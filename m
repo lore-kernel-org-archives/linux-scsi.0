@@ -1,133 +1,122 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
-Date: Mon, 4 Feb 2008 10:32:43 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F439766174@ADPE2K703.adaptec.com>
-References: 47A72A7F.1050301@panasas.com
- <1202140722-4650-1-git-send-email-bharrosh@panasas.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 21:38:02 +0300
+Message-ID: <47A75B8A.3020503@vlnb.net>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	 <1201639331.3069.58.camel@localhost.localdomain>	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>	 <1202144767.3096.38.camel@localhost.localdomain>	 <47A7488B.4080000@vlnb.net>	 <1202145901.3096.49.camel@localhost.localdomain>  <47A751C5.60600@vlnb.net> <1202149322.3096.66.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:42041 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753011AbYBDScr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:32:47 -0500
-In-Reply-To: <1202140722-4650-1-git-send-email-bharrosh@panasas.com>
-Content-Language: en-US
+Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:39359 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754267AbYBDSiF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:38:05 -0500
+In-Reply-To: <1202149322.3096.66.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-ACK with condition that community accepts the RFC's entire premise.
+James Bottomley wrote:
+> On Mon, 2008-02-04 at 20:56 +0300, Vladislav Bolkhovitin wrote:
+> 
+>>James Bottomley wrote:
+>>
+>>>On Mon, 2008-02-04 at 20:16 +0300, Vladislav Bolkhovitin wrote:
+>>>
+>>>
+>>>>James Bottomley wrote:
+>>>>
+>>>>
+>>>>>>>>So, James, what is your opinion on the above? Or the overall SCSI target 
+>>>>>>>>project simplicity doesn't matter much for you and you think it's fine 
+>>>>>>>>to duplicate Linux page cache in the user space to keep the in-kernel 
+>>>>>>>>part of the project as small as possible?
+>>>>>>>
+>>>>>>>
+>>>>>>>The answers were pretty much contained here
+>>>>>>>
+>>>>>>>http://marc.info/?l=linux-scsi&m=120164008302435
+>>>>>>>
+>>>>>>>and here:
+>>>>>>>
+>>>>>>>http://marc.info/?l=linux-scsi&m=120171067107293
+>>>>>>>
+>>>>>>>Weren't they?
+>>>>>>
+>>>>>>No, sorry, it doesn't look so for me. They are about performance, but 
+>>>>>>I'm asking about the overall project's architecture, namely about one 
+>>>>>>part of it: simplicity. Particularly, what do you think about 
+>>>>>>duplicating Linux page cache in the user space to have zero-copy cached 
+>>>>>>I/O? Or can you suggest another architectural solution for that problem 
+>>>>>>in the STGT's approach?
+>>>>>
+>>>>>
+>>>>>Isn't that an advantage of a user space solution?  It simply uses the
+>>>>>backing store of whatever device supplies the data.  That means it takes
+>>>>>advantage of the existing mechanisms for caching.
+>>>>
+>>>>No, please reread this thread, especially this message: 
+>>>>http://marc.info/?l=linux-kernel&m=120169189504361&w=2. This is one of 
+>>>>the advantages of the kernel space implementation. The user space 
+>>>>implementation has to have data copied between the cache and user space 
+>>>>buffer, but the kernel space one can use pages in the cache directly, 
+>>>>without extra copy.
+>>>
+>>>
+>>>Well, you've said it thrice (the bellman cried) but that doesn't make it
+>>>true.
+>>>
+>>>The way a user space solution should work is to schedule mmapped I/O
+>>>from the backing store and then send this mmapped region off for target
+>>>I/O.  For reads, the page gather will ensure that the pages are up to
+>>>date from the backing store to the cache before sending the I/O out.
+>>>For writes, You actually have to do a msync on the region to get the
+>>>data secured to the backing store. 
+>>
+>>James, have you checked how fast is mmaped I/O if work size > size of 
+>>RAM? It's several times slower comparing to buffered I/O. It was many 
+>>times discussed in LKML and, seems, VM people consider it unavoidable. 
+> 
+> 
+> Erm, but if you're using the case of work size > size of RAM, you'll
+> find buffered I/O won't help because you don't have the memory for
+> buffers either.
 
-The removed code that shunted the REQUEST_SENSE was based on the assumption that the sense data in the current scsi command packet was left over from the previous command's execution with a check condition as the scsi command packet is reused to issue the REQUEST_SENSE. For a new, or second from the target's point of view, request sense to the target issued by these older kernels would always return an erased sense. The dpt_i2o driver does not itself maintain the sense history, nor does the Firmware. This behavior, I believe, is not the case for current kernels so the code fragment made little sense (pun not intended). If my historical knowledge is correct, this (now removed) workaround makes no more sense because the scsi layer correctly manages adapters that produce auto-request sense an
- d does not ever turn around the command and send a second request for sense information.
+James, just check and you will see, buffered I/O is a lot faster.
 
-Given this understanding, I have no problem with the removed fragment of REQUEST_SENSE shunting. However, I do urge some target error recovery testing, tape drives being the likely type of target affected by this change. I have no such hardware to confirm...
+>>So, using mmaped IO isn't an option for high performance. Plus, mmaped 
+>>IO isn't an option for high reliability requirements, since it doesn't 
+>>provide a practical way to handle I/O errors.
+> 
+> I think you'll find it does ... the page gather returns -EFAULT if
+> there's an I/O error in the gathered region. 
 
-Sincerely -- Mark Salyzyn
+Err, to whom return? If you try to read from a mmaped page, which can't 
+be populated due to I/O error, you will get SIGBUS or SIGSEGV, I don't 
+remember exactly. It's quite tricky to get back to the faulted command 
+from the signal handler.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Boaz Harrosh
-> Sent: Monday, February 04, 2008 10:59 AM
-> To: James Bottomley; FUJITA Tomonori; Christoph Hellwig; Jens
-> Axboe; Jeff Garzik; linux-scsi
-> Cc: Andrew Morton
-> Subject: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
->
->   - Abstract away scsi_cmnd->sense_buffer for later removal.
->
->   - Removed a filtering out of a REQUEST_SENSE at .queuecommand
->     In the case of sense beeing clean. This is no longer relevant
->     since scsi-ml will always send a zero out sense buffer even
->     on a resend, so this means outside REQUEST_SENSE would never
->     go through. If this is intended then comment and check should
->     change.
->
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/dpt_i2o.c |   25 +++++++------------------
->  1 files changed, 7 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> index c9dd839..6ee6fcd 100644
-> --- a/drivers/scsi/dpt_i2o.c
-> +++ b/drivers/scsi/dpt_i2o.c
-> @@ -71,6 +71,7 @@ MODULE_DESCRIPTION("Adaptec I2O RAID Driver");
->  #include <scsi/scsi_device.h>
->  #include <scsi/scsi_host.h>
->  #include <scsi/scsi_tcq.h>
-> +#include <scsi/scsi_eh.h>
->
->  #include "dpt/dptsig.h"
->  #include "dpti.h"
-> @@ -385,18 +386,6 @@ static int adpt_queue(struct scsi_cmnd *
-> cmd, void (*done) (struct scsi_cmnd *))
->         struct adpt_device* pDev = NULL;        /* dpt per
-> device information */
->
->         cmd->scsi_done = done;
-> -       /*
-> -        * SCSI REQUEST_SENSE commands will be executed
-> automatically by the
-> -        * Host Adapter for any errors, so they should not be executed
-> -        * explicitly unless the Sense Data is zero
-> indicating that no error
-> -        * occurred.
-> -        */
-> -
-> -       if ((cmd->cmnd[0] == REQUEST_SENSE) &&
-> (cmd->sense_buffer[0] != 0)) {
-> -               cmd->result = (DID_OK << 16);
-> -               cmd->scsi_done(cmd);
-> -               return 0;
-> -       }
->
->         pHba = (adpt_hba*)cmd->device->host->hostdata[0];
->         if (!pHba) {
-> @@ -2226,8 +2215,6 @@ static s32 adpt_i2o_to_scsi(void
-> __iomem *reply, struct scsi_cmnd* cmd)
->
->         pHba = (adpt_hba*) cmd->device->host->hostdata[0];
->
-> -       cmd->sense_buffer[0] = '\0';  // initialize sense
-> valid flag to false
-> -
->         if(!(reply_flags & MSG_FAIL)) {
->                 switch(detailed_status & I2O_SCSI_DSC_MASK) {
->                 case I2O_SCSI_DSC_SUCCESS:
-> @@ -2297,11 +2284,13 @@ static s32 adpt_i2o_to_scsi(void
-> __iomem *reply, struct scsi_cmnd* cmd)
->                 // copy over the request sense data if it was a check
->                 // condition status
->                 if (dev_status == SAM_STAT_CHECK_CONDITION) {
-> -                       u32 len = min(SCSI_SENSE_BUFFERSIZE, 40);
-> +                       u8 sense_buffer[40];
-> +                       u32 len = sizeof(sense_buffer);
->                         // Copy over the sense data
-> -                       memcpy_fromio(cmd->sense_buffer,
-> (reply+28) , len);
-> -                       if(cmd->sense_buffer[0] == 0x70 /*
-> class 7 */ &&
-> -                          cmd->sense_buffer[2] == DATA_PROTECT ){
-> +                       memcpy_fromio(sense_buffer, (reply+28) , len);
-> +                       scsi_eh_cpy_sense(cmd, sense_buffer, len);
-> +                       if (sense_buffer[0] == 0x70 /* class 7 */ &&
-> +                          sense_buffer[2] == DATA_PROTECT){
->                                 /* This is to handle an array
-> failed */
->                                 cmd->result = (DID_TIME_OUT << 16);
->                                 printk(KERN_WARNING"%s: SCSI
-> Data Protect-Device (%d,%d,%d) hba_status=0x%x,
-> dev_status=0x%x, cmd=0x%x\n",
-> --
-> 1.5.3.3
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Or do you mean mmap(MAP_POPULATE)/munmap() for each command? Do you 
+think that such mapping/unmapping is good for performance?
+
+> msync does something
+> similar if there's a write failure.
+> 
+>>>You also have to pull tricks with
+>>>the mmap region in the case of writes to prevent useless data being read
+>>>in from the backing store.
+>>
+>>Can you be more exact and specify what kind of tricks should be done for 
+>>that?
+> 
+> Actually, just avoid touching it seems to do the trick with a recent
+> kernel.
+
+Hmm, how can one write to an mmaped page and don't touch it?
+
+> James
+> 
+> 
+> 
+
