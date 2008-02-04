@@ -1,12 +1,12 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 6/24][RFC] gdth: Use of scsi_eh API and sense accessors
-Date: Mon,  4 Feb 2008 18:07:16 +0200
-Message-ID: <1202141236-4722-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 7/24][RFC] qla2xxx: convert to new scsi_eh_cpy_sense API
+Date: Mon,  4 Feb 2008 18:17:05 +0200
+Message-ID: <1202141825-4767-1-git-send-email-bharrosh@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:46245 "EHLO
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:36780 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756516AbYBDQM6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 11:12:58 -0500
+	with ESMTP id S1752428AbYBDQW5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 11:22:57 -0500
 In-Reply-To: 47A72A7F.1050301@panasas.com
 References: 47A72A7F.1050301@panasas.com
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,160 +14,109 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>J
 Cc: Andrew Morton <akpm@linux-foundation.org>
 
-  Use of new scsi_eh API for setting sense information into
-  the scsi command.
+  this driver is special in that it would read sense in parts
+  until done. Same mechanics left here but read into a driver
+  internal buffer, which is then scsi_eh_cpy_sense() into command
+  when done.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/gdth.c |   47 ++++++++++++++++++++++++++---------------------
- drivers/scsi/gdth.h |    1 +
- 2 files changed, 27 insertions(+), 21 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    4 ++--
+ drivers/scsi/qla2xxx/qla_isr.c |   17 +++++++----------
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index c825239..9fdd5ef 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -2098,6 +2098,16 @@ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar priority)
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index b72c7f1..c2109f6 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -195,8 +195,9 @@ typedef struct srb {
+ 	/* Single transfer DMA context */
+ 	dma_addr_t dma_handle;
+ 
+-	uint32_t request_sense_length;
++	uint16_t request_sense_length;
+ 	uint8_t *request_sense_ptr;
++	uint8_t sense_buffer[SCSI_SENSE_BUFFERSIZE];
+ } srb_t;
+ 
+ /*
+@@ -2601,7 +2602,6 @@ typedef struct scsi_qla_host {
+ #define CMD_COMPL_STATUS(Cmnd)  ((Cmnd)->SCp.this_residual)
+ #define CMD_RESID_LEN(Cmnd)	((Cmnd)->SCp.buffers_residual)
+ #define CMD_SCSI_STATUS(Cmnd)	((Cmnd)->SCp.Status)
+-#define CMD_ACTUAL_SNSLEN(Cmnd)	((Cmnd)->SCp.Message)
+ #define CMD_ENTRY_STATUS(Cmnd)	((Cmnd)->SCp.have_data_in)
+ 
  #endif
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 642a0c3..611f556 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/delay.h>
+ #include <scsi/scsi_tcq.h>
++#include <scsi/scsi_eh.h>
+ 
+ static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
+ static void qla2x00_process_completed_request(struct scsi_qla_host *, uint32_t);
+@@ -825,18 +826,15 @@ qla2x00_process_response_queue(struct scsi_qla_host *ha)
+ static inline void
+ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t sense_len)
+ {
+-	struct scsi_cmnd *cp = sp->cmd;
+-
+ 	if (sense_len >= SCSI_SENSE_BUFFERSIZE)
+ 		sense_len = SCSI_SENSE_BUFFERSIZE;
+ 
+-	CMD_ACTUAL_SNSLEN(cp) = sense_len;
+ 	sp->request_sense_length = sense_len;
+-	sp->request_sense_ptr = cp->sense_buffer;
+-	if (sp->request_sense_length > 32)
++	sp->request_sense_ptr = sp->sense_buffer;
++	if (sense_len > 32)
+ 		sense_len = 32;
+ 
+-	memcpy(cp->sense_buffer, sense_data, sense_len);
++	memcpy(sp->sense_buffer, sense_data, sense_len);
+ 
+ 	sp->request_sense_ptr += sense_len;
+ 	sp->request_sense_length -= sense_len;
+@@ -847,8 +845,7 @@ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t sense_len)
+ 	    "cmd=%p pid=%ld\n", __func__, sp->ha->host_no, cp->device->channel,
+ 	    cp->device->id, cp->device->lun, cp, cp->serial_number));
+ 	if (sense_len)
+-		DEBUG5(qla2x00_dump_buffer(cp->sense_buffer,
+-		    CMD_ACTUAL_SNSLEN(cp)));
++		DEBUG5(qla2x00_dump_buffer(cp->sense_buffer, sense_len));
  }
  
-+static void gdth_set_4byte_sense(struct scsi_cmnd *scp, u8 sense_code)
-+{
-+	u8 sense[4];
-+
-+	memset(sense, 0, sizeof(sense));
-+	sense[0] = 0x70;
-+	sense[2] = sense_code;
-+	scsi_eh_cpy_sense(scp, sense, sizeof(sense));
-+}
-+
- static void gdth_next(gdth_ha_str *ha)
- {
-     register Scsi_Cmnd *pscp;
-@@ -2199,9 +2209,7 @@ static void gdth_next(gdth_ha_str *ha)
-                     this_cmd = FALSE;
-                 next_cmd = FALSE;
-             } else {
--                memset((char*)nscp->sense_buffer,0,16);
--                nscp->sense_buffer[0] = 0x70;
--                nscp->sense_buffer[2] = NOT_READY;
-+		gdth_set_4byte_sense(nscp, NOT_READY);
-                 nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
-                 if (!nscp_cmndinfo->wait_for_completion)
-                     nscp_cmndinfo->wait_for_completion++;
-@@ -2244,9 +2252,7 @@ static void gdth_next(gdth_ha_str *ha)
-                     TRACE2(("cmd 0x%x target %d: UNIT_ATTENTION\n",
-                              nscp->cmnd[0], t));
-                     ha->hdr[t].media_changed = FALSE;
--                    memset((char*)nscp->sense_buffer,0,16);
--                    nscp->sense_buffer[0] = 0x70;
--                    nscp->sense_buffer[2] = UNIT_ATTENTION;
-+                    gdth_set_4byte_sense(nscp, UNIT_ATTENTION);
-                     nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
-                     if (!nscp_cmndinfo->wait_for_completion)
-                         nscp_cmndinfo->wait_for_completion++;
-@@ -2263,7 +2269,7 @@ static void gdth_next(gdth_ha_str *ha)
-                 if ( (nscp->cmnd[4]&1) && !(ha->hdr[t].devtype&1) ) {
-                     TRACE(("Prevent r. nonremov. drive->do nothing\n"));
-                     nscp->result = DID_OK << 16;
--                    nscp->sense_buffer[0] = 0;
-+                    scsi_eh_reset_sense(nscp);
-                     if (!nscp_cmndinfo->wait_for_completion)
-                         nscp_cmndinfo->wait_for_completion++;
-                     else
-@@ -2296,9 +2302,7 @@ static void gdth_next(gdth_ha_str *ha)
-                     TRACE2(("cmd 0x%x target %d: UNIT_ATTENTION\n",
-                              nscp->cmnd[0], t));
-                     ha->hdr[t].media_changed = FALSE;
--                    memset((char*)nscp->sense_buffer,0,16);
--                    nscp->sense_buffer[0] = 0x70;
--                    nscp->sense_buffer[2] = UNIT_ATTENTION;
-+                    gdth_set_4byte_sense(nscp, UNIT_ATTENTION);
-                     nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
-                     if (!nscp_cmndinfo->wait_for_completion)
-                         nscp_cmndinfo->wait_for_completion++;
-@@ -2410,7 +2414,6 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
-            scp->cmnd[0],t));
+ /**
+@@ -1005,7 +1002,6 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+ 		if (lscsi_status != SS_CHECK_CONDITION)
+ 			break;
  
-     scp->result = DID_OK << 16;
--    scp->sense_buffer[0] = 0;
+-		memset(cp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 		if (!(scsi_status & SS_SENSE_LEN_VALID))
+ 			break;
  
-     switch (scp->cmnd[0]) {
-       case TEST_UNIT_READY:
-@@ -2726,8 +2729,8 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-         }
+@@ -1064,7 +1060,6 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+ 			if (lscsi_status != SS_CHECK_CONDITION)
+ 				break;
  
-     } else {
--        page = virt_to_page(scp->sense_buffer);
--        offset = (ulong)scp->sense_buffer & ~PAGE_MASK;
-+        page = virt_to_page(cmndinfo->sense);
-+        offset = (ulong)cmndinfo->sense & ~PAGE_MASK;
-         sense_paddr = pci_map_page(ha->pdev,page,offset,
-                                    16,PCI_DMA_FROMDEVICE);
+-			memset(cp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 			if (!(scsi_status & SS_SENSE_LEN_VALID))
+ 				break;
  
-@@ -3395,9 +3398,14 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-             pci_unmap_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-                          cmndinfo->dma_dir);
+@@ -1268,6 +1263,8 @@ qla2x00_status_cont_entry(scsi_qla_host_t *ha, sts_cont_entry_t *pkt)
  
--        if (cmndinfo->sense_paddr)
-+        if (cmndinfo->sense_paddr) {
-             pci_unmap_page(ha->pdev, cmndinfo->sense_paddr, 16,
-                                                            PCI_DMA_FROMDEVICE);
-+            /* this here is called before gdth_next so it will not
-+             * overwrite fake sense returned there.
-+             */
-+            scsi_eh_cpy_sense(scp, cmndinfo->sense, 16);
-+	}
- 
-         if (ha->status == S_OK) {
-             cmndinfo->status = S_OK;
-@@ -3441,7 +3449,7 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-                     ha->hdr[t].cluster_type &= ~CLUSTER_RESERVED;
-                 }           
-                 scp->result = DID_OK << 16;
--                scp->sense_buffer[0] = 0;
-+                scsi_eh_reset_sense(scp);
-             }
-         } else {
-             cmndinfo->status = ha->status;
-@@ -3457,9 +3465,7 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-                     cmndinfo->priority = HIGH_PRI;
-                     return 2;
-                 }
--                memset((char*)scp->sense_buffer,0,16);
--                scp->sense_buffer[0] = 0x70;
--                scp->sense_buffer[2] = NOT_READY;
-+                gdth_set_4byte_sense(scp, NOT_READY);
-                 scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
-             } else if (service == CACHESERVICE) {
-                 if (ha->status == S_CACHE_UNKNOWN &&
-@@ -3468,12 +3474,11 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-                     /* bus reset -> force GDT_CLUST_INFO */
-                     ha->hdr[t].cluster_type &= ~CLUSTER_RESERVED;
-                 }
--                memset((char*)scp->sense_buffer,0,16);
-+                scsi_eh_reset_sense(scp);
-                 if (ha->status == (ushort)S_CACHE_RESERV) {
-                     scp->result = (DID_OK << 16) | (RESERVATION_CONFLICT << 1);
-                 } else {
--                    scp->sense_buffer[0] = 0x70;
--                    scp->sense_buffer[2] = NOT_READY;
-+                    gdth_set_4byte_sense(scp, NOT_READY);
-                     scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
-                 }
-                 if (!cmndinfo->internal_command) {
-diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
-index 1434c6b..5501388 100644
---- a/drivers/scsi/gdth.h
-+++ b/drivers/scsi/gdth.h
-@@ -915,6 +915,7 @@ typedef struct {
-     struct gdth_cmndinfo {                      /* per-command private info */
-         int index;
-         int internal_command;                   /* don't call scsi_done */
-+        u8 sense[16];                           /* 16 is used allover */
-         dma_addr_t sense_paddr;                 /* sense dma-addr */
-         unchar priority;
-         int timeout;
+ 		/* Place command on done queue. */
+ 		if (sp->request_sense_length == 0) {
++			scsi_eh_cpy_sense(cp, sp->sense_buffer,
++				sp->request_sense_ptr - sp->sense_buffer);
+ 			ha->status_srb = NULL;
+ 			qla2x00_sp_compl(ha, sp);
+ 		}
 -- 
 1.5.3.3
 
