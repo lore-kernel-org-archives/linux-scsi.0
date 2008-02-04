@@ -1,77 +1,38 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 9/24][RFC] ultrastor: Use scsi_eh_cpy_sense() API
-Date: Mon,  4 Feb 2008 18:42:13 +0200
-Message-ID: <1202143333-4863-1-git-send-email-bharrosh@panasas.com>
+From: David Dillow <dillowda@ornl.gov>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 12:00:01 -0500
+Message-ID: <1202144401.11599.2.camel@lap75545.ornl.gov>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+ <1201639331.3069.58.camel@localhost.localdomain> <47A05CBD.5050803@vlnb.net>
+ <47A7049A.9000105@vlnb.net>
+ <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:60015 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509AbYBDQsC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 11:48:02 -0500
-In-Reply-To: 47A72A7F.1050301@panasas.com
-References: 47A72A7F.1050301@panasas.com
+Received: from emroute3.ornl.gov ([160.91.4.110]:57180 "EHLO emroute3.ornl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753970AbYBDRAF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Feb 2008 12:00:05 -0500
+In-reply-to: <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>J
-Cc: Andrew Morton <akpm@linux-foundation.org>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-  - allocate a driver private area sense buffer, and set IO
-    to transfer sense into that buffer.
-  - at end of command execution copy the sense information
-    using scsi_eh_cpy_sense().
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/ultrastor.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+On Mon, 2008-02-04 at 14:53 +0100, Bart Van Assche wrote:
+> Another issue I have to look further into is that dd and xdd report
+> different results for very large block sizes (> 1 MB).
 
-diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
-index f385dce..b2ccb48 100644
---- a/drivers/scsi/ultrastor.c
-+++ b/drivers/scsi/ultrastor.c
-@@ -199,6 +199,7 @@ struct mscp {
-   void (*done) (struct scsi_cmnd *);
-   struct scsi_cmnd *SCint;
-   ultrastor_sg_list sglist[ULTRASTOR_24F_MAX_SG]; /* use larger size for 24F */
-+  u8 sense_buffer[SCSI_SENSE_BUFFERSIZE];
- };
- 
- 
-@@ -743,19 +744,20 @@ static int ultrastor_queuecommand(struct scsi_cmnd *SCpnt,
-     } else {
- 	/* Unset scatter/gather flag in SCSI command packet */
- 	my_mscp->sg = FALSE;
--	my_mscp->transfer_data = isa_virt_to_bus(scsi_sglist(SCpnt));
--	my_mscp->transfer_data_length = scsi_bufflen(SCpnt);
-+	my_mscp->transfer_data = 0;
-+	my_mscp->transfer_data_length = 0;
-     }
-     my_mscp->command_link = 0;		/*???*/
-     my_mscp->scsi_command_link_id = 0;	/*???*/
--    my_mscp->length_of_sense_byte = SCSI_SENSE_BUFFERSIZE;
-     my_mscp->length_of_scsi_cdbs = SCpnt->cmd_len;
-     memcpy(my_mscp->scsi_cdbs, SCpnt->cmnd, my_mscp->length_of_scsi_cdbs);
-     my_mscp->adapter_status = 0;
-     my_mscp->target_status = 0;
--    my_mscp->sense_data = isa_virt_to_bus(&SCpnt->sense_buffer);
-     my_mscp->done = done;
-     my_mscp->SCint = SCpnt;
-+    memset(my_mscp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-+    my_mscp->length_of_sense_byte = SCSI_SENSE_BUFFERSIZE;
-+    my_mscp->sense_data = isa_virt_to_bus(my_mscp->sense_buffer);
-     SCpnt->host_scribble = (unsigned char *)my_mscp;
- 
-     /* Find free OGM slot.  On 24F, look for OGM status byte == 0.
-@@ -1140,7 +1142,9 @@ static void ultrastor_interrupt(void *dev_id)
- 	status = DID_TIME_OUT << 16;
- 	break;
-       }
--
-+    if (mscp->sense_buffer[0])
-+	scsi_eh_cpy_sense(SCtmp, mscp->sense_buffer,
-+						sizeof(mscp->sense_buffer));
-     SCtmp->result = status | mscp->target_status;
- 
-     SCtmp->host_scribble = NULL;
+Be aware that xdd reports 1 MB as 1000000, not 1048576. Though, it looks
+like dd is the same, so that's probably not helpful. Also, make sure
+you're passing {i,o}flag=direct to dd if you're using -dio in xdd to be
+sure you are comparing apples to apples.
 -- 
-1.5.3.3
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
 
