@@ -1,58 +1,62 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 6/8] kernel-doc: fix scsi docbook
-Date: Sun, 3 Feb 2008 20:22:30 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0802032014450.2108@shark.he.net>
-References: <Pine.LNX.4.64.0802031445490.3021@shark.he.net>
- <1202085030.3318.132.camel@localhost.localdomain>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sun, 3 Feb 2008 20:36:30 -0800
+Message-ID: <200802032036.31016.david-b@pacbell.net>
+References: <20080204030037.6C061108018@picon.linux-foundation.org> <1202097337.3318.143.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:46876 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754285AbYBDEWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 Feb 2008 23:22:33 -0500
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 3 Feb 2008 20:22:31 -0800
-In-Reply-To: <1202085030.3318.132.camel@localhost.localdomain>
+Received: from smtp117.sbc.mail.sp1.yahoo.com ([69.147.64.90]:24999 "HELO
+	smtp117.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752464AbYBDEgd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Feb 2008 23:36:33 -0500
+In-Reply-To: <1202097337.3318.143.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: bugme-daemon@bugzilla.kernel.org, Russell King <rmk@arm.linux.org.uk>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
 
-On Sun, 3 Feb 2008, James Bottomley wrote:
+On Sunday 03 February 2008, James Bottomley wrote:
+> That's caused by this commit:
+>=20
+> commit aa24886e379d2b641c5117e178b15ce1d5d366ba
+> Author: David Brownell <david-b@pacbell.net>
+> Date: =A0 Fri Aug 10 13:10:27 2007 -0700
+>=20
+> =A0 =A0 dma_free_coherent() needs irqs enabled (sigh)
+> =A0 =A0=20
+> I've cc'd the people responsible for this apparent bit of idiocy. =A0=
+Since
+> the API addition to dma_alloc_coherent() was the GFP flags so you cou=
+ld
+> call it from interrupt context with GFP_ATOMIC if so desired,
+> (pci_dma_alloc_consistent always has GFP_ATOMIC semantics), why on ea=
+rth
+> would the corresponding free routine require non-atomic semantics?
 
-> On Sun, 2008-02-03 at 15:06 -0800, Randy.Dunlap wrote:
-> > From: Randy Dunlap <randy.dunlap@oracle.com>
-> > 
-> > Add missing function parameter descriptions.
-> > Make function short description fit on one line as required.
-> > 
-> > Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > ---
-> >   drivers/scsi/scsi.c |    5 +++--
-> >   1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > --- linux-2.6.24-git12.orig/drivers/scsi/scsi.c
-> > +++ linux-2.6.24-git12/drivers/scsi/scsi.c
-> > @@ -969,9 +969,10 @@ void starget_for_each_device(struct scsi
-> >   EXPORT_SYMBOL(starget_for_each_device);
-> > 
-> >   /**
-> > - * __starget_for_each_device  -  helper to walk all devices of a target
-> > - *				 (UNLOCKED)
-> > + * __starget_for_each_device - helper to walk all devices of a target (UNLOCKED)
-> >    * @starget:	target whose devices we want to iterate over.
-> > + * @data:	parameter for callback @fn()
-> > + * @fn:		callback function that is invoked for each device
-> >    *
-> >    * This traverses over each device of @starget.  It does _not_
-> >    * take a reference on the scsi_device, so the whole loop must be
-> ^^^^^
-> I have this, but it's a bit mysterious: something added an extra space
-> to the non +/- lines making the patch reject.  I pulled it out by hand
-> and it applied fine.
+That was my reaction ... but I was told this would not be fixed.
 
-Thanks.  I think that I had a pine config error that caused the problem.
-Should be fixed now.
+See also 8a3c1f573c771e60f67ef172d2392d1a28385b4a ... several other
+controller drivers needed similar logic at one point.  (I eventually
+ripped that programming interface out, or *EVERY* driver would have
+needed crap like that.  The interface was mostly misused anyway, so
+it was no big loss.)
 
--- 
-~Randy
+
+> Is it seriously true that you can call dma_alloc_coherent() from atom=
+ic
+> context on arm, but not dma_free_coherent()?
+
+Lacking a tasklet in dma_free_coherent() analagous to that omap_udc com=
+mit
+I referenced ...
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
