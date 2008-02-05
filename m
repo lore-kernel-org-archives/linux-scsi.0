@@ -1,171 +1,107 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Tue, 5 Feb 2008 11:33:15 -0800 (PST)
-Message-ID: <471033.35291.qm@web31813.mail.mud.yahoo.com>
-References: <1202223716.3133.10.camel@localhost.localdomain>
+Subject: Re: new scsi sense handling
+Date: Tue, 5 Feb 2008 11:43:58 -0800 (PST)
+Message-ID: <224941.31369.qm@web31810.mail.mud.yahoo.com>
+References: <20080205225409O.tomof@acm.org>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1202223716.3133.10.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, "Accardi, Kristen C" <kristen.c.accardi@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:25876 "HELO
+	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754860AbYBETn7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 14:43:59 -0500
+In-Reply-To: <20080205225409O.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.com
 
---- On Tue, 2/5/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > > I guess the same could be said for STGT and
-> SCST,
-> > > right?
+--- On Tue, 2/5/08, FUJITA Tomonori <tomof@acm.org> wrote:
+> On Mon, 4 Feb 2008 18:39:22 -0800 (PST)
+> Luben Tuikov <ltuikov@yahoo.com> wrote:
+> 
+> > --- On Mon, 2/4/08, Boaz Harrosh
+> <bharrosh@panasas.com> wrote:
+> > > There are 3 usages of sense handling in drivers
 > > > 
-> > > You mean both of their kernel pieces are modular?
-> 
-> > > That's correct.
+> > > 1. sense is available in driver internal
+> structure and is
+> > > mem-copied to upper level
+> > > 2. A CHECK_CONDITION status was returned and the
+> driver
+> > > uses the scsi_eh_prep_cmnd()
+> > >    for a REQUEST_SENSE invocation to the target.
+> Then
+> > > returning the sense in 
+> > >    scsi_eh_return_cmnd(). A variation on this is
+> when the
+> > > driver does nothing the queue
+> > >    is frozen an the scsi watchdog timer does the
+> above.
+> > > 3. The underline host adapter does the
+> REQUEST_SENSE and a
+> > > pre-allocated and DMA mapped
+> > >    sense buffer receives the sense information
+> from HW.
 > > 
-> > No, you know very well what I mean.
+> > Many years ago when "ACA" had a constructive
+> meaning,
+> > so did "Autosense".  Then about 5 years ago,
+> "Autosense"
+> > disappeared completely since it became the de facto
+> > implementation of the then SCSI Execute Command
+> "RPC",
+> > now just SCSI Execute Command procedure call.
 > > 
-> > By the same logic you're preaching to include your
-> > solution part of the kernel, you can also apply to
-> > SCST.
+> > At that point in time, the SCSI mid-layer decided
+> > to embrace this model and give the LLDD a scsi command
+> > structure which included the sense data buffer to
+> > a size that the SCSI mid-layer was interested in,
+> > at the moment 96 bytes, macro defined in
+> > include/scsi/scsi_cmnd.h.
+> > 
+> > The concept of "Autosense" was off-loaded to
+> LLDD
+> > to emulate it if the specific target device to
+> > which the command was issued, didn't supply the
+> > sense data on CHECK CONDITION, and more so
+> > relevant to target devices which implemented
+> > queuing, thus the ACA.
+> > 
+> > And the mid-layer would consider extracting
+> > the sense data via REQUEST SENSE command
+> > as a _special case_ if the LLDD/transport layer
+> > didn't implement the "autosense" model.
 > 
-> Ah, but it's not ... the current patch is merely
-> exporting an interface.
-> The debate in STGT vs SCST is not whether to export an
-> interface but
-> where to draw the line.
+> Only SPI and USB?
 
-"draw the line" -- I see.
-BTW, what is wrong with "exporting the interface"?
-
-What is wrong if both implementations are in the kernel
-and then let the users and distros decide which one
-they like best and use more?  It'll not be the fist time
-this has happened in the kernel.  Both are actively
-maintained.
-
-It seems highly arbitrary to say: "X is in the kernel, Y
-is not. If you want Y, just forget about it and fix X."
-Give people choice at config time.
-
-This is off topic anyway.
-
-> You could also argue in the same vein that sd is redundant
-> because a
-> filesystem could talk directly to the device via /dev/sgX
-> (in fact OSD
-> based filesystems already do this).
-
-Yes, I've mentioned this thing before on this list.  Oh, maybe 3
-years ago.  This is why I had wanted for transport protocols
-to export ... (oh, let's not get this off topic).
-
-(Apparently it takes 3 years...)
-
-> The argument is true,
-> but misses
-> the bigger picture that the interfaces exported by sd are
-> more portable
-> (apply to non-SCSI block devices) and easier to use.
-
-It isn't quite the same thing.  It's like comparing
-apples to oranges.
+I don't understand this question.
 
 > 
-> > > > Yes, for which the transport layer,
-> implements the
-> > > > scsi device node for the SES device.  It
-> doesn't
-> > > really
-> > > > matter if the SCSI commands sent to the SES
-> device go
-> > > > over SGPIO or FC or SAS or Bluetooth or I2C,
-> etc, the
-> > > > transport layer can implement that and
-> present the
-> > > > /dev/sgX node.
-> > > 
-> > > But it does matter if the enclosure device
-> doesn't
-> > > speak SCSI.
-> > 
-> > Enclosure management isn't as simple as you're
-> > portraying it here.  The enclosure management
-> > device speaks either SES or SAF-TE.  The transport
-> > protocol to access it could be SGPIO or I2C or...
+> The most of LLDs using the transport protocol that we care
+> about today
+> uses sense buffer in their own internal structure.
+
+Yes.
+
 > 
-> Look, just read the spec; SGPIO is a bus for driving
-> enclosures ...
+> I think that the issue to solve to kill
+> scsi_cmnd:sense_buffer is how
+> to share (or export) such sense buffer with the scsi
+> mid-layer.
 
-I thought Serial General Purpose Input Output
-(SGPIO) was a method to serialize general purpose
-IO signals.
+And therein lies the problem.  Sense data is SCSI specific,
+it should be left to SCSI, unless of course you can
+stipulate that _all_ block devices return sense data.
+If that's not the case and you move it to the block
+layer, then you get a whole bunch of other problems,
+like does this device want/use it, should we allocate
+it, etc. OTOH, if that _is_ the case, then you don't
+have to worry about this and the model is pretty
+much as the SCSI mid-layer has it, i.e. sense buffer
+always present.  So I guess the question is, can
+you stipulate that _all_ block devices return sense data?
 
-> it
-> doesn't require SES or SAF-TE or even any SCSI
-> protocol.
-
-That's true.  And this is why I mentioned a couple
-of emails ago to simply export a sgpio device node *IF*
-this is what is needed.  Of course devices that use SGPIO
-abstract it away for their functional purpose, e.g.
-enclosures, LED, etc, and provide a more general way to
-control it -- highly hardware specific on one side.
-
-Your abstraction currently deals with "SES" devices
-and I'd rather leave that to user-space.  Alternatively,
-which I presume is what you're thinking, a HW specific
-core would be using your "abstraction" to provide
-some unified access to raw features, and that "unified
-access" isn't defined anywhere, and would likely not
-be.  Alternatively that "unified access" is things
-like SES and SAF-TE, which is what vendors prefer
-to export, or they prefer to drive this directly
-via other means.
-
-That is, I fail to see the kernel bloat, for things
-that aren't necessary in the kernel.
-
-If you want your abstraction to fly, it first needs
-a common usage model to abstract, and the latter is
-missing _from the kernel_.
-
-Unless I don't know the details and you've been
-asked to implement this for a single vendor's HW solution.
-
-> > >  SGPIO
-> > > isn't a SCSI protocol ... it's a general
-> purpose
-> > > serial bus protocol.
-> > > It's pretty simple and register based, but it
-> might (or
-> > > might not) be
-> > > accessible via a SCSI bridge.
-> > 
-> > I see.  You've just discovered SGPIO -- good for
-> you.
-> > 
-> > At any rate, I told you already that what is needed
-> > is not what you've provided but a _device node_
-> > exported by the kernel, either a processor or
-> > enclosure type.
-> 
-> Wrong ... we don't export non-SCSI devices as SCSI
-> (with the single and
-> rather annoying exception of ATA via SAT).
-
-I didn't say you should do that.  I had already
-mentioned that vendors export such controls
-as either enclosure or processor type devices,
-and this is why I told you that that is what
-needs to be exported, which incidentally is
-a device node of that type.
-
-Without a common usage model already in the kernel
-to abstract (e.g. sd for block device, since you brought
-that up) your abstraction seems redundant and arbitrary.
-
-Your kernel code already uses READ DIAGNOSTIC, etc,
-and I'd rather leave that to user-space.
-
-   Luben
+    Luben
 
