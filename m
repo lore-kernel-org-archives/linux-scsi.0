@@ -1,34 +1,38 @@
-From: Ciju Rajan K <ciju@linux.vnet.ibm.com>
-Subject: diskdump fails on x3850 (x86_64)
-Date: Tue, 05 Feb 2008 18:19:57 +0530
-Message-ID: <47A85B75.5010401@linux.vnet.ibm.com>
-Reply-To: ciju@linux.vnet.ibm.com
+From: Olivier Galibert <galibert@pobox.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Tue, 5 Feb 2008 14:05:17 +0100
+Message-ID: <20080205130517.GA35763@dspnet.fr.eu.org>
+References: <47A73C86.3060604@vlnb.net> <1202144767.3096.38.camel@localhost.localdomain> <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain> <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org> <1202151989.11265.576.camel@haakon2.linux-iscsi.org> <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org> <20080204210121.GF18682@fieldses.org> <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org> <47A7986B.1070206@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([59.145.155.7]:47194 "EHLO
-	e28esmtp07.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752476AbYBEMxy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 07:53:54 -0500
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by e28esmtp07.in.ibm.com (8.13.1/8.13.1) with ESMTP id m15CrqrW012215
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 18:23:52 +0530
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m15CrpF5962656
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 18:23:52 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.13.1/8.13.3) with ESMTP id m15CrpwS023366
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 12:53:51 GMT
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753341AbYBENFd@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47A7986B.1070206@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: david_chaw@adaptec.com, chandru@in.ibm.com
 
-Hello folks,
+On Mon, Feb 04, 2008 at 05:57:47PM -0500, Jeff Garzik wrote:
+> iSCSI and NBD were passe ideas at birth.  :)
+> 
+> Networked block devices are attractive because the concepts and 
+> implementation are more simple than networked filesystems... but usually 
+> you want to run some sort of filesystem on top.  At that point you might 
+> as well run NFS or [gfs|ocfs|flavor-of-the-week], and ditch your 
+> networked block device (and associated complexity).
 
-Diskdump on x3850 with adp94xx driver is not working (Redhat Enterprise Linux 4.6). 
-'Service diskdump restart' fails. Is there any plan to support it?
+Call me a sysadmin, but I find easier to plug in and keep in place an
+ethernet cable than these parallel scsi cables from hell.  Every
+server has at least two ethernet ports by default, with rarely any
+surprises at the kernel level.  Adding ethernet cards is inexpensive,
+and you pretty much never hear of compatibility problems between
+cards.
 
-Thanks
-Ciju
+So ethernet as a connection medium is really nice compared to scsi.
+Too bad iscsi is demented and ATAoE/NBD inexistant.  Maybe external
+SAS will be nice, but I don't see it getting to the level of
+universality of ethernet any time soon.  And it won't get the same
+amount of user-level compatibility testing in any case.
+
+  OG.
