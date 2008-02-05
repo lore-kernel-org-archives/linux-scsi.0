@@ -1,49 +1,72 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH] [SCSI] fix BUG when sum(scatterlist) > bufflen
-Date: Tue, 05 Feb 2008 10:36:10 -0500
-Message-ID: <47A8826A.4040401@cybernetics.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
+ isd200.c
+Date: Tue, 5 Feb 2008 10:42:09 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802051037040.4167-100000@iolanthe.rowland.org>
+References: <47A8213B.9050705@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([70.169.137.4]:2420 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446AbYBEPgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 10:36:12 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47A8213B.9050705-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Douglas Gilbert <dougg@torque.net>
 
-When sending a SCSI command to a tape drive via the SCSI Generic (sg)
-driver, if the command has a data transfer length more than
-scatter_elem_sz (32 KB default) and not a multiple of 512, then I either
-hit BUG_ON(!valid_dma_direction(direction)) in dma_unmap_sg() or else
-the command never completes (depending on the LLDD).
+On Tue, 5 Feb 2008, Boaz Harrosh wrote:
 
-When constructing scatterlists, the sg driver rounds up the scatterlist
-element sizes to be a multiple of 512.  This can result in
-sum(scatterlist lengths) > bufflen.  In this case, scsi_req_map_sg()
-incorrectly sets bio->bi_size to sum(scatterlist lengths) rather than to
-bufflen.  When the command completes, req_bio_endio() detects that
-bio->bi_size != 0, and so it doesn't call bio_endio().  This causes the
-command to be resubmitted, resulting in BUG_ON or the command never
-completing.
+> > However the interface to usb_stor_access_xfer_buf() will have to change
+> > slightly.  Right now if it sees that *sgptr is NULL, it assumes this
+> > means it should start at the beginning of the s-g buffer.  But with 
+> > Boaz's change, *sgptr == NULL means the transfer has reached the end of 
+> > the buffer.  So I'll have to go through and audit all the callers.
+> > 
+> > Alan Stern
+> > 
+> > -
+> No it does not, this as not changed. Please look again.
 
-This patch makes scsi_req_map_sg() set bio->bi_size to bufflen rather
-than to sum(scatterlist lengths), which fixes the problem.
+You look again.  Your patched code goes like this:
 
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
---- linux-2.6.24-git14/drivers/scsi/scsi_lib.c.orig	2008-02-05 09:33:05.000000000 -0500
-+++ linux-2.6.24-git14/drivers/scsi/scsi_lib.c	2008-02-05 09:33:10.000000000 -0500
-@@ -301,7 +301,6 @@ static int scsi_req_map_sg(struct reques
- 		page = sg_page(sg);
- 		off = sg->offset;
- 		len = sg->length;
-- 		data_len += len;
- 
- 		while (len > 0 && data_len > 0) {
- 			/*
+		struct scatterlist *sg = *sgptr;
 
+		if (!sg)
+			sg = (struct scatterlist *) srb->request_buffer;
 
+Hence if *sgptr is NULL upon entry, it is taken to mean that the 
+transfer should start at the beginning of the s-g buffer.
+
+		/* This loop handles a single s-g list entry, which may
+		 * include multiple pages.  Find the initial page structure
+		 * and the starting offset within the page, and update
+		 * the *offset and *index values for the next loop. */
+		cnt = 0;
+		while (cnt < buflen && sg) {
+
+Hence if sg is NULL, it indicates the end of the buffer has been 
+reached.  And then down near the end of the routine:
+
+		*sgptr = sg;
+
+Hence if the end is reached and the caller makes another call to try 
+transferring more data, the additional data will get stored back at the 
+beginning of the buffer.
+
+> Note that this patch was tested and working. It is a bug
+> in v2.2.24 and it should be accepted already. One way or
+> the other.
+> 
+> Callers of usb_stor_access_xfer_buf() need not change.
+> Matthew Dharm should decide if he wants the WARN_ON in 
+> usb_stor_set_xfer_buf() or not and be done with it.
+> 
+> I have found and fixed the bug, but it is not a SCSI
+> related bug, and it is not do to any scsi changes. It
+> is a bug from the SG changes of early 2.6.24. Please
+> take it through the USB tree. Feel free to change it
+> the way you like it, and submit it.
+
+I will post a new version of this which handles all these issues.  
+Expect it in a day or so.
+
+Alan Stern
