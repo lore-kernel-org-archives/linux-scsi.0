@@ -1,47 +1,38 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 5 Feb 2008 20:02:06 +0100
-Message-ID: <e2e108260802051102y1b02bcdic5ea9c45caee9964@mail.gmail.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <47A89889.9060701@Voltaire.COM>
+Date: Tue, 05 Feb 2008 14:12:16 -0500
+Message-ID: <47A8B510.8000807@garzik.org>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	<1201639331.3069.58.camel@localhost.localdomain>	<47A05CBD.5050803@vlnb.net>	<47A7049A.9000105@vlnb.net>	<1202139015.3096.5.camel@localhost.localdomain>	<47A73C86.3060604@vlnb.net>	<1202144767.3096.38.camel@localhost.localdomain>	<47A7488B.4080000@vlnb.net>	<1202145901.3096.49.camel@localhost.localdomain>	<alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>	<1202151989.11265.576.camel@haakon2.linux-iscsi.org>	<alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>	<20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org> <47A8B29B.8050406@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.182]:2145 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292AbYBETCI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 14:02:08 -0500
-Received: by el-out-1112.google.com with SMTP id v27so886792ele.23
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Feb 2008 11:02:07 -0800 (PST)
-In-Reply-To: <47A89889.9060701@Voltaire.COM>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:45668 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbYBETM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 14:12:26 -0500
+In-Reply-To: <47A8B29B.8050406@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erez Zilber <erezz@voltaire.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>, James.Bottomley@hansenpartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Feb 5, 2008 6:10 PM, Erez Zilber <erezz@voltaire.com> wrote:
-> One may claim that STGT should have lower performance than SCST because
-> its data path is from userspace. However, your results show that for
-> non-IB transports, they both show the same numbers. Furthermore, with IB
-> there shouldn't be any additional difference between the 2 targets
-> because data transfer from userspace is as efficient as data transfer
-> from kernel space.
->
-> The only explanation that I see is that fine tuning for iSCSI & iSER is
-> required. As was already mentioned in this thread, with SDR you can get
-> ~900 MB/sec with iSER (on STGT).
+Vladislav Bolkhovitin wrote:
+> Jeff Garzik wrote:
+>> iSCSI is way, way too complicated. 
+> 
+> I fully agree. From one side, all that complexity is unavoidable for 
+> case of multiple connections per session, but for the regular case of 
+> one connection per session it must be a lot simpler.
 
-My most recent measurements also show that one can get 900 MB/s with
-STGT + iSER on an SDR IB network, but only for very large block sizes
-(>= 100 MB). A quote from Linus Torvalds is relevant here (February 5,
-2008):
 
-    Block transfer sizes over about 64kB are totally irrelevant for
-99% of all people.
+Actually, think about those multiple connections...  we already had to 
+implement fast-failover (and load bal) SCSI multi-pathing at a higher 
+level.  IMO that portion of the protocol is redundant:   You need the 
+same capability elsewhere in the OS _anyway_, if you are to support 
+multi-pathing.
 
-Please read my e-mail (posted earlier today) with a comparison for 4
-KB - 64 KB block transfer sizes between SCST and STGT.
+	Jeff
 
-Bart Van Assche.
+
+
