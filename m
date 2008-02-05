@@ -1,77 +1,68 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE
-Date: Tue, 05 Feb 2008 14:04:26 -0600
-Message-ID: <47A8C14A.3030207@cs.wisc.edu>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>	
-	<20080124003203.18871.52040.sendpatchset@localhost.localdomain>	
-	<1202151498.3096.84.camel@localhost.localdomain>	
-	<1202156151.13537.14.camel@linuxchandra>
-	<1202156914.3096.112.camel@localhost.localdomain>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: aic7xxx build failure
+Date: Tue, 5 Feb 2008 21:06:23 +0100
+Message-ID: <20080205200623.GA26798@uranus.ravnborg.org>
+References: <20080205174024.GE505@cs181133002.pp.htv.fi> <20080205184735.GA26270@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1202156914.3096.112.camel@localhost.localdomain>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:60345 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760331AbYBEUGS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 15:06:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20080205184735.GA26270@uranus.ravnborg.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Mon, 2008-02-04 at 12:15 -0800, Chandra Seetharaman wrote:
->> On Mon, 2008-02-04 at 12:58 -0600, James Bottomley wrote:
->>> On Wed, 2008-01-23 at 16:32 -0800, Chandra Seetharaman wrote:
->>>> Subject: scsi_dh: Add support for SDEV_PASSIVE
->>>>
->>>> From: Chandra Seetharaman <sekharan@us.ibm.com>
->>>>
->>>> This patch adds a new device state SDEV_PASSIVE, to correspond to the
->>>> passive side access of an active/passive multipathed device.
->>> Really, no; this isn't right.  The state field of a SCSI device is for
->>> the SCSI state model.  Passive might be a valid device mapper state, but
->> Hi James,
->>
->> It is not the "device mapper state", it is the state of the device
->> itself. These devices have active/passive paths, the passive paths will
->> be represented by SDEV_PASSIVE device state in SCSI.
+On Tue, Feb 05, 2008 at 07:47:35PM +0100, Sam Ravnborg wrote:
+> On Tue, Feb 05, 2008 at 07:40:24PM +0200, Adrian Bunk wrote:
+> > Commit 8891fec65ac5b5a74b50c705e31b66c92c3eddeb broke aic7xxx 
+> > compilation:
+> > 
+> > <--  snip  -->
+> > 
+> > $ make O=../out/x86-full
+> > ...
+> >   SHIPPED drivers/scsi/aic7xxx/aic79xx_seq.h
+> >   SHIPPED drivers/scsi/aic7xxx/aic79xx_reg.h
+> >   CC      drivers/scsi/aic7xxx/aic79xx_core.o
+> > gcc: drivers/scsi/aic7xxx/aic79xx_core.c: No such file or directory
+> > gcc: no input files
+> > make[4]: *** [drivers/scsi/aic7xxx/aic79xx_core.o] Error 1
+> > 
+> > <--  snip  -->
+> > 
+> > Next "make" run brings the same failure in 
+> > drivers/scsi/aic7xxx/aic7xxx_core.c.
+> > 
+> > With the third "make" it works.
+> > 
+> > It might compile for people with SMP systems using -j?
 > 
-> Yes, it is .. you're killing commands on the basis of being in this
-> state, which nothing in SCSI ever sets.
+> I can reproduce it and will fix it.
+Seems I was sidetracked by some wrong assumptions.
+Could you please test this fix.
 
-SCSI does set this. See below.
+Works for me but this time I will do more testing....
 
-> 
-> A proper return from a passive path is the SCSI standard NOT_READY
-> LOGICAL UNIT NOT READY, INITIALIZING COMMAND REQUIRED.  We expect to see
-> this, not the command being killed.
-> 
+	Sam
 
-I think this part of the patch is trying to implement and detect the 
-Target port asymetric access states from spc3 section 5.8.2.4 (it does 
-not follow it exactly because devices like RDAC or old clarrions did not 
-implement the spec), and then use that info to fail commands before they 
-are even sent to the device to avoid start up delays from when programs 
-like udev, hal, kernel partition scanning probe the device.
+diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
+index 4c54954..6aa49e7 100644
+--- a/drivers/scsi/aic7xxx/Makefile
++++ b/drivers/scsi/aic7xxx/Makefile
+@@ -44,8 +44,8 @@ clean-files += aic79xx_seq.h aic79xx_reg.h aic79xx_reg_print.c
+ 
+ # Dependencies for generated files need to be listed explicitly
+ 
+-$(addprefix $(src)/,$(aic7xxx-y:.o=.c)): $(obj)/aic7xxx_seq.h $(obj)/aic7xxx_reg.h
+-$(addprefix $(src)/,$(aic79xx-y:.o=.c)): $(obj)/aic79xx_seq.h $(obj)/aic79xx_reg.h
++$(addprefix $(src)/,$(aic7xxx-y)): $(obj)/aic7xxx_seq.h $(obj)/aic7xxx_reg.h
++$(addprefix $(src)/,$(aic79xx-y)): $(obj)/aic79xx_seq.h $(obj)/aic79xx_reg.h
+ 
+ aic7xxx-gen-$(CONFIG_AIC7XXX_BUILD_FIRMWARE)	:= $(obj)/aic7xxx_reg.h
+ aic7xxx-gen-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT)	+= $(obj)/aic7xxx_reg_print.c
 
-For the LSI patch it works like the following:
-
-When IO is sent to a path that cannot execute IO optimally, the scsi hw 
-handler hook for sense processing (see rdac_check_sense in "[PATCH 8/9] 
-scsi_dh: add lsi rdac device handler" and the scsi_error.c hook in in 
-"scsi_dh: add skeleton for SCSI Device Handlers") will detect this and 
-set the state to passive so future IO is not execute on the path 
-(SG_IO/passthrough is allowed).
-
-I am not sure about alternatives. If we just exported the port access 
-state in sysfs, but did not fail IO from scsi_prep_state_check, then the 
-users could still check the state before sending IO. Would it be 
-horrible to convert apps to do this?
