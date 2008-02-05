@@ -1,64 +1,114 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 04 Feb 2008 18:45:14 -0600
-Message-ID: <1202172314.17934.161.camel@cinder.waste.org>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net>
-	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
-	 <1202144767.3096.38.camel@localhost.localdomain>
-	 <47A7488B.4080000@vlnb.net>
-	 <1202145901.3096.49.camel@localhost.localdomain>
-	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
-	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
-	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
-	 <20080204224314.113afe7b@core>
-	 <1202170060.17934.142.camel@cinder.waste.org>
-	 <alpine.LFD.1.00.0802041620110.3237@woody.linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+	padding in favour of that provided by the block layer
+Date: Mon, 04 Feb 2008 18:53:46 -0600
+Message-ID: <1202172826.3096.163.camel@localhost.localdomain>
+References: <1199138168.3110.12.camel@localhost.localdomain>
+	 <1200698057.3111.68.camel@localhost.localdomain>
+	 <1201894847.3134.59.camel@localhost.localdomain>
+	 <47A37AF3.3030503@garzik.org>
+	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>
+	 <1202013174.3187.69.camel@localhost.localdomain>
+	 <47A56F2B.4040904@gmail.com>
+	 <1202049511.3318.13.camel@localhost.localdomain>
+	 <47A5DA5F.3070209@gmail.com>
+	 <1202055156.3318.58.camel@localhost.localdomain>
+	 <47A66A39.7090800@gmail.com> <47A6D9F2.5060102@gmail.com>
+	 <47A72475.5040106@gmail.com>
+	 <1202142222.3096.26.camel@localhost.localdomain>
+	 <47A7A887.2040307@gmail.com>
+	 <1202171564.3096.147.camel@localhost.localdomain>
+	 <47A7B11C.10607@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:57753 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756643AbYBEAqW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Feb 2008 19:46:22 -0500
-In-Reply-To: <alpine.LFD.1.00.0802041620110.3237@woody.linux-foundation.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:38874 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757438AbYBEAxw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 19:53:52 -0500
+In-Reply-To: <47A7B11C.10607@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 
-On Mon, 2008-02-04 at 16:24 -0800, Linus Torvalds wrote:
+On Tue, 2008-02-05 at 09:43 +0900, Tejun Heo wrote:
+> Hello,
 > 
-> On Mon, 4 Feb 2008, Matt Mackall wrote:
+> James Bottomley wrote:
+> >> No, it doesn't.  Drain needs to extend the sg table too 
 > > 
-> > But ATAoE is boring because it's not IP. Which means no routing,
-> > firewalls, tunnels, congestion control, etc.
+> > The patches do extend the sg table.
 > 
-> The thing is, that's often an advantage. Not just for performance.
-> 
-> > NBD and iSCSI (for all its hideous growths) can take advantage of these
-> > things.
-> 
-> .. and all this could equally well be done by a simple bridging protocol 
-> (completely independently of any AoE code).
-> 
-> The thing is, iSCSI does things at the wrong level. It *forces* people to 
-> use the complex protocols, when it's a known that a lot of people don't 
-> want it. 
+> Hmm... Where?
 
-I frankly think NBD is at a pretty comfortable level. It's internally
-very simple (and hardware-agnostic). And moderately easy to do in
-silicon.
+It's the block component; it's already in git head with this patch:
 
-But I'm not going to defend iSCSI. I worked on the first implementation
-(what became the Cisco iSCSI driver) and I have no love for iSCSI at
-all. It should have been (and started out as) a nearly trivial
-encapsulation of SCSI over TCP much like ATA over Ethernet but quickly
-lost the plot when committees got ahold of it.
+commit fa0ccd837e3dddb44c7db2f128a8bb7e4eabc21a
+Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date:   Thu Jan 10 11:30:36 2008 -0600
 
--- 
-Mathematics is the supreme nostalgia of our time.
+    block: implement drain buffers
+
+The description is pretty reasonable.  The way it works is by making
+block add the drain buffer to the sg table as the last element.
+
+The way it works is if you simply use the length block gives you, you
+find yourself doing DMA to every element in the sg table except the last
+one.  If you expand the length to anything up to blk_rq_drain_size() you
+then use the last element for the drain.
+
+> >> and it makes controllers lax about buffer overruns for commands they shouldn't be.
+> > 
+> > So adjust the qc->nbytes to show no drain element in libata ... although
+> > the extra element gets mapped, the HBA will be none the wiser if there's
+> > zero length allocated to it.  Thus the entire system behaves exactly
+> > like the drain element isn't present.  The block layer is really just
+> > making the drain element available ... you don't have to use it.
+> 
+> Adjusting qc->nbytes isn't enough.  libata will have to trim at the end
+> of sglist.  With both draining and padding, it means libata will have to
+> trim one sg entry and a few more bytes.  Block layer is behaving
+> differently and in a very noticeable way, it's sending inconsistent
+> values in data_len and sg list.
+
+No, that's the point.  With all the space available, you don't need to
+trim at all ... you simply don't use it.  The rationale is the way the
+sg element stuff works.  If you program a DMA table (PRD table in IDE
+speak) into a controller, it doesn't care if you don't use the last few
+pieces.  With the default length set, the DMA controller won't use the
+last programmed element, but it's their if you expand the length or tell
+it to for an overrun.
+
+> >> Gee.. What's the deal with extra four bytes?  If you're worried about
+> >> the size of struct request, chopping off PC request part into a separate
+> >> struct would be far better strategy than making what's already confusing
+> >> more confusing.
+> > 
+> > Well, we are trying to slim down the request structure and scsi_cmnd
+> > structure.  However, there's no inherent advantage to counting this all
+> > in the block layer.  Think of it just as a transparent passthrough.
+> > You've told the block layer to make sure you have room for a drain
+> > element when it constructs the SG list, which it does.  Whether you use
+> > it (by adding blk_rq_drain_size() on to the actual length you hand down)
+> > or not is entirely up to you ... there's no need to push the decision on
+> > that one into the block layer, since use or not is pretty much a cost
+> > free thing.
+> 
+> Okay, I see your point.  The biggest problem is that by doing that blk
+> layer breaks a pretty important rule - keeping data len consistent with
+> sg list and the bugs it's gonna cause will be very subtle and dangerous.
+>  This is definitely where we can spend four extra bytes.
+
+The lengths don't have to be consistent (otherwise we wouldn't need to
+calculate them separately) the request reported length just has to be
+less than the sg table actual length.  We even make use of this property
+in SCSI when we can't fit a request into a single command ... we are
+allowed to chunk up the request as we complete it.  I'm not saying it's
+best practice, but it is acceptable behaviour.
+
+James
+
 
