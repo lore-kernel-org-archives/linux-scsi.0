@@ -1,55 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 13:08:11 -0500
-Message-ID: <47A8A60B.7080000@garzik.org>
-References: <47A73C86.3060604@vlnb.net> <1202144767.3096.38.camel@localhost.localdomain> <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain> <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org> <1202151989.11265.576.camel@haakon2.linux-iscsi.org> <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org> <20080204210121.GF18682@fieldses.org> <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org> <47A7986B.1070206@garzik.org> <20080205130517.GA35763@dspnet.fr.eu.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: aic7xxx build failure
+Date: Tue, 05 Feb 2008 12:18:04 -0600
+Message-ID: <1202235484.3133.49.camel@localhost.localdomain>
+References: <20080205174024.GE505@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52669 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758638AbYBESIb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Feb 2008 13:08:31 -0500
-In-Reply-To: <20080205130517.GA35763@dspnet.fr.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759173AbYBESS3@vger.kernel.org>
+In-Reply-To: <20080205174024.GE505@cs181133002.pp.htv.fi>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Ingo Molnar <mingo@elte.hu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James
 
-Olivier Galibert wrote:
-> On Mon, Feb 04, 2008 at 05:57:47PM -0500, Jeff Garzik wrote:
->> iSCSI and NBD were passe ideas at birth.  :)
->>
->> Networked block devices are attractive because the concepts and 
->> implementation are more simple than networked filesystems... but usually 
->> you want to run some sort of filesystem on top.  At that point you might 
->> as well run NFS or [gfs|ocfs|flavor-of-the-week], and ditch your 
->> networked block device (and associated complexity).
+
+On Tue, 2008-02-05 at 19:40 +0200, Adrian Bunk wrote:
+> Commit 8891fec65ac5b5a74b50c705e31b66c92c3eddeb broke aic7xxx 
+> compilation:
 > 
-> Call me a sysadmin, but I find easier to plug in and keep in place an
-> ethernet cable than these parallel scsi cables from hell.  Every
-> server has at least two ethernet ports by default, with rarely any
-> surprises at the kernel level.  Adding ethernet cards is inexpensive,
-> and you pretty much never hear of compatibility problems between
-> cards.
+> <--  snip  -->
 > 
-> So ethernet as a connection medium is really nice compared to scsi.
-> Too bad iscsi is demented and ATAoE/NBD inexistant.  Maybe external
-> SAS will be nice, but I don't see it getting to the level of
-> universality of ethernet any time soon.  And it won't get the same
-> amount of user-level compatibility testing in any case.
+> $ make O=../out/x86-full
+> ...
+>   SHIPPED drivers/scsi/aic7xxx/aic79xx_seq.h
+>   SHIPPED drivers/scsi/aic7xxx/aic79xx_reg.h
+>   CC      drivers/scsi/aic7xxx/aic79xx_core.o
+> gcc: drivers/scsi/aic7xxx/aic79xx_core.c: No such file or directory
+> gcc: no input files
+> make[4]: *** [drivers/scsi/aic7xxx/aic79xx_core.o] Error 1
 
-Indeed, at the end of the day iSCSI is a bloated cabling standard.  :)
+Could you run this with V=1 to get us a verbose output of what the exact
+files gcc is failing on are?
 
-It has its uses, but I don't see it as ever coming close to replacing 
-direct-to-network (perhaps backed with local cachefs) filesystems... 
-which is how all the hype comes across to me.
+Thanks,
 
-Cheap "Lintel" boxes everybody is familiar with _are_ the storage 
-appliances.  Until mass-produced ATA and SCSI devices start shipping 
-with ethernet connectors, anyway.
-
-	Jeff
-
-
-
+James
