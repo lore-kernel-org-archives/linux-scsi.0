@@ -1,74 +1,47 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: new scsi sense handling
-Date: Tue, 5 Feb 2008 22:54:40 +0900
-Message-ID: <20080205225409O.tomof@acm.org>
-References: <47A72A7F.1050301@panasas.com>
-	<168902.15215.qm@web31814.mail.mud.yahoo.com>
+Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux kernel
+Date: Tue, 5 Feb 2008 23:19:14 +0900
+Message-ID: <20080205231909I.tomof@acm.org>
+References: <20080204224314.113afe7b@core>
+	<47A74BAA.6080201@torque.net>
+	<165ac690802041807r147531d8s6bb5f3a1f254bcbb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:57995 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:60913 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751075AbYBENzv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Feb 2008 08:55:51 -0500
-In-Reply-To: <168902.15215.qm@web31814.mail.mud.yahoo.com>
+	id S1752010AbYBEOTr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 09:19:47 -0500
+In-Reply-To: <165ac690802041807r147531d8s6bb5f3a1f254bcbb@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.comfujita.tomonori@lab.ntt.co.jp
+To: cweiss@gmail.com
+Cc: dougg@torque.net, alan@lxorguk.ukuu.org.uk, michaelc@cs.wisc.edu, vst@vlnb.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, nab@linux-iscsi.org, James.Bottomley@hansenpartnership.com, scst-devel@lists.sourceforge.net, akpm@linux-foundation.org, torvalds@linux-foundation.org, fujita.tomonori@lab.ntt.co.jpfujita.tomonori@lab.ntt.co.jp
 
-On Mon, 4 Feb 2008 18:39:22 -0800 (PST)
-Luben Tuikov <ltuikov@yahoo.com> wrote:
+On Mon, 4 Feb 2008 20:07:01 -0600
+"Chris Weiss" <cweiss@gmail.com> wrote:
 
-> --- On Mon, 2/4/08, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > There are 3 usages of sense handling in drivers
-> > 
-> > 1. sense is available in driver internal structure and is
-> > mem-copied to upper level
-> > 2. A CHECK_CONDITION status was returned and the driver
-> > uses the scsi_eh_prep_cmnd()
-> >    for a REQUEST_SENSE invocation to the target. Then
-> > returning the sense in 
-> >    scsi_eh_return_cmnd(). A variation on this is when the
-> > driver does nothing the queue
-> >    is frozen an the scsi watchdog timer does the above.
-> > 3. The underline host adapter does the REQUEST_SENSE and a
-> > pre-allocated and DMA mapped
-> >    sense buffer receives the sense information from HW.
+> On Feb 4, 2008 11:30 AM, Douglas Gilbert <dougg@torque.net> wrote:
+> > Alan Cox wrote:
+> > >> better. So for example, I personally suspect that ATA-over-ethernet is way
+> > >> better than some crazy SCSI-over-TCP crap, but I'm biased for simple and
+> > >> low-level, and against those crazy SCSI people to begin with.
+> > >
+> > > Current ATAoE isn't. It can't support NCQ. A variant that did NCQ and IP
+> > > would probably trash iSCSI for latency if nothing else.
+> >
+> > And a variant that doesn't do ATA or IP:
+> > http://www.fcoe.com/
+> >
 > 
-> Many years ago when "ACA" had a constructive meaning,
-> so did "Autosense".  Then about 5 years ago, "Autosense"
-> disappeared completely since it became the de facto
-> implementation of the then SCSI Execute Command "RPC",
-> now just SCSI Execute Command procedure call.
-> 
-> At that point in time, the SCSI mid-layer decided
-> to embrace this model and give the LLDD a scsi command
-> structure which included the sense data buffer to
-> a size that the SCSI mid-layer was interested in,
-> at the moment 96 bytes, macro defined in
-> include/scsi/scsi_cmnd.h.
-> 
-> The concept of "Autosense" was off-loaded to LLDD
-> to emulate it if the specific target device to
-> which the command was issued, didn't supply the
-> sense data on CHECK CONDITION, and more so
-> relevant to target devices which implemented
-> queuing, thus the ACA.
-> 
-> And the mid-layer would consider extracting
-> the sense data via REQUEST SENSE command
-> as a _special case_ if the LLDD/transport layer
-> didn't implement the "autosense" model.
+> however, and interestingly enough, the open-fcoe software target
+> depends on scst (for now anyway)
 
-Only SPI and USB?
+STGT also supports software FCoE target driver though it's still
+experimental stuff.
 
-The most of LLDs using the transport protocol that we care about today
-uses sense buffer in their own internal structure.
+http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg12705.html
 
-I think that the issue to solve to kill scsi_cmnd:sense_buffer is how
-to share (or export) such sense buffer with the scsi mid-layer.
-
-For the old transport protocols, we could do something that James said
-in this thread to to kill scsi_cmnd:sense_buffer.
+It works in user space like STGT's iSCSI (and iSER) target driver
+(i.e. no kernel/user space interaction).
