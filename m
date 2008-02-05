@@ -1,42 +1,39 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 21/24][RFC] scsi_tgt: use of sense accessors
-Date: Wed, 6 Feb 2008 01:53:07 +0900
-Message-ID: <20080206015308F.tomof@acm.org>
-References: <1202147595-5400-1-git-send-email-bharrosh@panasas.com>
-	<20080205162133.GC1931@osc.edu>
+From: Erez Zilber <erezz@Voltaire.COM>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Tue, 05 Feb 2008 19:01:20 +0200
+Message-ID: <47A89660.1080804@Voltaire.COM>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	 <1201639331.3069.58.camel@localhost.localdomain>	 <adazluoe2t3.fsf@cisco.com>	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp> <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:50922 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752259AbYBEQ72 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Feb 2008 11:59:28 -0500
-In-Reply-To: <20080205162133.GC1931@osc.edu>
+Received: from fwil.voltaire.com ([193.47.165.2]:21665 "EHLO exil.voltaire.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751954AbYBERBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 12:01:22 -0500
+In-Reply-To: <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pw@osc.edu
-Cc: bharrosh@panasas.com, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.orgfujita.tomonori@lab.ntt.co.jp
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Tue, 5 Feb 2008 11:21:33 -0500
-Pete Wyckoff <pw@osc.edu> wrote:
+Bart Van Assche wrote:
+> On Jan 30, 2008 12:32 AM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+>   
+>> iSER has parameters to limit the maximum size of RDMA (it needs to
+>> repeat RDMA with a poor configuration)?
+>>     
+>
+> Please specify which parameters you are referring to. As you know I
+> had already repeated my tests with ridiculously high values for the
+> following iSER parameters: FirstBurstLength, MaxBurstLength and
+> MaxRecvDataSegmentLength (16 MB, which is more than the 1 MB block
+> size specified to dd).
+>
+>   
+Using such large values for FirstBurstLength will give you poor
+performance numbers for WRITE commands (with iSER). FirstBurstLength
+means how much data should you send as unsolicited data (i.e. without
+RDMA). It means that your WRITE commands were sent without RDMA.
 
-> bharrosh@panasas.com wrote on Mon, 04 Feb 2008 19:53 +0200:
-> >   FIXME: I need help with this driver (Pete?)
-> >     I used scsi_sense() in a none const way. But since
-> >     scsi_tgt is the ULD here, it can just access it's own sense
-> >     buffer directly. I did not use scsi_eh_cpy_sense() because
-> >     I did not want the extra copy. Pete will want to use a 260
-> >     bytes buffer here.
-> > 
-> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> > Need-help-from: Pete Wyckoff <pw@osc.edu>
-> 
-> FYI, I never use scsi_tgt.  Only just pure userspace on the target,
-> and a dumb ethernet NIC that does not know it is speaking any form
-> of SCSI.
-
-Seems that many people misunderstand STGT iSCSI (and iSER), FCoE, and
-SRP (not implemented yet) software target drivers. They don't use the
-tgt kernel module. They just run in user space like user-space nfs
-daemon.
+Erez
