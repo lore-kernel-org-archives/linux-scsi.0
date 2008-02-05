@@ -1,217 +1,51 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Mon, 4 Feb 2008 19:28:02 -0800 (PST)
-Message-ID: <845307.83869.qm@web31813.mail.mud.yahoo.com>
-References: <1202177662.3096.168.camel@localhost.localdomain>
-Reply-To: ltuikov@yahoo.com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: dmesg spam
+Date: Mon, 4 Feb 2008 19:59:23 -0800
+Message-ID: <20080204195923.5d893a18.akpm@linux-foundation.org>
+References: <20080203143033.cfea0501.akpm@linux-foundation.org>
+	<200802041524.55700.bzolnier@gmail.com>
+	<20080204120548.79f3fe57.akpm@linux-foundation.org>
+	<47A7721C.5020505@garzik.org>
+	<1202156442.3096.107.camel@localhost.localdomain>
+	<47A7747C.2040702@garzik.org>
+	<1202157858.3096.114.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754115AbYBED2V@vger.kernel.org>
-In-Reply-To: <1202177662.3096.168.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, "Accardi, Kristen C" <kristen.c.accardi@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48695 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751246AbYBED7c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 22:59:32 -0500
+In-Reply-To: <1202157858.3096.114.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
---- On Mon, 2/4/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Mon, 2008-02-04 at 18:01 -0800, Luben Tuikov wrote:
-> > --- On Mon, 2/4/08, James Bottomley
-> <James.Bottomley@HansenPartnership.com> wrote:
-> > > > > The enclosure misc device is really
-> just a
-> > > library providing
-> > > > > sysfs
-> > > > > support for physical enclosure devices
-> and their
-> > > > > components.
-> > > > 
-> > > > Who is the target audience/user of those
-> facilities?
-> > > > a) The kernel itself needing to read/write
-> SES pages?
-> > > 
-> > > That depends on the enclosure integration, but
-> right at the
-> > > moment, it
-> > > doesn't
-> > 
-> > Yes, I didn't suspect so.
-> > 
-> > > 
-> > > > b) A user space application using sysfs to
-> read/write
-> > > >    SES pages?
-> > > 
-> > > Not an application so much as a user.  The idea
-> of sysfs is
-> > > to allow
-> > > users to get and set the information in addition
-> to
-> > > applications.
-> > 
-> > Exactly the same argument stands for a user-space
-> > application with a user-space library.
-> > 
-> > This is the classical case of where it is better to
-> > do this in user-space as opposed to the kernel.
-> > 
-> > The kernel provides capability to access the SES
-> > device.  The user space application and library
-> > provide interpretation and control.  Thus if the
-> > enclosure were upgraded, one doesn't need to
-> > upgrade their kernel in order to utilize the new
-> > capabilities of the SES device.  Plus upgrading
-> > a user-space application is a lot easier than
-> > the kernel (and no reboot necessary).
-> 
-> The implementation is modular, so it's remove and
-> insert ...
-
-I guess the same could be said for STGT and SCST, right?
-
-LOL, no seriously, this is unnecessary kernel bloat,
-or rather at the wrong place (see below).
+On Mon, 04 Feb 2008 14:44:18 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
 > 
-> > Consider another thing: vendors would really like
-> > unprecedented access to the SES device in the
-> enclosure
-> > so as your ses/enclosure code keeps state it would
-> > get out of sync when vendor user-space enclosure
-> > applications access (and modify) the SES device's
-> > pages.
-> 
-> The state model doesn't assume nothing else will alter
-> the state.
-
-But it would be trivial exercise to show that an
-inconsistent state can be had by modifying pages
-of the SES device directly from userspace bypassing
-your implementation.
-
-> 
-> > You can test this yourself: submit a patch
-> > that removes SES /dev/sgX support; advertise your
-> > ses/class solution and watch the fun.
+> On Mon, 2008-02-04 at 15:24 -0500, Jeff Garzik wrote:
+> > James Bottomley wrote:
+> > > It's here in sr_ioctl.c:
 > > 
-> > > > At the moment SES device management is done
-> via
-> > > > an application (user-space) and a user-space
-> library
-> > > > used by the application and /dev/sgX to send
-> SCSI
-> > > > commands to the SES device.
-> > > 
-> > > I must have missed that when I was looking for
-> > > implementations; what's
-> > > the URL?
+> > Ah, indeed.  My grep-fu sucks today.
 > > 
-> > I'm not aware of any GPLed ones.  That doesn't
-> > necessarily mean that the best course of action is
-> > to bloat the kernel.  You can move your ses/enclosure
-> > stuff to a user space application library
-> > and thus start a GPLed one.
-> 
-> Certainly ... patches welcome.
-
-I've non at the moment, plus I don't think you'd be
-the point of contact for a user-space SES library.
-Unless of course you've already started something up
-on sourceforge.
-
-Really, such an effort already exists: it is called
-sg_ses(8).
-
-> 
-> > > But, if we have non-scsi enclosures to integrate,
-> that
-> > > makes it harder
-> > > for a user application because it has to know all
-> the
-> > > implementations.
 > > 
-> > So does the kernel.  And as I pointed out above, it
-> > is a lot easier to upgrade a user-space application
-> and
-> > library than it is to upgrade a new kernel and having
-> > to reboot the computer to run the new kernel.
-> 
-> No, think again ... it's easy for SES based enclosures
-> because they have
-> a SCSI transport.  We have no transport for SGPIO based
-> enclosures nor
-> for any of the other more esoteric ones.
-
-Yes, for which the transport layer, implements the
-scsi device node for the SES device.  It doesn't really
-matter if the SCSI commands sent to the SES device go
-over SGPIO or FC or SAS or Bluetooth or I2C, etc, the
-transport layer can implement that and present the
-/dev/sgX node.
-
-Case in point: the protocol FW running on the ASIC
-provides this capability so really the LLDD would
-only see a the pure SCSI SES or processor device and
-register that with the kernel.  At which point no new
-kernel bloat is required.
-
-Your code doesn't quite do that at the moment as it
-actually goes further in to read and present SES pages.
-Ideally it would simply provide capability for transport
-layers to register a SCSI device of type SES, or processor.
-
-Architecturally, the LLDD/transport layer would register
-the SGPIO device on one end with the SGPIO layer and on
-the other end as a SCSI SES/processpr device.  After that
-sg_ses(8) or sglib, fits the bill for user space applications.
-
-> That's not to say it can't be done, but it does
-> mean that it can't be
-> completely userspace.
-
-See previous paragraph.
-
-> 
-> > > A sysfs framework on the other hand is a
-> universal known
-> > > thing for the
-> > > user applications.
+> > > I'm not averse to simply nuking the printk ... it's probably valueless
+> > > in a modern kernel, since something dbussy is supposed to tell you to
+> > > put a CD in the drive, not something in the kernel.
 > > 
-> > So would a user-space ses library, a la libses.so.
-> > 
-> > > > One could have a very good argument to not
-> bloat
-> > > > the kernel with this but leave it to a
-> user-space
-> > > > application and a library to do all this and
-> > > > communicate with the SES device via the
-> kernel's
-> > > /dev/sgX.
-> > > 
-> > > The same thing goes for other esoteric SCSI
-> infrastructure
-> > > pieces like
-> > > cd changers.  On the whole, given that ATA is
-> asking for
-> > > enclosure
-> > > management in kernel, it makes sense to
-> consolidate the
-> > > infrastructure
-> > > and a ses ULD is a very good test bed.
-> > 
-> > What is wrong with exporting the SES device as
-> /dev/sgX
-> > and having a user-space application and library to
-> > do all this?
+> > The reverse...  dbussy/HAL is implementing autodetection of media 
+> > insertion, by polling ad infinitum.
 > 
-> How do you transport the enclosure commands over /dev/sgX? 
-> Only SES has
-> SCSI command encapsulation ... the rest won't even be
-> SCSI targets ...
+> Understood ... I meant the day of the user relying on a message from a
+> kernel printk to tell them they need a CD in the drive is long over.
+> 
 
-What is the protocol of those "rest" that you talk about?
+OK, sorry, I'm hopelessly full of it.  These messages also are produced by
+2.6.24, 2.6.23 and 2.6.23.1-49.fc8.
 
-At any rate, this capability lies in the kernel providing
-a _device node_ -- not quite what your patch is doing.
+I don't think anyone would miss this message were it to bite the D key.
 
-   Luben
