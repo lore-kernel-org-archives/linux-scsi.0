@@ -1,37 +1,80 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: [Cbe-oss-dev] LIO Target iSCSI/SE PS3-Linux / FC8 builds
-Date: Tue, 5 Feb 2008 08:14:37 +0100
-Message-ID: <e2e108260802042314p572909f3se1f58016cc20df14@mail.gmail.com>
-References: <1202134623.11265.524.camel@haakon2.linux-iscsi.org>
-	 <200802041647.06234.marc.dietrich@ap.physik.uni-giessen.de>
-	 <1202140360.11265.543.camel@haakon2.linux-iscsi.org>
-	 <200802041744.55909.marc.dietrich@ap.physik.uni-giessen.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 02/13] git-scsi-misc gdth fix
+Date: Mon, 04 Feb 2008 23:53:12 -0800
+Message-ID: <200802050752.m157qrLV010691@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:40198 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbYBEHOl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:14:41 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2840042wxd.4
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Feb 2008 23:14:38 -0800 (PST)
-In-Reply-To: <200802041744.55909.marc.dietrich@ap.physik.uni-giessen.de>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44451 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754013AbYBEHxC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Marc Dietrich <Marc.Dietrich@ap.physik.uni-giessen.de>, cbe-oss-dev@ozlabs.org, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Open iSCSI <open-iscsi@googlegroups.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@SteelEye.com, davemilter@gmail.com
 
-On Feb 4, 2008 5:44 PM, Marc Dietrich
-<Marc.Dietrich@ap.physik.uni-giessen.de> wrote:
-> ...
-> Anyway, heres a quick ugly fix for the ARCH detection code, tested on ps3.
-> ...
+From: James Bottomley <James.Bottomley@SteelEye.com>
 
-Architecture detection is indeed broken in LIO. Would it be possible
-to use the standard config.guess script instead of the custom LIO arch
-detection script ? config.guess is included with a.o. automake and
-libtool.
+On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
+> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
+>
+> > I build linux-2.6.23-mm1 and try to boot it using qemu,
+> > and it crashed with trace like this:
+> > do_page_fault
+> > error_code
+> > lock_acquire
+> > _spin_lock_irqsave
+> > gdth_timeout
+> > run_timer_softirq
+> > __do_softirq
+> > do_softirq
+> >
+> > I have screenshot, but have no idea, is it legal to include it, if I
+> > sent copy to lkml.
+> > config of kernel in attachment,
+> > I apply all three patches from hot-fixes.
+> >
+>
+> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
+>
+> It would appear that gdth_timeout() is passing a bad pointer into
+> spin_lock_irqsave().
 
-Bart Van Assche.
+There's a bug in the gdth rework in that the instance can be deleted
+from the list before the actual timer is stopped.  This can be worked
+around I think by the following patch; although we really should be
+stopping the timer from firing when the list goes empty.
+
+
+James said:
+
+This is almost certainly the wrong fix for real hardware.  Although it
+kills the timer when the list goes empty, nothing will ever restart it
+when the list fills again.
+
+Boaz, since you touched all of this, you get to fix it.  The correct fix
+will be to control the timer along with the actual list instead of at
+entry/exit time.  If you're not going to add this empty check to the
+timer routine, make sure you use del_timer_sync() before removing the
+last element from the list.
+
+
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/gdth.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
++++ a/drivers/scsi/gdth.c
+@@ -3791,6 +3791,9 @@ static void gdth_timeout(ulong data)
+     gdth_ha_str *ha;
+     ulong flags;
+ 
++    if (list_empty(&gdth_instances))
++	return;
++
+     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
+_
