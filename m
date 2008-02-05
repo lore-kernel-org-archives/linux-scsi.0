@@ -1,113 +1,51 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/13] MegaRAID driver management char device moved to misc
-Date: Mon, 04 Feb 2008 23:53:18 -0800
-Message-ID: <200802050752.m157qxIX010700@imap1.linux-foundation.org>
+Subject: [patch 03/13] mptbase: reset ioc initiator during PCI resume
+Date: Mon, 04 Feb 2008 23:53:12 -0800
+Message-ID: <200802050752.m157qsni010694@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33088 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38960 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754202AbYBEHxM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:12 -0500
+	by vger.kernel.org with ESMTP id S1754172AbYBEHxL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, thomas@horsten.com, Neela.Kolli@engenio.com, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, djwong@us.ibm.com
 
-From: Thomas Horsten <thomas@horsten.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
 
-The MegaRAID driver's common management module (megaraid_mm.c) creates a
-char device used by the management tool "megarc" from LSI Logic (and
-possibly other management tools).
+It appears that the LSI SAS 1064E chip needs to be reset after a
+suspend/resume cycle before the driver attempts further communications with
+the chip.  Without this patch, resuming the chip results in this error
+message being printed repeatedly and no more disk I/O.
 
-In 2.6 with udev, this device doesn't get created because it is not
-registered in sysfs.
+mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
 
-I first fixed this by registering a class "megaraid_mm", but realized that
-this should probably be moved to misc devices, instead of taking up a char
-major.  This is because only 1 device is used, even if there are multiple
-adapters - the minor is never used (the adapter info is in the ioctl block
-sent to the driver, not detected based on the minor number as one might
-think).  So it is a complete waste to have an entire major taken by this.
+So far it seems to fix suspend/resume on all the MPT Fusion cards I have
+(SAS and U320 SCSI) but since I don't know the internals of that chip I
+can't say for sure if this is a proper fix.
 
-So it now uses a misc device which I named "megadev0" (the name that megarc
-expects), and has a dynamic minor (previoulsy a dynamic major was used).
-
-I have tested this on my own system with the megarc tool, and it works just
-as fine as before (only now the device gets created correctly by udev).
-
-Cc: <thomas.horsten@gmail.com>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mm.c |   20 +++++++++++++-------
- drivers/scsi/megaraid/megaraid_mm.h |    1 +
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/message/fusion/mptbase.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff -puN drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-device-moved-to-misc drivers/scsi/megaraid/megaraid_mm.c
---- a/drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-device-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.c
-@@ -59,7 +59,6 @@ EXPORT_SYMBOL(mraid_mm_register_adp);
- EXPORT_SYMBOL(mraid_mm_unregister_adp);
- EXPORT_SYMBOL(mraid_mm_adapter_app_handle);
+diff -puN drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume
++++ a/drivers/message/fusion/mptbase.c
+@@ -1829,6 +1829,12 @@ mpt_resume(struct pci_dev *pdev)
+ 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
+ 		CHIPREG_READ32(&ioc->chip->Doorbell));
  
--static int majorno;
- static uint32_t drvr_ver	= 0x02200207;
- 
- static int adapters_count_g;
-@@ -76,6 +75,12 @@ static const struct file_operations lsi_
- 	.owner	= THIS_MODULE,
- };
- 
-+static struct miscdevice megaraid_mm_dev = {
-+	.minor	= MISC_DYNAMIC_MINOR,
-+	.name   = "megadev0",
-+	.fops   = &lsi_fops,
-+};
++	/* put ioc into READY_STATE */
++	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
++		printk(MYIOC_s_ERR_FMT
++		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
++	}
 +
- /**
-  * mraid_mm_open - open routine for char node interface
-  * @inode	: unused
-@@ -1184,15 +1189,16 @@ mraid_mm_teardown_dma_pools(mraid_mmadp_
- static int __init
- mraid_mm_init(void)
- {
-+	int err;
-+
- 	// Announce the driver version
- 	con_log(CL_ANN, (KERN_INFO "megaraid cmm: %s %s\n",
- 		LSI_COMMON_MOD_VERSION, LSI_COMMON_MOD_EXT_VERSION));
- 
--	majorno = register_chrdev(0, "megadev", &lsi_fops);
--
--	if (majorno < 0) {
--		con_log(CL_ANN, ("megaraid cmm: cannot get major\n"));
--		return majorno;
-+	err = misc_register(&megaraid_mm_dev);
-+	if (err < 0) {
-+		con_log(CL_ANN, ("megaraid cmm: cannot register misc device\n"));
-+		return err;
- 	}
- 
- 	init_waitqueue_head(&wait_q);
-@@ -1230,7 +1236,7 @@ mraid_mm_exit(void)
- {
- 	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
- 
--	unregister_chrdev(majorno, "megadev");
-+	misc_deregister(&megaraid_mm_dev);
- }
- 
- module_init(mraid_mm_init);
-diff -puN drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-device-moved-to-misc drivers/scsi/megaraid/megaraid_mm.h
---- a/drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-device-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.h
-@@ -22,6 +22,7 @@
- #include <linux/moduleparam.h>
- #include <linux/pci.h>
- #include <linux/list.h>
-+#include <linux/miscdevice.h>
- 
- #include "mbox_defs.h"
- #include "megaraid_ioctl.h"
+ 	/* bring ioc to operational state */
+ 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
+ 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
 _
