@@ -1,381 +1,688 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/13] scsi: arcmsr updates (1.20.00.15)
-Date: Mon, 04 Feb 2008 23:53:24 -0800
-Message-ID: <200802050753.m157r6AN010727@imap1.linux-foundation.org>
+Subject: [patch 10/13] scsi/aic94xx/: cleanups
+Date: Mon, 04 Feb 2008 23:53:23 -0800
+Message-ID: <200802050753.m157r4Ht010721@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:37264 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44234 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754044AbYBEHx5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:57 -0500
+	by vger.kernel.org with ESMTP id S1754174AbYBEHxd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, nick.cheng@areca.com.tw, James.Bottomley@steeleye.com, mbroz@redhat.com, thenzl@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com, djwong@us.ibm.com
 
-From: Nick Cheng <nick.cheng@areca.com.tw>
+From: Adrian Bunk <bunk@kernel.org>
 
-- add arcmsr_enable_eoi_mode()and readl(reg->iop2drv_doorbell_reg) in
-  arcmsr_handle_hbb_isr() on adapter Type B in case of the doorbell
-  interrupt clearance is cached
+- static functions in .c files shouldn't be marked inline
+- make needlessly global code static
+- remove the unused aic94xx_seq.c:asd_unpause_lseq()
+- #if 0 other unused code
 
-- add conditional declaration for arcmsr_pci_error_detected() and
-  arcmsr_pci_slot_reset
-
-- check if the sg list member number exceeds arcmsr default limit in
-  arcmsr_build_ccb()
-
-- change the returned value type of arcmsr_build_ccb()from "void" to
-  "int" returns FAILED in arcmsr_queue_command()
-
-- modify arcmsr_drain_donequeue() to ignore unknown command and let
-  kernel process command timeout.  This could handle IO request violating
-  maximum segments, i.e.  Linux XFS over DM-CRYPT.  Thanks to Milan Broz's
-  comments <mbroz@redhat.com>
-
-- fix the release of dma memory for type B in arcmsr_free_ccb_pool()
-
-- fix the arcmsr_polling_hbb_ccbdone()
-
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
-Cc: Milan Broz <mbroz@redhat.com>
-Cc: <thenzl@redhat.com>
+[akpm@linux-foundation.org: coding-style fixes]
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- Documentation/scsi/ChangeLog.arcmsr |   41 ++++++++++++
- drivers/scsi/arcmsr/arcmsr.h        |    4 -
- drivers/scsi/arcmsr/arcmsr_hba.c    |   87 ++++++++++++++++++--------
- 3 files changed, 105 insertions(+), 27 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_dev.c  |    8 +--
+ drivers/scsi/aic94xx/aic94xx_dump.c |   10 ++++
+ drivers/scsi/aic94xx/aic94xx_dump.h |    9 ----
+ drivers/scsi/aic94xx/aic94xx_hwi.c  |   24 +++++-----
+ drivers/scsi/aic94xx/aic94xx_hwi.h  |    2 
+ drivers/scsi/aic94xx/aic94xx_init.c |    8 +--
+ drivers/scsi/aic94xx/aic94xx_reg.c  |   57 ++++++++++++--------------
+ drivers/scsi/aic94xx/aic94xx_scb.c  |   33 ++++++++-------
+ drivers/scsi/aic94xx/aic94xx_sds.c  |    4 -
+ drivers/scsi/aic94xx/aic94xx_seq.c  |   31 ++------------
+ drivers/scsi/aic94xx/aic94xx_seq.h  |    4 -
+ drivers/scsi/aic94xx/aic94xx_task.c |   12 ++---
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    4 -
+ 13 files changed, 90 insertions(+), 116 deletions(-)
 
-diff -puN Documentation/scsi/ChangeLog.arcmsr~scsi-arcmsr-updates-1200015 Documentation/scsi/ChangeLog.arcmsr
---- a/Documentation/scsi/ChangeLog.arcmsr~scsi-arcmsr-updates-1200015
-+++ a/Documentation/scsi/ChangeLog.arcmsr
-@@ -68,4 +68,45 @@
- **						2. modify the arcmsr_pci_slot_reset function
- **						3. modify the arcmsr_pci_ers_disconnect_forepart function
- **						4. modify the arcmsr_pci_ers_need_reset_forepart function
-+** 1.20.00.15   09/27/2007	 Erich Chen & Nick Cheng
-+**						1. add arcmsr_enable_eoi_mode() on adapter Type B
-+** 						2. add readl(reg->iop2drv_doorbell_reg) in arcmsr_handle_hbb_isr()
-+**						in case of the doorbell interrupt clearance is cached
-+** 1.20.00.15   10/01/2007	 Erich Chen & Nick Cheng
-+**						1. modify acb->devstate[i][j]
-+**						as ARECA_RAID_GOOD instead of
-+**						ARECA_RAID_GONE in arcmsr_alloc_ccb_pool
-+** 1.20.00.15   11/06/2007       Erich Chen & Nick Cheng
-+**						1. add conditional declaration for
-+** 						arcmsr_pci_error_detected() and
-+**						arcmsr_pci_slot_reset
-+** 1.20.00.15	11/23/2007       Erich Chen & Nick Cheng
-+**						1.check if the sg list member number
-+**						exceeds arcmsr default limit in arcmsr_build_ccb()
-+**						2.change the returned value type of arcmsr_build_ccb()
-+**						from "void" to "int"
-+**						3.add the conditional check if arcmsr_build_ccb()
-+**						returns FAILED
-+** 1.20.00.15	12/04/2007	 Erich Chen & Nick Cheng
-+**						1. modify arcmsr_drain_donequeue() to ignore unknown
-+**						command and let kernel process command timeout.
-+**						This could handle IO request violating max. segments
-+**						while Linux XFS over DM-CRYPT.
-+**						Thanks to Milan Broz's comments <mbroz@redhat.com>
-+** 1.20.00.15	12/24/2007	 Erich Chen & Nick Cheng
-+**						1.fix the portability problems
-+**						2.fix type B where we should _not_ iounmap() acb->pmu;
-+**						it's not ioremapped.
-+**						3.add return -ENOMEM if ioremap() fails
-+**						4.transfer IS_SG64_ADDR w/ cpu_to_le32()
-+**						in arcmsr_build_ccb
-+**						5. modify acb->devstate[i][j] as ARECA_RAID_GONE instead of
-+**						ARECA_RAID_GOOD in arcmsr_alloc_ccb_pool()
-+**						6.fix arcmsr_cdb->Context as (unsigned long)arcmsr_cdb
-+**						7.add the checking state of
-+**						(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT) == 0
-+**						in arcmsr_handle_hba_isr
-+**						8.replace pci_alloc_consistent()/pci_free_consistent() with kmalloc()/kfree() in arcmsr_iop_message_xfer()
-+**						9. fix the release of dma memory for type B in arcmsr_free_ccb_pool()
-+**						10.fix the arcmsr_polling_hbb_ccbdone()
- **************************************************************************
-diff -puN drivers/scsi/arcmsr/arcmsr.h~scsi-arcmsr-updates-1200015 drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h~scsi-arcmsr-updates-1200015
-+++ a/drivers/scsi/arcmsr/arcmsr.h
-@@ -48,7 +48,7 @@ struct class_device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
- #define ARCMSR_MAX_OUTSTANDING_CMD						256
- #define ARCMSR_MAX_FREECCB_NUM							320
--#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 2007/08/30"
-+#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 2007/12/24"
- #define ARCMSR_SCSI_INITIATOR_ID						255
- #define ARCMSR_MAX_XFER_SECTORS							512
- #define ARCMSR_MAX_XFER_SECTORS_B						4096
-@@ -248,6 +248,7 @@ struct FIRMWARE_INFO
- #define ARCMSR_MESSAGE_START_BGRB		      0x00060008
- #define ARCMSR_MESSAGE_START_DRIVER_MODE	      0x000E0008
- #define ARCMSR_MESSAGE_SET_POST_WINDOW		      0x000F0008
-+#define ARCMSR_MESSAGE_ACTIVE_EOI_MODE		    0x00100008
- /* ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK */
- #define ARCMSR_MESSAGE_FIRMWARE_OK		      0x80000000
- /* ioctl transfer */
-@@ -256,6 +257,7 @@ struct FIRMWARE_INFO
- #define ARCMSR_DRV2IOP_DATA_READ_OK                   0x00000002
- #define ARCMSR_DRV2IOP_CDB_POSTED                     0x00000004
- #define ARCMSR_DRV2IOP_MESSAGE_CMD_POSTED             0x00000008
-+#define ARCMSR_DRV2IOP_END_OF_INTERRUPT		0x00000010
+diff -puN drivers/scsi/aic94xx/aic94xx_dev.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_dev.c
+--- a/drivers/scsi/aic94xx/aic94xx_dev.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_dev.c
+@@ -35,7 +35,7 @@
+ #define SET_DDB(_ddb, _ha) set_bit(_ddb, (_ha)->hw_prof.ddb_bitmap)
+ #define CLEAR_DDB(_ddb, _ha) clear_bit(_ddb, (_ha)->hw_prof.ddb_bitmap)
  
- /* data tunnel buffer between user space program and its firmware */
- /* user space data to iop 128bytes */
-diff -puN drivers/scsi/arcmsr/arcmsr_hba.c~scsi-arcmsr-updates-1200015 drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c~scsi-arcmsr-updates-1200015
-+++ a/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -315,9 +315,6 @@ static int arcmsr_alloc_ccb_pool(struct 
- 				(0x20 - ((unsigned long)dma_coherent_handle & 0x1F));
- 		}
- 
--		reg = (struct MessageUnit_B *)(dma_coherent +
--		ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock));
--
- 		dma_addr = dma_coherent_handle;
- 		ccb_tmp = (struct CommandControlBlock *)dma_coherent;
- 		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
-@@ -371,8 +368,8 @@ static int arcmsr_alloc_ccb_pool(struct 
- 
- out:
- 	dma_free_coherent(&acb->pdev->dev,
--		ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock) + 0x20,
--		acb->dma_coherent, acb->dma_coherent_handle);
-+		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock) + 0x20 +
-+		sizeof(struct MessageUnit_B)), acb->dma_coherent, acb->dma_coherent_handle);
- 	return -ENOMEM;
- }
- 
-@@ -509,6 +506,7 @@ static uint8_t arcmsr_hbb_wait_msgint_re
- 				& ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
- 				writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN
- 					, reg->iop2drv_doorbell_reg);
-+				writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);
- 				return 0x00;
- 			}
- 			msleep(10);
-@@ -748,6 +746,7 @@ static void arcmsr_drain_donequeue(struc
- 				, ccb->startdone
- 				, atomic_read(&acb->ccboutstandingcount));
- 		}
-+	else
- 	arcmsr_report_ccb_state(acb, ccb, flag_ccb);
- }
- 
-@@ -886,7 +885,7 @@ static void arcmsr_enable_outbound_ints(
- 	}
- }
- 
--static void arcmsr_build_ccb(struct AdapterControlBlock *acb,
-+static int arcmsr_build_ccb(struct AdapterControlBlock *acb,
- 	struct CommandControlBlock *ccb, struct scsi_cmnd *pcmd)
+-static inline int asd_get_ddb(struct asd_ha_struct *asd_ha)
++static int asd_get_ddb(struct asd_ha_struct *asd_ha)
  {
- 	struct ARCMSR_CDB *arcmsr_cdb = (struct ARCMSR_CDB *)&ccb->arcmsr_cdb;
-@@ -906,6 +905,8 @@ static void arcmsr_build_ccb(struct Adap
- 	memcpy(arcmsr_cdb->Cdb, pcmd->cmnd, pcmd->cmd_len);
+ 	int ddb, i;
  
- 	nseg = scsi_dma_map(pcmd);
-+	if (nseg > ARCMSR_MAX_SG_ENTRIES)
-+		return FAILED;
- 	BUG_ON(nseg < 0);
+@@ -71,7 +71,7 @@ out:
+ #define NCQ_DATA_SCB_PTR offsetof(struct asd_ddb_stp_sata_target_port, ncq_data_scb_ptr)
+ #define ITNL_TIMEOUT    offsetof(struct asd_ddb_ssp_smp_target_port, itnl_timeout)
  
- 	if (nseg) {
-@@ -946,6 +947,7 @@ static void arcmsr_build_ccb(struct Adap
- 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
- 		ccb->ccb_flags |= CCB_FLAG_WRITE;
- 	}
-+	return SUCCESS;
+-static inline void asd_free_ddb(struct asd_ha_struct *asd_ha, int ddb)
++static void asd_free_ddb(struct asd_ha_struct *asd_ha, int ddb)
+ {
+ 	if (!ddb || ddb >= 0xFFFF)
+ 		return;
+@@ -79,7 +79,7 @@ static inline void asd_free_ddb(struct a
+ 	CLEAR_DDB(ddb, asd_ha);
  }
  
- static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandControlBlock *ccb)
-@@ -1036,18 +1038,22 @@ static void arcmsr_free_ccb_pool(struct 
- 	switch (acb->adapter_type) {
- 	case ACB_ADAPTER_TYPE_A: {
- 		iounmap(acb->pmuA);
-+		dma_free_coherent(&acb->pdev->dev,
-+		ARCMSR_MAX_FREECCB_NUM * sizeof (struct CommandControlBlock) + 0x20,
-+		acb->dma_coherent,
-+		acb->dma_coherent_handle);
- 		break;
- 	}
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B *reg = acb->pmuB;
- 		iounmap(reg->drv2iop_doorbell_reg - ARCMSR_DRV2IOP_DOORBELL);
- 		iounmap(reg->ioctl_wbuffer_reg - ARCMSR_IOCTL_WBUFFER);
-+		dma_free_coherent(&acb->pdev->dev,
-+		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock) + 0x20 +
-+		sizeof(struct MessageUnit_B)), acb->dma_coherent, acb->dma_coherent_handle);
- 	}
- 	}
--	dma_free_coherent(&acb->pdev->dev,
--		ARCMSR_MAX_FREECCB_NUM * sizeof (struct CommandControlBlock) + 0x20,
--		acb->dma_coherent,
--		acb->dma_coherent_handle);
-+
- }
- 
- void arcmsr_iop_message_read(struct AdapterControlBlock *acb)
-@@ -1273,7 +1279,9 @@ static int arcmsr_handle_hbb_isr(struct 
- 		return 1;
- 
- 	writel(~outbound_doorbell, reg->iop2drv_doorbell_reg);
--
-+	/*in case the last action of doorbell interrupt clearance is cached, this action can push HW to write down the clear bit*/
-+	readl(reg->iop2drv_doorbell_reg);
-+	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);
- 	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK) 	{
- 		arcmsr_iop2drv_data_wrote_handle(acb);
- 	}
-@@ -1380,12 +1388,13 @@ static int arcmsr_iop_message_xfer(struc
- 
- 	case ARCMSR_MESSAGE_READ_RQBUFFER: {
- 		unsigned long *ver_addr;
--		dma_addr_t buf_handle;
- 		uint8_t *pQbuffer, *ptmpQbuffer;
- 		int32_t allxfer_len = 0;
-+		void *tmp;
- 
--		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
--		if (!ver_addr) {
-+		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-+		ver_addr = (unsigned long *)tmp;
-+		if (!tmp) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
-@@ -1421,18 +1430,19 @@ static int arcmsr_iop_message_xfer(struc
- 		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
- 		pcmdmessagefld->cmdmessage.Length = allxfer_len;
- 		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
--		pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
-+		kfree(tmp);
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
- 		unsigned long *ver_addr;
--		dma_addr_t buf_handle;
- 		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
-+		void *tmp;
- 
--		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
--		if (!ver_addr) {
-+		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-+		ver_addr = (unsigned long *)tmp;
-+		if (!tmp) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
-@@ -1482,7 +1492,7 @@ static int arcmsr_iop_message_xfer(struc
- 				retvalue = ARCMSR_MESSAGE_FAIL;
- 			}
- 			}
--			pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
-+			kfree(tmp);
- 		}
- 		break;
- 
-@@ -1682,8 +1692,11 @@ static int arcmsr_queue_command(struct s
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
- 		return SCSI_MLQUEUE_HOST_BUSY;
--
--	arcmsr_build_ccb(acb, ccb, cmd);
-+	if ( arcmsr_build_ccb( acb, ccb, cmd ) == FAILED ) {
-+		cmd->result = (DID_ERROR << 16) | (RESERVATION_CONFLICT << 1);
-+		cmd->scsi_done(cmd);
-+		return 0;
-+	}
- 	arcmsr_post_ccb(acb, ccb);
+-static inline void asd_set_ddb_type(struct domain_device *dev)
++static void asd_set_ddb_type(struct domain_device *dev)
+ {
+ 	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
+ 	int ddb = (int) (unsigned long) dev->lldd_dev;
+@@ -109,7 +109,7 @@ static int asd_init_sata_tag_ddb(struct 
  	return 0;
  }
-@@ -1844,7 +1857,7 @@ static void arcmsr_polling_hba_ccbdone(s
- 	}
- }
  
--static void arcmsr_polling_hbb_ccbdone(struct AdapterControlBlock *acb, \
-+static void arcmsr_polling_hbb_ccbdone(struct AdapterControlBlock *acb,
- 					struct CommandControlBlock *poll_ccb)
+-static inline int asd_init_sata(struct domain_device *dev)
++static int asd_init_sata(struct domain_device *dev)
  {
- 		struct MessageUnit_B *reg = acb->pmuB;
-@@ -1878,7 +1891,7 @@ static void arcmsr_polling_hbb_ccbdone(s
-       (acb->vir2phy_offset + (flag_ccb << 5));/*frame must be 32 bytes aligned*/
- 			poll_ccb_done = (ccb == poll_ccb) ? 1:0;
- 			if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
--				if (ccb->startdone == ARCMSR_CCB_ABORTED) {
-+				if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
- 					printk(KERN_NOTICE "arcmsr%d: \
- 		scsi id = %d lun = %d ccb = '0x%p' poll command abort successfully \n"
- 						,acb->host->host_no
-@@ -1901,7 +1914,7 @@ static void arcmsr_polling_hbb_ccbdone(s
- 		}	/*drain reply FIFO*/
+ 	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
+ 	int ddb = (int) (unsigned long) dev->lldd_dev;
+diff -puN drivers/scsi/aic94xx/aic94xx_dump.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_dump.c
+--- a/drivers/scsi/aic94xx/aic94xx_dump.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_dump.c
+@@ -738,6 +738,8 @@ static void asd_dump_lseq_state(struct a
+ 	PRINT_LMIP_dword(asd_ha, lseq, DEV_PRES_TIMER_TERM_TS);
  }
  
--static void arcmsr_polling_ccbdone(struct AdapterControlBlock *acb, \
-+static void arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
- 					struct CommandControlBlock *poll_ccb)
++#if 0
++
+ /**
+  * asd_dump_ddb_site -- dump a CSEQ DDB site
+  * @asd_ha: pointer to host adapter structure
+@@ -880,6 +882,8 @@ void asd_dump_scb_sites(struct asd_ha_st
+ 	}
+ }
+ 
++#endif  /*  0  */
++
+ /**
+  * ads_dump_seq_state -- dump CSEQ and LSEQ states
+  * @asd_ha: pointer to host adapter structure
+@@ -922,7 +926,9 @@ void asd_dump_frame_rcvd(struct asd_phy 
+ 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
+ }
+ 
+-static inline void asd_dump_scb(struct asd_ascb *ascb, int ind)
++#if 0
++
++static void asd_dump_scb(struct asd_ascb *ascb, int ind)
  {
- 	switch (acb->adapter_type) {
-@@ -2026,6 +2039,7 @@ static void arcmsr_wait_firmware_ready(s
- 		do {
- 			firmware_state = readl(reg->iop2drv_doorbell_reg);
- 		} while ((firmware_state & ARCMSR_MESSAGE_FIRMWARE_OK) == 0);
-+		writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);
- 		}
- 		break;
- 	}
-@@ -2090,19 +2104,39 @@ static void arcmsr_clear_doorbell_queue_
+ 	asd_printk("scb%d: vaddr: 0x%p, dma_handle: 0x%llx, next: 0x%llx, "
+ 		   "index:%d, opcode:0x%02x\n",
+@@ -956,4 +962,6 @@ void asd_dump_scb_list(struct asd_ascb *
  	}
  }
  
-+static void arcmsr_enable_eoi_mode(struct AdapterControlBlock *acb)
-+{
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		return;
-+	case ACB_ADAPTER_TYPE_B:
-+		{
-+			struct MessageUnit_B *reg = acb->pmuB;
-+			writel(ARCMSR_MESSAGE_ACTIVE_EOI_MODE, reg->drv2iop_doorbell_reg);
-+			if(arcmsr_hbb_wait_msgint_ready(acb)) {
-+				printk(KERN_NOTICE "ARCMSR IOP enables EOI_MODE TIMEOUT");
-+				return;
-+			}
-+		}
-+		break;
-+	}
-+	return;
++#endif  /*  0  */
++
+ #endif /* ASD_DEBUG */
+diff -puN drivers/scsi/aic94xx/aic94xx_dump.h~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_dump.h
+--- a/drivers/scsi/aic94xx/aic94xx_dump.h~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_dump.h
+@@ -29,24 +29,15 @@
+ 
+ #ifdef ASD_DEBUG
+ 
+-void asd_dump_ddb_0(struct asd_ha_struct *asd_ha);
+-void asd_dump_target_ddb(struct asd_ha_struct *asd_ha, u16 site_no);
+-void asd_dump_scb_sites(struct asd_ha_struct *asd_ha);
+ void asd_dump_seq_state(struct asd_ha_struct *asd_ha, u8 lseq_mask);
+ void asd_dump_frame_rcvd(struct asd_phy *phy,
+ 			 struct done_list_struct *dl);
+-void asd_dump_scb_list(struct asd_ascb *ascb, int num);
+ #else /* ASD_DEBUG */
+ 
+-static inline void asd_dump_ddb_0(struct asd_ha_struct *asd_ha) { }
+-static inline void asd_dump_target_ddb(struct asd_ha_struct *asd_ha,
+-				     u16 site_no) { }
+-static inline void asd_dump_scb_sites(struct asd_ha_struct *asd_ha) { }
+ static inline void asd_dump_seq_state(struct asd_ha_struct *asd_ha,
+ 				      u8 lseq_mask) { }
+ static inline void asd_dump_frame_rcvd(struct asd_phy *phy,
+ 				       struct done_list_struct *dl) { }
+-static inline void asd_dump_scb_list(struct asd_ascb *ascb, int num) { }
+ #endif /* ASD_DEBUG */
+ 
+ #endif /* _AIC94XX_DUMP_H_ */
+diff -puN drivers/scsi/aic94xx/aic94xx_hwi.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_hwi.c
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -251,7 +251,7 @@ static int asd_init_scbs(struct asd_ha_s
+ 	return 0;
+ }
+ 
+-static inline void asd_get_max_scb_ddb(struct asd_ha_struct *asd_ha)
++static void asd_get_max_scb_ddb(struct asd_ha_struct *asd_ha)
+ {
+ 	asd_ha->hw_prof.max_scbs = asd_get_cmdctx_size(asd_ha)/ASD_SCB_SIZE;
+ 	asd_ha->hw_prof.max_ddbs = asd_get_devctx_size(asd_ha)/ASD_DDB_SIZE;
+@@ -773,7 +773,7 @@ static void asd_dl_tasklet_handler(unsig
+  * asd_process_donelist_isr -- schedule processing of done list entries
+  * @asd_ha: pointer to host adapter structure
+  */
+-static inline void asd_process_donelist_isr(struct asd_ha_struct *asd_ha)
++static void asd_process_donelist_isr(struct asd_ha_struct *asd_ha)
+ {
+ 	tasklet_schedule(&asd_ha->seq.dl_tasklet);
+ }
+@@ -782,7 +782,7 @@ static inline void asd_process_donelist_
+  * asd_com_sas_isr -- process device communication interrupt (COMINT)
+  * @asd_ha: pointer to host adapter structure
+  */
+-static inline void asd_com_sas_isr(struct asd_ha_struct *asd_ha)
++static void asd_com_sas_isr(struct asd_ha_struct *asd_ha)
+ {
+ 	u32 comstat = asd_read_reg_dword(asd_ha, COMSTAT);
+ 
+@@ -821,7 +821,7 @@ static inline void asd_com_sas_isr(struc
+ 	asd_chip_reset(asd_ha);
+ }
+ 
+-static inline void asd_arp2_err(struct asd_ha_struct *asd_ha, u32 dchstatus)
++static void asd_arp2_err(struct asd_ha_struct *asd_ha, u32 dchstatus)
+ {
+ 	static const char *halt_code[256] = {
+ 		"UNEXPECTED_INTERRUPT0",
+@@ -908,7 +908,7 @@ static inline void asd_arp2_err(struct a
+  * asd_dch_sas_isr -- process device channel interrupt (DEVINT)
+  * @asd_ha: pointer to host adapter structure
+  */
+-static inline void asd_dch_sas_isr(struct asd_ha_struct *asd_ha)
++static void asd_dch_sas_isr(struct asd_ha_struct *asd_ha)
+ {
+ 	u32 dchstatus = asd_read_reg_dword(asd_ha, DCHSTATUS);
+ 
+@@ -923,7 +923,7 @@ static inline void asd_dch_sas_isr(struc
+  * ads_rbi_exsi_isr -- process external system interface interrupt (INITERR)
+  * @asd_ha: pointer to host adapter structure
+  */
+-static inline void asd_rbi_exsi_isr(struct asd_ha_struct *asd_ha)
++static void asd_rbi_exsi_isr(struct asd_ha_struct *asd_ha)
+ {
+ 	u32 stat0r = asd_read_reg_dword(asd_ha, ASISTAT0R);
+ 
+@@ -971,7 +971,7 @@ static inline void asd_rbi_exsi_isr(stru
+  *
+  * Asserted on PCIX errors: target abort, etc.
+  */
+-static inline void asd_hst_pcix_isr(struct asd_ha_struct *asd_ha)
++static void asd_hst_pcix_isr(struct asd_ha_struct *asd_ha)
+ {
+ 	u16 status;
+ 	u32 pcix_status;
+@@ -1044,8 +1044,8 @@ irqreturn_t asd_hw_isr(int irq, void *de
+ 
+ /* ---------- SCB handling ---------- */
+ 
+-static inline struct asd_ascb *asd_ascb_alloc(struct asd_ha_struct *asd_ha,
+-					      gfp_t gfp_flags)
++static struct asd_ascb *asd_ascb_alloc(struct asd_ha_struct *asd_ha,
++				       gfp_t gfp_flags)
+ {
+ 	extern struct kmem_cache *asd_ascb_cache;
+ 	struct asd_seq_data *seq = &asd_ha->seq;
+@@ -1144,8 +1144,8 @@ struct asd_ascb *asd_ascb_alloc_list(str
+  *
+  * LOCKING: called with the pending list lock held.
+  */
+-static inline void asd_swap_head_scb(struct asd_ha_struct *asd_ha,
+-				     struct asd_ascb *ascb)
++static void asd_swap_head_scb(struct asd_ha_struct *asd_ha,
++			      struct asd_ascb *ascb)
+ {
+ 	struct asd_seq_data *seq = &asd_ha->seq;
+ 	struct asd_ascb *last = list_entry(ascb->list.prev,
+@@ -1171,7 +1171,7 @@ static inline void asd_swap_head_scb(str
+  * intended to be called from asd_post_ascb_list(), just prior to
+  * posting the SCBs to the sequencer.
+  */
+-static inline void asd_start_scb_timers(struct list_head *list)
++static void asd_start_scb_timers(struct list_head *list)
+ {
+ 	struct asd_ascb *ascb;
+ 	list_for_each_entry(ascb, list, list) {
+diff -puN drivers/scsi/aic94xx/aic94xx_hwi.h~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_hwi.h
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.h~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_hwi.h
+@@ -392,8 +392,6 @@ void asd_build_control_phy(struct asd_as
+ void asd_control_led(struct asd_ha_struct *asd_ha, int phy_id, int op);
+ void asd_turn_led(struct asd_ha_struct *asd_ha, int phy_id, int op);
+ int  asd_enable_phys(struct asd_ha_struct *asd_ha, const u8 phy_mask);
+-void asd_build_initiate_link_adm_task(struct asd_ascb *ascb, int phy_id,
+-				      u8 subfunc);
+ 
+ void asd_ascb_timedout(unsigned long data);
+ int  asd_chip_hardrst(struct asd_ha_struct *asd_ha);
+diff -puN drivers/scsi/aic94xx/aic94xx_init.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_init.c
+--- a/drivers/scsi/aic94xx/aic94xx_init.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -547,7 +547,7 @@ static struct asd_pcidev_struct {
+ 	},
+ };
+ 
+-static inline int asd_create_ha_caches(struct asd_ha_struct *asd_ha)
++static int asd_create_ha_caches(struct asd_ha_struct *asd_ha)
+ {
+ 	asd_ha->scb_pool = dma_pool_create(ASD_DRIVER_NAME "_scb_pool",
+ 					   &asd_ha->pcidev->dev,
+@@ -565,7 +565,7 @@ static inline int asd_create_ha_caches(s
+  * asd_free_edbs -- free empty data buffers
+  * asd_ha: pointer to host adapter structure
+  */
+-static inline void asd_free_edbs(struct asd_ha_struct *asd_ha)
++static void asd_free_edbs(struct asd_ha_struct *asd_ha)
+ {
+ 	struct asd_seq_data *seq = &asd_ha->seq;
+ 	int i;
+@@ -576,7 +576,7 @@ static inline void asd_free_edbs(struct 
+ 	seq->edb_arr = NULL;
+ }
+ 
+-static inline void asd_free_escbs(struct asd_ha_struct *asd_ha)
++static void asd_free_escbs(struct asd_ha_struct *asd_ha)
+ {
+ 	struct asd_seq_data *seq = &asd_ha->seq;
+ 	int i;
+@@ -591,7 +591,7 @@ static inline void asd_free_escbs(struct
+ 	seq->escb_arr = NULL;
+ }
+ 
+-static inline void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
++static void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
+ {
+ 	int i;
+ 
+diff -puN drivers/scsi/aic94xx/aic94xx_reg.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_reg.c
+--- a/drivers/scsi/aic94xx/aic94xx_reg.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_reg.c
+@@ -32,8 +32,8 @@
+  * Offset comes before value to remind that the operation of
+  * this function is *offs = val.
+  */
+-static inline void asd_write_byte(struct asd_ha_struct *asd_ha,
+-				  unsigned long offs, u8 val)
++static void asd_write_byte(struct asd_ha_struct *asd_ha,
++			   unsigned long offs, u8 val)
+ {
+ 	if (unlikely(asd_ha->iospace))
+ 		outb(val,
+@@ -43,8 +43,8 @@ static inline void asd_write_byte(struct
+ 	wmb();
+ }
+ 
+-static inline void asd_write_word(struct asd_ha_struct *asd_ha,
+-				  unsigned long offs, u16 val)
++static void asd_write_word(struct asd_ha_struct *asd_ha,
++			   unsigned long offs, u16 val)
+ {
+ 	if (unlikely(asd_ha->iospace))
+ 		outw(val,
+@@ -54,8 +54,8 @@ static inline void asd_write_word(struct
+ 	wmb();
+ }
+ 
+-static inline void asd_write_dword(struct asd_ha_struct *asd_ha,
+-				   unsigned long offs, u32 val)
++static void asd_write_dword(struct asd_ha_struct *asd_ha,
++			    unsigned long offs, u32 val)
+ {
+ 	if (unlikely(asd_ha->iospace))
+ 		outl(val,
+@@ -67,8 +67,7 @@ static inline void asd_write_dword(struc
+ 
+ /* Reading from device address space.
+  */
+-static inline u8 asd_read_byte(struct asd_ha_struct *asd_ha,
+-			       unsigned long offs)
++static u8 asd_read_byte(struct asd_ha_struct *asd_ha, unsigned long offs)
+ {
+ 	u8 val;
+ 	if (unlikely(asd_ha->iospace))
+@@ -80,8 +79,8 @@ static inline u8 asd_read_byte(struct as
+ 	return val;
+ }
+ 
+-static inline u16 asd_read_word(struct asd_ha_struct *asd_ha,
+-				unsigned long offs)
++static u16 asd_read_word(struct asd_ha_struct *asd_ha,
++			 unsigned long offs)
+ {
+ 	u16 val;
+ 	if (unlikely(asd_ha->iospace))
+@@ -93,8 +92,8 @@ static inline u16 asd_read_word(struct a
+ 	return val;
+ }
+ 
+-static inline u32 asd_read_dword(struct asd_ha_struct *asd_ha,
+-				 unsigned long offs)
++static u32 asd_read_dword(struct asd_ha_struct *asd_ha,
++			  unsigned long offs)
+ {
+ 	u32 val;
+ 	if (unlikely(asd_ha->iospace))
+@@ -124,22 +123,22 @@ static inline u32 asd_mem_offs_swb(void)
+ /* We know that the register wanted is in the range
+  * of the sliding window.
+  */
+-#define ASD_READ_SW(ww, type, ord)                                     \
+-static inline type asd_read_##ww##_##ord (struct asd_ha_struct *asd_ha,\
+-					  u32 reg)                     \
+-{                                                                      \
+-	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
+-	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
+-	return asd_read_##ord (asd_ha, (unsigned long) map_offs);      \
+-}
+-
+-#define ASD_WRITE_SW(ww, type, ord)                                    \
+-static inline void asd_write_##ww##_##ord (struct asd_ha_struct *asd_ha,\
+-				  u32 reg, type val)                   \
+-{                                                                      \
+-	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
+-	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
+-	asd_write_##ord (asd_ha, (unsigned long) map_offs, val);       \
++#define ASD_READ_SW(ww, type, ord)					\
++static type asd_read_##ww##_##ord(struct asd_ha_struct *asd_ha,		\
++				   u32 reg)				\
++{									\
++	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];	\
++	u32 map_offs = (reg - io_handle->ww##_base) + asd_mem_offs_##ww();\
++	return asd_read_##ord(asd_ha, (unsigned long)map_offs);	\
 +}
 +
- static void arcmsr_iop_init(struct AdapterControlBlock *acb)
- {
- 	uint32_t intmask_org;
++#define ASD_WRITE_SW(ww, type, ord)					\
++static void asd_write_##ww##_##ord(struct asd_ha_struct *asd_ha,	\
++				    u32 reg, type val)			\
++{									\
++	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];	\
++	u32 map_offs = (reg - io_handle->ww##_base) + asd_mem_offs_##ww();\
++	asd_write_##ord(asd_ha, (unsigned long)map_offs, val);		\
+ }
  
--	arcmsr_wait_firmware_ready(acb);
--	arcmsr_iop_confirm(acb);
-        /* disable all outbound interrupt */
-        intmask_org = arcmsr_disable_outbound_ints(acb);
-+	arcmsr_wait_firmware_ready(acb);
-+	arcmsr_iop_confirm(acb);
- 	arcmsr_get_firmware_spec(acb);
- 	/*start background rebuild*/
- 	arcmsr_start_adapter_bgrb(acb);
- 	/* empty doorbell Qbuffer if door bell ringed */
- 	arcmsr_clear_doorbell_queue_buffer(acb);
-+	arcmsr_enable_eoi_mode(acb);
- 	/* enable outbound Post Queue,outbound doorbell Interrupt */
- 	arcmsr_enable_outbound_ints(acb, intmask_org);
- 	acb->acb_flags |= ACB_F_IOP_INITED;
-@@ -2275,6 +2309,7 @@ static pci_ers_result_t arcmsr_pci_slot_
- 	arcmsr_start_adapter_bgrb(acb);
- 	/* empty doorbell Qbuffer if door bell ringed */
- 	arcmsr_clear_doorbell_queue_buffer(acb);
-+	arcmsr_enable_eoi_mode(acb);
- 	/* enable outbound Post Queue,outbound doorbell Interrupt */
- 	arcmsr_enable_outbound_ints(acb, intmask_org);
- 	acb->acb_flags |= ACB_F_IOP_INITED;
+ ASD_READ_SW(swa, u8,  byte);
+@@ -186,7 +185,7 @@ ASD_WRITE_SW(swc, u32, dword);
+  * @asd_ha: pointer to host adapter structure
+  * @reg: register desired to be within range of the new window
+  */
+-static inline void asd_move_swb(struct asd_ha_struct *asd_ha, u32 reg)
++static void asd_move_swb(struct asd_ha_struct *asd_ha, u32 reg)
+ {
+ 	u32 base = reg & ~(MBAR0_SWB_SIZE-1);
+ 	pci_write_config_dword(asd_ha->pcidev, PCI_CONF_MBAR0_SWB, base);
+diff -puN drivers/scsi/aic94xx/aic94xx_scb.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_scb.c
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_scb.c
+@@ -50,7 +50,7 @@
+ 			   | CURRENT_SPINUP_HOLD | CURRENT_GTO_TIMEOUT \
+ 			   | CURRENT_OOB_ERROR)
+ 
+-static inline void get_lrate_mode(struct asd_phy *phy, u8 oob_mode)
++static void get_lrate_mode(struct asd_phy *phy, u8 oob_mode)
+ {
+ 	struct sas_phy *sas_phy = phy->sas_phy.phy;
+ 
+@@ -81,7 +81,7 @@ static inline void get_lrate_mode(struct
+ 		phy->sas_phy.oob_mode = SATA_OOB_MODE;
+ }
+ 
+-static inline void asd_phy_event_tasklet(struct asd_ascb *ascb,
++static void asd_phy_event_tasklet(struct asd_ascb *ascb,
+ 					 struct done_list_struct *dl)
+ {
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+@@ -125,8 +125,7 @@ static inline void asd_phy_event_tasklet
+ }
+ 
+ /* If phys are enabled sparsely, this will do the right thing. */
+-static inline unsigned ord_phy(struct asd_ha_struct *asd_ha,
+-			       struct asd_phy *phy)
++static unsigned ord_phy(struct asd_ha_struct *asd_ha, struct asd_phy *phy)
+ {
+ 	u8 enabled_mask = asd_ha->hw_prof.enabled_phys;
+ 	int i, k = 0;
+@@ -151,7 +150,7 @@ static inline unsigned ord_phy(struct as
+  * LOCKING: the frame_rcvd_lock needs to be held since this parses the frame
+  * buffer.
+  */
+-static inline void asd_get_attached_sas_addr(struct asd_phy *phy, u8 *sas_addr)
++static void asd_get_attached_sas_addr(struct asd_phy *phy, u8 *sas_addr)
+ {
+ 	if (phy->sas_phy.frame_rcvd[0] == 0x34
+ 	    && phy->sas_phy.oob_mode == SATA_OOB_MODE) {
+@@ -232,9 +231,9 @@ static void asd_deform_port(struct asd_h
+ 	spin_unlock_irqrestore(&asd_ha->asd_ports_lock, flags);
+ }
+ 
+-static inline void asd_bytes_dmaed_tasklet(struct asd_ascb *ascb,
+-					   struct done_list_struct *dl,
+-					   int edb_id, int phy_id)
++static void asd_bytes_dmaed_tasklet(struct asd_ascb *ascb,
++				    struct done_list_struct *dl,
++				    int edb_id, int phy_id)
+ {
+ 	unsigned long flags;
+ 	int edb_el = edb_id + ascb->edb_index;
+@@ -255,9 +254,9 @@ static inline void asd_bytes_dmaed_taskl
+ 	sas_ha->notify_port_event(&phy->sas_phy, PORTE_BYTES_DMAED);
+ }
+ 
+-static inline void asd_link_reset_err_tasklet(struct asd_ascb *ascb,
+-					      struct done_list_struct *dl,
+-					      int phy_id)
++static void asd_link_reset_err_tasklet(struct asd_ascb *ascb,
++				       struct done_list_struct *dl,
++				       int phy_id)
+ {
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+ 	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
+@@ -308,9 +307,9 @@ out:
+ 	;
+ }
+ 
+-static inline void asd_primitive_rcvd_tasklet(struct asd_ascb *ascb,
+-					      struct done_list_struct *dl,
+-					      int phy_id)
++static void asd_primitive_rcvd_tasklet(struct asd_ascb *ascb,
++				       struct done_list_struct *dl,
++				       int phy_id)
+ {
+ 	unsigned long flags;
+ 	struct sas_ha_struct *sas_ha = &ascb->ha->sas_ha;
+@@ -709,7 +708,7 @@ out:
+ 	asd_ascb_free(ascb);
+ }
+ 
+-static inline void set_speed_mask(u8 *speed_mask, struct asd_phy_desc *pd)
++static void set_speed_mask(u8 *speed_mask, struct asd_phy_desc *pd)
+ {
+ 	/* disable all speeds, then enable defaults */
+ 	*speed_mask = SAS_SPEED_60_DIS | SAS_SPEED_30_DIS | SAS_SPEED_15_DIS
+@@ -814,6 +813,8 @@ void asd_build_control_phy(struct asd_as
+ 
+ /* ---------- INITIATE LINK ADM TASK ---------- */
+ 
++#if 0
++
+ static void link_adm_tasklet_complete(struct asd_ascb *ascb,
+ 				      struct done_list_struct *dl)
+ {
+@@ -846,6 +847,8 @@ void asd_build_initiate_link_adm_task(st
+ 	ascb->tasklet_complete = link_adm_tasklet_complete;
+ }
+ 
++#endif  /*  0  */
++
+ /* ---------- SCB timer ---------- */
+ 
+ /**
+diff -puN drivers/scsi/aic94xx/aic94xx_sds.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_sds.c
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -590,8 +590,8 @@ static int asd_reset_flash(struct asd_ha
+ 	return err;
+ }
+ 
+-static inline int asd_read_flash_seg(struct asd_ha_struct *asd_ha,
+-				     void *buffer, u32 offs, int size)
++static int asd_read_flash_seg(struct asd_ha_struct *asd_ha,
++			      void *buffer, u32 offs, int size)
+ {
+ 	asd_read_reg_string(asd_ha, buffer, asd_ha->hw_prof.flash.bar+offs,
+ 			    size);
+diff -puN drivers/scsi/aic94xx/aic94xx_seq.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_seq.c
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_seq.c
+@@ -60,7 +60,7 @@ static u16 last_scb_site_no;
+  *
+  * Return 0 on success, negative on failure.
+  */
+-int asd_pause_cseq(struct asd_ha_struct *asd_ha)
++static int asd_pause_cseq(struct asd_ha_struct *asd_ha)
+ {
+ 	int	count = PAUSE_TRIES;
+ 	u32	arp2ctl;
+@@ -87,7 +87,7 @@ int asd_pause_cseq(struct asd_ha_struct 
+  *
+  * Return 0 on success, negative on error.
+  */
+-int asd_unpause_cseq(struct asd_ha_struct *asd_ha)
++static int asd_unpause_cseq(struct asd_ha_struct *asd_ha)
+ {
+ 	u32	arp2ctl;
+ 	int	count = PAUSE_TRIES;
+@@ -115,7 +115,7 @@ int asd_unpause_cseq(struct asd_ha_struc
+  *
+  * Return 0 on success, negative on error.
+  */
+-static inline int asd_seq_pause_lseq(struct asd_ha_struct *asd_ha, int lseq)
++static int asd_seq_pause_lseq(struct asd_ha_struct *asd_ha, int lseq)
+ {
+ 	u32    arp2ctl;
+ 	int    count = PAUSE_TRIES;
+@@ -143,7 +143,7 @@ static inline int asd_seq_pause_lseq(str
+  *
+  * Return 0 on success, negative on failure.
+  */
+-int asd_pause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask)
++static int asd_pause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask)
+ {
+ 	int lseq;
+ 	int err = 0;
+@@ -164,7 +164,7 @@ int asd_pause_lseq(struct asd_ha_struct 
+  *
+  * Return 0 on success, negative on error.
+  */
+-static inline int asd_seq_unpause_lseq(struct asd_ha_struct *asd_ha, int lseq)
++static int asd_seq_unpause_lseq(struct asd_ha_struct *asd_ha, int lseq)
+ {
+ 	u32 arp2ctl;
+ 	int count = PAUSE_TRIES;
+@@ -186,27 +186,6 @@ static inline int asd_seq_unpause_lseq(s
+ }
+ 
+ 
+-/**
+- * asd_unpause_lseq - unpause the link sequencer(s)
+- * @asd_ha: pointer to host adapter structure
+- * @lseq_mask: mask of link sequencers of interest
+- *
+- * Return 0 on success, negative on failure.
+- */
+-int asd_unpause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask)
+-{
+-	int lseq;
+-	int err = 0;
+-
+-	for_each_sequencer(lseq_mask, lseq_mask, lseq) {
+-		err = asd_seq_unpause_lseq(asd_ha, lseq);
+-		if (err)
+-			return err;
+-	}
+-
+-	return err;
+-}
+-
+ /* ---------- Downloading CSEQ/LSEQ microcode ---------- */
+ 
+ static int asd_verify_cseq(struct asd_ha_struct *asd_ha, const u8 *_prog,
+diff -puN drivers/scsi/aic94xx/aic94xx_seq.h~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_seq.h
+--- a/drivers/scsi/aic94xx/aic94xx_seq.h~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_seq.h
+@@ -58,10 +58,6 @@ struct sequencer_file_header {
+ } __attribute__((packed));
+ 
+ #ifdef __KERNEL__
+-int asd_pause_cseq(struct asd_ha_struct *asd_ha);
+-int asd_unpause_cseq(struct asd_ha_struct *asd_ha);
+-int asd_pause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask);
+-int asd_unpause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask);
+ int asd_init_seqs(struct asd_ha_struct *asd_ha);
+ int asd_start_seqs(struct asd_ha_struct *asd_ha);
+ int asd_release_firmware(void);
+diff -puN drivers/scsi/aic94xx/aic94xx_task.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_task.c
+--- a/drivers/scsi/aic94xx/aic94xx_task.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -33,7 +33,7 @@ static void asd_unbuild_ata_ascb(struct 
+ static void asd_unbuild_smp_ascb(struct asd_ascb *a);
+ static void asd_unbuild_ssp_ascb(struct asd_ascb *a);
+ 
+-static inline void asd_can_dequeue(struct asd_ha_struct *asd_ha, int num)
++static void asd_can_dequeue(struct asd_ha_struct *asd_ha, int num)
+ {
+ 	unsigned long flags;
+ 
+@@ -51,9 +51,9 @@ static const u8 data_dir_flags[] = {
+ 	[PCI_DMA_NONE]          = DATA_DIR_NONE, /* NO TRANSFER */
+ };
+ 
+-static inline int asd_map_scatterlist(struct sas_task *task,
+-				      struct sg_el *sg_arr,
+-				      gfp_t gfp_flags)
++static int asd_map_scatterlist(struct sas_task *task,
++			       struct sg_el *sg_arr,
++			       gfp_t gfp_flags)
+ {
+ 	struct asd_ascb *ascb = task->lldd_task;
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+@@ -131,7 +131,7 @@ err_unmap:
+ 	return res;
+ }
+ 
+-static inline void asd_unmap_scatterlist(struct asd_ascb *ascb)
++static void asd_unmap_scatterlist(struct asd_ascb *ascb)
+ {
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+ 	struct sas_task *task = ascb->uldd_task;
+@@ -525,7 +525,7 @@ static void asd_unbuild_ssp_ascb(struct 
+ 
+ /* ---------- Execute Task ---------- */
+ 
+-static inline int asd_can_queue(struct asd_ha_struct *asd_ha, int num)
++static int asd_can_queue(struct asd_ha_struct *asd_ha, int num)
+ {
+ 	int res = 0;
+ 	unsigned long flags;
+diff -puN drivers/scsi/aic94xx/aic94xx_tmf.c~scsi-aic94xx-cleanups drivers/scsi/aic94xx/aic94xx_tmf.c
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c~scsi-aic94xx-cleanups
++++ a/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -53,7 +53,7 @@ static int asd_enqueue_internal(struct a
+ 	return res;
+ }
+ 
+-static inline void asd_timedout_common(unsigned long data)
++static void asd_timedout_common(unsigned long data)
+ {
+ 	struct asd_ascb *ascb = (void *) data;
+ 	struct asd_seq_data *seq = &ascb->ha->seq;
+@@ -287,7 +287,7 @@ static void asd_tmf_tasklet_complete(str
+ 	complete(&ascb->completion);
+ }
+ 
+-static inline int asd_clear_nexus(struct sas_task *task)
++static int asd_clear_nexus(struct sas_task *task)
+ {
+ 	int res = TMF_RESP_FUNC_FAILED;
+ 	int leftover;
 _
