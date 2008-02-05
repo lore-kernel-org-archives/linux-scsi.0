@@ -1,62 +1,51 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Subject: Re: 2.6.24 regression w/ QLA2300
-Date: Tue, 05 Feb 2008 11:33:35 -0500
-Message-ID: <47A88FDF.6090102@hp.com>
-References: <47A88736.6090706@hp.com> <20080205160246.GF19882@plap3.qlogic.org> <20080205161501.GG19882@plap3.qlogic.org>
+Date: Tue, 5 Feb 2008 08:40:12 -0800
+Message-ID: <20080205164012.GI19882@plap3.qlogic.org>
+References: <47A88736.6090706@hp.com> <20080205160246.GF19882@plap3.qlogic.org> <47A88F2C.5050407@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:22673 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137AbYBEQeX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:34:23 -0500
-In-Reply-To: <20080205161501.GG19882@plap3.qlogic.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:10210 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451AbYBEQkO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:40:14 -0500
+Content-Disposition: inline
+In-Reply-To: <47A88F2C.5050407@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Seokmann Ju <seokmann.ju@qlogic.com>
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com
 
-Andrew Vasquez wrote:
-> On Tue, 05 Feb 2008, Andrew Vasquez wrote:
-> 
->> On Tue, 05 Feb 2008, Alan D. Brunelle wrote:
->>
->>> commit 9b73e76f3cf63379dcf45fcd4f112f5812418d0a
->>> Merge: 50d9a12... 23c3e29...
->>> Author: Linus Torvalds <torvalds@linux-foundation.org>
->>> Date:   Fri Jan 25 17:19:08 2008 -0800
->>>
->>>     Merge git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6
->>>
->>>     * git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6: (200 commits)
->>>
->>> I believe a regression was introduced. I'm running on a 4-way IA64,
->>> with straight 2.6.24 and 2 dual-port cards:
->>>
->>> 40:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
->>> 40:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
->>> c0:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
->>> c0:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
->>>
->>> the adapters failed initialization. In particular, I narrowed it down
->>> to failing the qla2x00_mbox_command call within qla2x00_init_firmware
->>> function. I went and removed the qla2x00-related parts of this (large-ish)
->>> merge, and the 4 ports initialized just fine.
->> Could you load the (default 2.6.24) driver with
->> ql2xextended_error_logging modules parameter set:
->>
->> 	# insmod qla2xxx ql2xextended_error_logging=1
->>
->> and send the resultant kernel logs?
-> 
-> Could you tray the patch referenced here:
-> 
-> qla2xxx: Correct issue where incorrect init-fw mailbox command was used on non-NPIV capable ISPs.
-> http://article.gmane.org/gmane.linux.scsi/38240
-> 
-> Thanks, av
+On Tue, 05 Feb 2008, Alan D. Brunelle wrote:
 
-The referenced patch worked fine Andrew, thanks much! 
+> > and send the resultant kernel logs?
+> 
+> Here's the output to the console (if there are other logs you need,
+> let me know). I'll try the patch next, and sorry, hadn't realized
+> merges were still coming in under 2.6.24 in Linus' tree... 
+> 
+> QLogic Fibre Channel HBA Driver
+> ACPI: PCI Interrupt 0000:40:01.0[A] -> GSI 38 (level, low) -> IRQ 58
+> qla2xxx 0000:40:01.0: Found an ISP2312, irq 58, iobase 0xc0000000a0041000
+> qla2xxx 0000:40:01.0: Configuring PCI space...
+> qla2x00_get_flash_version(): Unrecognized code type ff at pcids da1c.
+> qla2x00_get_flash_version(): Unrecognized code type ff at pcids 1f61c.
+> qla2xxx 0000:40:01.0: Configure NVRAM parameters...
+> qla2xxx 0000:40:01.0: Verifying loaded RISC code...
+> scsi(14): **** Load RISC code ****
+> scsi(14): Verifying Checksum of loaded RISC code.
+> scsi(14): Checksum OK, start firmware.
+> qla2xxx 0000:40:01.0: Allocated (412 KB) for firmware dump...
+> scsi(14): Issue init firmware.
+> qla2x00_mailbox_command(14): **** FAILED. mbx0=4001, mbx1=0, mbx2=ba8a, cmd=48 ****
 
-Alan
+Ok, this is what I would have expected with the linus' tree prior to
+the fix.  I just double-checked, the fix in question has yet to make
+it's way to Linus' tree.  It's currently in scsi-misc-2.6:
+
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=a571fdf7caa010e17f6a70c0c52e0992e87af7db
+
+which should filter up to linux-2.6.git during Linus' next pull.
+
+thanks, av
