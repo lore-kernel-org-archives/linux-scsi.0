@@ -1,68 +1,122 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 5 Feb 2008 17:25:44 +0100
-Message-ID: <e2e108260802050825u68ef2ee9m6e085acb6b474fe@mail.gmail.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net>
-	 <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Subject: Re: 2.6.24 regression w/ QLA2300
+Date: Tue, 05 Feb 2008 11:30:36 -0500
+Message-ID: <47A88F2C.5050407@hp.com>
+References: <47A88736.6090706@hp.com> <20080205160246.GF19882@plap3.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759467AbYBEQ03@vger.kernel.org>
-In-Reply-To: <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Vladislav Bolkhovitin <vst@vlnb.net>, Vu Pham <vuhuong@mellanox.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:1765 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbYBEQaz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:30:55 -0500
+In-Reply-To: <20080205160246.GF19882@plap3.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com
 
-Regarding the performance tests I promised to perform: although until
-now I only have been able to run two tests (STGT + iSER versus SCST +
-SRP), the results are interesting. I will run the remaining test cases
-during the next days.
+Andrew Vasquez wrote:
+> On Tue, 05 Feb 2008, Alan D. Brunelle wrote:
+> 
+>> commit 9b73e76f3cf63379dcf45fcd4f112f5812418d0a
+>> Merge: 50d9a12... 23c3e29...
+>> Author: Linus Torvalds <torvalds@linux-foundation.org>
+>> Date:   Fri Jan 25 17:19:08 2008 -0800
+>>
+>>     Merge git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6
+>>
+>>     * git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6: (200 commits)
+>>
+>> I believe a regression was introduced. I'm running on a 4-way IA64,
+>> with straight 2.6.24 and 2 dual-port cards:
+>>
+>> 40:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
+>> 40:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
+>> c0:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
+>> c0:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 03)
+>>
+>> the adapters failed initialization. In particular, I narrowed it down
+>> to failing the qla2x00_mbox_command call within qla2x00_init_firmware
+>> function. I went and removed the qla2x00-related parts of this (large-ish)
+>> merge, and the 4 ports initialized just fine.
+> 
+> Could you load the (default 2.6.24) driver with
+> ql2xextended_error_logging modules parameter set:
+> 
+> 	# insmod qla2xxx ql2xextended_error_logging=1
+> 
+> and send the resultant kernel logs?
 
-About the test setup: dd and xdd were used to transfer 2 GB of data
-between an initiator system and a target system via direct I/O over an
-SDR InfiniBand network (1GB/s). The block size varied between 512
-bytes and 1 GB, but was always a power of two.
+Here's the output to the console (if there are other logs you need, let me know). I'll try the patch next, and sorry, hadn't realized merges were still coming in under 2.6.24 in Linus' tree... 
 
-Expected results:
-* The measurement results are consistent with the numbers I published earlier.
-* During data transfers all data is transferred in blocks between 4 KB
-and 32 KB in size (according to the SCST statistics).
-* For small and medium block sizes (<= 32 KB) transfer times can be
-modeled very well by the following formula: (transfer time) = (setup
-latency) + (bytes transferred)/(bandwidth). The correlation numbers
-are very close to one.
-* The latency and bandwidth parameters depend on the test tool (dd
-versus xdd), on the kind of test performed (reading versus writing),
-on the SCSI target and on the communication protocol.
-* When using RDMA (iSER or SRP), SCST has a lower latency and higher
-bandwidth than STGT (results from linear regression for block sizes <=
-32 KB):
-           Test          Latency(us) Bandwidth (MB/s) Correlation
-   STGT+iSER, read, dd   64          560              0.999995
-   STGT+iSER, read, xdd  65          556              0.999994
-   STGT+iSER, write, dd  53          394              0.999971
-   STGT+iSER, write, xdd 54          445              0.999959
-   SCST+SRP, read, dd    39          657              0.999983
-   SCST+SRP, read, xdd   41          668              0.999987
-   SCST+SRP, write, dd   52          449              0.999962
-   SCST+SRP, write, xdd  52          516              0.999977
-
-Results that I did not expect:
-* A block transfer size of 1 MB is not enough to measure the maximal
-throughput. The maximal throughput is only reached at much higher
-block sizes (about 10 MB for SCST + SRP and about 100 MB for STGT +
-iSER).
-* There is one case where dd and xdd results are inconsistent: when
-reading via SCST + SRP and for block sizes of about 1 MB.
-* For block sizes > 64 KB the measurements differ from the model. This
-is probably because all initiator-target transfers happen in blocks of
-32 KB or less.
-
-For the details and some graphs, see also
-http://software.qlayer.com/display/iSCSI/Measurements .
-
-Bart Van Assche.
+QLogic Fibre Channel HBA Driver
+ACPI: PCI Interrupt 0000:40:01.0[A] -> GSI 38 (level, low) -> IRQ 58
+qla2xxx 0000:40:01.0: Found an ISP2312, irq 58, iobase 0xc0000000a0041000
+qla2xxx 0000:40:01.0: Configuring PCI space...
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids da1c.
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids 1f61c.
+qla2xxx 0000:40:01.0: Configure NVRAM parameters...
+qla2xxx 0000:40:01.0: Verifying loaded RISC code...
+scsi(14): **** Load RISC code ****
+scsi(14): Verifying Checksum of loaded RISC code.
+scsi(14): Checksum OK, start firmware.
+qla2xxx 0000:40:01.0: Allocated (412 KB) for firmware dump...
+scsi(14): Issue init firmware.
+qla2x00_mailbox_command(14): **** FAILED. mbx0=4001, mbx1=0, mbx2=ba8a, cmd=48 ****
+qla2x00_init_firmware(14): failed=102 mb0=4001.
+scsi(14): Init firmware **** FAILED ****.
+qla2xxx 0000:40:01.0: Failed to initialize adapter
+scsi(14): Failed to initialize adapter - Adapter flags 10.
+ACPI: PCI Interrupt 0000:40:01.1[B] -> GSI 39 (level, low) -> IRQ 59
+qla2xxx 0000:40:01.1: Found an ISP2312, irq 59, iobase 0xc0000000a0040000
+qla2xxx 0000:40:01.1: Configuring PCI space...
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids da1c.
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids 1f61c.
+qla2xxx 0000:40:01.1: Configure NVRAM parameters...
+qla2xxx 0000:40:01.1: Verifying loaded RISC code...
+scsi(15): **** Load RISC code ****
+scsi(15): Verifying Checksum of loaded RISC code.
+scsi(15): Checksum OK, start firmware.
+qla2xxx 0000:40:01.1: Allocated (412 KB) for firmware dump...
+scsi(15): Issue init firmware.
+qla2x00_mailbox_command(15): **** FAILED. mbx0=4001, mbx1=0, mbx2=bac6, cmd=48 ****
+qla2x00_init_firmware(15): failed=102 mb0=4001.
+scsi(15): Init firmware **** FAILED ****.
+qla2xxx 0000:40:01.1: Failed to initialize adapter
+scsi(15): Failed to initialize adapter - Adapter flags 10.
+ACPI: PCI Interrupt 0000:c0:01.0[A] -> GSI 71 (level, low) -> IRQ 60
+qla2xxx 0000:c0:01.0: Found an ISP2312, irq 60, iobase 0xc0000000e0041000
+qla2xxx 0000:c0:01.0: Configuring PCI space...
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids c61c.
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids 1da1c.
+qla2xxx 0000:c0:01.0: Configure NVRAM parameters...
+qla2xxx 0000:c0:01.0: Verifying loaded RISC code...
+scsi(16): **** Load RISC code ****
+scsi(16): Verifying Checksum of loaded RISC code.
+scsi(16): Checksum OK, start firmware.
+qla2xxx 0000:c0:01.0: Allocated (412 KB) for firmware dump...
+scsi(16): Issue init firmware.
+qla2x00_mailbox_command(16): **** FAILED. mbx0=4001, mbx1=0, mbx2=bae3, cmd=48 ****
+qla2x00_init_firmware(16): failed=102 mb0=4001.
+scsi(16): Init firmware **** FAILED ****.
+qla2xxx 0000:c0:01.0: Failed to initialize adapter
+scsi(16): Failed to initialize adapter - Adapter flags 10.
+ACPI: PCI Interrupt 0000:c0:01.1[B] -> GSI 72 (level, low) -> IRQ 61
+qla2xxx 0000:c0:01.1: Found an ISP2312, irq 61, iobase 0xc0000000e0040000
+qla2xxx 0000:c0:01.1: Configuring PCI space...
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids c61c.
+qla2x00_get_flash_version(): Unrecognized code type ff at pcids 1da1c.
+qla2xxx 0000:c0:01.1: Configure NVRAM parameters...
+qla2xxx 0000:c0:01.1: Verifying loaded RISC code...
+scsi(17): **** Load RISC code ****
+scsi(17): Verifying Checksum of loaded RISC code.
+scsi(17): Checksum OK, start firmware.
+qla2xxx 0000:c0:01.1: Allocated (412 KB) for firmware dump...
+scsi(17): Issue init firmware.
+qla2x00_mailbox_command(17): **** FAILED. mbx0=4001, mbx1=0, mbx2=bb06, cmd=48 ****
+qla2x00_init_firmware(17): failed=102 mb0=4001.
+scsi(17): Init firmware **** FAILED ****.
+qla2xxx 0000:c0:01.1: Failed to initialize adapter
+scsi(17): Failed to initialize adapter - Adapter flags 10.
