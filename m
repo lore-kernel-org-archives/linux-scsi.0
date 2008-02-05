@@ -1,56 +1,61 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 22:01:21 +0300
-Message-ID: <47A8B281.5030701@vlnb.net>
-References: <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net>	<1202139015.3096.5.camel@localhost.localdomain>	<47A73C86.3060604@vlnb.net>	<1202144767.3096.38.camel@localhost.localdomain>	<47A7488B.4080000@vlnb.net>	<1202145901.3096.49.camel@localhost.localdomain>	<alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>	<1202151989.11265.576.camel@haakon2.linux-iscsi.org>	<alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>	<20080204210121.GF18682@fieldses.org> <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org>
+Date: Tue, 05 Feb 2008 22:02:16 +0300
+Message-ID: <47A8B2B8.2020108@vlnb.net>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com> <47A89889.9060701@Voltaire.COM>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:56403 "EHLO
+Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:56417 "EHLO
 	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751451AbYBETBY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 14:01:24 -0500
-In-Reply-To: <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org>
+	by vger.kernel.org with ESMTP id S1756123AbYBETCN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 14:02:13 -0500
+In-Reply-To: <47A89889.9060701@Voltaire.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Erez Zilber <erezz@Voltaire.COM>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Linus Torvalds wrote:
->>I'd assumed the move was primarily because of the difficulty of getting
->>correct semantics on a shared filesystem
+Erez Zilber wrote:
+> Bart Van Assche wrote:
 > 
+>>As you probably know there is a trend in enterprise computing towards
+>>networked storage. This is illustrated by the emergence during the
+>>past few years of standards like SRP (SCSI RDMA Protocol), iSCSI
+>>(Internet SCSI) and iSER (iSCSI Extensions for RDMA). Two different
+>>pieces of software are necessary to make networked storage possible:
+>>initiator software and target software. As far as I know there exist
+>>three different SCSI target implementations for Linux:
+>>- The iSCSI Enterprise Target Daemon (IETD,
+>>http://iscsitarget.sourceforge.net/);
+>>- The Linux SCSI Target Framework (STGT, http://stgt.berlios.de/);
+>>- The Generic SCSI Target Middle Level for Linux project (SCST,
+>>http://scst.sourceforge.net/).
+>>Since I was wondering which SCSI target software would be best suited
+>>for an InfiniBand network, I started evaluating the STGT and SCST SCSI
+>>target implementations. Apparently the performance difference between
+>>STGT and SCST is small on 100 Mbit/s and 1 Gbit/s Ethernet networks,
+>>but the SCST target software outperforms the STGT software on an
+>>InfiniBand network. See also the following thread for the details:
+>>http://sourceforge.net/mailarchive/forum.php?thread_name=e2e108260801170127w2937b2afg9bef324efa945e43%40mail.gmail.com&forum_name=scst-devel.
+>>
+>>  
 > 
-> .. not even shared. It was hard to get correct semantics full stop. 
+> Sorry for the late response (but better late than never).
 > 
-> Which is a traditional problem. The thing is, the kernel always has some 
-> internal state, and it's hard to expose all the semantics that the kernel 
-> knows about to user space.
-> 
-> So no, performance is not the only reason to move to kernel space. It can 
-> easily be things like needing direct access to internal data queues (for a 
-> iSCSI target, this could be things like barriers or just tagged commands - 
-> yes, you can probably emulate things like that without access to the 
-> actual IO queues, but are you sure the semantics will be entirely right?
-> 
-> The kernel/userland boundary is not just a performance boundary, it's an 
-> abstraction boundary too, and these kinds of protocols tend to break 
-> abstractions. NFS broke it by having "file handles" (which is not 
-> something that really exists in user space, and is almost impossible to 
-> emulate correctly), and I bet the same thing happens when emulating a SCSI 
-> target in user space.
+> One may claim that STGT should have lower performance than SCST because
+> its data path is from userspace. However, your results show that for
+> non-IB transports, they both show the same numbers. Furthermore, with IB
+> there shouldn't be any additional difference between the 2 targets
+> because data transfer from userspace is as efficient as data transfer
+> from kernel space.
 
-Yes, there is something like that for SCSI target as well. It's a "local 
-initiator" or "local nexus", see 
-http://thread.gmane.org/gmane.linux.scsi/31288 and 
-http://news.gmane.org/find-root.php?message_id=%3c463F36AC.3010207%40vlnb.net%3e 
-for more info about that.
+And now consider if one target has zero-copy cached I/O. How much that 
+will improve its performance?
 
-In fact, existence of local nexus is one more point why SCST is better, 
-than STGT, because for STGT it's pretty hard to support it (all locally 
-generated commands would have to be passed through its daemon, which 
-would be a total disaster for performance), while for SCST it can be 
-done relatively simply.
-
-Vlad
+> The only explanation that I see is that fine tuning for iSCSI & iSER is
+> required. As was already mentioned in this thread, with SDR you can get
+> ~900 MB/sec with iSER (on STGT).
+> 
+> Erez
