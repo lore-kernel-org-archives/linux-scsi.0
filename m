@@ -1,72 +1,42 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
-Date: Tue, 5 Feb 2008 18:56:17 +0200 (EET)
-Message-ID: <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
-References: <20080204142206.GB5532@stro.at>  <20080204212835.GA29286@gollum.tnic> <1202162213.3096.119.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 21/24][RFC] scsi_tgt: use of sense accessors
+Date: Wed, 6 Feb 2008 01:53:07 +0900
+Message-ID: <20080206015308F.tomof@acm.org>
+References: <1202147595-5400-1-git-send-email-bharrosh@panasas.com>
+	<20080205162133.GC1931@osc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:60825 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbYBEQ40 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:56:26 -0500
-In-Reply-To: <1202162213.3096.119.camel@localhost.localdomain>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:50922 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752259AbYBEQ72 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 11:59:28 -0500
+In-Reply-To: <20080205162133.GC1931@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: petkovbb@gmail.com, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: pw@osc.edu
+Cc: bharrosh@panasas.com, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.orgfujita.tomonori@lab.ntt.co.jp
 
-On Mon, 4 Feb 2008, James Bottomley wrote:
+On Tue, 5 Feb 2008 11:21:33 -0500
+Pete Wyckoff <pw@osc.edu> wrote:
 
-> 
-> On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
-> > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
+> bharrosh@panasas.com wrote on Mon, 04 Feb 2008 19:53 +0200:
+> >   FIXME: I need help with this driver (Pete?)
+> >     I used scsi_sense() in a none const way. But since
+> >     scsi_tgt is the ULD here, it can just access it's own sense
+> >     buffer directly. I did not use scsi_eh_cpy_sense() because
+> >     I did not want the extra copy. Pete will want to use a 260
+> >     bytes buffer here.
 > > 
-> > (Added Bart to CC)
-> > 
-> > > hello borislav,
-> > > 
-> > > may i forward you that *old* Debian kernel bug,
-> > > have seen you working on ide-tape:
-> > > http://bugs.debian.org/11922
-> > > no we don't carry any ide patches anymore.
-> > > 
-> > > maybe you've already fixed it in latest?
-> > > 
-> > > thanks
-> > > 
-> > > -- 
-> > > maks
-> > > 
-> > > ----- Forwarded message from Stephen Kitt <steve@sk2.org> -----
-> > > 
-> > > Subject: Bug#11922: I/O error on blank tapes
-> > > Date: Sat, 1 Dec 2007 19:06:18 +0100
-> > > From: Stephen Kitt <steve@sk2.org>
-> > > To: 11922@bugs.debian.org
-> > > 
-> > > Hi,
-> > > 
-> > > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
-> > > 
-> > > $ tar tzvf /dev/nst0
-> > > tar: /dev/nst0: Cannot read: Input/output error
+> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> > Need-help-from: Pete Wyckoff <pw@osc.edu>
 > 
-> That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
-> 
-This is not a bug, it is a feature. There is _nothing_ on the tape and if 
-you try to read something, you get an error. The same thing applies to 
-reading after the last filemark. Note that after writing a filemark at the 
-beginning of the tape, the situation is different. Now there is a file and 
-the normal EOF semantics apply although there still is no data.
+> FYI, I never use scsi_tgt.  Only just pure userspace on the target,
+> and a dumb ethernet NIC that does not know it is speaking any form
+> of SCSI.
 
-I admit that the error return could be more descriptive but the st driver 
-tries to be compatible with other Unices.
-
-The behavior can be changed if Linux does not match other Unices. I don't 
-remember if I have tested just this with other Unices. I will try to test 
-this with Tru64 tomorrow. If anyone has data on other Unices, it would be 
-helpful.
-
--- 
-Kai
+Seems that many people misunderstand STGT iSCSI (and iSER), FCoE, and
+SRP (not implemented yet) software target drivers. They don't use the
+tgt kernel module. They just run in user space like user-space nfs
+daemon.
