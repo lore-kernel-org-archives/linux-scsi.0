@@ -1,78 +1,74 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
-Date: Tue, 5 Feb 2008 05:51:28 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F4397D6404@ADPE2K703.adaptec.com>
-References: 47A72A7F.1050301@panasas.com
- <1202140722-4650-1-git-send-email-bharrosh@panasas.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F439766174@ADPE2K703.adaptec.com>
- <47A823A2.6090200@panasas.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: new scsi sense handling
+Date: Tue, 5 Feb 2008 22:54:40 +0900
+Message-ID: <20080205225409O.tomof@acm.org>
+References: <47A72A7F.1050301@panasas.com>
+	<168902.15215.qm@web31814.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:57850 "EHLO mail-gw3.adaptec.com"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:57995 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751055AbYBENva convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 08:51:30 -0500
-In-Reply-To: <47A823A2.6090200@panasas.com>
-Content-Language: en-US
+	id S1751075AbYBENzv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Feb 2008 08:55:51 -0500
+In-Reply-To: <168902.15215.qm@web31814.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: ltuikov@yahoo.com
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.comfujita.tomonori@lab.ntt.co.jp
 
-I do not think the midlayer needs to be fixed. I think this was a bug/feature that presented itself in the 2.2 tree when we were developing this driver in 1996...
+On Mon, 4 Feb 2008 18:39:22 -0800 (PST)
+Luben Tuikov <ltuikov@yahoo.com> wrote:
 
-Sincerely -- Mark Salyzyn
+> --- On Mon, 2/4/08, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > There are 3 usages of sense handling in drivers
+> > 
+> > 1. sense is available in driver internal structure and is
+> > mem-copied to upper level
+> > 2. A CHECK_CONDITION status was returned and the driver
+> > uses the scsi_eh_prep_cmnd()
+> >    for a REQUEST_SENSE invocation to the target. Then
+> > returning the sense in 
+> >    scsi_eh_return_cmnd(). A variation on this is when the
+> > driver does nothing the queue
+> >    is frozen an the scsi watchdog timer does the above.
+> > 3. The underline host adapter does the REQUEST_SENSE and a
+> > pre-allocated and DMA mapped
+> >    sense buffer receives the sense information from HW.
+> 
+> Many years ago when "ACA" had a constructive meaning,
+> so did "Autosense".  Then about 5 years ago, "Autosense"
+> disappeared completely since it became the de facto
+> implementation of the then SCSI Execute Command "RPC",
+> now just SCSI Execute Command procedure call.
+> 
+> At that point in time, the SCSI mid-layer decided
+> to embrace this model and give the LLDD a scsi command
+> structure which included the sense data buffer to
+> a size that the SCSI mid-layer was interested in,
+> at the moment 96 bytes, macro defined in
+> include/scsi/scsi_cmnd.h.
+> 
+> The concept of "Autosense" was off-loaded to LLDD
+> to emulate it if the specific target device to
+> which the command was issued, didn't supply the
+> sense data on CHECK CONDITION, and more so
+> relevant to target devices which implemented
+> queuing, thus the ACA.
+> 
+> And the mid-layer would consider extracting
+> the sense data via REQUEST SENSE command
+> as a _special case_ if the LLDD/transport layer
+> didn't implement the "autosense" model.
 
-> -----Original Message-----
-> From: Boaz Harrosh [mailto:bharrosh@panasas.com]
-> Sent: Tuesday, February 05, 2008 3:52 AM
-> To: Salyzyn, Mark
-> Cc: James Bottomley; FUJITA Tomonori; Christoph Hellwig; Jens
-> Axboe; Jeff Garzik; linux-scsi; Andrew Morton
-> Subject: Re: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
->
-> On Mon, Feb 04 2008 at 20:32 +0200, "Salyzyn, Mark"
-> <Mark_Salyzyn@adaptec.com> wrote:
-> > ACK with condition that community accepts the RFC's entire premise.
-> >
-> > The removed code that shunted the REQUEST_SENSE was based
-> on the assumption
-> > that the sense data in the current scsi command packet was
-> left over from the
-> > previous command's execution with a check condition as the
-> scsi command packet
-> > is reused to issue the REQUEST_SENSE. For a new, or second
-> from the target's point
-> > of view, request sense to the target issued by these older
-> kernels would always
-> > return an erased sense. The dpt_i2o driver does not itself
-> maintain the sense history,
-> > nor does the Firmware. This behavior, I believe, is not the
-> case for current kernels so
-> > the code fragment made little sense (pun not intended). If
-> my historical knowledge is
-> > correct, this (now removed) workaround makes no more sense
-> because the scsi layer correctly
-> > manages adapters that produce auto-request sense and does
-> not ever turn around the command
-> > and send a second request for sense information.
->
-> > Given this understanding, I have no problem with the
-> removed fragment of REQUEST_SENSE shunting.
-> > However, I do urge some target error recovery testing, tape
-> drives being the likely type of target
-> > affected by this change. I have no such hardware to confirm...
-> > Sincerely -- Mark Salyzyn
->
-> I have removed this test because the midlayer does a
-> scsi_eh_reset_sense() just before
-> the new invocation of a command. So even if the second bad
-> REQUEST_SENSE comes this
-> will not filter it out anymore. If such a thing still
-> happens? A driver state machine
-> must be used to filter it out, or of course midlayer should be fixed.
->
-> Boaz
->
+Only SPI and USB?
+
+The most of LLDs using the transport protocol that we care about today
+uses sense buffer in their own internal structure.
+
+I think that the issue to solve to kill scsi_cmnd:sense_buffer is how
+to share (or export) such sense buffer with the scsi mid-layer.
+
+For the old transport protocols, we could do something that James said
+in this thread to to kill scsi_cmnd:sense_buffer.
