@@ -1,60 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/5] block: update bio according to DMA alignment padding
-Date: Tue,  5 Feb 2008 16:53:01 +0900
-Message-ID: <12021979863012-git-send-email-htejun@gmail.com>
-References: <12021979851743-git-send-email-htejun@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <12021979851743-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens.Axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+From: akpm@linux-foundation.org
+Subject: [patch 08/13] sg: nopage
+Date: Mon, 04 Feb 2008 23:53:21 -0800
+Message-ID: <200802050753.m157r2m7010715@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53842 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754227AbYBEHxN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, npiggin@suse.de, James.Bottomley@steeleye.com, dougg@torque.net
 
-DMA start address and transfer size alignment for PC requests are
-achieved using bio_copy_user() instead of bio_map_user().  This works
-because bio_copy_user() always uses full pages and block DMA alignment
-isn't allowed to go over PAGE_SIZE.
+From: Nick Piggin <npiggin@suse.de>
 
-However, the implementation didn't update the last bio of the request
-to make this padding visible to lower layers.  This patch makes
-blk_rq_map_user() extend the last bio such that it includes the
-padding area and the size of area pointed to by the request is
-properly aligned.
+Convert SG from nopage to fault.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Nick Piggin <npiggin@suse.de>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- block/blk-map.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 955d75c..103b1df 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -139,6 +139,23 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
- 		ubuf += ret;
+ drivers/scsi/sg.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+diff -puN drivers/scsi/sg.c~sg-nopage drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~sg-nopage
++++ a/drivers/scsi/sg.c
+@@ -1160,23 +1160,22 @@ sg_fasync(int fd, struct file *filp, int
+ 	return (retval < 0) ? retval : 0;
+ }
+ 
+-static struct page *
+-sg_vma_nopage(struct vm_area_struct *vma, unsigned long addr, int *type)
++static int
++sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+ 	Sg_fd *sfp;
+-	struct page *page = NOPAGE_SIGBUS;
+ 	unsigned long offset, len, sa;
+ 	Sg_scatter_hold *rsv_schp;
+ 	struct scatterlist *sg;
+ 	int k;
+ 
+ 	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
+-		return page;
++		return VM_FAULT_SIGBUS;
+ 	rsv_schp = &sfp->reserve;
+-	offset = addr - vma->vm_start;
++	offset = vmf->pgoff << PAGE_SHIFT;
+ 	if (offset >= rsv_schp->bufflen)
+-		return page;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_vma_nopage: offset=%lu, scatg=%d\n",
++		return VM_FAULT_SIGBUS;
++	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
+ 				   offset, rsv_schp->k_use_sg));
+ 	sg = rsv_schp->buffer;
+ 	sa = vma->vm_start;
+@@ -1185,21 +1184,21 @@ sg_vma_nopage(struct vm_area_struct *vma
+ 		len = vma->vm_end - sa;
+ 		len = (len < sg->length) ? len : sg->length;
+ 		if (offset < len) {
++			struct page *page;
+ 			page = virt_to_page(page_address(sg_page(sg)) + offset);
+ 			get_page(page);	/* increment page count */
+-			break;
++			vmf->page = page;
++			return 0; /* success */
+ 		}
+ 		sa += len;
+ 		offset -= len;
  	}
  
-+	/*
-+	 * __blk_rq_map_user() copies the buffers if starting address
-+	 * or length isn't aligned.  As the copied buffer is always
-+	 * page aligned, we know that there's enough room for padding.
-+	 * Extend the last bio and update rq->data_len accordingly.
-+	 *
-+	 * On unmap, bio_uncopy_user() will use unmodified
-+	 * bio_map_data pointed to by bio->bi_private.
-+	 */
-+	if (len & queue_dma_alignment(q)) {
-+		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-+		struct bio *bio = rq->biotail;
-+
-+		bio->bi_io_vec[bio->bi_vcnt - 1].bv_len += pad_len;
-+		bio->bi_size += pad_len;
-+	}
-+
- 	rq->buffer = rq->data = NULL;
- 	return 0;
- unmap_rq:
--- 
-1.5.2.4
-
+-	if (type)
+-		*type = VM_FAULT_MINOR;
+-	return page;
++	return VM_FAULT_SIGBUS;
+ }
+ 
+ static struct vm_operations_struct sg_mmap_vm_ops = {
+-	.nopage = sg_vma_nopage,
++	.fault = sg_vma_fault,
+ };
+ 
+ static int
+_
