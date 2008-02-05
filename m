@@ -1,100 +1,72 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
-Date: Tue, 05 Feb 2008 18:54:41 +0200
-Message-ID: <47A894D1.30307@panasas.com>
-References: <Pine.LNX.4.44L0.0802051037040.4167-100000@iolanthe.rowland.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Tue, 5 Feb 2008 18:56:17 +0200 (EET)
+Message-ID: <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
+References: <20080204142206.GB5532@stro.at>  <20080204212835.GA29286@gollum.tnic> <1202162213.3096.119.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24063 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751484AbYBEQzM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:55:12 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0802051037040.4167-100000@iolanthe.rowland.org>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:60825 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464AbYBEQ40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 11:56:26 -0500
+In-Reply-To: <1202162213.3096.119.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mark Glines <mark@glines.org>, James Bottomley <James.Bottomley@SteelEye.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: petkovbb@gmail.com, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 05 2008 at 17:42 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Tue, 5 Feb 2008, Boaz Harrosh wrote:
-> 
->>> However the interface to usb_stor_access_xfer_buf() will have to change
->>> slightly.  Right now if it sees that *sgptr is NULL, it assumes this
->>> means it should start at the beginning of the s-g buffer.  But with 
->>> Boaz's change, *sgptr == NULL means the transfer has reached the end of 
->>> the buffer.  So I'll have to go through and audit all the callers.
->>>
->>> Alan Stern
->>>
->>> -
->> No it does not, this as not changed. Please look again.
-> 
-> You look again.  Your patched code goes like this:
-> 
-> 		struct scatterlist *sg = *sgptr;
-> 
-> 		if (!sg)
-> 			sg = (struct scatterlist *) srb->request_buffer;
-> 
-> Hence if *sgptr is NULL upon entry, it is taken to mean that the 
-> transfer should start at the beginning of the s-g buffer.
-> 
-> 		/* This loop handles a single s-g list entry, which may
-> 		 * include multiple pages.  Find the initial page structure
-> 		 * and the starting offset within the page, and update
-> 		 * the *offset and *index values for the next loop. */
-> 		cnt = 0;
-> 		while (cnt < buflen && sg) {
-> 
-> Hence if sg is NULL, it indicates the end of the buffer has been 
-> reached.  And then down near the end of the routine:
-> 
-> 		*sgptr = sg;
-> 
-> Hence if the end is reached and the caller makes another call to try 
-> transferring more data, the additional data will get stored back at the 
-> beginning of the buffer.
-> 
-That behavior did not change. In the likely event of sg-length matching
-bufflen the last call to sg_next will return NULL, and will be returned 
-in *sgptr. The end condition of an outside caller is either sum of 
-returned counts reaching some target count, or *sgptr return to NULL.
-The code before the sg change would have *indexptr >= some_sg_count, but 
-now we do not have an index we have a pointer and the termination condition 
-is *sgptr == NULL.
+On Mon, 4 Feb 2008, James Bottomley wrote:
 
-So I guess you are afraid that calling code that was converted from index
-to pointer, was done wrong, and where something did  *indexptr >= some_sg_count
-before, does not do *sgptr == NULL now.
-
-So I guess, yes you are welcome to check. I did not do the conversion so
-I can not comment.
-
->> Note that this patch was tested and working. It is a bug
->> in v2.2.24 and it should be accepted already. One way or
->> the other.
->>
->> Callers of usb_stor_access_xfer_buf() need not change.
->> Matthew Dharm should decide if he wants the WARN_ON in 
->> usb_stor_set_xfer_buf() or not and be done with it.
->>
->> I have found and fixed the bug, but it is not a SCSI
->> related bug, and it is not do to any scsi changes. It
->> is a bug from the SG changes of early 2.6.24. Please
->> take it through the USB tree. Feel free to change it
->> the way you like it, and submit it.
 > 
-> I will post a new version of this which handles all these issues.  
-> Expect it in a day or so.
+> On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
+> > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
+> > 
+> > (Added Bart to CC)
+> > 
+> > > hello borislav,
+> > > 
+> > > may i forward you that *old* Debian kernel bug,
+> > > have seen you working on ide-tape:
+> > > http://bugs.debian.org/11922
+> > > no we don't carry any ide patches anymore.
+> > > 
+> > > maybe you've already fixed it in latest?
+> > > 
+> > > thanks
+> > > 
+> > > -- 
+> > > maks
+> > > 
+> > > ----- Forwarded message from Stephen Kitt <steve@sk2.org> -----
+> > > 
+> > > Subject: Bug#11922: I/O error on blank tapes
+> > > Date: Sat, 1 Dec 2007 19:06:18 +0100
+> > > From: Stephen Kitt <steve@sk2.org>
+> > > To: 11922@bugs.debian.org
+> > > 
+> > > Hi,
+> > > 
+> > > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
+> > > 
+> > > $ tar tzvf /dev/nst0
+> > > tar: /dev/nst0: Cannot read: Input/output error
 > 
-
-Please do. Thanks, that would be better.
-Don't forget to also submit a patch for current head-of-line. It's exactly
-the same fix but has diff conflicts with surrounding code.
-
-> Alan Stern
+> That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
 > 
+This is not a bug, it is a feature. There is _nothing_ on the tape and if 
+you try to read something, you get an error. The same thing applies to 
+reading after the last filemark. Note that after writing a filemark at the 
+beginning of the tape, the situation is different. Now there is a file and 
+the normal EOF semantics apply although there still is no data.
 
-Boaz
+I admit that the error return could be more descriptive but the st driver 
+tries to be compatible with other Unices.
+
+The behavior can be changed if Linux does not match other Unices. I don't 
+remember if I have tested just this with other Unices. I will try to test 
+this with Tru64 tomorrow. If anyone has data on other Unices, it would be 
+helpful.
+
+-- 
+Kai
