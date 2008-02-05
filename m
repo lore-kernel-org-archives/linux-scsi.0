@@ -1,185 +1,130 @@
-From: akpm@linux-foundation.org
-Subject: [patch 11/13] Small cleanups for scsi_host.h
-Date: Mon, 04 Feb 2008 23:53:24 -0800
-Message-ID: <200802050753.m157r5bo010724@imap1.linux-foundation.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:41080 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754048AbYBEHxO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 02:53:14 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 5/5] libata: implement drain buffers
+Date: Tue,  5 Feb 2008 16:53:05 +0900
+Message-ID: <12021979861729-git-send-email-htejun@gmail.com>
+References: <12021979851743-git-send-email-htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <12021979851743-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens.Axboe@oracle.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, pavel@ucw.cz, James.Bottomley@steeleye.com, pavel@suse.cz
 
-From: Pavel Machek <pavel@ucw.cz>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Small cleanups in scsi_host.h. Few #defines make me wonder if their
-description is still up to date..?
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Signed-off-by: Pavel Machek <pavel@suse.cz>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+This just updates the libata slave configure routine to take advantage
+of the block layer drain buffers.  It also adjusts the size lengths in
+the atapi code to add the drain buffer to the DMA length so the driver
+knows it can rely on it.
+
+I suspect I should also be checking for AHCI as well as ATA_DEV_ATAPI,
+but I couldn't see how to do that easily.
+
+tj: * atapi_drain_needed() added such that draining is applied to only
+      misc ATAPI commands.
+    * q->bounce_gfp used when allocating drain buffer.
+    * ata_dev_printk() used instead of sdev_printk().
+
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+ drivers/ata/libata-scsi.c |   41 +++++++++++++++++++++++++++++++++++------
+ 1 files changed, 35 insertions(+), 6 deletions(-)
 
- include/scsi/scsi_host.h |   44 +++++++++++++++++++++----------------
- 1 file changed, 25 insertions(+), 19 deletions(-)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e54ee6e..185d699 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -826,17 +826,38 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+ 	sdev->max_device_blocked = 1;
+ }
+ 
+-static void ata_scsi_dev_config(struct scsi_device *sdev,
+-				struct ata_device *dev)
++static int atapi_drain_needed(struct request *rq)
++{
++	if (likely(!blk_pc_request(rq)))
++		return 0;
++
++	return atapi_cmd_type(rq->cmd[0]) == ATAPI_MISC;
++}
++
++static int ata_scsi_dev_config(struct scsi_device *sdev,
++			       struct ata_device *dev)
+ {
+ 	/* configure max sectors */
+ 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
+ 
+-	if (dev->class == ATA_DEV_ATAPI)
++	if (dev->class == ATA_DEV_ATAPI) {
++		struct request_queue *q = sdev->request_queue;
++		void *buf;
++
+ 		/* set the min alignment */
+ 		blk_queue_update_dma_alignment(sdev->request_queue,
+ 					       ATA_DMA_PAD_SZ - 1);
+-	else {
++
++		/* configure draining */
++		buf = kmalloc(ATAPI_MAX_DRAIN, q->bounce_gfp | GFP_KERNEL);
++		if (!buf) {
++			ata_dev_printk(dev, KERN_ERR,
++				       "drain buffer allocation failed\n");
++			return -ENOMEM;
++		}
++
++		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
++	} else {
+ 		/* ATA devices must be sector aligned */
+ 		blk_queue_update_dma_alignment(sdev->request_queue,
+ 					       ATA_SECT_SIZE - 1);
+@@ -853,6 +874,8 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+ 		depth = min(ATA_MAX_QUEUE - 1, depth);
+ 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
+ 	}
++
++	return 0;
+ }
+ 
+ /**
+@@ -871,13 +894,14 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
++	int rc = 0;
+ 
+ 	ata_scsi_sdev_config(sdev);
+ 
+ 	if (dev)
+-		ata_scsi_dev_config(sdev, dev);
++		rc = ata_scsi_dev_config(sdev, dev);
+ 
+-	return 0;
++	return rc;
+ }
+ 
+ /**
+@@ -897,6 +921,7 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct request_queue *q = sdev->request_queue;
+ 	unsigned long flags;
+ 	struct ata_device *dev;
+ 
+@@ -912,6 +937,10 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ 		ata_port_schedule_eh(ap);
+ 	}
+ 	spin_unlock_irqrestore(ap->lock, flags);
++
++	kfree(q->dma_drain_buffer);
++	q->dma_drain_buffer = NULL;
++	q->dma_drain_size = 0;
+ }
+ 
+ /**
+-- 
+1.5.2.4
 
-diff -puN include/scsi/scsi_host.h~small-cleanups-for-scsi_hosth include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h~small-cleanups-for-scsi_hosth
-+++ a/include/scsi/scsi_host.h
-@@ -280,39 +280,45 @@ struct scsi_host_template {
- 	 * If the host wants to be called before the scan starts, but
- 	 * after the midlayer has set up ready for the scan, it can fill
- 	 * in this function.
-+	 *
-+	 * Status: OPTIONAL
- 	 */
- 	void (* scan_start)(struct Scsi_Host *);
- 
- 	/*
--	 * fill in this function to allow the queue depth of this host
--	 * to be changeable (on a per device basis).  returns either
-+	 * Fill in this function to allow the queue depth of this host
-+	 * to be changeable (on a per device basis).  Returns either
- 	 * the current queue depth setting (may be different from what
- 	 * was passed in) or an error.  An error should only be
- 	 * returned if the requested depth is legal but the driver was
- 	 * unable to set it.  If the requested depth is illegal, the
- 	 * driver should set and return the closest legal queue depth.
- 	 *
-+	 * Status: OPTIONAL
- 	 */
- 	int (* change_queue_depth)(struct scsi_device *, int);
- 
- 	/*
--	 * fill in this function to allow the changing of tag types
-+	 * Fill in this function to allow the changing of tag types
- 	 * (this also allows the enabling/disabling of tag command
- 	 * queueing).  An error should only be returned if something
- 	 * went wrong in the driver while trying to set the tag type.
- 	 * If the driver doesn't support the requested tag type, then
- 	 * it should set the closest type it does support without
- 	 * returning an error.  Returns the actual tag type set.
-+	 *
-+	 * Status: OPTIONAL
- 	 */
- 	int (* change_queue_type)(struct scsi_device *, int);
- 
- 	/*
--	 * This function determines the bios parameters for a given
-+	 * This function determines the BIOS parameters for a given
- 	 * harddisk.  These tend to be numbers that are made up by
- 	 * the host adapter.  Parameters:
- 	 * size, device, list (heads, sectors, cylinders)
- 	 *
--	 * Status: OPTIONAL */
-+	 * Status: OPTIONAL
-+	 */
- 	int (* bios_param)(struct scsi_device *, struct block_device *,
- 			sector_t, int []);
- 
-@@ -351,7 +357,7 @@ struct scsi_host_template {
- 
- 	/*
- 	 * This determines if we will use a non-interrupt driven
--	 * or an interrupt driven scheme,  It is set to the maximum number
-+	 * or an interrupt driven scheme.  It is set to the maximum number
- 	 * of simultaneous commands a given host adapter will accept.
- 	 */
- 	int can_queue;
-@@ -372,12 +378,12 @@ struct scsi_host_template {
- 	unsigned short sg_tablesize;
- 
- 	/*
--	 * If the host adapter has limitations beside segment count
-+	 * Set this if the host adapter has limitations beside segment count.
- 	 */
- 	unsigned short max_sectors;
- 
- 	/*
--	 * dma scatter gather segment boundary limit. a segment crossing this
-+	 * DMA scatter gather segment boundary limit. A segment crossing this
- 	 * boundary will be split in two.
- 	 */
- 	unsigned long dma_boundary;
-@@ -386,7 +392,7 @@ struct scsi_host_template {
- 	 * This specifies "machine infinity" for host templates which don't
- 	 * limit the transfer size.  Note this limit represents an absolute
- 	 * maximum, and may be over the transfer limits allowed for
--	 * individual devices (e.g. 256 for SCSI-1)
-+	 * individual devices (e.g. 256 for SCSI-1).
- 	 */
- #define SCSI_DEFAULT_MAX_SECTORS	1024
- 
-@@ -413,12 +419,12 @@ struct scsi_host_template {
- 	unsigned supported_mode:2;
- 
- 	/*
--	 * true if this host adapter uses unchecked DMA onto an ISA bus.
-+	 * True if this host adapter uses unchecked DMA onto an ISA bus.
- 	 */
- 	unsigned unchecked_isa_dma:1;
- 
- 	/*
--	 * true if this host adapter can make good use of clustering.
-+	 * True if this host adapter can make good use of clustering.
- 	 * I originally thought that if the tablesize was large that it
- 	 * was a waste of CPU cycles to prepare a cluster list, but
- 	 * it works out that the Buslogic is faster if you use a smaller
-@@ -428,7 +434,7 @@ struct scsi_host_template {
- 	unsigned use_clustering:1;
- 
- 	/*
--	 * True for emulated SCSI host adapters (e.g. ATAPI)
-+	 * True for emulated SCSI host adapters (e.g. ATAPI).
- 	 */
- 	unsigned emulated:1;
- 
-@@ -438,12 +444,12 @@ struct scsi_host_template {
- 	unsigned skip_settle_delay:1;
- 
- 	/*
--	 * ordered write support
-+	 * True if we are using ordered write support.
- 	 */
- 	unsigned ordered_tag:1;
- 
- 	/*
--	 * Countdown for host blocking with no commands outstanding
-+	 * Countdown for host blocking with no commands outstanding.
- 	 */
- 	unsigned int max_host_blocked;
- 
-@@ -522,8 +528,8 @@ struct Scsi_Host {
- 	struct scsi_transport_template *transportt;
- 
- 	/*
--	 * area to keep a shared tag map (if needed, will be
--	 * NULL if not)
-+	 * Area to keep a shared tag map (if needed, will be
-+	 * NULL if not).
- 	 */
- 	struct blk_queue_tag	*bqt;
- 
-@@ -596,16 +602,16 @@ struct Scsi_Host {
- 	/*
- 	 * Host uses correct SCSI ordering not PC ordering. The bit is
- 	 * set for the minority of drivers whose authors actually read
--	 * the spec ;)
-+	 * the spec ;).
- 	 */
- 	unsigned reverse_ordering:1;
- 
- 	/*
--	 * ordered write support
-+	 * Ordered write support
- 	 */
- 	unsigned ordered_tag:1;
- 
--	/* task mgmt function in progress */
-+	/* Task mgmt function in progress */
- 	unsigned tmf_in_progress:1;
- 
- 	/* Asynchronous scan in progress */
-_
