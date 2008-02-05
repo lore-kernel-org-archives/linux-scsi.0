@@ -1,55 +1,55 @@
-From: Erez Zilber <erezz@Voltaire.COM>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 19:10:33 +0200
-Message-ID: <47A89889.9060701@Voltaire.COM>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+From: Matteo Tescione <matteo@rmnet.it>
+Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux
+ kernel
+Date: Tue, 05 Feb 2008 18:09:15 +0100
+Message-ID: <C3CE56CB.57D4%matteo@rmnet.it>
+References: <20080205223740L.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:24842 "EHLO exil.voltaire.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751981AbYBERKf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Feb 2008 12:10:35 -0500
-In-Reply-To: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758638AbYBERLj@vger.kernel.org>
+In-Reply-To: <20080205223740L.tomof@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>, mangoo@wpkg.org
+Cc: vst@vlnb.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, scst-devel@lists.sourceforge.net, akpm@linux-foundation.org, torvalds@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>, James.Bottomley@hansenpartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-Bart Van Assche wrote:
-> As you probably know there is a trend in enterprise computing towards
-> networked storage. This is illustrated by the emergence during the
-> past few years of standards like SRP (SCSI RDMA Protocol), iSCSI
-> (Internet SCSI) and iSER (iSCSI Extensions for RDMA). Two different
-> pieces of software are necessary to make networked storage possible:
-> initiator software and target software. As far as I know there exist
-> three different SCSI target implementations for Linux:
-> - The iSCSI Enterprise Target Daemon (IETD,
-> http://iscsitarget.sourceforge.net/);
-> - The Linux SCSI Target Framework (STGT, http://stgt.berlios.de/);
-> - The Generic SCSI Target Middle Level for Linux project (SCST,
-> http://scst.sourceforge.net/).
-> Since I was wondering which SCSI target software would be best suited
-> for an InfiniBand network, I started evaluating the STGT and SCST SCSI
-> target implementations. Apparently the performance difference between
-> STGT and SCST is small on 100 Mbit/s and 1 Gbit/s Ethernet networks,
-> but the SCST target software outperforms the STGT software on an
-> InfiniBand network. See also the following thread for the details:
-> http://sourceforge.net/mailarchive/forum.php?thread_name=e2e108260801170127w2937b2afg9bef324efa945e43%40mail.gmail.com&forum_name=scst-devel.
->
->   
-Sorry for the late response (but better late than never).
+On 5-02-2008 14:38, "FUJITA Tomonori" <tomof@acm.org> wrote:
 
-One may claim that STGT should have lower performance than SCST because
-its data path is from userspace. However, your results show that for
-non-IB transports, they both show the same numbers. Furthermore, with IB
-there shouldn't be any additional difference between the 2 targets
-because data transfer from userspace is as efficient as data transfer
-from kernel space.
+> On Tue, 05 Feb 2008 08:14:01 +0100
+> Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+> 
+>> James Bottomley schrieb:
+>> 
+>>> These are both features being independently worked on, are they not?
+>>> Even if they weren't, the combination of the size of SCST in kernel plus
+>>> the problem of having to find a migration path for the current STGT
+>>> users still looks to me to involve the greater amount of work.
+>> 
+>> I don't want to be mean, but does anyone actually use STGT in
+>> production? Seriously?
+>> 
+>> In the latest development version of STGT, it's only possible to stop
+>> the tgtd target daemon using KILL / 9 signal - which also means all
+>> iSCSI initiator connections are corrupted when tgtd target daemon is
+>> started again (kernel upgrade, target daemon upgrade, server reboot etc.).
+> 
+> I don't know what "iSCSI initiator connections are corrupted"
+> mean. But if you reboot a server, how can an iSCSI target
+> implementation keep iSCSI tcp connections?
+> 
+> 
+>> Imagine you have to reboot all your NFS clients when you reboot your NFS
+>> server. Not only that - your data is probably corrupted, or at least the
+>> filesystem deserves checking...
 
-The only explanation that I see is that fine tuning for iSCSI & iSER is
-required. As was already mentioned in this thread, with SDR you can get
-~900 MB/sec with iSER (on STGT).
+Don't know if matters, but in my setup (iscsi on top of drbd+heartbeat)
+rebooting the primary server doesn't affect my iscsi traffic, SCST correctly
+manages stop/crash, by sending unit attention to clients on reconnect.
+Drbd+heartbeat correctly manages those things too.
+Still from an end-user POV, i was able to reboot/survive a crash only with
+SCST, IETD still has reconnect problems and STGT are even worst.
 
-Erez
+Regards,
+--matteo
