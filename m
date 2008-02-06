@@ -1,67 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: ABORT_TASK defined in aic94xx_sas.h
-Date: Wed, 06 Feb 2008 09:46:26 -0600
-Message-ID: <1202312786.3112.28.camel@localhost.localdomain>
-References: <47A9B859.6020208@panasas.com>
-	 <1202310808.3112.8.camel@localhost.localdomain>
-	 <47A9D374.2010607@panasas.com>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Wed, 06 Feb 2008 18:45:47 +0200
+Message-ID: <47A9E43B.3030407@panasas.com>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	 <1201639331.3069.58.camel@localhost.localdomain>	 <adazluoe2t3.fsf@cisco.com>	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>	 <47A89660.1080804@Voltaire.COM> <e2e108260802060416w492db372mc09848edd365d441@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45511 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751637AbYBFPq2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 10:46:28 -0500
-In-Reply-To: <47A9D374.2010607@panasas.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38031 "EHLO
+	bh-buildlin1.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbYBFQsx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 11:48:53 -0500
+In-Reply-To: <e2e108260802060416w492db372mc09848edd365d441@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Erez Zilber <erezz@voltaire.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Wed, 2008-02-06 at 17:34 +0200, Boaz Harrosh wrote:
-> On Wed, Feb 06 2008 at 17:13 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > On Wed, 2008-02-06 at 15:38 +0200, Boaz Harrosh wrote:
-> >> include/scsi/scsi.h as a definition:
-> >> #define ABORT_TASK          0x0d
-> >>
-> >> on the other hand drivers/scsi/aic94xx/aic94xx_sas.h has:
-> >> #define ABORT_TASK              0x03
-> >>
-> >> am I right in thinking that aic94xx_sas.h is wrong in
-> >> polluting the global name-space?
-> >>
-> >> If you ask me aic94xx_sas.h is a global name-space minefield
-> >>
-> >> (This gives me problems when trying to pull in scsi_eh.h into
-> >> aic94xx source files)
-> > 
-> > Well, no, not in those terms.  The global namespace exists in shared
-> > headers which it's a little hard to argue that aic94xx_sas.h is, being
-> > unusable by anything other than a single driver.
-> > 
-> > It is correct to say that include/scsi/scsi.h is polluting the global
-> > namespace, because that is pulled into a large section of the kernel.
-> > 
-> > The message code #defines in scsi.h are a horrible mess of SPI message
-> > defines and task management function defines each of which should
-> > arguably have a SPI_ and TMF_ global namespace discriminator (and the
-> > SPI_ ones be shovelled off into the SPI transport class header).
-> > 
-> > However, this looks like a reasonable hack.
-> > 
-> > James
-> > 
-> > 
-> Point taken, you are right.
+On Feb. 06, 2008, 14:16 +0200, "Bart Van Assche" <bart.vanassche@gmail.com> wrote:
+> On Feb 5, 2008 6:01 PM, Erez Zilber <erezz@voltaire.com> wrote:
+>> Using such large values for FirstBurstLength will give you poor
+>> performance numbers for WRITE commands (with iSER). FirstBurstLength
+>> means how much data should you send as unsolicited data (i.e. without
+>> RDMA). It means that your WRITE commands were sent without RDMA.
 > 
-> Please see that you approve of the name I gave it,
-> I just got it from the nearest comment so I'm not
-> even sure if it's related.
+> Sorry, but I'm afraid you got this wrong. When the iSER transport is
+> used instead of TCP, all data is sent via RDMA, including unsolicited
+> data. If you have look at the iSER implementation in the Linux kernel
+> (source files under drivers/infiniband/ulp/iser), you will see that
+> all data is transferred via RDMA and not via TCP/IP.
 
-Yes, it's a sequencer control block opcode, so prefixing it with SCB_ is
-reasonable.
+Regardless of what the current implementation is, the behavior you (Bart)
+describe seems to disagree with http://www.ietf.org/rfc/rfc5046.txt.
 
-James
+Benny
 
+> 
+> Bart Van Assche.
+> -
 
