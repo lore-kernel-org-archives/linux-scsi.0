@@ -1,38 +1,83 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Wed, 06 Feb 2008 09:06:37 -0800
-Message-ID: <ada8x1ydnfm.fsf@cisco.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	<1201639331.3069.58.camel@localhost.localdomain>
-	<adazluoe2t3.fsf@cisco.com>
-	<20080130083239E.fujita.tomonori@lab.ntt.co.jp>
-	<e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	<47A89660.1080804@Voltaire.COM>
-	<e2e108260802060416w492db372mc09848edd365d441@mail.gmail.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH] sr: update to follow tray status correctly
+Date: Wed, 06 Feb 2008 17:09:26 +0000
+Message-ID: <47A9E9C6.4000802@gentoo.org>
+References: <20071027225830.585C8657DB@smtp.gentoo.org>	 <1193801523.3321.138.camel@localhost.localdomain> <1199551191.3399.29.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2.cisco.com ([171.71.176.71]:47116 "EHLO
-	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116AbYBFRGw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 12:06:52 -0500
-In-Reply-To: <e2e108260802060416w492db372mc09848edd365d441@mail.gmail.com> (Bart Van Assche's message of "Wed, 6 Feb 2008 13:16:43 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------090006030005000304030208"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756613AbYBFRJA@vger.kernel.org>
+In-Reply-To: <1199551191.3399.29.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Maarten Bressers <mbres@gentoo.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, tasio@hierro.tasio.net
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Erez Zilber <erezz@voltaire.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
- > Sorry, but I'm afraid you got this wrong. When the iSER transport is
- > used instead of TCP, all data is sent via RDMA, including unsolicited
- > data. If you have look at the iSER implementation in the Linux kernel
- > (source files under drivers/infiniband/ulp/iser), you will see that
- > all data is transferred via RDMA and not via TCP/IP.
+This is a multi-part message in MIME format.
+--------------090006030005000304030208
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I think the confusion here is caused by a slight misuse of the term
-"RDMA".  It is true that all data is always transported over an
-InfiniBand connection when iSER is used, but not all such transfers
-are one-sided RDMA operations; some data can be transferred using
-send/receive operations.
+Hi James,
 
- - R.
+James Bottomley wrote:
+> It's been a while with no status on this one, so I corrected the patch
+> based on my original input.  The attached is what I think is the best
+> way of doing this (I've replaced the home grown test_unit_ready routine
+> with the SCSI one and updated some of the sense check conditions).
 
+Many thanks for following up on this. The user has not responded to my 
+request for him to test your patch, so I decided to try it myself. I'm 
+using Linus git as of today, I noticed the patch is merged.
+
+It doesn't work for me. On unpatched 2.6.24, I get the behaviour 
+previously described - the ioctl always gives CDS_TRAY_OPEN regardless 
+of tray status. On 2.6.24-git which includes your patch, I instead 
+always get CDS_DISC_OK. I have confirmed that on 2 systems this is 
+because scsi_test_unit_ready() is returning 0.
+
+Before I dig further, does this work for you? I have attached the test 
+program I am using.
+
+Thanks!
+Daniel
+
+
+--------------090006030005000304030208
+Content-Type: text/plain;
+ name="test.c"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="test.c"
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <linux/cdrom.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(void)
+{
+	int fd = open("/dev/sr0", O_RDONLY | O_NONBLOCK);
+	int ret;
+	if (fd < 0) {
+		perror("open");
+		return 1;
+	}
+
+	ret = ioctl(fd, CDROM_DRIVE_STATUS, 0);
+	printf("ioctl result %d\n", ret);
+
+	switch(ret) {
+		case CDS_NO_INFO: printf("CDS_NO_INFO\n"); break;
+		case CDS_NO_DISC: printf("CDS_NO_DISC\n"); break;
+		case CDS_TRAY_OPEN: printf("CDS_TRAY_OPEN\n"); break;
+		case CDS_DRIVE_NOT_READY: printf("CDS_DRIVE_NOT_READY\n"); break;
+		case CDS_DISC_OK: printf("CDS_DISC_OK\n"); break;
+		default: printf("Unknown\n"); break;
+	}
+	return 0;
+}
+
+--------------090006030005000304030208--
