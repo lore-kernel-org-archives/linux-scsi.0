@@ -1,101 +1,149 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 9901] New: kernel panic in stex modules (?)
-Date: Wed, 06 Feb 2008 12:26:39 -0600
-Message-ID: <1202322400.3112.96.camel@localhost.localdomain>
-References: <bug-9901-10286@http.bugzilla.kernel.org/>
-	 <20080206101502.ba8746a6.akpm@linux-foundation.org>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/9] scsi_dh: scsi handling of REQ_LB_OP_TRANSITION
+Date: Wed, 6 Feb 2008 11:00:39 -0800
+Message-ID: <20080206190039.GD32522@linux.vnet.ibm.com>
+References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain> <20080124003059.18871.89111.sendpatchset@localhost.localdomain> <47A37A65.8020500@cs.wisc.edu> <1202151767.3096.86.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080206101502.ba8746a6.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, FUJITA Tomonori <tomof@acm.org>, bugme-daemon@bugzilla.kernel.org, dairinin@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:33503 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754852AbYBFTBl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Feb 2008 14:01:41 -0500
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m16J3U6c027399
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 14:03:30 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m16J1Qif876680
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 14:01:27 -0500
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m16J1J7F001409
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 12:01:20 -0700
+Content-Disposition: inline
+In-Reply-To: <1202151767.3096.86.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Chandra Seetharaman <sekharan@us.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-On Wed, 2008-02-06 at 10:15 -0800, Andrew Morton wrote:
-> On Wed,  6 Feb 2008 09:40:15 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9901
+> On Fri, 2008-02-01 at 14:00 -0600, Mike Christie wrote:
+> > Chandra Seetharaman wrote:
+> > > @@ -1445,9 +1479,24 @@ static void scsi_kill_request(struct req
+> > >  static void scsi_softirq_done(struct request *rq)
+> > >  {
+> > >  	struct scsi_cmnd *cmd = rq->completion_data;
+> > > -	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+> > >  	int disposition;
+> > > +	struct request_queue *q;
+> > > +	unsigned long wait_for, flags;
+> > >  
+> > > +	if (blk_linux_request(rq)) {
+> > > +		q = rq->q;
+> > > +		spin_lock_irqsave(q->queue_lock, flags);
+> > > +		/*
+> > > +		 * we always return 1 and the caller should
+> > > +		 * check rq->errors for the complete status
+> > > +		 */
+> > > +		end_that_request_last(rq, 1);
+> > > +		spin_unlock_irqrestore(q->queue_lock, flags);
+> > > +		return;
+> > > +	}
+> > > +
+> > > +
+> > > +	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+> > >  	INIT_LIST_HEAD(&cmd->eh_entry);
+> > >  
+> > .....
 > > 
-> >            Summary: kernel panic in stex modules (?)
-> >            Product: IO/Storage
-> >            Version: 2.5
-> >      KernelVersion: 2.6.24
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: Serial ATA
-> >         AssignedTo: jgarzik@pobox.com
-> >         ReportedBy: dairinin@gmail.com
+> > > +
+> > >  /*
+> > >   * Function:    scsi_request_fn()
+> > >   *
+> > > @@ -1519,7 +1612,23 @@ static void scsi_request_fn(struct reque
+> > >  		 * accept it.
+> > >  		 */
+> > >  		req = elv_next_request(q);
+> > > -		if (!req || !scsi_dev_queue_ready(q, sdev))
+> > > +		if (!req)
+> > > +			break;
+> > > +
+> > > +		/*
+> > > +		 * We do not account for linux blk req in the device
+> > > +		 * or host busy accounting because it is not necessarily
+> > > +		 * a scsi command that is sent to some object. The lower
+> > > +		 * level can translate it into a request/scsi_cmnd, if
+> > > +		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
+> > > +		 */
+> > > +		if (blk_linux_request(req)) {
+> > > +			blkdev_dequeue_request(req);
+> > > +			scsi_execute_blk_linux_cmd(req);
+> > > +			continue;
+> > > +		}
+> > > +
+> > > +		if (!scsi_dev_queue_ready(q, sdev))
+> > >  			break;
 > > 
+> > I think these two pieces are one of the reasons I have not pushed the 
+> > patches. I thought the completion and execution pieces here are a little 
+> > ugly and seem to just wedge themselves in where they want to be.
 > > 
-> > Latest working kernel version: 2.6.23-r6
-> > Earliest failing kernel version: 2.6.24
-> > Distribution: Gentoo
-> > Hardware Environment: Core2D E6600, Asus p5B Dlx, 2G DDR2 667, Promise ST
-> > EX4350
-> > Software Environment: GCC 4.2.3/4.1.2, CFLAGS="-O2"
-> > 
-> > Problem Description:
-> > The problem is frequent kernel panics within the same module. Can't say what it
-> > is, but looks like it is related to dma and promise driver.
-> > The first culprit, the memory, is ok, 8 hours of memtest passed without errors.
-> > Before, kernel 2.6.23-gentoo-r6, compiled with GCC 4.1.2 worked just fine, then
-> > after upgrade to 4.2.2 th bug appeared. Upgrade to 2.6.24 didn't solve the
-> > problem. Switching back to GCC 4.1.2 made things better for a moment, crashes
-> > became less frequent and I thought compiler was the cause. But today system
-> > crashed again with same symptoms.
-> > Sorry, but I can't save crash log, so I'll provide screen "shot":
-> > http://img238.imageshack.us/my.php?image=p2030030ki1.jpg
-> > 
-> > Steps to reproduce:
-> > Boot, start FTP-server, load RAID with heavy input, in some hours it will
-> > crash. With pure reads system can run several days, heavy write load kills it
-> > much too easier.
-> > 
+> > Is there any way to make the insertion of non-scsi commands more common? 
+> > Do we have the code for being able to send requests directly to 
+> > something like a fc rport done? Could we maybe inject these special 
+> > commands to the hw handler using something similar to how bsg would send 
+> > non scsi commands to weird objects (objects like rport, sessions, and 
+> > not devices we traditionally associated with queues like scsi_devices). 
+> > Just a thought with no code :) that is why the ugly code existed still :)
 > 
-> The supertrak driver has regressed in 2.6.24.  And
-> 
-> commit 9cb83c7529d929c00f37d821daed1942a1b20602
-> Author: FUJITA Tomonori <tomof@acm.org>
-> Date:   Tue Oct 16 11:24:32 2007 +0200
-> 
->     [SCSI] add use_sg_chaining option to scsi_host_template
->     
-> looks a likely candidate.
-> 
-> And this:
-> 
-> commit d3f46f39b7092594b498abc12f0c73b0b9913bde
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Tue Jan 15 11:11:46 2008 -0600
-> 
->     [SCSI] remove use_sg_chaining
-> 
-> from 2.6.25 looks to be a likely fix for it.  Should it be backported?
+> We sort of do.  The bsg code in scsi_transport_sas to send SMP frames to
+> expander devices would be an example of non-scsi commands going via a
+> mechanism other than being encapsulated in SCSI.  I don't know if that's
+> the complete solution in this case, but you could investigate it.
 
-If the patch you identify is the culprit, mine can't be the fix ... and
-it should also be present in git head.
+I looked at the bsg code in scsi_transport_sas and all I see it doing is
+calling blk_init_queue to set the request_fn. The request_fn
+(*smp_request) just processes one cmd_type. Is there code is another tree
+that has more processing?
 
-The BUG_ON is here: isn't it?
+A idea to allow for more control / flexibility cmd_type handlers could be
+added inside request_fn, prep_rq_fn, softirq_done_fn.
 
-static inline void
-dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents,
-	     int direction)
+I thought about this being at a higher level in the block layer, but it
+would be hard to handle the request_fn cleanly at the high level. The
+localized change would reduce impact on users who do not want or need per
+cmd_type handlers.
+
+A SCSI example might be something like:
+
+static void scsi_softirq_done(struct request *rq)
 {
-	BUG_ON(!valid_dma_direction(direction));
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	dma_ops->unmap_sg(hwdev, sg, nents, direction);
+	...
+	sdev->cmd_type_handler[rq->cmd_type]->softirq_done(rq)
+	...
 }
 
-stex only does scsi_dma_unmap(), so something looks to have tampered
-with the cmnd->sc_data_direction somehow ... and I can't see how.
+int scsi_prep_fn(struct request_queue *q, struct request *req)
+{
+	...
+	sdev->cmd_type_handler[rq->cmd_type]->prep_fn(req)
+	...
+}
 
-James
+static void scsi_request_fn(struct request_queue *q)
+{
+	...
+	sdev->cmd_type_handler[rq->cmd_type]->request_fn(req)
+	...
+}
 
+This is just moving the code inside the cmd_type "if" checks, but it may
+reduce the number of cmd_type "if" checks in some paths (if we make
+multiple decisions based on cmd_type). On init of the sdev default
+handlers would be installed.
 
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
