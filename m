@@ -1,35 +1,38 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
- isd200.c
-Date: Wed, 6 Feb 2008 18:25:23 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0802061820490.7110-100000@iolanthe.rowland.org>
-References: <1202338869.3112.138.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer
+	padding and draining
+Date: Wed, 06 Feb 2008 17:31:29 -0600
+Message-ID: <1202340689.3112.140.camel@localhost.localdomain>
+References: <12021979851743-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1202338869.3112.138.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <12021979851743-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens.Axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 6 Feb 2008, James Bottomley wrote:
 
-> > What we're talking about is a routine that provides drivers a simple
-> > way to access the data in a scatter-gather buffer (which may lie in
-> > highmem or otherwise not be easily reachable).  The idea is that some 
-> > commands are emulated by the driver rather than carried out by the 
-> > device, and the driver needs some way to stick the results in the 
-> > transfer buffer.
+On Tue, 2008-02-05 at 16:53 +0900, Tejun Heo wrote:
+> This patchset updates block layer padding and draining support and
+> make libata use it.  It's based on James Bottomley's initial work and,
+> of the five, the last two patches are from James with some
+> modifications.
 > 
-> Isn't that what scsi_kmap_sg() is designed for ... or do you need
-> something slightly different?
+> Please read the following thread for more info.
+> 
+>   http://thread.gmane.org/gmane.linux.scsi/37185
+> 
+> This patchset is on top of
+> 
+>   upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
+> + kill-n_iter-and-fix-fsl patch [1]
 
-I don't know -- I've never heard of scsi_kmap_sg().  And it doesn't 
-appear to exist anywhere in my kernel source.
+This certainly fixes the SATAPI panic on aic94xx (finally got the
+machine with it plugged into the expanders to boot).
 
-Did you mean scsi_kmap_atomic_sg()?  That appears to do only part of
-what usb_stor_access_xfer_buf() does.  In fact, all it does is map a
-single page.
+James
 
-Alan Stern
+
