@@ -1,49 +1,51 @@
-From: Chandru <chandru@in.ibm.com>
-Subject: Re: diskdump fails on x3850 (x86_64)
-Date: Wed, 06 Feb 2008 19:56:18 +0530
-Message-ID: <47A9C38A.7050402@in.ibm.com>
-References: <47A85B75.5010401@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: ABORT_TASK defined in aic94xx_sas.h
+Date: Wed, 06 Feb 2008 09:13:27 -0600
+Message-ID: <1202310808.3112.8.camel@localhost.localdomain>
+References: <47A9B859.6020208@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from E23SMTP01.au.ibm.com ([202.81.18.162]:39632 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbYBFO0V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 09:26:21 -0500
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [202.81.18.234])
-	by e23smtp01.au.ibm.com (8.13.1/8.13.1) with ESMTP id m16ERAB2025911
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:27:10 +1100
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m16EQJRV2691200
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:26:19 +1100
-Received: from d23av03.au.ibm.com (loopback [127.0.0.1])
-	by d23av03.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m16EQLN6009579
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:26:21 +1100
-In-Reply-To: <47A85B75.5010401@linux.vnet.ibm.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59719 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751247AbYBFPNd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 10:13:33 -0500
+In-Reply-To: <47A9B859.6020208@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ciju@linux.vnet.ibm.com, david_chaw@adaptec.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-We looked at the code and there seem to be atleast two functions that 
-may be required in the driver to support diskdump, dump_poll and 
-dump_sanity_check as part of Scsi_Host_Template structure.  Different 
-drivers have their own way of implementing these routines in the driver 
-code. Hence we wanted to ask if the current developers of adp94xx can 
-provide implementation for these routines.  The driver version that we 
-have seems to be adp94xx - '1.0.8-13'
+On Wed, 2008-02-06 at 15:38 +0200, Boaz Harrosh wrote:
+> include/scsi/scsi.h as a definition:
+> #define ABORT_TASK          0x0d
+> 
+> on the other hand drivers/scsi/aic94xx/aic94xx_sas.h has:
+> #define ABORT_TASK              0x03
+> 
+> am I right in thinking that aic94xx_sas.h is wrong in
+> polluting the global name-space?
+> 
+> If you ask me aic94xx_sas.h is a global name-space minefield
+> 
+> (This gives me problems when trying to pull in scsi_eh.h into
+> aic94xx source files)
 
-Regards,
-Chandru
+Well, no, not in those terms.  The global namespace exists in shared
+headers which it's a little hard to argue that aic94xx_sas.h is, being
+unusable by anything other than a single driver.
 
-Ciju Rajan K wrote:
-> Hello folks,
->
-> Diskdump on x3850 with adp94xx driver is not working (Redhat 
-> Enterprise Linux 4.6). 'Service diskdump restart' fails. Is there any 
-> plan to support it?
->
-> Thanks
-> Ciju
+It is correct to say that include/scsi/scsi.h is polluting the global
+namespace, because that is pulled into a large section of the kernel.
+
+The message code #defines in scsi.h are a horrible mess of SPI message
+defines and task management function defines each of which should
+arguably have a SPI_ and TMF_ global namespace discriminator (and the
+SPI_ ones be shovelled off into the SPI transport class header).
+
+However, this looks like a reasonable hack.
+
+James
+
 
