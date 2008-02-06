@@ -1,92 +1,84 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE
-Date: Tue, 05 Feb 2008 16:46:12 -0800
-Message-ID: <1202258772.13537.39.camel@linuxchandra>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	 <20080124003203.18871.52040.sendpatchset@localhost.localdomain>
-	 <1202151498.3096.84.camel@localhost.localdomain>
-	 <1202156151.13537.14.camel@linuxchandra>
-	 <1202156914.3096.112.camel@localhost.localdomain>
-	 <47A8C14A.3030207@cs.wisc.edu>  <20080205215657.GA20963@linux.vnet.ibm.com>
-Reply-To: sekharan@us.ibm.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Tue, 05 Feb 2008 16:48:22 -0800
+Message-ID: <1202258902.2220.102.camel@haakon2.linux-iscsi.org>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <1201639331.3069.58.camel@localhost.localdomain>
+	 <47A05CBD.5050803@vlnb.net>	<47A7049A.9000105@vlnb.net>
+	 <1202139015.3096.5.camel@localhost.localdomain>	<47A73C86.3060604@vlnb.net>
+	 <1202144767.3096.38.camel@localhost.localdomain>
+	 <47A7488B.4080000@vlnb.net>
+	 <1202145901.3096.49.camel@localhost.localdomain>
+	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
+	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
+	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
+	 <20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org>
+	 <47A8B29B.8050406@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:48120 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760819AbYBFAqP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:46:15 -0500
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m160kF9I030506
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 19:46:15 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m160kEXp210974
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 17:46:14 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m160kEp7001414
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Feb 2008 17:46:14 -0700
-In-Reply-To: <20080205215657.GA20963@linux.vnet.ibm.com>
+Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:38233 "HELO
+	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1761098AbYBFAsv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:48:51 -0500
+In-Reply-To: <47A8B29B.8050406@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Julian Satran <Julian_Satran@il.ibm.com>
 
-On Tue, 2008-02-05 at 13:56 -0800, Mike Anderson wrote:
-> Mike Christie <michaelc@cs.wisc.edu> wrote:
-> > When IO is sent to a path that cannot execute IO optimally, the scsi hw 
-> > handler hook for sense processing (see rdac_check_sense in "[PATCH 8/9] 
-> > scsi_dh: add lsi rdac device handler" and the scsi_error.c hook in in 
-> > "scsi_dh: add skeleton for SCSI Device Handlers") will detect this and set 
-> > the state to passive so future IO is not execute on the path 
-> > (SG_IO/passthrough is allowed).
-> >
-> > I am not sure about alternatives. If we just exported the port access state 
-> > in sysfs, but did not fail IO from scsi_prep_state_check, then the users 
-> > could still check the state before sending IO. Would it be horrible to 
-> > convert apps to do this?
+On Tue, 2008-02-05 at 22:01 +0300, Vladislav Bolkhovitin wrote:
+> Jeff Garzik wrote:
+> > Alan Cox wrote:
+> > 
+> >>>better. So for example, I personally suspect that ATA-over-ethernet is way 
+> >>>better than some crazy SCSI-over-TCP crap, but I'm biased for simple and 
+> >>>low-level, and against those crazy SCSI people to begin with.
+> >>
+> >>Current ATAoE isn't. It can't support NCQ. A variant that did NCQ and IP
+> >>would probably trash iSCSI for latency if nothing else.
+> > 
+> > 
+> > AoE is truly a thing of beauty.  It has a two/three page RFC (say no more!).
+> > 
+> > But quite so...  AoE is limited to MTU size, which really hurts.  Can't 
+> > really do tagged queueing, etc.
+> > 
+> > 
+> > iSCSI is way, way too complicated. 
 > 
-> The majority of the boot up delays is caused by the kernel partition
-> scanning and other kernel init code (Chandra please correct if that is not
-
-Yes, this is the case.
-
-Some level of scanning happens at the rc scripts level too. That can be
-reduced by what Mikec is suggesting. But, as andmike is suggesting, it
-won't be a complete solution.
-
-> true). Sysfs attributes would not help here. One option maybe to add
-> handling of the newer BLKERR_ codes in the generators of IO or some
-> similar solution with a rollout possibly focused at the top generators of
-
-are you suggesting the partition scanners (kernel) and lvm(user space
-scanner) should stop sending I/Os to a passive device once they realize
-that the device is passive (thru BLKERR_ return codes) ?
-
-> IO.
+> I fully agree. From one side, all that complexity is unavoidable for 
+> case of multiple connections per session, but for the regular case of 
+> one connection per session it must be a lot simpler.
 > 
-> A number of user apps like lvm scanning that execute media access commands
-> already have filter capability to filter devices that one does not want to
+> And now think about iSER, which brings iSCSI on the whole new complexity 
+> level ;)
 
-Yes, it will help. But, it will lead to additional instructions to the
-users which if they do not follow (due to not knowing it or some such)
-will lead to a delayed boot.
+Actually, the iSER protocol wire protocol itself is quite simple,
+because it builds on iSCSI and IPS fundamentals, and because traditional
+iSCSI's recovery logic for CRC failures (and hence alot of
+acknowledgement sequence PDUs that go missing, etc) and the RDMA Capable
+Protocol (RCaP).
 
-IMO, It will be good if it works nicely out of the box.
+The logic that iSER collectively disables is known as within-connection
+and within-command recovery (negotiated as ErrorRecoveryLevel=1 on the
+wire), RFC-5046 requires that the iSCSI layer that iSER is being enabled
+to disable CRC32C checksums and any associated timeouts for ERL=1.
 
-> scan. Another class of device scanners just use inquiries which are not
-> effected by the passive state (though some could probably use udevinfo and
-> reduce the amount of repeated SCSI inquiries execute on the system.
-> 
-> -andmike
-> --
-> Michael Anderson
-> andmike@linux.vnet.ibm.com
--- 
+Also, have a look at Appendix A. in the iSER spec.
 
-----------------------------------------------------------------------
-    Chandra Seetharaman               | Be careful what you choose....
-              - sekharan@us.ibm.com   |      .......you may get it.
-----------------------------------------------------------------------
+      A.1. iWARP Message Format for iSER Hello Message ...............73
+      A.2. iWARP Message Format for iSER HelloReply Message ..........74
+      A.3. iWARP Message Format for SCSI Read Command PDU ............75
+      A.4. iWARP Message Format for SCSI Read Data ...................76
+      A.5. iWARP Message Format for SCSI Write Command PDU ...........77
+      A.6. iWARP Message Format for RDMA Read Request ................78
+      A.7. iWARP Message Format for Solicited SCSI Write Data ........79
+      A.8. iWARP Message Format for SCSI Response PDU ................80
 
+This is about as 1/2 as many traditional iSCSI PDUs, that iSER
+encapulates.
+
+--nab
 
