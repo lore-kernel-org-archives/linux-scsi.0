@@ -1,45 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Wed, 06 Feb 2008 09:21:02 -0500
-Message-ID: <47A9C24E.7020004@garzik.org>
-References: <47A05CBD.5050803@vlnb.net>	 <1202145901.3096.49.camel@localhost.localdomain>	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>	 <20080204210121.GF18682@fieldses.org>	 <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org>	 <47A7986B.1070206@garzik.org>	 <e2e108260802050038v6648495ap13cf799727c00cfc@mail.gmail.com>	 <47A8A1C8.2010407@garzik.org> <e2e108260802060222p294abff9kde72bbb04a115752@mail.gmail.com>
+From: Chandru <chandru@in.ibm.com>
+Subject: Re: diskdump fails on x3850 (x86_64)
+Date: Wed, 06 Feb 2008 19:56:18 +0530
+Message-ID: <47A9C38A.7050402@in.ibm.com>
+References: <47A85B75.5010401@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52667 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893AbYBFOVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Feb 2008 09:21:18 -0500
-In-Reply-To: <e2e108260802060222p294abff9kde72bbb04a115752@mail.gmail.com>
+Received: from E23SMTP01.au.ibm.com ([202.81.18.162]:39632 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbYBFO0V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 09:26:21 -0500
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [202.81.18.234])
+	by e23smtp01.au.ibm.com (8.13.1/8.13.1) with ESMTP id m16ERAB2025911
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:27:10 +1100
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m16EQJRV2691200
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:26:19 +1100
+Received: from d23av03.au.ibm.com (loopback [127.0.0.1])
+	by d23av03.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m16EQLN6009579
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 01:26:21 +1100
+In-Reply-To: <47A85B75.5010401@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
+Cc: ciju@linux.vnet.ibm.com, david_chaw@adaptec.com
 
-Bart Van Assche wrote:
-> On Feb 5, 2008 6:50 PM, Jeff Garzik <jeff@garzik.org> wrote:
->> For remotely accessing data, iSCSI+fs is quite simply more overhead than
->> a networked fs.  With iSCSI you are doing
->>
->>         local VFS -> local blkdev -> network
->>
->> whereas a networked filesystem is
->>
->>         local VFS -> network
-> 
-> There are use cases than can be solved better via iSCSI and a
-> filesystem than via a network filesystem. One such use case is when
-> deploying a virtual machine whose data is stored on a network server:
-> in that case there is only one user of the data (so there are no
-> locking issues) and filesystem and block device each run in another
-> operating system: the filesystem runs inside the virtual machine and
-> iSCSI either runs in the hypervisor or in the native OS.
+We looked at the code and there seem to be atleast two functions that 
+may be required in the driver to support diskdump, dump_poll and 
+dump_sanity_check as part of Scsi_Host_Template structure.  Different 
+drivers have their own way of implementing these routines in the driver 
+code. Hence we wanted to ask if the current developers of adp94xx can 
+provide implementation for these routines.  The driver version that we 
+have seems to be adp94xx - '1.0.8-13'
 
-Hence the diskless root fs configuration I referred to in multiple 
-emails...  whoopee, you reinvented NFS root with quotas :)
+Regards,
+Chandru
 
-	Jeff
-
-
+Ciju Rajan K wrote:
+> Hello folks,
+>
+> Diskdump on x3850 with adp94xx driver is not working (Redhat 
+> Enterprise Linux 4.6). 'Service diskdump restart' fails. Is there any 
+> plan to support it?
+>
+> Thanks
+> Ciju
 
