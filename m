@@ -1,73 +1,118 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 16:51:28 -0800
-Message-ID: <1202259088.2220.105.camel@haakon2.linux-iscsi.org>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net>	<47A7049A.9000105@vlnb.net>
-	 <1202139015.3096.5.camel@localhost.localdomain>	<47A73C86.3060604@vlnb.net>
-	 <1202144767.3096.38.camel@localhost.localdomain>
-	 <47A7488B.4080000@vlnb.net>
-	 <1202145901.3096.49.camel@localhost.localdomain>
-	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
-	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
-	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
-	 <20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org>
-	 <47A8B29B.8050406@vlnb.net>
-	 <1202258902.2220.102.camel@haakon2.linux-iscsi.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: new scsi sense handling
+Date: Wed, 06 Feb 2008 09:55:23 +0900
+Message-ID: <20080206095523F.fujita.tomonori@lab.ntt.co.jp>
+References: <20080205225409O.tomof@acm.org>
+	<224941.31369.qm@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp117.sbc.mail.sp1.yahoo.com ([69.147.64.90]:43028 "HELO
-	smtp117.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750820AbYBFAwC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:52:02 -0500
-In-Reply-To: <1202258902.2220.102.camel@haakon2.linux-iscsi.org>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:52889 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbYBFA6A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:58:00 -0500
+In-Reply-To: <224941.31369.qm@web31810.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Julian Satran <Julian_Satran@il.ibm.com>
+To: ltuikov@yahoo.com
+Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.com
 
-On Tue, 2008-02-05 at 16:48 -0800, Nicholas A. Bellinger wrote:
-> On Tue, 2008-02-05 at 22:01 +0300, Vladislav Bolkhovitin wrote:
-> > Jeff Garzik wrote:
-> > > Alan Cox wrote:
-> > > 
-> > >>>better. So for example, I personally suspect that ATA-over-ethernet is way 
-> > >>>better than some crazy SCSI-over-TCP crap, but I'm biased for simple and 
-> > >>>low-level, and against those crazy SCSI people to begin with.
-> > >>
-> > >>Current ATAoE isn't. It can't support NCQ. A variant that did NCQ and IP
-> > >>would probably trash iSCSI for latency if nothing else.
-> > > 
-> > > 
-> > > AoE is truly a thing of beauty.  It has a two/three page RFC (say no more!).
-> > > 
-> > > But quite so...  AoE is limited to MTU size, which really hurts.  Can't 
-> > > really do tagged queueing, etc.
-> > > 
-> > > 
-> > > iSCSI is way, way too complicated. 
+On Tue, 5 Feb 2008 11:43:58 -0800 (PST)
+Luben Tuikov <ltuikov@yahoo.com> wrote:
+
+> --- On Tue, 2/5/08, FUJITA Tomonori <tomof@acm.org> wrote:
+> > On Mon, 4 Feb 2008 18:39:22 -0800 (PST)
+> > Luben Tuikov <ltuikov@yahoo.com> wrote:
 > > 
-> > I fully agree. From one side, all that complexity is unavoidable for 
-> > case of multiple connections per session, but for the regular case of 
-> > one connection per session it must be a lot simpler.
+> > > --- On Mon, 2/4/08, Boaz Harrosh
+> > <bharrosh@panasas.com> wrote:
+> > > > There are 3 usages of sense handling in drivers
+> > > > 
+> > > > 1. sense is available in driver internal
+> > structure and is
+> > > > mem-copied to upper level
+> > > > 2. A CHECK_CONDITION status was returned and the
+> > driver
+> > > > uses the scsi_eh_prep_cmnd()
+> > > >    for a REQUEST_SENSE invocation to the target.
+> > Then
+> > > > returning the sense in 
+> > > >    scsi_eh_return_cmnd(). A variation on this is
+> > when the
+> > > > driver does nothing the queue
+> > > >    is frozen an the scsi watchdog timer does the
+> > above.
+> > > > 3. The underline host adapter does the
+> > REQUEST_SENSE and a
+> > > > pre-allocated and DMA mapped
+> > > >    sense buffer receives the sense information
+> > from HW.
+> > > 
+> > > Many years ago when "ACA" had a constructive
+> > meaning,
+> > > so did "Autosense".  Then about 5 years ago,
+> > "Autosense"
+> > > disappeared completely since it became the de facto
+> > > implementation of the then SCSI Execute Command
+> > "RPC",
+> > > now just SCSI Execute Command procedure call.
+> > > 
+> > > At that point in time, the SCSI mid-layer decided
+> > > to embrace this model and give the LLDD a scsi command
+> > > structure which included the sense data buffer to
+> > > a size that the SCSI mid-layer was interested in,
+> > > at the moment 96 bytes, macro defined in
+> > > include/scsi/scsi_cmnd.h.
+> > > 
+> > > The concept of "Autosense" was off-loaded to
+> > LLDD
+> > > to emulate it if the specific target device to
+> > > which the command was issued, didn't supply the
+> > > sense data on CHECK CONDITION, and more so
+> > > relevant to target devices which implemented
+> > > queuing, thus the ACA.
+> > > 
+> > > And the mid-layer would consider extracting
+> > > the sense data via REQUEST SENSE command
+> > > as a _special case_ if the LLDD/transport layer
+> > > didn't implement the "autosense" model.
 > > 
-> > And now think about iSER, which brings iSCSI on the whole new complexity 
-> > level ;)
+> > Only SPI and USB?
 > 
-> Actually, the iSER protocol wire protocol itself is quite simple,
-> because it builds on iSCSI and IPS fundamentals, and because traditional
-> iSCSI's recovery logic for CRC failures (and hence alot of
-> acknowledgement sequence PDUs that go missing, etc) and the RDMA
-> Capable
-> Protocol (RCaP).
+> I don't understand this question.
 
-this should be:
+I meant, 'what transport protocols are categorized into the transport
+protocol that doesn't implement the "autosense" model?'
 
-.. and instead the RDMA Capacle Protocol (RCaP) provides the 32-bit or
-greater data integrity.
 
---nab
+> > The most of LLDs using the transport protocol that we care
+> > about today
+> > uses sense buffer in their own internal structure.
+> 
+> Yes.
+> 
+> > 
+> > I think that the issue to solve to kill
+> > scsi_cmnd:sense_buffer is how
+> > to share (or export) such sense buffer with the scsi
+> > mid-layer.
+> 
+> And therein lies the problem.  Sense data is SCSI specific,
+> it should be left to SCSI, unless of course you can
+> stipulate that _all_ block devices return sense data.
 
+Yeah, sense data is SCSI specific and it should be left to SCSI. But
+I'm not sure we need to stipulate that _all_ block devices return
+sense data. Today the block layer users (sg, bsg, etc) use it only
+when it's appropriate (or only if they want to use it).
+
+
+> If that's not the case and you move it to the block
+> layer, then you get a whole bunch of other problems,
+> like does this device want/use it, should we allocate
+> it, etc. OTOH, if that _is_ the case, then you don't
+> have to worry about this and the model is pretty
+> much as the SCSI mid-layer has it, i.e. sense buffer
+> always present.  So I guess the question is, can
+> you stipulate that _all_ block devices return sense data?
