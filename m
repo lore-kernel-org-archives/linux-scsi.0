@@ -1,91 +1,151 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 18:01:36 -0800
-Message-ID: <1202263296.2220.130.camel@haakon2.linux-iscsi.org>
-References: <20080205223740L.tomof@acm.org> <C3CE56CB.57D4%matteo@rmnet.it>
-	 <20080206102931C.fujita.tomonori@lab.ntt.co.jp>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: new scsi sense handling
+Date: Tue, 5 Feb 2008 18:14:29 -0800 (PST)
+Message-ID: <582460.13794.qm@web31808.mail.mud.yahoo.com>
+References: <20080206095523F.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763396AbYBFCC1@vger.kernel.org>
-In-Reply-To: <20080206102931C.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: matteo@rmnet.it, tomof@acm.org, mangoo@wpkg.org, vst@vlnb.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, scst-devel@lists.sourceforge.net, akpm@linux-foundation.org, torvalds@linux-foundation.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:24004 "HELO
+	web31808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759484AbYBFCOd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 21:14:33 -0500
+In-Reply-To: <20080206095523F.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, hch@infradead.org, jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.com
 
-On Wed, 2008-02-06 at 10:29 +0900, FUJITA Tomonori wrote:
-> On Tue, 05 Feb 2008 18:09:15 +0100
-> Matteo Tescione <matteo@rmnet.it> wrote:
-> 
-> > On 5-02-2008 14:38, "FUJITA Tomonori" <tomof@acm.org> wrote:
+--- On Tue, 2/5/08, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > --- On Tue, 2/5/08, FUJITA Tomonori
+> <tomof@acm.org> wrote:
+> > > On Mon, 4 Feb 2008 18:39:22 -0800 (PST)
+> > > Luben Tuikov <ltuikov@yahoo.com> wrote:
+> > > 
+> > > > --- On Mon, 2/4/08, Boaz Harrosh
+> > > <bharrosh@panasas.com> wrote:
+> > > > > There are 3 usages of sense handling in
+> drivers
+> > > > > 
+> > > > > 1. sense is available in driver
+> internal
+> > > structure and is
+> > > > > mem-copied to upper level
+> > > > > 2. A CHECK_CONDITION status was
+> returned and the
+> > > driver
+> > > > > uses the scsi_eh_prep_cmnd()
+> > > > >    for a REQUEST_SENSE invocation to
+> the target.
+> > > Then
+> > > > > returning the sense in 
+> > > > >    scsi_eh_return_cmnd(). A variation
+> on this is
+> > > when the
+> > > > > driver does nothing the queue
+> > > > >    is frozen an the scsi watchdog timer
+> does the
+> > > above.
+> > > > > 3. The underline host adapter does the
+> > > REQUEST_SENSE and a
+> > > > > pre-allocated and DMA mapped
+> > > > >    sense buffer receives the sense
+> information
+> > > from HW.
+> > > > 
+> > > > Many years ago when "ACA" had a
+> constructive
+> > > meaning,
+> > > > so did "Autosense".  Then about 5
+> years ago,
+> > > "Autosense"
+> > > > disappeared completely since it became the
+> de facto
+> > > > implementation of the then SCSI Execute
+> Command
+> > > "RPC",
+> > > > now just SCSI Execute Command procedure
+> call.
+> > > > 
+> > > > At that point in time, the SCSI mid-layer
+> decided
+> > > > to embrace this model and give the LLDD a
+> scsi command
+> > > > structure which included the sense data
+> buffer to
+> > > > a size that the SCSI mid-layer was
+> interested in,
+> > > > at the moment 96 bytes, macro defined in
+> > > > include/scsi/scsi_cmnd.h.
+> > > > 
+> > > > The concept of "Autosense" was
+> off-loaded to
+> > > LLDD
+> > > > to emulate it if the specific target device
+> to
+> > > > which the command was issued, didn't
+> supply the
+> > > > sense data on CHECK CONDITION, and more so
+> > > > relevant to target devices which implemented
+> > > > queuing, thus the ACA.
+> > > > 
+> > > > And the mid-layer would consider extracting
+> > > > the sense data via REQUEST SENSE command
+> > > > as a _special case_ if the LLDD/transport
+> layer
+> > > > didn't implement the
+> "autosense" model.
+> > > 
+> > > Only SPI and USB?
 > > 
-> > > On Tue, 05 Feb 2008 08:14:01 +0100
-> > > Tomasz Chmielewski <mangoo@wpkg.org> wrote:
-> > > 
-> > >> James Bottomley schrieb:
-> > >> 
-> > >>> These are both features being independently worked on, are they not?
-> > >>> Even if they weren't, the combination of the size of SCST in kernel plus
-> > >>> the problem of having to find a migration path for the current STGT
-> > >>> users still looks to me to involve the greater amount of work.
-> > >> 
-> > >> I don't want to be mean, but does anyone actually use STGT in
-> > >> production? Seriously?
-> > >> 
-> > >> In the latest development version of STGT, it's only possible to stop
-> > >> the tgtd target daemon using KILL / 9 signal - which also means all
-> > >> iSCSI initiator connections are corrupted when tgtd target daemon is
-> > >> started again (kernel upgrade, target daemon upgrade, server reboot etc.).
-> > > 
-> > > I don't know what "iSCSI initiator connections are corrupted"
-> > > mean. But if you reboot a server, how can an iSCSI target
-> > > implementation keep iSCSI tcp connections?
-> > > 
-> > > 
-> > >> Imagine you have to reboot all your NFS clients when you reboot your NFS
-> > >> server. Not only that - your data is probably corrupted, or at least the
-> > >> filesystem deserves checking...
+> > I don't understand this question.
+> 
+> I meant, 'what transport protocols are categorized into
+> the transport
+> protocol that doesn't implement the
+> "autosense" model?'
+
+If any transport protocol conforms to SAM, it supports it.
+Either emulated in the transport itself or supported
+by the device (target) itself.  But ideally, the SCSI
+mid-layer shouldn't have to get a CHECK CONDITION and
+then turn around and send REQUEST SENSE, due to the
+atomicity (per command) of the sense data, especially
+if the target supports queuing.  There used to be
+a mechanism to support this in SAM but is now obsolete.
+
+> 
+> 
+> > > The most of LLDs using the transport protocol
+> that we care
+> > > about today
+> > > uses sense buffer in their own internal
+> structure.
 > > 
-
-The TCP connection will drop, remember that the TCP connection state for
-one side has completely vanished.  Depending on iSCSI/iSER
-ErrorRecoveryLevel that is set, this will mean:
-
-1) Session Recovery, ERL=0 - Restarting the entire nexus and all
-connections across all of the possible subnets or comm-links.  All
-outstanding un-StatSN acknowledged commands will be returned back to the
-SCSI subsystem with RETRY status.  Once a single connection has been
-reestablished to start the nexus, the CDBs will be resent.
-
-2) Connection Recovery, ERL=2 - CDBs from the failed connection(s) will
-be retried (nothing changes in the PDU) to fill the iSCSI CmdSN ordering
-gap, or be explictly retried with TMR TASK_REASSIGN for ones already
-acknowledged by the ExpCmdSN that are returned to the initiator in
-response packets or by way of unsolicited NopINs.
-
-> > Don't know if matters, but in my setup (iscsi on top of drbd+heartbeat)
-> > rebooting the primary server doesn't affect my iscsi traffic, SCST correctly
-> > manages stop/crash, by sending unit attention to clients on reconnect.
-> > Drbd+heartbeat correctly manages those things too.
-> > Still from an end-user POV, i was able to reboot/survive a crash only with
-> > SCST, IETD still has reconnect problems and STGT are even worst.
+> > Yes.
+> > 
+> > > 
+> > > I think that the issue to solve to kill
+> > > scsi_cmnd:sense_buffer is how
+> > > to share (or export) such sense buffer with the
+> scsi
+> > > mid-layer.
+> > 
+> > And therein lies the problem.  Sense data is SCSI
+> specific,
+> > it should be left to SCSI, unless of course you can
+> > stipulate that _all_ block devices return sense data.
 > 
-> Please tell us on stgt-devel mailing list if you see problems. We will
-> try to fix them.
-> 
+> Yeah, sense data is SCSI specific and it should be left to
+> SCSI. But
+> I'm not sure we need to stipulate that _all_ block
+> devices return
+> sense data. Today the block layer users (sg, bsg, etc) use
+> it only
+> when it's appropriate (or only if they want to use it).
 
-FYI, the LIO code also supports rmmoding iscsi_target_mod while at full
-10 Gb/sec speed.  I think it should be a requirement to be able to
-control per initiator, per portal group, per LUN, per device, per HBA in
-the design without restarting any other objects.
+I agree.
 
---nab
+   Luben
 
-> Thanks,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
