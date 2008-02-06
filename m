@@ -1,138 +1,392 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Tue, 05 Feb 2008 16:11:07 -0800
-Message-ID: <1202256667.2220.83.camel@haakon2.linux-iscsi.org>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net>	<47A7049A.9000105@vlnb.net>
-	 <1202139015.3096.5.camel@localhost.localdomain>	<47A73C86.3060604@vlnb.net>
-	 <1202144767.3096.38.camel@localhost.localdomain>
-	 <47A7488B.4080000@vlnb.net>
-	 <1202145901.3096.49.camel@localhost.localdomain>
-	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
-	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
-	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
-	 <20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org>
-	 <47A8B29B.8050406@vlnb.net> <47A8B510.8000807@garzik.org>
-	 <47A8B757.10101@vlnb.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Tue, 5 Feb 2008 16:12:18 -0800
+Message-ID: <20080205161218.70af0ff9.akpm@linux-foundation.org>
+References: <1202074856.3318.111.camel@localhost.localdomain>
+	<20080203220348.GH2648@uranus.ravnborg.org>
+	<1202084211.3318.129.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp111.sbc.mail.mud.yahoo.com ([68.142.198.210]:25604 "HELO
-	smtp111.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756867AbYBFALm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:11:42 -0500
-In-Reply-To: <47A8B757.10101@vlnb.net>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:54655 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759026AbYBFAN6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2008 19:13:58 -0500
+In-Reply-To: <1202084211.3318.129.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Julian Satran <Julian_Satran@il.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: sam@ravnborg.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
 
-On Tue, 2008-02-05 at 22:21 +0300, Vladislav Bolkhovitin wrote:
-> Jeff Garzik wrote:
-> >>> iSCSI is way, way too complicated. 
-> >>
-> >> I fully agree. From one side, all that complexity is unavoidable for 
-> >> case of multiple connections per session, but for the regular case of 
-> >> one connection per session it must be a lot simpler.
-> > 
-> > Actually, think about those multiple connections...  we already had to 
-> > implement fast-failover (and load bal) SCSI multi-pathing at a higher 
-> > level.  IMO that portion of the protocol is redundant:   You need the 
-> > same capability elsewhere in the OS _anyway_, if you are to support 
-> > multi-pathing.
+On Sun, 03 Feb 2008 18:16:51 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
 > 
-> I'm thinking about MC/S as about a way to improve performance using 
-> several physical links. There's no other way, except MC/S, to keep 
-> commands processing order in that case. So, it's really valuable 
-> property of iSCSI, although with a limited application.
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date: Sun, 3 Feb 2008 15:40:56 -0600
+> Subject: [SCSI] enclosure: add support for enclosure services
 > 
-> Vlad
+> The enclosure misc device is really just a library providing sysfs
+> support for physical enclosure devices and their components.
 > 
 
-Greetings,
+Thanks for sending it out for review.
 
-I have always observed the case with LIO SE/iSCSI target mode (as well
-as with other software initiators we can leave out of the discussion for
-now, and congrats to the open/iscsi on folks recent release. :-) that
-execution core hardware thread and inter-nexus per 1 Gb/sec ethernet
-port performance scales up to 4x and 2x core x86_64 very well with
-MC/S).  I have been seeing 450 MB/sec using 2x socket 4x core x86_64 for
-a number of years with MC/S.  Using MC/S on 10 Gb/sec (on PCI-X v2.0
-266mhz as well, which was the first transport that LIO Target ran on
-that was able to reach handle duplex ~1200 MB/sec with 3 initiators and
-MC/S.  In the point to point 10 GB/sec tests on IBM p404 machines, the
-initiators where able to reach ~910 MB/sec with MC/S.  Open/iSCSI was
-able to go a bit faster (~950 MB/sec) because it uses struct sk_buff
-directly. 
+> +struct enclosure_device *enclosure_find(struct device *dev)
+> +{
+> +	struct enclosure_device *edev = NULL;
+> +
+> +	mutex_lock(&container_list_lock);
+> +	list_for_each_entry(edev, &container_list, node) {
+> +		if (edev->cdev.dev == dev) {
+> +			mutex_unlock(&container_list_lock);
+> +			return edev;
+> +		}
+> +	}
+> +	mutex_unlock(&container_list_lock);
+> +
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_find);
 
-A good rule to keep in mind here while considering performance is that
-context switching overhead and pipeline <-> bus stalling (along with
-other legacy OS specific storage stack limitations with BLOCK and VFS
-with O_DIRECT, et al and I will leave out of the discussion for iSCSI
-and SE engine target mode) is that a initiator will scale roughly 1/2 as
-well as a target, given comparable hardware and virsh output.  The
-software target case target case also depends, in great regard in many
-cases, if we are talking about something something as simple as doing
-contiguous DMA memory allocations in from a SINGLE kernel thread, and
-handling direction execution to a storage hardware DMA ring that may
-have not been allocated in the current kernel thread.  In MC/S mode this
-breaks down to:
+This looks a little odd.  We don't take a ref on the object after looking
+it up, so what prevents some other thread of control from freeing or
+otherwise altering the returned object while the caller is playing with it?
 
-1) Sorting logic that handles pre execution statemachine for transport
-from local RDMA memory and OS specific data buffers.   TCP application
-data buffer, struct sk_buff, or RDMA struct page or SG.  This should be
-generic between iSCSI and iSER.
+> +/**
+> + * enclosure_for_each_device - calls a function for each enclosure
+> + * @fn:		the function to call
+> + * @data:	the data to pass to each call
+> + *
+> + * Loops over all the enclosures calling the function.
+> + *
+> + * Note, this function uses a mutex which will be held across calls to
+> + * @fn, so it must have user context, and @fn should not sleep or
 
-2) Allocation of said memory buffers to OS subsystem dependent code that
-can be queued up to these drivers.  It breaks down to what you can get
-drivers and OS subsystem folks to agree to implement, and can be made
-generic in a Transport / BLOCK / VFS layered storage stack.  In the
-"allocate thread DMA ring and use OS supported software and vendor
-available hardware" I don't think the kernel space requirement will
-every completely be able to go away.
+Probably "non atomic context" would be more accurate.
 
-Without diving into RFC-3720 specifics, the statemachine for MC/S side
-for memory allocation, login and logout generic to iSCSi and ISER, and
-ERL=2 recovery.  My plan is to post the locations in the LIO code where
-this has been implemented, and where we where can make this easier, etc.
-In the early in the development of what eventually became LIO Target
-code, ERL was broken into separete files and separete function
-prefixes. 
+fn() actually _can_ sleep.
 
-iscsi_target_erl0, iscsi_target_erl1 and iscsi_target_erl2.
+> + * otherwise cause the mutex to be held for indefinite periods
+> + */
+> +int enclosure_for_each_device(int (*fn)(struct enclosure_device *, void *),
+> +			      void *data)
+> +{
+> +	int error = 0;
+> +	struct enclosure_device *edev;
+> +
+> +	mutex_lock(&container_list_lock);
+> +	list_for_each_entry(edev, &container_list, node) {
+> +		error = fn(edev, data);
+> +		if (error)
+> +			break;
+> +	}
+> +	mutex_unlock(&container_list_lock);
+> +
+> +	return error;
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_for_each_device);
+> +
+> +/**
+> + * enclosure_register - register device as an enclosure
+> + *
+> + * @dev:	device containing the enclosure
+> + * @components:	number of components in the enclosure
+> + *
+> + * This sets up the device for being an enclosure.  Note that @dev does
+> + * not have to be a dedicated enclosure device.  It may be some other type
+> + * of device that additionally responds to enclosure services
+> + */
+> +struct enclosure_device *
+> +enclosure_register(struct device *dev, const char *name, int components,
+> +		   struct enclosure_component_callbacks *cb)
+> +{
+> +	struct enclosure_device *edev =
+> +		kzalloc(sizeof(struct enclosure_device) +
+> +			sizeof(struct enclosure_component)*components,
+> +			GFP_KERNEL);
+> +	int err, i;
+> +
+> +	if (!edev)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	if (!cb) {
+> +		kfree(edev);
+> +		return ERR_PTR(-EINVAL);
+> +	}
 
-The statemachine for ERL=0 and ERL=2 is pretty simple in RFC-3720 (have
-a look for those interested in the discussion)
+It would be less fuss if this were to test cb before doing the kzalloc().
 
-7.1.1.  State Descriptions for Initiators and Targets
+Can cb==NULL actually and legitimately happen?
 
-The LIO target code is also pretty simple for this:
+> +	edev->components = components;
+> +
+> +	edev->cdev.class = &enclosure_class;
+> +	edev->cdev.dev = get_device(dev);
+> +	edev->cb = cb;
+> +	snprintf(edev->cdev.class_id, BUS_ID_SIZE, "%s", name);
+> +	err = class_device_register(&edev->cdev);
+> +	if (err)
+> +		goto err;
+> +
+> +	for (i = 0; i < components; i++)
+> +		edev->component[i].number = -1;
+> +
+> +	mutex_lock(&container_list_lock);
+> +	list_add_tail(&edev->node, &container_list);
+> +	mutex_unlock(&container_list_lock);
+> +
+> +	return edev;
+> +
+> + err:
+> +	put_device(edev->cdev.dev);
+> +	kfree(edev);
+> +	return ERR_PTR(err);
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_register);
+> +
+> +static struct enclosure_component_callbacks enclosure_null_callbacks;
+> +
+> +/**
+> + * enclosure_unregister - remove an enclosure
+> + *
+> + * @edev:	the registered enclosure to remove;
+> + */
+> +void enclosure_unregister(struct enclosure_device *edev)
+> +{
+> +	int i;
+> +
+> +	if (!edev)
+> +		return;
 
-[root@ps3-cell target]# wc -l iscsi_target_erl*
-  1115 iscsi_target_erl0.c
-    45 iscsi_target_erl0.h
-   526 iscsi_target_erl0.o
-  1426 iscsi_target_erl1.c
-    51 iscsi_target_erl1.h
-  1253 iscsi_target_erl1.o
-   605 iscsi_target_erl2.c
-    45 iscsi_target_erl2.h
-   447 iscsi_target_erl2.o
-  5513 total
+Is this legal?
 
-erl1.c is a bit larger than the others because it contains the MC/S
-statemachine functions. iscsi_target_erl1.c:iscsi_execute_cmd() and
-iscsi_target_util.c:iscsi_check_received_cmdsn() do most of the work for
-LIO MC/S state machine.  I would  probably benefit from being in broken
-up into say iscsi_target_mcs.c.  Note that all of this code is MC/S
-safe, with the exception of the specific SCSI TMR functions.  For the
-SCSI TMR pieces, I have always hoped to use SCST code for doing this...
+> +	mutex_lock(&container_list_lock);
+> +	list_del(&edev->node);
+> +	mutex_unlock(&container_list_lock);
 
-Most of the login/logout code is done in iscsi_target.c, which is could
-probably also benefit fot getting broken out...
+See, right now, someone who found this enclosure_device via
+enclosure_find() could still be playing with it?
 
---nab
+> +	for (i = 0; i < edev->components; i++)
+> +		if (edev->component[i].number != -1)
+> +			class_device_unregister(&edev->component[i].cdev);
+> +
+> +	/* prevent any callbacks into service user */
+> +	edev->cb = &enclosure_null_callbacks;
+> +	class_device_unregister(&edev->cdev);
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_unregister);
+> +
+> +/**
+> + * enclosure_component_register - add a particular component to an enclosure
+> + * @edev:	the enclosure to add the component
+> + * @num:	the device number
+> + * @type:	the type of component being added
+> + * @name:	an optional name to appear in sysfs (leave NULL if none)
+> + *
+> + * Registers the component.  The name is optional for enclosures that
+> + * give their components a unique name.  If not, leave the field NULL
+> + * and a name will be assigned.
+> + *
+> + * Returns a pointer to the enclosure component or an error.
+> + */
+> +struct enclosure_component *
+> +enclosure_component_register(struct enclosure_device *edev,
+> +			     unsigned int number,
+> +			     enum enclosure_component_type type,
+> +			     const char *name)
+> +{
+> +	struct enclosure_component *ecomp;
+> +	struct class_device *cdev;
+> +	int err;
+> +
+> +	if (!edev || number >= edev->components)
+> +		return ERR_PTR(-EINVAL);
+
+Is !edev possible and legitimate?
+
+> +	ecomp = &edev->component[number];
+> +
+> +	if (ecomp->number != -1)
+> +		return ERR_PTR(-EINVAL);
+> +
+> +	ecomp->type = type;
+> +	ecomp->number = number;
+> +	cdev = &ecomp->cdev;
+> +	cdev->parent = class_device_get(&edev->cdev);
+> +	cdev->class = &enclosure_component_class;
+> +	if (name)
+> +		snprintf(cdev->class_id, BUS_ID_SIZE, "%s", name);
+> +	else
+> +		snprintf(cdev->class_id, BUS_ID_SIZE, "%d", number);
+
+%u :)
+
+> +
+> +	err = class_device_register(cdev);
+> +	if (err)
+> +		ERR_PTR(err);
+> +
+> +	return ecomp;
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_component_register);
+> +
+> +/**
+> + * enclosure_add_device - add a device as being part of an enclosure
+> + * @edev:	the enclosure device being added to.
+> + * @num:	the number of the component
+> + * @dev:	the device being added
+> + *
+> + * Declares a real device to reside in slot (or identifier) @num of an
+> + * enclosure.  This will cause the relevant sysfs links to appear.
+> + * This function may also be used to change a device associated with
+> + * an enclosure without having to call enclosure_remove_device() in
+> + * between.
+> + *
+> + * Returns zero on success or an error.
+> + */
+> +int enclosure_add_device(struct enclosure_device *edev, int component,
+> +			 struct device *dev)
+> +{
+> +	struct class_device *cdev;
+> +
+> +	if (!edev || component >= edev->components)
+> +		return -EINVAL;
+> +
+> +	cdev = &edev->component[component].cdev;
+> +
+> +	class_device_del(cdev);
+> +	if (cdev->dev)
+> +		put_device(cdev->dev);
+> +	cdev->dev = get_device(dev);
+> +	return class_device_add(cdev);
+> +}
+> +EXPORT_SYMBOL_GPL(enclosure_add_device);
+> +
+> +/*
+> + * sysfs pieces below
+> + */
+> +
+> +static ssize_t enclosure_show_components(struct class_device *cdev, char *buf)
+> +{
+> +	struct enclosure_device *edev = to_enclosure_device(cdev);
+> +
+> +	return snprintf(buf, 40, "%d\n", edev->components);
+> +}
+
+"40"?
+
+> +static struct class_device_attribute enclosure_attrs[] = {
+> +	__ATTR(components, S_IRUGO, enclosure_show_components, NULL),
+> +	__ATTR_NULL
+> +};
+> +
+> +static struct class enclosure_class = {
+> +	.name			= "enclosure",
+> +	.owner			= THIS_MODULE,
+> +	.release		= enclosure_release,
+> +	.class_dev_attrs	= enclosure_attrs,
+> +};
+> +
+> +static char *enclosure_status [] = {
+> +	[ENCLOSURE_STATUS_UNSUPPORTED] = "unsupported",
+> +	[ENCLOSURE_STATUS_OK] = "OK",
+> +	[ENCLOSURE_STATUS_CRITICAL] = "critical",
+> +	[ENCLOSURE_STATUS_NON_CRITICAL] = "non-critical",
+> +	[ENCLOSURE_STATUS_UNRECOVERABLE] = "unrecoverable",
+> +	[ENCLOSURE_STATUS_NOT_INSTALLED] = "not installed",
+> +	[ENCLOSURE_STATUS_UNKNOWN] = "unknown",
+> +	[ENCLOSURE_STATUS_UNAVAILABLE] = "unavailable",
+> +};
+> +
+> +static char *enclosure_type [] = {
+> +	[ENCLOSURE_COMPONENT_DEVICE] = "device",
+> +	[ENCLOSURE_COMPONENT_ARRAY_DEVICE] = "array device",
+> +};
+
+One could play with const here, if sufficiently keen.
+
+> +static ssize_t set_component_fault(struct class_device *cdev, const char *buf,
+> +				   size_t count)
+> +{
+> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
+> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
+> +	int val = simple_strtoul(buf, NULL, 0);
+
+hrm, we do this conversion about 1e99 times in the kernel and we have to go
+and pass three args where only one was needed. katoi()?
+
+> +	if (edev->cb->set_fault)
+> +		edev->cb->set_fault(edev, ecomp, val);
+> +	return count;
+> +}
+> +
+> +static ssize_t get_component_status(struct class_device *cdev, char *buf)
+> +{
+> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
+> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
+> +
+> +	if (edev->cb->get_status)
+> +		edev->cb->get_status(edev, ecomp);
+> +	return snprintf(buf, 40, "%s\n", enclosure_status[ecomp->status]);
+> +}
+> +
+> +static ssize_t set_component_status(struct class_device *cdev, const char *buf,
+> +				   size_t count)
+> +{
+> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
+> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
+> +	int i;
+> +
+> +	for (i = 0; enclosure_status[i]; i++) {
+> +		if (strncmp(buf, enclosure_status[i],
+> +			    strlen(enclosure_status[i])) == 0 &&
+> +		    buf[strlen(enclosure_status[i])] == '\n')
+> +			break;
+> +	}
+
+So if an application does
+
+	write(fd, "foo", 3)
+
+it won't work?  Thye have to do
+
+	write(fd, "foo\n", 4)
+
+?
 
 
+> +	if (enclosure_status[i] && edev->cb->set_status) {
+> +		edev->cb->set_status(edev, ecomp, i);
+> +		return count;
+> +	} else
+> +		return -EINVAL;
+> +}
+> +
+>
+> ...
+>
+> +#define to_enclosure_device(x) container_of((x), struct enclosure_device, cdev)
+> +#define to_enclosure_component(x) container_of((x), struct enclosure_component, cdev)
+
+These could be C functions...
+
+> +struct enclosure_device *
+> +enclosure_register(struct device *, const char *, int,
+> +		   struct enclosure_component_callbacks *);
+> +void enclosure_unregister(struct enclosure_device *);
+> +struct enclosure_component *
+> +enclosure_component_register(struct enclosure_device *, unsigned int,
+> +				 enum enclosure_component_type, const char *);
+> +int enclosure_add_device(struct enclosure_device *enclosure, int component,
+> +			 struct device *dev);
+> +int enclosure_remove_device(struct enclosure_device *enclosure, int component);
+> +struct enclosure_device *enclosure_find(struct device *dev);
+> +int enclosure_for_each_device(int (*fn)(struct enclosure_device *, void *),
+> +			      void *data);
+> +
+> +#endif /* _LINUX_ENCLOSURE_H_ */
+
+Nice looking driver.
