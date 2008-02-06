@@ -1,74 +1,45 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: ABORT_TASK defined in aic94xx_sas.h
-Date: Wed, 06 Feb 2008 15:38:33 +0200
-Message-ID: <47A9B859.6020208@panasas.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Wed, 06 Feb 2008 09:21:02 -0500
+Message-ID: <47A9C24E.7020004@garzik.org>
+References: <47A05CBD.5050803@vlnb.net>	 <1202145901.3096.49.camel@localhost.localdomain>	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>	 <20080204210121.GF18682@fieldses.org>	 <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org>	 <47A7986B.1070206@garzik.org>	 <e2e108260802050038v6648495ap13cf799727c00cfc@mail.gmail.com>	 <47A8A1C8.2010407@garzik.org> <e2e108260802060222p294abff9kde72bbb04a115752@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:42246 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762378AbYBFNio (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 08:38:44 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:52667 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893AbYBFOVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Feb 2008 09:21:18 -0500
+In-Reply-To: <e2e108260802060222p294abff9kde72bbb04a115752@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-include/scsi/scsi.h as a definition:
-#define ABORT_TASK          0x0d
+Bart Van Assche wrote:
+> On Feb 5, 2008 6:50 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>> For remotely accessing data, iSCSI+fs is quite simply more overhead than
+>> a networked fs.  With iSCSI you are doing
+>>
+>>         local VFS -> local blkdev -> network
+>>
+>> whereas a networked filesystem is
+>>
+>>         local VFS -> network
+> 
+> There are use cases than can be solved better via iSCSI and a
+> filesystem than via a network filesystem. One such use case is when
+> deploying a virtual machine whose data is stored on a network server:
+> in that case there is only one user of the data (so there are no
+> locking issues) and filesystem and block device each run in another
+> operating system: the filesystem runs inside the virtual machine and
+> iSCSI either runs in the hypervisor or in the native OS.
 
-on the other hand drivers/scsi/aic94xx/aic94xx_sas.h has:
-#define ABORT_TASK              0x03
+Hence the diskless root fs configuration I referred to in multiple 
+emails...  whoopee, you reinvented NFS root with quotas :)
 
-am I right in thinking that aic94xx_sas.h is wrong in
-polluting the global name-space?
+	Jeff
 
-If you ask me aic94xx_sas.h is a global name-space minefield
 
-(This gives me problems when trying to pull in scsi_eh.h into
-aic94xx source files)
-
-perhaps:
----
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Wed, 6 Feb 2008 15:35:37 +0200
-Subject: [PATCH] aic94xx_sas: avoid conflict with scsi.h
-
-  drivers/scsi/aic94xx/aic94xx_sas.h would redefine ABORT_TASK
-  as a different value.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/aic94xx/aic94xx_sas.h |    2 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_sas.h b/drivers/scsi/aic94xx/aic94xx_sas.h
-index fa7c529..912e6b7 100644
---- a/drivers/scsi/aic94xx/aic94xx_sas.h
-+++ b/drivers/scsi/aic94xx/aic94xx_sas.h
-@@ -292,7 +292,7 @@ struct scb_header {
- #define INITIATE_SSP_TASK       0x00
- #define INITIATE_LONG_SSP_TASK  0x01
- #define INITIATE_BIDIR_SSP_TASK 0x02
--#define ABORT_TASK              0x03
-+#define SCB_ABORT_TASK          0x03
- #define INITIATE_SSP_TMF        0x04
- #define SSP_TARG_GET_DATA       0x05
- #define SSP_TARG_GET_DATA_GOOD  0x06
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index 87b2f6e..b52124f 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -369,7 +369,7 @@ int asd_abort_task(struct sas_task *task)
- 		return -ENOMEM;
- 	scb = ascb->scb;
- 
--	scb->header.opcode = ABORT_TASK;
-+	scb->header.opcode = SCB_ABORT_TASK;
- 
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SATA:
--- 
-1.5.3.3
 
