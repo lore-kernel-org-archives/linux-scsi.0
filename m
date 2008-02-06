@@ -1,41 +1,74 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Wed, 6 Feb 2008 13:16:43 +0100
-Message-ID: <e2e108260802060416w492db372mc09848edd365d441@mail.gmail.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <adazluoe2t3.fsf@cisco.com>
-	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>
-	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	 <47A89660.1080804@Voltaire.COM>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: ABORT_TASK defined in aic94xx_sas.h
+Date: Wed, 06 Feb 2008 15:38:33 +0200
+Message-ID: <47A9B859.6020208@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:42284 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762225AbYBFMQt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 07:16:49 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so2597816wra.23
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Feb 2008 04:16:45 -0800 (PST)
-In-Reply-To: <47A89660.1080804@Voltaire.COM>
-Content-Disposition: inline
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:42246 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762378AbYBFNio (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 08:38:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erez Zilber <erezz@voltaire.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-On Feb 5, 2008 6:01 PM, Erez Zilber <erezz@voltaire.com> wrote:
->
-> Using such large values for FirstBurstLength will give you poor
-> performance numbers for WRITE commands (with iSER). FirstBurstLength
-> means how much data should you send as unsolicited data (i.e. without
-> RDMA). It means that your WRITE commands were sent without RDMA.
+include/scsi/scsi.h as a definition:
+#define ABORT_TASK          0x0d
 
-Sorry, but I'm afraid you got this wrong. When the iSER transport is
-used instead of TCP, all data is sent via RDMA, including unsolicited
-data. If you have look at the iSER implementation in the Linux kernel
-(source files under drivers/infiniband/ulp/iser), you will see that
-all data is transferred via RDMA and not via TCP/IP.
+on the other hand drivers/scsi/aic94xx/aic94xx_sas.h has:
+#define ABORT_TASK              0x03
 
-Bart Van Assche.
+am I right in thinking that aic94xx_sas.h is wrong in
+polluting the global name-space?
+
+If you ask me aic94xx_sas.h is a global name-space minefield
+
+(This gives me problems when trying to pull in scsi_eh.h into
+aic94xx source files)
+
+perhaps:
+---
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Wed, 6 Feb 2008 15:35:37 +0200
+Subject: [PATCH] aic94xx_sas: avoid conflict with scsi.h
+
+  drivers/scsi/aic94xx/aic94xx_sas.h would redefine ABORT_TASK
+  as a different value.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/aic94xx/aic94xx_sas.h |    2 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_sas.h b/drivers/scsi/aic94xx/aic94xx_sas.h
+index fa7c529..912e6b7 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sas.h
++++ b/drivers/scsi/aic94xx/aic94xx_sas.h
+@@ -292,7 +292,7 @@ struct scb_header {
+ #define INITIATE_SSP_TASK       0x00
+ #define INITIATE_LONG_SSP_TASK  0x01
+ #define INITIATE_BIDIR_SSP_TASK 0x02
+-#define ABORT_TASK              0x03
++#define SCB_ABORT_TASK          0x03
+ #define INITIATE_SSP_TMF        0x04
+ #define SSP_TARG_GET_DATA       0x05
+ #define SSP_TARG_GET_DATA_GOOD  0x06
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index 87b2f6e..b52124f 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -369,7 +369,7 @@ int asd_abort_task(struct sas_task *task)
+ 		return -ENOMEM;
+ 	scb = ascb->scb;
+ 
+-	scb->header.opcode = ABORT_TASK;
++	scb->header.opcode = SCB_ABORT_TASK;
+ 
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SATA:
+-- 
+1.5.3.3
+
