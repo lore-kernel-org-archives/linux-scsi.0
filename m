@@ -1,149 +1,164 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/9] scsi_dh: scsi handling of REQ_LB_OP_TRANSITION
-Date: Wed, 6 Feb 2008 11:00:39 -0800
-Message-ID: <20080206190039.GD32522@linux.vnet.ibm.com>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain> <20080124003059.18871.89111.sendpatchset@localhost.localdomain> <47A37A65.8020500@cs.wisc.edu> <1202151767.3096.86.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sr: update to follow tray status correctly
+Date: Wed, 06 Feb 2008 13:01:58 -0600
+Message-ID: <1202324518.3112.104.camel@localhost.localdomain>
+References: <20071027225830.585C8657DB@smtp.gentoo.org>
+	 <1193801523.3321.138.camel@localhost.localdomain>
+	 <1199551191.3399.29.camel@localhost.localdomain>
+	 <47A9E9C6.4000802@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:33503 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754852AbYBFTBl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Feb 2008 14:01:41 -0500
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m16J3U6c027399
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 14:03:30 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m16J1Qif876680
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 14:01:27 -0500
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m16J1J7F001409
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Feb 2008 12:01:20 -0700
-Content-Disposition: inline
-In-Reply-To: <1202151767.3096.86.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56780 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753517AbYBFTCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 14:02:05 -0500
+In-Reply-To: <47A9E9C6.4000802@gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Chandra Seetharaman <sekharan@us.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Daniel Drake <dsd@gentoo.org>
+Cc: Maarten Bressers <mbres@gentoo.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, tasio@hierro.tasio.net
 
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+On Wed, 2008-02-06 at 17:09 +0000, Daniel Drake wrote:
+> Hi James,
 > 
-> On Fri, 2008-02-01 at 14:00 -0600, Mike Christie wrote:
-> > Chandra Seetharaman wrote:
-> > > @@ -1445,9 +1479,24 @@ static void scsi_kill_request(struct req
-> > >  static void scsi_softirq_done(struct request *rq)
-> > >  {
-> > >  	struct scsi_cmnd *cmd = rq->completion_data;
-> > > -	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-> > >  	int disposition;
-> > > +	struct request_queue *q;
-> > > +	unsigned long wait_for, flags;
-> > >  
-> > > +	if (blk_linux_request(rq)) {
-> > > +		q = rq->q;
-> > > +		spin_lock_irqsave(q->queue_lock, flags);
-> > > +		/*
-> > > +		 * we always return 1 and the caller should
-> > > +		 * check rq->errors for the complete status
-> > > +		 */
-> > > +		end_that_request_last(rq, 1);
-> > > +		spin_unlock_irqrestore(q->queue_lock, flags);
-> > > +		return;
-> > > +	}
-> > > +
-> > > +
-> > > +	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-> > >  	INIT_LIST_HEAD(&cmd->eh_entry);
-> > >  
-> > .....
-> > 
-> > > +
-> > >  /*
-> > >   * Function:    scsi_request_fn()
-> > >   *
-> > > @@ -1519,7 +1612,23 @@ static void scsi_request_fn(struct reque
-> > >  		 * accept it.
-> > >  		 */
-> > >  		req = elv_next_request(q);
-> > > -		if (!req || !scsi_dev_queue_ready(q, sdev))
-> > > +		if (!req)
-> > > +			break;
-> > > +
-> > > +		/*
-> > > +		 * We do not account for linux blk req in the device
-> > > +		 * or host busy accounting because it is not necessarily
-> > > +		 * a scsi command that is sent to some object. The lower
-> > > +		 * level can translate it into a request/scsi_cmnd, if
-> > > +		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
-> > > +		 */
-> > > +		if (blk_linux_request(req)) {
-> > > +			blkdev_dequeue_request(req);
-> > > +			scsi_execute_blk_linux_cmd(req);
-> > > +			continue;
-> > > +		}
-> > > +
-> > > +		if (!scsi_dev_queue_ready(q, sdev))
-> > >  			break;
-> > 
-> > I think these two pieces are one of the reasons I have not pushed the 
-> > patches. I thought the completion and execution pieces here are a little 
-> > ugly and seem to just wedge themselves in where they want to be.
-> > 
-> > Is there any way to make the insertion of non-scsi commands more common? 
-> > Do we have the code for being able to send requests directly to 
-> > something like a fc rport done? Could we maybe inject these special 
-> > commands to the hw handler using something similar to how bsg would send 
-> > non scsi commands to weird objects (objects like rport, sessions, and 
-> > not devices we traditionally associated with queues like scsi_devices). 
-> > Just a thought with no code :) that is why the ugly code existed still :)
+> James Bottomley wrote:
+> > It's been a while with no status on this one, so I corrected the patch
+> > based on my original input.  The attached is what I think is the best
+> > way of doing this (I've replaced the home grown test_unit_ready routine
+> > with the SCSI one and updated some of the sense check conditions).
 > 
-> We sort of do.  The bsg code in scsi_transport_sas to send SMP frames to
-> expander devices would be an example of non-scsi commands going via a
-> mechanism other than being encapsulated in SCSI.  I don't know if that's
-> the complete solution in this case, but you could investigate it.
+> Many thanks for following up on this. The user has not responded to my 
+> request for him to test your patch, so I decided to try it myself. I'm 
+> using Linus git as of today, I noticed the patch is merged.
+> 
+> It doesn't work for me. On unpatched 2.6.24, I get the behaviour 
+> previously described - the ioctl always gives CDS_TRAY_OPEN regardless 
+> of tray status. On 2.6.24-git which includes your patch, I instead 
+> always get CDS_DISC_OK. I have confirmed that on 2 systems this is 
+> because scsi_test_unit_ready() is returning 0.
+> 
+> Before I dig further, does this work for you? I have attached the test 
+> program I am using.
 
-I looked at the bsg code in scsi_transport_sas and all I see it doing is
-calling blk_init_queue to set the request_fn. The request_fn
-(*smp_request) just processes one cmd_type. Is there code is another tree
-that has more processing?
+Heh, you assume I have a CD easily to hand in my testing setup. But,
+unfortunately it requires a bit of manual intervention to set up the
+state ...
 
-A idea to allow for more control / flexibility cmd_type handlers could be
-added inside request_fn, prep_rq_fn, softirq_done_fn.
+However, I think you're right, the vanilla TUR does eat NOT_READY for
+removable media, which CDs are.  Does this fix it?
 
-I thought about this being at a higher level in the block layer, but it
-would be hard to handle the request_fn cleanly at the high level. The
-localized change would reduce impact on users who do not want or need per
-cmd_type handlers.
+James
 
-A SCSI example might be something like:
+---
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 50ba492..1332a5c 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -163,6 +163,29 @@ static void scsi_cd_put(struct scsi_cd *cd)
+ 	mutex_unlock(&sr_ref_mutex);
+ }
+ 
++/* identical to scsi_test_unit_ready except that it doesn't
++ * eat the NOT_READY returns for removable media */
++int sr_test_unit_ready(struct scsi_device *sdev, struct scsi_sense_hdr *sshdr)
++{
++	int retries = MAX_RETRIES;
++	int the_result; 
++	u8 cmd[] = {TEST_UNIT_READY, 0, 0, 0, 0, 0 };
++     
++	/* issue TEST_UNIT_READY until the initial startup UNIT_ATTENTION
++	 * conditions are gone, or a timeout happens
++	 */
++	do {
++		the_result = scsi_execute_req (sdev, cmd, DMA_NONE, NULL,
++					       0, sshdr, SR_TIMEOUT,
++					       retries--);
++
++	} while (retries > 0 && 
++		 (!scsi_status_is_good(the_result) ||
++		  (scsi_sense_valid(sshdr) &&
++		   sshdr->sense_key == UNIT_ATTENTION)));
++	return the_result;
++}
++
+ /*
+  * This function checks to see if the media has been changed in the
+  * CDROM drive.  It is possible that we have already sensed a change,
+@@ -185,8 +208,7 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ 	}
+ 
+ 	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+-	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
+-				      sshdr);
++	retval = sr_test_unit_ready(cd->device, sshdr);
+ 	if (retval || (scsi_sense_valid(sshdr) &&
+ 		       /* 0x3a is medium not present */
+ 		       sshdr->asc == 0x3a)) {
+@@ -733,10 +755,8 @@ static void get_capabilities(struct scsi_cd *cd)
+ {
+ 	unsigned char *buffer;
+ 	struct scsi_mode_data data;
+-	unsigned char cmd[MAX_COMMAND_SIZE];
+ 	struct scsi_sense_hdr sshdr;
+-	unsigned int the_result;
+-	int retries, rc, n;
++	int rc, n;
+ 
+ 	static const char *loadmech[] =
+ 	{
+@@ -758,23 +778,8 @@ static void get_capabilities(struct scsi_cd *cd)
+ 		return;
+ 	}
+ 
+-	/* issue TEST_UNIT_READY until the initial startup UNIT_ATTENTION
+-	 * conditions are gone, or a timeout happens
+-	 */
+-	retries = 0;
+-	do {
+-		memset((void *)cmd, 0, MAX_COMMAND_SIZE);
+-		cmd[0] = TEST_UNIT_READY;
+-
+-		the_result = scsi_execute_req (cd->device, cmd, DMA_NONE, NULL,
+-					       0, &sshdr, SR_TIMEOUT,
+-					       MAX_RETRIES);
+-
+-		retries++;
+-	} while (retries < 5 && 
+-		 (!scsi_status_is_good(the_result) ||
+-		  (scsi_sense_valid(&sshdr) &&
+-		   sshdr.sense_key == UNIT_ATTENTION)));
++	/* eat unit attentions */
++	sr_test_unit_ready(cd->device, &sshdr);
+ 
+ 	/* ask for mode page 0x2a */
+ 	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, 128,
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index 81fbc0b..1e144df 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -61,6 +61,7 @@ int sr_select_speed(struct cdrom_device_info *cdi, int speed);
+ int sr_audio_ioctl(struct cdrom_device_info *, unsigned int, void *);
+ 
+ int sr_is_xa(Scsi_CD *);
++int sr_test_unit_ready(struct scsi_device *sdev, struct scsi_sense_hdr *sshdr);
+ 
+ /* sr_vendor.c */
+ void sr_vendor_init(Scsi_CD *);
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index d5cebff..ae87d08 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -306,8 +306,7 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+ 		/* we have no changer support */
+ 		return -EINVAL;
+ 	}
+-	if (0 == scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
+-				      &sshdr))
++	if (0 == sr_test_unit_ready(cd->device, &sshdr))
+ 		return CDS_DISC_OK;
+ 
+ 	if (!cdrom_get_media_event(cdi, &med)) {
 
-static void scsi_softirq_done(struct request *rq)
-{
-	...
-	sdev->cmd_type_handler[rq->cmd_type]->softirq_done(rq)
-	...
-}
 
-int scsi_prep_fn(struct request_queue *q, struct request *req)
-{
-	...
-	sdev->cmd_type_handler[rq->cmd_type]->prep_fn(req)
-	...
-}
-
-static void scsi_request_fn(struct request_queue *q)
-{
-	...
-	sdev->cmd_type_handler[rq->cmd_type]->request_fn(req)
-	...
-}
-
-This is just moving the code inside the cmd_type "if" checks, but it may
-reduce the number of cmd_type "if" checks in some paths (if we make
-multiple decisions based on cmd_type). On init of the sdev default
-handlers would be installed.
-
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
