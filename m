@@ -1,185 +1,42 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: do not set valid bit in sense information
-Date: Wed, 6 Feb 2008 13:54:12 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F43982A08C@ADPE2K703.adaptec.com>
-References: <170fa0d20802030714i77d0fd65ka7ff32623da359ae@mail.gmail.com>
- <838819.43871.qm@web31812.mail.mud.yahoo.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
+ isd200.c
+Date: Wed, 6 Feb 2008 17:18:20 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802061708460.7110-100000@iolanthe.rowland.org>
+References: <20080206210511.GA30466@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F43982A08CADPE2K703adapte_"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:55184 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752791AbYBFVyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Feb 2008 16:54:14 -0500
-In-Reply-To: <838819.43871.qm@web31812.mail.mud.yahoo.com>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:50421 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757211AbYBFWSW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2008 17:18:22 -0500
+In-Reply-To: <20080206210511.GA30466@one-eyed-alien.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Tony Battersby <tonyb@cybernetics.com>, "ltuikov@yahoo.com" <ltuikov@yahoo.com>, Mike Snitzer <snitzer@gmail.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Mark Glines <mark@glines.org>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43982A08CADPE2K703adapte_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Wed, 6 Feb 2008, Matthew Dharm wrote:
 
-Luben Tuikov [mailto:ltuikov@yahoo.com] sez:
-> Just as in your case and Tony's case, which I presume
-> uses the same RAID firmware vendor, it would've
-> probably been better if the RAID firmware vendor
-> fixed the firmware to not set the VALID bit if the
-> INFORMATION field is not valid.
+> Maybe this is a crazy question, but...
+> 
+> Why is this not in the SCSI core?
 
-Point taken regarding the aacraid driver. Dropped the VALID bit, and then d=
-id some cleanup/simplification of the set_sense procedure and the associate=
-d parameters. Mike did some preliminary tests when the VALID bit was droppe=
-d before the 'Re: [PATCH] [SCSI] sd: make error handling more robust' patch=
-es came on the scene. The change in the SCSI subsystem does make this enclo=
-sed aacraid patch unnecessary, so this aacraid patch is merely post battle =
-ground cleanup. If the simplification is an issue, repugnant, too much for =
-a back-port to the stable trees or clouds the point, this patch could be ha=
-ppily distilled down to:
+Or even in the block core?
 
-diff -ru a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
---- a/drivers/scsi/aacraid/aachba.c     2008-02-06 16:26:45.834938955 -0500
-+++ b/drivers/scsi/aacraid/aachba.c     2008-02-06 16:32:01.109035329 -0500
-@@ -865,7 +865,7 @@
-                         u32 residue)
- {
--        sense_buf[0] =3D 0xF0;    /* Sense data valid, err code 70h (curre=
-nt error) */
-+        sense_buf[0] =3D 0x70;    /* Sense data invalid, err code 70h (cur=
-rent error) */
-         sense_buf[1] =3D 0;       /* Segment number, always zero */
+>  It's hardly USB-specific, and I'm
+> willing to bet that there are other HCDs (at least spb2) which need to do
+> this sort of thing...
 
-         if (incorrect_length) {
+James, do you have any idea?
 
-This patch is against current scsi-misc-2.6
+What we're talking about is a routine that provides drivers a simple
+way to access the data in a scatter-gather buffer (which may lie in
+highmem or otherwise not be easily reachable).  The idea is that some 
+commands are emulated by the driver rather than carried out by the 
+device, and the driver needs some way to stick the results in the 
+transfer buffer.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments. Please use the attached patch and not any inline=
- content.
+Alan Stern
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c |   81 +++++++++++++++----------------------=
------
- 1 file changed, 30 insertions(+), 51 deletions(-)
-
-Sincerely -- Mark Salyzyn
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43982A08CADPE2K703adapte_
-Content-Type: application/octet-stream; name="aacraid_set_sense.patch"
-Content-Description: aacraid_set_sense.patch
-Content-Disposition: attachment; filename="aacraid_set_sense.patch";
-	size=5979; creation-date="Wed, 06 Feb 2008 13:33:25 GMT";
-	modification-date="Wed, 06 Feb 2008 13:33:25 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
-MDItMDYgMTY6MjY6NDUuODM0OTM4OTU1IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDgtMDItMDYgMTY6MzI6MDEuMTA5MDM1MzI5IC0wNTAwCkBAIC04NTksNDQg
-Kzg1OSwzMSBAQAogCQkJbGUzMl90b19jcHUoZGV2LT5hZGFwdGVyX2luZm8uc2VyaWFsWzBdKSwg
-Y2lkKTsKIH0KIAotc3RhdGljIHZvaWQgc2V0X3NlbnNlKHU4ICpzZW5zZV9idWYsIHU4IHNlbnNl
-X2tleSwgdTggc2Vuc2VfY29kZSwKLQkJICAgICAgdTggYV9zZW5zZV9jb2RlLCB1OCBpbmNvcnJl
-Y3RfbGVuZ3RoLAotCQkgICAgICB1OCBiaXRfcG9pbnRlciwgdTE2IGZpZWxkX3BvaW50ZXIsCi0J
-CSAgICAgIHUzMiByZXNpZHVlKQorc3RhdGljIGlubGluZSB2b2lkIHNldF9zZW5zZShzdHJ1Y3Qg
-c2Vuc2VfZGF0YSAqc2Vuc2VfZGF0YSwgdTggc2Vuc2Vfa2V5LAorCXU4IHNlbnNlX2NvZGUsIHU4
-IGFfc2Vuc2VfY29kZSwgdTggYml0X3BvaW50ZXIsIHUxNiBmaWVsZF9wb2ludGVyKQogewotCXNl
-bnNlX2J1ZlswXSA9IDB4RjA7CS8qIFNlbnNlIGRhdGEgdmFsaWQsIGVyciBjb2RlIDcwaCAoY3Vy
-cmVudCBlcnJvcikgKi8KKwl1OCAqc2Vuc2VfYnVmID0gKHU4ICopc2Vuc2VfZGF0YTsKKwkvKiBT
-ZW5zZSBkYXRhIHZhbGlkLCBlcnIgY29kZSA3MGggKi8KKwlzZW5zZV9idWZbMF0gPSAweDcwOyAv
-KiBObyBpbmZvIGZpZWxkICovCiAJc2Vuc2VfYnVmWzFdID0gMDsJLyogU2VnbWVudCBudW1iZXIs
-IGFsd2F5cyB6ZXJvICovCiAKLQlpZiAoaW5jb3JyZWN0X2xlbmd0aCkgewotCQlzZW5zZV9idWZb
-Ml0gPSBzZW5zZV9rZXkgfCAweDIwOy8qIFNldCBJTEkgYml0IHwgc2Vuc2Uga2V5ICovCi0JCXNl
-bnNlX2J1ZlszXSA9IEJZVEUzKHJlc2lkdWUpOwotCQlzZW5zZV9idWZbNF0gPSBCWVRFMihyZXNp
-ZHVlKTsKLQkJc2Vuc2VfYnVmWzVdID0gQllURTEocmVzaWR1ZSk7Ci0JCXNlbnNlX2J1Zls2XSA9
-IEJZVEUwKHJlc2lkdWUpOwotCX0gZWxzZQotCQlzZW5zZV9idWZbMl0gPSBzZW5zZV9rZXk7CS8q
-IFNlbnNlIGtleSAqLwotCi0JaWYgKHNlbnNlX2tleSA9PSBJTExFR0FMX1JFUVVFU1QpCi0JCXNl
-bnNlX2J1Zls3XSA9IDEwOwkvKiBBZGRpdGlvbmFsIHNlbnNlIGxlbmd0aCAqLwotCWVsc2UKLQkJ
-c2Vuc2VfYnVmWzddID0gNjsJLyogQWRkaXRpb25hbCBzZW5zZSBsZW5ndGggKi8KKwlzZW5zZV9i
-dWZbMl0gPSBzZW5zZV9rZXk7CS8qIFNlbnNlIGtleSAqLwogCiAJc2Vuc2VfYnVmWzEyXSA9IHNl
-bnNlX2NvZGU7CS8qIEFkZGl0aW9uYWwgc2Vuc2UgY29kZSAqLwogCXNlbnNlX2J1ZlsxM10gPSBh
-X3NlbnNlX2NvZGU7CS8qIEFkZGl0aW9uYWwgc2Vuc2UgY29kZSBxdWFsaWZpZXIgKi8KKwogCWlm
-IChzZW5zZV9rZXkgPT0gSUxMRUdBTF9SRVFVRVNUKSB7Ci0JCXNlbnNlX2J1ZlsxNV0gPSAwOwor
-CQlzZW5zZV9idWZbN10gPSAxMDsJLyogQWRkaXRpb25hbCBzZW5zZSBsZW5ndGggKi8KIAotCQlp
-ZiAoc2Vuc2VfY29kZSA9PSBTRU5DT0RFX0lOVkFMSURfUEFSQU1fRklFTEQpCi0JCQlzZW5zZV9i
-dWZbMTVdID0gMHg4MDsvKiBTdGQgc2Vuc2Uga2V5IHNwZWNpZmljIGZpZWxkICovCisJCXNlbnNl
-X2J1ZlsxNV0gPSBiaXRfcG9pbnRlcjsKIAkJLyogSWxsZWdhbCBwYXJhbWV0ZXIgaXMgaW4gdGhl
-IHBhcmFtZXRlciBibG9jayAqLwotCiAJCWlmIChzZW5zZV9jb2RlID09IFNFTkNPREVfSU5WQUxJ
-RF9DREJfRklFTEQpCi0JCQlzZW5zZV9idWZbMTVdID0gMHhjMDsvKiBTdGQgc2Vuc2Uga2V5IHNw
-ZWNpZmljIGZpZWxkICovCisJCQlzZW5zZV9idWZbMTVdIHw9IDB4YzA7LyogU3RkIHNlbnNlIGtl
-eSBzcGVjaWZpYyBmaWVsZCAqLwogCQkvKiBJbGxlZ2FsIHBhcmFtZXRlciBpcyBpbiB0aGUgQ0RC
-IGJsb2NrICovCi0JCXNlbnNlX2J1ZlsxNV0gfD0gYml0X3BvaW50ZXI7CiAJCXNlbnNlX2J1Zlsx
-Nl0gPSBmaWVsZF9wb2ludGVyID4+IDg7CS8qIE1TQiAqLwogCQlzZW5zZV9idWZbMTddID0gZmll
-bGRfcG9pbnRlcjsJCS8qIExTQiAqLwotCX0KKwl9IGVsc2UKKwkJc2Vuc2VfYnVmWzddID0gNjsJ
-LyogQWRkaXRpb25hbCBzZW5zZSBsZW5ndGggKi8KIH0KIAogc3RhdGljIGludCBhYWNfYm91bmRz
-XzMyKHN0cnVjdCBhYWNfZGV2ICogZGV2LCBzdHJ1Y3Qgc2NzaV9jbW5kICogY21kLCB1NjQgbGJh
-KQpAQCAtOTA2LDExICs4OTMsOSBAQAogCQlkcHJpbnRrKChLRVJOX0RFQlVHICJhYWNyYWlkOiBJ
-bGxlZ2FsIGxiYVxuIikpOwogCQljbWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNiB8IENPTU1BTkRf
-Q09NUExFVEUgPDwgOCB8CiAJCQlTQU1fU1RBVF9DSEVDS19DT05ESVRJT047Ci0JCXNldF9zZW5z
-ZSgodTggKikgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCi0JCQkgICAgSEFSRFdBUkVf
-RVJST1IsCi0JCQkgICAgU0VOQ09ERV9JTlRFUk5BTF9UQVJHRVRfRkFJTFVSRSwKLQkJCSAgICBB
-U0VOQ09ERV9JTlRFUk5BTF9UQVJHRVRfRkFJTFVSRSwgMCwgMCwKLQkJCSAgICAwLCAwKTsKKwkJ
-c2V0X3NlbnNlKCZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhLAorCQkgIEhBUkRXQVJFX0VS
-Uk9SLCBTRU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9GQUlMVVJFLAorCQkgIEFTRU5DT0RFX0lOVEVS
-TkFMX1RBUkdFVF9GQUlMVVJFLCAwLCAwKTsKIAkJbWVtY3B5KGNtZC0+c2Vuc2VfYnVmZmVyLCAm
-ZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKIAkJICAgICAgIG1pbl90KHNpemVfdCwgc2l6
-ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpLAogCQkJICAgICBTQ1NJX1NFTlNFX0JV
-RkZFUlNJWkUpKTsKQEAgLTE1MjAsMTEgKzE1MDUsOSBAQAogCQkgIGxlMzJfdG9fY3B1KHJlYWRy
-ZXBseS0+c3RhdHVzKSk7CiAjZW5kaWYKIAkJc2NzaWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2
-IHwgQ09NTUFORF9DT01QTEVURSA8PCA4IHwgU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OOwotCQlz
-ZXRfc2Vuc2UoKHU4ICopICZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhLAotCQkJCSAgICBI
-QVJEV0FSRV9FUlJPUiwKLQkJCQkgICAgU0VOQ09ERV9JTlRFUk5BTF9UQVJHRVRfRkFJTFVSRSwK
-LQkJCQkgICAgQVNFTkNPREVfSU5URVJOQUxfVEFSR0VUX0ZBSUxVUkUsIDAsIDAsCi0JCQkJICAg
-IDAsIDApOworCQlzZXRfc2Vuc2UoJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCisJCSAg
-SEFSRFdBUkVfRVJST1IsIFNFTkNPREVfSU5URVJOQUxfVEFSR0VUX0ZBSUxVUkUsCisJCSAgQVNF
-TkNPREVfSU5URVJOQUxfVEFSR0VUX0ZBSUxVUkUsIDAsIDApOwogCQltZW1jcHkoc2NzaWNtZC0+
-c2Vuc2VfYnVmZmVyLCAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKIAkJICAgICAgIG1p
-bl90KHNpemVfdCwgc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpLAogCQkJICAg
-ICBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpKTsKQEAgLTE3MzMsMTEgKzE3MTYsOSBAQAogCQkgICAg
-IGxlMzJfdG9fY3B1KHN5bmNocm9uaXplcmVwbHktPnN0YXR1cykpOwogCQljbWQtPnJlc3VsdCA9
-IERJRF9PSyA8PCAxNiB8CiAJCQlDT01NQU5EX0NPTVBMRVRFIDw8IDggfCBTQU1fU1RBVF9DSEVD
-S19DT05ESVRJT047Ci0JCXNldF9zZW5zZSgodTggKikmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2Vf
-ZGF0YSwKLQkJCQkgICAgSEFSRFdBUkVfRVJST1IsCi0JCQkJICAgIFNFTkNPREVfSU5URVJOQUxf
-VEFSR0VUX0ZBSUxVUkUsCi0JCQkJICAgIEFTRU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9GQUlMVVJF
-LCAwLCAwLAotCQkJCSAgICAwLCAwKTsKKwkJc2V0X3NlbnNlKCZkZXYtPmZzYV9kZXZbY2lkXS5z
-ZW5zZV9kYXRhLAorCQkgIEhBUkRXQVJFX0VSUk9SLCBTRU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9G
-QUlMVVJFLAorCQkgIEFTRU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9GQUlMVVJFLCAwLCAwKTsKIAkJ
-bWVtY3B5KGNtZC0+c2Vuc2VfYnVmZmVyLCAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwK
-IAkJICAgICAgIG1pbl90KHNpemVfdCwgc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2Rh
-dGEpLAogCQkJICAgICBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpKTsKQEAgLTE5NDUsMTAgKzE5MjYs
-OSBAQAogCXsKIAkJZHByaW50aygoS0VSTl9XQVJOSU5HICJPbmx5IElOUVVJUlkgJiBUVVIgY29t
-bWFuZCBzdXBwb3J0ZWQgZm9yIGNvbnRyb2xsZXIsIHJjdmQgPSAweCV4LlxuIiwgc2NzaWNtZC0+
-Y21uZFswXSkpOwogCQlzY3NpY21kLT5yZXN1bHQgPSBESURfT0sgPDwgMTYgfCBDT01NQU5EX0NP
-TVBMRVRFIDw8IDggfCBTQU1fU1RBVF9DSEVDS19DT05ESVRJT047Ci0JCXNldF9zZW5zZSgodTgg
-KikgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCi0JCQkgICAgSUxMRUdBTF9SRVFVRVNU
-LAotCQkJICAgIFNFTkNPREVfSU5WQUxJRF9DT01NQU5ELAotCQkJICAgIEFTRU5DT0RFX0lOVkFM
-SURfQ09NTUFORCwgMCwgMCwgMCwgMCk7CisJCXNldF9zZW5zZSgmZGV2LT5mc2FfZGV2W2NpZF0u
-c2Vuc2VfZGF0YSwKKwkJICBJTExFR0FMX1JFUVVFU1QsIFNFTkNPREVfSU5WQUxJRF9DT01NQU5E
-LAorCQkgIEFTRU5DT0RFX0lOVkFMSURfQ09NTUFORCwgMCwgMCk7CiAJCW1lbWNweShzY3NpY21k
-LT5zZW5zZV9idWZmZXIsICZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhLAogCQkgICAgICAg
-bWluX3Qoc2l6ZV90LCBzaXplb2YoZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSksCiAJCQkg
-ICAgIFNDU0lfU0VOU0VfQlVGRkVSU0laRSkpOwpAQCAtMTk5NSwxMCArMTk3NSw5IEBACiAJCQkJ
-c2NzaWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2IHwKIAkJCQkgIENPTU1BTkRfQ09NUExFVEUg
-PDwgOCB8CiAJCQkJICBTQU1fU1RBVF9DSEVDS19DT05ESVRJT047Ci0JCQkJc2V0X3NlbnNlKCh1
-OCAqKSAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKLQkJCQkgIElMTEVHQUxfUkVRVUVT
-VCwKLQkJCQkgIFNFTkNPREVfSU5WQUxJRF9DREJfRklFTEQsCi0JCQkJICBBU0VOQ09ERV9OT19T
-RU5TRSwgMCwgNywgMiwgMCk7CisJCQkJc2V0X3NlbnNlKCZkZXYtPmZzYV9kZXZbY2lkXS5zZW5z
-ZV9kYXRhLAorCQkJCSAgSUxMRUdBTF9SRVFVRVNULCBTRU5DT0RFX0lOVkFMSURfQ0RCX0ZJRUxE
-LAorCQkJCSAgQVNFTkNPREVfTk9fU0VOU0UsIDcsIDIpOwogCQkJCW1lbWNweShzY3NpY21kLT5z
-ZW5zZV9idWZmZXIsCiAJCQkJICAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKIAkJCQkg
-IG1pbl90KHNpemVfdCwKQEAgLTIyNTQsOSArMjIzMyw5IEBACiAJCQkgKi8KIAkJCWRwcmludGso
-KEtFUk5fV0FSTklORyAiVW5oYW5kbGVkIFNDU0kgQ29tbWFuZDogMHgleC5cbiIsIHNjc2ljbWQt
-PmNtbmRbMF0pKTsKIAkJCXNjc2ljbWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNiB8IENPTU1BTkRf
-Q09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTjsKLQkJCXNldF9zZW5zZSgo
-dTggKikgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCi0JCQkJSUxMRUdBTF9SRVFVRVNU
-LCBTRU5DT0RFX0lOVkFMSURfQ09NTUFORCwKLQkJCQlBU0VOQ09ERV9JTlZBTElEX0NPTU1BTkQs
-IDAsIDAsIDAsIDApOworCQkJc2V0X3NlbnNlKCZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRh
-LAorCQkJICBJTExFR0FMX1JFUVVFU1QsIFNFTkNPREVfSU5WQUxJRF9DT01NQU5ELAorCQkJICBB
-U0VOQ09ERV9JTlZBTElEX0NPTU1BTkQsIDAsIDApOwogCQkJbWVtY3B5KHNjc2ljbWQtPnNlbnNl
-X2J1ZmZlciwgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCiAJCQkJbWluX3Qoc2l6ZV90
-LAogCQkJCSAgICAgIHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSwK
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43982A08CADPE2K703adapte_--
