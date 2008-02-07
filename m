@@ -1,25 +1,39 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux kernel
-Date: Thu, 7 Feb 2008 12:37:22 -0800 (PST)
-Message-ID: <393719.81864.qm@web31808.mail.mud.yahoo.com>
-References: <1202398695.1805.48.camel@haakon2.linux-iscsi.org>
+Subject: Re: no INQUIRY from userspace please (was Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE)
+Date: Thu, 7 Feb 2008 12:42:31 -0800 (PST)
+Message-ID: <157925.90863.qm@web31814.mail.mud.yahoo.com>
+References: <1202396490.3171.8.camel@localhost.localdomain>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:38994 "HELO
-	web31808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756191AbYBGUh0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 15:37:26 -0500
-In-Reply-To: <1202398695.1805.48.camel@haakon2.linux-iscsi.org>
+Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:25620 "HELO
+	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755327AbYBGUmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 15:42:36 -0500
+In-Reply-To: <1202396490.3171.8.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ming Zhang <blackmagic02881@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, sekharan@us.ibm.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-Is there an open iSCSI Target implementation which does NOT
-issue commands to sub-target devices via the SCSI mid-layer, but
-bypasses it completely?
+--- On Thu, 2/7/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> This is all a tradeoff.  If you want userspace *never* to
+> issue raw SCSI
+> commands like INQUIRY, we're going to have to provide
+> the needed
+> information from the kernel via sysfs ... including VPD
+> strings.  This
+> is something we've always shovelled off into userspace
+> before.
+
+What if a user-space application client _does_ send an INQUIRY to
+a device anyway?
+
+It would probably be better to preserve application client behaviour
+and simulate/emulate n-th INQUIRY, after the 1st for such broken
+device firmwares that break on any subsequent INQUIRY.  Possibly
+in the LLDD or via blacklisting in the mid-layer.
 
    Luben
 
