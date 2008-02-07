@@ -1,70 +1,73 @@
-From: david@lang.hm
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 7 Feb 2008 14:51:48 -0800 (PST)
-Message-ID: <alpine.DEB.1.00.0802071437404.12791@asgard.lang.hm>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>  <1202144767.3096.38.camel@localhost.localdomain>  <47A7488B.4080000@vlnb.net>  <1202145901.3096.49.camel@localhost.localdomain>  <47A751C5.60600@vlnb.net>  <1202149322.3096.66.camel@localhost.localdomain>
-  <47A75B8A.3020503@vlnb.net>  <1202151293.3096.80.camel@localhost.localdomain>  <47A8B210.8040202@vlnb.net>  <1202238802.3133.71.camel@localhost.localdomain> <e2e108260802070513t4eeb9a9fucfe9821d94bd7f82@mail.gmail.com> <47AB0B63.20500@vlnb.net>
+From: Harald Arnesen <skogtun.harald@gmail.com>
+Subject: Re: Latest git oopses during boot
+Date: Thu, 07 Feb 2008 22:39:45 +0100
+Message-ID: <87hcgkzbry.fsf@basilikum.skogtun.org>
+References: <8120cfd40802070144l79830c2cs6329c302697ecc8b@mail.gmail.com>
+	<20080207020214.0f0cf1c7.akpm@linux-foundation.org>
+	<8120cfd40802070314x2799bcbatf42e3fe824a18c22@mail.gmail.com>
+	<20080207233239Z.tomof@acm.org>
+	<8120cfd40802070933r42a98537v78feb7ee8e748a94@mail.gmail.com>
+	<alpine.LFD.1.00.0802070956380.2883@woody.linux-foundation.org>
+	<8120cfd40802071248x20ed938dh52cd9e314219613b@mail.gmail.com>
+	<alpine.LFD.1.00.0802071304420.2896@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:50931
-	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbYBGVip (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 16:38:45 -0500
-In-Reply-To: <47AB0B63.20500@vlnb.net>
+Received: from nf-out-0910.google.com ([64.233.182.187]:59773 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933481AbYBGVjy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 16:39:54 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1010025nfb.21
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Feb 2008 13:39:50 -0800 (PST)
+In-Reply-To: <alpine.LFD.1.00.0802071304420.2896@woody.linux-foundation.org>
+	(Linus Torvalds's message of "Thu, 7 Feb 2008 13:14:25 -0800 (PST)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>, FUJITA Tomonori <tomof@acm.org>, akpm@linux-foundation.org, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Thu, 7 Feb 2008, Vladislav Bolkhovitin wrote:
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-> Bart Van Assche wrote:
->> - It has been discussed which iSCSI target implementation should be in
->> the mainstream Linux kernel. There is no agreement on this subject
->> yet. The short-term options are as follows:
->> 1) Do not integrate any new iSCSI target implementation in the
->> mainstream Linux kernel.
->> 2) Add one of the existing in-kernel iSCSI target implementations to
->> the kernel, e.g. SCST or PyX/LIO.
->> 3) Create a new in-kernel iSCSI target implementation that combines
->> the advantages of the existing iSCSI kernel target implementations
->> (iETD, STGT, SCST and PyX/LIO).
+> On Thu, 7 Feb 2008, Harald Arnesen wrote:
+>> >
+>> > Can you do a
+>> >
+>> >         make drivers/scsi/advansys.lst
+>> >
+>> > and see what it should be?
 >> 
->> As an iSCSI user, I prefer option (3). The big question is whether the
->> various storage target authors agree with this ?
+>> Anyway, here it is, as an attachment.
 >
-> I tend to agree with some important notes:
+> Ok, I was wrong. The code really *does* compile to that insane
 >
-> 1. IET should be excluded from this list, iSCSI-SCST is IET updated for SCST 
-> framework with a lot of bugfixes and improvements.
+> 	a3 14 00 00 00          mov    %eax,0x14
 >
-> 2. I think, everybody will agree that Linux iSCSI target should work over 
-> some standard SCSI target framework. Hence the choice gets narrower: SCST vs 
-> STGT. I don't think there's a way for a dedicated iSCSI target (i.e. PyX/LIO) 
-> in the mainline, because of a lot of code duplication. Nicholas could decide 
-> to move to either existing framework (although, frankly, I don't think 
-> there's a possibility for in-kernel iSCSI target and user space SCSI target 
-> framework) and if he decide to go with SCST, I'll be glad to offer my help 
-> and support and wouldn't care if LIO-SCST eventually replaced iSCSI-SCST. The 
-> better one should win.
+> by your compiler.
+>
+> That's the
+>
+> 	asc_dvc_varp->overrun_buf = kzalloc(ASC_OVERRUN_BSIZE, GFP_KERNEL);
+>
+> thing, and gcc seems to have decided that it can statically prove that 
+> asc_dvc_varp is NULL.
+>
+> Quite frankly, I don't see that being true. But you have some patches in 
+> your tree that I haven't followed, so.. Are you sure the patches applied 
+> to the right spot? The patch I saw added that kzalloc() to the _end_ of 
+> the function (long after asc_dvc_varp was initialized), maybe that one got 
+> mis-applied?
+>
+> Or maybe your compiler version is simply totally broken.
+>
+> 			Linus
 
-why should linux as an iSCSI target be limited to passthrough to a SCSI 
-device.
+I'll try applying the patch to a freshly downloaded git-tree.
 
-the most common use of this sort of thing that I would see is to load up a 
-bunch of 1TB SATA drives in a commodity PC, run software RAID, and then 
-export the resulting volume to other servers via iSCSI. not a 'real' SCSI 
-device in sight.
+Shall I try another compiler? I have at least these two:
 
-As far as how good a standard iSCSI is, at this point I don't think it 
-really matters. There are too many devices and manufacturers out there 
-that implement iSCSI as their storage protocol (from both sides, offering 
-storage to other systems, and using external storage). Sometimes the best 
-technology doesn't win, but Linux should be interoperable with as much as 
-possible and be ready to support the winners and the loosers in technology 
-options, for as long as anyone chooses to use the old equipment (after 
-all, we support things like Arcnet networking, which lost to Ethernet many 
-years ago)
+gcc version 3.4.6 (Ubuntu 3.4.6-6ubuntu2)
+gcc version 4.1.3 20070929 (prerelease) (Ubuntu 4.1.2-16ubuntu2)
 
-David Lang
+in addition to the self-compiled 4.2.3 I used for the tests.
+-- 
+Hilsen Harald.
