@@ -1,38 +1,67 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Oops in megaraid_mbox_dpc(), kernel 2.6.23.9-85.fc8.i686
-Date: Thu, 07 Feb 2008 17:03:43 -0500
-Message-ID: <47AB803F.7070208@redhat.com>
-References: <9738BCBE884FDB42801FAD8A7769C26501EE201D@NAMAIL1.ad.lsil.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Latest git oopses during boot
+Date: Thu, 7 Feb 2008 14:12:54 -0800 (PST)
+Message-ID: <alpine.LFD.1.00.0802071404400.2896@woody.linux-foundation.org>
+References: <8120cfd40802070144l79830c2cs6329c302697ecc8b@mail.gmail.com> <20080207020214.0f0cf1c7.akpm@linux-foundation.org> <8120cfd40802070314x2799bcbatf42e3fe824a18c22@mail.gmail.com> <20080207233239Z.tomof@acm.org> <8120cfd40802070933r42a98537v78feb7ee8e748a94@mail.gmail.com>
+ <alpine.LFD.1.00.0802070956380.2883@woody.linux-foundation.org> <8120cfd40802071248x20ed938dh52cd9e314219613b@mail.gmail.com> <alpine.LFD.1.00.0802071304420.2896@woody.linux-foundation.org> <87hcgkzbry.fsf@basilikum.skogtun.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36874 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756993AbYBGWD6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Feb 2008 17:03:58 -0500
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501EE201D@NAMAIL1.ad.lsil.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:50154 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755717AbYBGWNI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 17:13:08 -0500
+In-Reply-To: <87hcgkzbry.fsf@basilikum.skogtun.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Scott Shambarger <scott-lkml@shambarger.net>, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: Harald Arnesen <skogtun.harald@gmail.com>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>, FUJITA Tomonori <tomof@acm.org>, akpm@linux-foundation.org, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On 02/06/2008 02:38 PM, Yang, Bo wrote:
-> Andrew/Scott,
+
+
+On Thu, 7 Feb 2008, Harald Arnesen wrote:
 > 
-> Can you give me more details about this issue?  Such as: MegaRAID
-> Controller name, FW version, RAID configuration, host system info, how
-> to reproduce this issue.  Also do you see the issue on other kernel
-> versions.  
+> I'll try applying the patch to a freshly downloaded git-tree.
+
+Ok, good.
+
+> Shall I try another compiler? I have at least these two:
 > 
+> gcc version 3.4.6 (Ubuntu 3.4.6-6ubuntu2)
+> gcc version 4.1.3 20070929 (prerelease) (Ubuntu 4.1.2-16ubuntu2)
 
-He has hit the BUG() here in megaraid_mbox_dpc():
+I would suggest a patch mis-application problem first (or possibly even 
+the patch itself being broken - I simply didn't look very closely at the 
+patch, but it *looked* ok).
 
-                // Make sure f/w has completed a valid command
-                if (scb->state != SCB_ISSUED) {
-                        con_log(CL_ANN, (KERN_CRIT
-                        "megaraid critical err: invalid command %d:%d:%p\n",
-                                scb->sno, scb->state, scp));
-                        BUG();
-                        continue;       // Must never happen!
-                }
+If it's a compiler bug, it's a pretty big one, and quite frankly, I doubt 
+it. Compiler bugs do happen, but they are pretty rare, and they tend to 
+have more subtle effects than the one you see. 
+
+However:
+
+> in addition to the self-compiled 4.2.3 I used for the tests.
+
+4.2.3? Really? That's pretty damn recent, and so almost totally untested. 
+That does make a compiler bug at least more likely.
+
+So yes, if you already have other compilers installed, you should try 
+them. If it really is a compiler bug, it's a really bad one, and you would 
+want to let the gcc people know.
+
+Still, I'd double-check that the
+
+	asc_dvc_varp->overrun_buf = kzalloc(ASC_OVERRUN_BSIZE, GFP_KERNEL);
+
+line was added properly first. You should see it way after the point where 
+it did 
+
+	asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
+
+to initialize it (and both statements should be inside a
+
+	if (ASC_NARROW_BOARD(boardp)) {
+
+conditional - please check that the source code looks sane too).
+
+			Linus
