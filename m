@@ -1,66 +1,128 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 07 Feb 2008 16:45:07 +0300
-Message-ID: <47AB0B63.20500@vlnb.net>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	 <1202144767.3096.38.camel@localhost.localdomain>	 <47A7488B.4080000@vlnb.net>	 <1202145901.3096.49.camel@localhost.localdomain>	 <47A751C5.60600@vlnb.net>	 <1202149322.3096.66.camel@localhost.localdomain>	 <47A75B8A.3020503@vlnb.net>	 <1202151293.3096.80.camel@localhost.localdomain>	 <47A8B210.8040202@vlnb.net>	 <1202238802.3133.71.camel@localhost.localdomain> <e2e108260802070513t4eeb9a9fucfe9821d94bd7f82@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9909] New: Unable to handle kernel NULL pointer dereference at 0000000000000010 (mptsas_probe_expander_phys+0x62/0x427)
+Date: Thu,  7 Feb 2008 05:52:14 -0800 (PST)
+Message-ID: <bug-9909-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:45894 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752278AbYBGNpV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 08:45:21 -0500
-In-Reply-To: <e2e108260802070513t4eeb9a9fucfe9821d94bd7f82@mail.gmail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:47532 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752355AbYBGNwS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 08:52:18 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m17DqEGw016205
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 05:52:15 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
-Bart Van Assche wrote:
-> Since the focus of this thread shifted somewhat in the last few
-> messages, I'll try to summarize what has been discussed so far:
-> - There was a number of participants who joined this discussion
-> spontaneously. This suggests that there is considerable interest in
-> networked storage and iSCSI.
-> - It has been motivated why iSCSI makes sense as a storage protocol
-> (compared to ATA over Ethernet and Fibre Channel over Ethernet).
-> - The direct I/O performance results for block transfer sizes below 64
-> KB are a meaningful benchmark for storage target implementations.
-> - It has been discussed whether an iSCSI target should be implemented
-> in user space or in kernel space. It is clear now that an
-> implementation in the kernel can be made faster than a user space
-> implementation (http://kerneltrap.org/mailarchive/linux-kernel/2008/2/4/714804).
-> Regarding existing implementations, measurements have a.o. shown that
-> SCST is faster than STGT (30% with the following setup: iSCSI via
-> IPoIB and direct I/O block transfers with a size of 512 bytes).
-> - It has been discussed which iSCSI target implementation should be in
-> the mainstream Linux kernel. There is no agreement on this subject
-> yet. The short-term options are as follows:
-> 1) Do not integrate any new iSCSI target implementation in the
-> mainstream Linux kernel.
-> 2) Add one of the existing in-kernel iSCSI target implementations to
-> the kernel, e.g. SCST or PyX/LIO.
-> 3) Create a new in-kernel iSCSI target implementation that combines
-> the advantages of the existing iSCSI kernel target implementations
-> (iETD, STGT, SCST and PyX/LIO).
-> 
-> As an iSCSI user, I prefer option (3). The big question is whether the
-> various storage target authors agree with this ?
+http://bugzilla.kernel.org/show_bug.cgi?id=9909
 
-I tend to agree with some important notes:
+           Summary: Unable to handle kernel NULL pointer dereference at
+                    0000000000000010 (mptsas_probe_expander_phys+0x62/0x427)
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.23 - 2.6.23.14
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: olel@ans.pl
 
-1. IET should be excluded from this list, iSCSI-SCST is IET updated for 
-SCST framework with a lot of bugfixes and improvements.
 
-2. I think, everybody will agree that Linux iSCSI target should work 
-over some standard SCSI target framework. Hence the choice gets 
-narrower: SCST vs STGT. I don't think there's a way for a dedicated 
-iSCSI target (i.e. PyX/LIO) in the mainline, because of a lot of code 
-duplication. Nicholas could decide to move to either existing framework 
-(although, frankly, I don't think there's a possibility for in-kernel 
-iSCSI target and user space SCSI target framework) and if he decide to 
-go with SCST, I'll be glad to offer my help and support and wouldn't 
-care if LIO-SCST eventually replaced iSCSI-SCST. The better one should win.
+Latest working kernel version: 2.6.22-2.6.22.17
+Distribution: Gentoo
+Hardware Environment:
+00:00.0 Host bridge [0600]: Intel Corporation 5000X Chipset Memory Controller
+Hub [8086:25c0] (rev 12)
+00:02.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x4
+Port 2 [8086:25e2] (rev 12)
+00:03.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x4
+Port 3 [8086:25e3] (rev 12)
+00:04.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x8
+Port 4-5 [8086:25f8] (rev 12)
+00:05.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x4
+Port 5 [8086:25e5] (rev 12)
+00:06.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x8
+Port 6-7 [8086:25f9] (rev 12)
+00:07.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x4
+Port 7 [8086:25e7] (rev 12)
+00:08.0 System peripheral [0880]: Intel Corporation 5000 Series Chipset DMA
+Engine [8086:1a38] (rev 12)
+00:10.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers
+[8086:25f0] (rev 12)
+00:10.1 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers
+[8086:25f0] (rev 12)
+00:10.2 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers
+[8086:25f0] (rev 12)
+00:11.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset Reserved
+Registers [8086:25f1] (rev 12)
+00:13.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset Reserved
+Registers [8086:25f3] (rev 12)
+00:15.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FBD Registers
+[8086:25f5] (rev 12)
+00:16.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FBD Registers
+[8086:25f6] (rev 12)
+00:1c.0 PCI bridge [0604]: Intel Corporation 631xESB/632xESB/3100 Chipset PCI
+Express Root Port 1 [8086:2690] (rev 09)
+00:1d.0 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset
+UHCI USB Controller #1 [8086:2688] (rev 09)
+00:1d.1 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset
+UHCI USB Controller #2 [8086:2689] (rev 09)
+00:1d.7 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset
+EHCI USB2 Controller [8086:268c] (rev 09)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 PCI Bridge [8086:244e] (rev
+d9)
+00:1f.0 ISA bridge [0601]: Intel Corporation 631xESB/632xESB/3100 Chipset LPC
+Interface Controller [8086:2670] (rev 09)
+00:1f.1 IDE interface [0101]: Intel Corporation 631xESB/632xESB IDE Controller
+[8086:269e] (rev 09)
+00:1f.2 IDE interface [0101]: Intel Corporation 631xESB/632xESB/3100 Chipset
+SATA IDE Controller [8086:2680] (rev 09)
+01:00.0 SCSI storage controller [0100]: LSI Logic / Symbios Logic SAS1068E
+PCI-Express Fusion-MPT SAS [1000:0058] (rev 08)
+02:00.0 PCI bridge [0604]: Broadcom EPB PCI-Express to PCI-X Bridge [1166:0103]
+(rev c3)
+03:00.0 Ethernet controller [0200]: Broadcom Corporation NetXtreme II BCM5708
+Gigabit Ethernet [14e4:164c] (rev 12)
+04:00.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express
+Upstream Port [8086:3500] (rev 01)
+04:00.3 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express to
+PCI-X Bridge [8086:350c] (rev 01)
+05:00.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express
+Downstream Port E1 [8086:3510] (rev 01)
+05:01.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express
+Downstream Port E2 [8086:3514] (rev 01)
+06:00.0 PCI bridge [0604]: Broadcom EPB PCI-Express to PCI-X Bridge [1166:0103]
+(rev c3)
+07:00.0 Ethernet controller [0200]: Broadcom Corporation NetXtreme II BCM5708
+Gigabit Ethernet [14e4:164c] (rev 12)
+0e:0d.0 VGA compatible controller [0300]: ATI Technologies Inc ES1000
+[1002:515e] (rev 02)
 
-Vlad
+Software Environment:
+Gnu C                  4.1.2
+Gnu make               3.81
+binutils               Binutils
+util-linux             2.12r
+mount                  2.12r
+module-init-tools      3.4
+e2fsprogs              1.40.5
+Linux C Library        2.7
+Dynamic linker (ldd)   2.7
+Procps                 3.2.7
+Net-tools              1.60
+Kbd                    1.13
+Sh-utils               6.9
+
+Attaching dmesg with oopses (2.6.23 and 2.6.23.14) and dmesg from 2.6.14.17
+(working kernel). Please also note that 2.6.23.14 is not able to dump a full
+Oops msg!
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
