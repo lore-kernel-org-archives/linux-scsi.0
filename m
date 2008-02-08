@@ -1,69 +1,55 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
-Date: Thu, 07 Feb 2008 17:14:44 -0800
-Message-ID: <1202433284.31361.29.camel@brick>
-References: <1202432206.3171.53.camel@localhost.localdomain>
-	 <1202432647.31361.26.camel@brick>
-	 <1202432873.3171.58.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] advansys: fix overrun_buf aligned bug
+Date: Fri, 08 Feb 2008 10:16:41 +0900
+Message-ID: <20080208101641R.fujita.tomonori@lab.ntt.co.jp>
+References: <20080208095008V.fujita.tomonori@lab.ntt.co.jp>
+	<1202432515.3171.55.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:53313 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756614AbYBHBOs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:14:48 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2393582rvb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Feb 2008 17:14:46 -0800 (PST)
-In-Reply-To: <1202432873.3171.58.camel@localhost.localdomain>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:36694 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022AbYBHBQ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:16:58 -0500
+In-Reply-To: <1202432515.3171.55.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: fujita.tomonori@lab.ntt.co.jp, skogtun.linux@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, tomof@acm.org
 
+On Thu, 07 Feb 2008 19:01:55 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-On Thu, 2008-02-07 at 19:07 -0600, James Bottomley wrote:
-> On Thu, 2008-02-07 at 17:04 -0800, Harvey Harrison wrote:
-> > On Thu, 2008-02-07 at 18:56 -0600, James Bottomley wrote:
-> > > Quite a bit of this is fixing things broken previously (the advansys fix
-> > > is still pending resolution, but I'll send it as an -rc fix when we have
-> > > it).  There's the final elimination of all drivers that are esp based
-> > > but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
-> > > the usual bunch of driver updates and the addition of a new enclosure
-> > > services driver and the corresponding ULD.
-> > > 
-> > > The patch is available from:
-> > > 
+> 
+> On Fri, 2008-02-08 at 09:50 +0900, FUJITA Tomonori wrote:
+> > struct asc_dvc_var needs overrun buffer to be placed on an 8 byte
+> > boundary. advansys defines struct asc_dvc_var:
 > > 
-> > I'm going to guess that this is the entry in feature-removal.txt
-> > that need an update then:
+> > struct asc_dvc_var {
+> > 	...
+> > 	uchar overrun_buf[ASC_OVERRUN_BSIZE] __aligned(8);
 > > 
-> > ---------------------------
+> > The problem is that struct asc_dvc_var is placed on
+> > shost->hostdata. So if the hostdata is not on an 8 byte boundary, the
+> > advansys crashes. The hostdata is placed on a sizeof(unsigned long)
+> > boundary so the 8 byte boundary is not garanteed with x86_32.
 > > 
-> > What:	old NCR53C9x driver
-> > When:	October 2007
-> > Why:	Replaced by the much better esp_scsi driver.  Actual low-level
-> > 	driver can be ported over almost trivially.
-> > Who:	David Miller <davem@davemloft.net>
-> > 	Christoph Hellwig <hch@lst.de>
+> > With 2.6.23 and 2.6.24, the hostdata is on an 8 byte boundary by
+> > chance, but with the current git, it's not.
+> > 
+> > This patch removes overrun_buf static array and use kzalloc.
 > 
-> Not immediately ... I anticipate a few "where'd my driver go?" type
-> questions from m68k for which this provides a useful reference to point
-> to ...
-> 
-> James
-> 
-> 
+> It's a bit of a waste of a kmallocs.  The usual way of fixing this type
+> of cockup is to float the structure until it becomes aligned, but I
+> suppose that involves changing all calls to shost_priv in the driver ...
 
-Well, if not removed, how about updated:
+Yeah, agreed. It's better but I'm not familiar with the driver so I
+use kmalloc. It's not so bad as a short-term solution, I think.
 
-What:	old NCR53C9x driver
-When:	Removed Feb 2008
-Why:	Replaced by the much better esp_scsi driver.  Actual low-level
-	driver can be ported over almost trivially.
-Who:	James Bottomley <James.Bottomley@HansenPartnership.com>
+Any chance to push it to final SCSI updates for 2.6.24 merge window?
+Though we can push it any time since it's a bug fix.
 
-Cheers,
-
-Harvey
-
+Anyway, I'm fine with dropping it if Matthew will fix the driver in a
+better way. I'm happy unless people blame my IOMMU or sense buffer
+patch for this bug. :)
