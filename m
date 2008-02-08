@@ -1,38 +1,112 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_error: Fix language abuse.
-Date: Fri, 08 Feb 2008 10:28:02 -0600
-Message-ID: <1202488082.3102.28.camel@localhost.localdomain>
-References: <20080208153217.5fc42a50@core>
-	 <1202486247.3102.17.camel@localhost.localdomain>
-	 <20080208155938.339d9f3d@core>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: [PATCH 1/1] aacraid: ignore adapter reset check polarity
+Date: Fri, 8 Feb 2008 08:36:23 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F4398D8392@ADPE2K703.adaptec.com>
+References: <532ABFBDAAC3A34EB12EBA6CEC2838F4397D643D@ADPE2K703.adaptec.com>
+	 <20080205234912B.tomof@acm.org>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F4397D6932@ADPE2K703.adaptec.com>
+	 <20080206101148L.fujita.tomonori@lab.ntt.co.jp>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F439829BBB@ADPE2K703.adaptec.com>
+	 <1202320497.3112.92.camel@localhost.localdomain>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F43982A010@ADPE2K703.adaptec.com>
+ <1202430634.3171.41.camel@localhost.localdomain>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F4398716E3@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F4398D8392ADPE2K703adapte_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37631 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759369AbYBHQ2G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 11:28:06 -0500
-In-Reply-To: <20080208155938.339d9f3d@core>
+Received: from ts.adaptec.com ([162.62.93.58]:40477 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932476AbYBHQgZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Feb 2008 11:36:25 -0500
+Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 2269224E14A
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Feb 2008 08:36:24 -0800 (PST)
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F4398716E3@ADPE2K703.adaptec.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Fri, 2008-02-08 at 15:59 +0000, Alan Cox wrote:
-> > http://www.t10.org/ftp/t10/drafts/spc3/spc3r23.pdf
-> > 
-> > By a simple text search.
-> > 
-> > I don't think the pedantry is worth the confusion ...
-> 
-> Ok so we should file a formal change request with T10 instead perhaps ?
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F4398D8392ADPE2K703adapte_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-As long as that "we" is royal, be my guest and go ahead.
+The Adapter's Ignore Reset flag and insmod parameter boolean polarity is in=
+correct in the driver.
 
-If you set up the correct legal trust, your heirs and assigns can submit
-the patch just as soon as T10 accepts the change ...
+This attached patch is against current scsi-misc-2.6.
 
-James
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
+ling of patch attachments.
 
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
+ drivers/scsi/aacraid/aachba.c  |   14 ++++++++------
+ drivers/scsi/aacraid/commsup.c |    2 +-
+ drivers/scsi/aacraid/linit.c   |    2 +-
+ 3 files changed, 10 insertions(+), 8 deletions(-)
+
+Sincerely - Mark Salyzyn
+
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F4398D8392ADPE2K703adapte_
+Content-Type: application/octet-stream; name="aacraid_ignore_reset.patch"
+Content-Description: aacraid_ignore_reset.patch
+Content-Disposition: attachment; filename="aacraid_ignore_reset.patch";
+	size=2887; creation-date="Fri, 08 Feb 2008 08:31:48 GMT";
+	modification-date="Fri, 08 Feb 2008 08:31:48 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
+MDItMDggMTE6MjI6NDMuNDk1Mjk1NzIzIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDgtMDItMDggMTE6Mjk6MjcuOTIwNjY5OTI5IC0wNTAwCkBAIC0xMzE1LDcg
+KzEzMTUsNyBAQAogCQkJICAoaW50KXNpemVvZihkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZv
+LlZwZEluZm8uVHNpZCksCiAJCQkgIGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uVnBkSW5m
+by5Uc2lkKTsKIAkJfQotCQlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFhY19jaGVja19yZXNl
+dCAhPSAxKSAmJgorCQlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFhY19jaGVja19yZXNldCA9
+PSAxKSAmJgogCQkgIChkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9wdGlv
+bnMyICYKIAkJICBBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKSB7CiAJCQlwcmludGsoS0VSTl9J
+TkZPICIlcyVkOiBSZXNldCBBZGFwdGVyIElnbm9yZWRcbiIsCkBAIC0xMzUzLDEzICsxMzUzLDE0
+IEBACiAKIAlpZiAobm9uZGFzZCAhPSAtMSkKIAkJZGV2LT5ub25kYXNkX3N1cHBvcnQgPSAobm9u
+ZGFzZCE9MCk7Ci0JaWYoZGV2LT5ub25kYXNkX3N1cHBvcnQgIT0gMCkgeworCWlmIChkZXYtPm5v
+bmRhc2Rfc3VwcG9ydCAmJiAhZGV2LT5pbl9yZXNldCkKIAkJcHJpbnRrKEtFUk5fSU5GTyAiJXMl
+ZDogTm9uLURBU0Qgc3VwcG9ydCBlbmFibGVkLlxuIixkZXYtPm5hbWUsIGRldi0+aWQpOwotCX0K
+IAogCWRldi0+ZGFjX3N1cHBvcnQgPSAwOwogCWlmKCAoc2l6ZW9mKGRtYV9hZGRyX3QpID4gNCkg
+JiYgKGRldi0+YWRhcHRlcl9pbmZvLm9wdGlvbnMgJiBBQUNfT1BUX1NHTUFQX0hPU1Q2NCkpewot
+CQlwcmludGsoS0VSTl9JTkZPICIlcyVkOiA2NGJpdCBzdXBwb3J0IGVuYWJsZWQuXG4iLCBkZXYt
+Pm5hbWUsIGRldi0+aWQpOworCQlpZiAoIWRldi0+aW5fcmVzZXQpCisJCQlwcmludGsoS0VSTl9J
+TkZPICIlcyVkOiA2NGJpdCBzdXBwb3J0IGVuYWJsZWQuXG4iLAorCQkJCWRldi0+bmFtZSwgZGV2
+LT5pZCk7CiAJCWRldi0+ZGFjX3N1cHBvcnQgPSAxOwogCX0KIApAQCAtMTM2OSw4ICsxMzcwLDkg
+QEAKIAlpZihkZXYtPmRhY19zdXBwb3J0ICE9IDApIHsKIAkJaWYgKCFwY2lfc2V0X2RtYV9tYXNr
+KGRldi0+cGRldiwgRE1BXzY0QklUX01BU0spICYmCiAJCQkhcGNpX3NldF9jb25zaXN0ZW50X2Rt
+YV9tYXNrKGRldi0+cGRldiwgRE1BXzY0QklUX01BU0spKSB7Ci0JCQlwcmludGsoS0VSTl9JTkZP
+IiVzJWQ6IDY0IEJpdCBEQUMgZW5hYmxlZFxuIiwKLQkJCQlkZXYtPm5hbWUsIGRldi0+aWQpOwor
+CQkJaWYgKCFkZXYtPmluX3Jlc2V0KQorCQkJCXByaW50ayhLRVJOX0lORk8iJXMlZDogNjQgQml0
+IERBQyBlbmFibGVkXG4iLAorCQkJCQlkZXYtPm5hbWUsIGRldi0+aWQpOwogCQl9IGVsc2UgaWYg
+KCFwY2lfc2V0X2RtYV9tYXNrKGRldi0+cGRldiwgRE1BXzMyQklUX01BU0spICYmCiAJCQkhcGNp
+X3NldF9jb25zaXN0ZW50X2RtYV9tYXNrKGRldi0+cGRldiwgRE1BXzMyQklUX01BU0spKSB7CiAJ
+CQlwcmludGsoS0VSTl9JTkZPIiVzJWQ6IERNQSBtYXNrIHNldCBmYWlsZWQsIDY0IEJpdCBEQUMg
+ZGlzYWJsZWRcbiIsCmRpZmYgLXJ1IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jIGIv
+ZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2NvbW1zdXAuYwkyMDA4LTAyLTA4IDExOjIyOjQzLjQ5NjI5NTU5OCAtMDUwMAorKysgYi9kcml2
+ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJMjAwOC0wMi0wOCAxMToyNjo1OC4zODkzOTQ0MzYg
+LTA1MDAKQEAgLTE0NTgsNyArMTQ1OCw3IEBACiAKIAlwcmludGsoS0VSTl9FUlIgIiVzOiBIb3N0
+IGFkYXB0ZXIgQkxJTksgTEVEIDB4JXhcbiIsIGFhYy0+bmFtZSwgQmxpbmtMRUQpOwogCi0JaWYg
+KCFhYWNfY2hlY2tfcmVzZXQgfHwgKChhYWNfY2hlY2tfcmVzZXQgIT0gMSkgJiYKKwlpZiAoIWFh
+Y19jaGVja19yZXNldCB8fCAoKGFhY19jaGVja19yZXNldCA9PSAxKSAmJgogCQkoYWFjLT5zdXBw
+bGVtZW50X2FkYXB0ZXJfaW5mby5TdXBwb3J0ZWRPcHRpb25zMiAmCiAJCQlBQUNfT1BUSU9OX0lH
+Tk9SRV9SRVNFVCkpKQogCQlnb3RvIG91dDsKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Nj
+c2kvYWFjcmFpZC9saW5pdC5jCTIwMDgtMDItMDggMTE6MjI6NDMuNDk3Mjk1NDczIC0wNTAwCisr
+KyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwOC0wMi0wOCAxMToyNjo1OC4zOTAz
+OTQzMTEgLTA1MDAKQEAgLTY0MSw3ICs2NDEsNyBAQAogCSAgIEFBQ19PUFRJT05fTVVfUkVTRVQp
+ICYmCiAJICBhYWNfY2hlY2tfcmVzZXQgJiYKIAkgICgoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpIHx8
+Ci0JICAgKGFhYy0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgor
+CSAgICEoYWFjLT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5mby5TdXBwb3J0ZWRPcHRpb25zMiAmCiAJ
+ICAgIEFBQ19PUFRJT05fSUdOT1JFX1JFU0VUKSkpCiAJCWFhY19yZXNldF9hZGFwdGVyKGFhYywg
+Mik7IC8qIEJ5cGFzcyB3YWl0IGZvciBjb21tYW5kIHF1aWVzY2UgKi8KIAlyZXR1cm4gU1VDQ0VT
+UzsgLyogQ2F1c2UgYW4gaW1tZWRpYXRlIHJldHJ5IG9mIHRoZSBjb21tYW5kIHdpdGggYSB0ZW4g
+c2Vjb25kIGRlbGF5IGFmdGVyIHN1Y2Nlc3NmdWwgdHVyICovCg==
+
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F4398D8392ADPE2K703adapte_--
