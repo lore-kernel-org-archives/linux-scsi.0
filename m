@@ -1,42 +1,55 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] aacraid: add optional MSI support.
-Date: Thu, 07 Feb 2008 18:30:34 -0600
-Message-ID: <1202430634.3171.41.camel@localhost.localdomain>
-References: <532ABFBDAAC3A34EB12EBA6CEC2838F4397D643D@ADPE2K703.adaptec.com>
-	 <20080205234912B.tomof@acm.org>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F4397D6932@ADPE2K703.adaptec.com>
-	 <20080206101148L.fujita.tomonori@lab.ntt.co.jp>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F439829BBB@ADPE2K703.adaptec.com>
-	 <1202320497.3112.92.camel@localhost.localdomain>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F43982A010@ADPE2K703.adaptec.com>
+Subject: Re: [patch 05/13] MegaRAID driver management char device moved to
+	misc
+Date: Thu, 07 Feb 2008 18:40:47 -0600
+Message-ID: <1202431248.3171.44.camel@localhost.localdomain>
+References: <200802050752.m157qxIX010700@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49961 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33610 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762382AbYBHAai (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 19:30:38 -0500
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F43982A010@ADPE2K703.adaptec.com>
+	by vger.kernel.org with ESMTP id S935416AbYBHAky (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 19:40:54 -0500
+In-Reply-To: <200802050752.m157qxIX010700@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, thomas@horsten.com, Neela.Kolli@engenio.com, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
 
-On Wed, 2008-02-06 at 13:20 -0800, Salyzyn, Mark wrote:
-> Added support for MSI utilizing the aacraid.msi=1 parameter. This patch adds some localized or like-minded janitor fixes. Since the default is disabled, there is no impact on the code paths unless the customer wishes to experiment with the MSI performance.
+On Mon, 2008-02-04 at 23:53 -0800, akpm@linux-foundation.org wrote:
+> From: Thomas Horsten <thomas@horsten.com>
 > 
-> This patch is against current scsi-misc-2.6
+> The MegaRAID driver's common management module (megaraid_mm.c) creates a
+> char device used by the management tool "megarc" from LSI Logic (and
+> possibly other management tools).
+> 
+> In 2.6 with udev, this device doesn't get created because it is not
+> registered in sysfs.
+> 
+> I first fixed this by registering a class "megaraid_mm", but realized that
+> this should probably be moved to misc devices, instead of taking up a char
+> major.  This is because only 1 device is used, even if there are multiple
+> adapters - the minor is never used (the adapter info is in the ioctl block
+> sent to the driver, not detected based on the minor number as one might
+> think).  So it is a complete waste to have an entire major taken by this.
+> 
+> So it now uses a misc device which I named "megadev0" (the name that megarc
+> expects), and has a dynamic minor (previoulsy a dynamic major was used).
+> 
+> I have tested this on my own system with the megarc tool, and it works just
+> as fine as before (only now the device gets created correctly by udev).
+> 
+> Cc: <thomas.horsten@gmail.com>
+> Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
+> Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-It doesn't seem to compile:
-
-drivers/scsi/aacraid/sa.c: In function 'aac_sa_init':
-drivers/scsi/aacraid/sa.c:388: error: dereferencing pointer to incomplete type
-drivers/scsi/aacraid/sa.c:406: error: dereferencing pointer to incomplete type
-
-It looks like this can be corrected by #include <linux/pci.h> since it's
-struct pci_dev that's the incomplete type.
+Neela and Sekomann or Sumant, can I ping on this ... I've no idea what
+this will do to the raid management tools, so I really need someone to
+sign off on this.
 
 James
 
