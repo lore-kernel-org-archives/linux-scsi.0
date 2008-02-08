@@ -1,64 +1,115 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] advansys: fix overrun_buf aligned bug
-Date: Thu, 07 Feb 2008 19:37:13 -0600
-Message-ID: <1202434633.3171.64.camel@localhost.localdomain>
-References: <20080208095008V.fujita.tomonori@lab.ntt.co.jp>
-	 <1202432515.3171.55.camel@localhost.localdomain>
-	 <20080208101641R.fujita.tomonori@lab.ntt.co.jp>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
+Date: Thu, 7 Feb 2008 18:46:06 -0800
+Message-ID: <20080207184606.03b28a9c.akpm@linux-foundation.org>
+References: <1202432206.3171.53.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46754 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932690AbYBHBhX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:37:23 -0500
-In-Reply-To: <20080208101641R.fujita.tomonori@lab.ntt.co.jp>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45060 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755779AbYBHCpv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 21:45:51 -0500
+In-Reply-To: <1202432206.3171.53.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: skogtun.linux@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, tomof@acm.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nick Piggin <nickpiggin@yahoo.com.au>
+
+On Thu, 07 Feb 2008 18:56:46 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> Quite a bit of this is fixing things broken previously (the advansys fix
+> is still pending resolution, but I'll send it as an -rc fix when we have
+> it).  There's the final elimination of all drivers that are esp based
+> but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
+> the usual bunch of driver updates and the addition of a new enclosure
+> services driver and the corresponding ULD.
+
+Sob.  Can we please merge "Convert SG from nopage to fault"?  It has been
+sent three times, the first time was Dec 5 last year and it has thus far
+received the lead balloon treatment.  Despite my explicit request for
+consideration last time I sent it
+
+If there is no movement here then I have to carry the moderately intrusive
+mm-remove-nopage.patch for another N months and we need to watch out for
+new ->nopage implementations popping up etc.
 
 
-On Fri, 2008-02-08 at 10:16 +0900, FUJITA Tomonori wrote:
-> On Thu, 07 Feb 2008 19:01:55 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > 
-> > On Fri, 2008-02-08 at 09:50 +0900, FUJITA Tomonori wrote:
-> > > struct asc_dvc_var needs overrun buffer to be placed on an 8 byte
-> > > boundary. advansys defines struct asc_dvc_var:
-> > > 
-> > > struct asc_dvc_var {
-> > > 	...
-> > > 	uchar overrun_buf[ASC_OVERRUN_BSIZE] __aligned(8);
-> > > 
-> > > The problem is that struct asc_dvc_var is placed on
-> > > shost->hostdata. So if the hostdata is not on an 8 byte boundary, the
-> > > advansys crashes. The hostdata is placed on a sizeof(unsigned long)
-> > > boundary so the 8 byte boundary is not garanteed with x86_32.
-> > > 
-> > > With 2.6.23 and 2.6.24, the hostdata is on an 8 byte boundary by
-> > > chance, but with the current git, it's not.
-> > > 
-> > > This patch removes overrun_buf static array and use kzalloc.
-> > 
-> > It's a bit of a waste of a kmallocs.  The usual way of fixing this type
-> > of cockup is to float the structure until it becomes aligned, but I
-> > suppose that involves changing all calls to shost_priv in the driver ...
-> 
-> Yeah, agreed. It's better but I'm not familiar with the driver so I
-> use kmalloc. It's not so bad as a short-term solution, I think.
-> 
-> Any chance to push it to final SCSI updates for 2.6.24 merge window?
-> Though we can push it any time since it's a bug fix.
-> 
-> Anyway, I'm fine with dropping it if Matthew will fix the driver in a
-> better way. I'm happy unless people blame my IOMMU or sense buffer
-> patch for this bug. :)
 
-Sure, will do ...  I think it's an OK interim fix.
 
-James
+From: Nick Piggin <npiggin@suse.de>
 
+Convert SG from nopage to fault.
+
+Signed-off-by: Nick Piggin <npiggin@suse.de>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/sg.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+diff -puN drivers/scsi/sg.c~sg-nopage drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~sg-nopage
++++ a/drivers/scsi/sg.c
+@@ -1160,23 +1160,22 @@ sg_fasync(int fd, struct file *filp, int
+ 	return (retval < 0) ? retval : 0;
+ }
+ 
+-static struct page *
+-sg_vma_nopage(struct vm_area_struct *vma, unsigned long addr, int *type)
++static int
++sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+ 	Sg_fd *sfp;
+-	struct page *page = NOPAGE_SIGBUS;
+ 	unsigned long offset, len, sa;
+ 	Sg_scatter_hold *rsv_schp;
+ 	struct scatterlist *sg;
+ 	int k;
+ 
+ 	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
+-		return page;
++		return VM_FAULT_SIGBUS;
+ 	rsv_schp = &sfp->reserve;
+-	offset = addr - vma->vm_start;
++	offset = vmf->pgoff << PAGE_SHIFT;
+ 	if (offset >= rsv_schp->bufflen)
+-		return page;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_vma_nopage: offset=%lu, scatg=%d\n",
++		return VM_FAULT_SIGBUS;
++	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
+ 				   offset, rsv_schp->k_use_sg));
+ 	sg = rsv_schp->buffer;
+ 	sa = vma->vm_start;
+@@ -1185,21 +1184,21 @@ sg_vma_nopage(struct vm_area_struct *vma
+ 		len = vma->vm_end - sa;
+ 		len = (len < sg->length) ? len : sg->length;
+ 		if (offset < len) {
++			struct page *page;
+ 			page = virt_to_page(page_address(sg_page(sg)) + offset);
+ 			get_page(page);	/* increment page count */
+-			break;
++			vmf->page = page;
++			return 0; /* success */
+ 		}
+ 		sa += len;
+ 		offset -= len;
+ 	}
+ 
+-	if (type)
+-		*type = VM_FAULT_MINOR;
+-	return page;
++	return VM_FAULT_SIGBUS;
+ }
+ 
+ static struct vm_operations_struct sg_mmap_vm_ops = {
+-	.nopage = sg_vma_nopage,
++	.fault = sg_vma_fault,
+ };
+ 
+ static int
+_
 
