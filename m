@@ -1,41 +1,56 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9769] CONFIG_SCSI_WAIT_SCAN configure error
-Date: Thu,  7 Feb 2008 23:28:59 -0800 (PST)
-Message-ID: <20080208072859.A360510806E@picon.linux-foundation.org>
-References: <bug-9769-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:34783 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932668AbYBHH3E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 02:29:04 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m187SxBY026966
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 23:29:00 -0800
-In-Reply-To: <bug-9769-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/7] blk_end_request: full I/O completion handler
+Date: Fri, 8 Feb 2008 09:51:48 +0100
+Message-ID: <20080208085148.GD15220@kernel.dk>
+References: <20080205103851.GQ15220@kernel.dk> <77334B9413C72244AE1B51ADD4868D700AFD9D60@BGEEXC02.asiapacific.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <77334B9413C72244AE1B51ADD4868D700AFD9D60@BGEEXC02.asiapacific.cpqcorp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "S, Chandrakala (STSD)" <chandrakala.s@hp.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, "Miller, Mike (OS Dev)" <mike.miller@hp.com>, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9769
+On Fri, Feb 08 2008, S, Chandrakala (STSD) wrote:
+> Hi,
+> 
+> Thanks for the information! 
+> We would like to know when does the 2.6.25 kernel will be available at
+> kernel.org.
 
+So would I, if I locate my crystal ball I'll be sure to let you know :-)
 
-protasnb@gmail.com changed:
+Seriously, given past experience, it's probably sometime in April.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |protasnb@gmail.com,
-                   |                            |jejb@hansenpartnership.com
-
-
-
-
-------- Comment #1 from protasnb@gmail.com  2008-02-07 23:28 -------
-This appears to be a dependency, but these are not dependent defines.
-CONFIG_SCSI_SCAN_ASYNC defines the default scan type, which can be overridden
-by the module parameter.
-
+> 
+> Thanks,
+> Chandrakala 
+> 
+> -----Original Message-----
+> From: Jens Axboe [mailto:jens.axboe@oracle.com] 
+> Sent: Tuesday, February 05, 2008 4:09 PM
+> To: S, Chandrakala (STSD)
+> Cc: Kiyoshi Ueda; linux-kernel@vger.kernel.org;
+> linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; Miller, Mike (OS
+> Dev); grant.likely@secretlab.ca; dm-devel@redhat.com;
+> j-nomura@ce.jp.nec.com
+> Subject: Re: [PATCH 0/7] blk_end_request: full I/O completion handler
+> 
+> On Tue, Feb 05 2008, S, Chandrakala (STSD) wrote:
+> > Hello,
+> > 
+> > We would like to know in which kernel version these patches are 
+> > available.
+> 
+> They were merged after 2.6.24 was released, so they will show up in the
+> 2.6.25 kernel.
+> 
+> --
+> Jens Axboe
+> 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Jens Axboe
+
