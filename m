@@ -1,49 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] megaraid: outb_p extermination
-Date: Fri, 8 Feb 2008 15:34:24 +0000
-Message-ID: <20080208153424.29683d17@core>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9769] CONFIG_SCSI_WAIT_SCAN configure error
+Date: Fri,  8 Feb 2008 07:56:23 -0800 (PST)
+Message-ID: <20080208155623.CC5CD11D10B@picon.linux-foundation.org>
+References: <bug-9769-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33110 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756822AbYBHPkw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 10:40:52 -0500
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:54690 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756642AbYBHP46 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 10:56:58 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m18FuNbS017691
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Feb 2008 07:56:24 -0800
+In-Reply-To: <bug-9769-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, akpm@osdl.org
+To: linux-scsi@vger.kernel.org
 
->From conversations with the maintainers the _p isn't needed so kill it.
-That removes the last non ISA _p user from the SCSI layer to my knowledge.
+http://bugzilla.kernel.org/show_bug.cgi?id=9769
 
-Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-mm1/drivers/scsi/megaraid.c linux-2.6.24-mm1/drivers/scsi/megaraid.c
---- linux.vanilla-2.6.24-mm1/drivers/scsi/megaraid.c	2008-02-06 14:14:41.000000000 +0000
-+++ linux-2.6.24-mm1/drivers/scsi/megaraid.c	2008-02-06 14:35:38.000000000 +0000
-@@ -151,19 +151,19 @@
- 	 */
- 	if( adapter->flag & BOARD_IOMAP ) {
- 
--		outb_p(adapter->mbox_dma & 0xFF,
-+		outb(adapter->mbox_dma & 0xFF,
- 				adapter->host->io_port + MBOX_PORT0);
- 
--		outb_p((adapter->mbox_dma >> 8) & 0xFF,
-+		outb((adapter->mbox_dma >> 8) & 0xFF,
- 				adapter->host->io_port + MBOX_PORT1);
- 
--		outb_p((adapter->mbox_dma >> 16) & 0xFF,
-+		outb((adapter->mbox_dma >> 16) & 0xFF,
- 				adapter->host->io_port + MBOX_PORT2);
- 
--		outb_p((adapter->mbox_dma >> 24) & 0xFF,
-+		outb((adapter->mbox_dma >> 24) & 0xFF,
- 				adapter->host->io_port + MBOX_PORT3);
- 
--		outb_p(ENABLE_MBOX_BYTE,
-+		outb(ENABLE_MBOX_BYTE,
- 				adapter->host->io_port + ENABLE_MBOX_REGION);
- 
- 		irq_ack(adapter);
+protasnb@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |REJECTED
+         Resolution|                            |INVALID
+
+
+
+
+------- Comment #3 from protasnb@gmail.com  2008-02-08 07:56 -------
+Thanks, closing the bug.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
