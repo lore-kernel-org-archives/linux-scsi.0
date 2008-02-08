@@ -1,45 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] advansys: fix overrun_buf aligned bug
-Date: Thu, 07 Feb 2008 19:01:55 -0600
-Message-ID: <1202432515.3171.55.camel@localhost.localdomain>
-References: <20080208095008V.fujita.tomonori@lab.ntt.co.jp>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
+Date: Thu, 07 Feb 2008 17:04:02 -0800
+Message-ID: <1202432647.31361.26.camel@brick>
+References: <1202432206.3171.53.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48660 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752059AbYBHBB7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:01:59 -0500
-In-Reply-To: <20080208095008V.fujita.tomonori@lab.ntt.co.jp>
+Received: from wx-out-0506.google.com ([66.249.82.236]:6797 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753242AbYBHBEM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:04:12 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so3885850wxd.4
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Feb 2008 17:04:11 -0800 (PST)
+In-Reply-To: <1202432206.3171.53.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: skogtun.linux@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, tomof@acm.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-
-On Fri, 2008-02-08 at 09:50 +0900, FUJITA Tomonori wrote:
-> struct asc_dvc_var needs overrun buffer to be placed on an 8 byte
-> boundary. advansys defines struct asc_dvc_var:
+On Thu, 2008-02-07 at 18:56 -0600, James Bottomley wrote:
+> Quite a bit of this is fixing things broken previously (the advansys fix
+> is still pending resolution, but I'll send it as an -rc fix when we have
+> it).  There's the final elimination of all drivers that are esp based
+> but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
+> the usual bunch of driver updates and the addition of a new enclosure
+> services driver and the corresponding ULD.
 > 
-> struct asc_dvc_var {
-> 	...
-> 	uchar overrun_buf[ASC_OVERRUN_BSIZE] __aligned(8);
+> The patch is available from:
 > 
-> The problem is that struct asc_dvc_var is placed on
-> shost->hostdata. So if the hostdata is not on an 8 byte boundary, the
-> advansys crashes. The hostdata is placed on a sizeof(unsigned long)
-> boundary so the 8 byte boundary is not garanteed with x86_32.
-> 
-> With 2.6.23 and 2.6.24, the hostdata is on an 8 byte boundary by
-> chance, but with the current git, it's not.
-> 
-> This patch removes overrun_buf static array and use kzalloc.
 
-It's a bit of a waste of a kmallocs.  The usual way of fixing this type
-of cockup is to float the structure until it becomes aligned, but I
-suppose that involves changing all calls to shost_priv in the driver ...
+I'm going to guess that this is the entry in feature-removal.txt
+that need an update then:
 
-James
+---------------------------
 
+What:	old NCR53C9x driver
+When:	October 2007
+Why:	Replaced by the much better esp_scsi driver.  Actual low-level
+	driver can be ported over almost trivially.
+Who:	David Miller <davem@davemloft.net>
+	Christoph Hellwig <hch@lst.de>
+
+
+Cheers,
+
+Harvey
 
