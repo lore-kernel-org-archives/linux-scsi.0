@@ -1,55 +1,55 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] advansys: fix overrun_buf aligned bug
-Date: Fri, 08 Feb 2008 10:16:41 +0900
-Message-ID: <20080208101641R.fujita.tomonori@lab.ntt.co.jp>
-References: <20080208095008V.fujita.tomonori@lab.ntt.co.jp>
-	<1202432515.3171.55.camel@localhost.localdomain>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [patch 03/13] mptbase: reset ioc initiator during PCI resume
+Date: Thu, 7 Feb 2008 17:23:24 -0800
+Message-ID: <20080208012324.GA3601@tree.beaverton.ibm.com>
+References: <200802050752.m157qsni010694@imap1.linux-foundation.org> <1202431285.3171.46.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:36694 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbYBHBQ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 20:16:58 -0500
-In-Reply-To: <1202432515.3171.55.camel@localhost.localdomain>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:43837 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758825AbYBHBXh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Feb 2008 20:23:37 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m181NQRC017338
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 20:23:26 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m181NQuc264866
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 20:23:26 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m181NPU5009708
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2008 20:23:26 -0500
+Content-Disposition: inline
+In-Reply-To: <1202431285.3171.46.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: fujita.tomonori@lab.ntt.co.jp, skogtun.linux@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, tomof@acm.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Thu, 07 Feb 2008 19:01:55 -0600
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
+On Thu, Feb 07, 2008 at 06:41:25PM -0600, James Bottomley wrote:
+> On Mon, 2008-02-04 at 23:53 -0800, akpm@linux-foundation.org wrote:
+> > From: "Darrick J. Wong" <djwong@us.ibm.com>
+> > 
+> > It appears that the LSI SAS 1064E chip needs to be reset after a
+> > suspend/resume cycle before the driver attempts further communications with
+> > the chip.  Without this patch, resuming the chip results in this error
+> > message being printed repeatedly and no more disk I/O.
+> > 
+> > mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
+> > 
+> > So far it seems to fix suspend/resume on all the MPT Fusion cards I have
+> > (SAS and U320 SCSI) but since I don't know the internals of that chip I
+> > can't say for sure if this is a proper fix.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > 
-> On Fri, 2008-02-08 at 09:50 +0900, FUJITA Tomonori wrote:
-> > struct asc_dvc_var needs overrun buffer to be placed on an 8 byte
-> > boundary. advansys defines struct asc_dvc_var:
-> > 
-> > struct asc_dvc_var {
-> > 	...
-> > 	uchar overrun_buf[ASC_OVERRUN_BSIZE] __aligned(8);
-> > 
-> > The problem is that struct asc_dvc_var is placed on
-> > shost->hostdata. So if the hostdata is not on an 8 byte boundary, the
-> > advansys crashes. The hostdata is placed on a sizeof(unsigned long)
-> > boundary so the 8 byte boundary is not garanteed with x86_32.
-> > 
-> > With 2.6.23 and 2.6.24, the hostdata is on an 8 byte boundary by
-> > chance, but with the current git, it's not.
-> > 
-> > This patch removes overrun_buf static array and use kzalloc.
-> 
-> It's a bit of a waste of a kmallocs.  The usual way of fixing this type
-> of cockup is to float the structure until it becomes aligned, but I
-> suppose that involves changing all calls to shost_priv in the driver ...
+> Ping on this, please Eric.
 
-Yeah, agreed. It's better but I'm not familiar with the driver so I
-use kmalloc. It's not so bad as a short-term solution, I think.
+As far as I can tell, Eric isn't really involved with this patch
+anymore, and handed it over to Sathya.Prakash@lsi.com.  I received email
+from him (her?  Apologies, I'm not sufficiently familiar with Indian
+names) this morning saying that a modified version of it would go out to
+linux-scsi in a day or two.
 
-Any chance to push it to final SCSI updates for 2.6.24 merge window?
-Though we can push it any time since it's a bug fix.
-
-Anyway, I'm fine with dropping it if Matthew will fix the driver in a
-better way. I'm happy unless people blame my IOMMU or sense buffer
-patch for this bug. :)
+--D
