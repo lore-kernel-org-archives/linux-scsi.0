@@ -1,33 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [patch 05/13] MegaRAID driver management char device moved
-	tomisc
-Date: Thu, 07 Feb 2008 21:09:21 -0600
-Message-ID: <1202440161.3171.69.camel@localhost.localdomain>
-References: <0631C836DBF79F42B5A60C8C8D4E8229E75449@NAMAIL2.ad.lsil.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
+Date: Thu, 7 Feb 2008 19:11:33 -0800 (PST)
+Message-ID: <alpine.LFD.1.00.0802071909350.2896@woody.linux-foundation.org>
+References: <1202432206.3171.53.camel@localhost.localdomain> <20080207184606.03b28a9c.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36442 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753781AbYBHDJ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 22:09:27 -0500
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229E75449@NAMAIL2.ad.lsil.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:50888 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754324AbYBHDLh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 22:11:37 -0500
+In-Reply-To: <20080207184606.03b28a9c.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, thomas@horsten.com, "Kolli, Neela" <Neela.Kolli@lsi.com>, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com
-
-On Thu, 2008-02-07 at 19:47 -0700, Patro, Sumant wrote:
-> James, I acked this patch on 11/28.
-
-Sorry about that ... that's in the window where my server dropped of the
-internet while I was on holiday, so I didn't get the email, I'm afraid
-
-> We are fine with the change proposed.
-
-Great, will add it.
-
-James
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nick Piggin <nickpiggin@yahoo.com.au>
 
 
+
+On Thu, 7 Feb 2008, Andrew Morton wrote:
+> 
+> Sob.  Can we please merge "Convert SG from nopage to fault"?
+
+Heh. I just took it directly then.
+
+I think it's more of a VM patch than a SCSI patch anyway, so I don't think 
+you really should even have tried to push it through the SCSI tree.
+
+It's not like we ever do the low-level FS changes for VFS issues through 
+the FS maintainers anyway (ie you sent me all those iget/read_inode things 
+directly rather than trying to go through each filesystem). I don't think 
+this is any different, really.
+
+		Linus
