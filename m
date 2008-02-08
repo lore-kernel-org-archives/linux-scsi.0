@@ -1,70 +1,150 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
-Date: Fri, 08 Feb 2008 10:37:00 -0600
-Message-ID: <1202488620.3102.33.camel@localhost.localdomain>
-References: <1202432206.3171.53.camel@localhost.localdomain>
-	 <1202432647.31361.26.camel@brick>
-	 <1202432873.3171.58.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0802081001540.18242@anakin>
+From: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Subject: [PATCH 1/3] mpt fusion: Request I/O resources only when required
+Date: Fri, 8 Feb 2008 22:05:35 +0530
+Message-ID: <20080208163534.GA20640@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57760 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933577AbYBHQhL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 11:37:11 -0500
-In-Reply-To: <Pine.LNX.4.64.0802081001540.18242@anakin>
+Received: from mail0.lsil.com ([147.145.40.20]:51500 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934255AbYBHQkP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Feb 2008 11:40:15 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id m18GbEZq009074
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Feb 2008 08:37:14 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Harvey Harrison <harvey.harrison@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com
 
-On Fri, 2008-02-08 at 10:03 +0100, Geert Uytterhoeven wrote:
-> On Thu, 7 Feb 2008, James Bottomley wrote:
-> > On Thu, 2008-02-07 at 17:04 -0800, Harvey Harrison wrote:
-> > > On Thu, 2008-02-07 at 18:56 -0600, James Bottomley wrote:
-> > > > Quite a bit of this is fixing things broken previously (the advansys fix
-> > > > is still pending resolution, but I'll send it as an -rc fix when we have
-> > > > it).  There's the final elimination of all drivers that are esp based
-> > > > but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
-> > > > the usual bunch of driver updates and the addition of a new enclosure
-> > > > services driver and the corresponding ULD.
-> > > > 
-> > > > The patch is available from:
-> > > > 
-> > > 
-> > > I'm going to guess that this is the entry in feature-removal.txt
-> > > that need an update then:
-> > > 
-> > > ---------------------------
-> > > 
-> > > What:	old NCR53C9x driver
-> > > When:	October 2007
-> > > Why:	Replaced by the much better esp_scsi driver.  Actual low-level
-> > > 	driver can be ported over almost trivially.
-> > > Who:	David Miller <davem@davemloft.net>
-> > > 	Christoph Hellwig <hch@lst.de>
-> > 
-> > Not immediately ... I anticipate a few "where'd my driver go?" type
-> > questions from m68k for which this provides a useful reference to point
-> > to ...
-> 
-> Don't bother, we're fully aware of this.
-> 
-> The shortest feature removal notice in Linux's history (is it?) didn't go
-> unnoticed ;-)
+This patch modifies the I/O resource allocation behavior of FUSION driver. 
+The current version of driver allocates the I/O resources even if they are not required and this creates trouble in low resource environments.
+This driver now uses pci_enable_device_mem/pci_enable_device functions to differentiate the resource allocations.
 
-I don't know where you get that from.  The notice went in on 30 April
-2007 and we gave you six months to convert the drivers, hence the
-October 2007 date for when the deletion will actually be done.  I've
-actually delayed removal until February 2007 giving you a further three
-months.  Even then I only removed the drivers because they no longer
-compile.
+signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+---
 
-I think nine months isn't unreasonable for a feature removal ... unless
-you work on a different time scale from me?
-
-James
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 425f60c..c3f33de 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1470,9 +1470,6 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (mpt_debug_level)
+ 		printk(KERN_INFO MYNAM ": mpt_debug_level=%xh\n", mpt_debug_level);
+ 
+-	if (pci_enable_device(pdev))
+-		return r;
+-
+ 	ioc = kzalloc(sizeof(MPT_ADAPTER), GFP_ATOMIC);
+ 	if (ioc == NULL) {
+ 		printk(KERN_ERR MYNAM ": ERROR - Insufficient memory to add adapter!\n");
+@@ -1482,6 +1479,20 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->id = mpt_ids++;
+ 	sprintf(ioc->name, "ioc%d", ioc->id);
+ 
++	ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
++	if (pci_enable_device_mem(pdev)) {
++		kfree(ioc);
++		printk(MYIOC_s_ERR_FMT "pci_enable_device_mem() "
++		    "failed\n",ioc->name);
++ 		return r;
++	}
++	if (pci_request_selected_regions(pdev, ioc->bars, "mpt")) {
++		kfree(ioc);
++		printk(MYIOC_s_ERR_FMT "pci_request_selected_regions() with "
++		    "MEM failed\n",ioc->name);
++		return r;
++	}
++
+ 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT ": mpt_adapter_install\n", ioc->name));
+ 
+ 	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
+@@ -1791,6 +1802,7 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+ 
+ 	pci_disable_device(pdev);
++	pci_release_selected_regions(pdev, ioc->bars);
+ 	pci_set_power_state(pdev, device_state);
+ 
+ 	return 0;
+@@ -1807,7 +1819,6 @@ mpt_resume(struct pci_dev *pdev)
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 	u32 device_state = pdev->current_state;
+ 	int recovery_state;
+-	int err;
+ 
+ 	printk(MYIOC_s_INFO_FMT
+ 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+@@ -1815,9 +1826,18 @@ mpt_resume(struct pci_dev *pdev)
+ 
+ 	pci_set_power_state(pdev, 0);
+ 	pci_restore_state(pdev);
+-	err = pci_enable_device(pdev);
+-	if (err)
+-		return err;
++	if (ioc->facts.Flags & MPI_IOCFACTS_FLAGS_FW_DOWNLOAD_BOOT) {
++		ioc->bars = pci_select_bars(ioc->pcidev, IORESOURCE_MEM |
++			IORESOURCE_IO);
++		if (pci_enable_device(pdev))
++			return 0; 
++	} else {
++		ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
++		if (pci_enable_device_mem(pdev))
++			return 0;
++	}
++	if (pci_request_selected_regions(pdev, ioc->bars, "mpt"))
++		return 0;
+ 
+ 	/* enable interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+@@ -1878,6 +1898,7 @@ mpt_signal_reset(u8 index, MPT_ADAPTER *ioc, int reset_phase)
+  *		-2 if READY but IOCFacts Failed
+  *		-3 if READY but PrimeIOCFifos Failed
+  *		-4 if READY but IOCInit Failed
++ *		-5 if failed to enable_device and/or request_selected_regions
+  */
+ static int
+ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+@@ -1976,6 +1997,18 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		}
+ 	}
+ 
++	if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP) &&
++	    (ioc->facts.Flags & MPI_IOCFACTS_FLAGS_FW_DOWNLOAD_BOOT)) {
++		pci_release_selected_regions(ioc->pcidev, ioc->bars);
++		ioc->bars = pci_select_bars(ioc->pcidev, IORESOURCE_MEM |
++		    IORESOURCE_IO);
++		if (pci_enable_device(ioc->pcidev))
++			return -5;
++		if (pci_request_selected_regions(ioc->pcidev, ioc->bars,
++			"mpt"))
++			return -5;
++	}
++
+ 	/*
+ 	 * Device is reset now. It must have de-asserted the interrupt line
+ 	 * (if it was asserted) and it should be safe to register for the
+@@ -2381,6 +2414,9 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
+ 		ioc->memmap = NULL;
+ 	}
+ 
++	pci_disable_device(ioc->pcidev);
++	pci_release_selected_regions(ioc->pcidev, ioc->bars);
++
+ #if defined(CONFIG_MTRR) && 0
+ 	if (ioc->mtrr_reg > 0) {
+ 		mtrr_del(ioc->mtrr_reg, 0, 0);
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b49b706..44c98c5 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -629,6 +629,7 @@ typedef struct _MPT_ADAPTER
+ 	dma_addr_t		HostPageBuffer_dma;
+ 	int			 mtrr_reg;
+ 	struct pci_dev		*pcidev;	/* struct pci_dev pointer */
++	int			bars;	/* bitmask of BAR's that must be configured */
+ 	u8			__iomem *memmap;	/* mmap address */
+ 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
+ 	SpiCfgData		spi_data;	/* Scsi config. data */
 
