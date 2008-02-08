@@ -1,60 +1,100 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
-Date: Thu, 7 Feb 2008 19:24:58 -0800
-Message-ID: <20080207192458.77ea0778.akpm@linux-foundation.org>
-References: <1202432206.3171.53.camel@localhost.localdomain>
-	<20080207184606.03b28a9c.akpm@linux-foundation.org>
-	<1202440603.3171.72.camel@localhost.localdomain>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [patch 10/18] sg: nopage
+Date: Thu, 07 Feb 2008 22:45:26 -0500
+Message-ID: <47ABD056.5070304@torque.net>
+References: <20071205071547.701344000@nick.local0.net> <20071205071627.793811000@nick.local0.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:49986 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756811AbYBHDYq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 22:24:46 -0500
-In-Reply-To: <1202440603.3171.72.camel@localhost.localdomain>
+Received: from pentafluge.infradead.org ([213.146.154.40]:54949 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758998AbYBHDpd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 22:45:33 -0500
+In-Reply-To: <20071205071627.793811000@nick.local0.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nick Piggin <nickpiggin@yahoo.com.au>, dougg@torque.net
+To: npiggin@suse.de
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Thu, 07 Feb 2008 21:16:43 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+For the patch shown below:
 
-> On Thu, 2008-02-07 at 18:46 -0800, Andrew Morton wrote:
-> > On Thu, 07 Feb 2008 18:56:46 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > Quite a bit of this is fixing things broken previously (the advansys fix
-> > > is still pending resolution, but I'll send it as an -rc fix when we have
-> > > it).  There's the final elimination of all drivers that are esp based
-> > > but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
-> > > the usual bunch of driver updates and the addition of a new enclosure
-> > > services driver and the corresponding ULD.
-> > 
-> > Sob.  Can we please merge "Convert SG from nopage to fault"?  It has been
-> > sent three times, the first time was Dec 5 last year and it has thus far
-> > received the lead balloon treatment.  Despite my explicit request for
-> > consideration last time I sent it
-> > 
-> > If there is no movement here then I have to carry the moderately intrusive
-> > mm-remove-nopage.patch for another N months and we need to watch out for
-> > new ->nopage implementations popping up etc.
-> 
-> I agree ... I've pinged Doug privately, this is publicly.
-> Unfortunately, it is an intrusive change and needs testing .. I just
-> don't have the tools that do this for SG.  
-> 
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-I keep on forgetting that sg==dougg.
 
-<looks in MAINTAINERS. Shifts blame.>
 
-In fact scsi is the area in which I have the most who-maintains-what
-trouble.  I just don't believe what MAINTAINERS says about scsi drivers and
-I tend to resort to git-whatchanged to find out who's really doing stuff. 
-The number of people@lsil.com makes my head spin and I tend to cc as many
-as I can get my hands on.
+npiggin@suse.de wrote:
+Convert SG from nopage to fault.
 
-IOW: some care and attention to the ./MAINTAINERS file would really help
-here.
+Signed-off-by: Nick Piggin <npiggin@suse.de>
+Cc: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+  drivers/scsi/sg.c |   23 +++++++++++------------
+  1 file changed, 11 insertions(+), 12 deletions(-)
+
+Index: linux-2.6/drivers/scsi/sg.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/sg.c
++++ linux-2.6/drivers/scsi/sg.c
+@@ -1144,23 +1144,22 @@ sg_fasync(int fd, struct file *filp, int
+  	return (retval < 0) ? retval : 0;
+  }
+
+-static struct page *
+-sg_vma_nopage(struct vm_area_struct *vma, unsigned long addr, int *type)
++static int
++sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+  {
+  	Sg_fd *sfp;
+-	struct page *page = NOPAGE_SIGBUS;
+  	unsigned long offset, len, sa;
+  	Sg_scatter_hold *rsv_schp;
+  	struct scatterlist *sg;
+  	int k;
+
+  	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
+-		return page;
++		return VM_FAULT_SIGBUS;
+  	rsv_schp = &sfp->reserve;
+-	offset = addr - vma->vm_start;
++	offset = vmf->pgoff << PAGE_SHIFT;
+  	if (offset >= rsv_schp->bufflen)
+-		return page;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_vma_nopage: offset=%lu, scatg=%d\n",
++		return VM_FAULT_SIGBUS;
++	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
+  				   offset, rsv_schp->k_use_sg));
+  	sg = rsv_schp->buffer;
+  	sa = vma->vm_start;
+@@ -1169,21 +1168,21 @@ sg_vma_nopage(struct vm_area_struct *vma
+  		len = vma->vm_end - sa;
+  		len = (len < sg->length) ? len : sg->length;
+  		if (offset < len) {
++			struct page *page;
+  			page = virt_to_page(page_address(sg_page(sg)) + offset);
+  			get_page(page);	/* increment page count */
+-			break;
++			vmf->page = page;
++			return 0; /* success */
+  		}
+  		sa += len;
+  		offset -= len;
+  	}
+
+-	if (type)
+-		*type = VM_FAULT_MINOR;
+-	return page;
++	return VM_FAULT_SIGBUS;
+  }
+
+  static struct vm_operations_struct sg_mmap_vm_ops = {
+-	.nopage = sg_vma_nopage,
++	.fault = sg_vma_fault,
+  };
+
+  static int
+
 
