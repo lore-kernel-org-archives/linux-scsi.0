@@ -1,115 +1,85 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] final SCSI updates for 2.6.24 merge window
-Date: Thu, 7 Feb 2008 18:46:06 -0800
-Message-ID: <20080207184606.03b28a9c.akpm@linux-foundation.org>
-References: <1202432206.3171.53.camel@localhost.localdomain>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: RE: [patch 05/13] MegaRAID driver management char device moved tomisc
+Date: Thu, 7 Feb 2008 19:47:36 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229E75449@NAMAIL2.ad.lsil.com>
+References: <1202431248.3171.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45060 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755779AbYBHCpv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 21:45:51 -0500
-In-Reply-To: <1202432206.3171.53.camel@localhost.localdomain>
+Received: from mail0.lsil.com ([147.145.40.20]:57749 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756910AbYBHCsF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2008 21:48:05 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1202431248.3171.44.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nick Piggin <nickpiggin@yahoo.com.au>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, thomas@horsten.com, "Kolli, Neela" <Neela.Kolli@lsi.com>, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com
 
-On Thu, 07 Feb 2008 18:56:46 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-> Quite a bit of this is fixing things broken previously (the advansys fix
-> is still pending resolution, but I'll send it as an -rc fix when we have
-> it).  There's the final elimination of all drivers that are esp based
-> but don't use the scsi_esp core (that's mostly m68k and alpha).  Plus
-> the usual bunch of driver updates and the addition of a new enclosure
-> services driver and the corresponding ULD.
+James, I acked this patch on 11/28.
 
-Sob.  Can we please merge "Convert SG from nopage to fault"?  It has been
-sent three times, the first time was Dec 5 last year and it has thus far
-received the lead balloon treatment.  Despite my explicit request for
-consideration last time I sent it
+We are fine with the change proposed.
 
-If there is no movement here then I have to carry the moderately intrusive
-mm-remove-nopage.patch for another N months and we need to watch out for
-new ->nopage implementations popping up etc.
+Regards,
+
+Sumant
 
 
 
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Thursday, February 07, 2008 4:41 PM
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org; thomas@horsten.com; Kolli, Neela;
+Seokmann.Ju@lsil.com; thomas.horsten@gmail.com; Patro, Sumant
+Subject: Re: [patch 05/13] MegaRAID driver management char device moved
+tomisc
 
-From: Nick Piggin <npiggin@suse.de>
 
-Convert SG from nopage to fault.
+On Mon, 2008-02-04 at 23:53 -0800, akpm@linux-foundation.org wrote:
+> From: Thomas Horsten <thomas@horsten.com>
+> 
+> The MegaRAID driver's common management module (megaraid_mm.c) creates
 
-Signed-off-by: Nick Piggin <npiggin@suse.de>
-Cc: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+> a char device used by the management tool "megarc" from LSI Logic (and
 
- drivers/scsi/sg.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+> possibly other management tools).
+> 
+> In 2.6 with udev, this device doesn't get created because it is not 
+> registered in sysfs.
+> 
+> I first fixed this by registering a class "megaraid_mm", but realized 
+> that this should probably be moved to misc devices, instead of taking 
+> up a char major.  This is because only 1 device is used, even if there
 
-diff -puN drivers/scsi/sg.c~sg-nopage drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~sg-nopage
-+++ a/drivers/scsi/sg.c
-@@ -1160,23 +1160,22 @@ sg_fasync(int fd, struct file *filp, int
- 	return (retval < 0) ? retval : 0;
- }
- 
--static struct page *
--sg_vma_nopage(struct vm_area_struct *vma, unsigned long addr, int *type)
-+static int
-+sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- {
- 	Sg_fd *sfp;
--	struct page *page = NOPAGE_SIGBUS;
- 	unsigned long offset, len, sa;
- 	Sg_scatter_hold *rsv_schp;
- 	struct scatterlist *sg;
- 	int k;
- 
- 	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
--		return page;
-+		return VM_FAULT_SIGBUS;
- 	rsv_schp = &sfp->reserve;
--	offset = addr - vma->vm_start;
-+	offset = vmf->pgoff << PAGE_SHIFT;
- 	if (offset >= rsv_schp->bufflen)
--		return page;
--	SCSI_LOG_TIMEOUT(3, printk("sg_vma_nopage: offset=%lu, scatg=%d\n",
-+		return VM_FAULT_SIGBUS;
-+	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
- 				   offset, rsv_schp->k_use_sg));
- 	sg = rsv_schp->buffer;
- 	sa = vma->vm_start;
-@@ -1185,21 +1184,21 @@ sg_vma_nopage(struct vm_area_struct *vma
- 		len = vma->vm_end - sa;
- 		len = (len < sg->length) ? len : sg->length;
- 		if (offset < len) {
-+			struct page *page;
- 			page = virt_to_page(page_address(sg_page(sg)) + offset);
- 			get_page(page);	/* increment page count */
--			break;
-+			vmf->page = page;
-+			return 0; /* success */
- 		}
- 		sa += len;
- 		offset -= len;
- 	}
- 
--	if (type)
--		*type = VM_FAULT_MINOR;
--	return page;
-+	return VM_FAULT_SIGBUS;
- }
- 
- static struct vm_operations_struct sg_mmap_vm_ops = {
--	.nopage = sg_vma_nopage,
-+	.fault = sg_vma_fault,
- };
- 
- static int
-_
+> are multiple adapters - the minor is never used (the adapter info is 
+> in the ioctl block sent to the driver, not detected based on the minor
+
+> number as one might think).  So it is a complete waste to have an
+entire major taken by this.
+> 
+> So it now uses a misc device which I named "megadev0" (the name that 
+> megarc expects), and has a dynamic minor (previoulsy a dynamic major
+was used).
+> 
+> I have tested this on my own system with the megarc tool, and it works
+
+> just as fine as before (only now the device gets created correctly by
+udev).
+> 
+> Cc: <thomas.horsten@gmail.com>
+> Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
+> Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+
+Neela and Sekomann or Sumant, can I ping on this ... I've no idea what
+this will do to the raid management tools, so I really need someone to
+sign off on this.
+
+James
+
 
