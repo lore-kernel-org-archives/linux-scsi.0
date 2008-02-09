@@ -1,22 +1,28 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
-Date: Sat, 9 Feb 2008 17:21:11 +0000
-Message-ID: <20080209172111.GA23282@flint.arm.linux.org.uk>
-References: <20080204030037.6C061108018@picon.linux-foundation.org> <1202097337.3318.143.camel@localhost.localdomain> <20080204081940.GC15955@flint.arm.linux.org.uk> <1202575876.4254.15.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sat,  9 Feb 2008 09:24:02 -0800 (PST)
+Message-ID: <20080209172402.6726711D10C@picon.linux-foundation.org>
+References: <bug-9880-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:48910 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123AbYBIRYA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 12:24:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1202575876.4254.15.camel@localhost.localdomain>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:46499 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754123AbYBIRZe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 12:25:34 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m19HOCoX032447
+	for <linux-scsi@vger.kernel.org>; Sat, 9 Feb 2008 09:24:13 -0800
+In-Reply-To: <bug-9880-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: bugme-daemon@bugzilla.kernel.org, David Brownell <david-b@pacbell.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=9880
+
+
+
+
+
+------- Comment #5 from rmk@arm.linux.org.uk  2008-02-09 09:24 -------
 On Sat, Feb 09, 2008 at 10:51:16AM -0600, James Bottomley wrote:
 > On Mon, 2008-02-04 at 08:19 +0000, Russell King wrote:
 > > On Sun, Feb 03, 2008 at 09:55:37PM -0600, James Bottomley wrote:
@@ -95,7 +101,8 @@ requirements, and these have not been reflected in the ARM implementation.
 If some of these folk who have the problem want to provide a patch to
 implement what you've outlined above, I'll certainly review it.
 
+
 -- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
