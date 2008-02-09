@@ -1,152 +1,57 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] scsi: ses fix for len and mem leaking when fail to add intf
-Date: Sat, 9 Feb 2008 14:28:46 -0800
-Message-ID: <86802c440802091428v87a10f5h280ae1d82b1db6a@mail.gmail.com>
-References: <200802090413.53275.yinghai.lu@sun.com>
-	 <1202569242.4254.9.camel@localhost.localdomain>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Investigating potential flaw in scsi error handling
+Date: Sat, 09 Feb 2008 22:59:28 +0100
+Message-ID: <87bq6pkczj.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757343AbYBIW3B@vger.kernel.org>
-In-Reply-To: <1202569242.4254.9.camel@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nebensachen.de ([195.34.83.29]:42275 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755035AbYBIWvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Feb 2008 17:51:24 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-On Feb 9, 2008 7:00 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Sat, 2008-02-09 at 04:13 -0800, Yinghai Lu wrote:
-> > [PATCH] scsi: ses fix for len and mem leaking when fail to add intf
-> >
-> > change to u32 before left shifting char
->
-> This one is a bit unnecessary; C promotion rules guarantee that
-> everything is promoted to int (or above) before doing arithmetic.  Since
-> it's only ever done on 16 bits, signed or unsigned int is adequate for
-> the conversion.
+Hi there,
 
-thank. just learned that.
+I'm experiencing system lockups with 2.6.24 which I believe to be
+related to scsi error handling. Actually, I have patched the mainline
+kernel with a disk shock protection patch [1] and in my case it is indeed
+the shock protection mechanism that triggers the lockups. However, some
+rather lengthy investigations have lead me to the conclusion that this
+additional patch is just the means to reproduce the error condition
+fairly reliably rather than the origin of the problem.
 
-yhlu@yhlunb:~/xx/xx/notes> cat ctest.c
-#include <stdio.h>
-int main(int argc, char *argv[])
-{
-        unsigned char buf[20];
-        int len;
+The problem has only become apparent since Tejun's commit
+31cc23b34913bc173680bdc87af79e551bf8cc0d. More precisely, libata now
+sets max_host_blocked and max_device_blocked to 1 for all ATA devices.
+Various tests I've conducted so far have lead me to the conclusion that
+a non zero return code from scsi_dispatch_command is sufficient to
+trigger the problem I'm seeing provided that max_host_blocked and
+max_device_blocked are set to 1.
 
-        buf[2] = 0x02;
-        buf[3] = 0x03;
+Unfortunately, I'm a bit at a loss as to how I should proceed to find
+the culprit. I can reliably reproduce the problem using the disk shock
+protection patch in order to cause non zero return values from
+scsi_dispatch_command. How can I find out where in the error handling of
+this condition things might go wrong?
 
-        len = (buf[2] << 8) + buf[3];
+Most likely you will need further information to help me solving this
+issue but perhaps you can already come up with some suggestions and tell
+me what else you'd like to know.
 
-        printf("len = %x\n", len);
-        return 0;
-}
-yhlu@yhlunb:~/xx/xx/notes> gcc -o ctest ctest.c
-yhlu@yhlunb:~/xx/xx/notes> ./ctest
-len = 203
-yhlu@yhlunb:~/xx/xx/notes>
+Thanks in advance,
+
+Elias
+
+[1] http://article.gmane.org/gmane.linux.drivers.hdaps.devel/1094
 
 
->
-> > also fix leaking with scomp leaking when failing.
->
-> Yes, I see that, thanks!  There's also the kmalloc of scomp which should
-> be kzalloc if you care to fix that up in the resend.
->
-> > -             edev =  enclosure_find(&sdev->host->shost_gendev);
-> > +             edev = enclosure_find(&sdev->host->shost_gendev);
->
-> Space cleanups also need mention in the changelog.
->
-> > -     ses_dev->page1 = buf;
-> > -     ses_dev->page1_len = len;
-> > -
-> >       result = ses_recv_diag(sdev, 1, buf, len);
-> >       if (result)
-> >               goto recv_failed;
-> >
-> > +     ses_dev->page1 = buf;
-> > +     ses_dev->page1_len = len;
-> > +
->
-> Neither of us gets this right.  By removing the kfree(buf) from the
-> err_free path, you cause a leak here.  I cause a double free.  I think
-> putting back the kfree(buf) and keeping this hunk is the fix.
-
-the buf already become sdev->page1, sdev->pag10, sdev->page2.
-so it will be freed via them
-
->
-> >       types = buf[10];
-> >       len = buf[11];
-> >
-> > @@ -474,11 +474,12 @@ static int ses_intf_add(struct class_dev
-> >                       components += type_ptr[1];
-> >       }
-> >
-> > +     buf = NULL;
->
-> Yes, prevents double free (but only if buf is freed).
-
-it became sdev->page1 already
-
->
-> >       result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
-> >       if (result)
-> >               goto recv_failed;
-> >
-> > @@ -492,11 +493,12 @@ static int ses_intf_add(struct class_dev
-> >
-> >       /* The additional information page --- allows us
-> >        * to match up the devices */
-> > +     buf = NULL;
->
-> It's probably better to move these closer to the statements that make
-> them necessary (in this case above the comment).
-
-OK
-
->
-> >       if (IS_ERR(edev)) {
-> >               err = PTR_ERR(edev);
-> > +             kfree(scomp);
-> >               goto err_free;
-> >       }
->
-> kfree(scomp) should be in the err_free path just in case someone else
-> adds something to this.
-
-ok.
-
->
-> >       /* add 1 for trailing '\0' we'll use */
-> >       buf = kzalloc(len + 1, GFP_KERNEL);
-> > -     result = ses_recv_diag(sdev, 7, buf, len);
-> > -     if (result) {
-> > +     if (buf)
-> > +             result = ses_recv_diag(sdev, 7, buf, len);
-> > +     else
-> > +             result = 7;
-> > +
->
-> What exactly is this supposed to be doing, and why 7?  If you're
-> thinking of conditioning the page 7 receive on the success of the
-> allocation, we really need the allocation failure report more than we
-> need the driver to attach.
-
-want to move out label out of if later.
-
->
-> > -                                     addl_desc_ptr += addl_desc_ptr[1] + 2;
-> > +                                     addl_desc_ptr += 2 + addl_desc_ptr[1];
->
-> This is rather pointless, isn't it?
->
-> >   err_free:
-> > -     kfree(buf);
->
-> You can't remove this.  Also add kfree(scomp) here.
+PS: Since the disk shock protection patch is mainly concerned with an
+ATA specific feature, I'm currently working on it to implement it in
+libata rather than in the scsi midlayer. This doesn't change anything
+with regard to the problem I've described above but has confirmed my
+suspicion that it must be the return code from scsi_dispatch_command
+that triggers system freeze.
