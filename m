@@ -1,23 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
-Date: Sat, 09 Feb 2008 10:51:16 -0600
-Message-ID: <1202575876.4254.15.camel@localhost.localdomain>
-References: <20080204030037.6C061108018@picon.linux-foundation.org>
-	 <1202097337.3318.143.camel@localhost.localdomain>
-	 <20080204081940.GC15955@flint.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sat,  9 Feb 2008 08:52:26 -0800 (PST)
+Message-ID: <20080209165226.3853F11D109@picon.linux-foundation.org>
+References: <bug-9880-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57884 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756719AbYBIQvU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 11:51:20 -0500
-In-Reply-To: <20080204081940.GC15955@flint.arm.linux.org.uk>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:58961 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753904AbYBIQyb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 11:54:31 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m19Gqadd030777
+	for <linux-scsi@vger.kernel.org>; Sat, 9 Feb 2008 08:52:37 -0800
+In-Reply-To: <bug-9880-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: bugme-daemon@bugzilla.kernel.org, David Brownell <david-b@pacbell.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=9880
+
+
+
+
+
+------- Comment #4 from anonymous@kernel-bugs.osdl.org  2008-02-09 08:52 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Mon, 2008-02-04 at 08:19 +0000, Russell King wrote:
 > On Sun, Feb 03, 2008 at 09:55:37PM -0600, James Bottomley wrote:
@@ -87,3 +93,7 @@ background.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
