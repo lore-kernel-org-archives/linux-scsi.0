@@ -1,46 +1,101 @@
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: can all 53c7xx-related stuff be removed?
-Date: Sat, 9 Feb 2008 11:54:43 -0500 (EST)
-Message-ID: <alpine.LFD.1.00.0802091151440.5998@localhost.localdomain>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sat, 9 Feb 2008 17:21:11 +0000
+Message-ID: <20080209172111.GA23282@flint.arm.linux.org.uk>
+References: <20080204030037.6C061108018@picon.linux-foundation.org> <1202097337.3318.143.camel@localhost.localdomain> <20080204081940.GC15955@flint.arm.linux.org.uk> <1202575876.4254.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:34967 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754044AbYBIQyw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 11:54:52 -0500
-Received: from cpe001d60ad7267-cm001225dbafb6.cpe.net.cable.rogers.com ([99.236.100.208] helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1JNsyW-0004bB-V5
-	for linux-scsi@vger.kernel.org; Sat, 09 Feb 2008 11:54:50 -0500
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:48910 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754123AbYBIRYA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 12:24:00 -0500
+Content-Disposition: inline
+In-Reply-To: <1202575876.4254.15.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: bugme-daemon@bugzilla.kernel.org, David Brownell <david-b@pacbell.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
 
+On Sat, Feb 09, 2008 at 10:51:16AM -0600, James Bottomley wrote:
+> On Mon, 2008-02-04 at 08:19 +0000, Russell King wrote:
+> > On Sun, Feb 03, 2008 at 09:55:37PM -0600, James Bottomley wrote:
+> > > I've cc'd the people responsible for this apparent bit of idiocy.  Since
+> > > the API addition to dma_alloc_coherent() was the GFP flags so you could
+> > > call it from interrupt context with GFP_ATOMIC if so desired,
+> > > (pci_dma_alloc_consistent always has GFP_ATOMIC semantics), why on earth
+> > > would the corresponding free routine require non-atomic semantics?
+> > 
+> > For the N-th time, when tearing down the MMU mappings which we need
+> > to setup for coherent mappings, we need to invalidate the TLB.  On
+> > SMP systems, that means doing an IPI to the other CPUs to tell them
+> > to invalidate their TLBs as well.
+> 
+> Actually it's the first time I'm seeing this.
+> 
+> > Now, look at the restrictions on calling smp_call_function_on_cpu()
+> > or equivalent function which is used to do the IPIs.  I don't care if
+> > you look that up for x86 or ARM, because the restrictions are the same
+> > - see the last two lines:
+> > 
+> > x86:
+> > /**
+> >  * smp_call_function_mask(): Run a function on a set of other CPUs.
+> >  * @mask: The set of cpus to run on.  Must not include the current cpu.
+> >  * @func: The function to run. This must be fast and non-blocking.
+> >  * @info: An arbitrary pointer to pass to the function.
+> >  * @wait: If true, wait (atomically) until function has completed on other CPUs. *
+> >   * Returns 0 on success, else a negative status code.
+> >  *
+> >  * If @wait is true, then returns once @func has returned; otherwise
+> >  * it returns just before the target cpu calls @func.
+> >  *
+> >  * You must not call this function with disabled interrupts or from a
+> >  * hardware interrupt handler or from a bottom half handler.
+> >  */
+> > 
+> > arm:
+> > /*
+> >  * You must not call this function with disabled interrupts, from a
+> >  * hardware interrupt handler, nor from a bottom half handler.
+> >  */
+> > 
+> > 
+> > So, if the architecture requires you to IPI the TLB flush to other CPUs
+> > this restriction has to propagate to dma_free_coherent.  Or we just don't
+> > provide *any* DMA coherent memory and dictate that such platforms can
+> > never use DMA.
+> > 
+> > Which is more idiotic?
+> 
+> Why are you actually going to the trouble of freeing the mappings?
 
-  just an observation that, even though 53c7xx content has been
-officially removed, there are still a few droppings hanging around the
-tree:
+If we don't free the mappings, we'll eventually end up running out of VM
+space for the coherent DMA.  We only have about 2MB of virtual space for
+these mappings on most machines.
 
-$ grep -r 53c7xx *
-arch/m68k/Makefile:# without -fno-strength-reduce the 53c7xx.c driver fails ;-(
-Documentation/scsi/sym53c8xx_2.txt:by the 53c7xx and 53c8xx family.
-Documentation/scsi/ncr53c8xx.txt:by the 53c7xx and 53c8xx family.
-drivers/scsi/a4000t.c: * plus modifications of the 53c7xx.c driver to support the Amiga.
-drivers/scsi/zalon.c: * Zalon 53c7xx device driver.
-drivers/scsi/zorro7xx.c: * plus modifications of the 53c7xx.c driver to support the Amiga.
-$
+> The MO of most consumers is either to allocate once on attach and free
+> on detach (effectively tying up the memory forever) or to alloc and free
+> descriptors as they come in and go out.  In the former case, there's no
+> need for free, in the latter the cycle of setup followed by teardown
+> will add a pretty big latency overhead.  Why not just use a pool
+> implementation, so you always add but never free ... it should reach a
+> steady state for the system and be a lot faster than the current
+> implementation.  Most architectures actually operate like this ... and
+> they tend to alloc and free in page size chunks to make it easy.
+>
+> If you're worried about memory, you can always reap the pool in the
+> background.
 
-rday
---
+The existing implementation comes from the original PCI DMA code, which
+had the restriction that free was not called from interrupt contexts.
 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
+We now seem to be saying that the newer generic DMA API has different
+requirements, and these have not been reflected in the ARM implementation.
+If some of these folk who have the problem want to provide a patch to
+implement what you've outlined above, I'll certainly review it.
 
-Home page:                                         http://crashcourse.ca
-Fedora Cookbook:    http://crashcourse.ca/wiki/index.php/Fedora_Cookbook
-========================================================================
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
