@@ -1,206 +1,184 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/7] libata: update ATAPI overflow draining
-Date: Sat,  9 Feb 2008 10:40:20 +0900
-Message-ID: <12025212273000-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/7] block: add request->raw_data_len
+Date: Sat,  9 Feb 2008 10:40:22 +0900
+Message-ID: <12025212273391-git-send-email-htejun@gmail.com>
 References: <12025212262892-git-send-email-htejun@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:56720 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.187]:57416 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362AbYBIBkf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 20:40:35 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2705686rvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Feb 2008 17:40:34 -0800 (PST)
+	with ESMTP id S1756475AbYBIBkg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2008 20:40:36 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2705691rvb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Feb 2008 17:40:35 -0800 (PST)
 In-Reply-To: <12025212262892-git-send-email-htejun@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org
+Cc: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-For misc ATAPI commands which transfer variable length data to the
-host, overflow can occur due to application or hardware bug.  Such
-overflows can be ignored safely as long as overflow data is properly
-drained.  libata HSM implementation has this implemented in
-__atapi_pio_bytes() and recently updated for 2.6.24-rc but it requires
-further improvements.  Improve drain logic such that...
+With padding and draining moved into it, block layer now may extend
+requests as directed by queue parameters, so now a request has two
+sizes - the original request size and the extended size which matches
+the size of area pointed to by bios and later by sgs.  The latter size
+is what lower layers are primarily interested in when allocating,
+filling up DMA tables and setting up the controller.
 
-* Report overflow errors using ehi desc mechanism instead of printing
-  directly.
+Both padding and draining extend the data area to accomodate
+controller characteristics.  As any controller which speaks SCSI can
+handle underflows, feeding larger data area is safe.
 
-* Properly calculate the number of bytes to be drained considering
-  actual number of consumed bytes for partial draining.
+So, this patch makes the primary data length field, request->data_len,
+indicate the size of full data area and add a separate length field,
+request->raw_data_len, for the unmodified request size.  The latter is
+used to report to higher layer (userland) and where the original
+request size should be fed to the controller or device.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Acked-by: Albert Lee <albertcc@tw.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/ata/libata-core.c |   76 +++++++++++++++++++-------------------------
- 1 files changed, 33 insertions(+), 43 deletions(-)
+ block/blk-core.c        |    2 ++
+ block/blk-map.c         |    2 ++
+ block/blk-merge.c       |    1 +
+ block/bsg.c             |    8 ++++----
+ block/scsi_ioctl.c      |    3 ++-
+ drivers/scsi/scsi_lib.c |    8 ++++----
+ include/linux/blkdev.h  |    1 +
+ 7 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3011919..ecb8275 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4656,24 +4656,9 @@ int ata_check_atapi_dma(struct ata_queued_cmd *qc)
-  */
- static int atapi_qc_may_overflow(struct ata_queued_cmd *qc)
- {
--	if (qc->tf.protocol != ATAPI_PROT_PIO &&
--	    qc->tf.protocol != ATAPI_PROT_DMA)
--		return 0;
--
--	if (qc->tf.flags & ATA_TFLAG_WRITE)
--		return 0;
--
--	switch (qc->cdb[0]) {
--	case READ_10:
--	case READ_12:
--	case WRITE_10:
--	case WRITE_12:
--	case GPCMD_READ_CD:
--	case GPCMD_READ_CD_MSF:
--		return 0;
--	}
--
--	return 1;
-+	return ata_is_atapi(qc->tf.protocol) && ata_is_data(qc->tf.protocol) &&
-+		atapi_cmd_type(qc->cdb[0]) == ATAPI_MISC &&
-+		!(qc->tf.flags & ATA_TFLAG_WRITE);
- }
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 4afb39c..8b004e1 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -116,6 +116,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+ 	rq->ref_count = 1;
+ 	rq->q = q;
+ 	rq->special = NULL;
++	rq->raw_data_len = 0;
+ 	rq->data_len = 0;
+ 	rq->data = NULL;
+ 	rq->nr_phys_segments = 0;
+@@ -1982,6 +1983,7 @@ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 	rq->hard_cur_sectors = rq->current_nr_sectors;
+ 	rq->hard_nr_sectors = rq->nr_sectors = bio_sectors(bio);
+ 	rq->buffer = bio_data(bio);
++	rq->raw_data_len = bio->bi_size;
+ 	rq->data_len = bio->bi_size;
  
- /**
-@@ -5127,13 +5112,14 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
-  */
- static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
- {
--	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
-+	int rw = (qc->tf.flags & ATA_TFLAG_WRITE) ? WRITE : READ;
- 	struct ata_port *ap = qc->ap;
--	struct ata_eh_info *ehi = &qc->dev->link->eh_info;
-+	struct ata_device *dev = qc->dev;
-+	struct ata_eh_info *ehi = &dev->link->eh_info;
- 	struct scatterlist *sg;
- 	struct page *page;
- 	unsigned char *buf;
--	unsigned int offset, count;
-+	unsigned int offset, count, consumed;
+ 	rq->bio = rq->biotail = bio;
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 103b1df..1588ea3 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -19,6 +19,7 @@ int blk_rq_append_bio(struct request_queue *q, struct request *rq,
+ 		rq->biotail->bi_next = bio;
+ 		rq->biotail = bio;
  
- next_sg:
- 	sg = qc->cursg;
-@@ -5146,26 +5132,27 @@ next_sg:
- 		 *    - for write case, padding zero data to the device
- 		 */
- 		u16 pad_buf[1] = { 0 };
--		unsigned int i;
- 
--		if (bytes > qc->curbytes - qc->nbytes + ATAPI_MAX_DRAIN) {
-+		if (qc->curbytes + bytes > qc->nbytes + ATAPI_MAX_DRAIN) {
- 			ata_ehi_push_desc(ehi, "too much trailing data "
- 					  "buf=%u cur=%u bytes=%u",
- 					  qc->nbytes, qc->curbytes, bytes);
- 			return -1;
- 		}
- 
--		 /* overflow is exptected for misc ATAPI commands */
--		if (bytes && !atapi_qc_may_overflow(qc))
--			ata_dev_printk(qc->dev, KERN_WARNING, "ATAPI %u bytes "
--				       "trailing data (cdb=%02x nbytes=%u)\n",
--				       bytes, qc->cdb[0], qc->nbytes);
-+		/* allow overflow only for misc ATAPI commands */
-+		if (!atapi_qc_may_overflow(qc)) {
-+			ata_ehi_push_desc(ehi, "unexpected trailing data "
-+					  "%u bytes", bytes);
-+			return -1;
-+		}
- 
--		for (i = 0; i < (bytes + 1) / 2; i++)
--			ap->ops->data_xfer(qc->dev, (unsigned char *)pad_buf, 2, do_write);
-+		consumed = 0;
-+		while (consumed < bytes)
-+			consumed += ap->ops->data_xfer(dev,
-+					(unsigned char *)pad_buf, 2, rw);
- 
- 		qc->curbytes += bytes;
--
- 		return 0;
++		rq->raw_data_len += bio->bi_size;
+ 		rq->data_len += bio->bi_size;
  	}
- 
-@@ -5192,18 +5179,16 @@ next_sg:
- 		buf = kmap_atomic(page, KM_IRQ0);
- 
- 		/* do the actual data transfer */
--		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
-+		consumed = ap->ops->data_xfer(dev,  buf + offset, count, rw);
- 
- 		kunmap_atomic(buf, KM_IRQ0);
- 		local_irq_restore(flags);
- 	} else {
- 		buf = page_address(page);
--		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
-+		consumed = ap->ops->data_xfer(dev,  buf + offset, count, rw);
- 	}
- 
--	bytes -= count;
--	if ((count & 1) && bytes)
--		bytes--;
-+	bytes -= min(bytes, consumed);
- 	qc->curbytes += count;
- 	qc->cursg_ofs += count;
- 
-@@ -5212,9 +5197,11 @@ next_sg:
- 		qc->cursg_ofs = 0;
- 	}
- 
-+	/* consumed can be larger than count only for the last transfer */
-+	WARN_ON(qc->cursg && count != consumed);
-+
- 	if (bytes)
- 		goto next_sg;
--
  	return 0;
+@@ -154,6 +155,7 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 
+ 		bio->bi_io_vec[bio->bi_vcnt - 1].bv_len += pad_len;
+ 		bio->bi_size += pad_len;
++		rq->data_len += pad_len;
+ 	}
+ 
+ 	rq->buffer = rq->data = NULL;
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 845ef81..480d2bc 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -228,6 +228,7 @@ new_segment:
+ 			    ((unsigned long)q->dma_drain_buffer) &
+ 			    (PAGE_SIZE - 1));
+ 		nsegs++;
++		rq->data_len += q->dma_drain_size;
+ 	}
+ 
+ 	if (sg)
+diff --git a/block/bsg.c b/block/bsg.c
+index 8917c51..7f3c095 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -437,14 +437,14 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 	}
+ 
+ 	if (rq->next_rq) {
+-		hdr->dout_resid = rq->data_len;
+-		hdr->din_resid = rq->next_rq->data_len;
++		hdr->dout_resid = rq->raw_data_len;
++		hdr->din_resid = rq->next_rq->raw_data_len;
+ 		blk_rq_unmap_user(bidi_bio);
+ 		blk_put_request(rq->next_rq);
+ 	} else if (rq_data_dir(rq) == READ)
+-		hdr->din_resid = rq->data_len;
++		hdr->din_resid = rq->raw_data_len;
+ 	else
+-		hdr->dout_resid = rq->data_len;
++		hdr->dout_resid = rq->raw_data_len;
+ 
+ 	/*
+ 	 * If the request generated a negative error number, return it
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 9675b34..e993cac 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -266,7 +266,7 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
+ 	hdr->info = 0;
+ 	if (hdr->masked_status || hdr->host_status || hdr->driver_status)
+ 		hdr->info |= SG_INFO_CHECK;
+-	hdr->resid = rq->data_len;
++	hdr->resid = rq->raw_data_len;
+ 	hdr->sb_len_wr = 0;
+ 
+ 	if (rq->sense_len && hdr->sbp) {
+@@ -528,6 +528,7 @@ static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_disk,
+ 	rq = blk_get_request(q, WRITE, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	rq->data = NULL;
++	rq->raw_data_len = 0;
+ 	rq->data_len = 0;
+ 	rq->timeout = BLK_DEFAULT_SG_TIMEOUT;
+ 	memset(rq->cmd, 0, sizeof(rq->cmd));
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f243fc3..afb2c9f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1015,10 +1015,6 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	}
+ 
+ 	req->buffer = NULL;
+-	if (blk_pc_request(req))
+-		sdb->length = req->data_len;
+-	else
+-		sdb->length = req->nr_sectors << 9;
+ 
+ 	/* 
+ 	 * Next, walk the list, and fill in the addresses and sizes of
+@@ -1027,6 +1023,10 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	count = blk_rq_map_sg(req->q, req, sdb->table.sgl);
+ 	BUG_ON(count > sdb->table.nents);
+ 	sdb->table.nents = count;
++	if (blk_pc_request(req))
++		sdb->length = req->data_len;
++	else
++		sdb->length = req->nr_sectors << 9;
+ 	return BLKPREP_OK;
  }
  
-@@ -5232,6 +5219,7 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	struct ata_device *dev = qc->dev;
-+	struct ata_eh_info *ehi = &dev->link->eh_info;
- 	unsigned int ireason, bc_lo, bc_hi, bytes;
- 	int i_write, do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? 1 : 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 90392a9..ee0b021 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -214,6 +214,7 @@ struct request {
+ 	unsigned int cmd_len;
+ 	unsigned char cmd[BLK_MAX_CDB];
  
-@@ -5249,26 +5237,28 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
- 
- 	/* shall be cleared to zero, indicating xfer of data */
- 	if (unlikely(ireason & (1 << 0)))
--		goto err_out;
-+		goto atapi_check;
- 
- 	/* make sure transfer direction matches expected */
- 	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
- 	if (unlikely(do_write != i_write))
--		goto err_out;
-+		goto atapi_check;
- 
- 	if (unlikely(!bytes))
--		goto err_out;
-+		goto atapi_check;
- 
- 	VPRINTK("ata%u: xfering %d bytes\n", ap->print_id, bytes);
- 
--	if (__atapi_pio_bytes(qc, bytes))
-+	if (unlikely(__atapi_pio_bytes(qc, bytes)))
- 		goto err_out;
- 	ata_altstatus(ap); /* flush */
- 
- 	return;
- 
--err_out:
--	ata_dev_printk(dev, KERN_INFO, "ATAPI check failed\n");
-+ atapi_check:
-+	ata_ehi_push_desc(ehi, "ATAPI check failed (ireason=0x%x bytes=%u)",
-+			  ireason, bytes);
-+ err_out:
- 	qc->err_mask |= AC_ERR_HSM;
- 	ap->hsm_task_state = HSM_ST_ERR;
- }
++	unsigned int raw_data_len;
+ 	unsigned int data_len;
+ 	unsigned int sense_len;
+ 	void *data;
 -- 
 1.5.2.4
 
