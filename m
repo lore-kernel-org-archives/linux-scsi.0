@@ -1,29 +1,121 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 1/3] mpt fusion: Request I/O resources only whenrequired
-Date: Sat, 09 Feb 2008 11:34:34 -0600
-Message-ID: <1202578474.4254.22.camel@localhost.localdomain>
-References: <5AE055B67BB5764693E2900C7E3699BEFB1C5C@pamail.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sat,  9 Feb 2008 09:34:46 -0800 (PST)
+Message-ID: <20080209173446.A844311D10C@picon.linux-foundation.org>
+References: <bug-9880-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46671 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755176AbYBIRev (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 12:34:51 -0500
-In-Reply-To: <5AE055B67BB5764693E2900C7E3699BEFB1C5C@pamail.ad.lsil.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51843 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755195AbYBIRqD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 12:46:03 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m19HieNb001207
+	for <linux-scsi@vger.kernel.org>; Sat, 9 Feb 2008 09:44:42 -0800
+In-Reply-To: <bug-9880-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2008-02-10 at 01:26 +0800, Prakash, Sathya wrote:
-> Thanks James for pointing the missing of checkpatch.pl check. I will do
-> it before submitting the future patches.
+http://bugzilla.kernel.org/show_bug.cgi?id=9880
 
-Great, thanks ... I still haven't seen PATCH 2/3 in this series, by the
-way.
+
+
+
+
+------- Comment #6 from anonymous@kernel-bugs.osdl.org  2008-02-09 09:34 -------
+Reply-To: James.Bottomley@HansenPartnership.com
+
+On Sat, 2008-02-09 at 17:21 +0000, Russell King wrote:
+> On Sat, Feb 09, 2008 at 10:51:16AM -0600, James Bottomley wrote:
+> > On Mon, 2008-02-04 at 08:19 +0000, Russell King wrote:
+> > > On Sun, Feb 03, 2008 at 09:55:37PM -0600, James Bottomley wrote:
+> > > > I've cc'd the people responsible for this apparent bit of idiocy.  Since
+> > > > the API addition to dma_alloc_coherent() was the GFP flags so you could
+> > > > call it from interrupt context with GFP_ATOMIC if so desired,
+> > > > (pci_dma_alloc_consistent always has GFP_ATOMIC semantics), why on earth
+> > > > would the corresponding free routine require non-atomic semantics?
+> > > 
+> > > For the N-th time, when tearing down the MMU mappings which we need
+> > > to setup for coherent mappings, we need to invalidate the TLB.  On
+> > > SMP systems, that means doing an IPI to the other CPUs to tell them
+> > > to invalidate their TLBs as well.
+> > 
+> > Actually it's the first time I'm seeing this.
+> > 
+> > > Now, look at the restrictions on calling smp_call_function_on_cpu()
+> > > or equivalent function which is used to do the IPIs.  I don't care if
+> > > you look that up for x86 or ARM, because the restrictions are the same
+> > > - see the last two lines:
+> > > 
+> > > x86:
+> > > /**
+> > >  * smp_call_function_mask(): Run a function on a set of other CPUs.
+> > >  * @mask: The set of cpus to run on.  Must not include the current cpu.
+> > >  * @func: The function to run. This must be fast and non-blocking.
+> > >  * @info: An arbitrary pointer to pass to the function.
+> > >  * @wait: If true, wait (atomically) until function has completed on other CPUs. *
+> > >   * Returns 0 on success, else a negative status code.
+> > >  *
+> > >  * If @wait is true, then returns once @func has returned; otherwise
+> > >  * it returns just before the target cpu calls @func.
+> > >  *
+> > >  * You must not call this function with disabled interrupts or from a
+> > >  * hardware interrupt handler or from a bottom half handler.
+> > >  */
+> > > 
+> > > arm:
+> > > /*
+> > >  * You must not call this function with disabled interrupts, from a
+> > >  * hardware interrupt handler, nor from a bottom half handler.
+> > >  */
+> > > 
+> > > 
+> > > So, if the architecture requires you to IPI the TLB flush to other CPUs
+> > > this restriction has to propagate to dma_free_coherent.  Or we just don't
+> > > provide *any* DMA coherent memory and dictate that such platforms can
+> > > never use DMA.
+> > > 
+> > > Which is more idiotic?
+> > 
+> > Why are you actually going to the trouble of freeing the mappings?
+> 
+> If we don't free the mappings, we'll eventually end up running out of VM
+> space for the coherent DMA.  We only have about 2MB of virtual space for
+> these mappings on most machines.
+
+No, free the memory back to the coherent DMA pool but don't free the
+mappings; the next use takes a page with existing mappings, thus saving
+the mapping setup/teardown cycle.  My contention is that the system
+reaches steady state even for alloc/free drivers.
+
+> > The MO of most consumers is either to allocate once on attach and free
+> > on detach (effectively tying up the memory forever) or to alloc and free
+> > descriptors as they come in and go out.  In the former case, there's no
+> > need for free, in the latter the cycle of setup followed by teardown
+> > will add a pretty big latency overhead.  Why not just use a pool
+> > implementation, so you always add but never free ... it should reach a
+> > steady state for the system and be a lot faster than the current
+> > implementation.  Most architectures actually operate like this ... and
+> > they tend to alloc and free in page size chunks to make it easy.
+> >
+> > If you're worried about memory, you can always reap the pool in the
+> > background.
+> 
+> The existing implementation comes from the original PCI DMA code, which
+> had the restriction that free was not called from interrupt contexts.
+> 
+> We now seem to be saying that the newer generic DMA API has different
+> requirements, and these have not been reflected in the ARM implementation.
+> If some of these folk who have the problem want to provide a patch to
+> implement what you've outlined above, I'll certainly review it.
+
+Being able to allocate from interrupt but not free from interrupt does
+violate the principle of least surprise.
 
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
