@@ -1,60 +1,37 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/7] block: update bio according to DMA alignment padding
-Date: Sat,  9 Feb 2008 10:40:21 +0900
-Message-ID: <12025212271469-git-send-email-htejun@gmail.com>
+Subject: [PATCH 5/7] block: clear drain buffer if draining for write command
+Date: Sat,  9 Feb 2008 10:40:24 +0900
+Message-ID: <12025212272956-git-send-email-htejun@gmail.com>
 References: <12025212262892-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <12025212262892-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org
-Cc: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
+Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-DMA start address and transfer size alignment for PC requests are
-achieved using bio_copy_user() instead of bio_map_user().  This works
-because bio_copy_user() always uses full pages and block DMA alignment
-isn't allowed to go over PAGE_SIZE.
-
-However, the implementation didn't update the last bio of the request
-to make this padding visible to lower layers.  This patch makes
-blk_rq_map_user() extend the last bio such that it includes the
-padding area and the size of area pointed to by the request is
-properly aligned.
+Clear drain buffer before chaining if the command in question is a
+write.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- block/blk-map.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ block/blk-merge.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 955d75c..103b1df 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -139,6 +139,23 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
- 		ubuf += ret;
- 	}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index d50cfc8..d0b9031 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -221,6 +221,9 @@ new_segment:
+ 	} /* segments in rq */
  
-+	/*
-+	 * __blk_rq_map_user() copies the buffers if starting address
-+	 * or length isn't aligned.  As the copied buffer is always
-+	 * page aligned, we know that there's enough room for padding.
-+	 * Extend the last bio and update rq->data_len accordingly.
-+	 *
-+	 * On unmap, bio_uncopy_user() will use unmodified
-+	 * bio_map_data pointed to by bio->bi_private.
-+	 */
-+	if (len & queue_dma_alignment(q)) {
-+		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-+		struct bio *bio = rq->biotail;
+ 	if (q->dma_drain_size && q->dma_drain_needed(rq)) {
++		if (rq->cmd_flags & REQ_RW)
++			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
 +
-+		bio->bi_io_vec[bio->bi_vcnt - 1].bv_len += pad_len;
-+		bio->bi_size += pad_len;
-+	}
-+
- 	rq->buffer = rq->data = NULL;
- 	return 0;
- unmap_rq:
+ 		sg->page_link &= ~0x02;
+ 		sg = sg_next(sg);
+ 		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
 -- 
 1.5.2.4
 
