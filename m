@@ -1,57 +1,138 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Investigating potential flaw in scsi error handling
-Date: Sat, 09 Feb 2008 22:59:28 +0100
-Message-ID: <87bq6pkczj.fsf@denkblock.local>
+From: Yinghai Lu <Yinghai.Lu@Sun.COM>
+Subject: [PATCH] scsi: ses fix mem leaking when fail to add intf
+Date: Sat, 09 Feb 2008 15:15:47 -0800
+Message-ID: <200802091515.48076.yinghai.lu@sun.com>
+References: <200802090413.53275.yinghai.lu@sun.com>
+ <1202569242.4254.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:42275 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755035AbYBIWvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Feb 2008 17:51:24 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-reply-to: <1202569242.4254.9.camel@localhost.localdomain>
+Content-disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
 
-Hi there,
+[PATCH] scsi: ses fix mem leaking when fail to add intf
 
-I'm experiencing system lockups with 2.6.24 which I believe to be
-related to scsi error handling. Actually, I have patched the mainline
-kernel with a disk shock protection patch [1] and in my case it is indeed
-the shock protection mechanism that triggers the lockups. However, some
-rather lengthy investigations have lead me to the conclusion that this
-additional patch is just the means to reproduce the error condition
-fairly reliably rather than the origin of the problem.
+fix leaking with scomp leaking when failing.
+also remove one extra space.
 
-The problem has only become apparent since Tejun's commit
-31cc23b34913bc173680bdc87af79e551bf8cc0d. More precisely, libata now
-sets max_host_blocked and max_device_blocked to 1 for all ATA devices.
-Various tests I've conducted so far have lead me to the conclusion that
-a non zero return code from scsi_dispatch_command is sufficient to
-trigger the problem I'm seeing provided that max_host_blocked and
-max_device_blocked are set to 1.
+Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
 
-Unfortunately, I'm a bit at a loss as to how I should proceed to find
-the culprit. I can reliably reproduce the problem using the disk shock
-protection patch in order to cause non zero return values from
-scsi_dispatch_command. How can I find out where in the error handling of
-this condition things might go wrong?
-
-Most likely you will need further information to help me solving this
-issue but perhaps you can already come up with some suggestions and tell
-me what else you'd like to know.
-
-Thanks in advance,
-
-Elias
-
-[1] http://article.gmane.org/gmane.linux.drivers.hdaps.devel/1094
-
-
-PS: Since the disk shock protection patch is mainly concerned with an
-ATA specific feature, I'm currently working on it to implement it in
-libata rather than in the scsi midlayer. This doesn't change anything
-with regard to the problem I've described above but has confirmed my
-suspicion that it must be the return code from scsi_dispatch_command
-that triggers system freeze.
+Index: linux-2.6/drivers/scsi/ses.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/ses.c
++++ linux-2.6/drivers/scsi/ses.c
+@@ -416,11 +416,11 @@ static int ses_intf_add(struct class_dev
+ 	int i, j, types, len, components = 0;
+ 	int err = -ENOMEM;
+ 	struct enclosure_device *edev;
+-	struct ses_component *scomp;
++	struct ses_component *scomp = NULL;
+ 
+ 	if (!scsi_device_enclosure(sdev)) {
+ 		/* not an enclosure, but might be in one */
+-		edev = 	enclosure_find(&sdev->host->shost_gendev);
++		edev = enclosure_find(&sdev->host->shost_gendev);
+ 		if (edev) {
+ 			ses_match_to_enclosure(edev, sdev);
+ 			class_device_put(&edev->cdev);
+@@ -456,9 +456,6 @@ static int ses_intf_add(struct class_dev
+ 	if (!buf)
+ 		goto err_free;
+ 
+-	ses_dev->page1 = buf;
+-	ses_dev->page1_len = len;
+-
+ 	result = ses_recv_diag(sdev, 1, buf, len);
+ 	if (result)
+ 		goto recv_failed;
+@@ -473,6 +470,9 @@ static int ses_intf_add(struct class_dev
+ 		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
+ 			components += type_ptr[1];
+ 	}
++	ses_dev->page1 = buf;
++	ses_dev->page1_len = len;
++	buf = NULL;
+ 
+ 	result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
+ 	if (result)
+@@ -489,6 +489,7 @@ static int ses_intf_add(struct class_dev
+ 		goto recv_failed;
+ 	ses_dev->page2 = buf;
+ 	ses_dev->page2_len = len;
++	buf = NULL;
+ 
+ 	/* The additional information page --- allows us
+ 	 * to match up the devices */
+@@ -506,11 +507,26 @@ static int ses_intf_add(struct class_dev
+ 		goto recv_failed;
+ 	ses_dev->page10 = buf;
+ 	ses_dev->page10_len = len;
++	buf = NULL;
+ 
+  no_page10:
+-	scomp = kmalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
++
++	/* Page 7 for the descriptors is optional */
++	result = ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
++	if (result)
++		goto simple_populate;
++
++	len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
++	/* add 1 for trailing '\0' we'll use */
++	buf = kzalloc(len + 1, GFP_KERNEL);
++	if (!buf)
++		goto err_free;
++	result = ses_recv_diag(sdev, 7, buf, len);
++
++ simple_populate:
++	scomp = kzalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
+ 	if (!scomp)
+-		goto  err_free;
++		goto err_free;
+ 
+ 	edev = enclosure_register(cdev->dev, sdev->sdev_gendev.bus_id,
+ 				  components, &ses_enclosure_callbacks);
+@@ -521,20 +537,10 @@ static int ses_intf_add(struct class_dev
+ 
+ 	edev->scratch = ses_dev;
+ 	for (i = 0; i < components; i++)
+-		edev->component[i].scratch = scomp++;
++		edev->component[i].scratch = scomp + i;
+ 
+-	/* Page 7 for the descriptors is optional */
+-	buf = NULL;
+-	result = ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
+-	if (result)
+-		goto simple_populate;
+-
+-	len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
+-	/* add 1 for trailing '\0' we'll use */
+-	buf = kzalloc(len + 1, GFP_KERNEL);
+-	result = ses_recv_diag(sdev, 7, buf, len);
++	/* result and buf from page 7 check */
+ 	if (result) {
+- simple_populate:
+ 		kfree(buf);
+ 		buf = NULL;
+ 		desc_ptr = NULL;
+@@ -598,6 +604,7 @@ static int ses_intf_add(struct class_dev
+ 	err = -ENODEV;
+  err_free:
+ 	kfree(buf);
++	kfree(scomp);
+ 	kfree(ses_dev->page10);
+ 	kfree(ses_dev->page2);
+ 	kfree(ses_dev->page1);
+@@ -630,6 +637,7 @@ static void ses_intf_remove(struct class
+ 	ses_dev = edev->scratch;
+ 	edev->scratch = NULL;
+ 
++	kfree(ses_dev->page10);
+ 	kfree(ses_dev->page1);
+ 	kfree(ses_dev->page2);
+ 	kfree(ses_dev);
