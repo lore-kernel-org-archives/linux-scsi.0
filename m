@@ -1,58 +1,71 @@
-From: Jarod Wilson <jwilson@redhat.com>
-Subject: Re: [PATCH 11/9 update] firewire: fw-sbp2: enforce a retry of
-	__scsi_add_device if bus generation changed
-Date: Sun, 10 Feb 2008 13:36:57 -0500
-Message-ID: <200802101336.57689.jwilson@redhat.com>
-References: <tkrat.f34e34fd91a0695f@s5r6.in-berlin.de>
-	<47ACB449.3060200@s5r6.in-berlin.de>
-	<tkrat.e02d667ba3320993@s5r6.in-berlin.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCHSET 0/3] varlen extended and vendor-specific cdbs
+Date: Sun, 10 Feb 2008 20:59:00 +0200
+Message-ID: <47AF4974.9010200@panasas.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.e02d667ba3320993@s5r6.in-berlin.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:35777 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755155AbYBJS7x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Feb 2008 13:59:53 -0500
+In-Reply-To: <47AF1321.7000107@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Friday 08 February 2008 04:33:29 pm Stefan Richter wrote:
-> fw-sbp2 is unable to reconnect while performing __scsi_add_device
-> because there is only a single workqueue thread context available for
-> both at the moment.  This should be fixed eventually.
->
-> An actual failure of __scsi_add_device is easy to handle, but an
-> incomplete execution of __scsi_add_device with an sdev returned would
-> remain undetected and leave the SBP-2 target unusable.
->
-> Therefore we use a workaround:  If there was a bus reset during
-> __scsi_add_device (i.e. during the SCSI probe), we remove the new sdev
-> immediately, log out, and attempt login and SCSI probe again.
->
-> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Submitted is a patchset for adding support for variable-length, extended,
+and vendor specific CDBs. It should now cover the entire range of the 
+SCSI standard. (and/or any other use of command packets in block devices)
 
-Now *this* does the trick. I get the 'READ CAPACITY failed' as before, 
-then 'firewire_sbp2: fw1.0: error status: 0:4', followed by a new login and 
-SCSI probe, both of which are successful this time, disk is available for use 
-and all that good stuff.
+They are based on scsi-misc.
 
-Signed-off-by: Jarod Wilson <jwilson@redhat.com>
+Difference from last time, is at struct request. I did a smallish
+hack to save the extra pointer space. The pointer now shares it's
+space with the request->cmd, as they are mutual exclusive. The
+flag to switch between them is when cmd_len == 0 and varlen_cdb_len != 0
+I've added 2 accessors to hide the mess. I think this approach
+should be safe. I can easily go back to the separate pointer,
+but I figured a little hack is better then a bloat.
+
+This is on top of the size shrink to struct scsi_cmnd gained
+in the first patch. We save upto 12 bytes on 32 bit ARCHs
+
+So over all, this cleans things up, and add fixtures without
+any extra cost.
+
+[1/3] Let scsi_cmnd->cmnd use request->cmd buffer
+  Here I let scsi_cmnd->cmnd point to the space allocated by
+  request->cmd, instead of copying the data. The scsi_cmnd->cmd_len
+  is guaranteed to contain the right length of the command.
+  I have tried to go over every single place in the kernel that uses
+  scsi_cmnd->cmnd and make sure it looks sane. Surprisingly to me,
+  that was not at all bad. I hope I did not miss anything.
+
+  I've tested on an x86_64 machine booting from a sata disk and
+  ran the iscsi regression tests as well as my bidi and varlen tests
+  on top of the complete patchset and all tests passed.
+
+[2/3] block layer varlen-cd
+   Here I added an option to use a user supplied buffer for an arbitrary
+   large command. Buffer must be kept valid until execution of request
+   ends. The pointer to the buffer shares it's space with the fixed
+   length command, so the size of struct request does not change.
+
+[3/3] scsi: varlen extended and vendor-specific cdbs
+  Adds support for variable length, extended, and vendor-specific
+  cdbs at the scsi mid-layer.
+
+Bart:
+If you need this infrastructure see second patch for an easy to use
+inline accessors on struct request. If you then need to use them in
+a scsi LLD, thats easy same as before only cmd_len will be bigger then 16.
+If you need to use them in a block LLD. You need to use the accessors and
+an extra if() statement. See 3rd patch on how scsi_lib.c uses it.
+
+Boaz
 
 
--- 
-Jarod Wilson
-jwilson@redhat.com
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
