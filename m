@@ -1,139 +1,92 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi/arm/fas216.c compile error
-Date: Sun, 10 Feb 2008 08:20:24 -0600
-Message-ID: <1202653224.3136.20.camel@localhost.localdomain>
-References: <20080209000413.GE6505@cs181133002.pp.htv.fi>
-	 <47AEF6FD.8080801@panasas.com>
-	 <20080210135851.GB25703@flint.arm.linux.org.uk>
+Subject: Re: Investigating potential flaw in scsi error handling
+Date: Sun, 10 Feb 2008 08:22:55 -0600
+Message-ID: <1202653375.3136.24.camel@localhost.localdomain>
+References: <87bq6pkczj.fsf@denkblock.local>
+	 <1202599854.4254.43.camel@localhost.localdomain>
+	 <87ejblnf94.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53898 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59509 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751001AbYBJOU1 (ORCPT
+	by vger.kernel.org with ESMTP id S1750982AbYBJOW6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Feb 2008 09:20:27 -0500
-In-Reply-To: <20080210135851.GB25703@flint.arm.linux.org.uk>
+	Sun, 10 Feb 2008 09:22:58 -0500
+In-Reply-To: <87ejblnf94.fsf@denkblock.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Adrian Bunk <adrian.bunk@movial.fi>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
 
-On Sun, 2008-02-10 at 13:58 +0000, Russell King wrote:
-> On Sun, Feb 10, 2008 at 03:07:09PM +0200, Boaz Harrosh wrote:
-> > It's in mainline 84ac86ca8c6787f9efff28bc04b1b65fe0a5c310
-> >   [SCSI] arm: convert to accessors and !use_sg cleanup
-> > 
-> > Thanks for checking. This patch was in scsi-pending tree since forever, And we were unable
-> > to get a responsive maintainer to ACK on them. until the breakage cause went into mainline
-> > we finally managed a Tested-by:.
-> > 
-> > I guess sometimes people are so busy, you need a bulldozer to shove 20 minutes into they're
-> > schedule.
+On Sun, 2008-02-10 at 13:54 +0100, Elias Oltmanns wrote:
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > On Sat, 2008-02-09 at 22:59 +0100, Elias Oltmanns wrote:
+> >> Hi there,
+> >> 
+> >> I'm experiencing system lockups with 2.6.24 which I believe to be
+> >> related to scsi error handling. Actually, I have patched the mainline
+> >> kernel with a disk shock protection patch [1] and in my case it is indeed
+> >> the shock protection mechanism that triggers the lockups. However, some
+> >> rather lengthy investigations have lead me to the conclusion that this
+> >> additional patch is just the means to reproduce the error condition
+> >> fairly reliably rather than the origin of the problem.
+> >> 
+> >> The problem has only become apparent since Tejun's commit
+> >> 31cc23b34913bc173680bdc87af79e551bf8cc0d. More precisely, libata now
+> >> sets max_host_blocked and max_device_blocked to 1 for all ATA devices.
+> >> Various tests I've conducted so far have lead me to the conclusion that
+> >> a non zero return code from scsi_dispatch_command is sufficient to
+> >> trigger the problem I'm seeing provided that max_host_blocked and
+> >> max_device_blocked are set to 1.
+> >
+> > There's nothing inherently incorrect with setting max_device_blocked to
+> > 1 but it is suboptimal: it means that for a single queue device
+> > returning a wait causes an immediate reissue.
 > 
-> Oh, I was ill for most of December, particularly at the time that you
-> sent the patch, and by the time I recovered, it was buried in my mailbox.
+> Thanks for rubbing that in again. It should have been clear to me all
+> along but I've only just realised the consequences and found the
+> problem, I think. We are, in fact, faced with a situation where the
+> ->request_fn() is being called recursively forever.
+
+This happens on a device_max_blocked of 1 if there's a programmatic
+defer return of non zero at zero outstanding commands.  If you want to
+set a max blocked of one, you need to ensure that doesn't happen.
+
+> Consider this: The ->request_fn() of a single queue device is called
+> which in turn calls scsi_dispatch_cmd(). Assume that the device is
+> either in SDEV_BLOCK state or ->queuecommand() returns
+> SCSI_MLQUEUE_DEVICE_BUSY for some reason. In either case
+> scsi_queue_insert() will be called. Eventually, blk_run_queue() will be
+> called with the same device queue not plugged yet. This way we directly
+> reenter q->request_fn(). Now, remember that libata sets
+> sdev->max_device_blocked to 1. Consequently, the function
+> scsi_dev_queue_ready() will immediately give a positive response and we
+> go ahead calling scsi_dispatch_cmd() again. Note that at this stage the
+> lld will not have had a chance yet to clear the SDEV_BLOCK state or the
+> condition that caused the SCSI_MLQUEUE_DEVICE_BUSY return code from
+> ->queuecommand(). Hence the infinite recursion. A similar recursion can
+> also occur due to a SCSI_MLQUEUE_HOST_BUSY response from
+> ->queuecommand().
 > 
-> Suggest you have some consideration for others who might not be able to
-> do your beg and call at the immediate moment that you want it, and
-> consider that their email management skills may not be as l33t as yours.
+> Unless I have overlooked some unwanted implications, please consider
+> applying the patch that I'm going to send you as a follow up to this
+> email.
 
-OK, sorry about this, it's a bit of a cockup all around.  The patch that
-fixes this problem is still in SCSI pending largely because it's patch
-description:
+No.  We have a fix for this, it's called setting device_max_blocked to 2
+or greater.  All your patch does is make this seem to be the case, plus
+it eliminates the instant reissue case for drivers with queuecommands
+that do obey all the rules.
 
-    [SCSI] fas216: Use scsi_eh API for REQUEST_SENSE invocation
-
-Doesn't lead one to think it might be build critical, so I concentrated
-on getting the other arm patch out.
-
-Russell, could you give it a quick test, and I'll put it in with a
-tested-by tag?
-
-Thanks,
+If you can prove that IDE doesn't obey the rules (no defer returns) then
+ask them to revert their setting of device_max_blocked to 1; if they do,
+then you have to come up with an alternative for your patch.
 
 James
 
----
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Mon, 10 Sep 2007 22:39:11 +0300
-Subject: [SCSI] fas216: Use scsi_eh API for REQUEST_SENSE invocation
-
-  - Use new scsi_eh_prep/restor_cmnd() for synchronous
-    REQUEST_SENSE invocation.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Russell King <rmk@arm.linux.org.uk>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/arm/fas216.c |   16 +++-------------
- drivers/scsi/arm/fas216.h |    3 +++
- 2 files changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index fb5f202..a715632 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2018,6 +2018,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- 	 * the upper layers to process.  This would have been set
- 	 * correctly by fas216_std_done.
- 	 */
-+	scsi_eh_restore_cmnd(SCpnt, &info->ses);
- 	SCpnt->scsi_done(SCpnt);
- }
- 
-@@ -2103,23 +2104,12 @@ request_sense:
- 	if (SCpnt->cmnd[0] == REQUEST_SENSE)
- 		goto done;
- 
-+	scsi_eh_prep_cmnd(SCpnt, &info->ses, NULL, 0, ~0);
- 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
- 			  "requesting sense");
--	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
--	SCpnt->cmnd[0] = REQUEST_SENSE;
--	SCpnt->cmnd[1] = SCpnt->device->lun << 5;
--	SCpnt->cmnd[4] = sizeof(SCpnt->sense_buffer);
--	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
--	SCpnt->SCp.buffer = NULL;
--	SCpnt->SCp.buffers_residual = 0;
--	SCpnt->SCp.ptr = (char *)SCpnt->sense_buffer;
--	SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
--	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
-+	init_SCp(SCpnt);
- 	SCpnt->SCp.Message = 0;
- 	SCpnt->SCp.Status = 0;
--	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
--	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	SCpnt->use_sg = 0;
- 	SCpnt->tag = 0;
- 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
- 
-diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
-index 00e5f05..3e73e26 100644
---- a/drivers/scsi/arm/fas216.h
-+++ b/drivers/scsi/arm/fas216.h
-@@ -16,6 +16,8 @@
- #define NO_IRQ 255
- #endif
- 
-+#include <scsi/scsi_eh.h>
-+
- #include "queue.h"
- #include "msgqueue.h"
- 
-@@ -311,6 +313,7 @@ typedef struct {
- 
- 	/* miscellaneous */
- 	int			internal_done;		/* flag to indicate request done */
-+	struct scsi_eh_save	*ses;		/* holds request sense restore info */
- 	unsigned long		magic_end;
- } FAS216_Info;
- 
--- 
-1.5.3.8
-
+James
 
 
