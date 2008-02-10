@@ -1,79 +1,48 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH] Make sure that scsi_request_fn() isn't called recursively forever
-Date: Sun, 10 Feb 2008 14:02:32 +0100
-Message-ID: <878x1tnevr.fsf_-_@denkblock.local>
-References: <87bq6pkczj.fsf@denkblock.local>
-	<1202599854.4254.43.camel@localhost.localdomain>
-	<87ejblnf94.fsf@denkblock.local>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: scsi/arm/fas216.c compile error
+Date: Sun, 10 Feb 2008 15:07:09 +0200
+Message-ID: <47AEF6FD.8080801@panasas.com>
+References: <20080209000413.GE6505@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:51788 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757945AbYBJNCn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Feb 2008 08:02:43 -0500
-In-Reply-To: <87ejblnf94.fsf@denkblock.local> (Elias Oltmanns's message of
-	"Sun, 10 Feb 2008 13:54:31 +0100")
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:51594 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756136AbYBJNIT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Feb 2008 08:08:19 -0500
+In-Reply-To: <20080209000413.GE6505@cs181133002.pp.htv.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Adrian Bunk <adrian.bunk@movial.fi>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@HansenPartnership.com>, rmk@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Currently, scsi_dev_queue_ready() and scsi_host_queue_ready() decrease the
-device_blocked or host_blocked counter respectively *before* they determine
-the right return value. If the device can't accept a request for some
-reason and max_host_blocked or max_device_blocked has been set to 1, this
-may lead to scsi_request_fn() being called recursively without giving the
-low level driver a chance to unjam the device.
+On Sat, Feb 09 2008 at 2:04 +0200, Adrian Bunk <adrian.bunk@movial.fi> wrote:
+> Commit 30b0c37b27485a9cb897bfe3824f6f517b8c80d6 causes the following 
+> compile error:
+> 
+> <--  snip  -->
+> 
+> ...
+>   CC      drivers/scsi/arm/fas216.o
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/scsi/arm/fas216.c: In function 'fas216_std_done':
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/scsi/arm/fas216.c:2120: error: 'struct scsi_cmnd' has no member named 'request_bufflen'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/scsi/arm/fas216.c:2122: error: 'struct scsi_cmnd' has no member named 'use_sg'
+> make[4]: *** [drivers/scsi/arm/fas216.o] Error 1
+> 
+> <--  snip  -->
+> 
+> cu
+> Adrian
+> 
+It's in mainline 84ac86ca8c6787f9efff28bc04b1b65fe0a5c310
+  [SCSI] arm: convert to accessors and !use_sg cleanup
 
-This patch applies to 2.6.24. Please include it in the stable updates as
-well.
+Thanks for checking. This patch was in scsi-pending tree since forever, And we were unable
+to get a responsive maintainer to ACK on them. until the breakage cause went into mainline
+we finally managed a Tested-by:.
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
+I guess sometimes people are so busy, you need a bulldozer to shove 20 minutes into they're
+schedule.
 
- drivers/scsi/scsi_lib.c |   20 ++++++++------------
- 1 files changed, 8 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a9ac5b1..7513bed 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1357,14 +1357,12 @@ static inline int scsi_dev_queue_ready(s
- 		/*
- 		 * unblock after device_blocked iterates to zero
- 		 */
--		if (--sdev->device_blocked == 0) {
-+		if (sdev->device_blocked-- == 1)
- 			SCSI_LOG_MLQUEUE(3,
- 				   sdev_printk(KERN_INFO, sdev,
--				   "unblocking device at zero depth\n"));
--		} else {
--			blk_plug_device(q);
--			return 0;
--		}
-+				   "device will be unblocked next time\n"));
-+		blk_plug_device(q);
-+		return 0;
- 	}
- 	if (sdev->device_blocked)
- 		return 0;
-@@ -1389,14 +1387,12 @@ static inline int scsi_host_queue_ready(
- 		/*
- 		 * unblock after host_blocked iterates to zero
- 		 */
--		if (--shost->host_blocked == 0) {
-+		if (shost->host_blocked-- == 1)
- 			SCSI_LOG_MLQUEUE(3,
--				printk("scsi%d unblocking host at zero depth\n",
-+				printk("scsi%d host will be unblocked next time\n",
- 					shost->host_no));
--		} else {
--			blk_plug_device(q);
--			return 0;
--		}
-+		blk_plug_device(q);
-+		return 0;
- 	}
- 	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
- 	    shost->host_blocked || shost->host_self_blocked) {
+Boaz
