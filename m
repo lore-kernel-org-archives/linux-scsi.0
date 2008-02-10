@@ -1,62 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Investigating potential flaw in scsi error handling
-Date: Sat, 09 Feb 2008 17:30:54 -0600
-Message-ID: <1202599854.4254.43.camel@localhost.localdomain>
-References: <87bq6pkczj.fsf@denkblock.local>
+From: Kars de Jong <jongk@linux-m68k.org>
+Subject: Re: [SCSI] sun3x_esp: convert to esp_scsi
+Date: Sun, 10 Feb 2008 10:38:15 +0100
+Message-ID: <1202636295.2814.31.camel@kars.perseus.home>
+References: <200802080259.m182xDkb014716@hera.kernel.org>
+	 <Pine.LNX.4.64.0802080932220.18242@anakin>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45671 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755034AbYBIXbA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2008 18:31:00 -0500
-In-Reply-To: <87bq6pkczj.fsf@denkblock.local>
+Received: from smtpq2.groni1.gr.home.nl ([213.51.130.201]:47656 "EHLO
+	smtpq2.groni1.gr.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbYBJKSx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Feb 2008 05:18:53 -0500
+In-Reply-To: <Pine.LNX.4.64.0802080932220.18242@anakin>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Linux/m68k <linux-m68k@vger.kernel.org>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, 2008-02-09 at 22:59 +0100, Elias Oltmanns wrote:
-> Hi there,
+On vr, 2008-02-08 at 09:33 +0100, Geert Uytterhoeven wrote:
+> On Fri, 8 Feb 2008, Linux Kernel Mailing List wrote:
+> > Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=0bb67f181834044db6e9b15c7d5cc3cce0489bfd
+> > Commit:     0bb67f181834044db6e9b15c7d5cc3cce0489bfd
+> > Parent:     f8d9d654fcc7dd87f5d0b222e233eaab15d650c4
+> > Author:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> > AuthorDate: Fri Feb 1 00:13:34 2008 +0100
+> > Committer:  James Bottomley <James.Bottomley@HansenPartnership.com>
+> > CommitDate: Thu Feb 7 18:02:33 2008 -0600
+> > 
+> >     [SCSI] sun3x_esp: convert to esp_scsi
+> >     
+> >     Converted sun3x_esp driver to use esp_scsi.c
+> >     
+> >     Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> >     Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > ---
+> >  drivers/scsi/Kconfig     |    1 +
+> >  drivers/scsi/Makefile    |    2 +-
+> >  drivers/scsi/sun3x_esp.c |  708 +++++++++++++++++++++-------------------------
+> >  3 files changed, 318 insertions(+), 393 deletions(-)
 > 
-> I'm experiencing system lockups with 2.6.24 which I believe to be
-> related to scsi error handling. Actually, I have patched the mainline
-> kernel with a disk shock protection patch [1] and in my case it is indeed
-> the shock protection mechanism that triggers the lockups. However, some
-> rather lengthy investigations have lead me to the conclusion that this
-> additional patch is just the means to reproduce the error condition
-> fairly reliably rather than the origin of the problem.
-> 
-> The problem has only become apparent since Tejun's commit
-> 31cc23b34913bc173680bdc87af79e551bf8cc0d. More precisely, libata now
-> sets max_host_blocked and max_device_blocked to 1 for all ATA devices.
-> Various tests I've conducted so far have lead me to the conclusion that
-> a non zero return code from scsi_dispatch_command is sufficient to
-> trigger the problem I'm seeing provided that max_host_blocked and
-> max_device_blocked are set to 1.
+> But the first one is back! Thank you, Thomas!
 
-There's nothing inherently incorrect with setting max_device_blocked to
-1 but it is suboptimal: it means that for a single queue device
-returning a wait causes an immediate reissue.
+Thomas, can't you use ioreadxx() and friends instead of rolling your own
+memory mapped I/O handlers? readxx() and friends are only to be used on
+PCI-like buses.
 
-> Unfortunately, I'm a bit at a loss as to how I should proceed to find
-> the culprit. I can reliably reproduce the problem using the disk shock
-> protection patch in order to cause non zero return values from
-> scsi_dispatch_command. How can I find out where in the error handling of
-> this condition things might go wrong?
-> 
-> Most likely you will need further information to help me solving this
-> issue but perhaps you can already come up with some suggestions and tell
-> me what else you'd like to know.
+Unfortunately, a simple conversion like this didn't work for me on the
+Blizzard SCSI IV. The driver gets stuck when probing devices:
 
-Well, the first case I'm not sure why you refer to non-zero return from
-scsi_dispatch_command() since that's an internal API; the non zero
-return should come from ->queuecommand().
+esp: esp0, regs[80ea8000:80eb0000] irq[2]
+esp: esp0 is a 53CF94/96-2, 40 MHz (ccf=0), SCSI ID 7
+scsi0 : esp
+ESP: tgt[0] lun[0] scsi_cmd [ 12 00 00 00 24 00 ]
+ESP: start data addr[78e76590] len[36] write(1)
+ESP: data done flgs[1] sent[36]
+ESP: Command done status[0] message[0]
+ESP: tgt[0] lun[0] scsi_cmd [ 12 00 00 00 86 00 ]
+ESP: start data addr[78e76590] len[134] write(1)
+ESP: data done flgs[1] sent[134]
+ESP: Command done status[0] message[0]
+scsi 0:0:0:0: Direct-Access     QUANTUM  FIREBALL_TM2110S 300N PQ: 0 ANSI: 2
+ target0:0:0: Beginning Domain Validation
+ESP: tgt[0] lun[0] scsi_cmd [ 12 00 00 00 86 00 ]
+ESP: Got msgin byte 4
+ESP: Disconnecting tgt[0] tag[20:0]
+ESP: reconnect tag, IRQ(0:10:97), <3>esp: esp0: Reconnect IRQ2 timeout
+ESP: esp_schedule_reset() from 00127ad2
+ target0:0:0: Domain Validation Initial Inquiry Failed
+ target0:0:0: Ending Domain Validation
+ESP: tgt[1] lun[0] scsi_cmd [ 12 00 00 00 24 00 ]
+ESP: tgt[2] lun[0] scsi_cmd [ 12 00 00 00 24 00 ]
+ESP: Got msgin byte 7
+ESP: Sending message [ 06 ]
+...
+ESP: Got msgin byte 7
+ESP: Sending message [ 06 ]
+...
 
-However, if you've patched scsi_dispatch_command() I'd guess that would
-be the problem.
+The "Reconnect IRQ2 timeout" thing seemed wrong, so I modified it to
+never timeout there (perhaps the timer was a bit short on m68k). This
+causes it to get completely stuck, so the chip is apparently not in the
+mood to generate any interrupt ever. I wonder whether this is because a
+DMA operation is done with only 2 bytes...
+The Blizzard DMA engine is rather simplistic (no byte counters). It's
+also undocumented.
 
-James
+The old driver used to use PIO for small transfers (like message in and
+SCSI commands). David, any ideas on this?
+
+
+Kind regards,
+
+Kars.
 
 
