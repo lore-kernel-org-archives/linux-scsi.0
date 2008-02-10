@@ -1,156 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi/arm/fas216.c compile error
-Date: Sun, 10 Feb 2008 16:44:16 -0600
-Message-ID: <1202683456.3136.77.camel@localhost.localdomain>
-References: <20080209000413.GE6505@cs181133002.pp.htv.fi>
-	 <47AEF6FD.8080801@panasas.com>
-	 <20080210135851.GB25703@flint.arm.linux.org.uk>
-	 <1202653224.3136.20.camel@localhost.localdomain>
-	 <20080210220200.GA26654@flint.arm.linux.org.uk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] scsi_error: Fix language abuse.
+Date: Sun, 10 Feb 2008 18:24:00 -0500
+Message-ID: <47AF8790.1040706@torque.net>
+References: <20080208153217.5fc42a50@core>	<47AD02C6.70402@torque.net> <20080209135020.6eca03ac@core>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57292 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751275AbYBJWoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Feb 2008 17:44:23 -0500
-In-Reply-To: <20080210220200.GA26654@flint.arm.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756533AbYBJXYX@vger.kernel.org>
+In-Reply-To: <20080209135020.6eca03ac@core>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Adrian Bunk <adrian.bunk@movial.fi>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2008-02-10 at 22:02 +0000, Russell King wrote:
-> On Sun, Feb 10, 2008 at 08:20:24AM -0600, James Bottomley wrote:
-> > 
-> > On Sun, 2008-02-10 at 13:58 +0000, Russell King wrote:
-> > > On Sun, Feb 10, 2008 at 03:07:09PM +0200, Boaz Harrosh wrote:
-> > > > It's in mainline 84ac86ca8c6787f9efff28bc04b1b65fe0a5c310
-> > > >   [SCSI] arm: convert to accessors and !use_sg cleanup
-> > > > 
-> > > > Thanks for checking. This patch was in scsi-pending tree since forever, And we were unable
-> > > > to get a responsive maintainer to ACK on them. until the breakage cause went into mainline
-> > > > we finally managed a Tested-by:.
-> > > > 
-> > > > I guess sometimes people are so busy, you need a bulldozer to shove 20 minutes into they're
-> > > > schedule.
-> > > 
-> > > Oh, I was ill for most of December, particularly at the time that you
-> > > sent the patch, and by the time I recovered, it was buried in my mailbox.
-> > > 
-> > > Suggest you have some consideration for others who might not be able to
-> > > do your beg and call at the immediate moment that you want it, and
-> > > consider that their email management skills may not be as l33t as yours.
-> > 
-> > OK, sorry about this, it's a bit of a cockup all around.  The patch that
-> > fixes this problem is still in SCSI pending largely because it's patch
-> > description:
-> > 
-> >     [SCSI] fas216: Use scsi_eh API for REQUEST_SENSE invocation
-> > 
-> > Doesn't lead one to think it might be build critical, so I concentrated
-> > on getting the other arm patch out.
-> > 
-> > Russell, could you give it a quick test, and I'll put it in with a
-> > tested-by tag?
+Alan Cox wrote:
+> On Fri, 08 Feb 2008 20:32:54 -0500
+> Douglas Gilbert <dougg@torque.net> wrote:
 > 
-> It's not looking good:
+>> Alan Cox wrote:
+>>> The word "illegal" has a precise dictionary meaning of "prohibited by
+>>> law". 
+>> Also "contrary to or forbidden by official rules, regulations, etc".
 > 
->   CC      drivers/scsi/arm/fas216.o
-> drivers/scsi/arm/fas216.c: In function `fas216_rq_sns_done':
-> drivers/scsi/arm/fas216.c:2021: warning: passing arg 2 of `scsi_eh_restore_cmnd' from incompatible pointer type
-> drivers/scsi/arm/fas216.c: In function `fas216_std_done':
-> drivers/scsi/arm/fas216.c:2107: warning: passing arg 2 of `scsi_eh_prep_cmnd' from incompatible pointer type
-> 
-> Since the second argument of scsi_eh_prep_cmnd is 'struct scsi_eh_save *ses'
-> this patch is most definitely bad.  Not even booted it.
+> The OED I have here doesn't seem to think so, however if the words are
+> the ones used in the T10 documentation then I'm happy to drop the patch.
 
-Yes, there looks to be a fatal screw up in the definition in
-FAS216_Info.  Could you try this ... I think I've corrected it.
+The OED (Oxford English dictionary) seems to be at odds
+with most other online dictionaries with respect to the
+word illegal. I find the following 'illegal' entry
+(at www.askoxford.com) daft:
+  "USAGE Both illegal and unlawful can mean 'contrary to
+   or forbidden by law', but unlawful has a broader meaning
+   'not permitted by rules': thus handball in soccer is
+   unlawful, but not illegal."
 
-James
+So if we followed the OED's advice then SCSI's "illegal
+request" would become "unlawful request". I'm yet to
+see the word "unlawful" in any technical standard ...
 
----
-
->From 35be7297dc581b42c05ea7751ee595b0ce78f669 Mon Sep 17 00:00:00 2001
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Mon, 10 Sep 2007 22:39:11 +0300
-Subject: [SCSI] fas216: Use scsi_eh API for REQUEST_SENSE invocation
-
-  - Use new scsi_eh_prep/restor_cmnd() for synchronous
-    REQUEST_SENSE invocation.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Russell King <rmk@arm.linux.org.uk>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/arm/fas216.c |   16 +++-------------
- drivers/scsi/arm/fas216.h |    3 +++
- 2 files changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index fb5f202..a715632 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2018,6 +2018,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- 	 * the upper layers to process.  This would have been set
- 	 * correctly by fas216_std_done.
- 	 */
-+	scsi_eh_restore_cmnd(SCpnt, &info->ses);
- 	SCpnt->scsi_done(SCpnt);
- }
- 
-@@ -2103,23 +2104,12 @@ request_sense:
- 	if (SCpnt->cmnd[0] == REQUEST_SENSE)
- 		goto done;
- 
-+	scsi_eh_prep_cmnd(SCpnt, &info->ses, NULL, 0, ~0);
- 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
- 			  "requesting sense");
--	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
--	SCpnt->cmnd[0] = REQUEST_SENSE;
--	SCpnt->cmnd[1] = SCpnt->device->lun << 5;
--	SCpnt->cmnd[4] = sizeof(SCpnt->sense_buffer);
--	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
--	SCpnt->SCp.buffer = NULL;
--	SCpnt->SCp.buffers_residual = 0;
--	SCpnt->SCp.ptr = (char *)SCpnt->sense_buffer;
--	SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
--	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
-+	init_SCp(SCpnt);
- 	SCpnt->SCp.Message = 0;
- 	SCpnt->SCp.Status = 0;
--	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
--	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	SCpnt->use_sg = 0;
- 	SCpnt->tag = 0;
- 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
- 
-diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
-index 00e5f05..b65f4cf 100644
---- a/drivers/scsi/arm/fas216.h
-+++ b/drivers/scsi/arm/fas216.h
-@@ -16,6 +16,8 @@
- #define NO_IRQ 255
- #endif
- 
-+#include <scsi/scsi_eh.h>
-+
- #include "queue.h"
- #include "msgqueue.h"
- 
-@@ -311,6 +313,7 @@ typedef struct {
- 
- 	/* miscellaneous */
- 	int			internal_done;		/* flag to indicate request done */
-+	struct scsi_eh_save	ses;		/* holds request sense restore info */
- 	unsigned long		magic_end;
- } FAS216_Info;
- 
--- 
-1.5.3.8
-
-
-
+Doug Gilbert
