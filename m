@@ -1,56 +1,66 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Current git --> kaboom [bisect] seems IDE related.
-Date: Sun, 10 Feb 2008 17:07:13 +0200
-Message-ID: <47AF1321.7000107@panasas.com>
-References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Investigating potential flaw in scsi error handling
+Date: Sun, 10 Feb 2008 16:29:11 +0100
+Message-ID: <8763ww6da0.fsf@denkblock.local>
+References: <87bq6pkczj.fsf@denkblock.local>
+	<1202599854.4254.43.camel@localhost.localdomain>
+	<87ejblnf94.fsf@denkblock.local>
+	<1202653375.3136.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080210144352.GA3537@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nebensachen.de ([195.34.83.29]:33114 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751919AbYBJP3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Feb 2008 10:29:24 -0500
+In-Reply-To: <1202653375.3136.24.camel@localhost.localdomain> (James
+	Bottomley's message of "Sun, 10 Feb 2008 08:22:55 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On Sun, Feb 10 2008 at 16:43 +0200, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sun, Feb 10, 2008 at 02:38:46PM +0100, Bartlomiej Zolnierkiewicz wrote:
->> The OOPS is most likely (again) my fault - I was rushing out to push out
->> the fix and memset() line didn't get converted.
-> 
-> The new patch works fine for me.
-> 
->> I prepared the new patch, documented it and started looking into SCSI
->> build breakage... and I no longer feel comfortable with the hack :(
->>
->> It seems that fixing IDE properly will be easier than auditing the whole
->> SCSI for all the weird assumptions on rq->cmd[] size (James?) so I'm back
->> to the code, in the meantime here's the updated patch:
-> 
-> Yeah, this is quite nasty.  I'll attach the patch below which just
-> rejects a command in scsi_setup_blk_pc_cmnd if it's too large for
-> the scsi_cmnd cmnd array.  This is probably enough but I haven't
-> audited all of the scsi code yet.  But as James said this is
-> too much of a memory vastage to put it into the tree.
-> 
-> Long-term the Panasas folks have looked into killing the scsi_cmnd.cmnd
-> filed entirely and make the struct request.cmd field dynamically sized
-> which would solve your problem, but probably won't be ready for 2.6.25.
-> 
-> 
-<snip>
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Sun, 2008-02-10 at 13:54 +0100, Elias Oltmanns wrote:
+[...]
+>> Consider this: The ->request_fn() of a single queue device is called
+>> which in turn calls scsi_dispatch_cmd(). Assume that the device is
+>> either in SDEV_BLOCK state or ->queuecommand() returns
+>> SCSI_MLQUEUE_DEVICE_BUSY for some reason. In either case
+>> scsi_queue_insert() will be called. Eventually, blk_run_queue() will be
+>> called with the same device queue not plugged yet. This way we directly
+>> reenter q->request_fn(). Now, remember that libata sets
+>> sdev->max_device_blocked to 1. Consequently, the function
+>> scsi_dev_queue_ready() will immediately give a positive response and we
+>> go ahead calling scsi_dispatch_cmd() again. Note that at this stage the
+>> lld will not have had a chance yet to clear the SDEV_BLOCK state or the
+>> condition that caused the SCSI_MLQUEUE_DEVICE_BUSY return code from
+>> ->queuecommand(). Hence the infinite recursion. A similar recursion can
+>> also occur due to a SCSI_MLQUEUE_HOST_BUSY response from
+>> ->queuecommand().
+>> 
+>> Unless I have overlooked some unwanted implications, please consider
+>> applying the patch that I'm going to send you as a follow up to this
+>> email.
+>
+> No.  We have a fix for this, it's called setting device_max_blocked to 2
+> or greater.  All your patch does is make this seem to be the case, plus
+> it eliminates the instant reissue case for drivers with queuecommands
+> that do obey all the rules.
+>
+> If you can prove that IDE doesn't obey the rules (no defer returns)
 
-As far as I'm concerned it is very ready, and I have sent a last version
-for inclusion into 2.6.25.
-- There is a very minor patch-ability problem between last patchset and 
-  scsi-misc I will resend the pachset as a reply to this mail.
-- Since I never got any comments from Jens or James, this code was never
-  accepted into -mm. So it was not widely tested. Though I have thrown
-  every test I can on these patches. But that is still, a very limited 
-  testing.
+In fact, I can prove that scsi midlayer itself doesn't exactly comply
+with this rule by design. The comment explaining the SDEV_BLOCK state in
+scsi_device.h suggests that the low level driver is supposed to control
+whether a device is switched to or from SDEV_BLOCK. However, with
+max_device_blocked set to 1 we have an infinite loop where the low level
+driver never gets even called since scsi_dispatch_cmd will requeue the
+request instantly.
 
-If people have a bit of spare time, please review. For some of us it is
-very important
+IDE doesn't obey the rule either but this can be fixed easily. So, what
+about SDEV_BLOCK?
 
-Thanks
-Boaz
+Regards,
+
+Elias
