@@ -1,317 +1,54 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/3] scsi: varlen extended and vendor-specific cdbs
-Date: Sun, 10 Feb 2008 21:12:02 +0200
-Message-ID: <47AF4C82.2090103@panasas.com>
-References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com> <47AF4974.9010200@panasas.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Sun, 10 Feb 2008 23:23:31 +0200 (EET)
+Message-ID: <alpine.LSU.1.00.0802102319100.6303@kai.makisara.local>
+References: <20080204142206.GB5532@stro.at>  <20080204212835.GA29286@gollum.tnic> <1202162213.3096.119.camel@localhost.localdomain> <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47AF4974.9010200@panasas.com>
+In-Reply-To: <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
 Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: petkovbb@gmail.com, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, 5 Feb 2008, Kai Makisara wrote:
 
-Add support for variable-length, extended, and vendor specific
-CDBs to scsi-ml. It is now possible for initiators and ULD's
-to issue these types of commands. LLDs need not change much.
-All they need is to raise the .max_cmd_len to the longest command
-they support (see iscsi patches).
+> On Mon, 4 Feb 2008, James Bottomley wrote:
+> 
+> > 
+> > On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
+> > > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
+> > > 
+> > > (Added Bart to CC)
+> > > 
+> > > > hello borislav,
+> > > > 
+...
+> > > > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
+> > > > 
+> > > > $ tar tzvf /dev/nst0
+> > > > tar: /dev/nst0: Cannot read: Input/output error
+> > 
+> > That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
+> > 
+> This is not a bug, it is a feature. There is _nothing_ on the tape and if 
+> you try to read something, you get an error. The same thing applies to 
+> reading after the last filemark. Note that after writing a filemark at the 
+> beginning of the tape, the situation is different. Now there is a file and 
+> the normal EOF semantics apply although there still is no data.
+> 
+> I admit that the error return could be more descriptive but the st driver 
+> tries to be compatible with other Unices.
+> 
+> The behavior can be changed if Linux does not match other Unices. I don't 
+> remember if I have tested just this with other Unices. I will try to test 
+> this with Tru64 tomorrow. If anyone has data on other Unices, it would be 
+> helpful.
+> 
+None of our Tru64 boxes have a user-accessible tape drive any more. 
+However, I have been able to test with a Solaris box. The behavior there 
+matches the Linux behavior: blank tape -> i/o error when trying to read.
 
-- clean-up some code paths that did not expect commands to be
-  larger than 16, and change cmd_len members' type to short as
-  char is not enough.
-- Add support for varlen_cdb in scsi_execute.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Signed-off-by: Benny Halevy <bhalevy@panasas.com>
----
- block/scsi_ioctl.c       |    4 ++--
- drivers/scsi/constants.c |   10 +++-------
- drivers/scsi/scsi.c      |   22 +++++++++++-----------
- drivers/scsi/scsi_lib.c  |   27 ++++++++++++++++++++++-----
- include/scsi/scsi.h      |   40 +++++++++++++++++++++++++++++++++-------
- include/scsi/scsi_cmnd.h |    2 +-
- include/scsi/scsi_host.h |    8 +++-----
- 7 files changed, 75 insertions(+), 38 deletions(-)
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 9675b34..a1d7070 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -33,13 +33,13 @@
- #include <scsi/scsi_cmnd.h>
- 
- /* Command group 3 is reserved and should never be used.  */
--const unsigned char scsi_command_size[8] =
-+const unsigned char scsi_command_size_tbl[8] =
- {
- 	6, 10, 10, 12,
- 	16, 12, 10, 10
- };
- 
--EXPORT_SYMBOL(scsi_command_size);
-+EXPORT_SYMBOL(scsi_command_size_tbl);
- 
- #include <scsi/sg.h>
- 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 403a7f2..9785d73 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -28,7 +28,6 @@
- #define SERVICE_ACTION_OUT_12 0xa9
- #define SERVICE_ACTION_IN_16 0x9e
- #define SERVICE_ACTION_OUT_16 0x9f
--#define VARIABLE_LENGTH_CMD 0x7f
- 
- 
- 
-@@ -210,7 +209,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 	cdb0 = cdbp[0];
- 	switch(cdb0) {
- 	case VARIABLE_LENGTH_CMD:
--		len = cdbp[7] + 8;
-+		len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
- 			printk("short variable length command, "
- 			       "len=%d ext_len=%d", len, cdb_len);
-@@ -300,7 +299,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 	cdb0 = cdbp[0];
- 	switch(cdb0) {
- 	case VARIABLE_LENGTH_CMD:
--		len = cdbp[7] + 8;
-+		len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
- 			printk("short opcode=0x%x command, len=%d "
- 			       "ext_len=%d", cdb0, len, cdb_len);
-@@ -335,10 +334,7 @@ void __scsi_print_command(unsigned char *cdb)
- 	int k, len;
- 
- 	print_opcode_name(cdb, 0);
--	if (VARIABLE_LENGTH_CMD == cdb[0])
--		len = cdb[7] + 8;
--	else
--		len = COMMAND_SIZE(cdb[0]);
-+	len = scsi_command_size(cdb);
- 	/* print out all bytes in cdb */
- 	for (k = 0; k < len; ++k) 
- 		printk(" %02x", cdb[k]);
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index fecba05..944fafa 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -79,15 +79,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
- #define MIN_RESET_PERIOD (15*HZ)
- 
- /*
-- * Macro to determine the size of SCSI command. This macro takes vendor
-- * unique commands into account. SCSI commands in groups 6 and 7 are
-- * vendor unique and we will depend upon the command length being
-- * supplied correctly in cmd_len.
-- */
--#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
--				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
--
--/*
-  * Note - the initial logging level can be set here to log events at boot time.
-  * After the system is up, you may enable logging via the /proc interface.
-  */
-@@ -525,6 +516,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	unsigned long flags = 0;
- 	unsigned long timeout;
- 	int rtn = 0;
-+	unsigned cmd_len;
- 
- 	/* check if the device is still usable */
- 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
-@@ -606,9 +598,17 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	 * Before we queue this command, check if the command
- 	 * length exceeds what the host adapter can handle.
- 	 */
--	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
-+	cmd_len = cmd->cmd_len;
-+	if (!cmd_len) {
-+		BUG_ON(cmd->cmnd[0] == VARIABLE_LENGTH_CMD);
-+		cmd_len = COMMAND_SIZE((cmd)->cmnd[0]);
-+	}
-+
-+	if (cmd_len > cmd->device->host->max_cmd_len) {
- 		SCSI_LOG_MLQUEUE(3,
--				printk("queuecommand : command too long.\n"));
-+			printk("queuecommand : command too long. "
-+			       "cdb_size=%d host->max_cmd_len=%d\n",
-+			       cmd->cmd_len, cmd->device->host->max_cmd_len));
- 		cmd->result = (DID_ABORT << 16);
- 
- 		scsi_done(cmd);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 426aa11..3029b31 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -193,8 +193,16 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 					buffer, bufflen, __GFP_WAIT))
- 		goto out;
- 
--	req->cmd_len = COMMAND_SIZE(cmd[0]);
--	memcpy(req->cmd, cmd, req->cmd_len);
-+	if (cmd[0] == VARIABLE_LENGTH_CMD)
-+		rq_set_varlen_cdb(req, (u8 *)cmd, scsi_varlen_cdb_length(cmd));
-+	else {
-+		req->cmd_len = COMMAND_SIZE(cmd[0]);
-+		memcpy(req->cmd, cmd, req->cmd_len);
-+		if (req->cmd_len < MAX_COMMAND_SIZE)
-+			memset(&req->cmd[req->cmd_len], 0,
-+			       MAX_COMMAND_SIZE - req->cmd_len);
-+	}
-+
- 	req->sense = sense;
- 	req->sense_len = 0;
- 	req->retries = retries;
-@@ -445,7 +453,7 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
- 	scsi_set_resid(cmd, 0);
- 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 	if (cmd->cmd_len == 0)
--		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
-+		cmd->cmd_len = scsi_command_size(cmd->cmnd);
- }
- 
- void scsi_device_unbusy(struct scsi_device *sdev)
-@@ -1100,6 +1108,7 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
- int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- {
- 	struct scsi_cmnd *cmd;
-+	u8 *varlen_cdb;
- 	int ret = scsi_prep_state_check(sdev, req);
- 
- 	if (ret != BLKPREP_OK)
-@@ -1131,14 +1140,22 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 		req->buffer = NULL;
- 	}
- 
--	cmd->cmd_len = req->cmd_len;
-+	varlen_cdb = rq_get_varlen_cdb(req);
-+	if (varlen_cdb) {
-+		cmd->cmnd = varlen_cdb;
-+		cmd->cmd_len = req->varlen_cdb_len;
-+	} else if (req->cmd_len)
-+		cmd->cmd_len = req->cmd_len;
-+	else
-+		cmd->cmd_len = scsi_command_size(cmd->cmnd);
-+
- 	if (!req->data_len)
- 		cmd->sc_data_direction = DMA_NONE;
- 	else if (rq_data_dir(req) == WRITE)
- 		cmd->sc_data_direction = DMA_TO_DEVICE;
- 	else
- 		cmd->sc_data_direction = DMA_FROM_DEVICE;
--	
-+
- 	cmd->transfersize = req->data_len;
- 	cmd->allowed = req->retries;
- 	cmd->timeout_per_command = req->timeout;
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 1f74bcd..0ba902c 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -30,13 +30,6 @@
- #endif
- 
- /*
-- *	SCSI command lengths
-- */
--
--extern const unsigned char scsi_command_size[8];
--#define COMMAND_SIZE(opcode) scsi_command_size[((opcode) >> 5) & 7]
--
--/*
-  * Special value for scanning to specify scanning or rescanning of all
-  * possible channels, (target) ids, or luns on a given shost.
-  */
-@@ -109,6 +102,7 @@ extern const unsigned char scsi_command_size[8];
- #define MODE_SENSE_10         0x5a
- #define PERSISTENT_RESERVE_IN 0x5e
- #define PERSISTENT_RESERVE_OUT 0x5f
-+#define VARIABLE_LENGTH_CMD   0x7f
- #define REPORT_LUNS           0xa0
- #define MAINTENANCE_IN        0xa3
- #define MOVE_MEDIUM           0xa5
-@@ -136,6 +130,38 @@ extern const unsigned char scsi_command_size[8];
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
- 
- /*
-+ *	SCSI command lengths
-+ */
-+
-+#define SCSI_MAX_VARLEN_CDB_SIZE 260
-+
-+/* defined in T10 SCSI Primary Commands-2 (SPC2) */
-+struct scsi_varlen_cdb_hdr {
-+	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-+	u8 control;
-+	u8 misc[5];
-+	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__be16 service_action;
-+	/* service specific data follows */
-+};
-+
-+static inline unsigned
-+scsi_varlen_cdb_length(const void *hdr)
-+{
-+	return ((struct scsi_varlen_cdb_hdr*)hdr)->additional_cdb_length + 8;
-+}
-+
-+extern const unsigned char scsi_command_size_tbl[8];
-+#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
-+
-+static inline unsigned
-+scsi_command_size(const unsigned char *cmnd)
-+{
-+	return (cmnd[0] == VARIABLE_LENGTH_CMD) ? scsi_varlen_cdb_length(cmnd) :
-+	                                 COMMAND_SIZE(cmnd[0]);
-+}
-+
-+/*
-  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
-  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
-  */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 5c21ddc..c32d0da 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -66,7 +66,7 @@ struct scsi_cmnd {
- 	int allowed;
- 	int timeout_per_command;
- 
--	unsigned char cmd_len;
-+	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
- 
- 	/* These elements define the operation we are about to perform */
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index d1299e9..72e0f0d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -568,13 +568,11 @@ struct Scsi_Host {
- 	/*
- 	 * The maximum length of SCSI commands that this host can accept.
- 	 * Probably 12 for most host adapters, but could be 16 for others.
-+	 * or 260 if the driver supports variable length cdbs.
- 	 * For drivers that don't set this field, a value of 12 is
--	 * assumed.  I am leaving this as a number rather than a bit
--	 * because you never know what subsequent SCSI standards might do
--	 * (i.e. could there be a 20 byte or a 24-byte command a few years
--	 * down the road?).  
-+	 * assumed.
- 	 */
--	unsigned char max_cmd_len;
-+	unsigned short max_cmd_len;
- 
- 	int this_id;
- 	int can_queue;
 -- 
-1.5.3.3
-
-
+Kai
