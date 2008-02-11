@@ -1,46 +1,42 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [SCSI] sun3x_esp: convert to esp_scsi
-Date: Mon, 11 Feb 2008 09:18:26 -0600
-Message-ID: <1202743106.3122.5.camel@localhost.localdomain>
-References: <200802080259.m182xDkb014716@hera.kernel.org>
-	 <Pine.LNX.4.64.0802080932220.18242@anakin>
-	 <1202636295.2814.31.camel@kars.perseus.home>
-	 <20080211112453.GA7761@alpha.franken.de>
+Subject: Re: Patches not reaching the list
+Date: Mon, 11 Feb 2008 09:19:36 -0600
+Message-ID: <1202743176.3122.7.camel@localhost.localdomain>
+References: <20080211045423.GA31176@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43594 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43612 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753708AbYBKPSc (ORCPT
+	by vger.kernel.org with ESMTP id S1753847AbYBKPTk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Feb 2008 10:18:32 -0500
-In-Reply-To: <20080211112453.GA7761@alpha.franken.de>
+	Mon, 11 Feb 2008 10:19:40 -0500
+In-Reply-To: <20080211045423.GA31176@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: Kars de Jong <jongk@linux-m68k.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2008-02-11 at 12:24 +0100, Thomas Bogendoerfer wrote:
-> On Sun, Feb 10, 2008 at 10:38:15AM +0100, Kars de Jong wrote:
-> > Thomas, can't you use ioreadxx() and friends instead of rolling your own
-> > memory mapped I/O handlers?
-> 
-> well, at least ioread32be/iowrite32be are looking promising, but a quick
-> grep didn't show them for m68k.
 
-Someone could submit a patch ...
+On Mon, 2008-02-11 at 10:24 +0530, Prakash, Sathya wrote:
+> I tried to send few patches on last friday, out of which only one
+> reached the list I resent the rest two and again only on reached the list
+> Again I have resent the third patch two times, but they are still to reach 
+> the list. I am using mutt as E-mail client. I am sending this E-mail also from the same client, can any one please help me in sorting this out.
 
-> > readxx() and friends are only to be used on PCI-like buses.
-> 
-> hmm, afaik readxx/writexx is not directly related to PCI. It's
-> like ioread/iowrite to access iomapped address space. The difference
-> to ioread/iowrite is that it doesn't support PCI IO space.
+The people who might be able to help are the owners of the mailing list
 
-That's correct ... at least that's the meaning we've ascribed on other
-architectures I've worked on. Any ioremap'd memory area can be accessed
-by readX/writeX.  The current list of Buses I know it works on is MCA,
-EISA, GSC, Runway ... in addition to PCI.
+<linux-scsi-owner@vger.kernel.org>
+
+However, please don't bother them unless you've checked out the faq here
+(also listed in the footer of every email):
+
+http://vger.kernel.org/majordomo-info.html
+
+and tried the autoanswer thing.
+
+If it turns out to be your fault, they will be pretty unfriendly.
 
 James
 
