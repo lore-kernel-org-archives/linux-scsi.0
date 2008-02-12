@@ -1,73 +1,113 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
-Date: Tue, 12 Feb 2008 16:46:32 -0500
-Message-ID: <20080212214632.GA14397@osc.edu>
-References: <20080212205252.GB13643@osc.edu> <20080212205403.GC13643@osc.edu> <1202850645.3137.132.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
+Date: Tue, 12 Feb 2008 13:56:03 -0800 (PST)
+Message-ID: <20080212215603.E8EA8108016@picon.linux-foundation.org>
+References: <bug-9775-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:57458 "EHLO marge.padd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbYBLVqh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:46:37 -0500
-Content-Disposition: inline
-In-Reply-To: <1202850645.3137.132.camel@localhost.localdomain>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:37439 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752137AbYBLV4F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2008 16:56:05 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1CLu3Yq010896
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Feb 2008 13:56:05 -0800
+In-Reply-To: <bug-9775-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James.Bottomley@HansenPartnership.com wrote on Tue, 12 Feb 2008 15:10 -0600:
-> On Tue, 2008-02-12 at 15:54 -0500, Pete Wyckoff wrote:
-> > iscsi_iser does not have any hardware DMA restrictions.  Add a
-> > slave_configure function to remove any DMA alignment restriction,
-> > allowing the use of direct IO from arbitrary offsets within a page.
-> > Also disable page bouncing; iser has no restrictions on which pages it
-> > can address.
-> > 
-> > Signed-off-by: Pete Wyckoff <pw@osc.edu>
-> > ---
-> >  drivers/infiniband/ulp/iser/iscsi_iser.c |    8 ++++++++
-> >  1 files changed, 8 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> > index be1b9fb..1b272a6 100644
-> > --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> > +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> > @@ -543,6 +543,13 @@ iscsi_iser_ep_disconnect(__u64 ep_handle)
-> >  	iser_conn_terminate(ib_conn);
-> >  }
-> >  
-> > +static int iscsi_iser_slave_configure(struct scsi_device *sdev)
-> > +{
-> > +	blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
+http://bugzilla.kernel.org/show_bug.cgi?id=9775
+
+
+
+
+
+------- Comment #10 from anonymous@kernel-bugs.osdl.org  2008-02-12 13:56 -------
+Reply-To: James.Bottomley@HansenPartnership.com
+
+On Fri, 2008-02-08 at 18:52 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> Ok, I've spent some time trying different combinations of devices.
 > 
-> You really don't want to do this.  That signals to the block layer that
-> we have an iommu, although it's practically the same thing as a 64 bit
-> DMA mask ... but I'd just leave it to the DMA mask to set this up
-> correctly.  Anything else is asking for a subtle bug to turn up years
-> from now when something causes the mask and the limit to be mismatched.
+> Against kernel 2.6.24
+> T0 is Quantum DLT8000 ID0
+> T1 is Quantum DLT8000 ID1
+> MTX     is STK L80  ID 15
+> Terminators A, B
+> 
+> Channel                         A                       B
+>                                         T0,T1,MTX,B     Nil                    
+>                 Crash
+>                                         Nil                     T0,T1,MTX,B    
+>                 Parity Error in Data-in Phase
+>                                         Nil                     T0,MTX,B       
+>                 Ok, Tar test ok, MTX ok
+>                                         Nil                     T1,MTX,B       
+>                 Ok, Tar test ok, MTX ok 
+> -- Both drives work ok          
+>                                         T1,MTX,B        Nil                    
+>                 Ok   Skipped Tests
+>                                         T1,MTX,A        Nil                    
+>                 Ok   Skipped Tests
+>                                         T0,MTX,B        Nil                    
+>                 Crash
+>                                         T0,MTX,A        Nil                    
+>                 Crash
+> -- Not the terminator
+> 
+> 
+> --Test on two channels
+>                                         T0,MTX,A        T1,B                   
+>         Crash
+>                                         T1,B            T0,MTX,A               
+>         Parity Error in Data-in Phase                                   
+> 
+> It really doesn't like three devices, on two busses or one.
 
-Oh.  I decided to add that line for symmetry with TCP, and was
-convinced by the arguments here:
+Well, I still think you have some type of bus instability, but that said
+we need to get rid of the panic.
 
-    commit b6d44fe9582b9d90a0b16f508ac08a90d899bf56
-    Author: Mike Christie <michaelc@cs.wisc.edu>
-    Date:   Thu Jul 26 12:46:47 2007 -0500
+I'm afraid this is going to be a long process.  For the first attempt,
+let's see if this is an unsolicited msgin ... it looks like the driver
+handling for those is wrong.  Can you try this patch?
 
-    [SCSI] iscsi_tcp: Turn off bounce buffers
+Thanks,
 
-    It was found by LSI that on setups with large amounts of memory
-    we were bouncing buffers when we did not need to. If the iscsi tcp
-    code touches the data buffer (or a helper does),
-    it will kmap the buffer. iscsi_tcp also does not interact with hardware,
-    so it does not have any hw dma restrictions. This patch sets the bounce
-    buffer settings for our device queue so buffers should not be bounced
-    because of a driver limit.
+James
 
-I don't see a convenient place to callback into particular iscsi
-devices to set the DMA mask per-host.  It has to go on the
-shost_gendev, right?, but only for TCP and iSER, not qla4xxx, which
-handles its DMA mask during device probe.
+---
 
-		-- Pete
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c
+b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 6d2ae64..64e62ce 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -695,15 +695,16 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+                        scb_index = ahc_inb(ahc, SCB_TAG);
+                        scb = ahc_lookup_scb(ahc, scb_index);
+                        if (devinfo.role == ROLE_INITIATOR) {
+-                               if (scb == NULL)
+-                                       panic("HOST_MSG_LOOP with "
+-                                             "invalid SCB %x\n", scb_index);
++                               if (bus_phase == P_MESGOUT) {
++                                       if (scb == NULL)
++                                               panic("HOST_MSG_LOOP with "
++                                                     "invalid SCB %x\n",
++                                                     scb_index);
+
+-                               if (bus_phase == P_MESGOUT)
+                                        ahc_setup_initiator_msgout(ahc,
+                                                                   &devinfo,
+                                                                   scb);
+-                               else {
++                               } else {
+                                        ahc->msg_type =
+                                            MSG_TYPE_INITIATOR_MSGIN;
+                                        ahc->msgin_index = 0;
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
