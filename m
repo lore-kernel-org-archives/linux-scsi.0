@@ -1,52 +1,145 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/3] scsi: varlen extended and vendor-specific cdbs
-Date: Tue, 12 Feb 2008 20:17:42 +0200
-Message-ID: <47B1E2C6.4010305@panasas.com>
-References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com> <47AF4974.9010200@panasas.com> <47AF4C82.2090103@panasas.com> <20080212175137.GC26316@infradead.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Tue, 12 Feb 2008 10:22:44 -0800
+Message-ID: <20080212102244.32869382@appleyard>
+References: <1202172065.3096.154.camel@localhost.localdomain>
+	<922945.25870.qm@web31811.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080212175137.GC26316@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:50954 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760594AbYBLS37 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2008 13:29:59 -0500
+In-Reply-To: <922945.25870.qm@web31811.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 
-On Tue, Feb 12 2008 at 19:51 +0200, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sun, Feb 10, 2008 at 09:12:02PM +0200, Boaz Harrosh wrote:
->> @@ -525,6 +516,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->>  	unsigned long flags = 0;
->>  	unsigned long timeout;
->>  	int rtn = 0;
->> +	unsigned cmd_len;
->>  
->>  	/* check if the device is still usable */
->>  	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
->> @@ -606,9 +598,17 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->>  	 * Before we queue this command, check if the command
->>  	 * length exceeds what the host adapter can handle.
->>  	 */
->> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
->> +	cmd_len = cmd->cmd_len;
->> +	if (!cmd_len) {
->> +		BUG_ON(cmd->cmnd[0] == VARIABLE_LENGTH_CMD);
->> +		cmd_len = COMMAND_SIZE((cmd)->cmnd[0]);
->> +	}
+On Mon, 4 Feb 2008 18:01:36 -0800 (PST)
+Luben Tuikov <ltuikov@yahoo.com> wrote:
+
+> --- On Mon, 2/4/08, James Bottomley
+> <James.Bottomley@HansenPartnership.com> wrote:
+> > > > The enclosure misc device is really just a
+> > library providing
+> > > > sysfs
+> > > > support for physical enclosure devices and their
+> > > > components.
+> > > 
+> > > Who is the target audience/user of those facilities?
+> > > a) The kernel itself needing to read/write SES pages?
+> > 
+> > That depends on the enclosure integration, but right at the
+> > moment, it
+> > doesn't
 > 
-> This looks odd to me.  Shouldn't we make sure cmd_len is always
-> initialized in a single place for either varlen or fixed length
-> commands and not have things like this?
+> Yes, I didn't suspect so.
 > 
-I used to have a BUG_ON(!cmd_len) here at around the 2.6.20 kernels
-And it would trigger. I'm not sure exactly how. Through a retransmit
-or something.
+> > 
+> > > b) A user space application using sysfs to read/write
+> > >    SES pages?
+> > 
+> > Not an application so much as a user.  The idea of sysfs is
+> > to allow
+> > users to get and set the information in addition to
+> > applications.
+> 
+> Exactly the same argument stands for a user-space
+> application with a user-space library.
+> 
+> This is the classical case of where it is better to
+> do this in user-space as opposed to the kernel.
+> 
+> The kernel provides capability to access the SES
+> device.  The user space application and library
+> provide interpretation and control.  Thus if the
+> enclosure were upgraded, one doesn't need to
+> upgrade their kernel in order to utilize the new
+> capabilities of the SES device.  Plus upgrading
+> a user-space application is a lot easier than
+> the kernel (and no reboot necessary).
+> 
+> Consider another thing: vendors would really like
+> unprecedented access to the SES device in the enclosure
+> so as your ses/enclosure code keeps state it would
+> get out of sync when vendor user-space enclosure
+> applications access (and modify) the SES device's
+> pages.
+> 
+> You can test this yourself: submit a patch
+> that removes SES /dev/sgX support; advertise your
+> ses/class solution and watch the fun.
+> 
+> > > At the moment SES device management is done via
+> > > an application (user-space) and a user-space library
+> > > used by the application and /dev/sgX to send SCSI
+> > > commands to the SES device.
+> > 
+> > I must have missed that when I was looking for
+> > implementations; what's
+> > the URL?
+> 
+> I'm not aware of any GPLed ones.  That doesn't
+> necessarily mean that the best course of action is
+> to bloat the kernel.  You can move your ses/enclosure
+> stuff to a user space application library
+> and thus start a GPLed one.
+> 
+> > But, if we have non-scsi enclosures to integrate, that
+> > makes it harder
+> > for a user application because it has to know all the
+> > implementations.
+> 
+> So does the kernel.  And as I pointed out above, it
+> is a lot easier to upgrade a user-space application and
+> library than it is to upgrade a new kernel and having
+> to reboot the computer to run the new kernel.
+> 
+> > A sysfs framework on the other hand is a universal known
+> > thing for the
+> > user applications.
+> 
+> So would a user-space ses library, a la libses.so.
+> 
+> > > One could have a very good argument to not bloat
+> > > the kernel with this but leave it to a user-space
+> > > application and a library to do all this and
+> > > communicate with the SES device via the kernel's
+> > /dev/sgX.
+> > 
+> > The same thing goes for other esoteric SCSI infrastructure
+> > pieces like
+> > cd changers.  On the whole, given that ATA is asking for
+> > enclosure
+> > management in kernel, it makes sense to consolidate the
+> > infrastructure
+> > and a ses ULD is a very good test bed.
+> 
+> What is wrong with exporting the SES device as /dev/sgX
+> and having a user-space application and library to
+> do all this?
+> 
+>     Luben
+> 
 
-Reinspecting all command submission paths, I agree with you that it
-should not happen anymore. I will look at it some more and run tests.
+Hi,
+I apologize for taking so long to review this patch.  I obviously agree
+wholeheartedly with Luben.  The problem I ran into while trying to
+design an enclosure management interface for the SATA devices is that
+there is all this vendor defined stuff.  For example, for the AHCI LED
+protocol, the only "defined" LED is 'activity'.  For LED2 and LED3 it
+is up to hardware vendors to define these.  For SGPIO there's all kinds
+of ways for hw vendors to customize.  I felt that it was going to be a
+maintainance nightmare to have to keep track of various vendors
+enclosure implementations in the ahci driver, and that it'd be better
+to just have user space libraries take care of that.  Plus, that way a
+vendor doesn't have to get a patch into the kernel to get their new
+spiffy wizzy bang blinky lights working (think of how long it takes
+something to even get into a vendor kernel, which is what these guys
+care about...).  So I'm still not sold on having an enclosure
+abstraction in the kernel - at least for the SATA controllers.
 
-Perhaps if this code will sit in -mm tree for a while I can put the
-BUG_ON back and see if it triggers again. What do you recommend?
-
-Boaz
-
+Kristen
