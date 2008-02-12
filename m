@@ -1,165 +1,260 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 02/13] git-scsi-misc gdth fix
-Date: Tue, 12 Feb 2008 11:46:27 -0800
-Message-ID: <20080212114627.c1983246.akpm@linux-foundation.org>
-References: <200802050752.m157qrLV010691@imap1.linux-foundation.org>
-	<47B1BAE5.1030503@panasas.com>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: Re: [PATCH 0/3] iscsi bidi & varlen support
+Date: Tue, 12 Feb 2008 15:12:39 -0500
+Message-ID: <20080212201239.GB12532@osc.edu>
+References: <47A20E85.6040906@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:53210 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751631AbYBLTtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2008 14:49:04 -0500
-In-Reply-To: <47B1BAE5.1030503@panasas.com>
+Received: from marge.padd.com ([66.127.62.138]:51031 "EHLO marge.padd.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755480AbYBLUMm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2008 15:12:42 -0500
+Content-Disposition: inline
+In-Reply-To: <47A20E85.6040906@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, davemilter@gmail.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>
 
-On Tue, 12 Feb 2008 17:27:33 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+bharrosh@panasas.com wrote on Thu, 31 Jan 2008 20:08 +0200:
+> Cheers after 1.3 years these can go in.
+> 
+> [PATCH 1/3] iscsi: extended cdb support
+>    The varlen support is not yet in mainline for
+>   block and scsi-ml. But the API for drivers will
+>   not change. All LLD need to do is max_command to
+>   the it's maximum and be ready for bigger commands.
+>   This is what's done here. Once these commands start
+>   coming iscsi will be ready for them.
+> 
+> [PATCH 2/3] iscsi: bidi support - libiscsi
+> [PATCH 3/3] iscsi: bidi support - iscsi_tcp
+>   bidirectional commands support in iscsi.
+>   iSER is not yet ready, but it will not break.
+>   There is already a mechanism in libiscsi that will
+>   return error if bidi commands are sent iSER way.
+> 
+> Pete please send me the iSER bits so we can port them
+> to this latest version.
+> 
+> Mike these patches are ontop of iscs branch of the iscsi
+> git tree, they will apply but for compilation you will need
+> to sync with Linus mainline. The patches are for the in-tree
+> iscsi code. I own you the compat patch for the out-off-tree
+> code, but this I will only be Sunday.
+> 
+> If we do it fast it might get accepted to 2.6.25 merge window
+> 
+> Everybody is invited to a party at Shila ben-yhuda 52 Tel-Aviv
+> 9:45 pm. Drinks and wonderful see-food on us :)
 
-> On Tue, Feb 05 2008 at 9:53 +0200, akpm@linux-foundation.org wrote:
-> > From: James Bottomley <James.Bottomley@SteelEye.com>
-> > 
-> > On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
-> >> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
-> >>
-> >>> I build linux-2.6.23-mm1 and try to boot it using qemu,
-> >>> and it crashed with trace like this:
-> >>> do_page_fault
-> >>> error_code
-> >>> lock_acquire
-> >>> _spin_lock_irqsave
-> >>> gdth_timeout
-> >>> run_timer_softirq
-> >>> __do_softirq
-> >>> do_softirq
-> >>>
-> >>> I have screenshot, but have no idea, is it legal to include it, if I
-> >>> sent copy to lkml.
-> >>> config of kernel in attachment,
-> >>> I apply all three patches from hot-fixes.
-> >>>
-> >> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
-> >>
-> >> It would appear that gdth_timeout() is passing a bad pointer into
-> >> spin_lock_irqsave().
-> > 
-> > There's a bug in the gdth rework in that the instance can be deleted
-> > from the list before the actual timer is stopped.  This can be worked
-> > around I think by the following patch; although we really should be
-> > stopping the timer from firing when the list goes empty.
-> > 
-> > 
-> > James said:
-> > 
-> > This is almost certainly the wrong fix for real hardware.  Although it
-> > kills the timer when the list goes empty, nothing will ever restart it
-> > when the list fills again.
-> > 
-> > Boaz, since you touched all of this, you get to fix it.  The correct fix
-> > will be to control the timer along with the actual list instead of at
-> > entry/exit time.  If you're not going to add this empty check to the
-> > timer routine, make sure you use del_timer_sync() before removing the
-> > last element from the list.
-> > 
-> > 
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> > 
-> >  drivers/scsi/gdth.c |    3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
-> > --- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
-> > +++ a/drivers/scsi/gdth.c
-> > @@ -3791,6 +3791,9 @@ static void gdth_timeout(ulong data)
-> >      gdth_ha_str *ha;
-> >      ulong flags;
-> >  
-> > +    if (list_empty(&gdth_instances))
-> > +	return;
-> > +
-> >      ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-> >      spin_lock_irqsave(&ha->smp_lock, flags);
-> >  
-> > _
-> Hello dear Andrew
-> 
-> Do you perhaps remember who as reported this problem, and if he can
-> test patches?
-> 
+Here's the patch to add bidi support to iSER too.  It works
+with my setup, but could use more testing.  Note that this does
+rely on the 3 patches quoted above.
 
-It was Dave Milter, who has been cc'ed on all of this.
+		-- Pete
 
-> and if he can test patches?
 
-Don't know.  Dave, would it be a possibility?
+From: Pete Wyckoff <pw@osc.edu>
 
-Thanks.
+Support bidirectional SCSI commands in iSCSI iSER.  The handling of
+data buffers for each direction was already mostly separated.  It was
+necessary to separate the unmapping of data bufs when one was found
+to be unaligned.  This was done by adding a "direction" parameter to
+iser_dma_unmap_task_data() and calling it appropriately.  Also
+iser_ctask_rdma_finalize() used local variables in such a way that
+it assumed a unidirectional command; that was split up to make it
+cleaner and order the operations correctly for bidi.
 
-> 
-> ---
-> gdth: Try to fix the Timer at exit problem
-> 
-> Remove_sync the timer before we delete the cards.
-> 
-> Testing-patches: Boaz Harrosh <bharrosh@panasas.com>
-> 
-> ---
-> git-diff --stat -p v2.6.24
->  drivers/scsi/gdth.c |   19 ++++++++++++-------
->  1 files changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index b253b8c..57fa756 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -5102,6 +5105,9 @@ static int __init gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
->  	if (error)
->  		goto out_free_coal_stat;
->  	list_add_tail(&ha->list, &gdth_instances);
-> +
-> +	scsi_scan_host(shp);
-> +
->  	return 0;
->  
->   out_free_coal_stat:
-> @@ -5137,8 +5143,6 @@ static void gdth_remove_one(gdth_ha_str *ha)
->  		ha->sdev = NULL;
->  	}
->  
-> -	gdth_flush(ha);
-> -
->  	if (shp->irq)
->  		free_irq(shp->irq,ha);
->  
-> @@ -5236,14 +5240,15 @@ static void __exit gdth_exit(void)
->  {
->  	gdth_ha_str *ha;
->  
-> -	list_for_each_entry(ha, &gdth_instances, list)
-> -		gdth_remove_one(ha);
-> +	unregister_chrdev(major,"gdth");
-> +	unregister_reboot_notifier(&gdth_notifier);
->  
->  #ifdef GDTH_STATISTICS
-> -	del_timer(&gdth_timer);
-> +	del_timer_sync(&gdth_timer);
->  #endif
-> -	unregister_chrdev(major,"gdth");
-> -	unregister_reboot_notifier(&gdth_notifier);
-> +
-> +	list_for_each_entry(ha, &gdth_instances, list)
-> +		gdth_remove_one(ha);
->  }
->  
->  module_init(gdth_init);
-> 
-> 
-> 
-> 
+Signed-off-by: Pete Wyckoff <pw@osc.edu>
+---
+ drivers/infiniband/ulp/iser/iscsi_iser.h     |    3 +-
+ drivers/infiniband/ulp/iser/iser_initiator.c |   79 +++++++++++---------------
+ drivers/infiniband/ulp/iser/iser_memory.c    |    9 ++-
+ 3 files changed, 41 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
+index 66905df..f5497b0 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.h
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
+@@ -356,5 +356,6 @@ int iser_dma_map_task_data(struct iscsi_iser_cmd_task *iser_ctask,
+ 			    enum   iser_data_dir       iser_dir,
+ 			    enum   dma_data_direction  dma_dir);
+ 
+-void iser_dma_unmap_task_data(struct iscsi_iser_cmd_task *iser_ctask);
++void iser_dma_unmap_task_data(struct iscsi_iser_cmd_task *iser_ctask,
++			      enum iser_data_dir cmd_dir);
+ #endif
+diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+index ea3f5dc..491ffab 100644
+--- a/drivers/infiniband/ulp/iser/iser_initiator.c
++++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+@@ -325,9 +325,8 @@ int iser_send_command(struct iscsi_conn     *conn,
+ {
+ 	struct iscsi_iser_conn *iser_conn = conn->dd_data;
+ 	struct iscsi_iser_cmd_task *iser_ctask = ctask->dd_data;
+-	struct iser_dto *send_dto = NULL;
+-	unsigned long edtl;
+-	int err = 0;
++	struct iser_dto *send_dto;
++	int err;
+ 	struct iser_data_buf *data_buf;
+ 
+ 	struct iscsi_cmd *hdr =  ctask->hdr;
+@@ -340,37 +339,32 @@ int iser_send_command(struct iscsi_conn     *conn,
+ 	if (iser_check_xmit(conn, ctask))
+ 		return -ENOBUFS;
+ 
+-	edtl = ntohl(hdr->data_length);
+-
+ 	/* build the tx desc regd header and add it to the tx desc dto */
+ 	iser_ctask->desc.type = ISCSI_TX_SCSI_COMMAND;
+ 	send_dto = &iser_ctask->desc.dto;
+ 	send_dto->ctask = iser_ctask;
+ 	iser_create_send_desc(iser_conn, &iser_ctask->desc, ctask->hdr_len);
+ 
+-	if (hdr->flags & ISCSI_FLAG_CMD_READ)
+-		data_buf = &iser_ctask->data[ISER_DIR_IN];
+-	else
+-		data_buf = &iser_ctask->data[ISER_DIR_OUT];
+-
+-	if (scsi_sg_count(sc)) { /* using a scatter list */
+-		data_buf->buf  = scsi_sglist(sc);
+-		data_buf->size = scsi_sg_count(sc);
+-	}
+-
+-	data_buf->data_len = scsi_bufflen(sc);
+-
+ 	if (hdr->flags & ISCSI_FLAG_CMD_READ) {
+-		err = iser_prepare_read_cmd(ctask, edtl);
++		data_buf = &iser_ctask->data[ISER_DIR_IN];
++		data_buf->buf  = scsi_in(sc)->table.sgl;
++		data_buf->size = scsi_in(sc)->table.nents;
++		data_buf->data_len = scsi_in(sc)->length;
++		err = iser_prepare_read_cmd(ctask, data_buf->data_len);
+ 		if (err)
+ 			goto send_command_error;
+ 	}
++
+ 	if (hdr->flags & ISCSI_FLAG_CMD_WRITE) {
++		data_buf = &iser_ctask->data[ISER_DIR_OUT];
++		data_buf->buf  = scsi_out(sc)->table.sgl;
++		data_buf->size = scsi_out(sc)->table.nents;
++		data_buf->data_len = scsi_out(sc)->length;
+ 		err = iser_prepare_write_cmd(ctask,
+ 					     ctask->imm_count,
+ 				             ctask->imm_count +
+ 					     ctask->unsol_count,
+-					     edtl);
++					     data_buf->data_len);
+ 		if (err)
+ 			goto send_command_error;
+ 	}
+@@ -648,45 +642,40 @@ void iser_ctask_rdma_init(struct iscsi_iser_cmd_task *iser_ctask)
+ 	       sizeof(struct iser_regd_buf));
+ }
+ 
+-void iser_ctask_rdma_finalize(struct iscsi_iser_cmd_task *iser_ctask)
++static void iser_ctask_rdma_finalize_dir(struct iscsi_iser_cmd_task *iser_ctask,
++				         enum iser_data_dir cmd_dir)
+ {
+ 	int deferred;
+ 	int is_rdma_aligned = 1;
+ 	struct iser_regd_buf *regd;
+ 
+-	/* if we were reading, copy back to unaligned sglist,
+-	 * anyway dma_unmap and free the copy
++	/*
++	 * If we were reading, copy back to unaligned sglist,
++	 * anyway dma_unmap and free the copy.
+ 	 */
+-	if (iser_ctask->data_copy[ISER_DIR_IN].copy_buf != NULL) {
+-		is_rdma_aligned = 0;
+-		iser_finalize_rdma_unaligned_sg(iser_ctask, ISER_DIR_IN);
+-	}
+-	if (iser_ctask->data_copy[ISER_DIR_OUT].copy_buf != NULL) {
++	if (iser_ctask->data_copy[cmd_dir].copy_buf != NULL) {
+ 		is_rdma_aligned = 0;
+-		iser_finalize_rdma_unaligned_sg(iser_ctask, ISER_DIR_OUT);
++		iser_finalize_rdma_unaligned_sg(iser_ctask, cmd_dir);
+ 	}
+ 
+-	if (iser_ctask->dir[ISER_DIR_IN]) {
+-		regd = &iser_ctask->rdma_regd[ISER_DIR_IN];
++	if (iser_ctask->dir[cmd_dir]) {
++		regd = &iser_ctask->rdma_regd[cmd_dir];
+ 		deferred = iser_regd_buff_release(regd);
+-		if (deferred) {
+-			iser_err("%d references remain for BUF-IN rdma reg\n",
+-				 atomic_read(&regd->ref_count));
+-		}
++		if (deferred)
++			iser_err("%d references remain for %s rdma reg\n",
++				 atomic_read(&regd->ref_count),
++				 cmd_dir == ISER_DIR_IN ? "IN" : "OUT");
+ 	}
+ 
+-	if (iser_ctask->dir[ISER_DIR_OUT]) {
+-		regd = &iser_ctask->rdma_regd[ISER_DIR_OUT];
+-		deferred = iser_regd_buff_release(regd);
+-		if (deferred) {
+-			iser_err("%d references remain for BUF-OUT rdma reg\n",
+-				 atomic_read(&regd->ref_count));
+-		}
+-	}
++	/* if the data was unaligned, it was already unmapped and then copied */
++	if (is_rdma_aligned)
++		iser_dma_unmap_task_data(iser_ctask, cmd_dir);
++}
+ 
+-       /* if the data was unaligned, it was already unmapped and then copied */
+-       if (is_rdma_aligned)
+-		iser_dma_unmap_task_data(iser_ctask);
++void iser_ctask_rdma_finalize(struct iscsi_iser_cmd_task *iser_ctask)
++{
++	iser_ctask_rdma_finalize_dir(iser_ctask, ISER_DIR_IN);
++	iser_ctask_rdma_finalize_dir(iser_ctask, ISER_DIR_OUT);
+ }
+ 
+ void iser_dto_buffs_release(struct iser_dto *dto)
+diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
+index 4a17743..aa3f299 100644
+--- a/drivers/infiniband/ulp/iser/iser_memory.c
++++ b/drivers/infiniband/ulp/iser/iser_memory.c
+@@ -393,19 +393,20 @@ int iser_dma_map_task_data(struct iscsi_iser_cmd_task *iser_ctask,
+ 	return 0;
+ }
+ 
+-void iser_dma_unmap_task_data(struct iscsi_iser_cmd_task *iser_ctask)
++void iser_dma_unmap_task_data(struct iscsi_iser_cmd_task *iser_ctask,
++			      enum iser_data_dir cmd_dir)
+ {
+ 	struct ib_device *dev;
+ 	struct iser_data_buf *data;
+ 
+ 	dev = iser_ctask->iser_conn->ib_conn->device->ib_device;
+ 
+-	if (iser_ctask->dir[ISER_DIR_IN]) {
++	if (cmd_dir == ISER_DIR_IN && iser_ctask->dir[ISER_DIR_IN]) {
+ 		data = &iser_ctask->data[ISER_DIR_IN];
+ 		ib_dma_unmap_sg(dev, data->buf, data->size, DMA_FROM_DEVICE);
+ 	}
+ 
+-	if (iser_ctask->dir[ISER_DIR_OUT]) {
++	if (cmd_dir == ISER_DIR_OUT && iser_ctask->dir[ISER_DIR_OUT]) {
+ 		data = &iser_ctask->data[ISER_DIR_OUT];
+ 		ib_dma_unmap_sg(dev, data->buf, data->size, DMA_TO_DEVICE);
+ 	}
+@@ -439,7 +440,7 @@ int iser_reg_rdma_mem(struct iscsi_iser_cmd_task *iser_ctask,
+ 		iser_data_buf_dump(mem, ibdev);
+ 
+ 		/* unmap the command data before accessing it */
+-		iser_dma_unmap_task_data(iser_ctask);
++		iser_dma_unmap_task_data(iser_ctask, cmd_dir);
+ 
+ 		/* allocate copy buf, if we are writing, copy the */
+ 		/* unaligned scatterlist, dma map the copy        */
+-- 
+1.5.3.8
+
