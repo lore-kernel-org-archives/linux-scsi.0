@@ -1,30 +1,22 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
-Date: Tue, 12 Feb 2008 13:56:03 -0800 (PST)
-Message-ID: <20080212215603.E8EA8108016@picon.linux-foundation.org>
-References: <bug-9775-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
+Date: Tue, 12 Feb 2008 15:55:48 -0600
+Message-ID: <1202853348.3137.145.camel@localhost.localdomain>
+References: <20080209025241.9B31B11D107@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:37439 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752137AbYBLV4F (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43623 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752072AbYBLVzy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:56:05 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1CLu3Yq010896
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Feb 2008 13:56:05 -0800
-In-Reply-To: <bug-9775-11613@http.bugzilla.kernel.org/>
+	Tue, 12 Feb 2008 16:55:54 -0500
+In-Reply-To: <20080209025241.9B31B11D107@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=9775
-
-
-
-
-
-------- Comment #10 from anonymous@kernel-bugs.osdl.org  2008-02-12 13:56 -------
-Reply-To: James.Bottomley@HansenPartnership.com
+To: bugme-daemon@bugzilla.kernel.org, john@mib-infotech.co.nz
+Cc: linux-scsi@vger.kernel.org
 
 On Fri, 2008-02-08 at 18:52 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -78,36 +70,31 @@ James
 
 ---
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c
-b/drivers/scsi/aic7xxx/aic7xxx_core.c
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
 index 6d2ae64..64e62ce 100644
 --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
 +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
 @@ -695,15 +695,16 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
-                        scb_index = ahc_inb(ahc, SCB_TAG);
-                        scb = ahc_lookup_scb(ahc, scb_index);
-                        if (devinfo.role == ROLE_INITIATOR) {
--                               if (scb == NULL)
--                                       panic("HOST_MSG_LOOP with "
--                                             "invalid SCB %x\n", scb_index);
-+                               if (bus_phase == P_MESGOUT) {
-+                                       if (scb == NULL)
-+                                               panic("HOST_MSG_LOOP with "
-+                                                     "invalid SCB %x\n",
-+                                                     scb_index);
+ 			scb_index = ahc_inb(ahc, SCB_TAG);
+ 			scb = ahc_lookup_scb(ahc, scb_index);
+ 			if (devinfo.role == ROLE_INITIATOR) {
+-				if (scb == NULL)
+-					panic("HOST_MSG_LOOP with "
+-					      "invalid SCB %x\n", scb_index);
++				if (bus_phase == P_MESGOUT) {
++					if (scb == NULL)
++						panic("HOST_MSG_LOOP with "
++						      "invalid SCB %x\n",
++						      scb_index);
+ 
+-				if (bus_phase == P_MESGOUT)
+ 					ahc_setup_initiator_msgout(ahc,
+ 								   &devinfo,
+ 								   scb);
+-				else {
++				} else {
+ 					ahc->msg_type =
+ 					    MSG_TYPE_INITIATOR_MSGIN;
+ 					ahc->msgin_index = 0;
 
--                               if (bus_phase == P_MESGOUT)
-                                        ahc_setup_initiator_msgout(ahc,
-                                                                   &devinfo,
-                                                                   scb);
--                               else {
-+                               } else {
-                                        ahc->msg_type =
-                                            MSG_TYPE_INITIATOR_MSGIN;
-                                        ahc->msgin_index = 0;
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
