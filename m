@@ -1,47 +1,78 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2/3] block layer varlen-cdb
-Date: Tue, 12 Feb 2008 19:54:39 +0200
-Message-ID: <47B1DD5F.9050709@panasas.com>
-References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com> <47AF4974.9010200@panasas.com> <47AF4BF5.90807@panasas.com> <20080212174808.GB26316@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Open bugs
+Date: Tue, 12 Feb 2008 11:57:02 -0600
+Message-ID: <1202839022.3137.63.camel@localhost.localdomain>
+References: <32209efe0802120018r17c38835ud931085e44aafefb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13336 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758305AbYBLR4N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 12:56:13 -0500
-In-Reply-To: <20080212174808.GB26316@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <32209efe0802120018r17c38835ud931085e44aafefb@mail.gmail.com>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+To: Natalie Protasevich <protasnb@gmail.com>
+Cc: alsa-devel@alsa-project.org, bugme-daemon@kernel-bugs.osdl.org, linux-scsi <linux-scsi@vger.kernel.org>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Feb 12 2008 at 19:48 +0200, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sun, Feb 10, 2008 at 09:09:41PM +0200, Boaz Harrosh wrote:
->> - add varlen_cdb and varlen_cdb_len to hold a large user cdb
->>   if needed. They start as empty. Allocation of buffer must
->>   be done by user and held until request execution is done.
->> - Since there can be either a fix_length command up to 16 bytes
->>   or a variable_length, larger then 16 bytes, commands but never
->>   both, we hold the two types in a union to save space. The
->>   presence of varlen_cdb_len and cmd_len==0 signals a varlen_cdb
->>   mode.
+Added linux-scsi for the SCSI ones
+
+On Tue, 2008-02-12 at 00:18 -0800, Natalie Protasevich wrote:
+> Hello,
 > 
-> this one I'm a bit confused by, why can't we just set the length
-> of the variable length command in cmd_len aswell, and if cmd_len >
-> the length of the cmd array it's a variable length command?
+> The bugs listed are over a month old, and haven't been addressed yet.
+> It would be appreciated if corresponding maintainers identify whether
+> the bugs have been fixed, or need to be worked on, and take
+> appropriate action.
 > 
-> Note that this is both to keep the logic simpler and not to grow
-> struct request further.  Especially for the rather rare case
-> of a bidi command.
+> In most cases, reporters are standing by and ready to provide
+> information and necessary testing.
+> Thanks!
+> 
+> SCSI======================================================
+> 
+> Problems on booting
+> http://bugzilla.kernel.org/show_bug.cgi?id=9621
+> Date: 12/22/2007
+> Regression
+> Summary: The boot stops / hangs on hardware detection of SCSI.  I have
+> an InitioINI-9X00U/UW
+> When I have an usb key sticked in /dev/sba, and run lilo then, then it
+> dont boot but give L99 99 99 99 ... error
 
-Because this will be dangerous for the Legacy block devices.
-Unlike scsi drivers block drivers do not have a .max_cmnd_len
-and upper layer will not check to make sure that the device supports
-the longer command. If such a command goes through, lets say bsg
-the drivers do blindly memcpy(,,rq->cmd_len) and will crash.
-Better safe then sorry, at no cost.
+I think this was fixed by commit
+e2d435ea4084022ab88efa74214accb45b1f9e92
 
-Boaz
+Apparently bugzilla email is on the fritz again because this bug report
+didn't come across linux-scsi.
 
+> Resetting RAID attached to a FC Switch causes kernel panic and crash
+> http://bugzilla.kernel.org/show_bug.cgi?id=9598
+> 12/18/2007
+> Hardware Environment:SunFire X4200 - 2 x dual core AMD Opteron CPUs,
+> 8GB Ram, Qlogic FC adapter.
+> Summary: Resetting the RAID box causes the X4200 to crash.
+
+This one looks like the usual problem of remove re-add with the SCSI
+device model.
+
+> 3ware 9650SE -8LPML not recognized by 3w-9xxx driver
+> http://bugzilla.kernel.org/show_bug.cgi?id=8908
+> 08/19/2007
+> Problem Description: The 3w-9xxx kernel driver for 3ware 9xxx SATA
+> RAID Controller series did not recognize the 3ware 9650SE-8LPML SATA
+> RAID Controller.
+
+Since this one never apparently worked it's not a regression but an
+enhancement request, isn't it?
+
+However, adding this PCI ID to the driver should be fairly
+straightforward.  Does anyone know what the actual PCI IDs are?
+
+James
