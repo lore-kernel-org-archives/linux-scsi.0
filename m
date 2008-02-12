@@ -1,153 +1,64 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch 02/13] git-scsi-misc gdth fix
-Date: Tue, 12 Feb 2008 17:27:33 +0200
-Message-ID: <47B1BAE5.1030503@panasas.com>
-References: <200802050752.m157qrLV010691@imap1.linux-foundation.org>
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux kernel
+Date: Tue, 12 Feb 2008 17:05:20 +0100
+Message-ID: <e2e108260802120805v4c8e07d6if59c881213c4ae97@mail.gmail.com>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
+	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
+	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
+	 <20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org>
+	 <47A8B29B.8050406@vlnb.net> <47A8B510.8000807@garzik.org>
+	 <47A8B757.10101@vlnb.net>
+	 <1202256667.2220.83.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:50623 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759172AbYBLPaQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 10:30:16 -0500
-In-Reply-To: <200802050752.m157qrLV010691@imap1.linux-foundation.org>
+Received: from rn-out-0910.google.com ([64.233.170.187]:24118 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756223AbYBLQFX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 11:05:23 -0500
+Received: by rn-out-0910.google.com with SMTP id i24so6699697rng.19
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Feb 2008 08:05:21 -0800 (PST)
+In-Reply-To: <1202256667.2220.83.camel@haakon2.linux-iscsi.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, davemilter@gmail.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, Feb 05 2008 at 9:53 +0200, akpm@linux-foundation.org wrote:
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> 
-> On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
->> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
->>
->>> I build linux-2.6.23-mm1 and try to boot it using qemu,
->>> and it crashed with trace like this:
->>> do_page_fault
->>> error_code
->>> lock_acquire
->>> _spin_lock_irqsave
->>> gdth_timeout
->>> run_timer_softirq
->>> __do_softirq
->>> do_softirq
->>>
->>> I have screenshot, but have no idea, is it legal to include it, if I
->>> sent copy to lkml.
->>> config of kernel in attachment,
->>> I apply all three patches from hot-fixes.
->>>
->> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
->>
->> It would appear that gdth_timeout() is passing a bad pointer into
->> spin_lock_irqsave().
-> 
-> There's a bug in the gdth rework in that the instance can be deleted
-> from the list before the actual timer is stopped.  This can be worked
-> around I think by the following patch; although we really should be
-> stopping the timer from firing when the list goes empty.
-> 
-> 
-> James said:
-> 
-> This is almost certainly the wrong fix for real hardware.  Although it
-> kills the timer when the list goes empty, nothing will ever restart it
-> when the list fills again.
-> 
-> Boaz, since you touched all of this, you get to fix it.  The correct fix
-> will be to control the timer along with the actual list instead of at
-> entry/exit time.  If you're not going to add this empty check to the
-> timer routine, make sure you use del_timer_sync() before removing the
-> last element from the list.
-> 
-> 
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/gdth.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
-> --- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
-> +++ a/drivers/scsi/gdth.c
-> @@ -3791,6 +3791,9 @@ static void gdth_timeout(ulong data)
->      gdth_ha_str *ha;
->      ulong flags;
->  
-> +    if (list_empty(&gdth_instances))
-> +	return;
-> +
->      ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
-> _
-Hello dear Andrew
+On Feb 6, 2008 1:11 AM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> I have always observed the case with LIO SE/iSCSI target mode ...
 
-Do you perhaps remember who as reported this problem, and if he can
-test patches?
+Hello Nicholas,
 
-Boaz
+Are you sure that the LIO-SE kernel module source code is ready for
+inclusion in the mainstream Linux kernel ? As you know I tried to test
+the LIO-SE iSCSI target. Already while configuring the target I
+encountered a kernel crash that froze the whole system. I can
+reproduce this kernel crash easily, and I reported it 11 days ago on
+the LIO-SE mailing list (February 4, 2008). One of the call stacks I
+posted shows a crash in mempool_alloc() called from jbd. Or: the crash
+is most likely the result of memory corruption caused by LIO-SE.
 
----
-gdth: Try to fix the Timer at exit problem
+Because I was curious to know why it took so long to fix such a severe
+crash, I started browsing through the LIO-SE source code. Analysis of
+the LIO-SE kernel module source code learned me that this crash is not
+a coincidence. Dynamic memory allocation (kmalloc()/kfree()) in the
+LIO-SE kernel module is complex and hard to verify. There are 412
+memory allocation/deallocation calls in the current version of the
+LIO-SE kernel module source code, which is a lot. Additionally,
+because of the complexity of the memory handling in LIO-SE, it is not
+possible to verify the correctness of the memory handling by analyzing
+a single function at a time. In my opinion this makes the LIO-SE
+source code hard to maintain.
+Furthermore, the LIO-SE kernel module source code does not follow
+conventions that have proven their value in the past like grouping all
+error handling at the end of a function. As could be expected, the
+consequence is that error handling is not correct in several
+functions, resulting in memory leaks in case of an error. Some
+examples of functions in which error handling is clearly incorrect:
+* transport_allocate_passthrough().
+* iscsi_do_build_list().
 
-Remove_sync the timer before we delete the cards.
-
-Testing-patches: Boaz Harrosh <bharrosh@panasas.com>
-
----
-git-diff --stat -p v2.6.24
- drivers/scsi/gdth.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index b253b8c..57fa756 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -5102,6 +5105,9 @@ static int __init gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
- 	if (error)
- 		goto out_free_coal_stat;
- 	list_add_tail(&ha->list, &gdth_instances);
-+
-+	scsi_scan_host(shp);
-+
- 	return 0;
- 
-  out_free_coal_stat:
-@@ -5137,8 +5143,6 @@ static void gdth_remove_one(gdth_ha_str *ha)
- 		ha->sdev = NULL;
- 	}
- 
--	gdth_flush(ha);
--
- 	if (shp->irq)
- 		free_irq(shp->irq,ha);
- 
-@@ -5236,14 +5240,15 @@ static void __exit gdth_exit(void)
- {
- 	gdth_ha_str *ha;
- 
--	list_for_each_entry(ha, &gdth_instances, list)
--		gdth_remove_one(ha);
-+	unregister_chrdev(major,"gdth");
-+	unregister_reboot_notifier(&gdth_notifier);
- 
- #ifdef GDTH_STATISTICS
--	del_timer(&gdth_timer);
-+	del_timer_sync(&gdth_timer);
- #endif
--	unregister_chrdev(major,"gdth");
--	unregister_reboot_notifier(&gdth_notifier);
-+
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		gdth_remove_one(ha);
- }
- 
- module_init(gdth_init);
-
-
-
-
-
+Bart Van Assche.
