@@ -1,34 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [BUGFIX 1/2] gdth: scan for scsi devices
-Date: Tue, 12 Feb 2008 13:05:25 -0500
-Message-ID: <20080212180525.GA14745@infradead.org>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47B1D7A8.8010108@panasas.com> <47B1D8DA.6000109@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3] block layer varlen-cdb
+Date: Tue, 12 Feb 2008 20:07:01 +0200
+Message-ID: <47B1E045.9070600@panasas.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com> <47AF4974.9010200@panasas.com> <47AF4BF5.90807@panasas.com> <20080212174808.GB26316@infradead.org> <47B1DD5F.9050709@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52454 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758772AbYBLSFc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 13:05:32 -0500
-Content-Disposition: inline
-In-Reply-To: <47B1D8DA.6000109@panasas.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13620 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760681AbYBLSJg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 13:09:36 -0500
+In-Reply-To: <47B1DD5F.9050709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Sven K?hler <skoehler@upb.de>, linux-scsi <"linux-scsi"@vger.kernel.org>, James Bottomley <"James.Bottomley"@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Feb 12, 2008 at 07:35:22PM +0200, Boaz Harrosh wrote:
+On Tue, Feb 12 2008 at 19:54 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> On Tue, Feb 12 2008 at 19:48 +0200, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Sun, Feb 10, 2008 at 09:09:41PM +0200, Boaz Harrosh wrote:
+>>> - add varlen_cdb and varlen_cdb_len to hold a large user cdb
+>>>   if needed. They start as empty. Allocation of buffer must
+>>>   be done by user and held until request execution is done.
+>>> - Since there can be either a fix_length command up to 16 bytes
+>>>   or a variable_length, larger then 16 bytes, commands but never
+>>>   both, we hold the two types in a union to save space. The
+>>>   presence of varlen_cdb_len and cmd_len==0 signals a varlen_cdb
+>>>   mode.
+>> this one I'm a bit confused by, why can't we just set the length
+>> of the variable length command in cmd_len aswell, and if cmd_len >
+>> the length of the cmd array it's a variable length command?
+>>
+>> Note that this is both to keep the logic simpler and not to grow
+>> struct request further.  Especially for the rather rare case
+>> of a bidi command.
 > 
-> The patch: "gdth: switch to modern scsi host registration"
+> Because this will be dangerous for the Legacy block devices.
+> Unlike scsi drivers block drivers do not have a .max_cmnd_len
+> and upper layer will not check to make sure that the device supports
+> the longer command. If such a command goes through, lets say bsg
+> the drivers do blindly memcpy(,,rq->cmd_len) and will crash.
+> Better safe then sorry, at no cost.
 > 
-> missed one simple fact when moving a way from scsi_module.c.
-> That is to call scsi_scan_host() on the probed host.
-> With this the gdth driver from 2.6.24 is again able to
-> see drives and boot.
+> Boaz
+> 
+> -
+PS: the struct request does not grow. Because before cmd_len was
+unsigned but now both cmd_len and varlen_cdb_len are short so
+it is the same as before.
 
-Doh, someone please hand me a brown paper bag.  My first series
-of patches had this but it got dropped when I rebased it over various
-janitor cleanups.
-
-The patch looks obviously correct, thanks.
+Boaz
 
