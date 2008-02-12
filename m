@@ -1,80 +1,50 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
-Date: Tue, 12 Feb 2008 19:40:58 +0200
-Message-ID: <47B1DA2A.1060904@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47B1D7A8.8010108@panasas.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Subject: [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd
+	buffer
+Date: Tue, 12 Feb 2008 12:45:22 -0500
+Message-ID: <20080212174522.GA26316@infradead.org>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com> <47AF4974.9010200@panasas.com> <47AF4AED.8080104@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:36417 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756832AbYBLRmL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 12:42:11 -0500
-In-Reply-To: <47B1D7A8.8010108@panasas.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:47854 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756858AbYBLRqb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2008 12:46:31 -0500
+Content-Disposition: inline
+In-Reply-To: <47AF4AED.8080104@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Sun, Feb 10, 2008 at 09:05:17PM +0200, Boaz Harrosh wrote:
+> - Lots of drivers still use MAX_COMMAND_SIZE. So I have left
+>   that #define but equate it to BLK_MAX_CDB. The way I see it
+>   and is reflected in the patch below is.
+>   MAX_COMMAND_SIZE - means: The longest fixed-length (*) SCSI CDB
+>                      as per the SCSI standard and is not related
+>                      to the implementation.
+>   BLK_MAX_CDB.     - The allocated space at the request level
+> 
+> (*)fixed-length here means commands that their size can be determined
+>    by their opcode and the CDB does not carry a length specifier, like
+>    the VARIABLE_LENGTH_CMD(0x7f) command. This is actually not exactly
+>    true and the SCSI standard also defines extended commands and
+>    vendor specific commands that can be bigger than 16 bytes. The kernel
+>    will support these using the same infrastructure used for VARLEN CDB's.
+>    So in effect MAX_COMMAND_SIZE means the maximum size command
+>    scsi-ml supports without specifying a cmd_len by ULD's
 
-gdth _exit would first remove all cards then stop the timer
-and would not sync with the timer function. This caused a crash
-in gdth_timer() when module was unloaded.
+A comment like this should be near the declaration of MAX_COMMAND_SIZE
 
-del_timer_sync the timer before we delete the cards.
+> +#define MAX_COMMAND_SIZE 16
+> +#if (MAX_COMMAND_SIZE > BLK_MAX_CDB)
+> +#	error MAX_COMMAND_SIZE can not be smaller than BLK_MAX_CDB
+> +#endif
 
-NOT YET TESTED
+No tabs between the # and the rest of the cpp command, please.  Either
+nothing or a single space as indentation instead.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/gdth.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 8eb78be..103280e 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -3793,6 +3793,8 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
- 
-+    BUG_ON(list_empty(&gdth_instances));
-+
-     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-     spin_lock_irqsave(&ha->smp_lock, flags);
- 
-@@ -5146,8 +5148,6 @@ static void gdth_remove_one(gdth_ha_str *ha)
- 		ha->sdev = NULL;
- 	}
- 
--	gdth_flush(ha);
--
- 	if (shp->irq)
- 		free_irq(shp->irq,ha);
- 
-@@ -5245,14 +5245,15 @@ static void __exit gdth_exit(void)
- {
- 	gdth_ha_str *ha;
- 
--	list_for_each_entry(ha, &gdth_instances, list)
--		gdth_remove_one(ha);
-+	unregister_chrdev(major,"gdth");
-+	unregister_reboot_notifier(&gdth_notifier);
- 
- #ifdef GDTH_STATISTICS
--	del_timer(&gdth_timer);
-+	del_timer_sync(&gdth_timer);
- #endif
--	unregister_chrdev(major,"gdth");
--	unregister_reboot_notifier(&gdth_notifier);
-+
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		gdth_remove_one(ha);
- }
- 
- module_init(gdth_init);
--- 
-1.5.3.3
-
-
+Except for those two small nitpicks this looks very good to me.  Nice
+memory saving aswel.
