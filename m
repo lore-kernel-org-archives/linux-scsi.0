@@ -1,53 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Tue, 12 Feb 2008 13:28:15 -0600
-Message-ID: <1202844495.3137.120.camel@localhost.localdomain>
-References: <1202172065.3096.154.camel@localhost.localdomain>
-	 <922945.25870.qm@web31811.mail.mud.yahoo.com>
-	 <20080212102244.32869382@appleyard>
-	 <1202841935.3137.94.camel@localhost.localdomain>
-	 <20080212110752.21840627@appleyard>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080212110752.21840627@appleyard>
-Sender: linux-ide-owner@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 8908] 3ware 9650SE -8LPML not recognized by 3w-9xxx driver
+Date: Tue, 12 Feb 2008 11:30:34 -0800 (PST)
+Message-ID: <20080212193035.048B5108069@picon.linux-foundation.org>
+References: <bug-8908-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60493 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750814AbYBLTaj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2008 14:30:39 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1CJUZBl002913
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Feb 2008 11:30:36 -0800
+In-Reply-To: <bug-8908-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
-> I understand what you are trying to do - I guess I just doubt the value
-> you've added by doing this.  I think that there's going to be so much
-> customization that system vendors will want to add, that they are going
-> to wind up adding a custom library regardless, so standardising those
-> few things won't buy us anything.
-
-It depends ... if you actually have a use for the customisations, yes.
-If you just want the basics of who (what's in the enclousure), what
-(activity) and where (locate) then I think it solves your problem almost
-entirely.
-
-So, entirely as a straw horse, tell me what else your enclosures provide
-that I haven't listed in the four points.  The SES standards too provide
-a huge range of things that no-one ever seems to implement (temperature,
-power, fan speeds etc).
-
-I think the users of enclosures fall int these categories
-
-85% just want to know where their device actually is (i.e. that sdc is
-in enclosure slot 5)
-50% like watching the activity lights
-30% want to be able to have a visual locate function
-20% want a visual failure indication (the other 80% rely on some OS
-notification instead)
-
-When you add up the overlapping needs, you get about 90% of people happy
-with the basics that the enclosure services provide.  Could there be
-more ... sure; should there be more ... I don't think so ... that's what
-value add the user libraries can provide.
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=8908
 
 
+
+
+
+------- Comment #6 from aradford@gmail.com  2008-02-12 11:30 -------
+The 9650SE (vendor:0x13c1, device id: 0x1004) controller series has been 
+supported by the in-kernel 3w-9xxx driver since 2.6.19 kernel.
+
+The user did not properly configure 'single disk' support through the 3ware
+BIOS, tw_cli or 3dm2 tool.
+
+Please close this bug.
+
+-Adam Radford
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
