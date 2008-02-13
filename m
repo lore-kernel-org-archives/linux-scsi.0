@@ -1,54 +1,102 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Wed, 13 Feb 2008 12:17:09 -0600
-Message-ID: <1202926629.3109.63.camel@localhost.localdomain>
-References: <1202172065.3096.154.camel@localhost.localdomain>
-	 <922945.25870.qm@web31811.mail.mud.yahoo.com>
-	 <20080212102244.32869382@appleyard>
-	 <1202841935.3137.94.camel@localhost.localdomain>
-	 <20080212110752.21840627@appleyard>
-	 <1202844495.3137.120.camel@localhost.localdomain>
-	 <20080213094502.4112d5e5@appleyard>
+From: Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [PATCH] Adaptec AACRAID: convert fibctx->wait_sem to completion
+Date: Wed, 13 Feb 2008 19:34:44 +0100
+Message-ID: <20080213183444.GA27068@traven>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932521AbYBMSRe@vger.kernel.org>
-In-Reply-To: <20080213094502.4112d5e5@appleyard>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.riseup.net ([204.13.164.18]:36702 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbYBMSek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 13:34:40 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: aacraid@adaptec.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Wed, 2008-02-13 at 09:45 -0800, Kristen Carlson Accardi wrote:
-> I don't think I'm arguing whether or not your solution may work, what I
-> am arguing is really a more philosophical point.  Not "can we do it
-> this way", but "should we do it way".  I am of the opinion that
-> management belongs in userspace.  I also am of the opinion that if you
-> can successfully accomplish something in user space, you should.  I
-> also believe that even if you provide this basic interface, all system
-> vendors are going to provide libraries on top of that to customize it,
-> so you've not added much value to just a simple message passing
-> interface.
+Adaptec AACRAID driver: The semaphore fibctx->wait_sem is used for
+signalling an event. Convert it to a completion.
 
-I'm not necessarily arguing against that.  However, what you're
-providing is slightly more than just a userspace tap into the enclosure.
-You're adding a file to display and control the enclosure state
-(sw_activity).  This constitutes an ad-hoc sysfs interface.  I'm not
-telling you not to do it, but I am pleading that if we have to have all
-these sysfs interfaces, lets at least do it in a uniform way.
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
-Enclosures are such nasty beasts, that even the job of getting a tap
-into them is problematic, so if we have a different tap infrastructure
-for every different enclosure type and connection it's still going to be
-pretty unmanageable to a userspace interface.
+--  
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3195d29..eef4939 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -717,7 +717,7 @@ struct aac_fib_context {
+ 	u32			unique;		// unique value representing this context
+ 	ulong			jiffies;	// used for cleanup - dmb changed to ulong
+ 	struct list_head	next;		// used to link context's into a linked list
+-	struct semaphore	wait_sem;	// this is used to wait for the next fib to arrive.
++	struct completion	compl;		// this is used to wait for the next fib to arrive.
+ 	int			wait;		// Set to true when thread is in WaitForSingleObject
+ 	unsigned long		count;		// total number of FIBs on FibList
+ 	struct list_head	fib_list;	// this holds fibs and their attachd hw_fibs
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index abef051..98efda6 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -33,6 +33,7 @@
+ #include <linux/types.h>
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
++#include <linux/completion.h>
+ #include <linux/slab.h>
+ #include <linux/completion.h>
+ #include <linux/dma-mapping.h>
+@@ -177,9 +178,9 @@ static int open_getadapter_fib(struct aac_dev * dev, void __user *arg)
+ 		 */
+ 		fibctx->unique = (u32)((ulong)fibctx & 0xFFFFFFFF);
+ 		/*
+-		 *	Initialize the mutex used to wait for the next AIF.
++		 *	Initialize the completion used to wait for the next AIF.
+ 		 */
+-		init_MUTEX_LOCKED(&fibctx->wait_sem);
++		init_completion(&fibctx->compl);
+ 		fibctx->wait = 0;
+ 		/*
+ 		 *	Initialize the fibs and set the count of fibs on
+@@ -310,7 +311,7 @@ return_fib:
+ 			ssleep(1);
+ 		}
+ 		if (f.wait) {
+-			if(down_interruptible(&fibctx->wait_sem) < 0) {
++			if(wait_for_completion_interruptible(&fibctx->compl) < 0) {
+ 				status = -EINTR;
+ 			} else {
+ 				/* Lock again and retry */
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 81b3692..486bdb3 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1440,7 +1440,7 @@ int aac_check_health(struct aac_dev * aac)
+ 			 * Set the event to wake up the
+ 			 * thread that will waiting.
+ 			 */
+-			up(&fibctx->wait_sem);
++			complete(&fibctx->compl);
+ 		} else {
+ 			printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+ 			kfree(fib);
+@@ -1671,7 +1671,7 @@ int aac_command_thread(void *data)
+ 						 * Set the event to wake up the
+ 						 * thread that is waiting.
+ 						 */
+-						up(&fibctx->wait_sem);
++						complete(&fibctx->compl);
+ 					} else {
+ 						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+ 					}
+-- 
+Matthias Kaehlcke
+Linux System Developer
+Barcelona
 
-> So, I'm happy to defer to Jeff's judgement call here - I just want to
-> do what's right for our customers and get an enclosure management
-> interface for SATA exposed, preferrably in time for the 2.6.26 merge
-> window.  If he prefers your design, I'll disagree, but commit to his
-> decision and try to get this to work for SATA. If he'd rather see
-> something along the lines of what I proposed, then since it is 100% self
-> contained in the SATA subsystem, it shouldn't impact whatever you
-> want to do in the SCSI subsystem.
-
-James
+  Si deseas mantener tu libertad, debes estar preparado para defenderla
+                          (Richard Stallman)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
