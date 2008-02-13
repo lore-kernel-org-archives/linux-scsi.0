@@ -1,38 +1,61 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
-Date: Wed, 13 Feb 2008 17:54:27 +0200
-Message-ID: <47B312B3.3010200@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>	 <47B1D7A8.8010108@panasas.com>  <47B1DA2A.1060904@panasas.com> <1202917468.3109.5.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Wed, 13 Feb 2008 10:04:51 -0600
+Message-ID: <1202918691.3109.18.camel@localhost.localdomain>
+References: <875344.96222.qm@web31808.mail.mud.yahoo.com>
+	 <47B2F9C3.8070207@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:41374 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932229AbYBMP5P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 10:57:15 -0500
-In-Reply-To: <1202917468.3109.5.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49999 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757430AbYBMQEz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 11:04:55 -0500
+In-Reply-To: <47B2F9C3.8070207@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+To: James.Smart@Emulex.Com
+Cc: ltuikov@yahoo.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 
-On Wed, Feb 13 2008 at 17:44 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Tue, 2008-02-12 at 19:40 +0200, Boaz Harrosh wrote:
->> -	gdth_flush(ha);
->> -
-> 
-> This piece doesn't look right.  gdth_flush() forces the internal cache
-> to disk backing.  If you remove it, you're taking the chance that the
-> machine will be powered off without a writeback which can cause data
-> corruption.
-> 
-> James
-> 
-Yes. 
-I have more problems reported, with exit, and am just sending one more patch that puts
-this back in. Which was tested.
+On Wed, 2008-02-13 at 09:08 -0500, James Smart wrote:
+> The keep-it-in-user-space arguments seem fairly compelling to me.
+> Especially as we've pushed whole i/o subsystems out to user space
+> (iscsi, stgt, talked about fcoe, a lot of dm control, etc).
 
-So I will resend this one plus one new one.
+And to me too.
 
-Boaz
+> The functionality seems to align with Doug's sg/lsscsi utility chain
+> as well.  Granted, the new utility would have to be designed in such
+> as way that it can incorporate vendor "hardware handlers".  But, if
+> James has a somewhat common implementation already for a kernel
+> implementation, I'm sure that can be the starting point for lsscsi.
+> 
+> So, the main question I believe is being asked is:
+> - Do we need to represent this via the object/sysfs tree or can an
+>    outside utility be depended upon to show it ?
+> 
+> Note that I am not supporting:
+> "Vendors may choose to distribute their own applications".
+> For this to become truly useful, there needs to be a common tool/method
+> that presents common features in a common manner, regardless of whether
+> it is in kernel or not.
+
+I don't disagree with that, but the fact is that there isn't such a
+tool.   It's also a fact that the enterprise is reasonably unhappy with
+the lack of an enclosure management infrastructure, since it's something
+they got on all the other unix systems.
+
+I think a minimal infrastructure in-kernel does just about everything
+the enterprise wants ... and since it's stateless, they can always use
+direct connect tools in addition.
+
+However, I'm happy to be proven wrong ... anyone on this thread is
+welcome to come up with a userland enclosure infrastructure.  Once it
+does everything the in-kernel one does (which is really about the
+minimal possible set), I'll be glad to erase the in-kernel one.
+
+James
+
+
