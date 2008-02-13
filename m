@@ -1,102 +1,106 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Wed, 13 Feb 2008 03:15:41 -0800 (PST)
-Message-ID: <172410.55272.qm@web31808.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: arcmsr + archttp64 calls dma_free_coherent() with irqs  disabled
+ - dmesg filled with warnings
+Date: Wed, 13 Feb 2008 12:55:03 +0000
+Message-ID: <47B2E8A7.2030200@gentoo.org>
+References: <47ADC74B.9080009@control.aau.dk> <1202580076.4254.24.camel@localhost.localdomain> <20080209193518.GC11299@hoblitt.com> <1202586219.4254.35.camel@localhost.localdomain> <20080212205345.GB7640@hoblitt.com> <20080212222109.GC7640@hoblitt.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040609070508010707080904"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:25942 "HELO
-	web31808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751527AbYBMLPq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 06:15:46 -0500
+Received: from probity.mcc.ac.uk ([130.88.200.94]:61874 "EHLO
+	probity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753593AbYBMMxq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 07:53:46 -0500
+In-Reply-To: <20080212222109.GC7640@hoblitt.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kristen.c.accardi@intel.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+To: Joshua Hoblitt <josh@hoblitt.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kim H?jgaard-Hansen <kimhh@control.aau.dk>, erich@areca.com.tw, linux-scsi@vger.kernel.org, j_gentoo@hoblitt.com
 
---- On Tue, 2/12/08, James Bottomley James.Bottomley@HansenPartnership.com> wrote:
-> > I understand what you are trying to do - I guess I
-> just doubt the value
-> > you've added by doing this.  I think that
-> there's going to be so much
-> > customization that system vendors will want to add,
-> that they are going
-> > to wind up adding a custom library regardless, so
-> standardising those
-> > few things won't buy us anything.
-> 
-> It depends ... if you actually have a use for the
-> customisations, yes.
-> If you just want the basics of who (what's in the
-> enclousure), what
-> (activity) and where (locate) then I think it solves your
-> problem almost
-> entirely.
+This is a multi-part message in MIME format.
+--------------040609070508010707080904
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-If the kernel doesn't solve it "entirely", then it is better
-off without the kernel bloat.  In fact vendors would distribute
-their own user-space application(s) to provide a consistent and
-complete solution(s) of their product(s) to their customer(s).
+Joshua Hoblitt wrote:
+> I've got a few compilation errors on head.  Before I try it, is it
+> possible to backport the 76d78300a6eb8b7f08e47703b7e68a659ffc2053 change
+> to 2.6.24.y?
 
-This could also be achieved via "sg_ses", which can also
-control custom vendor pages if the encodings are known by the
-customer (which they would be if they purchased the product).
+Please just try this patch instead, it's what I am planning to submit to 
+-stable and add to Gentoo if you report success.
 
-> So, entirely as a straw horse, tell me what else your
-> enclosures provide
-> that I haven't listed in the four points.
+Daniel
 
-You shouldn't insist on this.  It should already be clear
-to you this direction isn't the vendor's preference.
 
->  The SES
-> standards too provide
-> a huge range of things that no-one ever seems to implement
-> (temperature,
-> power, fan speeds etc).
+--------------040609070508010707080904
+Content-Type: text/plain;
+ name="arcmsr-pci-alloc-consistent.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="arcmsr-pci-alloc-consistent.patch"
 
-Vendors do use "temperature, power and fan speeds" and
-in fact more features, some of them completely custom
-for their product, since they end up writing the SES
-device server of the enclosure themselves (for their product).
-This kind of control and representation is better left to
-user-space.  The kernel neither needs to represent it
-nor know about it, since it is itself not using nor
-controlling it.
+From: Nick Cheng <nick.cheng@areca.com.tw>
 
-> I think the users of enclosures fall int these categories
+Partial backport of 76d78300 ("arcmsr: updates (1.20.00.15)") by
+Daniel Drake <dsd@gentoo.org>. Removes pci_alloc_consistent usage, which
+should not be used when IRQs are disabled for portability reasons. Fixes a
+spew of dma_alloc_coherent irqs_disabled() warnings.
 
-This statement (above) really means that the numbers below
-are but merely the speculation of one person.
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index f4a202e..4f9ff32 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1380,12 +1388,13 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+ 
+ 	case ARCMSR_MESSAGE_READ_RQBUFFER: {
+ 		unsigned long *ver_addr;
+-		dma_addr_t buf_handle;
+ 		uint8_t *pQbuffer, *ptmpQbuffer;
+ 		int32_t allxfer_len = 0;
++		void *tmp;
+ 
+-		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
+-		if (!ver_addr) {
++		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
++		ver_addr = (unsigned long *)tmp;
++		if (!tmp) {
+ 			retvalue = ARCMSR_MESSAGE_FAIL;
+ 			goto message_out;
+ 		}
+@@ -1421,18 +1430,19 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+ 		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
+ 		pcmdmessagefld->cmdmessage.Length = allxfer_len;
+ 		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
+-		pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
++		kfree(tmp);
+ 		}
+ 		break;
+ 
+ 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
+ 		unsigned long *ver_addr;
+-		dma_addr_t buf_handle;
+ 		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
+ 		uint8_t *pQbuffer, *ptmpuserbuffer;
++		void *tmp;
+ 
+-		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
+-		if (!ver_addr) {
++		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
++		ver_addr = (unsigned long *)tmp;
++		if (!tmp) {
+ 			retvalue = ARCMSR_MESSAGE_FAIL;
+ 			goto message_out;
+ 		}
+@@ -1482,7 +1492,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+ 				retvalue = ARCMSR_MESSAGE_FAIL;
+ 			}
+ 			}
+-			pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
++			kfree(tmp);
+ 		}
+ 		break;
+ 
 
-> 
-> 85% just want to know where their device actually is (i.e.
-> that sdc is
-> in enclosure slot 5)
-> 50% like watching the activity lights
-> 30% want to be able to have a visual locate function
-> 20% want a visual failure indication (the other 80% rely on
-> some OS
-> notification instead)
-> 
-> When you add up the overlapping needs, you get about 90% of
-> people happy
-> with the basics that the enclosure services provide.
-
-90% doesn't make it a necessary requirement for the kernel
-to have this, as well as the fact that the kernel is neither
-needing this to function properly, nor using it.
-
-> Could there be more ... sure; should there be more ... I don't think
-> so ... that's what value add the user libraries can provide.
-
-"should there be more ... I don't think so"
-
-This decision isn't yours to make.  In fact such a decision is never
-made by one person only.  This decision is made by 1) the industry,
-2) the customers and 3) vendors by the pricing of their product(s).
-
-   Luben
-
+--------------040609070508010707080904--
