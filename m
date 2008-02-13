@@ -1,239 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
-Date: Wed, 13 Feb 2008 11:36:38 -0600
-Message-ID: <1202924198.3109.52.camel@localhost.localdomain>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>
-	 <47B1D7A8.8010108@panasas.com>  <47B1DA2A.1060904@panasas.com>
-	 <1202917468.3109.5.camel@localhost.localdomain>
-	 <47B312B3.3010200@panasas.com>  <47B31BDE.2030408@panasas.com>
-	 <1202921122.3109.31.camel@localhost.localdomain>
-	 <47B31FC2.4040206@panasas.com>
-	 <1202922226.3109.36.camel@localhost.localdomain>
-	 <47B324E7.9040502@panasas.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Wed, 13 Feb 2008 09:45:02 -0800
+Message-ID: <20080213094502.4112d5e5@appleyard>
+References: <1202172065.3096.154.camel@localhost.localdomain>
+	<922945.25870.qm@web31811.mail.mud.yahoo.com>
+	<20080212102244.32869382@appleyard>
+	<1202841935.3137.94.camel@localhost.localdomain>
+	<20080212110752.21840627@appleyard>
+	<1202844495.3137.120.camel@localhost.localdomain>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47464 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757360AbYBMRgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 12:36:42 -0500
-In-Reply-To: <47B324E7.9040502@panasas.com>
+Received: from mga02.intel.com ([134.134.136.20]:2485 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934050AbYBMR6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 12:58:48 -0500
+In-Reply-To: <1202844495.3137.120.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Sven =?ISO-8859-1?Q?K=F6hler?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 
-On Wed, 2008-02-13 at 19:12 +0200, Boaz Harrosh wrote:
-> On Wed, Feb 13 2008 at 19:03 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > On Wed, 2008-02-13 at 18:50 +0200, Boaz Harrosh wrote:
-> >> On Wed, Feb 13 2008 at 18:45 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >>> On Wed, 2008-02-13 at 18:33 +0200, Boaz Harrosh wrote:
-> >>>> On Wed, Feb 13 2008 at 17:54 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >>>>> On Wed, Feb 13 2008 at 17:44 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >>>>>> On Tue, 2008-02-12 at 19:40 +0200, Boaz Harrosh wrote:
-> >>>>>>> -	gdth_flush(ha);
-> >>>>>>> -
-> >>>>>> This piece doesn't look right.  gdth_flush() forces the internal cache
-> >>>>>> to disk backing.  If you remove it, you're taking the chance that the
-> >>>>>> machine will be powered off without a writeback which can cause data
-> >>>>>> corruption.
-> >>>>>>
-> >>>>>> James
-> >>>>>>
-> >>>>> Yes. 
-> >>>>> I have more problems reported, with exit, and am just sending one more patch that puts
-> >>>>> this back in. Which was tested.
-> >>>>>
-> >>>>> So I will resend this one plus one new one.
-> >>>>>
-> >>>>> Boaz
-> >>>>>
-> >>>> The gdth driver would do a register_reboot_notifier(&gdth_notifier);
-> >>>> to a gdth_halt() function, which would then redo half of what gdth_exit
-> >>>> does, and wrongly so, and crash.  
-> >>>>
-> >>>> Are we guaranteed in todays kernel that modules .exit function be called
-> >>>> on an halt or reboot? If so then there is no need for duplications and
-> >>>> the gdth_halt() should go.
-> >>> No.  The __exit section is actually discardable if you promise never to
-> >>> remove the module.
-> >>>
-> >> I don't understand please explain. 
-> >> What does a driver need to do if it needs a consistent shutdown retine?
-> >> module or built in? unload or shutdown?
-> > 
-> > It needs to register a reboot notifier, which gdth does.
-> > 
-> > However, the notifier is only called on reboot, so it also needs to
-> > clean up correctly on module exit as well.
-> > 
-> > The alternative for GDTH would be to process the SCSI SYNCHRONIZE CACHE
-> > command.  That's done by a shutdown notifier from sd, so the correct
-> > thing would always get done; however it does mean the driver has to be
-> > in a condition to process the last sync cache command.
-> > 
-> > For the quick fix, just keep the current infrastructure and put back the
-> > gdth_flush() command where it can be effective.
-> > 
-> > James
-> > 
-> > 
-> Totally untested.
+On Tue, 12 Feb 2008 13:28:15 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
+> > I understand what you are trying to do - I guess I just doubt the
+> > value you've added by doing this.  I think that there's going to be
+> > so much customization that system vendors will want to add, that
+> > they are going to wind up adding a custom library regardless, so
+> > standardising those few things won't buy us anything.
 > 
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Subject: [PATCH] gdth: bugfix for the at-exit problems
+> It depends ... if you actually have a use for the customisations, yes.
+> If you just want the basics of who (what's in the enclousure), what
+> (activity) and where (locate) then I think it solves your problem
+> almost entirely.
 > 
-> gdth_exit would first remove all cards then stop the timer
-> and would not sync with the timer function. This caused a crash
-> in gdth_timer() when module was unloaded.
-> So del_timer_sync the timer before we delete the cards.
+> So, entirely as a straw horse, tell me what else your enclosures
+> provide that I haven't listed in the four points.  The SES standards
+> too provide a huge range of things that no-one ever seems to
+> implement (temperature, power, fan speeds etc).
 > 
-> also the reboot notifier function would crash. So unify
-> the exit and halt functions with a gdth_shutdown() that's
-> called by both.
+> I think the users of enclosures fall int these categories
 > 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/gdth.c |   99 ++++++++++++++++++++------------------------------
->  1 files changed, 40 insertions(+), 59 deletions(-)
+> 85% just want to know where their device actually is (i.e. that sdc is
+> in enclosure slot 5)
+> 50% like watching the activity lights
+> 30% want to be able to have a visual locate function
+> 20% want a visual failure indication (the other 80% rely on some OS
+> notification instead)
 > 
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 8eb78be..7bb9b45 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -183,7 +183,6 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
->                        unsigned int cmd, unsigned long arg);
->  
->  static void gdth_flush(gdth_ha_str *ha);
-> -static int gdth_halt(struct notifier_block *nb, ulong event, void *buf);
->  static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *));
->  static int __gdth_queuecommand(gdth_ha_str *ha, struct scsi_cmnd *scp,
->  				struct gdth_cmndinfo *cmndinfo);
-> @@ -418,12 +417,6 @@ static inline void gdth_set_sglist(struct scsi_cmnd *cmd,
->  #include "gdth_proc.h"
->  #include "gdth_proc.c"
->  
-> -/* notifier block to get a notify on system shutdown/halt/reboot */
-> -static struct notifier_block gdth_notifier = {
-> -    gdth_halt, NULL, 0
-> -};
-> -static int notifier_disabled = 0;
-> -
->  static gdth_ha_str *gdth_find_ha(int hanum)
->  {
->  	gdth_ha_str *ha;
-> @@ -3793,6 +3786,8 @@ static void gdth_timeout(ulong data)
->      gdth_ha_str *ha;
->      ulong flags;
->  
-> +    BUG_ON(list_empty(&gdth_instances));
-> +
->      ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
-> @@ -4668,45 +4663,6 @@ static void gdth_flush(gdth_ha_str *ha)
->      }
->  }
->  
-> -/* shutdown routine */
-> -static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
-> -{
-> -    gdth_ha_str *ha;
-> -#ifndef __alpha__
-> -    gdth_cmd_str    gdtcmd;
-> -    char            cmnd[MAX_COMMAND_SIZE];   
-> -#endif
-> -
-> -    if (notifier_disabled)
-> -        return NOTIFY_OK;
-> -
-> -    TRACE2(("gdth_halt() event %d\n",(int)event));
-> -    if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
-> -        return NOTIFY_DONE;
-> -
-> -    notifier_disabled = 1;
-> -    printk("GDT-HA: Flushing all host drives .. ");
-> -    list_for_each_entry(ha, &gdth_instances, list) {
-> -        gdth_flush(ha);
-> -
-> -#ifndef __alpha__
-> -        /* controller reset */
-> -        memset(cmnd, 0xff, MAX_COMMAND_SIZE);
-> -        gdtcmd.BoardNode = LOCALBOARD;
-> -        gdtcmd.Service = CACHESERVICE;
-> -        gdtcmd.OpCode = GDT_RESET;
-> -        TRACE2(("gdth_halt(): reset controller %d\n", ha->hanum));
-> -        gdth_execute(ha->shost, &gdtcmd, cmnd, 10, NULL);
-> -#endif
-> -    }
-> -    printk("Done.\n");
-> -
-> -#ifdef GDTH_STATISTICS
-> -    del_timer(&gdth_timer);
-> -#endif
-> -    return NOTIFY_OK;
-> -}
-> -
->  /* configure lun */
->  static int gdth_slave_configure(struct scsi_device *sdev)
->  {
-> @@ -5141,13 +5097,13 @@ static void gdth_remove_one(gdth_ha_str *ha)
->  
->  	scsi_remove_host(shp);
->  
-> +	gdth_flush(ha);
-> +
->  	if (ha->sdev) {
->  		scsi_free_host_dev(ha->sdev);
->  		ha->sdev = NULL;
->  	}
->  
-> -	gdth_flush(ha);
-> -
->  	if (shp->irq)
->  		free_irq(shp->irq,ha);
->  
-> @@ -5173,6 +5129,40 @@ static void gdth_remove_one(gdth_ha_str *ha)
->  	scsi_host_put(shp);
->  }
->  
-> +static void gdth_shutdown(void);
-> +static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
-> +{
-> +	TRACE2(("gdth_halt() event %d\n",(int)event));
-> +	if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
-> +		return NOTIFY_DONE;
-> +
-> +	gdth_shutdown();
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static struct notifier_block gdth_notifier = {
-> +    gdth_halt, NULL, 0
-> +};
-> +
-> +bool gdth_shutdown_done;
+> When you add up the overlapping needs, you get about 90% of people
+> happy with the basics that the enclosure services provide.  Could
+> there be more ... sure; should there be more ... I don't think so ...
+> that's what value add the user libraries can provide.
+> 
+> James
+> 
+> 
 
-Static police alert!  Just make it static and move it into
-gdth_shutdown()
+I don't think I'm arguing whether or not your solution may work, what I
+am arguing is really a more philosophical point.  Not "can we do it
+this way", but "should we do it way".  I am of the opinion that
+management belongs in userspace.  I also am of the opinion that if you
+can successfully accomplish something in user space, you should.  I
+also believe that even if you provide this basic interface, all system
+vendors are going to provide libraries on top of that to customize it,
+so you've not added much value to just a simple message passing
+interface.
 
-> +static void gdth_shutdown()
-> +{
-> +	gdth_ha_str *ha;
-> +	if (gdth_shutdown_done)
-> +		return;
-> +
-> +	gdth_shutdown_done = true;
-> +	unregister_chrdev(major,"gdth");
-> +	unregister_reboot_notifier(&gdth_notifier);
+So, I'm happy to defer to Jeff's judgement call here - I just want to
+do what's right for our customers and get an enclosure management
+interface for SATA exposed, preferrably in time for the 2.6.26 merge
+window.  If he prefers your design, I'll disagree, but commit to his
+decision and try to get this to work for SATA. If he'd rather see
+something along the lines of what I proposed, then since it is 100% self
+contained in the SATA subsystem, it shouldn't impact whatever you
+want to do in the SCSI subsystem.
 
-I'm not sure you can do this, aren't reboot notifiers called with the
-rwsem held?  In which case the unregister which also takes the rwsem
-will hang the system.
-
-James
-
+Jeff?
 
