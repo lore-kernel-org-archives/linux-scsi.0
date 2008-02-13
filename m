@@ -1,103 +1,113 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [PATCH] scsi: le*_add_cpu conversion
-Date: Wed, 13 Feb 2008 06:06:22 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F439963FA2@ADPE2K703.adaptec.com>
-References: <1202857582-15450-1-git-send-email-marcin.slusarz@gmail.com>
- <1202857582-15450-9-git-send-email-marcin.slusarz@gmail.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Wed, 13 Feb 2008 09:08:03 -0500
+Message-ID: <47B2F9C3.8070207@emulex.com>
+References: <875344.96222.qm@web31808.mail.mud.yahoo.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:51995 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759AbYBMOGZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 09:06:25 -0500
-In-Reply-To: <1202857582-15450-9-git-send-email-marcin.slusarz@gmail.com>
-Content-Language: en-US
+Received: from emulex.emulex.com ([138.239.112.1]:54456 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951AbYBMOIU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 09:08:20 -0500
+In-Reply-To: <875344.96222.qm@web31808.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "marcin.slusarz@gmail.com" <marcin.slusarz@gmail.com>, LKML <linux-kernel@vger.kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+To: ltuikov@yahoo.com
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 
-ACK
+The keep-it-in-user-space arguments seem fairly compelling to me.
+Especially as we've pushed whole i/o subsystems out to user space
+(iscsi, stgt, talked about fcoe, a lot of dm control, etc).
 
-Sincerely -- Mark Salyzyn
+The functionality seems to align with Doug's sg/lsscsi utility chain
+as well.  Granted, the new utility would have to be designed in such
+as way that it can incorporate vendor "hardware handlers".  But, if
+James has a somewhat common implementation already for a kernel
+implementation, I'm sure that can be the starting point for lsscsi.
 
-> -----Original Message-----
-> From: marcin.slusarz@gmail.com [mailto:marcin.slusarz@gmail.com]
-> Sent: Tuesday, February 12, 2008 6:06 PM
-> To: LKML
-> Cc: Marcin Slusarz; linux-scsi@vger.kernel.org; AACRAID;
-> James.Bottomley@HansenPartnership.com
-> Subject: [PATCH] scsi: le*_add_cpu conversion
->
-> From: Marcin Slusarz <marcin.slusarz@gmail.com>
->
-> replace all:
-> little_endian_variable =
-> cpu_to_leX(leX_to_cpu(little_endian_variable) +
->                                         expression_in_cpu_byteorder);
-> with:
->         leX_add_cpu(&little_endian_variable,
-> expression_in_cpu_byteorder);
-> generated with semantic patch
->
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: aacraid@adaptec.com
-> Cc: James.Bottomley@HansenPartnership.com
-> ---
->  drivers/scsi/aacraid/commsup.c |    2 +-
->  drivers/scsi/ips.c             |    8 ++------
->  2 files changed, 3 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/aacraid/commsup.c
-> b/drivers/scsi/aacraid/commsup.c
-> index 81b3692..3ac8c82 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -594,7 +594,7 @@ void aac_consumer_free(struct aac_dev *
-> dev, struct aac_queue *q, u32 qid)
->         if (le32_to_cpu(*q->headers.consumer) >= q->entries)
->                 *q->headers.consumer = cpu_to_le32(1);
->         else
-> -               *q->headers.consumer =
-> cpu_to_le32(le32_to_cpu(*q->headers.consumer)+1);
-> +               le32_add_cpu(q->headers.consumer, 1);
->
->         if (wasfull) {
->                 switch (qid) {
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-> index bb152fb..f45770a 100644
-> --- a/drivers/scsi/ips.c
-> +++ b/drivers/scsi/ips.c
-> @@ -3696,9 +3696,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
->                         scb->cmd.basic_io.sg_count = scb->sg_len;
->
->                         if (scb->cmd.basic_io.lba)
-> -                               scb->cmd.basic_io.lba =
-> -                                   cpu_to_le32(le32_to_cpu
+So, the main question I believe is being asked is:
+- Do we need to represent this via the object/sysfs tree or can an
+   outside utility be depended upon to show it ?
+
+Note that I am not supporting:
+"Vendors may choose to distribute their own applications".
+For this to become truly useful, there needs to be a common tool/method
+that presents common features in a common manner, regardless of whether
+it is in kernel or not.
+
+-- james s
+
+
+Luben Tuikov wrote:
+> Which is already the case without the SES kernel bloat.
+> Case in point, the excellent user-space application
+> "lsscsi" would clearly show which device is SES.
+> 
+> And the excellent user-space application "sg_ses" could
+> control an SES device.
+> 
+>> The pieces I think are absolutely standard are
+>>
+>> 1. Actual enclosure presence (is this device in an
+>> enclosure)
+> 
+> "lsscsi"
+> 
+>> 2. Activity LED, this seems to be a feature of every
+>> enclosure.
+> 
+> So that means that it needs a kernel representation?
+> If this indeed were the case, for every "feature" of every
+> type of device (not only SCSI) then the kernel itself would
+> be insurmountably big.
+> 
+>> I also think the following are reasonably standard (based
+>> on the fact
+>> that most enclosure standards recommend but don't
+>> require this):
+>>
+>> 3. Locate LED (for locating the device).  Even if you only
+>> have an
+>> activity LED, this is usually done by flashing the activity
+>> LED in a
+>> well defined pattern.
+>> 4. Fault.  this is the least standardised of the lot, but
+>> does seem to
+>> be present in about every enclosure implementation.
+>>
+>> All I've done is standardise these four pieces ... the
+>> services actually
+>> take into account that it might not be possible to do
+>> certain of these
+>> (like fault).
+> 
+> And none of this means that it needs a kernel representation.
+> 
+> 1. You're not "standardizing" any known, in-practice,
+> kernel representation, that is already in practice and
+> thusly needs a kernel representation.
+> 
+> 2. The kernel itself is not using nor needing this
+> "representation" in order to function properly (the kernel).
+> 
+> Leaving control of SES devices to user-space makes both
+> the kernel and the vendors happy.  All the kernel needs
+> to do is expose the SES device to user-space as it currently
+> does.  It makes it so much easier both to vendors and to
+> the kernel to stay out of unnecessary representations.
+> 
+> Vendors may choose to distribute their own applications
+> to control their hardware, as long as the kernel exposes
+> an SES device and provides functionality, as opposed to
+> policy of any kind.
+> 
+>     Luben
+> 
 > -
-> (scb->cmd.basic_io.lba) +
-> +                               le32_add_cpu(&scb->cmd.basic_io.lba,
->
-> le16_to_cpu(scb->cmd.basic_io.
->
-> sector_count));
->                         else
-> @@ -3744,9 +3742,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
->                         scb->cmd.basic_io.sg_count = scb->sg_len;
->
->                         if (scb->cmd.basic_io.lba)
-> -                               scb->cmd.basic_io.lba =
-> -                                   cpu_to_le32(le32_to_cpu
-> -
-> (scb->cmd.basic_io.lba) +
-> +                               le32_add_cpu(&scb->cmd.basic_io.lba,
->
-> le16_to_cpu(scb->cmd.basic_io.
->
-> sector_count));
->                         else
-> --
-> 1.5.3.7
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
