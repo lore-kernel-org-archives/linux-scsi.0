@@ -1,48 +1,31 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] 2.6.25-rc1-git2: GDT SCSI: change drivers/scsi/gdth.c
- into using pci_get device
-Date: Wed, 13 Feb 2008 10:57:37 +0200
-Message-ID: <47B2B101.3090106@panasas.com>
-References: <47B1ADCE.40202@larces.uece.br>	 <1202833354.3137.19.camel@localhost.localdomain>	 <47B1CF45.5070407@panasas.com>  <47B23033.1080100@larces.uece.br> <1202861823.3137.170.camel@localhost.localdomain>
+Subject: Re: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
+Date: Wed, 13 Feb 2008 11:03:36 +0200
+Message-ID: <47B2B268.1070702@panasas.com>
+References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47B1D7A8.8010108@panasas.com> <47B1DA2A.1060904@panasas.com> <47B29702.7050503@allied-internet.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11395 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:16503 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756009AbYBMI5y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 03:57:54 -0500
-In-Reply-To: <1202861823.3137.170.camel@localhost.localdomain>
+	with ESMTP id S932238AbYBMJFR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 04:05:17 -0500
+In-Reply-To: <47B29702.7050503@allied-internet.ag>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sergio Luis <sergio@larces.uece.br>, Achim Leubner <achim_leubner@adaptec.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+Cc: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>
 
-On Wed, Feb 13 2008 at 2:17 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Tue, 2008-02-12 at 20:48 -0300, Sergio Luis wrote:
->> reposting an updated version of it. Please check if it's ok.
+On Wed, Feb 13 2008 at 9:06 +0200, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag> wrote:
+> Hello!
 > 
-> Looks fine, thanks!  You added an extra space at the end of 
+> I've tested this patch now - and it works fine. Now rmmod, halt and 
+> reboot also works.
 > 
-> while ((pdev = pci_get_device(vendor, device, pdev)) 
+> Stefan Priebe
 > 
-> Which I fixed.  Unfortunately checkpatch isn't very helpful for this
-> driver since it uses spaces not tabs everywhere, which checkpatch really
-> hates.
-> 
-> James
-> 
-> 
-James hi
-This patch is now obsolete. After Jeff's patch to convert it to 
-hot plug API. Jeffs patch looks very good to me. I will try
-to push it through the testers.
+This is grate news Stefan. Thank you very much for all your time
+and effort, with out we could not have fixed all this.
 
-I still don't have a card for testing myself. Again anyone
-wants to send me a card. Intel people anybody home?
-
-I will add the missing Kconfig hunk to jeff's patch and will
-push it after it is tested.
-
-Thanks
 Boaz
