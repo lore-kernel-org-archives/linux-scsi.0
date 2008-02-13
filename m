@@ -1,84 +1,87 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Aborted commands with arcmsr and 2xWD1500ADFD in RAID1
-Date: Wed, 13 Feb 2008 00:03:03 -0800
-Message-ID: <20080213000303.e86bd125.akpm@linux-foundation.org>
-References: <751a4f870802110844m6c034664m5c0713df1d29eae3@mail.gmail.com>
+From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Subject: [BUGREPORT] The kernel thread for md RAID10 could cause a md RAID10
+ array deadlock
+Date: Wed, 13 Feb 2008 17:33:44 +0900
+Message-ID: <47B2AB68.1040604@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45250 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754159AbYBMIEh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 03:04:37 -0500
-In-Reply-To: <751a4f870802110844m6c034664m5c0713df1d29eae3@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aron Stansvik <elvstone@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, erich <erich@areca.com.tw>
+
+This message describes another issue about md-RAID10 found by
+testing the 2.6.24 md RAID10 using new scsi fault injection framework.
+
+Abstract:
+When a scsi command timeout occurs during RAID10 recovery, the kernel
+threads for md RAID10 could cause a md RAID10 array deadlock.
+The nr_pending flag set during normal I/O and barrier flag set by recovery
+thread conflicts, results in raid10d() and sync_request() deadlock.
+
+Details:
+             normal I/O                             recovery I/O
+   -----------------------------------------------------------------------------
+                                           B-1. kernel thread starts by calling
+   A-1. A process issues a read request.         md_do_sync()
+        make_request() for raid10 is called
+        by block layer.
+                                           B-2. md_do_sync() calls sync_request
+                                                operation for md raid10.
+   A-2. In make_request(), wait_barrier()
+        increments nr_pending flag.
+
+   A-3. A read command is issued to the disk,
+        but it takes a lot of time because
+        of no response from the disk.
+                                           B-3. sync_request() of raid10 calls
+                                                raise_barrier(), increments barrier
+                                                flag, and waits for nr_pending set
+                                                in (A-2) to be cleared.
+   A-4. raid10_end_read_request() is called
+        in the interrupt context. It detects
+        read error and wakes up raid10d kernel
+        thread.
+
+   A-5. raid10d() calls freeze_array() and waits
+        for barrier flag incremented in (B-3)
+        to be cleared.
+
+    (**  stalls here because waiting conditions in A-5 and B-3 are never met **)
 
 
-(cc's added)
+   A-6. raid1d calls fix_read_error() to
+        handle read error.                 B-4. barrier flag will be cleared after
+                                                the pending barrier request completes.
+   A-7  nr_pending flag will be cleared after
+        the pending read request completes.
 
-On Mon, 11 Feb 2008 17:44:08 +0100 "Aron Stansvik" <elvstone@gmail.com> wrote:
+The deadlock mechanism:
+When a normal I/O occurs during recovery, nr_pending flag incremented in (A-2)
+blocks subsequent recovery I/O until the normal I/O completes. The recovery thread
+will increment barrier flag and wait for nr_pending flag to be decremented (B-3).
 
-> Hello LKML.
-> 
-> Under semi-high disk I/O (e.g. installing a compiled KDE), I get the
-> following (accompanied by seconds of lock-ups on the machine):
-> 
-> [ 7727.345183] arcmsr0: abort device command of scsi id = 0 lun = 0
-> [ 7730.348776] arcmsr0:                 scsi id = 0 lun = 0 ccb =
-> '0xdfb461c0' poll command abort successfully
-> [ 8053.795943] arcmsr0: abort device command of scsi id = 0 lun = 0
-> [ 8056.799528] arcmsr0:                 scsi id = 0 lun = 0 ccb =
-> '0xdfb595e0' poll command abort successfully
-> [ 8884.592810] arcmsr0: abort device command of scsi id = 0 lun = 0
-> [ 8887.596392] arcmsr0:                 scsi id = 0 lun = 0 ccb =
-> '0xdfb56d80' poll command abort successfully
-> [ 8917.760216] arcmsr0: abort device command of scsi id = 0 lun = 0
-> [ 8920.763797] arcmsr0:                 scsi id = 0 lun = 0 ccb =
-> '0xdfb472c0' poll command abort successfully
-> [ 9074.106547] arcmsr0: abort device command of scsi id = 0 lun = 0
-> 
-> This is my setup:
-> 
-> 1 x MSI K8N Master2-FAR
-> 1 x Opteron 252
-> 1 x Areca ARC1200 (sitting in a PCIe x4 socket)
-> 2 x WD1500ADFD in RAID1
-> 
-> astan@rubik:~$ uname -a
-> Linux rubik 2.6.24-7-generic #1 SMP Thu Feb 7 01:29:58 UTC 2008 i686 GNU/Linux
-> astan@rubik:~$ modinfo arcmsr
-> filename:
-> /lib/modules/2.6.24-7-generic/kernel/drivers/scsi/arcmsr/arcmsr.ko
-> version:        Driver Version 1.20.00.15 2007/08/30
-> license:        Dual BSD/GPL
-> description:    ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID HOST Adapter
-> author:         Erich Chen <support@areca.com.tw>
-> srcversion:     28EAD6AB49D4491CA04D465
-> [...]
-> 
-> I've read some previous posts here on LKML that it could be the Areca
-> firmware who doesn't like my WD disks. Anyone know if this is an IRQ
-> handling problem in the kernel, or if it's a problem with the RAID
-> controller firmware?
-> 
-> Erich Chen (of Areca); have you tried the new ARC1200 in RAID1
-> configuration with Raptor disks on Linux?
-> 
-> As a side note, I can tell you that I first tried running FreeBSD 6.3
-> (RELENG_6) on this machine, but got random reboots during disk I/O
-> (even with a kernel with KDB debugging turned on). This leads me to
-> believe that it might be a firmware issue, and that Linux just handles
-> it more gracefully than FreeBSD.
-> 
-> Any ideas or advice is appriciated. This is my first post to the LKML,
-> so please instruct me if you want more information or if you want me
-> to take further debugging actions.
-> 
-> Best regards,
-> Aron Stansvik
+Normally, nr_pending flag is decremented after the I/O has completed successfully.
+Also, barrier flag is decremented after barrier request (such as recovery I/O) has
+completed successfully.
 
+If a normal read I/O results in scsi command timeout, the read request is handled
+by error handler in raid10d kernel thread. Then, raid10d calls freeze_array().
+But the barrier flag is set by (B-3), freeze_array() waits for barrier request
+completion. On the other hand, the recovery thread stalls waiting for nr_pending
+flag to  be decremented(B-3). In this way, both error handler and recovery
+thread are deadlocked.
+
+This problem can be reproduced  by using the new scsi fault injection framework,
+using "no response from the SCSI device" simulation.
+I think the new scsi fault injection framework is a little bit complicated
+to use, so I will upload some sample wrapper shell scripts for usability.
+
+-- 
+
+---------------------------------------------------------
+Kenichi TANAKA    | Open Source Software Platform Development Division
+                  | Computers Software Operations Unit, NEC Corporation
+                  | k-tanaka@ce.jp.nec.com
