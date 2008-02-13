@@ -1,157 +1,119 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH ver2] gdth: bugfix for the at-exit problems
-Date: Wed, 13 Feb 2008 18:35:07 +0200
-Message-ID: <47B31C3B.3060008@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>	 <47B1D7A8.8010108@panasas.com>  <47B1DA2A.1060904@panasas.com> <1202917468.3109.5.camel@localhost.localdomain> <47B312B3.3010200@panasas.com> <47B31BDE.2030408@panasas.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: CONFIG_SLUB and reproducable general protection faults on
+	2.6.2x
+Date: Wed, 13 Feb 2008 08:37:36 -0800
+Message-ID: <1202920656.25254.132.camel@haakon2.linux-iscsi.org>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
+	 <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
+	 <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
+	 <20080204224314.113afe7b@core> <47A79A10.4070706@garzik.org>
+	 <47A8B29B.8050406@vlnb.net> <47A8B510.8000807@garzik.org>
+	 <47A8B757.10101@vlnb.net>
+	 <1202256667.2220.83.camel@haakon2.linux-iscsi.org>
+	 <e2e108260802120805v4c8e07d6if59c881213c4ae97@mail.gmail.com>
+	 <1202874275.14647.52.camel@haakon2.linux-iscsi.org>
+	 <1202883507.21178.1.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933481AbYBMQg6@vger.kernel.org>
-In-Reply-To: <47B31BDE.2030408@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:25469 "HELO
+	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932121AbYBMQhl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 11:37:41 -0500
+In-Reply-To: <1202883507.21178.1.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Rik van Riel <riel@redhat.com>, Chris Weiss <cweiss@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
 
-gdth_exit would first remove all cards then stop the timer
-and would not sync with the timer function. This caused a crash
-in gdth_timer() when module was unloaded.
-So del_timer_sync the timer before we delete the cards.
+On Tue, 2008-02-12 at 22:18 -0800, Nicholas A. Bellinger wrote:
+> On Tue, 2008-02-12 at 19:57 -0800, Nicholas A. Bellinger wrote:
+> > Greetings all,
+> > 
+> > On Tue, 2008-02-12 at 17:05 +0100, Bart Van Assche wrote:
+> > > On Feb 6, 2008 1:11 AM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> > > > I have always observed the case with LIO SE/iSCSI target mode ...
+> > > 
+> > > Hello Nicholas,
+> > > 
+> > > Are you sure that the LIO-SE kernel module source code is ready for
+> > > inclusion in the mainstream Linux kernel ? As you know I tried to test
+> > > the LIO-SE iSCSI target. Already while configuring the target I
+> > > encountered a kernel crash that froze the whole system. I can
+> > > reproduce this kernel crash easily, and I reported it 11 days ago on
+> > > the LIO-SE mailing list (February 4, 2008). One of the call stacks I
+> > > posted shows a crash in mempool_alloc() called from jbd. Or: the crash
+> > > is most likely the result of memory corruption caused by LIO-SE.
+> > > 
+> > 
+> > So I was able to FINALLY track this down to:
+> > 
+> > -# CONFIG_SLUB_DEBUG is not set
+> > -# CONFIG_SLAB is not set
+> > -CONFIG_SLUB=y
+> > +CONFIG_SLAB=y
+> > 
+> > in both your and Chris Weiss's configs that was causing the
+> > reproduceable general protection faults.  I also disabled
+> > CONFIG_RELOCATABLE and crash dump because I was debugging using kdb in
+> > x86_64 VM on 2.6.24 with your config.  I am pretty sure you can leave
+> > this (crash dump) in your config for testing.
+> > 
+> > This can take a while to compile and take up alot of space, esp. with
+> > all of the kernel debug options enabled, which on 2.6.24, really amounts
+> > to alot of CPU time when building.  Also with your original config, I
+> > was seeing some strange undefined module objects after Stage 2 Link with
+> > iscsi_target_mod with modpost with the SLUB the lockups (which are not
+> > random btw, and are tracked back to __kmalloc())..  Also, at module load
+> > time with the original config, there where some warning about symbol
+> > objects (I believe it was SCSI related, same as the ones with modpost).
+> > 
+> > In any event, the dozen 1000 loop discovery test is now working fine (as
+> > well as IPoIB) with the above config change, and you should be ready to
+> > go for your testing.
+> > 
+> > Tomo, Vlad, Andrew and Co:
+> > 
+> > Do you have any ideas why this would be the case with LIO-Target..?  Is
+> > anyone else seeing something similar to this with their target mode
+> > (mabye its all out of tree code..?) that is having an issue..? I am
+> > using Debian x86_64 and Bart and Chris are using Ubuntu x86_64 and we
+> > both have this problem with CONFIG_SLUB on >= 2.6.22 kernel.org
+> > kernels. 
+> > 
+> > Also, I will recompile some of my non x86 machines with the above
+> > enabled and see if I can reproduce..  Here the Bart's config again:
+> > 
+> > http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/30835aede1028188
+> > 
+> 
+> This is also failing on CONFIG_SLUB on 2.6.24 ppc64.  Since the rest of
+> the system seems to work fine, my only guess it may be related to the
+> fact that the module is being compiled out of tree.  I took a quick
+> glance at what kbuild was using for compiler and linker parameters, but
+> nothing looked out of the ordinary.
+> 
+> I will take a look with kdb and SLUB re-enabled on x86_64 and see if this
+> helps shed any light on the issue.  Is anyone else seeing an issue with CONFIG_SLUB..?
+> 
 
-also a reboot notifier function was registered but is
-not needed anymore. And would crash. So remove gdth_halt
-and the reboot notifier registration.
+I was able to track this down to a memory corruption issue in the
+in-band iSCSI discovery path.  I just made the change, and the diff can
+be located at:
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/gdth.c |   64 +++++++-------------------------------------------
- 1 files changed, 9 insertions(+), 55 deletions(-)
+http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/a70d4835c55be392
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 8eb78be..8469fe6 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -183,7 +183,6 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-                       unsigned int cmd, unsigned long arg);
- 
- static void gdth_flush(gdth_ha_str *ha);
--static int gdth_halt(struct notifier_block *nb, ulong event, void *buf);
- static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *));
- static int __gdth_queuecommand(gdth_ha_str *ha, struct scsi_cmnd *scp,
- 				struct gdth_cmndinfo *cmndinfo);
-@@ -418,12 +417,6 @@ static inline void gdth_set_sglist(struct scsi_cmnd *cmd,
- #include "gdth_proc.h"
- #include "gdth_proc.c"
- 
--/* notifier block to get a notify on system shutdown/halt/reboot */
--static struct notifier_block gdth_notifier = {
--    gdth_halt, NULL, 0
--};
--static int notifier_disabled = 0;
--
- static gdth_ha_str *gdth_find_ha(int hanum)
- {
- 	gdth_ha_str *ha;
-@@ -3793,6 +3786,8 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
- 
-+    BUG_ON(list_empty(&gdth_instances));
-+
-     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-     spin_lock_irqsave(&ha->smp_lock, flags);
- 
-@@ -4668,45 +4663,6 @@ static void gdth_flush(gdth_ha_str *ha)
-     }
- }
- 
--/* shutdown routine */
--static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
--{
--    gdth_ha_str *ha;
--#ifndef __alpha__
--    gdth_cmd_str    gdtcmd;
--    char            cmnd[MAX_COMMAND_SIZE];   
--#endif
--
--    if (notifier_disabled)
--        return NOTIFY_OK;
--
--    TRACE2(("gdth_halt() event %d\n",(int)event));
--    if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
--        return NOTIFY_DONE;
--
--    notifier_disabled = 1;
--    printk("GDT-HA: Flushing all host drives .. ");
--    list_for_each_entry(ha, &gdth_instances, list) {
--        gdth_flush(ha);
--
--#ifndef __alpha__
--        /* controller reset */
--        memset(cmnd, 0xff, MAX_COMMAND_SIZE);
--        gdtcmd.BoardNode = LOCALBOARD;
--        gdtcmd.Service = CACHESERVICE;
--        gdtcmd.OpCode = GDT_RESET;
--        TRACE2(("gdth_halt(): reset controller %d\n", ha->hanum));
--        gdth_execute(ha->shost, &gdtcmd, cmnd, 10, NULL);
--#endif
--    }
--    printk("Done.\n");
--
--#ifdef GDTH_STATISTICS
--    del_timer(&gdth_timer);
--#endif
--    return NOTIFY_OK;
--}
--
- /* configure lun */
- static int gdth_slave_configure(struct scsi_device *sdev)
- {
-@@ -5141,13 +5097,13 @@ static void gdth_remove_one(gdth_ha_str *ha)
- 
- 	scsi_remove_host(shp);
- 
-+	gdth_flush(ha);
-+
- 	if (ha->sdev) {
- 		scsi_free_host_dev(ha->sdev);
- 		ha->sdev = NULL;
- 	}
- 
--	gdth_flush(ha);
--
- 	if (shp->irq)
- 		free_irq(shp->irq,ha);
- 
-@@ -5235,8 +5191,6 @@ static int __init gdth_init(void)
- 	add_timer(&gdth_timer);
- #endif
- 	major = register_chrdev(0,"gdth", &gdth_fops);
--	notifier_disabled = 0;
--	register_reboot_notifier(&gdth_notifier);
- 	gdth_polling = FALSE;
- 	return 0;
- }
-@@ -5245,14 +5199,14 @@ static void __exit gdth_exit(void)
- {
- 	gdth_ha_str *ha;
- 
--	list_for_each_entry(ha, &gdth_instances, list)
--		gdth_remove_one(ha);
-+	unregister_chrdev(major,"gdth");
- 
- #ifdef GDTH_STATISTICS
--	del_timer(&gdth_timer);
-+	del_timer_sync(&gdth_timer);
- #endif
--	unregister_chrdev(major,"gdth");
--	unregister_reboot_notifier(&gdth_notifier);
-+
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		gdth_remove_one(ha);
- }
- 
- module_init(gdth_init);
--- 
-1.5.3.3
+In any event, this is now fixed, and I will be generating some new
+builds for LIO-Target shortly for Debian, CentOS and Ubuntu.  Espically
+for the Ubuntu folks, where this is going to be an issue with their
+default kernel config.
+
+A big thanks to Bart Van Assche for helping me locate the actual issue,
+and giving me a clue with slub_debug=FZPU.  Thanks again,
+
+--nab
+
