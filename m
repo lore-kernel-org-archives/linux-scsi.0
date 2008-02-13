@@ -1,49 +1,59 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Wed, 13 Feb 2008 11:22:36 -0500
-Message-ID: <47B3194C.7070809@emulex.com>
-References: <875344.96222.qm@web31808.mail.mud.yahoo.com>	 <47B2F9C3.8070207@emulex.com> <1202918691.3109.18.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
+Date: Wed, 13 Feb 2008 18:33:34 +0200
+Message-ID: <47B31BDE.2030408@panasas.com>
+References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>	 <47B1D7A8.8010108@panasas.com>  <47B1DA2A.1060904@panasas.com> <1202917468.3109.5.camel@localhost.localdomain> <47B312B3.3010200@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33647 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755249AbYBMQWz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 11:22:55 -0500
-In-Reply-To: <1202918691.3109.18.camel@localhost.localdomain>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:59331 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755249AbYBMQfM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 11:35:12 -0500
+In-Reply-To: <47B312B3.3010200@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: ltuikov@yahoo.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Cc: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
 
-James Bottomley wrote:
-> I don't disagree with that, but the fact is that there isn't such a
-> tool.   It's also a fact that the enterprise is reasonably unhappy with
-> the lack of an enclosure management infrastructure, since it's something
-> they got on all the other unix systems.
-
-I don't disagree.
-
-> I think a minimal infrastructure in-kernel does just about everything
-> the enterprise wants ... and since it's stateless, they can always use
-> direct connect tools in addition.
+On Wed, Feb 13 2008 at 17:54 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> On Wed, Feb 13 2008 at 17:44 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+>> On Tue, 2008-02-12 at 19:40 +0200, Boaz Harrosh wrote:
+>>> -	gdth_flush(ha);
+>>> -
+>> This piece doesn't look right.  gdth_flush() forces the internal cache
+>> to disk backing.  If you remove it, you're taking the chance that the
+>> machine will be powered off without a writeback which can cause data
+>> corruption.
+>>
+>> James
+>>
+> Yes. 
+> I have more problems reported, with exit, and am just sending one more patch that puts
+> this back in. Which was tested.
 > 
-> However, I'm happy to be proven wrong ... anyone on this thread is
-> welcome to come up with a userland enclosure infrastructure.  Once it
-> does everything the in-kernel one does (which is really about the
-> minimal possible set), I'll be glad to erase the in-kernel one.
+> So I will resend this one plus one new one.
+> 
+> Boaz
+> 
 
-yeah, but...  putting something new in, only to pull it later, is a bad
-paradigm for adding new mgmt interfaces. Believe me, I've felt users pain in
-the reverse flow : driver-specific stuff that then has to migrate to upstream
-interfaces, complicated by different pull points by different distros. You can
-migrate a management interface, but can you really remove/pull one out ?
+The gdth driver would do a register_reboot_notifier(&gdth_notifier);
+to a gdth_halt() function, which would then redo half of what gdth_exit
+does, and wrongly so, and crash.  
 
-Isn't it better to let the lack of an interface give motivation to create
-the "right" interface, once the "right way" is determined - which is what I
-thought we were discussing ?    or is this simply that there is no motivation
-until something exists, that people don't like, thus they become motivated ?
+Are we guaranteed in todays kernel that modules .exit function be called
+on an halt or reboot? If so then there is no need for duplications and
+the gdth_halt() should go.
 
--- james s
+Submitted a patch that replaces the previous one I submitted with a deeper
+fix. 
+	[PATCH] gdth: bugfix for the at-exit problems
+
+If you ask me this all gdth_flush() is a crackup. sd and scsi-ml are doing 
+scsi FLUSH commands when ever is needed. The controller as no business caching
+data in memory longer then what is stated in standard. Raid controller or no raid
+controller. Virtual or not virtual device. Data on Plate means data on plate.
+What if there is a power outage? what the driver can do then?
+
+Boaz
