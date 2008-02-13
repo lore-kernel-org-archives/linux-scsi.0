@@ -1,106 +1,103 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: arcmsr + archttp64 calls dma_free_coherent() with irqs  disabled
- - dmesg filled with warnings
-Date: Wed, 13 Feb 2008 12:55:03 +0000
-Message-ID: <47B2E8A7.2030200@gentoo.org>
-References: <47ADC74B.9080009@control.aau.dk> <1202580076.4254.24.camel@localhost.localdomain> <20080209193518.GC11299@hoblitt.com> <1202586219.4254.35.camel@localhost.localdomain> <20080212205345.GB7640@hoblitt.com> <20080212222109.GC7640@hoblitt.com>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: [PATCH] scsi: le*_add_cpu conversion
+Date: Wed, 13 Feb 2008 06:06:22 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F439963FA2@ADPE2K703.adaptec.com>
+References: <1202857582-15450-1-git-send-email-marcin.slusarz@gmail.com>
+ <1202857582-15450-9-git-send-email-marcin.slusarz@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040609070508010707080904"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from probity.mcc.ac.uk ([130.88.200.94]:61874 "EHLO
-	probity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593AbYBMMxq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 07:53:46 -0500
-In-Reply-To: <20080212222109.GC7640@hoblitt.com>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:51995 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbYBMOGZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2008 09:06:25 -0500
+In-Reply-To: <1202857582-15450-9-git-send-email-marcin.slusarz@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joshua Hoblitt <josh@hoblitt.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kim H?jgaard-Hansen <kimhh@control.aau.dk>, erich@areca.com.tw, linux-scsi@vger.kernel.org, j_gentoo@hoblitt.com
+To: "marcin.slusarz@gmail.com" <marcin.slusarz@gmail.com>, LKML <linux-kernel@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-This is a multi-part message in MIME format.
---------------040609070508010707080904
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+ACK
 
-Joshua Hoblitt wrote:
-> I've got a few compilation errors on head.  Before I try it, is it
-> possible to backport the 76d78300a6eb8b7f08e47703b7e68a659ffc2053 change
-> to 2.6.24.y?
+Sincerely -- Mark Salyzyn
 
-Please just try this patch instead, it's what I am planning to submit to 
--stable and add to Gentoo if you report success.
-
-Daniel
-
-
---------------040609070508010707080904
-Content-Type: text/plain;
- name="arcmsr-pci-alloc-consistent.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="arcmsr-pci-alloc-consistent.patch"
-
-From: Nick Cheng <nick.cheng@areca.com.tw>
-
-Partial backport of 76d78300 ("arcmsr: updates (1.20.00.15)") by
-Daniel Drake <dsd@gentoo.org>. Removes pci_alloc_consistent usage, which
-should not be used when IRQs are disabled for portability reasons. Fixes a
-spew of dma_alloc_coherent irqs_disabled() warnings.
-
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index f4a202e..4f9ff32 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1380,12 +1388,13 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 
- 	case ARCMSR_MESSAGE_READ_RQBUFFER: {
- 		unsigned long *ver_addr;
--		dma_addr_t buf_handle;
- 		uint8_t *pQbuffer, *ptmpQbuffer;
- 		int32_t allxfer_len = 0;
-+		void *tmp;
- 
--		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
--		if (!ver_addr) {
-+		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-+		ver_addr = (unsigned long *)tmp;
-+		if (!tmp) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
-@@ -1421,18 +1430,19 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
- 		pcmdmessagefld->cmdmessage.Length = allxfer_len;
- 		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
--		pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
-+		kfree(tmp);
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
- 		unsigned long *ver_addr;
--		dma_addr_t buf_handle;
- 		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
-+		void *tmp;
- 
--		ver_addr = pci_alloc_consistent(acb->pdev, 1032, &buf_handle);
--		if (!ver_addr) {
-+		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-+		ver_addr = (unsigned long *)tmp;
-+		if (!tmp) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
-@@ -1482,7 +1492,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 				retvalue = ARCMSR_MESSAGE_FAIL;
- 			}
- 			}
--			pci_free_consistent(acb->pdev, 1032, ver_addr, buf_handle);
-+			kfree(tmp);
- 		}
- 		break;
- 
-
---------------040609070508010707080904--
+> -----Original Message-----
+> From: marcin.slusarz@gmail.com [mailto:marcin.slusarz@gmail.com]
+> Sent: Tuesday, February 12, 2008 6:06 PM
+> To: LKML
+> Cc: Marcin Slusarz; linux-scsi@vger.kernel.org; AACRAID;
+> James.Bottomley@HansenPartnership.com
+> Subject: [PATCH] scsi: le*_add_cpu conversion
+>
+> From: Marcin Slusarz <marcin.slusarz@gmail.com>
+>
+> replace all:
+> little_endian_variable =
+> cpu_to_leX(leX_to_cpu(little_endian_variable) +
+>                                         expression_in_cpu_byteorder);
+> with:
+>         leX_add_cpu(&little_endian_variable,
+> expression_in_cpu_byteorder);
+> generated with semantic patch
+>
+> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: aacraid@adaptec.com
+> Cc: James.Bottomley@HansenPartnership.com
+> ---
+>  drivers/scsi/aacraid/commsup.c |    2 +-
+>  drivers/scsi/ips.c             |    8 ++------
+>  2 files changed, 3 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/aacraid/commsup.c
+> b/drivers/scsi/aacraid/commsup.c
+> index 81b3692..3ac8c82 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -594,7 +594,7 @@ void aac_consumer_free(struct aac_dev *
+> dev, struct aac_queue *q, u32 qid)
+>         if (le32_to_cpu(*q->headers.consumer) >= q->entries)
+>                 *q->headers.consumer = cpu_to_le32(1);
+>         else
+> -               *q->headers.consumer =
+> cpu_to_le32(le32_to_cpu(*q->headers.consumer)+1);
+> +               le32_add_cpu(q->headers.consumer, 1);
+>
+>         if (wasfull) {
+>                 switch (qid) {
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index bb152fb..f45770a 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -3696,9 +3696,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
+>                         scb->cmd.basic_io.sg_count = scb->sg_len;
+>
+>                         if (scb->cmd.basic_io.lba)
+> -                               scb->cmd.basic_io.lba =
+> -                                   cpu_to_le32(le32_to_cpu
+> -
+> (scb->cmd.basic_io.lba) +
+> +                               le32_add_cpu(&scb->cmd.basic_io.lba,
+>
+> le16_to_cpu(scb->cmd.basic_io.
+>
+> sector_count));
+>                         else
+> @@ -3744,9 +3742,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
+>                         scb->cmd.basic_io.sg_count = scb->sg_len;
+>
+>                         if (scb->cmd.basic_io.lba)
+> -                               scb->cmd.basic_io.lba =
+> -                                   cpu_to_le32(le32_to_cpu
+> -
+> (scb->cmd.basic_io.lba) +
+> +                               le32_add_cpu(&scb->cmd.basic_io.lba,
+>
+> le16_to_cpu(scb->cmd.basic_io.
+>
+> sector_count));
+>                         else
+> --
+> 1.5.3.7
