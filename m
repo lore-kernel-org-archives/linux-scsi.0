@@ -1,54 +1,72 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
-Date: Thu, 14 Feb 2008 12:34:14 -0600
-Message-ID: <47B489A6.9060203@cs.wisc.edu>
-References: <20080212205252.GB13643@osc.edu>	 <20080212205403.GC13643@osc.edu>	 <1202850645.3137.132.camel@localhost.localdomain>	 <47B480D9.6080206@cs.wisc.edu> <1203012634.3158.5.camel@localhost.localdomain> <47B4869B.9070906@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: gdth new set of patches for 2.6.24 stable
+Date: Thu, 14 Feb 2008 20:47:10 +0200
+Message-ID: <47B48CAE.2020705@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43510 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754910AbYBNSeb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Feb 2008 13:34:31 -0500
-In-Reply-To: <47B4869B.9070906@cs.wisc.edu>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10101 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754646AbYBNSsk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 13:48:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Pete Wyckoff <pw@osc.edu>, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.priebe@allied-internet.ag>, Jon Chelton <jchelton@ffpglobal.com>, James Bottomley <James.Bottomley@HansenPartn>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Milter <davemilter@gmail.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> James Bottomley wrote:
->> On Thu, 2008-02-14 at 11:56 -0600, Mike Christie wrote:
->>>> You really don't want to do this.  That signals to the block layer that
->>>> we have an iommu, although it's practically the same thing as a 64 bit
->>>> DMA mask ... but I'd just leave it to the DMA mask to set this up
->>>> correctly.  Anything else is asking for a subtle bug to turn up years
->>>> from now when something causes the mask and the limit to be mismatched.
->>>>
->>> I thought BLK_BOUNCE_ANY just meant "don't bounce anything" (that was 
->>> from the blkdev.h comments). 
->>
->> It does ... that's why it's used in the IOMMU case ... and why it's
->> practically the same as a 64 bit mask.
->>
->>> We used it for iscsi_tcp because the network layer can take any type
->>> of page and will do the right thing for the hardware it eventually
->>> gets sent to.
->>
->> Right, to you it means never bounce because net wants to do it instead.
->> However, I don't think that's the case for iSER, is it? ... as in, if
-> 
-> I will leave that to Roland and them :)
-> 
-> My only concern with a simple patch to use the ib interface's dma values 
-> would be, if there is some event that causes us to start using inteface 
-> ib0 then switch to ib1 (maybe like some sort of route table change if 
-> that is possible), then we will have to loop over all the scsi devices's 
-> queues and update the dma values. And if there is IO already queued then 
-> would we have to possible rebuild those commands if something like the 
-> dma_mask changed?
-> 
+Submitted are a new set of patches, that fix lots of problems
+with the gdth driver.
 
-I guess we can just handle this like how FC handles the case when the 
-dev loss tmo expires, but then the rport comes back later.
+It fixes the following problems:
+- scan for drives on hosts. (Already in mainline)
+- truly fixes the exit/reboot problems but does call flush() before
+  reboot.
+- fix crash when accessing array with icpcon management application.
+- fix crash when doing $ cat /proc/sys/gdth/0.
+  This one still has the below WARN_ON in messages (see <gdth_info> below)
+  So there is one more thing hiding in there.
+- use pci_get_device
+  One of the testers requested if we can also put the move to pci_get_device 
+  patch with removal of dependency on PCI_LEGACY, to the stable release.
+
+The patches are for and based on Linux-2.6.24. here is the list of patches:
+  [PATCH 1/5] gdth: update deprecated pci_find_device
+  [PATCH 2/5] gdth: scan for scsi devices
+  [PATCH 3/5] gdth: bugfix for the at-exit problems
+  [PATCH 4/5] gdth: fix to internal commands execution
+  [PATCH 5/5] gdth: remove gdth cooked up command accessors
+
+Please all test and report your findings.
+
+Thanks in advance
+Boaz
+
+---
+<gdth_info>
+  WARNING: at arch/x86/kernel/pci-dma_32.c:66 dma_free_coherent()
+  Pid: 5501, comm: cat Not tainted 2.6.24 #43
+   [<c0107137>] dma_free_coherent+0x93/0x95
+   [<c025ef73>] gdth_ioctl_free+0x4c/0x69
+   [<c0264a36>] gdth_proc_info+0x165f/0x182c
+   [<c0111f7a>] update_curr+0xeb/0xf2
+   [<c01132aa>] task_rq_lock+0x29/0x50
+   [<c0113706>] try_to_wake_up+0x42/0x342
+   [<c0113706>] try_to_wake_up+0x42/0x342
+   [<c0111a9f>] __wake_up_common+0x46/0x6d
+   [<c0113569>] __wake_up+0x32/0x42
+   [<c022dad9>] n_tty_receive_buf+0x2e8/0xe97
+   [<c022dad9>] n_tty_receive_buf+0x2e8/0xe97
+   [<c0111f0a>] update_curr+0x7b/0xf2
+   [<c0112625>] enqueue_task_fair+0x27/0x30
+   [<c0111783>] enqueue_task+0xa/0x14
+   [<c025e351>] proc_scsi_read+0x29/0x3d
+   [<c025e328>] proc_scsi_read+0x0/0x3d
+   [<c0189704>] proc_file_read+0x1c6/0x279
+   [<c018953e>] proc_file_read+0x0/0x279
+   [<c0185eca>] proc_reg_read+0x53/0x71
+   [<c0185e77>] proc_reg_read+0x0/0x71
+   [<c0159968>] vfs_read+0x85/0x11b
+   [<c0159d9d>] sys_read+0x41/0x6a
+   [<c0102822>] sysenter_past_esp+0x5f/0x85
+ </gdth_info>
