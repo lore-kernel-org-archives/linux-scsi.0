@@ -1,110 +1,86 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] SCSI bug fixes for 2.6.25-rc1
-Date: Wed, 13 Feb 2008 18:02:44 -0600
-Message-ID: <1202947364.3109.96.camel@localhost.localdomain>
+From: Tim Pepper <lnxninja@linux.vnet.ibm.com>
+Subject: Re: ips.c broken since 2.6.23 on x86_64?
+Date: Wed, 13 Feb 2008 16:04:17 -0800
+Message-ID: <20080214000417.GA2741@tpepper-t42p.dolavim.us>
+References: <20080213214324.GB18227@tpepper-t42p.dolavim.us> <532ABFBDAAC3A34EB12EBA6CEC2838F439964688@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38536 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1764600AbYBNACu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 19:02:50 -0500
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:60804 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753847AbYBNAEw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 19:04:52 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1E04JhQ017868
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1E04JAE167994
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1E04IMb019739
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
+Content-Disposition: inline
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F439964688@ADPE2K703.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mark_Salyzyn@adaptec.com
 
-This one's not too bad given the number of patches we had in the merge
-window.  We have the advansys fix, a gdth severe problem fix (wouldn't
-scan any devices) a bug fix series for lpfc and a few other odds and
-ends.
+(replaced missing cc's including linux-scsi)
 
-The patch is available here:
+On Wed 13 Feb at 14:39:07 -0800 Mark_Salyzyn@adaptec.com said:
+> 
+> - Is the command path code even reaching the controller's processor inquiry
+>   spoofing section?
+> 
+>                 if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
+>                 IPS_SCSI_INQ_DATA inquiry;
+> 
+>                 memset(&inquiry, 0,
+>                sizeof (IPS_SCSI_INQ_DATA));
+> 
+>                 inquiry.DeviceType =
+>                     IPS_SCSI_INQ_TYPE_PROCESSOR;
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+I just added printk's in ips_send_cmd()'s INQUIRY case just before
+the above condition test and just within the conditional block.
+Neither showed on the console.
 
-The short changelog is:
+> The target_id check may be flawed? It is not using the
+> scmd/sdev accessors and could be the wrong value as a result. Wild goose
+> since arrays are working correctly (?)
 
-Boaz Harrosh (3):
-      gdth: scan for scsi devices
-      aic94xx: fix ABORT_TASK define conflict
-      fas216: Use scsi_eh API for REQUEST_SENSE invocation
+In the original case the arrays appeared to be working correctly although
+we were worried.  In the repro case we don't actually have any disk
+attached...Forgot to mention that in the original email.
 
-FUJITA Tomonori (1):
-      advansys: fix overrun_buf aligned bug
+> - There appears to be a missing 'break' statement for the START_STOP command
+>   immediately preceding the TEST_UNIT_READY/INQUIRY cases. What are the side
+>   effects of that? It appears to be innocuous.
 
-James Bottomley (2):
-      sym53c416: fix module parameters
-      update SG_ALL to avoid causing chaining
+No change noted with the missing break added.
 
-James Smart (6):
-      lpfc 8.2.5 : Update lpfc driver version to 8.2.5
-      lpfc 8.2.5 : Fix buffer leaks
-      lpfc 8.2.5 : Miscellaneous discovery Fixes
-      lpfc 8.2.5 : Add MSI-X single message support
-      lpfc 8.2.5 : Miscellaneous Fixes
-      lpfc 8.2.5 : Correct ndlp referencing issues
+> - ips_scmd_buf_write is used for array capacity and other fiddly bits and
+>   must be functioning correctly (?), so I can NOT harm it's functionality
+>   except to question if the kmap_atomic returned a non-null value, it's
+>   return value apparently is not checked. It's failure could speak of
+>   problem(s) elsewhere.
 
-Prakash, Sathya (2):
-      mpt fusion: Request I/O resources only when required
-      mpt fusion: Avoid racing when mptsas and mptcl module are loaded in parall
+I've got a printk there and haven't seen any output from it.  Haven't seen
+anything from any of the printk's I've tried actually before:
 
-Salyzyn, Mark (3):
-      aacraid: informational sysfs value corrections
-      aacraid: ignore adapter reset check polarity
-      aacraid: add optional MSI support
+In the run above to check if ips_send_cmd() hits the condition you were
+curious about...I did capture the following from printk's I added in
+ips_allocatescbs():
 
-Sergio Luis (1):
-      gdth: update deprecated pci_find_device
+pci_alloc_consistent returns ha->scbs    @ 0x18446604437762007040
+pci_alloc_consistent returns ips_sg.list @ 0x18446604437762002944
+pci_alloc_consistent returns ha->scbs    @ 0x18446604437698871296
+pci_alloc_consistent returns ips_sg.list @ 0x18446604437756837888
 
-Thomas Horsten (1):
-      MegaRAID driver management char device moved to misc
+I take that as ips_init_phase2() being called and presumable returning
+SUCCESS.
 
-Yinghai Lu (1):
-      ses: fix memory leaks
-
-And the diffstat:
-
- drivers/message/fusion/mptbase.c    |   54 ++++-
- drivers/message/fusion/mptbase.h    |    1 
- drivers/scsi/Kconfig                |    2 
- drivers/scsi/aacraid/aachba.c       |   70 ++++--
- drivers/scsi/aacraid/aacraid.h      |    2 
- drivers/scsi/aacraid/commsup.c      |    2 
- drivers/scsi/aacraid/linit.c        |   47 ++--
- drivers/scsi/aacraid/rx.c           |    5 
- drivers/scsi/aacraid/sa.c           |    5 
- drivers/scsi/advansys.c             |   13 +
- drivers/scsi/aic94xx/aic94xx_sas.h  |    2 
- drivers/scsi/aic94xx/aic94xx_tmf.c  |    2 
- drivers/scsi/arm/fas216.c           |   16 -
- drivers/scsi/arm/fas216.h           |    3 
- drivers/scsi/gdth.c                 |   16 +
- drivers/scsi/lpfc/lpfc.h            |   19 +
- drivers/scsi/lpfc/lpfc_attr.c       |   19 +
- drivers/scsi/lpfc/lpfc_crtn.h       |    6 
- drivers/scsi/lpfc/lpfc_ct.c         |   41 ++-
- drivers/scsi/lpfc/lpfc_disc.h       |   66 ++++--
- drivers/scsi/lpfc/lpfc_els.c        |  384 +++++++++++++++++++++++++-----------
- drivers/scsi/lpfc/lpfc_hbadisc.c    |  328 +++++++++++++++++++++++++-----
- drivers/scsi/lpfc/lpfc_hw.h         |   18 +
- drivers/scsi/lpfc/lpfc_init.c       |  154 ++++++++++++--
- drivers/scsi/lpfc/lpfc_logmsg.h     |   10 
- drivers/scsi/lpfc/lpfc_mem.c        |   13 +
- drivers/scsi/lpfc/lpfc_nportdisc.c  |   55 +++--
- drivers/scsi/lpfc/lpfc_scsi.c       |    4 
- drivers/scsi/lpfc/lpfc_sli.c        |  105 +++++++++
- drivers/scsi/lpfc/lpfc_version.h    |    2 
- drivers/scsi/lpfc/lpfc_vport.c      |   70 ++++++
- drivers/scsi/megaraid/megaraid_mm.c |   20 +
- drivers/scsi/megaraid/megaraid_mm.h |    1 
- drivers/scsi/ses.c                  |   23 +-
- drivers/scsi/sym53c416.c            |   16 -
- include/scsi/scsi_host.h            |    8 
- 36 files changed, 1232 insertions(+), 370 deletions(-)
-
-James
-
-
+-- 
+Tim Pepper  <lnxninja@linux.vnet.ibm.com>
+IBM Linux Technology Center
