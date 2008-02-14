@@ -1,60 +1,55 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] gdth: bugfix for the at-exit problems
-Date: Thu, 14 Feb 2008 18:18:43 +0200
-Message-ID: <47B469E3.4080403@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>	 <47B1D7A8.8010108@panasas.com>  <47B1DA2A.1060904@panasas.com>	 <1202917468.3109.5.camel@localhost.localdomain>	 <47B312B3.3010200@panasas.com>  <47B31BDE.2030408@panasas.com>	 <1202921122.3109.31.camel@localhost.localdomain>	 <47B31FC2.4040206@panasas.com>	 <1202922226.3109.36.camel@localhost.localdomain>	 <47B324E7.9040502@panasas.com>	 <1202924198.3109.52.camel@localhost.localdomain>	 <47B41CBD.8040701@panasas.com>  <47B42CF4.2050008@panasas.com> <1203005443.3189.23.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
+Date: Thu, 14 Feb 2008 11:56:41 -0600
+Message-ID: <47B480D9.6080206@cs.wisc.edu>
+References: <20080212205252.GB13643@osc.edu>	 <20080212205403.GC13643@osc.edu> <1202850645.3137.132.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:6240 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753520AbYBNQT5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 11:19:57 -0500
-In-Reply-To: <1203005443.3189.23.camel@localhost.localdomain>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43375 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752218AbYBNR5D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Feb 2008 12:57:03 -0500
+In-Reply-To: <1202850645.3137.132.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
+Cc: Pete Wyckoff <pw@osc.edu>, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Feb 14 2008 at 18:10 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Thu, 2008-02-14 at 13:58 +0200, Boaz Harrosh wrote:
->> This is a bugfix for the 2.6.24.x stable releases.
+James Bottomley wrote:
+> On Tue, 2008-02-12 at 15:54 -0500, Pete Wyckoff wrote:
+>> iscsi_iser does not have any hardware DMA restrictions.  Add a
+>> slave_configure function to remove any DMA alignment restriction,
+>> allowing the use of direct IO from arbitrary offsets within a page.
+>> Also disable page bouncing; iser has no restrictions on which pages it
+>> can address.
 >>
->> gdth_exit would first remove all cards then stop the timer
->> and would not sync with the timer function. This caused a crash
->> in gdth_timer() when module was unloaded.
->> So del_timer_sync the timer before we delete the cards.
+>> Signed-off-by: Pete Wyckoff <pw@osc.edu>
+>> ---
+>>  drivers/infiniband/ulp/iser/iscsi_iser.c |    8 ++++++++
+>>  1 files changed, 8 insertions(+), 0 deletions(-)
 >>
->> also the reboot notifier function would crash. So unify
->> the exit and halt functions with a gdth_shutdown() that's
->> called by both.
+>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+>> index be1b9fb..1b272a6 100644
+>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
+>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+>> @@ -543,6 +543,13 @@ iscsi_iser_ep_disconnect(__u64 ep_handle)
+>>  	iser_conn_terminate(ib_conn);
+>>  }
+>>  
+>> +static int iscsi_iser_slave_configure(struct scsi_device *sdev)
+>> +{
+>> +	blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
 > 
-> The patch looks fine now, thanks.  Can we actually get a tester just to
-> make sure there's nothing I missed.
+> You really don't want to do this.  That signals to the block layer that
+> we have an iommu, although it's practically the same thing as a 64 bit
+> DMA mask ... but I'd just leave it to the DMA mask to set this up
+> correctly.  Anything else is asking for a subtle bug to turn up years
+> from now when something causes the mask and the limit to be mismatched.
 > 
-> James
-> 
-> 
 
-Yes, and the tester reported, a breakage. We are on it.
-Apparently, you cannot do a full deallocation of resources
-at reboot notifier, nor would you want to I guess.
-
-But you can do the flush. The exit call is never called
-on a reboot and the card access is valid to the end.
-
-Please comment?
-
-So I pretty much reverted that patch, but did leave some
-cleanups.
-
-Also we found the other problems reported with user-mode tools
-and cat /proc/sys/gdth/0
-
-so 2 patches on the way above reverted. Give us a few ours to test
-every thing.
-
-Thanks
-Boaz
-
+I thought BLK_BOUNCE_ANY just meant "don't bounce anything" (that was 
+from the blkdev.h comments). We used it for iscsi_tcp because the 
+network layer can take any type of page and will do the right thing for 
+the hardware it eventually gets sent to.
