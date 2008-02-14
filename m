@@ -1,186 +1,67 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 5/5] gdth: remove gdth cooked up command accessors
-Date: Thu, 14 Feb 2008 20:56:21 +0200
-Message-ID: <47B48ED5.9090705@panasas.com>
-References: <47B48CAE.2020705@panasas.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
+Date: Thu, 14 Feb 2008 13:04:54 -0600
+Message-ID: <47B490D6.3040707@cs.wisc.edu>
+References: <20080212205252.GB13643@osc.edu>	 <20080212205403.GC13643@osc.edu>	 <1202850645.3137.132.camel@localhost.localdomain>	 <47B480D9.6080206@cs.wisc.edu> <1203012634.3158.5.camel@localhost.localdomain> <47B4869B.9070906@cs.wisc.edu> <47B489A6.9060203@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31408 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757495AbYBNS5j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 13:57:39 -0500
-In-Reply-To: <47B48CAE.2020705@panasas.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43550 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759795AbYBNTFO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Feb 2008 14:05:14 -0500
+In-Reply-To: <47B489A6.9060203@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.priebe@allied-internet.ag>, Jon Chelton <jchelton@ffpglobal.com>, James Bottomley <James.Bottomley@HansenPartn>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Milter <davemilter@gmail.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Pete Wyckoff <pw@osc.edu>, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+Mike Christie wrote:
+> Mike Christie wrote:
+>> James Bottomley wrote:
+>>> On Thu, 2008-02-14 at 11:56 -0600, Mike Christie wrote:
+>>>>> You really don't want to do this.  That signals to the block layer 
+>>>>> that
+>>>>> we have an iommu, although it's practically the same thing as a 64 bit
+>>>>> DMA mask ... but I'd just leave it to the DMA mask to set this up
+>>>>> correctly.  Anything else is asking for a subtle bug to turn up years
+>>>>> from now when something causes the mask and the limit to be 
+>>>>> mismatched.
+>>>>>
+>>>> I thought BLK_BOUNCE_ANY just meant "don't bounce anything" (that 
+>>>> was from the blkdev.h comments). 
+>>>
+>>> It does ... that's why it's used in the IOMMU case ... and why it's
+>>> practically the same as a 64 bit mask.
+>>>
+>>>> We used it for iscsi_tcp because the network layer can take any type
+>>>> of page and will do the right thing for the hardware it eventually
+>>>> gets sent to.
+>>>
+>>> Right, to you it means never bounce because net wants to do it instead.
+>>> However, I don't think that's the case for iSER, is it? ... as in, if
+>>
+>> I will leave that to Roland and them :)
 
-Last patch rendered these, to stupid status. So bye bye
+Ooops, I misread your mail. I think you are right and for iser we need 
+to use the ib devices dma values.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/gdth.c |   73 ++++++++++-----------------------------------------
- 1 files changed, 14 insertions(+), 59 deletions(-)
+For some reason I was thinking you were asking if there was a different 
+interface which abstracted all that away for us like with iscsi_tcp.
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 077f972..cfce0fe 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -85,10 +85,10 @@
- 
- /* The meaning of the Scsi_Pointer members in this driver is as follows:
-  * ptr:                     Chaining
-- * this_residual:           gdth_bufflen
-- * buffer:                  gdth_sglist
-+ * this_residual:           unused
-+ * buffer:                  unused
-  * dma_handle:              unused
-- * buffers_residual:        gdth_sg_count
-+ * buffers_residual:        unused
-  * Status:                  unused
-  * Message:                 unused
-  * have_data_in:            unused
-@@ -373,47 +373,6 @@ static const struct file_operations gdth_fops = {
-     .release = gdth_close,
- };
- 
--/*
-- * gdth scsi_command access wrappers.
-- *   below 6 functions are used throughout the driver to access scsi_command's
-- *   io parameters. The reason we do not use the regular accessors from
-- *   scsi_cmnd.h is because of gdth_execute(). Since it is unrecommended for
-- *   llds to directly set scsi_cmnd's IO members. This driver will use SCp
-- *   members for IO parameters, and will copy scsi_cmnd's members to Scp
-- *   members in queuecommand. For internal commands through gdth_execute()
-- *   SCp's members will be set directly.
-- */
--static inline unsigned gdth_bufflen(struct scsi_cmnd *cmd)
--{
--	return (unsigned)cmd->SCp.this_residual;
--}
--
--static inline void gdth_set_bufflen(struct scsi_cmnd *cmd, unsigned bufflen)
--{
--	cmd->SCp.this_residual = bufflen;
--}
--
--static inline unsigned gdth_sg_count(struct scsi_cmnd *cmd)
--{
--	return (unsigned)cmd->SCp.buffers_residual;
--}
--
--static inline void gdth_set_sg_count(struct scsi_cmnd *cmd, unsigned sg_count)
--{
--	cmd->SCp.buffers_residual = sg_count;
--}
--
--static inline struct scatterlist *gdth_sglist(struct scsi_cmnd *cmd)
--{
--	return cmd->SCp.buffer;
--}
--
--static inline void gdth_set_sglist(struct scsi_cmnd *cmd,
--                                   struct scatterlist *sglist)
--{
--	cmd->SCp.buffer = sglist;
--}
--
- #include "gdth_proc.h"
- #include "gdth_proc.c"
- 
-@@ -2349,12 +2308,12 @@ static void gdth_next(gdth_ha_str *ha)
- static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-                                     char *buffer, ushort count)
- {
--    ushort cpcount,i, max_sg = gdth_sg_count(scp);
-+    ushort cpcount,i, max_sg = scsi_sg_count(scp);
-     ushort cpsum,cpnow;
-     struct scatterlist *sl;
-     char *address;
- 
--    cpcount = min_t(ushort, count, gdth_bufflen(scp));
-+    cpcount = min_t(ushort, count, scsi_bufflen(scp));
- 
-     if (cpcount) {
-         cpsum=0;
-@@ -2362,7 +2321,7 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-             unsigned long flags;
-             cpnow = (ushort)sl->length;
-             TRACE(("copy_internal() now %d sum %d count %d %d\n",
--                          cpnow, cpsum, cpcount, gdth_bufflen(scp)));
-+                          cpnow, cpsum, cpcount, scsi_bufflen(scp)));
-             if (cpsum+cpnow > cpcount) 
-                 cpnow = cpcount - cpsum;
-             cpsum += cpnow;
-@@ -2585,10 +2544,10 @@ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, ushort hdrive)
-             cmdp->u.cache.BlockCnt = blockcnt;
-         }
- 
--        if (gdth_bufflen(scp)) {
-+        if (scsi_bufflen(scp)) {
-             cmndinfo->dma_dir = (read_write == 1 ?
-                 PCI_DMA_TODEVICE : PCI_DMA_FROMDEVICE);   
--            sgcnt = pci_map_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+            sgcnt = pci_map_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                                cmndinfo->dma_dir);
-             if (mode64) {
-                 struct scatterlist *sl;
-@@ -2735,7 +2694,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw64.lun        = l;
-             cmdp->u.raw64.bus        = b;
-             cmdp->u.raw64.priority   = 0;
--            cmdp->u.raw64.sdlen      = gdth_bufflen(scp);
-+            cmdp->u.raw64.sdlen      = scsi_bufflen(scp);
-             cmdp->u.raw64.sense_len  = 16;
-             cmdp->u.raw64.sense_data = sense_paddr;
-             cmdp->u.raw64.direction  = 
-@@ -2752,7 +2711,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw.bus        = b;
-             cmdp->u.raw.priority   = 0;
-             cmdp->u.raw.link_p     = 0;
--            cmdp->u.raw.sdlen      = gdth_bufflen(scp);
-+            cmdp->u.raw.sdlen      = scsi_bufflen(scp);
-             cmdp->u.raw.sense_len  = 16;
-             cmdp->u.raw.sense_data = sense_paddr;
-             cmdp->u.raw.direction  = 
-@@ -2761,9 +2720,9 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw.sg_ranz    = 0;
-         }
- 
--        if (gdth_bufflen(scp)) {
-+        if (scsi_bufflen(scp)) {
-             cmndinfo->dma_dir = PCI_DMA_BIDIRECTIONAL;
--            sgcnt = pci_map_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+            sgcnt = pci_map_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                                cmndinfo->dma_dir);
-             if (mode64) {
-                 struct scatterlist *sl;
-@@ -3383,8 +3342,8 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-             /* retry */
-             return 2;
-         }
--        if (gdth_bufflen(scp))
--            pci_unmap_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+        if (scsi_bufflen(scp))
-+            pci_unmap_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                          cmndinfo->dma_dir);
- 
-         if (cmndinfo->sense_paddr)
-@@ -4026,10 +3985,6 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
-     gdth_update_timeout(scp, scp->timeout_per_command * 6);
-     cmndinfo->priority = DEFAULT_PRI;
- 
--    gdth_set_bufflen(scp, scsi_bufflen(scp));
--    gdth_set_sg_count(scp, scsi_sg_count(scp));
--    gdth_set_sglist(scp, scsi_sglist(scp));
--
-     return __gdth_queuecommand(ha, scp, cmndinfo);
- }
- 
--- 
-1.5.3.3
+>>
+>> My only concern with a simple patch to use the ib interface's dma 
+>> values would be, if there is some event that causes us to start using 
+>> inteface ib0 then switch to ib1 (maybe like some sort of route table 
+>> change if that is possible), then we will have to loop over all the 
+>> scsi devices's queues and update the dma values. And if there is IO 
+>> already queued then would we have to possible rebuild those commands 
+>> if something like the dma_mask changed?
+>>
+> 
+> I guess we can just handle this like how FC handles the case when the 
+> dev loss tmo expires, but then the rport comes back later.
 
-
+Yuck, I guess we would have to do something like this if ib0 and ib1 had 
+different dma restrictions.
