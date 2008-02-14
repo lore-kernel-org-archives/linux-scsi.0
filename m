@@ -1,55 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.25-rc1
-Date: Wed, 13 Feb 2008 20:10:53 -0600
-Message-ID: <1202955053.3109.104.camel@localhost.localdomain>
+Date: Wed, 13 Feb 2008 19:34:03 -0800
+Message-ID: <20080213193403.c0dde7f8.akpm@linux-foundation.org>
 References: <1202947364.3109.96.camel@localhost.localdomain>
-	 <20080213161643.65a5a779.akpm@linux-foundation.org>
-	 <1202951513.3109.101.camel@localhost.localdomain>
-	 <20080213.172251.249294145.davem@davemloft.net>
+	<20080213161643.65a5a779.akpm@linux-foundation.org>
+	<1202951513.3109.101.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60445 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751683AbYBNCK7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 21:10:59 -0500
-In-Reply-To: <20080213.172251.249294145.davem@davemloft.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764652AbYBNDea@vger.kernel.org>
+In-Reply-To: <1202951513.3109.101.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Wed, 13 Feb 2008 19:11:53 -0600 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-On Wed, 2008-02-13 at 17:22 -0800, David Miller wrote:
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Wed, 13 Feb 2008 19:11:53 -0600
-> 
+> > mptbase-reset-ioc-initiator-during-pci-resume.patch
 > > 
-> > On Wed, 2008-02-13 at 16:16 -0800, Andrew Morton wrote:
-> > > kill-warnings-in-mptbaseh-on-parisc64.patch
+> >   Fixes suspend/resume on all of Darrick's MPT cards.  I first merged it
+> >   in September 2007.
+> 
+> Patch presented by LSI but has gone back with comments
+
+Five months is too long to fix a bug when someone has already sent us a
+patch.  If they insist on being this sluggish I'd suggest that you review
+the patch yourself then just merge it.  That will get their attention. 
+Maybe.
+
+> > dell-cerc-support-for-megaraid_mbox.patch
+> 
+> I need megaraid to sign off (and test) this one.
+
+Two months, same story.
+
+> > scsi-qlogicptic-section-fixes.patch
 > > 
-> > >   Warning fixes.
-> > 
-> > Not sure ... LSI is supposed to be processing this.
+> >   Fixes a reference from .text into .init.text and hence might fix a
+> >   machine crash when this driver is build into vmlinux.  Merged a week ago.
 > 
-> James, please don't push build warning fixes and the like back to the
-> driver maintainers.
-> 
-> This is your domain as SCSI maintainer, and you should integrate these
-> kinds of things directly and as promptly as possible.
-> 
-> This is doubly true if the "driver maintainer" can't be bothered
-> to ACK or fixup the patch for months.
-> 
-> Otherwise this kind of stuff rots, and diligent people like Andrew
-> (and the patch submitter, whoever that might be) get extremely
-> frustrated.
+> This was the one we had the alternative fix for, wasn't it ... ?
 
-LSI did ask to merge through their patch process, but I agree this one's
-been hanging around for a bit long.
+In current mainline, __devinit qpti_sbus_probe() still is calling __init
+qpti_chain_add() (for example).  So in a CONFIG_HOTPLUG kernel, hotplugging
+a new device (on sbus, ok, bad example ;)) will crash.
 
-James
+But Adrian has fixed six such bugs in there, maybe one of them can hit.  I
+don't think we've fixed these by alternative means, unless we've disabled
+__devinit?
 
 
+Still, we can discuss specific patches all day.  I think there is a
+_general_ problem getting bugfixes, warning fixes and cleanups into scsi
+drivers within reasonable amounts of time?
