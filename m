@@ -1,201 +1,260 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: ips.c broken since 2.6.23 on x86_64?
-Date: Thu, 14 Feb 2008 20:48:38 +0900
-Message-ID: <20080214204838F.fujita.tomonori@lab.ntt.co.jp>
-References: <20080213214324.GB18227@tpepper-t42p.dolavim.us>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: "mount: could not find filesystem" - aacraid? (was: Re: 2.6.26-git0: IDE oops during boot)
+Date: Thu, 14 Feb 2008 13:07:41 +0100
+Message-ID: <200802141307.42169.bzolnier@gmail.com>
+References: <20080206105334.GA3664@elf.ucw.cz> <47B40DF2.10009@linux.vnet.ibm.com> <200802141301.35032.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:50457 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765715AbYBNLss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 06:48:48 -0500
-In-Reply-To: <20080213214324.GB18227@tpepper-t42p.dolavim.us>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200802141301.35032.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: Nish Aravamudan <nish.aravamudan@gmail.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, ananth@in.ibm.com, Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org, aacraid@adaptec.com
 List-Id: linux-scsi@vger.kernel.org
-To: lnxninja@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Mark_Salyzyn@adaptec.com, ipslinux@adaptec.com, tomof@acm.org
 
-On Wed, 13 Feb 2008 13:43:24 -0800
-Tim Pepper <lnxninja@linux.vnet.ibm.com> wrote:
-
-> We recently upgraded a production x86_64 machine with serveraid
-> cards to 2.6.24 and noted that /proc/scsi/scsi showed garbage for our
-> serveraid service processors.  sg_inq also returned garbage from the
-> service processors' sg devices.  After a few iterations I started seeing
-> meaninful stuff in the garbage.  Not sure if it was returning live memory
-> or just unzero'd.  Either way not good so we went back to a known good,
-> older kernel and tried to repro on a similar machine.  We got different,
-> but still bad results in terms of pointing at memory badness.
+On Thursday 14 February 2008, Bartlomiej Zolnierkiewicz wrote:
 > 
-> FWIW, the original machine had the following hardware:
->     scsi0 : IBM PCI ServeRAID 7.12.05  Build 761 <ServeRAID 4H>
->     scsi1 : IBM PCI ServeRAID 7.12.05  Build 761 <ServeRAID 4M>
-> and the repro's have been on a machine with just:
->     scsi0 : IBM PCI ServeRAID 7.12.05  Build 761 <ServeRAID 4Mx>
+> Hi,
 > 
-> On the repro machine I'm getting a hang on ips driver load with the following
-> logged:
+> On Thursday 14 February 2008, Kamalesh Babulal wrote:
+> > Bartlomiej Zolnierkiewicz wrote:
+> > > Hi,
+> > > 
+> > > On Tuesday 12 February 2008, Kamalesh Babulal wrote:
+> > >> Bartlomiej Zolnierkiewicz wrote:
+> > >>> Hi,
+> > >>>
+> > >>> On Monday 11 February 2008, Kamalesh Babulal wrote:
+> > >>>> Nish Aravamudan wrote:
+> > >>>>> On 2/7/08, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > >>>>>> On Thursday 07 February 2008, Kamalesh Babulal wrote:
+> > >>>>>>> Bartlomiej Zolnierkiewicz wrote:
+> > >>>>>>>> Hi,
+> > >>>>>>>>
+> > >>>>>>>> On Wednesday 06 February 2008, Pavel Machek wrote:
+> > >>>>>>>>> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+> > >>>>>>>>>> Hi!
+> > >>>>>>>>>>
+> > >>>>>>>>>> Trying to boot 2.6.25-git0 (few days old), I get
+> > >>>>>>>>>>
+> > >>>>>>>>>> BUG: unable to handle kernel paging request at ffff..ffb0
+> > >>>>>>>>>> IP at init_irq+0x42e
+> > >>>>>>>> init_irq? hmm...
+> > >>>>>>>>
+> > >>>>>>>>>> Call trace:
+> > >>>>>>>>>> ide_device_add_all
+> > >>>>>>>> this comes from ide-generic
+> > >>>>>>>> (Generic IDE host driver)
+> > >>>>>>>>
+> > >>>>>>>>>> ide_generic_init
+> > >>>>>>>>>> kernel_init
+> > >>>>>>>>>> child_rip
+> > >>>>>>>>>> vgacon_cursor
+> > >>>>>>>>>> kernel_init
+> > >>>>>>>>>> child_rip
+> > >>>>>>>>>>
+> > >>>>>>>>>> Excerpt from config:
+> > >>>>>>>>>>
+> > >>>>>>>>>> CONFIG_IDE=y
+> > >>>>>>>>>> CONFIG_BLK_DEV_IDE=y
+> > >>>>>>>>> Disabling CONFIG_IDE made my machine boot, as it was using libata
+> > >>>>>>>>> anyway.
+> > >>>>>>>> Kamalesh/Pavel:
+> > >>>>>>>>
+> > >>>>>>>> Could you try latest git and see if the OOPS is still there?
+> > >>>>>>>>
+> > >>>>>>>> [ Yeah, I'm unable to reproduce it. :( ]
+> > >>>>>>>>
+> > >>>>>>>> Thanks,
+> > >>>>>>>> Bart
+> > >>>>>>> Hi Bart,
+> > >>>>>>>
+> > >>>>>>> The panic is reproducible with the 2.6.24-git16 kernel, the call trace is
+> > >>>>>>> similar to the previous one
+> > >>>>>> Thanks, I again reviewed ide-probe.c changes but nothing seems wrong...
+> > >>>>>>
+> > >>>>>> Could you please bisect it down to the guilty commit?
+> > >>>>> Kamalesh, were you able to bisect this down? I just got hit by the
+> > >>>>> same panic on a 4-way x86_64, with 2.6.24-git22.
+> > >>>>>
+> > >>>>> Thanks,
+> > >>>>> Nish
+> > >>>> Hi Nish,
+> > >>>>
+> > >>>> I tried bisecting and the guilty patch seems to be 
+> > >>>>
+> > >>>> 36501650ec45b1db308c3b51886044863be2d762 is first bad commit
+> > >>>> commit 36501650ec45b1db308c3b51886044863be2d762
+> > >>>> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > >>>> Date:   Fri Feb 1 23:09:31 2008 +0100
+> > >>>>
+> > >>>>     ide: keep pointer to struct device instead of struct pci_dev in ide_hwif_t
+> > >>>>
+> > >>>>
+> > >>>> the gdb output, also points to the changes made by the guilty patch
+> > >>>>
+> > >>>> (gdb) p ide_device_add_all
+> > >>>> $1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804176ac <ide_device_add_all>
+> > >>>> (gdb) p/x 0xffffffff804176ac+0xb60
+> > >>>> $2 = 0xffffffff8041820c
+> > >>>> (gdb) l *0xffffffff8041820c
+> > >>>> 0xffffffff8041820c is in ide_device_add_all (drivers/ide/ide-probe.c:1249).
+> > >>>> 1244                    goto out;
+> > >>>> 1245            }
+> > >>>> 1246
+> > >>>> 1247            sg_init_table(hwif->sg_table, hwif->sg_max_nents);
+> > >>>> 1248
+> > >>>> 1249            if (init_irq(hwif) == 0)
+> > >>>> 1250                    goto done;
+> > >>>> 1251
+> > >>>> 1252            old_irq = hwif->irq;
+> > >>>> 1253            /*
+> > >>>> (gdb) 
+> > >>>>
+> > >>>>
+> > >>>> (gdb) p init_irq
+> > >>>> $1 = {int (ide_hwif_t *)} 0xffffffff8041721f <init_irq>
+> > >>>> (gdb) p/x 0xffffffff8041721f+0x1a4
+> > >>>> $2 = 0xffffffff804173c3
+> > >>>> (gdb) l *0xffffffff804173c3
+> > >>>> 0xffffffff804173c3 is in init_irq (include/asm/pci.h:101).
+> > >>>> 96      /* Returns the node based on pci bus */
+> > >>>> 97      static inline int __pcibus_to_node(struct pci_bus *bus)
+> > >>>> 98      {
+> > >>>> 99              struct pci_sysdata *sd = bus->sysdata;
+> > >>>> 100
+> > >>>> 101             return sd->node;
+> > >>>> 102     }
+> > >>>> 103
+> > >>>> 104     static inline cpumask_t __pcibus_to_cpumask(struct pci_bus *bus)
+> > >>>> 105     {
+> > >>>> (gdb) 
+> > >>> Thanks for the detailed analysis and sorry for the bug.
+> > >>>
+> > >>> I think that this may has been just fixed by Andi's recent hwif_to_node()
+> > >>> fix (patch below, it is in Linus' tree already), could please verify this?
+> > >>>
+> > >>> commit 1f07e988290fc45932f5028c9e2a862c37a57336
+> > >>> Author: Andi Kleen <andi@firstfloor.org>
+> > >>> Date:   Mon Feb 11 01:35:20 2008 +0100
+> > >>>
+> > >>>     Prevent IDE boot ops on NUMA system
+> > >>>     
+> > >>>     Without this patch a Opteron test system here oopses at boot with
+> > >>>     current git.
+> > >>>     
+> > >>>     Calling to_pci_dev() on a NULL pointer gives a negative value so the
+> > >>>     following NULL pointer check never triggers and then an illegal address
+> > >>>     is referenced.  Check the unadjusted original device pointer for NULL
+> > >>>     instead.
+> > >>>     
+> > >>>     Signed-off-by: Andi Kleen <ak@suse.de>
+> > >>>     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > >>>
+> > >>> diff --git a/include/linux/ide.h b/include/linux/ide.h
+> > >>> index 23fad89..a3b69c1 100644
+> > >>> --- a/include/linux/ide.h
+> > >>> +++ b/include/linux/ide.h
+> > >>> @@ -1295,7 +1295,7 @@ static inline void ide_dump_identify(u8 *id)
+> > >>>  static inline int hwif_to_node(ide_hwif_t *hwif)
+> > >>>  {
+> > >>>  	struct pci_dev *dev = to_pci_dev(hwif->dev);
+> > >>> -	return dev ? pcibus_to_node(dev->bus) : -1;
+> > >>> +	return hwif->dev ? pcibus_to_node(dev->bus) : -1;
+> > >>>  }
+> > >>>
+> > >>>  static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
+> > >> Hi Bart,
+> > >> Thanks !! the patch solves the kernel panic but when after applying the patch,kernel is not
+> > >> able to mount the filesystem and panics, am i not sure what is likely causing the panic.
+> > > 
+> > > Is
+> > > 
+> > > - the commit 36501650ec45b1db308c3b51886044863be2d762 with Andi's fix applied
+> > > 
+> > > or
+> > > 
+> > > - the commit f6fb786d6dcdd7d730e4fba620b071796f487e1b
+> > >   (the one before commit 36501650ec45b1db308c3b51886044863be2d762)
+> > > 
+> > > working for you?
+> > 
+> > No, the commit before the commit 36501650ec45b1db308c3b51886044863be2d762 did not either work, i
+> > get the same kernel panic.
+> > 
+> > > 
+> > >> Creating root device.
+> > >> Mounting root filesystem.
+> > >> mount: could not  find filesystem
+> > >> Kernel panic - not syncing: Attempted to kill init!
+> > > 
+> > > Is IDE actually used for the boot device?
+> > > 
+> > > [ Please send a dmesg output from the working system. ]
 > 
-> Feb 13 13:16:08 ipstest kernel: [  915.236563] scsi3 : IBM PCI ServeRAID 7.12.05  Build 761 <ServeRAID 4Mx>
-> Feb 13 13:16:08 ipstest kernel: [  915.236839] Unable to handle kernel NULL pointer dereference at 0000000000000000 RIP:
-> Feb 13 13:16:08 ipstest kernel: [  915.236863]  [check_addr+16/80] check_addr+0x10/0x50
-> Feb 13 13:16:08 ipstest kernel: [  915.237209] PGD 79fff067 PUD 7a898067 PMD 0
-> Feb 13 13:16:08 ipstest kernel: [  915.237341] Oops: 0000 [1] SMP
-> Feb 13 13:16:08 ipstest kernel: [  915.237463] CPU 1
-> Feb 13 13:16:08 ipstest kernel: [  915.239436] Modules linked in: ips aic94xx
-> Feb 13 13:16:08 ipstest kernel: [  915.239559] Pid: 5213, comm: scsi_scan_3 Not tainted 2.6.23-ips_as_module #3
-> Feb 13 13:16:08 ipstest kernel: [  915.239692] RIP: 0010:[check_addr+16/80]  [check_addr+16/80] check_addr+0x10/0x50
-> Feb 13 13:16:08 ipstest kernel: [  915.239932] RSP: 0018:ffff810076d87900  EFLAGS: 00010082
-> Feb 13 13:16:08 ipstest kernel: [  915.240059] RAX: 0000000000000000 RBX: ffff81007b636300 RCX: 0000000000000024
-> Feb 13 13:16:08 ipstest kernel: [  915.240196] RDX: 000000007b636b00 RSI: ffffffff8077cde0 RDI: ffffffff806c4ed5
-> Feb 13 13:16:08 ipstest kernel: [  915.240332] RBP: ffff810076d87900 R08: 0000000000000500 R09: 0000000000000000
-> Feb 13 13:16:08 ipstest kernel: [  915.240468] R10: ffff81007aa33b40 R11: 0000000000000060 R12: 0000000000000000
-> Feb 13 13:16:08 ipstest kernel: [  915.240605] R13: 0000000000000001 R14: ffffffff8077cde0 R15: ffff81007aa33a80
-> Feb 13 13:16:08 ipstest kernel: [  915.240741] FS:  0000000000000000(0000) GS:ffff810001039300(0000) knlGS:0000000000000000
-> Feb 13 13:16:08 ipstest kernel: [  915.240981] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> Feb 13 13:16:08 ipstest kernel: [  915.241111] CR2: 0000000000000000 CR3: 0000000078a98000 CR4: 00000000000006e0
-> Feb 13 13:16:08 ipstest kernel: [  915.241248] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> Feb 13 13:16:08 ipstest kernel: [  915.241384] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Feb 13 13:16:08 ipstest kernel: [  915.241520] Process scsi_scan_3 (pid: 5213, threadinfo ffff810076d86000, task ffff81007be26720)
-> Feb 13 13:16:08 ipstest kernel: [  915.241761] Stack:  ffff810076d87930 ffffffff802125c3 ffff81007aa33a80 ffff81007480cf50
-> Feb 13 13:16:08 ipstest kernel: [  915.242006]  0000000000000000 ffff81007ba38ca8 ffff810076d87940 ffffffff8046fb42
-> Feb 13 13:16:08 ipstest kernel: [  915.242248]  ffff810076d879c0 ffffffff8801c2ee ffff81007aa33af0 000000017aa33af0
-> Feb 13 13:16:08 ipstest kernel: [  915.242389] Call Trace:
-> Feb 13 13:16:08 ipstest kernel: [  915.242606]  [nommu_map_sg+115/144] nommu_map_sg+0x73/0x90
-> Feb 13 13:16:08 ipstest kernel: [  915.242736]  [scsi_dma_map+66/96] scsi_dma_map+0x42/0x60
-> Feb 13 13:16:08 ipstest kernel: [  915.242867]  [_end+124884230/2127548952] :ips:ips_next+0x33e/0xc00
-> Feb 13 13:16:08 ipstest kernel: [  915.242986]  [scsi_done+0/48] scsi_done+0x0/0x30
-> Feb 13 13:16:08 ipstest kernel: [  915.243114]  [_end+124896894/2127548952] :ips:ips_queue+0x106/0x1f0
-> Feb 13 13:16:08 ipstest kernel: [  915.243240]  [scsi_dispatch_cmd+498/784] scsi_dispatch_cmd+0x1f2/0x310
-> Feb 13 13:16:08 ipstest kernel: [  915.243370]  [scsi_request_fn+491/976] scsi_request_fn+0x1eb/0x3d0
-> Feb 13 13:16:08 ipstest kernel: [  915.243500]  [__generic_unplug_device+37/48] __generic_unplug_device+0x25/0x30
-> Feb 13 13:16:08 ipstest kernel: [  915.243630]  [blk_execute_rq_nowait+99/176] blk_execute_rq_nowait+0x63/0xb0
-> Feb 13 13:16:08 ipstest kernel: [  915.243761]  [blk_execute_rq+122/224] blk_execute_rq+0x7a/0xe0
-> Feb 13 13:16:08 ipstest kernel: [  915.243889]  [scsi_execute+240/288] scsi_execute+0xf0/0x120
-> Feb 13 13:16:08 ipstest kernel: [  915.244016]  [scsi_execute_req+134/240] scsi_execute_req+0x86/0xf0
-> Feb 13 13:16:08 ipstest kernel: [  915.244145]  [scsi_probe_and_add_lun+594/3472] scsi_probe_and_add_lun+0x252/0xd90
-> Feb 13 13:16:08 ipstest kernel: [  915.244279]  [sas_expander_match+27/160] sas_expander_match+0x1b/0xa0
-> Feb 13 13:16:08 ipstest kernel: [  915.244412]  [get_device+23/32] get_device+0x17/0x20
-> Feb 13 13:16:08 ipstest kernel: [  915.244534]  [__scsi_scan_target+220/1696] __scsi_scan_target+0xdc/0x6a0
-> Feb 13 13:16:08 ipstest kernel: [  915.244665]  [enqueue_entity+172/432] enqueue_entity+0xac/0x1b0
-> Feb 13 13:16:08 ipstest kernel: [  915.244793]  [update_curr_load+135/160] update_curr_load+0x87/0xa0
-> Feb 13 13:16:08 ipstest kernel: [  915.244923]  [__check_preempt_curr_fair+107/128] __check_preempt_curr_fair+0x6b/0x80
-> Feb 13 13:16:08 ipstest kernel: [  915.245057]  [update_curr+258/272] update_curr+0x102/0x110
-> Feb 13 13:16:08 ipstest kernel: [  915.245186]  [scsi_scan_channel+139/160] scsi_scan_channel+0x8b/0xa0
-> Feb 13 13:16:08 ipstest kernel: [  915.245315]  [scsi_scan_host_selected+158/352] scsi_scan_host_selected+0x9e/0x160
-> Feb 13 13:16:08 ipstest kernel: [  915.245447]  [do_scan_async+0/320] do_scan_async+0x0/0x140
-> Feb 13 13:16:08 ipstest kernel: [  915.245574]  [do_scsi_scan_host+126/128] do_scsi_scan_host+0x7e/0x80
-> Feb 13 13:16:08 ipstest kernel: [  915.245703]  [do_scan_async+23/320] do_scan_async+0x17/0x140
-> Feb 13 13:16:08 ipstest kernel: [  915.245832]  [do_scan_async+0/320] do_scan_async+0x0/0x140
-> Feb 13 13:16:08 ipstest kernel: [  915.245962]  [kthread+77/128] kthread+0x4d/0x80
-> Feb 13 13:16:08 ipstest kernel: [  915.246086]  [child_rip+10/18] child_rip+0xa/0x12
-> Feb 13 13:16:08 ipstest kernel: [  915.246209]  [kthread+0/128] kthread+0x0/0x80
-> Feb 13 13:16:08 ipstest kernel: [  915.246333]  [child_rip+0/18] child_rip+0x0/0x12
-> Feb 13 13:16:08 ipstest kernel: [  915.246457]
-> Feb 13 13:16:08 ipstest kernel: [  915.246564]
-> Feb 13 13:16:08 ipstest kernel: [  915.246565] Code: 4c 8b 00 48 8d 04 0a 4c 39 c0 76 2b b8 fe ff ff ff 31 f6 49
-> Feb 13 13:16:08 ipstest kernel: [  915.246933] RIP  [check_addr+16/80] check_addr+0x10/0x50
-> Feb 13 13:16:08 ipstest kernel: [  915.247062]  RSP <ffff810076d87900>
-> Feb 13 13:16:08 ipstest kernel: [  915.247181] CR2: 0000000000000000
+> Hmm, it is not (from dmesg):
 > 
-> I was able to narrow it down in as much as with this reverted the machine
-> seems to run fine:
->     commit 2f4cf91cc0a1f32f75e1fa0a4d70a9bc7340a302
->     [SCSI] ips: convert to use the data buffer accessors
+> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+> Probing IDE interface ide0...
+> hda: HL-DT-STCD-RW/DVD DRIVE GCC-4244N, ATAPI CD/DVD-ROM drive
+> Probing IDE interface ide1...
+> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> hda: ATAPI 24X DVD-ROM CD-R/RW drive, 2048kB Cache
+> Uniform CD-ROM driver Revision: 3.20
 > 
-> Nothing looks overly suspicious in that patch per se, although based
-> on the list archives it looks like related changes caused other drivers
-> grief.  I've tried a variety of things to get a little more debug info,
-> but to no avail.  If anybody has any suggestions, I'd appreciate them!
+> [...]
+> 
+> Adaptec aacraid driver 1.1-5[2449]-ms
+> ACPI: PCI Interrupt 0000:01:02.0[A] -> GSI 25 (level, low) -> IRQ 25
+> AAC0: kernel 5.2-0[11835] Jan  9 2007
+> AAC0: monitor 5.2-0[11835]
+> AAC0: bios 5.2-0[11835]
+> AAC0: serial 1625D1
+> AAC0: 64bit support enabled.
+> AAC0: 64 Bit DAC enabled
+> scsi0 : ServeRAID
+> scsi 0:0:0:0: Direct-Access     IBM      x366             V1.0 PQ: 0 ANSI: 2
+> scsi 0:1:0:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
+> scsi 0:1:1:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
+> scsi 0:1:2:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
+> scsi 0:3:0:0: Enclosure         IBM      SAS SES-2 DEVICE 0.09 PQ: 0 ANSI: 5
+> sd 0:0:0:0: [sda] 429459456 512-byte hardware sectors (219883 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> sd 0:0:0:0: [sda] 429459456 512-byte hardware sectors (219883 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+>  sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+> sd 0:0:0:0: [sda] Attached SCSI removable disk
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
+> scsi 0:1:0:0: Attached scsi generic sg1 type 0
+> scsi 0:1:1:0: Attached scsi generic sg2 type 0
+> scsi 0:1:2:0: Attached scsi generic sg3 type 0
+> scsi 0:3:0:0: Attached scsi generic sg4 type 13
+> 
+> [...]
+> 
+> kjournald starting.  Commit interval 5 seconds
+> EXT3-fs: mounted filesystem with ordered data mode.
+> 
+> [...]
+> 
+> EXT3 FS on sda1, internal journal
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sda2, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> 
+> I worry that another git-bisect session will be needed unless SCSI
+> developers are already aware of the problem source.
 
-Really sorry about the bug.
+Yinghai Lu noticed that it may be actually a SES problem:
 
-I have a slight doubt on the breakup code though I'm not sure you hit
-the code. Reverting only the breakup part works? The patch is against
-2.6.24.
+http://lkml.org/lkml/2008/2/14/88
 
-
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 5c5a9b2..acabb19 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -3251,34 +3251,52 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
- 		 * the rest of the data and continue.
- 		 */
- 		if ((scb->breakup) || (scb->sg_break)) {
--                        struct scatterlist *sg;
--                        int i, sg_dma_index, ips_sg_index = 0;
--
- 			/* we had a data breakup */
- 			scb->data_len = 0;
- 
--                        sg = scsi_sglist(scb->scsi_cmd);
--
--                        /* Spin forward to last dma chunk */
--                        sg_dma_index = scb->breakup;
--                        for (i = 0; i < scb->breakup; i++)
--                                sg = sg_next(sg);
--
--			/* Take care of possible partial on last chunk */
--                        ips_fill_scb_sg_single(ha,
--                                               sg_dma_address(sg),
--                                               scb, ips_sg_index++,
--                                               sg_dma_len(sg));
--
--                        for (; sg_dma_index < scsi_sg_count(scb->scsi_cmd);
--                             sg_dma_index++, sg = sg_next(sg)) {
--                                if (ips_fill_scb_sg_single
--                                    (ha,
--                                     sg_dma_address(sg),
--                                     scb, ips_sg_index++,
--                                     sg_dma_len(sg)) < 0)
--                                        break;
--                        }
-+			if (scb->sg_count) {
-+				/* S/G request */
-+				struct scatterlist *sg;
-+				int ips_sg_index = 0;
-+				int sg_dma_index;
-+
-+				sg = scb->scsi_cmd->request_buffer;
-+
-+				/* Spin forward to last dma chunk */
-+				sg_dma_index = scb->breakup;
-+
-+				/* Take care of possible partial on last chunk */
-+				ips_fill_scb_sg_single(ha,
-+						       sg_dma_address(&sg
-+								      [sg_dma_index]),
-+						       scb, ips_sg_index++,
-+						       sg_dma_len(&sg
-+								  [sg_dma_index]));
-+
-+				for (; sg_dma_index < scb->sg_count;
-+				     sg_dma_index++) {
-+					if (ips_fill_scb_sg_single
-+					    (ha,
-+					     sg_dma_address(&sg[sg_dma_index]),
-+					     scb, ips_sg_index++,
-+					     sg_dma_len(&sg[sg_dma_index])) < 0)
-+						break;
-+
-+				}
-+
-+			} else {
-+				/* Non S/G Request */
-+				(void) ips_fill_scb_sg_single(ha,
-+							      scb->
-+							      data_busaddr +
-+							      (scb->sg_break *
-+							       ha->max_xfer),
-+							      scb, 0,
-+							      scb->scsi_cmd->
-+							      request_bufflen -
-+							      (scb->sg_break *
-+							       ha->max_xfer));
-+			}
- 
- 			scb->dcdb.transfer_length = scb->data_len;
- 			scb->dcdb.cmd_attribute |=
+[ I overlooked the above mail, sorry ]
