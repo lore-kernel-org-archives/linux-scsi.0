@@ -1,86 +1,74 @@
-From: Tim Pepper <lnxninja@linux.vnet.ibm.com>
-Subject: Re: ips.c broken since 2.6.23 on x86_64?
-Date: Wed, 13 Feb 2008 16:04:17 -0800
-Message-ID: <20080214000417.GA2741@tpepper-t42p.dolavim.us>
-References: <20080213214324.GB18227@tpepper-t42p.dolavim.us> <532ABFBDAAC3A34EB12EBA6CEC2838F439964688@ADPE2K703.adaptec.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.25-rc1
+Date: Wed, 13 Feb 2008 16:16:43 -0800
+Message-ID: <20080213161643.65a5a779.akpm@linux-foundation.org>
+References: <1202947364.3109.96.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:60804 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753847AbYBNAEw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 19:04:52 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1E04JhQ017868
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1E04JAE167994
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1E04IMb019739
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2008 19:04:19 -0500
-Content-Disposition: inline
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F439964688@ADPE2K703.adaptec.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45594 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755959AbYBNART (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Feb 2008 19:17:19 -0500
+In-Reply-To: <1202947364.3109.96.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mark_Salyzyn@adaptec.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(replaced missing cc's including linux-scsi)
+On Wed, 13 Feb 2008 18:02:44 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-On Wed 13 Feb at 14:39:07 -0800 Mark_Salyzyn@adaptec.com said:
+> This one's not too bad given the number of patches we had in the merge
+> window.  We have the advansys fix, a gdth severe problem fix (wouldn't
+> scan any devices) a bug fix series for lpfc and a few other odds and
+> ends.
 > 
-> - Is the command path code even reaching the controller's processor inquiry
->   spoofing section?
+> The patch is available here:
 > 
->                 if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
->                 IPS_SCSI_INQ_DATA inquiry;
-> 
->                 memset(&inquiry, 0,
->                sizeof (IPS_SCSI_INQ_DATA));
-> 
->                 inquiry.DeviceType =
->                     IPS_SCSI_INQ_TYPE_PROCESSOR;
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-I just added printk's in ips_send_cmd()'s INQUIRY case just before
-the above condition test and just within the conditional block.
-Neither showed on the console.
+I have scsi patches!
 
-> The target_id check may be flawed? It is not using the
-> scmd/sdev accessors and could be the wrong value as a result. Wild goose
-> since arrays are working correctly (?)
 
-In the original case the arrays appeared to be working correctly although
-we were worried.  In the repro case we don't actually have any disk
-attached...Forgot to mention that in the original email.
 
-> - There appears to be a missing 'break' statement for the START_STOP command
->   immediately preceding the TEST_UNIT_READY/INQUIRY cases. What are the side
->   effects of that? It appears to be innocuous.
+mptbase-reset-ioc-initiator-during-pci-resume.patch
 
-No change noted with the missing break added.
+  Fixes suspend/resume on all of Darrick's MPT cards.  I first merged it
+  in September 2007.
 
-> - ips_scmd_buf_write is used for array capacity and other fiddly bits and
->   must be functioning correctly (?), so I can NOT harm it's functionality
->   except to question if the kmap_atomic returned a non-null value, it's
->   return value apparently is not checked. It's failure could speak of
->   problem(s) elsewhere.
+kill-warnings-in-mptbaseh-on-parisc64.patch
 
-I've got a printk there and haven't seen any output from it.  Haven't seen
-anything from any of the printk's I've tried actually before:
+  Warning fixes.
 
-In the run above to check if ips_send_cmd() hits the condition you were
-curious about...I did capture the following from printk's I added in
-ips_allocatescbs():
+dell-cerc-support-for-megaraid_mbox.patch
 
-pci_alloc_consistent returns ha->scbs    @ 0x18446604437762007040
-pci_alloc_consistent returns ips_sg.list @ 0x18446604437762002944
-pci_alloc_consistent returns ha->scbs    @ 0x18446604437698871296
-pci_alloc_consistent returns ips_sg.list @ 0x18446604437756837888
+  Turns non-booting machiens into booting ones.  Merged in -mm in
+  November 2007.
 
-I take that as ips_init_phase2() being called and presumable returning
-SUCCESS.
+3w-raid-drivers-memset-not-needed-in-probe.patch
 
--- 
-Tim Pepper  <lnxninja@linux.vnet.ibm.com>
-IBM Linux Technology Center
+  Small optimisation
+
+scsi-aic94xx-cleanups.patch
+
+  cleanups only.
+
+scsi-qlogicptic-section-fixes.patch
+
+  Fixes a reference from .text into .init.text and hence might fix a
+  machine crash when this driver is build into vmlinux.  Merged a week ago.
+
+megaraid-outb_p-extermination.patch
+
+  Cleanup
+
+gdth-convert-to-pci-hotplug-api.patch
+
+  Just merged
+
+
+So several of these patches address quite seriosu bugs, and have been
+stuck in my tree for far too long.
