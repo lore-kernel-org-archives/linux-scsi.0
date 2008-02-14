@@ -1,83 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [SCSI] gdth: update deprecated pci_find_device
-Date: Wed, 13 Feb 2008 23:43:33 -0500
-Message-ID: <47B3C6F5.6060809@garzik.org>
-References: <200802140059.m1E0xrID025375@hera.kernel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUGFIX 2/2] gdth: bugfix for the Timer at exit crash
+Date: Thu, 14 Feb 2008 01:51:01 -0500
+Message-ID: <20080214065101.GA19294@infradead.org>
+References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47B1D7A8.8010108@panasas.com> <47B1DA2A.1060904@panasas.com> <1202917468.3109.5.camel@localhost.localdomain> <47B312B3.3010200@panasas.com> <47B31BDE.2030408@panasas.com> <1202921122.3109.31.camel@localhost.localdomain> <47B31FC2.4040206@panasas.com> <1202922226.3109.36.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52222 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756681AbYBNEnh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Feb 2008 23:43:37 -0500
-In-Reply-To: <200802140059.m1E0xrID025375@hera.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:51497 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbYBNGvN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 01:51:13 -0500
+Content-Disposition: inline
+In-Reply-To: <1202922226.3109.36.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sergio Luis <sergio@larces.uece.br>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Sven K?hler <skoehler@upb.de>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Joerg Dorchain <joerg@dorchain.net>, Jon Chelton <jchelton@ffpglobal.com>, Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
 
-Linux Kernel Mailing List wrote:
-> Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=99109301d103fbf0de43fc5a580a406c12a501e0
-> Commit:     99109301d103fbf0de43fc5a580a406c12a501e0
-> Parent:     61c92814dc324b541391757062ff02fbf3b08086
-> Author:     Sergio Luis <sergio@larces.uece.br>
-> AuthorDate: Tue Feb 12 20:48:03 2008 -0300
-> Committer:  James Bottomley <James.Bottomley@HansenPartnership.com>
-> CommitDate: Wed Feb 13 09:33:10 2008 -0600
+On Wed, Feb 13, 2008 at 11:03:45AM -0600, James Bottomley wrote:
+> > I don't understand please explain. 
+> > What does a driver need to do if it needs a consistent shutdown retine?
+> > module or built in? unload or shutdown?
 > 
->     [SCSI] gdth: update deprecated pci_find_device
->     
->     Fix compilation warning in gdth.c, which was using the deprecated
->     pci_find_device.
->     
->     drivers/scsi/gdth.c:645: warning: 'pci_find_device' is deprecated (declared at include/linux/pci.h:495)
->     
->     Changing it to use pci_get_device, instead.
->     
->     Signed-off-by: Sergio Luis <sergio@larces.uece.br>
->     Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  drivers/scsi/Kconfig |    2 +-
->  drivers/scsi/gdth.c  |    7 +++++--
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index a5f0aaa..a7a0813 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -722,7 +722,7 @@ config SCSI_FD_MCS
->  
->  config SCSI_GDTH
->  	tristate "Intel/ICP (former GDT SCSI Disk Array) RAID Controller support"
-> -	depends on (ISA || EISA || PCI) && SCSI && ISA_DMA_API && PCI_LEGACY
-> +	depends on (ISA || EISA || PCI) && SCSI && ISA_DMA_API
->  	---help---
->  	  Formerly called GDT SCSI Disk Array Controller Support.
->  
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 7079fef..6d67f5c 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -642,12 +642,15 @@ static void __init gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
->            *cnt, vendor, device));
->  
->      pdev = NULL;
-> -    while ((pdev = pci_find_device(vendor, device, pdev)) 
-> +    while ((pdev = pci_get_device(vendor, device, pdev))
->             != NULL) {
->          if (pci_enable_device(pdev))
->              continue;
-> -        if (*cnt >= MAXHA)
-> +        if (*cnt >= MAXHA) {
-> +            pci_dev_put(pdev);
->              return;
-> +        }
-> +
+> It needs to register a reboot notifier, which gdth does.
 
-Why no pci_dev_put() in the module cleanup path?
-
-	Jeff
-
-
+Well, for crappy legacy driver that's the way, but it's not really
+recommended.  As soon as a driver uses the proper driver models,
+e.g. gdth for pci using Jeff's pci hotplug patches it can just
+implement the ->shutdown method that is called before shutdown/kexec
+and can do the right thing.
 
