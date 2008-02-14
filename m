@@ -1,53 +1,54 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make lpfc_disable_node() static
-Date: Thu, 14 Feb 2008 23:24:02 +0200
-Message-ID: <20080214212402.GF23227@cs181133002.pp.htv.fi>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] gdth: convert to PCI hotplug API
+Date: Thu, 14 Feb 2008 15:33:42 -0600
+Message-ID: <1203024822.3158.29.camel@localhost.localdomain>
+References: <20080212234928.GA13892@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:51798 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934338AbYBNVYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Feb 2008 16:24:23 -0500
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:57714 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752005AbYBNVdt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Feb 2008 16:33:49 -0500
+In-Reply-To: <20080212234928.GA13892@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-This patch makes theneedlessly global lpfc_disable_node() static.
+On Tue, 2008-02-12 at 18:49 -0500, Jeff Garzik wrote:
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Nice work, thanks.  This is PCI only I take it.  ISA and EISA look like
+they'll be a tad more troublesome, so PCI only is fine.
 
----
+> ---
+>  drivers/scsi/gdth.c |  143 +++++++++++++++++++++++++++++++---------------------
+>  1 file changed, 86 insertions(+), 57 deletions(-)
+> 
+> 06196f50915da97bb897495863f9f084d785c1e4
+> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+> index c825239..1b53e92 100644
+> --- a/drivers/scsi/gdth.c
+> +++ b/drivers/scsi/gdth.c
+> @@ -595,85 +595,107 @@ static int __init gdth_search_isa(ulong32 bios_adr)
+>  #endif /* CONFIG_ISA */
+>  
+>  #ifdef CONFIG_PCI
+> -static void gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
+> -                            ushort vendor, ushort dev);
+> +static gdth_pci_str gdth_pcistr[MAXHA];
+> +static int gdth_pci_cnt;
+> +static bool gdth_pci_registered;
 
- drivers/scsi/lpfc/lpfc_crtn.h    |    1 -
- drivers/scsi/lpfc/lpfc_hbadisc.c |    2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Could we get rid of these static arrays and MAXHA entirely?  It should
+be possible just to bung the parameters in pci_str into gdth_ha_str and
+dump the arrays.
 
-c3ed441728e0116d0e545837d84cbe337740a3de diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 848d977..0819f5f 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -55,7 +55,6 @@ void lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_enqueue_node(struct lpfc_vport *, struct lpfc_nodelist *);
- void lpfc_dequeue_node(struct lpfc_vport *, struct lpfc_nodelist *);
--void lpfc_disable_node(struct lpfc_vport *, struct lpfc_nodelist *);
- struct lpfc_nodelist *lpfc_enable_node(struct lpfc_vport *,
- 					struct lpfc_nodelist *, int);
- void lpfc_nlp_set_state(struct lpfc_vport *, struct lpfc_nodelist *, int);
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index bd572d6..9766534 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1694,7 +1694,7 @@ lpfc_dequeue_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 				NLP_STE_UNUSED_NODE);
- }
- 
--void
-+static void
- lpfc_disable_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
- 	if ((ndlp->nlp_flag & NLP_DELAY_TMO) != 0)
+Thanks,
+
+James
+
 
