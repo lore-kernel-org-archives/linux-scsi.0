@@ -1,67 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
-Date: Thu, 14 Feb 2008 13:04:54 -0600
-Message-ID: <47B490D6.3040707@cs.wisc.edu>
-References: <20080212205252.GB13643@osc.edu>	 <20080212205403.GC13643@osc.edu>	 <1202850645.3137.132.camel@localhost.localdomain>	 <47B480D9.6080206@cs.wisc.edu> <1203012634.3158.5.camel@localhost.localdomain> <47B4869B.9070906@cs.wisc.edu> <47B489A6.9060203@cs.wisc.edu>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: FW: [Bug 9859] hp smart array E200i kernel panic upon boot
+Date: Thu, 14 Feb 2008 19:30:12 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE04243ECFB2@G6W0268.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43550 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759795AbYBNTFO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Feb 2008 14:05:14 -0500
-In-Reply-To: <47B489A6.9060203@cs.wisc.edu>
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:29666 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758588AbYBNTa5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2008 14:30:57 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Pete Wyckoff <pw@osc.edu>, Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Ross Fomerand <ross@upocnetworks.com>, Fabio Coatti <fabio.coatti@staff.dada.net>, "spam@jwdt.org" <spam@jwdt.org>
 
-Mike Christie wrote:
-> Mike Christie wrote:
->> James Bottomley wrote:
->>> On Thu, 2008-02-14 at 11:56 -0600, Mike Christie wrote:
->>>>> You really don't want to do this.  That signals to the block layer 
->>>>> that
->>>>> we have an iommu, although it's practically the same thing as a 64 bit
->>>>> DMA mask ... but I'd just leave it to the DMA mask to set this up
->>>>> correctly.  Anything else is asking for a subtle bug to turn up years
->>>>> from now when something causes the mask and the limit to be 
->>>>> mismatched.
->>>>>
->>>> I thought BLK_BOUNCE_ANY just meant "don't bounce anything" (that 
->>>> was from the blkdev.h comments). 
->>>
->>> It does ... that's why it's used in the IOMMU case ... and why it's
->>> practically the same as a 64 bit mask.
->>>
->>>> We used it for iscsi_tcp because the network layer can take any type
->>>> of page and will do the right thing for the hardware it eventually
->>>> gets sent to.
->>>
->>> Right, to you it means never bounce because net wants to do it instead.
->>> However, I don't think that's the case for iSER, is it? ... as in, if
->>
->> I will leave that to Roland and them :)
 
-Ooops, I misread your mail. I think you are right and for iser we need 
-to use the ib devices dma values.
+> -----Original Message-----
+> From: bugme-daemon@bugzilla.kernel.org
+> [mailto:bugme-daemon@bugzilla.kernel.org]
+> Sent: Thursday, February 14, 2008 8:16 AM
+> To: Miller, Mike (OS Dev)
+> Subject: [Bug 9859] hp smart array E200i kernel panic upon boot
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=9859
+>
+>
+> spam@jwdt.org changed:
+>
+>            What    |Removed                     |Added
+> --------------------------------------------------------------
+> --------------
+>                  CC|                            |spam@jwdt.org
+>
+>
+>
+>
+> ------- Comment #14 from spam@jwdt.org  2008-02-14 06:16
+> ------- I'm facing a problem that seems related also using
+> gentoo on a x86_64 configuration (Dual Opteron 270 on Tyan
+> K8SE) I'm booting from a 3ware 9500s controller.
+> Everything went find with 2.6.23 but stating from 2.6.24 i
+> get the same kernel panic message: Unable to mount root fs on
+> unknown-block(0,0) The sd messages for sda and sdb that
+> appear under 2.6.23 do no longer appear with 2.6.24 though
+> the 3ware driver reports it's loaded
+>
 
-For some reason I was thinking you were asking if there was a different 
-interface which abstracted all that away for us like with iscsi_tcp.
+Andrew,
+The latest reports being added to the bug point to something other than cciss. This user is reporting the same problem on a white box with a 3ware SAS card. I've recreated the problem in my lab with a DL385 Opteron server. I've confirmed the 2.6.24.x kernels do not fail on Intel based platforms.
+The question is what changed in the kernel to to break AMD platforms. I'll keep looking and post any updates.
 
->>
->> My only concern with a simple patch to use the ib interface's dma 
->> values would be, if there is some event that causes us to start using 
->> inteface ib0 then switch to ib1 (maybe like some sort of route table 
->> change if that is possible), then we will have to loop over all the 
->> scsi devices's queues and update the dma values. And if there is IO 
->> already queued then would we have to possible rebuild those commands 
->> if something like the dma_mask changed?
->>
-> 
-> I guess we can just handle this like how FC handles the case when the 
-> dev loss tmo expires, but then the rport comes back later.
+-- mikem
 
-Yuck, I guess we would have to do something like this if ib0 and ib1 had 
-different dma restrictions.
+>
+> --
+> Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: ------- You are
+> the assignee for the bug, or are watching the assignee.
+>
