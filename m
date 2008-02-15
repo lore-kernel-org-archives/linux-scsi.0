@@ -1,33 +1,47 @@
-From: Keith Hopkins <vger@hopnet.net>
-Subject: Re: aic94xx: failing on high load (another data point)
-Date: Sat, 16 Feb 2008 00:28:41 +0800
-Message-ID: <47B5BDB9.204@hopnet.net>
-References: <479FB3ED.3080401@hopnet.net>	<20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>	<20080130192947.GA21785@tree.beaverton.ibm.com>	<47B4682C.4020505@hopnet.net> <1203089323.3058.20.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: ips.c broken since 2.6.23 on x86_64?
+Date: Sat, 16 Feb 2008 01:09:43 +0900
+Message-ID: <20080216010954M.tomof@acm.org>
+References: <20080214235549.GA19591@tpepper-t42p.dolavim.us>
+	<20080215091316H.fujita.tomonori@lab.ntt.co.jp>
+	<20080215011636.GA21124@tpepper-t42p.dolavim.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.218.196.247] ([221.218.196.247]:37746 "EHLO
-	mail.hopnet.net" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667AbYBOQ1b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2008 11:27:31 -0500
-In-Reply-To: <1203089323.3058.20.camel@localhost.localdomain>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:39209 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754842AbYBOQkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2008 11:40:11 -0500
+In-Reply-To: <20080215011636.GA21124@tpepper-t42p.dolavim.us>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: lnxninja@linux.vnet.ibm.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com, tomof@acm.org
 
-On 02/15/2008 11:28 PM, James Bottomley wrote:
-> If you're willing, could you try this patch which may correct the
-> problem?  It's sort of like falling off a cliff: if you never go near
-> the edge (i.e. you upgrade the drive fw) you never fall off;
-> alternatively, it would be nice if you could help me put up guard rails
-> just in case.
+On Thu, 14 Feb 2008 17:16:36 -0800
+Tim Pepper <lnxninja@linux.vnet.ibm.com> wrote:
 
-Hi James,
+> On Fri 15 Feb at 09:13:16 +0900 fujita.tomonori@lab.ntt.co.jp said:
+> > 
+> > Thanks. So we surely have a bug in the non-breakup part.
+> > 
+> > I've just found one bug. Can you try this patch against 2.6.24?
+> 
+> Tested and unfortunately no change.  Behaves same as the breakup-revert patch.
 
-  Thanks for your feedback & suggestions.  Yes, I'll give the patch a try.  It might take a few days to get onto the system.  The system/drive isn't IBM, but I'll also see if I can track down a firmware update too for the protocol errors.
+Thanks and sorry about that.
 
---Keith
+Now I don't have any idea. I split the patch. Can you please apply
+them in a step-by-step way and tell me which patch breaks the driver?
 
+There are nine patches against 2.6.24:
 
+http://www.kernel.org/pub/linux/kernel/people/tomo/ips/
+
+The first one is just reverting the data buffer accessors
+conversion. It would be nice if we could just revert it but we
+can't. These changes are necessary to compile the driver against post
+2.6.24.
+
+Really sorry about the troubles,
