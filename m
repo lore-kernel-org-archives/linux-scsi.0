@@ -1,86 +1,92 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [APPENDIX PATCH 05/13] dm: remove dead codes
-Date: Fri, 15 Feb 2008 17:30:46 -0500 (EST)
-Message-ID: <20080215.173046.31640500.k-ueda@ct.jp.nec.com>
+Subject: [APPENDIX PATCH 07/13] dm: add memory pool
+Date: Fri, 15 Feb 2008 17:31:26 -0500 (EST)
+Message-ID: <20080215.173126.111205704.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53237 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:51750 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761879AbYBOWbV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Feb 2008 17:31:21 -0500
+	id S1761695AbYBOWcE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2008 17:32:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-This patch removes dead codes for the noflush suspend.
-No functional change.
-
-This patch is just a clean up of the codes and not functionally
-related to request-based dm.  But included here due to literal
-dependency.
-
-The dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL) in dm_suspend()
-is never invoked because:
-  - The 'goto flush_and_out' is same as 'goto out', because
-    the 'goto flush_and_out' is called only when '!noflush'
-  - If the 'r && noflush' is true, the interrupt check code above
-    is invoked and 'goto out'
-
-The DM_WQ_FLUSH_ALL type is used only in dm_suspend().
-So no need any more.
+This patch prepares memory pools for request-based dm.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/md/dm.c |   14 +-------------
- 1 files changed, 1 insertion(+), 13 deletions(-)
+ drivers/md/dm.c |   26 +++++++++++++++++++++++++-
+ 1 files changed, 25 insertions(+), 1 deletion(-)
 
 Index: 2.6.25-rc1/drivers/md/dm.c
 ===================================================================
 --- 2.6.25-rc1.orig/drivers/md/dm.c
 +++ 2.6.25-rc1/drivers/md/dm.c
-@@ -76,7 +76,6 @@ union map_info *dm_get_mapinfo(struct bi
-  */
- struct dm_wq_req {
- 	enum {
--		DM_WQ_FLUSH_ALL,
- 		DM_WQ_FLUSH_DEFERRED,
- 	} type;
- 	struct work_struct work;
-@@ -1340,9 +1339,6 @@ static void dm_wq_work(struct work_struc
+@@ -52,6 +52,22 @@ struct dm_target_io {
+ 	union map_info info;
+ };
  
- 	down_write(&md->io_lock);
- 	switch (req->type) {
--	case DM_WQ_FLUSH_ALL:
--		__merge_pushback_list(md);
--		/* pass through */
- 	case DM_WQ_FLUSH_DEFERRED:
- 		__flush_deferred_io(md);
- 		break;
-@@ -1472,7 +1468,7 @@ int dm_suspend(struct mapped_device *md,
- 		if (!md->suspended_bdev) {
- 			DMWARN("bdget failed in dm_suspend");
- 			r = -ENOMEM;
--			goto flush_and_out;
-+			goto out;
- 		}
++/*
++ * For request based dm.
++ * One of these is allocated per request.
++ *
++ * Since assuming "original request : cloned request = 1 : 1" and
++ * a counter for number of clones like struct dm_io.io_count isn't needed,
++ * struct dm_io and struct target_io can merge.
++ */
++struct dm_rq_target_io {
++	struct mapped_device *md;
++	struct dm_target *ti;
++	struct request *orig, clone;
++	int error;
++	union map_info info;
++};
++
+ union map_info *dm_get_mapinfo(struct bio *bio)
+ {
+ 	if (bio && bio->bi_private)
+@@ -147,6 +163,7 @@ struct mapped_device {
+ #define MIN_IOS 256
+ static struct kmem_cache *_io_cache;
+ static struct kmem_cache *_tio_cache;
++static struct kmem_cache *_rq_tio_cache; /* tio pool for request-based dm */
  
- 		/*
-@@ -1523,14 +1519,6 @@ int dm_suspend(struct mapped_device *md,
+ static int __init local_init(void)
+ {
+@@ -162,9 +179,13 @@ static int __init local_init(void)
+ 	if (!_tio_cache)
+ 		goto out_free_io_cache;
  
- 	set_bit(DMF_SUSPENDED, &md->flags);
++	_rq_tio_cache = KMEM_CACHE(dm_rq_target_io, 0);
++	if (!_rq_tio_cache)
++		goto out_free_tio_cache;
++
+ 	r = dm_uevent_init();
+ 	if (r)
+-		goto out_free_tio_cache;
++		goto out_free_rq_tio_cache;
  
--flush_and_out:
--	if (r && noflush)
--		/*
--		 * Because there may be already I/Os in the pushback list,
--		 * flush them before return.
--		 */
--		dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL);
--
- out:
- 	if (r && md->suspended_bdev) {
- 		bdput(md->suspended_bdev);
+ 	_major = major;
+ 	r = register_blkdev(_major, _name);
+@@ -178,6 +199,8 @@ static int __init local_init(void)
+ 
+ out_uevent_exit:
+ 	dm_uevent_exit();
++out_free_rq_tio_cache:
++	kmem_cache_destroy(_rq_tio_cache);
+ out_free_tio_cache:
+ 	kmem_cache_destroy(_tio_cache);
+ out_free_io_cache:
+@@ -188,6 +211,7 @@ out_free_io_cache:
+ 
+ static void local_exit(void)
+ {
++	kmem_cache_destroy(_rq_tio_cache);
+ 	kmem_cache_destroy(_tio_cache);
+ 	kmem_cache_destroy(_io_cache);
+ 	unregister_blkdev(_major, _name);
