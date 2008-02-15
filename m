@@ -1,107 +1,110 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Fri, 15 Feb 2008 16:02:47 +0100
-Message-ID: <e2e108260802150702g43bf7b47ye2c98770ef0857a7@mail.gmail.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1202145901.3096.49.camel@localhost.localdomain>
-	 <47A751C5.60600@vlnb.net>
-	 <1202149322.3096.66.camel@localhost.localdomain>
-	 <47A75B8A.3020503@vlnb.net>
-	 <1202151293.3096.80.camel@localhost.localdomain>
-	 <47A8B210.8040202@vlnb.net>
-	 <1202238802.3133.71.camel@localhost.localdomain>
-	 <e2e108260802070513t4eeb9a9fucfe9821d94bd7f82@mail.gmail.com>
-	 <47AB0B63.20500@vlnb.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: aic94xx: failing on high load (another data point)
+Date: Fri, 15 Feb 2008 09:28:43 -0600
+Message-ID: <1203089323.3058.20.camel@localhost.localdomain>
+References: <479FB3ED.3080401@hopnet.net>
+	 <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
+	 <20080130192947.GA21785@tree.beaverton.ibm.com>
+	 <47B4682C.4020505@hopnet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:2176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756878AbYBOPCv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2008 10:02:51 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1258472ugc.16
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Feb 2008 07:02:50 -0800 (PST)
-In-Reply-To: <47AB0B63.20500@vlnb.net>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:55087 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751241AbYBOP2u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2008 10:28:50 -0500
+In-Reply-To: <47B4682C.4020505@hopnet.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>
+To: Keith Hopkins <vger@hopnet.net>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org
 
-On Thu, Feb 7, 2008 at 2:45 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->
-> Bart Van Assche wrote:
->  > Since the focus of this thread shifted somewhat in the last few
->  > messages, I'll try to summarize what has been discussed so far:
->  > - There was a number of participants who joined this discussion
->  > spontaneously. This suggests that there is considerable interest in
->  > networked storage and iSCSI.
->  > - It has been motivated why iSCSI makes sense as a storage protocol
->  > (compared to ATA over Ethernet and Fibre Channel over Ethernet).
->  > - The direct I/O performance results for block transfer sizes below 64
->  > KB are a meaningful benchmark for storage target implementations.
->  > - It has been discussed whether an iSCSI target should be implemented
->  > in user space or in kernel space. It is clear now that an
->  > implementation in the kernel can be made faster than a user space
->  > implementation (http://kerneltrap.org/mailarchive/linux-kernel/2008/2/4/714804).
->  > Regarding existing implementations, measurements have a.o. shown that
->  > SCST is faster than STGT (30% with the following setup: iSCSI via
->  > IPoIB and direct I/O block transfers with a size of 512 bytes).
->  > - It has been discussed which iSCSI target implementation should be in
->  > the mainstream Linux kernel. There is no agreement on this subject
->  > yet. The short-term options are as follows:
->  > 1) Do not integrate any new iSCSI target implementation in the
->  > mainstream Linux kernel.
->  > 2) Add one of the existing in-kernel iSCSI target implementations to
->  > the kernel, e.g. SCST or PyX/LIO.
->  > 3) Create a new in-kernel iSCSI target implementation that combines
->  > the advantages of the existing iSCSI kernel target implementations
->  > (iETD, STGT, SCST and PyX/LIO).
->  >
->  > As an iSCSI user, I prefer option (3). The big question is whether the
->  > various storage target authors agree with this ?
->
->  I tend to agree with some important notes:
->
->  1. IET should be excluded from this list, iSCSI-SCST is IET updated for
->  SCST framework with a lot of bugfixes and improvements.
->
->  2. I think, everybody will agree that Linux iSCSI target should work
->  over some standard SCSI target framework. Hence the choice gets
->  narrower: SCST vs STGT. I don't think there's a way for a dedicated
->  iSCSI target (i.e. PyX/LIO) in the mainline, because of a lot of code
->  duplication. Nicholas could decide to move to either existing framework
->  (although, frankly, I don't think there's a possibility for in-kernel
->  iSCSI target and user space SCSI target framework) and if he decide to
->  go with SCST, I'll be glad to offer my help and support and wouldn't
->  care if LIO-SCST eventually replaced iSCSI-SCST. The better one should win.
+On Fri, 2008-02-15 at 00:11 +0800, Keith Hopkins wrote:
+> On 01/31/2008 03:29 AM, Darrick J. Wong wrote:
+> > On Wed, Jan 30, 2008 at 06:59:34PM +0800, Keith Hopkins wrote:
+> >> V28.  My controller functions well with a single drive (low-medium load).  Unfortunately, all attempts to get the mirrors in sync fail and usually hang the whole box.
+> > 
+> > Adaptec posted a V30 sequencer on their website; does that fix the
+> > problems?
+> > 
+> > http://www.adaptec.com/en-US/speed/scsi/linux/aic94xx-seq-30-1_tar_gz.htm
+> > 
+> 
+> I lost connectivity to the drive again, and had to reboot to recover
+> the drive, so it seemed a good time to try out the V30 firmware.
+> Unfortunately, it didn't work any better.  Details are in the
+> attachment.
 
-If I understood the above correctly, regarding a kernel space iSCSI
-target implementation, only LIO-SE and SCST should be considered. What
-I know today about these Linux iSCSI target implementations is as
-follows:
-* SCST performs slightly better than LIO-SE, and LIO-SE performs
-slightly better than STGT (both with regard to latency and with regard
-to bandwidth).
-* The coding style of SCST is closer to the Linux kernel coding style
-than the coding style of the LIO-SE project.
-* The structure of SCST is closer to what Linus expects than the
-structure of LIO-SE (i.e., authentication handled in userspace, data
-transfer handled by the kernel -- LIO-SE handles both in kernel
-space).
-* Until now I did not encounter any strange behavior in SCST. The
-issues I encountered with LIO-SE are being resolved via the LIO-SE
-mailing list (http://groups.google.com/group/linux-iscsi-target-dev).
+Well, I can offer some hope.  The errors you report:
 
-It would take too much effort to develop a new kernel space iSCSI
-target from scratch -- we should start from either LIO-SE or SCST. My
-opinion is that the best approach is to start with integrating SCST in
-the mainstream kernel, and that the more advanced features from LIO-SE
-that are not yet in SCST can be ported from LIO-SE to the SCST
-framework.
+> aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x6
+> aic94xx: escb_tasklet_complete: Can't find task (tc=6) to abort!
 
-Nicholas, do you think the structure of SCST is powerful enough to be
-extended with LIO-SE's powerful features like ERL-2 ?
+Are requests by the sequencer to abort a task because of a protocol
+error.  IBM did some extensive testing with seagate drives and found
+that the protocol errors were genuine and the result of drive firmware
+problems.  IBM released a version of seagate firmware (BA17) to correct
+these.  Unfortunately, your drive identifies its firmware as S513 which
+is likely OEM firmware from another vendor ... however, that vendor may
+have an update which corrects the problem.
 
-Bart Van Assche.
+Of course, the other issue is this:
+
+> aic94xx: escb_tasklet_complete: Can't find task (tc=6) to abort!
+
+This is a bug in the driver.  It's not finding the task in the
+outstanding list.  The problem seems to be that it's taking the task
+from the escb which, by definition, is always NULL.  It should be taking
+the task from the ascb it finds by looping over the pending queue.
+
+If you're willing, could you try this patch which may correct the
+problem?  It's sort of like falling off a cliff: if you never go near
+the edge (i.e. you upgrade the drive fw) you never fall off;
+alternatively, it would be nice if you could help me put up guard rails
+just in case.
+
+Thanks,
+
+James
+
+---
+diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
+index 0febad4..ab35050 100644
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c
++++ b/drivers/scsi/aic94xx/aic94xx_scb.c
+@@ -458,13 +458,19 @@ static void escb_tasklet_complete(struct asd_ascb *ascb,
+ 		tc_abort = le16_to_cpu(tc_abort);
+ 
+ 		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
+-			struct sas_task *task = ascb->uldd_task;
++			struct sas_task *task = a->uldd_task;
++
++			if (a->tc_index != tc_abort)
++				continue;
+ 
+-			if (task && a->tc_index == tc_abort) {
++			if (task) {
+ 				failed_dev = task->dev;
+ 				sas_task_abort(task);
+-				break;
++			} else {
++				ASD_DPRINTK("R_T_A for non TASK scb 0x%x\n",
++					    a->scb->header.opcode);
+ 			}
++			break;
+ 		}
+ 
+ 		if (!failed_dev) {
+@@ -478,7 +484,7 @@ static void escb_tasklet_complete(struct asd_ascb *ascb,
+ 		 * that the EH will wake up and do something.
+ 		 */
+ 		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
+-			struct sas_task *task = ascb->uldd_task;
++			struct sas_task *task = a->uldd_task;
+ 
+ 			if (task &&
+ 			    task->dev == failed_dev &&
+
+
