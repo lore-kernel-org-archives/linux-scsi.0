@@ -1,92 +1,95 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [APPENDIX PATCH 07/13] dm: add memory pool
-Date: Fri, 15 Feb 2008 17:31:26 -0500 (EST)
-Message-ID: <20080215.173126.111205704.k-ueda@ct.jp.nec.com>
+Subject: [APPENDIX PATCH 08/13] dm: add target interfaces
+Date: Fri, 15 Feb 2008 17:31:48 -0500 (EST)
+Message-ID: <20080215.173148.63997298.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51750 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:53246 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761695AbYBOWcE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Feb 2008 17:32:04 -0500
+	id S1761111AbYBOWbn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2008 17:31:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-This patch prepares memory pools for request-based dm.
+This patch adds target interfaces for request-based dm.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/md/dm.c |   26 +++++++++++++++++++++++++-
- 1 files changed, 25 insertions(+), 1 deletion(-)
+ include/linux/device-mapper.h |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+)
 
-Index: 2.6.25-rc1/drivers/md/dm.c
+Index: 2.6.25-rc1/include/linux/device-mapper.h
 ===================================================================
---- 2.6.25-rc1.orig/drivers/md/dm.c
-+++ 2.6.25-rc1/drivers/md/dm.c
-@@ -52,6 +52,22 @@ struct dm_target_io {
- 	union map_info info;
+--- 2.6.25-rc1.orig/include/linux/device-mapper.h
++++ 2.6.25-rc1/include/linux/device-mapper.h
+@@ -10,6 +10,8 @@
+ 
+ #ifdef __KERNEL__
+ 
++struct request;
++struct request_queue;
+ struct dm_target;
+ struct dm_table;
+ struct dm_dev;
+@@ -45,6 +47,9 @@ typedef void (*dm_dtr_fn) (struct dm_tar
+ typedef int (*dm_map_fn) (struct dm_target *ti, struct bio *bio,
+ 			  union map_info *map_context);
+ 
++typedef int (*dm_map_request_fn) (struct dm_target *ti, struct request *clone,
++				  union map_info *map_context);
++
+ /*
+  * Returns:
+  * < 0 : error (currently ignored)
+@@ -57,6 +62,18 @@ typedef int (*dm_endio_fn) (struct dm_ta
+ 			    struct bio *bio, int error,
+ 			    union map_info *map_context);
+ 
++typedef int (*dm_request_endio_first_fn) (struct dm_target *ti,
++					  struct request *clone, int error,
++					  union map_info *map_context);
++
++typedef int (*dm_request_endio_fn) (struct dm_target *ti,
++				    struct request *clone, int error,
++				    union map_info *map_context);
++
++typedef void (*dm_request_queue_in_tgt_fn) (struct dm_target *ti,
++					    struct request *clone,
++					    union map_info *map_context);
++
+ typedef void (*dm_flush_fn) (struct dm_target *ti);
+ typedef void (*dm_presuspend_fn) (struct dm_target *ti);
+ typedef void (*dm_postsuspend_fn) (struct dm_target *ti);
+@@ -71,6 +88,7 @@ typedef int (*dm_message_fn) (struct dm_
+ typedef int (*dm_ioctl_fn) (struct dm_target *ti, struct inode *inode,
+ 			    struct file *filp, unsigned int cmd,
+ 			    unsigned long arg);
++typedef int (*dm_congested_fn) (struct dm_target *ti);
+ 
+ void dm_error(const char *message);
+ 
+@@ -98,7 +116,11 @@ struct target_type {
+ 	dm_ctr_fn ctr;
+ 	dm_dtr_fn dtr;
+ 	dm_map_fn map;
++	dm_map_request_fn map_rq;
+ 	dm_endio_fn end_io;
++	dm_request_endio_first_fn rq_end_io_first;
++	dm_request_endio_fn rq_end_io;
++	dm_request_queue_in_tgt_fn queue_in_tgt;
+ 	dm_flush_fn flush;
+ 	dm_presuspend_fn presuspend;
+ 	dm_postsuspend_fn postsuspend;
+@@ -107,6 +129,7 @@ struct target_type {
+ 	dm_status_fn status;
+ 	dm_message_fn message;
+ 	dm_ioctl_fn ioctl;
++	dm_congested_fn congested;
  };
  
-+/*
-+ * For request based dm.
-+ * One of these is allocated per request.
-+ *
-+ * Since assuming "original request : cloned request = 1 : 1" and
-+ * a counter for number of clones like struct dm_io.io_count isn't needed,
-+ * struct dm_io and struct target_io can merge.
-+ */
-+struct dm_rq_target_io {
-+	struct mapped_device *md;
-+	struct dm_target *ti;
-+	struct request *orig, clone;
-+	int error;
-+	union map_info info;
-+};
-+
- union map_info *dm_get_mapinfo(struct bio *bio)
- {
- 	if (bio && bio->bi_private)
-@@ -147,6 +163,7 @@ struct mapped_device {
- #define MIN_IOS 256
- static struct kmem_cache *_io_cache;
- static struct kmem_cache *_tio_cache;
-+static struct kmem_cache *_rq_tio_cache; /* tio pool for request-based dm */
- 
- static int __init local_init(void)
- {
-@@ -162,9 +179,13 @@ static int __init local_init(void)
- 	if (!_tio_cache)
- 		goto out_free_io_cache;
- 
-+	_rq_tio_cache = KMEM_CACHE(dm_rq_target_io, 0);
-+	if (!_rq_tio_cache)
-+		goto out_free_tio_cache;
-+
- 	r = dm_uevent_init();
- 	if (r)
--		goto out_free_tio_cache;
-+		goto out_free_rq_tio_cache;
- 
- 	_major = major;
- 	r = register_blkdev(_major, _name);
-@@ -178,6 +199,8 @@ static int __init local_init(void)
- 
- out_uevent_exit:
- 	dm_uevent_exit();
-+out_free_rq_tio_cache:
-+	kmem_cache_destroy(_rq_tio_cache);
- out_free_tio_cache:
- 	kmem_cache_destroy(_tio_cache);
- out_free_io_cache:
-@@ -188,6 +211,7 @@ out_free_io_cache:
- 
- static void local_exit(void)
- {
-+	kmem_cache_destroy(_rq_tio_cache);
- 	kmem_cache_destroy(_tio_cache);
- 	kmem_cache_destroy(_io_cache);
- 	unregister_blkdev(_major, _name);
+ struct io_restrictions {
