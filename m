@@ -1,95 +1,332 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [APPENDIX PATCH 08/13] dm: add target interfaces
-Date: Fri, 15 Feb 2008 17:31:48 -0500 (EST)
-Message-ID: <20080215.173148.63997298.k-ueda@ct.jp.nec.com>
+Subject: [APPENDIX PATCH 10/13] dm: enable request-based dm
+Date: Fri, 15 Feb 2008 17:32:31 -0500 (EST)
+Message-ID: <20080215.173231.95504619.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53246 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:51761 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761111AbYBOWbn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Feb 2008 17:31:43 -0500
+	id S1763443AbYBOWc1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2008 17:32:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-This patch adds target interfaces for request-based dm.
+This patch enables request-based dm.
+
+Request-based dm and bio-based dm coexist.
+There are some limitations between them.
+  - OK: bio-based dm device on bio-based dm device
+  - OK: bio-based dm device on request-based dm device
+  - OK: request-based dm device on request-based dm device
+  - NG: request-based dm device on bio-based dm device
+
+The type of a dm device is decided at the first table loading time.
+Until then, mempool creations and queue initializations are deferred.
+Once the type of a dm device is decided, the type can't be changed.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- include/linux/device-mapper.h |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+)
+ drivers/md/dm-table.c |   54 +++++++++++++++++
+ drivers/md/dm.c       |  154 ++++++++++++++++++++++++++++++++++++++------------
+ drivers/md/dm.h       |    6 +
+ 3 files changed, 179 insertions(+), 35 deletions(-)
 
-Index: 2.6.25-rc1/include/linux/device-mapper.h
+Index: 2.6.25-rc1/drivers/md/dm-table.c
 ===================================================================
---- 2.6.25-rc1.orig/include/linux/device-mapper.h
-+++ 2.6.25-rc1/include/linux/device-mapper.h
-@@ -10,6 +10,8 @@
+--- 2.6.25-rc1.orig/drivers/md/dm-table.c
++++ 2.6.25-rc1/drivers/md/dm-table.c
+@@ -813,6 +813,55 @@ static int setup_indexes(struct dm_table
+ 	return 0;
+ }
  
- #ifdef __KERNEL__
- 
-+struct request;
-+struct request_queue;
- struct dm_target;
- struct dm_table;
- struct dm_dev;
-@@ -45,6 +47,9 @@ typedef void (*dm_dtr_fn) (struct dm_tar
- typedef int (*dm_map_fn) (struct dm_target *ti, struct bio *bio,
- 			  union map_info *map_context);
- 
-+typedef int (*dm_map_request_fn) (struct dm_target *ti, struct request *clone,
-+				  union map_info *map_context);
++#define DM_HOOK_AT_REQUEST	0
++#define DM_HOOK_AT_BIO		1
++
++/*
++ * Check the consistency of targets' hook type
++ *
++ * Returns
++ *    DM_HOOK_AT_REQUEST: the table is for request-based dm
++ *    DM_HOOK_AT_BIO    : the table is for bio-based dm
++ *    negative          : the table is not consistent
++ */
++static int check_table_hook_type(struct dm_table *t)
++{
++	unsigned int i;
++	unsigned int bio_based = 0, rq_based = 0;
++	struct dm_target *ti;
++
++	for (i = 0; i < t->num_targets; i++) {
++		ti = t->targets + i;
++
++		if (ti->type->map_rq)
++			rq_based = 1;
++		else
++			bio_based = 1;
++
++		if (rq_based && bio_based) {
++			DMERR("Inconsistent table: different target types"
++			      " mixed up");
++			return -EINVAL;
++		}
++	}
++
++	return rq_based ? DM_HOOK_AT_REQUEST : DM_HOOK_AT_BIO;
++}
++
++static int set_md_hook_type(struct dm_table *t)
++{
++	int r = check_table_hook_type(t);
++
++	switch (r) {
++	case DM_HOOK_AT_REQUEST:
++		return dm_set_md_request_based(t->md);
++	case DM_HOOK_AT_BIO:
++		return dm_set_md_bio_based(t->md);
++	default:
++		return r;
++	}
++}
 +
  /*
-  * Returns:
-  * < 0 : error (currently ignored)
-@@ -57,6 +62,18 @@ typedef int (*dm_endio_fn) (struct dm_ta
- 			    struct bio *bio, int error,
- 			    union map_info *map_context);
+  * Builds the btree to index the map.
+  */
+@@ -821,6 +870,11 @@ int dm_table_complete(struct dm_table *t
+ 	int r = 0;
+ 	unsigned int leaf_nodes;
  
-+typedef int (*dm_request_endio_first_fn) (struct dm_target *ti,
-+					  struct request *clone, int error,
-+					  union map_info *map_context);
++	/* Setup the mapped_device to bio-based dm or request-based dm */
++	r = set_md_hook_type(t);
++	if (r)
++		return r;
 +
-+typedef int (*dm_request_endio_fn) (struct dm_target *ti,
-+				    struct request *clone, int error,
-+				    union map_info *map_context);
+ 	check_for_valid_limits(&t->limits);
+ 
+ 	/* how many indexes will the btree have ? */
+Index: 2.6.25-rc1/drivers/md/dm.c
+===================================================================
+--- 2.6.25-rc1.orig/drivers/md/dm.c
++++ 2.6.25-rc1/drivers/md/dm.c
+@@ -95,6 +95,7 @@ EXPORT_SYMBOL_GPL(dm_get_rq_mapinfo);
+ #define DMF_DELETING 4
+ #define DMF_NOFLUSH_SUSPENDING 5
+ #define DMF_REQUEST_BASED 6
++#define DMF_BIO_BASED 7
+ 
+ /*
+  * Work processed by per-device workqueue.
+@@ -1398,6 +1399,115 @@ out:
+ 	return r;
+ }
+ 
++static void init_queue(struct request_queue *q, struct mapped_device *md)
++{
++	q->queuedata = md;
++	q->backing_dev_info.congested_fn = dm_any_congested;
++	q->backing_dev_info.congested_data = md;
++	blk_queue_make_request(q, dm_request);
++	blk_queue_bounce_limit(q, BLK_BOUNCE_ANY);
++	q->unplug_fn = dm_unplug_all;
++}
 +
-+typedef void (*dm_request_queue_in_tgt_fn) (struct dm_target *ti,
-+					    struct request *clone,
-+					    union map_info *map_context);
++int dm_set_md_request_based(struct mapped_device *md)
++{
++	int r = 0;
 +
- typedef void (*dm_flush_fn) (struct dm_target *ti);
- typedef void (*dm_presuspend_fn) (struct dm_target *ti);
- typedef void (*dm_postsuspend_fn) (struct dm_target *ti);
-@@ -71,6 +88,7 @@ typedef int (*dm_message_fn) (struct dm_
- typedef int (*dm_ioctl_fn) (struct dm_target *ti, struct inode *inode,
- 			    struct file *filp, unsigned int cmd,
- 			    unsigned long arg);
-+typedef int (*dm_congested_fn) (struct dm_target *ti);
++	if (test_bit(DMF_REQUEST_BASED, &md->flags))
++		/* Initialization is already done */
++		return 0;
++
++	if (test_bit(DMF_BIO_BASED, &md->flags)) {
++		DMERR("Can't change hook type to request-based from bio-based");
++		return -EINVAL;
++	}
++
++	md->tio_pool = mempool_create_slab_pool(MIN_IOS, _rq_tio_cache);
++	if (!md->tio_pool)
++		return -ENOMEM;
++
++	md->queue = blk_init_queue(dm_request_fn, NULL);
++	if (!md->queue) {
++		DMERR("request queue initialization for request-based failed");
++		r = -ENOMEM;
++		goto out_free_tio_pool;
++	}
++
++	md->saved_make_request_fn = md->queue->make_request_fn;
++	init_queue(md->queue, md);
++	set_bit(QUEUE_FLAG_STACKABLE, &md->queue->queue_flags);
++	md->disk->queue = md->queue;
++	r = blk_register_queue(md->disk);
++	if (r) {
++		DMERR("registration of request queue failed");
++		goto out_cleanup_queue;
++	}
++
++	set_bit(DMF_REQUEST_BASED, &md->flags);
++
++	return 0;
++
++out_cleanup_queue:
++	blk_cleanup_queue(md->queue);
++	md->disk->queue = md->queue = NULL;
++	md->saved_make_request_fn = NULL;
++
++out_free_tio_pool:
++	mempool_destroy(md->tio_pool);
++	md->tio_pool = NULL;
++
++	return r;
++}
++
++int dm_set_md_bio_based(struct mapped_device *md)
++{
++	if (test_bit(DMF_BIO_BASED, &md->flags))
++		/* Initialization is already done */
++		return 0;
++
++	if (test_bit(DMF_REQUEST_BASED, &md->flags)) {
++		DMERR("Can't change hook type to bio-based from request-based");
++		return -EINVAL;
++	}
++
++	md->io_pool = mempool_create_slab_pool(MIN_IOS, _io_cache);
++	if (!md->io_pool)
++		goto out;
++
++	md->tio_pool = mempool_create_slab_pool(MIN_IOS, _tio_cache);
++	if (!md->tio_pool)
++		goto out_free_io_pool;
++
++	md->bs = bioset_create(16, 16);
++	if (!md->bs)
++		goto out_free_tio_pool;
++
++	md->queue = blk_alloc_queue(GFP_KERNEL);
++	if (!md->queue) {
++		DMERR("request queue initialization for request-based failed");
++		goto out_free_bs;
++	}
++
++	init_queue(md->queue, md);
++	md->disk->queue = md->queue;
++
++	set_bit(DMF_BIO_BASED, &md->flags);
++
++	return 0;
++
++out_free_bs:
++	bioset_free(md->bs);
++	md->bs = NULL;
++out_free_tio_pool:
++	mempool_destroy(md->tio_pool);
++	md->tio_pool = NULL;
++out_free_io_pool:
++	mempool_destroy(md->io_pool);
++	md->io_pool = NULL;
++out:
++	return -ENOMEM;
++}
++
+ static struct block_device_operations dm_blk_dops;
  
- void dm_error(const char *message);
+ /*
+@@ -1437,28 +1547,7 @@ static struct mapped_device *alloc_dev(i
+ 	INIT_LIST_HEAD(&md->uevent_list);
+ 	spin_lock_init(&md->uevent_lock);
  
-@@ -98,7 +116,11 @@ struct target_type {
- 	dm_ctr_fn ctr;
- 	dm_dtr_fn dtr;
- 	dm_map_fn map;
-+	dm_map_request_fn map_rq;
- 	dm_endio_fn end_io;
-+	dm_request_endio_first_fn rq_end_io_first;
-+	dm_request_endio_fn rq_end_io;
-+	dm_request_queue_in_tgt_fn queue_in_tgt;
- 	dm_flush_fn flush;
- 	dm_presuspend_fn presuspend;
- 	dm_postsuspend_fn postsuspend;
-@@ -107,6 +129,7 @@ struct target_type {
- 	dm_status_fn status;
- 	dm_message_fn message;
- 	dm_ioctl_fn ioctl;
-+	dm_congested_fn congested;
- };
+-	md->queue = blk_alloc_queue(GFP_KERNEL);
+-	if (!md->queue)
+-		goto bad_queue;
+-
+-	md->queue->queuedata = md;
+-	md->queue->backing_dev_info.congested_fn = dm_any_congested;
+-	md->queue->backing_dev_info.congested_data = md;
+-	blk_queue_make_request(md->queue, dm_request);
+-	blk_queue_bounce_limit(md->queue, BLK_BOUNCE_ANY);
+-	md->queue->unplug_fn = dm_unplug_all;
+-
+-	md->io_pool = mempool_create_slab_pool(MIN_IOS, _io_cache);
+-	if (!md->io_pool)
+-		goto bad_io_pool;
+-
+-	md->tio_pool = mempool_create_slab_pool(MIN_IOS, _tio_cache);
+-	if (!md->tio_pool)
+-		goto bad_tio_pool;
+-
+-	md->bs = bioset_create(16, 16);
+-	if (!md->bs)
+-		goto bad_no_bioset;
++	/* md's queue and mempools will be allocated after the 1st table load */
  
- struct io_restrictions {
+ 	md->disk = alloc_disk(1);
+ 	if (!md->disk)
+@@ -1471,7 +1560,6 @@ static struct mapped_device *alloc_dev(i
+ 	md->disk->major = _major;
+ 	md->disk->first_minor = minor;
+ 	md->disk->fops = &dm_blk_dops;
+-	md->disk->queue = md->queue;
+ 	md->disk->private_data = md;
+ 	sprintf(md->disk->disk_name, "dm-%d", minor);
+ 	add_disk(md->disk);
+@@ -1493,14 +1581,6 @@ static struct mapped_device *alloc_dev(i
+ bad_thread:
+ 	put_disk(md->disk);
+ bad_disk:
+-	bioset_free(md->bs);
+-bad_no_bioset:
+-	mempool_destroy(md->tio_pool);
+-bad_tio_pool:
+-	mempool_destroy(md->io_pool);
+-bad_io_pool:
+-	blk_cleanup_queue(md->queue);
+-bad_queue:
+ 	free_minor(minor);
+ bad_minor:
+ 	module_put(THIS_MODULE);
+@@ -1520,9 +1600,12 @@ static void free_dev(struct mapped_devic
+ 		bdput(md->suspended_bdev);
+ 	}
+ 	destroy_workqueue(md->wq);
+-	mempool_destroy(md->tio_pool);
+-	mempool_destroy(md->io_pool);
+-	bioset_free(md->bs);
++	if (md->tio_pool)
++		mempool_destroy(md->tio_pool);
++	if (md->io_pool)
++		mempool_destroy(md->io_pool);
++	if (md->bs)
++		bioset_free(md->bs);
+ 	del_gendisk(md->disk);
+ 	free_minor(minor);
+ 
+@@ -1531,7 +1614,8 @@ static void free_dev(struct mapped_devic
+ 	spin_unlock(&_minor_lock);
+ 
+ 	put_disk(md->disk);
+-	blk_cleanup_queue(md->queue);
++	if (md->queue)
++		blk_cleanup_queue(md->queue);
+ 	module_put(THIS_MODULE);
+ 	kfree(md);
+ }
+Index: 2.6.25-rc1/drivers/md/dm.h
+===================================================================
+--- 2.6.25-rc1.orig/drivers/md/dm.h
++++ 2.6.25-rc1/drivers/md/dm.h
+@@ -196,4 +196,10 @@ int dm_lock_for_deletion(struct mapped_d
+ 
+ void dm_kobject_uevent(struct mapped_device *md);
+ 
++/*
++ * Initializer for request-based/bio-based device
++ */
++int dm_set_md_request_based(struct mapped_device *md);
++int dm_set_md_bio_based(struct mapped_device *md);
++
+ #endif
