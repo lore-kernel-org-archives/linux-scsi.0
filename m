@@ -1,44 +1,35 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 11/9 update] firewire: fw-sbp2: enforce a retry of
-	__scsi_add_device if bus generation changed
-Date: Sat, 16 Feb 2008 16:01:47 +0100
-Message-ID: <47B6FADB.1090203@s5r6.in-berlin.de>
-References: <tkrat.f34e34fd91a0695f@s5r6.in-berlin.de>
-	<47ACB449.3060200@s5r6.in-berlin.de>
-	<tkrat.e02d667ba3320993@s5r6.in-berlin.de>
-	<200802101336.57689.jwilson@redhat.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]*
+Date: Sat, 16 Feb 2008 10:20:16 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802161013190.3769-100000@iolanthe.rowland.org>
+References: <6101e8c40802160632y2723ccc3xb0940b9aebfa20f5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <200802101336.57689.jwilson@redhat.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Jarod Wilson <jwilson@redhat.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <6101e8c40802160632y2723ccc3xb0940b9aebfa20f5-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Jarod Wilson wrote on 2008-02-10:
-> Now *this* does the trick. I get the 'READ CAPACITY failed' as before, 
-> then 'firewire_sbp2: fw1.0: error status: 0:4', followed by a new login and 
-> SCSI probe, both of which are successful this time, disk is available for use 
-> and all that good stuff.
+On Sat, 16 Feb 2008, Oliver Pinter wrote:
 
-FYI, I now committed this patch to linux1394-2.6.git after folding patch
- "firewire: fw-sbp2: retry login if scsi_device was offlined early" into it.
--- 
-Stefan Richter
--=====-==--- --=- =----
-http://arcgraph.de/sr/
+> On 2/15/08, Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > In my workplace, I use a customized version of Novell's ZENworks imaging
+> > boot CD, which is based off of Linux. I have one particular model of
+> > laptop - the IBM/Lenovo R61 - on which three different things fail
+> > completely in current kernels (tested with 2.6.24.2 and 2.6.25-rc1):
+> > USB, AHCI (and thus access to the SATA drive), and networking. As a
+> > consequence of all three failing in parallel, I have no practical way to
+> > get logs and other information off of the machine to help with tracking
+> > down the bugs.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+...
+
+To make a long story short, the USB symptoms you describe indicate a
+problem with interrupt routing.  This could well explain the other
+difficulties too.  There are various kernel parameters you can try
+putting on the boot command line to work around it:  acpi=noirq or
+acpi=off or pci=noacpi or a few others.
+
+Alan Stern
