@@ -1,81 +1,69 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] aic94xx: Don't free ABORT_TASK SCBs that are timed out
-	(Was: Re: aic94xx: failing on high load)
-Date: Tue, 19 Feb 2008 10:44:00 -0800
-Message-ID: <20080219184359.GA5414@tree.beaverton.ibm.com>
-References: <479FB3ED.3080401@hopnet.net> <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net> <20080130192947.GA21785@tree.beaverton.ibm.com> <47B4682C.4020505@hopnet.net> <1203089323.3058.20.camel@localhost.localdomain> <47B9958A.8080104@hopnet.net> <1203438140.3103.24.camel@localhost.localdomain>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Sat, 16 Feb 2008 12:44:58 +0000
+Message-ID: <20080216124458.GA3979@ucw.cz>
+References: <1202172065.3096.154.camel@localhost.localdomain> <922945.25870.qm@web31811.mail.mud.yahoo.com> <20080212102244.32869382@appleyard> <1202841935.3137.94.camel@localhost.localdomain> <20080212110752.21840627@appleyard> <1202844495.3137.120.camel@localhost.localdomain> <20080213094502.4112d5e5@appleyard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:44240 "EHLO e3.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753653AbYBSSoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 13:44:04 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1JIi1xh019640
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1JIi1G2231948
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1JIi05w013268
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:4520 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753934AbYBSSpf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2008 13:45:35 -0500
 Content-Disposition: inline
-In-Reply-To: <1203438140.3103.24.camel@localhost.localdomain>
+In-Reply-To: <20080213094502.4112d5e5@appleyard>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Keith Hopkins <vger@hopnet.net>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>, Peter Bogdanovic <pbog@us.ibm.com>, Gilbert Wu <Gilbert_Wu@adaptec.com>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 
-If we send an ABORT_TASK ascb that doesn't return within the timeout period,
-we should not free that ascb because the sequencer is still holding onto it.
-Hopefully it will fix what James Bottomley describes below:
-
-On Tue, Feb 19, 2008 at 10:22:20AM -0600, James Bottomley wrote:
-
-> Unfortunately, there's a bug in TMF timeout handling in the driver, it
-> leaves the sequencer entry pending, but frees the ascb.  If the
-> sequencer ever picks this up it will get very confused, as it does a
-> while down in the trace:
+On Wed 2008-02-13 09:45:02, Kristen Carlson Accardi wrote:
+> On Tue, 12 Feb 2008 13:28:15 -0600
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
-> > aic94xx: BUG:sequencer:dl:no ascb?!
-> > aic94xx: BUG:sequencer:dl:no ascb?!
+> > On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
+> > > I understand what you are trying to do - I guess I just doubt the
+> > > value you've added by doing this.  I think that there's going to be
+> > > so much customization that system vendors will want to add, that
+> > > they are going to wind up adding a custom library regardless, so
+> > > standardising those few things won't buy us anything.
+> > 
+> > It depends ... if you actually have a use for the customisations, yes.
+> > If you just want the basics of who (what's in the enclousure), what
+> > (activity) and where (locate) then I think it solves your problem
+> > almost entirely.
+> > 
+> > So, entirely as a straw horse, tell me what else your enclosures
+> > provide that I haven't listed in the four points.  The SES standards
+> > too provide a huge range of things that no-one ever seems to
+> > implement (temperature, power, fan speeds etc).
+> > 
+> > I think the users of enclosures fall int these categories
+> > 
+> > 85% just want to know where their device actually is (i.e. that sdc is
+> > in enclosure slot 5)
+> > 50% like watching the activity lights
+> > 30% want to be able to have a visual locate function
+> > 20% want a visual failure indication (the other 80% rely on some OS
+> > notification instead)
+> > 
+> > When you add up the overlapping needs, you get about 90% of people
+> > happy with the basics that the enclosure services provide.  Could
+> > there be more ... sure; should there be more ... I don't think so ...
+> > that's what value add the user libraries can provide.
+> > 
+> > James
+> > 
+> > 
 > 
-> That's where the sequencer adds an ascb to the done list that we've
-> already freed.  From this point on confusion reigns and the error
-> handler eventually offlines the device.
-> 
-> I'll see if I can come up with patches to fix this ... or at least
-> mitigate the problems it causes.
+> I don't think I'm arguing whether or not your solution may work, what I
+> am arguing is really a more philosophical point.  Not "can we do it
+> this way", but "should we do it way".  I am of the opinion that
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+Hw abstraction is still kernel's job. That's why we have leds exported
+in sysfs... let vendors have their libraries, but lets put the
+'everyone does these' stuff in kernel.
 
- drivers/scsi/aic94xx/aic94xx_tmf.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index b52124f..4b24bd3 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -463,7 +463,7 @@ int asd_abort_task(struct sas_task *task)
- 						       AIC94XX_SCB_TIMEOUT);
- 		spin_lock_irqsave(&task->task_state_lock, flags);
- 		if (leftover < 1)
--			res = TMF_RESP_FUNC_FAILED;
-+			goto out_not_reported;
- 		if (task->task_state_flags & SAS_TASK_STATE_DONE)
- 			res = TMF_RESP_FUNC_COMPLETE;
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
-@@ -487,6 +487,11 @@ out:
- 	asd_ascb_free(ascb);
- 	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
- 	return res;
-+
-+out_not_reported:
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	ASD_DPRINTK("task 0x%p aborted? but not reported.\n", task);
-+	return res;
- }
- 
- /**
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
