@@ -1,56 +1,37 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394: sbp2: fix rescan-scsi-bus
-Date: Sun, 17 Feb 2008 14:57:10 +0100 (CET)
-Message-ID: <tkrat.e66f8acfe9d89925@s5r6.in-berlin.de>
-References: <tkrat.e8f3d31fb5f9fe01@s5r6.in-berlin.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi_debug: disable clustering
+Date: Sun, 17 Feb 2008 07:10:45 -0700
+Message-ID: <20080217141045.GB21012@parisc-linux.org>
+References: <20080216235714H.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.e8f3d31fb5f9fe01@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:54258 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753354AbYBQOKq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Feb 2008 09:10:46 -0500
+Content-Disposition: inline
+In-Reply-To: <20080216235714H.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@hansenpartnership.com, dougg@torque.net, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-rescan-scsi-bus used to add SBP-2 targets which weren't there.
+On Sat, Feb 16, 2008 at 11:57:15PM +0900, FUJITA Tomonori wrote:
+> scsi_debug does at several places:
+> 
+> for_each_sg(sdb->table.sgl, sg, sdb->table.nents, k) {
+> 	kaddr = (unsigned char *)
+> 		kmap_atomic(sg_page(sg), KM_USER0);
+> 
+> 
+> We cannot do something like that with the clustering enabled (or we
+> can use scsi_kmap_atomic_sg).
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/ieee1394/sbp2.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: linux/drivers/ieee1394/sbp2.c
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.c
-+++ linux/drivers/ieee1394/sbp2.c
-@@ -1974,6 +1974,9 @@ static int sbp2scsi_slave_alloc(struct s
- {
- 	struct sbp2_lu *lu = (struct sbp2_lu *)sdev->host->hostdata[0];
- 
-+	if (sdev->lun != 0 || sdev->id != lu->ud->id || sdev->channel != 0)
-+		return -ENODEV;
-+
- 	lu->sdev = sdev;
- 	sdev->allow_restart = 1;
- 
+Why not?  Is KM_USER0 used for something else with clstering enabled?
 
 -- 
-Stefan Richter
--=====-==--- --=- =---=
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
