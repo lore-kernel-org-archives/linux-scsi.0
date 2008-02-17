@@ -1,27 +1,42 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: fix compilation compile
-Date: Sun, 17 Feb 2008 13:04:37 -0800
-Message-ID: <20080217210437.GB15268@plap3.qlogic.org>
-References: <200802160624.m1G6OgC1027039@mbox.iij4u.or.jp>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] ieee1394: sbp2: fix rescan-scsi-bus
+Date: Sun, 17 Feb 2008 22:08:02 +0100
+Message-ID: <47B8A232.9080605@s5r6.in-berlin.de>
+References: <tkrat.e8f3d31fb5f9fe01@s5r6.in-berlin.de>	
+	<tkrat.e66f8acfe9d89925@s5r6.in-berlin.de>
+	<1203264186.3082.33.camel@localhost.localdomain>
+	<47B875CA.8070900@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:20665 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbYBQVEm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Feb 2008 16:04:42 -0500
-Content-Disposition: inline
-In-Reply-To: <200802160624.m1G6OgC1027039@mbox.iij4u.or.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <47B875CA.8070900@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Sat, 16 Feb 2008, FUJITA Tomonori wrote:
+>> On Sun, 2008-02-17 at 14:57 +0100, Stefan Richter wrote:
+>>> rescan-scsi-bus used to add SBP-2 targets which weren't there.
 
-> scsi/qla2xxx/qla_dfs.c: In function 'qla2x00_dfs_fce_show':
-> scsi/qla2xxx/qla_dfs.c:26: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'uint64_t'
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+PS:  It probably wasn't clear:  rescan-scsi-bus.sh is *not* necessary
+for sbp2 (under Linux 2.6, that is).  The patch merely prevents weird
+things from happening if the user runs rescan-scsi-bus.sh on a 2.6 box
+with sbp2 driven shosts present.
+-- 
+Stefan Richter
+-=====-==--- --=- =---=
+http://arcgraph.de/sr/
 
-Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
