@@ -1,37 +1,54 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] 2.6.25-rc1-git2: GDT SCSI: change drivers/scsi/gdth.c
- into using pci_get device
-Date: Sun, 17 Feb 2008 12:37:25 +0200
-Message-ID: <47B80E65.7090504@panasas.com>
-References: <47B1ADCE.40202@larces.uece.br> <1202833354.3137.19.camel@localhost.localdomain> <47B1CF45.5070407@panasas.com> <47B23033.1080100@larces.uece.br> <1202861823.3137.170.camel@localhost.localdomain> <47B2B101.3090106@panasas.com> <20080216163756.GG7657@parisc-linux.org>
+From: Sergey Vlasov <vsu-u2l5PoMzF/Uox3rIn2DAYQ@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]*
+Date: Sun, 17 Feb 2008 13:55:20 +0300
+Message-ID: <20080217105520.GA4628@atlas.home>
+References: <Pine.LNX.4.44L0.0802161207160.3828-100000@iolanthe.rowland.org> <47B756B5.7070901@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757701AbYBQKhu@vger.kernel.org>
-In-Reply-To: <20080216163756.GG7657@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, support@adaptec.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Sergio Luis <sergio@larces.uece.br>, Achim Leubner <achim_leubner@adaptec.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <47B756B5.7070901-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Feb 16 2008 at 18:37 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, Feb 13, 2008 at 10:57:37AM +0200, Boaz Harrosh wrote:
->> I still don't have a card for testing myself. Again anyone
->> wants to send me a card. Intel people anybody home?
-> 
-> Apparently Intel sold this line of cards to Adaptec.  The copyright
-> notice in the file backs this up:
-> 
->  * Copyright (C) 1995-06 ICP vortex GmbH, Achim Leubner                 *
->  * Copyright (C) 2002-04 Intel Corporation                              *
->  * Copyright (C) 2003-06 Adaptec Inc.                                   *
->  * <achim_leubner@adaptec.com>                                          *
-> 
 
-OK I never got this guy to ping back. CCing support@adaptec.com.
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Who is the right contact person, regarding the HW that is supported
-by the gdth driver? Form what we see in driver commit logs (above), 
-it was transfered to  Adaptec from Intel in 2003. Is that still so?
+On Sat, Feb 16, 2008 at 04:33:41PM -0500, Andrew Buehler wrote:
+> The associated dmesg (obtained yesterday from booting with the
+> Flash drive connected) is attached.
 
-Boaz
+This dmesg shows that ACPI is not enabled in your kernel config - most
+likely this is the problem.  Try to enable it:
+
+ 1) In the "Power management options" submenu enable the "Power
+    Management support" option (CONFIG_PM) - if this option is
+    disabled, you will not see the option to enable ACPI below.
+
+ 2) In the same submenu enable the "ACPI (Advanced Configuration and
+    Power Interface) Support" option (CONFIG_ACPI).
+
+Without ACPI support the kernel can use legacy interrupt routing
+tables from BIOS, but on new systems these tables are often broken due
+to lack of testing (because all modern operating systems use ACPI
+instead of these legacy tables).
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFHuBKYW82GfkQfsqIRAn7lAKCLI1Hqzb3ZLL6MCaRjfOAIJSknRwCdGUxG
+3FPtUeL7NNA+fI9UNNrp0jA=
+=CI1M
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
