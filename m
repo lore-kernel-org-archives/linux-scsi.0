@@ -1,54 +1,103 @@
-From: Sergey Vlasov <vsu-u2l5PoMzF/Uox3rIn2DAYQ@public.gmane.org>
-Subject: Re: USB regression (and other failures) in 2.6.2[45]*
-Date: Sun, 17 Feb 2008 13:55:20 +0300
-Message-ID: <20080217105520.GA4628@atlas.home>
-References: <Pine.LNX.4.44L0.0802161207160.3828-100000@iolanthe.rowland.org> <47B756B5.7070901@gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: ips.c broken since 2.6.23 on x86_64?
+Date: Sun, 17 Feb 2008 14:52:11 +0200
+Message-ID: <47B82DFB.8010206@panasas.com>
+References: <20080215011636.GA21124@tpepper-t42p.dolavim.us>	<20080216010954M.tomof@acm.org>	<20080215225057.GA3172@tpepper-t42p.dolavim.us> <20080216094127E.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <47B756B5.7070901-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22903 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752402AbYBQNCk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Feb 2008 08:02:40 -0500
+In-Reply-To: <20080216094127E.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com
 
+On Sat, Feb 16 2008 at 2:41 +0200, FUJITA Tomonori <tomof@acm.org> wrote:
+> On Fri, 15 Feb 2008 14:50:57 -0800
+> Tim Pepper <lnxninja@linux.vnet.ibm.com> wrote:
+> 
+>> On Sat 16 Feb at 01:09:43 +0900 tomof@acm.org said:
+>>> The first one is just reverting the data buffer accessors
+>>> conversion. It would be nice if we could just revert it but we
+>>> can't. These changes are necessary to compile the driver against post
+>>> 2.6.24.
+>> Fujita-san,
+>>
+>> Unfortunately (and not too surprisingly given what we've tried so far) with
+>> only the first of your series reverted the driver is working fine for me
+>> again.
+> 
+> Do you mean that you applied only the following two patches against
+> 2.6.24, and then it doesn't work?
+> 
+> 0001-ips-revert-the-changes-for-the-data-buffer-accessor.patch
+> 0002-ips-kill-the-map_single-path-in-ips_scmd_buf_write.patch
+> 
+> If so, the second patch is broken. Did you saw BUG_ON message (I added
+> some BUG_ON to the patch)?
+> 
+> 
+>> I saw (eg: replies to http://lkml.org/lkml/2007/5/11/132) some possibly
+>> similar sounding issues with other drivers.  Could there be some memory
+>> uninitialised?  I did try changing all the ips.c kmalloc's to kzalloc's,
+>> but that didn't help.  Also that thread ties into pci gart.  The machines
+>> we've been using are liable to getting pci calgary although given my
+>> .config has:
+>>     CONFIG_GART_IOMMU=y
+>>     CONFIG_CALGARY_IOMMU=y
+>>     # CONFIG_CALGARY_IOMMU_ENABLED_BY_DEFAULT is not set
+>> and that when booting this mainline I don't see any Calgary related
+>> messages like I get from eg: Ubuntu's 2.6.22-14-server...I'm probably not
+>> actually running the calgary iommu code in these repros.
+> 
+> Yes, probabaly, your machine doesn't use any IOMMU hardware
+> (nommu_map_sg function was in your crash log).
+> 
+> 
+>> Anyway, I greatly appreciate your efforts so far in trying to find what
+>> could be wrong here!
+> 
+> Really sorry about the troubles and thanks for testing.
+> -
+Tomo hi
+It looks like the same bug we had with USB's isd200 and protocol.c. An overflow
+of a data buffer bigger then then the sglist. There 2 it was in the INQUIRY command.
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+You just need to also check for sg != NULL in the for() loop.
 
-On Sat, Feb 16, 2008 at 04:33:41PM -0500, Andrew Buehler wrote:
-> The associated dmesg (obtained yesterday from booting with the
-> Flash drive connected) is attached.
+Tim Please test below patch. It's ontop of 2.6.24 but should also apply to
+2.6.25-rcx
 
-This dmesg shows that ACPI is not enabled in your kernel config - most
-likely this is the problem.  Try to enable it:
+Boaz
+-- 
+>From ec20bea25c9fe2400378b19c128b15fef3c7cbb6 Mon Sep 17 00:00:00 2001
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Sun, 17 Feb 2008 14:50:25 +0200
+Subject: [PATCH] ips: Avoid overflow in writing scsi command data
 
- 1) In the "Power management options" submenu enable the "Power
-    Management support" option (CONFIG_PM) - if this option is
-    disabled, you will not see the option to enable ACPI below.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/ips.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- 2) In the same submenu enable the "ACPI (Advanced Configuration and
-    Power Interface) Support" option (CONFIG_ACPI).
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 5c5a9b2..1d12253 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3517,7 +3517,7 @@ ips_scmd_buf_write(struct scsi_cmnd *scmd, void *data, unsigned int count)
+         struct scatterlist *sg = scsi_sglist(scmd);
+ 
+         for (i = 0, xfer_cnt = 0;
+-             (i < scsi_sg_count(scmd)) && (xfer_cnt < count); i++) {
++             (i < scsi_sg_count(scmd)) && (xfer_cnt < count) && sg; i++) {
+                 min_cnt = min(count - xfer_cnt, sg[i].length);
+ 
+                 /* kmap_atomic() ensures addressability of the data buffer.*/
+-- 
+1.5.3.3
 
-Without ACPI support the kernel can use legacy interrupt routing
-tables from BIOS, but on new systems these tables are often broken due
-to lack of testing (because all modern operating systems use ACPI
-instead of these legacy tables).
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHuBKYW82GfkQfsqIRAn7lAKCLI1Hqzb3ZLL6MCaRjfOAIJSknRwCdGUxG
-3FPtUeL7NNA+fI9UNNrp0jA=
-=CI1M
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
