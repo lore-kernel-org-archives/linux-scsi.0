@@ -1,98 +1,53 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: USB regression (and other failures) in 2.6.2[45]*
-Date: Sat, 16 Feb 2008 22:35:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0802162210110.13745-100000@netrider.rowland.org>
-References: <47B78A08.1020502@gmail.com>
+From: Joseph Fannin <jfannin@gmail.com>
+Subject: [OT] GMail (was USB regression (and other failures)...)
+Date: Sat, 16 Feb 2008 23:10:53 -0500
+Message-ID: <20080217041052.GA32381@nineveh.local>
+References: <Pine.LNX.4.44L0.0802161756330.3753-100000@netrider.rowland.org> <47B78A08.1020502@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <47B78A08.1020502-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.242]:29667 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757201AbYBQEK6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Feb 2008 23:10:58 -0500
+Received: by an-out-0708.google.com with SMTP id d31so278384and.103
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Feb 2008 20:10:57 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <47B78A08.1020502@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Buehler <abuehler.kernel@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Pinter <oliver.pntr@gmail.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Sat, 16 Feb 2008, Andrew Buehler wrote:
+On Sat, Feb 16, 2008 at 08:12:40PM -0500, Andrew Buehler wrote:
+> [...] and I would not be in the least surprised if this turned out to
+> be yet one more problem with gmail
 
-> Messages sent to my address directly are explicitly not filtered into
-> the folders I have set up for various mailing lists, so that if someone
-> does send me a "heads up" reply for a specific topic on a list to which
-> I am subscribed it does not get caught by the list filter and fail to
-> come to my attention. If a message fails to be filtered into any
-> mailing-list folder, then I should be able to conclude that it is
-> specifically intended for me, and not part of normal mailing-list
-> traffic. The practice of sending replies to both addresses renders this
-> an invalid conclusion. I do not think that it is unreasonable to expect
-> that conclusion to be valid.
+It is; Gmail will refuse to POP more than one copy of a mail to you,
+no matter how many copies it recieves via different paths.  Which copy
+you get seems to be dependant on which arrives first, so you can't
+even hope a mail exchange will consistently arrive in one mailbox or
+another.
 
-It's not unreasonable.  Neither is Aristotelian physics.  Nevertheless, 
-neither one is a good match to reality.
+Note that this also applies to mails cross-posted to multiple lists
+you maybe be suscribed to; this breaks threading fantastically.
 
-Why not arrange instead that messages sent from a mailing list server
-_do_ get filtered into the corresponding folder, even if they were also
-sent to your address?  This certainly should make your assumption (that
-messages not filtered into any mailing-list folder are specifically
-intended for you) much more valid than it is now.
+Google is aware of the issue, and considers it a feature.  If you find
+another free mail service which isn't so broken, I'd love to hear
+about it.
 
-> It's not that I'm not receiving all of this thread's messages via the
-> list - it's that I'm not receiving *any* of them via the list, and I
-> suspect that the reason is that my address is in both the To:/Cc: and
-> the list itself. Something is filtering it such that I do not receive
-> "duplicate" replies in this way, but it is doing so by filtering out the
-> list copy rather than the direct copy. I have seen mailing lists which
-> do this before, but I see no other indication that the LKML is one of
-> them, and I would not be in the least surprised if this turned out to be
-> yet one more problem with gmail.
+---
 
-Well, I _am_ receiving your messages by way of linux-usb as well as
-directly, for whatever that's worth.
+That said, netiquette on the kernel lists is to *never* drop CC's.
+Too much traffic crosses the lists for anyone to read it all and note
+anything they might be interested and/or implicated in.  Never
+dropping CC's allows busy people to keep track of conversations
+they've taken part in or that someone thinks they should see
+without the worry of missing any important parts of one.
 
+Or at least it does if your mail system isn't broken.  We get what we
+pay for.  :-/
 
-> > is an indication that interrupt routing is indeed not working right.
-> > Or possibly your EHCI controller isn't working.  You could try
-> > blacklisting or unloading ehci-hcd to see if that helps.  Of course
-> > then none of your USB devices would be able to run at high speed.
-> 
-> ehci-hcd is not modular in my current kernel, and if there is a way to
-> turn it off without its being modular I am not aware of it.
-
-Go into the /sys/bus/pci/drivers/ehci_hcd directory.  Then for each 
-symbolic link to a controller device listed there, write the device's 
-name (with "echo -n") to the "unbind" file.  For example,
-
-	echo -n 0000:00:1d.7 >unbind
-
-That will have nearly the same effect as unloading ehci-hcd.
-
-> Until this thread, I was not even aware that ACPI was related to USB; I
-> had largely conflated it with a similar acronym which I think is related
-> to power management and which I can suddenly not even find in my kernel
-> config. I will, however, look into linux-acpi.
-
-ACPI isn't directly related to USB; rather it has to do with
-transferring information between the OS and the
-BIOS/vendor-specific-hardware.  Power management is example where such
-a transfer is needed.  In your case, the relevant information is which
-IRQ is connected to which motherboard device.  If you don't have ACPI
-enabled in your configuration, then perhaps that's the problem -- try
-enabling it.
-
-> That will not be helpful for the other two problems, however, since
-> neither of them was ever working as far as I am aware. That also leaves
-> me hesitant to conclude that they are rooted in the same IRQ issue as
-> the USB problem appears to be.
-
-Maybe they aren't.  But when you have multiple bugs, you have to fix
-them one at a time.
-
-> Which lists or other addresses would be appropriate for reporting
-> problems with AHCI/libata and with networking, specifically with the
-> e1000/e1000e drivers? I see a mailing list for e1000 in MAINTAINERS, but
-> only the maintainer's address for SATA/libata/whatever else may be
-> involved there, and I am reflexively reluctant to bother a maintainer
-> directly with as little information as I presently have.
-
-I don't know, but you should wait until the simpler problem is sorted 
-out before tackling the more complicated ones.
-
-Alan Stern
+--
+Joseph Fannin
+jfannin@gmail.com
