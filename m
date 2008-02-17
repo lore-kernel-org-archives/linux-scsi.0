@@ -1,50 +1,43 @@
-From: FUJITA Tomonori <tomof@acm.org>
+From: Tim Pepper <lnxninja@linux.vnet.ibm.com>
 Subject: Re: ips.c broken since 2.6.23 on x86_64?
-Date: Mon, 18 Feb 2008 07:31:56 +0900
-Message-ID: <20080218073134A.tomof@acm.org>
-References: <20080215225057.GA3172@tpepper-t42p.dolavim.us>
-	<20080216094127E.tomof@acm.org>
-	<20080217211539.GA29813@tpepper-t42p.dolavim.us>
+Date: Sun, 17 Feb 2008 15:29:58 -0800
+Message-ID: <20080217232957.GA30778@tpepper-t42p.dolavim.us>
+References: <20080215225057.GA3172@tpepper-t42p.dolavim.us> <20080216094127E.tomof@acm.org> <20080217211539.GA29813@tpepper-t42p.dolavim.us> <20080218073134A.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:32867 "EHLO mo10.iij4u.or.jp"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:41821 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753950AbYBQWnt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Feb 2008 17:43:49 -0500
-In-Reply-To: <20080217211539.GA29813@tpepper-t42p.dolavim.us>
+	id S1754663AbYBQXaD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Feb 2008 18:30:03 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1HNU0E6023500
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Feb 2008 18:30:00 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1HNU0UQ236216
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Feb 2008 18:30:00 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1HNTxsu001060
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Feb 2008 18:30:00 -0500
+Content-Disposition: inline
+In-Reply-To: <20080218073134A.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lnxninja@linux.vnet.ibm.com
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com
 
-On Sun, 17 Feb 2008 13:15:40 -0800
-Tim Pepper <lnxninja@linux.vnet.ibm.com> wrote:
-
-> On Sat 16 Feb at 09:41:48 +0900 tomof@acm.org said:
-> > 
-> > Do you mean that you applied only the following two patches against
-> > 2.6.24, and then it doesn't work?
-> > 
-> > 0001-ips-revert-the-changes-for-the-data-buffer-accessor.patch
+On Mon 18 Feb at 07:31:56 +0900 tomof@acm.org said:
 > 
-> I only applies the 0001 patch and the driver appeared to function fine.
-
-I see, thanks. It would be nice if we can push only the 0001 patch to
-mainline, however as I explained, we can't unfortunately. The
-0002-0009 patches are necessary for post 2.6.24.
-
-
-> > If so, the second patch is broken. Did you saw BUG_ON message (I added
-> > some BUG_ON to the patch)?
+> Can you apply the 0001 and 0002 against 2.6.24 and see how it works?
+> If it works well, then please apply the 0001, 0002 and 0003.
 > 
-> I did not apply the 0002 patch.
+> Please the patches in a step-by-step way and tell me which patch
+> breaks the driver.
 
-Can you apply the 0001 and 0002 against 2.6.24 and see how it works?
-If it works well, then please apply the 0001, 0002 and 0003.
+I wasn't thinking Friday...we already expected 0001 to fix it, so the
+hope is one of the others breaks it and that is useful info.  I'll apply
+and test the rest of the series.  Sorry!
 
-Please the patches in a step-by-step way and tell me which patch
-breaks the driver.
-
-Thanks,
+-- 
+Tim Pepper  <lnxninja@linux.vnet.ibm.com>
+IBM Linux Technology Center
