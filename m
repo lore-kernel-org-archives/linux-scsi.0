@@ -1,116 +1,59 @@
-From: Joshua Hoblitt <josh@hoblitt.com>
-Subject: Re: arcmsr + archttp64 calls dma_free_coherent() with irqs
-	disabled - dmesg filled with warnings
-Date: Sat, 16 Feb 2008 15:15:11 -1000
-Message-ID: <20080217011511.GE11299@hoblitt.com>
-References: <20080212205345.GB7640@hoblitt.com> <20080212222109.GC7640@hoblitt.com> <1202855436.3137.153.camel@localhost.localdomain> <20080215205657.GB23625@hoblitt.com> <1203112643.3058.48.camel@localhost.localdomain> <1203113047.3058.50.camel@localhost.localdomain> <47B6CDDB.8000605@gentoo.org> <1203173535.3182.11.camel@localhost.localdomain> <47B7738C.9050107@gentoo.org> <47B773C5.2000905@gentoo.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
+Date: Sat, 16 Feb 2008 18:40:11 -0800 (PST)
+Message-ID: <20080217024011.24E2010806C@picon.linux-foundation.org>
+References: <bug-9775-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:41429 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbYBQBPO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Feb 2008 20:15:14 -0500
-Content-Disposition: inline
-In-Reply-To: <47B773C5.2000905@gentoo.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:35835 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751846AbYBQCkQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Feb 2008 21:40:16 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1H2eETO019573
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Feb 2008 18:40:15 -0800
+In-Reply-To: <bug-9775-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kim H?jgaard-Hansen <kimhh@control.aau.dk>, erich@areca.com.tw, linux-scsi@vger.kernel.org, j_gentoo@hoblitt.com, nick.cheng@areca.com.tw
+To: linux-scsi@vger.kernel.org
 
-Thanks James.  I'll give a try tonight or tomorrow.
+http://bugzilla.kernel.org/show_bug.cgi?id=9775
 
--J
 
---
-On Sat, Feb 16, 2008 at 11:37:41PM +0000, Daniel Drake wrote:
-> Daniel Drake wrote:
->> Here is a patch to address your comments.
->> Joshua, would you mind testing this before I submit it properly? It will 
->> apply cleanly to 2.6.24 on top of the previous patch you tested. I have 
->> compile-tested it.
->
-> It would help to include the patch.
+john@mib-infotech.co.nz changed:
 
-> >From 0a9cd6133fe4f0c3a8906d6be1b9d1ef083345dc Mon Sep 17 00:00:00 2001
-> From: Daniel Drake <dsd@gentoo.org>
-> Date: Sat, 16 Feb 2008 23:25:02 +0000
-> Subject: [PATCH] arcmsr: fix message allocation
-> 
-> ---
->  drivers/scsi/arcmsr/arcmsr_hba.c |   26 +++++++++++---------------
->  1 files changed, 11 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> index 4f9ff32..f91f79c 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -1387,18 +1387,16 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  	switch(controlcode) {
->  
->  	case ARCMSR_MESSAGE_READ_RQBUFFER: {
-> -		unsigned long *ver_addr;
-> +		unsigned char *ver_addr;
->  		uint8_t *pQbuffer, *ptmpQbuffer;
->  		int32_t allxfer_len = 0;
-> -		void *tmp;
->  
-> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-> -		ver_addr = (unsigned long *)tmp;
-> -		if (!tmp) {
-> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
-> +		if (!ver_addr) {
->  			retvalue = ARCMSR_MESSAGE_FAIL;
->  			goto message_out;
->  		}
-> -		ptmpQbuffer = (uint8_t *) ver_addr;
-> +		ptmpQbuffer = ver_addr;
->  		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
->  			&& (allxfer_len < 1031)) {
->  			pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
-> @@ -1427,26 +1425,24 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  			}
->  			arcmsr_iop_message_read(acb);
->  		}
-> -		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
-> +		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);
->  		pcmdmessagefld->cmdmessage.Length = allxfer_len;
->  		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
-> -		kfree(tmp);
-> +		kfree(ver_addr);
->  		}
->  		break;
->  
->  	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
-> -		unsigned long *ver_addr;
-> +		unsigned char *ver_addr;
->  		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
->  		uint8_t *pQbuffer, *ptmpuserbuffer;
-> -		void *tmp;
->  
-> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-> -		ver_addr = (unsigned long *)tmp;
-> -		if (!tmp) {
-> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
-> +		if (!ver_addr) {
->  			retvalue = ARCMSR_MESSAGE_FAIL;
->  			goto message_out;
->  		}
-> -		ptmpuserbuffer = (uint8_t *)ver_addr;
-> +		ptmpuserbuffer = ver_addr;
->  		user_len = pcmdmessagefld->cmdmessage.Length;
->  		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
->  		wqbuf_lastindex = acb->wqbuf_lastindex;
-> @@ -1492,7 +1488,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  				retvalue = ARCMSR_MESSAGE_FAIL;
->  			}
->  			}
-> -			kfree(tmp);
-> +			kfree(ver_addr);
->  		}
->  		break;
->  
-> -- 
-> 1.5.4
-> 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
 
+
+
+
+------- Comment #11 from john@mib-infotech.co.nz  2008-02-16 18:40 -------
+Thanks James,
+I've spent an afternoon rebooting now and finally discovered  I had a faulty
+external SSCI cable.
+
+Initial tests suggest its ok.
+
+However I remain perplexed. The problem initially manifested when I upgraded my
+kernel, not when I diddled with my hardware.
+
+This now seems to have fixed udev bug
+http://bugs.gentoo.org/show_bug.cgi?id=200437
+
+as well
+
+how bizarre!
+
+Thanks for your help everyone.
+
+Regards
+John
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
