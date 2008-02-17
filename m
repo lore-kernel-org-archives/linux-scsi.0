@@ -1,59 +1,98 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
-Date: Sat, 16 Feb 2008 18:40:11 -0800 (PST)
-Message-ID: <20080217024011.24E2010806C@picon.linux-foundation.org>
-References: <bug-9775-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:35835 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751846AbYBQCkQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Feb 2008 21:40:16 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1H2eETO019573
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Feb 2008 18:40:15 -0800
-In-Reply-To: <bug-9775-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]*
+Date: Sat, 16 Feb 2008 22:35:04 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802162210110.13745-100000@netrider.rowland.org>
+References: <47B78A08.1020502@gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47B78A08.1020502-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9775
+On Sat, 16 Feb 2008, Andrew Buehler wrote:
+
+> Messages sent to my address directly are explicitly not filtered into
+> the folders I have set up for various mailing lists, so that if someone
+> does send me a "heads up" reply for a specific topic on a list to which
+> I am subscribed it does not get caught by the list filter and fail to
+> come to my attention. If a message fails to be filtered into any
+> mailing-list folder, then I should be able to conclude that it is
+> specifically intended for me, and not part of normal mailing-list
+> traffic. The practice of sending replies to both addresses renders this
+> an invalid conclusion. I do not think that it is unreasonable to expect
+> that conclusion to be valid.
+
+It's not unreasonable.  Neither is Aristotelian physics.  Nevertheless, 
+neither one is a good match to reality.
+
+Why not arrange instead that messages sent from a mailing list server
+_do_ get filtered into the corresponding folder, even if they were also
+sent to your address?  This certainly should make your assumption (that
+messages not filtered into any mailing-list folder are specifically
+intended for you) much more valid than it is now.
+
+> It's not that I'm not receiving all of this thread's messages via the
+> list - it's that I'm not receiving *any* of them via the list, and I
+> suspect that the reason is that my address is in both the To:/Cc: and
+> the list itself. Something is filtering it such that I do not receive
+> "duplicate" replies in this way, but it is doing so by filtering out the
+> list copy rather than the direct copy. I have seen mailing lists which
+> do this before, but I see no other indication that the LKML is one of
+> them, and I would not be in the least surprised if this turned out to be
+> yet one more problem with gmail.
+
+Well, I _am_ receiving your messages by way of linux-usb as well as
+directly, for whatever that's worth.
 
 
-john@mib-infotech.co.nz changed:
+> > is an indication that interrupt routing is indeed not working right.
+> > Or possibly your EHCI controller isn't working.  You could try
+> > blacklisting or unloading ehci-hcd to see if that helps.  Of course
+> > then none of your USB devices would be able to run at high speed.
+> 
+> ehci-hcd is not modular in my current kernel, and if there is a way to
+> turn it off without its being modular I am not aware of it.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |CODE_FIX
+Go into the /sys/bus/pci/drivers/ehci_hcd directory.  Then for each 
+symbolic link to a controller device listed there, write the device's 
+name (with "echo -n") to the "unbind" file.  For example,
 
+	echo -n 0000:00:1d.7 >unbind
 
+That will have nearly the same effect as unloading ehci-hcd.
 
+> Until this thread, I was not even aware that ACPI was related to USB; I
+> had largely conflated it with a similar acronym which I think is related
+> to power management and which I can suddenly not even find in my kernel
+> config. I will, however, look into linux-acpi.
 
-------- Comment #11 from john@mib-infotech.co.nz  2008-02-16 18:40 -------
-Thanks James,
-I've spent an afternoon rebooting now and finally discovered  I had a faulty
-external SSCI cable.
+ACPI isn't directly related to USB; rather it has to do with
+transferring information between the OS and the
+BIOS/vendor-specific-hardware.  Power management is example where such
+a transfer is needed.  In your case, the relevant information is which
+IRQ is connected to which motherboard device.  If you don't have ACPI
+enabled in your configuration, then perhaps that's the problem -- try
+enabling it.
 
-Initial tests suggest its ok.
+> That will not be helpful for the other two problems, however, since
+> neither of them was ever working as far as I am aware. That also leaves
+> me hesitant to conclude that they are rooted in the same IRQ issue as
+> the USB problem appears to be.
 
-However I remain perplexed. The problem initially manifested when I upgraded my
-kernel, not when I diddled with my hardware.
+Maybe they aren't.  But when you have multiple bugs, you have to fix
+them one at a time.
 
-This now seems to have fixed udev bug
-http://bugs.gentoo.org/show_bug.cgi?id=200437
+> Which lists or other addresses would be appropriate for reporting
+> problems with AHCI/libata and with networking, specifically with the
+> e1000/e1000e drivers? I see a mailing list for e1000 in MAINTAINERS, but
+> only the maintainer's address for SATA/libata/whatever else may be
+> involved there, and I am reflexively reluctant to bother a maintainer
+> directly with as little information as I presently have.
 
-as well
+I don't know, but you should wait until the simpler problem is sorted 
+out before tackling the more complicated ones.
 
-how bizarre!
-
-Thanks for your help everyone.
-
-Regards
-John
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Alan Stern
