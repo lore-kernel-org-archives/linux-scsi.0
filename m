@@ -1,78 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] scsi_debug: disable clustering
-Date: Sun, 17 Feb 2008 07:28:48 -0700
-Message-ID: <20080217142848.GD21012@parisc-linux.org>
-References: <20080216235714H.tomof@acm.org> <20080217141045.GB21012@parisc-linux.org> <1203257892.3082.11.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ps3rom: disable clustering
+Date: Sun, 17 Feb 2008 23:46:00 +0900
+Message-ID: <1203259560-15434-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:36021 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755474AbYBQO2t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Feb 2008 09:28:49 -0500
-Content-Disposition: inline
-In-Reply-To: <1203257892.3082.11.camel@localhost.localdomain>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:52481 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758123AbYBQOrG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Feb 2008 09:47:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, dougg@torque.net, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Sun, Feb 17, 2008 at 08:18:11AM -0600, James Bottomley wrote:
-> No, he means that kmap_atomic can only map a page of data.  This makes
-> single page only sg list entries and input assumption into this loop.
-> with ENABLE_CLUSTERING, that's potentially not true.   Of course, this
-> accidentally works most of the time because of the way kmap functions.
+ps3rom does:
 
-Ah, right.  I'm on the verge of releasing a ram-based scsi driver I've
-been working on ... this loop should work fine with clustering as it
-takes account of the sg potentially having multiple pages:
+scsi_for_each_sg(cmd, sgpnt, scsi_sg_count(cmd), k) {
+	kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
 
-        scsi_for_each_sg(cmnd, sg, scsi_sg_count(cmnd), i) {
-                struct page *sgpage = sg_page(sg);
-                unsigned int to_off = sg->offset;
-                unsigned int sg_copy = sg->length;
-                if (sg_copy > len)
-                        sg_copy = len;
-                len -= sg_copy;
+We cannot do something like that with the clustering enabled (or we
+can use scsi_kmap_atomic_sg).
 
-                while (sg_copy > 0) {
-                        char *vto, *vfrom;
-                        unsigned int page_copy;
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/ps3rom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-                        if (from_off > to_off)
-                                page_copy = PAGE_SIZE - from_off;
-                        else
-                                page_copy = PAGE_SIZE - to_off;
-                        if (page_copy > sg_copy)
-                                page_copy = sg_copy;
-
-                        vfrom = get_data_page(data_pfn);
-                        vto = get_sg_page(sgpage);
-                        memcpy(vto + to_off, vfrom + from_off, page_copy);
-                        put_sg_page(vto);
-                        put_data_page(vfrom);
-
-                        from_off += page_copy;
-                        if (from_off == PAGE_SIZE) {
-                                from_off = 0;
-                                data_pfn++;
-                        }
-                        to_off += page_copy;
-                        if (to_off == PAGE_SIZE) {
-                                to_off = 0;
-                                sgpage++;
-                        }
-                        sg_copy -= page_copy;
-                }
-                if (!len)
-                        break;
-        }
-
-get_data_page() and get_sg_page() each do a kmap_atomic, so I was
-concerned that I might be out of KM_USER* pages.
-
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index 0cd614a..90985cd 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -427,7 +427,7 @@ static struct scsi_host_template ps3rom_host_template = {
+ 	.cmd_per_lun =		1,
+ 	.emulated =             1,		/* only sg driver uses this */
+ 	.max_sectors =		PS3ROM_MAX_SECTORS,
+-	.use_clustering =	ENABLE_CLUSTERING,
++	.use_clustering =	DISABLE_CLUSTERING,
+ 	.module =		THIS_MODULE,
+ };
+ 
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.3.7
+
