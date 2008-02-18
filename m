@@ -1,50 +1,62 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: Device rescan does not find all new devices
-Date: Mon, 18 Feb 2008 15:21:44 -0800
-Message-ID: <20080218232144.GB4233@linux.vnet.ibm.com>
-References: <OF83B5268C.7E58DEB4-ONC12573F3.0042CD17-C12573F3.0044D81A@de.ibm.com>
+From: Tim Pepper <lnxninja@linux.vnet.ibm.com>
+Subject: Re: ips.c broken since 2.6.23 on x86_64?
+Date: Mon, 18 Feb 2008 15:30:58 -0800
+Message-ID: <20080218233057.GC12905@tpepper-t42p.dolavim.us>
+References: <20080217233701.GA30994@tpepper-t42p.dolavim.us> <20080218223246I.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:46256 "EHLO e2.ny.us.ibm.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:41410 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754897AbYBRXXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Feb 2008 18:23:25 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1INNNh0019275
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:23:23 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1INNMRu248932
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:23:22 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1INNMEh001504
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:23:22 -0500
+	id S1751958AbYBRXbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Feb 2008 18:31:03 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1INV02b000383
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:31:00 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1INV0n8226672
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:31:00 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1INUxZk006590
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2008 18:31:00 -0500
 Content-Disposition: inline
-In-Reply-To: <OF83B5268C.7E58DEB4-ONC12573F3.0042CD17-C12573F3.0044D81A@de.ibm.com>
+In-Reply-To: <20080218223246I.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Markus Naeher <MNAEHER@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com
 
-Markus Naeher <MNAEHER@de.ibm.com> wrote:
-> The missing disk is always the first one (LUN 000). I have tested this by 
-> changing
-> the order of the disks on ESS 2. 
-> I have also repeated the test scenario with only one path per disk. 
-> In this testcase, I have divided the ESS's on the two Adapters (Adapter 1 
-> accesses
-> the disks on ESS 1, Adapter 2 those on ESS 2). 
-> Sadly, with no change in the result. 
+On Mon 18 Feb at 22:32:46 +0900 tomof@acm.org said:
 > 
-> I think the first thing I would need help with is how to further analyze 
-> the problem. 
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 05bb6ea..39cdd68 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -6906,7 +6906,7 @@ ips_register_scsi(int index)
+>  	sh->max_channel = ha->nbus - 1;
+>  	sh->can_queue = ha->max_cmds - 1;
 > 
+> -	scsi_add_host(sh, NULL);
+> +	scsi_add_host(sh, &ha->pcidev->dev);
+>  	scsi_scan_host(sh);
+> 
+>  	return 0;
 
-Output from dmesg with SCSI scan logging on would be helpful. You can use
-./scsi_logging_level -s --scan 7 with the script (let me know if you
-cannot locate the script) or you can adjust the logging by hand.
+Fujita-san,
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+This applies and runs well on top of your 0005 patch!  The rest of the
+patches also then apply in order and run successfully.
+
+Just to confirm, I applied the above alone to a clean 2.6.24 and things
+again build and run successfully.  For completeness I also reproduced
+the problem against 2.6.23.16 and verified the above patch fixes on that
+kernel version as well.
+
+Assuming this patch is accepted for 2.6.25, please also queue it for
+the 2.6.23/24 stable trees.
+
+Thank you very much for your help in tracking this issue down!
+
+-- 
+Tim Pepper  <lnxninja@linux.vnet.ibm.com>
+IBM Linux Technology Center
