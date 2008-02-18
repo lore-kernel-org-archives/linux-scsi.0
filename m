@@ -1,73 +1,81 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: gdth new set of patches for 2.6.24 stable
-Date: Mon, 18 Feb 2008 14:02:58 +0000
-Message-ID: <20080218140258.GB6606@flint.arm.linux.org.uk>
-References: <47B48CAE.2020705@panasas.com> <47B864CB.4040604@panasas.com> <20080218045736.d35d5408.akpm@linux-foundation.org>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH] ps3rom: disable clustering
+Date: Mon, 18 Feb 2008 15:18:15 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802181516170.13406@vixen.sonytel.be>
+References: <1203259560-15434-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-286681433-1203344295=:13406"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:40602 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbYBROJv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Feb 2008 09:09:51 -0500
-Content-Disposition: inline
-In-Reply-To: <20080218045736.d35d5408.akpm@linux-foundation.org>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:60128 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753232AbYBROSR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Feb 2008 09:18:17 -0500
+In-Reply-To: <1203259560-15434-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.priebe@allied-internet.ag>, Jon Chelton <jchelton@ffpglobal.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Milter <davemilter@gmail.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, David Brownell <dbrownell@users.sourceforge.net>, Greg Kroah-Hartman <gregkh@suse.de>, Ralf Baechle <ralf@linux-mips.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-On Mon, Feb 18, 2008 at 04:57:36AM -0800, Andrew Morton wrote:
-> But arm and mips require enabled local irqs because their
-> dma_free_coherent() needs to do a cross-cpu IPI call.  Presumably because
-> of certain unusual TLB protocols.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Consider that TLB flushing needs to call a function on another CPU.
-Now look at x86's implementation to do cross calls:
+---584349381-286681433-1203344295=:13406
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-/**
- * smp_call_function_mask(): Run a function on a set of other CPUs.
- * @mask: The set of cpus to run on.  Must not include the current cpu.
- * @func: The function to run. This must be fast and non-blocking.
- * @info: An arbitrary pointer to pass to the function.
- * @wait: If true, wait (atomically) until function has completed on other CPUs. *
- * Returns 0 on success, else a negative status code.
- *
- * If @wait is true, then returns once @func has returned; otherwise
- * it returns just before the target cpu calls @func.
- *
- * You must not call this function with disabled interrupts or from a
- * hardware interrupt handler or from a bottom half handler.
- */
-static int
-native_smp_call_function_mask(cpumask_t mask,
-                              void (*func)(void *), void *info,
-                              int wait)
+On Sun, 17 Feb 2008, FUJITA Tomonori wrote:
+> ps3rom does:
+> 
+> scsi_for_each_sg(cmd, sgpnt, scsi_sg_count(cmd), k) {
+> 	kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
+> 
+> We cannot do something like that with the clustering enabled (or we
+> can use scsi_kmap_atomic_sg).
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-You can not call functions on other CPUs without having IRQs enabled,
-otherwise this functionality deadlocks.  That restriction is on all
-smp_call_function() implementations.
+Seems to (still) work fine..
 
-Unfortunately, to flush the TLB on other CPUs on ARM, we need to do a
-cross call, which means using smp_call_function(), which introduces the
-same sodding restrictions that smp_call_function() has on the functions
-which call it.
+James: as you're scripts seem to be waiting for an ack from me, and it's not
+really obvious to me whether this patch is needed or not, I'll leave it up to
+you.
 
-> Russell, Ralf: is there something we can do here to relax this requirement?
+> ---
+>  drivers/scsi/ps3rom.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+> index 0cd614a..90985cd 100644
+> --- a/drivers/scsi/ps3rom.c
+> +++ b/drivers/scsi/ps3rom.c
+> @@ -427,7 +427,7 @@ static struct scsi_host_template ps3rom_host_template = {
+>  	.cmd_per_lun =		1,
+>  	.emulated =             1,		/* only sg driver uses this */
+>  	.max_sectors =		PS3ROM_MAX_SECTORS,
+> -	.use_clustering =	ENABLE_CLUSTERING,
+> +	.use_clustering =	DISABLE_CLUSTERING,
+>  	.module =		THIS_MODULE,
+>  };
 
-Do what x86 people have so far been unable to resolve and find some
-way to allow smp_call_function() to operate with IRQs disabled without
-deadlocking?
+With kind regards,
 
-Another solution jejb suggested was to make dma_free_coherent() lazy,
-but (a) I'm unconvinced that this'll work with drivers which constantly
-alloc+free in IRQ context since there's generally only 2MB of VM space
-for such mappings, and it probably won't take long to eat through that
-limited space with such a scheme.
+Geert Uytterhoeven
+Software Architect
 
-Also, I don't have the facility to really test out these issues...
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-286681433-1203344295=:13406--
