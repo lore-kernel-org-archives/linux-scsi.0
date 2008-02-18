@@ -1,34 +1,46 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] bsg: bidi bio map failure fix
-Date: Mon, 18 Feb 2008 18:25:01 +0100
-Message-ID: <20080218172500.GF23197@kernel.dk>
-References: <20080212204024.GA13643@osc.edu> <1202850758.3137.135.camel@localhost.localdomain> <20080218125508.GA23197@kernel.dk> <20080218233719R.tomof@acm.org> <20080218144652.GE23197@kernel.dk> <1203347347.3324.8.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/3 ver2] iscsi bidi & varlen support
+Date: Mon, 18 Feb 2008 19:33:40 +0200
+Message-ID: <47B9C174.8000200@panasas.com>
+References: <47A20E85.6040906@panasas.com>  <47B99F75.6030400@panasas.com> <1203355328.3324.34.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:26530 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbYBRRZF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Feb 2008 12:25:05 -0500
-Content-Disposition: inline
-In-Reply-To: <1203347347.3324.8.camel@localhost.localdomain>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25989 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751889AbYBRReY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Feb 2008 12:34:24 -0500
+In-Reply-To: <1203355328.3324.34.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Pete Wyckoff <pw@osc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
 
-On Mon, Feb 18 2008, James Bottomley wrote:
-> On Mon, 2008-02-18 at 15:46 +0100, Jens Axboe wrote:
-> > Seems symmetric to me now, either we fail and everything is cleaned up,
-> > or return success. What remains?
+On Mon, Feb 18 2008 at 19:22 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Mon, 2008-02-18 at 17:08 +0200, Boaz Harrosh wrote:
+>> But ... James? is
+>> there any chance these can go into scsi-rc-fixes for the 2.6.25
+>> kernel? The reason they are so late was mainly because of a fallout
+>> in the merge process and a bug that was introduced because of that,
+>> but they were intended to go together with bidi into 2.6.25. Also
+>> as an important client code to the bidi-api that is introduced in
+>> 2.6.25 kernel.
 > 
-> My main symmetry complaint was the API:  The map takes a request, the
-> unmap takes a bio.
+> Well, I think you know the answer to that one under Linus' rules for non
+> merge window submission.  It's not a bug fix; we haven't even put it
+> into -mm for testing and it's a pretty invasive change.
+> 
+> James
+> 
+> 
 
-Oh that, well that was done to make it easier for existing users. Feel
-free to send a patch changing that, however it was done that way on
-purpose at the time being.
+It was extensively tested by all iscsi people. It has the Sign-off-by
+of the iscsi maintainer. They are not new patches.
 
--- 
-Jens Axboe
+But, yes you are right. I now remember the trouble we had with Linus
+last time. So it's 2.6.26 then. :-( . People that need it for 2.6.25
+will just get it off the git tree.
+
+Boaz
 
