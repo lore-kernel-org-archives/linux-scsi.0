@@ -1,45 +1,36 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: 2.6.25-rc2-mm1 (cciss build error)
-Date: Mon, 18 Feb 2008 09:13:57 -0800
-Message-ID: <20080218091357.eb119a08.randy.dunlap@oracle.com>
-References: <20080216002522.9c4bd0fb.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3 ver2] iscsi bidi & varlen support
+Date: Mon, 18 Feb 2008 11:22:08 -0600
+Message-ID: <1203355328.3324.34.camel@localhost.localdomain>
+References: <47A20E85.6040906@panasas.com>  <47B99F75.6030400@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:33906 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751709AbYBRROS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Feb 2008 12:14:18 -0500
-In-Reply-To: <20080216002522.9c4bd0fb.akpm@linux-foundation.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52363 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751263AbYBRRWP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Feb 2008 12:22:15 -0500
+In-Reply-To: <47B99F75.6030400@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, mike.miller@hp.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Pete Wyckoff <pw@osc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
 
-On Sat, 16 Feb 2008 00:25:22 -0800 Andrew Morton wrote:
+On Mon, 2008-02-18 at 17:08 +0200, Boaz Harrosh wrote:
+> But ... James? is
+> there any chance these can go into scsi-rc-fixes for the 2.6.25
+> kernel? The reason they are so late was mainly because of a fallout
+> in the merge process and a bug that was introduced because of that,
+> but they were intended to go together with bidi into 2.6.25. Also
+> as an important client code to the bidi-api that is introduced in
+> 2.6.25 kernel.
 
-> 
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/
+Well, I think you know the answer to that one under Linus' rules for non
+merge window submission.  It's not a bug fix; we haven't even put it
+into -mm for testing and it's a pretty invasive change.
 
-cciss driver has a bad macro definition:
+James
 
-#else /* no CONFIG_CISS_SCSI_TAPE */
 
-/* If no tape support, then these become defined out of existence */
-
-#define cciss_scsi_setup(cntl_num)
-#define cciss_unregister_scsi(ctlr)
-#define cciss_register_scsi(ctlr)
-#define cciss_seq_tape_report(struct seq_file *seq, int ctlr)
-
-#endif /* CONFIG_CISS_SCSI_TAPE */
-
-which causes this error:
-
-In file included from /local/linsrc/linux-2.6.25-rc2-mm1/drivers/block/cciss.c:231:
-/local/linsrc/linux-2.6.25-rc2-mm1/drivers/block/cciss_scsi.c:1498:38: error: macro parameters must be comma-separated
-make[3]: *** [drivers/block/cciss.o] Error 1
-
----
-~Randy
