@@ -1,58 +1,74 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] cciss: procfs updates to display info about many
- volumes
-Date: Tue, 19 Feb 2008 03:59:56 -0800
-Message-ID: <20080219035956.d66052af.akpm@linux-foundation.org>
-References: <20080211220906.GA24835@roadking.usa.hp.com>
-	<20080219104818.GX23197@kernel.dk>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: [PATCH] ips: fix data buffer accessors conversion bug
+Date: Tue, 19 Feb 2008 04:29:44 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F439A58D04@ADPE2K703.adaptec.com>
+References: <20080219170154J.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:59652 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752119AbYBSMBL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 07:01:11 -0500
-In-Reply-To: <20080219104818.GX23197@kernel.dk>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:48796 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbYBSM3r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 07:29:47 -0500
+In-Reply-To: <20080219170154J.tomof@acm.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Mike Miller <mike.miller@hp.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "lnxninja@linux.vnet.ibm.com" <lnxninja@linux.vnet.ibm.com>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>
 
-On Tue, 19 Feb 2008 11:48:18 +0100 Jens Axboe <jens.axboe@oracle.com> wrote:
+ACK
 
-> On Mon, Feb 11 2008, Mike Miller wrote:
-> > Patch 1 of 1
-> > 
-> > This patch allows us to display information about all of the logical volumes
-> > configured on a particular without stepping on memory even when there are
-> > many volumes (128 or more) configured. This patch replaces the one submitted
-> > on 20071214. See
-> > http://groups.google.com/group/linux.kernel/browse_thread/thread/49a50244b19f8855/ba3dc95b23391521?hl=en&lnk=gst&q=cciss#ba3dc95b23391521
-> > which has not been merged. That patch displayed information about only the
-> > first logical volume on each controller and had negative side effects for some
-> > installers.
-> > Please consider this for inclusion.
-> 
-> It looks ok, but has some flaws. Try to disable cciss scsi and tape
-> support:
-> 
-> In file included from drivers/block/cciss.c:231:
-> drivers/block/cciss_scsi.c:1498:38: error: macro parameters must be
-> comma-separated
-> drivers/block/cciss.c: In function 'cciss_seq_show_header':
-> drivers/block/cciss.c:272: error: implicit declaration of function
-> 'cciss_seq_tape_report'
-> drivers/block/cciss.c: In function 'cciss_proc_write':
-> drivers/block/cciss.c:393: error: implicit declaration of function
-> 'cciss_engage_scsi'
-> 
-> You macro definition of cciss_seq_tape_report() is totally busted.
-> Either write is as a macro OR as a function.
-> 
-> Fix these up and resubmit, then I'll take it.
-> 
+Wonderful work Tom and Fujita-san!
 
-It also need to be updated to use the non-racy proc_create(),
-please, as per Alexey's comments.
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: FUJITA Tomonori [mailto:tomof@acm.org]
+> Sent: Tuesday, February 19, 2008 3:02 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: James.Bottomley@HansenPartnership.com; Salyzyn, Mark;
+> lnxninja@linux.vnet.ibm.com; fujita.tomonori@lab.ntt.co.jp
+> Subject: [PATCH] ips: fix data buffer accessors conversion bug
+>
+> There is one more bug in ips. I think that this needs to go to
+> scsi-rc-fixes, 2.6.24-stable, and 2.6.23-stable though we might rarely
+> hit this bug.
+>
+> =
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Tue, 19 Feb 2008 16:03:47 +0900
+> Subject: [PATCH] ips: fix data buffer accessors conversion bug
+>
+> This fixes a bug that can't handle a passthru command with more than
+> two sg entries.
+>
+> Big thanks to Tim Pepper for debugging the problem.
+>
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Tim Pepper <lnxninja@linux.vnet.ibm.com>
+> Cc: Salyzyn, Mark <Mark_Salyzyn@adaptec.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  drivers/scsi/ips.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index bb152fb..7ed568f 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -1576,7 +1576,7 @@ ips_make_passthru(ips_ha_t *ha, struct
+> scsi_cmnd *SC, ips_scb_t *scb, int intr)
+>         METHOD_TRACE("ips_make_passthru", 1);
+>
+>          scsi_for_each_sg(SC, sg, scsi_sg_count(SC), i)
+> -                length += sg[i].length;
+> +               length += sg->length;
+>
+>         if (length < sizeof (ips_passthru_t)) {
+>                 /* wrong size */
+> --
+> 1.5.3.7
+>
+>
