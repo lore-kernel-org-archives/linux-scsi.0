@@ -1,55 +1,80 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] ips: fix data buffer accessors conversion bug
-Date: Tue, 19 Feb 2008 17:02:27 +0900
-Message-ID: <20080219170154J.tomof@acm.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH update] firewire: fw-sbp2: fix NULL pointer deref in
+	scsi_remove_device
+Date: Tue, 19 Feb 2008 09:05:49 +0100 (CET)
+Message-ID: <tkrat.c814d52432988f28@s5r6.in-berlin.de>
+References: <tkrat.e8f3d31fb5f9fe01@s5r6.in-berlin.de>
+	<tkrat.9103805c20697161@s5r6.in-berlin.de>
+	<tkrat.bc89a18c9ce7df0b@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:43642 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbYBSIFv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 03:05:51 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <tkrat.bc89a18c9ce7df0b@s5r6.in-berlin.de>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Mark_Salyzyn@adaptec.com, lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp
 
-There is one more bug in ips. I think that this needs to go to
-scsi-rc-fixes, 2.6.24-stable, and 2.6.23-stable though we might rarely
-hit this bug.
+Fix a kernel bug when unplugging an SBP-2 device after having its
+scsi_device already removed via the "delete" sysfs attribute.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date: Tue, 19 Feb 2008 16:03:47 +0900
-Subject: [PATCH] ips: fix data buffer accessors conversion bug
-
-This fixes a bug that can't handle a passthru command with more than
-two sg entries.
-
-Big thanks to Tim Pepper for debugging the problem.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Tim Pepper <lnxninja@linux.vnet.ibm.com>
-Cc: Salyzyn, Mark <Mark_Salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/scsi/ips.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index bb152fb..7ed568f 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -1576,7 +1576,7 @@ ips_make_passthru(ips_ha_t *ha, struct scsi_cmnd *SC, ips_scb_t *scb, int intr)
- 	METHOD_TRACE("ips_make_passthru", 1);
+Update:  A _put was missing in a failure path.
+
+ drivers/firewire/fw-sbp2.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Index: linux/drivers/firewire/fw-sbp2.c
+===================================================================
+--- linux.orig/drivers/firewire/fw-sbp2.c
++++ linux/drivers/firewire/fw-sbp2.c
+@@ -762,9 +762,10 @@ static void sbp2_release_target(struct k
+ 	sbp2_unblock(tgt);
  
-         scsi_for_each_sg(SC, sg, scsi_sg_count(SC), i)
--                length += sg[i].length;
-+		length += sg->length;
+ 	list_for_each_entry_safe(lu, next, &tgt->lu_list, link) {
+-		if (lu->sdev)
++		if (lu->sdev) {
+ 			scsi_remove_device(lu->sdev);
+-
++			scsi_device_put(lu->sdev);
++		}
+ 		sbp2_send_management_orb(lu, tgt->node_id, lu->generation,
+ 				SBP2_LOGOUT_REQUEST, lu->login_id, NULL);
  
- 	if (length < sizeof (ips_passthru_t)) {
- 		/* wrong size */
+@@ -886,12 +887,11 @@ static void sbp2_login(struct work_struc
+ 	if (IS_ERR(sdev))
+ 		goto out_logout_login;
+ 
+-	scsi_device_put(sdev);
+-
+ 	/* Unreported error during __scsi_add_device() */
+ 	smp_rmb(); /* get current card generation */
+ 	if (generation != device->card->generation) {
+ 		scsi_remove_device(sdev);
++		scsi_device_put(sdev);
+ 		goto out_logout_login;
+ 	}
+ 
+
 -- 
-1.5.3.7
+Stefan Richter
+-=====-==--- --=- =--==
+http://arcgraph.de/sr/
 
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
