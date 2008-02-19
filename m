@@ -1,67 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: aic94xx: failing on high load (another data point)
-Date: Tue, 19 Feb 2008 10:22:20 -0600
-Message-ID: <1203438140.3103.24.camel@localhost.localdomain>
-References: <479FB3ED.3080401@hopnet.net>
-	 <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
-	 <20080130192947.GA21785@tree.beaverton.ibm.com>
-	 <47B4682C.4020505@hopnet.net>
-	 <1203089323.3058.20.camel@localhost.localdomain>
-	 <47B9958A.8080104@hopnet.net>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] cciss: procfs updates to display info about many
+ volumes
+Date: Tue, 19 Feb 2008 16:46:50 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE0427C1C4C2@G6W0268.americas.hpqcorp.net>
+References: <20080211220906.GA24835@roadking.usa.hp.com>
+	<20080219104818.GX23197@kernel.dk>
+ <20080219035956.d66052af.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48947 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751041AbYBSQW2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 11:22:28 -0500
-In-Reply-To: <47B9958A.8080104@hopnet.net>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:44670 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbYBSQru convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 11:47:50 -0500
+In-Reply-To: <20080219035956.d66052af.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Hopkins <vger@hopnet.net>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org
-
-On Mon, 2008-02-18 at 22:26 +0800, Keith Hopkins wrote:
-> Well, that made life interesting....
->   but didn't seem to fix anything.
-> 
-> The behavior is about the same as before, but with more verbose
-> errors.  I failed one member of the raid and had it rebuild as a
-> test...which hangs for a while and the drive falls off-line.
-> 
-> Please grab the dmesg output in all its gory glory from here:
-> http://wiki.hopnet.net/dokuwiki/lib/exe/fetch.php?media=myit:sas:dmesg-20080218-wpatch-fail.txt.gz
-
-I had a look through this.  Amazingly, in spite of the message spew, up
-to here:
-
-> sas: Enter sas_scsi_recover_host
-> sas: trying to find task 0xffff81033c3d3d80
-> sas: sas_scsi_find_task: aborting task 0xffff81033c3d3d80
-> aic94xx: tmf timed out
-> aic94xx: tmf came back
-
-Everything is going normally (the REQ_TASK_ABORT are properly aborted an
-retried).  At this point (around L3449 in the trace) the aborts start
-failing.
-
-Unfortunately, there's a bug in TMF timeout handling in the driver, it
-leaves the sequencer entry pending, but frees the ascb.  If the
-sequencer ever picks this up it will get very confused, as it does a
-while down in the trace:
-
-> aic94xx: BUG:sequencer:dl:no ascb?!
-> aic94xx: BUG:sequencer:dl:no ascb?!
-
-That's where the sequencer adds an ascb to the done list that we've
-already freed.  From this point on confusion reigns and the error
-handler eventually offlines the device.
-
-I'll see if I can come up with patches to fix this ... or at least
-mitigate the problems it causes.
-
-James
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>
 
 
+
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@linux-foundation.org]
+> Sent: Tuesday, February 19, 2008 6:00 AM
+> To: Jens Axboe
+> Cc: Miller, Mike (OS Dev); LKML; LKML-scsi
+> Subject: Re: [PATCH 1/1] cciss: procfs updates to display
+> info about many volumes
+>
+> On Tue, 19 Feb 2008 11:48:18 +0100 Jens Axboe
+> <jens.axboe@oracle.com> wrote:
+>
+> > On Mon, Feb 11 2008, Mike Miller wrote:
+> > > Patch 1 of 1
+> > >
+> > > This patch allows us to display information about all of
+> the logical
+> > > volumes configured on a particular without stepping on
+> memory even
+> > > when there are many volumes (128 or more) configured. This patch
+> > > replaces the one submitted on 20071214. See
+> > >
+> http://groups.google.com/group/linux.kernel/browse_thread/thread/49a
+> > >
+> 50244b19f8855/ba3dc95b23391521?hl=en&lnk=gst&q=cciss#ba3dc95b2339152
+> > > 1 which has not been merged. That patch displayed
+> information about
+> > > only the first logical volume on each controller and had negative
+> > > side effects for some installers.
+> > > Please consider this for inclusion.
+> >
+> > It looks ok, but has some flaws. Try to disable cciss scsi and tape
+> > support:
+> >
+> > In file included from drivers/block/cciss.c:231:
+> > drivers/block/cciss_scsi.c:1498:38: error: macro parameters must be
+> > comma-separated
+> > drivers/block/cciss.c: In function 'cciss_seq_show_header':
+> > drivers/block/cciss.c:272: error: implicit declaration of function
+> > 'cciss_seq_tape_report'
+> > drivers/block/cciss.c: In function 'cciss_proc_write':
+> > drivers/block/cciss.c:393: error: implicit declaration of function
+> > 'cciss_engage_scsi'
+> >
+> > You macro definition of cciss_seq_tape_report() is totally busted.
+> > Either write is as a macro OR as a function.
+> >
+> > Fix these up and resubmit, then I'll take it.
+> >
+>
+> It also need to be updated to use the non-racy proc_create(),
+> please, as per Alexey's comments.
+
+Thanks all, I'll fix and resubmit.
+
+-- mikem
+>
