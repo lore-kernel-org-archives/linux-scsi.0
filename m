@@ -1,81 +1,81 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/1] cciss: procfs updates to display info about many
- volumes
-Date: Tue, 19 Feb 2008 16:46:50 +0000
-Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE0427C1C4C2@G6W0268.americas.hpqcorp.net>
-References: <20080211220906.GA24835@roadking.usa.hp.com>
-	<20080219104818.GX23197@kernel.dk>
- <20080219035956.d66052af.akpm@linux-foundation.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] aic94xx: Don't free ABORT_TASK SCBs that are timed out
+	(Was: Re: aic94xx: failing on high load)
+Date: Tue, 19 Feb 2008 10:44:00 -0800
+Message-ID: <20080219184359.GA5414@tree.beaverton.ibm.com>
+References: <479FB3ED.3080401@hopnet.net> <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net> <20080130192947.GA21785@tree.beaverton.ibm.com> <47B4682C.4020505@hopnet.net> <1203089323.3058.20.camel@localhost.localdomain> <47B9958A.8080104@hopnet.net> <1203438140.3103.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:44670 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469AbYBSQru convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 11:47:50 -0500
-In-Reply-To: <20080219035956.d66052af.akpm@linux-foundation.org>
-Content-Language: en-US
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:44240 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753653AbYBSSoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2008 13:44:04 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1JIi1xh019640
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1JIi1G2231948
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1JIi05w013268
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 13:44:01 -0500
+Content-Disposition: inline
+In-Reply-To: <1203438140.3103.24.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Keith Hopkins <vger@hopnet.net>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>, Peter Bogdanovic <pbog@us.ibm.com>, Gilbert Wu <Gilbert_Wu@adaptec.com>
 
+If we send an ABORT_TASK ascb that doesn't return within the timeout period,
+we should not free that ascb because the sequencer is still holding onto it.
+Hopefully it will fix what James Bottomley describes below:
 
+On Tue, Feb 19, 2008 at 10:22:20AM -0600, James Bottomley wrote:
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> Sent: Tuesday, February 19, 2008 6:00 AM
-> To: Jens Axboe
-> Cc: Miller, Mike (OS Dev); LKML; LKML-scsi
-> Subject: Re: [PATCH 1/1] cciss: procfs updates to display
-> info about many volumes
->
-> On Tue, 19 Feb 2008 11:48:18 +0100 Jens Axboe
-> <jens.axboe@oracle.com> wrote:
->
-> > On Mon, Feb 11 2008, Mike Miller wrote:
-> > > Patch 1 of 1
-> > >
-> > > This patch allows us to display information about all of
-> the logical
-> > > volumes configured on a particular without stepping on
-> memory even
-> > > when there are many volumes (128 or more) configured. This patch
-> > > replaces the one submitted on 20071214. See
-> > >
-> http://groups.google.com/group/linux.kernel/browse_thread/thread/49a
-> > >
-> 50244b19f8855/ba3dc95b23391521?hl=en&lnk=gst&q=cciss#ba3dc95b2339152
-> > > 1 which has not been merged. That patch displayed
-> information about
-> > > only the first logical volume on each controller and had negative
-> > > side effects for some installers.
-> > > Please consider this for inclusion.
-> >
-> > It looks ok, but has some flaws. Try to disable cciss scsi and tape
-> > support:
-> >
-> > In file included from drivers/block/cciss.c:231:
-> > drivers/block/cciss_scsi.c:1498:38: error: macro parameters must be
-> > comma-separated
-> > drivers/block/cciss.c: In function 'cciss_seq_show_header':
-> > drivers/block/cciss.c:272: error: implicit declaration of function
-> > 'cciss_seq_tape_report'
-> > drivers/block/cciss.c: In function 'cciss_proc_write':
-> > drivers/block/cciss.c:393: error: implicit declaration of function
-> > 'cciss_engage_scsi'
-> >
-> > You macro definition of cciss_seq_tape_report() is totally busted.
-> > Either write is as a macro OR as a function.
-> >
-> > Fix these up and resubmit, then I'll take it.
-> >
->
-> It also need to be updated to use the non-racy proc_create(),
-> please, as per Alexey's comments.
+> Unfortunately, there's a bug in TMF timeout handling in the driver, it
+> leaves the sequencer entry pending, but frees the ascb.  If the
+> sequencer ever picks this up it will get very confused, as it does a
+> while down in the trace:
+> 
+> > aic94xx: BUG:sequencer:dl:no ascb?!
+> > aic94xx: BUG:sequencer:dl:no ascb?!
+> 
+> That's where the sequencer adds an ascb to the done list that we've
+> already freed.  From this point on confusion reigns and the error
+> handler eventually offlines the device.
+> 
+> I'll see if I can come up with patches to fix this ... or at least
+> mitigate the problems it causes.
 
-Thanks all, I'll fix and resubmit.
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
--- mikem
->
+ drivers/scsi/aic94xx/aic94xx_tmf.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index b52124f..4b24bd3 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -463,7 +463,7 @@ int asd_abort_task(struct sas_task *task)
+ 						       AIC94XX_SCB_TIMEOUT);
+ 		spin_lock_irqsave(&task->task_state_lock, flags);
+ 		if (leftover < 1)
+-			res = TMF_RESP_FUNC_FAILED;
++			goto out_not_reported;
+ 		if (task->task_state_flags & SAS_TASK_STATE_DONE)
+ 			res = TMF_RESP_FUNC_COMPLETE;
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+@@ -487,6 +487,11 @@ out:
+ 	asd_ascb_free(ascb);
+ 	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
+ 	return res;
++
++out_not_reported:
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++	ASD_DPRINTK("task 0x%p aborted? but not reported.\n", task);
++	return res;
+ }
+ 
+ /**
