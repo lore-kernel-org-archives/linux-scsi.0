@@ -1,54 +1,66 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: ips.c broken since 2.6.23 on x86_64?
-Date: Tue, 19 Feb 2008 10:06:39 -0600
-Message-ID: <1203437199.3103.15.camel@localhost.localdomain>
-References: <20080218073134A.tomof@acm.org>
-	 <20080217233701.GA30994@tpepper-t42p.dolavim.us>
-	 <20080218223246I.tomof@acm.org>  <20080219170100D.tomof@acm.org>
+Subject: Re: aic94xx: failing on high load (another data point)
+Date: Tue, 19 Feb 2008 10:22:20 -0600
+Message-ID: <1203438140.3103.24.camel@localhost.localdomain>
+References: <479FB3ED.3080401@hopnet.net>
+	 <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
+	 <20080130192947.GA21785@tree.beaverton.ibm.com>
+	 <47B4682C.4020505@hopnet.net>
+	 <1203089323.3058.20.camel@localhost.localdomain>
+	 <47B9958A.8080104@hopnet.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35701 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48947 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751054AbYBSQGq (ORCPT
+	by vger.kernel.org with ESMTP id S1751041AbYBSQW2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 11:06:46 -0500
-In-Reply-To: <20080219170100D.tomof@acm.org>
+	Tue, 19 Feb 2008 11:22:28 -0500
+In-Reply-To: <47B9958A.8080104@hopnet.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com, Jeff Garzik <jeff@garzik.org>
+To: Keith Hopkins <vger@hopnet.net>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org
 
-On Tue, 2008-02-19 at 17:02 +0900, FUJITA Tomonori wrote:
-> ips did scsi_add_host(sh, NULL) so scsi_dma_map uses
-> shost_gendev.parent that isn't initialized properly, then the kernel
-> crashes. 2.6.23 and 2.6.24 have this bug.
+On Mon, 2008-02-18 at 22:26 +0800, Keith Hopkins wrote:
+> Well, that made life interesting....
+>   but didn't seem to fix anything.
 > 
-> We can fix this by calling scsi_add_host with pdev->dev, in the
-> standard way (like the following way) but this bug was fixed in the
-> current Linus tree by:
+> The behavior is about the same as before, but with more verbose
+> errors.  I failed one member of the raid and had it rebuild as a
+> test...which hangs for a while and the drive falls off-line.
 > 
-> commit 2551a13e61d3c3df6c2da6de5a3ece78e6d67111
-> Author: Jeff Garzik <jeff@garzik.org>
-> Date:   Thu Dec 13 16:14:10 2007 -0800
-> 
-> [SCSI] ips: handle scsi_add_host() failure, and other err cleanups
-> 
-> 
-> James, the legitimate way to fix stable trees is sending this commit
-> (not sending a patch that was not committed upstream)?
+> Please grab the dmesg output in all its gory glory from here:
+> http://wiki.hopnet.net/dokuwiki/lib/exe/fetch.php?media=myit:sas:dmesg-20080218-wpatch-fail.txt.gz
 
-Well, the upstream patch doesn't look so bad as a stable candidate to my
-eye.  Just because it's an unintended bugfix doesn't automatically
-invalidate it.
+I had a look through this.  Amazingly, in spite of the message spew, up
+to here:
 
-The reason stable likes backports of existing upstream patches is
-because they've supposedly been well tested in upstream.  Although that
-doesn't apply in this case because the other bug rather prevented
-testing, the principle is still sound.
+> sas: Enter sas_scsi_recover_host
+> sas: trying to find task 0xffff81033c3d3d80
+> sas: sas_scsi_find_task: aborting task 0xffff81033c3d3d80
+> aic94xx: tmf timed out
+> aic94xx: tmf came back
 
-So, would there be any problems simply backporting this?
+Everything is going normally (the REQ_TASK_ABORT are properly aborted an
+retried).  At this point (around L3449 in the trace) the aborts start
+failing.
+
+Unfortunately, there's a bug in TMF timeout handling in the driver, it
+leaves the sequencer entry pending, but frees the ascb.  If the
+sequencer ever picks this up it will get very confused, as it does a
+while down in the trace:
+
+> aic94xx: BUG:sequencer:dl:no ascb?!
+> aic94xx: BUG:sequencer:dl:no ascb?!
+
+That's where the sequencer adds an ascb to the done list that we've
+already freed.  From this point on confusion reigns and the error
+handler eventually offlines the device.
+
+I'll see if I can come up with patches to fix this ... or at least
+mitigate the problems it causes.
 
 James
 
