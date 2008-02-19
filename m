@@ -1,65 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] aic94xx: Don't free ABORT_TASK SCBs that are timed out
-	(Was: Re: aic94xx: failing on high load)
-Date: Tue, 19 Feb 2008 12:52:26 -0600
-Message-ID: <1203447146.3103.32.camel@localhost.localdomain>
-References: <479FB3ED.3080401@hopnet.net>
-	 <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
-	 <20080130192947.GA21785@tree.beaverton.ibm.com>
-	 <47B4682C.4020505@hopnet.net>
-	 <1203089323.3058.20.camel@localhost.localdomain>
-	 <47B9958A.8080104@hopnet.net>
-	 <1203438140.3103.24.camel@localhost.localdomain>
-	 <20080219184359.GA5414@tree.beaverton.ibm.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] scsi/qla4xxx/ql4_isr.c: remove dead code
+Date: Tue, 19 Feb 2008 21:29:22 +0200
+Message-ID: <20080219192922.GH31955@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58707 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753668AbYBSSwd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 13:52:33 -0500
-In-Reply-To: <20080219184359.GA5414@tree.beaverton.ibm.com>
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:36968 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756175AbYBST36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2008 14:29:58 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Keith Hopkins <vger@hopnet.net>, Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>, Peter Bogdanovic <pbog@us.ibm.com>, Gilbert Wu <Gilbert_Wu@adaptec.com>
+To: David Somayajulu <david.somayajulu@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2008-02-19 at 10:44 -0800, Darrick J. Wong wrote:
-> If we send an ABORT_TASK ascb that doesn't return within the timeout period,
-> we should not free that ascb because the sequencer is still holding onto it.
-> Hopefully it will fix what James Bottomley describes below:
-> 
-> On Tue, Feb 19, 2008 at 10:22:20AM -0600, James Bottomley wrote:
-> 
-> > Unfortunately, there's a bug in TMF timeout handling in the driver, it
-> > leaves the sequencer entry pending, but frees the ascb.  If the
-> > sequencer ever picks this up it will get very confused, as it does a
-> > while down in the trace:
-> > 
-> > > aic94xx: BUG:sequencer:dl:no ascb?!
-> > > aic94xx: BUG:sequencer:dl:no ascb?!
-> > 
-> > That's where the sequencer adds an ascb to the done list that we've
-> > already freed.  From this point on confusion reigns and the error
-> > handler eventually offlines the device.
-> > 
-> > I'll see if I can come up with patches to fix this ... or at least
-> > mitigate the problems it causes.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+This patch removes dead code spotted by the Coverity checker.
 
-Actually, unfortunately, this is only a tiny part of it.  The message
-that triggered all of this is
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-> sas: sas_scsi_find_task: aborting task 0xffff81033c3d3d80
-> aic94xx: tmf timed out
-> aic94xx: tmf came back
+---
 
-That's caused by a timeout at asd_enqueue_internal() further up in the
-code base.
+ drivers/scsi/qla4xxx/ql4_isr.c |   18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
-James
-
+--- linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c.old	2008-02-19 20:29:16.000000000 +0200
++++ linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c	2008-02-19 20:30:37.000000000 +0200
+@@ -91,38 +91,22 @@ static void qla4xxx_status_entry(struct 
+ 		if (scsi_status == 0) {
+ 			cmd->result = DID_OK << 16;
+ 			break;
+ 		}
+ 
+ 		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
+ 			cmd->result = DID_ERROR << 16;
+ 			break;
+ 		}
+ 
+-		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
++		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER)
+ 			scsi_set_resid(cmd, residual);
+-			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
+-				cmd->underflow)) {
+-
+-				cmd->result = DID_ERROR << 16;
+-
+-				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
+-					"Mid-layer Data underrun0, "
+-					"xferlen = 0x%x, "
+-					"residual = 0x%x\n", ha->host_no,
+-					cmd->device->channel,
+-					cmd->device->id,
+-					cmd->device->lun, __func__,
+-					scsi_bufflen(cmd), residual));
+-				break;
+-			}
+-		}
+ 
+ 		cmd->result = DID_OK << 16 | scsi_status;
+ 
+ 		if (scsi_status != SCSI_CHECK_CONDITION)
+ 			break;
+ 
+ 		/* Copy Sense Data into sense buffer. */
+ 		memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+ 		sensebytecnt = le16_to_cpu(sts_entry->senseDataByteCnt);
 
