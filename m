@@ -1,67 +1,127 @@
-From: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly resolved
-Date: Tue, 19 Feb 2008 15:35:45 -0500
-Message-ID: <47BB3DA1.8040001@gmail.com>
-References: <Pine.LNX.4.44L0.0802162210110.13745-100000@netrider.rowland.org>
+From: Joshua Hoblitt <josh@hoblitt.com>
+Subject: Re: arcmsr + archttp64 calls dma_free_coherent() with irqs
+	disabled - dmesg filled with warnings
+Date: Tue, 19 Feb 2008 10:38:54 -1000
+Message-ID: <20080219203854.GA22562@hoblitt.com>
+References: <20080212205345.GB7640@hoblitt.com> <20080212222109.GC7640@hoblitt.com> <1202855436.3137.153.camel@localhost.localdomain> <20080215205657.GB23625@hoblitt.com> <1203112643.3058.48.camel@localhost.localdomain> <1203113047.3058.50.camel@localhost.localdomain> <47B6CDDB.8000605@gentoo.org> <1203173535.3182.11.camel@localhost.localdomain> <47B7738C.9050107@gentoo.org> <47B773C5.2000905@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0802162210110.13745-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:38371 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbYBSUi5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 15:38:57 -0500
+Content-Disposition: inline
+In-Reply-To: <47B773C5.2000905@gentoo.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kim H?jgaard-Hansen <kimhh@control.aau.dk>, erich@areca.com.tw, linux-scsi@vger.kernel.org, j_gentoo@hoblitt.com, nick.cheng@areca.com.tw
 
-On 2/16/2008 10:35 PM, Alan Stern wrote:
+I have a test machine running:
 
-> On Sat, 16 Feb 2008, Andrew Buehler wrote:
+0001-arcmsr-fix-message-allocation.patch
+arcmsr-pci-alloc-consistent.patch
+2.6.24-gentoo-r2
 
->> Until this thread, I was not even aware that ACPI was related to
->> USB; I had largely conflated it with a similar acronym which I
->> think is related to power management and which I can suddenly not
->> even find in my kernel config. I will, however, look into
->> linux-acpi.
+The arcmsr driver is loaded and archttp64 is running.  I've been access
+archttp64 and there are no warnings in dmesg.  Without the patches this
+would have generated 10s of MB of warning messages.  I haven't really
+exercised the areca volumes yet but this looks to be both a fix for the
+warnings and James' coding issues.  I'd vote for re-diffing and kicking
+the patch upstream at this point.
+
+-J
+
+--
+On Sat, Feb 16, 2008 at 11:37:41PM +0000, Daniel Drake wrote:
+> Daniel Drake wrote:
+>> Here is a patch to address your comments.
+>> Joshua, would you mind testing this before I submit it properly? It will 
+>> apply cleanly to 2.6.24 on top of the previous patch you tested. I have 
+>> compile-tested it.
+>
+> It would help to include the patch.
+
+> >From 0a9cd6133fe4f0c3a8906d6be1b9d1ef083345dc Mon Sep 17 00:00:00 2001
+> From: Daniel Drake <dsd@gentoo.org>
+> Date: Sat, 16 Feb 2008 23:25:02 +0000
+> Subject: [PATCH] arcmsr: fix message allocation
 > 
-> ACPI isn't directly related to USB; rather it has to do with
-> transferring information between the OS and the
-> BIOS/vendor-specific-hardware. Power management is example where such
-> a transfer is needed. In your case, the relevant information is
-> which IRQ is connected to which motherboard device. If you don't have
-> ACPI enabled in your configuration, then perhaps that's the problem
-> -- try enabling it.
+> ---
+>  drivers/scsi/arcmsr/arcmsr_hba.c |   26 +++++++++++---------------
+>  1 files changed, 11 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> index 4f9ff32..f91f79c 100644
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+> @@ -1387,18 +1387,16 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+>  	switch(controlcode) {
+>  
+>  	case ARCMSR_MESSAGE_READ_RQBUFFER: {
+> -		unsigned long *ver_addr;
+> +		unsigned char *ver_addr;
+>  		uint8_t *pQbuffer, *ptmpQbuffer;
+>  		int32_t allxfer_len = 0;
+> -		void *tmp;
+>  
+> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
+> -		ver_addr = (unsigned long *)tmp;
+> -		if (!tmp) {
+> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
+> +		if (!ver_addr) {
+>  			retvalue = ARCMSR_MESSAGE_FAIL;
+>  			goto message_out;
+>  		}
+> -		ptmpQbuffer = (uint8_t *) ver_addr;
+> +		ptmpQbuffer = ver_addr;
+>  		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
+>  			&& (allxfer_len < 1031)) {
+>  			pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
+> @@ -1427,26 +1425,24 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+>  			}
+>  			arcmsr_iop_message_read(acb);
+>  		}
+> -		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
+> +		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);
+>  		pcmdmessagefld->cmdmessage.Length = allxfer_len;
+>  		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
+> -		kfree(tmp);
+> +		kfree(ver_addr);
+>  		}
+>  		break;
+>  
+>  	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
+> -		unsigned long *ver_addr;
+> +		unsigned char *ver_addr;
+>  		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
+>  		uint8_t *pQbuffer, *ptmpuserbuffer;
+> -		void *tmp;
+>  
+> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
+> -		ver_addr = (unsigned long *)tmp;
+> -		if (!tmp) {
+> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
+> +		if (!ver_addr) {
+>  			retvalue = ARCMSR_MESSAGE_FAIL;
+>  			goto message_out;
+>  		}
+> -		ptmpuserbuffer = (uint8_t *)ver_addr;
+> +		ptmpuserbuffer = ver_addr;
+>  		user_len = pcmdmessagefld->cmdmessage.Length;
+>  		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
+>  		wqbuf_lastindex = acb->wqbuf_lastindex;
+> @@ -1492,7 +1488,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
+>  				retvalue = ARCMSR_MESSAGE_FAIL;
+>  			}
+>  			}
+> -			kfree(tmp);
+> +			kfree(ver_addr);
+>  		}
+>  		break;
+>  
+> -- 
+> 1.5.4
+> 
 
-Apparently it was the problem; enabling ACPI has fixed not only the USB
-problem but also the network problem (somewhat miraculously, since I'm
-quite certain that I had ACPI enabled in a 2.6.23.x kernel where the
-network did not work despite an apparently matching driver).
-
-I feel somewhat foolish for having reported a regression over what turns
-out to have been a simple misconfiguration, but I still do think it's
-somewhat misleading at best for something so potentially important to
-completely non-power-related things to be buried under the heading of
-power management... I would suggest moving it somewhere else in the
-config and the dependencies, except that I have neither a suggestion for
-a possible place nor any idea of how much actual work that would
-involve.
-
-
-
-With those two problems out of the way, what is left is the hard-drive
-issue, and that is also halfway fixed by enabling ACPI. Specifically, it
-is "fixed" in that the kernel sees the hard drive and I can mount it,
-but it is not fixed in that the program we need to use in this
-environment does not see the drive.
-
-I have a config from a boot disc running 2.6.5 (that's not a typo) under
-which the program in question *does* see the drive, but there are
-massive differences between that config and the one I am using now, and
-narrowing the critical difference down is likely to be somewhat
-difficult - particularly since some of the "differences" are merely
-renamed config symbols (i.e. the CONFIG_SCSI_SATA_*->CONFIG_SATA_*
-switchover), and I have limited ability to tell which without intensive
-investigation. Are there any established techniques for simplifying this
-kind of comparison?
-
--- 
-    Andrew Buehler
