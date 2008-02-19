@@ -1,69 +1,37 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] scsi/qla4xxx/ql4_isr.c: remove dead code
-Date: Tue, 19 Feb 2008 21:29:22 +0200
-Message-ID: <20080219192922.GH31955@cs181133002.pp.htv.fi>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] libsas: Provide a transport-level facility to request
+ SAS addrs
+Date: Tue, 19 Feb 2008 14:50:13 -0500
+Message-ID: <47BB32F5.9010505@garzik.org>
+References: <20080219184939.GB5414@tree.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:36968 "EHLO smtp6.pp.htv.fi"
+Received: from srv5.dvmed.net ([207.36.208.214]:53507 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756175AbYBST36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 14:29:58 -0500
-Content-Disposition: inline
+	id S1751264AbYBSTuR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2008 14:50:17 -0500
+In-Reply-To: <20080219184939.GB5414@tree.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Somayajulu <david.somayajulu@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-This patch removes dead code spotted by the Coverity checker.
+Darrick J. Wong wrote:
+> Provide a facility to use the request_firmware() interface to get a SAS
+> address from userspace.  This can be used by SAS LLDDs that cannot
+> obtain the address from the host adapter.
+> 
+> Resend of 8 Oct. 2007 patch, now based off 2.6.25-rc2 + scsi_misc.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
+> 
+>  drivers/scsi/libsas/sas_scsi_host.c |   41 +++++++++++++++++++++++++++++++++++
+>  include/scsi/libsas.h               |    2 ++
+>  2 files changed, 43 insertions(+), 0 deletions(-)
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+ACK patches 1-2
 
----
-
- drivers/scsi/qla4xxx/ql4_isr.c |   18 +-----------------
- 1 file changed, 1 insertion(+), 17 deletions(-)
-
---- linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c.old	2008-02-19 20:29:16.000000000 +0200
-+++ linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c	2008-02-19 20:30:37.000000000 +0200
-@@ -91,38 +91,22 @@ static void qla4xxx_status_entry(struct 
- 		if (scsi_status == 0) {
- 			cmd->result = DID_OK << 16;
- 			break;
- 		}
- 
- 		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
- 			cmd->result = DID_ERROR << 16;
- 			break;
- 		}
- 
--		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
-+		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER)
- 			scsi_set_resid(cmd, residual);
--			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
--				cmd->underflow)) {
--
--				cmd->result = DID_ERROR << 16;
--
--				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
--					"Mid-layer Data underrun0, "
--					"xferlen = 0x%x, "
--					"residual = 0x%x\n", ha->host_no,
--					cmd->device->channel,
--					cmd->device->id,
--					cmd->device->lun, __func__,
--					scsi_bufflen(cmd), residual));
--				break;
--			}
--		}
- 
- 		cmd->result = DID_OK << 16 | scsi_status;
- 
- 		if (scsi_status != SCSI_CHECK_CONDITION)
- 			break;
- 
- 		/* Copy Sense Data into sense buffer. */
- 		memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 
- 		sensebytecnt = le16_to_cpu(sts_entry->senseDataByteCnt);
 
