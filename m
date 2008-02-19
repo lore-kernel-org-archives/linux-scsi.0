@@ -1,89 +1,53 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] ips: sg chaining support to the path to non I/O commands
-Date: Tue, 19 Feb 2008 18:41:30 +0900
-Message-ID: <20080219184131V.tomof@acm.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/1] cciss: procfs updates to display info about many volumes
+Date: Tue, 19 Feb 2008 11:48:18 +0100
+Message-ID: <20080219104818.GX23197@kernel.dk>
+References: <20080211220906.GA24835@roadking.usa.hp.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:58007 "EHLO mo10.iij4u.or.jp"
+Received: from brick.kernel.dk ([87.55.233.238]:5300 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756514AbYBSJyw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 04:54:52 -0500
+	id S1751578AbYBSKsV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2008 05:48:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20080211220906.GA24835@roadking.usa.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com, lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-Here is another ips patch, but not a bug fix.
+On Mon, Feb 11 2008, Mike Miller wrote:
+> Patch 1 of 1
+> 
+> This patch allows us to display information about all of the logical volumes
+> configured on a particular without stepping on memory even when there are
+> many volumes (128 or more) configured. This patch replaces the one submitted
+> on 20071214. See
+> http://groups.google.com/group/linux.kernel/browse_thread/thread/49a50244b19f8855/ba3dc95b23391521?hl=en&lnk=gst&q=cciss#ba3dc95b23391521
+> which has not been merged. That patch displayed information about only the
+> first logical volume on each controller and had negative side effects for some
+> installers.
+> Please consider this for inclusion.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] ips: sg chaining support to the path to non I/O commands
+It looks ok, but has some flaws. Try to disable cciss scsi and tape
+support:
 
-I overlooked ips_scmd_buf_write and ips_scmd_buf_read when I converted
-ips to use the data buffer accessors.
+In file included from drivers/block/cciss.c:231:
+drivers/block/cciss_scsi.c:1498:38: error: macro parameters must be
+comma-separated
+drivers/block/cciss.c: In function 'cciss_seq_show_header':
+drivers/block/cciss.c:272: error: implicit declaration of function
+'cciss_seq_tape_report'
+drivers/block/cciss.c: In function 'cciss_proc_write':
+drivers/block/cciss.c:393: error: implicit declaration of function
+'cciss_engage_scsi'
 
-ips is unlikely to use sg chaining (especially in this path) since a)
-this path is used only for non I/O commands (with little data
-transfer), b) ips's sg_tablesize is set to just 17.
+You macro definition of cciss_seq_tape_report() is totally busted.
+Either write is as a macro OR as a function.
 
-Thanks to Tim Pepper for testing this patch.
+Fix these up and resubmit, then I'll take it.
 
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Salyzyn, Mark <Mark_Salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ips.c |   18 ++++++++++--------
- 1 files changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 7ed568f..e5467a4 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -3510,15 +3510,16 @@ ips_scmd_buf_write(struct scsi_cmnd *scmd, void *data, unsigned int count)
-         struct scatterlist *sg = scsi_sglist(scmd);
- 
-         for (i = 0, xfer_cnt = 0;
--             (i < scsi_sg_count(scmd)) && (xfer_cnt < count); i++) {
--                min_cnt = min(count - xfer_cnt, sg[i].length);
-+	(i < scsi_sg_count(scmd)) && (xfer_cnt < count);
-+             i++, sg = sg_next(sg)) {
-+                min_cnt = min(count - xfer_cnt, sg->length);
- 
-                 /* kmap_atomic() ensures addressability of the data buffer.*/
-                 /* local_irq_save() protects the KM_IRQ0 address slot.     */
-                 local_irq_save(flags);
--                buffer = kmap_atomic(sg_page(&sg[i]), KM_IRQ0) + sg[i].offset;
-+		buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
-                 memcpy(buffer, &cdata[xfer_cnt], min_cnt);
--                kunmap_atomic(buffer - sg[i].offset, KM_IRQ0);
-+		kunmap_atomic(buffer - sg->offset, KM_IRQ0);
-                 local_irq_restore(flags);
- 
-                 xfer_cnt += min_cnt;
-@@ -3543,15 +3544,16 @@ ips_scmd_buf_read(struct scsi_cmnd *scmd, void *data, unsigned int count)
-         struct scatterlist *sg = scsi_sglist(scmd);
- 
-         for (i = 0, xfer_cnt = 0;
--             (i < scsi_sg_count(scmd)) && (xfer_cnt < count); i++) {
--                min_cnt = min(count - xfer_cnt, sg[i].length);
-+             (i < scsi_sg_count(scmd)) && (xfer_cnt < count);
-+             i++, sg = sg_next(sg)) {
-+		min_cnt = min(count - xfer_cnt, sg->length);
- 
-                 /* kmap_atomic() ensures addressability of the data buffer.*/
-                 /* local_irq_save() protects the KM_IRQ0 address slot.     */
-                 local_irq_save(flags);
--                buffer = kmap_atomic(sg_page(&sg[i]), KM_IRQ0) + sg[i].offset;
-+		buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
-                 memcpy(&cdata[xfer_cnt], buffer, min_cnt);
--                kunmap_atomic(buffer - sg[i].offset, KM_IRQ0);
-+		kunmap_atomic(buffer - sg->offset, KM_IRQ0);
-                 local_irq_restore(flags);
- 
-                 xfer_cnt += min_cnt;
 -- 
-1.5.3.7
+Jens Axboe
 
