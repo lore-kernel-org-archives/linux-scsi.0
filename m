@@ -1,80 +1,35 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH update] firewire: fw-sbp2: fix NULL pointer deref in
-	scsi_remove_device
-Date: Tue, 19 Feb 2008 09:05:49 +0100 (CET)
-Message-ID: <tkrat.c814d52432988f28@s5r6.in-berlin.de>
-References: <tkrat.e8f3d31fb5f9fe01@s5r6.in-berlin.de>
-	<tkrat.9103805c20697161@s5r6.in-berlin.de>
-	<tkrat.bc89a18c9ce7df0b@s5r6.in-berlin.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: ips.c broken since 2.6.23 on x86_64?
+Date: Tue, 19 Feb 2008 17:22:34 +0900
+Message-ID: <20080219172234N.fujita.tomonori@lab.ntt.co.jp>
+References: <20080218233057.GC12905@tpepper-t42p.dolavim.us>
+	<20080219091121I.fujita.tomonori@lab.ntt.co.jp>
+	<eada2a070802181948p782a4862p3bc08db7b2b64beb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.bc89a18c9ce7df0b@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:34903 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbYBSIWw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 03:22:52 -0500
+In-Reply-To: <eada2a070802181948p782a4862p3bc08db7b2b64beb@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lnxninja@linux.vnet.ibm.com
+Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com
 
-Fix a kernel bug when unplugging an SBP-2 device after having its
-scsi_device already removed via the "delete" sysfs attribute.
+On Mon, 18 Feb 2008 19:48:49 -0800
+"Tim Pepper" <lnxninja@linux.vnet.ibm.com> wrote:
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
+> On Feb 18, 2008 4:11 PM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > Can you please help me just once more? 2.6.25-rc2 fixed this bug in a
+> > bit different way by chance. Please test 2.6.25-rc2 with the attached
+> > patch to make sure that ips in 2.6.25 works well.
+> 
+> Confirmed...the patch below against 2.6.25-rc2 also works for me.
 
-Update:  A _put was missing in a failure path.
+Thanks a lot!
 
- drivers/firewire/fw-sbp2.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-Index: linux/drivers/firewire/fw-sbp2.c
-===================================================================
---- linux.orig/drivers/firewire/fw-sbp2.c
-+++ linux/drivers/firewire/fw-sbp2.c
-@@ -762,9 +762,10 @@ static void sbp2_release_target(struct k
- 	sbp2_unblock(tgt);
- 
- 	list_for_each_entry_safe(lu, next, &tgt->lu_list, link) {
--		if (lu->sdev)
-+		if (lu->sdev) {
- 			scsi_remove_device(lu->sdev);
--
-+			scsi_device_put(lu->sdev);
-+		}
- 		sbp2_send_management_orb(lu, tgt->node_id, lu->generation,
- 				SBP2_LOGOUT_REQUEST, lu->login_id, NULL);
- 
-@@ -886,12 +887,11 @@ static void sbp2_login(struct work_struc
- 	if (IS_ERR(sdev))
- 		goto out_logout_login;
- 
--	scsi_device_put(sdev);
--
- 	/* Unreported error during __scsi_add_device() */
- 	smp_rmb(); /* get current card generation */
- 	if (generation != device->card->generation) {
- 		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
- 		goto out_logout_login;
- 	}
- 
-
--- 
-Stefan Richter
--=====-==--- --=- =--==
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+I'll make sure that the ips driver in 2.6.23-stable, 2.6.24-stable
+(and 2.6.25) will work well.
