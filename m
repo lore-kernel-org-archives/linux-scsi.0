@@ -1,127 +1,70 @@
-From: Joshua Hoblitt <josh@hoblitt.com>
-Subject: Re: arcmsr + archttp64 calls dma_free_coherent() with irqs
-	disabled - dmesg filled with warnings
-Date: Tue, 19 Feb 2008 10:38:54 -1000
-Message-ID: <20080219203854.GA22562@hoblitt.com>
-References: <20080212205345.GB7640@hoblitt.com> <20080212222109.GC7640@hoblitt.com> <1202855436.3137.153.camel@localhost.localdomain> <20080215205657.GB23625@hoblitt.com> <1203112643.3058.48.camel@localhost.localdomain> <1203113047.3058.50.camel@localhost.localdomain> <47B6CDDB.8000605@gentoo.org> <1203173535.3182.11.camel@localhost.localdomain> <47B7738C.9050107@gentoo.org> <47B773C5.2000905@gentoo.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: no INQUIRY from userspace please
+Date: Tue, 19 Feb 2008 15:53:38 -0500
+Message-ID: <47BB41D2.2070209@torque.net>
+References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>	 <20080124003203.18871.52040.sendpatchset@localhost.localdomain>	 <1202151498.3096.84.camel@localhost.localdomain>	 <1202156151.13537.14.camel@linuxchandra>	 <1202156914.3096.112.camel@localhost.localdomain>	 <47A8C14A.3030207@cs.wisc.edu> <20080205215657.GA20963@linux.vnet.ibm.com>	 <47AAD898.30004@s5r6.in-berlin.de> <1202396490.3171.8.camel@localhost.localdomain> <47AB3A53.2030907@s5r6.in-berlin.de> <47AB3C47.6060805@s5r6.in-berlin.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:38371 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbYBSUi5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 15:38:57 -0500
-Content-Disposition: inline
-In-Reply-To: <47B773C5.2000905@gentoo.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <47AB3C47.6060805@s5r6.in-berlin.de>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, sekharan@us.ibm.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-hotplug@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kim H?jgaard-Hansen <kimhh@control.aau.dk>, erich@areca.com.tw, linux-scsi@vger.kernel.org, j_gentoo@hoblitt.com, nick.cheng@areca.com.tw
 
-I have a test machine running:
-
-0001-arcmsr-fix-message-allocation.patch
-arcmsr-pci-alloc-consistent.patch
-2.6.24-gentoo-r2
-
-The arcmsr driver is loaded and archttp64 is running.  I've been access
-archttp64 and there are no warnings in dmesg.  Without the patches this
-would have generated 10s of MB of warning messages.  I haven't really
-exercised the areca volumes yet but this looks to be both a fix for the
-warnings and James' coding issues.  I'd vote for re-diffing and kicking
-the patch upstream at this point.
-
--J
-
---
-On Sat, Feb 16, 2008 at 11:37:41PM +0000, Daniel Drake wrote:
-> Daniel Drake wrote:
->> Here is a patch to address your comments.
->> Joshua, would you mind testing this before I submit it properly? It will 
->> apply cleanly to 2.6.24 on top of the previous patch you tested. I have 
->> compile-tested it.
->
-> It would help to include the patch.
-
-> >From 0a9cd6133fe4f0c3a8906d6be1b9d1ef083345dc Mon Sep 17 00:00:00 2001
-> From: Daniel Drake <dsd@gentoo.org>
-> Date: Sat, 16 Feb 2008 23:25:02 +0000
-> Subject: [PATCH] arcmsr: fix message allocation
+Stefan Richter wrote:
+>> James Bottomley wrote:
+>>> It's all very well to say this, but I think if you look at what udev
+>>> does, you'll find that it uses scsi_id to send a VPD inquiry to the
+>>> device so it can populate /dev/disk/by-id, so the point is already
+>>> conceded
 > 
-> ---
->  drivers/scsi/arcmsr/arcmsr_hba.c |   26 +++++++++++---------------
->  1 files changed, 11 insertions(+), 15 deletions(-)
+> PS:  Alas we don't have a practicable way to know how many of the
+>   - doesn't work with Linux but works to some degree with Windows,
+>   - doesn't work with a 2.6 based Linux distro but did work with a
+>     2.4 based distro
+> kinds of devices are those with this INQUIRY bug or similar bugs.
 > 
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> index 4f9ff32..f91f79c 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -1387,18 +1387,16 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  	switch(controlcode) {
->  
->  	case ARCMSR_MESSAGE_READ_RQBUFFER: {
-> -		unsigned long *ver_addr;
-> +		unsigned char *ver_addr;
->  		uint8_t *pQbuffer, *ptmpQbuffer;
->  		int32_t allxfer_len = 0;
-> -		void *tmp;
->  
-> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-> -		ver_addr = (unsigned long *)tmp;
-> -		if (!tmp) {
-> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
-> +		if (!ver_addr) {
->  			retvalue = ARCMSR_MESSAGE_FAIL;
->  			goto message_out;
->  		}
-> -		ptmpQbuffer = (uint8_t *) ver_addr;
-> +		ptmpQbuffer = ver_addr;
->  		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
->  			&& (allxfer_len < 1031)) {
->  			pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
-> @@ -1427,26 +1425,24 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  			}
->  			arcmsr_iop_message_read(acb);
->  		}
-> -		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
-> +		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);
->  		pcmdmessagefld->cmdmessage.Length = allxfer_len;
->  		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
-> -		kfree(tmp);
-> +		kfree(ver_addr);
->  		}
->  		break;
->  
->  	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
-> -		unsigned long *ver_addr;
-> +		unsigned char *ver_addr;
->  		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
->  		uint8_t *pQbuffer, *ptmpuserbuffer;
-> -		void *tmp;
->  
-> -		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
-> -		ver_addr = (unsigned long *)tmp;
-> -		if (!tmp) {
-> +		ver_addr = kmalloc(1032, GFP_ATOMIC);
-> +		if (!ver_addr) {
->  			retvalue = ARCMSR_MESSAGE_FAIL;
->  			goto message_out;
->  		}
-> -		ptmpuserbuffer = (uint8_t *)ver_addr;
-> +		ptmpuserbuffer = ver_addr;
->  		user_len = pcmdmessagefld->cmdmessage.Length;
->  		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
->  		wqbuf_lastindex = acb->wqbuf_lastindex;
-> @@ -1492,7 +1488,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
->  				retvalue = ARCMSR_MESSAGE_FAIL;
->  			}
->  			}
-> -			kfree(tmp);
-> +			kfree(ver_addr);
->  		}
->  		break;
->  
-> -- 
-> 1.5.4
-> 
+> While non-udev distros slowly went out of fashion on the desktop, there
+> was a certain frequency of reports of the latter kind of FireWire
+> devices, but this was before I became aware of that kind of firmware
+> bug, therefore I don't have any data whether it played a role for these
+> cases.
 
+Just a small point here. To my knowledge all devices
+that understand the SCSI command set will accept a
+36 byte INQUIRY (i.e. an INQUIRY with an "allocation length"
+of 36). That is a practical consideration since they would
+crash on Windows otherwise.
+
+Now scsi_id (and probably other programs of that ilk
+(including some of mine)) get excited when they get a
+response to a "36 byte" INQUIRY and go onto ask for
+VPD page 0x80 (serial number) or page 0x83 (device id)
+via an INQUIRY command with the EVPD bit set.
+Now if they were clever they would make sure that
+the "allocation length" of the _first_ such VPD inquiry
+was 36! That way they could have a close look at the
+response and if it wasn't valid for a VPD page
+(e.g. requested_VPD_page_num != response[1]) then
+they would leave the damn device alone **.
+
+<<< Special case: removable media >>>
+Since response[1] of a standard INQUIRY has RMB (removable
+medium bit) set in its top bit and the rest of the byte
+reserved, 0x80 is a possibility. That could give a
+false positive when the serial number VPD page is
+requested. So try looking for VPD page 0x83 (with
+alloc_len=36) first.
+
+
+** The logic here is that a brain dead SCSI target
+interpreter doesn't look at the EVPD bit and can
+only handle an "allocation length" of 36. So if
+it receives an INQUIRY cdb with the EVPD bit set
+it will just respond with its standard INQUIRY
+response.
+
+Doug Gilbert
