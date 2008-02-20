@@ -1,98 +1,39 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] arcmsr: fix message allocation
-Date: Wed, 20 Feb 2008 13:29:05 +0000 (GMT)
-Message-ID: <20080220132905.EAA849D4144@zog.reactivated.net>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:54597 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751667AbYBTN3N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Feb 2008 08:29:13 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly
+ resolved
+Date: Wed, 20 Feb 2008 10:50:19 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802201048410.4828-100000@iolanthe.rowland.org>
+References: <47BB3DA1.8040001@gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47BB3DA1.8040001-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: josh@hoblitt.com, kimhh@control.aau.dk, erich@areca.com.tw, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw
 
-arcmsr_iop_message_xfer() is called from atomic context under the
-queuecommand scsi_host_template handler. James Bottomley pointed out
-that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we are in
-atomic context, secondly this memory is not used for DMA.
-Also removed some unneeded casts.
+On Tue, 19 Feb 2008, Andrew Buehler wrote:
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/scsi/arcmsr/arcmsr_hba.c |   26 +++++++++++---------------
- 1 files changed, 11 insertions(+), 15 deletions(-)
+> With those two problems out of the way, what is left is the hard-drive
+> issue, and that is also halfway fixed by enabling ACPI. Specifically, it
+> is "fixed" in that the kernel sees the hard drive and I can mount it,
+> but it is not fixed in that the program we need to use in this
+> environment does not see the drive.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 4f9ff32..f91f79c 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1387,18 +1387,16 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 	switch(controlcode) {
- 
- 	case ARCMSR_MESSAGE_READ_RQBUFFER: {
--		unsigned long *ver_addr;
-+		unsigned char *ver_addr;
- 		uint8_t *pQbuffer, *ptmpQbuffer;
- 		int32_t allxfer_len = 0;
--		void *tmp;
- 
--		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
--		ver_addr = (unsigned long *)tmp;
--		if (!tmp) {
-+		ver_addr = kmalloc(1032, GFP_ATOMIC);
-+		if (!ver_addr) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
--		ptmpQbuffer = (uint8_t *) ver_addr;
-+		ptmpQbuffer = ver_addr;
- 		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
- 			&& (allxfer_len < 1031)) {
- 			pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
-@@ -1427,26 +1425,24 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 			}
- 			arcmsr_iop_message_read(acb);
- 		}
--		memcpy(pcmdmessagefld->messagedatabuffer, (uint8_t *)ver_addr, allxfer_len);
-+		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);
- 		pcmdmessagefld->cmdmessage.Length = allxfer_len;
- 		pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
--		kfree(tmp);
-+		kfree(ver_addr);
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
--		unsigned long *ver_addr;
-+		unsigned char *ver_addr;
- 		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
--		void *tmp;
- 
--		tmp = kmalloc(1032, GFP_KERNEL|GFP_DMA);
--		ver_addr = (unsigned long *)tmp;
--		if (!tmp) {
-+		ver_addr = kmalloc(1032, GFP_ATOMIC);
-+		if (!ver_addr) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
--		ptmpuserbuffer = (uint8_t *)ver_addr;
-+		ptmpuserbuffer = ver_addr;
- 		user_len = pcmdmessagefld->cmdmessage.Length;
- 		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
- 		wqbuf_lastindex = acb->wqbuf_lastindex;
-@@ -1492,7 +1488,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
- 				retvalue = ARCMSR_MESSAGE_FAIL;
- 			}
- 			}
--			kfree(tmp);
-+			kfree(ver_addr);
- 		}
- 		break;
- 
--- 
-1.5.4
+What do you mean by "does not see the drive"?
 
+> I have a config from a boot disc running 2.6.5 (that's not a typo) under
+> which the program in question *does* see the drive, but there are
+> massive differences between that config and the one I am using now, and
+> narrowing the critical difference down is likely to be somewhat
+> difficult - particularly since some of the "differences" are merely
+> renamed config symbols (i.e. the CONFIG_SCSI_SATA_*->CONFIG_SATA_*
+> switchover), and I have limited ability to tell which without intensive
+> investigation. Are there any established techniques for simplifying this
+> kind of comparison?
+
+The only established technique is to run various kernels intermediate 
+between the one that works and the one that fails.
+
+Alan Stern
