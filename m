@@ -1,33 +1,40 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly
- resolved
-Date: Wed, 20 Feb 2008 14:29:41 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0802201428390.7056-100000@iolanthe.rowland.org>
-References: <47BC7101.4060501@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_scan: Convert GFP_ATOMIC to GFP_KERNEL
+Date: Wed, 20 Feb 2008 13:45:37 -0600
+Message-ID: <1203536737.3109.38.camel@localhost.localdomain>
+References: <20080220181029.GC27736@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <47BC7101.4060501-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58094 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757853AbYBTTpk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Feb 2008 14:45:40 -0500
+In-Reply-To: <20080220181029.GC27736@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 20 Feb 2008, Andrew Buehler wrote:
 
-> In other words: I don't think that's likely to be practical in the
-> present instance. If you have reason to believe otherwise (past positive
-> experience with Novell, for instance), I'd be glad to hear it.
+On Wed, 2008-02-20 at 11:10 -0700, Matthew Wilcox wrote:
+> There is no need to allocate this memory atomically.  There is no problem
+> with sleeping during a bus scan, and it's actually causing problems
+> for libata.
 
-Greg KH may be able to help in that respect.
+This bit is fine.
 
-> Is there any place (aside from maybe the kernel changelog, which
-> contains a whole lot - if not several lots - of unrelated information)
-> where I could find a list of config-symbol name additions, changes,
-> deletions and meaning changes by version or by date? That would at least
-> let me build a mapping between the symbols in the older config and the
-> ones in the new one, which is about where I would have to start.
+> Also remove the GFP_DMA flag.  If it's needed, the block layer will
+> bounce-buffer it.
 
-Not as far as I know.
+Just because the block layer is capable of doing it doesn't mean we
+should automatically force it.  Bounce buffers are scarce resources, and
+since we know they're required and we know that kmalloc allocates from
+the top of its pools, and so will *always* require bouncing, doesn't it
+make sense simply to save it the trouble?
 
-Alan Stern
+James
+
+
