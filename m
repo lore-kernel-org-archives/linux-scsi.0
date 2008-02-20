@@ -1,111 +1,69 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
-Date: Wed, 20 Feb 2008 22:16:08 +0200 (EET)
-Message-ID: <alpine.LSU.1.00.0802202159290.5347@kai.makisara.local>
-References: <57F67688A8D72449AC80164DA982083103BD31C9@VMXYVR1.ds.mda.ca>
+From: Tilman Schmidt <tilman@imap.cc>
+Subject: [2.6.25-rc2] Drivers sd, sr, st, osst need updating - please use
+ bus_type methods
+Date: Wed, 20 Feb 2008 22:26:51 +0100
+Message-ID: <47BC9B1B.3010800@imap.cc>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig085842E8F732FE158B66CF95"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:49017 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbYBTUQM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2008 15:16:12 -0500
-In-Reply-To: <57F67688A8D72449AC80164DA982083103BD31C9@VMXYVR1.ds.mda.ca>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33948 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759405AbYBTV0z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Feb 2008 16:26:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John LLOYD <jal@mdacorporation.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 20 Feb 2008, John LLOYD wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig085842E8F732FE158B66CF95
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> 
-> > On Mon, 4 Feb 2008, James Bottomley wrote:
-> > 
-> > > 
-> > > On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
-...
-> > > > > This does still occur with 2.6.22; with a blank tape in my HP
-> DDS-4 drive:
-> > > > > 
-> > > > > $ tar tzvf /dev/nst0
-> > > > > tar: /dev/nst0: Cannot read: Input/output error
-> > > 
-> > > That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
-> > > 
-> > This is not a bug, it is a feature. There is _nothing_ on the tape and
-> if 
-> > you try to read something, you get an error. The same thing applies to
-> 
-> > reading after the last filemark. Note that after writing a filemark at
-> the 
-> > beginning of the tape, the situation is different. Now there is a file
-> and 
-> > the normal EOF semantics apply although there still is no data.
-> > 
-> 
-> The question then becomes -- How to detect blank tapes on a SCSI drive
-> without forcing an I/O error?
-> 
-> My own available systems do not include recent kernels, but there are at
-> least two behaviours:
-> 
->  SLES9 SP3 contains st.c *verstr = "20040318" (plus or minus SUSE hacks)
-> and the following approach works:
->    % mtst -f /dev/nst0 rewind
->    % mtst -f /dev/nst0 eom
->    % mtst -f /dev/nst0 status
->  and you get both BOT and EOD status with a blank tape, and some other
-> combination for empty (just EOF) or data-full tapes.
-> 
->  SLES10 SP1 contains st.c *verstr = "20050830" and that method does not
-> work.  You just get EOD and there is no way to tell what kind of tape it
-> is.
-> 
-The behaviour has changed because a bug has been fixed. The BOT status is 
-derived from file and block number being zero. Positioning to EOD is done 
-by spacing over files and this means that we don't know the number of 
-blocks been spaced over. This is why the block number is invalidated 
-(i.e., set to -1).
+Finding these in my syslog when testing 2.6.25-rc2{,-mm1} with
+CONFIG_ENABLE_WARN_DEPRECATED=3Dy:
 
-However, I think your approach can be used with small modification. Most 
-(all?) current drives can tell the tape position (mt tell). If I insert a 
-blank tape, with my drive I get
+<4>[    5.312173] Driver 'sd' needs updating - please use bus_type method=
+s
 
-makisara@kai:~> mt rewi
-makisara@kai:~> mt eod
-makisara@kai:~> mt status
-SCSI 2 tape drive:
-File number=0, block number=-1, partition=0.
-Tape block size 0 bytes. Density code 0x26 (DDS-4 or QIC-4GB).
-Soft error count since last status=0
-General status bits on (9010000):
- EOD ONLINE IM_REP_EN
-makisara@kai:~> mt tell
-At block 0.
+<4>[   20.028800] Driver 'sr' needs updating - please use bus_type method=
+s
 
-i.e, if the EOD status is set at block zero after 'mt eod', we have blank 
-tape. Now, if you have enabled logical block reporting (scsi2logical), the 
-filemarks are also counted as blocks. If the tape has only a filemark 
-(blank tape initialised with 'mt weof'), I get
+<6>[   22.849626] st: Version 20080117, fixed bufsize 32768, s/g segs 256=
 
-makisara@kai:~> mt rewi
-makisara@kai:~> mt eod
-makisara@kai:~> mt status
-SCSI 2 tape drive:
-File number=1, block number=-1, partition=0.
-Tape block size 0 bytes. Density code 0x26 (DDS-4 or QIC-4GB).
-Soft error count since last status=0
-General status bits on (9010000):
- EOD ONLINE IM_REP_EN
-makisara@kai:~> mt tell
-At block 1.
+<4>[   22.849813] Driver 'st' needs updating - please use bus_type method=
+s
 
-Now eod is set at file 1 (after filemark) at block 1 (there is only the 
-filemark).
+<6>[   22.930275] osst :I: Tape driver with OnStream support version 0.99=
+=2E4
+<4>[   22.930278] osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede =
+Exp $
+<4>[   22.930554] Driver 'osst' needs updating - please use bus_type meth=
+ods
 
-By combining these two results, you can tell that there is no data on the 
-tape.
+Just thought I'd let you know.
 
--- 
-Kai
+--=20
+Tilman Schmidt                          E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
+
+
+--------------enig085842E8F732FE158B66CF95
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3rc1 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFHvJsbMdB4Whm86/kRAvWhAJwMjuwpsXuIugwA+Awrh1Sy5Ti1qACfew34
+SHQV24EhWHpGuUzBi9Dms94=
+=ahW2
+-----END PGP SIGNATURE-----
+
+--------------enig085842E8F732FE158B66CF95--
