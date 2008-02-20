@@ -1,52 +1,82 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly
- resolved
-Date: Wed, 20 Feb 2008 12:15:12 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0802201213260.5630-100000@iolanthe.rowland.org>
-References: <47BC5E01.1050902@gmail.com>
+From: "John LLOYD" <jal@mdacorporation.com>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Wed, 20 Feb 2008 09:07:31 -0800
+Message-ID: <57F67688A8D72449AC80164DA982083103BD31C9@VMXYVR1.ds.mda.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <47BC5E01.1050902-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.mda.ca ([142.73.64.14]:34659 "EHLO MSXYVR1.ds.mda.ca"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753581AbYBTRRF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2008 12:17:05 -0500
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 20 Feb 2008, Andrew Buehler wrote:
 
-> > What do you mean by "does not see the drive"?
+
+> On Mon, 4 Feb 2008, James Bottomley wrote:
 > 
-> Its detect-hardware-and-report mode shows a HD size of 0 (which is what
-> it has showed in cases where the kernel has not detected the drive), its
-> detect-partitions-and-report mode shows no partitions and no devices
-> which can have partitions, and attempting to actually use it to pull
-> down a drive image (it's a disk-imaging program) causes it to hang at
-> the point where it would begin to write.
+> > 
+> > On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
+> > > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
+> > > 
+> > > (Added Bart to CC)
+> > > 
+> > > > hello borislav,
+> > > > 
+...
+> > > > This does still occur with 2.6.22; with a blank tape in my HP
+DDS-4 drive:
+> > > > 
+> > > > $ tar tzvf /dev/nst0
+> > > > tar: /dev/nst0: Cannot read: Input/output error
+> > 
+> > That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
+> > 
+> This is not a bug, it is a feature. There is _nothing_ on the tape and
+if 
+> you try to read something, you get an error. The same thing applies to
+
+> reading after the last filemark. Note that after writing a filemark at
+the 
+> beginning of the tape, the situation is different. Now there is a file
+and 
+> the normal EOF semantics apply although there still is no data.
 > 
-> Hmm. One thing which just sprang to mind, in the stab-in-the-dark
-> category: in 2.6.24.2, launching the program on some machines gave
-> warnings along the lines of "this program is using a deprecated ioctl,
-> please convert it to SG_IO" (which I naturally cannot do since it's
-> closed and I don't have the source),
 
-You can ask the program's author to update it.
+The question then becomes -- How to detect blank tapes on a SCSI drive
+without forcing an I/O error?
 
-> but IIRC in the 2.5.25-rc2-based
-> disc with ACPI enabled no such message appears. If the reason that there
-> are no longer such messages is that the ioctl in question has now been
-> removed, that might explain why the program does not see the drive.
+My own available systems do not include recent kernels, but there are at
+least two behaviours:
 
-Could be.  You can use strace to find out what system calls the program 
-is making.
+ SLES9 SP3 contains st.c *verstr = "20040318" (plus or minus SUSE hacks)
+and the following approach works:
+   % mtst -f /dev/nst0 rewind
+   % mtst -f /dev/nst0 eom
+   % mtst -f /dev/nst0 status
+ and you get both BOT and EOD status with a blank tape, and some other
+combination for empty (just EOF) or data-full tapes.
+
+ SLES10 SP1 contains st.c *verstr = "20050830" and that method does not
+work.  You just get EOD and there is no way to tell what kind of tape it
+is.
+
+Why do we care?  Because our software has to be defensive, and check the
+tape before writing to it.  The tapes are fed by a robot (no trustworthy
+humans involved) so checking the tape is necessary.
+
+Now, I fully understand what list I am posting to.  The question
+remains: 
+
+How to detect blank tapes on a SCSI drive without getting an I/O error?
 
 
-> I'm not sure I expressed myself clearly. I do not think the problem is
-> with the different kernels. I think the problem is with the different
-> configurations. I am asking if there are any established techniques for
-> comparing differences between config files from widely different
-> kernels.
+cheers
 
-Not as far as I know.
+John
 
-Alan Stern
