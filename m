@@ -1,97 +1,85 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [2.6 patch] scsi/qla4xxx/ql4_isr.c: remove dead code
-Date: Tue, 19 Feb 2008 18:55:25 -0800
-Message-ID: <20080220025525.GG23759@plap3.qlogic.org>
-References: <20080219192922.GH31955@cs181133002.pp.htv.fi> <1203473618.3103.37.camel@localhost.localdomain> <20080220023559.GF23759@plap3.qlogic.org> <1203475425.3103.42.camel@localhost.localdomain>
+From: Krzysztof Oledzki <olel@ans.pl>
+Subject: Re: + mpt-fusion-dont-oops-if-numphys==0.patch added to -mm tree
+Date: Wed, 20 Feb 2008 04:06:22 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802200400001.6490@bizon.gios.gov.pl>
+References: <200802192335.m1JNZ7MV005426@imap1.linux-foundation.org>
+ <1203475151.3103.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-261756978-1203476782=:6490"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:55704 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757685AbYBTCze (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 21:55:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1203475425.3103.42.camel@localhost.localdomain>
+Received: from bizon.gios.gov.pl ([212.244.124.8]:40322 "EHLO
+	bizon.gios.gov.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbYBTDHJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2008 22:07:09 -0500
+In-Reply-To: <1203475151.3103.40.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Somayajulu <david.somayajulu@qlogic.com>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, mm-commits@vger.kernel.org, Eric.Moore@lsi.com, fujita.tomonori@lab.ntt.co.jp, ole@ans.pl, sathya.prakash@lsi.com, max@rfc2324.org
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---187430788-261756978-1203476782=:6490
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+
+
 
 On Tue, 19 Feb 2008, James Bottomley wrote:
 
-> On Tue, 2008-02-19 at 18:35 -0800, Andrew Vasquez wrote:
-> > On Tue, 19 Feb 2008, James Bottomley wrote:
-> > 
-> > > On Tue, 2008-02-19 at 21:29 +0200, Adrian Bunk wrote:
-> > > > This patch removes dead code spotted by the Coverity checker.
-> > > > 
-> > > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> > > > 
-> > > > ---
-> > > > 
-> > > >  drivers/scsi/qla4xxx/ql4_isr.c |   18 +-----------------
-> > > >  1 file changed, 1 insertion(+), 17 deletions(-)
-> > > > 
-> > > > --- linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c.old	2008-02-19 20:29:16.000000000 +0200
-> > > > +++ linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c	2008-02-19 20:30:37.000000000 +0200
-> > > > @@ -91,38 +91,22 @@ static void qla4xxx_status_entry(struct 
-> > > >  		if (scsi_status == 0) {
-> > > >  			cmd->result = DID_OK << 16;
-> > > >  			break;
-> > > >  		}
-> > > >  
-> > > >  		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
-> > > >  			cmd->result = DID_ERROR << 16;
-> > > >  			break;
-> > > >  		}
-> > > >  
-> > > > -		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
-> > > > +		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER)
-> > > >  			scsi_set_resid(cmd, residual);
-> > > > -			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
-> > > > -				cmd->underflow)) {
-> > > > -
-> > > > -				cmd->result = DID_ERROR << 16;
-> > > > -
-> > > > -				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
-> > > > -					"Mid-layer Data underrun0, "
-> > > > -					"xferlen = 0x%x, "
-> > > > -					"residual = 0x%x\n", ha->host_no,
-> > > > -					cmd->device->channel,
-> > > > -					cmd->device->id,
-> > > > -					cmd->device->lun, __func__,
-> > > > -					scsi_bufflen(cmd), residual));
-> > > > -				break;
-> > > > -			}
-> > > > -		}
-> > > 
-> > > This code doesn't look dead to me, it looks to be enforcing
-> > > cmd->underrun if set ... what makes the coverity checker think it can
-> > > never be executed?
-> > 
-> > Hmm, guess it's the earlier 'if (scsi_status == 0)' check a few lines
-> > up...  Dave S., can you take a look at this...  Thanks, av
-> 
-> Ah, so the !scsi_status is wrong it was supposed to be scsi_status !=
-> 0 ... and even then it can just be dropped.
+>
+> On Tue, 2008-02-19 at 15:34 -0800, akpm@linux-foundation.org wrote:
+>> Subject: mpt fusion: don't oops if NumPhys=3D=3D0
+>> From: Krzysztof Oledzki <olel@ans.pl>
+>>
+>> Don't oops if NumPhys=3D=3D0, instead return -ENODEV.
+>> This patch fixes http://bugzilla.kernel.org/show_bug.cgi?id=3D9909
+>>
+>> Signed-off-by: Krzysztof Piotr Oledzki <ole@ans.pl>
+>> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+>> Cc: Eric Moore <Eric.Moore@lsi.com>
+>> Cc: Sathya Prakash <sathya.prakash@lsi.com>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/message/fusion/mptsas.c |    5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff -puN drivers/message/fusion/mptsas.c~mpt-fusion-dont-oops-if-numphy=
+s=3D=3D0 drivers/message/fusion/mptsas.c
+>> --- a/drivers/message/fusion/mptsas.c~mpt-fusion-dont-oops-if-numphys=3D=
+=3D0
+>> +++ a/drivers/message/fusion/mptsas.c
+>> @@ -1701,6 +1701,11 @@ mptsas_sas_expander_pg0(MPT_ADAPTER *ioc
+>>  =09if (error)
+>>  =09=09goto out_free_consistent;
+>>
+>> +=09if (!buffer->NumPhys) {
+>> +=09=09error =3D -ENODEV;
+>> +=09=09goto out_free_consistent;
+>> +=09}
+>> +
+>>  =09/* save config data */
+>>  =09port_info->num_phys =3D buffer->NumPhys;
+>>  =09port_info->phy_info =3D kcalloc(port_info->num_phys,
+>> _
+>
+> This is a bit odd ... It looks like a work around for a fusion firmware
+> problem.
 
-My guess is that the check should have been written as:
+Workaround or not, the driver should not oops by allocating 0 size memory=
+=20
+block and dereferencing it. It used to work in <2.6.23 but not now.
 
-	...
-	if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER)
-		scsi_set_resid(cmd, residual);
-		if ((scsi_bufflen(cmd) - residual) < cmd->underflow) {
-			...
+> What's the topology this thing is connected to?
 
-It looks to be a logic-error while porting from qla2xxx, where
-scsi_status during CS_COMPLETE is the full 16-bit status (high-byte is
-transport, low-byte SCSI status) from from the FCP_RSP frame (not so
-in iSCSI, where it's just the SCSI-status) and the residual check
-in qla_isr.c::qla2x00_status_entry() looks like:
+It is a Dell-1950III server with two 400GB SAS disks (RAID1) installed in=
+=20
+a dwo disk SAS backplane.
 
-	if (!lscsi_status &&
-	    ((unsigned)(scsi_bufflen(cp) - resid) <
-	     cp->underflow)) {
-		...
+Best regrds,
 
-I'll defer to Dave S. for verification.
+ =09=09=09Krzysztof Ol=EAdzki
+---187430788-261756978-1203476782=:6490--
