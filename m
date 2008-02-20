@@ -1,46 +1,33 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: DMA API Re: Remove dma_coherent_mem interface
-Date: Wed, 20 Feb 2008 20:10:44 +0100
-Message-ID: <47BC7B34.7020308@suse.de>
-References: <1193864605.25899.253.camel@wirenth>	 <20080220171409.GB27736@parisc-linux.org>  <200802201849.48312.ak@suse.de> <1203533015.3181.2.camel@wirenth>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly
+ resolved
+Date: Wed, 20 Feb 2008 14:29:41 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802201428390.7056-100000@iolanthe.rowland.org>
+References: <47BC7101.4060501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:57502 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752841AbYBTTJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Feb 2008 14:09:13 -0500
-In-Reply-To: <1203533015.3181.2.camel@wirenth>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47BC7101.4060501-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: ian <spyro@f2s.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-arch@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, linux-scsi@vger.kernel.org, jejb@steeleye.com, kernel-discuss@handhelds.org
 
-ian wrote:
-> On Wed, 2008-02-20 at 18:49 +0100, Andi Kleen wrote:
->>> So ... it's been 4 months.  Any new users merged?
->> At least dmam_declare_coherent_memory is completely unused as of
->> 2.6.25-rc* I plan to remove these.
-> 
-> Please do not.
+On Wed, 20 Feb 2008, Andrew Buehler wrote:
 
-Do you use dma_declare_* or dmam_declare_*. The first is used
-currently. Only the second is unused.
+> In other words: I don't think that's likely to be practical in the
+> present instance. If you have reason to believe otherwise (past positive
+> experience with Novell, for instance), I'd be glad to hear it.
 
-> 
-> Dmitry and I are still working on getting the users of this into the
-> kernel.
+Greg KH may be able to help in that respect.
 
-Is there a time frame on when will this happen? Will you be ready
-for the .26 merge window?
+> Is there any place (aside from maybe the kernel changelog, which
+> contains a whole lot - if not several lots - of unrelated information)
+> where I could find a list of config-symbol name additions, changes,
+> deletions and meaning changes by version or by date? That would at least
+> let me build a mapping between the symbols in the older config and the
+> ones in the new one, which is about where I would have to start.
 
-> 
-> the chips are multifunction devices, and their drivers are depending on
-> a lot of incompletely merged code and APIs.
+Not as far as I know.
 
-Well if it takes longer the best strategy might be to remove
-unused stuff now and you just readd what you need when you
-really need it in tree.
-
--Andi
+Alan Stern
