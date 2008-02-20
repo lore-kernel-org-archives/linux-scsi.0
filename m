@@ -1,70 +1,70 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [Fwd: [2.6 patch] message/fusion/mptbase.c: fix use-after-free's]
-Date: Tue, 19 Feb 2008 20:03:57 -0600
-Message-ID: <1203473037.3103.35.camel@localhost.localdomain>
+Subject: Re: [2.6 patch] scsi/qla4xxx/ql4_isr.c: remove dead code
+Date: Tue, 19 Feb 2008 20:13:38 -0600
+Message-ID: <1203473618.3103.37.camel@localhost.localdomain>
+References: <20080219192922.GH31955@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43510 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33092 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751087AbYBTCEF (ORCPT
+	by vger.kernel.org with ESMTP id S1755041AbYBTCNq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2008 21:04:05 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id 5ED339758
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 20:03:58 -0600 (CST)
-Received: from accolon.hansenpartnership.com ([127.0.0.1])
-	by localhost (redscar.int.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id TzqfKJmPvgxM for <linux-scsi@vger.kernel.org>;
-	Tue, 19 Feb 2008 20:03:57 -0600 (CST)
-Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id CB63F970B
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2008 20:03:57 -0600 (CST)
+	Tue, 19 Feb 2008 21:13:46 -0500
+In-Reply-To: <20080219192922.GH31955@cs181133002.pp.htv.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: David Somayajulu <david.somayajulu@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Tue, 2008-02-19 at 21:29 +0200, Adrian Bunk wrote:
+> This patch removes dead code spotted by the Coverity checker.
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> 
+> ---
+> 
+>  drivers/scsi/qla4xxx/ql4_isr.c |   18 +-----------------
+>  1 file changed, 1 insertion(+), 17 deletions(-)
+> 
+> --- linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c.old	2008-02-19 20:29:16.000000000 +0200
+> +++ linux-2.6/drivers/scsi/qla4xxx/ql4_isr.c	2008-02-19 20:30:37.000000000 +0200
+> @@ -91,38 +91,22 @@ static void qla4xxx_status_entry(struct 
+>  		if (scsi_status == 0) {
+>  			cmd->result = DID_OK << 16;
+>  			break;
+>  		}
+>  
+>  		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
+>  			cmd->result = DID_ERROR << 16;
+>  			break;
+>  		}
+>  
+> -		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
+> +		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER)
+>  			scsi_set_resid(cmd, residual);
+> -			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
+> -				cmd->underflow)) {
+> -
+> -				cmd->result = DID_ERROR << 16;
+> -
+> -				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
+> -					"Mid-layer Data underrun0, "
+> -					"xferlen = 0x%x, "
+> -					"residual = 0x%x\n", ha->host_no,
+> -					cmd->device->channel,
+> -					cmd->device->id,
+> -					cmd->device->lun, __func__,
+> -					scsi_bufflen(cmd), residual));
+> -				break;
+> -			}
+> -		}
 
--------- Forwarded Message --------
-From: Adrian Bunk <bunk@kernel.org>
-To: Sathya Prakash <sathya.prakash@lsi.com>, James Bottomley
-<James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org
-Subject: [2.6 patch] message/fusion/mptbase.c: fix use-after-free's
-Date: Wed, 20 Feb 2008 02:39:43 +0200
+This code doesn't look dead to me, it looks to be enforcing
+cmd->underrun if set ... what makes the coverity checker think it can
+never be executed?
 
-This patch fixes two use-after-free's introduced by
-commit e78d5b8f1e73ab82f3fd041d05824cfee7d83a2c and spotted by the 
-Coverity checker.
+James
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
----
-
- drivers/message/fusion/mptbase.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-901baeee449285d231921d0812b64b0f14d794b8 diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index bfda731..0c303c8 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1481,15 +1481,15 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	if (pci_enable_device_mem(pdev)) {
--		kfree(ioc);
- 		printk(MYIOC_s_ERR_FMT "pci_enable_device_mem() "
- 		       "failed\n", ioc->name);
-+		kfree(ioc);
- 		return r;
- 	}
- 	if (pci_request_selected_regions(pdev, ioc->bars, "mpt")) {
--		kfree(ioc);
- 		printk(MYIOC_s_ERR_FMT "pci_request_selected_regions() with "
- 		       "MEM failed\n", ioc->name);
-+		kfree(ioc);
- 		return r;
- 	}
- 
 
