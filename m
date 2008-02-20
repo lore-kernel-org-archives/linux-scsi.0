@@ -1,74 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] scsi_scan: Convert GFP_ATOMIC to GFP_KERNEL
-Date: Wed, 20 Feb 2008 11:10:30 -0700
-Message-ID: <20080220181029.GC27736@parisc-linux.org>
+From: Maximilian Wilhelm <max@rfc2324.org>
+Subject: Re: + mpt-fusion-dont-oops-if-numphys==0.patch added to -mm tree
+Date: Wed, 20 Feb 2008 19:14:10 +0100
+Message-ID: <20080220181410.GB31633@outback.rfc2324.org>
+References: <200802192335.m1JNZ7MV005426@imap1.linux-foundation.org> <1203475151.3103.40.camel@localhost.localdomain> <Pine.LNX.4.64.0802200400001.6490@bizon.gios.gov.pl> <20080220031731.GA31633@outback.rfc2324.org> <1203478129.3103.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38542 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759857AbYBTSKb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2008 13:10:31 -0500
+Received: from rfc2324.org ([89.149.194.216]:43420 "EHLO rfc2324.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758105AbYBTSOh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Feb 2008 13:14:37 -0500
 Content-Disposition: inline
+In-Reply-To: <1203478129.3103.44.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Maximilian Wilhelm <max@rfc2324.org>, Krzysztof Oledzki <olel@ans.pl>, akpm@linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, mm-commits@vger.kernel.org, Eric.Moore@lsi.com, fujita.tomonori@lab.ntt.co.jp, ole@ans.pl, sathya.prakash@lsi.com
 
+Am Tuesday, den 19 February hub James Bottomley folgendes in die Tasten:
 
-There is no need to allocate this memory atomically.  There is no problem
-with sleeping during a bus scan, and it's actually causing problems
-for libata.
+> On Wed, 2008-02-20 at 04:17 +0100, Maximilian Wilhelm wrote:
+> > Am Wednesday, den 20 February hub Krzysztof Oledzki folgendes in die Tasten:
+> > > >What's the topology this thing is connected to?
 
-Also remove the GFP_DMA flag.  If it's needed, the block layer will
-bounce-buffer it.
+> > > It is a Dell-1950III server with two 400GB SAS disks (RAID1) installed in 
+> > > a dwo disk SAS backplane.
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> > Here it's a Dell 1950 with two 73G SAS disks (RAID1) but having four
+> > SAS disk slots.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 1dc165a..98c66bd 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -242,7 +242,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	extern void scsi_evt_thread(struct work_struct *work);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
--		       GFP_ATOMIC);
-+		       GFP_KERNEL);
- 	if (!sdev)
- 		goto out;
- 
-@@ -747,7 +747,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 */
- 	sdev->inquiry = kmemdup(inq_result,
- 				max_t(size_t, sdev->inquiry_len, 36),
--				GFP_ATOMIC);
-+				GFP_KERNEL);
- 	if (sdev->inquiry == NULL)
- 		return SCSI_SCAN_NO_RESPONSE;
- 
-@@ -1010,8 +1010,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
- 
--	result = kmalloc(result_len, GFP_ATOMIC |
--			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
-+	result = kmalloc(result_len, GFP_KERNEL);
- 	if (!result)
- 		goto out_free_sdev;
- 
-@@ -1328,8 +1327,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	 * prevent us from finding any LUNs on this target.
- 	 */
- 	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
--	lun_data = kmalloc(length, GFP_ATOMIC |
--			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
-+	lun_data = kmalloc(length, GFP_KERNEL);
- 	if (!lun_data) {
- 		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
- 		goto out;
+> > If you need further information about the hardware, just let me know.
 
+> Is that directly connected or via an internal expander?
+
+The disks are connected to an expander.
+Have a look at http://files.rfc2324.org/mptsas_panic/DSC_2133.jpg for
+a picture.
+
+Further questions?
+
+Ciao
+Max
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	Follow the white penguin.
