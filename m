@@ -1,44 +1,48 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/1] resubmit: cciss: procfs updates to display info
- about many volumes
-Date: Thu, 21 Feb 2008 16:02:05 +0000
-Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE0428114F45@G6W0268.americas.hpqcorp.net>
-References: <20080220214400.GA13443@roadking.usa.hp.com>
- <20080221075743.GE23197@kernel.dk>
+From: Andrew Buehler <abuehler.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: USB regression (and other failures) in 2.6.2[45]* - mostly resolved
+Date: Thu, 21 Feb 2008 11:05:21 -0500
+Message-ID: <47BDA141.70806@gmail.com>
+References: <Pine.LNX.4.44L0.0802201428390.7056-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:25408 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933760AbYBUQC7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Feb 2008 11:02:59 -0500
-In-Reply-To: <20080221075743.GE23197@kernel.dk>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0802201428390.7056-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Oliver Pinter <oliver.pntr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "coldwell@redhat.com" <coldwell@redhat.com>, "adobriyan@gmail.com" <adobriyan@gmail.com>, "randy.dunlap@oracle.com" <randy.dunlap@oracle.com>
 
-Jens wrote:
->
-> On Wed, Feb 20 2008, Mike Miller wrote:
-> > Patch 1 of 1
-> >
-> > This patch hopefully fixes all the brokeness in my last
-> submission. It
-> > compiles cleanly with tape support on or off. I added a couple of
-> > #ifdef's and removed the broken macro definition. The
-> #ifdef's made it unneccesary.
-> > It also replaces create_proc_read_entry with proc_create.
-> >
-> > This patch allows us to display information about all of
-> the logical
-> > volumes configured on a particular controller without stepping on
-> > memory even when there are many volumes (128 or more) configured.
-> > Please consider this for inclusion.
->
-> Looks a lot better, I've applied it.
->
+On 2/20/2008 2:29 PM, Alan Stern wrote:
 
-Thanks.
+> On Wed, 20 Feb 2008, Andrew Buehler wrote:
+> 
+>> In other words: I don't think that's likely to be practical in the
+>> present instance. If you have reason to believe otherwise (past
+>> positive experience with Novell, for instance), I'd be glad to hear
+>> it.
+> 
+> Greg KH may be able to help in that respect.
+
+I know he's in the CC:, but I'm not sure he's reading this thread, and
+I'm hesitant to bother people about things out of the blue unless I have
+reason to expect that it's something they're going to care about. (Just
+because it's a big deal for me doesn't mean it makes one whit of
+difference to anyone else, and from what little I've seen on
+linux-kernel he seems to be somewhat important and fairly busy...)
+
+>> Is there any place (aside from maybe the kernel changelog, which
+>> contains a whole lot - if not several lots - of unrelated
+>> information) where I could find a list of config-symbol name
+>> additions, changes, deletions and meaning changes by version or by
+>> date? That would at least let me build a mapping between the
+>> symbols in the older config and the ones in the new one, which is
+>> about where I would have to start.
+> 
+> Not as far as I know.
+
+Then I suppose I'm reduced to browsing the Kconfig files, reading old
+changelogs, and trying a lot of different configs... thanks anyway.
+
+-- 
+    Andrew Buehler
