@@ -1,56 +1,46 @@
-From: Mark Hounschell <markh@compro.net>
-Subject: New 2.6.24.2 SG_IO SCSI problems
-Date: Thu, 21 Feb 2008 10:15:20 -0500
-Message-ID: <47BD9588.9080803@compro.net>
-Reply-To: markh@compro.net
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libsas: fix error handling
+Date: Thu, 21 Feb 2008 09:33:07 -0600
+Message-ID: <1203607987.3208.9.camel@localhost.localdomain>
+References: <541691.92554.qm@web31804.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.compro.net ([216.54.166.4]:30997 "EHLO mx2.compro.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753236AbYBUPSS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Feb 2008 10:18:18 -0500
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42569 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753547AbYBUPdM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Feb 2008 10:33:12 -0500
+In-Reply-To: <541691.92554.qm@web31804.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-I seem to have run into some sort of regression in the SG_IO interface of 2.6.24.2. 
-I have an application that up until 2.6.24 worked fine. The 2.6.23.16 kernel works fine.
+On Wed, 2008-02-20 at 21:51 -0800, Luben Tuikov wrote:
+> A similar change went into the SAS/SATL layer I support
+> shortly after I posted the version which you forked off.
+> The git date of the commit is: Tue Feb 7 22:14:54 2006 -0800.
 
-During reads I get these kernel messages. Writes and other functions _seem_ OK. Actually basic
-reads  are working. Its with large BC reads using an io_vec list that the problem shows up.
+Look, Luben; I don't mind you making an arse of yourself on the mailing
+lists; that's about par for the course nowadays.
 
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
-.
-.
-.
-.
-.
-.
+However, failing to report serious bugs you knew about in your code, and
+have known about for two years, is tantamount to sabotage ... especially
+when you've been reading the bug reports on the mailing list.  I have to
+wonder how many more such bugs you've left in the code for users to
+find.
 
-The status elements of the sg_io_hdr_t structure used in the application returns
- status = 0x0 msg_status 0x0 host_status = 0x7 driver_status = 0x0
+> BTW, the problem you're "debugging" may require a protocol
+> trace and a sequencer update by Adaptec.
 
-The hardware in use on this particular machine is an simple Adaptec AHA-2930CU talking to an old
-IMPRIMIS 94601-15 1.2GB disk drive.
+I think you're fully aware that my test rig consists of a couple of SAS
+cards and drives donated by IBM and two expanders donated by LSI, plus a
+bit of equipment scavenged from Intel.  I have no access to
+sophisticated tools like protocol analyzers.  However, thanks for the
+advice and help.
 
-Again, all this works fine with the 2.6.23.11 kernel
+James
 
-Any help would be appreciated
-
-Regards
-Mark Hounschell
 
