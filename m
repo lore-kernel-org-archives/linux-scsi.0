@@ -1,28 +1,37 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: New sparse warning in lpfc_sli.c
-Date: Wed, 20 Feb 2008 23:30:19 -0800
-Message-ID: <1203579019.20345.8.camel@brick>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/1] resubmit: cciss: procfs updates to display info about many volumes
+Date: Thu, 21 Feb 2008 08:57:44 +0100
+Message-ID: <20080221075743.GE23197@kernel.dk>
+References: <20080220214400.GA13443@roadking.usa.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:48014 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbYBUHaH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Feb 2008 02:30:07 -0500
-Received: by py-out-1112.google.com with SMTP id u52so3586327pyb.10
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Feb 2008 23:30:04 -0800 (PST)
+Received: from brick.kernel.dk ([87.55.233.238]:21655 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754705AbYBUH5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Feb 2008 02:57:47 -0500
+Content-Disposition: inline
+In-Reply-To: <20080220214400.GA13443@roadking.usa.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com, coldwell@redhat.com, adobriyan@gmail.com, randy.dunlap@oracle.com
 
-James, somewhere between 2.6.25-rc1 and -rc2 this new warning appeared, care
-to give the locking a quick once-over here?
+On Wed, Feb 20 2008, Mike Miller wrote:
+> Patch 1 of 1
+> 
+> This patch hopefully fixes all the brokeness in my last submission. It
+> compiles cleanly with tape support on or off. I added a couple of #ifdef's
+> and removed the broken macro definition. The #ifdef's made it unneccesary.
+> It also replaces create_proc_read_entry with proc_create.
+> 
+> This patch allows us to display information about all of the logical volumes
+> configured on a particular controller without stepping on memory even when
+> there are many volumes (128 or more) configured.
+> Please consider this for inclusion.
 
-drivers/scsi/lpfc/lpfc_sli.c:645:1: warning: context imbalance in 'lpfc_sli_hbqbuf_fill_hbqs' - wrong count at exit
+Looks a lot better, I've applied it.
 
-Full log available if you want it.
-
-Harvey
+-- 
+Jens Axboe
 
