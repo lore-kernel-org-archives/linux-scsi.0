@@ -1,38 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: New 2.6.24.2 SG_IO SCSI problems
-Date: Thu, 21 Feb 2008 09:41:13 -0600
-Message-ID: <1203608474.3208.10.camel@localhost.localdomain>
-References: <47BD9588.9080803@compro.net>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] resubmit: cciss: procfs updates to display info
+ about many volumes
+Date: Thu, 21 Feb 2008 16:02:05 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE0428114F45@G6W0268.americas.hpqcorp.net>
+References: <20080220214400.GA13443@roadking.usa.hp.com>
+ <20080221075743.GE23197@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59714 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756082AbYBUPlU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Feb 2008 10:41:20 -0500
-In-Reply-To: <47BD9588.9080803@compro.net>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:25408 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933760AbYBUQC7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Feb 2008 11:02:59 -0500
+In-Reply-To: <20080221075743.GE23197@kernel.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: markh@compro.net
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "coldwell@redhat.com" <coldwell@redhat.com>, "adobriyan@gmail.com" <adobriyan@gmail.com>, "randy.dunlap@oracle.com" <randy.dunlap@oracle.com>
 
-On Thu, 2008-02-21 at 10:15 -0500, Mark Hounschell wrote:
-> I seem to have run into some sort of regression in the SG_IO interface of 2.6.24.2. 
-> I have an application that up until 2.6.24 worked fine. The 2.6.23.16 kernel works fine.
-> 
-> During reads I get these kernel messages. Writes and other functions _seem_ OK. Actually basic
-> reads  are working. Its with large BC reads using an io_vec list that the problem shows up.
-> 
-> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-> Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
+Jens wrote:
+>
+> On Wed, Feb 20 2008, Mike Miller wrote:
+> > Patch 1 of 1
+> >
+> > This patch hopefully fixes all the brokeness in my last
+> submission. It
+> > compiles cleanly with tape support on or off. I added a couple of
+> > #ifdef's and removed the broken macro definition. The
+> #ifdef's made it unneccesary.
+> > It also replaces create_proc_read_entry with proc_create.
+> >
+> > This patch allows us to display information about all of
+> the logical
+> > volumes configured on a particular controller without stepping on
+> > memory even when there are many volumes (128 or more) configured.
+> > Please consider this for inclusion.
+>
+> Looks a lot better, I've applied it.
+>
 
-Help me a little here.  What was the io_vec and command you sent in to
-produce this?  The aic debugging information implies a single element sg
-list for a 256 byte read.
-
-James
-
-
+Thanks.
