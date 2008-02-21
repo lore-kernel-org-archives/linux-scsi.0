@@ -1,73 +1,112 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 10057] New: gdth: unable to handle kernel NULL
- pointer dereference at virtual address 0000000c
-Date: Thu, 21 Feb 2008 04:47:55 -0800
-Message-ID: <20080221044755.45a522f0.akpm@linux-foundation.org>
-References: <bug-10057-10286@http.bugzilla.kernel.org/>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: New sparse warning in lpfc_sli.c
+Date: Thu, 21 Feb 2008 08:47:10 -0500
+Message-ID: <47BD80DE.4060308@emulex.com>
+References: <1203579019.20345.8.camel@brick> <20080221124433.GC16995@parisc-linux.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:50044 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751513AbYBUMt3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Feb 2008 07:49:29 -0500
-In-Reply-To: <bug-10057-10286@http.bugzilla.kernel.org/>
+Received: from emulex.emulex.com ([138.239.112.1]:47589 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbYBUNrV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Feb 2008 08:47:21 -0500
+In-Reply-To: <20080221124433.GC16995@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, arne@meteo-graphics.de
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Harvey Harrison <harvey.harrison@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 21 Feb 2008 00:44:45 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
+Thanks Matt.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=10057
-> 
->            Summary: gdth: unable to handle kernel NULL  pointer dereference
->                     at virtual address 0000000c
->            Product: Drivers
->            Version: 2.5
->      KernelVersion: 2.6.24.2
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: drivers_other@kernel-bugs.osdl.org
->         ReportedBy: arne@meteo-graphics.de
-> 
-> 
-> Latest working kernel version: 2.6.22.18
-> Earliest failing kernel version: 2.6.24
-> Distribution: Debian Etch, i386
-> Hardware Environment: X6DAE-G2, 1x Xeon 2800, 2G, NVIDIA 5700 256MB PCI-X,
-> Adaptec AHA-2940U/UW/D / AIC-7881U, GDT8586RZ with 4x250G RAID5 + 4x500G RAID5,
-> 1x 80G IDE HDD, 1x IDE CD-ROM
-> 
-> Software Environment: -
-> Problem Description: no scsi device available + system crash
-> 
-> Steps to reproduce: The module gets loaded on startup, but no raid scsi device
-> is available. 
-> Trying to access the controller stats or rebooting the system result in a
-> system crash. 
-> 
-> ----------------------------
-> # cat /proc/scsi/gdth/0
-> Segmentation fault
-> #
-> (crash)
-> ----------------------------
-> 
+ACK
 
-This regression was filed under drivers_other so I guess linux-scsi didn't
-get a copy.
+-- james s
 
-I'll recategorise it.
 
-Boaz, if you're actually gdth maintainer then you might care to raise a
-patch against ./MAINTAINERS.
-
-You don't appear to have a bugzilla account.
+Matthew Wilcox wrote:
+> On Wed, Feb 20, 2008 at 11:30:19PM -0800, Harvey Harrison wrote:
+>> James, somewhere between 2.6.25-rc1 and -rc2 this new warning appeared, care
+>> to give the locking a quick once-over here?
+>>
+>> drivers/scsi/lpfc/lpfc_sli.c:645:1: warning: context imbalance in 'lpfc_sli_hbqbuf_fill_hbqs' - wrong count at exit
+> 
+> Easy enough to spot by hand:
+> 
+>         /* Check whether HBQ is still in use */
+>         spin_lock_irqsave(&phba->hbalock, flags);
+>         if (!phba->hbq_in_use) {
+>                 spin_unlock_irqrestore(&phba->hbalock, flags);
+>                 return 0;
+>         }
+> 
+>         /* Populate HBQ entries */
+>         for (i = start; i < end; i++) {
+>                 hbq_buffer = (phba->hbqs[hbqno].hbq_alloc_buffer)(phba);
+>                 if (!hbq_buffer)
+> --->                    return 1;
+> 
+> Here's a patch:
+> 
+> lpfc: Balance locking
+> 
+> Commit 3163f725a5d071eea1830bbbfab78cfe3fc9baaf introduced locking in
+> lpfc_sli_hbqbuf_fill_hbqs, but missed unlocking on one exit.
+> 
+> Reported-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> Cc: James Smart <james.smart@emulex.com>
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index f532064..fc0d950 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -648,28 +648,24 @@ lpfc_sli_hbqbuf_fill_hbqs(struct lpfc_hba *phba, uint32_t hbqno, uint32_t count)
+>  	unsigned long flags;
+>  	struct hbq_dmabuf *hbq_buffer;
+>  
+> -	if (!phba->hbqs[hbqno].hbq_alloc_buffer) {
+> +	if (!phba->hbqs[hbqno].hbq_alloc_buffer)
+>  		return 0;
+> -	}
+>  
+>  	start = phba->hbqs[hbqno].buffer_count;
+>  	end = count + start;
+> -	if (end > lpfc_hbq_defs[hbqno]->entry_count) {
+> +	if (end > lpfc_hbq_defs[hbqno]->entry_count)
+>  		end = lpfc_hbq_defs[hbqno]->entry_count;
+> -	}
+>  
+>  	/* Check whether HBQ is still in use */
+>  	spin_lock_irqsave(&phba->hbalock, flags);
+> -	if (!phba->hbq_in_use) {
+> -		spin_unlock_irqrestore(&phba->hbalock, flags);
+> -		return 0;
+> -	}
+> +	if (!phba->hbq_in_use)
+> +		goto out;
+>  
+>  	/* Populate HBQ entries */
+>  	for (i = start; i < end; i++) {
+>  		hbq_buffer = (phba->hbqs[hbqno].hbq_alloc_buffer)(phba);
+>  		if (!hbq_buffer)
+> -			return 1;
+> +			goto err;
+>  		hbq_buffer->tag = (i | (hbqno << 16));
+>  		if (lpfc_sli_hbq_to_firmware(phba, hbqno, hbq_buffer))
+>  			phba->hbqs[hbqno].buffer_count++;
+> @@ -677,8 +673,12 @@ lpfc_sli_hbqbuf_fill_hbqs(struct lpfc_hba *phba, uint32_t hbqno, uint32_t count)
+>  			(phba->hbqs[hbqno].hbq_free_buffer)(phba, hbq_buffer);
+>  	}
+>  
+> + out:
+>  	spin_unlock_irqrestore(&phba->hbalock, flags);
+>  	return 0;
+> + err:
+> +	spin_unlock_irqrestore(&phba->hbalock, flags);
+> +	return 1;
+>  }
+>  
+>  int
+> 
