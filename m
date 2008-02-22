@@ -1,30 +1,66 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: New 2.6.24.2 SG_IO SCSI problems
-Date: Fri, 22 Feb 2008 17:48:09 -0500
-Message-ID: <47BF5129.3070304@cybernetics.com>
-References: <47BD9588.9080803@compro.net> <47BEFD4B.9060803@cs.wisc.edu> <47BEFF5F.9020002@cs.wisc.edu> <47BF0CE2.306@compro.net> <47BF40D7.5050301@compro.net> <47BF4BD0.7080008@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: aic94xx: fix sequencer hang on error recovery
+Date: Fri, 22 Feb 2008 17:01:59 -0600
+Message-ID: <1203721319.6206.77.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([70.169.137.4]:4219 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S936304AbYBVWrx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 17:47:53 -0500
-In-Reply-To: <47BF4BD0.7080008@cs.wisc.edu>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56509 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759227AbYBVXCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2008 18:02:05 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 6DDDF8254
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Feb 2008 17:02:02 -0600 (CST)
+Received: from accolon.hansenpartnership.com ([127.0.0.1])
+	by localhost (redscar.int.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xhEVAXhAeNm0 for <linux-scsi@vger.kernel.org>;
+	Fri, 22 Feb 2008 17:02:01 -0600 (CST)
+Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 5CF9C83F0
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Feb 2008 17:02:00 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: markh@compro.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
+The clear nexus I_T and clear nexus I_T_L functions in the aic94xx
+specify the SUSPEND_TX flag which causes the sequencer to be suspended
+until it receives a RESUME_TX.  Unfortunately, nothing ever sends the
+resume, so the sequencer on the link is stopped forever, leading to
+eventual timeouts and I/O errors.
 
-> I attached a backport of the patch from Tony (added as cc) that is in 
-> 2.6.25-rc2. Could you try it out against 2.6.24.2 just to make sure it 
-> was this patch, then we can send it to stable.
->   
+Since clear nexus commands are only executed as part of error recovery,
+it's perfectly fine to keep the sequencer running on the link ... as
+soon as the recovery function is completed, we'll send it the commands
+to retry.
 
-Yes, I had wanted to send this patch to -stable, but got distracted with
-other bugs.  So please do so, by all means.
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Tony
+---
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index b52124f..144f5ad 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -151,8 +151,6 @@ static int asd_clear_nexus_I_T(struct domain_device *dev)
+ 	CLEAR_NEXUS_PRE;
+ 	scb->clear_nexus.nexus = NEXUS_I_T;
+ 	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
+-	if (dev->tproto)
+-		scb->clear_nexus.flags |= SUSPEND_TX;
+ 	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
+ 						   dev->lldd_dev);
+ 	CLEAR_NEXUS_POST;
+@@ -169,8 +167,6 @@ static int asd_clear_nexus_I_T_L(struct domain_device *dev, u8 *lun)
+ 	CLEAR_NEXUS_PRE;
+ 	scb->clear_nexus.nexus = NEXUS_I_T_L;
+ 	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
+-	if (dev->tproto)
+-		scb->clear_nexus.flags |= SUSPEND_TX;
+ 	memcpy(scb->clear_nexus.ssp_task.lun, lun, 8);
+ 	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
+ 						   dev->lldd_dev);
+
 
