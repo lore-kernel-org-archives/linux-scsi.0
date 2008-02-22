@@ -1,107 +1,146 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: Re: New 2.6.24.2 SG_IO SCSI problems
-Date: Fri, 22 Feb 2008 05:03:35 -0500
-Message-ID: <47BE9DF7.2090206@cfl.rr.com>
-References: <47BD9588.9080803@compro.net> <1203608474.3208.10.camel@localhost.localdomain> <47BDA514.5050800@compro.net>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] libsas: fix error handling
+Date: Fri, 22 Feb 2008 04:19:58 -0800 (PST)
+Message-ID: <63979.49270.qm@web31807.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:37674 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbYBVKH0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 05:07:26 -0500
-In-Reply-To: <47BDA514.5050800@compro.net>
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:22056 "HELO
+	web31807.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756100AbYBVMUA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2008 07:20:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: markh@compro.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Mark Hounschell wrote:
-> James Bottomley wrote:
->> On Thu, 2008-02-21 at 10:15 -0500, Mark Hounschell wrote:
->>> I seem to have run into some sort of regression in the SG_IO interface of 2.6.24.2. 
->>> I have an application that up until 2.6.24 worked fine. The 2.6.23.16 kernel works fine.
->>>
->>> During reads I get these kernel messages. Writes and other functions _seem_ OK. Actually basic
->>> reads  are working. Its with large BC reads using an io_vec list that the problem shows up.
->>>
->>> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
->>> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
->>> Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
->> Help me a little here.  What was the io_vec and command you sent in to
->> produce this?  The aic debugging information implies a single element sg
->> list for a 256 byte read.
->>
->> James
->>
->>
->>
-> 
-> Well, I did no 256 byte xfer at all.  My failing io_vec list has 6 elements.
-> The first 5 are for byte counts of 0xfffc and the last 0x6114. See below.
-> 
-> This is some debug info from within my app of the commands leading up the failure:
-> If you need actual values of the io_vec lists I will need to add some additional debug
-> info into the app. I will do if needed.
-> 
-> The disk BTW is formated at 768 byte sector size.
->  
-> The first read has a 2 element io_vec list and reports no error:
-> ScsiDev_thread_7e00: Read CBD = 0x08 0x00 0x00 0x00 0x01 0x00
-> ScsiDev_thread_7e00: Read1(1) bc = 0x0078 addr = 0x000000 Skip 0
-> ScsiDev_thread_7e00: Read(2) bc = 0x0288 addr = 0xb6cea368 Skip 1
-> ScsiDev_thread_7e00: SRead  DC ops = 2 short_bc = 288
-> 
-> The second read has a 4 element io_vec list and reports no error:
-> ScsiDev_thread_7e00: Read CBD = 0x08 0x00 0x00 0x00 0x05 0x00
-> ScsiDev_thread_7e00: Read1(1) bc = 0x0780 addr = 0x000000 Skip 0
-> ScsiDev_thread_7e00: Read1(2) bc = 0x0670 addr = 0x000000 Skip 1
-> ScsiDev_thread_7e00: Read1(3) bc = 0x003c addr = 0x000200 Skip 0
-> ScsiDev_thread_7e00: SRead(4) bc = 0x022c addr = 0xb6cea368 Skip 1
-> ScsiDev_thread_7e00: Read  DC ops = 4 short_bc = 22c
-> 
-> There is a seek here that reports no error:
-> ScsiDev_thread_7e00: Seek address 2752 BPS 768
-> 
-> 
-> This read has a 6 element io_vec list and reports  the error to the app:
-> ScsiDev_thread_7e00: ReadX CBD = 0x28 0x00 0x00 0x00 0x27 0x52 0x00 0x01 0xcb 0x00
-> ScsiDev_thread_7e00: Read1(1) bc = 0xfffc addr = 0x000784 Skip 0
-> ScsiDev_thread_7e00: Read1(2) bc = 0xfffc addr = 0x010780 Skip 0
-> ScsiDev_thread_7e00: Read1(3) bc = 0xfffc addr = 0x02077c Skip 0
-> ScsiDev_thread_7e00: Read1(4) bc = 0xfffc addr = 0x030778 Skip 0
-> ScsiDev_thread_7e00: Read1(5) bc = 0xfffc addr = 0x040774 Skip 0
-> ScsiDev_thread_7e00: Read1(6) bc = 0x6114 addr = 0x050770 Skip 0
-> ScsiDev_thread_7e00: Read  DC ops = 6 short_bc = 0
-> 
-> ScsiDev_thread_7e00: scsi = 0x0 msg 0x0 host = 0x00000007 driver = 0x00000000
-> ScsiDev_thread_7e00: Read error: sns = 0x00 residual = 0x0000
-> ScsiDev_thread_7e00: Posting IPL status 0x00000090 0x000e0000 for Suba 0000 to loc 0x000000
-> ScsiDev_thread_7e00: Sleeping!!
-> 
-> 
-> Below is the complete dump of kernel messages for the above. I assume they are
-> a result of the last failing read but there is an awfull lot there just for that 6 element
-> io_vec list. Sorry to put all this in there but wanted to you to get the idea.
-> 
-> 
-> Feb 21 10:51:03 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-> Feb 21 10:51:03 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-> Feb 21 10:51:03 harley kernel: sg[0] - Addr 0x03252e100 : Length 256
-.
-. Snip
-.
-> Feb 21 10:51:49 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
-> Feb 21 10:51:49 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
-> Feb 21 10:51:49 harley kernel: sg[0] - Addr 0x0f156100 : Length 256
-> 
-> Again, sorry for all that.
-> 
+--- On Thu, 2/21/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> Look, Luben; I don't mind you making an arse of
+> yourself on the mailing
+> lists; that's about par for the course nowadays.
 
-FWIW, on a different machine doing the same thing I get only a single
-kernel message and NOT the tons shown above.
+No, you just did in this thread by pretending to be any kind of
+authority or have an expertise on how to fix this problem, while in
+fact to properly address it, one really needs knowledge of the
+protocol, how the HW works and how the sequencer works, and
+a protocol trace of this specific problem.  And then fixing the
+problem after it's been fully understood is yet another feat.
 
-Regards
-Mark
+It's unfortunate that you feel the need to attack me and call
+me names.  You need to self-examine yourself and figure out
+and fix your hostile attitude.
+
+I've mostly stopped exposing your complete and utter incompetence
+in SCSI infrastructure and left the weed grow, but calling me names
+on public lists is very unprofessional.
+
+Speaking of "arse", a recent example of one of your "pearls" is this:
+http://marc.info/?l=linux-ide&m=120291905515015&w=2
+"However, I'm happy to be proven wrong ... anyone on this thread is
+ welcome to come up with a userland enclosure infrastructure.  Once it
+ does everything the in-kernel one does (which is really about the
+ minimal possible set), I'll be glad to erase the in-kernel one."
+
+You introduce unnecessary code, the vendors tell you they don't
+agree with you, you respond with "I'm happy to be proven wrong" in spite
+of everyone's opinion differing yours.  You clearly decide to do what
+you think is right without listening to vendors or people in the
+industry.  Also, you completely ignore sg_ses(8).
+
+There are other examples, this one is just more recent.
+
+> However, failing to report serious bugs you knew about in
+> your code, and
+> have known about for two years, is tantamount to sabotage
+> ... especially
+
+In 2005, you decided to take a working code out of a GIT tree,
+change it privately, and then submit it to GIT as new. Since of
+course GIT history is immutable, there is no way to sync back to the
+solution I had for users to inspect, evaluate and compare to your
+derived code, since you took it out of GIT and changed it privately
+before submitting it back to the kernel (I had a GIT repo with
+already integrated working code, synced daily to Linus' kernel).  Then
+a lot of people started asking me: "It doesn't work" and "SATA
+doesn't work", etc, and I had to explain over and over again
+what's happened.  So please do not talk about sabotage.
+
+You changed the code quite a bit, to the point where patches
+between what I maintain and what you decided to fork off
+and make it your own play-ground were different and patches wouldn't
+apply cleanly or at all.
+
+For this thread, I've looked at the "error handling" code of what's
+in the kernel for aic94xx and your version of the "libsas" and
+frankly, I cannot submit patches to something which completely does
+NOT follow the Sequencer Interface Spec for AIC94xx series of chips.
+For example, handling of REQ_TASK_ABORT -- its implementation is
+quite naive and out of spec, i.e. already broken.  I cannot submit
+patches to something that I know is already broken, which had
+been changed from a per-spec code version.
+
+You know, people are still asking me to sync up to kernel
+x.y.z the SAS/SATL+aic94xx I maintain, because they tell me "have been
+running it for 2 years on production hardware [i.e. IBM] and no
+problems and I just need to upgrade the kernel".
+
+Will you also attack me for having a SATL as part of my SAS code
+which I didn't submit to the kernel?  Do you know how much code
+is out there that vendors don't bother to try to integrate because
+of your attitude such as this?
+
+> when you've been reading the bug reports on the mailing
+> list.  I have to
+> wonder how many more such bugs you've left in the code
+> for users to
+> find.
+
+I didn't "leave" any bugs.  Bugs are just part of the development
+cycle.  You should know this.
+
+aic94xx is an old product, most customers have upgraded.
+The ones who still have IBM servers with this chip, have had the
+need to upgrade their kernels for various other reasons and since the
+in-kernel solution has failed them, have requested to run my code.
+
+> > BTW, the problem you're "debugging" may
+> require a protocol
+> > trace and a sequencer update by Adaptec.
+> 
+> I think you're fully aware that my test rig consists of
+> a couple of SAS
+> cards and drives donated by IBM and two expanders donated
+> by LSI, plus a bit of equipment scavenged from Intel.
+
+No, I'm not aware of this.  I have absolutely no interest in what your
+"test rig" consists of.
+
+Here is a question though: why do you even have SAS HW?  You don't
+work for a SAS HW vendor and you don't have expertise in SAS
+or SCSI in general.  Do you have hardware for each and every
+LLDD that's in the kernel?
+
+> I have no access to sophisticated tools like protocol analyzers.
+
+See above.  You don't need to have access to such things unless
+you worked for a vendor, and your job is to make your employer's
+customers happy, by looking at traces everyday and fixing bugs.
+And this itself isn't an easy matter, you need to talk to the
+HW engineers, understand the protocol, understand the hardware,
+how it implements the protocol, maybe need to read RTL code, all
+things which are really out of your domain.
+
+Now if you don't have access to such things, don't give "expert"
+advice, and leave it to the respective vendor to get involved.
+They have the equipment and the interest to debug their customers'
+problems.  Then those vendors would submit patches for you
+to integrate.
+
+>  However, thanks for the advice and help.
+
+Hey, no problem, anything for you James.
+
+    Luben
 
