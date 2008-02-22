@@ -1,40 +1,33 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
-	cmds with sense info
-Date: Fri, 22 Feb 2008 10:35:31 -0600
-Message-ID: <1203698131.6206.22.camel@localhost.localdomain>
-References: <9738BCBE884FDB42801FAD8A7769C26501F6979B@NAMAIL1.ad.lsil.com>
+Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
+Date: Fri, 22 Feb 2008 10:38:08 -0600
+Message-ID: <1203698288.6206.25.camel@localhost.localdomain>
+References: <FE3F06125A99254E8D92161AA4569C6F02310B1A@sc-exch02.marvell.com>
+	 <47BEF7B1.1090905@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34043 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40877 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756547AbYBVQfe (ORCPT
+	by vger.kernel.org with ESMTP id S1752723AbYBVQiL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:35:34 -0500
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501F6979B@NAMAIL1.ad.lsil.com>
+	Fri, 22 Feb 2008 11:38:11 -0500
+In-Reply-To: <47BEF7B1.1090905@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Ke Wei <kewei@marvell.com>, Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Qun Zhao <qzhao@marvell.com>, Larry Li <lil@marvell.com>, saeed bishara <saeed.bishara@gmail.com>
 
+On Fri, 2008-02-22 at 11:26 -0500, Jeff Garzik wrote:
+> 4) [major] Your email was encoded in base64, which makes it difficult 
+> for automated tools to handle, and difficult for some mail clients to 
+> view and reply-to.
 
-On Fri, 2008-02-22 at 09:17 -0700, Yang, Bo wrote:
-> James,
-> 
-> What is the status for this patch?  We need to submit more patches based
-> on the acceptance of this patch.
-
-OK, read the thread; Matthew is right.  What you propose would pretty
-much destroy compat ioctl handling within the driver.  You need a compat
-handler for MEGASAS_IOC_FW.
-
-With your current patch you'd get a failure both from a 64 bit binary
-running on x86-64 and if someone ran the x86 binary on ia64.
-
-The driver already uses the compat infrastructure, it shouldn't be too
-hard to add this in the correct manner.
+Yes, I echo this, there's also another problem it causes: The email
+didn't actually get through the scsi reflector in part, I suspect,
+because of the base64 content (anybody who wasn't on the direct to or cc
+list is only seeing Jeff's reply).
 
 James
 
