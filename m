@@ -1,32 +1,80 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Actually using the sg table/chain code
-Date: Fri, 22 Feb 2008 10:13:45 -0600
-Message-ID: <47BEF4B9.2010401@cs.wisc.edu>
-References: <1200412337.9273.28.camel@localhost.localdomain>	 <20080116150645.GE6258@kernel.dk> <1200498475.3136.9.camel@localhost.localdomain>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds with sense info
+Date: Fri, 22 Feb 2008 09:17:33 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501F6979B@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59696 "EHLO sabe.cs.wisc.edu"
+Received: from mail0.lsil.com ([147.145.40.20]:50620 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051AbYBVQOE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:14:04 -0500
-In-Reply-To: <1200498475.3136.9.camel@localhost.localdomain>
+	id S1755080AbYBVQST convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 11:18:19 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Yang, Bo" <Bo.Yang@lsi.com>, Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-James Bottomley wrote:
-> Yes, I can buy the argument for filesystem I/Os.  What about tapes which
-> currently use the block queue and have internal home grown stuff to
-> handle larger transfers ... how are they supposed to set the larger
-> default sector size?  Just modify the bare q->max_sectors?
+James,
+
+What is the status for this patch?  We need to submit more patches based
+on the acceptance of this patch.
+
+Thanks.
+
+Bo Yang 
+
+-----Original Message-----
+From: Yang, Bo 
+Sent: Thursday, November 29, 2007 1:24 PM
+To: 'Matthew Wilcox'
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
+cmds with sense info
+
+
+Matthew,
+
+I think my last email confused you. Here are the points for submitting
+this patch:
+
+1. It is only to add the ia64 support to our driver.  This is why we add
+the ia64 flag.
+
+2. We did not change the implementation for x86 and x86_64.  The
+implementation for them with u32 * is there from day one.
+
+3. What I wanted to convey in my previous mail is that if one uses a 64
+bit application (s)he may need to test for all functionality again.	
+
+Regards.
+
+Bo Yang
+
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx]
+Sent: Wednesday, November 28, 2007 2:27 PM
+To: Yang, Bo
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
+cmds with sense info
+
+On Wed, Nov 28, 2007 at 12:08:37PM -0700, Yang, Bo wrote:
+> Matthew,
 > 
+> Yes, as I mentioned, our applications are built in 32-bit environment 
+> (except for ia64).
+> We may see a different behavior if we build it in 64-bit for x86-64. 
 
-Sorry for the late response. I have been doing userspace stuff and not 
-keeping up with linux-scsi :(
+Then this patch isn't acceptable.  You need to find a way which works
+for both 32-bit and 64-bit applications.
 
-For scsi tape and passthrough (any place we use REQ_TYPE_BLOCK_PC like 
-with st or sg or block/scsi_ioctl or bsg), the block/bio/scatterlist 
-building code ignores q->max_sectors and uses q->max_hw_sectors.
+--
+Intel are signing my paycheques ... these opinions are still mine "Bill,
+look, we understand that you're interested in selling us this operating
+system, but compare it to ours.  We can't possibly take such a
+retrograde step."
