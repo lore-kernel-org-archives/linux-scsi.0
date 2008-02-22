@@ -1,112 +1,131 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 1/2] stex: stex_direct_copy shouldn't call dma_map_sg
-Date: Fri, 22 Feb 2008 23:11:03 +0900
-Message-ID: <1203689464-24591-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: RE: [PATCH] ips: sg chaining support to the path to non I/O
+ commands
+Date: Fri, 22 Feb 2008 23:50:43 +0900
+Message-ID: <20080222235040U.tomof@acm.org>
+References: <20080219184131V.tomof@acm.org>
+	<532ABFBDAAC3A34EB12EBA6CEC2838F439A58D14@ADPE2K703.adaptec.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:43136 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:51854 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753311AbYBVOMD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2008 09:12:03 -0500
+	id S1753524AbYBVPAa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2008 10:00:30 -0500
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F439A58D14@ADPE2K703.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Ed Lin <ed.lin@promise.com>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Mark_Salyzyn@adaptec.com
+Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, lnxninja@linux.vnet.ibm.com, fujita.tomonori@lab.ntt.co.jp
 
-stex_direct_copy copies an in-kernel buffer to a sg list in order to
-spoof some SCSI commands. stex_direct_copy calls dma_map_sg and then
-stex_internal_copy with the value that dma_map_sg returned. It calls
-scsi_kmap_atomic_sg to copy data.
+On Tue, 19 Feb 2008 04:39:00 -0800
+"Salyzyn, Mark" <Mark_Salyzyn@adaptec.com> wrote:
 
-scsi_kmap_atomic_sg doesn't see sg->dma_length so if dma_map_sg merges
-sg entries, stex_internal_copy gets the smaller number of sg entries
-than the acutual number, which means it wrongly think that the data
-length in the sg list is shorter than the actual length.
+> ACK
 
-stex_direct_copy shouldn't call dma_map_sg and it doesn't need since
-this code path doesn't involve dma transfers. This patch removes
-stex_direct_copy and simply calls stex_internal_copy with the actual
-number of sg entries.
+Thanks!
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Ed Lin <ed.lin@promise.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
----
- drivers/scsi/stex.c |   34 ++++++++++++----------------------
- 1 files changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 72f6d80..4b6861c 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -461,23 +461,6 @@ static void stex_internal_copy(struct scsi_cmnd *cmd,
- 	}
+> Other RAID drivers (eg: aacraid) makes the assumption that commands
+> in these paths (INQUIRY, READ CAPACITY, MODE SENSE etc spoofing) are
+> single scatter gather elements and have yet to be bitten. I agree
+> with Fujita-san about the practical unlikelihood. The fix does not
+> incur any change in code overhead, so it is worth hardening!
+>
+> Can one create a request via /dev/sg for a buffer smaller than 256
+> and manage to create a multi-element scatter gather?
+
+I think that we can do post 2.6.24 since we relaxed the default
+alignment requirements (from 511 to 3). So a buffer more than 8 bytes
+can leads to multi-element scatter gathers though it rarely happens.
+
+Shortly I will submit the helper functions to copy data between sg
+list and a buffer. It can replace aac_internal_transfer but it's not
+for scsi-rc-fixes. If you worry that aac_internal_transfer can't
+handle multiple sg entries, you can do something like this, I think:
+
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index ae5f74f..73fa7c2 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -455,6 +455,12 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 	return 0;
  }
  
--static int stex_direct_copy(struct scsi_cmnd *cmd,
--	const void *src, size_t count)
--{
--	size_t cp_len = count;
--	int n_elem = 0;
--
--	n_elem = scsi_dma_map(cmd);
--	if (n_elem < 0)
--		return 0;
--
--	stex_internal_copy(cmd, src, &cp_len, n_elem, ST_TO_CMD);
--
--	scsi_dma_unmap(cmd);
--
--	return cp_len == count;
--}
--
- static void stex_controller_info(struct st_hba *hba, struct st_ccb *ccb)
- {
- 	struct st_frame *p;
-@@ -569,8 +552,10 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- 		unsigned char page;
- 		page = cmd->cmnd[2] & 0x3f;
- 		if (page == 0x8 || page == 0x3f) {
--			stex_direct_copy(cmd, ms10_caching_page,
--					sizeof(ms10_caching_page));
-+			size_t cp_len = sizeof(ms10_caching_page);
-+			stex_internal_copy(cmd, ms10_caching_page,
-+					   &cp_len, scsi_sg_count(cmd),
-+					   ST_TO_CMD);
- 			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
- 			done(cmd);
- 		} else
-@@ -599,8 +584,10 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- 		if (id != host->max_id - 1)
- 			break;
- 		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
--			stex_direct_copy(cmd, console_inq_page,
--				sizeof(console_inq_page));
-+			size_t cp_len = sizeof(console_inq_page);
-+			stex_internal_copy(cmd, console_inq_page,
-+					   &cp_len, scsi_sg_count(cmd),
-+					   ST_TO_CMD);
- 			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
- 			done(cmd);
- 		} else
-@@ -609,6 +596,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- 	case PASSTHRU_CMD:
- 		if (cmd->cmnd[1] == PASSTHRU_GET_DRVVER) {
- 			struct st_drvver ver;
-+			size_t cp_len = sizeof(ver);
- 			ver.major = ST_VER_MAJOR;
- 			ver.minor = ST_VER_MINOR;
- 			ver.oem = ST_OEM;
-@@ -616,7 +604,9 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- 			ver.signature[0] = PASSTHRU_SIGNATURE;
- 			ver.console_id = host->max_id - 1;
- 			ver.host_no = hba->host->host_no;
--			cmd->result = stex_direct_copy(cmd, &ver, sizeof(ver)) ?
-+			stex_internal_copy(cmd, &ver, &cp_len,
-+					   scsi_sg_count(cmd), ST_TO_CMD);
-+			cmd->result = sizeof(ver) == cp_len ?
- 				DID_OK << 16 | COMMAND_COMPLETE << 8 :
- 				DID_ERROR << 16 | COMMAND_COMPLETE << 8;
- 			done(cmd);
--- 
-1.5.3.4
++static int aac_slave_alloc(struct scsi_device *sdev)
++{
++	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
++	return 0;
++}
++
+ /**
+  *	aac_change_queue_depth		-	alter queue depths
+  *	@sdev:	SCSI device we are considering
+@@ -1015,6 +1021,7 @@ static struct scsi_host_template aac_driver_template = {
+ 	.queuecommand			= aac_queuecommand,
+ 	.bios_param			= aac_biosparm,
+ 	.shost_attrs			= aac_attrs,
++	.slave_alloc			= aac_slave_alloc,
+ 	.slave_configure		= aac_slave_configure,
+ 	.change_queue_depth		= aac_change_queue_depth,
+ 	.sdev_attrs			= aac_dev_attrs,
 
+
+
+=
+Here's a malicious version of sg_inq, which tries to create multiple
+sg entries:
+
+=
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <malloc.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <scsi/sg.h>
+
+#define INQ_REPLY_LEN 96
+#define INQ_CMD_LEN 6
+
+int main(int argc, char **argv)
+{
+	struct sg_io_hdr hdr;
+	unsigned char scb[INQ_CMD_LEN] = {0x12, 0, 0, 0, INQ_REPLY_LEN, 0};
+	unsigned char sense[32];
+	void *buf;
+	int offset = 4096 - 4;
+	int fd, ret;
+
+	buf = valloc(8192);
+
+	memset(&hdr, 0, sizeof(hdr));
+
+	hdr.interface_id = 'S';
+	hdr.cmd_len = sizeof(scb);
+	hdr.mx_sb_len = sizeof(sense);
+	hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+	hdr.dxfer_len = INQ_REPLY_LEN;
+	hdr.dxferp = buf + offset;
+	hdr.cmdp = scb;
+	hdr.sbp = sense;
+	hdr.flags |= SG_FLAG_DIRECT_IO;
+
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0) {
+		fprintf(stderr, "fail to open %s\n", argv[1]);
+		return fd;
+	}
+
+	ret = ioctl(fd, SG_IO, &hdr);
+	if (ret < 0) {
+		fprintf(stderr, "fail to ioctl %d\n", ret);
+		return ret;
+	}
+
+	return ret;
+}
