@@ -1,34 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
-Date: Fri, 22 Feb 2008 10:38:08 -0600
-Message-ID: <1203698288.6206.25.camel@localhost.localdomain>
-References: <FE3F06125A99254E8D92161AA4569C6F02310B1A@sc-exch02.marvell.com>
-	 <47BEF7B1.1090905@garzik.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: New 2.6.24.2 SG_IO SCSI problems
+Date: Fri, 22 Feb 2008 10:50:19 -0600
+Message-ID: <47BEFD4B.9060803@cs.wisc.edu>
+References: <47BD9588.9080803@compro.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40877 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752723AbYBVQiL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:38:11 -0500
-In-Reply-To: <47BEF7B1.1090905@garzik.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:59828 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755858AbYBVQua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2008 11:50:30 -0500
+In-Reply-To: <47BD9588.9080803@compro.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ke Wei <kewei@marvell.com>, Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Qun Zhao <qzhao@marvell.com>, Larry Li <lil@marvell.com>, saeed bishara <saeed.bishara@gmail.com>
+To: markh@compro.net
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2008-02-22 at 11:26 -0500, Jeff Garzik wrote:
-> 4) [major] Your email was encoded in base64, which makes it difficult 
-> for automated tools to handle, and difficult for some mail clients to 
-> view and reply-to.
+Mark Hounschell wrote:
+> I seem to have run into some sort of regression in the SG_IO interface of 2.6.24.2. 
+> I have an application that up until 2.6.24 worked fine. The 2.6.23.16 kernel works fine.
+> 
+> During reads I get these kernel messages. Writes and other functions _seem_ OK. Actually basic
+> reads  are working. Its with large BC reads using an io_vec list that the problem shows up.
+> 
 
-Yes, I echo this, there's also another problem it causes: The email
-didn't actually get through the scsi reflector in part, I suspect,
-because of the base64 content (anybody who wasn't on the direct to or cc
-list is only seeing Jeff's reply).
-
-James
-
-
+Are you doing SG_IO to the sg device (/dev/sg*) or to the block device 
+(/dev/sdX)?
