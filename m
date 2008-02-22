@@ -1,88 +1,146 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH] SCSI st: compile fix when DEBUG set to one
-Date: Fri, 22 Feb 2008 20:11:21 +0200 (EET)
-Message-ID: <alpine.LSU.1.00.0802222008210.5292@kai.makisara.local>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: RE: [PATCH 1/2] stex: stex_direct_copy shouldn't call dma_map_sg
+Date: Fri, 22 Feb 2008 11:26:40 -0800
+Message-ID: <85ABFDC4641C4847BA6088F2982EFD8F98FFB8@nonamew.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:51712 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754677AbYBVSLY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 13:11:24 -0500
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh01-2.mail.saunalahti.fi (Postfix) with SMTP id BB2DF1B8DF
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Feb 2008 20:11:22 +0200 (EET)
-Received: from kai.makisara.local (a88-114-81-250.elisa-laajakaista.fi [88.114.81.250])
-	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id A8B45E53C2
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Feb 2008 20:11:21 +0200 (EET)
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:17201 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754672AbYBVTm6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 14:42:58 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 
-Remove the now useless counting of adjacent pages from the debugging code in
-to make it compile when DEBUG is set non-zero.
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
----
-The patch does not touch any code compiled when DEBUG is zero and is suitable
-for 2.5.25.
 
- drivers/scsi/st.c |   11 ++++-------
- drivers/scsi/st.h |    1 -
- 2 files changed, 4 insertions(+), 8 deletions(-)
+>-----Original Message-----
+>From: fujita [mailto:tomof@acm.org] On Behalf Of FUJITA Tomonori
+>Sent: Friday, February 22, 2008 6:11 AM
+>To: linux-scsi@vger.kernel.org
+>Cc: FUJITA Tomonori; Ed Lin; James Bottomley
+>Subject: [PATCH 1/2] stex: stex_direct_copy shouldn't call dma_map_sg
+>
+>
+>stex_direct_copy copies an in-kernel buffer to a sg list in order to
+>spoof some SCSI commands. stex_direct_copy calls dma_map_sg and then
+>stex_internal_copy with the value that dma_map_sg returned. It calls
+>scsi_kmap_atomic_sg to copy data.
+>
+>scsi_kmap_atomic_sg doesn't see sg->dma_length so if dma_map_sg merges
+>sg entries, stex_internal_copy gets the smaller number of sg entries
+>than the acutual number, which means it wrongly think that the data
+>length in the sg list is shorter than the actual length.
+>
+>stex_direct_copy shouldn't call dma_map_sg and it doesn't need since
+>this code path doesn't involve dma transfers. This patch removes
+>stex_direct_copy and simply calls stex_internal_copy with the actual
+>number of sg entries.
+>
+>Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>Cc: Ed Lin <ed.lin@promise.com>
+>Cc: James Bottomley <James.Bottomley@SteelEye.com>
+>---
+> drivers/scsi/stex.c |   34 ++++++++++++----------------------
+> 1 files changed, 12 insertions(+), 22 deletions(-)
+>
+>diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+>index 72f6d80..4b6861c 100644
+>--- a/drivers/scsi/stex.c
+>+++ b/drivers/scsi/stex.c
+>@@ -461,23 +461,6 @@ static void stex_internal_copy(struct 
+>scsi_cmnd *cmd,
+> 	}
+> }
+> 
+>-static int stex_direct_copy(struct scsi_cmnd *cmd,
+>-	const void *src, size_t count)
+>-{
+>-	size_t cp_len = count;
+>-	int n_elem = 0;
+>-
+>-	n_elem = scsi_dma_map(cmd);
+>-	if (n_elem < 0)
+>-		return 0;
+>-
+>-	stex_internal_copy(cmd, src, &cp_len, n_elem, ST_TO_CMD);
+>-
+>-	scsi_dma_unmap(cmd);
+>-
+>-	return cp_len == count;
+>-}
+>-
+> static void stex_controller_info(struct st_hba *hba, struct 
+>st_ccb *ccb)
+> {
+> 	struct st_frame *p;
+>@@ -569,8 +552,10 @@ stex_queuecommand(struct scsi_cmnd *cmd, 
+>void (* done)(struct scsi_cmnd *))
+> 		unsigned char page;
+> 		page = cmd->cmnd[2] & 0x3f;
+> 		if (page == 0x8 || page == 0x3f) {
+>-			stex_direct_copy(cmd, ms10_caching_page,
+>-					sizeof(ms10_caching_page));
+>+			size_t cp_len = sizeof(ms10_caching_page);
+>+			stex_internal_copy(cmd, ms10_caching_page,
+>+					   &cp_len, scsi_sg_count(cmd),
+>+					   ST_TO_CMD);
+> 			cmd->result = DID_OK << 16 | 
+>COMMAND_COMPLETE << 8;
+> 			done(cmd);
+> 		} else
+>@@ -599,8 +584,10 @@ stex_queuecommand(struct scsi_cmnd *cmd, 
+>void (* done)(struct scsi_cmnd *))
+> 		if (id != host->max_id - 1)
+> 			break;
+> 		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+>-			stex_direct_copy(cmd, console_inq_page,
+>-				sizeof(console_inq_page));
+>+			size_t cp_len = sizeof(console_inq_page);
+>+			stex_internal_copy(cmd, console_inq_page,
+>+					   &cp_len, scsi_sg_count(cmd),
+>+					   ST_TO_CMD);
+> 			cmd->result = DID_OK << 16 | 
+>COMMAND_COMPLETE << 8;
+> 			done(cmd);
+> 		} else
+>@@ -609,6 +596,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, 
+>void (* done)(struct scsi_cmnd *))
+> 	case PASSTHRU_CMD:
+> 		if (cmd->cmnd[1] == PASSTHRU_GET_DRVVER) {
+> 			struct st_drvver ver;
+>+			size_t cp_len = sizeof(ver);
+> 			ver.major = ST_VER_MAJOR;
+> 			ver.minor = ST_VER_MINOR;
+> 			ver.oem = ST_OEM;
+>@@ -616,7 +604,9 @@ stex_queuecommand(struct scsi_cmnd *cmd, 
+>void (* done)(struct scsi_cmnd *))
+> 			ver.signature[0] = PASSTHRU_SIGNATURE;
+> 			ver.console_id = host->max_id - 1;
+> 			ver.host_no = hba->host->host_no;
+>-			cmd->result = stex_direct_copy(cmd, 
+>&ver, sizeof(ver)) ?
+>+			stex_internal_copy(cmd, &ver, &cp_len,
+>+					   scsi_sg_count(cmd), 
+>ST_TO_CMD);
+>+			cmd->result = sizeof(ver) == cp_len ?
+> 				DID_OK << 16 | COMMAND_COMPLETE << 8 :
+> 				DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+> 			done(cmd);
+>-- 
+>1.5.3.4
+>
+>
 
-Index: linux-2.6.25-rc2-q/drivers/scsi/st.c
-===================================================================
---- linux-2.6.25-rc2-q.orig/drivers/scsi/st.c
-+++ linux-2.6.25-rc2-q/drivers/scsi/st.c
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static const char *verstr = "20080117";
-+static const char *verstr = "20080221";
- 
- #include <linux/module.h>
- 
-@@ -1172,7 +1172,7 @@ static int st_open(struct inode *inode, 
- 	STp->try_dio_now = STp->try_dio;
- 	STp->recover_count = 0;
- 	DEB( STp->nbr_waits = STp->nbr_finished = 0;
--	     STp->nbr_requests = STp->nbr_dio = STp->nbr_pages = STp->nbr_combinable = 0; )
-+	     STp->nbr_requests = STp->nbr_dio = STp->nbr_pages = 0; )
- 
- 	retval = check_tape(STp, filp);
- 	if (retval < 0)
-@@ -1226,8 +1226,8 @@ static int st_flush(struct file *filp, f
- 	}
- 
- 	DEBC( if (STp->nbr_requests)
--		printk(KERN_DEBUG "%s: Number of r/w requests %d, dio used in %d, pages %d (%d).\n",
--		       name, STp->nbr_requests, STp->nbr_dio, STp->nbr_pages, STp->nbr_combinable));
-+		printk(KERN_DEBUG "%s: Number of r/w requests %d, dio used in %d, pages %d.\n",
-+		       name, STp->nbr_requests, STp->nbr_dio, STp->nbr_pages));
- 
- 	if (STps->rw == ST_WRITING && !STp->pos_unknown) {
- 		struct st_cmdstatus *cmdstatp = &STp->buffer->cmdstat;
-@@ -1422,9 +1422,6 @@ static int setup_buffering(struct scsi_t
- 		     if (STbp->do_dio) {
- 			STp->nbr_dio++;
- 			STp->nbr_pages += STbp->do_dio;
--			for (i=1; i < STbp->do_dio; i++)
--				if (page_to_pfn(STbp->sg[i].page) == page_to_pfn(STbp->sg[i-1].page) + 1)
--					STp->nbr_combinable++;
- 		     }
- 		)
- 	} else
-Index: linux-2.6.25-rc2-q/drivers/scsi/st.h
-===================================================================
---- linux-2.6.25-rc2-q.orig/drivers/scsi/st.h
-+++ linux-2.6.25-rc2-q/drivers/scsi/st.h
-@@ -164,7 +164,6 @@ struct scsi_tape {
- 	int nbr_requests;
- 	int nbr_dio;
- 	int nbr_pages;
--	int nbr_combinable;
- 	unsigned char last_cmnd[6];
- 	unsigned char last_sense[16];
- #endif
+ACK patches 1-2.
+I didn't think dma_map_sg could change the sg count. And clearly
+it's unneeded if we can get sg count by scsi_sg_count. Thanks
+for the patches.
+
+
+Ed Lin
