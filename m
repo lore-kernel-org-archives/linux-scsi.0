@@ -1,174 +1,107 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: LSI Logic MegaRAID SATA 150-4 / LSI Logic New Generation RAID
- Device Drivers (MEGARAID_NEWGEN) problems (megaraid abort: scsi cmd:14600,
- do now own)
-Date: Fri, 22 Feb 2008 00:13:44 -0800
-Message-ID: <20080222001344.b5c41b75.akpm@linux-foundation.org>
-References: <47BA3A52.3020106@shellpower.net>
+From: Mark Hounschell <dmarkh@cfl.rr.com>
+Subject: Re: New 2.6.24.2 SG_IO SCSI problems
+Date: Fri, 22 Feb 2008 05:03:35 -0500
+Message-ID: <47BE9DF7.2090206@cfl.rr.com>
+References: <47BD9588.9080803@compro.net> <1203608474.3208.10.camel@localhost.localdomain> <47BDA514.5050800@compro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765206AbYBVIO7@vger.kernel.org>
-In-Reply-To: <47BA3A52.3020106@shellpower.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David M. Strang" <dstrang@shellpower.net>
-Cc: linux-kernel@vger.kernel.org, Bo Yang <bo.yang@lsi.com>, Sumant Patro <sumant.patro@lsi.com>, "Kolli, Neela Syam" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:37674 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbYBVKH0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2008 05:07:26 -0500
+In-Reply-To: <47BDA514.5050800@compro.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: markh@compro.net
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(cc's added)
+Mark Hounschell wrote:
+> James Bottomley wrote:
+>> On Thu, 2008-02-21 at 10:15 -0500, Mark Hounschell wrote:
+>>> I seem to have run into some sort of regression in the SG_IO interface of 2.6.24.2. 
+>>> I have an application that up until 2.6.24 worked fine. The 2.6.23.16 kernel works fine.
+>>>
+>>> During reads I get these kernel messages. Writes and other functions _seem_ OK. Actually basic
+>>> reads  are working. Its with large BC reads using an io_vec list that the problem shows up.
+>>>
+>>> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
+>>> Feb 21 09:27:51 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
+>>> Feb 21 09:27:51 harley kernel: sg[0] - Addr 0x06256100 : Length 256
+>> Help me a little here.  What was the io_vec and command you sent in to
+>> produce this?  The aic debugging information implies a single element sg
+>> list for a 256 byte read.
+>>
+>> James
+>>
+>>
+>>
+> 
+> Well, I did no 256 byte xfer at all.  My failing io_vec list has 6 elements.
+> The first 5 are for byte counts of 0xfffc and the last 0x6114. See below.
+> 
+> This is some debug info from within my app of the commands leading up the failure:
+> If you need actual values of the io_vec lists I will need to add some additional debug
+> info into the app. I will do if needed.
+> 
+> The disk BTW is formated at 768 byte sector size.
+>  
+> The first read has a 2 element io_vec list and reports no error:
+> ScsiDev_thread_7e00: Read CBD = 0x08 0x00 0x00 0x00 0x01 0x00
+> ScsiDev_thread_7e00: Read1(1) bc = 0x0078 addr = 0x000000 Skip 0
+> ScsiDev_thread_7e00: Read(2) bc = 0x0288 addr = 0xb6cea368 Skip 1
+> ScsiDev_thread_7e00: SRead  DC ops = 2 short_bc = 288
+> 
+> The second read has a 4 element io_vec list and reports no error:
+> ScsiDev_thread_7e00: Read CBD = 0x08 0x00 0x00 0x00 0x05 0x00
+> ScsiDev_thread_7e00: Read1(1) bc = 0x0780 addr = 0x000000 Skip 0
+> ScsiDev_thread_7e00: Read1(2) bc = 0x0670 addr = 0x000000 Skip 1
+> ScsiDev_thread_7e00: Read1(3) bc = 0x003c addr = 0x000200 Skip 0
+> ScsiDev_thread_7e00: SRead(4) bc = 0x022c addr = 0xb6cea368 Skip 1
+> ScsiDev_thread_7e00: Read  DC ops = 4 short_bc = 22c
+> 
+> There is a seek here that reports no error:
+> ScsiDev_thread_7e00: Seek address 2752 BPS 768
+> 
+> 
+> This read has a 6 element io_vec list and reports  the error to the app:
+> ScsiDev_thread_7e00: ReadX CBD = 0x28 0x00 0x00 0x00 0x27 0x52 0x00 0x01 0xcb 0x00
+> ScsiDev_thread_7e00: Read1(1) bc = 0xfffc addr = 0x000784 Skip 0
+> ScsiDev_thread_7e00: Read1(2) bc = 0xfffc addr = 0x010780 Skip 0
+> ScsiDev_thread_7e00: Read1(3) bc = 0xfffc addr = 0x02077c Skip 0
+> ScsiDev_thread_7e00: Read1(4) bc = 0xfffc addr = 0x030778 Skip 0
+> ScsiDev_thread_7e00: Read1(5) bc = 0xfffc addr = 0x040774 Skip 0
+> ScsiDev_thread_7e00: Read1(6) bc = 0x6114 addr = 0x050770 Skip 0
+> ScsiDev_thread_7e00: Read  DC ops = 6 short_bc = 0
+> 
+> ScsiDev_thread_7e00: scsi = 0x0 msg 0x0 host = 0x00000007 driver = 0x00000000
+> ScsiDev_thread_7e00: Read error: sns = 0x00 residual = 0x0000
+> ScsiDev_thread_7e00: Posting IPL status 0x00000090 0x000e0000 for Suba 0000 to loc 0x000000
+> ScsiDev_thread_7e00: Sleeping!!
+> 
+> 
+> Below is the complete dump of kernel messages for the above. I assume they are
+> a result of the last failing read but there is an awfull lot there just for that 6 element
+> io_vec list. Sorry to put all this in there but wanted to you to get the idea.
+> 
+> 
+> Feb 21 10:51:03 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
+> Feb 21 10:51:03 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
+> Feb 21 10:51:03 harley kernel: sg[0] - Addr 0x03252e100 : Length 256
+.
+. Snip
+.
+> Feb 21 10:51:49 harley kernel: (scsi1:A:2:0): data overrun detected in Data-in phase.  Tag == 0x1.
+> Feb 21 10:51:49 harley kernel: (scsi1:A:2:0): Have seen Data Phase.  Length = 256.  NumSGs = 1.
+> Feb 21 10:51:49 harley kernel: sg[0] - Addr 0x0f156100 : Length 256
+> 
+> Again, sorry for all that.
+> 
 
-On Mon, 18 Feb 2008 21:09:22 -0500 "David M. Strang" <dstrang@shellpower.net> wrote:
+FWIW, on a different machine doing the same thing I get only a single
+kernel message and NOT the tons shown above.
 
-> Greetings -
-> 
-> A couple months back I purchased a LSI Logic MegaRAID ATA 150-4 
-> controller, as well as 3 Seagate 500GB SATA-II hard drives to use in my 
-> system. Previously, I was using a pair of WD4000YR's in software raid, 
-> which seemed to work well. I've just not gotten around to working on 
-> migrating my data to these new drivers + controller, and it's giving me 
-> some issues. As with most, I'm having some severe performance issues, 
-> the performance is simply abysmal. Before getting into the details, here 
-> is a quick overview of my configuration:
-> 
-> System:
-> Tyan Tiger i7320/R (S5350) System Board
-> 2x Intel Xeon 3.0 GHz
-> 4GB RAM
-> 
-> LSI Logic MegaRAID ATA 150-4 controller -  Firmware Revision: 713S
-> 3x Seagate 7200.10 (Perpendicular Recording) ST3500630AS 500GB SATA-II 
-> drives configured as a RAID-1 array with a HotSpare.
-> 
-> Also, connected to the onboard controller is a WD4000YR, where all of my 
-> data currently resides.
-> 
-> I'm running Gentoo Hardended AMD64 MultiLib 
-> (/usr/portage/profiles/hardened/amd64/multilib)
-> 
-> My current kernel revision is 2.6.23-hardened-r7.
-> 
-> Here are some (possibly) relevant snippets from dmesg during startup:
-> 
-> ...
-> megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)
-> megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)
-> megaraid: probe new device 0x1000:0x1960:0x1000:0x4523: bus 3:slot 3:func 0
-> ACPI: PCI Interrupt 0000:03:03.0[A] -> GSI 24 (level, low) -> IRQ 24
-> megaraid: fw version:[713S] bios version:[G121]
-> scsi0 : LSI Logic MegaRAID driver
-> scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
-> scsi[0]: scanning scsi channel 1 [virtual] for logical drives
-> scsi 0:1:0:0: Direct-Access     MegaRAID LD 0 RAID1  476G 713S PQ: 0 ANSI: 2
-> sd 0:1:0:0: [sda] 976762880 512-byte hardware sectors (500103 MB)
-> sd 0:1:0:0: [sda] Write Protect is off
-> sd 0:1:0:0: [sda] Mode Sense: 00 00 00 00
-> sd 0:1:0:0: [sda] Asking for cache data failed
-> sd 0:1:0:0: [sda] Assuming drive cache: write through
-> sd 0:1:0:0: [sda] 976762880 512-byte hardware sectors (500103 MB)
-> sd 0:1:0:0: [sda] Write Protect is off
-> sd 0:1:0:0: [sda] Mode Sense: 00 00 00 00
-> sd 0:1:0:0: [sda] Asking for cache data failed
-> sd 0:1:0:0: [sda] Assuming drive cache: write through
->  sda: sda1 sda2 sda3 sda4
-> sd 0:1:0:0: [sda] Attached SCSI disk
-> ata_piix 0000:00:1f.2: version 2.12
-> ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
-> ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 18
-> PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> scsi1 : ata_piix
-> scsi2 : ata_piix
-> ata1: SATA max UDMA/133 cmd 0x00000000000114a0 ctl 0x000000000001149a 
-> bmdma 0x0000000000011470 irq 18
-> ata2: SATA max UDMA/133 cmd 0x0000000000011490 ctl 0x0000000000011486 
-> bmdma 0x0000000000011478 irq 18
-> ata1.00: ATA-7: WDC WD4000YR-01PLB0, 01.06A01, max UDMA/133
-> ata1.00: 781422768 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> ata1.00: configured for UDMA/133
-> scsi 1:0:0:0: Direct-Access     ATA      WDC WD4000YR-01P 01.0 PQ: 0 ANSI: 5
-> sd 1:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-> sd 1:0:0:0: [sdb] Write Protect is off
-> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> sd 1:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-> sd 1:0:0:0: [sdb] Write Protect is off
-> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
->  sdb: sdb1 sdb2 sdb3 sdb4
-> sd 1:0:0:0: [sdb] Attached SCSI disk
-> ...
-> 
-> My controller is configured for Write Back Caching, Adaptive Read Ahead, 
-> and Direct I/O (I've also tried cached I/O but it scared me...)
-> 
-> The first thing I'm noticing is the horrible performance on the raid 
-> disk, compared to the single standalone hard disk. Here is the output 
-> from hdparm -tT on the single disk:
-> 
-> -(root@server)-(~)- # hdparm -tT /dev/sdb1
-> 
-> /dev/sdb1:
->  Timing cached reads:   1670 MB in  2.00 seconds = 835.00 MB/sec
->  Timing buffered disk reads:  140 MB in  3.01 seconds =  46.45 MB/sec
-> 
-> And then, the output from the raid-1 array:
-> 
-> -(root@server)-(~)- # hdparm -tT /dev/sda1
-> 
-> /dev/sda1:
->  Timing cached reads:   1718 MB in  2.00 seconds = 859.65 MB/sec
->  Timing buffered disk reads:   92 MB in  3.09 seconds =  29.76 MB/sec
-> 
-> I'm not sure what the deal is with the buffered disk reads being so much 
-> WORSE than a single disk. So poor performance is a concern, but what's 
-> more alarming are the messages showing up in DMESG. When I first tried 
-> Cached IO - performance seemed good... except, dmesg was littered with 
-> these errors (?):
-> 
-> megaraid: aborting-14610 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: scsi cmd:14610, do now own
-> megaraid: aborting-14612 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: scsi cmd:14612, do now own
-> megaraid: aborting-14614 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: scsi cmd:14614, do now own
-> ...
-> megaraid: 38 outstanding commands. Max wait 300 sec
-> megaraid mbox: Wait for 38 commands to complete:300
-> megaraid mbox: reset sequence completed sucessfully
-> 
-> I'm not certain what these mean... why am I getting aborts?
-> 
-> So, I rebooted the box - and I switched back to direct I/O instead of 
-> cached... and while not as prevelant as before, I still get the above 
-> listed errors as well as these ones:
-> 
-> megaraid abort: 14687:62[255:128], fw owner
-> megaraid: aborting-14689 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: 14689:25[255:128], fw owner
-> megaraid: aborting-14691 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: 14691:40[255:128], fw owner
-> megaraid: aborting-14693 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: 14693:10[255:128], fw owner
-> megaraid: aborting-14695 cmd=2a <c=1 t=0 l=0>
-> megaraid abort: 14695:9[255:128], fw owner
-> 
-> 
-> I'm also a bit concerned by the dmesg output from the drive 
-> initialization; I have it set for Write Back caching, but this shows up:
-> 
-> sd 0:1:0:0: [sda] Asking for cache data failed
-> sd 0:1:0:0: [sda] Assuming drive cache: write through
-> 
-> Why?
-> 
-> I would really like to get my data over to my hardware mirror, but 
-> frankly - I'm nervous about this controller's behavior. Other than error 
-> messages in dmesg, and high cpu during file i/o -- it SEEMS ok, but is 
-> it really? I somehow don't think I should be getting these types of 
-> messages. I've searched the list archive, and I see similar messages 
-> follow by failed resets, but my reset sequence always completes 
-> successfully.
-> 
-> Regards,
-> David M. Strang
+Regards
+Mark
+
