@@ -1,37 +1,52 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] mvsas: convert from rough draft to working driver
-Date: Sat, 23 Feb 2008 11:28:50 -0500
-Message-ID: <47C049C2.2010502@garzik.org>
-References: <20080223131527.GB7942@ubuntu.domain>
+Subject: Re: [GIT PATCH] scsi fixes for 2.6.25-rc2
+Date: Sat, 23 Feb 2008 15:25:24 -0500
+Message-ID: <47C08134.2030205@garzik.org>
+References: <1203779614.3139.4.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41032 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35975 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760145AbYBWQ2y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Feb 2008 11:28:54 -0500
-In-Reply-To: <20080223131527.GB7942@ubuntu.domain>
+	id S1754677AbYBWUZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Feb 2008 15:25:28 -0500
+In-Reply-To: <1203779614.3139.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Ke Wei wrote:
-> Convert rough draft Marvell 6440 driver to a working driver.
-> Added support for SAS and SATA devices, hotplug, wide port, and expanders.
-> This patch is based on:
-> branch 'mvsas' of git.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+James Bottomley wrote:
+> This is the latest crop of bug fixes plus one new driver: mvsas.  We're
+[...]
+> Jeff Garzik (1):
+>       mvsas: Add Marvell 6440 SAS/SATA driver
+[...]
+> Ke Wei (1):
+>       mvsas: convert from rough draft to working driver
 
-Yay!  Perfect patch:  good tech content, applyable to #mvsas, and the 
-most important part, the driver works :)
 
-One minor (though important) detail:  may we assume this patch has the 
-same Signed-off-by as previous patches?
+I know I am probably shooting myself in the foot here, since I am the 
+original author of mvsas, but...
 
-Thanks and have a good weekend,
+Should we be adding new drivers during -rc?
+
+On one hand, it's clear the addition does not break anything, and adds 
+value for users.
+
+On the other hand, it's clearly not a bug fix, and -rc could easily get 
+bloated with new drivers that didn't make the merge window.
+
+On the net driver side of things, I have a few new net drivers that I 
+have queued for 2.6.26, because they did not make the merge window. 
+This is inconsistent with your apparently policy.
+
+I would just prefer to have a clear and consistent policy here, 
+regarding new drivers during -rc.
+
+Thanks,
 
 	Jeff
-
 
 
