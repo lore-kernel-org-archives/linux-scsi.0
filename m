@@ -1,74 +1,42 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] aacraid: READ_CAPACITY_16 shouldn't trust allocation length in cdb
-Date: Sun, 24 Feb 2008 15:25:23 -0800
-Message-ID: <1203895523-4009-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ps3rom: fix wrong resid calculation bug
+Date: Sun, 24 Feb 2008 15:25:22 -0800
+Message-ID: <1203895523-4009-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:60448 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:60490 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbYBXX17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Feb 2008 18:27:59 -0500
+	id S1750897AbYBXX2k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Feb 2008 18:28:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mark Salyzyn <Mark_Salyzyn@adaptec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-When aacraid spoofs READ_CAPACITY_16, it assumes that the data length
-in the sg list is equal to allocation length in cdb. But sg can put
-any value in scb so the driver needs to check both the data length in
-the sg list and allocation length in cdb.
-
-If allocation length is larger than the response length that the
-driver expects, it clears the data buffer in the sg list to zero but
-it doesn't need to do. Just setting resid is fine.
+sg driver rounds up the length in struct scatterlist to be a multiple
+of 512 in some conditions. So LLDs can't use the data length in a sg
+list to calculate residual. Instead, the length in struct scsi_cmnd
+should be used.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/aacraid/aachba.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/scsi/ps3rom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index c05092f..b9fc9b1 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2047,6 +2047,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 	{
- 		u64 capacity;
- 		char cp[13];
-+		unsigned int alloc_len;
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index 0cd614a..6944bda 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -124,7 +124,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf)
+ 		}
+ 		req_len += sgpnt->length;
+ 	}
+-	scsi_set_resid(cmd, req_len - act_len);
++	scsi_set_resid(cmd, scsi_bufflen(cmd) - act_len);
+ 	return 0;
+ }
  
- 		dprintk((KERN_DEBUG "READ CAPACITY_16 command.\n"));
- 		capacity = fsa_dev_ptr[cid].size - 1;
-@@ -2063,18 +2064,17 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		cp[10] = 2;
- 		cp[11] = 0;
- 		cp[12] = 0;
--		aac_internal_transfer(scsicmd, cp, 0,
--		  min_t(size_t, scsicmd->cmnd[13], sizeof(cp)));
--		if (sizeof(cp) < scsicmd->cmnd[13]) {
--			unsigned int len, offset = sizeof(cp);
- 
--			memset(cp, 0, offset);
--			do {
--				len = min_t(size_t, scsicmd->cmnd[13] - offset,
--						sizeof(cp));
--				aac_internal_transfer(scsicmd, cp, offset, len);
--			} while ((offset += len) < scsicmd->cmnd[13]);
--		}
-+		alloc_len = ((scsicmd->cmnd[10] << 24)
-+			     + (scsicmd->cmnd[11] << 16)
-+			     + (scsicmd->cmnd[12] << 8) + scsicmd->cmnd[13]);
-+
-+		alloc_len = min_t(size_t, alloc_len, sizeof(cp));
-+		aac_internal_transfer(scsicmd, cp, 0, alloc_len);
-+
-+		if (alloc_len < scsi_bufflen(scsicmd))
-+			scsi_set_resid(scsicmd,
-+				       scsi_bufflen(scsicmd) - alloc_len);
- 
- 		/* Do not cache partition table for arrays */
- 		scsicmd->device->removable = 1;
 -- 
 1.5.3.7
 
