@@ -1,39 +1,42 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [14/22] Remove automatic block layer bouncing for unchecked_isa_dma
-Date: Mon, 25 Feb 2008 00:35:27 +0100 (CET)
-Message-ID: <20080224233527.3B9031B4183@basil.firstfloor.org>
+Subject: [PATCH] [22/22] Remove GFP_DMA in sr_vendor.c
+Date: Mon, 25 Feb 2008 00:35:35 +0100 (CET)
+Message-ID: <20080224233535.60C5A1B4183@basil.firstfloor.org>
 References: <200802251235.889863872@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:55517 "EHLO
-	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbYBXXvg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 18:51:36 -0500
+Received: from smtp-out04.alice-dsl.net ([88.44.63.6]:15963 "EHLO
+	smtp-out04.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686AbYBXXvh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 18:51:37 -0500
 In-Reply-To: <200802251235.889863872@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
 
-All ISA drivers explicitely tell the block layer now that it needs
-to bounce for them, so SCSI mid layer doesn't need to do that automatically
-for unchecked_isa_dma anymore.
+Bounced by the block layer anyways
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 
----
- drivers/scsi/scsi_lib.c |    2 --
- 1 file changed, 2 deletions(-)
-
-Index: linux/drivers/scsi/scsi_lib.c
+Index: linux/drivers/scsi/sr_vendor.c
 ===================================================================
---- linux.orig/drivers/scsi/scsi_lib.c
-+++ linux/drivers/scsi/scsi_lib.c
-@@ -1547,8 +1547,6 @@ u64 scsi_calculate_bounce_limit(struct S
- 	struct device *host_dev;
- 	u64 bounce_limit = 0xffffffff;
+--- linux.orig/drivers/scsi/sr_vendor.c
++++ linux/drivers/scsi/sr_vendor.c
+@@ -117,7 +117,7 @@ int sr_set_blocklength(Scsi_CD *cd, int 
+ 		density = (blocklength > 2048) ? 0x81 : 0x83;
+ #endif
  
--	if (shost->unchecked_isa_dma)
--		return BLK_BOUNCE_ISA;
- 	/*
- 	 * Platforms with virtual-DMA translation
- 	 * hardware have no practical limit.
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = kmalloc(512, GFP_KERNEL);
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+@@ -164,7 +164,7 @@ int sr_cd_check(struct cdrom_device_info
+ 	if (cd->cdi.mask & CDC_MULTI_SESSION)
+ 		return 0;
+ 
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = kmalloc(512, GFP_KERNEL);
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
