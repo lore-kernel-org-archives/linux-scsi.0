@@ -1,45 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/5] aic94xx: plumb in I_T_nexus_reset task management
-	function
-Date: Sun, 24 Feb 2008 00:01:25 -0600
-Message-ID: <1203832885.3139.33.camel@localhost.localdomain>
-References: <1203831446.3139.21.camel@localhost.localdomain>
-	 <47C105FB.8090401@garzik.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/1] [SCSI] gdth: misc cleanups, preparation for ISA/EISA hotplug API
+Date: Sat, 23 Feb 2008 23:37:15 -0700
+Message-ID: <20080224063715.GN16995@parisc-linux.org>
+References: <017ac0b5a1e36b990eedfb7124c78d58f947f076.1203828195.git.jeff@garzik.org> <20080224045810.GA17051@infradead.org> <47C0FE1F.300@garzik.org> <20080224053117.GA13904@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51652 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757006AbYBXGBa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Feb 2008 01:01:30 -0500
-In-Reply-To: <47C105FB.8090401@garzik.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:60073 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbYBXGhR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 01:37:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20080224053117.GA13904@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 2008-02-24 at 00:51 -0500, Jeff Garzik wrote:
-> Tangent:
+On Sun, Feb 24, 2008 at 12:31:17AM -0500, Christoph Hellwig wrote:
+> On Sun, Feb 24, 2008 at 12:18:23AM -0500, Jeff Garzik wrote:
+> > hmmmmm.  We'll see how it plays out...  on the remove side, the above is 
+> > exact what happens in gdth_remove_one() without my patch, thus 
+> > consolidating two cases of the same code into one.  There is a less-strong 
+> > argument for doing the allocation that way, but it may turn out to be 
+> > useful anyway once the ISA/EISA API conversion is complete.
 > 
-> Now that patches for ipr and sata_sx4 exist, libsas is the last holdout 
-> using libata's old error handling paths.
-> 
-> I think Darrick was either scoping that work, or had preliminary patches?
-> 
-> Anyway, that's holding back removal of a lot of libata code, so I wanted 
-> to make sure the issue remained in people's minds...
+> EISA ->remove has a different prototype from PCI ->remove from ISA
+> ->remove, so gdth_remove_one will be split up eventually.  Having the
+> scsi_host_put duplicated in each shouldn't be too much of a problem :)
 
-I've not really been following what the issue actually is, so hopefully
-Darrick has.
+Shouldn't need to duplicate it ... free bus-specific things in the
+->remove method, and call a common helper.  See advansys_release() and
+its callers in advansys.c for how I did it.
 
-At the moment, we don't use any of libata for error handling in libsas.
-(In fact, there's a big issue with ATA error handling in libsas in
-general, since the sequencer abort task doesn't know what to do with a
-task that's at an ATA drive ... we need to detect that condition and
-then apply the SATL abort function, which depends on whether we're NCQ
-or not...SATA error handling was next on my list of things to look at).
-
-James
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
