@@ -1,67 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Need help with libata error handling in libsas
-Date: Sun, 24 Feb 2008 16:02:16 -0500
-Message-ID: <1203886936.3135.75.camel@localhost.localdomain>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 2/2] SCSI tape: show options currently set in sysfs
+Date: Sun, 24 Feb 2008 14:23:13 -0800
+Message-ID: <20080224142313.43ecbdcd.randy.dunlap@oracle.com>
+References: <alpine.LSU.1.00.0802242220350.5772@kai.makisara.local>
+	<alpine.LSU.1.00.0802242227410.5772@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:44623 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472AbYBXWXy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 17:23:54 -0500
+In-Reply-To: <alpine.LSU.1.00.0802242227410.5772@kai.makisara.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-I keep hearing that we need to convert libsas to use libata's new error
-handling.  Unfortunately, I have very little conception of what that
-means.  Right at the moment, libsas doesn't use any error handling
-functions of libata at all.
+On Sun, 24 Feb 2008 22:29:12 +0200 (EET) Kai Makisara wrote:
 
-I've looked through the libata-eh functions, and I find them frankly
-incomprehensible.
+>  Documentation/scsi/st.txt |    7 ++++++-
 
-Firstly, let me say what SAS error handling actually does:
+> Index: linux-2.6.25-rc2-q/Documentation/scsi/st.txt
+> ===================================================================
+> --- linux-2.6.25-rc2-q.orig/Documentation/scsi/st.txt
+> +++ linux-2.6.25-rc2-q/Documentation/scsi/st.txt
+> @@ -133,6 +133,11 @@ the defaults set by the user. The value 
+>  file 'dev' contains the device numbers corresponding to this device. The links
+>  'device' and 'driver' point to the SCSI device and driver entries.
+>  
+> +Each directory acontains also the entry 'options' which shows the currently
 
-First of all, we may (or may not) get early warning of problems, so we
-have callbacks to allow drivers to trigger the error handler early
-(There's a particular event from the aic94xx sequencer which says "I've
-detected a screw up on this task, begin error handling now"), which
-seems to correspond with ata_qc_schedule_eh().
+                  also contains the entry 'options'
 
-Then we quiesce the host (standard eh practice, so libata does this to
-because SCSI forces it).  Then we go through the remaining tasks.  The
-first thing we try is to abort a task.  This is basically asking the HBA
-to give me back my task, and is applicable to both ATA and SAS tasks.
-Abort serves a dual purpose; if the task is pending or completed, it can
-just be flushed from the HBA issue queue.  If the task is actually
-active on the end device, then we can send a SCSI TMF after it.  For
-ATA, we can't do this, but the docs recommend sending a register D2H FIS
-with a soft reset after a non-NCQ task or a CHECK POWER MODE fis after
-an NCQ command.  I just don't see anywhere in libata where this is done?
-
-After this, libsas uses a query function (which has no ATA parallel) to
-find what the target is doing with the task.
-
-Finally we come to the escalating reset sequece (LUN (hard), phy,
-pathway) which seems to mirror what libata-eh would do (well, barring
-the pathway reset, since ATA has no concept of that).
-
-All of this leads me to conclude, that all libsas needs is to plumb in
-the ATA equivalent of abort, junk the task query for libata devices and
-simply proceed, as if the task is held at the target, along the
-escalating reset path.
-
-We might be able to weld the error handlers of libsas and libata
-together (i.e. use the libata one for everything up to pathway reset and
-then move to the libsas one for pathway reset on), the problem is I just
-don't see any way of doing this.  Plus abort and TMF query skip are
-fairly small alterations to the current libsas eh, so it's not clear
-there's any value to acutally welding in the libsas eh, even if I could
-get it to provide the information I need.
-
-So, my conclusion is tending towards simply adding an ATA component to
-libsas and keeping all eh libsas local.  In that case, is there anything
-I need to do to convince libata that I don't care whether it uses old or
-new error handling?
-
-James
+> +enabled driver and mode options. The value in the file is a bit mask where the
+> +bit definitions are the same as those used with MTSETDRVBUFFER in setting the
+> +options.
+> +
+>  A link named 'tape' is made from the SCSI device directory to the class
+>  directory corresponding to the mode 0 auto-rewind device (e.g., st0). 
 
 
+---
+~Randy
