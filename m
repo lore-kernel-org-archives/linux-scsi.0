@@ -1,54 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] scsi fixes for 2.6.25-rc2
-Date: Sat, 23 Feb 2008 18:09:04 -0600
-Message-ID: <1203811744.3139.11.camel@localhost.localdomain>
-References: <1203779614.3139.4.camel@localhost.localdomain>
-	 <20080223230126.GA23265@lixom.net>  <47C0ACC1.1050306@garzik.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: aic94xx: fix sequencer hang on error recovery
+Date: Sat, 23 Feb 2008 17:01:28 -0800 (PST)
+Message-ID: <772867.72279.qm@web31815.mail.mud.yahoo.com>
+References: <1203721319.6206.77.camel@localhost.localdomain>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:54065 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752000AbYBXAJJ (ORCPT
+Received: from web31815.mail.mud.yahoo.com ([68.142.206.168]:23290 "HELO
+	web31815.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752862AbYBXBB3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Feb 2008 19:09:09 -0500
-In-Reply-To: <47C0ACC1.1050306@garzik.org>
+	Sat, 23 Feb 2008 20:01:29 -0500
+In-Reply-To: <1203721319.6206.77.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Olof Johansson <olof@lixom.net>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-
-On Sat, 2008-02-23 at 18:31 -0500, Jeff Garzik wrote:
-> Olof Johansson wrote:
-> > Hi,
-> > 
-> > On Sat, Feb 23, 2008 at 09:13:33AM -0600, James Bottomley wrote:
-> > 
-> >> Jeff Garzik (1):
-> >>       mvsas: Add Marvell 6440 SAS/SATA driver
-> > [...]
-> >>  drivers/scsi/mvsas.c                | 2981 ++++++++++++++++++++++++++++++++++++
-> > 
-> > I just noticed that the file permissions on that file are 755 in current
-> > git, that was probably not intentional?
+--- On Fri, 2/22/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> The clear nexus I_T and clear nexus I_T_L functions in the
+> aic94xx
+> specify the SUSPEND_TX flag which causes the sequencer to
+> be suspended
+> until it receives a RESUME_TX.  Unfortunately, nothing ever
+> sends the
+> resume, so the sequencer on the link is stopped forever,
+> leading to
+> eventual timeouts and I/O errors.
 > 
-> Definitely not intentional.  They were 0644 in the original changeset 
-> (the one from me you highlighted), then the second changeset updating 
-> mvsas somehow changed the perms.
+> Since clear nexus commands are only executed as part of
+> error recovery,
+> it's perfectly fine to keep the sequencer running on
+> the link ... as
+> soon as the recovery function is completed, we'll send
+> it the commands
+> to retry.
 
-Actually, unfortunately, it was ... I just didn't spot it.  The second
-patch has this in the header:
+No, this doesn't seem right.
 
-diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-old mode 100644
-new mode 100755
+   Luben
 
-It's git slang for change the mode to executable ... no idea why marvell
-would do that unless it's something windows related?  Anyway, I'll
-change it back.
-
-James
-
-
+> Signed-off-by: James Bottomley
+> <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c
+> b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> index b52124f..144f5ad 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_tmf.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> @@ -151,8 +151,6 @@ static int asd_clear_nexus_I_T(struct
+> domain_device *dev)
+>  	CLEAR_NEXUS_PRE;
+>  	scb->clear_nexus.nexus = NEXUS_I_T;
+>  	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
+> -	if (dev->tproto)
+> -		scb->clear_nexus.flags |= SUSPEND_TX;
+>  	scb->clear_nexus.conn_handle =
+> cpu_to_le16((u16)(unsigned long)
+>  						   dev->lldd_dev);
+>  	CLEAR_NEXUS_POST;
+> @@ -169,8 +167,6 @@ static int asd_clear_nexus_I_T_L(struct
+> domain_device *dev, u8 *lun)
+>  	CLEAR_NEXUS_PRE;
+>  	scb->clear_nexus.nexus = NEXUS_I_T_L;
+>  	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
+> -	if (dev->tproto)
+> -		scb->clear_nexus.flags |= SUSPEND_TX;
+>  	memcpy(scb->clear_nexus.ssp_task.lun, lun, 8);
+>  	scb->clear_nexus.conn_handle =
+> cpu_to_le16((u16)(unsigned long)
+>  						   dev->lldd_dev);
+> 
+> 
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
