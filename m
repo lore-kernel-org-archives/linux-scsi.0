@@ -1,152 +1,156 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 2/5] aic94xx: plumb in I_T_nexus_reset task management
-	function
-Date: Sat, 23 Feb 2008 23:37:26 -0600
-Message-ID: <1203831446.3139.21.camel@localhost.localdomain>
+Subject: [PATCH 3/5] libsas: use the supplied address for SATA devices
+	rather than changing it
+Date: Sat, 23 Feb 2008 23:38:44 -0600
+Message-ID: <1203831524.3139.22.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59697 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59730 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752737AbYBXFh3 (ORCPT
+	by vger.kernel.org with ESMTP id S1752223AbYBXFis (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Feb 2008 00:37:29 -0500
+	Sun, 24 Feb 2008 00:38:48 -0500
 Received: from localhost (localhost [127.0.0.1])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id C08288989
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:37:27 -0600 (CST)
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 046F0871C
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:38:46 -0600 (CST)
 Received: from accolon.hansenpartnership.com ([127.0.0.1])
 	by localhost (redscar.int.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 7T6RXC+UX5oi for <linux-scsi@vger.kernel.org>;
-	Sat, 23 Feb 2008 23:37:27 -0600 (CST)
+	with ESMTP id UfW5Vfuu1xn4 for <linux-scsi@vger.kernel.org>;
+	Sat, 23 Feb 2008 23:38:46 -0600 (CST)
 Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id 8A29D8112
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:37:26 -0600 (CST)
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 42D918112
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:38:45 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Currently aic94xx has no exported I_T_nexus_reset function.  This is a
-bit of a huge problem, since sas_ata relies on this function to
-perform an ATA phy reset and also it means that if abort fails, we
-really have no bigger hammer to hit everything with.
+Once the phy reset is plumbed in properly, SATA error handling fails
+nastily because we change the port attached_sas_address using the WWN
+field of the IDENTIFY message.  This is a nice thing to do in theory,
+but it really destroys hotplug because any event on the port causes an
+automatic mismatch between the sas_address the phy just picked up and
+the one we propagate into the port.  However ugly they are, we have to
+stick with the sas addresses made up by the phys and expanders.
 
-Plumb in the I_T_nexus_reset by quiescing the sequencer, sending the
-correct phy reset (link for ATA and hard for SAS) and then carefully
-resuming the sequencer again.
+Also does a few cosmetic changes to the way port printing is done to
+make it clearer how a port is formed.
 
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/aic94xx/aic94xx.h      |    1 +
- drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c  |   58 ++++++++++++++++++++++++++++++++--
- 3 files changed, 56 insertions(+), 5 deletions(-)
+ drivers/scsi/libsas/sas_ata.c  |   39 ++-------------------------------------
+ drivers/scsi/libsas/sas_port.c |   11 ++++++-----
+ 2 files changed, 8 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx.h b/drivers/scsi/aic94xx/aic94xx.h
-index 32f513b..eb8efdc 100644
---- a/drivers/scsi/aic94xx/aic94xx.h
-+++ b/drivers/scsi/aic94xx/aic94xx.h
-@@ -102,6 +102,7 @@ int  asd_abort_task_set(struct domain_device *, u8 *lun);
- int  asd_clear_aca(struct domain_device *, u8 *lun);
- int  asd_clear_task_set(struct domain_device *, u8 *lun);
- int  asd_lu_reset(struct domain_device *, u8 *lun);
-+int  asd_I_T_nexus_reset(struct domain_device *dev);
- int  asd_query_task(struct sas_task *);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 7cd05b5..b0e5ac3 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -236,12 +236,12 @@ static void sas_ata_phy_reset(struct ata_port *ap)
+ 	struct domain_device *dev = ap->private_data;
+ 	struct sas_internal *i =
+ 		to_sas_internal(dev->port->ha->core.shost->transportt);
+-	int res = 0;
++	int res = TMF_RESP_FUNC_FAILED;
  
- /* ---------- Adapter and Port management ---------- */
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 5d761eb..88d1e73 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -1003,7 +1003,7 @@ static struct sas_domain_function_template aic94xx_transport_functions = {
- 	.lldd_abort_task_set	= asd_abort_task_set,
- 	.lldd_clear_aca		= asd_clear_aca,
- 	.lldd_clear_task_set	= asd_clear_task_set,
--	.lldd_I_T_nexus_reset	= NULL,
-+	.lldd_I_T_nexus_reset	= asd_I_T_nexus_reset,
- 	.lldd_lu_reset		= asd_lu_reset,
- 	.lldd_query_task	= asd_query_task,
+ 	if (i->dft->lldd_I_T_nexus_reset)
+ 		res = i->dft->lldd_I_T_nexus_reset(dev);
  
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index 144f5ad..d684c74 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -140,8 +140,14 @@ int asd_clear_nexus_port(struct asd_sas_port *port)
- 	CLEAR_NEXUS_POST;
+-	if (res)
++	if (res != TMF_RESP_FUNC_COMPLETE)
+ 		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __FUNCTION__);
+ 
+ 	switch (dev->sata_dev.command_set) {
+@@ -656,21 +656,6 @@ out:
+ 	return res;
  }
  
--#if 0
--static int asd_clear_nexus_I_T(struct domain_device *dev)
-+enum clear_nexus_phase {
-+	NEXUS_PHASE_PRE,
-+	NEXUS_PHASE_POST,
-+	NEXUS_PHASE_RESUME,
-+};
-+
-+static int asd_clear_nexus_I_T(struct domain_device *dev,
-+			       enum clear_nexus_phase phase)
- {
- 	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
- 	struct asd_ascb *ascb;
-@@ -150,12 +156,56 @@ static int asd_clear_nexus_I_T(struct domain_device *dev)
+-static void sas_sata_propagate_sas_addr(struct domain_device *dev)
+-{
+-	unsigned long flags;
+-	struct asd_sas_port *port = dev->port;
+-	struct asd_sas_phy  *phy;
+-
+-	BUG_ON(dev->parent);
+-
+-	memcpy(port->attached_sas_addr, dev->sas_addr, SAS_ADDR_SIZE);
+-	spin_lock_irqsave(&port->phy_list_lock, flags);
+-	list_for_each_entry(phy, &port->phy_list, port_phy_el)
+-		memcpy(phy->attached_sas_addr, dev->sas_addr, SAS_ADDR_SIZE);
+-	spin_unlock_irqrestore(&port->phy_list_lock, flags);
+-}
+-
+ #define ATA_IDENTIFY_DEV         0xEC
+ #define ATA_IDENTIFY_PACKET_DEV  0xA1
+ #define ATA_SET_FEATURES         0xEF
+@@ -728,26 +713,6 @@ static int sas_discover_sata_dev(struct domain_device *dev)
+ 			goto out_err;
+ 	}
+ cont1:
+-	/* Get WWN */
+-	if (dev->port->oob_mode != SATA_OOB_MODE) {
+-		memcpy(dev->sas_addr, dev->sata_dev.rps_resp.rps.stp_sas_addr,
+-		       SAS_ADDR_SIZE);
+-	} else if (dev->sata_dev.command_set == ATA_COMMAND_SET &&
+-		   (le16_to_cpu(dev->sata_dev.identify_device[108]) & 0xF000)
+-		   == 0x5000) {
+-		int i;
+-
+-		for (i = 0; i < 4; i++) {
+-			dev->sas_addr[2*i] =
+-	     (le16_to_cpu(dev->sata_dev.identify_device[108+i]) & 0xFF00) >> 8;
+-			dev->sas_addr[2*i+1] =
+-	      le16_to_cpu(dev->sata_dev.identify_device[108+i]) & 0x00FF;
+-		}
+-	}
+-	sas_hash_addr(dev->hashed_sas_addr, dev->sas_addr);
+-	if (!dev->parent)
+-		sas_sata_propagate_sas_addr(dev);
+-
+ 	/* XXX Hint: register this SATA device with SATL.
+ 	   When this returns, dev->sata_dev->lu is alive and
+ 	   present.
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index e1e2d08..39ae68a 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -92,9 +92,6 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 	if (!port->phy)
+ 		port->phy = phy->phy;
  
- 	CLEAR_NEXUS_PRE;
- 	scb->clear_nexus.nexus = NEXUS_I_T;
--	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
-+	switch (phase) {
-+	case NEXUS_PHASE_PRE:
-+		scb->clear_nexus.flags = EXEC_Q | SUSPEND_TX;
-+		break;
-+	case NEXUS_PHASE_POST:
-+		scb->clear_nexus.flags = SEND_Q | NOTINQ;
-+		break;
-+	case NEXUS_PHASE_RESUME:
-+		scb->clear_nexus.flags = RESUME_TX;
-+	}
- 	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
- 						   dev->lldd_dev);
- 	CLEAR_NEXUS_POST;
- }
--#endif
-+
-+int asd_I_T_nexus_reset(struct domain_device *dev)
-+{
-+	int res, tmp_res, i;
-+	struct sas_phy *phy = sas_find_local_phy(dev);
-+	/* Standard mandates link reset for ATA  (type 0) and
-+	 * hard reset for SSP (type 1) */
-+	int reset_type = (dev->dev_type == SATA_DEV ||
-+			  (dev->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
-+
-+	asd_clear_nexus_I_T(dev, NEXUS_PHASE_PRE);
-+	/* send a hard reset */
-+	ASD_DPRINTK("sending %s reset to %s\n",
-+		    reset_type ? "hard" : "soft", phy->dev.bus_id);
-+	res = sas_phy_reset(phy, reset_type);
-+	if (res == TMF_RESP_FUNC_COMPLETE) {
-+		/* wait for the maximum settle time */
-+		msleep(500);
-+		/* clear all outstanding commands (keep nexus suspended) */
-+		asd_clear_nexus_I_T(dev, NEXUS_PHASE_POST);
-+	}
-+	for (i = 0 ; i < 3; i++) {
-+		tmp_res = asd_clear_nexus_I_T(dev, NEXUS_PHASE_RESUME);
-+		if (tmp_res == TC_RESUME)
-+			return res;
-+		msleep(500);
-+	}
-+
-+	/* This is a bit of a problem:  the sequencer is still suspended
-+	 * and is refusing to resume.  Hope it will resume on a bigger hammer
-+	 * or the disk is lost */
-+	dev_printk(KERN_ERR, &phy->dev,
-+		   "Failed to resume nexus after reset 0x%x\n", tmp_res);
-+
-+	return TMF_RESP_FUNC_FAILED;
-+}
+-	SAS_DPRINTK("phy%d added to port%d, phy_mask:0x%x\n", phy->id,
+-		    port->id, port->phy_mask);
+-
+ 	if (*(u64 *)port->attached_sas_addr == 0) {
+ 		port->class = phy->class;
+ 		memcpy(port->attached_sas_addr, phy->attached_sas_addr,
+@@ -115,6 +112,11 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 	}
+ 	sas_port_add_phy(port->port, phy->phy);
  
- static int asd_clear_nexus_I_T_L(struct domain_device *dev, u8 *lun)
++	SAS_DPRINTK("%s added to %s, phy_mask:0x%x (%16llx)\n",
++		    phy->phy->dev.bus_id,port->port->dev.bus_id,
++		    port->phy_mask,
++		    SAS_ADDR(port->attached_sas_addr));
++
+ 	if (port->port_dev)
+ 		port->port_dev->pathways = port->num_phys;
+ 
+@@ -255,12 +257,11 @@ void sas_porte_hard_reset(struct work_struct *work)
+ static void sas_init_port(struct asd_sas_port *port,
+ 			  struct sas_ha_struct *sas_ha, int i)
  {
++	memset(port, 0, sizeof(*port));
+ 	port->id = i;
+ 	INIT_LIST_HEAD(&port->dev_list);
+ 	spin_lock_init(&port->phy_list_lock);
+ 	INIT_LIST_HEAD(&port->phy_list);
+-	port->num_phys = 0;
+-	port->phy_mask = 0;
+ 	port->ha = sas_ha;
+ 
+ 	spin_lock_init(&port->dev_list_lock);
 -- 
 1.5.4.1
 
