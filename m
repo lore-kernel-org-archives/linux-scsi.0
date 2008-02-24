@@ -1,42 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] ps3rom: fix wrong resid calculation bug
-Date: Sun, 24 Feb 2008 15:25:22 -0800
-Message-ID: <1203895523-4009-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: [PATCH] [12/22] Remove GFP_DMAs/unchecked_isa_dma checks in scsi_scan.c
+Date: Mon, 25 Feb 2008 00:35:25 +0100 (CET)
+Message-ID: <20080224233525.31E991B4183@basil.firstfloor.org>
+References: <200802251235.889863872@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:60490 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbYBXX2k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Feb 2008 18:28:40 -0500
+Received: from smtp-out01.alice-dsl.net ([88.44.60.11]:19737 "EHLO
+	smtp-out01.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989AbYBXXf1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 18:35:27 -0500
+In-Reply-To: <200802251235.889863872@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-sg driver rounds up the length in struct scatterlist to be a multiple
-of 512 in some conditions. So LLDs can't use the data length in a sg
-list to calculate residual. Instead, the length in struct scsi_cmnd
-should be used.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Should not be needed because the block layer bounces that all.
+
+Signed-off-by: Andi Kleen <ak@suse.de>
+
 ---
- drivers/scsi/ps3rom.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/scsi_scan.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
-index 0cd614a..6944bda 100644
---- a/drivers/scsi/ps3rom.c
-+++ b/drivers/scsi/ps3rom.c
-@@ -124,7 +124,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf)
- 		}
- 		req_len += sgpnt->length;
- 	}
--	scsi_set_resid(cmd, req_len - act_len);
-+	scsi_set_resid(cmd, scsi_bufflen(cmd) - act_len);
- 	return 0;
- }
+Index: linux/drivers/scsi/scsi_scan.c
+===================================================================
+--- linux.orig/drivers/scsi/scsi_scan.c
++++ linux/drivers/scsi/scsi_scan.c
+@@ -1010,8 +1010,7 @@ static int scsi_probe_and_add_lun(struct
+ 	if (!sdev)
+ 		goto out;
  
--- 
-1.5.3.7
-
+-	result = kmalloc(result_len, GFP_ATOMIC |
+-			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
++	result = kmalloc(result_len, GFP_ATOMIC);
+ 	if (!result)
+ 		goto out_free_sdev;
+ 
+@@ -1328,8 +1327,7 @@ static int scsi_report_lun_scan(struct s
+ 	 * prevent us from finding any LUNs on this target.
+ 	 */
+ 	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
+-	lun_data = kmalloc(length, GFP_ATOMIC |
+-			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
++	lun_data = kmalloc(length, GFP_ATOMIC);
+ 	if (!lun_data) {
+ 		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+ 		goto out;
