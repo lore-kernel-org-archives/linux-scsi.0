@@ -1,81 +1,152 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 1/5]  libsas: export sas_find_local_phy function
-Date: Sat, 23 Feb 2008 23:35:44 -0600
-Message-ID: <1203831344.3139.18.camel@localhost.localdomain>
+Subject: [PATCH 2/5] aic94xx: plumb in I_T_nexus_reset task management
+	function
+Date: Sat, 23 Feb 2008 23:37:26 -0600
+Message-ID: <1203831446.3139.21.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:33663 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59697 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752534AbYBXFfs (ORCPT
+	by vger.kernel.org with ESMTP id S1752737AbYBXFh3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Feb 2008 00:35:48 -0500
+	Sun, 24 Feb 2008 00:37:29 -0500
 Received: from localhost (localhost [127.0.0.1])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id 1871F898C
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:35:46 -0600 (CST)
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id C08288989
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:37:27 -0600 (CST)
 Received: from accolon.hansenpartnership.com ([127.0.0.1])
 	by localhost (redscar.int.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id fiZzQXQ2nnW1 for <linux-scsi@vger.kernel.org>;
-	Sat, 23 Feb 2008 23:35:45 -0600 (CST)
+	with ESMTP id 7T6RXC+UX5oi for <linux-scsi@vger.kernel.org>;
+	Sat, 23 Feb 2008 23:37:27 -0600 (CST)
 Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
-	by accolon.hansenpartnership.com (Postfix) with ESMTP id BFFB08989
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:35:44 -0600 (CST)
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 8A29D8112
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:37:26 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is needed by the to be added I_T reset function in aic94xx.  It
-needs to know the local phy so it can send a link or hard reset along
-the path.
+Currently aic94xx has no exported I_T_nexus_reset function.  This is a
+bit of a huge problem, since sas_ata relies on this function to
+perform an ATA phy reset and also it means that if abort fails, we
+really have no bigger hammer to hit everything with.
+
+Plumb in the I_T_nexus_reset by quiescing the sequencer, sending the
+correct phy reset (link for ATA and hard for SAS) and then carefully
+resuming the sequencer again.
 
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |    5 +++--
- include/scsi/libsas.h               |    1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/aic94xx/aic94xx.h      |    1 +
+ drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |   58 ++++++++++++++++++++++++++++++++--
+ 3 files changed, 56 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 704ea06..f3706f4 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -434,7 +434,7 @@ static int sas_recover_I_T(struct domain_device *dev)
+diff --git a/drivers/scsi/aic94xx/aic94xx.h b/drivers/scsi/aic94xx/aic94xx.h
+index 32f513b..eb8efdc 100644
+--- a/drivers/scsi/aic94xx/aic94xx.h
++++ b/drivers/scsi/aic94xx/aic94xx.h
+@@ -102,6 +102,7 @@ int  asd_abort_task_set(struct domain_device *, u8 *lun);
+ int  asd_clear_aca(struct domain_device *, u8 *lun);
+ int  asd_clear_task_set(struct domain_device *, u8 *lun);
+ int  asd_lu_reset(struct domain_device *, u8 *lun);
++int  asd_I_T_nexus_reset(struct domain_device *dev);
+ int  asd_query_task(struct sas_task *);
+ 
+ /* ---------- Adapter and Port management ---------- */
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 5d761eb..88d1e73 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -1003,7 +1003,7 @@ static struct sas_domain_function_template aic94xx_transport_functions = {
+ 	.lldd_abort_task_set	= asd_abort_task_set,
+ 	.lldd_clear_aca		= asd_clear_aca,
+ 	.lldd_clear_task_set	= asd_clear_task_set,
+-	.lldd_I_T_nexus_reset	= NULL,
++	.lldd_I_T_nexus_reset	= asd_I_T_nexus_reset,
+ 	.lldd_lu_reset		= asd_lu_reset,
+ 	.lldd_query_task	= asd_query_task,
+ 
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index 144f5ad..d684c74 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -140,8 +140,14 @@ int asd_clear_nexus_port(struct asd_sas_port *port)
+ 	CLEAR_NEXUS_POST;
  }
  
- /* Find the sas_phy that's attached to this device */
--static struct sas_phy *find_local_sas_phy(struct domain_device *dev)
-+struct sas_phy *sas_find_local_phy(struct domain_device *dev)
+-#if 0
+-static int asd_clear_nexus_I_T(struct domain_device *dev)
++enum clear_nexus_phase {
++	NEXUS_PHASE_PRE,
++	NEXUS_PHASE_POST,
++	NEXUS_PHASE_RESUME,
++};
++
++static int asd_clear_nexus_I_T(struct domain_device *dev,
++			       enum clear_nexus_phase phase)
  {
- 	struct domain_device *pdev = dev->parent;
- 	struct ex_phy *exphy = NULL;
-@@ -456,6 +456,7 @@ static struct sas_phy *find_local_sas_phy(struct domain_device *dev)
- 	BUG_ON(!exphy);
- 	return exphy->phy;
- }
-+EXPORT_SYMBOL_GPL(sas_find_local_phy);
+ 	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
+ 	struct asd_ascb *ascb;
+@@ -150,12 +156,56 @@ static int asd_clear_nexus_I_T(struct domain_device *dev)
  
- /* Attempt to send a LUN reset message to a device */
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
-@@ -482,7 +483,7 @@ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
- int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd)
- {
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
--	struct sas_phy *phy = find_local_sas_phy(dev);
+ 	CLEAR_NEXUS_PRE;
+ 	scb->clear_nexus.nexus = NEXUS_I_T;
+-	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
++	switch (phase) {
++	case NEXUS_PHASE_PRE:
++		scb->clear_nexus.flags = EXEC_Q | SUSPEND_TX;
++		break;
++	case NEXUS_PHASE_POST:
++		scb->clear_nexus.flags = SEND_Q | NOTINQ;
++		break;
++	case NEXUS_PHASE_RESUME:
++		scb->clear_nexus.flags = RESUME_TX;
++	}
+ 	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
+ 						   dev->lldd_dev);
+ 	CLEAR_NEXUS_POST;
+ }
+-#endif
++
++int asd_I_T_nexus_reset(struct domain_device *dev)
++{
++	int res, tmp_res, i;
 +	struct sas_phy *phy = sas_find_local_phy(dev);
- 	int res;
++	/* Standard mandates link reset for ATA  (type 0) and
++	 * hard reset for SSP (type 1) */
++	int reset_type = (dev->dev_type == SATA_DEV ||
++			  (dev->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
++
++	asd_clear_nexus_I_T(dev, NEXUS_PHASE_PRE);
++	/* send a hard reset */
++	ASD_DPRINTK("sending %s reset to %s\n",
++		    reset_type ? "hard" : "soft", phy->dev.bus_id);
++	res = sas_phy_reset(phy, reset_type);
++	if (res == TMF_RESP_FUNC_COMPLETE) {
++		/* wait for the maximum settle time */
++		msleep(500);
++		/* clear all outstanding commands (keep nexus suspended) */
++		asd_clear_nexus_I_T(dev, NEXUS_PHASE_POST);
++	}
++	for (i = 0 ; i < 3; i++) {
++		tmp_res = asd_clear_nexus_I_T(dev, NEXUS_PHASE_RESUME);
++		if (tmp_res == TC_RESUME)
++			return res;
++		msleep(500);
++	}
++
++	/* This is a bit of a problem:  the sequencer is still suspended
++	 * and is refusing to resume.  Hope it will resume on a bigger hammer
++	 * or the disk is lost */
++	dev_printk(KERN_ERR, &phy->dev,
++		   "Failed to resume nexus after reset 0x%x\n", tmp_res);
++
++	return TMF_RESP_FUNC_FAILED;
++}
  
- 	res = sas_phy_reset(phy, 1);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 3ffd6b5..39e1cac 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -675,5 +675,6 @@ extern int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 
- extern void sas_ssp_task_response(struct device *dev, struct sas_task *task,
- 				  struct ssp_response_iu *iu);
-+struct sas_phy *sas_find_local_phy(struct domain_device *dev);
- 
- #endif /* _SASLIB_H_ */
+ static int asd_clear_nexus_I_T_L(struct domain_device *dev, u8 *lun)
+ {
 -- 
 1.5.4.1
 
