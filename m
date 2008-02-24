@@ -1,46 +1,42 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 2/2] SCSI tape: show options currently set in sysfs
-Date: Sun, 24 Feb 2008 14:23:13 -0800
-Message-ID: <20080224142313.43ecbdcd.randy.dunlap@oracle.com>
-References: <alpine.LSU.1.00.0802242220350.5772@kai.makisara.local>
-	<alpine.LSU.1.00.0802242227410.5772@kai.makisara.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_debug: fix wrong resid calculation bug
+Date: Sun, 24 Feb 2008 15:25:21 -0800
+Message-ID: <1203895523-4009-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:44623 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbYBXWXy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 17:23:54 -0500
-In-Reply-To: <alpine.LSU.1.00.0802242227410.5772@kai.makisara.local>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:60449 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750995AbYBXX17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Feb 2008 18:27:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Sun, 24 Feb 2008 22:29:12 +0200 (EET) Kai Makisara wrote:
+sg driver rounds up the length in struct scatterlist to be a multiple
+of 512 in some conditions. So LLDs can't use the data length in a sg
+list to calculate residual. Instead, the length in struct scsi_cmnd
+should be used.
 
->  Documentation/scsi/st.txt |    7 ++++++-
-
-> Index: linux-2.6.25-rc2-q/Documentation/scsi/st.txt
-> ===================================================================
-> --- linux-2.6.25-rc2-q.orig/Documentation/scsi/st.txt
-> +++ linux-2.6.25-rc2-q/Documentation/scsi/st.txt
-> @@ -133,6 +133,11 @@ the defaults set by the user. The value 
->  file 'dev' contains the device numbers corresponding to this device. The links
->  'device' and 'driver' point to the SCSI device and driver entries.
->  
-> +Each directory acontains also the entry 'options' which shows the currently
-
-                  also contains the entry 'options'
-
-> +enabled driver and mode options. The value in the file is a bit mask where the
-> +bit definitions are the same as those used with MTSETDRVBUFFER in setting the
-> +options.
-> +
->  A link named 'tape' is made from the SCSI device directory to the class
->  directory corresponding to the mode 0 auto-rewind device (e.g., st0). 
-
-
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
-~Randy
+ drivers/scsi/scsi_debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index d1777a9..691efd9 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -651,7 +651,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+ 	if (sdb->resid)
+ 		sdb->resid -= act_len;
+ 	else
+-		sdb->resid = req_len - act_len;
++		sdb->resid = scsi_bufflen(scp) - act_len;
+ 	return 0;
+ }
+ 
+-- 
+1.5.3.7
+
