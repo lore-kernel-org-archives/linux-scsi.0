@@ -1,40 +1,66 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 1/1] [SCSI] gdth: misc cleanups, preparation for ISA/EISA hotplug API
-Date: Sat, 23 Feb 2008 23:37:15 -0700
-Message-ID: <20080224063715.GN16995@parisc-linux.org>
-References: <017ac0b5a1e36b990eedfb7124c78d58f947f076.1203828195.git.jeff@garzik.org> <20080224045810.GA17051@infradead.org> <47C0FE1F.300@garzik.org> <20080224053117.GA13904@infradead.org>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: scsi_execute_req return 80002 in ses_match_to_enclosure.
+Date: Sat, 23 Feb 2008 23:42:38 -0800
+Message-ID: <86802c440802232342y467f8843oac46ca09c0128338@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:60073 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbYBXGhR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 01:37:17 -0500
+Received: from rv-out-0910.google.com ([209.85.198.190]:26903 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbYBXHmj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 02:42:39 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so680041rvb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Feb 2008 23:42:38 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20080224053117.GA13904@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Feb 24, 2008 at 12:31:17AM -0500, Christoph Hellwig wrote:
-> On Sun, Feb 24, 2008 at 12:18:23AM -0500, Jeff Garzik wrote:
-> > hmmmmm.  We'll see how it plays out...  on the remove side, the above is 
-> > exact what happens in gdth_remove_one() without my patch, thus 
-> > consolidating two cases of the same code into one.  There is a less-strong 
-> > argument for doing the allocation that way, but it may turn out to be 
-> > useful anyway once the ISA/EISA API conversion is complete.
-> 
-> EISA ->remove has a different prototype from PCI ->remove from ISA
-> ->remove, so gdth_remove_one will be split up eventually.  Having the
-> scsi_host_put duplicated in each shouldn't be too much of a problem :)
+James,
 
-Shouldn't need to duplicate it ... free bus-specific things in the
-->remove method, and call a common helper.  See advansys_release() and
-its callers in advansys.c for how I did it.
+i tried some sas disks in my system with expander with SES.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+seagate and fuji disk can not get the VPD 0x83. and scsi_execute_req
+got 0x80002.
+
+but hitachi disk works well.
+
+with lsscsi all disk can get sas address correctly.
+
+so wonder if there is some other way to get the SAS address..
+
+YH
+
+static void ses_match_to_enclosure(struct enclosure_device *edev,
+                                   struct scsi_device *sdev)
+{
+        unsigned char *buf = kmalloc(VPD_INQUIRY_SIZE, GFP_KERNEL);
+        int result;
+        unsigned char *desc;
+        int len;
+        struct efd efd = {
+                .addr = 0,
+        };
+        unsigned char cmd[] = {
+                INQUIRY,
+                1,
+                0x83,
+                VPD_INQUIRY_SIZE >> 8,
+                VPD_INQUIRY_SIZE & 0xff,
+                0
+        };
+
+        if (!buf)
+                return;
+
+        scsi_test_unit_ready(sdev, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
+
+        result = scsi_execute_req(sdev,  cmd, DMA_FROM_DEVICE, buf,
+                        VPD_INQUIRY_SIZE, NULL, SES_TIMEOUT, SES_RETRIES);
+        if (result) {
+                sdev_printk(KERN_INFO, sdev, "ses_match_to_enclosure:
+inquiry VPD page 0x83 failed with %x\n", result);
+                goto free;
+        }
