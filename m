@@ -1,76 +1,119 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [19/22] Finally kill unchecked_isa_dma
-Date: Mon, 25 Feb 2008 00:35:32 +0100 (CET)
-Message-ID: <20080224233532.5564E1B4183@basil.firstfloor.org>
+Subject: [PATCH] [1/22] Add new sense_buffer_mask host template field
+Date: Mon, 25 Feb 2008 00:35:13 +0100 (CET)
+Message-ID: <20080224233513.F083B1B4183@basil.firstfloor.org>
 References: <200802251235.889863872@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out01.alice-dsl.net ([88.44.60.11]:19737 "EHLO
-	smtp-out01.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757020AbYBXXfh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 18:35:37 -0500
+Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:51515 "EHLO
+	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172AbYBXXvb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 18:51:31 -0500
 In-Reply-To: <200802251235.889863872@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
 
-Now that all users are gone it can be safely completely removed.
+sense buffers are something that still needs to be explicitely 
+bounced in the scsi layer. Instead of using the global unchecked_isa_dma
+flag define a special fine grained mask for this.
+
+I decided to use a full dma mask because that is most useful for some future
+infrastructure work I'm doing.
+
+Needed for followup patches.
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 
 ---
- Documentation/scsi/scsi_mid_low_api.txt |    3 ---
- drivers/scsi/hosts.c                    |    1 -
- include/scsi/scsi_host.h                |    6 ------
- 3 files changed, 10 deletions(-)
+ Documentation/scsi/scsi_mid_low_api.txt |    4 ++++
+ drivers/scsi/hosts.c                    |    1 +
+ drivers/scsi/scsi.c                     |   12 +++++++++++-
+ include/scsi/scsi_host.h                |   10 +++++++++-
+ 4 files changed, 25 insertions(+), 2 deletions(-)
 
-Index: linux/Documentation/scsi/scsi_mid_low_api.txt
+Index: linux/drivers/scsi/scsi.c
 ===================================================================
---- linux.orig/Documentation/scsi/scsi_mid_low_api.txt
-+++ linux/Documentation/scsi/scsi_mid_low_api.txt
-@@ -1254,9 +1254,6 @@ of interest:
-     cmd_per_lun  - maximum number of commands that can be queued on devices
-                    controlled by the host. Overridden by LLD calls to
-                    scsi_adjust_queue_depth().
--    unchecked_isa_dma - 1=>only use bottom 16 MB of ram (ISA DMA addressing
--                   restriction), 0=>can use full 32 bit (or better) DMA
--                   address space
-     use_clustering - 1=>SCSI commands in mid level's queue can be merged,
-                      0=>disallow SCSI command merging
-     hostt        - pointer to driver's struct scsi_host_template from which
-Index: linux/drivers/scsi/hosts.c
-===================================================================
---- linux.orig/drivers/scsi/hosts.c
-+++ linux/drivers/scsi/hosts.c
-@@ -335,7 +335,6 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	shost->can_queue = sht->can_queue;
- 	shost->sg_tablesize = sht->sg_tablesize;
- 	shost->cmd_per_lun = sht->cmd_per_lun;
--	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->use_clustering = sht->use_clustering;
- 	shost->ordered_tag = sht->ordered_tag;
- 	shost->active_mode = sht->supported_mode;
+--- linux.orig/drivers/scsi/scsi.c
++++ linux/drivers/scsi/scsi.c
+@@ -299,6 +299,15 @@ void scsi_put_command(struct scsi_cmnd *
+ }
+ EXPORT_SYMBOL(scsi_put_command);
+ 
++static int sense_buffer_isa(struct Scsi_Host *shost)
++{
++	if (!shost->sense_buffer_mask)
++		return 0;
++	if (~shost->sense_buffer_mask & BLK_BOUNCE_HIGH)
++		return 1;
++	return 0;
++}
++
+ /**
+  * scsi_setup_command_freelist - Setup the command freelist for a scsi host.
+  * @shost: host to allocate the freelist for.
+@@ -322,7 +331,8 @@ int scsi_setup_command_freelist(struct S
+ 	 * yet existent.
+ 	 */
+ 	mutex_lock(&host_cmd_pool_mutex);
+-	pool = (shost->unchecked_isa_dma ? &scsi_cmd_dma_pool : &scsi_cmd_pool);
++	pool = (shost->unchecked_isa_dma || sense_buffer_isa(shost)) ?
++			&scsi_cmd_dma_pool : &scsi_cmd_pool;
+ 	if (!pool->users) {
+ 		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
+ 						   sizeof(struct scsi_cmnd), 0,
 Index: linux/include/scsi/scsi_host.h
 ===================================================================
 --- linux.orig/include/scsi/scsi_host.h
 +++ linux/include/scsi/scsi_host.h
-@@ -423,11 +423,6 @@ struct scsi_host_template {
- 	unsigned supported_mode:2;
+@@ -484,6 +484,14 @@ struct scsi_host_template {
+ 	 * module_init/module_exit.
+ 	 */
+ 	struct list_head legacy_hosts;
++
++	/*
++	 * DMA Mask of the sense buffer.
++	 * 0 means any in lowmem and subject to the pci device mask
++	 * This should only be set by ISA drivers doing direct DMA to the sense buffer
++	 * Status: optional.
++	 */
++	u64 sense_buffer_mask;
+ };
  
- 	/*
--	 * True if this host adapter uses unchecked DMA onto an ISA bus.
--	 */
--	unsigned unchecked_isa_dma:1;
--
--	/*
- 	 * True if this host adapter can make good use of clustering.
- 	 * I originally thought that if the tablesize was large that it
- 	 * was a waste of CPU cycles to prepare a cluster list, but
-@@ -601,7 +596,6 @@ struct Scsi_Host {
- 	unsigned long cmd_serial_number;
- 	
- 	unsigned active_mode:2;
--	unsigned unchecked_isa_dma:1;
- 	unsigned use_clustering:1;
- 	unsigned use_blk_tcq:1;
+ /*
+@@ -649,7 +657,7 @@ struct Scsi_Host {
+ 	unsigned char n_io_port;
+ 	unsigned char dma_channel;
+ 	unsigned int  irq;
+-	
++	u64 sense_buffer_mask;
  
+ 	enum scsi_host_state shost_state;
+ 
+Index: linux/Documentation/scsi/scsi_mid_low_api.txt
+===================================================================
+--- linux.orig/Documentation/scsi/scsi_mid_low_api.txt
++++ linux/Documentation/scsi/scsi_mid_low_api.txt
+@@ -1268,6 +1268,10 @@ of interest:
+                    instances (currently ordered by ascending host_no)
+     my_devices   - a double linked list of pointers to struct scsi_device 
+                    instances that belong to this host.
++    sense_buffer_mask - dma mask for the sense buffer. Only needed when
++		   the dma mask is below the minimum supported by the
++		   PCI IOMMU on that platform.
++		   Ignored when 0. Normally only needed on ISA host adapters.
+     hostdata[0]  - area reserved for LLD at end of struct Scsi_Host. Size
+                    is set by the second argument (named 'xtr_bytes') to
+                    scsi_host_alloc() or scsi_register().
+Index: linux/drivers/scsi/hosts.c
+===================================================================
+--- linux.orig/drivers/scsi/hosts.c
++++ linux/drivers/scsi/hosts.c
+@@ -342,6 +342,7 @@ struct Scsi_Host *scsi_host_alloc(struct
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
+ 	shost->active_mode = sht->supported_mode;
++	shost->sense_buffer_mask = sht->sense_buffer_mask;
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
