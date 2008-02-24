@@ -1,148 +1,67 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH 2/2] SCSI tape: show options currently set in sysfs
-Date: Sun, 24 Feb 2008 22:29:12 +0200 (EET)
-Message-ID: <alpine.LSU.1.00.0802242227410.5772@kai.makisara.local>
-References: <alpine.LSU.1.00.0802242220350.5772@kai.makisara.local>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Need help with libata error handling in libsas
+Date: Sun, 24 Feb 2008 16:02:16 -0500
+Message-ID: <1203886936.3135.75.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811327-1468074096-1203884963=:5772"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:34864 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbYBXU3Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2008 15:29:24 -0500
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id 323C48CB3D
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Feb 2008 22:29:23 +0200 (EET)
-Received: from kai.makisara.local (a88-114-81-250.elisa-laajakaista.fi [88.114.81.250])
-	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id 1993E42063
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Feb 2008 22:29:22 +0200 (EET)
-In-Reply-To: <alpine.LSU.1.00.0802242220350.5772@kai.makisara.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+I keep hearing that we need to convert libsas to use libata's new error
+handling.  Unfortunately, I have very little conception of what that
+means.  Right at the moment, libsas doesn't use any error handling
+functions of libata at all.
 
----1463811327-1468074096-1203884963=:5772
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I've looked through the libata-eh functions, and I find them frankly
+incomprehensible.
 
-Show the current binary tape driver and mode options is sysfs. A file
-(options) is created in each directory in /sys/class/scsi_tape. The files
-contain masks showing the options. The mask bit definitions are the same =
-as
-used when setting the options using the MTSETDRVBUFFER function in the
-MTIOCTOP ioctl (defined in include/linux/mtio.h). For example:
-> cat /sys/class/scsi_tape/nst0/options=20
-0x00000d07
+Firstly, let me say what SAS error handling actually does:
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
----
-The patch is against Feb 24 git version of 2.6.25-rc2. Candidate for
-inclusion into 2.6.26.
+First of all, we may (or may not) get early warning of problems, so we
+have callbacks to allow drivers to trigger the error handler early
+(There's a particular event from the aic94xx sequencer which says "I've
+detected a screw up on this task, begin error handling now"), which
+seems to correspond with ata_qc_schedule_eh().
 
- Documentation/scsi/st.txt |    7 ++++++-
- drivers/scsi/st.c         |   43 +++++++++++++++++++++++++++++++++++++++=
-++++
- 2 files changed, 49 insertions(+), 1 deletion(-)
+Then we quiesce the host (standard eh practice, so libata does this to
+because SCSI forces it).  Then we go through the remaining tasks.  The
+first thing we try is to abort a task.  This is basically asking the HBA
+to give me back my task, and is applicable to both ATA and SAS tasks.
+Abort serves a dual purpose; if the task is pending or completed, it can
+just be flushed from the HBA issue queue.  If the task is actually
+active on the end device, then we can send a SCSI TMF after it.  For
+ATA, we can't do this, but the docs recommend sending a register D2H FIS
+with a soft reset after a non-NCQ task or a CHECK POWER MODE fis after
+an NCQ command.  I just don't see anywhere in libata where this is done?
 
-Index: linux-2.6.25-rc2-q/drivers/scsi/st.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.25-rc2-q.orig/drivers/scsi/st.c
-+++ linux-2.6.25-rc2-q/drivers/scsi/st.c
-@@ -4365,6 +4365,46 @@ static ssize_t st_defcompression_show(st
-=20
- CLASS_DEVICE_ATTR(default_compression, S_IRUGO, st_defcompression_show, =
-NULL);
-=20
-+static ssize_t st_options_show(struct class_device *class_dev, char *buf=
-)
-+{
-+	struct st_modedef *STm =3D (struct st_modedef *)class_get_devdata(class=
-_dev);
-+	struct scsi_tape *STp;
-+	int i, j, options;
-+	ssize_t l =3D 0;
-+
-+	for (i=3D0; i < st_dev_max; i++) {
-+		for (j=3D0; j < ST_NBR_MODES; j++)
-+			if (&scsi_tapes[i]->modes[j] =3D=3D STm)
-+				break;
-+		if (j < ST_NBR_MODES)
-+			break;
-+	}
-+	if (i =3D=3D st_dev_max)
-+		return 0;  /* should never happen */
-+
-+	STp =3D scsi_tapes[i];
-+
-+	options =3D STm->do_buffer_writes ? MT_ST_BUFFER_WRITES : 0;
-+	options |=3D STm->do_async_writes ? MT_ST_ASYNC_WRITES : 0;
-+	options |=3D STm->do_read_ahead ? MT_ST_READ_AHEAD : 0;
-+	DEB( options |=3D debugging ? MT_ST_DEBUGGING : 0 );
-+	options |=3D STp->two_fm ? MT_ST_TWO_FM : 0;
-+	options |=3D STp->fast_mteom ? MT_ST_FAST_MTEOM : 0;
-+	options |=3D STm->defaults_for_writes ? MT_ST_DEF_WRITES : 0;
-+	options |=3D STp->can_bsr ? MT_ST_CAN_BSR : 0;
-+	options |=3D STp->omit_blklims ? MT_ST_NO_BLKLIMS : 0;
-+	options |=3D STp->can_partitions ? MT_ST_CAN_PARTITIONS : 0;
-+	options |=3D STp->scsi2_logical ? MT_ST_SCSI2LOGICAL : 0;
-+	options |=3D STm->sysv ? MT_ST_SYSV : 0;
-+	options |=3D STp->immediate ? MT_ST_NOWAIT : 0;
-+	options |=3D STp->sili ? MT_ST_SILI : 0;
-+
-+	l =3D snprintf(buf, PAGE_SIZE, "0x%08x\n", options);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(options, S_IRUGO, st_options_show, NULL);
-+
- static int do_create_class_files(struct scsi_tape *STp, int dev_num, int=
- mode)
- {
- 	int i, rew, error;
-@@ -4402,6 +4442,9 @@ static int do_create_class_files(struct=20
- 		error =3D class_device_create_file(st_class_member,
- 				        &class_device_attr_default_compression);
- 		if (error) goto out;
-+		error =3D class_device_create_file(st_class_member,
-+				        &class_device_attr_options);
-+		if (error) goto out;
-=20
- 		if (mode =3D=3D 0 && rew =3D=3D 0) {
- 			error =3D sysfs_create_link(&STp->device->sdev_gendev.kobj,
-Index: linux-2.6.25-rc2-q/Documentation/scsi/st.txt
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.25-rc2-q.orig/Documentation/scsi/st.txt
-+++ linux-2.6.25-rc2-q/Documentation/scsi/st.txt
-@@ -2,7 +2,7 @@ This file contains brief information abo
- The driver is currently maintained by Kai M=C3=A4kisara (email
- Kai.Makisara@kolumbus.fi)
-=20
--Last modified: Thu Feb 21 21:54:16 2008 by kai.makisara
-+Last modified: Sun Feb 24 21:59:07 2008 by kai.makisara
-=20
-=20
- BASICS
-@@ -133,6 +133,11 @@ the defaults set by the user. The value=20
- file 'dev' contains the device numbers corresponding to this device. The=
- links
- 'device' and 'driver' point to the SCSI device and driver entries.
-=20
-+Each directory acontains also the entry 'options' which shows the curren=
-tly
-+enabled driver and mode options. The value in the file is a bit mask whe=
-re the
-+bit definitions are the same as those used with MTSETDRVBUFFER in settin=
-g the
-+options.
-+
- A link named 'tape' is made from the SCSI device directory to the class
- directory corresponding to the mode 0 auto-rewind device (e.g., st0).=20
-=20
----1463811327-1468074096-1203884963=:5772--
+After this, libsas uses a query function (which has no ATA parallel) to
+find what the target is doing with the task.
+
+Finally we come to the escalating reset sequece (LUN (hard), phy,
+pathway) which seems to mirror what libata-eh would do (well, barring
+the pathway reset, since ATA has no concept of that).
+
+All of this leads me to conclude, that all libsas needs is to plumb in
+the ATA equivalent of abort, junk the task query for libata devices and
+simply proceed, as if the task is held at the target, along the
+escalating reset path.
+
+We might be able to weld the error handlers of libsas and libata
+together (i.e. use the libata one for everything up to pathway reset and
+then move to the libsas one for pathway reset on), the problem is I just
+don't see any way of doing this.  Plus abort and TMF query skip are
+fairly small alterations to the current libsas eh, so it's not clear
+there's any value to acutally welding in the libsas eh, even if I could
+get it to provide the information I need.
+
+So, my conclusion is tending towards simply adding an ATA component to
+libsas and keeping all eh libsas local.  In that case, is there anything
+I need to do to convince libata that I don't care whether it uses old or
+new error handling?
+
+James
+
+
