@@ -1,53 +1,66 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [12/22] Remove GFP_DMAs/unchecked_isa_dma checks in scsi_scan.c
-Date: Mon, 25 Feb 2008 17:34:10 +0100
-Message-ID: <20080225163410.GA17349@one.firstfloor.org>
-References: <200802251235.889863872@firstfloor.org> <20080224233525.31E991B4183@basil.firstfloor.org> <1203950818.3254.16.camel@localhost.localdomain> <20080225145850.GB16158@one.firstfloor.org> <1203951860.3254.26.camel@localhost.localdomain> <20080225151138.GE16158@one.firstfloor.org> <1203954305.3254.39.camel@localhost.localdomain>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: Need help with libata error handling in libsas
+Date: Mon, 25 Feb 2008 10:34:29 -0600
+Message-ID: <47C2EE15.3060105@linux.vnet.ibm.com>
+References: <1203886936.3135.75.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:59671 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbYBYQdf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 11:33:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1203954305.3254.39.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1203886936.3135.75.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-> You've already added a new special field with your u64
-> sense_buffer_mask;
+James Bottomley wrote:
+> I keep hearing that we need to convert libsas to use libata's new error
+> handling.  Unfortunately, I have very little conception of what that
+> means.  Right at the moment, libsas doesn't use any error handling
+> functions of libata at all.
+> 
+> I've looked through the libata-eh functions, and I find them frankly
+> incomprehensible.
+> 
+> Firstly, let me say what SAS error handling actually does:
 
-Ok I'll add another one for this case so that you can still
-have zero copy SCSI scan. Or maybe it can check the block
-layer bounce information directly here.
+Let me chime in with what ipr error handling does/can do. The ipr firmware
+provides two basic SATA error handling methods with some modifiers to each.
 
-> It's a special case field for ISA devices because everything else has a
-> dev->dma_mask you can use.
+Cancel All - This cancels all outstanding commands to the device. When issued
+to an ATA device, this gets escalated by the firmware to an SRST. When issued
+to an ATAPI device, an ATA NOOP is issued.
 
-I'm not sure that trying to use ->dma_mask for this is all that useful.
-The issue is that a lot of drivers do not actually DMA specific areas
-because either they don't care about the data or the data is passed
-in some other implicit way.
+Reset Device - This command has modifiers to indicate either a soft reset
+or a hard reset.
 
-Trying to lump it all together into a single mask would be a mistake
-I think.
+Currently, the only SATA devices that ipr officially attaches are ATAPI
+DVD devices. In our testing we've come to the conclusion that trying to
+use anything but a hard reset for ERP is generally more trouble than it
+is worth.
 
-> So, in fact, you're removing my single bit isa_unchecked_dma flag and
-> using 64 bits in its place that preserves essentially the same
-> information.  It just doesn't look like a bargain to me.  Particularly
-> as you're removing a lot of the memory allocation optimisation paths at
-> the same time.
+> All of this leads me to conclude, that all libsas needs is to plumb in
+> the ATA equivalent of abort, junk the task query for libata devices and
+> simply proceed, as if the task is held at the target, along the
+> escalating reset path.
 
-Essentially it removes an ISA specific optimization and makes ISA
-work like all other IO without IOMMU.
+The new libata-eh is used for more than just EH. It is used for device
+probing, device revalidation, and power management. It is also woken for
+all command failures and is where the request sense for ATAPI devices is
+issued. Device revalidation following reset is also critical for ATA and
+ATAPI devices. One example of this is some SATA/PATA converter chips
+lose their DMA xfer settings following a reset and default to PIO mode
+only. Any DMA transfer that is attempted simply hangs.
 
-> There is a proposal that's been under consideration for a while because
-> it might solve other issues ATA has with mdma (they need to use
+The other issue is PMP support. The more that gets pushed into libsas,
+the more libsas needs to know about things such as PMP.
 
-... that'll have to be done by someone else.
+-Brian
 
--Andi
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
 
