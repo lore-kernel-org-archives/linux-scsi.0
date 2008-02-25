@@ -1,44 +1,57 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [1/22] Add new sense_buffer_mask host template field
-Date: Mon, 25 Feb 2008 16:01:22 +0100
-Message-ID: <20080225150122.GC16158@one.firstfloor.org>
-References: <200802251235.889863872@firstfloor.org> <20080224233513.F083B1B4183@basil.firstfloor.org> <1203950908.3254.18.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Don't use unnecessary GFP_ATOMIC in sg.c
+Date: Mon, 25 Feb 2008 07:00:34 -0800
+Message-ID: <1203951634.3254.23.camel@localhost.localdomain>
+References: <20080224233632.GA31228@basil.nowhere.org>
+	 <1203950588.3254.12.camel@localhost.localdomain>
+	 <20080225145625.GA16158@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:46731 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034AbYBYPAr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 10:00:47 -0500
-Content-Disposition: inline
-In-Reply-To: <1203950908.3254.18.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49984 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753022AbYBYPAr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 10:00:47 -0500
+In-Reply-To: <20080225145625.GA16158@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Feb 25, 2008 at 06:48:28AM -0800, James Bottomley wrote:
-> On Mon, 2008-02-25 at 00:35 +0100, Andi Kleen wrote:
-> > sense buffers are something that still needs to be explicitely 
-> > bounced in the scsi layer. Instead of using the global unchecked_isa_dma
-> > flag define a special fine grained mask for this.
+
+On Mon, 2008-02-25 at 15:56 +0100, Andi Kleen wrote:
+> On Mon, Feb 25, 2008 at 06:43:08AM -0800, James Bottomley wrote:
+> > On Mon, 2008-02-25 at 00:36 +0100, Andi Kleen wrote:
+> > > Don't use unnecessary GFP_ATOMIC in sg.c
+> > > 
+> > > sg.c uses GFP_ATOMIC for a lot of allocations where it isn't necessary.
+> > > There are no locks hold and I don't see any other reasons why GFP_ATOMIC
+> > > should be needed here. So remove them for more reliable allocations.
+> > > 
+> > > Depends on the earlier GFP_DMA patchkit, but only because it happens
+> > > to patch the same places (no real functional dependency) 
+> > > 
+> > > Tested by burning a CD on a kernel with all lock/sleep/etc. debugging enabled.
 > > 
-> > I decided to use a full dma mask because that is most useful for some future
-> > infrastructure work I'm doing.
+> > I'm afraid this is wrong.  Those paths are used in the block layer issue
+> > path.  Most of the time this path does have user context.  However, it's
+> > legal to call it from tasklet context, and most error retries do this.
+> > In that case, your GFP_KERNEL will have problems, so these have to be
+> > GFP_ATOMIC, I'm afraid.
 > 
-> Why do we need a separate mask?  Why can't we just use the device
-> dma_mask?
+> In what path? I couldn't find one while reading the code. But I don't
+> claim to understand it completely so I might have missed something.
 
-First a lot of drivers don't need it because they handle the sense
-buffers without DMA. So if we just used a device mask we would either
-do unnecessary work for those or require a special sense buffer
-mask in the device (which wouldn't belong into the device layer) 
+It's a fundamental lack of guarantee of the API.  Block *may* give you
+user context but doesn't guarantee it.  It's so we can call
+blk_run_queue from the block tasklet.
 
-Then there isn't really a device anywhere in these drivers and I didn't
-plan to rewrite them to add one. 
+This is usually done by queue restarts.  SCSI does it via
+scsi_next_command, which is usually in tasklet context.  You'll really
+only see this for a TCQ device (which no CDs are).
 
-So just having a SCSI specific sense buffer mask seemed best. It is
-only set when a ISA driver actually does sense buffer DMA, which
-is only true in a handful of drivers.
+James
 
--Andi
+
