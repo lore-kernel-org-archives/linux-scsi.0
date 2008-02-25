@@ -1,56 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [3/22] Remove unchecked_isa_dma in advansys.c
-Date: Mon, 25 Feb 2008 14:58:06 -0800
-Message-ID: <1203980286.3254.54.camel@localhost.localdomain>
-References: <200802251235.889863872@firstfloor.org>
-	 <20080224233516.0657F1B4183@basil.firstfloor.org>
-	 <20080225214746.GA11382@parisc-linux.org>
-	 <20080225224035.GB21577@one.firstfloor.org>
-	 <20080225225022.GD20273@parisc-linux.org>  <47C34715.7040005@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] mvsas: convert from rough draft to working driver
+Date: Mon, 25 Feb 2008 18:11:16 -0500
+Message-ID: <47C34B14.4040509@garzik.org>
+References: <20080223131527.GB7942@ubuntu.domain> <47C049C2.2010502@garzik.org> <20080224114806.GA7908@ubuntu.domain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43984 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760780AbYBYW6L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:58:11 -0500
-In-Reply-To: <47C34715.7040005@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55567 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751294AbYBYXLT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 18:11:19 -0500
+In-Reply-To: <20080224114806.GA7908@ubuntu.domain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
 
-
-On Mon, 2008-02-25 at 17:54 -0500, Jeff Garzik wrote:
-> Matthew Wilcox wrote:
-> > On Mon, Feb 25, 2008 at 11:40:35PM +0100, Andi Kleen wrote:
-> >>> (I must have fixed it somehow because it works on parisc, which is most
-> >>> unforgiving of drivers which do DMA without the DMA API).
-> >> At least on x86 the DMA API cannot do ISA bouncing.
-> > 
-> > You're saying that if I set a 24-bit DMA mask, and then do a
-> > pci_alloc_coherent(), x86 might hand me back something that's not
-> > accessible?  That would be just broken.
+Ke Wei wrote:
+> On Sat, Feb 23, 2008 at 11:28:50AM -0500, Jeff Garzik wrote:
+>> Ke Wei wrote:
+>>> Convert rough draft Marvell 6440 driver to a working driver.
+>>> Added support for SAS and SATA devices, hotplug, wide port, and expanders.
+>>> This patch is based on:
+>>> branch 'mvsas' of 
+>>> git.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+>> Yay!  Perfect patch:  good tech content, applyable to #mvsas, and the 
+>> most important part, the driver works :)
+>>
+>> One minor (though important) detail:  may we assume this patch has the 
+>> same Signed-off-by as previous patches?
+>>
 > 
-> Indeed.
+> Oah, I have no idea how to diff between the previous 5th commit and
+> current to use git-format-patch command, so I had to use git-diff to
+> create patch. As a result, I format to place my Signed-off-by when
+> sending email.
+> Jeff, Do you have a good suggestion?  Thank you for your help.
 
-It's doing the right thing (from pci-dma_32.c):
+That's just a simple mistake, so I wouldn't worry about it.  We all 
+forget such things, every now and then.
 
-void *dma_alloc_coherent(struct device *dev, size_t size,
-			   dma_addr_t *dma_handle, gfp_t gfp)
-[...]
-	if (dev == NULL || (dev->coherent_dma_mask < 0xffffffff))
-		gfp |= GFP_DMA;
-
-
-	ret = (void *)__get_free_pages(gfp, order);
+If I forget to sign-off on a patch, I usually just reply to my own email 
+(publicly), providing the Signed-off-by line requested...  which is 
+precisely what you did below :)
 
 
-Which correctly allocates the region.
+> Signed-off-by: Ke Wei <kewei@marvell.com>
 
-James
+Thanks!
+
+	Jeff
 
 
 
