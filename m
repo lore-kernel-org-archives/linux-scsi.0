@@ -1,62 +1,59 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 7246] 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 25 Feb 2008 11:54:03 -0800 (PST)
-Message-ID: <20080225195403.0595D108094@picon.linux-foundation.org>
-References: <bug-7246-11613@http.bugzilla.kernel.org/>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDBcmds with sense info
+Date: Mon, 25 Feb 2008 14:30:19 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501F69BBB@NAMAIL1.ad.lsil.com>
+References: <1203698131.6206.22.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:43241 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754109AbYBYTyg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:54:36 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1PJs3lH011999
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Feb 2008 11:54:04 -0800
-In-Reply-To: <bug-7246-11613@http.bugzilla.kernel.org/>
+Received: from mail0.lsil.com ([147.145.40.20]:36823 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751119AbYBYVaq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 16:30:46 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1203698131.6206.22.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7246
+James,
 
+Thanks for the reply.  We will resubmit the patch to rollback it to our
+original implementation.
 
-aradford@gmail.com changed:
+Regards.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |aradford@gmail.com
+Bo Yang
 
-
-
-
-------- Comment #13 from aradford@gmail.com  2008-02-25 11:54 -------
-Javier,
-
-The final issue you are talking about (different from original issue in this
-bugzilla entry):
-
-The 3w-xxxx driver calling pci_map_sg() with sc_data_direction ==
-DMA_BIDIRECTIONAL caused data corruption when going through swiotlb.c, on EM64T
-with 4GB or higher of RAM.  AMD64 systems using IOMMU were never affected.
-
-This problem doesn't exist in the 3w-xxxx driver in kernels 2.6.23 and higher.
-The reason is the 'scsi data buffer accessors' patches removed most instances 
-of scsi drivers calling pci_map_sg() and replaced them with scsi_dma_map().
-
-This corrected the problem of the 3w-xxxx driver over-riding the default
-sc_data_direction that was causing data corruption with EM64T systems with 
-4GB+ RAM.
-
-If you need a driver update for an older kernel to fix this issue, please go to
-www.3ware.com, however no driver patch to 3w-xxxx needs to be sent to the
-kernel tree to fix this issue.
-
-Please close this BUG.
-
--Adam Radford
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Friday, February 22, 2008 11:36 AM
+To: Yang, Bo
+Cc: Matthew Wilcox; linux-scsi@vger.kernel.org; akpm@osdl.org;
+linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of
+DCDBcmds with sense info
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+On Fri, 2008-02-22 at 09:17 -0700, Yang, Bo wrote:
+> James,
+> 
+> What is the status for this patch?  We need to submit more patches 
+> based on the acceptance of this patch.
+
+OK, read the thread; Matthew is right.  What you propose would pretty
+much destroy compat ioctl handling within the driver.  You need a compat
+handler for MEGASAS_IOC_FW.
+
+With your current patch you'd get a failure both from a 64 bit binary
+running on x86-64 and if someone ran the x86 binary on ia64.
+
+The driver already uses the compat infrastructure, it shouldn't be too
+hard to add this in the correct manner.
+
+James
+
+
