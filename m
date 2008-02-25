@@ -1,40 +1,87 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10050] message/fusion/mptbase.c: fix use-after-free's
-Date: Sun, 24 Feb 2008 23:57:18 -0800 (PST)
-Message-ID: <20080225075718.E6F98108077@picon.linux-foundation.org>
-References: <bug-10050-11613@http.bugzilla.kernel.org/>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: [PATCH] Don't use unnecessary GFP_ATOMIC in sg.c v2
+Date: Mon, 25 Feb 2008 10:09:48 +0100
+Message-ID: <20080225090948.GA5843@basil.nowhere.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:50838 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750951AbYBYH5r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 02:57:47 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1P7vIeW004980
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Feb 2008 23:57:20 -0800
-In-Reply-To: <bug-10050-11613@http.bugzilla.kernel.org/>
+Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:14115 "EHLO
+	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978AbYBYJJv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 04:09:51 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10050
+Don't use unnecessary GFP_ATOMIC in sg.c v2
 
+[Update for the previous version of the patch]
 
-bunk@kernel.org changed:
+sg.c uses GFP_ATOMIC for a lot of allocations where it isn't necessary.
+There are no locks hold and I don't see any other reasons why GFP_ATOMIC
+should be needed here. So remove them.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |CODE_FIX
+Depends on the earlier GFP_DMA patchkit, but only because it happens
+to patch the same places (no real functional dependency) 
 
+Tested by burning a CD on a kernel with all lock/sleep/etc. debugging enabled.
 
+v2: Actually always use GFP_KERNEL instead of 0 (which is equivalent to 
+    GFP_ATOMIC). Retested.
 
+Signed-off-by: Andi Kleen <ak@suse.de>
 
-------- Comment #1 from bunk@kernel.org  2008-02-24 23:57 -------
-Fixed by commit ad008d42bcec99911b3270a8349f8ec8405a1c4e.
+---
+ drivers/scsi/sg.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Index: linux/drivers/scsi/sg.c
+===================================================================
+--- linux.orig/drivers/scsi/sg.c
++++ linux/drivers/scsi/sg.c
+@@ -745,7 +745,7 @@ sg_common_write(Sg_fd * sfp, Sg_request 
+ 	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
+ 				hp->dxfer_len, srp->data.k_use_sg, timeout,
+ 				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
+-				GFP_ATOMIC)) {
++				GFP_KERNEL)) {
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: scsi_execute_async failed\n"));
+ 		/*
+ 		 * most likely out of mem, but could also be a bad map
+@@ -1654,7 +1654,7 @@ static int
+ sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
+ {
+ 	int sg_bufflen = tablesize * sizeof(struct scatterlist);
+-	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
++	gfp_t gfp_flags = GFP_KERNEL | __GFP_NOWARN;
+ 
+ 	schp->buffer = kzalloc(sg_bufflen, gfp_flags);
+ 	if (!schp->buffer)
+@@ -1694,7 +1694,7 @@ st_map_user_pages(struct scatterlist *sg
+ 	if (count == 0)
+ 		return 0;
+ 
+-	if ((pages = kmalloc(max_pages * sizeof(*pages), GFP_ATOMIC)) == NULL)
++	if ((pages = kmalloc(max_pages * sizeof(*pages), GFP_KERNEL)) == NULL)
+ 		return -ENOMEM;
+ 
+         /* Try to fault in all of the necessary pages */
+@@ -2323,7 +2323,7 @@ sg_add_sfp(Sg_device * sdp, int dev)
+ 	unsigned long iflags;
+ 	int bufflen;
+ 
+-	sfp = kzalloc(sizeof(*sfp), GFP_ATOMIC | __GFP_NOWARN);
++	sfp = kzalloc(sizeof(*sfp), GFP_KERNEL|__GFP_NOWARN);
+ 	if (!sfp)
+ 		return NULL;
+ 
+@@ -2452,7 +2452,7 @@ sg_page_malloc(int rqSz, int *retSzp)
+ 	if ((rqSz <= 0) || (NULL == retSzp))
+ 		return resp;
+ 
+-	page_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN;
++	page_mask = GFP_KERNEL | __GFP_COMP | __GFP_NOWARN;
+ 
+ 	for (order = 0, a_size = PAGE_SIZE; a_size < rqSz;
+ 	     order++, a_size <<= 1) ;
