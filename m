@@ -1,106 +1,99 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: [PATCH 2/2] ps3rom: Simplify fill_from_dev_buffer()
-Date: Mon, 25 Feb 2008 14:24:31 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0802251423470.31208@vixen.sonytel.be>
-References: <1203895523-4009-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <Pine.LNX.4.64.0802251420270.31208@vixen.sonytel.be>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid: READ_CAPACITY_16 shouldn't trust allocation
+ length in cdb
+Date: Mon, 25 Feb 2008 06:16:02 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F482A67CD3@ADPE2K703.adaptec.com>
+References: <1203895523-4009-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-2050510550-1203945871=:31208"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:39077 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750813AbYBYNYc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 08:24:32 -0500
-In-Reply-To: <Pine.LNX.4.64.0802251420270.31208@vixen.sonytel.be>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:41409 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754102AbYBYOQG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 09:16:06 -0500
+In-Reply-To: <1203895523-4009-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "tomof@acm.org" <tomof@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+ACK
 
----584349381-2050510550-1203945871=:31208
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Sincerely -- Mark Salyzyn
 
-Subject: [PATCH] ps3rom: Simplify fill_from_dev_buffer()
-
-As we no longer need to calculate the data length of the whole scatterlist,
-we can abort the loop earlier and coalesce req_len and act_len into one
-variable, making fill_from_dev_buffer() more similar to fetch_to_dev_buffer().
-
-Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
----
- drivers/scsi/ps3rom.c |   30 ++++++++++++++----------------
- 1 file changed, 14 insertions(+), 16 deletions(-)
-
---- a/drivers/scsi/ps3rom.c
-+++ b/drivers/scsi/ps3rom.c
-@@ -95,7 +95,7 @@ static int ps3rom_slave_configure(struct
-  */
- static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf)
- {
--	int k, req_len, act_len, len, active;
-+	int k, req_len, len, fin;
- 	void *kaddr;
- 	struct scatterlist *sgpnt;
- 	unsigned int buflen;
-@@ -107,24 +107,22 @@ static int fill_from_dev_buffer(struct s
- 	if (!scsi_sglist(cmd))
- 		return -1;
- 
--	active = 1;
--	req_len = act_len = 0;
-+	req_len = fin = 0;
- 	scsi_for_each_sg(cmd, sgpnt, scsi_sg_count(cmd), k) {
--		if (active) {
--			kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
--			len = sgpnt->length;
--			if ((req_len + len) > buflen) {
--				active = 0;
--				len = buflen - req_len;
--			}
--			memcpy(kaddr + sgpnt->offset, buf + req_len, len);
--			flush_kernel_dcache_page(sg_page(sgpnt));
--			kunmap_atomic(kaddr, KM_IRQ0);
--			act_len += len;
-+		kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
-+		len = sgpnt->length;
-+		if ((req_len + len) > buflen) {
-+			len = buflen - req_len;
-+			fin = 1;
- 		}
--		req_len += sgpnt->length;
-+		memcpy(kaddr + sgpnt->offset, buf + req_len, len);
-+		flush_kernel_dcache_page(sg_page(sgpnt));
-+		kunmap_atomic(kaddr, KM_IRQ0);
-+		req_len += len;
-+		if (fin)
-+			break;
- 	}
--	scsi_set_resid(cmd, buflen - act_len);
-+	scsi_set_resid(cmd, buflen - req_len);
- 	return 0;
- }
- 
-With kind regards,
-
-Geert Uytterhoeven
-Software Architect
-
-Sony Network and Software Technology Center Europe
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
-
-Phone:    +32 (0)2 700 8453
-Fax:      +32 (0)2 700 8622
-E-mail:   Geert.Uytterhoeven@sonycom.com
-Internet: http://www.sony-europe.com/
-
-Sony Network and Software Technology Center Europe
-A division of Sony Service Centre (Europe) N.V.
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
-VAT BE 0413.825.160 · RPR Brussels
-Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584349381-2050510550-1203945871=:31208--
+> -----Original Message-----
+> From: fujita [mailto:tomof@acm.org] On Behalf Of FUJITA Tomonori
+> Sent: Sunday, February 24, 2008 6:25 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: tomof@acm.org; FUJITA Tomonori; Salyzyn, Mark; James Bottomley
+> Subject: [PATCH] aacraid: READ_CAPACITY_16 shouldn't trust
+> allocation length in cdb
+>
+> When aacraid spoofs READ_CAPACITY_16, it assumes that the data length
+> in the sg list is equal to allocation length in cdb. But sg can put
+> any value in scb so the driver needs to check both the data length in
+> the sg list and allocation length in cdb.
+>
+> If allocation length is larger than the response length that the
+> driver expects, it clears the data buffer in the sg list to zero but
+> it doesn't need to do. Just setting resid is fine.
+>
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  drivers/scsi/aacraid/aachba.c |   22 +++++++++++-----------
+>  1 files changed, 11 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/scsi/aacraid/aachba.c
+> b/drivers/scsi/aacraid/aachba.c
+> index c05092f..b9fc9b1 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -2047,6 +2047,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+>         {
+>                 u64 capacity;
+>                 char cp[13];
+> +               unsigned int alloc_len;
+>
+>                 dprintk((KERN_DEBUG "READ CAPACITY_16 command.\n"));
+>                 capacity = fsa_dev_ptr[cid].size - 1;
+> @@ -2063,18 +2064,17 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+>                 cp[10] = 2;
+>                 cp[11] = 0;
+>                 cp[12] = 0;
+> -               aac_internal_transfer(scsicmd, cp, 0,
+> -                 min_t(size_t, scsicmd->cmnd[13], sizeof(cp)));
+> -               if (sizeof(cp) < scsicmd->cmnd[13]) {
+> -                       unsigned int len, offset = sizeof(cp);
+>
+> -                       memset(cp, 0, offset);
+> -                       do {
+> -                               len = min_t(size_t,
+> scsicmd->cmnd[13] - offset,
+> -                                               sizeof(cp));
+> -
+> aac_internal_transfer(scsicmd, cp, offset, len);
+> -                       } while ((offset += len) < scsicmd->cmnd[13]);
+> -               }
+> +               alloc_len = ((scsicmd->cmnd[10] << 24)
+> +                            + (scsicmd->cmnd[11] << 16)
+> +                            + (scsicmd->cmnd[12] << 8) +
+> scsicmd->cmnd[13]);
+> +
+> +               alloc_len = min_t(size_t, alloc_len, sizeof(cp));
+> +               aac_internal_transfer(scsicmd, cp, 0, alloc_len);
+> +
+> +               if (alloc_len < scsi_bufflen(scsicmd))
+> +                       scsi_set_resid(scsicmd,
+> +                                      scsi_bufflen(scsicmd)
+> - alloc_len);
+>
+>                 /* Do not cache partition table for arrays */
+>                 scsicmd->device->removable = 1;
+> --
+> 1.5.3.7
+>
+>
