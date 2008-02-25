@@ -1,130 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [12/22] Remove GFP_DMAs/unchecked_isa_dma checks in
-	scsi_scan.c
-Date: Mon, 25 Feb 2008 07:45:05 -0800
-Message-ID: <1203954305.3254.39.camel@localhost.localdomain>
-References: <200802251235.889863872@firstfloor.org>
-	 <20080224233525.31E991B4183@basil.firstfloor.org>
-	 <1203950818.3254.16.camel@localhost.localdomain>
-	 <20080225145850.GB16158@one.firstfloor.org>
-	 <1203951860.3254.26.camel@localhost.localdomain>
-	 <20080225151138.GE16158@one.firstfloor.org>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH 2/2] ps3rom: Simplify fill_from_dev_buffer()
+Date: Mon, 25 Feb 2008 17:19:17 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802251719050.31208@vixen.sonytel.be>
+References: <1203895523-4009-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <Pine.LNX.4.64.0802251420270.31208@vixen.sonytel.be>
+ <Pine.LNX.4.64.0802251423470.31208@vixen.sonytel.be> <20080224235154E.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-428809084-1203956357=:31208"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52339 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753433AbYBYPpR (ORCPT
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:40636 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753969AbYBYQTT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:45:17 -0500
-In-Reply-To: <20080225151138.GE16158@one.firstfloor.org>
+	Mon, 25 Feb 2008 11:19:19 -0500
+In-Reply-To: <20080224235154E.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-On Mon, 2008-02-25 at 16:11 +0100, Andi Kleen wrote:
-> On Mon, Feb 25, 2008 at 07:04:20AM -0800, James Bottomley wrote:
-> > On Mon, 2008-02-25 at 15:58 +0100, Andi Kleen wrote:
-> > > On Mon, Feb 25, 2008 at 06:46:58AM -0800, James Bottomley wrote:
-> > > > 
-> > > > On Mon, 2008-02-25 at 00:35 +0100, Andi Kleen wrote:
-> > > > > Should not be needed because the block layer bounces that all.
-> > > > > 
-> > > > > Signed-off-by: Andi Kleen <ak@suse.de>
-> > > > > 
-> > > > > ---
-> > > > >  drivers/scsi/scsi_scan.c |    6 ++----
-> > > > >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > > > > 
-> > > > > Index: linux/drivers/scsi/scsi_scan.c
-> > > > > ===================================================================
-> > > > > --- linux.orig/drivers/scsi/scsi_scan.c
-> > > > > +++ linux/drivers/scsi/scsi_scan.c
-> > > > > @@ -1010,8 +1010,7 @@ static int scsi_probe_and_add_lun(struct
-> > > > >  	if (!sdev)
-> > > > >  		goto out;
-> > > > >  
-> > > > > -	result = kmalloc(result_len, GFP_ATOMIC |
-> > > > > -			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
-> > > > > +	result = kmalloc(result_len, GFP_ATOMIC);
-> > > > >  	if (!result)
-> > > > >  		goto out_free_sdev;
-> > > > >  
-> > > > > @@ -1328,8 +1327,7 @@ static int scsi_report_lun_scan(struct s
-> > > > >  	 * prevent us from finding any LUNs on this target.
-> > > > >  	 */
-> > > > >  	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
-> > > > > -	lun_data = kmalloc(length, GFP_ATOMIC |
-> > > > > -			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
-> > > > > +	lun_data = kmalloc(length, GFP_ATOMIC);
-> > > > >  	if (!lun_data) {
-> > > > >  		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-> > > > >  		goto out;
-> > > > 
-> > > > Andi, this can't be right.
-> > > 
-> > > You mean it is incorrect or just not optimal? 
-> > 
-> > It's not optimal ... but that's sufficient an objection.
-> > 
-> > > > 
-> > > > You're removing something that's actually useful.  I'm happy to
-> > > > substitute this kmalloc for kmalloc_mask on the device dma mask which
-> > > > will do the same thing and so junk unchecked_isa_dma() that way (and
-> > > > actually fix us up for other weird mask devices), but just using
-> > > > ZONE_NORMAL is wrong because we'll then bounce all the time for
-> > > > something we knew a priori how to avoid.
-> > > 
-> > > That would require adding a separate mask just for this to the 
-> > > template. I figured the SCSI scan was not performance critical
-> > > so a few more copies just for this case was an ok trade off
-> > > for simpler code.
-> > 
-> > Why?  We already have the device; can't we just use its mask?
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---584349381-428809084-1203956357=:31208
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Tue, 26 Feb 2008, FUJITA Tomonori wrote:
+> On Mon, 25 Feb 2008 14:24:31 +0100 (CET)
+> Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com> wrote:
 > 
-> These ISA drivers I worked with definitely don't know 
-> anything about a device in any form.
-> 
-> Also there is the issue that 50+% of the ISA drivers actually
-> don't need it even if they had a ISA device.
-> 
+> > Subject: [PATCH] ps3rom: Simplify fill_from_dev_buffer()
 > > 
-> > > You think it makes sense to optimize scsi scan?
-> > 
-> > It makes sense to use information we already know to optimise the path,
+> > As we no longer need to calculate the data length of the whole scatterlist,
+> > we can abort the loop earlier and coalesce req_len and act_len into one
+> > variable, making fill_from_dev_buffer() more similar to fetch_to_dev_buffer().
 > 
-> In this case we would need to add a special new field for this
-> to the SCSI template (assume unchecked_isa_dma is already gone). 
-> You think that is worth it? 
+> I'll add new APIs to copy data between a sg list and a buffer soon
+> after cleaning up (and fixing) some drivers on this area. I plan to
+> remove fill_from_dev_buffer and fetch_to_dev_buffer in ps3rom. As you
+> know, they are same functions that scsi_debug uses. There are other
+> drivers that need similar functions. I expect my ps3rom patch to be
+> applied to the scsi-fixes tree so I didn't change much as you did in
+> this patch.
 
-You've already added a new special field with your u64
-sense_buffer_mask;
+IC, thanks!
 
-It's a special case field for ISA devices because everything else has a
-dev->dma_mask you can use.
+With kind regards,
 
-So, in fact, you're removing my single bit isa_unchecked_dma flag and
-using 64 bits in its place that preserves essentially the same
-information.  It just doesn't look like a bargain to me.  Particularly
-as you're removing a lot of the memory allocation optimisation paths at
-the same time.
+Geert Uytterhoeven
+Software Architect
 
-Don't get me wrong; I'm all for removing the special casing of isa
-devices we have to do, of which isa_unchecked_dma is the switch ... I
-just want to do it properly, and that would have to be by bringing isa
-devices under the device model, so we don't have to special case them.
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
-There is a proposal that's been under consideration for a while because
-it might solve other issues ATA has with mdma (they need to use
-different DMA masks for different devices on the same host).  The
-proposal was to use the struct device in the struct scsi_device as the
-device for the dma_ API ... this has all the properties you need ... you
-can give it a DMA_24BIT_MASK for isa devices, and use it to key the
-allocations off, since it's always present ... then we can junk
-isa_unchecked_dma and not add any other strange flags.
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
 
-James
-
-
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-428809084-1203956357=:31208--
