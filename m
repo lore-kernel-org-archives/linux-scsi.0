@@ -1,287 +1,334 @@
 From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH 3/5] Removed outer port use in fc_exch
-Date: Mon, 25 Feb 2008 03:20:21 -0800
-Message-ID: <20080225112021.22380.45522.stgit@vdinit.jf.intel.com>
+Subject: [PATCH 2/5] Removed outer port use from fcs
+Date: Mon, 25 Feb 2008 03:20:16 -0800
+Message-ID: <20080225112016.22380.9533.stgit@vdinit.jf.intel.com>
 References: <20080225111856.22380.70951.stgit@vdinit.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7145 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:13115 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754394AbYBYTcC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:32:02 -0500
+	id S1755347AbYBYTkV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 14:40:21 -0500
 In-Reply-To: <20080225111856.22380.70951.stgit@vdinit.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-Used fcdev for frame_alloc instead outer port. The frame_alloc() is modified
-in next patch with its all other references.
+Removed outer port use from fcs create and fcs destroy.
+Made fcdev available via fcs_state for previously used some of the fields
+from outer port, e.g. egress handler and framesize from outer port.
+Also added fcdev to fc_local_port and initialized this fcdev during 
+local port create, this fcdev will be used for frame alloc 
+and removing inner port later. 
+
+Also moved outer port event list to fcs_state.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 ---
 
- drivers/scsi/ofc/include/fc_exch.h     |    5 +++--
- drivers/scsi/ofc/include/fc_frame.h    |    2 ++
- drivers/scsi/ofc/libfc/fc_exch.c       |   32 ++++++++++++++++----------------
- drivers/scsi/ofc/libfc/fc_exch_impl.h  |    4 ++--
- drivers/scsi/ofc/libfc/fc_local_port.c |    2 +-
- drivers/scsi/ofc/libfc/fc_sess.c       |    2 +-
- drivers/scsi/ofc/libfc/fcs_cmd.c       |    2 +-
- drivers/scsi/ofc/libfc/fcs_state.c     |    1 +
- 8 files changed, 27 insertions(+), 23 deletions(-)
+ drivers/scsi/ofc/include/fc_local_port.h    |    2 +
+ drivers/scsi/ofc/include/fcs_state.h        |    4 ++
+ drivers/scsi/ofc/libfc/fc_local_port.c      |    2 +
+ drivers/scsi/ofc/libfc/fc_local_port_impl.h |    1 +
+ drivers/scsi/ofc/libfc/fcs_state.c          |   47 +++++++++++++++------------
+ drivers/scsi/ofc/libfc/fcs_state_impl.h     |    4 ++
+ drivers/scsi/ofc/openfc/openfc_if.c         |    7 ++--
+ drivers/scsi/ofc/openfc/openfc_ioctl.c      |   10 +++---
+ 8 files changed, 48 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/ofc/include/fc_exch.h b/drivers/scsi/ofc/include/fc_exch.h
-index 91339ca..b97263f 100644
---- a/drivers/scsi/ofc/include/fc_exch.h
-+++ b/drivers/scsi/ofc/include/fc_exch.h
+diff --git a/drivers/scsi/ofc/include/fc_local_port.h b/drivers/scsi/ofc/include/fc_local_port.h
+index 0781a8d..c7bb5ac 100644
+--- a/drivers/scsi/ofc/include/fc_local_port.h
++++ b/drivers/scsi/ofc/include/fc_local_port.h
 @@ -27,6 +27,7 @@
- #include "fc_event.h"
+  */
+ #include "sa_event.h"
  #include "fc_fs.h"
- #include "fc_els.h"
 +#include "fcdev.h"
  
- /*
-  * Principles of Operation.
-@@ -92,9 +93,9 @@ void fc_exch_mgr_reset(struct fc_exch_mgr *, fc_fid_t s_id, fc_fid_t d_id);
- void fc_exch_set_addr(struct fc_exch *, fc_fid_t orig, fc_fid_t resp);
+ struct fc_local_port;		/* semi-opaque.  See fc_local_port_impl.h */
+ struct fc_remote_port;
+@@ -38,6 +39,7 @@ struct fc_frame;
+ struct fc_ns_fts;
+ 
+ struct fc_local_port *fc_local_port_create(struct fc_virt_fab *,
++					   struct fcdev *,
+ 					   struct fc_port *,
+ 					   fc_wwn_t wwpn, fc_wwn_t wwnn,
+ 					   u_int timeout_msec,
+diff --git a/drivers/scsi/ofc/include/fcs_state.h b/drivers/scsi/ofc/include/fcs_state.h
+index 67b9890..720d3da 100644
+--- a/drivers/scsi/ofc/include/fcs_state.h
++++ b/drivers/scsi/ofc/include/fcs_state.h
+@@ -20,6 +20,8 @@
+ #ifndef _LIBFC_FCS_STATE_H_
+ #define _LIBFC_FCS_STATE_H_
+ 
++#include "fcdev.h"
++
+ struct fcs_state;
+ struct fc_remote_port;
+ struct fc_local_port;
+@@ -34,6 +36,7 @@ struct fcs_create_args {
+ 	void		(*fca_prlo_notify)(void *arg, struct fc_remote_port *);
+ 	void		*fca_cb_arg;	/* arg for callbacks */
+ 	struct fc_port *fca_port;	/* transport interface to FC fabric */
++	struct fcdev	*dev;		/* transport driver instance */
+ 	u_int fca_service_params;	/* service parm flags from fc/fcp.h */
+ 	fc_xid_t	fca_min_xid;	/* starting exchange ID */
+ 	fc_xid_t	fca_max_xid;	/* maximum exchange ID */
+@@ -51,6 +54,7 @@ void fcs_recv(struct fcs_state *, struct fc_frame *);
+ int fcs_local_port_set(struct fcs_state *, fc_wwn_t node, fc_wwn_t port);
+ int fcs_cmd_send(struct fcs_state *, struct fc_frame *,
+ 			struct fc_frame *, u_int, u_int);
++void fcs_send_event(struct fcs_state *sp, enum fc_event event);
+ struct fc_local_port *fcs_get_local_port(struct fcs_state *);
  
  /*
-- * Set the output port to be used for an exchange.
-+ * Set the device to be used for an exchange.
-  */
--void fc_exch_set_port(struct fc_exch *, struct fc_port *);
-+void fc_exch_set_dev(struct fc_exch *, struct fcdev *);
- 
- /*
-  * Start a new sequence as originator on a new exchange.
-diff --git a/drivers/scsi/ofc/include/fc_frame.h b/drivers/scsi/ofc/include/fc_frame.h
-index 3fce700..7c7e0c5 100644
---- a/drivers/scsi/ofc/include/fc_frame.h
-+++ b/drivers/scsi/ofc/include/fc_frame.h
-@@ -44,6 +44,7 @@
- 
- struct fc_frame {
- 	struct fc_port	*fr_in_port;	/* port where frame was received */
-+	struct fcdev	*dev;		/* fc device instance */
- 	struct fc_seq	*fr_seq;	/* for use with exchange manager */
- 	struct fc_frame_header *fr_hdr;	/* pointer to frame header in buffer */
- 	const char	*fr_stamp;	/* debug info on last usage */
-@@ -85,6 +86,7 @@ struct fc_frame {
- static inline void fc_frame_init(struct fc_frame *fp)
- {
- 	fp->fr_in_port = NULL;
-+	fp->dev = NULL;
- 	fp->fr_seq = NULL;
- 	fp->fr_flags = 0;
- 	fp->fr_sg_len = 0;
-diff --git a/drivers/scsi/ofc/libfc/fc_exch.c b/drivers/scsi/ofc/libfc/fc_exch.c
-index db67d98..a6ea157 100644
---- a/drivers/scsi/ofc/libfc/fc_exch.c
-+++ b/drivers/scsi/ofc/libfc/fc_exch.c
-@@ -481,7 +481,7 @@ int fc_seq_abort_exch(const struct fc_seq *req_sp)
- 		/*
- 		 * Send an abort for the sequence that timed out.
- 		 */
--		fp = fc_frame_alloc(ep->ex_port, 0);
-+		fp = fc_frame_alloc(ep->dev, 0);
- 		if (fp) {
- 			fc_frame_setup(fp, FC_RCTL_BA_ABTS, FC_TYPE_BLS);
- 			sp->seq_f_ctl |= FC_FC_SEQ_INIT;
-@@ -609,7 +609,7 @@ static struct fc_exch *fc_exch_resp(struct fc_exch_mgr *mp,
- 
- 	ep = fc_exch_alloc(mp);
- 	if (ep) {
--		ep->ex_port = fp->fr_in_port;
-+		ep->dev = fp->dev;
- 		ep->ex_class = fc_frame_class(fp);
- 
- 		/*
-@@ -788,9 +788,9 @@ static struct fc_seq *fc_seq_lookup_orig(struct fc_exch_mgr *mp,
- /*
-  * Set the output port to be used for an exchange.
-  */
--void fc_exch_set_port(struct fc_exch *ep, struct fc_port *port)
-+void fc_exch_set_dev(struct fc_exch *ep, struct fcdev *dev)
- {
--	ep->ex_port = port;
-+	ep->dev = dev;
- }
- 
- /*
-@@ -934,7 +934,7 @@ size_t fc_seq_mfs(struct fc_seq *sp)
- int fc_seq_send_frag(struct fc_seq *sp, struct fc_frame *fp)
- {
- 	struct fc_exch *ep;
--	struct fc_port *port;
-+	struct fcdev *dev;
- 	struct fc_frame_header *fh;
- 	enum fc_class class;
- 	u_int32_t f_ctl;
-@@ -942,7 +942,7 @@ int fc_seq_send_frag(struct fc_seq *sp, struct fc_frame *fp)
- 
- 	ep = fc_seq_exch(sp);
- 	WARN_ON((ep->ex_e_stat & ESB_ST_SEQ_INIT) != ESB_ST_SEQ_INIT);
--	port = ep->ex_port;
-+	dev = ep->dev;
- 
- 	WARN_ON((sp->seq_f_ctl & FC_FC_END_SEQ) != 0);
- 	WARN_ON(fp->fr_len % 4 != 0);	/* can't pad except on last frame */
-@@ -969,7 +969,7 @@ int fc_seq_send_frag(struct fc_seq *sp, struct fc_frame *fp)
- 	/*
- 	 * Send the frame.
- 	 */
--	error = fc_port_egress(port, fp);
-+	error = dev->port_ops.send(dev, fp);
- 
- 	/*
- 	 * Update the exchange and sequence flags.
-@@ -989,7 +989,7 @@ int fc_seq_send_frag(struct fc_seq *sp, struct fc_frame *fp)
- int fc_seq_send(struct fc_seq *sp, struct fc_frame *fp)
- {
- 	struct fc_exch *ep;
--	struct fc_port *port;
-+	struct fcdev *dev;
- 	struct fc_frame_header *fh;
- 	enum fc_class class;
- 	u_int32_t f_ctl;
-@@ -998,7 +998,7 @@ int fc_seq_send(struct fc_seq *sp, struct fc_frame *fp)
- 
- 	ep = fc_seq_exch(sp);
- 	WARN_ON((ep->ex_e_stat & ESB_ST_SEQ_INIT) != ESB_ST_SEQ_INIT);
--	port = ep->ex_port;
-+	dev = ep->dev;
- 	WARN_ON((sp->seq_f_ctl & FC_FC_END_SEQ) != 0);
- 
- 	class = ep->ex_class;
-@@ -1032,7 +1032,7 @@ int fc_seq_send(struct fc_seq *sp, struct fc_frame *fp)
- 	/*
- 	 * Send the frame.
- 	 */
--	error = fc_port_egress(port, fp);
-+	error = dev->port_ops.send(dev, fp);
- 
- 	/*
- 	 * Update the exchange and sequence flags,
-@@ -1115,7 +1115,7 @@ static void fc_seq_send_ack(struct fc_seq *sp, const struct fc_frame *rx_fp)
- 	 * Don't send ACKs for class 3.
- 	 */
- 	if (fc_sof_needs_ack(rx_fp->fr_sof)) {
--		fp = fc_frame_alloc(fc_seq_exch(sp)->ex_port, 0);
-+		fp = fc_frame_alloc(fc_seq_exch(sp)->dev, 0);
- 		BUG_ON(!fp);
- 		if (!fp)
- 			return;
-@@ -1150,7 +1150,7 @@ static void fc_seq_send_ack(struct fc_seq *sp, const struct fc_frame *rx_fp)
- 		} else {
- 			fp->fr_eof = FC_EOF_N;
- 		}
--		(void)fc_port_egress(rx_fp->fr_in_port, fp);
-+		(void) rx_fp->dev->port_ops.send(rx_fp->dev, fp);
- 	}
- }
- 
-@@ -1451,7 +1451,7 @@ void fc_seq_ls_acc(struct fc_seq *req_sp)
- 	struct fc_frame *fp;
- 
- 	sp = fc_seq_start_next(req_sp);
--	fp = fc_frame_alloc(fc_seq_exch(sp)->ex_port, sizeof(*acc));
-+	fp = fc_frame_alloc(fc_seq_exch(sp)->dev, sizeof(*acc));
- 	if (fp) {
- 		acc = fc_frame_payload_get(fp, sizeof(*acc));
- 		memset(acc, 0, sizeof(*acc));
-@@ -1475,7 +1475,7 @@ void fc_seq_ls_rjt(struct fc_seq *req_sp, enum fc_els_rjt_reason reason,
- 	struct fc_frame *fp;
- 
- 	sp = fc_seq_start_next(req_sp);
--	fp = fc_frame_alloc(fc_seq_exch(sp)->ex_port, sizeof(*rjt));
-+	fp = fc_frame_alloc(fc_seq_exch(sp)->dev, sizeof(*rjt));
- 	if (fp) {
- 		rjt = fc_frame_payload_get(fp, sizeof(*rjt));
- 		memset(rjt, 0, sizeof(*rjt));
-@@ -1533,7 +1533,7 @@ struct fc_seq *fc_seq_rec_req(struct fc_seq *inq_sp,
- 	struct fc_els_rec *rp;
- 
- 	ep = fc_seq_exch(inq_sp);
--	fp = fc_frame_alloc(ep->ex_port, sizeof(*rp));
-+	fp = fc_frame_alloc(ep->dev, sizeof(*rp));
- 	if (!fp)
- 		return NULL;
- 	sp = fc_seq_start_exch(ep->ex_pool->emp_mgr, recv, errh, arg,
-@@ -1542,7 +1542,7 @@ struct fc_seq *fc_seq_rec_req(struct fc_seq *inq_sp,
- 		fc_frame_free(fp);
- 		return NULL;
- 	}
--	fc_seq_exch(sp)->ex_port = ep->ex_port;
-+	fc_seq_exch(sp)->dev = ep->dev;
- 	rp = fc_frame_payload_get(fp, sizeof(*rp));
- 	memset(rp, 0, sizeof(*rp));
- 	rp->rec_cmd = ELS_REC;
-diff --git a/drivers/scsi/ofc/libfc/fc_exch_impl.h b/drivers/scsi/ofc/libfc/fc_exch_impl.h
-index 98eeee2..9b798fd 100644
---- a/drivers/scsi/ofc/libfc/fc_exch_impl.h
-+++ b/drivers/scsi/ofc/libfc/fc_exch_impl.h
-@@ -77,8 +77,8 @@ struct fc_exch {
- 	/*
- 	 * Fields after ex_refcnt are cleared when an exchange is reallocated.
- 	 */
--#define fc_exch_clear_start ex_port
--	struct fc_port 	*ex_port;	/* port to peer (s/b in remote port) */
-+#define fc_exch_clear_start dev
-+	struct fcdev 	*dev;		/* fc device instance */
- 	fc_xid_t	ex_ox_id;	/* originator's exchange ID */
- 	fc_xid_t	ex_rx_id;	/* responder's exchange ID */
- 	fc_fid_t	ex_orig_fid;	/* originator's FCID */
 diff --git a/drivers/scsi/ofc/libfc/fc_local_port.c b/drivers/scsi/ofc/libfc/fc_local_port.c
-index be5a559..6160bdf 100644
+index 5f28f4a..be5a559 100644
 --- a/drivers/scsi/ofc/libfc/fc_local_port.c
 +++ b/drivers/scsi/ofc/libfc/fc_local_port.c
-@@ -398,7 +398,7 @@ static void fc_local_port_els_send(struct fc_local_port *lp,
- 				   struct fc_seq *sp, struct fc_frame *fp)
- {
- 	if (sp && fp) {
--		fc_seq_exch(sp)->ex_port = lp->fl_port;
-+		fc_seq_exch(sp)->dev = lp->dev;
- 		fc_exch_timer_set(fc_seq_exch(sp), lp->fl_e_d_tov);
- 		if (fc_seq_send_req(sp, fp, FC_RCTL_ELS_REQ, FC_TYPE_ELS, 0))
- 			fc_local_port_retry(lp);
-diff --git a/drivers/scsi/ofc/libfc/fc_sess.c b/drivers/scsi/ofc/libfc/fc_sess.c
-index 1eb3bc3..0d5f611 100644
---- a/drivers/scsi/ofc/libfc/fc_sess.c
-+++ b/drivers/scsi/ofc/libfc/fc_sess.c
-@@ -519,7 +519,7 @@ struct fc_seq *fc_sess_seq_alloc(struct fc_sess *sess,
- 			       sess->fs_remote_fid);
- 	if (sp) {
- 		ep = fc_seq_exch(sp);
--		ep->ex_port = lp->fl_port;
-+		ep->dev = lp->dev;
- 		ep->ex_max_payload = sess->fs_max_payload;
- 	}
- 	return sp;
-diff --git a/drivers/scsi/ofc/libfc/fcs_cmd.c b/drivers/scsi/ofc/libfc/fcs_cmd.c
-index fb066bd..3253abd 100644
---- a/drivers/scsi/ofc/libfc/fcs_cmd.c
-+++ b/drivers/scsi/ofc/libfc/fcs_cmd.c
-@@ -140,7 +140,7 @@ int fcs_cmd_send(struct fcs_state *sp, struct fc_frame *fp,
- 	}
- 
- 	cp->fcc_seq = seq;
--	fc_exch_set_port(fc_seq_exch(seq), sp->fs_args.fca_port);
-+	fc_exch_set_dev(fc_seq_exch(seq), sp->fs_args.dev);
- 	cp->fcc_req_hdr = *fh;
- 	kref_get(&cp->fcc_kref);	/* take ref for response */
- 
+@@ -869,6 +869,7 @@ void fc_local_port_table_destroy(struct fc_virt_fab *vp)
+  * Create Local Port.
+  */
+ struct fc_local_port *fc_local_port_create(struct fc_virt_fab *vf,
++					   struct fcdev *dev,
+ 					   struct fc_port *port,
+ 					   fc_wwn_t wwpn, fc_wwn_t wwnn,
+ 					   u_int timeout_msec,
+@@ -882,6 +883,7 @@ struct fc_local_port *fc_local_port_create(struct fc_virt_fab *vf,
+ 	memset(lp, 0, sizeof(*lp));
+ 	lp->fl_vf = vf;
+ 	atomic_set(&lp->fl_refcnt, 1);
++	lp->dev = dev;
+ 	lp->fl_port = port;
+ 	lp->fl_port_wwn = wwpn;
+ 	lp->fl_node_wwn = wwnn;
+diff --git a/drivers/scsi/ofc/libfc/fc_local_port_impl.h b/drivers/scsi/ofc/libfc/fc_local_port_impl.h
+index ce32176..ce06533 100644
+--- a/drivers/scsi/ofc/libfc/fc_local_port_impl.h
++++ b/drivers/scsi/ofc/libfc/fc_local_port_impl.h
+@@ -55,6 +55,7 @@ struct fc_local_port {
+ 	struct fc_virt_fab *fl_vf;		/* virtual fabric */
+ 	struct list_head fl_list;		/* list headed in virt_fab */
+ 	struct fc_port	*fl_port;		/* port to use when sending */
++	struct fcdev	*dev;			/* fc device instance */
+ 	struct fc_sess	*fl_dns_sess;		/* session for dNS queries */
+ 	struct fc_remote_port *fl_ptp_rp;	/* point-to-point remote port */
+ 	struct list_head fl_sess_list;	/* list of sessions */
 diff --git a/drivers/scsi/ofc/libfc/fcs_state.c b/drivers/scsi/ofc/libfc/fcs_state.c
-index e514504..0669427 100644
+index 78dd61a..e514504 100644
 --- a/drivers/scsi/ofc/libfc/fcs_state.c
 +++ b/drivers/scsi/ofc/libfc/fcs_state.c
-@@ -178,6 +178,7 @@ void fcs_recv(struct fcs_state *sp, struct fc_frame *fp)
+@@ -50,7 +50,7 @@ static int fcs_local_port_prli_accept(struct fc_local_port *,
+ 				      struct fc_remote_port *, void *);
+ static void fcs_add_remote(void *, struct fc_remote_port *, enum fc_event);
+ static void fcs_sess_event(int, void *);
+-static void fcs_port_event(int, void *);
++static void fcs_event(int, void *);
  
+ void fcs_module_init(void)
+ {
+@@ -75,11 +75,9 @@ struct fcs_state *fcs_create(struct fcs_create_args *ap)
+ {
+ 	struct fcs_state *sp;
+ 	struct fc_port *inner_port;
+-	struct fc_port *outer_port;
+ 	size_t mfs;
+ 
+ 	WARN_ON(!ap->fca_disc_done);
+-	WARN_ON(!ap->fca_port);
+ 
+ 	sp = sa_malloc(sizeof(*sp));
+ 	if (!sp)
+@@ -104,8 +102,11 @@ struct fcs_state *fcs_create(struct fcs_create_args *ap)
+ 	if (!inner_port)
+ 		goto error;
+ 	sp->fs_inner_port = inner_port;
+-	outer_port = ap->fca_port;
+-	mfs = fc_port_get_max_frame_size(outer_port);
++
++	if (!ap->dev)
++		goto error;
++
++	mfs = ap->dev->framesize;
+ 	if (mfs < FC_MIN_MAX_PAYLOAD) {
+ 		OFC_DBG("port max frame size only %zx (0x%zx) bytes - "
+ 		       "setting to %d", mfs, mfs, FC_MIN_MAX_PAYLOAD);
+@@ -117,12 +118,12 @@ struct fcs_state *fcs_create(struct fcs_create_args *ap)
+ 	}
+ 	fc_port_set_max_frame_size(inner_port, mfs);
+ 	fc_port_set_ingress(inner_port, fcs_recv_req, sp);
+-	fc_port_set_egress(inner_port, (int (*)(void *, struct fc_frame *))
+-			   fc_port_egress, outer_port);
+-	fc_port_set_frame_alloc(inner_port, outer_port->np_frame_alloc);
+-	fc_port_set_ingress(outer_port,
+-			    (void (*)(void *, struct fc_frame *))fcs_recv, sp);
+-	if (!fc_port_enq_handler(outer_port, fcs_port_event, sp))
++
++	sp->events = sa_event_list_alloc();
++	if (!sp->events)
++		goto error;
++
++	if (!sa_event_enq(sp->events, fcs_event, (void *)sp))
+ 		goto error;
+ 	return sp;
+ 
+@@ -131,7 +132,7 @@ error:
+ 	return NULL;
+ }
+ 
+-static int fcs_drop(void *arg, struct fc_frame *fp)
++static int fcs_drop(struct fcdev *hba, struct fc_frame *fp)
+ {
+ 	fc_frame_free(fp);
+ 	return 0;
+@@ -144,30 +145,28 @@ void fcs_destroy(struct fcs_state *sp)
+ {
+ 	struct fc_port *port;
+ 
+-	WARN_ON(!sp->fs_args.fca_port);
++	WARN_ON(!sp->fs_args.dev);
+ 
+ 	sp->fs_args.fca_disc_done = (void (*)(void *))fcs_nop;
+ 	sp->fs_args.fca_remote_port_state_change =
+ 	    (void (*)(void *, struct fc_remote_port *))fcs_nop;
+ 	fcs_ev_add(sp, OFC_EV_HBA_DEL, NULL, 0);
+ 
+-	fc_port_set_egress(sp->fs_args.fca_port, fcs_drop, NULL);
+-
+-	fc_port_deq_handler(sp->fs_args.fca_port, fcs_port_event, sp);
++	sp->fs_args.dev->port_ops.send = fcs_drop;
++	sa_event_deq(sp->events, fcs_event, (void *)sp);
++	sa_event_list_free(sp->events);
+ 	port = sp->fs_inner_port;
+ 	if (port) {
+ 		sp->fs_inner_port = NULL;
+ 		fc_port_close_ingress(port);
+-		fc_port_close_egress(port);
+ 	}
+-	fc_port_close_ingress(sp->fs_args.fca_port);
++
  	if (sp->fs_local_port) {
- 		fp->fr_in_port = sp->fs_inner_port;
-+		fp->dev = sp->fs_args.dev;
- 		fc_local_port_recv(sp->fs_local_port, fp);
- 	} else {
- 		OFC_DBG("fcs_local_port_set needed before receiving");
+ 		fc_local_port_destroy(sp->fs_local_port);
+ 		fc_local_port_release(sp->fs_local_port);
+ 	}
+ 	if (sp->fs_vf)
+ 		fc_virt_fab_free(sp->fs_vf);
+-	fc_port_close_egress(sp->fs_args.fca_port);
+ 	sa_free(sp);
+ }
+ 
+@@ -215,7 +214,8 @@ int fcs_local_port_set(struct fcs_state *sp, fc_wwn_t wwnn, fc_wwn_t wwpn)
+ 
+ 	WARN_ON(!sp->fs_inner_port);
+ 	WARN_ON(sp->fs_local_port);
+-	lp = fc_local_port_create(sp->fs_vf, sp->fs_inner_port, wwpn, wwnn,
++	lp = fc_local_port_create(sp->fs_vf, sp->fs_args.dev,
++				  sp->fs_inner_port, wwpn, wwnn,
+ 				  sp->fs_args.fca_e_d_tov,
+ 				  sp->fs_args.fca_plogi_retries);
+ 	if (!lp)
+@@ -426,7 +426,12 @@ struct fc_sess *fcs_sess_get(struct fcs_state *sp, struct fc_remote_port *rp)
+ 	return sess;
+ }
+ 
+-static void fcs_port_event(int event, void *sp_arg)
++void fcs_send_event(struct fcs_state *sp, enum fc_event event)
++{
++	sa_event_call(sp->events, event);
++}
++
++static void fcs_event(int event, void *sp_arg)
+ {
+ 	struct fcs_state *sp = sp_arg;
+ 
+diff --git a/drivers/scsi/ofc/libfc/fcs_state_impl.h b/drivers/scsi/ofc/libfc/fcs_state_impl.h
+index 9f4ecc1..d33b49c 100644
+--- a/drivers/scsi/ofc/libfc/fcs_state_impl.h
++++ b/drivers/scsi/ofc/libfc/fcs_state_impl.h
+@@ -20,6 +20,9 @@
+ #ifndef _OPENFC_FCS_STATE_IMPL_H_
+ #define _OPENFC_FCS_STATE_IMPL_H_
+ 
++#include "sa_event.h"
++#include "fc_event.h"
++
+ /*
+  * Private state structure.
+  */
+@@ -29,6 +32,7 @@ struct fcs_state {
+ 	struct fc_local_port *fs_local_port;	/* local port */
+ 	struct fc_port	*fs_inner_port;		/* port used by local port */
+ 	uint8_t		fs_disc_done;		/* discovery complete */
++	struct sa_event_list *events;		/* fcs events */
+ };
+ 
+ void fcs_ev_destroy(void);
+diff --git a/drivers/scsi/ofc/openfc/openfc_if.c b/drivers/scsi/ofc/openfc/openfc_if.c
+index 53bbfb1..20bf568 100644
+--- a/drivers/scsi/ofc/openfc/openfc_if.c
++++ b/drivers/scsi/ofc/openfc/openfc_if.c
+@@ -981,6 +981,7 @@ int openfc_register(struct fcdev *dev)
+ 		ofc_fcs_args.fca_max_xid = OPENFC_MAX_XID;
+ 
+ 	ofc_fcs_args.fca_cb_arg = (void *)openfcp;
++	ofc_fcs_args.dev = dev;
+ 	openfcp->fcs_state = fcs_create(&ofc_fcs_args);
+ 	if (openfcp->fcs_state == NULL) {
+ 		OFC_DBG("Could not create fcs_state structure");
+@@ -1018,7 +1019,7 @@ int openfc_register(struct fcdev *dev)
+ 		goto out_fcs;
+ 	}
+ 	if (dev->fd_link_status == TRANS_LINK_DOWN) {
+-		fc_port_send_event(openfcp->fcs_port, FC_EV_DOWN);
++		fcs_send_event(openfcp->fcs_state, FC_EV_DOWN);
+ 		openfcp->status &= ~OPENFC_LINK_UP;
+ 	}
+ 	if (dev->options & TRANS_O_FCS_AUTO) {
+@@ -1120,7 +1121,7 @@ void openfc_linkup(struct fcdev *dev)
+ 	struct openfc_softc *openfcp = openfc_get_softc(dev);
+ 
+ 	if (!(openfcp->status & OPENFC_LINK_UP)) {
+-		fc_port_send_event(openfcp->fcs_port, FC_EV_READY);
++		fcs_send_event(openfcp->fcs_state, FC_EV_READY);
+ 		openfcp->status |= OPENFC_LINK_UP;
+ 	}
+ }
+@@ -1136,7 +1137,7 @@ void openfc_linkdown(struct fcdev *dev)
+ 	struct fc_scsi_pkt *fsp;
+ 
+ 	if (openfcp->status & OPENFC_LINK_UP) {
+-		fc_port_send_event(openfcp->fcs_port, FC_EV_DOWN);
++		fcs_send_event(openfcp->fcs_state, FC_EV_DOWN);
+ 		openfcp->status &= ~(OPENFC_LINK_UP);
+ 		fsp = openfc_alloc_scsi_pkt(openfcp);
+ 		openfc_scsi_cleanup(fsp);
+diff --git a/drivers/scsi/ofc/openfc/openfc_ioctl.c b/drivers/scsi/ofc/openfc/openfc_ioctl.c
+index 60662d9..0b1ec62 100644
+--- a/drivers/scsi/ofc/openfc/openfc_ioctl.c
++++ b/drivers/scsi/ofc/openfc/openfc_ioctl.c
+@@ -189,14 +189,14 @@ static int openfc_ioctl(struct inode *inode, struct file *file,
+ 			port->pi_max_frame_size = FC_MAX_PAYLOAD;
+ 
+ 		port->pi_class = FC_COS_CLASS3;
+-		if (fc_port_ready(openfcp->fcs_port) == 0) {
++		if (openfcp->fcs_state == NULL)
+ 			port->pi_port_state = OFC_PSTATE_NOLINK;
+-		} else if (atomic_read(&openfcp->fcs_status) ==
+-			   OPENFC_FCS_ONLINE) {
++		else if (atomic_read(&openfcp->fcs_status) ==
++			   OPENFC_FCS_ONLINE)
+ 			port->pi_port_state = OFC_PSTATE_ONLINE;
+-		} else {
++		else
+ 			port->pi_port_state = OFC_PSTATE_OFFLINE;
+-		}
++
+ 		lp = fcs_get_local_port(openfcp->fcs_state);
+ 		fm = fc_local_port_get_fc4_map(lp);
+ 		memcpy(port->pi_fc4_support, fm, sizeof(*fm));
 
