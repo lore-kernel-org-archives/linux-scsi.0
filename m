@@ -1,99 +1,144 @@
 From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: READ_CAPACITY_16 shouldn't trust allocation
- length in cdb
-Date: Mon, 25 Feb 2008 06:16:02 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F482A67CD3@ADPE2K703.adaptec.com>
-References: <1203895523-4009-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: RE: [PATCH] [8/22] Remove random noop unchecked_isa_dma users
+Date: Mon, 25 Feb 2008 06:19:37 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F482A67CDA@ADPE2K703.adaptec.com>
+References: <200802251235.889863872@firstfloor.org>
+ <20080224233521.1EC2D1B4183@basil.firstfloor.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:41409 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754102AbYBYOQG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 09:16:06 -0500
-In-Reply-To: <1203895523-4009-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from ts.adaptec.com ([162.62.93.58]:41422 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753925AbYBYOTj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 09:19:39 -0500
+In-Reply-To: <20080224233521.1EC2D1B4183@basil.firstfloor.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "tomof@acm.org" <tomof@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andi Kleen <andi@firstfloor.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-ACK
+ACK (for ips portion, see no harm other chunks).
 
 Sincerely -- Mark Salyzyn
 
 > -----Original Message-----
-> From: fujita [mailto:tomof@acm.org] On Behalf Of FUJITA Tomonori
-> Sent: Sunday, February 24, 2008 6:25 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: tomof@acm.org; FUJITA Tomonori; Salyzyn, Mark; James Bottomley
-> Subject: [PATCH] aacraid: READ_CAPACITY_16 shouldn't trust
-> allocation length in cdb
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Andi Kleen
+> Sent: Sunday, February 24, 2008 6:35 PM
+> To: linux-scsi@vger.kernel.org; James.Bottomley@HansenPartnership.com
+> Subject: [PATCH] [8/22] Remove random noop unchecked_isa_dma users
 >
-> When aacraid spoofs READ_CAPACITY_16, it assumes that the data length
-> in the sg list is equal to allocation length in cdb. But sg can put
-> any value in scb so the driver needs to check both the data length in
-> the sg list and allocation length in cdb.
 >
-> If allocation length is larger than the response length that the
-> driver expects, it clears the data buffer in the sg list to zero but
-> it doesn't need to do. Just setting resid is fine.
+> Lots of drivers set it to 0. Remove that. Patch should be a nop.
 >
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andi Kleen <ak@suse.de>
+>
 > ---
->  drivers/scsi/aacraid/aachba.c |   22 +++++++++++-----------
->  1 files changed, 11 insertions(+), 11 deletions(-)
+>  drivers/scsi/arm/acornscsi.c |    1 -
+>  drivers/scsi/arm/cumana_1.c  |    1 -
+>  drivers/scsi/dc395x.c        |    1 -
+>  drivers/scsi/eata_pio.c      |    2 --
+>  drivers/scsi/hptiop.c        |    1 -
+>  drivers/scsi/ips.c           |    1 -
+>  drivers/scsi/mac_scsi.c      |    1 -
+>  drivers/scsi/scsi_debug.c    |    1 -
+>  8 files changed, 9 deletions(-)
 >
-> diff --git a/drivers/scsi/aacraid/aachba.c
-> b/drivers/scsi/aacraid/aachba.c
-> index c05092f..b9fc9b1 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -2047,6 +2047,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
->         {
->                 u64 capacity;
->                 char cp[13];
-> +               unsigned int alloc_len;
+> Index: linux/drivers/scsi/arm/acornscsi.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/arm/acornscsi.c
+> +++ linux/drivers/scsi/arm/acornscsi.c
+> @@ -2983,7 +2983,6 @@ static struct scsi_host_template acornsc
+>         .this_id                = 7,
+>         .sg_tablesize           = SG_ALL,
+>         .cmd_per_lun            = 2,
+> -       .unchecked_isa_dma      = 0,
+>         .use_clustering         = DISABLE_CLUSTERING,
+>         .proc_name              = "acornscsi",
+>  };
+> Index: linux/drivers/scsi/arm/cumana_1.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/arm/cumana_1.c
+> +++ linux/drivers/scsi/arm/cumana_1.c
+> @@ -222,7 +222,6 @@ static struct scsi_host_template cumanas
+>         .this_id                = 7,
+>         .sg_tablesize           = SG_ALL,
+>         .cmd_per_lun            = 2,
+> -       .unchecked_isa_dma      = 0,
+>         .use_clustering         = DISABLE_CLUSTERING,
+>         .proc_name              = "CumanaSCSI-1",
+>  };
+> Index: linux/drivers/scsi/dc395x.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/dc395x.c
+> +++ linux/drivers/scsi/dc395x.c
+> @@ -4761,7 +4761,6 @@ static struct scsi_host_template dc395x_
+>         .cmd_per_lun            = DC395x_MAX_CMD_PER_LUN,
+>         .eh_abort_handler       = dc395x_eh_abort,
+>         .eh_bus_reset_handler   = dc395x_eh_bus_reset,
+> -       .unchecked_isa_dma      = 0,
+>         .use_clustering         = DISABLE_CLUSTERING,
+>  };
 >
->                 dprintk((KERN_DEBUG "READ CAPACITY_16 command.\n"));
->                 capacity = fsa_dev_ptr[cid].size - 1;
-> @@ -2063,18 +2064,17 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
->                 cp[10] = 2;
->                 cp[11] = 0;
->                 cp[12] = 0;
-> -               aac_internal_transfer(scsicmd, cp, 0,
-> -                 min_t(size_t, scsicmd->cmnd[13], sizeof(cp)));
-> -               if (sizeof(cp) < scsicmd->cmnd[13]) {
-> -                       unsigned int len, offset = sizeof(cp);
+> Index: linux/drivers/scsi/eata_pio.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/eata_pio.c
+> +++ linux/drivers/scsi/eata_pio.c
+> @@ -815,8 +815,6 @@ static int register_pio_HBA(long base, s
+>         else
+>                 hd->primary = 1;
 >
-> -                       memset(cp, 0, offset);
-> -                       do {
-> -                               len = min_t(size_t,
-> scsicmd->cmnd[13] - offset,
-> -                                               sizeof(cp));
+> -       sh->unchecked_isa_dma = 0;      /* We can only do PIO */
 > -
-> aac_internal_transfer(scsicmd, cp, offset, len);
-> -                       } while ((offset += len) < scsicmd->cmnd[13]);
-> -               }
-> +               alloc_len = ((scsicmd->cmnd[10] << 24)
-> +                            + (scsicmd->cmnd[11] << 16)
-> +                            + (scsicmd->cmnd[12] << 8) +
-> scsicmd->cmnd[13]);
-> +
-> +               alloc_len = min_t(size_t, alloc_len, sizeof(cp));
-> +               aac_internal_transfer(scsicmd, cp, 0, alloc_len);
-> +
-> +               if (alloc_len < scsi_bufflen(scsicmd))
-> +                       scsi_set_resid(scsicmd,
-> +                                      scsi_bufflen(scsicmd)
-> - alloc_len);
+>         hd->next = NULL;        /* build a linked list of all HBAs */
+>         hd->prev = last_HBA;
+>         if (hd->prev != NULL)
+> Index: linux/drivers/scsi/hptiop.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/hptiop.c
+> +++ linux/drivers/scsi/hptiop.c
+> @@ -903,7 +903,6 @@ static struct scsi_host_template driver_
+>         .eh_device_reset_handler    = hptiop_reset,
+>         .eh_bus_reset_handler       = hptiop_reset,
+>         .info                       = hptiop_info,
+> -       .unchecked_isa_dma          = 0,
+>         .emulated                   = 0,
+>         .use_clustering             = ENABLE_CLUSTERING,
+>         .proc_name                  = driver_name,
+> Index: linux/drivers/scsi/ips.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/ips.c
+> +++ linux/drivers/scsi/ips.c
+> @@ -6842,7 +6842,6 @@ ips_register_scsi(int index)
+>         sh->sg_tablesize = sh->hostt->sg_tablesize;
+>         sh->can_queue = sh->hostt->can_queue;
+>         sh->cmd_per_lun = sh->hostt->cmd_per_lun;
+> -       sh->unchecked_isa_dma = sh->hostt->unchecked_isa_dma;
+>         sh->use_clustering = sh->hostt->use_clustering;
+>         sh->max_sectors = 128;
 >
->                 /* Do not cache partition table for arrays */
->                 scsicmd->device->removable = 1;
-> --
-> 1.5.3.7
+> Index: linux/drivers/scsi/mac_scsi.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/mac_scsi.c
+> +++ linux/drivers/scsi/mac_scsi.c
+> @@ -592,7 +592,6 @@ static struct scsi_host_template driver_
+>         .this_id                        = 7,
+>         .sg_tablesize                   = SG_ALL,
+>         .cmd_per_lun                    = CMD_PER_LUN,
+> -       .unchecked_isa_dma              = 0,
+>         .use_clustering                 = DISABLE_CLUSTERING
+>  };
 >
->
+> Index: linux/drivers/scsi/scsi_debug.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/scsi_debug.c
+> +++ linux/drivers/scsi/scsi_debug.c
+> @@ -221,7 +221,6 @@ static struct scsi_host_template sdebug_
+>         .sg_tablesize =         256,
+>         .cmd_per_lun =          16,
+>         .max_sectors =          0xffff,
+> -       .unchecked_isa_dma =    0,
+>         .use_clustering =       ENABLE_CLUSTERING,
+>         .module =               THIS_MODULE,
+>  };
