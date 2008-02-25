@@ -1,95 +1,37 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [12/22] Remove GFP_DMAs/unchecked_isa_dma checks in scsi_scan.c
-Date: Mon, 25 Feb 2008 16:11:38 +0100
-Message-ID: <20080225151138.GE16158@one.firstfloor.org>
-References: <200802251235.889863872@firstfloor.org> <20080224233525.31E991B4183@basil.firstfloor.org> <1203950818.3254.16.camel@localhost.localdomain> <20080225145850.GB16158@one.firstfloor.org> <1203951860.3254.26.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 2/2] ps3rom: Simplify fill_from_dev_buffer()
+Date: Tue, 26 Feb 2008 00:39:34 +0900
+Message-ID: <20080224235154E.tomof@acm.org>
+References: <1203895523-4009-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<Pine.LNX.4.64.0802251420270.31208@vixen.sonytel.be>
+	<Pine.LNX.4.64.0802251423470.31208@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:52490 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640AbYBYPLC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 10:11:02 -0500
-Content-Disposition: inline
-In-Reply-To: <1203951860.3254.26.camel@localhost.localdomain>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:58328 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756804AbYBYPk2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 10:40:28 -0500
+In-Reply-To: <Pine.LNX.4.64.0802251423470.31208@vixen.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+To: Geert.Uytterhoeven@sonycom.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com
 
-On Mon, Feb 25, 2008 at 07:04:20AM -0800, James Bottomley wrote:
-> On Mon, 2008-02-25 at 15:58 +0100, Andi Kleen wrote:
-> > On Mon, Feb 25, 2008 at 06:46:58AM -0800, James Bottomley wrote:
-> > > 
-> > > On Mon, 2008-02-25 at 00:35 +0100, Andi Kleen wrote:
-> > > > Should not be needed because the block layer bounces that all.
-> > > > 
-> > > > Signed-off-by: Andi Kleen <ak@suse.de>
-> > > > 
-> > > > ---
-> > > >  drivers/scsi/scsi_scan.c |    6 ++----
-> > > >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > > > 
-> > > > Index: linux/drivers/scsi/scsi_scan.c
-> > > > ===================================================================
-> > > > --- linux.orig/drivers/scsi/scsi_scan.c
-> > > > +++ linux/drivers/scsi/scsi_scan.c
-> > > > @@ -1010,8 +1010,7 @@ static int scsi_probe_and_add_lun(struct
-> > > >  	if (!sdev)
-> > > >  		goto out;
-> > > >  
-> > > > -	result = kmalloc(result_len, GFP_ATOMIC |
-> > > > -			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
-> > > > +	result = kmalloc(result_len, GFP_ATOMIC);
-> > > >  	if (!result)
-> > > >  		goto out_free_sdev;
-> > > >  
-> > > > @@ -1328,8 +1327,7 @@ static int scsi_report_lun_scan(struct s
-> > > >  	 * prevent us from finding any LUNs on this target.
-> > > >  	 */
-> > > >  	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
-> > > > -	lun_data = kmalloc(length, GFP_ATOMIC |
-> > > > -			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
-> > > > +	lun_data = kmalloc(length, GFP_ATOMIC);
-> > > >  	if (!lun_data) {
-> > > >  		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-> > > >  		goto out;
-> > > 
-> > > Andi, this can't be right.
-> > 
-> > You mean it is incorrect or just not optimal? 
+On Mon, 25 Feb 2008 14:24:31 +0100 (CET)
+Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com> wrote:
+
+> Subject: [PATCH] ps3rom: Simplify fill_from_dev_buffer()
 > 
-> It's not optimal ... but that's sufficient an objection.
-> 
-> > > 
-> > > You're removing something that's actually useful.  I'm happy to
-> > > substitute this kmalloc for kmalloc_mask on the device dma mask which
-> > > will do the same thing and so junk unchecked_isa_dma() that way (and
-> > > actually fix us up for other weird mask devices), but just using
-> > > ZONE_NORMAL is wrong because we'll then bounce all the time for
-> > > something we knew a priori how to avoid.
-> > 
-> > That would require adding a separate mask just for this to the 
-> > template. I figured the SCSI scan was not performance critical
-> > so a few more copies just for this case was an ok trade off
-> > for simpler code.
-> 
-> Why?  We already have the device; can't we just use its mask?
+> As we no longer need to calculate the data length of the whole scatterlist,
+> we can abort the loop earlier and coalesce req_len and act_len into one
+> variable, making fill_from_dev_buffer() more similar to fetch_to_dev_buffer().
 
-These ISA drivers I worked with definitely don't know 
-anything about a device in any form.
-
-Also there is the issue that 50+% of the ISA drivers actually
-don't need it even if they had a ISA device.
-
-> 
-> > You think it makes sense to optimize scsi scan?
-> 
-> It makes sense to use information we already know to optimise the path,
-
-In this case we would need to add a special new field for this
-to the SCSI template (assume unchecked_isa_dma is already gone). 
-You think that is worth it? 
-
--Andi
-
+I'll add new APIs to copy data between a sg list and a buffer soon
+after cleaning up (and fixing) some drivers on this area. I plan to
+remove fill_from_dev_buffer and fetch_to_dev_buffer in ps3rom. As you
+know, they are same functions that scsi_debug uses. There are other
+drivers that need similar functions. I expect my ps3rom patch to be
+applied to the scsi-fixes tree so I didn't change much as you did in
+this patch.
