@@ -1,59 +1,36 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDBcmds with sense info
-Date: Mon, 25 Feb 2008 14:30:19 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501F69BBB@NAMAIL1.ad.lsil.com>
-References: <1203698131.6206.22.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] [3/22] Remove unchecked_isa_dma in advansys.c
+Date: Mon, 25 Feb 2008 14:47:46 -0700
+Message-ID: <20080225214746.GA11382@parisc-linux.org>
+References: <200802251235.889863872@firstfloor.org> <20080224233516.0657F1B4183@basil.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:36823 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbYBYVaq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 16:30:46 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1203698131.6206.22.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:46984 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbYBYVsI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 16:48:08 -0500
+Content-Disposition: inline
+In-Reply-To: <20080224233516.0657F1B4183@basil.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-James,
+On Mon, Feb 25, 2008 at 12:35:16AM +0100, Andi Kleen wrote:
+> That patch is a little more complicated than the others. advansys
+> was the only ISA driver who actually passed ->cmnd to the firmware.
+> So I implemented a simple own bounce buffer scheme for this case.
+> Also did sense_buffer bouncing in the driver while I was at it;
+> which means it doesn't require the mid layer to do this anymore.
 
-Thanks for the reply.  We will resubmit the patch to rollback it to our
-original implementation.
+I have to say I really don't like this patch.  I'll look up my current
+patch queue for this driver next week -- I think I fixed this differently.
+(I must have fixed it somehow because it works on parisc, which is most
+unforgiving of drivers which do DMA without the DMA API).
 
-Regards.
-
-Bo Yang
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Friday, February 22, 2008 11:36 AM
-To: Yang, Bo
-Cc: Matthew Wilcox; linux-scsi@vger.kernel.org; akpm@osdl.org;
-linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
-Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of
-DCDBcmds with sense info
-
-
-On Fri, 2008-02-22 at 09:17 -0700, Yang, Bo wrote:
-> James,
-> 
-> What is the status for this patch?  We need to submit more patches 
-> based on the acceptance of this patch.
-
-OK, read the thread; Matthew is right.  What you propose would pretty
-much destroy compat ioctl handling within the driver.  You need a compat
-handler for MEGASAS_IOC_FW.
-
-With your current patch you'd get a failure both from a 64 bit binary
-running on x86-64 and if someone ran the x86 binary on ia64.
-
-The driver already uses the compat infrastructure, it shouldn't be too
-hard to add this in the correct manner.
-
-James
-
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
