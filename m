@@ -1,42 +1,76 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] Don't use unnecessary GFP_ATOMIC in sg.c
-Date: Mon, 25 Feb 2008 15:56:25 +0100
-Message-ID: <20080225145625.GA16158@one.firstfloor.org>
-References: <20080224233632.GA31228@basil.nowhere.org> <1203950588.3254.12.camel@localhost.localdomain>
+Subject: Re: [PATCH] [12/22] Remove GFP_DMAs/unchecked_isa_dma checks in scsi_scan.c
+Date: Mon, 25 Feb 2008 15:58:50 +0100
+Message-ID: <20080225145850.GB16158@one.firstfloor.org>
+References: <200802251235.889863872@firstfloor.org> <20080224233525.31E991B4183@basil.firstfloor.org> <1203950818.3254.16.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:55148 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:46725 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754780AbYBYOzu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 09:55:50 -0500
+	with ESMTP id S1750730AbYBYO6P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 09:58:15 -0500
 Content-Disposition: inline
-In-Reply-To: <1203950588.3254.12.camel@localhost.localdomain>
+In-Reply-To: <1203950818.3254.16.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 25, 2008 at 06:43:08AM -0800, James Bottomley wrote:
-> On Mon, 2008-02-25 at 00:36 +0100, Andi Kleen wrote:
-> > Don't use unnecessary GFP_ATOMIC in sg.c
-> > 
-> > sg.c uses GFP_ATOMIC for a lot of allocations where it isn't necessary.
-> > There are no locks hold and I don't see any other reasons why GFP_ATOMIC
-> > should be needed here. So remove them for more reliable allocations.
-> > 
-> > Depends on the earlier GFP_DMA patchkit, but only because it happens
-> > to patch the same places (no real functional dependency) 
-> > 
-> > Tested by burning a CD on a kernel with all lock/sleep/etc. debugging enabled.
+On Mon, Feb 25, 2008 at 06:46:58AM -0800, James Bottomley wrote:
 > 
-> I'm afraid this is wrong.  Those paths are used in the block layer issue
-> path.  Most of the time this path does have user context.  However, it's
-> legal to call it from tasklet context, and most error retries do this.
-> In that case, your GFP_KERNEL will have problems, so these have to be
-> GFP_ATOMIC, I'm afraid.
+> On Mon, 2008-02-25 at 00:35 +0100, Andi Kleen wrote:
+> > Should not be needed because the block layer bounces that all.
+> > 
+> > Signed-off-by: Andi Kleen <ak@suse.de>
+> > 
+> > ---
+> >  drivers/scsi/scsi_scan.c |    6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > Index: linux/drivers/scsi/scsi_scan.c
+> > ===================================================================
+> > --- linux.orig/drivers/scsi/scsi_scan.c
+> > +++ linux/drivers/scsi/scsi_scan.c
+> > @@ -1010,8 +1010,7 @@ static int scsi_probe_and_add_lun(struct
+> >  	if (!sdev)
+> >  		goto out;
+> >  
+> > -	result = kmalloc(result_len, GFP_ATOMIC |
+> > -			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
+> > +	result = kmalloc(result_len, GFP_ATOMIC);
+> >  	if (!result)
+> >  		goto out_free_sdev;
+> >  
+> > @@ -1328,8 +1327,7 @@ static int scsi_report_lun_scan(struct s
+> >  	 * prevent us from finding any LUNs on this target.
+> >  	 */
+> >  	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
+> > -	lun_data = kmalloc(length, GFP_ATOMIC |
+> > -			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
+> > +	lun_data = kmalloc(length, GFP_ATOMIC);
+> >  	if (!lun_data) {
+> >  		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+> >  		goto out;
+> 
+> Andi, this can't be right.
 
-In what path? I couldn't find one while reading the code. But I don't
-claim to understand it completely so I might have missed something.
+You mean it is incorrect or just not optimal? 
+
+> 
+> You're removing something that's actually useful.  I'm happy to
+> substitute this kmalloc for kmalloc_mask on the device dma mask which
+> will do the same thing and so junk unchecked_isa_dma() that way (and
+> actually fix us up for other weird mask devices), but just using
+> ZONE_NORMAL is wrong because we'll then bounce all the time for
+> something we knew a priori how to avoid.
+
+That would require adding a separate mask just for this to the 
+template. I figured the SCSI scan was not performance critical
+so a few more copies just for this case was an ok trade off
+for simpler code.
+
+You think it makes sense to optimize scsi scan?
 
 -Andi
+
