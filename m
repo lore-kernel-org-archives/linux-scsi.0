@@ -1,54 +1,64 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] mvsas: convert from rough draft to working driver
-Date: Mon, 25 Feb 2008 18:11:16 -0500
-Message-ID: <47C34B14.4040509@garzik.org>
-References: <20080223131527.GB7942@ubuntu.domain> <47C049C2.2010502@garzik.org> <20080224114806.GA7908@ubuntu.domain>
+From: Jeff Garzik <JGarzik@DunveganMedia.com>
+Subject: Re: [PATCH] libsas: Don't issue commands to devices that have been
+ hot-removed.
+Date: Mon, 25 Feb 2008 18:39:35 -0500
+Message-ID: <47C351B7.3080204@DunveganMedia.com>
+References: <200711301022.08001.kb@sysmikro.com.pl> <200712031709.54168.kb@sysmikro.com.pl> <20071203193652.GB7066@tree.beaverton.ibm.com> <200712032106.44176.kb@sysmikro.com.pl> <20071204223516.GA6767@tree.beaverton.ibm.com> <4755D941.2060903@garzik.org> <20071204231727.GB6767@tree.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55567 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55784 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751294AbYBYXLT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2008 18:11:19 -0500
-In-Reply-To: <20080224114806.GA7908@ubuntu.domain>
+	id S1751581AbYBYXjm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 18:39:42 -0500
+In-Reply-To: <20071204231727.GB6767@tree.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, =?UTF-8?B?S3J6eXN6dG9mIELFgmFzemtvd3Nr?= =?UTF-8?B?aQ==?= <kb@sysmikro.com.pl>, linux-scsi@vger.kernel.org, vst@vlnb.net, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Ke Wei wrote:
-> On Sat, Feb 23, 2008 at 11:28:50AM -0500, Jeff Garzik wrote:
->> Ke Wei wrote:
->>> Convert rough draft Marvell 6440 driver to a working driver.
->>> Added support for SAS and SATA devices, hotplug, wide port, and expanders.
->>> This patch is based on:
->>> branch 'mvsas' of 
->>> git.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
->> Yay!  Perfect patch:  good tech content, applyable to #mvsas, and the 
->> most important part, the driver works :)
->>
->> One minor (though important) detail:  may we assume this patch has the 
->> same Signed-off-by as previous patches?
->>
+
+(digging through old email)
+
+Darrick J. Wong wrote:
+> On Tue, Dec 04, 2007 at 05:48:33PM -0500, Jeff Garzik wrote:
 > 
-> Oah, I have no idea how to diff between the previous 5th commit and
-> current to use git-format-patch command, so I had to use git-diff to
-> create patch. As a result, I format to place my Signed-off-by when
-> sending email.
-> Jeff, Do you have a good suggestion?  Thank you for your help.
+>> As an aside, issues like this really really imply a need to move libsas 
+>> away from the old libata EH stuff (like brking did with ipr, in patches).
+> 
+> Hm... does the new libata EH handle the case of "device was
+> unplugged, don't bother trying to send any more commands"?
 
-That's just a simple mistake, so I wouldn't worry about it.  We all 
-forget such things, every now and then.
-
-If I forget to sign-off on a patch, I usually just reply to my own email 
-(publicly), providing the Signed-off-by line requested...  which is 
-precisely what you did below :)
+Yes, most certainly :)  We wouldn't have hotplug support without that...
 
 
-> Signed-off-by: Ke Wei <kewei@marvell.com>
+> In general, I agree that sas-ata should adopt the new EH.
+> Unfortunately, I believe the old way of sas-ata configuring ATA ports is
+> somehow not compatible with the new EH stuff and causes a crash during
+> the device probe with my patch to move sas-ata to the new EH.  If I
+> apply the patch that migrates sas-ata to use brking's latest ata-sas
+> configuration mechanism (the one that creates real ata_hosts), I see
+> (a) lots and lots of ATA hosts getting created (one per ATA port;
+> possibly undesirable if you've a SAS topology with a lot of SATA disks)
+> and (b) NCQ disks don't seem to work if you unplug the disk and plug
+> it back in (unless NCQ is disabled entirely).  Jeff, by any chance have
+> you tried plugging SATA devices into your SAS controllers?
 
-Thanks!
+Just tested mvsas here...
+
+
+> James Bottomley wondered if it would be easier to have sas-ata call only
+> into the parts of libata that convert SCSI commands to ATA taskfiles,
+> though I'm unsure how many wormy cans that would open.
+
+Like Brian K noted, libata-EH is heavily involved in "anything not 
+hotpath read/write", including but not limited to:  PMP, hotplug, device 
+probing, device revalidation, explicit sequencing of ATA commands during 
+initialization (critical for getting many ATA devices working)
+
+You don't want to reinvent or duplicate all those ATA device 
+initialization/revalidation quirks.
 
 	Jeff
 
