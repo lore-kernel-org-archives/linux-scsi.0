@@ -1,13 +1,15 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH 0/2] (was Re: [ofa-general] fmr pool free_list empty)
-Date: Tue, 26 Feb 2008 13:26:55 -0500
-Message-ID: <20080226182655.GD7033@osc.edu>
+Subject: [ofa-general] [PATCH 1/2] Revert "IB/fmr_pool: ib_fmr_pool_flush()
+	should flush all dirty FMRs"
+Date: Tue, 26 Feb 2008 13:27:31 -0500
+Message-ID: <20080226182731.GE7033@osc.edu>
 References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
+	<20080226182655.GD7033@osc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <general-bounces@lists.openfabrics.org>
 Content-Disposition: inline
-In-Reply-To: <ada1w70zlkf.fsf@cisco.com>
+In-Reply-To: <20080226182655.GD7033@osc.edu>
 List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
 	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
 List-Archive: <http://lists.openfabrics.org/pipermail/general>
@@ -21,47 +23,68 @@ To: Roland Dreier <rdreier@cisco.com>
 Cc: linux-kernel@vger.kernel.org, Olaf Kirch <olaf.kirch@oracle.com>, general@lists.openfabrics.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-rdreier@cisco.com wrote on Mon, 25 Feb 2008 15:02 -0800:
-> Ugh.
-[pw wrote:]
->  > Looking at the FMR dirty list unmapping code in
->  > ib_fmr_batch_release(), there is a section that pulls all the dirty
->  > entries onto a list that it will later unmap and put back on the
->  > free list.
-> 
->  > But it also plans to unmap all the free entries that have ever been
->  > remapped:
-> 
-> Yes, this came from a3cd7d90 ("IB/fmr_pool: ib_fmr_pool_flush() should
-> flush all dirty FMRs").  That solved a real problem for Olaf, because
-> otherwise dirty FMRs with not at the max map count might never get
-> invalidated.  It's not exactly an optimization but rather a
-> correctness issue, because RDS relies on killing mapping eventually.
-> 
-> On the other hand, this behavior clearly does lead to the possibility
-> of leaving the free list temporarily empty for stupid reasons.
-> 
-> I don't see a really good way to fix this at the momemnt, need to
-> meditate a little.
+This reverts commit a3cd7d9070be417a21905c997ee32d756d999b38.
 
-Adding CCs in case some iser users are not on the openfabrics list.
-Original message is here:
-http://lists.openfabrics.org/pipermail/general/2008-February/047111.html
+The original commit breaks iSER reliably, making it complain:
 
-This quoted commit is a regression for iSER.  Not sure if it causes
-problems for the other FMR user, SRP.  It went in after v2.6.24.
-Following this mail are two patches.  One to revert the change, and
-one to attempt to do Olaf's patch in such a way that it does not
-cause problems for other FMR users.
+    iser: iser_reg_page_vec:ib_fmr_pool_map_phys failed: -11
 
-I haven't tested the patches with RDS.  It apparently isn't in the
-tree yet.  In fact, there are no users of ib_flush_fmr_pool() in the
-tree, which is the only function affected by the second patch.  But
-iSER is working again in my scenario.
+The FMR cleanup thread runs ib_fmr_batch_release() as dirty
+entries build up.  This commit causes clean but used FMR
+entries also to be purged.  During that process, another thread
+can see that there are no free FMRs and fail, even though
+there should always have been enough available.
 
-As a side note, I don't remember seeing this patch on the
-openfabrics mailing list.  Perhaps I missed it.  Sometimes these
-sorts of interactions can be spotted if proposed changes get wider
-attention.
+Signed-off-by: Pete Wyckoff <pw@osc.edu>
+---
+ drivers/infiniband/core/fmr_pool.c |   21 ++++++---------------
+ 1 files changed, 6 insertions(+), 15 deletions(-)
 
-		-- Pete
+diff --git a/drivers/infiniband/core/fmr_pool.c b/drivers/infiniband/core/fmr_pool.c
+index 7f00347..4044fdf 100644
+--- a/drivers/infiniband/core/fmr_pool.c
++++ b/drivers/infiniband/core/fmr_pool.c
+@@ -139,7 +139,7 @@ static inline struct ib_pool_fmr *ib_fmr_cache_lookup(struct ib_fmr_pool *pool,
+ static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
+ {
+ 	int                 ret;
+-	struct ib_pool_fmr *fmr, *next;
++	struct ib_pool_fmr *fmr;
+ 	LIST_HEAD(unmap_list);
+ 	LIST_HEAD(fmr_list);
+ 
+@@ -158,20 +158,6 @@ static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
+ #endif
+ 	}
+ 
+-	/*
+-	 * The free_list may hold FMRs that have been put there
+-	 * because they haven't reached the max_remap count.
+-	 * Invalidate their mapping as well.
+-	 */
+-	list_for_each_entry_safe(fmr, next, &pool->free_list, list) {
+-		if (fmr->remap_count == 0)
+-			continue;
+-		hlist_del_init(&fmr->cache_node);
+-		fmr->remap_count = 0;
+-		list_add_tail(&fmr->fmr->list, &fmr_list);
+-		list_move(&fmr->list, &unmap_list);
+-	}
+-
+ 	list_splice(&pool->dirty_list, &unmap_list);
+ 	INIT_LIST_HEAD(&pool->dirty_list);
+ 	pool->dirty_len = 0;
+@@ -384,6 +370,11 @@ void ib_destroy_fmr_pool(struct ib_fmr_pool *pool)
+ 
+ 	i = 0;
+ 	list_for_each_entry_safe(fmr, tmp, &pool->free_list, list) {
++		if (fmr->remap_count) {
++			INIT_LIST_HEAD(&fmr_list);
++			list_add_tail(&fmr->fmr->list, &fmr_list);
++			ib_unmap_fmr(&fmr_list);
++		}
+ 		ib_dealloc_fmr(fmr->fmr);
+ 		list_del(&fmr->list);
+ 		kfree(fmr);
+-- 
+1.5.4.1
