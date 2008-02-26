@@ -1,33 +1,68 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [3/22] Remove unchecked_isa_dma in advansys.c
-Date: Tue, 26 Feb 2008 04:44:02 +0100
-Message-ID: <20080226034402.GD21577@one.firstfloor.org>
-References: <200802251235.889863872@firstfloor.org> <20080224233516.0657F1B4183@basil.firstfloor.org> <20080225214746.GA11382@parisc-linux.org> <20080225224035.GB21577@one.firstfloor.org> <20080225225022.GD20273@parisc-linux.org>
+From: "nickcheng" <nick.cheng@areca.com.tw>
+Subject: RE: Patch added to scsi-rc-fixes-2.6:  [SCSI] arcmsr: fix messageallocation
+Date: Tue, 26 Feb 2008 12:29:13 +0800
+Message-ID: <000d01c87830$23d84b00$8800a8c0@Nick>
+References: <1203950310.3254.9.camel@localhost.localdomain>
+Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:45438 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755254AbYBZDnZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2008 22:43:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20080225225022.GD20273@parisc-linux.org>
+Received: from areca.com.tw ([220.130.178.142]:36213 "EHLO areca.com.tw"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756058AbYBZE3R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2008 23:29:17 -0500
+In-Reply-To: <1203950310.3254.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+Cc: 'Daniel Drake' <dsd@gentoo.org>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 25, 2008 at 03:50:22PM -0700, Matthew Wilcox wrote:
-> On Mon, Feb 25, 2008 at 11:40:35PM +0100, Andi Kleen wrote:
-> > > (I must have fixed it somehow because it works on parisc, which is most
-> > > unforgiving of drivers which do DMA without the DMA API).
-> > 
-> > At least on x86 the DMA API cannot do ISA bouncing.
-> 
-> You're saying that if I set a 24-bit DMA mask, and then do a
-> pci_alloc_coherent(), x86 might hand me back something that's not
-> accessible?  That would be just broken.
+James,
+Appreciate for your answer.
+One more question: do you think there are any compatibility issues on
+kmalloc/kfree pair?
+I just trace the kernel code. It looks like it would not.
+But I am not quite sure absolutely.
+May I have your comments?
+Thank you,
 
-No pci_alloc_coherent works, but pci_map_* will not.
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Monday, February 25, 2008 10:39 PM
+To: nick.cheng@areca.com.tw
+Cc: 'Daniel Drake'; linux-scsi@vger.kernel.org; 'erich'
+Subject: RE: Patch added to scsi-rc-fixes-2.6: [SCSI] arcmsr: fix
+messageallocation
 
--Andi
+On Mon, 2008-02-25 at 18:47 +0800, nickcheng wrote:
+> Sorry, maybe I did not ask distinctly enough.
+> I mean if I would like to allocate a memory space from ZONE_DMA for atomic
+> context, why can I not use kmalloc(1032, GFP_ATOMIC|GFP_DMA)?
+> In case of lack of GFP_DMA, kmalloc would grab the memory from ZONE_HIGH
+or
+> ZONE_HIGHMEM, isn't it?(I read it from the textbook of Linux Kernel
+> Development by Robert Love)
+
+Um, no that's not true at all.  GFP_DMA only allocates memory from
+ZONE_DMA and fails otherwise.  You only need memory from ZONE_DMA if you
+cannot address physical memory above 24 bits (the old ISA restriction).
+This only applies if you're a standard ISA device and you're going
+actually to DMA to the memory in question.  Neither of which applies in
+the arcmsr case, since you're only using the memory as a copy buffer
+within the kernel (it never sees an actual DMA transfer), and arcmsr
+doesn't have the ISA restrictions.
+
+> Or the basic is that you don't think it is necessary to allocate a memory
+> space from DMA area?
+> Please give me some comments.
+
+It's unnecessary because you never DMA to it, but even if you did, since
+arcmsr is a non-ISA device (with 64 bit DMA mask falling back to 32) you
+can just use ordinary kmalloc'd memory for that (provided you obey the
+coherence requirements).
+
+James
+
+
