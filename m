@@ -1,70 +1,44 @@
-From: "nickcheng" <nick.cheng@areca.com.tw>
-Subject: RE: arcmsr & areca-1660 - strange behaviour under heavy load
-Date: Tue, 26 Feb 2008 18:30:25 +0800
-Message-ID: <001701c87862$993a44c0$8800a8c0@Nick>
-References: <alpine.LRH.0.9999.0802261032440.31781@linuxbox.linuxbox.cz>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] [3/22] Remove unchecked_isa_dma in advansys.c
+Date: Tue, 26 Feb 2008 06:56:37 -0700
+Message-ID: <20080226135637.GA10837@parisc-linux.org>
+References: <200802251235.889863872@firstfloor.org> <20080224233516.0657F1B4183@basil.firstfloor.org> <20080225214746.GA11382@parisc-linux.org> <20080225224035.GB21577@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from areca.com.tw ([220.130.178.142]:40071 "EHLO areca.com.tw"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761352AbYBZKa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Feb 2008 05:30:29 -0500
-In-Reply-To: <alpine.LRH.0.9999.0802261032440.31781@linuxbox.linuxbox.cz>
+Received: from palinux.external.hp.com ([192.25.206.14]:40457 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753972AbYBZN47 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Feb 2008 08:56:59 -0500
+Content-Disposition: inline
+In-Reply-To: <20080225224035.GB21577@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Nikola Ciprich' <extmaillist@linuxbox.cz>, 'Andrew Morton' <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 'Erich Chen' <erich@areca.com.tw>, kopi@linuxbox.cz, kevin34@areca.com.tw, billion.wu@areca.com.tw
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Hi Nikola,
-As I said, we will test on our site.
-Our support team will help you to settle the issue.
-Sorry for your inconvenience,
+On Mon, Feb 25, 2008 at 11:40:35PM +0100, Andi Kleen wrote:
+> On Mon, Feb 25, 2008 at 02:47:46PM -0700, Matthew Wilcox wrote:
+> > I have to say I really don't like this patch.  I'll look up my current
+> 
+> Why do you not like it? What would you do better?
+> 
+> > patch queue for this driver next week -- I think I fixed this differently.
+> > (I must have fixed it somehow because it works on parisc, which is most
+> > unforgiving of drivers which do DMA without the DMA API).
 
------Original Message-----
-From: Nikola Ciprich [mailto:extmaillist@linuxbox.cz] 
-Sent: Tuesday, February 26, 2008 5:36 PM
-To: Andrew Morton
-Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Nick Cheng;
-Erich Chen; kopi@linuxbox.cz
-Subject: Re: arcmsr & areca-1660 - strange behaviour under heavy load
+This patch is unnecessary.  The driver does not access the cmnd field
+using DMA.  See AscPutReadyQueue where it calls:
 
-Hi
+        AscMemWordCopyPtrToLram(iop_base,
+                                q_addr + ASC_SCSIQ_CDB_BEG,
+                                (uchar *)scsiq->cdbptr, scsiq->q2.cdb_len >> 1);
 
-On Sun, 24 Feb 2008, Andrew Morton wrote:
-
-Hi Andrew,
-thanks a lot for reply, I'm attaching requested information.
-please let me know if You need more information/testing, whatever.
-I'll be glad to help.
-BR
-nik
-
->> Areca support doesn't seem to be very interested in the problem :-(
->
-> (cc's added)
->
-> Please get the machine into this state of memory exhaustion then take
-> copies of the output of the following, and send them via reply-to-all to
-> this email:
->
-> - cat /proc/meminfo
->
-> - cat /proc/slabinfo
->
-> - dmesg -c > /dev/null ; echo m > /proc/sysrq-trigger ; dmesg -c
->
-> Thanks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->
+Despite the name, it doesn't actually copy a pointer to Lram.  It copies
+the thing pointed at to Lram.  (ie it's memcpy_toio with a minor twist).
 
 -- 
-
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
