@@ -1,94 +1,88 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: [ofa-general] Re: [PATCH 1/2] Revert "IB/fmr_pool:
- ib_fmr_pool_flush() should flush all dirty FMRs"
-Date: Tue, 26 Feb 2008 11:23:01 -0800
-Message-ID: <47C46715.2090603@panasas.com>
-References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
-	<20080226182655.GD7033@osc.edu> <20080226182731.GE7033@osc.edu>
+From: Nikola Ciprich <extmaillist@linuxbox.cz>
+Subject: Re: arcmsr & areca-1660 - strange behaviour under heavy load
+Date: Tue, 26 Feb 2008 20:29:31 +0100 (CET)
+Message-ID: <alpine.LRH.0.9999.0802262018230.14724@linuxbox.linuxbox.cz>
+References: <alpine.LRH.0.9999.0802231201380.21313@linuxbox.linuxbox.cz> <20080224161034.f494fc7f.akpm@linux-foundation.org> <alpine.LRH.0.9999.0802261032440.31781@linuxbox.linuxbox.cz> <20080226094308.35db8f3f.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <general-bounces@lists.openfabrics.org>
-In-Reply-To: <20080226182731.GE7033@osc.edu>
-List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
-List-Archive: <http://lists.openfabrics.org/pipermail/general>
-List-Post: <mailto:general@lists.openfabrics.org>
-List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
-List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
-Sender: general-bounces@lists.openfabrics.org
-Errors-To: general-bounces@lists.openfabrics.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: linux-kernel@vger.kernel.org, Roland Dreier <rdreier@cisco.com>, Olaf Kirch <olaf.kirch@oracle.com>, general@lists.openfabrics.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gwu.lbox.cz ([62.245.111.132]:58820 "EHLO gwu.lbox.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754324AbYBZT3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Feb 2008 14:29:55 -0500
+In-Reply-To: <20080226094308.35db8f3f.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Nick Cheng <nick.cheng@areca.com.tw>, Erich Chen <erich@areca.com.tw>, kopi@linuxbox.cz
 
-Pete, the subject says "PATCH 1/2" but I didn't see any follow-up message
-for PATCH 2/2. Just wondering :)
+Hi Andrew,
+no, right now I have the machine in the weird state, swap is empty (3GB), 
+and so is bigger part of RAM (~100MB free), and the gcc crashes even when 
+trying to compile c program with empty main function. so it doesn't seem 
+to be problem with memory exhaustion.
+Hopefully the areca guys will be able to find out what is going on. But 
+anyways, if You'll have any other idea what should I check/try, please let 
+me know, as I have to admit that I'd really like to hunt it down myself 
+(and yes, there is some vanity on my side here :))
+thanks a lot once more
+cheers
+nik
 
-Benny
 
-On Feb. 26, 2008, 10:27 -0800, Pete Wyckoff <pw@osc.edu> wrote:
-> This reverts commit a3cd7d9070be417a21905c997ee32d756d999b38.
-> 
-> The original commit breaks iSER reliably, making it complain:
-> 
->     iser: iser_reg_page_vec:ib_fmr_pool_map_phys failed: -11
-> 
-> The FMR cleanup thread runs ib_fmr_batch_release() as dirty
-> entries build up.  This commit causes clean but used FMR
-> entries also to be purged.  During that process, another thread
-> can see that there are no free FMRs and fail, even though
-> there should always have been enough available.
-> 
-> Signed-off-by: Pete Wyckoff <pw@osc.edu>
-> ---
->  drivers/infiniband/core/fmr_pool.c |   21 ++++++---------------
->  1 files changed, 6 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/infiniband/core/fmr_pool.c b/drivers/infiniband/core/fmr_pool.c
-> index 7f00347..4044fdf 100644
-> --- a/drivers/infiniband/core/fmr_pool.c
-> +++ b/drivers/infiniband/core/fmr_pool.c
-> @@ -139,7 +139,7 @@ static inline struct ib_pool_fmr *ib_fmr_cache_lookup(struct ib_fmr_pool *pool,
->  static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
->  {
->  	int                 ret;
-> -	struct ib_pool_fmr *fmr, *next;
-> +	struct ib_pool_fmr *fmr;
->  	LIST_HEAD(unmap_list);
->  	LIST_HEAD(fmr_list);
->  
-> @@ -158,20 +158,6 @@ static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
->  #endif
->  	}
->  
-> -	/*
-> -	 * The free_list may hold FMRs that have been put there
-> -	 * because they haven't reached the max_remap count.
-> -	 * Invalidate their mapping as well.
-> -	 */
-> -	list_for_each_entry_safe(fmr, next, &pool->free_list, list) {
-> -		if (fmr->remap_count == 0)
-> -			continue;
-> -		hlist_del_init(&fmr->cache_node);
-> -		fmr->remap_count = 0;
-> -		list_add_tail(&fmr->fmr->list, &fmr_list);
-> -		list_move(&fmr->list, &unmap_list);
-> -	}
-> -
->  	list_splice(&pool->dirty_list, &unmap_list);
->  	INIT_LIST_HEAD(&pool->dirty_list);
->  	pool->dirty_len = 0;
-> @@ -384,6 +370,11 @@ void ib_destroy_fmr_pool(struct ib_fmr_pool *pool)
->  
->  	i = 0;
->  	list_for_each_entry_safe(fmr, tmp, &pool->free_list, list) {
-> +		if (fmr->remap_count) {
-> +			INIT_LIST_HEAD(&fmr_list);
-> +			list_add_tail(&fmr->fmr->list, &fmr_list);
-> +			ib_unmap_fmr(&fmr_list);
-> +		}
->  		ib_dealloc_fmr(fmr->fmr);
->  		list_del(&fmr->list);
->  		kfree(fmr);
+
+  On Tue, 26 Feb 2008, 
+Andrew Morton wrote:
+
+> On Tue, 26 Feb 2008 10:35:31 +0100 (CET) Nikola Ciprich <extmaillist@linuxbox.cz> wrote:
+>
+>> Hi
+>>
+>> On Sun, 24 Feb 2008, Andrew Morton wrote:
+>>
+>> Hi Andrew,
+>> thanks a lot for reply, I'm attaching requested information.
+>> please let me know if You need more information/testing, whatever.
+>> I'll be glad to help.
+>> BR
+>> nik
+>>
+>>>> Areca support doesn't seem to be very interested in the problem :-(
+>>>
+>>> (cc's added)
+>>>
+>>> Please get the machine into this state of memory exhaustion then take
+>>> copies of the output of the following, and send them via reply-to-all to
+>>> this email:
+>>>
+>>> - cat /proc/meminfo
+>>>
+>>> - cat /proc/slabinfo
+>>>
+>>> - dmesg -c > /dev/null ; echo m > /proc/sysrq-trigger ; dmesg -c
+>>>
+>>> Thanks.
+>
+> Alas, that all looks OK to me.
+>
+> You never get any out-of-memory messages, and no oom-killing messages?
+>
+> Possibly what is happening here is that in this low-memory condition, some
+> of the driver's internal memory-allocation attempts are failing, and the
+> driver isn't correctly handling this.  This is a rare situation which may
+> well not have been hit in anyone else's testing.
+>
+> I expect that the Areca engineers will be able to reproduce this with a
+> suitably small "mem=" kernel boot option.  If not, they could perhaps
+> investigate the kernel's fault-injection framework, which permits
+> simulation of page allocation failures.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>
+
+-- 
+
