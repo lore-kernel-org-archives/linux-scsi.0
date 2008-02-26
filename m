@@ -1,47 +1,94 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] [3/22] Remove unchecked_isa_dma in advansys.c
-Date: Tue, 26 Feb 2008 11:40:36 -0700
-Message-ID: <20080226184035.GC6029@parisc-linux.org>
-References: <200802251235.889863872@firstfloor.org> <20080224233516.0657F1B4183@basil.firstfloor.org> <20080225214746.GA11382@parisc-linux.org> <20080225224035.GB21577@one.firstfloor.org> <20080225225022.GD20273@parisc-linux.org> <20080226034402.GD21577@one.firstfloor.org> <1204039098.3254.63.camel@localhost.localdomain>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: [ofa-general] Re: [PATCH 1/2] Revert "IB/fmr_pool:
+ ib_fmr_pool_flush() should flush all dirty FMRs"
+Date: Tue, 26 Feb 2008 11:23:01 -0800
+Message-ID: <47C46715.2090603@panasas.com>
+References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
+	<20080226182655.GD7033@osc.edu> <20080226182731.GE7033@osc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33828 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbYBZSkh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Feb 2008 13:40:37 -0500
-Content-Disposition: inline
-In-Reply-To: <1204039098.3254.63.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <20080226182731.GE7033@osc.edu>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: Pete Wyckoff <pw@osc.edu>
+Cc: linux-kernel@vger.kernel.org, Roland Dreier <rdreier@cisco.com>, Olaf Kirch <olaf.kirch@oracle.com>, general@lists.openfabrics.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
 
-On Tue, Feb 26, 2008 at 07:18:18AM -0800, James Bottomley wrote:
-> On Tue, 2008-02-26 at 04:44 +0100, Andi Kleen wrote:
-> > No pci_alloc_coherent works, but pci_map_* will not.
+Pete, the subject says "PATCH 1/2" but I didn't see any follow-up message
+for PATCH 2/2. Just wondering :)
+
+Benny
+
+On Feb. 26, 2008, 10:27 -0800, Pete Wyckoff <pw@osc.edu> wrote:
+> This reverts commit a3cd7d9070be417a21905c997ee32d756d999b38.
 > 
-> Yes, it does ... dma_map is a flush/virt_to_phys on x86. so of course it
-> works.  If you mean it doesn't transform from > 24 bit phys to < 24 bit
-> phys, then yes; but that's not an API requirement; that's what bounce
-> buffering is all about, so for ISA devices we always only call dma_map
-> on < 24 bit phys addresses and it all works.
-
-Actually, tomo's patch violates that ...
-
-asc_dvc_varp->overrun_buf = kzalloc(ASC_OVERRUN_BSIZE, GFP_KERNEL);
-
-[...]
-
-asc_dvc->overrun_dma = dma_map_single(board->dev, asc_dvc->overrun_buf, ASC_OVERRUN_BSIZE, DMA_FROM_DEVICE);
-
-There's a missing check for ISA boards and GFP_DMA.
-
-Honestly, I'd rather over-allocate asc_dvc_varp->overrun_buf by 4 bytes
-and map the appropriate alignment.  Patch next week, probably.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> The original commit breaks iSER reliably, making it complain:
+> 
+>     iser: iser_reg_page_vec:ib_fmr_pool_map_phys failed: -11
+> 
+> The FMR cleanup thread runs ib_fmr_batch_release() as dirty
+> entries build up.  This commit causes clean but used FMR
+> entries also to be purged.  During that process, another thread
+> can see that there are no free FMRs and fail, even though
+> there should always have been enough available.
+> 
+> Signed-off-by: Pete Wyckoff <pw@osc.edu>
+> ---
+>  drivers/infiniband/core/fmr_pool.c |   21 ++++++---------------
+>  1 files changed, 6 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/infiniband/core/fmr_pool.c b/drivers/infiniband/core/fmr_pool.c
+> index 7f00347..4044fdf 100644
+> --- a/drivers/infiniband/core/fmr_pool.c
+> +++ b/drivers/infiniband/core/fmr_pool.c
+> @@ -139,7 +139,7 @@ static inline struct ib_pool_fmr *ib_fmr_cache_lookup(struct ib_fmr_pool *pool,
+>  static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
+>  {
+>  	int                 ret;
+> -	struct ib_pool_fmr *fmr, *next;
+> +	struct ib_pool_fmr *fmr;
+>  	LIST_HEAD(unmap_list);
+>  	LIST_HEAD(fmr_list);
+>  
+> @@ -158,20 +158,6 @@ static void ib_fmr_batch_release(struct ib_fmr_pool *pool)
+>  #endif
+>  	}
+>  
+> -	/*
+> -	 * The free_list may hold FMRs that have been put there
+> -	 * because they haven't reached the max_remap count.
+> -	 * Invalidate their mapping as well.
+> -	 */
+> -	list_for_each_entry_safe(fmr, next, &pool->free_list, list) {
+> -		if (fmr->remap_count == 0)
+> -			continue;
+> -		hlist_del_init(&fmr->cache_node);
+> -		fmr->remap_count = 0;
+> -		list_add_tail(&fmr->fmr->list, &fmr_list);
+> -		list_move(&fmr->list, &unmap_list);
+> -	}
+> -
+>  	list_splice(&pool->dirty_list, &unmap_list);
+>  	INIT_LIST_HEAD(&pool->dirty_list);
+>  	pool->dirty_len = 0;
+> @@ -384,6 +370,11 @@ void ib_destroy_fmr_pool(struct ib_fmr_pool *pool)
+>  
+>  	i = 0;
+>  	list_for_each_entry_safe(fmr, tmp, &pool->free_list, list) {
+> +		if (fmr->remap_count) {
+> +			INIT_LIST_HEAD(&fmr_list);
+> +			list_add_tail(&fmr->fmr->list, &fmr_list);
+> +			ib_unmap_fmr(&fmr_list);
+> +		}
+>  		ib_dealloc_fmr(fmr->fmr);
+>  		list_del(&fmr->list);
+>  		kfree(fmr);
