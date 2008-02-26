@@ -1,48 +1,67 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
-Date: Tue, 26 Feb 2008 18:54:19 +0100
-Message-ID: <200802261854.19980.bs@q-leap.de>
-References: <20080226174314.GA30767@skl-net.de>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: [PATCH 0/2] (was Re: [ofa-general] fmr pool free_list empty)
+Date: Tue, 26 Feb 2008 13:26:55 -0500
+Message-ID: <20080226182655.GD7033@osc.edu>
+References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:54285 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761878AbYBZRyW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Feb 2008 12:54:22 -0500
-In-Reply-To: <20080226174314.GA30767@skl-net.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <general-bounces@lists.openfabrics.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <ada1w70zlkf.fsf@cisco.com>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: Roland Dreier <rdreier@cisco.com>
+Cc: linux-kernel@vger.kernel.org, Olaf Kirch <olaf.kirch@oracle.com>, general@lists.openfabrics.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: adam radford <aradford@gmail.com>, Tony Battersby <tonyb@cybernetics.com>, Johannes =?iso-8859-15?q?W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hello Andre,
+rdreier@cisco.com wrote on Mon, 25 Feb 2008 15:02 -0800:
+> Ugh.
+[pw wrote:]
+>  > Looking at the FMR dirty list unmapping code in
+>  > ib_fmr_batch_release(), there is a section that pulls all the dirty
+>  > entries onto a list that it will later unmap and put back on the
+>  > free list.
+> 
+>  > But it also plans to unmap all the free entries that have ever been
+>  > remapped:
+> 
+> Yes, this came from a3cd7d90 ("IB/fmr_pool: ib_fmr_pool_flush() should
+> flush all dirty FMRs").  That solved a real problem for Olaf, because
+> otherwise dirty FMRs with not at the max map count might never get
+> invalidated.  It's not exactly an optimization but rather a
+> correctness issue, because RDS relies on killing mapping eventually.
+> 
+> On the other hand, this behavior clearly does lead to the possibility
+> of leaving the free list temporarily empty for stupid reasons.
+> 
+> I don't see a really good way to fix this at the momemnt, need to
+> meditate a little.
 
-On Tuesday 26 February 2008 18:43:14 Andre Noll wrote:
-> Hi
->
-> we are experiencing massive performance problems with two of our
-> Linux servers that contain 3ware controllers on a Tyan mainboard and
-> a couple of 1T disks.
->
-> During the daily cron job that uses rsync to sync a 500G file system
-> from another machine to the raid on the 3ware controller the load
-> jumps up, and the machine becomes sluggish as hell. For example, an
-> ssh login to that machine takes minutes to complete and ldap becomes
-> unreliable while the rsync job is running. Even Nagios complains
-> about the machine being down while rsync is running.
+Adding CCs in case some iser users are not on the openfabrics list.
+Original message is here:
+http://lists.openfabrics.org/pipermail/general/2008-February/047111.html
 
-do you have the write-back cache of the controller enabled for your disks? 
-When you disable this cache, the controller will also disable the disks, 
-cause a write-performance between 3 to 8MB/s per disks.
+This quoted commit is a regression for iSER.  Not sure if it causes
+problems for the other FMR user, SRP.  It went in after v2.6.24.
+Following this mail are two patches.  One to revert the change, and
+one to attempt to do Olaf's patch in such a way that it does not
+cause problems for other FMR users.
 
-Cheers,
-Bernd
+I haven't tested the patches with RDS.  It apparently isn't in the
+tree yet.  In fact, there are no users of ib_flush_fmr_pool() in the
+tree, which is the only function affected by the second patch.  But
+iSER is working again in my scenario.
 
+As a side note, I don't remember seeing this patch on the
+openfabrics mailing list.  Perhaps I missed it.  Sometimes these
+sorts of interactions can be spotted if proposed changes get wider
+attention.
 
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+		-- Pete
