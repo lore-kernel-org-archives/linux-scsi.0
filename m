@@ -1,71 +1,39 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: [ofa-general] [PATCH 2/2] ib fmr pool: flush used clean entries
-Date: Tue, 26 Feb 2008 13:27:53 -0500
-Message-ID: <20080226182753.GF7033@osc.edu>
-References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
-	<20080226182655.GD7033@osc.edu>
+From: Chris Snook <csnook@redhat.com>
+Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
+Date: Tue, 26 Feb 2008 13:33:36 -0500
+Message-ID: <47C45B80.6090907@redhat.com>
+References: <20080226174314.GA30767@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <general-bounces@lists.openfabrics.org>
-Content-Disposition: inline
-In-Reply-To: <20080226182655.GD7033@osc.edu>
-List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
-List-Archive: <http://lists.openfabrics.org/pipermail/general>
-List-Post: <mailto:general@lists.openfabrics.org>
-List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
-List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
-Sender: general-bounces@lists.openfabrics.org
-Errors-To: general-bounces@lists.openfabrics.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: linux-kernel@vger.kernel.org, Olaf Kirch <olaf.kirch@oracle.com>, general@lists.openfabrics.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:42751 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756430AbYBZSdr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Feb 2008 13:33:47 -0500
+In-Reply-To: <20080226174314.GA30767@skl-net.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: adam radford <aradford@gmail.com>, Tony Battersby <tonyb@cybernetics.com>, =?ISO-8859-1?Q?Johannes_W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Commit a3cd7d9070be417a21905c997ee32d756d999b38 (IB/fmr_pool:
-ib_fmr_pool_flush() should flush all dirty FMRs) caused a
-regression for iSER and was reverted in
-e5507736c6449b3253347eed6f8ea77a28cf688e.
+Andre Noll wrote:
+> we are experiencing massive performance problems with two of our
+> Linux servers that contain 3ware controllers on a Tyan mainboard and
+> a couple of 1T disks.
+> 
+> During the daily cron job that uses rsync to sync a 500G file system
+> from another machine to the raid on the 3ware controller the load
+> jumps up, and the machine becomes sluggish as hell. For example, an
+> ssh login to that machine takes minutes to complete and ldap becomes
+> unreliable while the rsync job is running. Even Nagios complains
+> about the machine being down while rsync is running.
 
-This change attempts to redo the original patch so that all used
-FMR entries are flushed when ib_flush_fmr_pool() is called,
-and other FMR users are not affected.  Simply move used entries
-from the clean list onto the dirty list before letting the
-cleanup thread do its job.
+You're putting your box under astronomical load.  This is generally 
+regarded as a bad idea, regardless of how well your storage controller 
+is performing.  Can you measure the single-threaded throughput (say, 
+coping one huge file, and then syncing) to give us a baseline 
+performance figure?  rsync will happily peg your box, your network, and 
+your cat if you let it.
 
-Signed-off-by: Pete Wyckoff <pw@osc.edu>
----
- drivers/infiniband/core/fmr_pool.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/infiniband/core/fmr_pool.c b/drivers/infiniband/core/fmr_pool.c
-index 4044fdf..06d502c 100644
---- a/drivers/infiniband/core/fmr_pool.c
-+++ b/drivers/infiniband/core/fmr_pool.c
-@@ -398,8 +398,23 @@ EXPORT_SYMBOL(ib_destroy_fmr_pool);
-  */
- int ib_flush_fmr_pool(struct ib_fmr_pool *pool)
- {
--	int serial = atomic_inc_return(&pool->req_ser);
-+	int serial;
-+	struct ib_pool_fmr *fmr, *next;
-+
-+	/*
-+	 * The free_list holds FMRs that may have been used
-+	 * but have not been remapped enough times to be dirty.
-+	 * Put them on the dirty list now so that the cleanup
-+	 * thread will reap them too.
-+	 */
-+	spin_lock_irq(&pool->pool_lock);
-+	list_for_each_entry_safe(fmr, next, &pool->free_list, list) {
-+		if (fmr->remap_count > 0)
-+			list_move(&fmr->list, &pool->dirty_list);
-+	}
-+	spin_unlock_irq(&pool->pool_lock);
- 
-+	serial = atomic_inc_return(&pool->req_ser);
- 	wake_up_process(pool->thread);
- 
- 	if (wait_event_interruptible(pool->force_wait,
--- 
-1.5.4.1
+	-- Chris
