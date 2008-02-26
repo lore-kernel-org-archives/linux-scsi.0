@@ -1,47 +1,63 @@
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
-Date: Wed, 27 Feb 2008 00:07:05 +0100
-Message-ID: <47C49B99.1060707@nets.rwth-aachen.de>
-References: <20080226174314.GA30767@skl-net.de>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: regression: CD burning (k3b) went broke
+Date: Tue, 26 Feb 2008 15:08:45 -0800
+Message-ID: <20080226150845.2196bc1a.akpm@linux-foundation.org>
+References: <1203583379.6244.27.camel@homer.simson.net>
+	<20080222073228.GZ23197@kernel.dk>
+	<1203752563.5225.4.camel@homer.simson.net>
+	<1203839683.17463.9.camel@homer.simson.net>
+	<1204019283.8731.11.camel@homer.simson.net>
+	<1204033003.11828.22.camel@homer.simson.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764945AbYBZXGf@vger.kernel.org>
-In-reply-to: <20080226174314.GA30767@skl-net.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: adam radford <aradford@gmail.com>, Tony Battersby <tonyb@cybernetics.com>, =?ISO-8859-15?Q?Johannes_W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:34031 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751722AbYBZXKg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Feb 2008 18:10:36 -0500
+In-Reply-To: <1204033003.11828.22.camel@homer.simson.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Galbraith <efault@gmx.de>
+Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Andre Noll schrieb:
-> Hi
+On Tue, 26 Feb 2008 14:36:43 +0100 Mike Galbraith <efault@gmx.de> wrote:
+
 > 
-> we are experiencing massive performance problems with two of our
-> Linux servers that contain 3ware controllers on a Tyan mainboard and
-> a couple of 1T disks.
+> On Tue, 2008-02-26 at 10:48 +0100, Mike Galbraith wrote:
+> > Greetings,
+> > 
+> > I straced both a good and a bad kernel (good being .git with attached
+> > revert patch applied) and filtered/diffed/merged the output.  Scroll
+> > down to "HERE" to see the problem (resid).
+> > 
+> > I'm poking around, but not having much luck.
+
+cc's added.
+
+I'm told this is part of "Tejun's DMA drain handling".
+
+> Seems the problem is data_len changes, but raw_data_len doesn't.  I've
+> not the foggiest IO-land clue, but k3b works again, so the below may
+> have some diagnostic value.
+
+So this change fixes a bug?  Can we have a recap of how it does this?
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ba21d97..7a6f784 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -871,7 +871,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  			scsi_end_bidi_request(cmd);
+>  			return;
+>  		}
+> -		req->data_len = scsi_get_resid(cmd);
+> +		req->data_len = req->raw_data_len = scsi_get_resid(cmd);
+>  	}
+>  
+>  	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
 > 
-> During the daily cron job that uses rsync to sync a 500G file system
-> from another machine to the raid on the 3ware controller the load
-> jumps up, and the machine becomes sluggish as hell. For example, an
-> ssh login to that machine takes minutes to complete and ldap becomes
-> unreliable while the rsync job is running. Even Nagios complains
-> about the machine being down while rsync is running.
 
-Could you give some numbers, please?
-
-However there are some known issues:
-
-http://forums.storagereview.net/index.php?showtopic=25923
-http://tumbleweed.org.za/2007/02/16/horrific-performance-with-3ware-raid
-
-Symptons are reasonable performance with large block ops, but really bad performance with small block ops.
-time (cp -a linux-2.6.24.2 linux-2.6.24.2b; sync)
-Gives me with some tuning 50 seconds here with a 9650SE in a 4 disk raid5 setup. (very bad, single disk will do it in <30s!!!)
-But reading and writing large files with large block sizes is usually beyond > 100 MB/s
-
-[snipped a lot]
-
-> Andre
-
-Best regards,
-Arnd
+Thanks.
