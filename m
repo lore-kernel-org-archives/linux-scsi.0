@@ -1,27 +1,31 @@
-From: Roland Dreier <rdreier@cisco.com>
+From: Olaf Kirch <olaf.kirch@oracle.com>
 Subject: Re: [ofa-general] [PATCH 2/2] ib fmr pool: flush used clean entries
-Date: Tue, 26 Feb 2008 12:09:52 -0800
-Message-ID: <adazltnwkbz.fsf@cisco.com>
-References: <20080225225330.GA3316@osc.edu> <ada1w70zlkf.fsf@cisco.com>
-	<20080226182655.GD7033@osc.edu> <20080226182753.GF7033@osc.edu>
+Date: Tue, 26 Feb 2008 22:58:25 +0100
+Message-ID: <200802262258.26536.olaf.kirch@oracle.com>
+References: <20080225225330.GA3316@osc.edu> <20080226182753.GF7033@osc.edu> <adazltnwkbz.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <general-bounces@lists.openfabrics.org>
-In-Reply-To: <20080226182753.GF7033@osc.edu> (Pete Wyckoff's message of "Tue,
-	26 Feb 2008 13:27:53 -0500")
-List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
-List-Archive: <http://lists.openfabrics.org/pipermail/general>
-List-Post: <mailto:general@lists.openfabrics.org>
-List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
-List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
-Sender: general-bounces@lists.openfabrics.org
-Errors-To: general-bounces@lists.openfabrics.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, general@lists.openfabrics.org, Olaf Kirch <olaf.kirch@oracle.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from agminet01.oracle.com ([141.146.126.228]:57309 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764580AbYBZV7N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Feb 2008 16:59:13 -0500
+In-Reply-To: <adazltnwkbz.fsf@cisco.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: general@lists.openfabrics.org
+Cc: Roland Dreier <rdreier@cisco.com>, Pete Wyckoff <pw@osc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This looks like a really nice approach to me.  Olaf?
+On Tuesday 26 February 2008 21:09, Roland Dreier wrote:
+> This looks like a really nice approach to me.  Olaf?
 
- - R.
+Yes, this looks good. I haven't had a chance to test it,
+but it looks like the right approach.
+
+Olaf
+-- 
+Olaf Kirch  |  --- o --- Nous sommes du soleil we love when we play
+okir@lst.de |    / | \   sol.dhoop.naytheet.ah kin.ir.samse.qurax
