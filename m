@@ -1,31 +1,31 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
-Date: Wed, 27 Feb 2008 12:06:08 -0800
-Message-ID: <b1bc6a000802271206l3e99afedt64d5f7cc238365d6@mail.gmail.com>
-References: <20080226174314.GA30767@skl-net.de>
-	 <47C49B99.1060707@nets.rwth-aachen.de>
-	 <20080227101154.GD30767@skl-net.de> <47C57327.6070901@cybernetics.com>
-	 <20080227170528.GB29468@skl-net.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: make use of the residue value
+Date: Wed, 27 Feb 2008 15:25:03 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0802261113260.4447-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759626AbYB0UGZ@vger.kernel.org>
-In-Reply-To: <20080227170528.GB29468@skl-net.de>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Tony Battersby <tonyb@cybernetics.com>, Arnd Hannemann <hannemann@nets.rwth-aachen.de>, =?ISO-8859-1?Q?Johannes_W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54453 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756775AbYB0UZF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 15:25:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 9:05 AM, Andre Noll <maan@systemlinux.org> wrote:
-> On 09:26, Tony Battersby wrote:
->  > > Thanks, this helped a lot. However, there does not seem to be a way
->  > > to make the system more responsive, which is really the problem we
->  > > are experiencing.
+On 20 Feb 2008, Alan Stern wrote:
 
-Andre,
+> This patch (as1036) causes the SCSI midlayer to take into account the
+> residue value provided by some low-level drivers.  There's at least
+> one situation (USB mass storage with the Bulk-only transport) where
+> the specification states that it is permissible for a device to
+> indicate some of the data was not transferred correctly merely by
+> setting the residue value, without issuing a Check Condition.
 
-Can you try turning down /sys/block/sdX/device/queue_depth to 16 and
-see if that improves your responsiveness?
+After a week, there hasn't been any feedback on this patch.  Has it
+been accepted?  Is there anything wrong with it?  Is it still on a
+"to-look-at" queue?
 
--Adam
+Alan Stern
+
