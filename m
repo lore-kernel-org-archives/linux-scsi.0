@@ -1,81 +1,66 @@
-From: "nickcheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15-80227
-Date: Wed, 27 Feb 2008 16:22:03 +0800
-Message-ID: <003501c87919$d4d6f660$8800a8c0@Nick>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
+Date: Wed, 27 Feb 2008 11:11:54 +0100
+Message-ID: <20080227101154.GD30767@skl-net.de>
+References: <20080226174314.GA30767@skl-net.de> <47C49B99.1060707@nets.rwth-aachen.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0036_01C8795C.E2FA3660"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W5WqUoFLvi1M7tJE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from areca.com.tw ([220.130.178.142]:53720 "EHLO areca.com.tw"
+Received: from systemlinux.org ([83.151.29.59]:55128 "EHLO m18s25.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754798AbYB0IWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Feb 2008 03:22:06 -0500
-In-Reply-To: 
+	id S1752590AbYB0KNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Feb 2008 05:13:37 -0500
+Content-Disposition: inline
+In-Reply-To: <47C49B99.1060707@nets.rwth-aachen.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nick.cheng@areca.com.tw, 'Andrew Morton' <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, billion.wu@areca.com.tw, 'erich' <erich@areca.com.tw>
+To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Cc: adam radford <aradford@gmail.com>, Tony Battersby <tonyb@cybernetics.com>, Johannes =?iso-8859-1?Q?W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
 
-------=_NextPart_000_0036_01C8795C.E2FA3660
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-
-Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15-80227
-From: Nick Cheng <nick.cheng@areca.com.tw>
-Description:
-*** update the driver version of arcmsr and ChangeLog.arcmsr
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
-
-------=_NextPart_000_0036_01C8795C.E2FA3660
-Content-Type: text/plain;
-	name="patch_arcmsr-1.20.00.15-80227.txt"
+--W5WqUoFLvi1M7tJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="patch_arcmsr-1.20.00.15-80227.txt"
 
-diff --git a/Documentation/scsi/ChangeLog.arcmsr =
-b/Documentation/scsi/ChangeLog.arcmsr
-index de2bcac..038a3e6 100644
---- a/Documentation/scsi/ChangeLog.arcmsr
-+++ b/Documentation/scsi/ChangeLog.arcmsr
-@@ -109,4 +109,10 @@
- **						8.replace pci_alloc_consistent()/pci_free_consistent() with =
-kmalloc()/kfree() in arcmsr_iop_message_xfer()
- **						9. fix the release of dma memory for type B in =
-arcmsr_free_ccb_pool()
- **						10.fix the arcmsr_polling_hbb_ccbdone()
-+** 1.20.00.15	02/27/2008	Erich Chen & Nick Cheng
-+**						1.arcmsr_iop_message_xfer() is called from atomic context under =
-the
-+**						queuecommand scsi_host_template handler. James Bottomley =
-pointed out
-+**						that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we =
-are in
-+**						atomic context, secondly this memory is not used for DMA.
-+**						Also removed some unneeded casts. Thanks to Daniel Drake =
-<dsd@gentoo.org>
- =
-*************************************************************************=
-*
-diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index 5778650..0393707 100644
---- a/drivers/scsi/arcmsr/arcmsr.h
-+++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -48,7 +48,7 @@ struct class_device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
- #define ARCMSR_MAX_OUTSTANDING_CMD						256
- #define ARCMSR_MAX_FREECCB_NUM							320
--#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
-2007/12/24"
-+#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
-2008/02/27"
- #define ARCMSR_SCSI_INITIATOR_ID						255
- #define ARCMSR_MAX_XFER_SECTORS							512
- #define ARCMSR_MAX_XFER_SECTORS_B						4096
+On 00:07, Arnd Hannemann wrote:
 
-------=_NextPart_000_0036_01C8795C.E2FA3660--
+> > During the daily cron job that uses rsync to sync a 500G file system
+> > from another machine to the raid on the 3ware controller the load
+> > jumps up, and the machine becomes sluggish as hell. For example, an
+> > ssh login to that machine takes minutes to complete and ldap becomes
+> > unreliable while the rsync job is running. Even Nagios complains
+> > about the machine being down while rsync is running.
+>=20
+> Could you give some numbers, please?
 
+What kind of numbers would you like to see?
+
+> However there are some known issues:
+>=20
+> http://forums.storagereview.net/index.php?showtopic=3D25923
+> http://tumbleweed.org.za/2007/02/16/horrific-performance-with-3ware-raid
+
+Thanks, this helped a lot. However, there does not seem to be a way
+to make the system more responsive, which is really the problem we
+are experiencing.
+
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--W5WqUoFLvi1M7tJE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFHxTdqWto1QDEAkw8RAs56AJ9ySmErHiQDjJWvw974+MK0h+4PqQCgoYDs
+pvMcr6YM34Pd6jkjIZzoJU0=
+=Ghs2
+-----END PGP SIGNATURE-----
+
+--W5WqUoFLvi1M7tJE--
