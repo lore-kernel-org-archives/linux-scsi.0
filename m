@@ -1,38 +1,88 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
-Date: Wed, 27 Feb 2008 09:26:47 -0500
-Message-ID: <47C57327.6070901@cybernetics.com>
-References: <20080226174314.GA30767@skl-net.de> <47C49B99.1060707@nets.rwth-aachen.de> <20080227101154.GD30767@skl-net.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] mvsas: Mainly add version info to run testing process.
+Date: Wed, 27 Feb 2008 08:22:37 -0800
+Message-ID: <1204129357.3470.14.camel@localhost.localdomain>
+References: <20080227125025.GA7897@ubuntu.domain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([70.169.137.4]:2645 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753985AbYB0O0w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 09:26:52 -0500
-In-Reply-To: <20080227101154.GD30767@skl-net.de>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40650 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753186AbYB0QWp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Feb 2008 11:22:45 -0500
+In-Reply-To: <20080227125025.GA7897@ubuntu.domain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Arnd Hannemann <hannemann@nets.rwth-aachen.de>, adam radford <aradford@gmail.com>, =?ISO-8859-1?Q?Johannes_W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
 
-Andre Noll wrote:
-> Thanks, this helped a lot. However, there does not seem to be a way
-> to make the system more responsive, which is really the problem we
-> are experiencing.
->
-> Andre
->   
-This is not 3ware-specific, but kernel 2.6.24 has new per-device write
-throttling that might help with the responsiveness issue:
+On Wed, 2008-02-27 at 20:50 +0800, Ke Wei wrote:
+> 1. Owing to device testing, we need the kernel can show mvsas current
+> version in the /proc system.
 
-http://kernelnewbies.org/LinuxChanges#head-92340ffcec39e7c2a09fd933243fb18eda57f1b4
-http://lwn.net/Articles/245600/
+I'm afraid proc is really deprecated now.  We have /sys for showing
+necessary information.  For an example of how to use /sys, aacraid does
+it the right way (drivers/scsi/aacraid/linit.c).  They use this for
+exposing a lot of detail about the actual device and its firmware.  The
+format of sysfs is one entry per file, rather than descriptive text.
 
-Also, check to see if the 3ware controller has a background initialize
-or verify in progress, since that will obviously slow things down until
-it is complete.
+However, for both the parameters you're trying to export, you can get
+them an alternative way.  The driver version is available from modinfo,
+which is usually what your support is looking for:
 
-Tony
+jejb@hobholes> modinfo -F version mvsas
+0.5
+
+And the sas_address is available from the phys.  Because it's possible
+for a HBA to have a different address per phy, it has to be stored this
+way:
+
+jejb@hobholes> ls /sys/class/sas_host/host0/device/*/sas_phy\:*/sas_address 
+/sys/class/sas_host/host0/device/phy-0:0/sas_phy:phy-0:0/sas_address
+/sys/class/sas_host/host0/device/phy-0:1/sas_phy:phy-0:1/sas_address
+/sys/class/sas_host/host0/device/phy-0:2/sas_phy:phy-0:2/sas_address
+/sys/class/sas_host/host0/device/phy-0:3/sas_phy:phy-0:3/sas_address
+/sys/class/sas_host/host0/device/phy-0:4/sas_phy:phy-0:4/sas_address
+/sys/class/sas_host/host0/device/phy-0:5/sas_phy:phy-0:5/sas_address
+/sys/class/sas_host/host0/device/phy-0:6/sas_phy:phy-0:6/sas_address
+/sys/class/sas_host/host0/device/phy-0:7/sas_phy:phy-0:7/sas_address
+
+(showing that the sas_address is stored under the sas_phy class in
+sysfs).  The values for this one (aic94xx) are all the same:
+
+jejb@hobholes> cat /sys/class/sas_host/host0/device/*/sas_phy\:*/sas_address 
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+0x50000d100001cae0
+
+
+> 2. Set the correct SAS address to per port.
+
+This looks interesting:
+
+>         for (i = 0; i < mvi->chip->n_phy; i++) {
+> -               /* FIXME: is this the correct dword order? */
+> -               u32 lo = *((u32 *)&mvi->sas_addr[0]);
+> -               u32 hi = *((u32 *)&mvi->sas_addr[4]);
+> +               u32 lo = swab32p((u32 *)&mvi->sas_addr[4]);
+> +               u32 hi = swab32p((u32 *)&mvi->sas_addr[0]);
+>  
+>                 mvs_detect_porttype(mvi, i);
+
+I'm assuming the swab32p is because the mvi->sas_addr array is in wire
+(big endian) format, and you need to write it out to the config
+registers as two u32 upper and lower words via mvs_write_port_cfg.  As
+long as that register set is always in pci order (little endian), I
+think this will work, but has it been tested on a big endian system,
+like PPC?
+
+James
+
 
