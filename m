@@ -1,54 +1,81 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: regression: CD burning (k3b) went broke
-Date: Wed, 27 Feb 2008 08:07:04 +0100
-Message-ID: <1204096025.1623.9.camel@homer.simson.net>
-References: <1203583379.6244.27.camel@homer.simson.net>
-	 <20080222073228.GZ23197@kernel.dk>
-	 <1203752563.5225.4.camel@homer.simson.net>
-	 <1203839683.17463.9.camel@homer.simson.net>
-	 <1204019283.8731.11.camel@homer.simson.net>
-	 <1204033003.11828.22.camel@homer.simson.net>
-	 <20080226150845.2196bc1a.akpm@linux-foundation.org>
-	 <1204079075.26640.8.camel@homer.simson.net>
-	 <1204092010.9934.31.camel@homer.simson.net>
+From: "nickcheng" <nick.cheng@areca.com.tw>
+Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15-80227
+Date: Wed, 27 Feb 2008 16:22:03 +0800
+Message-ID: <003501c87919$d4d6f660$8800a8c0@Nick>
+Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1204092010.9934.31.camel@homer.simson.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0036_01C8795C.E2FA3660"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from areca.com.tw ([220.130.178.142]:53720 "EHLO areca.com.tw"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754798AbYB0IWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Feb 2008 03:22:06 -0500
+In-Reply-To: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nick.cheng@areca.com.tw, 'Andrew Morton' <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, billion.wu@areca.com.tw, 'erich' <erich@areca.com.tw>
 
+This is a multi-part message in MIME format.
 
-On Wed, 2008-02-27 at 07:00 +0100, Mike Galbraith wrote:
+------=_NextPart_000_0036_01C8795C.E2FA3660
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 
-> (patchlet takes wing, and... goes splat?)
+Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15-80227
+From: Nick Cheng <nick.cheng@areca.com.tw>
+Description:
+*** update the driver version of arcmsr and ChangeLog.arcmsr
+Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 
-Bugger, went splat... forgot preformat for patchlet insert.  <quiltuple
-checks>
- 
-Fix CD burning regression introduced by
-6b00769fe1502b4ad97bb327ef7ac971b208bfb5.  raw_data_len must be updated
-to reflect residual data upon IO completion because it is used by
-blk_complete_sghdr_rq() to set hdr->resid which eventually becomes
-visible to userland.
+------=_NextPart_000_0036_01C8795C.E2FA3660
+Content-Type: text/plain;
+	name="patch_arcmsr-1.20.00.15-80227.txt"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="patch_arcmsr-1.20.00.15-80227.txt"
 
-Signed-off-by: Mike Galbraith <efault@gmx.de>
+diff --git a/Documentation/scsi/ChangeLog.arcmsr =
+b/Documentation/scsi/ChangeLog.arcmsr
+index de2bcac..038a3e6 100644
+--- a/Documentation/scsi/ChangeLog.arcmsr
++++ b/Documentation/scsi/ChangeLog.arcmsr
+@@ -109,4 +109,10 @@
+ **						8.replace pci_alloc_consistent()/pci_free_consistent() with =
+kmalloc()/kfree() in arcmsr_iop_message_xfer()
+ **						9. fix the release of dma memory for type B in =
+arcmsr_free_ccb_pool()
+ **						10.fix the arcmsr_polling_hbb_ccbdone()
++** 1.20.00.15	02/27/2008	Erich Chen & Nick Cheng
++**						1.arcmsr_iop_message_xfer() is called from atomic context under =
+the
++**						queuecommand scsi_host_template handler. James Bottomley =
+pointed out
++**						that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we =
+are in
++**						atomic context, secondly this memory is not used for DMA.
++**						Also removed some unneeded casts. Thanks to Daniel Drake =
+<dsd@gentoo.org>
+ =
+*************************************************************************=
+*
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index 5778650..0393707 100644
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -48,7 +48,7 @@ struct class_device_attribute;
+ /*The limit of outstanding scsi command that firmware can handle*/
+ #define ARCMSR_MAX_OUTSTANDING_CMD						256
+ #define ARCMSR_MAX_FREECCB_NUM							320
+-#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
+2007/12/24"
++#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
+2008/02/27"
+ #define ARCMSR_SCSI_INITIATOR_ID						255
+ #define ARCMSR_MAX_XFER_SECTORS							512
+ #define ARCMSR_MAX_XFER_SECTORS_B						4096
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ba21d97..7a6f784 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -871,7 +871,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			scsi_end_bidi_request(cmd);
- 			return;
- 		}
--		req->data_len = scsi_get_resid(cmd);
-+		req->data_len = req->raw_data_len = scsi_get_resid(cmd);
- 	}
- 
- 	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
-
+------=_NextPart_000_0036_01C8795C.E2FA3660--
 
