@@ -1,190 +1,75 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/3] gdth: remove gdth cooked up command accessors
-Date: Wed, 27 Feb 2008 15:31:20 -0800
-Message-ID: <47C5F2C8.6090702@panasas.com>
-References: <47C5EF80.4080600@panasas.com>
+From: peter <pbog@us.ibm.com>
+Subject: Re: Bug in aic94xx driver in 2.6.25-rc3
+Date: Wed, 27 Feb 2008 14:39:06 -0800
+Message-ID: <1204151946.7281.23.camel@gnattop>
+References: <1203987834.6909.17.camel@gnattop>
+	 <1203992592.26232.79.camel@alexis>
+Reply-To: pbog@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:54841 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbYB0Wby (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 17:31:54 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so4524705wra.23
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 14:31:53 -0800 (PST)
-In-Reply-To: <47C5EF80.4080600@panasas.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:33576 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669AbYB0WjJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 17:39:09 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1RMd6E0005853
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 17:39:06 -0500
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1RMd6Y1190330
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 15:39:06 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1RMd5HN005783
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 15:39:06 -0700
+In-Reply-To: <1203992592.26232.79.camel@alexis>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.priebe@allied-internet.ag>, Jon Chelton <jchelton@ffpglobal.com>, James Bottomley <James.Bottomley@HansenPartn>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Milter <davemilter@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, Alexis Bruemmer <alexisb@us.ibm.com>, tom_white@adaptec.com
 
 
-Last patch rendered these, to stupid status. So bye bye
+My original post was user error and not acutally a bug.  I didn't
+realize that there was another patch I need to apply to rc3 to get the
+latest scsi drivers and error handler code.  Alexis clued me in.  Now
+the error handler appears to be working properly.  I included a sample
+at the bottom of this email.  
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Tested-by: Joerg Dorchain: <joerg@dorchain.net>
-Tested-by: Stefan Priebe <s.priebe@allied-internet.ag>
-Tested-by: Jon Chelton <jchelton@ffpglobal.com>
----
- drivers/scsi/gdth.c |   73 ++++++++++-----------------------------------------
- 1 files changed, 14 insertions(+), 59 deletions(-)
+I am still seeing the disk go offline if I run i/o performance tests on
+sas disks connected to the aic94xx (sequencer version 32).  It doesn't
+happen right away.  The i/o tests will run for several hours before it
+fails.  Eventually you see the filesystem abort and then be remounted as
+read only.
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 077f972..cfce0fe 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -85,10 +85,10 @@
- 
- /* The meaning of the Scsi_Pointer members in this driver is as follows:
-  * ptr:                     Chaining
-- * this_residual:           gdth_bufflen
-- * buffer:                  gdth_sglist
-+ * this_residual:           unused
-+ * buffer:                  unused
-  * dma_handle:              unused
-- * buffers_residual:        gdth_sg_count
-+ * buffers_residual:        unused
-  * Status:                  unused
-  * Message:                 unused
-  * have_data_in:            unused
-@@ -373,47 +373,6 @@ static const struct file_operations gdth_fops = {
-     .release = gdth_close,
- };
- 
--/*
-- * gdth scsi_command access wrappers.
-- *   below 6 functions are used throughout the driver to access scsi_command's
-- *   io parameters. The reason we do not use the regular accessors from
-- *   scsi_cmnd.h is because of gdth_execute(). Since it is unrecommended for
-- *   llds to directly set scsi_cmnd's IO members. This driver will use SCp
-- *   members for IO parameters, and will copy scsi_cmnd's members to Scp
-- *   members in queuecommand. For internal commands through gdth_execute()
-- *   SCp's members will be set directly.
-- */
--static inline unsigned gdth_bufflen(struct scsi_cmnd *cmd)
--{
--	return (unsigned)cmd->SCp.this_residual;
--}
--
--static inline void gdth_set_bufflen(struct scsi_cmnd *cmd, unsigned bufflen)
--{
--	cmd->SCp.this_residual = bufflen;
--}
--
--static inline unsigned gdth_sg_count(struct scsi_cmnd *cmd)
--{
--	return (unsigned)cmd->SCp.buffers_residual;
--}
--
--static inline void gdth_set_sg_count(struct scsi_cmnd *cmd, unsigned sg_count)
--{
--	cmd->SCp.buffers_residual = sg_count;
--}
--
--static inline struct scatterlist *gdth_sglist(struct scsi_cmnd *cmd)
--{
--	return cmd->SCp.buffer;
--}
--
--static inline void gdth_set_sglist(struct scsi_cmnd *cmd,
--                                   struct scatterlist *sglist)
--{
--	cmd->SCp.buffer = sglist;
--}
--
- #include "gdth_proc.h"
- #include "gdth_proc.c"
- 
-@@ -2349,12 +2308,12 @@ static void gdth_next(gdth_ha_str *ha)
- static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-                                     char *buffer, ushort count)
- {
--    ushort cpcount,i, max_sg = gdth_sg_count(scp);
-+    ushort cpcount,i, max_sg = scsi_sg_count(scp);
-     ushort cpsum,cpnow;
-     struct scatterlist *sl;
-     char *address;
- 
--    cpcount = min_t(ushort, count, gdth_bufflen(scp));
-+    cpcount = min_t(ushort, count, scsi_bufflen(scp));
- 
-     if (cpcount) {
-         cpsum=0;
-@@ -2362,7 +2321,7 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-             unsigned long flags;
-             cpnow = (ushort)sl->length;
-             TRACE(("copy_internal() now %d sum %d count %d %d\n",
--                          cpnow, cpsum, cpcount, gdth_bufflen(scp)));
-+                          cpnow, cpsum, cpcount, scsi_bufflen(scp)));
-             if (cpsum+cpnow > cpcount) 
-                 cpnow = cpcount - cpsum;
-             cpsum += cpnow;
-@@ -2585,10 +2544,10 @@ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, ushort hdrive)
-             cmdp->u.cache.BlockCnt = blockcnt;
-         }
- 
--        if (gdth_bufflen(scp)) {
-+        if (scsi_bufflen(scp)) {
-             cmndinfo->dma_dir = (read_write == 1 ?
-                 PCI_DMA_TODEVICE : PCI_DMA_FROMDEVICE);   
--            sgcnt = pci_map_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+            sgcnt = pci_map_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                                cmndinfo->dma_dir);
-             if (mode64) {
-                 struct scatterlist *sl;
-@@ -2735,7 +2694,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw64.lun        = l;
-             cmdp->u.raw64.bus        = b;
-             cmdp->u.raw64.priority   = 0;
--            cmdp->u.raw64.sdlen      = gdth_bufflen(scp);
-+            cmdp->u.raw64.sdlen      = scsi_bufflen(scp);
-             cmdp->u.raw64.sense_len  = 16;
-             cmdp->u.raw64.sense_data = sense_paddr;
-             cmdp->u.raw64.direction  = 
-@@ -2752,7 +2711,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw.bus        = b;
-             cmdp->u.raw.priority   = 0;
-             cmdp->u.raw.link_p     = 0;
--            cmdp->u.raw.sdlen      = gdth_bufflen(scp);
-+            cmdp->u.raw.sdlen      = scsi_bufflen(scp);
-             cmdp->u.raw.sense_len  = 16;
-             cmdp->u.raw.sense_data = sense_paddr;
-             cmdp->u.raw.direction  = 
-@@ -2761,9 +2720,9 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
-             cmdp->u.raw.sg_ranz    = 0;
-         }
- 
--        if (gdth_bufflen(scp)) {
-+        if (scsi_bufflen(scp)) {
-             cmndinfo->dma_dir = PCI_DMA_BIDIRECTIONAL;
--            sgcnt = pci_map_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+            sgcnt = pci_map_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                                cmndinfo->dma_dir);
-             if (mode64) {
-                 struct scatterlist *sl;
-@@ -3383,8 +3342,8 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
-             /* retry */
-             return 2;
-         }
--        if (gdth_bufflen(scp))
--            pci_unmap_sg(ha->pdev, gdth_sglist(scp), gdth_sg_count(scp),
-+        if (scsi_bufflen(scp))
-+            pci_unmap_sg(ha->pdev, scsi_sglist(scp), scsi_sg_count(scp),
-                          cmndinfo->dma_dir);
- 
-         if (cmndinfo->sense_paddr)
-@@ -4026,10 +3985,6 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
-     gdth_update_timeout(scp, scp->timeout_per_command * 6);
-     cmndinfo->priority = DEFAULT_PRI;
- 
--    gdth_set_bufflen(scp, scsi_bufflen(scp));
--    gdth_set_sg_count(scp, scsi_sg_count(scp));
--    gdth_set_sglist(scp, scsi_sglist(scp));
--
-     return __gdth_queuecommand(ha, scp, cmndinfo);
- }
- 
--- 
-1.5.3.3
+Peter Bogdanovic
+IBM
+
+
+
+
+sas: command 0xffff810142569200, task 0xffff81022ad27980, timed out:
+EH_NOT_HANDLED^M
+sas: Enter sas_scsi_recover_host^M
+sas: trying to find task 0xffff81022ad27980^M
+sas: sas_scsi_find_task: aborting task 0xffff81022ad27980^M
+aic94xx: tmf tasklet complete^M
+aic94xx: tmf resp tasklet^M
+aic94xx: tmf came back^M
+aic94xx: task not done, clearing nexus^M
+aic94xx: asd_clear_nexus_tag: PRE^M
+aic94xx: asd_clear_nexus_tag: POST^M
+aic94xx: asd_clear_nexus_tag: clear nexus posted, waiting...^M
+aic94xx: task 0xffff81022ad27980 done with opcode 0x23 resp 0x0 stat
+0x8d but aborted by upper layer!^M
+aic94xx: asd_clear_nexus_tasklet_complete: here^M
+aic94xx: asd_clear_nexus_tasklet_complete: opcode: 0x0^M
+aic94xx: came back from clear nexus^M
+aic94xx: task 0xffff81022ad27980 aborted, res: 0x0^M
+sas: sas_scsi_find_task: task 0xffff81022ad27980 is done^M
+sas: sas_eh_handle_sas_errors: task 0xffff81022ad27980 is done^M
+sd 0:0:3:0: [sdd] Result: hostbyte=DID_ABORT
+driverbyte=DRIVER_OK,SUGGEST_OK^M
+end_request: I/O error, dev sdd, sector 27106623^M
+sas: --- Exit sas_scsi_recover_host^M
+
 
