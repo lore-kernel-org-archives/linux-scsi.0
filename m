@@ -1,41 +1,33 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make scsi_end_bidi_request() static
-Date: Wed, 27 Feb 2008 23:20:13 +0200
-Message-ID: <20080227212013.GG29269@cs181133002.pp.htv.fi>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: gdth: resend missing patches for 2.6.24 stable
+Date: Wed, 27 Feb 2008 15:17:20 -0800
+Message-ID: <47C5EF80.4080600@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:41737 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757392AbYB0VVY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Feb 2008 16:21:24 -0500
-Content-Disposition: inline
+Received: from el-out-1112.google.com ([209.85.162.182]:30920 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762152AbYB0WSK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 17:18:10 -0500
+Received: by el-out-1112.google.com with SMTP id v27so2687049ele.23
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 14:18:09 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.priebe@allied-internet.ag>, Jon Chelton <jchelton@ffpglobal.com>, James Bottomley <James.Bottomley@HansenPartn>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Milter <davemilter@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch makes the needlessly global scsi_end_bidi_request() static.
+Resending bugfix patches for gdth driver
+they have all been tested and are necessary for
+normal gdth operation.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+The patches are for and based on Linux-2.6.24. here is the list of patches:
+   [PATCH 3/5] gdth: bugfix for the at-exit problems
+   [PATCH 4/5] gdth: fix to internal commands execution
+   [PATCH 5/5] gdth: remove gdth cooked up command accessors
 
----
+Thanks in advance
+Boaz
 
-This patch has been sent on:
-- 13 Feb 2008
 
-48e50a33ee11afb02eadc790ae2d9542b0805608 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b12fb31..148c8b0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -785,7 +785,7 @@ EXPORT_SYMBOL(scsi_release_buffers);
-  * in req->data_len and req->next_rq->data_len. The upper-layer driver can
-  * decide what to do with this information.
-  */
--void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-+static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
- {
- 	struct request *req = cmd->request;
- 	unsigned int dlen = req->data_len;
 
