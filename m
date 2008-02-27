@@ -1,18 +1,18 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/3] gdth: bugfix for the at-exit problems
-Date: Wed, 27 Feb 2008 15:27:16 -0800
-Message-ID: <47C5F1D4.1090804@panasas.com>
+Subject: [PATCH 2/3] gdth: fix to internal commands execution
+Date: Wed, 27 Feb 2008 15:29:15 -0800
+Message-ID: <47C5F24B.7020005@panasas.com>
 References: <47C5EF80.4080600@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.181]:48911 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761923AbYB0W1x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 17:27:53 -0500
-Received: by el-out-1112.google.com with SMTP id v27so2691919ele.23
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 14:27:52 -0800 (PST)
+Received: from wf-out-1314.google.com ([209.85.200.170]:63684 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbYB0W3s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 17:29:48 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so2558804wff.4
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 14:29:47 -0800 (PST)
 In-Reply-To: <47C5EF80.4080600@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,172 +20,174 @@ To: Tobias Oetiker <tobi@oetiker.ch>, allied internet ag- Stefan Priebe <s.prieb
 Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Milter <davemilter@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-gdth_exit would first remove all cards then stop the timer
-and would not sync with the timer function. This caused a crash
-in gdth_timer() when module was unloaded.
-So del_timer_sync the timer before we delete the cards.
+The recent patch named:
+  [SCSI] gdth: !use_sg cleanup and use of scsi accessors
 
-also the reboot notifier function would crash. So clean
-that up and fix the crashes.
+has done a bad job in handling internal commands issued by gdth_execute().
+
+Internal commands are issued with device gdth_cmd_str ready made directly
+to the card, without any mapping or translations of scsi commands. So here
+I added a gdth_cmd_str pointer to the gdth_cmndinfo private structure which
+is then copied directly to host.
+
+following this patch is a cleanup that removes the home cooked accessors
+and reverts them to regular scsi_cmnd accessors. Since they are not used
+anymore. After review maybe the 2 patches should be squashed together.
+
+FIXME: There is still a problem with gdth_get_info(). as reported there
+   is a WARN_ON trigerd in dma_free_coherent() when doing:
+   $ cat /proc/sys/gdth/0
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Tested-by: Joerg Dorchain: <joerg@dorchain.net>
 Tested-by: Stefan Priebe <s.priebe@allied-internet.ag>
 Tested-by: Jon Chelton <jchelton@ffpglobal.com>
 ---
- drivers/scsi/gdth.c |   82 +++++++++++++++++---------------------------------
- 1 files changed, 28 insertions(+), 54 deletions(-)
+ drivers/scsi/gdth.c |   30 ++++++++++++------------------
+ drivers/scsi/gdth.h |    1 +
+ 2 files changed, 13 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 4959037..0979553 100644
+index 0979553..077f972 100644
 --- a/drivers/scsi/gdth.c
 +++ b/drivers/scsi/gdth.c
-@@ -183,7 +183,6 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-                       unsigned int cmd, unsigned long arg);
+@@ -160,7 +160,7 @@ static void gdth_readapp_event(gdth_ha_str *ha, unchar application,
+ static void gdth_clear_events(void);
  
- static void gdth_flush(gdth_ha_str *ha);
--static int gdth_halt(struct notifier_block *nb, ulong event, void *buf);
- static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *));
- static int __gdth_queuecommand(gdth_ha_str *ha, struct scsi_cmnd *scp,
- 				struct gdth_cmndinfo *cmndinfo);
-@@ -418,12 +417,6 @@ static inline void gdth_set_sglist(struct scsi_cmnd *cmd,
- #include "gdth_proc.h"
- #include "gdth_proc.c"
+ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
+-                                    char *buffer, ushort count, int to_buffer);
++                                    char *buffer, ushort count);
+ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp);
+ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, ushort hdrive);
  
--/* notifier block to get a notify on system shutdown/halt/reboot */
--static struct notifier_block gdth_notifier = {
--    gdth_halt, NULL, 0
--};
--static int notifier_disabled = 0;
--
- static gdth_ha_str *gdth_find_ha(int hanum)
- {
- 	gdth_ha_str *ha;
-@@ -3796,6 +3789,8 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
- 
-+    BUG_ON(list_empty(&gdth_instances));
-+
-     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-     spin_lock_irqsave(&ha->smp_lock, flags);
- 
-@@ -4671,45 +4666,6 @@ static void gdth_flush(gdth_ha_str *ha)
-     }
- }
- 
--/* shutdown routine */
--static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
--{
--    gdth_ha_str *ha;
--#ifndef __alpha__
--    gdth_cmd_str    gdtcmd;
--    char            cmnd[MAX_COMMAND_SIZE];   
--#endif
--
--    if (notifier_disabled)
--        return NOTIFY_OK;
--
--    TRACE2(("gdth_halt() event %d\n",(int)event));
--    if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
--        return NOTIFY_DONE;
--
--    notifier_disabled = 1;
--    printk("GDT-HA: Flushing all host drives .. ");
--    list_for_each_entry(ha, &gdth_instances, list) {
--        gdth_flush(ha);
--
--#ifndef __alpha__
--        /* controller reset */
--        memset(cmnd, 0xff, MAX_COMMAND_SIZE);
--        gdtcmd.BoardNode = LOCALBOARD;
--        gdtcmd.Service = CACHESERVICE;
--        gdtcmd.OpCode = GDT_RESET;
--        TRACE2(("gdth_halt(): reset controller %d\n", ha->hanum));
--        gdth_execute(ha->shost, &gdtcmd, cmnd, 10, NULL);
--#endif
--    }
--    printk("Done.\n");
--
--#ifdef GDTH_STATISTICS
--    del_timer(&gdth_timer);
--#endif
--    return NOTIFY_OK;
--}
--
- /* configure lun */
- static int gdth_slave_configure(struct scsi_device *sdev)
- {
-@@ -5144,13 +5100,13 @@ static void gdth_remove_one(gdth_ha_str *ha)
- 
- 	scsi_remove_host(shp);
- 
-+	gdth_flush(ha);
-+
- 	if (ha->sdev) {
- 		scsi_free_host_dev(ha->sdev);
- 		ha->sdev = NULL;
+@@ -439,8 +439,8 @@ static struct gdth_cmndinfo *gdth_get_cmndinfo(gdth_ha_str *ha)
+ 	for (i=0; i<GDTH_MAXCMDS; ++i) {
+ 		if (ha->cmndinfo[i].index == 0) {
+ 			priv = &ha->cmndinfo[i];
+-			priv->index = i+1;
+ 			memset(priv, 0, sizeof(*priv));
++			priv->index = i+1;
+ 			break;
+ 		}
  	}
+@@ -487,7 +487,6 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+     gdth_ha_str *ha = shost_priv(sdev->host);
+     Scsi_Cmnd *scp;
+     struct gdth_cmndinfo cmndinfo;
+-    struct scatterlist one_sg;
+     DECLARE_COMPLETION_ONSTACK(wait);
+     int rval;
  
--	gdth_flush(ha);
--
- 	if (shp->irq)
- 		free_irq(shp->irq,ha);
+@@ -501,13 +500,10 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+     /* use request field to save the ptr. to completion struct. */
+     scp->request = (struct request *)&wait;
+     scp->timeout_per_command = timeout*HZ;
+-    sg_init_one(&one_sg, gdtcmd, sizeof(*gdtcmd));
+-    gdth_set_sglist(scp, &one_sg);
+-    gdth_set_sg_count(scp, 1);
+-    gdth_set_bufflen(scp, sizeof(*gdtcmd));
+     scp->cmd_len = 12;
+     memcpy(scp->cmnd, cmnd, 12);
+     cmndinfo.priority = IOCTL_PRI;
++    cmndinfo.internal_cmd_str = gdtcmd;
+     cmndinfo.internal_command = 1;
  
-@@ -5176,6 +5132,24 @@ static void gdth_remove_one(gdth_ha_str *ha)
- 	scsi_host_put(shp);
- }
- 
-+static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
-+{
-+	gdth_ha_str *ha;
-+
-+	TRACE2(("gdth_halt() event %d\n", (int)event));
-+	if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
-+		return NOTIFY_DONE;
-+
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		gdth_flush(ha);
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block gdth_notifier = {
-+    gdth_halt, NULL, 0
-+};
-+
- static int __init gdth_init(void)
+     TRACE(("__gdth_execute() cmd 0x%x\n", scp->cmnd[0]));
+@@ -2351,7 +2347,7 @@ static void gdth_next(gdth_ha_str *ha)
+  * buffers, kmap_atomic() as needed.
+  */
+ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
+-                                    char *buffer, ushort count, int to_buffer)
++                                    char *buffer, ushort count)
  {
- 	if (disable) {
-@@ -5238,7 +5212,6 @@ static int __init gdth_init(void)
- 	add_timer(&gdth_timer);
- #endif
- 	major = register_chrdev(0,"gdth", &gdth_fops);
--	notifier_disabled = 0;
- 	register_reboot_notifier(&gdth_notifier);
- 	gdth_polling = FALSE;
- 	return 0;
-@@ -5248,14 +5221,15 @@ static void __exit gdth_exit(void)
+     ushort cpcount,i, max_sg = gdth_sg_count(scp);
+     ushort cpsum,cpnow;
+@@ -2377,10 +2373,7 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
+             }
+             local_irq_save(flags);
+             address = kmap_atomic(sg_page(sl), KM_BIO_SRC_IRQ) + sl->offset;
+-            if (to_buffer)
+-                memcpy(buffer, address, cpnow);
+-            else
+-                memcpy(address, buffer, cpnow);
++            memcpy(address, buffer, cpnow);
+             flush_dcache_page(sg_page(sl));
+             kunmap_atomic(address, KM_BIO_SRC_IRQ);
+             local_irq_restore(flags);
+@@ -2434,7 +2427,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+         strcpy(inq.vendor,ha->oem_name);
+         sprintf(inq.product,"Host Drive  #%02d",t);
+         strcpy(inq.revision,"   ");
+-        gdth_copy_internal_data(ha, scp, (char*)&inq, sizeof(gdth_inq_data), 0);
++        gdth_copy_internal_data(ha, scp, (char*)&inq, sizeof(gdth_inq_data));
+         break;
+ 
+       case REQUEST_SENSE:
+@@ -2444,7 +2437,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+         sd.key       = NO_SENSE;
+         sd.info      = 0;
+         sd.add_length= 0;
+-        gdth_copy_internal_data(ha, scp, (char*)&sd, sizeof(gdth_sense_data), 0);
++        gdth_copy_internal_data(ha, scp, (char*)&sd, sizeof(gdth_sense_data));
+         break;
+ 
+       case MODE_SENSE:
+@@ -2456,7 +2449,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+         mpd.bd.block_length[0] = (SECTOR_SIZE & 0x00ff0000) >> 16;
+         mpd.bd.block_length[1] = (SECTOR_SIZE & 0x0000ff00) >> 8;
+         mpd.bd.block_length[2] = (SECTOR_SIZE & 0x000000ff);
+-        gdth_copy_internal_data(ha, scp, (char*)&mpd, sizeof(gdth_modep_data), 0);
++        gdth_copy_internal_data(ha, scp, (char*)&mpd, sizeof(gdth_modep_data));
+         break;
+ 
+       case READ_CAPACITY:
+@@ -2466,7 +2459,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+         else
+             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
+         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
+-        gdth_copy_internal_data(ha, scp, (char*)&rdc, sizeof(gdth_rdcap_data), 0);
++        gdth_copy_internal_data(ha, scp, (char*)&rdc, sizeof(gdth_rdcap_data));
+         break;
+ 
+       case SERVICE_ACTION_IN:
+@@ -2478,7 +2471,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+             rdc16.last_block_no = cpu_to_be64(ha->hdr[t].size-1);
+             rdc16.block_length  = cpu_to_be32(SECTOR_SIZE);
+             gdth_copy_internal_data(ha, scp, (char*)&rdc16,
+-                                                 sizeof(gdth_rdcap16_data), 0);
++                                                 sizeof(gdth_rdcap16_data));
+         } else { 
+             scp->result = DID_ABORT << 16;
+         }
+@@ -2848,6 +2841,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
+ static int gdth_special_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
  {
- 	gdth_ha_str *ha;
+     register gdth_cmd_str *cmdp;
++    struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+     int cmd_index;
  
--	list_for_each_entry(ha, &gdth_instances, list)
--		gdth_remove_one(ha);
-+	unregister_chrdev(major, "gdth");
-+	unregister_reboot_notifier(&gdth_notifier);
+     cmdp= ha->pccb;
+@@ -2856,7 +2850,7 @@ static int gdth_special_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+     if (ha->type==GDT_EISA && ha->cmd_cnt>0) 
+         return 0;
  
- #ifdef GDTH_STATISTICS
--	del_timer(&gdth_timer);
-+	del_timer_sync(&gdth_timer);
- #endif
--	unregister_chrdev(major,"gdth");
--	unregister_reboot_notifier(&gdth_notifier);
-+
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		gdth_remove_one(ha);
- }
+-    gdth_copy_internal_data(ha, scp, (char *)cmdp, sizeof(gdth_cmd_str), 1);
++    *cmdp = *cmndinfo->internal_cmd_str;
+     cmdp->RequestBuffer = scp;
  
- module_init(gdth_init);
+     /* search free command index */
+diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
+index 1434c6b..26e4e92 100644
+--- a/drivers/scsi/gdth.h
++++ b/drivers/scsi/gdth.h
+@@ -915,6 +915,7 @@ typedef struct {
+     struct gdth_cmndinfo {                      /* per-command private info */
+         int index;
+         int internal_command;                   /* don't call scsi_done */
++        gdth_cmd_str *internal_cmd_str;         /* crier for internal messages*/
+         dma_addr_t sense_paddr;                 /* sense dma-addr */
+         unchar priority;
+         int timeout;
 -- 
 1.5.3.3
 
