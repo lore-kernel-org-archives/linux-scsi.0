@@ -1,90 +1,104 @@
-From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-Subject: [PATCH] The md RAID10 resync thread could cause a md RAID10 array
- deadlock
-Date: Thu, 28 Feb 2008 11:55:15 +0900
-Message-ID: <47C62293.9010904@ce.jp.nec.com>
+From: "Ke Wei" <kewei.mv@gmail.com>
+Subject: Re: [PATCH] mvsas: Mainly add version info to run testing process.
+Date: Thu, 28 Feb 2008 11:16:26 +0800
+Message-ID: <6b2481670802271916y62aa0588w81de83c08c9f128c@mail.gmail.com>
+References: <20080227125025.GA7897@ubuntu.domain>
+	 <1204129357.3470.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:63879 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbYB1CyI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 21:54:08 -0500
+Received: from po-out-1718.google.com ([72.14.252.155]:57407 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbYB1DQ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 22:16:29 -0500
+Received: by po-out-1718.google.com with SMTP id b23so4863752poe.1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 19:16:26 -0800 (PST)
+In-Reply-To: <1204129357.3470.14.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
 
-This message describes another issue about md RAID10 found by
-testing the 2.6.24 md RAID10 using new scsi fault injection framework.
+On Thu, Feb 28, 2008 at 12:22 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Wed, 2008-02-27 at 20:50 +0800, Ke Wei wrote:
+> > 1. Owing to device testing, we need the kernel can show mvsas current
+> > version in the /proc system.
+>
+> I'm afraid proc is really deprecated now.  We have /sys for showing
+> necessary information.  For an example of how to use /sys, aacraid does
+> it the right way (drivers/scsi/aacraid/linit.c).  They use this for
+> exposing a lot of detail about the actual device and its firmware.  The
+> format of sysfs is one entry per file, rather than descriptive text.
+>
+> However, for both the parameters you're trying to export, you can get
+> them an alternative way.  The driver version is available from modinfo,
+> which is usually what your support is looking for:
+>
+> jejb@hobholes> modinfo -F version mvsas
+> 0.5
+>
+> And the sas_address is available from the phys.  Because it's possible
+> for a HBA to have a different address per phy, it has to be stored this
+> way:
+>
+> jejb@hobholes> ls /sys/class/sas_host/host0/device/*/sas_phy\:*/sas_address
+> /sys/class/sas_host/host0/device/phy-0:0/sas_phy:phy-0:0/sas_address
+> /sys/class/sas_host/host0/device/phy-0:1/sas_phy:phy-0:1/sas_address
+> /sys/class/sas_host/host0/device/phy-0:2/sas_phy:phy-0:2/sas_address
+> /sys/class/sas_host/host0/device/phy-0:3/sas_phy:phy-0:3/sas_address
+> /sys/class/sas_host/host0/device/phy-0:4/sas_phy:phy-0:4/sas_address
+> /sys/class/sas_host/host0/device/phy-0:5/sas_phy:phy-0:5/sas_address
+> /sys/class/sas_host/host0/device/phy-0:6/sas_phy:phy-0:6/sas_address
+> /sys/class/sas_host/host0/device/phy-0:7/sas_phy:phy-0:7/sas_address
+>
+> (showing that the sas_address is stored under the sas_phy class in
+> sysfs).  The values for this one (aic94xx) are all the same:
+>
+> jejb@hobholes> cat /sys/class/sas_host/host0/device/*/sas_phy\:*/sas_address
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+> 0x50000d100001cae0
+>
+Ok, I will tell our testing team how to show version in this way.
 
-Abstract:
-When a scsi error results in disabling a disk during RAID10 recovery,
-the resync threads of md RAID10 could stall.
-This case, the raid array has already been broken and it may not matter.
-But I think stall is not preferable. If it occurs, even shutdown or reboot
-will fail because of resource busy.
+>
+> > 2. Set the correct SAS address to per port.
+>
+> This looks interesting:
+>
+> >         for (i = 0; i < mvi->chip->n_phy; i++) {
+> > -               /* FIXME: is this the correct dword order? */
+> > -               u32 lo = *((u32 *)&mvi->sas_addr[0]);
+> > -               u32 hi = *((u32 *)&mvi->sas_addr[4]);
+> > +               u32 lo = swab32p((u32 *)&mvi->sas_addr[4]);
+> > +               u32 hi = swab32p((u32 *)&mvi->sas_addr[0]);
+> >
+> >                 mvs_detect_porttype(mvi, i);
+>
+> I'm assuming the swab32p is because the mvi->sas_addr array is in wire
+> (big endian) format, and you need to write it out to the config
+> registers as two u32 upper and lower words via mvs_write_port_cfg.  As
+> long as that register set is always in pci order (little endian), I
+> think this will work, but has it been tested on a big endian system,
+> like PPC?
 
-The deadlock mechanism:
-The r10bio_s structure has a "remaining" member to keep track of BIOs yet to be
-handled when recovering. The "remaining" counter is incremented when building a BIO
-in sync_request() and is decremented when finish a BIO in end_sync_write().
-
-If building a BIO fails for some reasons in sync_request(), the "remaining" should be
-decremented if it has already been incremented. I found a case where this decrement
-is forgotten. This causes a md_do_sync() deadlock because md_do_sync() waits for
-md_done_sync() called by end_sync_write(), but end_sync_write() never calls
-md_done_sync() because of the "remaining" counter mismatch.
-
-For example, this problem would be reproduced in the following case:
-
-Personalities : [raid10]
-md0 : active raid10 sdf1[4] sde1[5](F) sdd1[2] sdc1[1] sdb1[6](F)
-      3919616 blocks 64K chunks 2 near-copies [4/2] [_UU_]
-      [>....................]  recovery =  2.2% (45376/1959808) finish=0.7min speed=45376K/sec
-
-This case, sdf1 is recovering, sdb1 and sde1 are disabled.
-An additional error with detaching sdd will cause a deadlock.
-
-md0 : active raid10 sdf1[4] sde1[5](F) sdd1[6](F) sdc1[1] sdb1[7](F)
-      3919616 blocks 64K chunks 2 near-copies [4/1] [_U__]
-      [=>...................]  recovery =  5.0% (99520/1959808) finish=5.9min speed=5237K/sec
-
- 2739 ?        S<     0:17 [md0_raid10]
-28608 ?        D<     0:00 [md0_resync]
-28629 pts/1    Ss     0:00 bash
-28830 pts/1    R+     0:00 ps ax
-31819 ?        D<     0:00 [kjournald]
-
-The resync thread keeps working, but actually it is deadlocked.
-
-Patch:
-By this patch, the remaining counter will be decremented if needed.
-
---- raid10.c.org	2008-01-30 01:09:04.000000000 +0900
-+++ raid10.c	2008-02-26 16:27:22.000000000 +0900
-@@ -1805,6 +1805,9 @@ static sector_t sync_request(mddev_t *md
- 				if (j == conf->copies) {
- 					/* Cannot recover, so abort the recovery */
- 					put_buf(r10_bio);
-+  				        if (rb2) {
-+ 					    atomic_dec(&rb2->remaining);
-+                                        }
- 					r10_bio = rb2;
- 					if (!test_and_set_bit(MD_RECOVERY_ERR, &mddev->recovery))
- 						printk(KERN_INFO "raid10: %s: insufficient working devices for recovery.\n",
+Yes,  the mvi->sas_addr array is in wire big endian format. And it
+will be written to two
+little-endian 32-bit registers after converting to little endian. So I
+think this is independent
+of system architecture.
 
 
-This problem is also detected by using new scsi fault injection framework.
-I have posted a new version to sourceforge with some sample shell script
-using the framework for usability. If you are interested, please take a look at it.
 
 
 -- 
-
----------------------------------------------------------
-Kenichi TANAKA    | Open Source Software Platform Development Division
-                  | Computers Software Operations Unit, NEC Corporation
-                  | k-tanaka@ce.jp.nec.com
-
+Best Regards,
+Ke Wei
