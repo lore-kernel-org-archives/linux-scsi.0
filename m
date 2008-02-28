@@ -1,358 +1,90 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 7/7] scsi_dh: Remove hardware handler infrastructure from dm
-Date: Wed, 27 Feb 2008 17:09:12 -0800
-Message-ID: <20080228010912.5535.84087.sendpatchset@localhost.localdomain>
-References: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
+From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Subject: [PATCH] The md RAID10 resync thread could cause a md RAID10 array
+ deadlock
+Date: Thu, 28 Feb 2008 11:55:15 +0900
+Message-ID: <47C62293.9010904@ce.jp.nec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:44443 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753604AbYB1BJZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 20:09:25 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1S19Jpr004973
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 20:09:19 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1S19EDo191938
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:09:19 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1S19DV9032169
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:09:14 -0700
-In-Reply-To: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
+Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:63879 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbYB1CyI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 21:54:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, Chandra Seetharaman <sekharan@us.ibm.com>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, agk@redhat.com
+To: linux-raid@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Subject: scsi_dh: Remove hardware handler infrastructure from dm
+This message describes another issue about md RAID10 found by
+testing the 2.6.24 md RAID10 using new scsi fault injection framework.
 
-From: Chandra Seetharaman <sekharan@us.ibm.com>
+Abstract:
+When a scsi error results in disabling a disk during RAID10 recovery,
+the resync threads of md RAID10 could stall.
+This case, the raid array has already been broken and it may not matter.
+But I think stall is not preferable. If it occurs, even shutdown or reboot
+will fail because of resource busy.
 
-This patch just removes infrastructure that provide support to add
-a hardware handler to dm.
+The deadlock mechanism:
+The r10bio_s structure has a "remaining" member to keep track of BIOs yet to be
+handled when recovering. The "remaining" counter is incremented when building a BIO
+in sync_request() and is decremented when finish a BIO in end_sync_write().
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- drivers/md/Makefile        |    2 	1 +	1 -	0 !
- drivers/md/dm-hw-handler.c |  213 	0 +	213 -	0 !
- drivers/md/dm-hw-handler.h |   63 	0 +	63 -	0 !
- drivers/md/dm-mpath.h      |    1 	0 +	1 -	0 !
- 4 files changed, 1 insertion(+), 278 deletions(-)
+If building a BIO fails for some reasons in sync_request(), the "remaining" should be
+decremented if it has already been incremented. I found a case where this decrement
+is forgotten. This causes a md_do_sync() deadlock because md_do_sync() waits for
+md_done_sync() called by end_sync_write(), but end_sync_write() never calls
+md_done_sync() because of the "remaining" counter mismatch.
 
-Index: linux-2.6.24/drivers/md/dm-hw-handler.c
-===================================================================
---- linux-2.6.24.orig/drivers/md/dm-hw-handler.c
-+++ /dev/null
-@@ -1,213 +0,0 @@
--/*
-- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
-- *
-- * This file is released under the GPL.
-- *
-- * Multipath hardware handler registration.
-- */
--
--#include "dm.h"
--#include "dm-hw-handler.h"
--
--#include <linux/slab.h>
--
--struct hwh_internal {
--	struct hw_handler_type hwht;
--
--	struct list_head list;
--	long use;
--};
--
--#define hwht_to_hwhi(__hwht) container_of((__hwht), struct hwh_internal, hwht)
--
--static LIST_HEAD(_hw_handlers);
--static DECLARE_RWSEM(_hwh_lock);
--
--static struct hwh_internal *__find_hw_handler_type(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	list_for_each_entry(hwhi, &_hw_handlers, list) {
--		if (!strcmp(name, hwhi->hwht.name))
--			return hwhi;
--	}
--
--	return NULL;
--}
--
--static struct hwh_internal *get_hw_handler(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(name);
--	if (hwhi) {
--		if ((hwhi->use == 0) && !try_module_get(hwhi->hwht.module))
--			hwhi = NULL;
--		else
--			hwhi->use++;
--	}
--	up_read(&_hwh_lock);
--
--	return hwhi;
--}
--
--struct hw_handler_type *dm_get_hw_handler(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	if (!name)
--		return NULL;
--
--	hwhi = get_hw_handler(name);
--	if (!hwhi) {
--		request_module("dm-%s", name);
--		hwhi = get_hw_handler(name);
--	}
--
--	return hwhi ? &hwhi->hwht : NULL;
--}
--
--void dm_put_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	if (!hwht)
--		return;
--
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi)
--		goto out;
--
--	if (--hwhi->use == 0)
--		module_put(hwhi->hwht.module);
--
--	BUG_ON(hwhi->use < 0);
--
--      out:
--	up_read(&_hwh_lock);
--}
--
--static struct hwh_internal *_alloc_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi = kzalloc(sizeof(*hwhi), GFP_KERNEL);
--
--	if (hwhi)
--		hwhi->hwht = *hwht;
--
--	return hwhi;
--}
--
--int dm_register_hw_handler(struct hw_handler_type *hwht)
--{
--	int r = 0;
--	struct hwh_internal *hwhi = _alloc_hw_handler(hwht);
--
--	if (!hwhi)
--		return -ENOMEM;
--
--	down_write(&_hwh_lock);
--
--	if (__find_hw_handler_type(hwht->name)) {
--		kfree(hwhi);
--		r = -EEXIST;
--	} else
--		list_add(&hwhi->list, &_hw_handlers);
--
--	up_write(&_hwh_lock);
--
--	return r;
--}
--
--int dm_unregister_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	down_write(&_hwh_lock);
--
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi) {
--		up_write(&_hwh_lock);
--		return -EINVAL;
--	}
--
--	if (hwhi->use) {
--		up_write(&_hwh_lock);
--		return -ETXTBSY;
--	}
--
--	list_del(&hwhi->list);
--
--	up_write(&_hwh_lock);
--
--	kfree(hwhi);
--
--	return 0;
--}
--
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio)
--{
--#if 0
--	int sense_key, asc, ascq;
--
--	if (bio->bi_error & BIO_SENSE) {
--		/* FIXME: This is just an initial guess. */
--		/* key / asc / ascq */
--		sense_key = (bio->bi_error >> 16) & 0xff;
--		asc = (bio->bi_error >> 8) & 0xff;
--		ascq = bio->bi_error & 0xff;
--
--		switch (sense_key) {
--			/* This block as a whole comes from the device.
--			 * So no point retrying on another path. */
--		case 0x03:	/* Medium error */
--		case 0x05:	/* Illegal request */
--		case 0x07:	/* Data protect */
--		case 0x08:	/* Blank check */
--		case 0x0a:	/* copy aborted */
--		case 0x0c:	/* obsolete - no clue ;-) */
--		case 0x0d:	/* volume overflow */
--		case 0x0e:	/* data miscompare */
--		case 0x0f:	/* reserved - no idea either. */
--			return MP_ERROR_IO;
--
--			/* For these errors it's unclear whether they
--			 * come from the device or the controller.
--			 * So just lets try a different path, and if
--			 * it eventually succeeds, user-space will clear
--			 * the paths again... */
--		case 0x02:	/* Not ready */
--		case 0x04:	/* Hardware error */
--		case 0x09:	/* vendor specific */
--		case 0x0b:	/* Aborted command */
--			return MP_FAIL_PATH;
--
--		case 0x06:	/* Unit attention - might want to decode */
--			if (asc == 0x04 && ascq == 0x01)
--				/* "Unit in the process of
--				 * becoming ready" */
--				return 0;
--			return MP_FAIL_PATH;
--
--			/* FIXME: For Unit Not Ready we may want
--			 * to have a generic pg activation
--			 * feature (START_UNIT). */
--
--			/* Should these two ever end up in the
--			 * error path? I don't think so. */
--		case 0x00:	/* No sense */
--		case 0x01:	/* Recovered error */
--			return 0;
--		}
--	}
--#endif
--
--	/* We got no idea how to decode the other kinds of errors ->
--	 * assume generic error condition. */
--	return MP_FAIL_PATH;
--}
--
--EXPORT_SYMBOL_GPL(dm_register_hw_handler);
--EXPORT_SYMBOL_GPL(dm_unregister_hw_handler);
--EXPORT_SYMBOL_GPL(dm_scsi_err_handler);
-Index: linux-2.6.24/drivers/md/dm-hw-handler.h
-===================================================================
---- linux-2.6.24.orig/drivers/md/dm-hw-handler.h
-+++ /dev/null
-@@ -1,63 +0,0 @@
--/*
-- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
-- *
-- * This file is released under the GPL.
-- *
-- * Multipath hardware handler registration.
-- */
--
--#ifndef	DM_HW_HANDLER_H
--#define	DM_HW_HANDLER_H
--
--#include <linux/device-mapper.h>
--
--#include "dm-mpath.h"
--
--struct hw_handler_type;
--struct hw_handler {
--	struct hw_handler_type *type;
--	struct mapped_device *md;
--	void *context;
--};
--
--/*
-- * Constructs a hardware handler object, takes custom arguments
-- */
--/* Information about a hardware handler type */
--struct hw_handler_type {
--	char *name;
--	struct module *module;
--
--	int (*create) (struct hw_handler *handler, unsigned int argc,
--		       char **argv);
--	void (*destroy) (struct hw_handler *hwh);
--
--	void (*pg_init) (struct hw_handler *hwh, unsigned bypassed,
--			 struct dm_path *path);
--	unsigned (*error) (struct hw_handler *hwh, struct bio *bio);
--	int (*status) (struct hw_handler *hwh, status_type_t type,
--		       char *result, unsigned int maxlen);
--};
--
--/* Register a hardware handler */
--int dm_register_hw_handler(struct hw_handler_type *type);
--
--/* Unregister a hardware handler */
--int dm_unregister_hw_handler(struct hw_handler_type *type);
--
--/* Returns a registered hardware handler type */
--struct hw_handler_type *dm_get_hw_handler(const char *name);
--
--/* Releases a hardware handler  */
--void dm_put_hw_handler(struct hw_handler_type *hwht);
--
--/* Default err function */
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio);
--
--/* Error flags for err and dm_pg_init_complete */
--#define MP_FAIL_PATH 1
--#define MP_BYPASS_PG 2
--#define MP_ERROR_IO  4	/* Don't retry this I/O */
--#define MP_RETRY 8
--
--#endif
-Index: linux-2.6.24/drivers/md/Makefile
-===================================================================
---- linux-2.6.24.orig/drivers/md/Makefile
-+++ linux-2.6.24/drivers/md/Makefile
-@@ -4,7 +4,7 @@
- 
- dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-linear.o dm-stripe.o \
- 		   dm-ioctl.o dm-io.o kcopyd.o
--dm-multipath-objs := dm-hw-handler.o dm-path-selector.o dm-mpath.o
-+dm-multipath-objs := dm-path-selector.o dm-mpath.o
- dm-snapshot-objs := dm-snap.o dm-exception-store.o
- dm-mirror-objs	:= dm-log.o dm-raid1.o
- dm-rdac-objs	:= dm-mpath-rdac.o
-Index: linux-2.6.24/drivers/md/dm-mpath.h
-===================================================================
---- linux-2.6.24.orig/drivers/md/dm-mpath.h
-+++ linux-2.6.24/drivers/md/dm-mpath.h
-@@ -16,7 +16,6 @@ struct dm_path {
- 	unsigned is_active;	/* Read-only */
- 
- 	void *pscontext;	/* For path-selector use */
--	void *hwhcontext;	/* For hw-handler use */
- };
- 
- /* Callback for hwh_pg_init_fn to use when complete */
+For example, this problem would be reproduced in the following case:
+
+Personalities : [raid10]
+md0 : active raid10 sdf1[4] sde1[5](F) sdd1[2] sdc1[1] sdb1[6](F)
+      3919616 blocks 64K chunks 2 near-copies [4/2] [_UU_]
+      [>....................]  recovery =  2.2% (45376/1959808) finish=0.7min speed=45376K/sec
+
+This case, sdf1 is recovering, sdb1 and sde1 are disabled.
+An additional error with detaching sdd will cause a deadlock.
+
+md0 : active raid10 sdf1[4] sde1[5](F) sdd1[6](F) sdc1[1] sdb1[7](F)
+      3919616 blocks 64K chunks 2 near-copies [4/1] [_U__]
+      [=>...................]  recovery =  5.0% (99520/1959808) finish=5.9min speed=5237K/sec
+
+ 2739 ?        S<     0:17 [md0_raid10]
+28608 ?        D<     0:00 [md0_resync]
+28629 pts/1    Ss     0:00 bash
+28830 pts/1    R+     0:00 ps ax
+31819 ?        D<     0:00 [kjournald]
+
+The resync thread keeps working, but actually it is deadlocked.
+
+Patch:
+By this patch, the remaining counter will be decremented if needed.
+
+--- raid10.c.org	2008-01-30 01:09:04.000000000 +0900
++++ raid10.c	2008-02-26 16:27:22.000000000 +0900
+@@ -1805,6 +1805,9 @@ static sector_t sync_request(mddev_t *md
+ 				if (j == conf->copies) {
+ 					/* Cannot recover, so abort the recovery */
+ 					put_buf(r10_bio);
++  				        if (rb2) {
++ 					    atomic_dec(&rb2->remaining);
++                                        }
+ 					r10_bio = rb2;
+ 					if (!test_and_set_bit(MD_RECOVERY_ERR, &mddev->recovery))
+ 						printk(KERN_INFO "raid10: %s: insufficient working devices for recovery.\n",
+
+
+This problem is also detected by using new scsi fault injection framework.
+I have posted a new version to sourceforge with some sample shell script
+using the framework for usability. If you are interested, please take a look at it.
+
 
 -- 
 
-----------------------------------------------------------------------
-    Chandra Seetharaman               | Be careful what you choose....
-              - sekharan@us.ibm.com   |      .......you may get it.
-----------------------------------------------------------------------
+---------------------------------------------------------
+Kenichi TANAKA    | Open Source Software Platform Development Division
+                  | Computers Software Operations Unit, NEC Corporation
+                  | k-tanaka@ce.jp.nec.com
+
