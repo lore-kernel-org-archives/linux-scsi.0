@@ -1,41 +1,35 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: need help with sg ioctls
-Date: Thu, 28 Feb 2008 17:43:51 +0100
-Message-ID: <200802281743.51332.bs@q-leap.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: need help with sg ioctls
+Date: Thu, 28 Feb 2008 14:15:39 -0600
+Message-ID: <47C7166B.6090507@cs.wisc.edu>
+References: <200802281743.51332.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:41222 "EHLO mail.q-leap.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42811 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756636AbYB1Qn4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Feb 2008 11:43:56 -0500
-Received: from lanczos (lanczos [192.168.55.86])
-	by mail.q-leap.de (Postfix) with ESMTP id EE3B079AF
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Feb 2008 17:43:54 +0100 (CET)
-Content-Disposition: inline
+	id S1765746AbYB1UPs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Feb 2008 15:15:48 -0500
+In-Reply-To: <200802281743.51332.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+Bernd Schubert wrote:
+> Hello,
+> 
+> for some reasons the kernel.org qla4xxx driver doesn't work for us. Version 
+> 5.01.00.08 seems to work a bit better, but all default sg-ioctl's are not 
+> defined.
+> 
+> Adding these manually as in scsi/sg.c works, but IMHO is rather stupid. Is 
+> there a sane way to call sg_ioctl()?
+> I mean it's static and also not exported and the file_operations ioctl method 
+> is already taken by the qla4xxx driver.
+> 
 
-for some reasons the kernel.org qla4xxx driver doesn't work for us. Version 
-5.01.00.08 seems to work a bit better, but all default sg-ioctl's are not 
-defined.
-
-Adding these manually as in scsi/sg.c works, but IMHO is rather stupid. Is 
-there a sane way to call sg_ioctl()?
-I mean it's static and also not exported and the file_operations ioctl method 
-is already taken by the qla4xxx driver.
-
-Do I miss something?
-
-
-Thanks in advance,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+Do you mean that with the driver from qlogic.com (or one of the distros) 
+you can do sg io to the qla4xxx driver, but with the kernel.org driver 
+you have to go through the sg (scsi/sg.c) driver?
