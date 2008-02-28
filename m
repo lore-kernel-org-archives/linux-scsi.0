@@ -1,78 +1,65 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE
-Date: Wed, 27 Feb 2008 17:03:30 -0800
-Message-ID: <1204160610.4963.49.camel@linuxchandra>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	 <20080124003203.18871.52040.sendpatchset@localhost.localdomain>
-	 <1202151498.3096.84.camel@localhost.localdomain>
-	 <1202156151.13537.14.camel@linuxchandra>
-	 <1202156914.3096.112.camel@localhost.localdomain>
-	 <1202159970.13537.19.camel@linuxchandra>
-	 <20080209124511.GB28967@parisc-linux.org>
-	 <1202754466.13537.123.camel@linuxchandra>
-	 <20080211191800.GO5299@parisc-linux.org>
-Reply-To: sekharan@us.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/7] Move hardware handlers from dm layer to SCSI layer
+Date: Wed, 27 Feb 2008 17:08:28 -0800
+Message-ID: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:43092 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762864AbYB1BDi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 20:03:38 -0500
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1S13Xts030268
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 20:03:33 -0500
+Received: from e33.co.us.ibm.com ([32.97.110.151]:43307 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759332AbYB1BId (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 20:08:33 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1S18UF5002999
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 20:08:30 -0500
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1S13X0r063320
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:03:33 -0700
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1S18U2f093042
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:30 -0700
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1S13WeH017543
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:03:32 -0700
-In-Reply-To: <20080211191800.GO5299@parisc-linux.org>
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1S18Tkf030708
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>, michaelc@cs.wisc.edu, jens.axboe@oracle.com
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, Chandra Seetharaman <sekharan@us.ibm.com>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, agk@redhat.com
 
-On Mon, 2008-02-11 at 12:18 -0700, Matthew Wilcox wrote:
-> On Mon, Feb 11, 2008 at 10:27:46AM -0800, Chandra Seetharaman wrote:
-> > On Sat, 2008-02-09 at 05:45 -0700, Matthew Wilcox wrote:
-> > > On Mon, Feb 04, 2008 at 01:19:30PM -0800, Chandra Seetharaman wrote:
-> > > > The device does send these error messages currently, but it takes some
-> > > > time to get the check condition back, which adds up the time to boot
-> > > > especially when the # of LUNS is huge.
-> > > > 
-> > > > For example, in my test configuration, I had 40 luns, and the time
-> > > > difference (with this patch and without it) to boot is 171 seconds and
-> > > > 1426 seconds.
-> > > 
-> > > Was that with sync or async SCSI bus scanning?
-> > 
-> > I didn't change anything, IOW, i did default scanning, which I would
-> > guess sync ?!
-> 
-> That would depend on your CONFIG_SCSI_SCAN_ASYNC setting.
-> 
-> Try booting with 'scsi_mod.scan=async' and without this patch, and see
-> how long it takes.
-Hi Matthew,
+Hello,
 
-scanning in async mode did not help in reducing the boot time.
+Set of patches that follow this email facilitate movement of hardware
+handlers from dm layer to SCSI layer.
 
-I even changed the configuration, such that 20 active luns and 20
-passive luns are in each path, it still didn't change the time it took
-to reboot.
+Previous set of patches that implemented this was posted on Jan 24:
+http://marc.info/?l=linux-scsi&m=120113462706925&w=2
 
-regards,
+Changes have been made based on feedback received from James, Alasdair,
+Mike Christie and Mike Anderson.
+
+Following are the changes:
+ - Removed scsi_dh hardware handler in the dm layer. This means 
+   no change (not even a change in the multipath.conf file) is
+   required in user space.
+ - Replaced REQ_OP_LB_TRANSITION with an activate() function.
+ - Removed the SDEV_PASSIVE and added a prep_fn to the device 
+   handler, hence giving it the veto power.
+ - Replaced blk_execute_rq_nowait() with blk_execute_rq() in
+   device handlers to make them synchronous. Added a thread(work queue)
+   to dm-multipath to handle requests asynchronously.
+ - Added Ed's changes to the EMC hardware handler.
+   
+Patches are created on top of 2.6.25-rc2-mm1.
+
+Testing has been done with a IBM DS4800 storage device, which means the
+infrastructure and the lsi_rdac hardware handler has been tested. Testing
+by someone with the EMC hardware and/or HP hardware would be appreciated.
+
+Comments, suggestions solicited.
+
+Thanks,
 
 chandra
-> 
+
+
 -- 
 
 ----------------------------------------------------------------------
     Chandra Seetharaman               | Be careful what you choose....
               - sekharan@us.ibm.com   |      .......you may get it.
 ----------------------------------------------------------------------
-
-
