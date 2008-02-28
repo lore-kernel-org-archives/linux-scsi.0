@@ -1,62 +1,79 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Performance problems with 3ware 9500S-4LP and 2.6.25-rc3
-Date: Thu, 28 Feb 2008 10:46:20 +0100
-Message-ID: <20080228094620.GD29468@skl-net.de>
-References: <20080226174314.GA30767@skl-net.de> <47C45B80.6090907@redhat.com> <20080227101143.GC30767@skl-net.de> <47C5C048.9080704@redhat.com>
+From: Keith Hopkins <vger@hopnet.net>
+Subject: Re: [PATCH] aic94xx: Don't free ABORT_TASK SCBs that are timed out
+  (Was: Re: aic94xx: failing on high load)
+Date: Thu, 28 Feb 2008 22:56:20 +0800
+Message-ID: <47C6CB94.4070904@hopnet.net>
+References: <479FB3ED.3080401@hopnet.net>	<20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>	<20080130192947.GA21785@tree.beaverton.ibm.com>	<47B4682C.4020505@hopnet.net>	<1203089323.3058.20.camel@localhost.localdomain>	<47B9958A.8080104@hopnet.net>	<1203438140.3103.24.camel@localhost.localdomain> <20080219184359.GA5414@tree.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wLAMOaPNJ0fu1fTG"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from systemlinux.org ([83.151.29.59]:59565 "EHLO m18s25.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755291AbYB1Jst (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Feb 2008 04:48:49 -0500
-Content-Disposition: inline
-In-Reply-To: <47C5C048.9080704@redhat.com>
+Received: from [123.112.10.105] ([123.112.10.105]:33745 "EHLO mail.hopnet.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1757004AbYB1Pav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Feb 2008 10:30:51 -0500
+In-Reply-To: <20080219184359.GA5414@tree.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Snook <csnook@redhat.com>
-Cc: adam radford <aradford@gmail.com>, Tony Battersby <tonyb@cybernetics.com>, Johannes =?iso-8859-1?Q?W=F6rner?= <johannes.woerner@tuebingen.mpg.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
+On 02/20/2008 02:44 AM, Darrick J. Wong wrote:
+> If we send an ABORT_TASK ascb that doesn't return within the timeout period,
+> we should not free that ascb because the sequencer is still holding onto it.
+> Hopefully it will fix what James Bottomley describes below:
+> 
+> On Tue, Feb 19, 2008 at 10:22:20AM -0600, James Bottomley wrote:
+> 
+>> Unfortunately, there's a bug in TMF timeout handling in the driver, it
+>> leaves the sequencer entry pending, but frees the ascb.  If the
+>> sequencer ever picks this up it will get very confused, as it does a
+>> while down in the trace:
+>>
+>>> aic94xx: BUG:sequencer:dl:no ascb?!
+>>> aic94xx: BUG:sequencer:dl:no ascb?!
+>> That's where the sequencer adds an ascb to the done list that we've
+>> already freed.  From this point on confusion reigns and the error
+>> handler eventually offlines the device.
+>>
+>> I'll see if I can come up with patches to fix this ... or at least
+>> mitigate the problems it causes.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
+> 
+>  drivers/scsi/aic94xx/aic94xx_tmf.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> index b52124f..4b24bd3 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_tmf.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> @@ -463,7 +463,7 @@ int asd_abort_task(struct sas_task *task)
+>  						       AIC94XX_SCB_TIMEOUT);
+>  		spin_lock_irqsave(&task->task_state_lock, flags);
+>  		if (leftover < 1)
+> -			res = TMF_RESP_FUNC_FAILED;
+> +			goto out_not_reported;
+>  		if (task->task_state_flags & SAS_TASK_STATE_DONE)
+>  			res = TMF_RESP_FUNC_COMPLETE;
+>  		spin_unlock_irqrestore(&task->task_state_lock, flags);
+> @@ -487,6 +487,11 @@ out:
+>  	asd_ascb_free(ascb);
+>  	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
+>  	return res;
+> +
+> +out_not_reported:
+> +	spin_unlock_irqrestore(&task->task_state_lock, flags);
+> +	ASD_DPRINTK("task 0x%p aborted? but not reported.\n", task);
+> +	return res;
+>  }
+>  
+>  /**
+> -
 
---wLAMOaPNJ0fu1fTG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Darrick,
 
-On 14:55, Chris Snook wrote:
+  Is this the only patch for ascb sequencer use after free problems, or are you still looking into that?
 
-> Does the machine become unresponsive during the single-threaded test, or=
-=20
-> only when doing the rsync?
-
-It takes noticably longer to ssh into the machine also in the
-single-threaded case (using dd to write to the device), but the
-system remains usable. When the rsync job is running, it becomes
-unusable quickly.
-
-However, reducing the queue depth with
-
-	echo 16 > /sys/block/sda/device/queue_depth
-
-as suggested by Adam, solves all problems.
-
-Thanks all for your help.
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---wLAMOaPNJ0fu1fTG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFHxoLsWto1QDEAkw8RAoAHAJ0TFMt26ioLR/WskxAUW5Td+OqmRQCeNcH3
-EDQQFgyymODIGTVteQrHULA=
-=nnxa
------END PGP SIGNATURE-----
-
---wLAMOaPNJ0fu1fTG--
+--Keith
