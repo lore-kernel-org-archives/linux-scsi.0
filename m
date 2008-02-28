@@ -1,397 +1,730 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 1/7] scsi_dh: add skeleton for SCSI Device Handlers
-Date: Wed, 27 Feb 2008 17:08:34 -0800
-Message-ID: <20080228010834.5535.41038.sendpatchset@localhost.localdomain>
+Subject: [PATCH 2/7] scsi_dh: add lsi rdac device handler
+Date: Wed, 27 Feb 2008 17:08:40 -0800
+Message-ID: <20080228010840.5535.21174.sendpatchset@localhost.localdomain>
 References: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:43399 "EHLO
+Received: from e33.co.us.ibm.com ([32.97.110.151]:43527 "EHLO
 	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760978AbYB1BIh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 20:08:37 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1S18bCf003186
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 20:08:37 -0500
+	with ESMTP id S1756224AbYB1BIn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2008 20:08:43 -0500
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m1S18hI0003560
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 20:08:43 -0500
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1S18aj0168838
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:36 -0700
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m1S18hVv210178
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:43 -0700
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1S18Zlq030877
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:36 -0700
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m1S18gIi031040
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Feb 2008 18:08:43 -0700
 In-Reply-To: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, Chandra Seetharaman <sekharan@us.ibm.com>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, agk@redhat.com
 
-Subject: scsi_dh: add skeleton for SCSI Device Handlers
+Subject: scsi_dh: add lsi rdac device handler
 
 From: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Add base support to the SCSI subsystem for SCSI device handlers.
+add LSI RDAC SCSI device handler
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
 
- drivers/scsi/Kconfig                  |    2 	2 +	0 -	0 !
- drivers/scsi/Makefile                 |    1 	1 +	0 -	0 !
- drivers/scsi/device_handler/Kconfig   |   12 	12 +	0 -	0 !
- drivers/scsi/device_handler/Makefile  |    4 	4 +	0 -	0 !
- drivers/scsi/device_handler/scsi_dh.c |  146 	146 +	0 -	0 !
- drivers/scsi/scsi_error.c             |   10 	10 +	0 -	0 !
- drivers/scsi/scsi_lib.c               |    5 	5 +	0 -	0 !
- include/scsi/scsi_device.h            |   18 	18 +	0 -	0 !
- include/scsi/scsi_dh.h                |   58 	58 +	0 -	0 !
- 9 files changed, 256 insertions(+)
+ drivers/scsi/device_handler/Kconfig        |    6 	6 +	0 -	0 !
+ drivers/scsi/device_handler/Makefile       |    1 	1 +	0 -	0 !
+ drivers/scsi/device_handler/scsi_dh_rdac.c |  660 	660 +	0 -	0 !
+ 3 files changed, 667 insertions(+)
 
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/Kconfig
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/scsi/Kconfig
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/Kconfig
-@@ -1749,4 +1749,6 @@ endif # SCSI_LOWLEVEL
- 
- source "drivers/scsi/pcmcia/Kconfig"
- 
-+source "drivers/scsi/device_handler/Kconfig"
-+
- endmenu
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/Makefile
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/scsi/Makefile
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/Makefile
-@@ -34,6 +34,7 @@ obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_t
- obj-$(CONFIG_SCSI_SAS_ATTRS)	+= scsi_transport_sas.o
- obj-$(CONFIG_SCSI_SAS_LIBSAS)	+= libsas/
- obj-$(CONFIG_SCSI_SRP_ATTRS)	+= scsi_transport_srp.o
-+obj-$(CONFIG_SCSI_DH)		+= device_handler/
- 
- obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	iscsi_tcp.o
- obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
 Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Kconfig
 ===================================================================
---- /dev/null
+--- linux-2.6.25-rc2-mm1.orig/drivers/scsi/device_handler/Kconfig
 +++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Kconfig
-@@ -0,0 +1,12 @@
-+#
-+# SCSI Device Handler configuration
-+#
+@@ -10,3 +10,9 @@ menuconfig SCSI_DH
+ 	  SCSI Device Handlers provide device specific support for
+ 	  devices utilized in multipath configurations. Say Y here to
+ 	  select support for specific hardware.
 +
-+menuconfig SCSI_DH
-+	bool "SCSI Device Handlers"
-+	depends on SCSI!=n
-+	default n
++config SCSI_DH_RDAC
++	tristate "LSI RDAC Device Handler"
++	depends on SCSI_DH
 +	help
-+	  SCSI Device Handlers provide device specific support for
-+	  devices utilized in multipath configurations. Say Y here to
-+	  select support for specific hardware.
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
++	If you have a LSI RDAC select y. Otherwise, say N.
+Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh_rdac.c
 ===================================================================
 --- /dev/null
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
-@@ -0,0 +1,4 @@
-+#
-+# SCSI Device Handler
-+#
-+obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/scsi_error.c
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/scsi/scsi_error.c
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/scsi_error.c
-@@ -298,6 +298,7 @@ static inline void scsi_eh_prt_fail_stat
-  */
- static int scsi_check_sense(struct scsi_cmnd *scmd)
- {
-+	struct scsi_device *sdev = scmd->device;
- 	struct scsi_sense_hdr sshdr;
- 
- 	if (! scsi_command_normalize_sense(scmd, &sshdr))
-@@ -306,6 +307,15 @@ static int scsi_check_sense(struct scsi_
- 	if (scsi_sense_is_deferred(&sshdr))
- 		return NEEDS_RETRY;
- 
-+	if (sdev->sdev_dh && sdev->sdev_dh->check_sense) {
-+		int rc;
++++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -0,0 +1,660 @@
++/*
++ * Engenio/LSI RDAC SCSI Device Handler
++ *
++ * Copyright (C) 2005 Mike Christie. All rights reserved.
++ * Copyright (C) Chandra Seetharaman, IBM Corp. 2007
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ */
++#include <scsi/scsi.h>
++#include <scsi/scsi_eh.h>
++#include <scsi/scsi_dh.h>
 +
-+		rc = sdev->sdev_dh->check_sense(sdev, &sshdr);
-+		if (rc != SUCCESS)
-+			return rc;
-+		/* handler does not care. Drop down to default handling */
-+	}
++#define RDAC_NAME "rdac"
 +
- 	/*
- 	 * Previous logic looked for FILEMARK, EOM or ILI which are
- 	 * mainly associated with tapes and returned SUCCESS.
-Index: linux-2.6.25-rc2-mm1/include/scsi/scsi_device.h
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/include/scsi/scsi_device.h
-+++ linux-2.6.25-rc2-mm1/include/scsi/scsi_device.h
-@@ -161,9 +161,25 @@ struct scsi_device {
- 
- 	struct execute_work	ew; /* used to get process context on put */
- 
-+	struct scsi_device_handler *sdev_dh;
-+	void			*sdev_dh_data;
- 	enum scsi_device_state sdev_state;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
++/*
++ * LSI mode page stuff
++ *
++ * These struct definitions and the forming of the
++ * mode page were taken from the LSI RDAC 2.4 GPL'd
++ * driver, and then converted to Linux conventions.
++ */
++#define RDAC_QUIESCENCE_TIME 20;
++/*
++ * Page Codes
++ */
++#define RDAC_PAGE_CODE_REDUNDANT_CONTROLLER 0x2c
 +
-+struct scsi_device_handler {
-+	/* Used by the infrastructure */
-+	struct list_head list; /* list of scsi_device_handlers */
-+	struct notifier_block nb;
++/*
++ * Controller modes definitions
++ */
++#define RDAC_MODE_TRANSFER_SPECIFIED_LUNS	0x02
 +
-+	/* Filled by the hardware handler */
-+	struct module *module;
-+	const char *name;
-+	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
-+	int (*activate)(struct scsi_device *);
-+	int (*prep_fn)(struct scsi_device *);
++/*
++ * RDAC Options field
++ */
++#define RDAC_FORCED_QUIESENCE 0x02
++
++#define RDAC_TIMEOUT	(60 * HZ)
++#define RDAC_RETRIES	3
++
++struct rdac_mode_6_hdr {
++	u8	data_len;
++	u8	medium_type;
++	u8	device_params;
++	u8	block_desc_len;
 +};
 +
- #define	to_scsi_device(d)	\
- 	container_of(d, struct scsi_device, sdev_gendev)
- #define	class_to_sdev(d)	\
-@@ -229,7 +245,9 @@ extern struct scsi_device *__scsi_add_de
- 		uint, uint, uint, void *hostdata);
- extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- 			   uint target, uint lun);
-+extern int scsi_register_device_handler(struct scsi_device_handler *sdev_dh);
- extern void scsi_remove_device(struct scsi_device *);
-+extern int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh);
- 
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh.c
-===================================================================
---- /dev/null
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh.c
-@@ -0,0 +1,146 @@
-+/*
-+ * SCSI device handler infrastruture.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2 of the License, or (at your
-+ * option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ * Copyright IBM Corporation, 2007
-+ *      Authors:
-+ *               Chandra Seetharaman <sekharan@us.ibm.com>
-+ *               Mike Anderson <andmike@linux.vnet.ibm.com>
-+ */
++struct rdac_mode_10_hdr {
++	u16	data_len;
++	u8	medium_type;
++	u8	device_params;
++	u16	reserved;
++	u16	block_desc_len;
++};
 +
-+#include <scsi/scsi_dh.h>
-+#include "../scsi_priv.h"
++struct rdac_mode_common {
++	u8	controller_serial[16];
++	u8	alt_controller_serial[16];
++	u8	rdac_mode[2];
++	u8	alt_rdac_mode[2];
++	u8	quiescence_timeout;
++	u8	rdac_options;
++};
 +
++struct rdac_pg_legacy {
++	struct rdac_mode_6_hdr hdr;
++	u8	page_code;
++	u8	page_len;
++	struct rdac_mode_common common;
++#define MODE6_MAX_LUN	32
++	u8	lun_table[MODE6_MAX_LUN];
++	u8	reserved2[32];
++	u8	reserved3;
++	u8	reserved4;
++};
++
++struct rdac_pg_expanded {
++	struct rdac_mode_10_hdr hdr;
++	u8	page_code;
++	u8	subpage_code;
++	u8	page_len[2];
++	struct rdac_mode_common common;
++	u8	lun_table[256];
++	u8	reserved3;
++	u8	reserved4;
++};
++
++struct c9_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC9 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "vace" */
++	u8	avte_cvp;
++	u8	path_prio;
++	u8	reserved2[38];
++};
++
++#define SUBSYS_ID_LEN	16
++#define SLOT_ID_LEN	2
++
++struct c4_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC4 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "subs" */
++	u8	subsys_id[SUBSYS_ID_LEN];
++	u8	revision[4];
++	u8	slot_id[SLOT_ID_LEN];
++	u8	reserved[2];
++};
++
++struct rdac_controller {
++	u8			subsys_id[SUBSYS_ID_LEN];
++	u8			slot_id[SLOT_ID_LEN];
++	int			use_ms10;
++	struct kref		kref;
++	struct list_head	node; /* list of all controllers */
++	union			{
++		struct rdac_pg_legacy legacy;
++		struct rdac_pg_expanded expanded;
++	} mode_select;
++};
++struct c8_inquiry {
++	u8	peripheral_info;
++	u8	page_code; /* 0xC8 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4]; /* "edid" */
++	u8	reserved2[3];
++	u8	vol_uniq_id_len;
++	u8	vol_uniq_id[16];
++	u8	vol_user_label_len;
++	u8	vol_user_label[60];
++	u8	array_uniq_id_len;
++	u8	array_unique_id[16];
++	u8	array_user_label_len;
++	u8	array_user_label[60];
++	u8	lun[8];
++};
++
++struct c2_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC2 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "swr4" */
++	u8	sw_version[3];
++	u8	sw_date[3];
++	u8	features_enabled;
++	u8	max_lun_supported;
++	u8	partitions[239]; /* Total allocation length should be 0xFF */
++};
++
++struct rdac_dh_data {
++	struct rdac_controller	*ctlr;
++#define UNINITIALIZED_LUN	(1 << 8)
++	unsigned		lun;
++#define RDAC_STATE_ACTIVE	0
++#define RDAC_STATE_PASSIVE	1
++	unsigned char		state;
++	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
++	union			{
++		struct c2_inquiry c2;
++		struct c4_inquiry c4;
++		struct c8_inquiry c8;
++		struct c9_inquiry c9;
++	} inq;
++};
++
++static LIST_HEAD(ctlr_list);
 +static DEFINE_SPINLOCK(list_lock);
-+static LIST_HEAD(scsi_dh_list);
 +
-+static struct scsi_device_handler *get_device_handler(const char *name)
++static struct request *get_rdac_req(struct scsi_device *sdev,
++			void *buffer, unsigned buflen, int rw)
 +{
-+	struct scsi_device_handler *tmp, *found = NULL;
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++
++	rq = blk_get_request(q, rw, GFP_KERNEL);
++
++	if (!rq) {
++		sdev_printk(KERN_INFO, sdev,
++				"get_rdac_req: blk_get_request failed.\n");
++		return NULL;
++	}
++
++	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
++		blk_put_request(rq);
++		sdev_printk(KERN_INFO, sdev,
++				"get_rdac_req: blk_rq_map_kern failed.\n");
++		return NULL;
++	}
++
++	memset(&rq->cmd, 0, BLK_MAX_CDB);
++	rq->sense = h->sense;
++	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
++	rq->sense_len = 0;
++
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
++	rq->retries = RDAC_RETRIES;
++	rq->timeout = RDAC_TIMEOUT;
++
++	return rq;
++}
++
++static struct request *rdac_failover_get(struct scsi_device *sdev)
++{
++	struct request *rq;
++	struct rdac_mode_common *common;
++	unsigned data_size;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++
++	if (h->ctlr->use_ms10) {
++		struct rdac_pg_expanded *rdac_pg;
++
++		data_size = sizeof(struct rdac_pg_expanded);
++		rdac_pg = &h->ctlr->mode_select.expanded;
++		memset(rdac_pg, 0, data_size);
++		common = &rdac_pg->common;
++		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER + 0x40;
++		rdac_pg->subpage_code = 0x1;
++		rdac_pg->page_len[0] = 0x01;
++		rdac_pg->page_len[1] = 0x28;
++		rdac_pg->lun_table[h->lun] = 0x81;
++	} else {
++		struct rdac_pg_legacy *rdac_pg;
++
++		data_size = sizeof(struct rdac_pg_legacy);
++		rdac_pg = &h->ctlr->mode_select.legacy;
++		memset(rdac_pg, 0, data_size);
++		common = &rdac_pg->common;
++		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
++		rdac_pg->page_len = 0x68;
++		rdac_pg->lun_table[h->lun] = 0x81;
++	}
++	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
++	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
++	common->rdac_options = RDAC_FORCED_QUIESENCE;
++
++	/* get request for block layer packet command */
++	rq = get_rdac_req(sdev, &h->ctlr->mode_select, data_size, WRITE);
++	if (!rq)
++		return NULL;
++
++	/* Prepare the command. */
++	if (h->ctlr->use_ms10) {
++		rq->cmd[0] = MODE_SELECT_10;
++		rq->cmd[7] = data_size >> 8;
++		rq->cmd[8] = data_size & 0xff;
++	} else {
++		rq->cmd[0] = MODE_SELECT;
++		rq->cmd[4] = data_size;
++	}
++	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
++
++	return rq;
++}
++
++static void release_controller(struct kref *kref)
++{
++	struct rdac_controller *ctlr;
++	ctlr = container_of(kref, struct rdac_controller, kref);
 +
 +	spin_lock(&list_lock);
-+	list_for_each_entry(tmp, &scsi_dh_list, list) {
-+		if (!strcmp(tmp->name, name)) {
-+			found = tmp;
-+			break;
++	list_del(&ctlr->node);
++	spin_unlock(&list_lock);
++	kfree(ctlr);
++}
++
++static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id)
++{
++	struct rdac_controller *ctlr, *tmp;
++
++	spin_lock(&list_lock);
++
++	list_for_each_entry(tmp, &ctlr_list, node) {
++		if ((memcmp(tmp->subsys_id, subsys_id, SUBSYS_ID_LEN) == 0) &&
++			  (memcmp(tmp->slot_id, slot_id, SLOT_ID_LEN) == 0)) {
++			kref_get(&tmp->kref);
++			spin_unlock(&list_lock);
++			return tmp;
 +		}
 +	}
-+	spin_unlock(&list_lock);
-+	return found;
-+}
-+
-+static int scsi_dh_notifier_add(struct device *dev, void *data)
-+{
-+	struct scsi_device_handler *sdev_dh = data;
-+
-+	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_ADD_DEVICE, dev);
-+	return 0;
-+}
-+
-+/*
-+ * scsi_register_device_handler - register a device handler personality
-+ *      module.
-+ * @sdev_dh - device handler to be registered.
-+ *
-+ * Returns 0 on success, -EBUSY if handler already registered.
-+ */
-+int scsi_register_device_handler(struct scsi_device_handler *sdev_dh)
-+{
-+	int ret = -EBUSY;
-+	struct scsi_device_handler *tmp;
-+
-+	tmp = get_device_handler(sdev_dh->name);
-+	if (tmp)
++	ctlr = kmalloc(sizeof(*ctlr), GFP_ATOMIC);
++	if (!ctlr)
 +		goto done;
 +
-+	ret = bus_register_notifier(&scsi_bus_type, &sdev_dh->nb);
-+
-+	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh, scsi_dh_notifier_add);
-+	spin_lock(&list_lock);
-+	list_add(&sdev_dh->list, &scsi_dh_list);
-+	spin_unlock(&list_lock);
-+
++	/* initialize fields of controller */
++	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
++	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
++	kref_init(&ctlr->kref);
++	ctlr->use_ms10 = -1;
++	list_add(&ctlr->node, &ctlr_list);
 +done:
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(scsi_register_device_handler);
-+
-+static int scsi_dh_notifier_remove(struct device *dev, void *data)
-+{
-+	struct scsi_device_handler *sdev_dh = data;
-+
-+	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_DEL_DEVICE, dev);
-+	return 0;
-+}
-+
-+/*
-+ * scsi_unregister_device_handler - register a device handler personality
-+ *      module.
-+ * @sdev_dh - device handler to be unregistered.
-+ *
-+ * Returns 0 on success, -ENODEV if handler not registered.
-+ */
-+int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh)
-+{
-+	int ret = -ENODEV;
-+	struct scsi_device_handler *tmp;
-+
-+	tmp = get_device_handler(sdev_dh->name);
-+	if (!tmp)
-+		goto done;
-+
-+	ret = bus_unregister_notifier(&scsi_bus_type, &sdev_dh->nb);
-+
-+	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh,
-+					scsi_dh_notifier_remove);
-+	spin_lock(&list_lock);
-+	list_del(&sdev_dh->list);
 +	spin_unlock(&list_lock);
-+
-+done:
-+	return ret;
++	return ctlr;
 +}
-+EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
 +
-+/*
-+ * scsi_dh_activate - activate the path associated with the scsi_device
-+ *      corresponding to the given request queue.
-+ * @q - Request queue that is associated with the scsi_device to be
-+ *      activated.
-+ */
-+int scsi_dh_activate(struct request_queue *q)
++static int submit_inquiry(struct scsi_device *sdev, int page_code,
++		unsigned int len)
 +{
-+	int err = SCSI_DH_NOSYS;
-+	struct scsi_device *sdev;
-+	struct scsi_device_handler *sdev_dh;
-+	unsigned long flags;
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++	int err = SCSI_DH_RES_TEMP_UNAVAIL;
 +
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	sdev_dh = sdev->sdev_dh;
-+	if (!sdev || !sdev_dh || !get_device(&sdev->sdev_gendev)) {
-+		spin_unlock_irqrestore(q->queue_lock, flags);
++	rq = get_rdac_req(sdev, &h->inq, len, READ);
++	if (!rq)
 +		goto done;
-+	}
-+	spin_unlock_irqrestore(q->queue_lock, flags);
 +
-+	if (sdev_dh->activate)
-+		err = sdev_dh->activate(sdev);
-+	put_device(&sdev->sdev_gendev);
++	/* Prepare the command. */
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 1;
++	rq->cmd[2] = page_code;
++	rq->cmd[4] = len;
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++	err = blk_execute_rq(q, NULL, rq, 1);
++	if (err == -EIO)
++		err = SCSI_DH_IO;
 +done:
 +	return err;
 +}
-+EXPORT_SYMBOL_GPL(scsi_dh_activate);
-Index: linux-2.6.25-rc2-mm1/include/scsi/scsi_dh.h
-===================================================================
---- /dev/null
-+++ linux-2.6.25-rc2-mm1/include/scsi/scsi_dh.h
-@@ -0,0 +1,58 @@
-+/*
-+ * Header file for SCSI device handler infrastruture.
-+ *
-+ * Modified version of patches posted by Mike Christie <michaelc@cs.wisc.edu>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2 of the License, or (at your
-+ * option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ * Copyright IBM Corporation, 2007
-+ *      Authors:
-+ *               Chandra Seetharaman <sekharan@us.ibm.com>
-+ *               Mike Anderson <andmike@linux.vnet.ibm.com>
-+ */
 +
-+#include <scsi/scsi_device.h>
++static int get_lun(struct scsi_device *sdev)
++{
++	int err;
++	struct c8_inquiry *inqp;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
 +
-+enum {
-+	SCSI_DH_OK = 0,
-+	/*
-+	 * device errors
-+	 */
-+	SCSI_DH_DEV_FAILED,	/* generic device error */
-+	SCSI_DH_DEV_TEMP_BUSY,
-+	SCSI_DH_DEVICE_MAX,	/* max device blkerr definition */
++	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c8;
++		h->lun = inqp->lun[7]; /* currently it uses only one byte */
++	}
++	return err;
++}
 +
-+	/*
-+	 * transport errors
-+	 */
-+	SCSI_DH_NOTCONN = SCSI_DH_DEVICE_MAX + 1,
-+	SCSI_DH_CONN_FAILURE,
-+	SCSI_DH_TRANSPORT_MAX,	/* max transport blkerr definition */
++#define RDAC_OWNED	0
++#define RDAC_UNOWNED	1
++#define RDAC_FAILED	2
++static int check_ownership(struct scsi_device *sdev)
++{
++	int err;
++	struct c9_inquiry *inqp;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
 +
-+	/*
-+	 * driver and generic errors
-+	 */
-+	SCSI_DH_IO = SCSI_DH_TRANSPORT_MAX + 1,	/* generic error */
-+	SCSI_DH_INVALID_IO,
-+	SCSI_DH_RETRY,		/* retry the req, but not immediately */
-+	SCSI_DH_IMM_RETRY,	/* immediately retry the req */
-+	SCSI_DH_TIMED_OUT,
-+	SCSI_DH_RES_TEMP_UNAVAIL,
-+	SCSI_DH_DEV_OFFLINED,
-+	SCSI_DH_NOSYS,
-+	SCSI_DH_DRIVER_MAX,
-+};
++	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
++	if (err == SCSI_DH_OK) {
++		err = RDAC_UNOWNED;
++		inqp = &h->inq.c9;
++		/*
++		 * If in AVT mode or if the path already owns the LUN,
++		 * return RDAC_OWNED;
++		 */
++		if (((inqp->avte_cvp >> 7) == 0x1) ||
++				 ((inqp->avte_cvp & 0x1) != 0))
++			err = RDAC_OWNED;
++	} else
++		err = RDAC_FAILED;
++	return err;
++}
 +
-+extern int scsi_dh_activate(struct request_queue *);
-Index: linux-2.6.25-rc2-mm1/drivers/scsi/scsi_lib.c
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/scsi/scsi_lib.c
-+++ linux-2.6.25-rc2-mm1/drivers/scsi/scsi_lib.c
-@@ -1156,6 +1156,11 @@ int scsi_setup_fs_cmnd(struct scsi_devic
- 	struct scsi_cmnd *cmd;
- 	int ret = scsi_prep_state_check(sdev, req);
- 
-+	if ((ret == BLKPREP_OK) && (req->cmd_type == REQ_TYPE_FS)) {
-+		if (sdev->sdev_dh && sdev->sdev_dh->prep_fn)
-+			ret = sdev->sdev_dh->prep_fn(sdev);
++static int initialize_controller(struct scsi_device *sdev)
++{
++	int err;
++	struct c4_inquiry *inqp;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++
++	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c4;
++		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
++		if (!h->ctlr)
++			err = SCSI_DH_RES_TEMP_UNAVAIL;
++	}
++	return err;
++}
++
++static int set_mode_select(struct scsi_device *sdev)
++{
++	int err;
++	struct c2_inquiry *inqp;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++
++	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c2;
++		/*
++		 * If more than MODE6_MAX_LUN luns are supported, use
++		 * mode select 10
++		 */
++		if (inqp->max_lun_supported >= MODE6_MAX_LUN)
++			h->ctlr->use_ms10 = 1;
++		else
++			h->ctlr->use_ms10 = 0;
++	}
++	return err;
++}
++
++static int mode_select_handle_sense(struct scsi_device *sdev)
++{
++	struct scsi_sense_hdr sense_hdr;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++	int sense, err = SCSI_DH_IO, ret;
++
++	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
++	if (!ret)
++		goto done;
++
++	err = SCSI_DH_OK;
++	sense = (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
++			sense_hdr.ascq;
++	/* If it is retryable failure, submit the c9 inquiry again */
++	if (sense == 0x59136 || sense == 0x68b02 || sense == 0xb8b02 ||
++			    sense == 0x62900) {
++		/* 0x59136    - Command lock contention
++		 * 0x[6b]8b02 - Quiesense in progress or achieved
++		 * 0x62900    - Power On, Reset, or Bus Device Reset
++		 */
++		err = SCSI_DH_DEV_TEMP_BUSY;
 +	}
 +
- 	if (ret != BLKPREP_OK)
- 		return ret;
- 	/*
++	if (sense)
++		sdev_printk(KERN_INFO, sdev,
++			"MODE_SELECT failed with sense 0x%x.\n", sense);
++done:
++	return err;
++}
++
++static int send_mode_select(struct scsi_device *sdev)
++{
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++	int err = SCSI_DH_RES_TEMP_UNAVAIL;
++
++	rq = rdac_failover_get(sdev);
++	if (!rq)
++		goto done;
++
++	sdev_printk(KERN_INFO, sdev, "queueing MODE_SELECT command.\n");
++
++	err = blk_execute_rq(q, NULL, rq, 1);
++	if (err != SCSI_DH_OK)
++		err = mode_select_handle_sense(sdev);
++	if (err == SCSI_DH_OK)
++		h->state = RDAC_STATE_ACTIVE;
++done:
++	return err;
++}
++
++static int rdac_activate(struct scsi_device *sdev)
++{
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++	int err = SCSI_DH_OK;
++
++	if (h->lun == UNINITIALIZED_LUN) {
++		err = get_lun(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	err = check_ownership(sdev);
++	switch (err) {
++	case RDAC_UNOWNED:
++		break;
++	case RDAC_OWNED:
++		err = SCSI_DH_OK;
++		goto done;
++	case RDAC_FAILED:
++	default:
++		err = SCSI_DH_IO;
++		goto done;
++	}
++
++	if (!h->ctlr) {
++		err = initialize_controller(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	if (h->ctlr->use_ms10 == -1) {
++		err = set_mode_select(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	err = send_mode_select(sdev);
++done:
++	return err;
++}
++
++static int rdac_prep_fn(struct scsi_device *sdev)
++{
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++
++	return (h->state == RDAC_STATE_ACTIVE) ? BLKPREP_OK : BLKPREP_KILL;
++}
++
++static int rdac_check_sense(struct scsi_device *sdev,
++				struct scsi_sense_hdr *sense_hdr)
++{
++	struct rdac_dh_data *h = sdev->sdev_dh_data;
++	switch (sense_hdr->sense_key) {
++	case NOT_READY:
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x81)
++			/* LUN Not Ready - Storage firmware incompatible
++			 * Manual code synchonisation required.
++			 *
++			 * Nothing we can do here. Try to bypass the path.
++			 */
++			return SUCCESS;
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0xA1)
++			/* LUN Not Ready - Quiescense in progress
++			 *
++			 * Just retry and wait.
++			 */
++			return NEEDS_RETRY;
++		break;
++	case ILLEGAL_REQUEST:
++		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01)
++			/* Invalid Request - Current Logical Unit Ownership.
++			 * Controller is not the current owner of the LUN,
++			 * Fail the path, so that the other path be used.
++			 */
++			h->state = RDAC_STATE_PASSIVE;
++		break;
++	case UNIT_ATTENTION:
++		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
++			/*
++			 * Power On, Reset, or Bus Device Reset, just retry.
++			 */
++			return NEEDS_RETRY;
++		break;
++	}
++	/* success just means we do not care what scsi-ml does */
++	return SUCCESS;
++}
++
++static const struct {
++	char *vendor;
++	char *model;
++} rdac_dev_list[] = {
++	{"IBM", "1815"},
++	{NULL, NULL},
++};
++
++static int rdac_bus_notify(struct notifier_block *, unsigned long, void *);
++
++static struct scsi_device_handler rdac_dh = {
++	.name = RDAC_NAME,
++	.module = THIS_MODULE,
++	.nb.notifier_call = rdac_bus_notify,
++	.prep_fn = rdac_prep_fn,
++	.check_sense = rdac_check_sense,
++	.activate = rdac_activate,
++};
++
++/*
++ * TODO: need some interface so we can set trespass values
++ */
++static int rdac_bus_notify(struct notifier_block *nb,
++			    unsigned long action, void *data)
++{
++	struct device *dev = data;
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct rdac_dh_data *dh_data;
++	int i, found = 0;
++	unsigned long flags;
++
++	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		for (i = 0; rdac_dev_list[i].vendor; i++) {
++			if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
++				     strlen(rdac_dev_list[i].vendor)) &&
++			    !strncmp(sdev->model, rdac_dev_list[i].model,
++				     strlen(rdac_dev_list[i].model))) {
++				found = 1;
++				break;
++			}
++		}
++		if (!found)
++			goto out;
++
++		dh_data = kzalloc(sizeof(*dh_data), GFP_KERNEL);
++		if (!dh_data) {
++			sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
++				    RDAC_NAME);
++			goto out;
++		}
++
++		dh_data->lun = UNINITIALIZED_LUN;
++		dh_data->state = RDAC_STATE_ACTIVE;
++		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
++		sdev->sdev_dh_data = dh_data;
++		sdev->sdev_dh = &rdac_dh;
++		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
++		try_module_get(THIS_MODULE);
++
++		sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", RDAC_NAME);
++
++	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
++		if (sdev->sdev_dh != &rdac_dh)
++			goto out;
++
++		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
++		dh_data = sdev->sdev_dh_data;
++		sdev->sdev_dh_data = NULL;
++		sdev->sdev_dh = NULL;
++		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
++
++		if (dh_data->ctlr)
++			kref_put(&dh_data->ctlr->kref, release_controller);
++		kfree(dh_data);
++		module_put(THIS_MODULE);
++		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
++			    RDAC_NAME);
++	}
++
++out:
++	return 0;
++}
++
++static int __init rdac_init(void)
++{
++	int r;
++
++	r = scsi_register_device_handler(&rdac_dh);
++	if (r != 0)
++		printk(KERN_ERR "Failed to register scsi device handler.");
++	return r;
++}
++
++static void __exit rdac_exit(void)
++{
++	scsi_unregister_device_handler(&rdac_dh);
++}
++
++module_init(rdac_init);
++module_exit(rdac_exit);
++
++MODULE_DESCRIPTION("Multipath LSI/Engenio RDAC driver");
++MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
++MODULE_LICENSE("GPL");
+Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
+===================================================================
+--- linux-2.6.25-rc2-mm1.orig/drivers/scsi/device_handler/Makefile
++++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
+@@ -2,3 +2,4 @@
+ # SCSI Device Handler
+ #
+ obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
++obj-$(CONFIG_SCSI_DH_RDAC)	+= scsi_dh_rdac.o
 
 -- 
 
