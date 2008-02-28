@@ -1,79 +1,40 @@
-From: Keith Hopkins <vger@hopnet.net>
-Subject: Re: [PATCH] aic94xx: Don't free ABORT_TASK SCBs that are timed out
-  (Was: Re: aic94xx: failing on high load)
-Date: Thu, 28 Feb 2008 22:56:20 +0800
-Message-ID: <47C6CB94.4070904@hopnet.net>
-References: <479FB3ED.3080401@hopnet.net>	<20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>	<20080130192947.GA21785@tree.beaverton.ibm.com>	<47B4682C.4020505@hopnet.net>	<1203089323.3058.20.camel@localhost.localdomain>	<47B9958A.8080104@hopnet.net>	<1203438140.3103.24.camel@localhost.localdomain> <20080219184359.GA5414@tree.beaverton.ibm.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Thu, 28 Feb 2008 16:35:43 +0100
+Message-ID: <20080228153542.GZ6704@kernel.dk>
+References: <1203839683.17463.9.camel@homer.simson.net> <1204019283.8731.11.camel@homer.simson.net> <1204033003.11828.22.camel@homer.simson.net> <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [123.112.10.105] ([123.112.10.105]:33745 "EHLO mail.hopnet.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1757004AbYB1Pav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Feb 2008 10:30:51 -0500
-In-Reply-To: <20080219184359.GA5414@tree.beaverton.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47C675C6.8000904@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 02/20/2008 02:44 AM, Darrick J. Wong wrote:
-> If we send an ABORT_TASK ascb that doesn't return within the timeout period,
-> we should not free that ascb because the sequencer is still holding onto it.
-> Hopefully it will fix what James Bottomley describes below:
+On Thu, Feb 28 2008, Tejun Heo wrote:
+> rq->raw_data_len introduced for block layer padding and draining
+> (commit 6b00769fe1502b4ad97bb327ef7ac971b208bfb5) broke residual byte
+> count handling.  Block drivers modify rq->data_len to notify residual
+> byte count to the block layer which blindly reported unmodified
+> rq->raw_data_len to userland.
 > 
-> On Tue, Feb 19, 2008 at 10:22:20AM -0600, James Bottomley wrote:
+> To keep block drivers dealing only with rq->data_len, this should be
+> handled inside block layer.  However, how much extra buffer was
+> appened is lost after rq->data_len is modified.
 > 
->> Unfortunately, there's a bug in TMF timeout handling in the driver, it
->> leaves the sequencer entry pending, but frees the ascb.  If the
->> sequencer ever picks this up it will get very confused, as it does a
->> while down in the trace:
->>
->>> aic94xx: BUG:sequencer:dl:no ascb?!
->>> aic94xx: BUG:sequencer:dl:no ascb?!
->> That's where the sequencer adds an ascb to the done list that we've
->> already freed.  From this point on confusion reigns and the error
->> handler eventually offlines the device.
->>
->> I'll see if I can come up with patches to fix this ... or at least
->> mitigate the problems it causes.
+> This patch replaces rq->raw_data_len with rq->extra_len and add
+> blk_rq_raw_data_len() helper to calculate raw data size from
+> rq->data_len and rq->extra_len.  The helper returns correct raw
+> residual byte count when called on a rq whose data_len is modified to
+> carry residual byte count.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> ---
-> 
->  drivers/scsi/aic94xx/aic94xx_tmf.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-> index b52124f..4b24bd3 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-> @@ -463,7 +463,7 @@ int asd_abort_task(struct sas_task *task)
->  						       AIC94XX_SCB_TIMEOUT);
->  		spin_lock_irqsave(&task->task_state_lock, flags);
->  		if (leftover < 1)
-> -			res = TMF_RESP_FUNC_FAILED;
-> +			goto out_not_reported;
->  		if (task->task_state_flags & SAS_TASK_STATE_DONE)
->  			res = TMF_RESP_FUNC_COMPLETE;
->  		spin_unlock_irqrestore(&task->task_state_lock, flags);
-> @@ -487,6 +487,11 @@ out:
->  	asd_ascb_free(ascb);
->  	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
->  	return res;
-> +
-> +out_not_reported:
-> +	spin_unlock_irqrestore(&task->task_state_lock, flags);
-> +	ASD_DPRINTK("task 0x%p aborted? but not reported.\n", task);
-> +	return res;
->  }
->  
->  /**
-> -
+> This problem was reported and diagnosed by Mike Galbraith.
 
-Hi Darrick,
+Tejun, this patch isn't much cleaner at all. It really shows the pain of
+these two seperate, yet related, variables.
 
-  Is this the only patch for ascb sequencer use after free problems, or are you still looking into that?
+-- 
+Jens Axboe
 
---Keith
