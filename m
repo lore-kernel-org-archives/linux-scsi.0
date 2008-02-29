@@ -1,60 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] mvsas: fix default can_queue
-Date: Fri, 29 Feb 2008 12:01:53 -0600
-Message-ID: <1204308113.4003.45.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Fri, 29 Feb 2008 21:11:25 +0100
+Message-ID: <20080229201123.GK6704@kernel.dk>
+References: <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com> <20080228153542.GZ6704@kernel.dk> <47C6D73E.4030302@gmail.com> <1204303656.4003.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40371 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752295AbYB2SCA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Feb 2008 13:02:00 -0500
+Received: from brick.kernel.dk ([87.55.233.238]:23556 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754760AbYB2UL3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Feb 2008 15:11:29 -0500
+Content-Disposition: inline
+In-Reply-To: <1204303656.4003.19.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <htejun@gmail.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-I noticed that the current marvell sas driver wasn't performing very
-well.  It turns out that it's setting can_queue not in the SCSI host,
-but in its own internal data structure, meaning it's always operating
-with a global queue depth of one.  This patch raises it to what the code
-seemed to be intending ... although I think can_queue should be
-MVS_CHIP_SLOT_SZ - 1 (without the divide by two)?
+On Fri, Feb 29 2008, James Bottomley wrote:
+> 
+> On Fri, 2008-02-29 at 00:46 +0900, Tejun Heo wrote:
+> > Jens Axboe wrote:
+> > >> This problem was reported and diagnosed by Mike Galbraith.
+> > > 
+> > > Tejun, this patch isn't much cleaner at all. It really shows the pain of
+> > > these two seperate, yet related, variables.
+> > 
+> > Not much cleaner compared to what?  I think padding stuff is bound to be
+> > somewhat complex.  It's a nasty thing in nature.  I think ->extra_len is
+> > better than ->raw_data_len because ->extra_len only needs to be updated
+> > where the dirty jobs are done and extra buffer areas are added.  Any
+> > better suggestions?
+> 
+> Well, I just investigated a bug report in the SCSI transport class.  Our
+> SMP handler is broken in exactly the same way.  We rely on the incoming
+> reported request lengths to size our request data, and they've blown up
+> from the true length to 512 bytes (the size of our alignment).
+> 
+> With the original patch, I have to run through the whole of libsas and
+> scsi_transport_sas doing
+> 
+> s/data_len/raw_data_len/
+> 
+> With your update it looks like I have to run through them all doing
+> 
+> s/data_len/data_len - extra_len/
+> 
+> which is even worse.  Can't we put things back to a point where data_len
+> means exactly that and extra_len means how much we have spare on the
+> end, so you know you can DMA up to data_len + extra_len if need be?
+> 
+> That way we don't have to sweep through every block driver altering the
+> way it uses data_len.
 
-The good news is that with this change, I'm getting a respectable
-throughput on the fio hammer test; plus zapping random phy resets across
-the disk triggers error handler recovery correctly (so far).
+Fully agree. The reason why I think it's so ugly is that you have to
+keep these two seperate variables in sync. The burning was just one bug,
+there will be others...
 
-I'm having less happy results with a SATAPI DVD ... it looks like the
-initial IDENTIFY goes across just fine, but that we stall on the other
-SCSI commands ... I'm still investigating this one.
-
-James
-
----
-
-diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-index 5ec0665..a128f67 100755
---- a/drivers/scsi/mvsas.c
-+++ b/drivers/scsi/mvsas.c
-@@ -618,7 +618,6 @@ struct mvs_info {
- 	struct mvs_phy		phy[MVS_MAX_PHYS];
- 	struct mvs_port		port[MVS_MAX_PHYS];
- 
--	u32			can_queue;	/* per adapter */
- 	u32			tag_out;	/*Get*/
- 	u32			tag_in;		/*Give*/
- };
-@@ -2150,7 +2149,7 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
- 	mvi->sas.num_phys = chip->n_phy;
- 	mvi->sas.lldd_max_execute_num = MVS_CHIP_SLOT_SZ - 1;
- 	mvi->sas.lldd_queue_size = MVS_QUEUE_SIZE;
--	mvi->can_queue = (MVS_CHIP_SLOT_SZ >> 1) - 1;
-+	mvi->shost->can_queue = (MVS_CHIP_SLOT_SZ >> 1) - 1;
- 	mvi->sas.lldd_ha = mvi;
- 	mvi->sas.core.shost = mvi->shost;
- 
-
+-- 
+Jens Axboe
 
