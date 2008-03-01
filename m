@@ -1,15 +1,14 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/5] qla4xxx: Add target reset functionality
-Date: Fri, 29 Feb 2008 18:25:20 -0600
-Message-ID: <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/5] scsi_error: add target reset handler
+Date: Fri, 29 Feb 2008 18:25:19 -0600
+Message-ID: <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu>
- <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58275 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:37249 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751320AbYCAAZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Feb 2008 19:25:37 -0500
-In-Reply-To: <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu>
+	id S1751788AbYCAA0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Feb 2008 19:26:01 -0500
+In-Reply-To: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, andrew.vasquez@qlogic.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
@@ -17,229 +16,232 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch adds target reset functionalty.
+The problem is that serveral drivers are sending a target reset from the
+device reset handler, and if we have multiple devices a target reset gets
+sent for each device when only one would be sufficient. And if we do a target
+reset it affects all the commands on the target so the device reset handler
+code only cleaning up one devices's commands makes programming the driver a
+little more difficult than it should be.
+
+This patch adds a target reset handler, which drivers can use to send
+a target reset. If successful it cleans up the commands for a devices
+accessed through that starget.
+
+The next patches will convert drivers to use it.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Acked-by: David Somayajulu <david.somayajulu@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h   |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h |    2 +
- drivers/scsi/qla4xxx/ql4_mbx.c  |   39 ++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_os.c   |   82 ++++++++++++++++++++++++++++++---------
- 4 files changed, 105 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi_error.c |  122 ++++++++++++++++++++++++++++++++++++++-------
+ include/scsi/scsi_eh.h    |    1 +
+ include/scsi/scsi_host.h  |    1 +
+ 3 files changed, 106 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index fe415ec..ed8ee66 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -216,6 +216,7 @@ union external_hw_config_reg {
- #define MBOX_CMD_ABOUT_FW			0x0009
- #define MBOX_CMD_PING				0x000B
- #define MBOX_CMD_LUN_RESET			0x0016
-+#define MBOX_CMD_TARGET_WARM_RESET		0x0017
- #define MBOX_CMD_GET_MANAGEMENT_DATA		0x001E
- #define MBOX_CMD_GET_FW_STATUS			0x001F
- #define MBOX_CMD_SET_ISNS_SERVICE		0x0021
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index a3608e0..b403a17 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -27,6 +27,8 @@ int qla4xxx_relogin_device(struct scsi_qla_host * ha,
- 			   struct ddb_entry * ddb_entry);
- int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
- 		      int lun);
-+int qla4xxx_reset_target(struct scsi_qla_host * ha,
-+			 struct ddb_entry * ddb_entry);
- int qla4xxx_get_flash(struct scsi_qla_host * ha, dma_addr_t dma_addr,
- 		      uint32_t offset, uint32_t len);
- int qla4xxx_get_firmware_status(struct scsi_qla_host * ha);
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 35cd73c..c577d79 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -713,6 +713,45 @@ int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
- 	return status;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 045a086..1221d2c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -524,6 +524,41 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
+ 	return rtn;
  }
  
-+/**
-+ * qla4xxx_reset_target - issues target Reset
-+ * @ha: Pointer to host adapter structure.
-+ * @db_entry: Pointer to device database entry
-+ * @un_entry: Pointer to lun entry structure
-+ *
-+ * This routine performs a TARGET RESET on the specified target.
-+ * The caller must ensure that the ddb_entry pointers
-+ * are valid before calling this routine.
-+ **/
-+int qla4xxx_reset_target(struct scsi_qla_host *ha,
-+			 struct ddb_entry *ddb_entry)
++static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
 +{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_SUCCESS;
-+
-+	DEBUG2(printk("scsi%ld:%d: target reset issued\n", ha->host_no,
-+		      ddb_entry->os_target_id));
-+
-+	/*
-+	 * Send target reset command to ISP, so that the ISP will return all
-+	 * outstanding requests with RESET status
-+	 */
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_TARGET_WARM_RESET;
-+	mbox_cmd[1] = ddb_entry->fw_ddb_index;
-+	mbox_cmd[5] = 0x01;	/* Immediate Command Enable */
-+
-+	qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0],
-+				&mbox_sts[0]);
-+	if (mbox_sts[0] != MBOX_STS_COMMAND_COMPLETE &&
-+	    mbox_sts[0] != MBOX_STS_COMMAND_ERROR)
-+		status = QLA_ERROR;
-+
-+	return status;
++	sdev->was_reset = 1;
++	sdev->expecting_cc_ua = 1;
 +}
++
++/**
++ * scsi_try_target_reset - Ask host to perform a target reset
++ * @scmd:	SCSI cmd used to send a target reset
++ *
++ * Notes:
++ *    There is no timeout for this operation.  if this operation is
++ *    unreliable for a given host, then the host itself needs to put a
++ *    timer on it, and set the host back to a consistent state prior to
++ *    returning.
++ */
++static int scsi_try_target_reset(struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	int rtn;
++
++	if (!scmd->device->host->hostt->eh_target_reset_handler)
++		return FAILED;
++
++	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
++	if (rtn == SUCCESS) {
++		spin_lock_irqsave(scmd->device->host->host_lock, flags);
++		__starget_for_each_device(scsi_target(scmd->device), NULL,
++					  __scsi_report_device_reset);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++	}
++
++	return rtn;
++}
++
+ /**
+  * scsi_try_bus_device_reset - Ask host to perform a BDR on a dev
+  * @scmd:	SCSI cmd used to send BDR
+@@ -542,11 +577,8 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+ 		return FAILED;
  
- int qla4xxx_get_flash(struct scsi_qla_host * ha, dma_addr_t dma_addr,
- 		      uint32_t offset, uint32_t len)
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index c3c59d7..8c31fe5 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -71,6 +71,7 @@ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
- static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 				void (*done) (struct scsi_cmnd *));
- static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd);
-+static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_slave_alloc(struct scsi_device *device);
- static int qla4xxx_slave_configure(struct scsi_device *device);
-@@ -83,6 +84,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
- 	.queuecommand		= qla4xxx_queuecommand,
- 
- 	.eh_device_reset_handler = qla4xxx_eh_device_reset,
-+	.eh_target_reset_handler = qla4xxx_eh_target_reset,
- 	.eh_host_reset_handler	= qla4xxx_eh_host_reset,
- 
- 	.slave_configure	= qla4xxx_slave_configure,
-@@ -1478,7 +1480,7 @@ static int qla4xxx_wait_for_hba_online(struct scsi_qla_host *ha)
+ 	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
+-	if (rtn == SUCCESS) {
+-		scmd->device->was_reset = 1;
+-		scmd->device->expecting_cc_ua = 1;
+-	}
+-
++	if (rtn == SUCCESS)
++		__scsi_report_device_reset(scmd->device, NULL);
+ 	return rtn;
  }
  
- /**
-- * qla4xxx_eh_wait_for_active_target_commands - wait for active cmds to finish.
-+ * qla4xxx_eh_wait_for_commands - wait for active cmds to finish.
-  * @ha: pointer to to HBA
-  * @t: target id
-  * @l: lun id
-@@ -1486,20 +1488,22 @@ static int qla4xxx_wait_for_hba_online(struct scsi_qla_host *ha)
-  * This function waits for all outstanding commands to a lun to complete. It
-  * returns 0 if all pending commands are returned and 1 otherwise.
-  **/
--static int qla4xxx_eh_wait_for_active_target_commands(struct scsi_qla_host *ha,
--						 int t, int l)
-+static int qla4xxx_eh_wait_for_commands(struct scsi_qla_host *ha,
-+					struct scsi_target *stgt,
-+					struct scsi_device *sdev)
+@@ -584,8 +616,9 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
  {
- 	int cnt;
- 	int status = 0;
- 	struct scsi_cmnd *cmd;
- 
- 	/*
--	 * Waiting for all commands for the designated target in the active
--	 * array
-+	 * Waiting for all commands for the designated target or dev
-+	 * in the active array
- 	 */
- 	for (cnt = 0; cnt < ha->host->can_queue; cnt++) {
- 		cmd = scsi_host_find_tag(ha->host, cnt);
--		if (cmd && cmd->device->id == t && cmd->device->lun == l) {
-+		if (cmd && stgt == scsi_target(cmd->device) &&
-+		    (!sdev || sdev == cmd->device)) {
- 			if (!qla4xxx_eh_wait_on_command(ha, cmd)) {
- 				status++;
- 				break;
-@@ -1547,19 +1551,12 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
- 	/* Send marker. */
- 	ha->marker_needed = 1;
- 
--	/*
--	 * If we are coming down the EH path, wait for all commands to complete
--	 * for the device.
--	 */
--	if (cmd->device->host->shost_state == SHOST_RECOVERY) {
--		if (qla4xxx_eh_wait_for_active_target_commands(ha,
--							  cmd->device->id,
--							  cmd->device->lun)){
--			dev_info(&ha->pdev->dev,
--				   "DEVICE RESET FAILED - waiting for "
--				   "commands.\n");
--			goto eh_dev_reset_done;
--		}
-+	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
-+					 cmd->device)) {
-+		dev_info(&ha->pdev->dev,
-+			   "DEVICE RESET FAILED - waiting for "
-+			   "commands.\n");
-+		goto eh_dev_reset_done;
- 	}
- 
- 	dev_info(&ha->pdev->dev,
-@@ -1575,6 +1572,53 @@ eh_dev_reset_done:
+ 	if (__scsi_try_to_abort_cmd(scmd) != SUCCESS)
+ 		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
+-			if (scsi_try_bus_reset(scmd) != SUCCESS)
+-				scsi_try_host_reset(scmd);
++			if (scsi_try_target_reset(scmd) != SUCCESS)
++				if (scsi_try_bus_reset(scmd) != SUCCESS)
++					scsi_try_host_reset(scmd);
  }
  
  /**
-+ * qla4xxx_eh_target_reset - callback for target reset.
-+ * @cmd: Pointer to Linux's SCSI command structure
+@@ -1060,6 +1093,56 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ }
+ 
+ /**
++ * scsi_eh_target_reset - send target reset if needed
++ * @shost:	scsi host being recovered.
++ * @work_q:     &list_head for pending commands.
++ * @done_q:	&list_head for processed commands.
 + *
-+ * This routine is called by the Linux OS to reset the target.
-+ **/
-+static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
++ * Notes:
++ *    Try a target reset.
++ */
++static int scsi_eh_target_reset(struct Scsi_Host *shost,
++				struct list_head *work_q,
++				struct list_head *done_q)
 +{
-+	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
-+	struct ddb_entry *ddb_entry = cmd->device->hostdata;
-+	int stat;
++	struct scsi_cmnd *scmd, *tgtr_scmd, *next;
++	unsigned int id;
++	int rtn;
 +
-+	if (!ddb_entry)
-+		return FAILED;
++	for (id = 0; id <= shost->max_id; id++) {
++		tgtr_scmd = NULL;
++		list_for_each_entry(scmd, work_q, eh_entry) {
++			if (id == scmd_id(scmd)) {
++				tgtr_scmd = scmd;
++				break;
++			}
++		}
++		if (!tgtr_scmd)
++			continue;
 +
-+	starget_printk(KERN_INFO, scsi_target(cmd->device),
-+		       "WARM TARGET RESET ISSUED.\n");
-+
-+	DEBUG2(printk(KERN_INFO
-+		      "scsi%ld: TARGET_DEVICE_RESET cmd=%p jiffies = 0x%lx, "
-+		      "to=%x,dpc_flags=%lx, status=%x allowed=%d\n",
-+		      ha->host_no, cmd, jiffies, cmd->timeout_per_command / HZ,
-+		      ha->dpc_flags, cmd->result, cmd->allowed));
-+
-+	stat = qla4xxx_reset_target(ha, ddb_entry);
-+	if (stat != QLA_SUCCESS) {
-+		starget_printk(KERN_INFO, scsi_target(cmd->device),
-+			       "WARM TARGET RESET FAILED.\n");
-+		return FAILED;
++		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
++						  "to target %d\n",
++						  current->comm, id));
++		rtn = scsi_try_target_reset(tgtr_scmd);
++		if (rtn == SUCCESS) {
++			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
++				if (id == scmd_id(scmd))
++					if (!scsi_device_online(scmd->device) ||
++					    !scsi_eh_tur(tgtr_scmd))
++						scsi_eh_finish_cmd(scmd,
++								   done_q);
++			}
++		} else
++			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Target reset"
++							  " failed target: "
++							  "%d\n",
++							  current->comm, id));
 +	}
 +
-+	/* Send marker. */
-+	ha->marker_needed = 1;
-+
-+	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
-+					 NULL)) {
-+		starget_printk(KERN_INFO, scsi_target(cmd->device),
-+			       "WARM TARGET DEVICE RESET FAILED - "
-+			       "waiting for commands.\n");
-+		return FAILED;
-+	}
-+
-+	starget_printk(KERN_INFO, scsi_target(cmd->device),
-+		       "WARM TARGET RESET SUCCEEDED.\n");
-+	return SUCCESS;
++	return list_empty(work_q);
 +}
 +
 +/**
-  * qla4xxx_eh_host_reset - kernel callback
-  * @cmd: Pointer to Linux's SCSI command structure
-  *
+  * scsi_eh_bus_reset - send a bus reset 
+  * @shost:	&scsi host being recovered.
+  * @work_q:     &list_head for pending commands.
+@@ -1447,9 +1530,11 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ {
+ 	if (!scsi_eh_stu(shost, work_q, done_q))
+ 		if (!scsi_eh_bus_device_reset(shost, work_q, done_q))
+-			if (!scsi_eh_bus_reset(shost, work_q, done_q))
+-				if (!scsi_eh_host_reset(work_q, done_q))
+-					scsi_eh_offline_sdevs(work_q, done_q);
++			if (!scsi_eh_target_reset(shost, work_q, done_q))
++				if (!scsi_eh_bus_reset(shost, work_q, done_q))
++					if (!scsi_eh_host_reset(work_q, done_q))
++						scsi_eh_offline_sdevs(work_q,
++								      done_q);
+ }
+ EXPORT_SYMBOL_GPL(scsi_eh_ready_devs);
+ 
+@@ -1619,10 +1704,8 @@ void scsi_report_bus_reset(struct Scsi_Host *shost, int channel)
+ 	struct scsi_device *sdev;
+ 
+ 	__shost_for_each_device(sdev, shost) {
+-		if (channel == sdev_channel(sdev)) {
+-			sdev->was_reset = 1;
+-			sdev->expecting_cc_ua = 1;
+-		}
++		if (channel == sdev_channel(sdev))
++			__scsi_report_device_reset(sdev, NULL);
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_report_bus_reset);
+@@ -1655,10 +1738,8 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
+ 
+ 	__shost_for_each_device(sdev, shost) {
+ 		if (channel == sdev_channel(sdev) &&
+-		    target == sdev_id(sdev)) {
+-			sdev->was_reset = 1;
+-			sdev->expecting_cc_ua = 1;
+-		}
++		    target == sdev_id(sdev))
++			__scsi_report_device_reset(sdev, NULL);
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_report_device_reset);
+@@ -1714,6 +1795,11 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+ 		if (rtn == SUCCESS)
+ 			break;
+ 		/* FALLTHROUGH */
++	case SCSI_TRY_RESET_TARGET:
++		rtn = scsi_try_target_reset(scmd);
++		if (rtn == SUCCESS)
++			break;
++		/* FALLTHROUGH */
+ 	case SCSI_TRY_RESET_BUS:
+ 		rtn = scsi_try_bus_reset(scmd);
+ 		if (rtn == SUCCESS)
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 25071d5..37a7614 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -64,6 +64,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+ #define SCSI_TRY_RESET_DEVICE	1
+ #define SCSI_TRY_RESET_BUS	2
+ #define SCSI_TRY_RESET_HOST	3
++#define SCSI_TRY_RESET_TARGET	4
+ 
+ extern int scsi_reset_provider(struct scsi_device *, int);
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 530ff4c..4913286 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -172,6 +172,7 @@ struct scsi_host_template {
+ 	 */
+ 	int (* eh_abort_handler)(struct scsi_cmnd *);
+ 	int (* eh_device_reset_handler)(struct scsi_cmnd *);
++	int (* eh_target_reset_handler)(struct scsi_cmnd *);
+ 	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
+ 	int (* eh_host_reset_handler)(struct scsi_cmnd *);
+ 
 -- 
 1.5.4.1
 
