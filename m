@@ -1,198 +1,249 @@
-From: Gerold Jury <gml@inode.at>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
-Date: Fri, 29 Feb 2008 22:59:11 +0100
-Message-ID: <200802292259.12047.gml@inode.at>
-References: <200802252005.22663.gml@inode.at> <1204183844.10161.57.camel@homer.simson.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761681AbYB2V5Q@vger.kernel.org>
-In-Reply-To: <1204183844.10161.57.camel@homer.simson.net>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 4/5] lpfc: convert lpfc to use target reset handler.
+Date: Fri, 29 Feb 2008 18:25:22 -0600
+Message-ID: <1204331123-3833-5-git-send-email-michaelc@cs.wisc.edu>
+References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu>
+ <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu>
+ <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu>
+ <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:58278 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751340AbYCAAZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Feb 2008 19:25:38 -0500
+In-Reply-To: <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, andrew.vasquez@qlogic.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-The oldest kernel that i tried is now 2.6.18 and behaves the same as all the 
-others up to 2.6.24.2.
-I did the tests on 2.6.18 in runlevel 1 with only udevd running to make sure 
-no other program is sending any commands to the drive.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-I am suspicious about the LG hardware as well so i hooked it to the friendly 
-windows pc in the neighborhood but it works quite well there.
+lpfc is sending a target reset from the device reset handler,
+so this patch just has it use the target reset handler.
 
-The SATA port the LG drive is connected to, was previously occupied by a 
-maxtor harddrive and did it's work without troubles.
+This patch also has the driver use CTX_TGT instead of CTX_LUN
+in the target reset handler. It looked like a bug.
 
-Does anybody know a possible meaning of the byte sequence
-2a 00 00 00 00 80 00 00  40 00 00 00 00 80 00 00
-in the context of scsi dvd writing
+One thing I was not sure of was if lpfc_scsi_tgt_reset fails, but
+the caller ends up calling lpfc_sli_abort_iocb and that aborts all
+the commands for the context that is requested and those are all
+cleaned up by the driver/firmware, should we return SUCCESS.
+
+This patch should wait for James Smart. I think he is on vacation,
+but the driver will work without the patch like it did before, so
+it is not required that this patch be merged with the rest.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c |   85 ++++++++++++++---------------------------
+ 1 files changed, 29 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 70255c1..e881ffb 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -835,13 +835,15 @@ lpfc_tskmgmt_def_cmpl(struct lpfc_hba *phba,
+ static int
+ lpfc_scsi_tgt_reset(struct lpfc_scsi_buf *lpfc_cmd, struct lpfc_vport *vport,
+ 		    unsigned  tgt_id, unsigned int lun,
+-		    struct lpfc_rport_data *rdata)
++		    struct lpfc_rport_data *rdata, int *iocb_status)
+ {
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	struct lpfc_iocbq *iocbq;
+ 	struct lpfc_iocbq *iocbqrsp;
+ 	int ret;
  
-Regards
-Gerold
++	*iocb_status = 0;
++
+ 	if (!rdata->pnode)
+ 		return FAILED;
+ 
+@@ -861,13 +863,14 @@ lpfc_scsi_tgt_reset(struct lpfc_scsi_buf *lpfc_cmd, struct lpfc_vport *vport,
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+ 			 "0702 Issue Target Reset to TGT %d Data: x%x x%x\n",
+ 			 tgt_id, rdata->pnode->nlp_rpi, rdata->pnode->nlp_flag);
+-	ret = lpfc_sli_issue_iocb_wait(phba,
++	*iocb_status = lpfc_sli_issue_iocb_wait(phba,
+ 				       &phba->sli.ring[phba->sli.fcp_ring],
+ 				       iocbq, iocbqrsp, lpfc_cmd->timeout);
+-	if (ret != IOCB_SUCCESS) {
+-		if (ret == IOCB_TIMEDOUT)
++	if (*iocb_status != IOCB_SUCCESS) {
++		if (*iocb_status == IOCB_TIMEDOUT)
+ 			iocbq->iocb_cmpl = lpfc_tskmgmt_def_cmpl;
+ 		lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
++		ret = FAILED;
+ 	} else {
+ 		ret = SUCCESS;
+ 		lpfc_cmd->result = iocbqrsp->iocb.un.ulpWord[4];
+@@ -1125,16 +1128,14 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
+ }
+ 
+ static int
+-lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
++lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+ {
+ 	struct Scsi_Host  *shost = cmnd->device->host;
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	struct lpfc_scsi_buf *lpfc_cmd;
+-	struct lpfc_iocbq *iocbq, *iocbqrsp;
+ 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
+ 	struct lpfc_nodelist *pnode = rdata->pnode;
+-	uint32_t cmd_result = 0, cmd_status = 0;
+ 	int ret = FAILED;
+ 	int iocb_status = IOCB_SUCCESS;
+ 	int cnt, loopcnt;
+@@ -1156,7 +1157,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 			if (!rdata ||
+ 				(loopcnt > ((vport->cfg_devloss_tmo * 2) + 1))){
+ 				lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+-						 "0721 LUN Reset rport "
++						 "0721 Target Reset rport "
+ 						 "failure: cnt x%x rdata x%p\n",
+ 						 loopcnt, rdata);
+ 				goto out;
+@@ -1174,52 +1175,20 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 		goto out;
+ 
+ 	lpfc_cmd->timeout = 60;
+-	lpfc_cmd->rdata = rdata;
+-
+-	ret = lpfc_scsi_prep_task_mgmt_cmd(vport, lpfc_cmd, cmnd->device->lun,
+-					   FCP_TARGET_RESET);
+-	if (!ret)
+-		goto out_free_scsi_buf;
+-
+-	iocbq = &lpfc_cmd->cur_iocbq;
+-
+-	/* get a buffer for this IOCB command response */
+-	iocbqrsp = lpfc_sli_get_iocbq(phba);
+-	if (iocbqrsp == NULL)
+-		goto out_free_scsi_buf;
+-
+-	lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+-			 "0703 Issue target reset to TGT %d LUN %d "
+-			 "rpi x%x nlp_flag x%x\n", cmnd->device->id,
+-			 cmnd->device->lun, pnode->nlp_rpi, pnode->nlp_flag);
+-	iocb_status = lpfc_sli_issue_iocb_wait(phba,
+-				       &phba->sli.ring[phba->sli.fcp_ring],
+-				       iocbq, iocbqrsp, lpfc_cmd->timeout);
+-
+-	if (iocb_status == IOCB_TIMEDOUT)
+-		iocbq->iocb_cmpl = lpfc_tskmgmt_def_cmpl;
+-
+-	if (iocb_status == IOCB_SUCCESS)
+-		ret = SUCCESS;
+-	else
+-		ret = iocb_status;
+-
+-	cmd_result = iocbqrsp->iocb.un.ulpWord[4];
+-	cmd_status = iocbqrsp->iocb.ulpStatus;
+-
+-	lpfc_sli_release_iocbq(phba, iocbqrsp);
+ 
++	ret = lpfc_scsi_tgt_reset(lpfc_cmd, vport, cmnd->device->id,
++				  cmnd->device->lun, rdata, &iocb_status);
+ 	/*
+ 	 * All outstanding txcmplq I/Os should have been aborted by the device.
+ 	 * Unfortunately, some targets do not abide by this forcing the driver
+ 	 * to double check.
+ 	 */
+ 	cnt = lpfc_sli_sum_iocb(vport, cmnd->device->id, cmnd->device->lun,
+-				LPFC_CTX_LUN);
++				LPFC_CTX_TGT);
+ 	if (cnt)
+ 		lpfc_sli_abort_iocb(vport, &phba->sli.ring[phba->sli.fcp_ring],
+ 				    cmnd->device->id, cmnd->device->lun,
+-				    LPFC_CTX_LUN);
++				    LPFC_CTX_TGT);
+ 	loopcnt = 0;
+ 	while(cnt) {
+ 		schedule_timeout_uninterruptible(LPFC_RESET_WAIT*HZ);
+@@ -1229,25 +1198,29 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 			break;
+ 
+ 		cnt = lpfc_sli_sum_iocb(vport, cmnd->device->id,
+-					cmnd->device->lun, LPFC_CTX_LUN);
++					cmnd->device->lun, LPFC_CTX_TGT);
+ 	}
+ 
++	/*
++	 * if lpfc_scsi_tgt_reset returned FAILED but lpfc_sli_abort_iocb
++	 * got run above and that aborted all the commands and cnt=0, should
++	 * we return SUCCESS because at least the commands were unstuck?
++	 */
+ 	if (cnt) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+-				 "0719 device reset I/O flush failure: "
++				 "0719 target reset I/O flush failure: "
+ 				 "cnt x%x\n", cnt);
+ 		ret = FAILED;
+ 	}
+ 
+-out_free_scsi_buf:
+ 	if (iocb_status != IOCB_TIMEDOUT) {
+ 		lpfc_release_scsi_buf(phba, lpfc_cmd);
+ 	}
+ 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+-			 "0713 SCSI layer issued device reset (%d, %d) "
++			 "0713 SCSI layer issued target reset (%d) "
+ 			 "return x%x status x%x result x%x\n",
+-			 cmnd->device->id, cmnd->device->lun, ret,
+-			 cmd_status, cmd_result);
++			 cmnd->device->id, ret,
++			 lpfc_cmd->status, lpfc_cmd->result);
+ out:
+ 	return ret;
+ }
+@@ -1263,6 +1236,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 	int ret = FAILED, i, err_count = 0;
+ 	int cnt, loopcnt;
+ 	struct lpfc_scsi_buf * lpfc_cmd;
++	int iocb_status = IOCB_SUCCESS;
+ 
+ 	lpfc_block_error_handler(cmnd);
+ 
+@@ -1296,9 +1270,8 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 		if (!match)
+ 			continue;
+ 
+-		ret = lpfc_scsi_tgt_reset(lpfc_cmd, vport, i,
+-					  cmnd->device->lun,
+-					  ndlp->rport->dd_data);
++		ret = lpfc_scsi_tgt_reset(lpfc_cmd, vport, i, cmnd->device->lun,
++					  ndlp->rport->dd_data, &iocb_status);
+ 		if (ret != SUCCESS) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+ 					 "0700 Bus Reset on target %d failed\n",
+@@ -1308,7 +1281,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 		}
+ 	}
+ 
+-	if (ret != IOCB_TIMEDOUT)
++	if (iocb_status != IOCB_TIMEDOUT)
+ 		lpfc_release_scsi_buf(phba, lpfc_cmd);
+ 
+ 	if (err_count == 0)
+@@ -1453,7 +1426,7 @@ struct scsi_host_template lpfc_template = {
+ 	.info			= lpfc_info,
+ 	.queuecommand		= lpfc_queuecommand,
+ 	.eh_abort_handler	= lpfc_abort_handler,
+-	.eh_device_reset_handler= lpfc_device_reset_handler,
++	.eh_target_reset_handler= lpfc_target_reset_handler,
+ 	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
+ 	.slave_alloc		= lpfc_slave_alloc,
+ 	.slave_configure	= lpfc_slave_configure,
+@@ -1473,7 +1446,7 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.info			= lpfc_info,
+ 	.queuecommand		= lpfc_queuecommand,
+ 	.eh_abort_handler	= lpfc_abort_handler,
+-	.eh_device_reset_handler= lpfc_device_reset_handler,
++	.eh_target_reset_handler= lpfc_target_reset_handler,
+ 	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
+ 	.slave_alloc		= lpfc_slave_alloc,
+ 	.slave_configure	= lpfc_slave_configure,
+-- 
+1.5.4.1
 
-
-On Thursday 28 February 2008 08:30:44 Mike Galbraith wrote:
->On Mon, 2008-02-25 at 20:05 +0100, Gerold Jury wrote:
->> Hello,
->
->Hi,
->
->> I have two DVD drives, one connected to the SATA port (LG) the other to
->> the IDE port (PHILIPS) of a via chipset.
->> They are driven by VIA SATA support (SATA_VIA) and VIA PATA support
->> (PATA_VIA).
->>
->> When I write an iso image to the drive on the SATA port /dev/sr0 it has
->> some extra bytes on disk which make the disk unreadable.
->> Writing to the IDE drive /dev/sr1 works well.
->
->I take it kernels < 2.6.23 are known to be functional?  If so, a git
->bisect should be really easy if you're a git user _and_ the breakage is
->in drivers/ata/sata_via.c, there are only two meaningful commits
->involved.
->
->homer:..git/linux-2.6 # git bisect start -- drivers/ata/sata_via.c
->homer:..git/linux-2.6 # git bisect good v2.6.22
->homer:..git/linux-2.6 # git bisect bad v2.6.23
->Bisecting: 2 revisions left to test after this
->
->A full bisection would take quite a few more builds.
->
->(I haven't noticed anybody else reporting similar troubles, and quite a
->lot of time has passed since 2.6.22 was released.. that makes me
->suspicious of your hardware)
->
->Maybe you should post again, and add cc's to  linux-ide@vger.kernel.org
->and  linux-scsi@vger.kernel.org, perhaps someone there can give you a
->better idea.
->
->> A simple test with a DVD RAM and dd instead of growisofs
->>
->> dd if=/dev/zero of=/dev/srX bs=1024k count=10
->>
->> and a readback afterwards
->>
->> dd if=/dev/srX of=imageX.bin bs=1024k count=10
->>
->> gives me an all zero file from the IDE drive but a file
->> full of probably scsi commands for the SATA drive and looks like
->>
->> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
->> |................| *
->> 00020000  2a 00 00 00 00 40 00 00  40 00 00 00 00 40 00 00 
->> |*....@..@....@..| 00020010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00
->> 00  |................| *
->> 00040000  2a 00 00 00 00 80 00 00  40 00 00 00 00 80 00 00 
->> |*.......@.......| 00040010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00
->> 00  |................| *
->> 00060000  2a 00 00 00 00 c0 00 00  02 00 00 00 00 c0 00 00 
->> |*...............| 00060010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00
->> 00  |................| *
->> 00061010  00 00 00 00 00 00 00 00  2a 00 00 00 00 c2 00 00 
->> |........*.......| 00061020  40 00 00 00 00 c2 00 00  00 00 00 00 00 00 00
->> 00  |@...............| 00061030  00 00 00 00 00 00 00 00  00 00 00 00 00
->> 00 00 00  |................| *
->> 00081010  00 00 00 00 00 00 00 00  2a 00 00 00 01 02 00 00 
->> |........*.......| 00081020  40 00 00 00 01 02 00 00  00 00 00 00 00 00 00
->> 00  |@...............| 00081030  00 00 00 00 00 00 00 00  00 00 00 00 00
->> 00 00 00  |................| *
->> 000a1010  00 00 00 00 00 00 00 00  2a 00 00 00 01 42 00 00 
->> |........*....B..| 000a1020  40 00 00 00 01 42 00 00  00 00 00 00 00 00 00
->> 00  |@....B..........| 000a1030  00 00 00 00 00 00 00 00  00 00 00 00 00
->> 00 00 00  |................| *
->> 000c1010  00 00 00 00 00 00 00 00  2a 00 00 00 01 82 00 00 
->> |........*.......| 000c1020  40 00 00 00 01 82 00 00  00 00 00 00 00 00 00
->> 00  |@...............| 000c1030  00 00 00 00 00 00 00 00  00 00 00 00 00
->> 00 00 00  |................|
->>
->> I really need some hints to make the SATA drive usable, please.
->>
->> best Regards
->> Gerold
->>
->>
->> uname -a
->> Linux blaubaer 2.6.24.2 #4 Sun Feb 24 21:50:21 CET 2008 x86_64 AMD
->> Athlon(tm) 64 Processor 3400+ AuthenticAMD GNU/Linux
->>
->> lspvi -v
->>
->> 00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAID
->> Controller (rev 80)
->>         Subsystem: ASUSTeK Computer Inc. A7V600/K8V Deluxe/K8V-X/A8V
->> Deluxe motherboard
->>         Flags: bus master, medium devsel, latency 64, IRQ 20
->>         I/O ports at e800 [size=8]
->>         I/O ports at e400 [size=4]
->>         I/O ports at e000 [size=8]
->>         I/O ports at d800 [size=4]
->>         I/O ports at d400 [size=16]
->>         I/O ports at d000 [size=256]
->>         Capabilities: [c0] Power Management version 2
->>         Kernel driver in use: sata_via
->>
->> 00:0f.1 IDE interface: VIA Technologies, Inc.
->> VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if
->> 8a [Master SecP PriP])
->>         Subsystem: ASUSTeK Computer Inc. A7V600/K8V-X/A8V Deluxe
->> motherboard Flags: bus master, medium devsel, latency 32, IRQ 20
->>         [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [size=8]
->>         [virtual] Memory at 000003f0 (type 3, non-prefetchable) [size=1]
->>         [virtual] Memory at 00000170 (32-bit, non-prefetchable) [size=8]
->>         [virtual] Memory at 00000370 (type 3, non-prefetchable) [size=1]
->>         I/O ports at fc00 [size=16]
->>         Capabilities: [c0] Power Management version 2
->>         Kernel driver in use: pata_via
->>
->> cat /var/log/messages
->>
->> Feb 25 18:20:57 blaubaer sata_via 0000:00:0f.0: version 2.3
->> Feb 25 18:20:57 blaubaer ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20
->> (level, low) -> IRQ 20
->> Feb 25 18:20:57 blaubaer sata_via 0000:00:0f.0: routed to hard irq line 10
->> Feb 25 18:20:57 blaubaer scsi3 : sata_via
->> Feb 25 18:20:57 blaubaer scsi4 : sata_via
->> Feb 25 18:20:57 blaubaer ata4: SATA max UDMA/133 cmd 0xe800 ctl 0xe400
->> bmdma 0xd400 irq 20
->> Feb 25 18:20:57 blaubaer ata5: SATA max UDMA/133 cmd 0xe000 ctl 0xd800
->> bmdma 0xd408 irq 20
->> Feb 25 18:20:57 blaubaer ata4: SATA link down 1.5 Gbps (SStatus 0 SControl
->> 300)
->> Feb 25 18:20:57 blaubaer ata5: SATA link up 1.5 Gbps (SStatus 113 SControl
->> 300)
->> Feb 25 18:20:57 blaubaer ata5.00: ATAPI: HL-DT-ST DVDRAM GH20NS10, EL00,
->> max UDMA/100
->> Feb 25 18:20:57 blaubaer ata5.00: configured for UDMA/100
->> Feb 25 18:20:57 blaubaer scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM
->> GH20NS10  EL00 PQ: 0 ANSI: 5
->> Feb 25 18:20:57 blaubaer sr0: scsi3-mmc drive: 48x/48x writer dvd-ram
->> cd/rw xa/form2 cdda tray
->> Feb 25 18:20:57 blaubaer Uniform CD-ROM driver Revision: 3.20
->> Feb 25 18:20:57 blaubaer sr 4:0:0:0: Attached scsi CD-ROM sr0
->> Feb 25 18:20:57 blaubaer sr 4:0:0:0: Attached scsi generic sg2 type 5
->> Feb 25 18:20:57 blaubaer pata_via 0000:00:0f.1: version 0.3.3
->> Feb 25 18:20:57 blaubaer ACPI: PCI Interrupt 0000:00:0f.1[A] -> GSI 20
->> (level, low) -> IRQ 20
->> Feb 25 18:20:57 blaubaer scsi5 : pata_via
->> Feb 25 18:20:57 blaubaer scsi6 : pata_via
->> Feb 25 18:20:57 blaubaer ata6: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma
->> 0xfc00 irq 14
->> Feb 25 18:20:57 blaubaer ata7: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma
->> 0xfc08 irq 15
->> Feb 25 18:20:57 blaubaer ata6.00: ATAPI: PHILIPS SPD2411P, BP01, max
->> UDMA/66 Feb 25 18:20:57 blaubaer ata6.00: limited to UDMA/33 due to
->> 40-wire cable Feb 25 18:20:57 blaubaer ata6.00: configured for UDMA/33
->> Feb 25 18:20:57 blaubaer scsi 5:0:0:0: CD-ROM            PHILIPS  SPD2411P
->> BP01 PQ: 0 ANSI: 5
->> Feb 25 18:20:57 blaubaer sr1: scsi3-mmc drive: 48x/48x writer dvd-ram
->> cd/rw xa/form2 cdda tray
->> Feb 25 18:20:57 blaubaer sr 5:0:0:0: Attached scsi CD-ROM sr1
->> Feb 25 18:20:57 blaubaer sr 5:0:0:0: Attached scsi generic sg3 type 5
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
