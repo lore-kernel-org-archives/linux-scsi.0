@@ -1,149 +1,40 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [PATCH] zfcp: convert zfcp to use target reset and device reset handler
-Date: Sat, 1 Mar 2008 14:36:33 +0100
-Message-ID: <20080301133632.GB5098@schmichrtp.de.ibm.com>
-References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-5-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-6-git-send-email-michaelc@cs.wisc.edu>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [Patch] plug async scan race at 1st node scan
+Date: Sat, 1 Mar 2008 07:26:45 -0700
+Message-ID: <20080301142644.GC24386@parisc-linux.org>
+References: <1187615436.3897.5.camel@localhost.localdomain> <20070820134918.GC30019@parisc-linux.org> <47C9419D.1040402@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate8.uk.ibm.com ([195.212.29.141]:50952 "EHLO
-	mtagate8.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760048AbYCANgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Mar 2008 08:36:38 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate8.uk.ibm.com (8.13.8/8.13.8) with ESMTP id m21DaZmu311828
-	for <linux-scsi@vger.kernel.org>; Sat, 1 Mar 2008 13:36:35 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m21DaZNE1802260
-	for <linux-scsi@vger.kernel.org>; Sat, 1 Mar 2008 13:36:35 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m21DaYin023667
-	for <linux-scsi@vger.kernel.org>; Sat, 1 Mar 2008 13:36:35 GMT
+Received: from palinux.external.hp.com ([192.25.206.14]:46310 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbYCAO1H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Mar 2008 09:27:07 -0500
 Content-Disposition: inline
-In-Reply-To: <1204331123-3833-6-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <47C9419D.1040402@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, andrew.vasquez@qlogic.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org, tore@linpro.no
 
-[based on proposal from Mike Christie <michaelc@cs.wisc.edu>, this
-patch adds some simplifications to the handler functions]
+On Sat, Mar 01, 2008 at 05:44:29AM -0600, Mike Christie wrote:
+> >Possibly we should be less forgiving, and require drivers to have a
+> >scan_start, otherwise they can't avoid this race.
+> 
+> I am hitting this problem with qla4xxx (added async scanning to 
+> 2.6.25-rc). Was the final decision that we have to add a scan_start? I 
+> did not see scan_start be made mandatory and I did not see James's patch 
+> go in.
 
-With the new target reset handler callback in the SCSI midlayer, the
-device reset handler in zfcp can be split in two parts. Now, zfcp does
-not have to track anymore whether the device supports LUN resets, so
-remove this flag and let the SCSI midlayer decide what to do.
+You can't really make it mandatory ... it's only mandatory *if* you have
+a scan_finished.
 
-The device reset handler simply issues a LUN reset and the target
-reset handler a target reset.
+The documentation should be updated though.  Possibly the function
+prototype should be changed from returning void to returning int, to
+allow drivers to say "Oh no, I can't start after all".
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/s390/scsi/zfcp_def.h  |    1 
- drivers/s390/scsi/zfcp_scsi.c |   62 ++++++++++++------------------------------
- 2 files changed, 19 insertions(+), 44 deletions(-)
-
---- a/drivers/s390/scsi/zfcp_scsi.c	2008-03-01 14:30:02.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_scsi.c	2008-03-01 14:30:45.000000000 +0100
-@@ -31,6 +31,7 @@ static int zfcp_scsi_queuecommand(struct
- 				  void (*done) (struct scsi_cmnd *));
- static int zfcp_scsi_eh_abort_handler(struct scsi_cmnd *);
- static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *);
-+static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *);
- static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *);
- static int zfcp_task_management_function(struct zfcp_unit *, u8,
- 					 struct scsi_cmnd *);
-@@ -51,6 +52,7 @@ struct zfcp_data zfcp_data = {
- 		.queuecommand		= zfcp_scsi_queuecommand,
- 		.eh_abort_handler	= zfcp_scsi_eh_abort_handler,
- 		.eh_device_reset_handler = zfcp_scsi_eh_device_reset_handler,
-+		.eh_target_reset_handler = zfcp_scsi_eh_target_reset_handler,
- 		.eh_host_reset_handler	= zfcp_scsi_eh_host_reset_handler,
- 		.can_queue		= 4096,
- 		.this_id		= -1,
-@@ -442,58 +444,32 @@ static int zfcp_scsi_eh_abort_handler(st
- 	return retval;
- }
- 
--static int
--zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
-+static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
- {
- 	int retval;
- 	struct zfcp_unit *unit = (struct zfcp_unit *) scpnt->device->hostdata;
- 
- 	if (!unit) {
--		ZFCP_LOG_NORMAL("bug: Tried reset for nonexistent unit\n");
--		retval = SUCCESS;
--		goto out;
-+		BUG();
-+		return SUCCESS;
- 	}
--	ZFCP_LOG_NORMAL("resetting unit 0x%016Lx on port 0x%016Lx, adapter %s\n",
--			unit->fcp_lun, unit->port->wwpn,
--			zfcp_get_busid_by_adapter(unit->port->adapter));
-+	retval = zfcp_task_management_function(unit,
-+					       FCP_LOGICAL_UNIT_RESET,
-+					       scpnt);
-+	return retval ? FAILED : SUCCESS;
-+}
- 
--	/*
--	 * If we do not know whether the unit supports 'logical unit reset'
--	 * then try 'logical unit reset' and proceed with 'target reset'
--	 * if 'logical unit reset' fails.
--	 * If the unit is known not to support 'logical unit reset' then
--	 * skip 'logical unit reset' and try 'target reset' immediately.
--	 */
--	if (!atomic_test_mask(ZFCP_STATUS_UNIT_NOTSUPPUNITRESET,
--			      &unit->status)) {
--		retval = zfcp_task_management_function(unit,
--						       FCP_LOGICAL_UNIT_RESET,
--						       scpnt);
--		if (retval) {
--			ZFCP_LOG_DEBUG("unit reset failed (unit=%p)\n", unit);
--			if (retval == -ENOTSUPP)
--				atomic_set_mask
--				    (ZFCP_STATUS_UNIT_NOTSUPPUNITRESET,
--				     &unit->status);
--			/* fall through and try 'target reset' next */
--		} else {
--			ZFCP_LOG_DEBUG("unit reset succeeded (unit=%p)\n",
--				       unit);
--			/* avoid 'target reset' */
--			retval = SUCCESS;
--			goto out;
--		}
-+static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
-+{
-+	int retval;
-+	struct zfcp_unit *unit = (struct zfcp_unit *) scpnt->device->hostdata;
-+
-+	if (!unit) {
-+		BUG();
-+		return SUCCESS;
- 	}
- 	retval = zfcp_task_management_function(unit, FCP_TARGET_RESET, scpnt);
--	if (retval) {
--		ZFCP_LOG_DEBUG("target reset failed (unit=%p)\n", unit);
--		retval = FAILED;
--	} else {
--		ZFCP_LOG_DEBUG("target reset succeeded (unit=%p)\n", unit);
--		retval = SUCCESS;
--	}
-- out:
--	return retval;
-+	return retval ? FAILED : SUCCESS;
- }
- 
- static int
---- a/drivers/s390/scsi/zfcp_def.h	2008-03-01 14:30:02.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_def.h	2008-03-01 14:30:45.000000000 +0100
-@@ -634,7 +634,6 @@ do { \
- 		 ZFCP_STATUS_PORT_NO_SCSI_ID)
- 
- /* logical unit status */
--#define ZFCP_STATUS_UNIT_NOTSUPPUNITRESET	0x00000001
- #define ZFCP_STATUS_UNIT_TEMPORARY		0x00000002
- #define ZFCP_STATUS_UNIT_SHARED			0x00000004
- #define ZFCP_STATUS_UNIT_READONLY		0x00000008
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
