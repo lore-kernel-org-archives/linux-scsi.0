@@ -1,124 +1,51 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/9] qla4xxx: use SCSI_ML_TARGET_BUSY and iscsi helper
-Date: Sun,  2 Mar 2008 03:03:17 -0600
-Message-ID: <1204448602-5435-4-git-send-email-michaelc@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/9] scsi: Add helper code so transport classes/driver
+ can control queueing
+Date: Sun, 02 Mar 2008 03:08:13 -0600
+Message-ID: <47CA6E7D.8000205@cs.wisc.edu>
 References: <1204448602-5435-1-git-send-email-michaelc@cs.wisc.edu>
- <1204448602-5435-2-git-send-email-michaelc@cs.wisc.edu>
- <1204448602-5435-3-git-send-email-michaelc@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42594 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47045 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752404AbYCBJEU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Mar 2008 04:04:20 -0500
-In-Reply-To: <1204448602-5435-3-git-send-email-michaelc@cs.wisc.edu>
+	id S1752822AbYCBJIY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Mar 2008 04:08:24 -0500
+In-Reply-To: <1204448602-5435-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, david.somayajulu@qlogic.com, andrew.vasquez@qlogic.com, James.Smart@Emulex.com, Eric.Moore@lsil.com
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Oh yeah, these patches were made over scsi-rc-fixes and can be applied 
+over the target resets ones (the target reset ones can be applied over 
+these too).
 
-When transitioning to the blocked state use SCSI_ML_TARGET_BUSY
-instead of returning with DID_IMM_RETRY, because DID_IMM_RETRY
-causes a requeue and then possibly (if under recursion limits)
-a queuecommand call.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/qla4xxx/ql4_os.c |   37 ++++++++++++++++++++-----------------
- 1 files changed, 20 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index c3c59d7..40ad624 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -341,9 +341,7 @@ void qla4xxx_mark_device_missing(struct scsi_qla_host *ha,
- }
- 
- static struct srb* qla4xxx_get_new_srb(struct scsi_qla_host *ha,
--				       struct ddb_entry *ddb_entry,
--				       struct scsi_cmnd *cmd,
--				       void (*done)(struct scsi_cmnd *))
-+				       struct ddb_entry *ddb_entry)
- {
- 	struct srb *srb;
- 
-@@ -354,11 +352,7 @@ static struct srb* qla4xxx_get_new_srb(struct scsi_qla_host *ha,
- 	atomic_set(&srb->ref_count, 1);
- 	srb->ha = ha;
- 	srb->ddb = ddb_entry;
--	srb->cmd = cmd;
- 	srb->flags = 0;
--	cmd->SCp.ptr = (void *)srb;
--	cmd->scsi_done = done;
--
- 	return srb;
- }
- 
-@@ -407,33 +401,41 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 	struct srb *srb;
- 	int rval;
- 
-+	cmd->scsi_done = done;
-+	cmd->result = 0;
-+
- 	if (!sess) {
- 		cmd->result = DID_IMM_RETRY << 16;
- 		goto qc_fail_command;
- 	}
- 
--	rval = iscsi_session_chkready(sess);
--	if (rval) {
--		cmd->result = rval;
-+	rval = iscsi_session_queue_ready(sess, cmd);
-+	if (rval)
-+		goto qc_busy;
-+	if (cmd->result)
- 		goto qc_fail_command;
--	}
- 
- 	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
- 		if (atomic_read(&ddb_entry->state) == DDB_STATE_DEAD) {
- 			cmd->result = DID_NO_CONNECT << 16;
- 			goto qc_fail_command;
- 		}
--		goto qc_host_busy;
-+		rval = SCSI_MLQUEUE_TARGET_BUSY;
-+		goto qc_busy;
- 	}
- 
--	if (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags))
--		goto qc_host_busy;
-+	if (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags)) {
-+		rval = SCSI_MLQUEUE_HOST_BUSY;
-+		goto qc_busy;
-+	}
- 
- 	spin_unlock_irq(ha->host->host_lock);
- 
--	srb = qla4xxx_get_new_srb(ha, ddb_entry, cmd, done);
-+	srb = qla4xxx_get_new_srb(ha, ddb_entry);
- 	if (!srb)
- 		goto qc_host_busy_lock;
-+	cmd->SCp.ptr = (void *)srb;
-+	srb->cmd = cmd;
- 
- 	rval = qla4xxx_send_command_to_isp(ha, srb);
- 	if (rval != QLA_SUCCESS)
-@@ -447,10 +449,11 @@ qc_host_busy_free_sp:
- 	mempool_free(srb, ha->srb_mempool);
- 
- qc_host_busy_lock:
-+	rval = SCSI_MLQUEUE_HOST_BUSY;
- 	spin_lock_irq(ha->host->host_lock);
- 
--qc_host_busy:
--	return SCSI_MLQUEUE_HOST_BUSY;
-+qc_busy:
-+	return rval;
- 
- qc_fail_command:
- 	done(cmd);
--- 
-1.5.4.1
-
+michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> SCSI-ml manages the queueing limits for the device and host, but
+> does not do so at the target level. However something something similar
+> can come in userful when a driver is transitioning a transport object to
+> the the blocked state, becuase at that time we do not want to queue
+> io and we do not want the queuecommand to be called again.
+> 
+> The patch adds code similar to the exisiting SCSI_ML_*BUSY handlers.
+> You can now return SCSI_MLQUEUE_TARGET_BUSY when we hit
+> a transport level queueing issue like the hw cannot allocate some
+> resource at the iscsi session/connection level, or the target has temporarily
+> closed or shrunk the queueing window, or if we are transitioning
+> to the blocked state.
+> 
+> For bnx2i we will also need to be able to limit queueing at this level.
+> bnx2i will hook into libiscsi, but will allocate a scsi host per
+> netdevice/hba, so unlike pure software iscsi/iser which is allocating
+> a host per session, it cannot set the scsi_host->can_queue and return
+> SCSI_MLQUEUE_HOST_BUSY to reflect queueing limits on the transport.
+> 
+> The iscsi class/driver can also set a scsi_target->can_queue value which
+> reflects the max commands the driver/class can support. For iscsi this
+> reflects the number of commands we can support for each session due to
+> session/connection hw limits, driver limits, and to also reflect the
+> session/targets's queueing window.
+> 
