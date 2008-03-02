@@ -1,37 +1,42 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] zfcp: convert zfcp to use target reset and device reset
- handler
-Date: Sun, 02 Mar 2008 03:09:20 -0600
-Message-ID: <47CA6EC0.7010606@cs.wisc.edu>
-References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-5-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-6-git-send-email-michaelc@cs.wisc.edu> <20080301133632.GB5098@schmichrtp.de.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/4] scsi_debug: remove unnecessary checking
+Date: Sun,  2 Mar 2008 18:30:17 +0900
+Message-ID: <1204450218-6858-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1204450218-6858-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1204450218-6858-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1204450218-6858-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47054 "EHLO sabe.cs.wisc.edu"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:47925 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824AbYCBJJw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Mar 2008 04:09:52 -0500
-In-Reply-To: <20080301133632.GB5098@schmichrtp.de.ibm.com>
+	id S1753038AbYCBJn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Mar 2008 04:43:58 -0500
+In-Reply-To: <1204450218-6858-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, andrew.vasquez@qlogic.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
+To: linux-scsi@vger.kernel.org
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Christof Schmitt wrote:
-> [based on proposal from Mike Christie <michaelc@cs.wisc.edu>, this
-> patch adds some simplifications to the handler functions]
-> 
-> With the new target reset handler callback in the SCSI midlayer, the
-> device reset handler in zfcp can be split in two parts. Now, zfcp does
-> not have to track anymore whether the device supports LUN resets, so
-> remove this flag and let the SCSI midlayer decide what to do.
-> 
-> The device reset handler simply issues a LUN reset and the target
-> reset handler a target reset.
-> 
-> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/scsi_debug.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Thanks for the review and testing. Your patch looks better than mine.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index c10234f..f70df03 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -344,9 +344,6 @@ int scsi_debug_queuecommand(struct scsi_cmnd * SCpnt, done_funct_t done)
+ 	int inj_transport = 0;
+ 	int delay_override = 0;
+ 
+-	if (done == NULL)
+-		return 0;	/* assume mid level reprocessing command */
+-
+ 	scsi_set_resid(SCpnt, 0);
+ 	if ((SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) && cmd) {
+ 		printk(KERN_INFO "scsi_debug: cmd ");
+-- 
+1.5.3.7
 
-Reviewed-by Mike Christie <michaelc@cs.wisc.edu>
