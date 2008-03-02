@@ -1,34 +1,46 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: oops in ibmvstgt, in __scsi_alloc_queue
-Date: Sun, 2 Mar 2008 13:57:39 +0100
-Message-ID: <20080302125739.GA2623@suse.de>
-References: <20080229155825.GA25293@suse.de> <20080301154342O.tomof@acm.org>
+From: Erez Zilber <erezz@Voltaire.COM>
+Subject: Re: [PATCH 0/3] iscsi iser limits
+Date: Sun, 02 Mar 2008 15:56:14 +0200
+Message-ID: <47CAB1FE.5010207@Voltaire.COM>
+References: <20080212205252.GB13643@osc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:41946 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753840AbYCBM5p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Mar 2008 07:57:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20080301154342O.tomof@acm.org>
+Received: from fwil.voltaire.com ([193.47.165.2]:21283 "EHLO exil.voltaire.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755018AbYCBN43 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Mar 2008 08:56:29 -0500
+In-Reply-To: <20080212205252.GB13643@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Pete Wyckoff <pw@osc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, Mar 01, FUJITA Tomonori wrote:
+Pete Wyckoff wrote:
+> These three patches remove various block device limits to
+> the iSER iSCSI transport.  I guess in theory they should go
+> in via the IB tree, although ACKs from the iSCSI side would
+> be welcome.
+>
+> The first two look quite similar to some TCP iSCSI patches
+> that Mike applied a while back:
+>
+>     d1d81c01f4bdd50577d9f89aa4a8e6344f63aa70
+> 	[SCSI] iscsi_tcp: remove DMA alignment restriction
+>
+>     8231f0eddbe425cc3b54f2d723bb03531925272e
+> 	[SCSI] iscsi_tcp: increase max_sectors
+>
+> The third fixes a problem with mapping an unaligned 512 kB
+> buffer and takes the opportunity to increase the FMR mapping
+> limit to 1 MB, as is done in SRP.
+>
+>   
+Pete,
 
-> On Fri, 29 Feb 2008 16:58:25 +0100
-> Olaf Hering <olh@suse.de> wrote:
-> > NIP [d00000000009ed80] .__scsi_alloc_queue+0xa4/0x130 [scsi_mod]
-> > LR [d00000000009ed7c] .__scsi_alloc_queue+0xa0/0x130 [scsi_mod]
-> 
-> Thanks for report.
-> 
-> Can you try the following patchset?
-> 
-> http://marc.info/?l=linux-scsi&m=120435349330391&w=2
+In the future, please send iSER patches also to
+general@lists.openfabrics.org.
 
-The 4 patches fix the oops.
-Thanks.
+Thanks,
+Erez
