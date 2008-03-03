@@ -1,66 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 07:44:13 +0900
-Message-ID: <47CC7F3D.4010605@gmail.com>
-References: <47CC036C.2060902@gmail.com>	<20080303230121M.tomof@acm.org>	<47CC09B6.6090709@gmail.com> <20080303235207S.tomof@acm.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Mon, 3 Mar 2008 18:04:07 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803031758310.8280-100000@iolanthe.rowland.org>
+References: <1204581661.3043.66.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.228]:38416 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbYCCWoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 17:44:23 -0500
-Received: by qb-out-0506.google.com with SMTP id e11so205338qbe.15
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2008 14:44:20 -0800 (PST)
-In-Reply-To: <20080303235207S.tomof@acm.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34781 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757494AbYCCXEJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 18:04:09 -0500
+In-Reply-To: <1204581661.3043.66.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-FUJITA Tomonori wrote:
-> On Mon, 03 Mar 2008 23:22:46 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
+On Mon, 3 Mar 2008, James Bottomley wrote:
+
+> On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
+> > This patch (as1050) adds a new field to struct scsi_device, to keep a
+> > count of the number of block-device open file references.  This count
+> > will be used by usb-storage to determine whether USB-PERSIST should be
+> > forced on during a suspend.
 > 
->> FUJITA Tomonori wrote:
->>>> At the end of blk_rq_map_user() together with data_len / extra_len
->>>> mangling or were you talking about James' original patch?
->>> With my patch, at the end of blk_rq_map_user, we have:
->>>
->>> 	if (len & queue_dma_alignment(q)) {
->>> 		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
->>>
->>> 		rq->extra_len += pad_len;
->>> 	}
->>>
->>>
->>> So no change as compared with 2.6.24?
->> Oh.. you killed sg list manipulation.  Many controllers do allow odd
->> bytes as the last sg entry but not all.  Also, if you append drain
-> 
-> Until 2.6.24, these drivers have taken care about the issue by
-> themselves. There is no change as compared with 2.6.24.
+> I don't think this does what's advertised if you mean it to keep a count
+> as the atomics seem to imply. (->open is only called on first open and
+> ->release on last close.  openers was a historical 2.4 field that used
+> to count opens but now just flags whether sd is open or not.
 
-Yeah, libata did its own padding and needed to add draining.  Private
-implementation was complex as hell and James suggested moving them to
-block layer.  Are you suggesting moving them back to drivers?
+Um.  The real purpose of that field is to let usb-storage know whether 
+or not the device is open at all.  I used a count because that seemed 
+like the only way to do it; it doesn't matter if the count value 
+doesn't exactly match the actual number of open file references.
 
->> buffer after it, it ends up with unaligned sg entry in the middle and
->> rq->data_len + rq->extra_len will overrun the sg entry after the drain
->> page which is really dangerous.
-> 
-> The drivers know that they use drain buffer. They can take care about
-> themselves on this too. If we want to do explicitly, we could have
-> rq->pad_len and rq->drain_len instead of rq->extra_len, though I think
-> that we are fine without these values because these drivers already
-> tell the block layer what they want and know that the block layer
-> gives it.
+I didn't want to use the openers field in struct scsi_disk because this 
+should apply to CDs and any other block devices as well as to disks.
 
-So, if a driver has requested aligning and draining, the driver should
-extend the sg entry before the last one by the alignment if draining was
-used for the request and extent the last sg if the draining wasn't used.
- I'd rather just implement them in the drivers.
+> Secondly, if you really want an openers count (which I remember SCSI
+> rendering a bad idea ages ago), that's held in struct block_device as
+> openers, isn't it?  So there's no need to duplicate this in SCSI.
 
--- 
-tejun
+But there's no way to get to the block_device structure if all you're 
+given is the scsi_device, right?  You would have to know something 
+special about it, such as whether it is a disk, a CD, or something 
+else.  This is intended to be generic.
+
+Alan Stern
+
