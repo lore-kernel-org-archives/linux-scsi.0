@@ -1,64 +1,59 @@
-From: "Ke Wei" <kewei.mv@gmail.com>
-Subject: Re: [PATCH] mvsas: fix default can_queue
-Date: Mon, 3 Mar 2008 16:17:40 +0800
-Message-ID: <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
-References: <1204308113.4003.45.camel@localhost.localdomain>
-	 <1204504945.3069.30.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Mon, 03 Mar 2008 17:26:41 +0900
+Message-ID: <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>
+References: <20080302233415.GA6258@Pilar>
+	<18379.18297.838050.536473@harpo.it.uu.se>
+	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:58018 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337AbYCCIRl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 03:17:41 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6670620wah.23
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2008 00:17:40 -0800 (PST)
-In-Reply-To: <1204504945.3069.30.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:45334 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753036AbYCCI1l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 03:27:41 -0500
+In-Reply-To: <tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: stefanr@s5r6.in-berlin.de
+Cc: mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Mar 3, 2008 at 8:42 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Fri, 2008-02-29 at 12:01 -0600, James Bottomley wrote:
-> > I noticed that the current marvell sas driver wasn't performing very
-> > well.  It turns out that it's setting can_queue not in the SCSI host,
-> > but in its own internal data structure, meaning it's always operating
-> > with a global queue depth of one.  This patch raises it to what the code
-> > seemed to be intending ... although I think can_queue should be
-> > MVS_CHIP_SLOT_SZ - 1 (without the divide by two)?
-> >
-> > The good news is that with this change, I'm getting a respectable
-> > throughput on the fio hammer test; plus zapping random phy resets across
-> > the disk triggers error handler recovery correctly (so far).
-> >
-> > I'm having less happy results with a SATAPI DVD ... it looks like the
-> > initial IDENTIFY goes across just fine, but that we stall on the other
-> > SCSI commands ... I'm still investigating this one.
->
-> Actually, I've run into another problem with this patch applied.  It
-> looks like NCQ fails with ATA disks.  What I see is that I/O goes fine
-> until I get more than one command outstanding to the device, then the
-> device stops responding.  I can keep the I/O flowing if I clamp the
-> device queue depth at 1.  SAS disks seem to be fine ... I can get
-> multiple outstanding commands to them correctly serviced.
+On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-Yes, I have to say that testing failed when I plugged SATA and SAS
-disk. Sometimes "insmod mvsas" will cause the system to hang.
-Only look good if can_queue is set to 1.  I will investigate this case.
+> [resend with linux-ide and linux-scsi CCed]
+> 
+> Mikael Pettersson wrote:
+> > Carlos R. Mafra writes:
+> >  > On Sun  2.Mar'08 at 21:53:25 +0100, Mikael Pettersson wrote:
+> >  > > On my main workstation (Intel P965 chipset, ICH8 SATA driven by ahci,
+> >  > > Samsung/Toshiba SH-203P SATA DVD writer, FC5 user-space), cdrecord
+> >  > > stopped working on the 2.6.25-rc3 kernel, with the complaint:
+> >  > > 
+> >  > > Warning: controller returns zero sized CD capabilities page.
+> >  > > Warning: controller returns wrong page 0 for CD capabilities page (2A).
+> [...]
+> >  > I will try to help by pointing you to the patch here: 
+> >  > http://lkml.org/lkml/2008/2/28/76
+> >  > 
+> >  > It seems your problem is similar to the one Mike Galbraith reported.
+> > 
+> > That patch does seem to fix the problem. Thanks.
+> 
+> This also fixes the same regression for FireWire.
+> 
+> However, CD burning still fails for me via ide-cd, although in a
+> different way than without the patch.  (Without the patch, ide-cd also
+> fails like described by you for SATA.)
+> 
+> With the patch, the failure is as follows.  I don't know if this is
+> related to the data length arithmetic or something entirely different;
+> all I learned so far is that 2.6.24 works.  Application log from
+> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
 
-> I'm having less happy results with a SATAPI DVD ... it looks like the
-> initial IDENTIFY goes across just fine, but that we stall on the other
-> SCSI commands ... I'm still investigating this one.
+Can you try the following patch?
 
-I think we need set BLIST_NOREPORTLUN or some other flags (see
-scsi_devinfo.h) about  new some ATAPI device.When calling
-scsi_report_lun_scan , it will bypass REPORT_LUNS command.
+http://lkml.org/lkml/2008/3/2/218
 
--- 
-Best Regards,
-Ke Wei
+Thanks,
