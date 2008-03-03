@@ -1,149 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] block: separate out padding from alignment
-Date: Mon, 03 Mar 2008 15:10:28 +0900
-Message-ID: <47CB9654.2000109@gmail.com>
-References: <47C8F4FC.1040505@gmail.com>	<20080302235223X.tomof@acm.org>	<47CB6508.3040206@gmail.com> <20080303125940T.fujita.tomonori@lab.ntt.co.jp> <47CB79E9.8000505@gmail.com> <47CB95C2.40309@gmail.com>
+From: "Ke Wei" <kewei.mv@gmail.com>
+Subject: Re: [PATCH] mvsas: fix default can_queue
+Date: Mon, 3 Mar 2008 16:17:40 +0800
+Message-ID: <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
+References: <1204308113.4003.45.camel@localhost.localdomain>
+	 <1204504945.3069.30.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:22741 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:58018 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbYCCGM1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 01:12:27 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6615610wah.23
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Mar 2008 22:12:27 -0800 (PST)
-In-Reply-To: <47CB95C2.40309@gmail.com>
+	with ESMTP id S1752337AbYCCIRl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 03:17:41 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so6670620wah.23
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2008 00:17:40 -0800 (PST)
+In-Reply-To: <1204504945.3069.30.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tomof@acm.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Block layer alignment was used for two different purposes - memory
-alignment and padding.  This causes problems in lower layers because
-drivers which only require memory alignment ends up with adjusted
-rq->data_len.  Separate out padding such that padding occurs iff
-driver explicitly requests it.
+On Mon, Mar 3, 2008 at 8:42 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Fri, 2008-02-29 at 12:01 -0600, James Bottomley wrote:
+> > I noticed that the current marvell sas driver wasn't performing very
+> > well.  It turns out that it's setting can_queue not in the SCSI host,
+> > but in its own internal data structure, meaning it's always operating
+> > with a global queue depth of one.  This patch raises it to what the code
+> > seemed to be intending ... although I think can_queue should be
+> > MVS_CHIP_SLOT_SZ - 1 (without the divide by two)?
+> >
+> > The good news is that with this change, I'm getting a respectable
+> > throughput on the fio hammer test; plus zapping random phy resets across
+> > the disk triggers error handler recovery correctly (so far).
+> >
+> > I'm having less happy results with a SATAPI DVD ... it looks like the
+> > initial IDENTIFY goes across just fine, but that we stall on the other
+> > SCSI commands ... I'm still investigating this one.
+>
+> Actually, I've run into another problem with this patch applied.  It
+> looks like NCQ fails with ATA disks.  What I see is that I/O goes fine
+> until I get more than one command outstanding to the device, then the
+> device stops responding.  I can keep the I/O flowing if I clamp the
+> device queue depth at 1.  SAS disks seem to be fine ... I can get
+> multiple outstanding commands to them correctly serviced.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-As wrote before, the major problem was that drivers which don't want
-size adjustment got it acciedentally by mixing up aligning and padding
-which are two conceptually separate things.  Let padding occur iff the
-driver explicitly requested it.  This makes both parties happy.
+Yes, I have to say that testing failed when I plugged SATA and SAS
+disk. Sometimes "insmod mvsas" will cause the system to hang.
+Only look good if can_queue is set to 1.  I will investigate this case.
 
- block/blk-map.c           |   16 +++++++++-------
- block/blk-settings.c      |   17 +++++++++++++++++
- drivers/ata/libata-scsi.c |    3 ++-
- include/linux/blkdev.h    |    2 ++
- 4 files changed, 30 insertions(+), 8 deletions(-)
+> I'm having less happy results with a SATAPI DVD ... it looks like the
+> initial IDENTIFY goes across just fine, but that we stall on the other
+> SCSI commands ... I'm still investigating this one.
 
-Index: work/block/blk-settings.c
-===================================================================
---- work.orig/block/blk-settings.c
-+++ work/block/blk-settings.c
-@@ -293,6 +293,23 @@ void blk_queue_stack_limits(struct reque
- EXPORT_SYMBOL(blk_queue_stack_limits);
- 
- /**
-+ * blk_queue_dma_pad - set pad mask
-+ * @q:     the request queue for the device
-+ * @mask:  pad mask
-+ *
-+ * Set pad mask.  Direct IO requests are padded to the mask specified.
-+ *
-+ * Appending pad buffer to a request modifies ->data_len such that it
-+ * includes the pad buffer.  The original requested data length can be
-+ * obtained using blk_rq_raw_data_len().
-+ **/
-+void blk_queue_dma_pad(struct request_queue *q, unsigned int mask)
-+{
-+	q->dma_pad_mask = mask;
-+}
-+EXPORT_SYMBOL(blk_queue_dma_pad);
-+
-+/**
-  * blk_queue_dma_drain - Set up a drain buffer for excess dma.
-  *
-  * @q:  the request queue for the device
-Index: work/block/blk-map.c
-===================================================================
---- work.orig/block/blk-map.c
-+++ work/block/blk-map.c
-@@ -43,6 +43,7 @@ static int __blk_rq_map_user(struct requ
- 			     void __user *ubuf, unsigned int len)
- {
- 	unsigned long uaddr;
-+	unsigned int alignment;
- 	struct bio *bio, *orig_bio;
- 	int reading, ret;
- 
-@@ -53,8 +54,8 @@ static int __blk_rq_map_user(struct requ
- 	 * direct dma. else, set up kernel bounce buffers
- 	 */
- 	uaddr = (unsigned long) ubuf;
--	if (!(uaddr & queue_dma_alignment(q)) &&
--	    !(len & queue_dma_alignment(q)))
-+	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-+	if (!(uaddr & alignment) && !(len & alignment))
- 		bio = bio_map_user(q, NULL, uaddr, len, reading);
- 	else
- 		bio = bio_copy_user(q, uaddr, len, reading);
-@@ -141,15 +142,16 @@ int blk_rq_map_user(struct request_queue
- 
- 	/*
- 	 * __blk_rq_map_user() copies the buffers if starting address
--	 * or length isn't aligned.  As the copied buffer is always
--	 * page aligned, we know that there's enough room for padding.
--	 * Extend the last bio and update rq->data_len accordingly.
-+	 * or length isn't aligned to dma_pad_mask.  As the copied
-+	 * buffer is always page aligned, we know that there's enough
-+	 * room for padding.  Extend the last bio and update
-+	 * rq->data_len accordingly.
- 	 *
- 	 * On unmap, bio_uncopy_user() will use unmodified
- 	 * bio_map_data pointed to by bio->bi_private.
- 	 */
--	if (len & queue_dma_alignment(q)) {
--		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-+	if (len & q->dma_pad_mask) {
-+		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
- 		struct bio *bio = rq->biotail;
- 
- 		bio->bi_io_vec[bio->bi_vcnt - 1].bv_len += pad_len;
-Index: work/include/linux/blkdev.h
-===================================================================
---- work.orig/include/linux/blkdev.h
-+++ work/include/linux/blkdev.h
-@@ -362,6 +362,7 @@ struct request_queue
- 	unsigned long		seg_boundary_mask;
- 	void			*dma_drain_buffer;
- 	unsigned int		dma_drain_size;
-+	unsigned int		dma_pad_mask;
- 	unsigned int		dma_alignment;
- 
- 	struct blk_queue_tag	*queue_tags;
-@@ -707,6 +708,7 @@ extern void blk_queue_max_hw_segments(st
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
- extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
-+extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
- extern int blk_queue_dma_drain(struct request_queue *q,
- 			       dma_drain_needed_fn *dma_drain_needed,
- 			       void *buf, unsigned int size);
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -862,9 +862,10 @@ static int ata_scsi_dev_config(struct sc
- 		struct request_queue *q = sdev->request_queue;
- 		void *buf;
- 
--		/* set the min alignment */
-+		/* set the min alignment and padding */
- 		blk_queue_update_dma_alignment(sdev->request_queue,
- 					       ATA_DMA_PAD_SZ - 1);
-+		blk_queue_dma_pad(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
- 
- 		/* configure draining */
- 		buf = kmalloc(ATAPI_MAX_DRAIN, q->bounce_gfp | GFP_KERNEL);
+I think we need set BLIST_NOREPORTLUN or some other flags (see
+scsi_devinfo.h) about  new some ATAPI device.When calling
+scsi_report_lun_scan , it will bypass REPORT_LUNS command.
+
+-- 
+Best Regards,
+Ke Wei
