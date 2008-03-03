@@ -1,46 +1,48 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
-Date: Mon, 3 Mar 2008 10:45:04 +0100
-Message-ID: <18379.51360.744676.894510@harpo.it.uu.se>
-References: <20080302233415.GA6258@Pilar>
-	<18379.18297.838050.536473@harpo.it.uu.se>
-	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>
-	<20080303172641Z.fujita.tomonori@lab.ntt.co.jp>
-	<47CBC014.9090309@s5r6.in-berlin.de>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [PATCH] zfcp: convert zfcp to use target reset and device reset handler
+Date: Mon, 3 Mar 2008 11:12:31 +0100
+Message-ID: <20080303101231.GA20838@schmichrtp.de.ibm.com>
+References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-5-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-6-git-send-email-michaelc@cs.wisc.edu> <20080301133632.GB5098@schmichrtp.de.ibm.com> <20080303093924.GA8698@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:43148 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751430AbYCCJp7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Mar 2008 04:45:59 -0500
-In-Reply-To: <47CBC014.9090309@s5r6.in-berlin.de>
+Received: from mtagate4.uk.ibm.com ([195.212.29.137]:53246 "EHLO
+	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756097AbYCCKMg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 05:12:36 -0500
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate4.uk.ibm.com (8.13.8/8.13.8) with ESMTP id m23ACYOA026200
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Mar 2008 10:12:34 GMT
+Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m23ACXfr1396900
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Mar 2008 10:12:34 GMT
+Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m23ACWPY002656
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Mar 2008 10:12:33 GMT
+Content-Disposition: inline
+In-Reply-To: <20080303093924.GA8698@osiris.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, andrew.vasquez@qlogic.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
 
-Stefan Richter writes:
- > FUJITA Tomonori wrote:
- > > On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
- > > Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
- > >> CD burning still fails for me via ide-cd, although in a
- > >> different way than without the patch.  (Without the patch, ide-cd also
- > >> fails like described by you for SATA.)
- > >>
- > >> With the patch, the failure is as follows.  I don't know if this is
- > >> related to the data length arithmetic or something entirely different;
- > >> all I learned so far is that 2.6.24 works.  Application log from
- > >> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
- > > 
- > > Can you try the following patch?
- > > 
- > > http://lkml.org/lkml/2008/3/2/218
- > 
- > Fails just like with Tejun's patch, alas.
+On Mon, Mar 03, 2008 at 10:39:24AM +0100, Heiko Carstens wrote:
+> >  	if (!unit) {
+> > -		ZFCP_LOG_NORMAL("bug: Tried reset for nonexistent unit\n");
+> > -		retval = SUCCESS;
+> > -		goto out;
+> > +		BUG();
+> > +		return SUCCESS;
+> > [...]
+> > +	if (!unit) {
+> > +		BUG();
+> > +		return SUCCESS;
+> 
+> Would you mind turning the BUG()s into WARN_ON(1)s? BUG() may crash the
+> whole system, while WARN_ON() will just emit a warning and continue.
 
-At this point I must confess I feel very uneasy about this situation.
+Agree, WARN_ON is enough for these cases. I will followup with the
+changed patch.
 
-Dare I suggest the perhaps hereditary solution of reverting these
-changes and doing them right after 2.6.25 final?
+--
+Christof Schmitt
