@@ -1,69 +1,30 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
- references
-Date: Mon, 3 Mar 2008 15:16:16 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803031508490.7094-100000@iolanthe.rowland.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Mon, 03 Mar 2008 22:41:33 +0100
+Message-ID: <47CC708D.9020504@s5r6.in-berlin.de>
+References: <20080302233415.GA6258@Pilar>	 <18379.18297.838050.536473@harpo.it.uu.se>	 <tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>	 <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>	 <47CBC014.9090309@s5r6.in-berlin.de>	 <47CC37CA.1040407@s5r6.in-berlin.de> <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>
-Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch (as1050) adds a new field to struct scsi_device, to keep a
-count of the number of block-device open file references.  This count
-will be used by usb-storage to determine whether USB-PERSIST should be
-forced on during a suspend.
+Boris Petkov wrote:
+>>  >> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>>  >>> CD burning still fails for me via ide-cd,
+...
+> we have fixed a similar bug to yours and the patch went in after
+> 2.6.25-rc3 - more specifically
+> bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32 - so please test current git head wrt
+> burning with ide-cd.
 
-Signed-off-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-
----
-
-This patch is being submitted through the USB tree rather than the SCSI 
-tree because it is part of a series of USB patches.
-
-
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -611,6 +611,7 @@ static int sd_open(struct inode *inode, 
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
- 	}
- 
-+	atomic_inc(&sdev->blockdev_open_cnt);
- 	return 0;
- 
- error_out:
-@@ -637,6 +638,8 @@ static int sd_release(struct inode *inod
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
- 
-+	atomic_dec(&sdev->blockdev_open_cnt);
-+
- 	if (!--sdkp->openers && sdev->removable) {
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
-Index: usb-2.6/drivers/scsi/sr.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sr.c
-+++ usb-2.6/drivers/scsi/sr.c
-@@ -564,6 +564,7 @@ static int sr_open(struct cdrom_device_i
- 	if (!scsi_block_when_processing_errors(sdev))
- 		goto error_out;
- 
-+	atomic_inc(&sdev->blockdev_open_cnt);
- 	return 0;
- 
- error_out:
-@@ -573,10 +574,12 @@ error_out:
- static void sr_release(struct cdrom_device_info *cdi)
- {
- 	struct scsi_cd *cd = cdi->handle;
-+	struct scsi_device *sdev = cd->device;
-+
-+	atomic_dec(&sdev->blockdev_open_cnt);
- 
- 	if (cd->device->sector_size > 2048)
- 		sr_set_blocklength(cd, 2048);
+I tested 2.6.25-rc3-git4 now, plus Tomo's block layer patch.
+Burning with wodim over ide-cd works now.  Thanks everybody,
+-- 
+Stefan Richter
+-=====-==--- --== ---==
+http://arcgraph.de/sr/
