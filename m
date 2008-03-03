@@ -1,160 +1,210 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 2/2] usb-storage: add autosuspend support
-Date: Mon, 3 Mar 2008 11:12:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803031109270.3611-100000@iolanthe.rowland.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC PATCH 1/3] block: add rq->complete_io hook for request stacking
+Date: Mon, 03 Mar 2008 17:24:50 +0100
+Message-ID: <47CC2652.1080601@suse.de>
+References: <20080215.172727.39155014.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45996 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759537AbYCCQMU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 11:12:20 -0500
+Received: from ns2.suse.de ([195.135.220.15]:47538 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754940AbYCCQYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Mar 2008 11:24:55 -0500
+In-Reply-To: <20080215.172727.39155014.k-ueda@ct.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 
-This patch (as1043) implements autosuspend for usb-storage.  It relies
-on an underlying SCSI dynamic PM implementation for generating
-autosuspend and autoresume requests.
+Hi Kiyoshi,
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Kiyoshi Ueda wrote:
+> This patch adds ->complete_io() hook for request stacking.
+> Request stacking drivers (such as request-based dm) can set
+> a callback for completion.
+> (The hook is not called in blk_end_io(), since request-based dm uses
+>  it for clone completion in the following appendix patches.)
+>=20
+[ .. ]
+I would rather have rq->complete_io() to be pointing to blk_end_io in t=
+he
+default case, this way rq->complete_io() would always be valid and we
+would be saving us the if() clause.
 
----
+> Index: 2.6.25-rc1/block/blk-core.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- 2.6.25-rc1.orig/block/blk-core.c
+> +++ 2.6.25-rc1/block/blk-core.c
+> @@ -138,6 +138,7 @@ void rq_init(struct request_queue *q, st
+>  	rq->data =3D NULL;
+>  	rq->sense =3D NULL;
+>  	rq->end_io =3D NULL;
+> +	rq->complete_io =3D NULL;
+rq->complete_io =3D blk_end_io;
 
-I'm submitting this through the SCSI tree rather than the USB tree, 
-because it depends so heavily on the previous SCSI dynamic PM patch.
+>  	rq->end_io_data =3D NULL;
+>  	rq->next_rq =3D NULL;
+>  }
+> @@ -1917,6 +1918,9 @@ static int blk_end_io(struct request *rq
+>   **/
+>  int blk_end_request(struct request *rq, int error, unsigned int nr_b=
+ytes)
+>  {
+> +	if (rq->complete_io)
+> +		return rq->complete_io(rq, error, nr_bytes, 0, NULL);
+> +
+>  	return blk_end_io(rq, error, nr_bytes, 0, NULL);
+>  }
+So when using my proposal this would just become:
 
+{
+    BUG_ON(!rq->complete_io);
+    return rq->complete_io(rq, error, nr_bytes, 0, NULL);
+}
 
-Index: usb-2.6/drivers/usb/storage/usb.c
-===================================================================
---- usb-2.6.orig/drivers/usb/storage/usb.c
-+++ usb-2.6/drivers/usb/storage/usb.c
-@@ -184,16 +184,22 @@ static int storage_suspend(struct usb_in
- {
- 	struct us_data *us = usb_get_intfdata(iface);
- 
-+	US_DEBUGP("%s\n", __FUNCTION__);
-+
-+#ifdef CONFIG_SCSI_DYNAMIC_PM
-+	/* Don't suspend if the host is still active */
-+	if (iface->pm_usage_cnt > 0) {
-+		US_DEBUGP("host is not suspended!\n");
-+		return -EBUSY;
-+	}
-+#endif
-+
- 	/* Wait until no command is running */
- 	mutex_lock(&us->dev_mutex);
- 
--	US_DEBUGP("%s\n", __FUNCTION__);
- 	if (us->suspend_resume_hook)
- 		(us->suspend_resume_hook)(us, US_SUSPEND);
- 
--	/* When runtime PM is working, we'll set a flag to indicate
--	 * whether we should autoresume when a SCSI request arrives. */
--
- 	mutex_unlock(&us->dev_mutex);
- 	return 0;
- }
-@@ -202,13 +208,10 @@ static int storage_resume(struct usb_int
- {
- 	struct us_data *us = usb_get_intfdata(iface);
- 
--	mutex_lock(&us->dev_mutex);
--
- 	US_DEBUGP("%s\n", __FUNCTION__);
- 	if (us->suspend_resume_hook)
- 		(us->suspend_resume_hook)(us, US_RESUME);
- 
--	mutex_unlock(&us->dev_mutex);
- 	return 0;
- }
- 
-@@ -957,6 +960,9 @@ static int storage_probe(struct usb_inte
- 		return -ENOMEM;
- 	}
- 
-+	/* Don't autosuspend until the SCSI core tells us */
-+	usb_autopm_get_interface(intf);
-+
- 	/*
- 	 * Allow 16-byte CDBs and thus > 2TB
- 	 */
-@@ -1054,6 +1060,7 @@ static struct usb_driver usb_storage_dri
- 	.pre_reset =	storage_pre_reset,
- 	.post_reset =	storage_post_reset,
- 	.id_table =	storage_usb_ids,
-+	.supports_autosuspend = 1,
- };
- 
- static int __init usb_stor_init(void)
-Index: usb-2.6/drivers/usb/storage/scsiglue.c
-===================================================================
---- usb-2.6.orig/drivers/usb/storage/scsiglue.c
-+++ usb-2.6/drivers/usb/storage/scsiglue.c
-@@ -299,10 +299,15 @@ static int device_reset(struct scsi_cmnd
- 
- 	US_DEBUGP("%s called\n", __FUNCTION__);
- 
--	/* lock the device pointers and do the reset */
--	mutex_lock(&(us->dev_mutex));
--	result = us->transport_reset(us);
--	mutex_unlock(&us->dev_mutex);
-+	result = usb_autopm_get_interface(us->pusb_intf);
-+	if (result == 0) {
-+
-+		/* lock the device pointers and do the reset */
-+		mutex_lock(&(us->dev_mutex));
-+		result = us->transport_reset(us);
-+		mutex_unlock(&us->dev_mutex);
-+		usb_autopm_put_interface(us->pusb_intf);
-+	}
- 
- 	return result < 0 ? FAILED : SUCCESS;
- }
-@@ -345,6 +350,32 @@ void usb_stor_report_bus_reset(struct us
- 	scsi_unlock(host);
- }
- 
-+#ifdef CONFIG_SCSI_DYNAMIC_PM
-+
-+/* The host and its devices are all idle so we can autosuspend */
-+static int us_autosuspend(struct Scsi_Host *host)
-+{
-+	struct us_data *us = host_to_us(host);
-+
-+	usb_autopm_put_interface(us->pusb_intf);
-+	return 0;
-+}
-+
-+/* The host needs to be autoresumed */
-+static int us_autoresume(struct Scsi_Host *host)
-+{
-+	struct us_data *us = host_to_us(host);
-+
-+	return usb_autopm_get_interface(us->pusb_intf);
-+}
-+
-+#else
-+#define us_autosuspend		NULL
-+#define us_autoresume		NULL
-+
-+#endif /* CONFIG_SCSI_DYNAMIC_PM */
-+
-+
- /***********************************************************************
-  * /proc/scsi/ functions
-  ***********************************************************************/
-@@ -471,6 +502,10 @@ struct scsi_host_template usb_stor_host_
- 	.eh_device_reset_handler =	device_reset,
- 	.eh_bus_reset_handler =		bus_reset,
- 
-+	/* dynamic power management */
-+	.autosuspend =			us_autosuspend,
-+	.autoresume =			us_autoresume,
-+
- 	/* queue commands only, only one command per LUN */
- 	.can_queue =			1,
- 	.cmd_per_lun =			1,
+>  EXPORT_SYMBOL_GPL(blk_end_request);
+> @@ -1936,6 +1940,27 @@ EXPORT_SYMBOL_GPL(blk_end_request);
+>   **/
+>  int __blk_end_request(struct request *rq, int error, unsigned int nr=
+_bytes)
+>  {
+> +	if (unlikely(blk_queue_stackable(rq->q)))
+> +		printk(KERN_WARNING "dev: %s: Not ready for request stacking, "
+> +		       "but the device driver set it stackable. "
+> +		       "Need to fix the device driver!\n",
+> +		       rq->rq_disk ? rq->rq_disk->disk_name : "?");
+> +
+> +	if (unlikely(rq->complete_io)) {
+> +		/*
+> +		 * If we invoke the ->complete_io here, the request submitter's
+> +		 * handler would get deadlock on the queue lock.
+> +		 *
+> +		 * This happens, when the request submitter didn't check
+> +		 * whether the queue is stackable or the device driver marked
+> +		 * the queue stackable.
+> +		 * Need to fix the request submitter or the device driver.
+> +		 */
+> +		printk(KERN_ERR "The device driver isn't ready for "
+> +		       "request stacking.\n");
+> +		BUG();
+> +	}
+> +
+This could be skipped entirely then.
 
+>  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
+>  		if (__end_that_request_first(rq, error, nr_bytes))
+>  			return 1;
+> @@ -1966,6 +1991,9 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
+>  int blk_end_bidi_request(struct request *rq, int error, unsigned int=
+ nr_bytes,
+>  			 unsigned int bidi_bytes)
+>  {
+> +	if (rq->complete_io)
+> +		return rq->complete_io(rq, error, nr_bytes, bidi_bytes, NULL);
+> +
+>  	return blk_end_io(rq, error, nr_bytes, bidi_bytes, NULL);
+>  }
+return rq->complete_io(rq, error, nr_bytes, bidi_bytes, NULL);
+
+>  EXPORT_SYMBOL_GPL(blk_end_bidi_request);
+> @@ -1999,6 +2027,9 @@ int blk_end_request_callback(struct requ
+>  			     unsigned int nr_bytes,
+>  			     int (drv_callback)(struct request *))
+>  {
+> +	if (rq->complete_io)
+> +		return rq->complete_io(rq, error, nr_bytes, 0, drv_callback);
+> +
+>  	return blk_end_io(rq, error, nr_bytes, 0, drv_callback);
+return rq->complete_io(rq, error, nr_bytes, bidi_bytes, NULL);
+
+>  }
+>  EXPORT_SYMBOL_GPL(blk_end_request_callback);
+> Index: 2.6.25-rc1/include/linux/blkdev.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- 2.6.25-rc1.orig/include/linux/blkdev.h
+> +++ 2.6.25-rc1/include/linux/blkdev.h
+> @@ -42,6 +42,9 @@ void copy_io_context(struct io_context *
+> =20
+>  struct request;
+>  typedef void (rq_end_io_fn)(struct request *, int);
+> +typedef int (rq_complete_io_fn)(struct request *rq, int error,
+> +				unsigned int nr_bytes, unsigned int bidi_bytes,
+> +				int (drv_callback)(struct request *));
+> =20
+>  struct request_list {
+>  	int count[2];
+> @@ -228,6 +231,7 @@ struct request {
+>  	 * completion callback.
+>  	 */
+>  	rq_end_io_fn *end_io;
+> +	rq_complete_io_fn *complete_io;
+>  	void *end_io_data;
+> =20
+>  	/* for bidi */
+> @@ -401,6 +405,7 @@ struct request_queue
+>  #define QUEUE_FLAG_PLUGGED	7	/* queue is plugged */
+>  #define QUEUE_FLAG_ELVSWITCH	8	/* don't use elevator, just do FIFO *=
+/
+>  #define QUEUE_FLAG_BIDI		9	/* queue supports bidi requests */
+> +#define QUEUE_FLAG_STACKABLE	10	/* queue supports request stacking *=
+/
+> =20
+>  enum {
+>  	/*
+> @@ -446,6 +451,8 @@ enum {
+>  #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_=
+flags)
+>  #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queu=
+e_flags)
+>  #define blk_queue_flushing(q)	((q)->ordseq)
+> +#define blk_queue_stackable(q)	\
+> +		test_bit(QUEUE_FLAG_STACKABLE, &(q)->queue_flags)
+> =20
+>  #define blk_fs_request(rq)	((rq)->cmd_type =3D=3D REQ_TYPE_FS)
+>  #define blk_pc_request(rq)	((rq)->cmd_type =3D=3D REQ_TYPE_BLOCK_PC)
+> Index: 2.6.25-rc1/drivers/scsi/scsi_lib.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- 2.6.25-rc1.orig/drivers/scsi/scsi_lib.c
+> +++ 2.6.25-rc1/drivers/scsi/scsi_lib.c
+> @@ -1597,6 +1597,13 @@ struct request_queue *__scsi_alloc_queue
+>  	 */
+>  	blk_queue_dma_alignment(q, 0x03);
+> =20
+> +	/*
+> +	 * SCSI is ready for request stacking, since it doesn't hold
+> +	 * queue lock when completing request.
+> +	 * (It doesn't use __blk_end_request().)
+> +	 */
+> +	set_bit(QUEUE_FLAG_STACKABLE, &q->queue_flags);
+> +
+>  	return q;
+>  }
+>  EXPORT_SYMBOL(__scsi_alloc_queue);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Apart from this: Great work!
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
