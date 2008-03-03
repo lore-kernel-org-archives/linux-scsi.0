@@ -1,91 +1,131 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] libata: update port initialisation for SAS call in
-Date: Mon, 03 Mar 2008 11:18:24 -0600
-Message-ID: <1204564704.3043.28.camel@localhost.localdomain>
+Subject: [PATCH] libata,libsas: expose ata_sas_change_queue_depth() and use
+	it
+Date: Mon, 03 Mar 2008 11:27:28 -0600
+Message-ID: <1204565248.3043.32.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
-Cc: Brian King <brking@linux.vnet.ibm.com>
+To: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The current port initialisation is skating on thin ice ... it doesn't
-fill in the device and link backlinks, and it doesn't add the sdev.
-Currently, this is all fine because they're never used, but it's a NULL
-deref waiting to happen, so fill them all in.
+The current libsas implementation of change_queue_depth() only really
+pays attention to the SAS queuing requirements.  If we plumb in a libata
+variant, we can make sure we're doing correct queue depth modifications
+on SATA devices.
 
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-----
-
-I need to use this in the following patch to plumb in the queue depth
-setting, so I'll take this through the scsi trees with the appropriate
-acks.
-
-James
+---
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0562b0a..f54f87c 100644
+index 0562b0a..d99403c 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3634,12 +3648,15 @@ EXPORT_SYMBOL_GPL(ata_sas_port_stop);
-  *	Zero on success, non-zero on error.
+@@ -962,13 +962,14 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ }
+ 
+ /**
+- *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
++ *	ata_sas_change_queue_depth - SAS callback for queue depth config
+  *	@sdev: SCSI device to configure queue depth for
++ *	@dev: The ATA device whose depth is to be changed
+  *	@queue_depth: new queue depth
+  *
+- *	This is libata standard hostt->change_queue_depth callback.
+- *	SCSI will call into this callback when user tries to set queue
+- *	depth via sysfs.
++ *	This is standard hostt->change_queue_depth callback for SAS
++ *	devices using libata for SATA tasks.  SCSI will call into this
++ *	callback when user tries to set queue depth via sysfs.
+  *
+  *	LOCKING:
+  *	SCSI layer (we don't care)
+@@ -976,16 +977,16 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+  *	RETURNS:
+  *	Newly configured queue depth.
   */
- 
--int ata_sas_port_init(struct ata_port *ap)
-+int ata_sas_port_init(struct ata_port *ap, struct scsi_device *sdev)
+-int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
++int ata_sas_change_queue_depth(struct scsi_device *sdev,
++			       struct ata_device *dev,
++			       int queue_depth)
  {
- 	int rc = ap->ops->port_start(ap);
+-	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *dev;
++	struct ata_port *ap = dev->link->ap;
+ 	unsigned long flags;
  
- 	if (!rc) {
- 		ap->print_id = ata_print_id++;
-+		ap->link.device->sdev = sdev;
-+		ap->link.device->link = &ap->link;
-+		ap->link.ap = ap;
- 		rc = ata_bus_probe(ap);
- 	}
+ 	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+ 		return sdev->queue_depth;
  
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index c72014a..cddada2 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3694,7 +3694,7 @@ static int ipr_ata_slave_alloc(struct scsi_device *sdev)
- 	if (sdev->sdev_target)
- 		sata_port = sdev->sdev_target->hostdata;
- 	if (sata_port)
--		rc = ata_sas_port_init(sata_port->ap);
-+		rc = ata_sas_port_init(sata_port->ap, sdev);
- 	if (rc)
- 		ipr_slave_destroy(sdev);
+-	dev = ata_scsi_find_dev(ap, sdev);
+ 	if (!dev || !ata_dev_enabled(dev))
+ 		return sdev->queue_depth;
  
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+@@ -1009,6 +1010,35 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+ 	scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, queue_depth);
+ 	return queue_depth;
+ }
++EXPORT_SYMBOL_GPL(ata_sas_change_queue_depth);
++
++/**
++ *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
++ *	@sdev: SCSI device to configure queue depth for
++ *	@queue_depth: new queue depth
++ *
++ *	This is libata standard hostt->change_queue_depth callback.
++ *	SCSI will call into this callback when user tries to set queue
++ *	depth via sysfs.
++ *
++ *	LOCKING:
++ *	SCSI layer (we don't care)
++ *
++ *	RETURNS:
++ *	Newly configured queue depth.
++ */
++int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
++{
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *dev;
++
++	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
++		return sdev->queue_depth;
++
++	dev = ata_scsi_find_dev(ap, sdev);
++
++	return ata_sas_change_queue_depth(sdev, dev, queue_depth);
++}
+ 
+ /* XXX: for spindown warning */
+ static void ata_delayed_done_timerfn(unsigned long arg)
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 601ec5b..2bcc30b 100644
+index 601ec5b..99a6dee 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -1048,7 +1062,7 @@ int sas_slave_alloc(struct scsi_device *scsi_dev)
- 	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
+@@ -823,6 +833,10 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
+ int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth)
+ {
+ 	int res = min(new_depth, SAS_MAX_QD);
++	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
++
++	if (dev_is_sata(dev))
++		return ata_sas_change_queue_depth(scsi_dev, dev->sata_dev.ap->link.device, res);
  
- 	if (dev_is_sata(dev))
--		return ata_sas_port_init(dev->sata_dev.ap);
-+		return ata_sas_port_init(dev->sata_dev.ap, scsi_dev);
- 
- 	return 0;
- }
+ 	if (scsi_dev->tagged_supported)
+ 		scsi_adjust_queue_depth(scsi_dev, scsi_get_tag_type(scsi_dev),
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a05f600..14570e7 100644
+index a05f600..b5c75aa 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -815,7 +815,7 @@ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmn
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
--extern int ata_sas_port_init(struct ata_port *);
-+extern int ata_sas_port_init(struct ata_port *, struct scsi_device *);
- extern int ata_sas_port_start(struct ata_port *ap);
- extern void ata_sas_port_stop(struct ata_port *ap);
- extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
+@@ -913,6 +913,7 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
+ extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+ extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+ 				       int queue_depth);
++int ata_sas_change_queue_depth(struct scsi_device *, struct ata_device *, int);
+ extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+ extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+ extern u8 ata_irq_on(struct ata_port *ap);
 
 
