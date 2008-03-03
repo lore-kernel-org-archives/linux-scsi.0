@@ -1,115 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] mvsas: fix default can_queue
-Date: Mon, 03 Mar 2008 10:40:06 -0600
-Message-ID: <1204562406.3043.23.camel@localhost.localdomain>
-References: <1204308113.4003.45.camel@localhost.localdomain>
-	 <1204504945.3069.30.camel@localhost.localdomain>
-	 <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
-	 <1204556371.3043.7.camel@localhost.localdomain>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: scsi: fix target reset handling
+Date: Mon, 3 Mar 2008 10:06:11 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D70D55122@NAMAIL4.ad.lsil.com>
+References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50847 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751824AbYCCQkK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 11:40:10 -0500
-In-Reply-To: <1204556371.3043.7.camel@localhost.localdomain>
+Received: from mail0.lsil.com ([147.145.40.20]:61956 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751307AbYCCRGz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 12:06:55 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, james.smart@emulex.com, andrew.vasquez@qlogic.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk
 
-On Mon, 2008-03-03 at 08:59 -0600, James Bottomley wrote:
-> On Mon, 2008-03-03 at 16:17 +0800, Ke Wei wrote:
-> > On Mon, Mar 3, 2008 at 8:42 AM, James Bottomley
-> > <James.Bottomley@hansenpartnership.com> wrote:
-> > >
-> > > On Fri, 2008-02-29 at 12:01 -0600, James Bottomley wrote:
-> > > > I noticed that the current marvell sas driver wasn't performing very
-> > > > well.  It turns out that it's setting can_queue not in the SCSI host,
-> > > > but in its own internal data structure, meaning it's always operating
-> > > > with a global queue depth of one.  This patch raises it to what the code
-> > > > seemed to be intending ... although I think can_queue should be
-> > > > MVS_CHIP_SLOT_SZ - 1 (without the divide by two)?
-> > > >
-> > > > The good news is that with this change, I'm getting a respectable
-> > > > throughput on the fio hammer test; plus zapping random phy resets across
-> > > > the disk triggers error handler recovery correctly (so far).
-> > > >
-> > > > I'm having less happy results with a SATAPI DVD ... it looks like the
-> > > > initial IDENTIFY goes across just fine, but that we stall on the other
-> > > > SCSI commands ... I'm still investigating this one.
-> > >
-> > > Actually, I've run into another problem with this patch applied.  It
-> > > looks like NCQ fails with ATA disks.  What I see is that I/O goes fine
-> > > until I get more than one command outstanding to the device, then the
-> > > device stops responding.  I can keep the I/O flowing if I clamp the
-> > > device queue depth at 1.  SAS disks seem to be fine ... I can get
-> > > multiple outstanding commands to them correctly serviced.
-> > 
-> > Yes, I have to say that testing failed when I plugged SATA and SAS
-> > disk. Sometimes "insmod mvsas" will cause the system to hang.
-> > Only look good if can_queue is set to 1.  I will investigate this case.
+On Friday, February 29, 2008 5:25 PM,  Mike Christie wrote:
+> This patchset fixes the problem where scsi-ml will call the 
+> device reset
+> handler for each logical unit, but some drivers are sending a target
+> reset. Because we do not need to send a target reset multiple times,
+> this patchset creates a new target reset callout which of course is
+> called once per target instead of once per lu. It also cleans up
+> the all the commands sent to the target when SUCCESS is returned.
 > 
-> Thanks.  For the NCQ case, it does look like turning NCQ off makes the
-> disk work fine, so I'd suspect some issue with NCQ handling.
+> qla4xxx, qla2xxx and lpfc were test with a hacked up sg_reset. I also
+> sent lots of commands to the target and decreased the cmd timeout to
+> 1 second so the scsi would run (turned off the eh abort callout too).
+> 
+> The arm scsi, mpt fusion, sym53c8xx_2, and a100u2w, and qla1280
+> drivers were only compile tested, but looked like the only needed
+> a rename of the scsi eh handler.
+> 
+> The zfcp driver is also only compile tested. It was doing a lun
+> reset and possibly target reset, so I split that up to use
+> the device and target reset handlers. scsi-ml will escalate from
+> the device to the target reset for the driver.
+> 
+> 
 
-As a work around until the NCQ issue is fixed, this will allow can_queue
-to be raised while still forcing all ATA devices to the non-NCQ case.
+The fusion firmware supports Logical Unit Reset, so why not fix
+mptscsih_dev_reset so its passing
+MPI_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, and lun number to
+mptscsih_TMHandler, and create the new function mptscsih_target_reset as
+you've done?
 
-Also, can can_queue be set to MVS_CHIP_SLOT_SZ - 1?  It seems like a
-reasonable default.
-
-James
-
----
-
-diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-index 5ec0665..425231f 100755
---- a/drivers/scsi/mvsas.c
-+++ b/drivers/scsi/mvsas.c
-@@ -37,6 +37,8 @@
- #include <linux/dma-mapping.h>
- #include <linux/ctype.h>
- #include <scsi/libsas.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/sas_ata.h>
- #include <asm/io.h>
- 
- #define DRV_NAME	"mvsas"
-@@ -654,12 +655,31 @@ static const struct mvs_chip_info mvs_chips[] = {
- 	[chip_6480] =		{ 8, 32, 10 },
- };
- 
-+static int mvsas_slave_configure(struct scsi_device *sdev)
-+{
-+	struct domain_device *dev = sdev_to_domain_dev(sdev);
-+	int ret = sas_slave_configure(sdev);
-+
-+	if (ret)
-+		return ret;
-+
-+	if (dev_is_sata(dev)) {
-+		struct ata_port *ap = dev->sata_dev.ap;
-+		struct ata_device *adev = ap->link.device;
-+
-+		/* clamp at no NCQ for the time being */
-+		adev->flags |= ATA_DFLAG_NCQ_OFF;
-+		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, 1);
-+	}
-+	return 0;
-+}
-+
- static struct scsi_host_template mvs_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
--	.slave_configure	= sas_slave_configure,
-+	.slave_configure	= mvsas_slave_configure,
- 	.slave_destroy		= sas_slave_destroy,
- 	.scan_finished		= mvs_scan_finished,
- 	.scan_start		= mvs_scan_start,
-
-
+Eric
