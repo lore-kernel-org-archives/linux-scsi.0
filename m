@@ -1,59 +1,75 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Mon, 3 Mar 2008 23:52:04 +0900
-Message-ID: <20080303235207S.tomof@acm.org>
-References: <47CC036C.2060902@gmail.com>
-	<20080303230121M.tomof@acm.org>
-	<47CC09B6.6090709@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] mvsas: fix default can_queue
+Date: Mon, 03 Mar 2008 08:59:31 -0600
+Message-ID: <1204556371.3043.7.camel@localhost.localdomain>
+References: <1204308113.4003.45.camel@localhost.localdomain>
+	 <1204504945.3069.30.camel@localhost.localdomain>
+	 <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:53670 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756763AbYCCOyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Mar 2008 09:54:51 -0500
-In-Reply-To: <47CC09B6.6090709@gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:50826 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753894AbYCCO7e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 09:59:34 -0500
+In-Reply-To: <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: htejun@gmail.com, jens.axboe@oracle.com
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 03 Mar 2008 23:22:46 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> FUJITA Tomonori wrote:
-> >> At the end of blk_rq_map_user() together with data_len / extra_len
-> >> mangling or were you talking about James' original patch?
-> > 
-> > With my patch, at the end of blk_rq_map_user, we have:
-> > 
-> > 	if (len & queue_dma_alignment(q)) {
-> > 		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-> > 
-> > 		rq->extra_len += pad_len;
-> > 	}
-> > 
-> > 
-> > So no change as compared with 2.6.24?
+On Mon, 2008-03-03 at 16:17 +0800, Ke Wei wrote:
+> On Mon, Mar 3, 2008 at 8:42 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> >
+> > On Fri, 2008-02-29 at 12:01 -0600, James Bottomley wrote:
+> > > I noticed that the current marvell sas driver wasn't performing very
+> > > well.  It turns out that it's setting can_queue not in the SCSI host,
+> > > but in its own internal data structure, meaning it's always operating
+> > > with a global queue depth of one.  This patch raises it to what the code
+> > > seemed to be intending ... although I think can_queue should be
+> > > MVS_CHIP_SLOT_SZ - 1 (without the divide by two)?
+> > >
+> > > The good news is that with this change, I'm getting a respectable
+> > > throughput on the fio hammer test; plus zapping random phy resets across
+> > > the disk triggers error handler recovery correctly (so far).
+> > >
+> > > I'm having less happy results with a SATAPI DVD ... it looks like the
+> > > initial IDENTIFY goes across just fine, but that we stall on the other
+> > > SCSI commands ... I'm still investigating this one.
+> >
+> > Actually, I've run into another problem with this patch applied.  It
+> > looks like NCQ fails with ATA disks.  What I see is that I/O goes fine
+> > until I get more than one command outstanding to the device, then the
+> > device stops responding.  I can keep the I/O flowing if I clamp the
+> > device queue depth at 1.  SAS disks seem to be fine ... I can get
+> > multiple outstanding commands to them correctly serviced.
 > 
-> Oh.. you killed sg list manipulation.  Many controllers do allow odd
-> bytes as the last sg entry but not all.  Also, if you append drain
+> Yes, I have to say that testing failed when I plugged SATA and SAS
+> disk. Sometimes "insmod mvsas" will cause the system to hang.
+> Only look good if can_queue is set to 1.  I will investigate this case.
 
-Until 2.6.24, these drivers have taken care about the issue by
-themselves. There is no change as compared with 2.6.24.
+Thanks.  For the NCQ case, it does look like turning NCQ off makes the
+disk work fine, so I'd suspect some issue with NCQ handling.
+
+> > I'm having less happy results with a SATAPI DVD ... it looks like the
+> > initial IDENTIFY goes across just fine, but that we stall on the other
+> > SCSI commands ... I'm still investigating this one.
+> 
+> I think we need set BLIST_NOREPORTLUN or some other flags (see
+> scsi_devinfo.h) about  new some ATAPI device.When calling
+> scsi_report_lun_scan , it will bypass REPORT_LUNS command.
+
+It doesn't seem to be anything the DVD does ... it works fine with the
+aic94xx controller doing SATAPI (it sends the correct reply to REPORT
+LUNS).  It looks like the first hang comes at around the second or third
+Test Unit Ready.
+
+Traces seem to show IDENTIFY_PACKET, INQUIRY, INQUIRY, TUR, TUR (hang)
+and then every following command hangs, but I'll try to instrument more
+accurate tracing.
+
+James
 
 
-> buffer after it, it ends up with unaligned sg entry in the middle and
-> rq->data_len + rq->extra_len will overrun the sg entry after the drain
-> page which is really dangerous.
-
-The drivers know that they use drain buffer. They can take care about
-themselves on this too. If we want to do explicitly, we could have
-rq->pad_len and rq->drain_len instead of rq->extra_len, though I think
-that we are fine without these values because these drivers already
-tell the block layer what they want and know that the block layer
-gives it.
-
-
-Jens, want's your verdict on this?
