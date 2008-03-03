@@ -1,63 +1,89 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open
-	file references
-Date: Mon, 03 Mar 2008 17:13:15 -0600
-Message-ID: <1204585995.3043.85.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0803031758310.8280-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] SCSI: add dynamic Power Management infrastructure
+Date: Mon, 03 Mar 2008 17:24:19 -0600
+Message-ID: <1204586659.3043.92.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0803031107360.3611-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0803031758310.8280-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58304 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754854AbYCCXYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2008 18:24:24 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0803031107360.3611-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-On Mon, 2008-03-03 at 18:04 -0500, Alan Stern wrote:
-> On Mon, 3 Mar 2008, James Bottomley wrote:
+On Mon, 2008-03-03 at 11:09 -0500, Alan Stern wrote:
+> This patch (as1042) introduces dynamic Power Management for the SCSI
+> stack.  It keeps track of devices' logical state and adds a
+> notification callback to tell the host adapter driver when some or all
+> of the devices on a SCSI bus are no longer in use, so the link can be
+> powered down.
 > 
-> > On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
-> > > This patch (as1050) adds a new field to struct scsi_device, to keep a
-> > > count of the number of block-device open file references.  This count
-> > > will be used by usb-storage to determine whether USB-PERSIST should be
-> > > forced on during a suspend.
-> > 
-> > I don't think this does what's advertised if you mean it to keep a count
-> > as the atomics seem to imply. (->open is only called on first open and
-> > ->release on last close.  openers was a historical 2.4 field that used
-> > to count opens but now just flags whether sd is open or not.
+> It also adds autosuspend capability (disabled initially) that can be
+> controlled by userspace, using the same sort of sysfs API as the USB
+> autosuspend implementation.
 > 
-> Um.  The real purpose of that field is to let usb-storage know whether 
-> or not the device is open at all.  I used a count because that seemed 
-> like the only way to do it; it doesn't matter if the count value 
-> doesn't exactly match the actual number of open file references.
+> Everything is managed by a new Kconfig option:
+> CONFIG_SCSI_DYNAMIC_PM.  If that symbol isn't set then essentially
+> nothing is changed (some code gets moved from one source file to
+> another).
 
-OK, so your change log is "whether the device is open" not "a count of
-openers".
+First the general comments/questions:
 
-> I didn't want to use the openers field in struct scsi_disk because this 
-> should apply to CDs and any other block devices as well as to disks.
-> 
-> > Secondly, if you really want an openers count (which I remember SCSI
-> > rendering a bad idea ages ago), that's held in struct block_device as
-> > openers, isn't it?  So there's no need to duplicate this in SCSI.
-> 
-> But there's no way to get to the block_device structure if all you're 
-> given is the scsi_device, right?  You would have to know something 
-> special about it, such as whether it is a disk, a CD, or something 
-> else.  This is intended to be generic.
+1. It's done at the wrong level: suspend "device" is actually a target
+function.  There's no way on a multi-lun device we want to keep the
+flags and last_busy anywhere but in the target
 
-OK, but then the obvious question is why this isn't at the block device
-layer?  It doesn't seem right that we'd have a shadow (and not a very
-effective one) of bdev->openers just so you can access it from a
-scsi_device.  We had a similar problem with the AHCI AN patches which
-were solved by altering the layered accesses.
+2. As you say in the comment, the thing we're trying to power down is
+the link.  In most SCSI implementations, the link has a rather complex
+relationship to the target, what we want to do in
+periodic_autosuspend_scan() is run over the devices on each link, and if
+they're not busy suspend the link?  What's probably needed is a set of
+adjunct helpers for the transport classes to do this.
+
+3. The link power down is much faster than device spin down ... in your
+patch these two things seem to be coupled ... we really need to keep
+them separate.
+
+4. The entanglement with error handling is incredibly problematic (since
+eh is a nastily complex state machine in its own right).  What do
+transports that use eh_strategy_handler do about all of this?
+
+
+Then the specific code:
+
+> +scsi_mod-y                     += scsi_scan.o scsi_sysfs.o scsi_devinfo.o \
+> +                                  scsi_pm.o
+
+If you just said N to SCSI_DYNAMIC_PM why does it still get compiled in?
+
+
+
+> 		.name		= "sd",
+>  		.probe		= sd_probe,
+>  		.remove		= sd_remove,
+> -		.suspend	= sd_suspend,
+> -		.resume		= sd_resume,
+>  		.shutdown	= sd_shutdown,
+>  	},
+>  	.rescan			= sd_rescan,
+>  	.done			= sd_done,
+> +	.suspend		= sd_suspend,
+> +	.resume			= sd_resume,
+>  };
+
+You're duplicating the driver suspend/resume methods in scsi_driver.  We
+just had a discussion about this at the storage summit.  Those methods
+are staying, so we might as well not duplicate them.
 
 James
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
