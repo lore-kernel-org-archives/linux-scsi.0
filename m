@@ -1,43 +1,50 @@
-From: FUJITA Tomonori <tomof@acm.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Mon, 3 Mar 2008 21:17:28 +0900
-Message-ID: <20080303211727P.tomof@acm.org>
-References: <47CB79E9.8000505@gmail.com>
-	<20080303172623O.fujita.tomonori@lab.ntt.co.jp>
-	<47CBC309.7090106@gmail.com>
+Date: Mon, 03 Mar 2008 22:38:55 +0900
+Message-ID: <47CBFF6F.4060301@gmail.com>
+References: <47CB79E9.8000505@gmail.com>	<20080303172623O.fujita.tomonori@lab.ntt.co.jp>	<47CBC309.7090106@gmail.com> <20080303211727P.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CBC309.7090106@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: htejun@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.comfujita.tomonori@lab.ntt.co.jp
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755208AbYCCNjY@vger.kernel.org>
+In-Reply-To: <20080303211727P.tomof@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 03 Mar 2008 18:21:13 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> FUJITA Tomonori wrote:
-> >>> I can't see what changing the meaning of rq->data_len (and
-> >>> investigating all the block drivers) gives us.
-> >> No matter which way you go, you change the meaning of rq->data_len and
-> >> you MUST inspect rq->data_len usage whichever way you go.
-> > 
-> > The patch doens't change that rq->data_len means the true data
-> > length. But yeah, it breaks rq->data_len == sum(sg). So it might break
-> > some drivers.
+FUJITA Tomonori wrote:
+> On Mon, 03 Mar 2008 18:21:13 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> Yeah, that's what I was saying.  You end up breaking one of the two
-> assumptions.  As sglist is getting modified for any driver if it has DMA
-> alignment set, whether rq->data_len is adjusted together or not, sglist
-> and data_len usages have to be audited.
+>> FUJITA Tomonori wrote:
+>>>>> I can't see what changing the meaning of rq->data_len (and
+>>>>> investigating all the block drivers) gives us.
+>>>> No matter which way you go, you change the meaning of rq->data_len and
+>>>> you MUST inspect rq->data_len usage whichever way you go.
+>>> The patch doens't change that rq->data_len means the true data
+>>> length. But yeah, it breaks rq->data_len == sum(sg). So it might break
+>>> some drivers.
+>> Yeah, that's what I was saying.  You end up breaking one of the two
+>> assumptions.  As sglist is getting modified for any driver if it has DMA
+>> alignment set, whether rq->data_len is adjusted together or not, sglist
+>> and data_len usages have to be audited.
+> 
+> My patch (well, James' original approach) doesn't affect drivers that
+> don't use drain buffer. rq->data_len still means the true data length
+> and rq->data_len is equal to sum(sg) for them. So right now we need to
+> audit only libata.
 
-My patch (well, James' original approach) doesn't affect drivers that
-don't use drain buffer. rq->data_len still means the true data length
-and rq->data_len is equal to sum(sg) for them. So right now we need to
-audit only libata.
+Your patch does change sglist for any driver which sets DMA alignment.
+You'll definitely need to audit more than libata.
 
-But your patch changes the meaning of rq->data_len. It affects all the
-drivers. So it breaks non libata stuff, like the SMP handler. We need
-to audit all the drivers.
+> But your patch changes the meaning of rq->data_len. It affects all the
+> drivers. So it breaks non libata stuff, like the SMP handler. We need
+> to audit all the drivers.
+
+With both patches applied, sglist and data_len are adjusted only for
+libata, so only drivers which explicitly requested buffer size
+manipulation (currently only libata) need to be audited / updated.
+
+-- 
+tejun
