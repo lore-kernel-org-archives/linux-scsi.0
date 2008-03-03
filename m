@@ -1,30 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
-Date: Mon, 03 Mar 2008 22:41:33 +0100
-Message-ID: <47CC708D.9020504@s5r6.in-berlin.de>
-References: <20080302233415.GA6258@Pilar>	 <18379.18297.838050.536473@harpo.it.uu.se>	 <tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>	 <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>	 <47CBC014.9090309@s5r6.in-berlin.de>	 <47CC37CA.1040407@s5r6.in-berlin.de> <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open
+	file references
+Date: Mon, 03 Mar 2008 16:01:01 -0600
+Message-ID: <1204581661.3043.66.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0803031508490.7094-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0803031508490.7094-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Boris Petkov wrote:
->>  >> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->>  >>> CD burning still fails for me via ide-cd,
-...
-> we have fixed a similar bug to yours and the patch went in after
-> 2.6.25-rc3 - more specifically
-> bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32 - so please test current git head wrt
-> burning with ide-cd.
+On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
+> This patch (as1050) adds a new field to struct scsi_device, to keep a
+> count of the number of block-device open file references.  This count
+> will be used by usb-storage to determine whether USB-PERSIST should be
+> forced on during a suspend.
 
-I tested 2.6.25-rc3-git4 now, plus Tomo's block layer patch.
-Burning with wodim over ide-cd works now.  Thanks everybody,
--- 
-Stefan Richter
--=====-==--- --== ---==
-http://arcgraph.de/sr/
+I don't think this does what's advertised if you mean it to keep a count
+as the atomics seem to imply. (->open is only called on first open and
+->release on last close.  openers was a historical 2.4 field that used
+to count opens but now just flags whether sd is open or not.
+
+Secondly, if you really want an openers count (which I remember SCSI
+rendering a bad idea ages ago), that's held in struct block_device as
+openers, isn't it?  So there's no need to duplicate this in SCSI.
+
+James
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
