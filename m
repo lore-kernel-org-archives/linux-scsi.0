@@ -1,44 +1,36 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
-Date: Mon, 03 Mar 2008 18:39:22 +0100
-Message-ID: <47CC37CA.1040407@s5r6.in-berlin.de>
-References: <20080302233415.GA6258@Pilar>	<18379.18297.838050.536473@harpo.it.uu.se>	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de> <20080303172641Z.fujita.tomonori@lab.ntt.co.jp> <47CBC014.9090309@s5r6.in-berlin.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC PATCH 1/3] block: add rq->complete_io hook for request stacking
+Date: Mon, 3 Mar 2008 18:49:54 +0100
+Message-ID: <20080303174953.GE6704@kernel.dk>
+References: <20080215.172727.39155014.k-ueda@ct.jp.nec.com> <47CC2652.1080601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CBC014.9090309@s5r6.in-berlin.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760212AbYCCRuX@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47CC2652.1080601@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
 
-I wrote:
-> FUJITA Tomonori wrote:
->> On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
->> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->>> CD burning still fails for me via ide-cd, although in a
->>> different way than without the patch.  (Without the patch, ide-cd also
->>> fails like described by you for SATA.)
->>>
->>> With the patch, the failure is as follows.  I don't know if this is
->>> related to the data length arithmetic or something entirely different;
->>> all I learned so far is that 2.6.24 works.  Application log from
->>> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
->>
->> Can you try the following patch?
->>
->> http://lkml.org/lkml/2008/3/2/218
+On Mon, Mar 03 2008, Hannes Reinecke wrote:
+> Hi Kiyoshi,
 > 
-> Fails just like with Tejun's patch, alas.
+> Kiyoshi Ueda wrote:
+> > This patch adds ->complete_io() hook for request stacking.
+> > Request stacking drivers (such as request-based dm) can set
+> > a callback for completion.
+> > (The hook is not called in blk_end_io(), since request-based dm uses
+> >  it for clone completion in the following appendix patches.)
+> > 
+> [ .. ]
+> I would rather have rq->complete_io() to be pointing to blk_end_io in the
+> default case, this way rq->complete_io() would always be valid and we
+> would be saving us the if() clause.
 
-What I see may very well be an ide-cd specific problem which is perhaps 
-already fixed in Linus' tree.  I need to update and retest.
+The whole point of this ->complete_io() thread is that we cannot use the
+above approach, before all drivers are converted from using
+__blk_end_request() to blk_end_request(). And that requires some work.
 
-(In any case, your patch fixes CD writing over SBP-2 and, judging from 
-the failure modes I got, is necessary for ide-cd as well.  Or Tejun's 
-patch or whatever you guys will come up with.)
 -- 
-Stefan Richter
--=====-==--- --== ---==
-http://arcgraph.de/sr/
+Jens Axboe
