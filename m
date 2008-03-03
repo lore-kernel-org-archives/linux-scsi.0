@@ -1,35 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Sun, 02 Mar 2008 12:46:44 -0600
-Message-ID: <47CAF614.5050206@cs.wisc.edu>
-References: <1204303656.4003.19.camel@localhost.localdomain>	<20080229201123.GK6704@kernel.dk>	<47C8F4FC.1040505@gmail.com> <20080302235223X.tomof@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Sun, 02 Mar 2008 18:04:09 -0600
+Message-ID: <1204502650.3069.25.camel@localhost.localdomain>
+References: <200803022053.m22KrP2Y023591@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080302235223X.tomof@acm.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: htejun@gmail.com, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, fujita.tomonori@lab.ntt.co.jp
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757509AbYCCAE6@vger.kernel.org>
+In-Reply-To: <200803022053.m22KrP2Y023591@harpo.it.uu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-kernel@vger.kernel.org, htejun@gmail.com, jens.axboe@oracle.com, linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> sum(sg) == rq->data_len is already broken; sg sends such requests
-> (though it would be nice if it doesn't).
+[scsi and ide list cc's added]
+
+On Sun, 2008-03-02 at 21:53 +0100, Mikael Pettersson wrote:
+> On my main workstation (Intel P965 chipset, ICH8 SATA driven by ahci,
+> Samsung/Toshiba SH-203P SATA DVD writer, FC5 user-space), cdrecord
+> stopped working on the 2.6.25-rc3 kernel, with the complaint:
 > 
+> Warning: controller returns zero sized CD capabilities page.
+> Warning: controller returns wrong page 0 for CD capabilities page (2A).
+> 
+> There's nothing in dmesg to suggest that the kernel has experienced
+> some problem.
+> 
+> 2.6.25-rc2-git2 was the last working kernel, 2.6.25-rc2-git3 up to
+> today's 2.6.25-rc3-git3 are all non-working.
+> 
+> I've narrowed the cause down to these two commits in 2.6.25-rc2-git3:
+> 
+> 40b01b9bbdf51ae543a04744283bf2d56c4a6afa
+> block: update bio according to DMA alignment padding
+> 
+> 6b00769fe1502b4ad97bb327ef7ac971b208bfb5
+> block: add request->raw_data_len
+> 
+> Four or so subsequent commits depend on the second of these, so it's
+> easier to test them by applying them to -git2 than to revert them.
+> 
+> Also, these two need to be treated as a unit. With only the first
+> applied, I get a massive delay as init tries to start udev, and then
+> if I try cdrecord it hangs in an unkillable state.
+> 
+> I've put some information in
+> <http://user.it.uu.se/~mikpe/linux/bug-2.6.25-rc3-cdrecord/>:
+> - the kernel's .config
+> - cdrecord -VV dev=/dev/scd0 blank=fast output for 2.6.25-rc2-git2 and -git3
+> - strace -v logs for the above cdrecord runs
 
-Actually, I think I was half wrong on that when you asked about 
-scsi_debug. The scatterlist that sg.c uses is never seen by the block 
-layer or scsi layer. It is just used as a container to hold segments. 
-sg.c and st.c use their scatterlist to manage their preallocated 
-pages/segments. When they pass it to scsi_execute_async, that function 
-will create a request struct and add bios for the pages.
+I think this is another manifestation of this problem:
 
-In 2.6.24 and below, sg.c will send a scatterlist length that does not 
-match the IO length, and scsi_execute_async will goof up and send a 
-rq->data_len that does not match the sum of the bios. That is what I was 
-trying to fix in 2.6.24, but the patch got messed up. In 2.6.25-rc2 and 
-above that is fixed and scsi_execute_async will catch sg.c doing this 
-and set rq->data_len and the bio lengths correctly.
+http://marc.info/?t=120358360500002
 
-So hopefully that helps any fixes you might have planned.
+The fix for which is being actively discussed here:
+
+http://marc.info/?t=120418867400002
+
+James
