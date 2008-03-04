@@ -1,39 +1,76 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
- references
-Date: Tue, 4 Mar 2008 12:43:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803041237440.4039-100000@iolanthe.rowland.org>
-References: <1204649571.3091.36.camel@localhost.localdomain>
+From: walt <w41ter@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 04 Mar 2008 09:34:56 -0800
+Message-ID: <fqk15l$lgq$1@ger.gmane.org>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1204649571.3091.36.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080304123939.GM6704@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.orglinux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 4 Mar 2008, James Bottomley wrote:
+Jens Axboe wrote:
+> On Tue, Mar 04 2008, Mike Galbraith wrote:
+>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+>>
+>>> Looks excellent to me, has a variant of this been tested as OK by the
+>>> users reporting the regression?
+>> K3b burning seems to be a nogo here.  This is git pulled this morning
+>> though, so it's a somewhat different tree than previously tested fwtw.
+>
+> can you please try git as of this morning without any patches applied,
+> and then pull
+>
+> git://git.kernel.dk/linux-2.6-block.git for-linus
+>
+> into that and see if that works?
 
-> If you want to see for yourself, it's fs/block_dev.c:do_open().
+Unfortunately this doesn't fix a problem I've discussed off-list with
+Kiyoshi Ueda, who suggested that I should follow this thread and try
+any patches posted here.
 
-Thanks for the pointer.  I see the subroutine is not exactly loaded 
-with comments...
+Here is what happens when I try to mount a CD (before and after I
+pull 'for-linus'):
 
-> > If you can suggest an alternative approach, I'll be glad to change the
-> > patch.
-> 
-> Well, since this is the 7th patch of an eight patch series, I don't
-> really have the context for that.  However, I assume it's all on the
-> linux-usb list?  If so, I'll add it to my list of things to look at.
+hdc: ide_cd_check_ireason: wrong transfer direction!
+cdrom: failed setting lba address space
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hdc: drive not ready for command
+hdc: status timeout: status=0xd0 { Busy }
+ide: failed opcode was: unknown
+hdc: DMA disabled
+hdc: drive not ready for command
+hdc: ATAPI reset complete
+ISO 9660 Extensions: Microsoft Joliet Level 3
+ISOFS: changing to secondary root
+VFS: busy inodes on changed media.
 
-The patches before it probably won't give you any additional useful 
-context.  The following patch might; that's the one affecting 
-usb-storage.
+The mount can take from 5 seconds on up to a minute or so before the
+CD can be accessed.
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
