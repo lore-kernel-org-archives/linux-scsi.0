@@ -1,83 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Wed, 05 Mar 2008 02:59:30 +0900
-Message-ID: <47CD8E02.1020207@gmail.com>
-References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <fqk15l$lgq$1@ger.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: scsi: fix target reset handling
+Date: Tue, 04 Mar 2008 12:00:34 -0600
+Message-ID: <1204653634.3091.47.camel@localhost.localdomain>
+References: <47CD68F9.5060108@cs.wisc.edu>
+	 <664A4EBB07F29743873A87CF62C26D70D55464@NAMAIL4.ad.lsil.com>
+	 <61DA31637BAF774FB13AC59B6381C080A9CFC1@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: walt <w41ter@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49262 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761135AbYCDSAn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 13:00:43 -0500
+In-Reply-To: <61DA31637BAF774FB13AC59B6381C080A9CFC1@NAMAIL4.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Hagan, Steve" <Steve.Hagan@lsi.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, james.smart@emulex.com, andrew.vasquez@qlogic.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx, "Rivera, Peter" <Peter.Rivera@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-walt wrote:
-> Jens Axboe wrote:
->> On Tue, Mar 04 2008, Mike Galbraith wrote:
->>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
->>>
->>>> Looks excellent to me, has a variant of this been tested as OK by the
->>>> users reporting the regression?
->>> K3b burning seems to be a nogo here.  This is git pulled this morning
->>> though, so it's a somewhat different tree than previously tested fwtw.
->>
->> can you please try git as of this morning without any patches applied,
->> and then pull
->>
->> git://git.kernel.dk/linux-2.6-block.git for-linus
->>
->> into that and see if that works?
+On Tue, 2008-03-04 at 10:40 -0700, Hagan, Steve wrote:
+> Windows (StorPort drivers) supports LUN, target, and bus resets in a
+> hierarchical fashion.  If an I/O times out, Storport will issue a LUN
+> reset first.  If that fails, it will escalate to a target reset.  If
+> that fails, it will escalate to a bus reset.
 > 
-> Unfortunately this doesn't fix a problem I've discussed off-list with
-> Kiyoshi Ueda, who suggested that I should follow this thread and try
-> any patches posted here.
-> 
-> Here is what happens when I try to mount a CD (before and after I
-> pull 'for-linus'):
-> 
-> hdc: ide_cd_check_ireason: wrong transfer direction!
-> cdrom: failed setting lba address space
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status timeout: status=0xd0 { Busy }
-> ide: failed opcode was: unknown
-> hdc: DMA disabled
-> hdc: drive not ready for command
-> hdc: ATAPI reset complete
-> ISO 9660 Extensions: Microsoft Joliet Level 3
-> ISOFS: changing to secondary root
-> VFS: busy inodes on changed media.
-> 
-> The mount can take from 5 seconds on up to a minute or so before the
-> CD can be accessed.
+> What does "fail" mean?
 
-Which version did you try?  There was a recent IDE bug fix which
-affected CD recording.  Commit bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32
-which is included in 2.6.25-rc3.  Also, did 2.6.24 work?
+Fail means the driver was unable to perform the action.  i.e failure of
+a LUN reset means we couldn't get the TMF out.
 
--- 
-tejun
+>   If the TM request returns with a non-success
+> status, or if there are outstanding I/O's for the scope of the reset
+> remaining after we receive the TM reply, then the reset is considered
+> failed.
+
+Outstanding I/O is a dubious point.  Your driver could have outstanding
+I/O for the LUN after a LUN reset, but if the device correctly executed
+it, it will have cleared its queue.
+
+>   Our miniport driver will return error status back to Storport
+> and it will escalate to the next level of reset.  A bus reset cannot be
+> failed back to Storport.  If a bus reset fails (as above) then the only
+> recourse if for the miniport to do a hard reset of the adapter and
+> return all outstanding I/O's with reset status.
+
+That's pretty much what the default error handler does.
+
+James
+
+
