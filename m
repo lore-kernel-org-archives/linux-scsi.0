@@ -1,40 +1,57 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 4 Mar 2008 20:34:30 +0100
-Message-ID: <20080304193430.GX6704@kernel.dk>
-References: <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <47CD4355.4050401@gmail.com> <20080304223006A.tomof@acm.org> <47CD53BA.5040908@gmail.com> <47CD7611.2030606@gmail.com> <47CD7C05.1080707@gmail.com> <1204656328.6598.1.camel@homer.simson.net> <20080304192551.GU6704@kernel.dk> <1204659196.6284.7.camel@homer.simson.net>
+Date: Tue, 04 Mar 2008 14:42:40 -0500 (EST)
+Message-ID: <20080304.144240.71085240.k-ueda@ct.jp.nec.com>
+References: <1204634238.5997.5.camel@homer.simson.net>
+	<20080304123939.GM6704@kernel.dk>
+	<fqk15l$lgq$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:24396 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932324AbYCDTef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 14:34:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1204659196.6284.7.camel@homer.simson.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: w41ter@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: Tejun Heo <htejun@gmail.com>, FUJITA Tomonori <tomof@acm.org>, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-On Tue, Mar 04 2008, Mike Galbraith wrote:
-> 
-> On Tue, 2008-03-04 at 20:25 +0100, Jens Axboe wrote:
+Hi,
+
+On Tue, 04 Mar 2008 09:34:56 -0800, walt wrote:
+> Jens Axboe wrote:
 > > On Tue, Mar 04 2008, Mike Galbraith wrote:
-> > > 
-> > > On Wed, 2008-03-05 at 01:42 +0900, Tejun Heo wrote:
-> > > 
-> > > > The following patch gets the writing going.
-> > > 
-> > > Bingo.
-> > 
-> > Pretty please test this on top of current -git?
+> >> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+> >>
+> >>> Looks excellent to me, has a variant of this been tested as OK by the
+> >>> users reporting the regression?
+> >> K3b burning seems to be a nogo here.  This is git pulled this morning
+> >> though, so it's a somewhat different tree than previously tested fwtw.
+> >
+> > can you please try git as of this morning without any patches applied,
+> > and then pull
+> >
+> > git://git.kernel.dk/linux-2.6-block.git for-linus
+> >
+> > into that and see if that works?
 > 
-> ?  That's the patch I just tested, and the tree.  Oh.. 976dde0..87baa2b
-> just a sec....
+> Unfortunately this doesn't fix a problem I've discussed off-list with
+> Kiyoshi Ueda, who suggested that I should follow this thread and try
+> any patches posted here.
+ 
+I think there was misunderstanding between us.
+On off-list, I meant:
+  o Your original problem was CD burning, and it looked same problem
+    being discussed on this thread, according to this message:
 
-Yeah it is, mid-air collision of emails. So just disregard this one!
+> cdrecord: Warning: controller returns zero sized CD capabilities page.
+> cdrecord: Warning: controller returns wrong page 0 for CD capabilities page (2A). 
 
--- 
-Jens Axboe
+    So I suggested you to watch this thread and try patches of this
+    thread for CD burning problem.
 
+  o The problem of ide_cd_check_ireason looked different from
+    CD burning one.
+    So I suggested you to report it as a different problem.
+
+Thanks,
+Kiyoshi Ueda
