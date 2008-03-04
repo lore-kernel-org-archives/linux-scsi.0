@@ -1,46 +1,54 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: need help with sg ioctls
-Date: Tue, 4 Mar 2008 12:08:02 +0100
-Message-ID: <200803041208.02448.bs@q-leap.de>
-References: <200802281743.51332.bs@q-leap.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] 2.6.25-rc1-git2: GDT SCSI: change drivers/scsi/gdth.c
+ into using pci_get device
+Date: Tue, 04 Mar 2008 14:04:24 +0200
+Message-ID: <47CD3AC8.6020300@panasas.com>
+References: <47B1ADCE.40202@larces.uece.br> <1202833354.3137.19.camel@localhost.localdomain> <47B1CF45.5070407@panasas.com> <47B23033.1080100@larces.uece.br> <1202861823.3137.170.camel@localhost.localdomain> <47B2B101.3090106@panasas.com> <20080216163756.GG7657@parisc-linux.org> <47B80E65.7090504@panasas.com> <47CCFECC.8040709@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:46942 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753269AbYCDLIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 06:08:04 -0500
-In-Reply-To: <200802281743.51332.bs@q-leap.de>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759408AbYCDMFL@vger.kernel.org>
+In-Reply-To: <47CCFECC.8040709@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sergio Luis <sergio@larces.uece.br>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On Thursday 28 February 2008 17:43:51 Bernd Schubert wrote:
-> Hello,
->
-> for some reasons the kernel.org qla4xxx driver doesn't work for us. Version
-> 5.01.00.08 seems to work a bit better, but all default sg-ioctl's are not
-> defined.
->
-> Adding these manually as in scsi/sg.c works, but IMHO is rather stupid. Is
-> there a sane way to call sg_ioctl()?
-> I mean it's static and also not exported and the file_operations ioctl
-> method is already taken by the qla4xxx driver.
->
-> Do I miss something?
+On Tue, Mar 04 2008 at 9:48 +0200, Hannes Reinecke <hare@suse.de> wrote:
+> Boaz Harrosh wrote:
+>> On Sat, Feb 16 2008 at 18:37 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
+>>> On Wed, Feb 13, 2008 at 10:57:37AM +0200, Boaz Harrosh wrote:
+>>>> I still don't have a card for testing myself. Again anyone
+>>>> wants to send me a card. Intel people anybody home?
+>>> Apparently Intel sold this line of cards to Adaptec.  The copyright
+>>> notice in the file backs this up:
+>>>
+>>>  * Copyright (C) 1995-06 ICP vortex GmbH, Achim Leubner                 *
+>>>  * Copyright (C) 2002-04 Intel Corporation                              *
+>>>  * Copyright (C) 2003-06 Adaptec Inc.                                   *
+>>>  * <achim_leubner@adaptec.com>                                          *
+>>>
+>> OK I never got this guy to ping back. CCing support@adaptec.com.
+>>
+>> Who is the right contact person, regarding the HW that is supported
+>> by the gdth driver? Form what we see in driver commit logs (above), 
+>> it was transfered to  Adaptec from Intel in 2003. Is that still so?
+>>
+> Yes, apparently. But gdth is the driver for the rather old ICP Vortex
+> range; most of which are driven by aacraid nowadays.
+> I thought I had one of these beasts; will check.
+> 
+> But yes, this is Adaptec. Unless the person is Mark Salyzyn or Luben
+> it's quite tricky to excite any response.
+> 
+> Cheers,
+> 
+> Hannes
 
-Enventually we found the reason for all the trouble. It was a bug in one of 
-the debian udev scripts (scsi_devfs.sh), which made it to override /dev 
-entries with wrong device major/minors (debian bug Bug#468939).
+Thanks Hannes.
 
-Sorry for the noise.
+I never got any response. I guess I'm not important enough.
+Christoph said he has a card, that he'll send once he gets
+to it. I'll wait for his card. I gave up on the Adaptec guys.
 
-
-
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+Boaz
