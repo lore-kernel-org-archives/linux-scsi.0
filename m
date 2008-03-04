@@ -1,41 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Mike Galbraith <efault@gmx.de>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 22:50:50 +0900
-Message-ID: <47CD53BA.5040908@gmail.com>
-References: <20080304093536.GH6704@kernel.dk>	<1204634238.5997.5.camel@homer.simson.net>	<47CD4355.4050401@gmail.com> <20080304223006A.tomof@acm.org>
+Date: Tue, 04 Mar 2008 15:25:22 +0100
+Message-ID: <1204640722.5783.10.camel@homer.simson.net>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304085944.GG6704@kernel.dk>
+	 <20080304180648W.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304093536.GH6704@kernel.dk>
+	 <1204634238.5997.5.camel@homer.simson.net>
+	 <20080304123939.GM6704@kernel.dk>
+	 <1204634619.17258.0.camel@homer.simson.net>
+	 <1204635515.17258.12.camel@homer.simson.net>
+	 <20080304130307.GN6704@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:25807 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094AbYCDNvE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 08:51:04 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so874145wah.23
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Mar 2008 05:51:02 -0800 (PST)
-In-Reply-To: <20080304223006A.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080304130307.GN6704@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-FUJITA Tomonori wrote:
->> Aiee... device going down after timing out on READ_DISC_INFO.  That's
->> gruesome.  Can you please try the other patches?
+
+On Tue, 2008-03-04 at 14:03 +0100, Jens Axboe wrote:
+
+> Re-read my original mail! It states that you should just pull:
 > 
-> Tejun, I thought that libata needs a fix for sum(sg) != rq->data_len. No?
+> git://git.kernel.dk/linux-2.6-block.git for-linus
+> 
+> into your linus branch, or just create a test branch off linus' master
+> and pull into that. IOW, it's the for-linus branch that you should pull,
+> nothing else.
 
-The extra_len you added to qc->nbytes should be it.  The only other
-place to pay attention is the ATAPI transfer chunk size and your patch
-seems to get it right.
+Well, I had a good reason.  You know how to un-pull, I know how to
+un-remote to get back to pristine after I'm done testing... guaranteed
+without whimpering pathetically on the git list ;-)
 
-> Now Jens' git tree should work with all the non libata stuff, ide,
-> firewire, bsg, etc. But I'm not sure about libata.
+Anyway, I checked out the one with the big-fat-hint in it's name
+(block-for-linus/for-linus).
+Same error.  Git this morning with patches...
+	restore_meaning_of_data_len.diff
+	seperate_out_padding_from_alignment.diff
+...reverted restored me to the originally reported k3b error, nothing
+new noted.
 
-With the second patch, all others should be fine no matter what.  I'll
-go check libata part again.
+If I tested the wrong branch, whack me upside the head, and I'll follow
+your pull destructions, and figure out how to un-pull later.
 
-Thanks.
+	-Mike
 
--- 
-tejun
