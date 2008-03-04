@@ -1,79 +1,42 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
- references
-Date: Tue, 4 Mar 2008 11:16:43 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803041101200.4039-100000@iolanthe.rowland.org>
-References: <1204585995.3043.85.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Wed, 05 Mar 2008 01:17:21 +0900
+Message-ID: <47CD7611.2030606@gmail.com>
+References: <20080304093536.GH6704@kernel.dk>	<1204634238.5997.5.camel@homer.simson.net>	<47CD4355.4050401@gmail.com> <20080304223006A.tomof@acm.org> <47CD53BA.5040908@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1204585995.3043.85.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:62015 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755927AbYCDQRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 11:17:31 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so977414wah.23
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Mar 2008 08:17:30 -0800 (PST)
+In-Reply-To: <47CD53BA.5040908@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-On Mon, 3 Mar 2008, James Bottomley wrote:
-
-> On Mon, 2008-03-03 at 18:04 -0500, Alan Stern wrote:
-> > On Mon, 3 Mar 2008, James Bottomley wrote:
-> > 
-> > > On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
-> > > > This patch (as1050) adds a new field to struct scsi_device, to keep a
-> > > > count of the number of block-device open file references.  This count
-> > > > will be used by usb-storage to determine whether USB-PERSIST should be
-> > > > forced on during a suspend.
-> > > 
-> > > I don't think this does what's advertised if you mean it to keep a count
-> > > as the atomics seem to imply. (->open is only called on first open and
-> > > ->release on last close.  openers was a historical 2.4 field that used
-> > > to count opens but now just flags whether sd is open or not.
-> > 
-> > Um.  The real purpose of that field is to let usb-storage know whether 
-> > or not the device is open at all.  I used a count because that seemed 
-> > like the only way to do it; it doesn't matter if the count value 
-> > doesn't exactly match the actual number of open file references.
+Tejun Heo wrote:
+> FUJITA Tomonori wrote:
+>>> Aiee... device going down after timing out on READ_DISC_INFO.  That's
+>>> gruesome.  Can you please try the other patches?
+>> Tejun, I thought that libata needs a fix for sum(sg) != rq->data_len. No?
 > 
-> OK, so your change log is "whether the device is open" not "a count of
-> openers".
-
-Yes, sort of.  That is, the new field is used just for its "whether the 
-device is open" meaning, but the only way to keep track of that is to 
-count the calls to the open and release methods.
-
-BTW, is it really accurate to say that this isn't a count of the
-openers?  I guess it depends on what you mean by "opener".  IIUC, every
-system call to open(2) will go through the driver's open method and
-thus increment the count, whereas calls to dup(2) or dup2(2) will not.  
-It that correct, or is there a stronger distinction at work?
-
-> > > Secondly, if you really want an openers count (which I remember SCSI
-> > > rendering a bad idea ages ago), that's held in struct block_device as
-> > > openers, isn't it?  So there's no need to duplicate this in SCSI.
-> > 
-> > But there's no way to get to the block_device structure if all you're 
-> > given is the scsi_device, right?  You would have to know something 
-> > special about it, such as whether it is a disk, a CD, or something 
-> > else.  This is intended to be generic.
+> The extra_len you added to qc->nbytes should be it.  The only other
+> place to pay attention is the ATAPI transfer chunk size and your patch
+> seems to get it right.
 > 
-> OK, but then the obvious question is why this isn't at the block device
-> layer?  It doesn't seem right that we'd have a shadow (and not a very
-> effective one) of bdev->openers just so you can access it from a
-> scsi_device.  We had a similar problem with the AHCI AN patches which
-> were solved by altering the layered accesses.
+>> Now Jens' git tree should work with all the non libata stuff, ide,
+>> firewire, bsg, etc. But I'm not sure about libata.
+> 
+> With the second patch, all others should be fine no matter what.  I'll
+> go check libata part again.
 
-Well then, how would you solve the problem?  Given a pointer to the 
-scsi_host, we need to know whether there are any block-device files 
-open for any of the SCSI devices beneath it.  Ideally we would like to 
-know strictly if there are any exclusive opens, but merely knowing 
-about any kind of open device file would be good enough.
+I can reproduce the problem here and it's very weird.  I'll report back
+when I know more.
 
-If you can suggest an alternative approach, I'll be glad to change the
-patch.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
