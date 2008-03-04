@@ -1,97 +1,437 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
- references
-Date: Tue, 4 Mar 2008 15:04:06 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803041501060.15190-100000@iolanthe.rowland.org>
-References: <47CD8D4E.3010703@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/7] scsi_dh: add skeleton for SCSI Device Handlers
+Date: Tue, 04 Mar 2008 15:37:02 -0600
+Message-ID: <1204666622.3091.86.camel@localhost.localdomain>
+References: <20080228010828.5535.74088.sendpatchset@localhost.localdomain>
+	 <20080228010834.5535.41038.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:52304 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752615AbYCDUEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 15:04:07 -0500
-In-Reply-To: <47CD8D4E.3010703@s5r6.in-berlin.de>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47269 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754427AbYCDVhK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 16:37:10 -0500
+In-Reply-To: <20080228010834.5535.41038.sendpatchset@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, andmike@us.ibm.com, michaelc@cs.wisc.edu, jens.axboe@oracle.com, agk@redhat.com
 
-On Tue, 4 Mar 2008, Stefan Richter wrote:
+On Wed, 2008-02-27 at 17:08 -0800, Chandra Seetharaman wrote:
+> Subject: scsi_dh: add skeleton for SCSI Device Handlers
+> 
+> From: Chandra Seetharaman <sekharan@us.ibm.com>
+> 
+> Add base support to the SCSI subsystem for SCSI device handlers.
 
-> Alan Stern wrote:
-> > So I need a
-> > way to know whether anything is mounted on a device below a SCSI host.
+Generally, this is much cleaner and an easier implementation to follow,
+thanks.
+
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
 > 
-> Actually I have been thinking of something related for a while but 
-> didn't send a patch yet.  Consider this:
+>  drivers/scsi/Kconfig                  |    2 	2 +	0 -	0 !
+>  drivers/scsi/Makefile                 |    1 	1 +	0 -	0 !
+>  drivers/scsi/device_handler/Kconfig   |   12 	12 +	0 -	0 !
+>  drivers/scsi/device_handler/Makefile  |    4 	4 +	0 -	0 !
+>  drivers/scsi/device_handler/scsi_dh.c |  146 	146 +	0 -	0 !
+>  drivers/scsi/scsi_error.c             |   10 	10 +	0 -	0 !
+>  drivers/scsi/scsi_lib.c               |    5 	5 +	0 -	0 !
+>  include/scsi/scsi_device.h            |   18 	18 +	0 -	0 !
+>  include/scsi/scsi_dh.h                |   58 	58 +	0 -	0 !
+>  9 files changed, 256 insertions(+)
 > 
-> [include/scsi/scsi_host.h]
-> 
->   struct scsi_host_template {
-> 	...
-> +	int (* slave_sdev_get)(struct scsi_device *);
-> +	void (* slave_sdev_put)(struct scsi_device *);
-> 	...
->   }
-> 
-> [drivers/scsi/scsi.c]
-> 
->   int scsi_device_get(struct scsi_device *sdev)
->   {
-> +	int err = 0;
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/Kconfig
+> ===================================================================
+> --- linux-2.6.25-rc2-mm1.orig/drivers/scsi/Kconfig
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/Kconfig
+> @@ -1749,4 +1749,6 @@ endif # SCSI_LOWLEVEL
+>  
+>  source "drivers/scsi/pcmcia/Kconfig"
+>  
+> +source "drivers/scsi/device_handler/Kconfig"
 > +
->   	if (sdev->sdev_state == SDEV_DEL)
->   		return -ENXIO;
->   	if (!get_device(&sdev->sdev_gendev))
->   		return -ENXIO;
->   	/* We can fail this if we're doing SCSI operations
->   	 * from module exit (like cache flush) */
->   	try_module_get(sdev->host->hostt->module);
-> 
-> -	return 0;
-> +	if (sdev->host->hostt->slave_sdev_get)
-> +		err = sdev->host->hostt->slave_sdev_get(sdev);
-> +	if (err) {
-> +		...some ifdef'd module_put stuff...;
-> +		put_device(&sdev->sdev_gendev);
+>  endmenu
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/Makefile
+> ===================================================================
+> --- linux-2.6.25-rc2-mm1.orig/drivers/scsi/Makefile
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/Makefile
+> @@ -34,6 +34,7 @@ obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_t
+>  obj-$(CONFIG_SCSI_SAS_ATTRS)	+= scsi_transport_sas.o
+>  obj-$(CONFIG_SCSI_SAS_LIBSAS)	+= libsas/
+>  obj-$(CONFIG_SCSI_SRP_ATTRS)	+= scsi_transport_srp.o
+> +obj-$(CONFIG_SCSI_DH)		+= device_handler/
+>  
+>  obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	iscsi_tcp.o
+>  obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Kconfig
+> ===================================================================
+> --- /dev/null
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Kconfig
+> @@ -0,0 +1,12 @@
+> +#
+> +# SCSI Device Handler configuration
+> +#
+> +
+> +menuconfig SCSI_DH
+> +	bool "SCSI Device Handlers"
+> +	depends on SCSI!=n
+> +	default n
+> +	help
+> +	  SCSI Device Handlers provide device specific support for
+> +	  devices utilized in multipath configurations. Say Y here to
+> +	  select support for specific hardware.
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
+> ===================================================================
+> --- /dev/null
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/Makefile
+> @@ -0,0 +1,4 @@
+> +#
+> +# SCSI Device Handler
+> +#
+> +obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/scsi_error.c
+> ===================================================================
+> --- linux-2.6.25-rc2-mm1.orig/drivers/scsi/scsi_error.c
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/scsi_error.c
+> @@ -298,6 +298,7 @@ static inline void scsi_eh_prt_fail_stat
+>   */
+>  static int scsi_check_sense(struct scsi_cmnd *scmd)
+>  {
+> +	struct scsi_device *sdev = scmd->device;
+>  	struct scsi_sense_hdr sshdr;
+>  
+>  	if (! scsi_command_normalize_sense(scmd, &sshdr))
+> @@ -306,6 +307,15 @@ static int scsi_check_sense(struct scsi_
+>  	if (scsi_sense_is_deferred(&sshdr))
+>  		return NEEDS_RETRY;
+>  
+> +	if (sdev->sdev_dh && sdev->sdev_dh->check_sense) {
+> +		int rc;
+> +
+> +		rc = sdev->sdev_dh->check_sense(sdev, &sshdr);
+> +		if (rc != SUCCESS)
+
+I can see reasons for a sense handler to return SUCCESS to trigger a
+fast failure (say not ready needs initialising command or something, so
+this should be a specific sense handler doesn't care return code.
+
+> +			return rc;
+> +		/* handler does not care. Drop down to default handling */
 > +	}
-> +	return err;
-> }
-> 
-> and equivalent additions to scsi_device_put().
-
-That would be okay.  It does a little more than I need, but the 
-difference doesn't matter.
-
-> Example usage:
-> 
-> [drivers/ieee1394/sbp2.c]
-> 
-> +int sbp2_slave_sdev_get(struct scsi_device *sdev)
-> +{
-> +	struct sbp2_lu *lu = (struct sbp2_lu *)sdev->host->hostdata[0];
 > +
-> +	if (!try_module_get(lu->hi->host->driver->owner))
-> +		return -ENOMEM;
+>  	/*
+>  	 * Previous logic looked for FILEMARK, EOM or ILI which are
+>  	 * mainly associated with tapes and returned SUCCESS.
+> Index: linux-2.6.25-rc2-mm1/include/scsi/scsi_device.h
+> ===================================================================
+> --- linux-2.6.25-rc2-mm1.orig/include/scsi/scsi_device.h
+> +++ linux-2.6.25-rc2-mm1/include/scsi/scsi_device.h
+> @@ -161,9 +161,25 @@ struct scsi_device {
+>  
+>  	struct execute_work	ew; /* used to get process context on put */
+>  
+> +	struct scsi_device_handler *sdev_dh;
+> +	void			*sdev_dh_data;
+
+This is a bit wasteful of 8 bytes ... why not simply move the
+sdev_dh_data inside the sdev_dh structure, then if there's no handler
+it's not occupying space?
+
+>  	enum scsi_device_state sdev_state;
+>  	unsigned long		sdev_data[0];
+>  } __attribute__((aligned(sizeof(unsigned long))));
+> +
+> +struct scsi_device_handler {
+> +	/* Used by the infrastructure */
+> +	struct list_head list; /* list of scsi_device_handlers */
+> +	struct notifier_block nb;
+> +
+> +	/* Filled by the hardware handler */
+> +	struct module *module;
+> +	const char *name;
+> +	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
+> +	int (*activate)(struct scsi_device *);
+> +	int (*prep_fn)(struct scsi_device *);
+> +};
+> +
+>  #define	to_scsi_device(d)	\
+>  	container_of(d, struct scsi_device, sdev_gendev)
+>  #define	class_to_sdev(d)	\
+> @@ -229,7 +245,9 @@ extern struct scsi_device *__scsi_add_de
+>  		uint, uint, uint, void *hostdata);
+>  extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+>  			   uint target, uint lun);
+> +extern int scsi_register_device_handler(struct scsi_device_handler *sdev_dh);
+>  extern void scsi_remove_device(struct scsi_device *);
+> +extern int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh);
+>  
+>  extern int scsi_device_get(struct scsi_device *);
+>  extern void scsi_device_put(struct scsi_device *);
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh.c
+> ===================================================================
+> --- /dev/null
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/device_handler/scsi_dh.c
+> @@ -0,0 +1,146 @@
+> +/*
+> + * SCSI device handler infrastruture.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of the GNU General Public License as published by the
+> + * Free Software Foundation; either version 2 of the License, or (at your
+> + * option) any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along
+> + * with this program; if not, write to the Free Software Foundation, Inc.,
+> + * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+> + *
+> + * Copyright IBM Corporation, 2007
+> + *      Authors:
+> + *               Chandra Seetharaman <sekharan@us.ibm.com>
+> + *               Mike Anderson <andmike@linux.vnet.ibm.com>
+> + */
+> +
+> +#include <scsi/scsi_dh.h>
+> +#include "../scsi_priv.h"
+> +
+> +static DEFINE_SPINLOCK(list_lock);
+> +static LIST_HEAD(scsi_dh_list);
+> +
+> +static struct scsi_device_handler *get_device_handler(const char *name)
+> +{
+> +	struct scsi_device_handler *tmp, *found = NULL;
+> +
+> +	spin_lock(&list_lock);
+> +	list_for_each_entry(tmp, &scsi_dh_list, list) {
+> +		if (!strcmp(tmp->name, name)) {
+> +			found = tmp;
+> +			break;
+> +		}
+> +	}
+> +	spin_unlock(&list_lock);
+> +	return found;
+> +}
+> +
+> +static int scsi_dh_notifier_add(struct device *dev, void *data)
+> +{
+> +	struct scsi_device_handler *sdev_dh = data;
+> +
+> +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_ADD_DEVICE, dev);
 > +	return 0;
 > +}
-> 
-> and an equivalent sbp2_slave_sdev_put().  These examples would prevent 
-> unloading ohci1394 while somebody has mounted a filesystem on a device 
-> driven by sbp2, or otherwise opened or referenced that device.  (At the 
-> moment sbp2 unintelligently gets the host->driver->owner as long as it 
-> is logged in into a device.  This is somewhat necessary because there 
-> are unrelated drivers in the ieee1394 stack which when unloaded with 
-> modprobe would cause ohci1394 to be unloaded too.)
-> 
-> You could use slave_sdev_get()/ slave_sdev_put() callbacks in 
-> usb-storage to do an own bookkeeping of references there.
-> 
-> (Since I haven't looked at your other current work, all of the above may 
-> be utterly besides the point...)
+> +
+> +/*
+> + * scsi_register_device_handler - register a device handler personality
+> + *      module.
+> + * @sdev_dh - device handler to be registered.
+> + *
+> + * Returns 0 on success, -EBUSY if handler already registered.
+> + */
+> +int scsi_register_device_handler(struct scsi_device_handler *sdev_dh)
+> +{
+> +	int ret = -EBUSY;
+> +	struct scsi_device_handler *tmp;
+> +
+> +	tmp = get_device_handler(sdev_dh->name);
+> +	if (tmp)
+> +		goto done;
+> +
+> +	ret = bus_register_notifier(&scsi_bus_type, &sdev_dh->nb);
+> +
+> +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh, scsi_dh_notifier_add);
+> +	spin_lock(&list_lock);
+> +	list_add(&sdev_dh->list, &scsi_dh_list);
+> +	spin_unlock(&list_lock);
+> +
+> +done:
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_register_device_handler);
+> +
+> +static int scsi_dh_notifier_remove(struct device *dev, void *data)
+> +{
+> +	struct scsi_device_handler *sdev_dh = data;
+> +
+> +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_DEL_DEVICE, dev);
+> +	return 0;
+> +}
+> +
+> +/*
+> + * scsi_unregister_device_handler - register a device handler personality
+> + *      module.
+> + * @sdev_dh - device handler to be unregistered.
+> + *
+> + * Returns 0 on success, -ENODEV if handler not registered.
+> + */
+> +int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh)
+> +{
+> +	int ret = -ENODEV;
+> +	struct scsi_device_handler *tmp;
+> +
+> +	tmp = get_device_handler(sdev_dh->name);
+> +	if (!tmp)
+> +		goto done;
+> +
+> +	ret = bus_unregister_notifier(&scsi_bus_type, &sdev_dh->nb);
+> +
+> +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh,
+> +					scsi_dh_notifier_remove);
+> +	spin_lock(&list_lock);
+> +	list_del(&sdev_dh->list);
+> +	spin_unlock(&list_lock);
+> +
+> +done:
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
+> +
+> +/*
+> + * scsi_dh_activate - activate the path associated with the scsi_device
+> + *      corresponding to the given request queue.
+> + * @q - Request queue that is associated with the scsi_device to be
+> + *      activated.
+> + */
+> +int scsi_dh_activate(struct request_queue *q)
+> +{
+> +	int err = SCSI_DH_NOSYS;
+> +	struct scsi_device *sdev;
+> +	struct scsi_device_handler *sdev_dh;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(q->queue_lock, flags);
+> +	sdev = q->queuedata;
+> +	sdev_dh = sdev->sdev_dh;
+> +	if (!sdev || !sdev_dh || !get_device(&sdev->sdev_gendev)) {
+> +		spin_unlock_irqrestore(q->queue_lock, flags);
+> +		goto done;
+> +	}
+> +	spin_unlock_irqrestore(q->queue_lock, flags);
 
-It's a good idea.  I'd be willing to use it, if you submit it.
+just on programming style, this is marginally better expressed as
 
-Alan Stern
+err = (!sdev || !sdev_dh || !get_device(&sdev->sdev_gendev)) ? SCSI_DH_NOSYS : 0;
+spin_unlock_irqrestore(q->queue_lock, flags);
+
+if (err)
+	goto done; (or even return err)
+
+Just to eliminate the duplicate unlocks.
+
+> +
+> +	if (sdev_dh->activate)
+> +		err = sdev_dh->activate(sdev);
+> +	put_device(&sdev->sdev_gendev);
+> +done:
+> +	return err;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_dh_activate);
+> Index: linux-2.6.25-rc2-mm1/include/scsi/scsi_dh.h
+> ===================================================================
+> --- /dev/null
+> +++ linux-2.6.25-rc2-mm1/include/scsi/scsi_dh.h
+> @@ -0,0 +1,58 @@
+> +/*
+> + * Header file for SCSI device handler infrastruture.
+> + *
+> + * Modified version of patches posted by Mike Christie <michaelc@cs.wisc.edu>
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of the GNU General Public License as published by the
+> + * Free Software Foundation; either version 2 of the License, or (at your
+> + * option) any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along
+> + * with this program; if not, write to the Free Software Foundation, Inc.,
+> + * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+> + *
+> + * Copyright IBM Corporation, 2007
+> + *      Authors:
+> + *               Chandra Seetharaman <sekharan@us.ibm.com>
+> + *               Mike Anderson <andmike@linux.vnet.ibm.com>
+> + */
+> +
+> +#include <scsi/scsi_device.h>
+> +
+> +enum {
+> +	SCSI_DH_OK = 0,
+> +	/*
+> +	 * device errors
+> +	 */
+> +	SCSI_DH_DEV_FAILED,	/* generic device error */
+> +	SCSI_DH_DEV_TEMP_BUSY,
+> +	SCSI_DH_DEVICE_MAX,	/* max device blkerr definition */
+> +
+> +	/*
+> +	 * transport errors
+> +	 */
+> +	SCSI_DH_NOTCONN = SCSI_DH_DEVICE_MAX + 1,
+> +	SCSI_DH_CONN_FAILURE,
+> +	SCSI_DH_TRANSPORT_MAX,	/* max transport blkerr definition */
+> +
+> +	/*
+> +	 * driver and generic errors
+> +	 */
+> +	SCSI_DH_IO = SCSI_DH_TRANSPORT_MAX + 1,	/* generic error */
+> +	SCSI_DH_INVALID_IO,
+> +	SCSI_DH_RETRY,		/* retry the req, but not immediately */
+> +	SCSI_DH_IMM_RETRY,	/* immediately retry the req */
+> +	SCSI_DH_TIMED_OUT,
+> +	SCSI_DH_RES_TEMP_UNAVAIL,
+> +	SCSI_DH_DEV_OFFLINED,
+> +	SCSI_DH_NOSYS,
+> +	SCSI_DH_DRIVER_MAX,
+> +};
+> +
+> +extern int scsi_dh_activate(struct request_queue *);
+> Index: linux-2.6.25-rc2-mm1/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- linux-2.6.25-rc2-mm1.orig/drivers/scsi/scsi_lib.c
+> +++ linux-2.6.25-rc2-mm1/drivers/scsi/scsi_lib.c
+> @@ -1156,6 +1156,11 @@ int scsi_setup_fs_cmnd(struct scsi_devic
+>  	struct scsi_cmnd *cmd;
+>  	int ret = scsi_prep_state_check(sdev, req);
+>  
+> +	if ((ret == BLKPREP_OK) && (req->cmd_type == REQ_TYPE_FS)) {
+> +		if (sdev->sdev_dh && sdev->sdev_dh->prep_fn)
+> +			ret = sdev->sdev_dh->prep_fn(sdev);
+> +	}
+> +
+>  	if (ret != BLKPREP_OK)
+>  		return ret;
+
+This is the fastpath and we need to be careful.  We already checked
+cmd_type == REQ_TYPE before calling scsi_setup_fs_cmnd(), so there's no
+need to check it again, surely.
+
+Plus, since we're doing if (ret != BLKPREP_OK) just below this, if you
+move the if down below that, it can simply become
+
+if (unlikely(sdev->sdev_dh && sdev->sdev_dh->prep_fn)) {
+	ret = sdev->sdev_dh->prep_fn(sdev);
+	if (ret != BLKPREP_OK)
+		return ret;
+}
+
+Because the two outer gates have already been checked.  The unlikely
+expresses the fact that having device handlers isn't currently the very
+common case.
+
+Presumably the gcc optimiser would see all of this, but it never hurts
+to make sure.
+
+James
+
 
