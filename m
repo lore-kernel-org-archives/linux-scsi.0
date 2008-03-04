@@ -1,92 +1,120 @@
-From: Mike Anderson <andmike-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open
-	file references
-Date: Tue, 4 Mar 2008 08:50:47 -0800
-Message-ID: <20080304165047.GA31007@linux.vnet.ibm.com>
-References: <1204585995.3043.85.camel@localhost.localdomain> <Pine.LNX.4.44L0.0803041101200.4039-100000@iolanthe.rowland.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/2] SCSI: add dynamic Power Management infrastructure
+Date: Tue, 4 Mar 2008 11:51:48 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803041130160.4039-100000@iolanthe.rowland.org>
+References: <1204586659.3043.92.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0803041101200.4039-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47285 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758548AbYCDQvt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 11:51:49 -0500
+In-Reply-To: <1204586659.3043.92.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-> On Mon, 3 Mar 2008, James Bottomley wrote:
-> 
-> > On Mon, 2008-03-03 at 18:04 -0500, Alan Stern wrote:
-> > > On Mon, 3 Mar 2008, James Bottomley wrote:
-> > > 
-> > > > On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
-> > > > > This patch (as1050) adds a new field to struct scsi_device, to keep a
-> > > > > count of the number of block-device open file references.  This count
-> > > > > will be used by usb-storage to determine whether USB-PERSIST should be
-> > > > > forced on during a suspend.
-> > > > 
-> > > > I don't think this does what's advertised if you mean it to keep a count
-> > > > as the atomics seem to imply. (->open is only called on first open and
-> > > > ->release on last close.  openers was a historical 2.4 field that used
-> > > > to count opens but now just flags whether sd is open or not.
-> > > 
-> > > Um.  The real purpose of that field is to let usb-storage know whether 
-> > > or not the device is open at all.  I used a count because that seemed 
-> > > like the only way to do it; it doesn't matter if the count value 
-> > > doesn't exactly match the actual number of open file references.
+On Mon, 3 Mar 2008, James Bottomley wrote:
+
+> On Mon, 2008-03-03 at 11:09 -0500, Alan Stern wrote:
+> > This patch (as1042) introduces dynamic Power Management for the SCSI
+> > stack.  It keeps track of devices' logical state and adds a
+> > notification callback to tell the host adapter driver when some or all
+> > of the devices on a SCSI bus are no longer in use, so the link can be
+> > powered down.
 > > 
-> > OK, so your change log is "whether the device is open" not "a count of
-> > openers".
-> 
-> Yes, sort of.  That is, the new field is used just for its "whether the 
-> device is open" meaning, but the only way to keep track of that is to 
-> count the calls to the open and release methods.
-> 
-> BTW, is it really accurate to say that this isn't a count of the
-> openers?  I guess it depends on what you mean by "opener".  IIUC, every
-> system call to open(2) will go through the driver's open method and
-> thus increment the count, whereas calls to dup(2) or dup2(2) will not.  
-> It that correct, or is there a stronger distinction at work?
-> 
-
-In do_open there is a different path taken if bd_openers is non zero. 
-
-> > > > Secondly, if you really want an openers count (which I remember SCSI
-> > > > rendering a bad idea ages ago), that's held in struct block_device as
-> > > > openers, isn't it?  So there's no need to duplicate this in SCSI.
-> > > 
-> > > But there's no way to get to the block_device structure if all you're 
-> > > given is the scsi_device, right?  You would have to know something 
-> > > special about it, such as whether it is a disk, a CD, or something 
-> > > else.  This is intended to be generic.
+> > It also adds autosuspend capability (disabled initially) that can be
+> > controlled by userspace, using the same sort of sysfs API as the USB
+> > autosuspend implementation.
 > > 
-> > OK, but then the obvious question is why this isn't at the block device
-> > layer?  It doesn't seem right that we'd have a shadow (and not a very
-> > effective one) of bdev->openers just so you can access it from a
-> > scsi_device.  We had a similar problem with the AHCI AN patches which
-> > were solved by altering the layered accesses.
+> > Everything is managed by a new Kconfig option:
+> > CONFIG_SCSI_DYNAMIC_PM.  If that symbol isn't set then essentially
+> > nothing is changed (some code gets moved from one source file to
+> > another).
 > 
-> Well then, how would you solve the problem?  Given a pointer to the 
-> scsi_host, we need to know whether there are any block-device files 
-> open for any of the SCSI devices beneath it.  Ideally we would like to 
-> know strictly if there are any exclusive opens, but merely knowing 
-> about any kind of open device file would be good enough.
+> First the general comments/questions:
 > 
-> If you can suggest an alternative approach, I'll be glad to change the
-> patch.
+> 1. It's done at the wrong level: suspend "device" is actually a target
+> function.  There's no way on a multi-lun device we want to keep the
+> flags and last_busy anywhere but in the target
 
-The field that you are adding is very close in behavior to
-(sdev->sdev_gendev.kobj.kref.refcount). Though sd_open increments the sdev
-kref through a call chain started by a call to scsi_disk_get the sdev kref
-would cover more than block opens which may effect the usefulness in your
-case.
+Okay.
 
--andmike
---
-Michael Anderson
-andmike-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2. As you say in the comment, the thing we're trying to power down is
+> the link.  In most SCSI implementations, the link has a rather complex
+> relationship to the target, what we want to do in
+> periodic_autosuspend_scan() is run over the devices on each link, and if
+> they're not busy suspend the link?  What's probably needed is a set of
+> adjunct helpers for the transport classes to do this.
+
+I'd love to do it that way, but I don't understand enough about how the 
+transport classes work.  If somebody could help out, I'd appreciate it.
+
+> 3. The link power down is much faster than device spin down ... in your
+> patch these two things seem to be coupled ... we really need to keep
+> them separate.
+
+I don't understand.  Is it safe in general to keep a device spun up
+while taking the link down?  Or to avoid sending a SYNCHRONIZE CACHE
+command before suspending the link?  I wouldn't think so.  This means
+the device suspend routine must be carried out before the link is
+suspended.
+
+> 4. The entanglement with error handling is incredibly problematic (since
+> eh is a nastily complex state machine in its own right).  What do
+> transports that use eh_strategy_handler do about all of this?
+
+They should prevent the link from autosuspending before starting up the
+error handler and then allow it again when the handler is done.  
+Ideally the core should do this for them automatically, before calling
+eh_strategy_handler.
+
+> Then the specific code:
+> 
+> > +scsi_mod-y                     += scsi_scan.o scsi_sysfs.o scsi_devinfo.o \
+> > +                                  scsi_pm.o
+> 
+> If you just said N to SCSI_DYNAMIC_PM why does it still get compiled in?
+
+Because the scsi_pm.c source file contains some code I moved from other
+files, stuff that has to be compiled whether SCSI_DYNAMIC_PM is
+configured or not.  When SCSI_DYNAMIC_PM isn't set then the original 
+code is used, otherwise new code is used.
+
+I suppose the old code could be left where it was, protected by 
+"#ifndef CONFIG_SCSI_DYNAMIC_PM", but it doesn't seem like a good idea 
+to have two versions of the same subroutine in two different source 
+files.
+
+> > 		.name		= "sd",
+> >  		.probe		= sd_probe,
+> >  		.remove		= sd_remove,
+> > -		.suspend	= sd_suspend,
+> > -		.resume		= sd_resume,
+> >  		.shutdown	= sd_shutdown,
+> >  	},
+> >  	.rescan			= sd_rescan,
+> >  	.done			= sd_done,
+> > +	.suspend		= sd_suspend,
+> > +	.resume			= sd_resume,
+> >  };
+> 
+> You're duplicating the driver suspend/resume methods in scsi_driver.
+
+(More precisely, this duplicates the method pointers, not the methods
+themselves.)
+
+The only reason for doing it like this was to avoid the "Driver '%s'
+needs updating - please use bus_type methods" warning in the driver
+core.  It's not otherwise important.
+
+>  We
+> just had a discussion about this at the storage summit.  Those methods
+> are staying, so we might as well not duplicate them.
+
+Then what about those warnings?
+
+Alan Stern
+
