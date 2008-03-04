@@ -1,92 +1,83 @@
-From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
- references
-Date: Tue, 04 Mar 2008 18:56:30 +0100
-Message-ID: <47CD8D4E.3010703@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0803041151510.4039-100000@iolanthe.rowland.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Wed, 05 Mar 2008 02:59:30 +0900
+Message-ID: <47CD8E02.1020207@gmail.com>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <fqk15l$lgq$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0803041151510.4039-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: walt <w41ter@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> So I need a
-> way to know whether anything is mounted on a device below a SCSI host.
+walt wrote:
+> Jens Axboe wrote:
+>> On Tue, Mar 04 2008, Mike Galbraith wrote:
+>>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+>>>
+>>>> Looks excellent to me, has a variant of this been tested as OK by the
+>>>> users reporting the regression?
+>>> K3b burning seems to be a nogo here.  This is git pulled this morning
+>>> though, so it's a somewhat different tree than previously tested fwtw.
+>>
+>> can you please try git as of this morning without any patches applied,
+>> and then pull
+>>
+>> git://git.kernel.dk/linux-2.6-block.git for-linus
+>>
+>> into that and see if that works?
+> 
+> Unfortunately this doesn't fix a problem I've discussed off-list with
+> Kiyoshi Ueda, who suggested that I should follow this thread and try
+> any patches posted here.
+> 
+> Here is what happens when I try to mount a CD (before and after I
+> pull 'for-linus'):
+> 
+> hdc: ide_cd_check_ireason: wrong transfer direction!
+> cdrom: failed setting lba address space
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: drive not ready for command
+> hdc: status timeout: status=0xd0 { Busy }
+> ide: failed opcode was: unknown
+> hdc: DMA disabled
+> hdc: drive not ready for command
+> hdc: ATAPI reset complete
+> ISO 9660 Extensions: Microsoft Joliet Level 3
+> ISOFS: changing to secondary root
+> VFS: busy inodes on changed media.
+> 
+> The mount can take from 5 seconds on up to a minute or so before the
+> CD can be accessed.
 
-Actually I have been thinking of something related for a while but 
-didn't send a patch yet.  Consider this:
+Which version did you try?  There was a recent IDE bug fix which
+affected CD recording.  Commit bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32
+which is included in 2.6.25-rc3.  Also, did 2.6.24 work?
 
-[include/scsi/scsi_host.h]
-
-  struct scsi_host_template {
-	...
-+	int (* slave_sdev_get)(struct scsi_device *);
-+	void (* slave_sdev_put)(struct scsi_device *);
-	...
-  }
-
-[drivers/scsi/scsi.c]
-
-  int scsi_device_get(struct scsi_device *sdev)
-  {
-+	int err = 0;
-+
-  	if (sdev->sdev_state == SDEV_DEL)
-  		return -ENXIO;
-  	if (!get_device(&sdev->sdev_gendev))
-  		return -ENXIO;
-  	/* We can fail this if we're doing SCSI operations
-  	 * from module exit (like cache flush) */
-  	try_module_get(sdev->host->hostt->module);
-
--	return 0;
-+	if (sdev->host->hostt->slave_sdev_get)
-+		err = sdev->host->hostt->slave_sdev_get(sdev);
-+	if (err) {
-+		...some ifdef'd module_put stuff...;
-+		put_device(&sdev->sdev_gendev);
-+	}
-+	return err;
-}
-
-and equivalent additions to scsi_device_put().
-
-Example usage:
-
-[drivers/ieee1394/sbp2.c]
-
-+int sbp2_slave_sdev_get(struct scsi_device *sdev)
-+{
-+	struct sbp2_lu *lu = (struct sbp2_lu *)sdev->host->hostdata[0];
-+
-+	if (!try_module_get(lu->hi->host->driver->owner))
-+		return -ENOMEM;
-+	return 0;
-+}
-
-and an equivalent sbp2_slave_sdev_put().  These examples would prevent 
-unloading ohci1394 while somebody has mounted a filesystem on a device 
-driven by sbp2, or otherwise opened or referenced that device.  (At the 
-moment sbp2 unintelligently gets the host->driver->owner as long as it 
-is logged in into a device.  This is somewhat necessary because there 
-are unrelated drivers in the ieee1394 stack which when unloaded with 
-modprobe would cause ohci1394 to be unloaded too.)
-
-You could use slave_sdev_get()/ slave_sdev_put() callbacks in 
-usb-storage to do an own bookkeeping of references there.
-
-(Since I haven't looked at your other current work, all of the above may 
-be utterly besides the point...)
 -- 
-Stefan Richter
--=====-==--- --== --=--
-http://arcgraph.de/sr/
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+tejun
