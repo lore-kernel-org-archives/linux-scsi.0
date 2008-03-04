@@ -1,59 +1,37 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [patch 1/7] mptbase: reset ioc initiator during PCI resume
-Date: Tue, 4 Mar 2008 16:30:24 -0700
-Message-ID: <664A4EBB07F29743873A87CF62C26D70D555F3@NAMAIL4.ad.lsil.com>
-References: <200803042324.m24NOLWG003081@imap1.linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Wed, 05 Mar 2008 08:33:05 +0900
+Message-ID: <47CDDC31.4070806@gmail.com>
+References: <47CD53BA.5040908@gmail.com>	<47CD7611.2030606@gmail.com>	<47CD7C05.1080707@gmail.com> <20080305041914V.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:41655 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934465AbYCDXaw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:30:52 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <200803042324.m24NOLWG003081@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080305041914V.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, djwong@us.ibm.com, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On Tuesday, March 04, 2008 4:24 PM, Andrew Morton  wrote: 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> Cc: "Moore, Eric" <Eric.Moore@lsi.com>
-> Cc: <Sathya.Prakash@lsi.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
+FUJITA Tomonori wrote:
+> Hmm, does SCSI mid-layer need to care about how many bytes the block
+> layer allocates? I don't think that extra_len is NOT good_bytes.
 > 
->  drivers/message/fusion/mptbase.c |    6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff -puN 
-> drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-d
-> uring-pci-resume drivers/message/fusion/mptbase.c
-> --- 
-> a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator
-> -during-pci-resume
-> +++ a/drivers/message/fusion/mptbase.c
-> @@ -1852,6 +1852,12 @@ mpt_resume(struct pci_dev *pdev)
->  		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
->  		CHIPREG_READ32(&ioc->chip->Doorbell));
->  
-> +	/* put ioc into READY_STATE */
-> +	if(SendIocReset(ioc, 
-> MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-> +		printk(MYIOC_s_ERR_FMT
-> +		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
-> +	}
-> +
->  	/* bring ioc to operational state */
->  	if ((recovery_state = mpt_do_ioc_recovery(ioc,
->  	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
-> _
->
+> I think that the block layer had better take care about it (fix
+> __end_that_request_first?).
 
-Actually we have a different patch for this, which Sathya been working
-on.
+Yeah, probably calling completion functions w/o bytes count is the right
+thing to do but what I was talking about was what could break when the
+semantics of rq->data_len changed.  If we keep rq->data_len() ==
+sum(sg), we keep it business as usual for all the rest except for the
+device application layer if we don't we do the reverse and SCSI midlayer
+completion was a good example, I think.
 
-Eric 
+Things going the other way is fine with me but I at least want to hear a
+valid rationale.  Till now all I got is "because that's the true size"
+which doesn't really make much sense to me.
+
+Thanks.
+
+-- 
+tejun
