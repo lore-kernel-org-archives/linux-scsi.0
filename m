@@ -1,54 +1,97 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [RFC PATCH 1/3] block: add rq->complete_io hook for request stacking
-Date: Tue, 04 Mar 2008 15:02:22 -0500
-Message-ID: <47CDAACE.3090203@ce.jp.nec.com>
-References: <20080215.172727.39155014.k-ueda@ct.jp.nec.com>	<47CC2652.1080601@suse.de> <20080303.140427.39152329.k-ueda@ct.jp.nec.com> <47CD03DE.3010703@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Tue, 4 Mar 2008 15:04:06 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803041501060.15190-100000@iolanthe.rowland.org>
+References: <47CD8D4E.3010703@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42285 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932323AbYCDUCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 15:02:48 -0500
-In-Reply-To: <47CD03DE.3010703@suse.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52304 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752615AbYCDUEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 15:04:07 -0500
+In-Reply-To: <47CD8D4E.3010703@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi Hannes,
+On Tue, 4 Mar 2008, Stefan Richter wrote:
 
-Hannes Reinecke wrote:
-> Kiyoshi Ueda wrote:
->> I'm thinking about an idea come from Mike and Jens after the session
->> at LSF'08:
->>   o stacking driver clones both bio and request and uses
->>     bio->bi_end_io and rq->end_io
->>   o stacking driver uses blk_complete_request() in rq->end_io
->>     so that stacking driver can work without queue lock
->> With this idea, we don't need to add the new hook to request,
->> and we can use request stacking on drivers using __blk_end_request().
->>
-> Huh? I can't really imagine how this should work. If you start using
-> bio->bi_end_io() for stacking usage you'll end up with doing weird thing
-> with the bios ... Can you elaborate a bit more here?
+> Alan Stern wrote:
+> > So I need a
+> > way to know whether anything is mounted on a device below a SCSI host.
+> 
+> Actually I have been thinking of something related for a while but 
+> didn't send a patch yet.  Consider this:
+> 
+> [include/scsi/scsi_host.h]
+> 
+>   struct scsi_host_template {
+> 	...
+> +	int (* slave_sdev_get)(struct scsi_device *);
+> +	void (* slave_sdev_put)(struct scsi_device *);
+> 	...
+>   }
+> 
+> [drivers/scsi/scsi.c]
+> 
+>   int scsi_device_get(struct scsi_device *sdev)
+>   {
+> +	int err = 0;
+> +
+>   	if (sdev->sdev_state == SDEV_DEL)
+>   		return -ENXIO;
+>   	if (!get_device(&sdev->sdev_gendev))
+>   		return -ENXIO;
+>   	/* We can fail this if we're doing SCSI operations
+>   	 * from module exit (like cache flush) */
+>   	try_module_get(sdev->host->hostt->module);
+> 
+> -	return 0;
+> +	if (sdev->host->hostt->slave_sdev_get)
+> +		err = sdev->host->hostt->slave_sdev_get(sdev);
+> +	if (err) {
+> +		...some ifdef'd module_put stuff...;
+> +		put_device(&sdev->sdev_gendev);
+> +	}
+> +	return err;
+> }
+> 
+> and equivalent additions to scsi_device_put().
 
-Cloned bio's bi_end_io() can check the error.
+That would be okay.  It does a little more than I need, but the 
+difference doesn't matter.
 
-For successful I/O, it calls something equivalent to
-end_that_request_first() for the original request,
-that may eventually complete the original bio and
-notify the submitter.
+> Example usage:
+> 
+> [drivers/ieee1394/sbp2.c]
+> 
+> +int sbp2_slave_sdev_get(struct scsi_device *sdev)
+> +{
+> +	struct sbp2_lu *lu = (struct sbp2_lu *)sdev->host->hostdata[0];
+> +
+> +	if (!try_module_get(lu->hi->host->driver->owner))
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+> 
+> and an equivalent sbp2_slave_sdev_put().  These examples would prevent 
+> unloading ohci1394 while somebody has mounted a filesystem on a device 
+> driven by sbp2, or otherwise opened or referenced that device.  (At the 
+> moment sbp2 unintelligently gets the host->driver->owner as long as it 
+> is logged in into a device.  This is somewhat necessary because there 
+> are unrelated drivers in the ieee1394 stack which when unloaded with 
+> modprobe would cause ohci1394 to be unloaded too.)
+> 
+> You could use slave_sdev_get()/ slave_sdev_put() callbacks in 
+> usb-storage to do an own bookkeeping of references there.
+> 
+> (Since I haven't looked at your other current work, all of the above may 
+> be utterly besides the point...)
 
-For error, it can decide not to complete the original bio
-and record the error information.
+It's a good idea.  I'd be willing to use it, if you submit it.
 
-When the clone request is finally completed and rq->end_io() is
-called, stacking driver can check the recorded error information
-and decide whether it should take any action or just complete
-the original request by blk_complete_request().
+Alan Stern
 
-Thanks,
--- 
-Jun'ichi Nomura, NEC Corporation of America
