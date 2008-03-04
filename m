@@ -1,76 +1,91 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] mvsas: convert from rough draft to working driver
-Date: Tue, 04 Mar 2008 20:59:35 +0200
-Message-ID: <47CD9C17.3090508@panasas.com>
-References: <20080223131527.GB7942@ubuntu.domain> <47C049C2.2010502@garzik.org> <20080224114806.GA7908@ubuntu.domain>
+From: walt <w41ter@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 04 Mar 2008 11:18:11 -0800
+Message-ID: <fqk77b$cdn$1@ger.gmane.org>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <fqk15l$lgq$1@ger.gmane.org> <47CD8E02.1020207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:50532 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932674AbYCDTAG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 14:00:06 -0500
-In-Reply-To: <20080224114806.GA7908@ubuntu.domain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47CD8E02.1020207@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com, lil@marvell.com, saeed.bishara@gmail.com, kewei@marvell.com
 
-On Sun, Feb 24 2008 at 13:48 +0200, Ke Wei <kewei.mv@gmail.com> wrote:
-> On Sat, Feb 23, 2008 at 11:28:50AM -0500, Jeff Garzik wrote:
->> Ke Wei wrote:
->>> Convert rough draft Marvell 6440 driver to a working driver.
->>> Added support for SAS and SATA devices, hotplug, wide port, and expanders.
->>> This patch is based on:
->>> branch 'mvsas' of 
->>> git.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
->> Yay!  Perfect patch:  good tech content, applyable to #mvsas, and the 
->> most important part, the driver works :)
+Tejun Heo wrote:
+> walt wrote:
+>> Jens Axboe wrote:
+>>> On Tue, Mar 04 2008, Mike Galbraith wrote:
+>>>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+>>>>
+>>>>> Looks excellent to me, has a variant of this been tested as OK by the
+>>>>> users reporting the regression?
+>>>> K3b burning seems to be a nogo here.  This is git pulled this morning
+>>>> though, so it's a somewhat different tree than previously tested fwtw.
+>>> can you please try git as of this morning without any patches applied,
+>>> and then pull
+>>>
+>>> git://git.kernel.dk/linux-2.6-block.git for-linus
+>>>
+>>> into that and see if that works?
+>> Unfortunately this doesn't fix a problem I've discussed off-list with
+>> Kiyoshi Ueda, who suggested that I should follow this thread and try
+>> any patches posted here.
 >>
->> One minor (though important) detail:  may we assume this patch has the 
->> same Signed-off-by as previous patches?
+>> Here is what happens when I try to mount a CD (before and after I
+>> pull 'for-linus'):
 >>
-> 
-> Oah, I have no idea how to diff between the previous 5th commit and
-> current to use git-format-patch command, so I had to use git-diff to
-> create patch. As a result, I format to place my Signed-off-by when
-> sending email.
-> Jeff, Do you have a good suggestion?  Thank you for your help.
+>> hdc: ide_cd_check_ireason: wrong transfer direction!
+>> cdrom: failed setting lba address space
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+>> ide: failed opcode was: unknown
+>> hdc: drive not ready for command
+>> hdc: status timeout: status=0xd0 { Busy }
+>> ide: failed opcode was: unknown
+>> hdc: DMA disabled
+>> hdc: drive not ready for command
+>> hdc: ATAPI reset complete
+>> ISO 9660 Extensions: Microsoft Joliet Level 3
+>> ISOFS: changing to secondary root
+>> VFS: busy inodes on changed media.
+>>
+>> The mount can take from 5 seconds on up to a minute or so before the
+>> CD can be accessed.
+>
+> Which version did you try?  There was a recent IDE bug fix which
+> affected CD recording.  Commit bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32
+> which is included in 2.6.25-rc3.
 
-Do you mean you have 5 patches in git that you want to send as
-one patch to the list? 
-- if so then lets say you are in branch my_branch based off master
-  and it has your 5 patches. And lets say you want to keep your
-  original 5 patch, but have an alternative one patch for them all.
-- $ git-checkout -b my_one_patch my_branch
-- $ git-rebase--interactive master
-- At this stage you will get your $GIT_EDITOR with a list of your
-  5 patches like:
-	pick xxxxxxx patch one
-	pick yyyyyyy patch two
-        ...
-  edit the "pick" at start of line to "squash" to all but the first
-  patch. Save and exit the editor.
-- git will ask you to edit the commit message of the now combined patch,
-  in an editor, do so. Verify you have a Signed-off-by:, save and exit.
-- Rebase should finish cleanly, leaving you with one patch that can then
-  be sent with $ git-format-patch -1.
-- If you do $ git-diff my_one_patch my_branch 
-	they are identical
-- But $ git-log my_one_patch
- 	will only have one patch following master
-   
-Any re-edits of your git history git-rebase--interactive is your
-friend.
-> 
-> Now,
-> Signed-off-by: Ke Wei <kewei@marvell.com>
->  
->> Thanks and have a good weekend,
->>
->> 	Jeff
->>
-> -
+I pulled from Jens to Linus' latest git, as Jens instructed.  I noticed
+no difference at all.
 
-Boaz
+> Also, did 2.6.24 work?
+
+Yes, vanilla 2.6.24 works fine.  Your patchlet of earlier today also
+didn't fix it, so I'm beginning to think that maybe I'm in the wrong
+thread :o)
+
+
+
