@@ -1,57 +1,54 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 14:42:40 -0500 (EST)
-Message-ID: <20080304.144240.71085240.k-ueda@ct.jp.nec.com>
-References: <1204634238.5997.5.camel@homer.simson.net>
-	<20080304123939.GM6704@kernel.dk>
-	<fqk15l$lgq$1@ger.gmane.org>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [RFC PATCH 1/3] block: add rq->complete_io hook for request stacking
+Date: Tue, 04 Mar 2008 15:02:22 -0500
+Message-ID: <47CDAACE.3090203@ce.jp.nec.com>
+References: <20080215.172727.39155014.k-ueda@ct.jp.nec.com>	<47CC2652.1080601@suse.de> <20080303.140427.39152329.k-ueda@ct.jp.nec.com> <47CD03DE.3010703@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: w41ter@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:42285 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932323AbYCDUCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Mar 2008 15:02:48 -0500
+In-Reply-To: <47CD03DE.3010703@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu
 
-Hi,
+Hi Hannes,
 
-On Tue, 04 Mar 2008 09:34:56 -0800, walt wrote:
-> Jens Axboe wrote:
-> > On Tue, Mar 04 2008, Mike Galbraith wrote:
-> >> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
-> >>
-> >>> Looks excellent to me, has a variant of this been tested as OK by the
-> >>> users reporting the regression?
-> >> K3b burning seems to be a nogo here.  This is git pulled this morning
-> >> though, so it's a somewhat different tree than previously tested fwtw.
-> >
-> > can you please try git as of this morning without any patches applied,
-> > and then pull
-> >
-> > git://git.kernel.dk/linux-2.6-block.git for-linus
-> >
-> > into that and see if that works?
-> 
-> Unfortunately this doesn't fix a problem I've discussed off-list with
-> Kiyoshi Ueda, who suggested that I should follow this thread and try
-> any patches posted here.
- 
-I think there was misunderstanding between us.
-On off-list, I meant:
-  o Your original problem was CD burning, and it looked same problem
-    being discussed on this thread, according to this message:
+Hannes Reinecke wrote:
+> Kiyoshi Ueda wrote:
+>> I'm thinking about an idea come from Mike and Jens after the session
+>> at LSF'08:
+>>   o stacking driver clones both bio and request and uses
+>>     bio->bi_end_io and rq->end_io
+>>   o stacking driver uses blk_complete_request() in rq->end_io
+>>     so that stacking driver can work without queue lock
+>> With this idea, we don't need to add the new hook to request,
+>> and we can use request stacking on drivers using __blk_end_request().
+>>
+> Huh? I can't really imagine how this should work. If you start using
+> bio->bi_end_io() for stacking usage you'll end up with doing weird thing
+> with the bios ... Can you elaborate a bit more here?
 
-> cdrecord: Warning: controller returns zero sized CD capabilities page.
-> cdrecord: Warning: controller returns wrong page 0 for CD capabilities page (2A). 
+Cloned bio's bi_end_io() can check the error.
 
-    So I suggested you to watch this thread and try patches of this
-    thread for CD burning problem.
+For successful I/O, it calls something equivalent to
+end_that_request_first() for the original request,
+that may eventually complete the original bio and
+notify the submitter.
 
-  o The problem of ide_cd_check_ireason looked different from
-    CD burning one.
-    So I suggested you to report it as a different problem.
+For error, it can decide not to complete the original bio
+and record the error information.
+
+When the clone request is finally completed and rq->end_io() is
+called, stacking driver can check the recorded error information
+and decide whether it should take any action or just complete
+the original request by blk_complete_request().
 
 Thanks,
-Kiyoshi Ueda
+-- 
+Jun'ichi Nomura, NEC Corporation of America
