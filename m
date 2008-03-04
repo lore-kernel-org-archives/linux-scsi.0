@@ -1,78 +1,53 @@
 From: akpm@linux-foundation.org
-Subject: [patch 2/7] Dell CERC support for megaraid_mbox
-Date: Tue, 04 Mar 2008 15:24:22 -0800
-Message-ID: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
+Subject: [patch 1/7] mptbase: reset ioc initiator during PCI resume
+Date: Tue, 04 Mar 2008 15:24:21 -0800
+Message-ID: <200803042324.m24NOLWG003081@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54860 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43382 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934496AbYCDXYx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:24:53 -0500
+	by vger.kernel.org with ESMTP id S935342AbYCDXYq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:24:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, Bo.Yang@lsi.com, James.Bottomley@SteelEye.com, Sumant.Patro@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, djwong@us.ibm.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-From: Hannes Reinecke <hare@suse.de>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
 
-Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
-compatible with the legacy megaraid driver.  The legacy handling shifted
-the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
-megaraid_mbox shifts the target ID always if random deletion is supported. 
-The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
-not finding any devices, obviously.
+It appears that the LSI SAS 1064E chip needs to be reset after a
+suspend/resume cycle before the driver attempts further communications with
+the chip.  Without this patch, resuming the chip results in this error
+message being printed repeatedly and no more disk I/O.
 
-So we disable the random deletion support if the offending firmware is
-found.
+mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
 
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+So far it seems to fix suspend/resume on all the MPT Fusion cards I have
+(SAS and U320 SCSI) but since I don't know the internals of that chip I
+can't say for sure if this is a proper fix.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: <Sathya.Prakash@lsi.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 18 insertions(+)
+ drivers/message/fusion/mptbase.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
+diff -puN drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume
++++ a/drivers/message/fusion/mptbase.c
+@@ -1852,6 +1852,12 @@ mpt_resume(struct pci_dev *pdev)
+ 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
+ 		CHIPREG_READ32(&ioc->chip->Doorbell));
  
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
-+		return 0;
++	/* put ioc into READY_STATE */
++	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
++		printk(MYIOC_s_ERR_FMT
++		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
 +	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
---- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
- 
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
++
+ 	/* bring ioc to operational state */
+ 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
+ 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
 _
