@@ -1,54 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] 2.6.25-rc1-git2: GDT SCSI: change drivers/scsi/gdth.c
- into using pci_get device
-Date: Tue, 04 Mar 2008 08:48:28 +0100
-Message-ID: <47CCFECC.8040709@suse.de>
-References: <47B1ADCE.40202@larces.uece.br> <1202833354.3137.19.camel@localhost.localdomain> <47B1CF45.5070407@panasas.com> <47B23033.1080100@larces.uece.br> <1202861823.3137.170.camel@localhost.localdomain> <47B2B101.3090106@panasas.com> <20080216163756.GG7657@parisc-linux.org> <47B80E65.7090504@panasas.com>
+Subject: Re: [RFC PATCH 1/3] block: add rq->complete_io hook for request stacking
+Date: Tue, 04 Mar 2008 09:10:06 +0100
+Message-ID: <47CD03DE.3010703@suse.de>
+References: <20080215.172727.39155014.k-ueda@ct.jp.nec.com>	<47CC2652.1080601@suse.de> <20080303.140427.39152329.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:47737 "EHLO mx1.suse.de"
+Received: from ns1.suse.de ([195.135.220.2]:52192 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752958AbYCDHsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 02:48:31 -0500
-In-Reply-To: <47B80E65.7090504@panasas.com>
+	id S1750812AbYCDIKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Mar 2008 03:10:09 -0500
+In-Reply-To: <20080303.140427.39152329.k-ueda@ct.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sergio Luis <sergio@larces.uece.br>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, michaelc@cs.wisc.edu
 
-Boaz Harrosh wrote:
-> On Sat, Feb 16 2008 at 18:37 +0200, Matthew Wilcox <matthew@wil.cx> w=
-rote:
->> On Wed, Feb 13, 2008 at 10:57:37AM +0200, Boaz Harrosh wrote:
->>> I still don't have a card for testing myself. Again anyone
->>> wants to send me a card. Intel people anybody home?
->> Apparently Intel sold this line of cards to Adaptec.  The copyright
->> notice in the file backs this up:
->>
->>  * Copyright (C) 1995-06 ICP vortex GmbH, Achim Leubner             =
-    *
->>  * Copyright (C) 2002-04 Intel Corporation                          =
-    *
->>  * Copyright (C) 2003-06 Adaptec Inc.                               =
-    *
->>  * <achim_leubner@adaptec.com>                                      =
-    *
->>
->=20
-> OK I never got this guy to ping back. CCing support@adaptec.com.
->=20
-> Who is the right contact person, regarding the HW that is supported
-> by the gdth driver? Form what we see in driver commit logs (above),=20
-> it was transfered to  Adaptec from Intel in 2003. Is that still so?
->=20
-Yes, apparently. But gdth is the driver for the rather old ICP Vortex
-range; most of which are driven by aacraid nowadays.
-I thought I had one of these beasts; will check.
+Hi Kiyoshi,
 
-But yes, this is Adaptec. Unless the person is Mark Salyzyn or Luben
-it's quite tricky to excite any response.
+Kiyoshi Ueda wrote:
+> Hi Hannes,
+>=20
+> On Mon, 03 Mar 2008 17:24:50 +0100, Hannes Reinecke wrote:
+>> Hi Kiyoshi,
+>>
+>> Kiyoshi Ueda wrote:
+>>> This patch adds ->complete_io() hook for request stacking.
+>>> Request stacking drivers (such as request-based dm) can set
+>>> a callback for completion.
+>>> (The hook is not called in blk_end_io(), since request-based dm use=
+s
+>>>  it for clone completion in the following appendix patches.)
+>>>
+>> [ .. ]
+>> I would rather have rq->complete_io() to be pointing to blk_end_io i=
+n the
+>> default case, this way rq->complete_io() would always be valid and w=
+e
+>> would be saving us the if() clause.
+>=20
+> Thank you for the comment.
+>=20
+> I'm thinking about an idea come from Mike and Jens after the session
+> at LSF'08:
+>   o stacking driver clones both bio and request and uses
+>     bio->bi_end_io and rq->end_io
+>   o stacking driver uses blk_complete_request() in rq->end_io
+>     so that stacking driver can work without queue lock
+> With this idea, we don't need to add the new hook to request,
+> and we can use request stacking on drivers using __blk_end_request().
+>=20
+Huh? I can't really imagine how this should work. If you start using
+bio->bi_end_io() for stacking usage you'll end up with doing weird thin=
+g
+with the bios ... Can you elaborate a bit more here?
+
+> Currently, I'm trying to convert request-based dm to use the idea abo=
+ve.
+> I'll post the new version as a RFC in the near future.
+>=20
+Oh, cool. Looking forward to it.
 
 Cheers,
 
