@@ -1,50 +1,61 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: FUJITA Tomonori <tomof@acm.org>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 4 Mar 2008 14:03:07 +0100
-Message-ID: <20080304130307.GN6704@kernel.dk>
-References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <1204634619.17258.0.camel@homer.simson.net> <1204635515.17258.12.camel@homer.simson.net>
+Date: Tue, 4 Mar 2008 22:30:13 +0900
+Message-ID: <20080304223006A.tomof@acm.org>
+References: <20080304093536.GH6704@kernel.dk>
+	<1204634238.5997.5.camel@homer.simson.net>
+	<47CD4355.4050401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:15464 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758418AbYCDNDM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 08:03:12 -0500
-Content-Disposition: inline
-In-Reply-To: <1204635515.17258.12.camel@homer.simson.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47CD4355.4050401@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: htejun@gmail.com
+Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-On Tue, Mar 04 2008, Mike Galbraith wrote:
-> 
-> On Tue, 2008-03-04 at 13:43 +0100, Mike Galbraith wrote:
-> 
-> > > can you please try git as of this morning without any patches applied,
-> > > and then pull
-> > > 
-> > > git://git.kernel.dk/linux-2.6-block.git for-linus
-> > > 
-> > > into that and see if that works?
+On Tue, 04 Mar 2008 21:40:53 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> Mike Galbraith wrote:
+> > On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
 > > 
-> > I'll give it a shot in a bit.
+> >> Looks excellent to me, has a variant of this been tested as OK by the
+> >> users reporting the regression?
+> > 
+> > K3b burning seems to be a nogo here.  This is git pulled this morning
+> > though, so it's a somewhat different tree than previously tested fwtw.
+> > 
+> > [  136.440021] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > [  136.440043] ata1.01: cmd a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
+> > [  136.440045]          cdb 51 00 00 00 00 00 00 00  02 00 00 00 00 00 00 00
+> > [  136.440047]          res 58/00:02:00:02:00/00:00:00:00:00/b0 Emask 0x2 (HSM violation)
+> > [  136.440053] ata1.01: status: { DRDY DRQ }
+> > [  136.440086] ata1: soft resetting link
+> > [  165.327627] ata1.01: qc timeout (cmd 0xa1)
+> > [  165.327627] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > [  165.327627] ata1.01: revalidation failed (errno=-5)
+> > [  165.327627] ata1: failed to recover some devices, retrying in 5 secs
+> > [  177.272373] ata1: port is slow to respond, please be patient (Status 0x80)
+> > [  180.388879] ata1: device not ready (errno=-16), forcing hardreset
+> > [  180.388879] ata1: soft resetting link
+> > [  210.832471] ata1.01: qc timeout (cmd 0xa1)
+> > [  210.832471] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > [  210.832471] ata1.01: revalidation failed (errno=-5)
+> > [  210.832471] ata1: failed to recover some devices, retrying in 5 secs
+> > [  223.392899] ata1: port is slow to respond, please be patient (Status 0x80)
+> > [  225.920376] ata1: device not ready (errno=-16), forcing hardreset
+> > [  225.920376] ata1: soft resetting link
+> > [  256.542565] ata1.01: qc timeout (cmd 0xa1)
+> > [  256.542565] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > [  256.542565] ata1.01: revalidation failed (errno=-5)
+> > [  256.542565] ata1.01: disabled
 > 
-> Aw poo, so many choices.
-> I did:
-> 	git add remote block-for-linus git://git.kernel.dk/linux-2.6-block.git
-> 	git remote update
-> Now, which one do I check out?  block-for-linus/master maybe, or
-> block-for-linus/for-linus?
+> Aiee... device going down after timing out on READ_DISC_INFO.  That's
+> gruesome.  Can you please try the other patches?
 
-Re-read my original mail! It states that you should just pull:
+Tejun, I thought that libata needs a fix for sum(sg) != rq->data_len. No?
 
-git://git.kernel.dk/linux-2.6-block.git for-linus
-
-into your linus branch, or just create a test branch off linus' master
-and pull into that. IOW, it's the for-linus branch that you should pull,
-nothing else.
-
--- 
-Jens Axboe
-
+Now Jens' git tree should work with all the non libata stuff, ide,
+firewire, bsg, etc. But I'm not sure about libata.
