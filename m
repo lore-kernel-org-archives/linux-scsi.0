@@ -1,66 +1,82 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Wed, 05 Mar 2008 01:42:45 +0900
-Message-ID: <47CD7C05.1080707@gmail.com>
-References: <20080304093536.GH6704@kernel.dk>	<1204634238.5997.5.camel@homer.simson.net>	<47CD4355.4050401@gmail.com> <20080304223006A.tomof@acm.org> <47CD53BA.5040908@gmail.com> <47CD7611.2030606@gmail.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] Fusion SAS and Fibre Channel: target missing after resetting
+ external raid
+Date: Tue, 04 Mar 2008 10:50:38 -0600
+Message-ID: <47CD7DDE.7030907@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CD7611.2030606@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay1.sgi.com ([192.48.171.29]:52793 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751320AbYCDQuq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Mar 2008 11:50:46 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: Michael Reed <mdr@sgi.com>, Jeremy Higdon <jeremy@sgi.com>
 
-Tejun Heo wrote:
-> Tejun Heo wrote:
->> FUJITA Tomonori wrote:
->>>> Aiee... device going down after timing out on READ_DISC_INFO.  That's
->>>> gruesome.  Can you please try the other patches?
->>> Tejun, I thought that libata needs a fix for sum(sg) != rq->data_len. No?
->> The extra_len you added to qc->nbytes should be it.  The only other
->> place to pay attention is the ATAPI transfer chunk size and your patch
->> seems to get it right.
->>
->>> Now Jens' git tree should work with all the non libata stuff, ide,
->>> firewire, bsg, etc. But I'm not sure about libata.
->> With the second patch, all others should be fine no matter what.  I'll
->> go check libata part again.
-> 
-> I can reproduce the problem here and it's very weird.  I'll report back
-> when I know more.
+Following a hard reset of a SAS raid, one of the raid targets is occasionally
+missing.  I tracked this down to a pretty obscure little bug.
 
-Okay, I got it.  Heh, it turns out SCSI and/or block layer is not
-ready for rq->data_len != sum(sg).  When adjusted command completes,
-SCSI midlayer completes the command with rq->data_len for PC commands
-which eventually ends up in __end_that_request_first().  As there are
-extra sg area left after completing rq->data_len, blk layer says so to
-SCSI layer and SCSI layer retries the command only with the appended
-area.
+The LSI fusion drivers for SAS and Fibre Channel both use their respective
+transport layers.  Those transport layers increment the target number
+assigned to new targets.
 
-The following patch gets the writing going.  I really think it's a
-serious mistake to break rq->data_len == sum(sg).  If we break
-rq->data_len == requested size, the worst bugs are giving wrong size
-when issuing commands to application layer of devices which is
-relatively easy to spot and not all that command anyway.  Breaking
-rq->data_len == sum(sg), bugs will be in internal mechanics, DMA
-engine programming and transport layer.  Oh well...
+The routine __scsi_scan_target uses the "this_id" element of the Scsi_Host
+structure to avoid scanning the scsi host adapter.  Both fusion drivers set
+"this_id" from a value returned in a firmware PortFacts response.  For my
+particular test case (SAS) the firmware id assigned to the initiator was
+173.  After enough raid resets to cause the raid targets to go and come a
+sufficient number of times, the id assigned by the transport to a raid
+target would match the id assigned by the host adapter to the "this_id"
+field, resulting in that target not being scanned.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index fecba05..32439ac 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 				"Notifying upper driver of completion "
- 				"(result %x)\n", cmd->result));
+static void __scsi_scan_target(struct device *parent, unsigned int channel,
+                unsigned int id, unsigned int lun, int rescan)
+{
+        struct Scsi_Host *shost = dev_to_shost(parent);
+        int bflags = 0;
+        int res;
+        struct scsi_target *starget;
+
+        if (shost->this_id == id)
+                /*
+                 * Don't scan the host adapter
+                 */
+                return;
+
+....
+
+The fix is simple.  Fusion SAS and Fibre Channel (subject to same bug) should
+just leave "this_id" initialized to "-1".
+
+Applies to 2.6.25-rc3-git5.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+--
+
+--- kou/drivers/message/fusion/mptfc.c	2008-01-24 16:58:37.000000000 -0600
++++ ko/drivers/message/fusion/mptfc.c	2008-03-04 09:01:18.428176326 -0600
+@@ -1238,8 +1238,6 @@ mptfc_probe(struct pci_dev *pdev, const 
+ 	sh->max_id = ioc->pfacts->MaxDevices;
+ 	sh->max_lun = max_lun;
  
--	good_bytes = scsi_bufflen(cmd);
-+	good_bytes = scsi_bufflen(cmd) + cmd->request->data_len;
-         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
- 		drv = scsi_cmd_to_driver(cmd);
- 		if (drv->done)
+-	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-
+ 	/* Required entry.
+ 	 */
+ 	sh->unique_id = ioc->id;
+--- kou/drivers/message/fusion/mptsas.c	2008-03-04 08:38:58.000000000 -0600
++++ ko/drivers/message/fusion/mptsas.c	2008-03-04 09:01:04.284807301 -0600
+@@ -3176,8 +3176,6 @@ mptsas_probe(struct pci_dev *pdev, const
+ 
+ 	sh->transportt = mptsas_transport_template;
+ 
+-	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-
+ 	/* Required entry.
+ 	 */
+ 	sh->unique_id = ioc->id;
 
-
--- 
-tejun
