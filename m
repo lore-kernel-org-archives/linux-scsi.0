@@ -1,46 +1,79 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 10:04:55 -0600
-Message-ID: <1204646695.3091.14.camel@localhost.localdomain>
-References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp>
-	 <20080304085944.GG6704@kernel.dk>
-	 <20080304180648W.fujita.tomonori@lab.ntt.co.jp>
-	 <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
-	 <20080304093536.GH6704@kernel.dk>
-	 <1204634238.5997.5.camel@homer.simson.net>
-	 <20080304123939.GM6704@kernel.dk>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Tue, 4 Mar 2008 11:16:43 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803041101200.4039-100000@iolanthe.rowland.org>
+References: <1204585995.3043.85.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080304123939.GM6704@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Mike Galbraith <efault@gmx.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1204585995.3043.85.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2008-03-04 at 13:39 +0100, Jens Axboe wrote:
-> On Tue, Mar 04 2008, Mike Galbraith wrote:
+On Mon, 3 Mar 2008, James Bottomley wrote:
+
+> On Mon, 2008-03-03 at 18:04 -0500, Alan Stern wrote:
+> > On Mon, 3 Mar 2008, James Bottomley wrote:
 > > 
-> > On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+> > > On Mon, 2008-03-03 at 15:16 -0500, Alan Stern wrote:
+> > > > This patch (as1050) adds a new field to struct scsi_device, to keep a
+> > > > count of the number of block-device open file references.  This count
+> > > > will be used by usb-storage to determine whether USB-PERSIST should be
+> > > > forced on during a suspend.
+> > > 
+> > > I don't think this does what's advertised if you mean it to keep a count
+> > > as the atomics seem to imply. (->open is only called on first open and
+> > > ->release on last close.  openers was a historical 2.4 field that used
+> > > to count opens but now just flags whether sd is open or not.
 > > 
-> > > Looks excellent to me, has a variant of this been tested as OK by the
-> > > users reporting the regression?
+> > Um.  The real purpose of that field is to let usb-storage know whether 
+> > or not the device is open at all.  I used a count because that seemed 
+> > like the only way to do it; it doesn't matter if the count value 
+> > doesn't exactly match the actual number of open file references.
+> 
+> OK, so your change log is "whether the device is open" not "a count of
+> openers".
+
+Yes, sort of.  That is, the new field is used just for its "whether the 
+device is open" meaning, but the only way to keep track of that is to 
+count the calls to the open and release methods.
+
+BTW, is it really accurate to say that this isn't a count of the
+openers?  I guess it depends on what you mean by "opener".  IIUC, every
+system call to open(2) will go through the driver's open method and
+thus increment the count, whereas calls to dup(2) or dup2(2) will not.  
+It that correct, or is there a stronger distinction at work?
+
+> > > Secondly, if you really want an openers count (which I remember SCSI
+> > > rendering a bad idea ages ago), that's held in struct block_device as
+> > > openers, isn't it?  So there's no need to duplicate this in SCSI.
 > > 
-> > K3b burning seems to be a nogo here.  This is git pulled this morning
-> > though, so it's a somewhat different tree than previously tested fwtw.
+> > But there's no way to get to the block_device structure if all you're 
+> > given is the scsi_device, right?  You would have to know something 
+> > special about it, such as whether it is a disk, a CD, or something 
+> > else.  This is intended to be generic.
 > 
-> can you please try git as of this morning without any patches applied,
-> and then pull
-> 
-> git://git.kernel.dk/linux-2.6-block.git for-linus
-> 
-> into that and see if that works?
+> OK, but then the obvious question is why this isn't at the block device
+> layer?  It doesn't seem right that we'd have a shadow (and not a very
+> effective one) of bdev->openers just so you can access it from a
+> scsi_device.  We had a similar problem with the AHCI AN patches which
+> were solved by altering the layered accesses.
 
-Works for me with the SAS SMP handler.  Both input request and output
-response frame sizes are picked up and returned with the correct
-residues.
+Well then, how would you solve the problem?  Given a pointer to the 
+scsi_host, we need to know whether there are any block-device files 
+open for any of the SCSI devices beneath it.  Ideally we would like to 
+know strictly if there are any exclusive opens, but merely knowing 
+about any kind of open device file would be good enough.
 
-James
+If you can suggest an alternative approach, I'll be glad to change the
+patch.
 
+Alan Stern
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
