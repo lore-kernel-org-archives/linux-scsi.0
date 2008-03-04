@@ -1,70 +1,67 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Wed, 05 Mar 2008 08:54:18 +0900
-Message-ID: <47CDE12A.2010109@gmail.com>
-References: <47CD53BA.5040908@gmail.com>	<47CD7611.2030606@gmail.com>	<47CD7C05.1080707@gmail.com> <20080305041914V.tomof@acm.org> <47CDDC31.4070806@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 1/7] mptbase: reset ioc initiator during PCI resume
+Date: Tue, 4 Mar 2008 15:49:50 -0800
+Message-ID: <20080304154950.09df861a.akpm@linux-foundation.org>
+References: <200803042324.m24NOLWG003081@imap1.linux-foundation.org>
+	<664A4EBB07F29743873A87CF62C26D70D555F3@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CDDC31.4070806@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34485 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934785AbYCDXzb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:55:31 -0500
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70D555F3@NAMAIL4.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, djwong@us.ibm.com, Sathya.Prakash@lsi.com
 
-Tejun Heo wrote:
-> FUJITA Tomonori wrote:
->> Hmm, does SCSI mid-layer need to care about how many bytes the block
->> layer allocates? I don't think that extra_len is NOT good_bytes.
->>
->> I think that the block layer had better take care about it (fix
->> __end_that_request_first?).
+On Tue, 4 Mar 2008 16:30:24 -0700
+"Moore, Eric" <Eric.Moore@lsi.com> wrote:
+
+> On Tuesday, March 04, 2008 4:24 PM, Andrew Morton  wrote: 
+> > Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> > Cc: "Moore, Eric" <Eric.Moore@lsi.com>
+> > Cc: <Sathya.Prakash@lsi.com>
+> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> > ---
+> > 
+> >  drivers/message/fusion/mptbase.c |    6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff -puN 
+> > drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-d
+> > uring-pci-resume drivers/message/fusion/mptbase.c
+> > --- 
+> > a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator
+> > -during-pci-resume
+> > +++ a/drivers/message/fusion/mptbase.c
+> > @@ -1852,6 +1852,12 @@ mpt_resume(struct pci_dev *pdev)
+> >  		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
+> >  		CHIPREG_READ32(&ioc->chip->Doorbell));
+> >  
+> > +	/* put ioc into READY_STATE */
+> > +	if(SendIocReset(ioc, 
+> > MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
+> > +		printk(MYIOC_s_ERR_FMT
+> > +		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
+> > +	}
+> > +
+> >  	/* bring ioc to operational state */
+> >  	if ((recovery_state = mpt_do_ioc_recovery(ioc,
+> >  	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
+> > _
+> >
 > 
-> Yeah, probably calling completion functions w/o bytes count is the right
-> thing to do but what I was talking about was what could break when the
-> semantics of rq->data_len changed.  If we keep rq->data_len() ==
-> sum(sg), we keep it business as usual for all the rest except for the
-> device application layer if we don't we do the reverse and SCSI midlayer
-> completion was a good example, I think.
+> Actually we have a different patch for this, which Sathya been working
+> on.
 > 
-> Things going the other way is fine with me but I at least want to hear a
-> valid rationale.  Till now all I got is "because that's the true size"
-> which doesn't really make much sense to me.
 
-I'm giving it another shot.  When the padding / draining thing was in
-libata (or IDE) in that matter.  The whole thing looked like this.
+Will that be ready in time for 2.6.25?  If not, should we merge Darrick's
+patch as an interrim thing?
 
-  user - blk - SCSI - libata - LLD - controller - device
-  <---------------------><----------------------><----->
-            a                       b               c
-
-a: Uses the 'true' request size and matching sg
-b: Requires adjusted request size and matching sg
-c: Don't really care about sg, but sometimes needs the true size.  For
-   anything which gets attached behind ATA and which may require
-   padding, transfer size is also sent in the CDB as well, which not
-   all devices honor and that's one of the reasons why size adjustment
-   is necessary.
-
-If we move the adjustment to block layer and keep data_len == sum(sg),
-it looks like.
-
-  user - blk - SCSI - libata - LLD - controller - device
-  <------><-------------------------------------><----->
-      a                      b                      c
-
-And a, b and c stay the same.  If we keep the requested size in
-data_len.  Whole b gets inconsistent values in the middle while c gets
-the value it wants in data_len, so we're risking much more to keep the
-true size in rq->data_len when we could simply make it mean sum(sg).
-
-Before the only thing which need updating was to correctly determine
-the transfer size to feed to device.  Now we need to audit whole b.
-In addition, such adjustments are made only when the driver explicitly
-requested it, so for all others it doesn't really matter.
+And I assume that 2.6.24 has the same problem - what should we do there?
 
 Thanks.
-
--- 
-tejun
