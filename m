@@ -1,54 +1,72 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] 2.6.25-rc1-git2: GDT SCSI: change drivers/scsi/gdth.c
- into using pci_get device
-Date: Tue, 04 Mar 2008 14:04:24 +0200
-Message-ID: <47CD3AC8.6020300@panasas.com>
-References: <47B1ADCE.40202@larces.uece.br> <1202833354.3137.19.camel@localhost.localdomain> <47B1CF45.5070407@panasas.com> <47B23033.1080100@larces.uece.br> <1202861823.3137.170.camel@localhost.localdomain> <47B2B101.3090106@panasas.com> <20080216163756.GG7657@parisc-linux.org> <47B80E65.7090504@panasas.com> <47CCFECC.8040709@suse.de>
+From: Mike Galbraith <efault@gmx.de>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 04 Mar 2008 13:37:18 +0100
+Message-ID: <1204634238.5997.5.camel@homer.simson.net>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304085944.GG6704@kernel.dk>
+	 <20080304180648W.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304093536.GH6704@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759408AbYCDMFL@vger.kernel.org>
-In-Reply-To: <47CCFECC.8040709@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sergio Luis <sergio@larces.uece.br>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080304093536.GH6704@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 04 2008 at 9:48 +0200, Hannes Reinecke <hare@suse.de> wrote:
-> Boaz Harrosh wrote:
->> On Sat, Feb 16 2008 at 18:37 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
->>> On Wed, Feb 13, 2008 at 10:57:37AM +0200, Boaz Harrosh wrote:
->>>> I still don't have a card for testing myself. Again anyone
->>>> wants to send me a card. Intel people anybody home?
->>> Apparently Intel sold this line of cards to Adaptec.  The copyright
->>> notice in the file backs this up:
->>>
->>>  * Copyright (C) 1995-06 ICP vortex GmbH, Achim Leubner                 *
->>>  * Copyright (C) 2002-04 Intel Corporation                              *
->>>  * Copyright (C) 2003-06 Adaptec Inc.                                   *
->>>  * <achim_leubner@adaptec.com>                                          *
->>>
->> OK I never got this guy to ping back. CCing support@adaptec.com.
->>
->> Who is the right contact person, regarding the HW that is supported
->> by the gdth driver? Form what we see in driver commit logs (above), 
->> it was transfered to  Adaptec from Intel in 2003. Is that still so?
->>
-> Yes, apparently. But gdth is the driver for the rather old ICP Vortex
-> range; most of which are driven by aacraid nowadays.
-> I thought I had one of these beasts; will check.
-> 
-> But yes, this is Adaptec. Unless the person is Mark Salyzyn or Luben
-> it's quite tricky to excite any response.
-> 
-> Cheers,
-> 
-> Hannes
 
-Thanks Hannes.
+On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
 
-I never got any response. I guess I'm not important enough.
-Christoph said he has a card, that he'll send once he gets
-to it. I'll wait for his card. I gave up on the Adaptec guys.
+> Looks excellent to me, has a variant of this been tested as OK by the
+> users reporting the regression?
 
-Boaz
+K3b burning seems to be a nogo here.  This is git pulled this morning
+though, so it's a somewhat different tree than previously tested fwtw.
+
+[  136.440021] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  136.440043] ata1.01: cmd a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
+[  136.440045]          cdb 51 00 00 00 00 00 00 00  02 00 00 00 00 00 00 00
+[  136.440047]          res 58/00:02:00:02:00/00:00:00:00:00/b0 Emask 0x2 (HSM violation)
+[  136.440053] ata1.01: status: { DRDY DRQ }
+[  136.440086] ata1: soft resetting link
+[  165.327627] ata1.01: qc timeout (cmd 0xa1)
+[  165.327627] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+[  165.327627] ata1.01: revalidation failed (errno=-5)
+[  165.327627] ata1: failed to recover some devices, retrying in 5 secs
+[  177.272373] ata1: port is slow to respond, please be patient (Status 0x80)
+[  180.388879] ata1: device not ready (errno=-16), forcing hardreset
+[  180.388879] ata1: soft resetting link
+[  210.832471] ata1.01: qc timeout (cmd 0xa1)
+[  210.832471] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+[  210.832471] ata1.01: revalidation failed (errno=-5)
+[  210.832471] ata1: failed to recover some devices, retrying in 5 secs
+[  223.392899] ata1: port is slow to respond, please be patient (Status 0x80)
+[  225.920376] ata1: device not ready (errno=-16), forcing hardreset
+[  225.920376] ata1: soft resetting link
+[  256.542565] ata1.01: qc timeout (cmd 0xa1)
+[  256.542565] ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+[  256.542565] ata1.01: revalidation failed (errno=-5)
+[  256.542565] ata1.01: disabled
+[  259.995199] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+[  259.995214] ata1.00: revalidation failed (errno=-5)
+[  259.995219] ata1: failed to recover some devices, retrying in 5 secs
+[  265.047502] ata1: soft resetting link
+[  262.397570] ata1.00: limited to UDMA/33 due to 40-wire cable
+[  262.420039] ata1.00: configured for UDMA/33
+[  262.420039] sr 0:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+[  262.420039] sr 0:0:1:0: [sr0] Sense Key : Aborted Command [current] [descriptor]
+[  262.420039] Descriptor sense data with sense descriptors (in hex):
+[  262.420039]         72 0b 47 00 00 00 00 0e 09 0c 00 00 00 02 00 00 
+[  262.420039]         00 02 00 00 b0 58 
+[  262.420039] sr 0:0:1:0: [sr0] Add. Sense: Scsi parity error
+[  262.420039] ata1: EH complete
+[  262.420257] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[  262.420320] sd 0:0:0:0: [sda] Write Protect is off
+[  262.420326] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[  262.420390] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+
+
