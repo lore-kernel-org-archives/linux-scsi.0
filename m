@@ -1,53 +1,78 @@
 From: akpm@linux-foundation.org
-Subject: [patch 3/7] 3W RAID drivers: memset not needed in probe
-Date: Tue, 04 Mar 2008 15:24:23 -0800
-Message-ID: <200803042324.m24NON8V003087@imap1.linux-foundation.org>
+Subject: [patch 2/7] Dell CERC support for megaraid_mbox
+Date: Tue, 04 Mar 2008 15:24:22 -0800
+Message-ID: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36728 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54860 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935169AbYCDXYu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:24:50 -0500
+	by vger.kernel.org with ESMTP id S934496AbYCDXYx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2008 18:24:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, crquan@gmail.com, linuxraid@amcc.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, Bo.Yang@lsi.com, James.Bottomley@SteelEye.com, Sumant.Patro@lsi.com
 
-From: Denis Cheng <crquan@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
 
-The memory return from scsi_host_alloc is alloced by kzalloc, which is
-already zero initilized, so memset not needed.
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
+not finding any devices, obviously.
 
-Signed-off-by: Denis Cheng <crquan@gmail.com>
-Cc: Adam Radford <linuxraid@amcc.com>
+So we disable the random deletion support if the offending firmware is
+found.
+
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Yang, Bo" <Bo.Yang@lsi.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/3w-9xxx.c |    2 --
- drivers/scsi/3w-xxxx.c |    2 --
- 2 files changed, 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
 
-diff -puN drivers/scsi/3w-9xxx.c~3w-raid-drivers-memset-not-needed-in-probe drivers/scsi/3w-9xxx.c
---- a/drivers/scsi/3w-9xxx.c~3w-raid-drivers-memset-not-needed-in-probe
-+++ a/drivers/scsi/3w-9xxx.c
-@@ -2028,8 +2028,6 @@ static int __devinit twa_probe(struct pc
- 	}
- 	tw_dev = (TW_Device_Extension *)host->hostdata;
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
+--- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
  
--	memset(tw_dev, 0, sizeof(TW_Device_Extension));
--
- 	/* Save values to device extension */
- 	tw_dev->host = host;
- 	tw_dev->tw_pci_dev = pdev;
-diff -puN drivers/scsi/3w-xxxx.c~3w-raid-drivers-memset-not-needed-in-probe drivers/scsi/3w-xxxx.c
---- a/drivers/scsi/3w-xxxx.c~3w-raid-drivers-memset-not-needed-in-probe
-+++ a/drivers/scsi/3w-xxxx.c
-@@ -2294,8 +2294,6 @@ static int __devinit tw_probe(struct pci
- 	}
- 	tw_dev = (TW_Device_Extension *)host->hostdata;
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
++		return 0;
++	}
  
--	memset(tw_dev, 0, sizeof(TW_Device_Extension));
--
- 	/* Save values to device extension */
- 	tw_dev->host = host;
- 	tw_dev->tw_pci_dev = pdev;
+ 	mbox = (mbox_t *)raw_mbox;
+ 
+diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
+--- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+ 
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
 _
