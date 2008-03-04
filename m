@@ -1,91 +1,82 @@
-From: walt <w41ter@gmail.com>
+From: FUJITA Tomonori <tomof@acm.org>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 11:18:11 -0800
-Message-ID: <fqk77b$cdn$1@ger.gmane.org>
-References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <fqk15l$lgq$1@ger.gmane.org> <47CD8E02.1020207@gmail.com>
+Date: Wed, 5 Mar 2008 04:19:33 +0900
+Message-ID: <20080305041914V.tomof@acm.org>
+References: <47CD53BA.5040908@gmail.com>
+	<47CD7611.2030606@gmail.com>
+	<47CD7C05.1080707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CD8E02.1020207@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:35055 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754213AbYCDTYF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Mar 2008 14:24:05 -0500
+In-Reply-To: <47CD7C05.1080707@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: htejun@gmail.com
+Cc: tomof@acm.org, efault@gmx.de, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.comfujita.tomonori@lab.ntt.co.jp
 
-Tejun Heo wrote:
-> walt wrote:
->> Jens Axboe wrote:
->>> On Tue, Mar 04 2008, Mike Galbraith wrote:
->>>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
->>>>
->>>>> Looks excellent to me, has a variant of this been tested as OK by the
->>>>> users reporting the regression?
->>>> K3b burning seems to be a nogo here.  This is git pulled this morning
->>>> though, so it's a somewhat different tree than previously tested fwtw.
->>> can you please try git as of this morning without any patches applied,
->>> and then pull
->>>
->>> git://git.kernel.dk/linux-2.6-block.git for-linus
->>>
->>> into that and see if that works?
->> Unfortunately this doesn't fix a problem I've discussed off-list with
->> Kiyoshi Ueda, who suggested that I should follow this thread and try
->> any patches posted here.
->>
->> Here is what happens when I try to mount a CD (before and after I
->> pull 'for-linus'):
->>
->> hdc: ide_cd_check_ireason: wrong transfer direction!
->> cdrom: failed setting lba address space
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
->> ide: failed opcode was: unknown
->> hdc: drive not ready for command
->> hdc: status timeout: status=0xd0 { Busy }
->> ide: failed opcode was: unknown
->> hdc: DMA disabled
->> hdc: drive not ready for command
->> hdc: ATAPI reset complete
->> ISO 9660 Extensions: Microsoft Joliet Level 3
->> ISOFS: changing to secondary root
->> VFS: busy inodes on changed media.
->>
->> The mount can take from 5 seconds on up to a minute or so before the
->> CD can be accessed.
->
-> Which version did you try?  There was a recent IDE bug fix which
-> affected CD recording.  Commit bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32
-> which is included in 2.6.25-rc3.
+On Wed, 05 Mar 2008 01:42:45 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-I pulled from Jens to Linus' latest git, as Jens instructed.  I noticed
-no difference at all.
+> Tejun Heo wrote:
+> > Tejun Heo wrote:
+> >> FUJITA Tomonori wrote:
+> >>>> Aiee... device going down after timing out on READ_DISC_INFO.  That's
+> >>>> gruesome.  Can you please try the other patches?
+> >>> Tejun, I thought that libata needs a fix for sum(sg) != rq->data_len. No?
+> >> The extra_len you added to qc->nbytes should be it.  The only other
+> >> place to pay attention is the ATAPI transfer chunk size and your patch
+> >> seems to get it right.
+> >>
+> >>> Now Jens' git tree should work with all the non libata stuff, ide,
+> >>> firewire, bsg, etc. But I'm not sure about libata.
+> >> With the second patch, all others should be fine no matter what.  I'll
+> >> go check libata part again.
+> > 
+> > I can reproduce the problem here and it's very weird.  I'll report back
+> > when I know more.
+> 
+> Okay, I got it.  Heh, it turns out SCSI and/or block layer is not
+> ready for rq->data_len != sum(sg).  When adjusted command completes,
+> SCSI midlayer completes the command with rq->data_len for PC commands
+> which eventually ends up in __end_that_request_first().  As there are
+> extra sg area left after completing rq->data_len, blk layer says so to
+> SCSI layer and SCSI layer retries the command only with the appended
+> area.
 
-> Also, did 2.6.24 work?
-
-Yes, vanilla 2.6.24 works fine.  Your patchlet of earlier today also
-didn't fix it, so I'm beginning to think that maybe I'm in the wrong
-thread :o)
+Ah, thanks!
 
 
+> The following patch gets the writing going.  I really think it's a
+> serious mistake to break rq->data_len == sum(sg).  If we break
+> rq->data_len == requested size, the worst bugs are giving wrong size
+> when issuing commands to application layer of devices which is
+> relatively easy to spot and not all that command anyway.  Breaking
+> rq->data_len == sum(sg), bugs will be in internal mechanics, DMA
+> engine programming and transport layer.  Oh well...
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index fecba05..32439ac 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+>  				"Notifying upper driver of completion "
+>  				"(result %x)\n", cmd->result));
+>  
+> -	good_bytes = scsi_bufflen(cmd);
+> +	good_bytes = scsi_bufflen(cmd) + cmd->request->data_len;
+>          if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+>  		drv = scsi_cmd_to_driver(cmd);
+>  		if (drv->done)
+> 
+> 
 
+Hmm, does SCSI mid-layer need to care about how many bytes the block
+layer allocates? I don't think that extra_len is NOT good_bytes.
+
+I think that the block layer had better take care about it (fix
+__end_that_request_first?).
