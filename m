@@ -1,92 +1,46 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/3] qla4xxx: fix host reset dpc race
-Date: Tue,  4 Mar 2008 13:26:53 -0600
-Message-ID: <1204658815-6185-2-git-send-email-michaelc@cs.wisc.edu>
-References: <1204658815-6185-1-git-send-email-michaelc@cs.wisc.edu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 4 Mar 2008 20:28:37 +0100
+Message-ID: <20080304192837.GV6704@kernel.dk>
+References: <1204634619.17258.0.camel@homer.simson.net> <1204635515.17258.12.camel@homer.simson.net> <20080304130307.GN6704@kernel.dk> <1204640722.5783.10.camel@homer.simson.net> <20080304181736.GP6704@kernel.dk> <1204655711.19496.10.camel@homer.simson.net> <20080304184534.GR6704@kernel.dk> <1204656555.6598.4.camel@homer.simson.net> <20080304185420.GT6704@kernel.dk> <1204658770.6284.2.camel@homer.simson.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41148 "EHLO mx1.redhat.com"
+Received: from brick.kernel.dk ([87.55.233.238]:27133 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761959AbYCDT1A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Mar 2008 14:27:00 -0500
-In-Reply-To: <1204658815-6185-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1761245AbYCDT2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Mar 2008 14:28:43 -0500
+Content-Disposition: inline
+In-Reply-To: <1204658770.6284.2.camel@homer.simson.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Mike Galbraith <efault@gmx.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Tue, Mar 04 2008, Mike Galbraith wrote:
+> 
+> On Tue, 2008-03-04 at 19:54 +0100, Jens Axboe wrote:
+> > On Tue, Mar 04 2008, Mike Galbraith wrote:
+> > > 
+> > > On Tue, 2008-03-04 at 19:45 +0100, Jens Axboe wrote:
+> > > 
+> > > > > It says cc66b4512cae8df4ed1635483210aabf7690ec27... kewpie doll?
+> > > > 
+> > > > That looks right, then perhaps there's still an issue there :/
+> > > > Logs?
+> > > 
+> > > Tejuns patchlet (below) fixed it here.
+> > 
+> > OK, can you try changing that to
+> > 
+> >         good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
+> > 
+> > and retest?
+> 
+> Yup, disk #42 is happily burning away.
 
-The host reset callout could be starting to reset the hba at the same
-time the dpc thread is. This creates lots of problems because they both
-want to do wierd things with the firmware and interrupts, etc.
+Super, patch heading to Linus now. Thanks for all your testing, Mike!
 
-This patch just has the host reset function fully shutdown the dpc
-thread before resetting the hba.
-
-This patch also moves the setting of the session online bit to fix
-a potential race with the dpc thread and iscsi recovery thread.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Acked-by: David C Somayajulu <david.somayajulu@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_init.c |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c   |   13 +++++++++----
- 2 files changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 10b3b9a..109c5f5 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -1299,9 +1299,9 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha,
- 	ddb_entry->fw_ddb_device_state = state;
- 	/* Device is back online. */
- 	if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
-+		atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
- 		atomic_set(&ddb_entry->port_down_timer,
- 			   ha->port_down_retry_count);
--		atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
- 		atomic_set(&ddb_entry->relogin_retry_count, 0);
- 		atomic_set(&ddb_entry->relogin_timer, 0);
- 		clear_bit(DF_RELOGIN, &ddb_entry->flags);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index c3c59d7..10a233e 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -864,8 +864,9 @@ static void qla4xxx_flush_active_srbs(struct scsi_qla_host *ha)
-  * qla4xxx_recover_adapter - recovers adapter after a fatal error
-  * @ha: Pointer to host adapter structure.
-  * @renew_ddb_list: Indicates what to do with the adapter's ddb list
-- *	after adapter recovery has completed.
-- *	0=preserve ddb list, 1=destroy and rebuild ddb list
-+ *
-+ * renew_ddb_list value can be 0=preserve ddb list, 1=destroy and rebuild
-+ * ddb list.
-  **/
- static int qla4xxx_recover_adapter(struct scsi_qla_host *ha,
- 				uint8_t renew_ddb_list)
-@@ -874,6 +875,7 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha,
- 
- 	/* Stall incoming I/O until we are done */
- 	clear_bit(AF_ONLINE, &ha->flags);
-+
- 	DEBUG2(printk("scsi%ld: %s calling qla4xxx_cmd_wait\n", ha->host_no,
- 		      __func__));
- 
-@@ -1600,9 +1602,12 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 		return FAILED;
- 	}
- 
--	if (qla4xxx_recover_adapter(ha, PRESERVE_DDB_LIST) == QLA_SUCCESS) {
-+	/* make sure the dpc thread is stopped while we reset the hba */
-+	clear_bit(AF_ONLINE, &ha->flags);
-+	flush_workqueue(ha->dpc_thread);
-+
-+	if (qla4xxx_recover_adapter(ha, PRESERVE_DDB_LIST) == QLA_SUCCESS)
- 		return_status = SUCCESS;
--	}
- 
- 	dev_info(&ha->pdev->dev, "HOST RESET %s.\n",
- 		   return_status == FAILED ? "FAILED" : "SUCCEDED");
 -- 
-1.5.4.1
+Jens Axboe
 
