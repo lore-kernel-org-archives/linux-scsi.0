@@ -1,119 +1,160 @@
-From: <gregkh-l3A5Bk7waGM@public.gmane.org>
-Subject: patch scsi-add-a-field-to-scsi_device-to-count-open-file-references.patch added to gregkh-2.6 tree
-Date: Wed, 05 Mar 2008 12:13:35 -0800
-Message-ID: <1204748015695@kroah.org>
-References: <Pine.LNX.4.44L0.0803031508490.7094-100000@iolanthe.rowland.org>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0803031508490.7094-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, gregkh-l3A5Bk7waGM@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Josef Bacik <jbacik@redhat.com>
+Subject: Re: some hard numbers on ext3 & batching performance issue
+Date: Wed, 5 Mar 2008 15:20:08 -0500
+Message-ID: <200803051520.09931.jbacik@redhat.com>
+References: <47C6A46D.8020700@emc.com> <20080228175422.GU155259@sgi.com> <47CEF254.2090208@emc.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <47CEF254.2090208@emc.com>
+Content-Disposition: inline
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: ric@emc.com
+Cc: David Chinner <dgc@sgi.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Wednesday 05 March 2008 2:19:48 pm Ric Wheeler wrote:
+> After the IO/FS workshop last week, I posted some details on the slow
+> down we see with ext3 when we have a low latency back end instead of a
+> normal local disk (SCSI/S-ATA/etc).
+>
+> As a follow up to that thread, I wanted to post some real numbers that
+> Andy from our performance team pulled together. Andy tested various
+> patches using three classes of storage (S-ATA, RAM disk and Clariion
+> array).
+>
+> Note that this testing was done on a SLES10/SP1 kernel, but the code in
+> question has not changed in mainline but we should probably retest on
+> something newer just to clear up any doubts.
+>
+> The work load is generated using fs_mark
+> (http://sourceforge.net/projects/fsmark/) which is basically a write
+> workload with small files, each file gets fsync'ed before close. The
+> metric is "files/sec".
+>
+> The clearest result used a ramdisk to store 4k files.
+>
+> We modified ext3 and jbd to accept a new mount option: bdelay Use it like:
+>
+> mount -o bdelay=n dev mountpoint
+>
+> n is passed to schedule_timeout_interruptible() in the jbd code. if n ==
+> 0, it skips the whole loop. if n is "yield", then substitute the
+> schedule...(n) with yield().
+>
+> Note that the first row is the value of the delay with a 250HZ build
+> followed by the number of concurrent threads writing 4KB files.
+>
+> Ramdisk test:
+>
+> bdelay  1       2       4       8       10      20
+> 0       4640    4498    3226    1721    1436     664
+> yield   4640    4078    2977    1611    1136     551
+> 1       4647     250     482     588     629     483
+> 2       4522     149     233     422     450     389
+> 3       4504      86     165     271     308     334
+> 4       4425      84     128     222     253     293
+>
+> Midrange clariion:
+>
+> bdelay   1       2       4       8       10      20
+> 0        778     923    1567    1424    1276     785
+> yield    791     931    1551    1473    1328     806
+> 1        793     304     499     714     751     760
+> 2        789     132     201     382     441     589
+> 3        792     124     168     298     342     471
+> 4        786      71     116     237     277     393
+>
+> Local disk:
+>
+> bdelay    1       2       4       8       10      20
+> 0         47      51      81     135     160     234
+> yield     36      45      74     117     138     214
+> 1         44      52      86     148     183     258
+> 2         40      60     109     163     184     265
+> 3         40      52      97     148     171     264
+> 4         35      42      83     149     169     246
+>
+> Apologies for mangling the nicely formatted tables.
+>
+> Note that the justification for the batching as we have it today is
+> basically this last local drive test case.
+>
+> It would be really interesting to rerun some of these tests on xfs which
+> Dave explained in the thread last week has a more self tuning way to
+> batch up transactions....
+>
+> Note that all of those poor users who have a synchronous write workload
+> today are in the "1" row for each of the above tables.
 
-This is a note to let you know that I've just added the patch titled
+Mind giving this a whirl?  The fastest thing I've got here is an Apple X RAID 
+and its being used for something else atm, so I've only tested this on local 
+disk to make sure it didn't make local performance suck (which it doesn't btw).  
+This should be equivalent with what David says XFS does.  Thanks much,
 
-     Subject: SCSI: add a field to scsi_device to count open file references
+Josef
 
-to my gregkh-2.6 tree.  Its filename is
-
-     scsi-add-a-field-to-scsi_device-to-count-open-file-references.patch
-
-This tree can be found at 
-    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
-
-
->From stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org  Wed Mar  5 12:05:47 2008
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Date: Mon, 3 Mar 2008 15:16:16 -0500 (EST)
-Subject: SCSI: add a field to scsi_device to count open file references
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>
-Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>,  SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Message-ID: <Pine.LNX.4.44L0.0803031508490.7094-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-
-
-This patch (as1050) adds a new field to struct scsi_device, to keep a
-count of the number of block-device open file references.  This count
-will be used by usb-storage to determine whether USB-PERSIST should be
-forced on during a suspend.
-
-Signed-off-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>
-
----
- drivers/scsi/sd.c          |    3 +++
- drivers/scsi/sr.c          |    5 ++++-
- include/scsi/scsi_device.h |    1 +
- 3 files changed, 8 insertions(+), 1 deletion(-)
-
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -610,6 +610,7 @@ static int sd_open(struct inode *inode, 
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
- 	}
- 
-+	atomic_inc(&sdev->blockdev_open_cnt);
- 	return 0;
- 
- error_out:
-@@ -636,6 +637,8 @@ static int sd_release(struct inode *inod
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
- 
-+	atomic_dec(&sdev->blockdev_open_cnt);
-+
- 	if (!--sdkp->openers && sdev->removable) {
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -564,6 +564,7 @@ static int sr_open(struct cdrom_device_i
- 	if (!scsi_block_when_processing_errors(sdev))
- 		goto error_out;
- 
-+	atomic_inc(&sdev->blockdev_open_cnt);
- 	return 0;
- 
- error_out:
-@@ -573,10 +574,12 @@ error_out:
- static void sr_release(struct cdrom_device_info *cdi)
+diff --git a/fs/jbd/transaction.c b/fs/jbd/transaction.c
+index c6cbb6c..4596e1c 100644
+--- a/fs/jbd/transaction.c
++++ b/fs/jbd/transaction.c
+@@ -1333,8 +1333,7 @@ int journal_stop(handle_t *handle)
  {
- 	struct scsi_cd *cd = cdi->handle;
-+	struct scsi_device *sdev = cd->device;
-+
-+	atomic_dec(&sdev->blockdev_open_cnt);
+ 	transaction_t *transaction = handle->h_transaction;
+ 	journal_t *journal = transaction->t_journal;
+-	int old_handle_count, err;
+-	pid_t pid;
++	int err;
  
- 	if (cd->device->sector_size > 2048)
- 		sr_set_blocklength(cd, 2048);
+ 	J_ASSERT(journal_current_handle() == handle);
+ 
+@@ -1353,32 +1352,22 @@ int journal_stop(handle_t *handle)
+ 
+ 	jbd_debug(4, "Handle %p going down\n", handle);
+ 
+-	/*
+-	 * Implement synchronous transaction batching.  If the handle
+-	 * was synchronous, don't force a commit immediately.  Let's
+-	 * yield and let another thread piggyback onto this transaction.
+-	 * Keep doing that while new threads continue to arrive.
+-	 * It doesn't cost much - we're about to run a commit and sleep
+-	 * on IO anyway.  Speeds up many-threaded, many-dir operations
+-	 * by 30x or more...
+-	 *
+-	 * But don't do this if this process was the most recent one to
+-	 * perform a synchronous write.  We do this to detect the case where a
+-	 * single process is doing a stream of sync writes.  No point in waiting
+-	 * for joiners in that case.
+-	 */
+-	pid = current->pid;
+-	if (handle->h_sync && journal->j_last_sync_writer != pid) {
+-		journal->j_last_sync_writer = pid;
+-		do {
+-			old_handle_count = transaction->t_handle_count;
+-			schedule_timeout_uninterruptible(1);
+-		} while (old_handle_count != transaction->t_handle_count);
+-	}
 -
- }
- 
- static int sr_probe(struct device *dev)
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -153,6 +153,7 @@ struct scsi_device {
- 	atomic_t iorequest_cnt;
- 	atomic_t iodone_cnt;
- 	atomic_t ioerr_cnt;
-+	atomic_t blockdev_open_cnt;
- 
- 	int timeout;
- 
+ 	current->journal_info = NULL;
+ 	spin_lock(&journal->j_state_lock);
+ 	spin_lock(&transaction->t_handle_lock);
++
++	if (journal->j_committing_transaction && handle->h_sync) {
++		tid_t tid = journal->j_committing_transaction->t_tid;
++
++		spin_unlock(&transaction->t_handle_lock);
++		spin_unlock(&journal->j_state_lock);
++
++		err = log_wait_commit(journal, tid);
++
++		spin_lock(&journal->j_state_lock);
++		spin_lock(&transaction->t_handle_lock);
++	}
++
+ 	transaction->t_outstanding_credits -= handle->h_buffer_credits;
+ 	transaction->t_updates--;
+ 	if (!transaction->t_updates) {
 
 
-Patches currently in gregkh-2.6 which might be from stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org are
-
-usb/usb-convert-usb.h-struct-usb_device-to-kernel-doc.patch
-usb/usb-make-usb_storage_onetouch-available-with-pm.patch
-usb/usb-usb-ohci-sm501-driver-use-the-conventional-convention-for-suspend-and-resume.patch
-usb/usb-reorganize-code-in-hub.c.patch
-usb/usb-ehci-carry-out-port-handover-during-each-root-hub-resume.patch
-usb/scsi-add-a-field-to-scsi_device-to-count-open-file-references.patch
-usb/usb-allow-drivers-to-force-usb-persist.patch
-usb/usb-remove-config_usb_persist-setting.patch
-usb/usb-check-serial-number-string-after-device-reset.patch
-usb/usb-make-usb-persist-work-after-every-system-sleep.patch
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
