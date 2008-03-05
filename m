@@ -1,41 +1,113 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [patch 5/7] scsi: le*_add_cpu conversion
-Date: Wed, 5 Mar 2008 06:01:29 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F4831D6B01@ADPE2K703.adaptec.com>
-References: <200803042324.m24NOP97003093@imap1.linux-foundation.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [patch 2/7] Dell CERC support for megaraid_mbox
+Date: Wed, 5 Mar 2008 06:54:42 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501FA50DC@NAMAIL1.ad.lsil.com>
+References: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:43180 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294AbYCEOBb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 09:01:31 -0500
-In-Reply-To: <200803042324.m24NOP97003093@imap1.linux-foundation.org>
-Content-Language: en-US
+Received: from mail0.lsil.com ([147.145.40.20]:51955 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351AbYCEODA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 09:03:00 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "marcin.slusarz@gmail.com" <marcin.slusarz@gmail.com>
+To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-I ACKed this patch for aacraid and ips in the past, I continue to support it.
+Hannes,
 
-Sincerely -- Mark Salyzyn
+I will view the patch and give the feedback soon.
 
-> -----Original Message-----
-. . .
-> From: Marcin Slusarz <marcin.slusarz@gmail.com>
->
-> replace all:
-> little_endian_variable =
-> cpu_to_leX(leX_to_cpu(little_endian_variable) +
->                                         expression_in_cpu_byteorder);
-> with:
->         leX_add_cpu(&little_endian_variable,
-> expression_in_cpu_byteorder);
-> generated with semantic patch
->
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: James.Bottomley@HansenPartnership.com
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-. . .
+Thanks.
+
+Bo Yang 
+
+-----Original Message-----
+From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
+Sent: Tuesday, March 04, 2008 6:24 PM
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; hare@suse.de;
+Yang, Bo; James.Bottomley@SteelEye.com; Patro, Sumant
+Subject: [patch 2/7] Dell CERC support for megaraid_mbox
+
+From: Hannes Reinecke <hare@suse.de>
+
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is
+supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
+and not finding any devices, obviously.
+
+So we disable the random deletion support if the offending firmware is
+found.
+
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
+
+diff -puN
+drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.c
+---
+a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
+ 
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device ==
+PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random
+deletion\n"));
++		return 0;
++	}
+ 
+ 	mbox = (mbox_t *)raw_mbox;
+ 
+diff -puN
+drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.h
+---
+a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+ 
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
+kernel
+_
