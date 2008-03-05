@@ -1,67 +1,35 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open
-	file references
-Date: Wed, 05 Mar 2008 15:30:18 -0600
-Message-ID: <1204752618.3047.77.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0803051608140.4161-100000@iolanthe.rowland.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Wed, 05 Mar 2008 22:47:28 +0100
+Message-ID: <47CF14F0.6060803@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0803051625450.4161-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0803051608140.4161-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:48953 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755652AbYCEVrh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 16:47:37 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0803051625450.4161-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2008-03-05 at 16:24 -0500, Alan Stern wrote:
-> On Wed, 5 Mar 2008, James Bottomley wrote:
+Alan Stern wrote:
+> On Wed, 5 Mar 2008, Stefan Richter wrote:
+>> sg, st, ch could be callers as well, but I suppose you don't really need 
+>> them.  And for me, sd and sr already cover 99.9% of the use cases.
 > 
-> > OK, I looked through the patch series.  It really looks like the
-> > in-kernel thing is the wrong approach.
-> > 
-> > Why not export this want_persist flag via sysfs and then have hal and
-> > udev update it when they see a filesystem on an underlying usb device
-> > mounted (and zero it out on unmount)?  That way you always have the
-> > exactly correct state and there's no need to go fishing for information
-> > in layers that are difficult to get to.
-> 
-> The flag (or rather, a similar one named "persist_enabled") already is
-> exported via sysfs.
-> 
-> Having hal+udev set it automatically as you describe never occurred 
-> to me.  The reason for doing all of this within the kernel is that 
-> Linus said (off-list) that the kernel should handle this automatically.  
-> Whether he considered userspace tools taking over the responsibility, I 
-> can't say.  (But he might object to having to wait for the tools to add 
-> the extra functionality.)
-> 
-> Now, it has to be mentioned that mounted filesystems on a USB device
-> account for something like 90% of the objections against USB-PERSIST.  
-> If we go ahead and enable it automatically in that case, there is
-> really very little reason not to enable it for every USB device, 
-> mounted or not.
-> 
-> In fact, the only other important reason for not turning it on by
-> default (or always!) is because the USB spec says not to.  By adding
-> this check for mounted filesystems, we are trying to adhere as closely
-> as possible to the spec -- but only in cases where we don't care since
-> it doesn't matter!
-> 
-> Whether to enable USB-PERSIST for mounted devices is a policy decision.  
-> Whether that policy should be set by the kernel or by userspace is
-> outside my jursidiction.  If you think this approach is wrong-headed
-> and you can convince Linus to go along, I'll be willing to drop the
-> last three patches in this series.
+> Those drivers don't export a block-device interface, do they?  So you 
+> can't mount a filesystem on a device they control.
 
-So make it default to one now and also put the processes in train to
-update hal and udev.  That way everything should work immediately and we
-come back to spec compliance later.
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That's right, but users can "use" those devices.  ;-)
+Anyway, go ahead with sd and sr only; I don't really care about having 
+those calls in the other drivers.
+-- 
+Stefan Richter
+-=====-==--- --== --=-=
+http://arcgraph.de/sr/
