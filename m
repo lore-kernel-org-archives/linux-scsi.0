@@ -1,113 +1,63 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [patch 2/7] Dell CERC support for megaraid_mbox
-Date: Wed, 5 Mar 2008 06:54:42 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501FA50DC@NAMAIL1.ad.lsil.com>
-References: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
+   count
+Date: Wed, 05 Mar 2008 23:08:08 +0900
+Message-ID: <47CEA948.6050408@gmail.com>
+References: <47CD7C05.1080707@gmail.com> <20080305041914V.tomof@acm.org> <47CDDC31.4070806@gmail.com> <20080305092619Y.fujita.tomonori@lab.ntt.co.jp> <47CE72EF.7050302@panasas.com> <20080305123317.GI6704@kernel.dk> <47CE9634.6040501@panasas.com> <20080305124857.GJ6704@kernel.dk> <47CEA40F.6050903@gmail.com> <20080305135121.GK6704@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:51955 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351AbYCEODA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 09:03:00 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <200803042324.m24NOM3A003084@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754373AbYCEOIg@vger.kernel.org>
+In-Reply-To: <20080305135121.GK6704@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Galbraith <efault@gmx.de>, James.Bottomley@HansenPartnership.com, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, hare@suse.de, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-Hannes,
+Hello, Jens.
 
-I will view the patch and give the feedback soon.
+Jens Axboe wrote:
+>> This is getting insanely subtle.  Let's say there's PIO driver which
+>> transfer certain sized chunks at a time and completes request partially
+>> after completing each chunk and the driver uses draining to eat up
+>> whatever excess data, which seems like a legit use case to me.  But it
+>> won't work because __end_that_request_first() will terminate when it
+>> reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
+>>
+>> Nacked-by: Tejun Heo <htejun@gmail.com>
+> 
+> Yeah, I think I may have gone a bit overboard in applying this so
+> quickly. It's just not a good interface, silently adding the extra
+> length if asked to complete more. It may even happen right now, for a
+> driver that does no padding (it probably wont do any harm here either,
+> but still).
+
+Unless it explicitly requests padding, it shouldn't be a problem
+extra_len will always be zero and currently the only driver which uses
+padding and draining is libata.
+
+> I'll try and see if I can come up with something cleaner.
+> 
+> My basic design paradigm for this is that the _driver_ (or mid layer, if
+> SCSI wants to handle it) should care about the padding. So make it easy
+> for them to pad, but have it 'unrolled' by completion time. We should
+> NOT need any extra_len checks or additions in the block/ directory,
+> period.
+
+Maybe I'm from Mars but I don't really understand all this fuss.  The
+two patches I posted way back work perfectly fine and don't have any of
+these problems and as I have said again and again that's because it
+doesn't break the assumption which our internal mechanics depend on.
+
+Can you please put the "true" size aside for a while and consider those
+patches?  There's nothing fundamentally wrong with letting the
+rq->data_len be sum(sg) which can differ from user requested data length
+if and only if low level driver requests so.
+
+If you can come up with something nicer, that will be great too but I
+really don't think the current scheme will work.
 
 Thanks.
 
-Bo Yang 
-
------Original Message-----
-From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
-Sent: Tuesday, March 04, 2008 6:24 PM
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; hare@suse.de;
-Yang, Bo; James.Bottomley@SteelEye.com; Patro, Sumant
-Subject: [patch 2/7] Dell CERC support for megaraid_mbox
-
-From: Hannes Reinecke <hare@suse.de>
-
-Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
-compatible with the legacy megaraid driver.  The legacy handling shifted
-the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
-megaraid_mbox shifts the target ID always if random deletion is
-supported. 
-The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
-and not finding any devices, obviously.
-
-So we disable the random deletion support if the offending firmware is
-found.
-
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 18 insertions(+)
-
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbo
-x drivers/scsi/megaraid/megaraid_mbox.c
----
-a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_m
-box
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device ==
-PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random
-deletion\n"));
-+		return 0;
-+	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbo
-x drivers/scsi/megaraid/megaraid_mbox.h
----
-a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_m
-box
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
- 
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
-kernel
-_
+-- 
+tejun
