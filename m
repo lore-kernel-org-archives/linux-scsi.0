@@ -1,34 +1,60 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
  references
-Date: Wed, 05 Mar 2008 22:14:22 +0100
-Message-ID: <47CF0D2E.7000607@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0803051528270.2085-100000@iolanthe.rowland.org>
+Date: Wed, 5 Mar 2008 16:24:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803051608140.4161-100000@iolanthe.rowland.org>
+References: <1204750514.3047.63.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:47213 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755588AbYCEVOf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 16:14:35 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0803051528270.2085-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55145 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756772AbYCEVZA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 16:25:00 -0500
+In-Reply-To: <1204750514.3047.63.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> This patch (as1050b) adds two new methods to the SCSI host template
-> structure.  These methods are called to notify lower-level drivers
-> when a block device below one of their hosts has been opened or
-> released.
+On Wed, 5 Mar 2008, James Bottomley wrote:
 
-I like it and would make use of it in sbp2.
+> OK, I looked through the patch series.  It really looks like the
+> in-kernel thing is the wrong approach.
+> 
+> Why not export this want_persist flag via sysfs and then have hal and
+> udev update it when they see a filesystem on an underlying usb device
+> mounted (and zero it out on unmount)?  That way you always have the
+> exactly correct state and there's no need to go fishing for information
+> in layers that are difficult to get to.
 
-sg, st, ch could be callers as well, but I suppose you don't really need 
-them.  And for me, sd and sr already cover 99.9% of the use cases.
--- 
-Stefan Richter
--=====-==--- --== --=-=
-http://arcgraph.de/sr/
+The flag (or rather, a similar one named "persist_enabled") already is
+exported via sysfs.
+
+Having hal+udev set it automatically as you describe never occurred 
+to me.  The reason for doing all of this within the kernel is that 
+Linus said (off-list) that the kernel should handle this automatically.  
+Whether he considered userspace tools taking over the responsibility, I 
+can't say.  (But he might object to having to wait for the tools to add 
+the extra functionality.)
+
+Now, it has to be mentioned that mounted filesystems on a USB device
+account for something like 90% of the objections against USB-PERSIST.  
+If we go ahead and enable it automatically in that case, there is
+really very little reason not to enable it for every USB device, 
+mounted or not.
+
+In fact, the only other important reason for not turning it on by
+default (or always!) is because the USB spec says not to.  By adding
+this check for mounted filesystems, we are trying to adhere as closely
+as possible to the spec -- but only in cases where we don't care since
+it doesn't matter!
+
+Whether to enable USB-PERSIST for mounted devices is a policy decision.  
+Whether that policy should be set by the kernel or by userspace is
+outside my jursidiction.  If you think this approach is wrong-headed
+and you can convince Linus to go along, I'll be willing to drop the
+last three patches in this series.
+
+Alan Stern
+
