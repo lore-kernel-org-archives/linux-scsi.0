@@ -1,83 +1,65 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: New 2.6.24.2 SG_IO SCSI problems
-Date: Wed, 05 Mar 2008 11:13:40 -0600
-Message-ID: <47CED4C4.80008@cs.wisc.edu>
-References: <47BD9588.9080803@compro.net> <47BEFD4B.9060803@cs.wisc.edu>	 <47BEFF5F.9020002@cs.wisc.edu> <47BF0CE2.306@compro.net>	 <47BF40D7.5050301@compro.net> <47BF4BD0.7080008@cs.wisc.edu>	 <47CE8AEA.1060209@cfl.rr.com> <1204731854.3047.20.camel@localhost.localdomain>
+Subject: Re: [PATCH 3/5] Convert qla2xxx, mpt, arm, sym, a100u2w, qla1280
+ to target reset handler
+Date: Wed, 05 Mar 2008 11:11:18 -0600
+Message-ID: <47CED436.2050403@cs.wisc.edu>
+References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu> <20080305050833.GB1398@plap3.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53689 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:53695 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740AbYCERNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Mar 2008 12:13:53 -0500
-In-Reply-To: <1204731854.3047.20.camel@localhost.localdomain>
+	id S1758092AbYCERPo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Mar 2008 12:15:44 -0500
+In-Reply-To: <20080305050833.GB1398@plap3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mark Hounschell <dmarkh@cfl.rr.com>, markh@compro.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tony Battersby <tonyb@cybernetics.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
 
-James Bottomley wrote:
-> On Wed, 2008-03-05 at 06:58 -0500, Mark Hounschell wrote:
->> Mike Christie wrote:
->>> Mark Hounschell wrote:
->>>> Mark Hounschell wrote:
->>>>> Mike Christie wrote:
->>>>>> Mike Christie wrote:
->>>>>>> Mark Hounschell wrote:
->>>>>>>> I seem to have run into some sort of regression in the SG_IO
->>>>>>>> interface of 2.6.24.2. I have an application that up until 2.6.24
->>>>>>>> worked fine. The 2.6.23.16 kernel works fine.
->>>>>>>>
->>>>>>>> During reads I get these kernel messages. Writes and other functions
->>>>>>>> _seem_ OK. Actually basic
->>>>>>>> reads  are working. Its with large BC reads using an io_vec list that
->>>>>>>> the problem shows up.
->>>>>>>>
->>>>>>> Are you doing SG_IO to the sg device (/dev/sg*) or to the block device
->>>>>>> (/dev/sdX)?
->>>>>> If you are doing SG_IO to the sg device, then I know of one regression
->>>>>> (well not regression exactly, but I fixed a bug but the patch got
->>>>>> partially overwritten by another patch and that caused a new bug). Both
->>>>>> bugs are fixed in 2.6.25-rc2. Could you try that out if you are doing
->>>>>> SG_IO to the sg device.
->>>>>>
->>>>> Yes, I'm using /dev/sg*. And yes again I'll checkout 2.6.25-rc2 ASIC.
->>>>>
->>>>> Thanks
->>>>> Mark
->>>>> -
->>>>  
->>>> 2.6.25-rc2 does fix the problem I'm having. I don't suppose there is a
->>>> patch
->>>> lying around for 2.6.24.2??
->>>>
->>> I attached a backport of the patch from Tony (added as cc) that is in
->>> 2.6.25-rc2. Could you try it out against 2.6.24.2 just to make sure it
->>> was this patch, then we can send it to stable.
->>>
->>> Mark Hounschell wrote:
->>>
->>> Sorry it took so long. This does fix my problem. I hope it's not to
->>> late for 2.6.24.3
->>>
->> Backport
->> 76d78300a6eb8b7f08e47703b7e68a659ffc2053
->> to 2.6.24
+Andrew Vasquez wrote:
+> On Fri, 29 Feb 2008, michaelc@cs.wisc.edu wrote:
 > 
-> Erm, I think you mean:
+>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>
+>> This patch converts the drivers that just needed a rename from
+>> "deivce" to "target" to use the target reset handler. This includes
+>> qla2xxx, mpt, arm/*, sym53c8xx_2, a100u2w and qla1280.
+>>
+>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>> ---
+>>  drivers/message/fusion/mptfc.c      |    8 +++---
+>>  drivers/message/fusion/mptsas.c     |    8 +++---
+>>  drivers/message/fusion/mptscsih.c   |    8 +++---
+>>  drivers/message/fusion/mptscsih.h   |    2 +-
+>>  drivers/message/fusion/mptspi.c     |    2 +-
+>>  drivers/scsi/a100u2w.c              |   12 +++++-----
+>>  drivers/scsi/arm/arxescsi.c         |    2 +-
+>>  drivers/scsi/arm/cumana_2.c         |    2 +-
+>>  drivers/scsi/arm/eesox.c            |    2 +-
+>>  drivers/scsi/arm/fas216.c           |    6 ++--
+>>  drivers/scsi/arm/fas216.h           |    4 +-
+>>  drivers/scsi/arm/powertec.c         |    2 +-
+>>  drivers/scsi/qla1280.c              |   30 ++++++++++++------------
+>>  drivers/scsi/qla2xxx/qla_os.c       |   42 +++++++++++++++++-----------------
+> 
+> Mike,
+> 
+> Thanks for doing this.  In looking at the changes needed to support
+> both device and lun resets, there's some significant cleanup and code
+> consolidation which can easily occur.  Your qla2xxx changes currently
+> conflict with my a several commits in my 2.6.26 patch-queue.  Would
+> you mind if I carry the qla2xxx updates in my tree and push when the
+> infrastructure updates are present in scsi-misc-2.6?  As it stands,
 
-You are right.
+That sounds good.
 
+> here's a snapshot of the composite LUN/Target-reset updates for
+> qla2xxx which I have testing locally.  The commit should make it to my
+> public tree in the next few days:
 > 
-> commit 4d2de3a50ce19af2008a90636436a1bf5b3b697b
-> Author: Tony Battersby <tonyb@cybernetics.com>
-> Date:   Tue Feb 5 10:36:10 2008 -0500
-> 
->     [SCSI] fix BUG when sum(scatterlist) > bufflen
-> 
-> I can send it ... I thought the error was introduced post 2.6.24, but it
-> was actually in 2.6.24-rc1
+> 	git://git.qlogic.com/qla2xxx-upstream.git
 > 
 
-Ok thanks.
+Thanks.
