@@ -1,65 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/5] Convert qla2xxx, mpt, arm, sym, a100u2w, qla1280
- to target reset handler
-Date: Wed, 05 Mar 2008 11:11:18 -0600
-Message-ID: <47CED436.2050403@cs.wisc.edu>
-References: <1204331123-3833-1-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-2-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-3-git-send-email-michaelc@cs.wisc.edu> <1204331123-3833-4-git-send-email-michaelc@cs.wisc.edu> <20080305050833.GB1398@plap3.qlogic.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Wed, 5 Mar 2008 13:04:43 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803051259070.5634-100000@iolanthe.rowland.org>
+References: <47CD8D4E.3010703@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53695 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758092AbYCERPo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Mar 2008 12:15:44 -0500
-In-Reply-To: <20080305050833.GB1398@plap3.qlogic.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42549 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754586AbYCESEo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 13:04:44 -0500
+In-Reply-To: <47CD8D4E.3010703@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, james.smart@emulex.com, christof.schmitt@de.ibm.com, mp3@de.ibm.com, rmk@arm.linux.org.uk, matthew@wil.cx
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Andrew Vasquez wrote:
-> On Fri, 29 Feb 2008, michaelc@cs.wisc.edu wrote:
-> 
->> From: Mike Christie <michaelc@cs.wisc.edu>
->>
->> This patch converts the drivers that just needed a rename from
->> "deivce" to "target" to use the target reset handler. This includes
->> qla2xxx, mpt, arm/*, sym53c8xx_2, a100u2w and qla1280.
->>
->> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->> ---
->>  drivers/message/fusion/mptfc.c      |    8 +++---
->>  drivers/message/fusion/mptsas.c     |    8 +++---
->>  drivers/message/fusion/mptscsih.c   |    8 +++---
->>  drivers/message/fusion/mptscsih.h   |    2 +-
->>  drivers/message/fusion/mptspi.c     |    2 +-
->>  drivers/scsi/a100u2w.c              |   12 +++++-----
->>  drivers/scsi/arm/arxescsi.c         |    2 +-
->>  drivers/scsi/arm/cumana_2.c         |    2 +-
->>  drivers/scsi/arm/eesox.c            |    2 +-
->>  drivers/scsi/arm/fas216.c           |    6 ++--
->>  drivers/scsi/arm/fas216.h           |    4 +-
->>  drivers/scsi/arm/powertec.c         |    2 +-
->>  drivers/scsi/qla1280.c              |   30 ++++++++++++------------
->>  drivers/scsi/qla2xxx/qla_os.c       |   42 +++++++++++++++++-----------------
-> 
-> Mike,
-> 
-> Thanks for doing this.  In looking at the changes needed to support
-> both device and lun resets, there's some significant cleanup and code
-> consolidation which can easily occur.  Your qla2xxx changes currently
-> conflict with my a several commits in my 2.6.26 patch-queue.  Would
-> you mind if I carry the qla2xxx updates in my tree and push when the
-> infrastructure updates are present in scsi-misc-2.6?  As it stands,
+On Tue, 4 Mar 2008, Stefan Richter wrote:
 
-That sounds good.
-
-> here's a snapshot of the composite LUN/Target-reset updates for
-> qla2xxx which I have testing locally.  The commit should make it to my
-> public tree in the next few days:
+> Alan Stern wrote:
+> > So I need a
+> > way to know whether anything is mounted on a device below a SCSI host.
 > 
-> 	git://git.qlogic.com/qla2xxx-upstream.git
+> Actually I have been thinking of something related for a while but 
+> didn't send a patch yet.  Consider this:
 > 
+> [include/scsi/scsi_host.h]
+> 
+>   struct scsi_host_template {
+> 	...
+> +	int (* slave_sdev_get)(struct scsi_device *);
+> +	void (* slave_sdev_put)(struct scsi_device *);
+> 	...
+>   }
+> 
+> [drivers/scsi/scsi.c]
+> 
+>   int scsi_device_get(struct scsi_device *sdev)
+>   {
+> +	int err = 0;
+> +
+>   	if (sdev->sdev_state == SDEV_DEL)
+>   		return -ENXIO;
+>   	if (!get_device(&sdev->sdev_gendev))
+>   		return -ENXIO;
+>   	/* We can fail this if we're doing SCSI operations
+>   	 * from module exit (like cache flush) */
+>   	try_module_get(sdev->host->hostt->module);
+> 
+> -	return 0;
+> +	if (sdev->host->hostt->slave_sdev_get)
+> +		err = sdev->host->hostt->slave_sdev_get(sdev);
+> +	if (err) {
+> +		...some ifdef'd module_put stuff...;
+> +		put_device(&sdev->sdev_gendev);
+> +	}
+> +	return err;
+> }
+> 
+> and equivalent additions to scsi_device_put().
 
-Thanks.
+On second thought, I'm not so sure this would work the way I want.  
+scsi_device_get() ends up being called for all sorts of extra things 
+unrelated to device opens.  For instance, scsi_probe_and_add_lun() 
+calls it whenever a new LUN is discovered.
+
+Would it be acceptable to add a similar pair of callbacks to the host
+template, invoked by the upper-level driver's open and release
+routines?
+
+Alan Stern
+
