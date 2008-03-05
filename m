@@ -1,34 +1,83 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Adaptec 29320LPE errors on boot
-Date: Wed, 5 Mar 2008 10:11:42 -0700
-Message-ID: <20080305171142.GN24386@parisc-linux.org>
-References: <a7108f870803050742x6a960bf4sed894208a5fb3931@mail.gmail.com> <532ABFBDAAC3A34EB12EBA6CEC2838F4831D6BEF@ADPE2K703.adaptec.com> <a7108f870803050826u15e8dd90q656cd415e4eea1eb@mail.gmail.com> <1204734777.3047.40.camel@localhost.localdomain> <a7108f870803050852h1824418v9c67a90f754f69e@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: New 2.6.24.2 SG_IO SCSI problems
+Date: Wed, 05 Mar 2008 11:13:40 -0600
+Message-ID: <47CED4C4.80008@cs.wisc.edu>
+References: <47BD9588.9080803@compro.net> <47BEFD4B.9060803@cs.wisc.edu>	 <47BEFF5F.9020002@cs.wisc.edu> <47BF0CE2.306@compro.net>	 <47BF40D7.5050301@compro.net> <47BF4BD0.7080008@cs.wisc.edu>	 <47CE8AEA.1060209@cfl.rr.com> <1204731854.3047.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42853 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756173AbYCERLn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 12:11:43 -0500
-Content-Disposition: inline
-In-Reply-To: <a7108f870803050852h1824418v9c67a90f754f69e@mail.gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:53689 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbYCERNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Mar 2008 12:13:53 -0500
+In-Reply-To: <1204731854.3047.20.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rodrigo Severo <rodrigo@fabricadeideias.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mark Hounschell <dmarkh@cfl.rr.com>, markh@compro.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tony Battersby <tonyb@cybernetics.com>
 
-On Wed, Mar 05, 2008 at 01:52:50PM -0300, Rodrigo Severo wrote:
-> I changed the following values on  29320LPE from the previous default ones:
+James Bottomley wrote:
+> On Wed, 2008-03-05 at 06:58 -0500, Mark Hounschell wrote:
+>> Mike Christie wrote:
+>>> Mark Hounschell wrote:
+>>>> Mark Hounschell wrote:
+>>>>> Mike Christie wrote:
+>>>>>> Mike Christie wrote:
+>>>>>>> Mark Hounschell wrote:
+>>>>>>>> I seem to have run into some sort of regression in the SG_IO
+>>>>>>>> interface of 2.6.24.2. I have an application that up until 2.6.24
+>>>>>>>> worked fine. The 2.6.23.16 kernel works fine.
+>>>>>>>>
+>>>>>>>> During reads I get these kernel messages. Writes and other functions
+>>>>>>>> _seem_ OK. Actually basic
+>>>>>>>> reads  are working. Its with large BC reads using an io_vec list that
+>>>>>>>> the problem shows up.
+>>>>>>>>
+>>>>>>> Are you doing SG_IO to the sg device (/dev/sg*) or to the block device
+>>>>>>> (/dev/sdX)?
+>>>>>> If you are doing SG_IO to the sg device, then I know of one regression
+>>>>>> (well not regression exactly, but I fixed a bug but the patch got
+>>>>>> partially overwritten by another patch and that caused a new bug). Both
+>>>>>> bugs are fixed in 2.6.25-rc2. Could you try that out if you are doing
+>>>>>> SG_IO to the sg device.
+>>>>>>
+>>>>> Yes, I'm using /dev/sg*. And yes again I'll checkout 2.6.25-rc2 ASIC.
+>>>>>
+>>>>> Thanks
+>>>>> Mark
+>>>>> -
+>>>>  
+>>>> 2.6.25-rc2 does fix the problem I'm having. I don't suppose there is a
+>>>> patch
+>>>> lying around for 2.6.24.2??
+>>>>
+>>> I attached a backport of the patch from Tony (added as cc) that is in
+>>> 2.6.25-rc2. Could you try it out against 2.6.24.2 just to make sure it
+>>> was this patch, then we can send it to stable.
+>>>
+>>> Mark Hounschell wrote:
+>>>
+>>> Sorry it took so long. This does fix my problem. I hope it's not to
+>>> late for 2.6.24.3
+>>>
+>> Backport
+>> 76d78300a6eb8b7f08e47703b7e68a659ffc2053
+>> to 2.6.24
 > 
-> Sync Transfer Rate: 160
+> Erm, I think you mean:
 
-Ah, you've been fooled by SCSI terminology.  U160 is 80 million
-transfers per second, but each transfer is 16-bit wide, so they call it
-U160.  Can you try turning that down to 80 (and just for fun, if that
-fails, can you try 40?)
+You are right.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> 
+> commit 4d2de3a50ce19af2008a90636436a1bf5b3b697b
+> Author: Tony Battersby <tonyb@cybernetics.com>
+> Date:   Tue Feb 5 10:36:10 2008 -0500
+> 
+>     [SCSI] fix BUG when sum(scatterlist) > bufflen
+> 
+> I can send it ... I thought the error was introduced post 2.6.24, but it
+> was actually in 2.6.24-rc1
+> 
+
+Ok thanks.
