@@ -1,35 +1,43 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
  references
-Date: Wed, 05 Mar 2008 22:47:28 +0100
-Message-ID: <47CF14F0.6060803@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0803051625450.4161-100000@iolanthe.rowland.org>
+Date: Wed, 5 Mar 2008 16:52:44 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803051651090.4318-100000@iolanthe.rowland.org>
+References: <1204752618.3047.77.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48953 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755652AbYCEVrh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 16:47:37 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0803051625450.4161-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40020 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753129AbYCEVwp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 16:52:45 -0500
+In-Reply-To: <1204752618.3047.77.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg KH <greg@kroah.com>, David Brownell <david-b@pacbell.net>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Wed, 5 Mar 2008, Stefan Richter wrote:
->> sg, st, ch could be callers as well, but I suppose you don't really need 
->> them.  And for me, sd and sr already cover 99.9% of the use cases.
+On Wed, 5 Mar 2008, James Bottomley wrote:
+
+> > In fact, the only other important reason for not turning it on by
+> > default (or always!) is because the USB spec says not to.  By adding
+> > this check for mounted filesystems, we are trying to adhere as closely
+> > as possible to the spec -- but only in cases where we don't care since
+> > it doesn't matter!
+> > 
+> > Whether to enable USB-PERSIST for mounted devices is a policy decision.  
+> > Whether that policy should be set by the kernel or by userspace is
+> > outside my jursidiction.  If you think this approach is wrong-headed
+> > and you can convince Linus to go along, I'll be willing to drop the
+> > last three patches in this series.
 > 
-> Those drivers don't export a block-device interface, do they?  So you 
-> can't mount a filesystem on a device they control.
+> So make it default to one now and also put the processes in train to
+> update hal and udev.  That way everything should work immediately and we
+> come back to spec compliance later.
 
-That's right, but users can "use" those devices.  ;-)
-Anyway, go ahead with sd and sr only; I don't really care about having 
-those calls in the other drivers.
--- 
-Stefan Richter
--=====-==--- --== --=-=
-http://arcgraph.de/sr/
+Under the circumstances that sounds like a reasonable course of action.
+
+Does anybody have a serious objection?
+
+Alan Stern
+
