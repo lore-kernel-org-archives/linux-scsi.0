@@ -1,160 +1,211 @@
-From: Josef Bacik <jbacik@redhat.com>
-Subject: Re: some hard numbers on ext3 & batching performance issue
-Date: Wed, 5 Mar 2008 15:20:08 -0500
-Message-ID: <200803051520.09931.jbacik@redhat.com>
-References: <47C6A46D.8020700@emc.com> <20080228175422.GU155259@sgi.com> <47CEF254.2090208@emc.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 7/8] SCSI: add a field to scsi_device to count open file
+ references
+Date: Wed, 5 Mar 2008 15:34:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803051528270.2085-100000@iolanthe.rowland.org>
+References: <47CEF45B.2080701@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <47CEF254.2090208@emc.com>
-Content-Disposition: inline
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: ric@emc.com
-Cc: David Chinner <dgc@sgi.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:48778 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752790AbYCEUeQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 15:34:16 -0500
+In-Reply-To: <47CEF45B.2080701@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wednesday 05 March 2008 2:19:48 pm Ric Wheeler wrote:
-> After the IO/FS workshop last week, I posted some details on the slow
-> down we see with ext3 when we have a low latency back end instead of a
-> normal local disk (SCSI/S-ATA/etc).
->
-> As a follow up to that thread, I wanted to post some real numbers that
-> Andy from our performance team pulled together. Andy tested various
-> patches using three classes of storage (S-ATA, RAM disk and Clariion
-> array).
->
-> Note that this testing was done on a SLES10/SP1 kernel, but the code in
-> question has not changed in mainline but we should probably retest on
-> something newer just to clear up any doubts.
->
-> The work load is generated using fs_mark
-> (http://sourceforge.net/projects/fsmark/) which is basically a write
-> workload with small files, each file gets fsync'ed before close. The
-> metric is "files/sec".
->
-> The clearest result used a ramdisk to store 4k files.
->
-> We modified ext3 and jbd to accept a new mount option: bdelay Use it like:
->
-> mount -o bdelay=n dev mountpoint
->
-> n is passed to schedule_timeout_interruptible() in the jbd code. if n ==
-> 0, it skips the whole loop. if n is "yield", then substitute the
-> schedule...(n) with yield().
->
-> Note that the first row is the value of the delay with a 250HZ build
-> followed by the number of concurrent threads writing 4KB files.
->
-> Ramdisk test:
->
-> bdelay  1       2       4       8       10      20
-> 0       4640    4498    3226    1721    1436     664
-> yield   4640    4078    2977    1611    1136     551
-> 1       4647     250     482     588     629     483
-> 2       4522     149     233     422     450     389
-> 3       4504      86     165     271     308     334
-> 4       4425      84     128     222     253     293
->
-> Midrange clariion:
->
-> bdelay   1       2       4       8       10      20
-> 0        778     923    1567    1424    1276     785
-> yield    791     931    1551    1473    1328     806
-> 1        793     304     499     714     751     760
-> 2        789     132     201     382     441     589
-> 3        792     124     168     298     342     471
-> 4        786      71     116     237     277     393
->
-> Local disk:
->
-> bdelay    1       2       4       8       10      20
-> 0         47      51      81     135     160     234
-> yield     36      45      74     117     138     214
-> 1         44      52      86     148     183     258
-> 2         40      60     109     163     184     265
-> 3         40      52      97     148     171     264
-> 4         35      42      83     149     169     246
->
-> Apologies for mangling the nicely formatted tables.
->
-> Note that the justification for the batching as we have it today is
-> basically this last local drive test case.
->
-> It would be really interesting to rerun some of these tests on xfs which
-> Dave explained in the thread last week has a more self tuning way to
-> batch up transactions....
->
-> Note that all of those poor users who have a synchronous write workload
-> today are in the "1" row for each of the above tables.
+On Wed, 5 Mar 2008, Stefan Richter wrote:
 
-Mind giving this a whirl?  The fastest thing I've got here is an Apple X RAID 
-and its being used for something else atm, so I've only tested this on local 
-disk to make sure it didn't make local performance suck (which it doesn't btw).  
-This should be equivalent with what David says XFS does.  Thanks much,
+> > Would it be acceptable to add a similar pair of callbacks to the host
+> > template, invoked by the upper-level driver's open and release
+> > routines?
+> 
+> This would actually be nice for that sbp2 thing which I mentioned as well.
 
-Josef
+James and Stefan, what do you think of this patch?
 
-diff --git a/fs/jbd/transaction.c b/fs/jbd/transaction.c
-index c6cbb6c..4596e1c 100644
---- a/fs/jbd/transaction.c
-+++ b/fs/jbd/transaction.c
-@@ -1333,8 +1333,7 @@ int journal_stop(handle_t *handle)
+(Unfortunately it won't quite apply as is, because it touches a region
+of documentation that was changed by the SCSI dynamic power management
+patch.)
+
+Alan Stern
+
+--------------------------------------------------------------------
+
+This patch (as1050b) adds two new methods to the SCSI host template
+structure.  These methods are called to notify lower-level drivers
+when a block device below one of their hosts has been opened or
+released.
+
+This information is useful for host drivers that want to know whether
+a device on one of its buses contains a mounted filesystem.  The
+open/release information isn't quite the same as mount/unmount, but it
+will suffice.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+Index: usb-2.6/Documentation/scsi/scsi_mid_low_api.txt
+===================================================================
+--- usb-2.6.orig/Documentation/scsi/scsi_mid_low_api.txt
++++ usb-2.6/Documentation/scsi/scsi_mid_low_api.txt
+@@ -785,6 +785,8 @@ Summary:
+    autoresume - perform dynamic (runtime) host resume
+    autosuspend - perform dynamic (runtime) host suspend
+    bios_param - fetch head, sector, cylinder info for a disk
++   blockdev_open - notify the host about a block-device open
++   blockdev_release - notify the host about a block-device release
+    detect - detects HBAs this driver wants to control
+    eh_timed_out - notify the host that a command timer expired
+    eh_abort_handler - abort given command
+@@ -882,6 +884,48 @@ Details:
+ 
+ 
+ /**
++ *	blockdev_open - notify the host about a block-device open
++ *	@sdev: the SCSI device being opened
++ *	@disk: the gendisk corresponding to the block device
++ *
++ *	Block device opens occur primarily when a filesystem on the
++ *	device is mounted (although they crop up occasionally at other
++ *	times, such as when a partition table is edited).  An LLD
++ *	can define this function and blockdev_release below to keep
++ *	track of whether or not a device below one of its hosts has
++ *	been mounted.
++ *
++ *	Locks: none
++ *
++ *	Calling context: process
++ *
++ *	Optionally defined in: LLD
++ **/
++    void blockdev_open(struct scsi_device *sdev, struct gendisk *disk)
++
++
++/**
++ *	blockdev_release - notify the host about a block-device release
++ *	@sdev: the SCSI device being released
++ *	@disk: the gendisk corresponding to the block device
++ *
++ *	Block device releases occur primarily when a filesystem on the
++ *	device is unmounted (although they crop up occasionally at other
++ *	times, such as when a partition table is edited).  An LLD
++ *	can define this function and blockdev_open above to keep
++ *	track of whether or not a device below one of its hosts has
++ *	been mounted.
++ *
++ *	Locks: none
++ *
++ *	Calling context: process
++ *
++ *	Optionally defined in: LLD
++ **/
++    void blockdev_release(struct scsi_device *sdev, struct gendisk *disk)
++
++
++/**
+  *      detect - detects HBAs this driver wants to control
+  *      @shtp: host template for this driver.
+  *
+Index: usb-2.6/include/scsi/scsi_host.h
+===================================================================
+--- usb-2.6.orig/include/scsi/scsi_host.h
++++ usb-2.6/include/scsi/scsi_host.h
+@@ -306,6 +306,27 @@ struct scsi_host_template {
+ 	void (* scan_start)(struct Scsi_Host *);
+ 
+ 	/*
++	 * If the host driver wants to know about block-device open
++	 * calls, it can fill in this function.  Note that these calls
++	 * are made only for the first opener, not for opens that occur
++	 * when the device is already open.
++	 *
++	 * Status: OPTIONAL
++	 */
++	void (* blockdev_open)(struct scsi_device *, struct gendisk *);
++
++	/*
++	 * If the host driver wants to know about block-device release
++	 * calls, it can fill in this function.  Note that these calls
++	 * are made only for the last closer, not for closes that leave
++	 * the device still open (i.e., these exactly balance the
++	 * block-device open calls).
++	 *
++	 * Status: OPTIONAL
++	 */
++	void (* blockdev_release)(struct scsi_device *, struct gendisk *);
++
++	/*
+ 	 * Fill in this function to allow the queue depth of this host
+ 	 * to be changeable (on a per device basis).  Returns either
+ 	 * the current queue depth setting (may be different from what
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -606,6 +606,9 @@ static int sd_open(struct inode *inode, 
+ 	if (!scsi_device_online(sdev))
+ 		goto error_out;
+ 
++	if (sdev->host->hostt->blockdev_open)
++		(sdev->host->hostt->blockdev_open)(sdev, disk);
++
+ 	if (!sdkp->openers++ && sdev->removable) {
+ 		if (scsi_block_when_processing_errors(sdev))
+ 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
+@@ -642,6 +645,9 @@ static int sd_release(struct inode *inod
+ 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+ 	}
+ 
++	if (sdev->host->hostt->blockdev_release)
++		(sdev->host->hostt->blockdev_release)(sdev, disk);
++
+ 	/*
+ 	 * XXX and what if there are packets in flight and this close()
+ 	 * XXX is followed by a "rmmod sd_mod"?
+Index: usb-2.6/drivers/scsi/sr.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sr.c
++++ usb-2.6/drivers/scsi/sr.c
+@@ -473,13 +473,17 @@ static int sr_block_open(struct inode *i
  {
- 	transaction_t *transaction = handle->h_transaction;
- 	journal_t *journal = transaction->t_journal;
--	int old_handle_count, err;
--	pid_t pid;
-+	int err;
+ 	struct gendisk *disk = inode->i_bdev->bd_disk;
+ 	struct scsi_cd *cd;
++	struct scsi_device *sdev;
+ 	int ret = 0;
  
- 	J_ASSERT(journal_current_handle() == handle);
+ 	if(!(cd = scsi_cd_get(disk)))
+ 		return -ENXIO;
++	sdev = cd->device;
  
-@@ -1353,32 +1352,22 @@ int journal_stop(handle_t *handle)
+ 	if((ret = cdrom_open(&cd->cdi, inode, file)) != 0)
+ 		scsi_cd_put(cd);
++	else if (sdev->host->hostt->blockdev_open)
++		(sdev->host->hostt->blockdev_open)(sdev, disk);
  
- 	jbd_debug(4, "Handle %p going down\n", handle);
+ 	return ret;
+ }
+@@ -487,11 +491,16 @@ static int sr_block_open(struct inode *i
+ static int sr_block_release(struct inode *inode, struct file *file)
+ {
+ 	int ret;
+-	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
++	struct gendisk *disk = inode->i_bdev->bd_disk;
++	struct scsi_cd *cd = scsi_cd(disk);
++	struct scsi_device *sdev = cd->device;
++
+ 	ret = cdrom_release(&cd->cdi, file);
+ 	if(ret)
+ 		return ret;
+-	
++
++	if (sdev->host->hostt->blockdev_release)
++		(sdev->host->hostt->blockdev_release)(sdev, disk);
+ 	scsi_cd_put(cd);
  
--	/*
--	 * Implement synchronous transaction batching.  If the handle
--	 * was synchronous, don't force a commit immediately.  Let's
--	 * yield and let another thread piggyback onto this transaction.
--	 * Keep doing that while new threads continue to arrive.
--	 * It doesn't cost much - we're about to run a commit and sleep
--	 * on IO anyway.  Speeds up many-threaded, many-dir operations
--	 * by 30x or more...
--	 *
--	 * But don't do this if this process was the most recent one to
--	 * perform a synchronous write.  We do this to detect the case where a
--	 * single process is doing a stream of sync writes.  No point in waiting
--	 * for joiners in that case.
--	 */
--	pid = current->pid;
--	if (handle->h_sync && journal->j_last_sync_writer != pid) {
--		journal->j_last_sync_writer = pid;
--		do {
--			old_handle_count = transaction->t_handle_count;
--			schedule_timeout_uninterruptible(1);
--		} while (old_handle_count != transaction->t_handle_count);
--	}
--
- 	current->journal_info = NULL;
- 	spin_lock(&journal->j_state_lock);
- 	spin_lock(&transaction->t_handle_lock);
-+
-+	if (journal->j_committing_transaction && handle->h_sync) {
-+		tid_t tid = journal->j_committing_transaction->t_tid;
-+
-+		spin_unlock(&transaction->t_handle_lock);
-+		spin_unlock(&journal->j_state_lock);
-+
-+		err = log_wait_commit(journal, tid);
-+
-+		spin_lock(&journal->j_state_lock);
-+		spin_lock(&transaction->t_handle_lock);
-+	}
-+
- 	transaction->t_outstanding_credits -= handle->h_buffer_credits;
- 	transaction->t_updates--;
- 	if (!transaction->t_updates) {
-
+ 	return 0;
 
