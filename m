@@ -1,68 +1,41 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] mvsas: fix default can_queue
-Date: Thu, 06 Mar 2008 09:52:04 -0600
-Message-ID: <1204818725.3062.14.camel@localhost.localdomain>
-References: <1204308113.4003.45.camel@localhost.localdomain>
-	 <1204504945.3069.30.camel@localhost.localdomain>
-	 <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
-	 <1204556371.3043.7.camel@localhost.localdomain>
-	 <1204682849.3091.95.camel@localhost.localdomain>
-	 <1204750960.3047.67.camel@localhost.localdomain>
-	 <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
+Subject: Re: [PATCH v3] block: move RAID transport class to BLOCK menu
+Date: Thu, 06 Mar 2008 10:02:26 -0600
+Message-ID: <1204819346.3062.19.camel@localhost.localdomain>
+References: <20071104104423.d595c0e7.randy.dunlap@oracle.com>
+	 <20071104185806.GV15111@parisc-linux.org> <472E16BA.4090708@garzik.org>
+	 <472E1FD7.1010508@oracle.com> <472E2458.7060905@garzik.org>
+	 <472E2567.4010304@oracle.com> <472E264D.4010006@garzik.org>
+	 <20071104121727.c2621fda.randy.dunlap@oracle.com>
+	 <20080305190841.b16c4946.randy.dunlap@oracle.com>
+	 <20080306062845.GM6704@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43506 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49312 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760182AbYCFPwI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 10:52:08 -0500
-In-Reply-To: <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
+	by vger.kernel.org with ESMTP id S1758569AbYCFQCa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 11:02:30 -0500
+In-Reply-To: <20080306062845.GM6704@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, jgarzik <jgarzik@redhat.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2008-03-06 at 22:46 +0800, Ke Wei wrote:
-> On Thu, Mar 6, 2008 at 5:02 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
+On Thu, 2008-03-06 at 07:28 +0100, Jens Axboe wrote:
+> On Wed, Mar 05 2008, Randy Dunlap wrote:
+> > On Sun, 4 Nov 2007 12:17:27 -0800 Randy Dunlap wrote:
+> > 
+> > ping.  James, Jens?
 > 
-> 1.
-> > >
-> > > OK, I instrumented more ... you're right, the first failing command is
-> > > REPORT_LUNS.  The failure isn't because the DVD doesn't accept the
-> > > command, but because it gets errored and we fail to report back the
-> > > error data.
-> 
-> First, I noticed that scsi_probe_and_add_lun function has changed
-> since v2.6.17-git4.
-> It will cause bflagsp to miss BLIST_NOREPORTLUN flag after calling scsi_add_lun.
-> On the other hand,  Even though mvsas driver can succeed in reporting
-> back the error data, scsi subsystem also will force device to reset
-> because of wrong REPORTLUN status. But Error again, then reset.
-> Maybe I may write simulation codes for this command.
+> Fine with me, though it's really up to James to pass judgement on this.
 
-But this isn't the problem.
-
-I'll look into the mid layer changes and see if we have a problem.
-However, this device does respond correctly (with an error) to
-REPORT_LUNS (however, at the moment, for me, the current setup is a
-great test of ATA error handling).
-
-When I have it on the aic94xx it terminates the command and sends back a
-Register D2H FIS with
-
-error = 0x54 (sense key ILLEGAL REQUEST, ABRT)
-status = 0x51 (DRDY, SERV, CHK)
-
-So the device does a correct termination for an unsupported command.
-The problem seems to be that mvsas isn't terminating and picking up the
-register D2H fis properly.  Which, in turn seems to be connected with
-the way it's not really processing a RXQ_ERR return.
-
-This is a perfectly proper termination, and the scan routine will
-proceed normally without invoking any error handling (it's aware of the
-conflict between SPC and MMC regarding REPORT_LUNS).
+In principle, yes, when (if) it's actually made useful, it would belong
+at the block layer (or even in misc or the md/dm layer), but while it's
+a bit vestigial, there's not really much point in moving it.  I'll tie a
+knot in my hankie to see if I can make it progress and then we can see
+where it should go.
 
 James
 
