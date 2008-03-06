@@ -1,733 +1,125 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH v3] block: move RAID transport class to BLOCK menu
-Date: Wed, 5 Mar 2008 19:08:41 -0800
-Message-ID: <20080305190841.b16c4946.randy.dunlap@oracle.com>
-References: <20071104104423.d595c0e7.randy.dunlap@oracle.com>
-	<20071104185806.GV15111@parisc-linux.org>
-	<472E16BA.4090708@garzik.org>
-	<472E1FD7.1010508@oracle.com>
-	<472E2458.7060905@garzik.org>
-	<472E2567.4010304@oracle.com>
-	<472E264D.4010006@garzik.org>
-	<20071104121727.c2621fda.randy.dunlap@oracle.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
+	 count
+Date: Thu, 06 Mar 2008 13:41:46 +0900
+Message-ID: <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+References: <47CEA40F.6050903@gmail.com>
+	<20080305135121.GK6704@kernel.dk>
+	<1204730484.3047.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:50800 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755559AbYCFDI5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 22:08:57 -0500
-In-Reply-To: <20071104121727.c2621fda.randy.dunlap@oracle.com>
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:61465 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbYCFEnJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 23:43:09 -0500
+In-Reply-To: <1204730484.3047.10.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>, Jens Axboe <jens.axboe@oracle.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: jens.axboe@oracle.com, htejun@gmail.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-On Sun, 4 Nov 2007 12:17:27 -0800 Randy Dunlap wrote:
+On Wed, 05 Mar 2008 09:21:24 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-ping.  James, Jens?
-
-Acked-by: Jeff Garzik <jeff@garzik.org>
-
-
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+> On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
+> > On Wed, Mar 05 2008, Tejun Heo wrote:
+> > > This is getting insanely subtle.  Let's say there's PIO driver which
+> > > transfer certain sized chunks at a time and completes request partially
+> > > after completing each chunk and the driver uses draining to eat up
+> > > whatever excess data, which seems like a legit use case to me.  But it
+> > > won't work because __end_that_request_first() will terminate when it
+> > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
+> > > 
+> > > Nacked-by: Tejun Heo <htejun@gmail.com>
+> > 
+> > Yeah, I think I may have gone a bit overboard in applying this so
+> > quickly. It's just not a good interface, silently adding the extra
+> > length if asked to complete more. It may even happen right now, for a
+> > driver that does no padding (it probably wont do any harm here either,
+> > but still).
+> > 
+> > I'll try and see if I can come up with something cleaner.
+> > 
+> > My basic design paradigm for this is that the _driver_ (or mid layer, if
+> > SCSI wants to handle it) should care about the padding. So make it easy
+> > for them to pad, but have it 'unrolled' by completion time. We should
+> > NOT need any extra_len checks or additions in the block/ directory,
+> > period.
 > 
-> Move RAID class configuration to the BLOCK menu since it is not
-> SCSI-specific.
+> Right, that's why my original proposal was to do nothing for padding
+> (other than ensure the driver could adjust the length if it wanted to)
+> and to add an extra element always for draining, which the driver could
+> ignore.  It basically pushed the use paradigm onto the driver.
 > 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> ---
->  block/Kconfig             |    5 
->  block/Makefile            |    2 
->  block/raid_class.c        |  313 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/Kconfig      |    7 -
->  drivers/scsi/Makefile     |    2 
->  drivers/scsi/raid_class.c |  314 ----------------------------------------------
->  6 files changed, 320 insertions(+), 323 deletions(-)
-> 
-> --- linux-2.6.24-rc1-git13.orig/block/Kconfig
-> +++ linux-2.6.24-rc1-git13/block/Kconfig
-> @@ -62,6 +62,11 @@ config BLK_DEV_BSG
->  	protocols (e.g. Task Management Functions and SMP in Serial
->  	Attached SCSI).
->  
-> +config RAID_ATTRS
-> +	tristate "RAID Transport Class"
-> +	---help---
-> +	  Provides RAID class information in sysfs.
-> +
->  endif # BLOCK
->  
->  config BLOCK_COMPAT
-> --- linux-2.6.24-rc1-git13.orig/drivers/scsi/Kconfig
-> +++ linux-2.6.24-rc1-git13/drivers/scsi/Kconfig
-> @@ -1,12 +1,5 @@
->  menu "SCSI device support"
->  
-> -config RAID_ATTRS
-> -	tristate "RAID Transport Class"
-> -	default n
-> -	depends on BLOCK
-> -	---help---
-> -	  Provides RAID
-> -
->  config SCSI
->  	tristate "SCSI device support"
->  	depends on BLOCK
-> --- /dev/null
-> +++ linux-2.6.24-rc1-git13/block/raid_class.c
-> @@ -0,0 +1,313 @@
-> +/*
-> + * raid_class.c - implementation of a simple raid visualisation class
-> + *
-> + * Copyright (c) 2005 - James Bottomley <James.Bottomley@steeleye.com>
-> + *
-> + * This file is licensed under GPLv2
-> + *
-> + * This class is designed to allow raid attributes to be visualised and
-> + * manipulated in a form independent of the underlying raid.  Ultimately this
-> + * should work for both hardware and software raids.
-> + */
-> +#include <linux/init.h>
-> +#include <linux/module.h>
-> +#include <linux/list.h>
-> +#include <linux/slab.h>
-> +#include <linux/string.h>
-> +#include <linux/raid_class.h>
-> +#include <scsi/scsi_device.h>
-> +#include <scsi/scsi_host.h>
-> +
-> +#define RAID_NUM_ATTRS	3
-> +
-> +struct raid_internal {
-> +	struct raid_template r;
-> +	struct raid_function_template *f;
-> +	/* The actual attributes */
-> +	struct class_device_attribute private_attrs[RAID_NUM_ATTRS];
-> +	/* The array of null terminated pointers to attributes
-> +	 * needed by scsi_sysfs.c */
-> +	struct class_device_attribute *attrs[RAID_NUM_ATTRS + 1];
-> +};
-> +
-> +struct raid_component {
-> +	struct list_head node;
-> +	struct class_device cdev;
-> +	int num;
-> +};
-> +
-> +#define to_raid_internal(tmpl)	container_of(tmpl, struct raid_internal, r)
-> +
-> +#define tc_to_raid_internal(tcont) ({					\
-> +	struct raid_template *r =					\
-> +		container_of(tcont, struct raid_template, raid_attrs);	\
-> +	to_raid_internal(r);						\
-> +})
-> +
-> +#define ac_to_raid_internal(acont) ({					\
-> +	struct transport_container *tc =				\
-> +		container_of(acont, struct transport_container, ac);	\
-> +	tc_to_raid_internal(tc);					\
-> +})
-> +
-> +#define class_device_to_raid_internal(cdev) ({				\
-> +	struct attribute_container *ac =				\
-> +		attribute_container_classdev_to_container(cdev);	\
-> +	ac_to_raid_internal(ac);					\
-> +})
-> +
-> +
-> +static int raid_match(struct attribute_container *cont, struct device *dev)
-> +{
-> +	/* We have to look for every subsystem that could house
-> +	 * emulated RAID devices, so start with SCSI */
-> +	struct raid_internal *i = ac_to_raid_internal(cont);
-> +
-> +	if (scsi_is_sdev_device(dev)) {
-> +		struct scsi_device *sdev = to_scsi_device(dev);
-> +
-> +		if (i->f->cookie != sdev->host->hostt)
-> +			return 0;
-> +
-> +		return i->f->is_raid(dev);
-> +	}
-> +	/* FIXME: look at other subsystems too */
-> +	return 0;
-> +}
-> +
-> +static int raid_setup(struct transport_container *tc, struct device *dev,
-> +		       struct class_device *cdev)
-> +{
-> +	struct raid_data *rd;
-> +
-> +	BUG_ON(class_get_devdata(cdev));
-> +
-> +	rd = kzalloc(sizeof(*rd), GFP_KERNEL);
-> +	if (!rd)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&rd->component_list);
-> +	class_set_devdata(cdev, rd);
-> +
-> +	return 0;
-> +}
-> +
-> +static int raid_remove(struct transport_container *tc, struct device *dev,
-> +		       struct class_device *cdev)
-> +{
-> +	struct raid_data *rd = class_get_devdata(cdev);
-> +	struct raid_component *rc, *next;
-> +	dev_printk(KERN_ERR, dev, "RAID REMOVE\n");
-> +	class_set_devdata(cdev, NULL);
-> +	list_for_each_entry_safe(rc, next, &rd->component_list, node) {
-> +		list_del(&rc->node);
-> +		dev_printk(KERN_ERR, rc->cdev.dev, "RAID COMPONENT REMOVE\n");
-> +		class_device_unregister(&rc->cdev);
-> +	}
-> +	dev_printk(KERN_ERR, dev, "RAID REMOVE DONE\n");
-> +	kfree(rd);
-> +	return 0;
-> +}
-> +
-> +static DECLARE_TRANSPORT_CLASS(raid_class,
-> +			       "raid_devices",
-> +			       raid_setup,
-> +			       raid_remove,
-> +			       NULL);
-> +
-> +static const struct {
-> +	enum raid_state	value;
-> +	char		*name;
-> +} raid_states[] = {
-> +	{ RAID_STATE_UNKNOWN, "unknown" },
-> +	{ RAID_STATE_ACTIVE, "active" },
-> +	{ RAID_STATE_DEGRADED, "degraded" },
-> +	{ RAID_STATE_RESYNCING, "resyncing" },
-> +	{ RAID_STATE_OFFLINE, "offline" },
-> +};
-> +
-> +static const char *raid_state_name(enum raid_state state)
-> +{
-> +	int i;
-> +	char *name = NULL;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(raid_states); i++) {
-> +		if (raid_states[i].value == state) {
-> +			name = raid_states[i].name;
-> +			break;
-> +		}
-> +	}
-> +	return name;
-> +}
-> +
-> +static struct {
-> +	enum raid_level value;
-> +	char *name;
-> +} raid_levels[] = {
-> +	{ RAID_LEVEL_UNKNOWN, "unknown" },
-> +	{ RAID_LEVEL_LINEAR, "linear" },
-> +	{ RAID_LEVEL_0, "raid0" },
-> +	{ RAID_LEVEL_1, "raid1" },
-> +	{ RAID_LEVEL_10, "raid10" },
-> +	{ RAID_LEVEL_3, "raid3" },
-> +	{ RAID_LEVEL_4, "raid4" },
-> +	{ RAID_LEVEL_5, "raid5" },
-> +	{ RAID_LEVEL_50, "raid50" },
-> +	{ RAID_LEVEL_6, "raid6" },
-> +};
-> +
-> +static const char *raid_level_name(enum raid_level level)
-> +{
-> +	int i;
-> +	char *name = NULL;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(raid_levels); i++) {
-> +		if (raid_levels[i].value == level) {
-> +			name = raid_levels[i].name;
-> +			break;
-> +		}
-> +	}
-> +	return name;
-> +}
-> +
-> +#define raid_attr_show_internal(attr, fmt, var, code)			\
-> +static ssize_t raid_show_##attr(struct class_device *cdev, char *buf)	\
-> +{									\
-> +	struct raid_data *rd = class_get_devdata(cdev);			\
-> +	code								\
-> +	return snprintf(buf, 20, #fmt "\n", var);			\
-> +}
-> +
-> +#define raid_attr_ro_states(attr, states, code)				\
-> +raid_attr_show_internal(attr, %s, name,					\
-> +	const char *name;						\
-> +	code								\
-> +	name = raid_##states##_name(rd->attr);				\
-> +)									\
-> +static CLASS_DEVICE_ATTR(attr, S_IRUGO, raid_show_##attr, NULL)
-> +
-> +
-> +#define raid_attr_ro_internal(attr, code)				\
-> +raid_attr_show_internal(attr, %d, rd->attr, code)			\
-> +static CLASS_DEVICE_ATTR(attr, S_IRUGO, raid_show_##attr, NULL)
-> +
-> +#define ATTR_CODE(attr)							\
-> +	struct raid_internal *i = class_device_to_raid_internal(cdev);	\
-> +	if (i->f->get_##attr)						\
-> +		i->f->get_##attr(cdev->dev);
-> +
-> +#define raid_attr_ro(attr)	raid_attr_ro_internal(attr, )
-> +#define raid_attr_ro_fn(attr)	raid_attr_ro_internal(attr, ATTR_CODE(attr))
-> +#define raid_attr_ro_state(attr)	raid_attr_ro_states(attr, attr, )
-> +#define raid_attr_ro_state_fn(attr)	raid_attr_ro_states(attr, attr, ATTR_CODE(attr))
-> +
-> +
-> +raid_attr_ro_state(level);
-> +raid_attr_ro_fn(resync);
-> +raid_attr_ro_state_fn(state);
-> +
-> +static void raid_component_release(struct class_device *cdev)
-> +{
-> +	struct raid_component *rc = container_of(cdev, struct raid_component,
-> +						 cdev);
-> +	dev_printk(KERN_ERR, rc->cdev.dev, "COMPONENT RELEASE\n");
-> +	put_device(rc->cdev.dev);
-> +	kfree(rc);
-> +}
-> +
-> +int raid_component_add(struct raid_template *r,struct device *raid_dev,
-> +		       struct device *component_dev)
-> +{
-> +	struct class_device *cdev =
-> +		attribute_container_find_class_device(&r->raid_attrs.ac,
-> +						      raid_dev);
-> +	struct raid_component *rc;
-> +	struct raid_data *rd = class_get_devdata(cdev);
-> +	int err;
-> +
-> +	rc = kzalloc(sizeof(*rc), GFP_KERNEL);
-> +	if (!rc)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&rc->node);
-> +	class_device_initialize(&rc->cdev);
-> +	rc->cdev.release = raid_component_release;
-> +	rc->cdev.dev = get_device(component_dev);
-> +	rc->num = rd->component_count++;
-> +
-> +	snprintf(rc->cdev.class_id, sizeof(rc->cdev.class_id),
-> +		 "component-%d", rc->num);
-> +	list_add_tail(&rc->node, &rd->component_list);
-> +	rc->cdev.parent = cdev;
-> +	rc->cdev.class = &raid_class.class;
-> +	err = class_device_add(&rc->cdev);
-> +	if (err)
-> +		goto err_out;
-> +
-> +	return 0;
-> +
-> +err_out:
-> +	list_del(&rc->node);
-> +	rd->component_count--;
-> +	put_device(component_dev);
-> +	kfree(rc);
-> +	return err;
-> +}
-> +EXPORT_SYMBOL(raid_component_add);
-> +
-> +struct raid_template *
-> +raid_class_attach(struct raid_function_template *ft)
-> +{
-> +	struct raid_internal *i = kzalloc(sizeof(struct raid_internal),
-> +					  GFP_KERNEL);
-> +	int count = 0;
-> +
-> +	if (unlikely(!i))
-> +		return NULL;
-> +
-> +	i->f = ft;
-> +
-> +	i->r.raid_attrs.ac.class = &raid_class.class;
-> +	i->r.raid_attrs.ac.match = raid_match;
-> +	i->r.raid_attrs.ac.attrs = &i->attrs[0];
-> +
-> +	attribute_container_register(&i->r.raid_attrs.ac);
-> +
-> +	i->attrs[count++] = &class_device_attr_level;
-> +	i->attrs[count++] = &class_device_attr_resync;
-> +	i->attrs[count++] = &class_device_attr_state;
-> +
-> +	i->attrs[count] = NULL;
-> +	BUG_ON(count > RAID_NUM_ATTRS);
-> +
-> +	return &i->r;
-> +}
-> +EXPORT_SYMBOL(raid_class_attach);
-> +
-> +void
-> +raid_class_release(struct raid_template *r)
-> +{
-> +	struct raid_internal *i = to_raid_internal(r);
-> +
-> +	attribute_container_unregister(&i->r.raid_attrs.ac);
-> +
-> +	kfree(i);
-> +}
-> +EXPORT_SYMBOL(raid_class_release);
-> +
-> +static __init int raid_init(void)
-> +{
-> +	return transport_class_register(&raid_class);
-> +}
-> +
-> +static __exit void raid_exit(void)
-> +{
-> +	transport_class_unregister(&raid_class);
-> +}
-> +
-> +MODULE_AUTHOR("James Bottomley");
-> +MODULE_DESCRIPTION("RAID device class");
-> +MODULE_LICENSE("GPL");
-> +
-> +module_init(raid_init);
-> +module_exit(raid_exit);
-> --- linux-2.6.24-rc1-git13.orig/drivers/scsi/raid_class.c
-> +++ /dev/null
-> @@ -1,314 +0,0 @@
-> -/*
-> - * raid_class.c - implementation of a simple raid visualisation class
-> - *
-> - * Copyright (c) 2005 - James Bottomley <James.Bottomley@steeleye.com>
-> - *
-> - * This file is licensed under GPLv2
-> - *
-> - * This class is designed to allow raid attributes to be visualised and
-> - * manipulated in a form independent of the underlying raid.  Ultimately this
-> - * should work for both hardware and software raids.
-> - */
-> -#include <linux/init.h>
-> -#include <linux/module.h>
-> -#include <linux/list.h>
-> -#include <linux/slab.h>
-> -#include <linux/string.h>
-> -#include <linux/raid_class.h>
-> -#include <scsi/scsi_device.h>
-> -#include <scsi/scsi_host.h>
-> -
-> -#define RAID_NUM_ATTRS	3
-> -
-> -struct raid_internal {
-> -	struct raid_template r;
-> -	struct raid_function_template *f;
-> -	/* The actual attributes */
-> -	struct class_device_attribute private_attrs[RAID_NUM_ATTRS];
-> -	/* The array of null terminated pointers to attributes 
-> -	 * needed by scsi_sysfs.c */
-> -	struct class_device_attribute *attrs[RAID_NUM_ATTRS + 1];
-> -};
-> -
-> -struct raid_component {
-> -	struct list_head node;
-> -	struct class_device cdev;
-> -	int num;
-> -};
-> -
-> -#define to_raid_internal(tmpl)	container_of(tmpl, struct raid_internal, r)
-> -
-> -#define tc_to_raid_internal(tcont) ({					\
-> -	struct raid_template *r =					\
-> -		container_of(tcont, struct raid_template, raid_attrs);	\
-> -	to_raid_internal(r);						\
-> -})
-> -
-> -#define ac_to_raid_internal(acont) ({					\
-> -	struct transport_container *tc =				\
-> -		container_of(acont, struct transport_container, ac);	\
-> -	tc_to_raid_internal(tc);					\
-> -})
-> -
-> -#define class_device_to_raid_internal(cdev) ({				\
-> -	struct attribute_container *ac =				\
-> -		attribute_container_classdev_to_container(cdev);	\
-> -	ac_to_raid_internal(ac);					\
-> -})
-> -	
-> -
-> -static int raid_match(struct attribute_container *cont, struct device *dev)
-> -{
-> -	/* We have to look for every subsystem that could house
-> -	 * emulated RAID devices, so start with SCSI */
-> -	struct raid_internal *i = ac_to_raid_internal(cont);
-> -
-> -	if (scsi_is_sdev_device(dev)) {
-> -		struct scsi_device *sdev = to_scsi_device(dev);
-> -
-> -		if (i->f->cookie != sdev->host->hostt)
-> -			return 0;
-> -
-> -		return i->f->is_raid(dev);
-> -	}
-> -	/* FIXME: look at other subsystems too */
-> -	return 0;
-> -}
-> -
-> -static int raid_setup(struct transport_container *tc, struct device *dev,
-> -		       struct class_device *cdev)
-> -{
-> -	struct raid_data *rd;
-> -
-> -	BUG_ON(class_get_devdata(cdev));
-> -
-> -	rd = kzalloc(sizeof(*rd), GFP_KERNEL);
-> -	if (!rd)
-> -		return -ENOMEM;
-> -
-> -	INIT_LIST_HEAD(&rd->component_list);
-> -	class_set_devdata(cdev, rd);
-> -		
-> -	return 0;
-> -}
-> -
-> -static int raid_remove(struct transport_container *tc, struct device *dev,
-> -		       struct class_device *cdev)
-> -{
-> -	struct raid_data *rd = class_get_devdata(cdev);
-> -	struct raid_component *rc, *next;
-> -	dev_printk(KERN_ERR, dev, "RAID REMOVE\n");
-> -	class_set_devdata(cdev, NULL);
-> -	list_for_each_entry_safe(rc, next, &rd->component_list, node) {
-> -		list_del(&rc->node);
-> -		dev_printk(KERN_ERR, rc->cdev.dev, "RAID COMPONENT REMOVE\n");
-> -		class_device_unregister(&rc->cdev);
-> -	}
-> -	dev_printk(KERN_ERR, dev, "RAID REMOVE DONE\n");
-> -	kfree(rd);
-> -	return 0;
-> -}
-> -
-> -static DECLARE_TRANSPORT_CLASS(raid_class,
-> -			       "raid_devices",
-> -			       raid_setup,
-> -			       raid_remove,
-> -			       NULL);
-> -
-> -static const struct {
-> -	enum raid_state	value;
-> -	char		*name;
-> -} raid_states[] = {
-> -	{ RAID_STATE_UNKNOWN, "unknown" },
-> -	{ RAID_STATE_ACTIVE, "active" },
-> -	{ RAID_STATE_DEGRADED, "degraded" },
-> -	{ RAID_STATE_RESYNCING, "resyncing" },
-> -	{ RAID_STATE_OFFLINE, "offline" },
-> -};
-> -
-> -static const char *raid_state_name(enum raid_state state)
-> -{
-> -	int i;
-> -	char *name = NULL;
-> -
-> -	for (i = 0; i < ARRAY_SIZE(raid_states); i++) {
-> -		if (raid_states[i].value == state) {
-> -			name = raid_states[i].name;
-> -			break;
-> -		}
-> -	}
-> -	return name;
-> -}
-> -
-> -static struct {
-> -	enum raid_level value;
-> -	char *name;
-> -} raid_levels[] = {
-> -	{ RAID_LEVEL_UNKNOWN, "unknown" },
-> -	{ RAID_LEVEL_LINEAR, "linear" },
-> -	{ RAID_LEVEL_0, "raid0" },
-> -	{ RAID_LEVEL_1, "raid1" },
-> -	{ RAID_LEVEL_10, "raid10" },
-> -	{ RAID_LEVEL_3, "raid3" },
-> -	{ RAID_LEVEL_4, "raid4" },
-> -	{ RAID_LEVEL_5, "raid5" },
-> -	{ RAID_LEVEL_50, "raid50" },
-> -	{ RAID_LEVEL_6, "raid6" },
-> -};
-> -
-> -static const char *raid_level_name(enum raid_level level)
-> -{
-> -	int i;
-> -	char *name = NULL;
-> -
-> -	for (i = 0; i < ARRAY_SIZE(raid_levels); i++) {
-> -		if (raid_levels[i].value == level) {
-> -			name = raid_levels[i].name;
-> -			break;
-> -		}
-> -	}
-> -	return name;
-> -}
-> -
-> -#define raid_attr_show_internal(attr, fmt, var, code)			\
-> -static ssize_t raid_show_##attr(struct class_device *cdev, char *buf)	\
-> -{									\
-> -	struct raid_data *rd = class_get_devdata(cdev);			\
-> -	code								\
-> -	return snprintf(buf, 20, #fmt "\n", var);			\
-> -}
-> -
-> -#define raid_attr_ro_states(attr, states, code)				\
-> -raid_attr_show_internal(attr, %s, name,					\
-> -	const char *name;						\
-> -	code								\
-> -	name = raid_##states##_name(rd->attr);				\
-> -)									\
-> -static CLASS_DEVICE_ATTR(attr, S_IRUGO, raid_show_##attr, NULL)
-> -
-> -
-> -#define raid_attr_ro_internal(attr, code)				\
-> -raid_attr_show_internal(attr, %d, rd->attr, code)			\
-> -static CLASS_DEVICE_ATTR(attr, S_IRUGO, raid_show_##attr, NULL)
-> -
-> -#define ATTR_CODE(attr)							\
-> -	struct raid_internal *i = class_device_to_raid_internal(cdev);	\
-> -	if (i->f->get_##attr)						\
-> -		i->f->get_##attr(cdev->dev);
-> -
-> -#define raid_attr_ro(attr)	raid_attr_ro_internal(attr, )
-> -#define raid_attr_ro_fn(attr)	raid_attr_ro_internal(attr, ATTR_CODE(attr))
-> -#define raid_attr_ro_state(attr)	raid_attr_ro_states(attr, attr, )
-> -#define raid_attr_ro_state_fn(attr)	raid_attr_ro_states(attr, attr, ATTR_CODE(attr))
-> -
-> -
-> -raid_attr_ro_state(level);
-> -raid_attr_ro_fn(resync);
-> -raid_attr_ro_state_fn(state);
-> -
-> -static void raid_component_release(struct class_device *cdev)
-> -{
-> -	struct raid_component *rc = container_of(cdev, struct raid_component,
-> -						 cdev);
-> -	dev_printk(KERN_ERR, rc->cdev.dev, "COMPONENT RELEASE\n");
-> -	put_device(rc->cdev.dev);
-> -	kfree(rc);
-> -}
-> -
-> -int raid_component_add(struct raid_template *r,struct device *raid_dev,
-> -		       struct device *component_dev)
-> -{
-> -	struct class_device *cdev =
-> -		attribute_container_find_class_device(&r->raid_attrs.ac,
-> -						      raid_dev);
-> -	struct raid_component *rc;
-> -	struct raid_data *rd = class_get_devdata(cdev);
-> -	int err;
-> -
-> -	rc = kzalloc(sizeof(*rc), GFP_KERNEL);
-> -	if (!rc)
-> -		return -ENOMEM;
-> -
-> -	INIT_LIST_HEAD(&rc->node);
-> -	class_device_initialize(&rc->cdev);
-> -	rc->cdev.release = raid_component_release;
-> -	rc->cdev.dev = get_device(component_dev);
-> -	rc->num = rd->component_count++;
-> -
-> -	snprintf(rc->cdev.class_id, sizeof(rc->cdev.class_id),
-> -		 "component-%d", rc->num);
-> -	list_add_tail(&rc->node, &rd->component_list);
-> -	rc->cdev.parent = cdev;
-> -	rc->cdev.class = &raid_class.class;
-> -	err = class_device_add(&rc->cdev);
-> -	if (err)
-> -		goto err_out;
-> -
-> -	return 0;
-> -
-> -err_out:
-> -	list_del(&rc->node);
-> -	rd->component_count--;
-> -	put_device(component_dev);
-> -	kfree(rc);
-> -	return err;
-> -}
-> -EXPORT_SYMBOL(raid_component_add);
-> -
-> -struct raid_template *
-> -raid_class_attach(struct raid_function_template *ft)
-> -{
-> -	struct raid_internal *i = kzalloc(sizeof(struct raid_internal),
-> -					  GFP_KERNEL);
-> -	int count = 0;
-> -
-> -	if (unlikely(!i))
-> -		return NULL;
-> -
-> -	i->f = ft;
-> -
-> -	i->r.raid_attrs.ac.class = &raid_class.class;
-> -	i->r.raid_attrs.ac.match = raid_match;
-> -	i->r.raid_attrs.ac.attrs = &i->attrs[0];
-> -
-> -	attribute_container_register(&i->r.raid_attrs.ac);
-> -
-> -	i->attrs[count++] = &class_device_attr_level;
-> -	i->attrs[count++] = &class_device_attr_resync;
-> -	i->attrs[count++] = &class_device_attr_state;
-> -
-> -	i->attrs[count] = NULL;
-> -	BUG_ON(count > RAID_NUM_ATTRS);
-> -
-> -	return &i->r;
-> -}
-> -EXPORT_SYMBOL(raid_class_attach);
-> -
-> -void
-> -raid_class_release(struct raid_template *r)
-> -{
-> -	struct raid_internal *i = to_raid_internal(r);
-> -
-> -	attribute_container_unregister(&i->r.raid_attrs.ac);
-> -
-> -	kfree(i);
-> -}
-> -EXPORT_SYMBOL(raid_class_release);
-> -
-> -static __init int raid_init(void)
-> -{
-> -	return transport_class_register(&raid_class);
-> -}
-> -
-> -static __exit void raid_exit(void)
-> -{
-> -	transport_class_unregister(&raid_class);
-> -}
-> -
-> -MODULE_AUTHOR("James Bottomley");
-> -MODULE_DESCRIPTION("RAID device class");
-> -MODULE_LICENSE("GPL");
-> -
-> -module_init(raid_init);
-> -module_exit(raid_exit);
-> -
-> --- linux-2.6.24-rc1-git13.orig/block/Makefile
-> +++ linux-2.6.24-rc1-git13/block/Makefile
-> @@ -12,3 +12,5 @@ obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched
->  
->  obj-$(CONFIG_BLK_DEV_IO_TRACE)	+= blktrace.o
->  obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
-> +
-> +obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
-> --- linux-2.6.24-rc1-git13.orig/drivers/scsi/Makefile
-> +++ linux-2.6.24-rc1-git13/drivers/scsi/Makefile
-> @@ -23,8 +23,6 @@ subdir-$(CONFIG_PCMCIA)		+= pcmcia
->  obj-$(CONFIG_SCSI)		+= scsi_mod.o
->  obj-$(CONFIG_SCSI_TGT)		+= scsi_tgt.o
->  
-> -obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
-> -
->  # --- NOTE ORDERING HERE ---
->  # For kernel non-modular link, transport attributes need to
->  # be initialised before drivers
+> If we want the use paradigm shared between block and driver, then I
+> think the best approach is to keep all the bios the same (so not adjust
+> for padding), but do adjust in the blk_rq_map_sg().  That way we have
+> the padding and draining unwind information by comparing with the bio.
 
+Adjusting only sg in blk_rq_map_sg (like drain) looks much
+better. This works with libata for me.
 
----
-~Randy
+diff --git a/block/blk-map.c b/block/blk-map.c
+index c07d9c8..e949969 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -140,26 +140,6 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 		ubuf += ret;
+ 	}
+ 
+-	/*
+-	 * __blk_rq_map_user() copies the buffers if starting address
+-	 * or length isn't aligned to dma_pad_mask.  As the copied
+-	 * buffer is always page aligned, we know that there's enough
+-	 * room for padding.  Extend the last bio and update
+-	 * rq->data_len accordingly.
+-	 *
+-	 * On unmap, bio_uncopy_user() will use unmodified
+-	 * bio_map_data pointed to by bio->bi_private.
+-	 */
+-	if (len & q->dma_pad_mask) {
+-		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
+-		struct bio *tail = rq->biotail;
+-
+-		tail->bi_io_vec[tail->bi_vcnt - 1].bv_len += pad_len;
+-		tail->bi_size += pad_len;
+-
+-		rq->extra_len += pad_len;
+-	}
+-
+ 	rq->buffer = rq->data = NULL;
+ 	return 0;
+ unmap_rq:
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 0f58616..2a81c87 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -220,6 +220,13 @@ new_segment:
+ 		bvprv = bvec;
+ 	} /* segments in rq */
+ 
++	if (sg && (q->dma_pad_mask & rq->data_len)) {
++		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
++
++		sg->length += pad_len;
++		rq->extra_len += pad_len;
++	}
++
+ 	if (q->dma_drain_size && q->dma_drain_needed(rq)) {
+ 		if (rq->cmd_flags & REQ_RW)
+ 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e5c6f6a..fecba05 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"Notifying upper driver of completion "
+ 				"(result %x)\n", cmd->result));
+ 
+-	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
++	good_bytes = scsi_bufflen(cmd);
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
