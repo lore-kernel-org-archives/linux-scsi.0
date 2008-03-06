@@ -1,29 +1,42 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH v3] block: move RAID transport class to BLOCK menu
-Date: Thu, 6 Mar 2008 07:28:45 +0100
-Message-ID: <20080306062845.GM6704@kernel.dk>
-References: <20071104104423.d595c0e7.randy.dunlap@oracle.com> <20071104185806.GV15111@parisc-linux.org> <472E16BA.4090708@garzik.org> <472E1FD7.1010508@oracle.com> <472E2458.7060905@garzik.org> <472E2567.4010304@oracle.com> <472E264D.4010006@garzik.org> <20071104121727.c2621fda.randy.dunlap@oracle.com> <20080305190841.b16c4946.randy.dunlap@oracle.com>
+From: Kay Sievers <kay.sievers@novell.com>
+Subject: media change events for polled devices broken with current
+	sdev_evt_send()
+Date: Thu, 06 Mar 2008 10:29:22 +0100
+Message-ID: <1204795762.3136.27.camel@lov.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:12903 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753779AbYCFG2r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Mar 2008 01:28:47 -0500
-Content-Disposition: inline
-In-Reply-To: <20080305190841.b16c4946.randy.dunlap@oracle.com>
+Received: from charybdis-ext.suse.de ([195.135.221.2]:59432 "EHLO
+	emea5-mh.id5.novell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755824AbYCFJ2j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 04:28:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: kristen accardi <kaccardi@gmail.com>, scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 05 2008, Randy Dunlap wrote:
-> On Sun, 4 Nov 2007 12:17:27 -0800 Randy Dunlap wrote:
-> 
-> ping.  James, Jens?
+Hi Jeff,
+  a341cd0f (SCSI: add asynchronous event notification API)
+introduces an event filter like:
+  +       if (!test_bit(evt->evt_type, sdev->supported_events)) {
+  +               kfree(evt);
+  +               return;
+  +       }
 
-Fine with me, though it's really up to James to pass judgement on this.
+which breaks:
+  285e9670 (sr,sd: send media state change modification events)
 
--- 
-Jens Axboe
+Why are events sent through sdev_evt_send() filtered? In which case does
+code send an event which we don't want to deliver?
+
+
+Side note: introduced with a341cd0f is the sysfs file:
+"evt_media_change", which has a store() method, but has the permission
+0444. It should either have no store() method assigned, by introducing
+something like DECLARE_EVT_RO(), or the file permission should be
+changed to 0644.
+
+Thanks,
+Kay
 
