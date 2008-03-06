@@ -1,110 +1,86 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] libsas: Check that the firmware loader is present in
- sas_request_addr
-Date: Thu, 06 Mar 2008 13:20:13 -0800
-Message-ID: <47D0600D.40809@oracle.com>
-References: <20080306090904.258f92eb.randy.dunlap@oracle.com>	 <20080306181645.GA6046@kroah.com> <47D03666.9080000@oracle.com>	 <20080306210212.GC7430@tree.beaverton.ibm.com> <1204838233.3062.53.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [2.6 patch] SCSI_AIC94XX must depend on SCSI
+Date: Thu, 06 Mar 2008 15:32:06 -0600
+Message-ID: <1204839126.3062.57.camel@localhost.localdomain>
+References: <200803062009.20309.toralf.foerster@gmx.de>
+	 <20080306202246.GB5259@cs181133002.pp.htv.fi>
+	 <20080306203558.GA7430@tree.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:30471 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068AbYCFVZt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 16:25:49 -0500
-In-Reply-To: <1204838233.3062.53.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47899 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765080AbYCFVcL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 16:32:11 -0500
+In-Reply-To: <20080306203558.GA7430@tree.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Greg KH <greg@kroah.com>, linux-next@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Adrian Bunk <bunk@kernel.org>, Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2008-03-06 at 13:02 -0800, Darrick J. Wong wrote:
->> Return an error code in sas_request_addr if the fw loader isn't
->> configured.
->>
->> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
->> ---
->>
->>  drivers/scsi/libsas/sas_scsi_host.c |    4 ++++
->>  1 files changed, 4 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
->> index 601ec5b..e44be7a 100644
->> --- a/drivers/scsi/libsas/sas_scsi_host.c
->> +++ b/drivers/scsi/libsas/sas_scsi_host.c
->> @@ -1085,6 +1085,7 @@ static void sas_parse_addr(u8 *sas_addr, const char *p)
->>  
->>  int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
->>  {
->> +#ifdef CONFIG_FW_LOADER
->>  	int res;
->>  	const struct firmware *fw;
->>  
->> @@ -1102,6 +1103,9 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
->>  out:
->>  	release_firmware(fw);
->>  	return res;
->> +#else
->> +	return -ENOENT;
->> +#endif
->>  }
->>  EXPORT_SYMBOL_GPL(sas_request_addr);
-> 
-> We could do it that way ... I suspect what Greg was asking for was more
-> like this:
+On Thu, 2008-03-06 at 12:35 -0800, Darrick J. Wong wrote:
+> On Thu, Mar 06, 2008 at 10:22:46PM +0200, Adrian Bunk wrote:
+> > This patch fixes the following build error reported by Toralf F=C3=B6=
+rster:
+> >=20
+> > <--  snip  -->
+> >=20
+> > ...
+> >   MODPOST 243 modules
+> > ERROR: "sas_bios_param" [drivers/scsi/mvsas.ko] undefined!
+>=20
+> <snip>
+>=20
+> > --- a/drivers/scsi/aic94xx/Kconfig
+> > +++ b/drivers/scsi/aic94xx/Kconfig
+>=20
+> Maybe I'm missing something here, but how does patching aic94xx Kconf=
+ig
+> fix an mvsas build problem?
 
-Yes, it seems that this is needed.  Lots of drivers use
-request_firmware().  Oooooh, and they select FW_LOADER.  :(
-That's how they "get around" this problem.
+Actually, it's a dependency chain fault.  The config this was generated
+from has
 
-> James
-> 
-> ---
-> 
-> diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-> index 33d8f20..4d10c73 100644
-> --- a/include/linux/firmware.h
-> +++ b/include/linux/firmware.h
-> @@ -10,7 +10,10 @@ struct firmware {
->  	size_t size;
->  	u8 *data;
->  };
-> +
->  struct device;
-> +
-> +#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
->  int request_firmware(const struct firmware **fw, const char *name,
->  		     struct device *device);
->  int request_firmware_nowait(
-> @@ -19,4 +22,24 @@ int request_firmware_nowait(
->  	void (*cont)(const struct firmware *fw, void *context));
->  
->  void release_firmware(const struct firmware *fw);
-> +#else
-> +static inline int request_firmware(const struct firmware **fw,
-> +				   const char *name,
-> +				   struct device *device)
-> +{
-> +	return -EINVAL;
-> +}
-> +static inline int request_firmware_nowait(
-> +	struct module *module, int uevent,
-> +	const char *name, struct device *device, void *context,
-> +	void (*cont)(const struct firmware *fw, void *context))
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +static inline void release_firmware(const struct firmware *fw)
-> +{
-> +}
-> +#endif
-> +
->  #endif
-> 
-> 
+CONFIG_SCSI=3Dm
+
+CONFIG_SCSI_AIC94XX=3Dy
+
+the latter then forces
+
+CONFIG_SCSI_SAS_LIBSAS=3Dy
+
+I think the error reported is wrong: the kernel just should have failed
+to link, since both the built in aic94xx and libsas have scsi
+dependencies.
+
+We have a few other drivers in this category (like ibmvscsi).  The root
+cause seems to be that SCSI_LOWLEVEL doesn't act as a tristate.  I thin=
+k
+a fix that will prevent all of these issues from recurring is this one.
+
+James
 
 
--- 
-~Randy
+---
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index c46666a..b9d3740 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -325,7 +325,7 @@ menuconfig SCSI_LOWLEVEL
+ 	depends on SCSI!=3Dn
+ 	default y
+=20
+-if SCSI_LOWLEVEL
++if SCSI_LOWLEVEL && SCSI
+=20
+ config ISCSI_TCP
+ 	tristate "iSCSI Initiator over TCP/IP"
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
