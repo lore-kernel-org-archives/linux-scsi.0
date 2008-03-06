@@ -1,63 +1,118 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
-Date: Thu, 6 Mar 2008 14:41:39 +0100
-Message-ID: <20080306134138.GF17940@kernel.dk>
-References: <47CEA40F.6050903@gmail.com> <20080305135121.GK6704@kernel.dk> <1204730484.3047.10.camel@localhost.localdomain> <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+From: "Ke Wei" <kewei.mv@gmail.com>
+Subject: Re: [PATCH] mvsas: fix default can_queue
+Date: Thu, 6 Mar 2008 22:46:56 +0800
+Message-ID: <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
+References: <1204308113.4003.45.camel@localhost.localdomain>
+	 <1204504945.3069.30.camel@localhost.localdomain>
+	 <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
+	 <1204556371.3043.7.camel@localhost.localdomain>
+	 <1204682849.3091.95.camel@localhost.localdomain>
+	 <1204750960.3047.67.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.182]:47330 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760934AbYCFOq5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 09:46:57 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2268138wah.23
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Mar 2008 06:46:56 -0800 (PST)
+In-Reply-To: <1204750960.3047.67.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, jgarzik <jgarzik@redhat.com>
 
-On Thu, Mar 06 2008, FUJITA Tomonori wrote:
-> On Wed, 05 Mar 2008 09:21:24 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
-> > > On Wed, Mar 05 2008, Tejun Heo wrote:
-> > > > This is getting insanely subtle.  Let's say there's PIO driver which
-> > > > transfer certain sized chunks at a time and completes request partially
-> > > > after completing each chunk and the driver uses draining to eat up
-> > > > whatever excess data, which seems like a legit use case to me.  But it
-> > > > won't work because __end_that_request_first() will terminate when it
-> > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
-> > > > 
-> > > > Nacked-by: Tejun Heo <htejun@gmail.com>
-> > > 
-> > > Yeah, I think I may have gone a bit overboard in applying this so
-> > > quickly. It's just not a good interface, silently adding the extra
-> > > length if asked to complete more. It may even happen right now, for a
-> > > driver that does no padding (it probably wont do any harm here either,
-> > > but still).
-> > > 
-> > > I'll try and see if I can come up with something cleaner.
-> > > 
-> > > My basic design paradigm for this is that the _driver_ (or mid layer, if
-> > > SCSI wants to handle it) should care about the padding. So make it easy
-> > > for them to pad, but have it 'unrolled' by completion time. We should
-> > > NOT need any extra_len checks or additions in the block/ directory,
-> > > period.
-> > 
-> > Right, that's why my original proposal was to do nothing for padding
-> > (other than ensure the driver could adjust the length if it wanted to)
-> > and to add an extra element always for draining, which the driver could
-> > ignore.  It basically pushed the use paradigm onto the driver.
-> > 
-> > If we want the use paradigm shared between block and driver, then I
-> > think the best approach is to keep all the bios the same (so not adjust
-> > for padding), but do adjust in the blk_rq_map_sg().  That way we have
-> > the padding and draining unwind information by comparing with the bio.
-> 
-> Adjusting only sg in blk_rq_map_sg (like drain) looks much
-> better. This works with libata for me.
+On Thu, Mar 6, 2008 at 5:02 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
 
-Looks like a much better solution to me. Anyone have any valid
-objections against moving the padding to the sg map time?
+1.
+> >
+> > OK, I instrumented more ... you're right, the first failing command is
+> > REPORT_LUNS.  The failure isn't because the DVD doesn't accept the
+> > command, but because it gets errored and we fail to report back the
+> > error data.
+
+First, I noticed that scsi_probe_and_add_lun function has changed
+since v2.6.17-git4.
+It will cause bflagsp to miss BLIST_NOREPORTLUN flag after calling scsi_add_lun.
+On the other hand,  Even though mvsas driver can succeed in reporting
+back the error data, scsi subsystem also will force device to reset
+because of wrong REPORTLUN status. But Error again, then reset.
+Maybe I may write simulation codes for this command.
+
+
+ 2.6.17-git4:
+ /**
+  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
+@@ -880,10 +906,12 @@ static int scsi_probe_and_add_lun(struct
+    if (scsi_probe_lun(sdev, result, result_len, &bflags))
+       goto out_free_result;
+
++   if (bflagsp)
++      *bflagsp = bflags;
+    /*
+     * result contains valid SCSI INQUIRY data.
+     */
+-   if ((result[0] >> 5) == 3) {
++   if (((result[0] >> 5) == 3) && !(bflags & BLIST_ATTACH_PQ3)) {
+       /*
+        * For a Peripheral qualifier 3 (011b), the SCSI
+        * spec says: The device server is not capable of
+@@ -894,9 +922,22 @@ static int scsi_probe_and_add_lun(struct
+        * logical disk configured at sdev->lun, but there
+        * is a target id responding.
+        */
+-      SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
+-               "scsi scan: peripheral qualifier of 3,"
+-               " no device added\n"));
++      SCSI_LOG_SCAN_BUS(2, sdev_printk(KERN_INFO, sdev, "scsi scan:"
++               " peripheral qualifier of 3, device not"
++               " added\n"))
++      if (lun == 0) {
++         SCSI_LOG_SCAN_BUS(1, {
++            unsigned char vend[9];
++            unsigned char mod[17];
++
++            sdev_printk(KERN_INFO, sdev,
++               "scsi scan: consider passing scsi_mod."
++               "dev_flags=%s:%s:0x240 or 0x800240\n",
++               scsi_inq_str(vend, result, 8, 16),
++               scsi_inq_str(mod, result, 16, 32));
++         });
++      }
++
+       res = SCSI_SCAN_TARGET_PRESENT;
+       goto out_free_result;
+    }
+@@ -920,8 +961,6 @@ static int scsi_probe_and_add_lun(struct
+          sdev->lockable = 0;
+          scsi_unlock_floptical(sdev, result);
+       }
+-      if (bflagsp)
+-         *bflagsp = bflags;
+    }
+
+
+2.
+> As a work around until the NCQ issue is fixed, this will allow can_queue
+> to be raised while still forcing all ATA devices to the non-NCQ case.
+>
+> Also, can can_queue be set to MVS_CHIP_SLOT_SZ - 1?  It seems like a
+> reasonable default.
+
+I also test failed. By far, can_queue only be set to 1. I will keep on
+investigating.
+
+3.
+> The good news is that with this change, I'm getting a respectable
+> throughput on the fio hammer test; plus zapping random phy resets across
+> the disk triggers error handler recovery correctly (so far).
+
+I fixed it because of a register mistake. And I'm testing for the follow patch.
 
 -- 
-Jens Axboe
-
+Best Regards,
+Ke Wei
