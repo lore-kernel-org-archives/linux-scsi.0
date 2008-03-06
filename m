@@ -1,42 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.25-rc4
-Date: Wed, 05 Mar 2008 18:39:46 -0600
-Message-ID: <1204763986.3047.113.camel@localhost.localdomain>
-References: <1204755977.3047.103.camel@localhost.localdomain>
-	 <20080306003509.GU24386@parisc-linux.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: +
+ scsi-chc-fix-shadowed-variable-warnings-checkpatch-fixes.patch added to -mm
+ tree
+Date: Wed, 5 Mar 2008 16:47:30 -0800
+Message-ID: <20080305164730.684fa40f.akpm@linux-foundation.org>
+References: <200803060016.m260Giml029428@imap1.linux-foundation.org>
+	<1204763247.3047.111.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41478 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933372AbYCFAjt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 19:39:49 -0500
-In-Reply-To: <20080306003509.GU24386@parisc-linux.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51335 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755581AbYCFArg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 19:47:36 -0500
+In-Reply-To: <1204763247.3047.111.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
 
-On Wed, 2008-03-05 at 17:35 -0700, Matthew Wilcox wrote:
-> On Wed, Mar 05, 2008 at 04:26:17PM -0600, James Bottomley wrote:
-> > Apart from the usual crop of bug fixes, it is hoped that both gdth
-> > (under all circumstances) and aic94xx (under protocol errors) now work
-> > after this.
+On Wed, 05 Mar 2008 18:27:27 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
 > > 
-> > The patch is available from:
-> > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-> > 
-> > The short changelog is:
+> > diff -puN drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings-checkpatch-fixes drivers/scsi/ch.c
+> > --- a/drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings-checkpatch-fixes
+> > +++ a/drivers/scsi/ch.c
+> > @@ -739,11 +739,11 @@ static long ch_ioctl(struct file *file,
+> >  		mutex_lock(&ch->lock);
+> >  
+> >  	voltag_retry:
+> > -		memset(ch_cmd,0,sizeof(ch_cmd));
+> > +		memset(ch_cmd, 0, sizeof(ch_cmd));
+> >  		ch_cmd[0] = READ_ELEMENT_STATUS;
+> >  		ch_cmd[1] = (ch->device->lun << 5) |
+> >  			    (ch->voltags ? 0x10 : 0) |
+> > -			    ch_elem_to_typecode(ch,elem);
+> > +			    ch_elem_to_typecode(ch, elem);
+> >  		ch_cmd[2] = (elem >> 8) & 0xff;
+> >  		ch_cmd[3] = elem        & 0xff;
+> >  		ch_cmd[5] = 1;
 > 
-> James, you've overlooked
-> http://marc.info/?l=linux-scsi&m=119161490104667&w=2 again.  I last sent
-> it to you on Feb 25th
+> Please stop.  I'm not taking whitespace patches ... one per file no
+> less.
 
-Sorry ... the week of the 25th was a bit of a busy one.  I've tracked it
-down marked it for addition.
+This gets folded into the base patch - there is no incremental effect.
 
-James
+>  I take whitespace and other cleanups as part of real driver
+> updates only.
 
-
+That's what this does.
