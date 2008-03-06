@@ -1,37 +1,33 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [14/21] Don't disable direct_io for unchecked_isa_dma in st.c
-Date: Thu,  6 Mar 2008 21:51:35 +0100 (CET)
-Message-ID: <20080306205135.754211B419C@basil.firstfloor.org>
-References: <20080306951.147874949@firstfloor.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: next-2008-0306 scsi/libsas build failure
+Date: Thu, 6 Mar 2008 13:01:00 -0800
+Message-ID: <20080306210059.GB7430@tree.beaverton.ibm.com>
+References: <20080306090904.258f92eb.randy.dunlap@oracle.com> <20080306181645.GA6046@kroah.com> <47D03666.9080000@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:53297 "EHLO
-	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762230AbYCFUvs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 15:51:48 -0500
-In-Reply-To: <20080306951.147874949@firstfloor.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:49155 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935956AbYCFVBH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 16:01:07 -0500
+Content-Disposition: inline
+In-Reply-To: <47D03666.9080000@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Greg KH <greg@kroah.com>, linux-next@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, jejb <James.Bottomley@HansenPartnership.com>
 
+>> Sounds like a bug in the firmware code, it should provide stubs if this
+>> config option is not present, right?
+>
+> That would be one (good) solution.
+>
+> I'll wait to see if James or Darrick have other ideas...
 
-Block layer bounces anyways.
+sas_request_addr should only be called in the (possibly) exceptional
+case that a SAS controller forgot its address and wants a sysadmin to
+provide one.  However, it's not critical to the operation of libsas, so
+in this particular case we can just return an error code if
+CONFIG_FW_LOADER=n.
 
-Signed-off-by: Andi Kleen <ak@suse.de>
-
----
- drivers/scsi/st.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux/drivers/scsi/st.c
-===================================================================
---- linux.orig/drivers/scsi/st.c
-+++ linux/drivers/scsi/st.c
-@@ -3990,7 +3990,7 @@ static int st_probe(struct device *dev)
- 	tpnt->nbr_partitions = 0;
- 	tpnt->device->timeout = ST_TIMEOUT;
- 	tpnt->long_timeout = ST_LONG_TIMEOUT;
--	tpnt->try_dio = try_direct_io && !SDp->host->unchecked_isa_dma;
-+	tpnt->try_dio = try_direct_io;
- 
- 	for (i = 0; i < ST_NBR_MODES; i++) {
- 		STm = &(tpnt->modes[i]);
+--D
