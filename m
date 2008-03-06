@@ -1,39 +1,49 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [3/21] Remove unchecked_isa_dma in advansys.c
-Date: Thu, 6 Mar 2008 23:04:32 +0100
-Message-ID: <20080306220432.GA31833@one.firstfloor.org>
-References: <20080306951.147874949@firstfloor.org> <20080306205122.87EF81B419C@basil.firstfloor.org> <20080306210458.GZ24386@parisc-linux.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [2.6 patch] SCSI_AIC94XX must depend on SCSI
+Date: Thu, 06 Mar 2008 16:07:42 -0600
+Message-ID: <1204841262.3062.60.camel@localhost.localdomain>
+References: <200803062009.20309.toralf.foerster@gmx.de>
+	 <20080306202246.GB5259@cs181133002.pp.htv.fi>
+	 <1204835467.3062.42.camel@localhost.localdomain>
+	 <20080306213938.GA1574@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:45810 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128AbYCFWDE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 17:03:04 -0500
-Content-Disposition: inline
-In-Reply-To: <20080306210458.GZ24386@parisc-linux.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:54192 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765317AbYCFWHp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 17:07:45 -0500
+In-Reply-To: <20080306213938.GA1574@cs181133002.pp.htv.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Mar 06, 2008 at 02:04:59PM -0700, Matthew Wilcox wrote:
-> On Thu, Mar 06, 2008 at 09:51:21PM +0100, Andi Kleen wrote:
-> > That patch is a little more complicated than the others. advansys
-> > was the only ISA driver who actually passed ->cmnd to the firmware.
+On Thu, 2008-03-06 at 23:39 +0200, Adrian Bunk wrote:
+> This is the right fix for this bug.
+
+Incidentally, just for future reference, this:
+
+> We have:
+> - SCSI=m
+> - SCSI_AIC94XX=y
+> - SCSI_MVSAS=m
+> - SCSI_SAS_LIBSAS=y
 > 
-> Why did you ignore me the first time when I told you that you'd made a
-> mistake?
+> The problem is:
+> - SCSI_AIC94XX selects (and requires) SCSI_SAS_LIBSAS
+> - SCSI_MVSAS selects (and requires) SCSI_SAS_LIBSAS
+> - with SCSI=m a SCSI_SAS_LIBSAS=y is not linked into the kernel
+> 
+> SCSI_AIC94XX=y also results in the AIC94xx driver not being linked into 
+> the kernel here (and that's also fixed by this patch), but this alone 
+> wouldn't result in a build bug...
 
-Can you be more specific what you complained about? 
+Is the right changelog for your fix (even if it got superceded), rather
+than a compile dump that doesn't even mention the driver you're
+patching.
 
-As I remember you had a quite vague high level complaint last time
-("very ugly patch") but you didn't go into details as what exactly you 
-considered ugly. I assumed you meant not using the DMA API but
-raw get_free_pages with "ugly", and I fixed that.
+James
 
-If you have any other issues with the patch please describe them clearly.
-Assume I'm like a 4 year old regarding SCSI arcana.
-
--Andi
 
