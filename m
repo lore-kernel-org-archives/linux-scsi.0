@@ -1,40 +1,46 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: next-2008-0306 scsi/libsas build failure
-Date: Thu, 06 Mar 2008 10:22:30 -0800
-Message-ID: <47D03666.9080000@oracle.com>
-References: <20080306090904.258f92eb.randy.dunlap@oracle.com> <20080306181645.GA6046@kroah.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH v3] block: move RAID transport class to BLOCK menu
+Date: Thu, 6 Mar 2008 19:29:54 +0100
+Message-ID: <20080306182953.GI17940@kernel.dk>
+References: <20071104185806.GV15111@parisc-linux.org> <472E16BA.4090708@garzik.org> <472E1FD7.1010508@oracle.com> <472E2458.7060905@garzik.org> <472E2567.4010304@oracle.com> <472E264D.4010006@garzik.org> <20071104121727.c2621fda.randy.dunlap@oracle.com> <20080305190841.b16c4946.randy.dunlap@oracle.com> <20080306062845.GM6704@kernel.dk> <1204819346.3062.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:45407 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013AbYCFSXh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 13:23:37 -0500
-In-Reply-To: <20080306181645.GA6046@kroah.com>
+Received: from brick.kernel.dk ([87.55.233.238]:27479 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752060AbYCFS37 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Mar 2008 13:29:59 -0500
+Content-Disposition: inline
+In-Reply-To: <1204819346.3062.19.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-next@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, jejb <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, scsi <linux-scsi@vger.kernel.org>
 
-Greg KH wrote:
-> On Thu, Mar 06, 2008 at 09:09:04AM -0800, Randy Dunlap wrote:
->> drivers/built-in.o: In function `sas_request_addr':
->> (.text+0x598fb): undefined reference to `request_firmware'
->> drivers/built-in.o: In function `sas_request_addr':
->> (.text+0x5998e): undefined reference to `release_firmware'
->> make[1]: *** [.tmp_vmlinux1] Error 1
->> make: *** [sub-make] Error 2
->>
->> drivers/scsi/libsas/sas_scsi_host.c calls request_firmware() and
->> release_firmware() without checking to see if CONFIG_FW_LOADER=y.
+On Thu, Mar 06 2008, James Bottomley wrote:
+> On Thu, 2008-03-06 at 07:28 +0100, Jens Axboe wrote:
+> > On Wed, Mar 05 2008, Randy Dunlap wrote:
+> > > On Sun, 4 Nov 2007 12:17:27 -0800 Randy Dunlap wrote:
+> > > 
+> > > ping.  James, Jens?
+> > 
+> > Fine with me, though it's really up to James to pass judgement on this.
 > 
-> Sounds like a bug in the firmware code, it should provide stubs if this
-> config option is not present, right?
+> In principle, yes, when (if) it's actually made useful, it would belong
+> at the block layer (or even in misc or the md/dm layer), but while it's
+> a bit vestigial, there's not really much point in moving it.  I'll tie a
+> knot in my hankie to see if I can make it progress and then we can see
+> where it should go.
 
-That would be one (good) solution.
+I mistakenly thought that the md raid stuff was already moved over,
+since the patch to move the transport was suggested. If it isn't and
+SCSI is still the sole user of that code, then by all means keep it
+there. Once patches for md or eg cciss or other block raid controllers
+are supplied, then it'll make sense to move the transport class.
 
-I'll wait to see if James or Darrick have other ideas...
+IOW, I completely agree with you James and thought we were further ahead
+than we really are :-)
 
 -- 
-~Randy
+Jens Axboe
+
