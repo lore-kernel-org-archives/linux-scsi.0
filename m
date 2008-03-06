@@ -1,77 +1,39 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: some hard numbers on ext3 & batching performance issue
-Date: Thu, 6 Mar 2008 11:28:04 +1100
-Message-ID: <20080306002804.GE155407@sgi.com>
-References: <47C6A46D.8020700@emc.com> <200802281005.13068.jbacik@redhat.com> <200802281041.01411.jbacik@redhat.com> <47C6B2A5.4030609@emc.com> <20080228175422.GU155259@sgi.com> <47CEF254.2090208@emc.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.25-rc4
+Date: Wed, 5 Mar 2008 17:35:09 -0700
+Message-ID: <20080306003509.GU24386@parisc-linux.org>
+References: <1204755977.3047.103.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:37167 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932531AbYCFAfM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2008 19:35:12 -0500
 Content-Disposition: inline
-In-Reply-To: <47CEF254.2090208@emc.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: David Chinner <dgc@sgi.com>, Josef Bacik <jbacik@redhat.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <1204755977.3047.103.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Mar 05, 2008 at 02:19:48PM -0500, Ric Wheeler wrote:
-> The work load is generated using fs_mark 
-> (http://sourceforge.net/projects/fsmark/) which is basically a write 
-> workload with small files, each file gets fsync'ed before close. The 
-> metric is "files/sec".
+On Wed, Mar 05, 2008 at 04:26:17PM -0600, James Bottomley wrote:
+> Apart from the usual crop of bug fixes, it is hoped that both gdth
+> (under all circumstances) and aic94xx (under protocol errors) now work
+> after this.
+> 
+> The patch is available from:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> 
+> The short changelog is:
 
-.......
+James, you've overlooked
+http://marc.info/?l=linux-scsi&m=119161490104667&w=2 again.  I last sent
+it to you on Feb 25th
 
-> It would be really interesting to rerun some of these tests on xfs which 
-> Dave explained in the thread last week has a more self tuning way to 
-> batch up transactions....
-
-Ok, so XFS numbers. note these are all on a CONFIG_XFS_DEBUG=y kernel, so
-there's lots of extra checks in the code as compared to a normal production
-kernel.
-
-Local disk (15krpm SCSI, WCD, CONFIG_XFS_DEBUG=y):
-
-threads		files/s
-  1		  97
-  2		 117
-  4		 109
-  8		 110
- 10		 113
- 20		 116
-
-Local disk (15krpm SCSI, WCE, nobarrier, CONFIG_XFS_DEBUG=y):
-
-threads		files/s
-  1		 203
-  2		 216
-  4		 243
-  8		 332
- 10		 405
- 20		 424
-
-Ramdisk (nobarrier, CONFIG_XFS_DEBUG=y):
-
-	       agcount=4	agcount=16
-threads		files/s		 files/s
-  1		 1298		  1298
-  2		 2073             2394
-  4		 3296             3321
-  8		 3464             4199
- 10		 3394             3937
- 20		 3251             3691
-
-Note the difference the amount of parallel allocation in the
-filesystem makes - agcount=4 only allows up to 4 parallel allocations
-at once, so even if they are all aggregated into the one log I/O,
-no further allocation can take place until that log I/O is complete.
-
-And at about 4000 files/s the system (4p ia64) is becoming CPU bound
-due to all the debug checks in XFS.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
