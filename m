@@ -1,102 +1,69 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] scsi_lib: Convert GFP_ATOMIC to gfp_flags
-Date: Thu, 06 Mar 2008 17:37:11 +0200
-Message-ID: <47D00FA7.4040404@panasas.com>
-References: <20080220182604.GD27736@parisc-linux.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] mvsas: fix default can_queue
+Date: Thu, 06 Mar 2008 09:52:04 -0600
+Message-ID: <1204818725.3062.14.camel@localhost.localdomain>
+References: <1204308113.4003.45.camel@localhost.localdomain>
+	 <1204504945.3069.30.camel@localhost.localdomain>
+	 <6b2481670803030017h43da68bcxd78a6142f8f5c6bb@mail.gmail.com>
+	 <1204556371.3043.7.camel@localhost.localdomain>
+	 <1204682849.3091.95.camel@localhost.localdomain>
+	 <1204750960.3047.67.camel@localhost.localdomain>
+	 <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:35581 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932847AbYCFPiF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 10:38:05 -0500
-In-Reply-To: <20080220182604.GD27736@parisc-linux.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43506 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760182AbYCFPwI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 10:52:08 -0500
+In-Reply-To: <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, jgarzik <jgarzik@redhat.com>
 
-On Wed, Feb 20 2008 at 20:26 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> scsi_init_io() is already passed a gfp_mask, so we should use that
-> instead of an explicit GFP_ATOMIC
+On Thu, 2008-03-06 at 22:46 +0800, Ke Wei wrote:
+> On Thu, Mar 6, 2008 at 5:02 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
 > 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 1.
+> > >
+> > > OK, I instrumented more ... you're right, the first failing command is
+> > > REPORT_LUNS.  The failure isn't because the DVD doesn't accept the
+> > > command, but because it gets errored and we fail to report back the
+> > > error data.
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f243fc3..b81170d 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1048,8 +1048,8 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  		goto err_exit;
->  
->  	if (blk_bidi_rq(cmd->request)) {
-> -		struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
-> -			scsi_bidi_sdb_cache, GFP_ATOMIC);
-> +		struct scsi_data_buffer *bidi_sdb;
-> +		bidi_sdb = kmem_cache_zalloc(scsi_bidi_sdb_cache, gfp_mask);
->  		if (!bidi_sdb) {
->  			error = BLKPREP_DEFER;
->  			goto err_exit;
-> @@ -1057,7 +1057,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  
->  		cmd->request->next_rq->special = bidi_sdb;
->  		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
-> -								    GFP_ATOMIC);
-> +								    gfp_mask);
->  		if (error)
->  			goto err_exit;
->  	}
-> 
-Sorry for the late reply. Thanks for the patch but ...
+> First, I noticed that scsi_probe_and_add_lun function has changed
+> since v2.6.17-git4.
+> It will cause bflagsp to miss BLIST_NOREPORTLUN flag after calling scsi_add_lun.
+> On the other hand,  Even though mvsas driver can succeed in reporting
+> back the error data, scsi subsystem also will force device to reset
+> because of wrong REPORTLUN status. But Error again, then reset.
+> Maybe I may write simulation codes for this command.
 
-Jens does not like a second part in a compound allocation to wait. This is
-because it can cause a deadlock between contenders that both grabbed half
-the resource and are waiting for the second part, if they don't wait, and
-release the first part at least one can continue.
+But this isn't the problem.
 
-Perhaps a small change to the patch would be better. (See below)
+I'll look into the mid layer changes and see if we have a problem.
+However, this device does respond correctly (with an error) to
+REPORT_LUNS (however, at the moment, for me, the current setup is a
+great test of ATA error handling).
 
-Boaz
----
-From: Matthew Wilcox <willy@linux.intel.com>
-Date: Thu, 6 Mar 2008 17:21:47 +0200
-Subject: [PATCH] scsi_lib: Convert GFP_ATOMIC to gfp_flags
+When I have it on the aic94xx it terminates the command and sends back a
+Register D2H FIS with
 
-scsi_init_io() is already passed a gfp_mask, so we should use that
-instead of an explicit GFP_ATOMIC
+error = 0x54 (sense key ILLEGAL REQUEST, ABRT)
+status = 0x51 (DRDY, SERV, CHK)
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/scsi_lib.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+So the device does a correct termination for an unsupported command.
+The problem seems to be that mvsas isn't terminating and picking up the
+register D2H fis properly.  Which, in turn seems to be connected with
+the way it's not really processing a RXQ_ERR return.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ba21d97..4d1d886 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1047,8 +1047,9 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 		goto err_exit;
- 
- 	if (blk_bidi_rq(cmd->request)) {
--		struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
--			scsi_bidi_sdb_cache, GFP_ATOMIC);
-+		struct scsi_data_buffer *bidi_sdb;
-+		bidi_sdb = kmem_cache_zalloc(scsi_bidi_sdb_cache,
-+							gfp_mask & ~__GFP_WAIT);
- 		if (!bidi_sdb) {
- 			error = BLKPREP_DEFER;
- 			goto err_exit;
-@@ -1056,7 +1057,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 
- 		cmd->request->next_rq->special = bidi_sdb;
- 		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
--								    GFP_ATOMIC);
-+							gfp_mask & ~__GFP_WAIT);
- 		if (error)
- 			goto err_exit;
- 	}
--- 
-1.5.3.3
+This is a perfectly proper termination, and the scan routine will
+proceed normally without invoking any error handling (it's aware of the
+conflict between SPC and MMC regarding REPORT_LUNS).
+
+James
+
 
