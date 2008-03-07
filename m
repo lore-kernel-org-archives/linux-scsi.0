@@ -1,76 +1,86 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [19/20] Finally kill unchecked_isa_dma
-Date: Fri,  7 Mar 2008 18:54:19 +0100 (CET)
-Message-ID: <20080307175419.1F6271B41AE@basil.firstfloor.org>
+Subject: [PATCH] [20/20] Convert DMA buffers in ch.c to allocate via the block layer
+Date: Fri,  7 Mar 2008 18:54:20 +0100 (CET)
+Message-ID: <20080307175420.2442A1B41AE@basil.firstfloor.org>
 References: <20080307653.720459648@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:56579 "EHLO
 	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758409AbYCGRyV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:21 -0500
+	with ESMTP id S1758746AbYCGRy1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:27 -0500
 In-Reply-To: <20080307653.720459648@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
 
-Now that all users are gone it can be safely completely removed.
+Instead of specifying GFP_DMA always ask the block layer to get 
+some dma'able memory
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 
 ---
- Documentation/scsi/scsi_mid_low_api.txt |    3 ---
- drivers/scsi/hosts.c                    |    1 -
- include/scsi/scsi_host.h                |    6 ------
- 3 files changed, 10 deletions(-)
+ drivers/scsi/ch.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Index: linux/Documentation/scsi/scsi_mid_low_api.txt
+Index: linux/drivers/scsi/ch.c
 ===================================================================
---- linux.orig/Documentation/scsi/scsi_mid_low_api.txt
-+++ linux/Documentation/scsi/scsi_mid_low_api.txt
-@@ -1254,9 +1254,6 @@ of interest:
-     cmd_per_lun  - maximum number of commands that can be queued on devices
-                    controlled by the host. Overridden by LLD calls to
-                    scsi_adjust_queue_depth().
--    unchecked_isa_dma - 1=>only use bottom 16 MB of ram (ISA DMA addressing
--                   restriction), 0=>can use full 32 bit (or better) DMA
--                   address space
-     use_clustering - 1=>SCSI commands in mid level's queue can be merged,
-                      0=>disallow SCSI command merging
-     hostt        - pointer to driver's struct scsi_host_template from which
-Index: linux/drivers/scsi/hosts.c
-===================================================================
---- linux.orig/drivers/scsi/hosts.c
-+++ linux/drivers/scsi/hosts.c
-@@ -335,7 +335,6 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	shost->can_queue = sht->can_queue;
- 	shost->sg_tablesize = sht->sg_tablesize;
- 	shost->cmd_per_lun = sht->cmd_per_lun;
--	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->use_clustering = sht->use_clustering;
- 	shost->ordered_tag = sht->ordered_tag;
- 	shost->active_mode = sht->supported_mode;
-Index: linux/include/scsi/scsi_host.h
-===================================================================
---- linux.orig/include/scsi/scsi_host.h
-+++ linux/include/scsi/scsi_host.h
-@@ -423,11 +423,6 @@ struct scsi_host_template {
- 	unsigned supported_mode:2;
+--- linux.orig/drivers/scsi/ch.c
++++ linux/drivers/scsi/ch.c
+@@ -231,7 +231,7 @@ ch_read_element_status(scsi_changer *ch,
+ 	u_char  *buffer;
+ 	int     result;
  
- 	/*
--	 * True if this host adapter uses unchecked DMA onto an ISA bus.
--	 */
--	unsigned unchecked_isa_dma:1;
--
--	/*
- 	 * True if this host adapter can make good use of clustering.
- 	 * I originally thought that if the tablesize was large that it
- 	 * was a waste of CPU cycles to prepare a cluster list, but
-@@ -601,7 +596,6 @@ struct Scsi_Host {
- 	unsigned long cmd_serial_number;
- 	
- 	unsigned active_mode:2;
--	unsigned unchecked_isa_dma:1;
- 	unsigned use_clustering:1;
- 	unsigned use_blk_tcq:1;
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = blk_kmalloc(ch->device->request_queue, 512, GFP_KERNEL);
+ 	if(!buffer)
+ 		return -ENOMEM;
  
+@@ -261,7 +261,7 @@ ch_read_element_status(scsi_changer *ch,
+ 		}
+ 		dprintk("READ ELEMENT STATUS for element 0x%x failed\n",elem);
+ 	}
+-	kfree(buffer);
++	blk_kfree(buffer, 512);
+ 	return result;
+ }
+ 
+@@ -288,9 +288,10 @@ ch_readconfig(scsi_changer *ch)
+ 	int     result,id,lun,i;
+ 	u_int   elem;
+ 
+-	buffer = kzalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = blk_kmalloc(ch->device->request_queue, 512, GFP_KERNEL);
+ 	if (!buffer)
+ 		return -ENOMEM;
++	memset(buffer, 0, 512);
+ 
+ 	memset(cmd,0,sizeof(cmd));
+ 	cmd[0] = MODE_SENSE;
+@@ -401,7 +402,7 @@ ch_readconfig(scsi_changer *ch)
+ 		}
+ 	}
+ 	ch->voltags = 1;
+-	kfree(buffer);
++	blk_kfree(buffer, 512);
+ 
+ 	return 0;
+ }
+@@ -733,7 +734,7 @@ static long ch_ioctl(struct file *file,
+ 			return -EINVAL;
+ 		elem = ch->firsts[cge.cge_type] + cge.cge_unit;
+ 
+-		buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++		buffer = blk_kmalloc(ch->device->request_queue, 512, GFP_KERNEL);
+ 		if (!buffer)
+ 			return -ENOMEM;
+ 		mutex_lock(&ch->lock);
+@@ -786,7 +787,7 @@ static long ch_ioctl(struct file *file,
+ 			vprintk("device has no volume tag support\n");
+ 			goto voltag_retry;
+ 		}
+-		kfree(buffer);
++		blk_kfree(buffer, 512);
+ 		mutex_unlock(&ch->lock);
+ 
+ 		if (copy_to_user(argp, &cge, sizeof (cge)))
