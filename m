@@ -1,243 +1,250 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [2/20] Remove unchecked_isa in BusLogic
-Date: Fri,  7 Mar 2008 18:54:01 +0100 (CET)
-Message-ID: <20080307175401.BDA751B41AE@basil.firstfloor.org>
+Subject: [PATCH] [4/20] Remove unchecked_isa_dma in gdth
+Date: Fri,  7 Mar 2008 18:54:03 +0100 (CET)
+Message-ID: <20080307175403.C73751B41AE@basil.firstfloor.org>
 References: <20080307653.720459648@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:53513 "EHLO
-	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758387AbYCGRyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:04 -0500
+Received: from smtp-out01.alice-dsl.net ([88.44.60.11]:14680 "EHLO
+	smtp-out01.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758432AbYCGRyG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:06 -0500
 In-Reply-To: <20080307653.720459648@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
 
-- ->cmnd handling audited and does always copy
-- Allocate hostdata separately
-- Enable sense_buffer isa bounce buffering
+- Audited ->cmnd use and it always copies
+- Allocate hostdata separately with GFP_DMA for the ISA case
+- Tell scsi layer to bounce sense_buffer for ISA case
+- Tell block layer to bounce for isa case
 - Remove unchecked_isa_dma
-- Enable block layer bouncing explicitely for isa adapters
 
 Untested due to lack of hardware
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 
 ---
- drivers/scsi/BusLogic.c |   77 ++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 59 insertions(+), 18 deletions(-)
+ drivers/scsi/gdth.c |   81 +++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 62 insertions(+), 19 deletions(-)
 
-Index: linux/drivers/scsi/BusLogic.c
+Index: linux/drivers/scsi/gdth.c
 ===================================================================
---- linux.orig/drivers/scsi/BusLogic.c
-+++ linux/drivers/scsi/BusLogic.c
-@@ -62,6 +62,13 @@
+--- linux.orig/drivers/scsi/gdth.c
++++ linux/drivers/scsi/gdth.c
+@@ -138,6 +138,15 @@
+ #include <scsi/scsi_host.h>
+ #include "gdth.h"
  
- static struct scsi_host_template Bus_Logic_template;
- 
++
 +struct host_ptr {
-+	struct BusLogic_HostAdapter *host;
++	gdth_ha_str *host_ptr;
 +	dma_addr_t dma;
 +};
-+#define bl_shost_priv(shost) (((struct host_ptr *)shost_priv(shost))->host)
-+#define bl_shost_dma(shost) (((struct host_ptr *)shost_priv(shost))->dma)
 +
- /*
-   BusLogic_DriverOptionsCount is a count of the number of BusLogic Driver
-   Options specifications provided via the Linux Kernel Command Line or via
-@@ -124,6 +131,12 @@ static int BusLogic_ProbeInfoCount;
++#define gdth_shost_priv(host) (((struct host_ptr *)shost_priv(host))->host_ptr)
++#define gdth_shost_dma(host) (((struct host_ptr *)shost_priv(host))->dma)
++
+ static void gdth_delay(int milliseconds);
+ static void gdth_eval_mapping(ulong32 size, ulong32 *cyls, int *heads, int *secs);
+ static irqreturn_t gdth_interrupt(int irq, void *dev_id);
+@@ -490,7 +499,7 @@ static void gdth_scsi_done(struct scsi_c
+ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+                    int timeout, u32 *info)
+ {
+-    gdth_ha_str *ha = shost_priv(sdev->host);
++    gdth_ha_str *ha = gdth_shost_priv(sdev->host);
+     Scsi_Cmnd *scp;
+     struct gdth_cmndinfo cmndinfo;
+     struct scatterlist one_sg;
+@@ -3933,7 +3942,7 @@ static const char *gdth_ctr_name(gdth_ha
  
- static struct BusLogic_ProbeInfo *BusLogic_ProbeInfoList;
+ static const char *gdth_info(struct Scsi_Host *shp)
+ {
+-    gdth_ha_str *ha = shost_priv(shp);
++    gdth_ha_str *ha = gdth_shost_priv(shp);
  
-+static int buslogic_adjust_queue(struct scsi_device *device)
+     TRACE2(("gdth_info()\n"));
+     return ((const char *)ha->binfo.type_string);
+@@ -3941,7 +3950,7 @@ static const char *gdth_info(struct Scsi
+ 
+ static int gdth_eh_bus_reset(Scsi_Cmnd *scp)
+ {
+-    gdth_ha_str *ha = shost_priv(scp->device->host);
++    gdth_ha_str *ha = gdth_shost_priv(scp->device->host);
+     int i;
+     ulong flags;
+     Scsi_Cmnd *cmnd;
+@@ -3994,7 +4003,7 @@ static int gdth_eh_bus_reset(Scsi_Cmnd *
+ static int gdth_bios_param(struct scsi_device *sdev,struct block_device *bdev,sector_t cap,int *ip)
+ {
+     unchar b, t;
+-    gdth_ha_str *ha = shost_priv(sdev->host);
++    gdth_ha_str *ha = gdth_shost_priv(sdev->host);
+     struct scsi_device *sd;
+     unsigned capacity;
+ 
+@@ -4023,7 +4032,7 @@ static int gdth_bios_param(struct scsi_d
+ static int gdth_queuecommand(struct scsi_cmnd *scp,
+ 				void (*done)(struct scsi_cmnd *))
+ {
+-    gdth_ha_str *ha = shost_priv(scp->device->host);
++    gdth_ha_str *ha = gdth_shost_priv(scp->device->host);
+     struct gdth_cmndinfo *cmndinfo;
+ 
+     TRACE(("gdth_queuecommand() cmd 0x%x\n", scp->cmnd[0]));
+@@ -4717,6 +4726,13 @@ static int gdth_slave_configure(struct s
+     return 0;
+ }
+ 
++static int gdth_adjust_queue(struct scsi_device *device)
 +{
 +	if (device->host->sense_buffer_isa)
 +		blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
 +	return 0;
 +}
- 
- /*
-   BusLogic_CommandFailureReason holds a string identifying the reason why a
-@@ -152,7 +165,7 @@ static void BusLogic_AnnounceDriver(stru
- 
- static const char *BusLogic_DriverInfo(struct Scsi_Host *Host)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Host);
- 	return HostAdapter->FullModelName;
- }
- 
-@@ -1607,9 +1620,6 @@ static bool __init BusLogic_ReadHostAdap
- 	   BIOS_Address is 0.
- 	 */
- 	HostAdapter->BIOS_Address = ExtendedSetupInformation.BIOS_Address << 12;
--	/*
--	   ISA Host Adapters require Bounce Buffers if there is more than 16MB memory.
--	 */
- 	if (HostAdapter->HostAdapterBusType == BusLogic_ISA_Bus && (void *) high_memory > (void *) MAX_DMA_ADDRESS)
- 		HostAdapter->BounceBuffersRequired = true;
- 	/*
-@@ -2128,7 +2138,9 @@ static void __init BusLogic_InitializeHo
- 	Host->this_id = HostAdapter->SCSI_ID;
- 	Host->can_queue = HostAdapter->DriverQueueDepth;
- 	Host->sg_tablesize = HostAdapter->DriverScatterGatherLimit;
--	Host->unchecked_isa_dma = HostAdapter->BounceBuffersRequired;
-+	if (HostAdapter->BounceBuffersRequired)
-+		Host->sense_buffer_isa = 1;
 +
- 	Host->cmd_per_lun = HostAdapter->UntaggedQueueDepth;
- }
+ static struct scsi_host_template gdth_template = {
+         .name                   = "GDT SCSI Disk Array Controller",
+         .info                   = gdth_info, 
+@@ -4730,10 +4746,38 @@ static struct scsi_host_template gdth_te
+         .this_id                = -1,
+         .sg_tablesize           = GDTH_MAXSG,
+         .cmd_per_lun            = GDTH_MAXC_P_L,
+-        .unchecked_isa_dma      = 1,
+         .use_clustering         = ENABLE_CLUSTERING,
++	.slave_alloc 		= gdth_adjust_queue,
+ };
  
-@@ -2142,7 +2154,7 @@ static void __init BusLogic_InitializeHo
- */
- static int BusLogic_SlaveConfigure(struct scsi_device *Device)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Device->host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Device->host);
- 	int TargetID = Device->id;
- 	int QueueDepth = HostAdapter->QueueDepth[TargetID];
- 
-@@ -2167,6 +2179,35 @@ static int BusLogic_SlaveConfigure(struc
- 	return 0;
- }
- 
-+static struct Scsi_Host *buslogic_host_alloc(gfp_t gfp)
++static struct Scsi_Host *gdth_host_alloc(struct device *dev)
 +{
-+	struct BusLogic_HostAdapter *board;
 +	struct Scsi_Host *shost;
-+
-+
-+	shost = scsi_host_alloc(&Bus_Logic_template, sizeof(struct host_ptr));
++	gdth_ha_str *board;
++	shost = scsi_host_alloc(&gdth_template, sizeof(struct host_ptr));
 +	if (!shost)
 +		return NULL;
 +
-+	board = dma_alloc_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
-+					&bl_shost_dma(shost), GFP_KERNEL);
++	board = dma_alloc_coherent(dev, sizeof(gdth_ha_str),
++				&gdth_shost_dma(shost), GFP_KERNEL);
 +	if (!board) {
 +		scsi_host_put(shost);
 +		return NULL;
 +	}
 +
-+	bl_shost_priv(shost) = board;
++	gdth_shost_priv(shost) = board;
 +
 +	return shost;
 +}
 +
-+static void buslogic_free_host(struct Scsi_Host *shost)
++static void gdth_free_host(struct Scsi_Host *shost)
 +{
-+	dma_free_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
-+			  bl_shost_priv(shost), bl_shost_dma(shost));
++	gdth_ha_str *h = gdth_shost_priv(shost);
++	dma_free_coherent(h->pdev ? &h->pdev->dev : NULL, sizeof(gdth_ha_str),
++			  h, gdth_shost_dma(shost));
 +	scsi_host_put(shost);
 +}
 +
- /*
-   BusLogic_DetectHostAdapter probes for BusLogic Host Adapters at the standard
-   I/O Addresses where they may be located, initializing, registering, and
-@@ -2267,12 +2308,12 @@ static int __init BusLogic_init(void)
- 		   Register the SCSI Host structure.
- 		 */
+ #ifdef CONFIG_ISA
+ static int __init gdth_isa_probe_one(ulong32 isa_bios)
+ {
+@@ -4745,10 +4789,10 @@ static int __init gdth_isa_probe_one(ulo
+ 	if (!gdth_search_isa(isa_bios))
+ 		return -ENXIO;
  
--		Host = scsi_host_alloc(&Bus_Logic_template, sizeof(struct BusLogic_HostAdapter));
-+		Host = buslogic_host_alloc(PrototypeHostAdapter->BounceBuffersRequired ? GFP_DMA : 0);
- 		if (Host == NULL) {
- 			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
- 			continue;
- 		}
--		HostAdapter = (struct BusLogic_HostAdapter *) Host->hostdata;
-+		HostAdapter = bl_shost_priv(Host);
- 		memcpy(HostAdapter, PrototypeHostAdapter, sizeof(struct BusLogic_HostAdapter));
- 		HostAdapter->SCSI_Host = Host;
- 		HostAdapter->HostNumber = Host->host_no;
-@@ -2318,7 +2359,7 @@ static int __init BusLogic_init(void)
- 				BusLogic_DestroyCCBs(HostAdapter);
- 				BusLogic_ReleaseResources(HostAdapter);
- 				list_del(&HostAdapter->host_list);
--				scsi_host_put(Host);
-+				buslogic_free_host(Host);
- 				ret = -ENOMEM;
- 			} else {
- 				BusLogic_InitializeHostStructure(HostAdapter,
-@@ -2332,7 +2373,7 @@ static int __init BusLogic_init(void)
- 					BusLogic_DestroyCCBs(HostAdapter);
- 					BusLogic_ReleaseResources(HostAdapter);
- 					list_del(&HostAdapter->host_list);
--					scsi_host_put(Host);
-+					buslogic_free_host(Host);
- 					ret = -ENODEV;
- 				} else {
- 					scsi_scan_host(Host);
-@@ -2351,7 +2392,7 @@ static int __init BusLogic_init(void)
- 			BusLogic_DestroyCCBs(HostAdapter);
- 			BusLogic_ReleaseResources(HostAdapter);
- 			list_del(&HostAdapter->host_list);
--			scsi_host_put(Host);
-+			buslogic_free_host(Host);
- 			ret = -ENODEV;
- 		}
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	shp = gdth_host_alloc(NULL);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
+ 
+ 	error = -ENODEV;
+ 	if (!gdth_init_isa(isa_bios,ha))
+@@ -4772,7 +4816,7 @@ static int __init gdth_isa_probe_one(ulo
+ 
+ 	set_dma_mode(ha->drq,DMA_MODE_CASCADE);
+ 	enable_dma(ha->drq);
+-	shp->unchecked_isa_dma = 1;
++	shp->sense_buffer_isa = 1;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = ha->drq;
+ 
+@@ -4860,7 +4904,7 @@ static int __init gdth_isa_probe_one(ulo
+  out_free_irq:
+ 	free_irq(ha->irq, ha);
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_ISA */
+@@ -4876,10 +4920,11 @@ static int __init gdth_eisa_probe_one(us
+ 	if (!gdth_search_eisa(eisa_slot))
+ 		return -ENXIO;
+ 
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	/* RED-PEN NULL device ISA mask is 24bit, but EISA 32bit */
++	shp = gdth_host_alloc(NULL);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
+ 
+ 	error = -ENODEV;
+ 	if (!gdth_init_eisa(eisa_slot,ha))
+@@ -4895,7 +4940,6 @@ static int __init gdth_eisa_probe_one(us
+ 		goto out_host_put;
  	}
-@@ -2395,7 +2436,7 @@ static int __exit BusLogic_ReleaseHostAd
- 	 */
- 	list_del(&HostAdapter->host_list);
  
--	scsi_host_put(Host);
-+	buslogic_free_host(Host);
- 	return 0;
+-	shp->unchecked_isa_dma = 0;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = 0xff;
+ 
+@@ -4992,7 +5036,7 @@ static int __init gdth_eisa_probe_one(us
+ 	free_irq(ha->irq, ha);
+ 	gdth_ctr_count--;
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_EISA */
+@@ -5005,10 +5049,10 @@ static int __init gdth_pci_probe_one(gdt
+ 	dma_addr_t scratch_dma_handle = 0;
+ 	int error, i;
+ 
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	shp = gdth_host_alloc(&pcistr->pdev->dev);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
+ 
+ 	error = -ENODEV;
+ 	if (!gdth_init_pci(&pcistr[ctr],ha))
+@@ -5027,7 +5071,6 @@ static int __init gdth_pci_probe_one(gdt
+ 		goto out_host_put;
+ 	}
+ 
+-	shp->unchecked_isa_dma = 0;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = 0xff;
+ 
+@@ -5129,7 +5172,7 @@ static int __init gdth_pci_probe_one(gdt
+ 	free_irq(ha->irq, ha);
+ 	gdth_ctr_count--;
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_PCI */
+@@ -5171,7 +5214,7 @@ static void gdth_remove_one(gdth_ha_str 
+ 		pci_unmap_single(ha->pdev,ha->ccb_phys,
+ 			sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
+ 
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
  }
  
-@@ -2783,7 +2824,7 @@ static bool BusLogic_WriteOutgoingMailbo
- 
- static int BusLogic_host_reset(struct scsi_cmnd * SCpnt)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) SCpnt->device->host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(SCpnt->device->host);
- 
- 	unsigned int id = SCpnt->device->id;
- 	struct BusLogic_TargetStatistics *stats = &HostAdapter->TargetStatistics[id];
-@@ -2805,7 +2846,7 @@ static int BusLogic_host_reset(struct sc
- 
- static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRoutine) (struct scsi_cmnd *))
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Command->device->host);
- 	struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[Command->device->id];
- 	struct BusLogic_TargetStatistics *TargetStatistics = HostAdapter->TargetStatistics;
- 	unsigned char *CDB = Command->cmnd;
-@@ -2998,7 +3039,7 @@ static int BusLogic_QueueCommand(struct 
- 
- static int BusLogic_AbortCommand(struct scsi_cmnd *Command)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Command->device->host);
- 
- 	int TargetID = Command->device->id;
- 	struct BusLogic_CCB *CCB;
-@@ -3128,7 +3169,7 @@ static int BusLogic_ResetHostAdapter(str
- 
- static int BusLogic_BIOSDiskParameters(struct scsi_device *sdev, struct block_device *Device, sector_t capacity, int *Parameters)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) sdev->host->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(sdev->host);
- 	struct BIOS_DiskParameters *DiskParameters = (struct BIOS_DiskParameters *) Parameters;
- 	unsigned char *buf;
- 	if (HostAdapter->ExtendedTranslationEnabled && capacity >= 2 * 1024 * 1024 /* 1 GB in 512 byte sectors */ ) {
-@@ -3199,7 +3240,7 @@ static int BusLogic_BIOSDiskParameters(s
- 
- static int BusLogic_ProcDirectoryInfo(struct Scsi_Host *shost, char *ProcBuffer, char **StartPointer, off_t Offset, int BytesAvailable, int WriteFlag)
- {
--	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) shost->hostdata;
-+	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(shost);
- 	struct BusLogic_TargetStatistics *TargetStatistics;
- 	int TargetID, Length;
- 	char *Buffer;
-@@ -3572,9 +3613,9 @@ static struct scsi_host_template Bus_Log
- #if 0
- 	.eh_abort_handler = BusLogic_AbortCommand,
- #endif
--	.unchecked_isa_dma = 1,
- 	.max_sectors = 128,
- 	.use_clustering = ENABLE_CLUSTERING,
-+	.slave_alloc = buslogic_adjust_queue,
- };
- 
- /*
+ static int __init gdth_init(void)
