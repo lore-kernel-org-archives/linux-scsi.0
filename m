@@ -1,49 +1,66 @@
-From: "Ke Wei" <kewei.mv@gmail.com>
-Subject: Re: [PATCH] mvsas: fix default can_queue
-Date: Fri, 7 Mar 2008 23:31:44 +0800
-Message-ID: <6b2481670803070731x6c2717feyfc8ba9cc35f7181d@mail.gmail.com>
-References: <1204308113.4003.45.camel@localhost.localdomain>
-	 <1204556371.3043.7.camel@localhost.localdomain>
-	 <1204682849.3091.95.camel@localhost.localdomain>
-	 <1204750960.3047.67.camel@localhost.localdomain>
-	 <6b2481670803060646m54675625g729a82c4da33ce05@mail.gmail.com>
-	 <1204818725.3062.14.camel@localhost.localdomain>
-	 <1204825474.3062.25.camel@localhost.localdomain>
-	 <47D03117.2020903@garzik.org>
-	 <6b2481670803070250p7e6eab01i6660c53188914058@mail.gmail.com>
-	 <1204902185.2889.6.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] SCSI: remove dev->power.power_state from mesh driver
+Date: Fri, 7 Mar 2008 11:20:25 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803071118040.4398-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:45776 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756667AbYCGPbr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 10:31:47 -0500
-Received: by rn-out-0910.google.com with SMTP id v46so882515rnb.15
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Mar 2008 07:31:46 -0800 (PST)
-In-Reply-To: <1204902185.2889.6.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:53158 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751436AbYCGQU1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 11:20:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Paul Mackerras <paulus@au.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 7, 2008 at 11:03 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
->
-> Are you still seeing timeouts in the lldd_max_execute_num == 1 case?
-> And if so, is that still with can_queue == 1?
->
-Yes , I set lldd_max_execute_num = 1 & can_queue = 1. By far, no timeout event.
+power.power_state is scheduled for removal.  This patch (as1055)
+removes all uses of that field from the SCSI mesh driver.
 
-> James
->
->
->
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Paul Mackerras <paulus@au.ibm.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
+---
 
--- 
-Best Regards,
-Ke Wei
+Index: usb-2.6/drivers/scsi/mesh.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/mesh.c
++++ usb-2.6/drivers/scsi/mesh.c
+@@ -1765,7 +1765,7 @@ static int mesh_suspend(struct macio_dev
+ 	default:
+ 		return 0;
+ 	}
+-	if (mesg.event == mdev->ofdev.dev.power.power_state.event)
++	if (ms->phase == sleeping)
+ 		return 0;
+ 
+ 	scsi_block_requests(ms->host);
+@@ -1780,8 +1780,6 @@ static int mesh_suspend(struct macio_dev
+ 	disable_irq(ms->meshintr);
+ 	set_mesh_power(ms, 0);
+ 
+-	mdev->ofdev.dev.power.power_state = mesg;
+-
+ 	return 0;
+ }
+ 
+@@ -1790,7 +1788,7 @@ static int mesh_resume(struct macio_dev 
+ 	struct mesh_state *ms = (struct mesh_state *)macio_get_drvdata(mdev);
+ 	unsigned long flags;
+ 
+-	if (mdev->ofdev.dev.power.power_state.event == PM_EVENT_ON)
++	if (ms->phase != sleeping)
+ 		return 0;
+ 
+ 	set_mesh_power(ms, 1);
+@@ -1801,8 +1799,6 @@ static int mesh_resume(struct macio_dev 
+ 	enable_irq(ms->meshintr);
+ 	scsi_unblock_requests(ms->host);
+ 
+-	mdev->ofdev.dev.power.power_state.event = PM_EVENT_ON;
+-
+ 	return 0;
+ }
+ 
+
