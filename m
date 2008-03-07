@@ -1,66 +1,95 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: remove dev->power.power_state from mesh driver
-Date: Fri, 7 Mar 2008 11:20:25 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803071118040.4398-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: <gregkh@suse.de>
+Subject: patch firmware-provide-stubs-for-the-fw_loader-n-case.patch added to gregkh-2.6 tree
+Date: Fri, 07 Mar 2008 09:08:40 -0800
+Message-ID: <1204909720886@kroah.org>
+References: <1204901874.2889.3.camel@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53158 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751436AbYCGQU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 11:20:27 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:46627 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757981AbYCGRJR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Mar 2008 12:09:17 -0500
+In-Reply-To: <1204901874.2889.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Paul Mackerras <paulus@au.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com, djwong@us.ibm.com, greg@kroah.com, gregkh@suse.de, linux-scsi@vger.kernel.org, randy.dunlap@oracle.com
 
-power.power_state is scheduled for removal.  This patch (as1055)
-removes all uses of that field from the SCSI mesh driver.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: Paul Mackerras <paulus@au.ibm.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+This is a note to let you know that I've just added the patch titled
+
+     Subject: firmware: provide stubs for the FW_LOADER=n case
+
+to my gregkh-2.6 tree.  Its filename is
+
+     firmware-provide-stubs-for-the-fw_loader-n-case.patch
+
+This tree can be found at 
+    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+
+
+>From James.Bottomley@HansenPartnership.com  Fri Mar  7 08:30:11 2008
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Fri, 07 Mar 2008 08:57:54 -0600
+Subject: firmware: provide stubs for the FW_LOADER=n case
+To: Greg KH <greg@kroah.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-next@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
+Message-ID: <1204901874.2889.3.camel@localhost.localdomain>
+
+
+libsas has a case where it uses the firmware loader to provide services,
+but doesn't want to select it all the time.  This currently causes a
+compile failure in libsas if FW_LOADER=n.  Fix this by providing error
+stubs for the firmware loader API in the FW_LOADER=n case.
+
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 ---
+ include/linux/firmware.h |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-Index: usb-2.6/drivers/scsi/mesh.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/mesh.c
-+++ usb-2.6/drivers/scsi/mesh.c
-@@ -1765,7 +1765,7 @@ static int mesh_suspend(struct macio_dev
- 	default:
- 		return 0;
- 	}
--	if (mesg.event == mdev->ofdev.dev.power.power_state.event)
-+	if (ms->phase == sleeping)
- 		return 0;
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -10,7 +10,10 @@ struct firmware {
+ 	size_t size;
+ 	u8 *data;
+ };
++
+ struct device;
++
++#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
+ int request_firmware(const struct firmware **fw, const char *name,
+ 		     struct device *device);
+ int request_firmware_nowait(
+@@ -19,4 +22,24 @@ int request_firmware_nowait(
+ 	void (*cont)(const struct firmware *fw, void *context));
  
- 	scsi_block_requests(ms->host);
-@@ -1780,8 +1780,6 @@ static int mesh_suspend(struct macio_dev
- 	disable_irq(ms->meshintr);
- 	set_mesh_power(ms, 0);
- 
--	mdev->ofdev.dev.power.power_state = mesg;
--
- 	return 0;
- }
- 
-@@ -1790,7 +1788,7 @@ static int mesh_resume(struct macio_dev 
- 	struct mesh_state *ms = (struct mesh_state *)macio_get_drvdata(mdev);
- 	unsigned long flags;
- 
--	if (mdev->ofdev.dev.power.power_state.event == PM_EVENT_ON)
-+	if (ms->phase != sleeping)
- 		return 0;
- 
- 	set_mesh_power(ms, 1);
-@@ -1801,8 +1799,6 @@ static int mesh_resume(struct macio_dev 
- 	enable_irq(ms->meshintr);
- 	scsi_unblock_requests(ms->host);
- 
--	mdev->ofdev.dev.power.power_state.event = PM_EVENT_ON;
--
- 	return 0;
- }
- 
+ void release_firmware(const struct firmware *fw);
++#else
++static inline int request_firmware(const struct firmware **fw,
++				   const char *name,
++				   struct device *device)
++{
++	return -EINVAL;
++}
++static inline int request_firmware_nowait(
++	struct module *module, int uevent,
++	const char *name, struct device *device, void *context,
++	void (*cont)(const struct firmware *fw, void *context))
++{
++	return -EINVAL;
++}
++
++static inline void release_firmware(const struct firmware *fw)
++{
++}
++#endif
++
+ #endif
 
+
+Patches currently in gregkh-2.6 which might be from James.Bottomley@HansenPartnership.com are
+
+pci/pci-remove-parisc-consumer-of-the-pci-global_list.patch
+usb/usb-enable-usb-persist-by-default.patch
+driver-core/firmware-provide-stubs-for-the-fw_loader-n-case.patch
