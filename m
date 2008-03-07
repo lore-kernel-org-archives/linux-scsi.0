@@ -1,53 +1,68 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
-   count
-Date: Fri, 07 Mar 2008 09:07:23 +0900
-Message-ID: <47D0873B.6090705@gmail.com>
-References: <47CEA40F.6050903@gmail.com> <20080305135121.GK6704@kernel.dk> <1204730484.3047.10.camel@localhost.localdomain> <20080306134146A.fujita.tomonori@lab.ntt.co.jp> <20080306134138.GF17940@kernel.dk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Thu, 06 Mar 2008 18:10:52 -0600
+Message-ID: <1204848652.3062.100.camel@localhost.localdomain>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:52240 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbYCGAHh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 19:07:37 -0500
-Received: by rn-out-0910.google.com with SMTP id v46so278904rnb.15
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Mar 2008 16:07:33 -0800 (PST)
-In-Reply-To: <20080306134138.GF17940@kernel.dk>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58405 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752239AbYCGAK4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 19:10:56 -0500
+In-Reply-To: <200803062108.m26L8e4i020882@colby.verdasys.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 
-Jens Axboe wrote:
->>> If we want the use paradigm shared between block and driver, then I
->>> think the best approach is to keep all the bios the same (so not adjust
->>> for padding), but do adjust in the blk_rq_map_sg().  That way we have
->>> the padding and draining unwind information by comparing with the bio.
->> Adjusting only sg in blk_rq_map_sg (like drain) looks much
->> better. This works with libata for me.
+On Thu, 2008-03-06 at 16:08 -0500, Marc Bejarano wrote:
+> i've been doing burn-in on a new server i had hoped to deploy months 
+> ago and can't seem to figure out the cause of data corruption i've 
+> been seeing.  the SAS controller is an LSI SAS3801E connected to an 
+> xTore XJ-SA12-316 SAS enclosures (vitesses expanders) full of seagate 
+> 7200.10 750-GB SATA drives.
 > 
-> Looks like a much better solution to me. Anyone have any valid
-> objections against moving the padding to the sg map time?
+> the corruption is occurring in ext3 filesystems that live on top of 
+> an lvm2 RAID 0 stripe composed of 16 2-drive md RAID 1 sets.  the 
+> corruption has been detected both by MySQL noticing bad checksums and 
+> also by using md's "check" (sync_action) for RAID 1 consistency.
 
-Not necessarily objections but some concerns.
+Actually, the RAID-1 might be the most useful.  Is there anything
+significant about the differing data?  Do od dumps of the corrupt
+sectors in both halves of the mirror and see what actually appears in
+the data ... it might turn out to be useful.  Things like how long the
+data corruption is (are the two sectors different, or is it just a run
+of a few bytes within them) can be useful in tracking the source of the
+corruption.
 
-* As completion is done in bio terms, it makes completion from LLDs a
-bit cumbersome, but this is unavoidable if we break sum(bio) == sum(sg).
+> most recently we got two cases of the storage stack apparently 
+> writing a mysql 16K page starting at the wrong 512-byte (sector) 
+> boundary.  in both cases it was at too low a sector.  one page was 13 
+> sectors too early, the other 34 too early.  in both cases, one disk 
+> in each mirror set had the correct data and the other incorrect 
+> (apparently ruling out everything above md). unfortunately, the 
+> problem is not easily repeatable.  the system can run for days with 
+> terabytes of writes before we notice any corruption.
 
-* I've been wondering why we are not using sg chain / table or whatever
-directly in bios and maybe rq_map_sg can go away in future.
+Do you happen to have the absolute block number (and relative block
+number---relative to the partition start) of the corruption?  That might
+help analyse the writing algorithms to see if there's a problem
+somewhere.
 
-How about separating out the padding / draining adjustment into a
-separate interface?  Say, blk_rq_apply_extra() and blk_rq_undo_extra()
-and make it the responsibility of the LLD which requested
-padding/draining to apply and undo the adjustments?  It can undo the
-adjustments when it returns the the request to its upper layer.  If rq
-completion is handled by upper layer, it will do the right thing.  If rq
-completion is handled by LLD, it can see the bio it wants to see.
+> we're running RHEL 5.1's kernel and drivers and i understand that 
+> these lists are for vanilla kernel support.  i've already engaged 
+> redhat support, but i just wanted to see if anybody else has seen 
+> something similar or anybody has any brilliant troubleshooting 
+> ideas.  swapping drives, enclosures, HBA's, cables, and sacrifices of 
+> animals to gods have so far not been able to make the world right.
 
-Thanks.
+Don't worry too much; the RHEL 5 stack is close enough to the vanilla
+kernel, and we're interested in tracking it down.  Of course, confirming
+that git head has this problem too, so we could rule out patches added
+to the RHEL kernel would be useful ...
 
--- 
-tejun
+James
+
+
