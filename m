@@ -1,24 +1,49 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [3/21] Remove unchecked_isa_dma in advansys.c
-Date: Fri, 7 Mar 2008 02:09:33 +0100
-Message-ID: <20080307010933.GE31833@one.firstfloor.org>
-References: <20080306951.147874949@firstfloor.org> <20080306205122.87EF81B419C@basil.firstfloor.org> <20080306210458.GZ24386@parisc-linux.org> <20080306220432.GA31833@one.firstfloor.org> <20080307005917.GA24386@parisc-linux.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] libsas: Check that the firmware loader is present in
+	sas_request_addr
+Date: Thu, 6 Mar 2008 20:54:13 -0800
+Message-ID: <20080307045413.GB913@kroah.com>
+References: <20080306090904.258f92eb.randy.dunlap@oracle.com> <20080306181645.GA6046@kroah.com> <47D03666.9080000@oracle.com> <20080306210212.GC7430@tree.beaverton.ibm.com> <1204838233.3062.53.camel@localhost.localdomain> <20080306140437.8a193423.randy.dunlap@oracle.com> <1204841781.3062.69.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:48183 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751606AbYCGBID (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2008 20:08:03 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:32906 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbYCGGIG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 01:08:06 -0500
 Content-Disposition: inline
-In-Reply-To: <20080307005917.GA24386@parisc-linux.org>
+In-Reply-To: <1204841781.3062.69.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-next@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-> I was very specific.
+On Thu, Mar 06, 2008 at 04:16:21PM -0600, James Bottomley wrote:
+> On Thu, 2008-03-06 at 14:04 -0800, Randy Dunlap wrote:
+> > On Thu, 06 Mar 2008 15:17:13 -0600 James Bottomley wrote:
+> > 
+> > > We could do it that way ... I suspect what Greg was asking for was more
+> > > like this:
+> > > 
+> > > James
+> > 
+> > Builds cleanly for CONFIG_FW_LOADER=n.
+> > I'm having trouble setting CONFIG_FW_LOADER=m for test building it.
+> 
+> Ironically, I can, and have, tested that config ... I just couldn't
+> build with CONFIG_FW_LOADER=n.
+> 
+> I think we've covered all the test cases between us.
+> 
+> > Anyway,
+> > Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Thanks.
 
-Ok thanks. Will address that in the next spin.
+Yes, this is what I was thinking was needed.
 
--Andi
+Care to resend it with a signed-off-by?
+
+thanks,
+
+greg k-h
