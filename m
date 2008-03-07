@@ -1,64 +1,97 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
-Date: Fri, 07 Mar 2008 17:40:07 +0900
-Message-ID: <47D0FF67.8050503@gmail.com>
-References: <200802252005.22663.gml@inode.at> <200802292259.12047.gml@inode.at> <20080301145354.ca4d4f1a.vsu@altlinux.ru> <200803011329.11315.gml@inode.at>
+From: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Subject: [PATCH] mpt fusion: Enable MSI by default for SAS controllers
+Date: Fri, 7 Mar 2008 15:53:21 +0530
+Message-ID: <20080307102320.GA20428@lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000506050203060601000100"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:12051 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752279AbYCGIkR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 03:40:17 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so419584wah.23
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Mar 2008 00:40:17 -0800 (PST)
-In-Reply-To: <200803011329.11315.gml@inode.at>
+Received: from mail0.lsil.com ([147.145.40.20]:52615 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751059AbYCGKb5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Mar 2008 05:31:57 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerold Jury <gml@inode.at>
-Cc: Sergey Vlasov <vsu@altlinux.ru>, Mike Galbraith <efault@gmx.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com, djwong@us.ibm.com
 
-This is a multi-part message in MIME format.
---------------000506050203060601000100
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+This patch modifies the driver to enable MSI by default for all SAS chips.
 
-Hello,
+Signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+---
 
-Gerold Jury wrote:
-> Yes it happens with the DVD+RW (testet with dd now) and with DVD+R
-> 
-> Thank you for the byte interpretation.
-> Now I have a hint where to start with the debugging.
-
-I've tried to reproduce the problem here but failed.  Can you please try
-the test with the file generated with the attached program?  "genseqfile
-524288 > testfile" will give you 1 meg testfile and it will give us
-better idea how the data is getting corrupted.
-
-Thanks.
-
--- 
-tejun
-
---------------000506050203060601000100
-Content-Type: text/x-csrc;
- name="genseqfile.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="genseqfile.c"
-
-#include <unistd.h>
-#include <stdio.h>
-
-int main(int argc, char **argv)
-{
-	unsigned int i;
-
-	for (i = 0; i < atoi(argv[1]); i++)
-		fwrite(&i, 2, 1, stdout);
-	return 0;
-}
-
---------------000506050203060601000100--
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 6b6df86..7587413 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -79,7 +79,7 @@ MODULE_VERSION(my_VERSION);
+ /*
+  *  cmd line parameters
+  */
+-static int mpt_msi_enable;
++static int mpt_msi_enable = -1;
+ module_param(mpt_msi_enable, int, 0);
+ MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
+ 
+@@ -1660,6 +1660,11 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ioc->bus_type = SAS;
+ 	}
+ 
++	if (ioc->bus_type == SAS && mpt_msi_enable == -1)
++		ioc->msi_enable = 1;
++	else
++		ioc->msi_enable = mpt_msi_enable;
++
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(pdev);
+ 
+@@ -2021,15 +2026,17 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 	if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP)) {
+ 		ioc->pci_irq = -1;
+ 		if (ioc->pcidev->irq) {
+-			if (mpt_msi_enable && !pci_enable_msi(ioc->pcidev))
++			if (ioc->msi_enable && !pci_enable_msi(ioc->pcidev))
+ 				printk(MYIOC_s_INFO_FMT "PCI-MSI enabled\n",
+ 				    ioc->name);
++			else
++				ioc->msi_enable = 0;
+ 			rc = request_irq(ioc->pcidev->irq, mpt_interrupt,
+ 			    IRQF_SHARED, ioc->name, ioc);
+ 			if (rc < 0) {
+ 				printk(MYIOC_s_ERR_FMT "Unable to allocate "
+ 				    "interrupt %d!\n", ioc->name, ioc->pcidev->irq);
+-				if (mpt_msi_enable)
++				if (ioc->msi_enable)
+ 					pci_disable_msi(ioc->pcidev);
+ 				return -EBUSY;
+ 			}
+@@ -2225,7 +2232,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+  out:
+ 	if ((ret != 0) && irq_allocated) {
+ 		free_irq(ioc->pci_irq, ioc);
+-		if (mpt_msi_enable)
++		if (ioc->msi_enable)
+ 			pci_disable_msi(ioc->pcidev);
+ 	}
+ 	return ret;
+@@ -2407,7 +2414,7 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
+ 
+ 	if (ioc->pci_irq != -1) {
+ 		free_irq(ioc->pci_irq, ioc);
+-		if (mpt_msi_enable)
++		if (ioc->msi_enable)
+ 			pci_disable_msi(ioc->pcidev);
+ 		ioc->pci_irq = -1;
+ 	}
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index caadc68..50c0c17 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -630,6 +630,7 @@ typedef struct _MPT_ADAPTER
+ 	int			 mtrr_reg;
+ 	struct pci_dev		*pcidev;	/* struct pci_dev pointer */
+ 	int			bars;		/* bitmask of BAR's that must be configured */
++	int			msi_enable;
+ 	u8			__iomem *memmap;	/* mmap address */
+ 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
+ 	SpiCfgData		spi_data;	/* Scsi config. data */
