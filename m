@@ -1,86 +1,61 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [1/20] Add sense_buffer_isa to host template
-Date: Fri,  7 Mar 2008 18:54:00 +0100 (CET)
-Message-ID: <20080307175400.B99741B41AE@basil.firstfloor.org>
-References: <20080307653.720459648@firstfloor.org>
+Subject: [PATCH] [0/20] Remove isa_unchecked_dma and some more GFP_DMAs in the mid layer v3
+Date: Fri,  7 Mar 2008 18:53:59 +0100 (CET)
+Message-ID: <20080307653.720459648@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:56515 "EHLO
-	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758369AbYCGRyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:04 -0500
-In-Reply-To: <20080307653.720459648@firstfloor.org>
+Received: from smtp-out04.alice-dsl.net ([88.44.63.6]:11184 "EHLO
+	smtp-out04.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758050AbYCGRyC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2008 12:54:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
 
-Instead of having the global "unchecked_isa_dma" bit add a single
-bit that tells the mid layer that the sense buffer needs to be ISA
-DMA'able.
+v2: various cleanups, use dma_alloc_coherent instead of naked GFP_DMA
+    add blk_* allocators to avoid bouncing in SCSI scan
+v3: Remove cmnd/sense buffer bouncing in advansys. 
+    Replace sense_buffer_mask with a single bit
 
-Signed-off-by: Andi Kleen <ak@suse.de>
+Original description:
 
-Index: linux/include/scsi/scsi_host.h
-===================================================================
---- linux.orig/include/scsi/scsi_host.h
-+++ linux/include/scsi/scsi_host.h
-@@ -453,6 +453,11 @@ struct scsi_host_template {
- 	unsigned ordered_tag:1;
- 
- 	/*
-+	 * True if sense buffers need to be ISA-DMAable
-+	 */
-+	unsigned sense_buffer_isa:1;
-+
-+	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
- 	unsigned int max_host_blocked;
-@@ -615,6 +620,9 @@ struct Scsi_Host {
- 	 */
- 	unsigned ordered_tag:1;
- 
-+	/* Sense buffer needs to be ISA dma'able */
-+	unsigned sense_buffer_isa:1;
-+
- 	/* Task mgmt function in progress */
- 	unsigned tmf_in_progress:1;
- 
-Index: linux/Documentation/scsi/scsi_mid_low_api.txt
-===================================================================
---- linux.orig/Documentation/scsi/scsi_mid_low_api.txt
-+++ linux/Documentation/scsi/scsi_mid_low_api.txt
-@@ -1268,6 +1268,7 @@ of interest:
-                    instances (currently ordered by ascending host_no)
-     my_devices   - a double linked list of pointers to struct scsi_device 
-                    instances that belong to this host.
-+    sense_buffer_isa - bit flag; true when the sense buffer needs to be ISA DMAable
-     hostdata[0]  - area reserved for LLD at end of struct Scsi_Host. Size
-                    is set by the second argument (named 'xtr_bytes') to
-                    scsi_host_alloc() or scsi_register().
-Index: linux/drivers/scsi/hosts.c
-===================================================================
---- linux.orig/drivers/scsi/hosts.c
-+++ linux/drivers/scsi/hosts.c
-@@ -342,6 +342,7 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	shost->use_clustering = sht->use_clustering;
- 	shost->ordered_tag = sht->ordered_tag;
- 	shost->active_mode = sht->supported_mode;
-+	shost->sense_buffer_isa = sht->sense_buffer_isa;
- 
- 	if (sht->supported_mode == MODE_UNKNOWN)
- 		/* means we didn't set it ... default to INITIATOR */
-Index: linux/drivers/scsi/scsi.c
-===================================================================
---- linux.orig/drivers/scsi/scsi.c
-+++ linux/drivers/scsi/scsi.c
-@@ -322,7 +322,8 @@ int scsi_setup_command_freelist(struct S
- 	 * yet existent.
- 	 */
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (shost->unchecked_isa_dma ? &scsi_cmd_dma_pool : &scsi_cmd_pool);
-+	pool = ((shost->unchecked_isa_dma || shost->sense_buffer_isa) ?
-+			&scsi_cmd_dma_pool : &scsi_cmd_pool);
- 	if (!pool->users) {
- 		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
- 						   sizeof(struct scsi_cmnd), 0,
+This patchkit fixes all existing drivers that used isa_unchecked_dma
+to not need that anymore.  I have some upcoming infrastructure changes 
+for DMA memory management and isa_unchecked_dma was in the way.
+
+Enabling isa_unchecked_dma had several effects:
+- All incoming scsi_cmnds were in GFP_DMA memory.
+Only one driver relied on that actually (advansys), the others all accessed
+the scsi_cmnds only with the CPU.
+- scsi hostdata is allocated with GFP_DMA
+A lot of drivers relied on that. I converted them all to allocate hostdata
+in a separate buffer linked to rom the scsi host structure.
+- Enabling block layer bouncing for all data. That's the most important one.
+I changed all drivers to do that directly instead of relying on the mid
+layer for it.
+- sense_buffer is allocated with GFP_DMA. That was also commonly
+required and not easy to fix so I created a separate host template
+field that enables sense_buffer bouncing.
+
+Also while I was it I removed also a lot of GFP_DMAs in the frontend
+drivers which are not needed anymore because the block layer does
+the bouncing for all data anyways. Or rather we ask the block layer
+now to bounce.
+
+The main problem of the patchkit is that is that I wasn't able
+to test the drivers because I don't have any of the hardware. All
+changes (except perhaps advansys) were relatively simple and straight
+forward so I don't expect many problems though.
+
+If anybody has any of these ISA SCSI adapters and would be willing to test
+them with these patches that would be appreciated.
+I suspect actually that some of the ISA drivers are actually already
+bitrotted independently of these changes. Hopefully they won't make
+anything worse though. 
+
+Patches against 2.6.25rc4
+
+These are a lot of patches. I can set up a git tree if that makes
+merging easier. Please let me now if I should do that.
+
+-Andi
