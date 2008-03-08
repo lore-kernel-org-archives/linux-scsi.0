@@ -1,86 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: make use of the residue value
-Date: Sat, 08 Mar 2008 11:20:42 -0600
-Message-ID: <1204996842.2893.14.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0803081110480.17487-100000@netrider.rowland.org>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Sat, 8 Mar 2008 13:23:18 -0800
+Message-ID: <da824cf30803081323i2911567eu4a03d7167964d92d@mail.gmail.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+	 <1204843956.2673.8.camel@vema.umeoce.maine.edu>
+	 <200803072239.m27MdGVv028621@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34642 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754900AbYCHRUq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2008 12:20:46 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0803081110480.17487-100000@netrider.rowland.org>
+Received: from smtp-out.google.com ([216.239.45.13]:19279 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754406AbYCHVXW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2008 16:23:22 -0500
+Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
+	by smtp-out.google.com with ESMTP id m28LNJsI016061
+	for <linux-scsi@vger.kernel.org>; Sat, 8 Mar 2008 13:23:19 -0800
+Received: from hs-out-0708.google.com (hsl4.prod.google.com [10.44.12.4])
+	by zps76.corp.google.com with ESMTP id m28LNJIe012420
+	for <linux-scsi@vger.kernel.org>; Sat, 8 Mar 2008 13:23:19 -0800
+Received: by hs-out-0708.google.com with SMTP id 4so1134517hsl.1
+        for <linux-scsi@vger.kernel.org>; Sat, 08 Mar 2008 13:23:18 -0800 (PST)
+In-Reply-To: <200803072239.m27MdGVv028621@colby.verdasys.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: Steve Cousins <steve.cousins@maine.edu>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 
-On Sat, 2008-03-08 at 11:22 -0500, Alan Stern wrote:
-> On Fri, 7 Mar 2008, James Bottomley wrote:
-> 
-> > On Wed, 2008-02-27 at 15:25 -0500, Alan Stern wrote:
-> > > On 20 Feb 2008, Alan Stern wrote:
-> > > 
-> > > > This patch (as1036) causes the SCSI midlayer to take into account the
-> > > > residue value provided by some low-level drivers.  There's at least
-> > > > one situation (USB mass storage with the Bulk-only transport) where
-> > > > the specification states that it is permissible for a device to
-> > > > indicate some of the data was not transferred correctly merely by
-> > > > setting the residue value, without issuing a Check Condition.
-> > > 
-> > > After a week, there hasn't been any feedback on this patch.  Has it
-> > > been accepted?  Is there anything wrong with it?  Is it still on a
-> > > "to-look-at" queue?
-> > 
-> > OK, I ran it through its paces, but it fails in testing.  A very fun
-> > failure, actually, some disks fail to appear with udev.
-> > 
-> > The reason is they return a residue from the VPD inquiry.  What your
-> > patch actually causes is the block layer to resubmit the command with
-> > the residue and triggers an overrun error (because the length in the
-> > command is now much longer than the data buffer).
-> 
-> Can you give any more details?
-> 
-> 	What was the transfer length of the original command?
+On Fri, Mar 7, 2008 at 2:39 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
+> At 17:52 3/6/2008, Steve Cousins wrote:
+>   >Have you run any memory tests on the machine?
+>
+>  no, but my suspicions lay elsewhere.  could bad memory explain the
+>  right bits ending up in the wrong place on only one half of a mirror?
 
-Depends on how you instigate it.  If you use sg_inq it will be 252.
+IMHO, not likely unless the page is getting copied before being DMA'd
+but the HBA. DMA is a form of copying but would have a different
+"signature" than bad memory (cacheline vs sub-cacheline corruption).
 
-> 	What were the actual data length and the residue value?
+If you know that the two RAID mirrors are different, can you compare
+them block-by-block?
 
-Depends on the page and the drive.  Best way is 0x80 it also depends on
-the driver (since a lot don't report a residue).  Mostly they seem to be
-24 bytes.
+First step to solving any data corruption issue is characterizing
+the corruption: length of wrong data, alignment of wrong data,
+and if possible, determine if wrong data is "stale" or where it
+originates. jejb already suggested this.
 
-> 	What were the length and data-buffer size of the
-> 	resubmitted command?
+If you can destroy (and later restore) the data on one or more
+of the disks, you might consider running disktest from:
+   http://test.kernel.org/autotest/
 
-The length remains the same, it's embedded in the command.  The failing
-length reported at 2.
+I've parked an SVN snapshot on:
+   http://iou.parisc-linux.org/~grundler/autotest-20080307.tgz
 
-> > The bottom line is that this patch won't work with variable length
-> > commands like inquiry that always return a residue.
-> 
-> You're saying that the amount of data returned is smaller that the 
-> amount requested because the data is variable length, right?
+See autotest/tests/disktest/ . IIRC this test will tag each 512 byte
+"sector" it writes to a file and will read back those tags later to
+verify the sectors made it to media.
 
-Yes.
-
-> Under these circumstances the block layer should not resubmit anything.
-> That is, it should be smart enough to know that the "missing" data does
-> not in fact exist, as opposed to not being returned because of a
-> retryable device error.
-> 
-> Aren't requests for things like VPD distinguished from regular 
-> data-block accesses by a flag in the request structure already?  The 
-> block layer should take this flag into account when deciding whether to 
-> continue trying to transfer the "missing" data.  Maybe that needs to be 
-> fixed first.
-
-I'm sure Jens will look at patches.
-
-James
-
-
+hth,
+grant
