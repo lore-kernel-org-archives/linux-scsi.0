@@ -1,62 +1,121 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Sat, 8 Mar 2008 13:23:18 -0800
-Message-ID: <da824cf30803081323i2911567eu4a03d7167964d92d@mail.gmail.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
-	 <1204843956.2673.8.camel@vema.umeoce.maine.edu>
-	 <200803072239.m27MdGVv028621@colby.verdasys.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: make use of the residue value
+Date: Sat, 8 Mar 2008 17:35:07 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0803081643590.31118-100000@netrider.rowland.org>
+References: <1204996842.2893.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:19279 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406AbYCHVXW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2008 16:23:22 -0500
-Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
-	by smtp-out.google.com with ESMTP id m28LNJsI016061
-	for <linux-scsi@vger.kernel.org>; Sat, 8 Mar 2008 13:23:19 -0800
-Received: from hs-out-0708.google.com (hsl4.prod.google.com [10.44.12.4])
-	by zps76.corp.google.com with ESMTP id m28LNJIe012420
-	for <linux-scsi@vger.kernel.org>; Sat, 8 Mar 2008 13:23:19 -0800
-Received: by hs-out-0708.google.com with SMTP id 4so1134517hsl.1
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Mar 2008 13:23:18 -0800 (PST)
-In-Reply-To: <200803072239.m27MdGVv028621@colby.verdasys.com>
-Content-Disposition: inline
+Received: from netrider.rowland.org ([192.131.102.5]:1950 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750714AbYCHWfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2008 17:35:11 -0500
+In-Reply-To: <1204996842.2893.14.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Bejarano <beej@alum.mit.edu>
-Cc: Steve Cousins <steve.cousins@maine.edu>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 7, 2008 at 2:39 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
-> At 17:52 3/6/2008, Steve Cousins wrote:
->   >Have you run any memory tests on the machine?
->
->  no, but my suspicions lay elsewhere.  could bad memory explain the
->  right bits ending up in the wrong place on only one half of a mirror?
+On Sat, 8 Mar 2008, James Bottomley wrote:
 
-IMHO, not likely unless the page is getting copied before being DMA'd
-but the HBA. DMA is a form of copying but would have a different
-"signature" than bad memory (cacheline vs sub-cacheline corruption).
+> > > The bottom line is that this patch won't work with variable length
+> > > commands like inquiry that always return a residue.
+> > 
+> > You're saying that the amount of data returned is smaller that the 
+> > amount requested because the data is variable length, right?
+> 
+> Yes.
+> 
+> > Under these circumstances the block layer should not resubmit anything.
+> > That is, it should be smart enough to know that the "missing" data does
+> > not in fact exist, as opposed to not being returned because of a
+> > retryable device error.
+> > 
+> > Aren't requests for things like VPD distinguished from regular 
+> > data-block accesses by a flag in the request structure already?  The 
+> > block layer should take this flag into account when deciding whether to 
+> > continue trying to transfer the "missing" data.  Maybe that needs to be 
+> > fixed first.
+> 
+> I'm sure Jens will look at patches.
 
-If you know that the two RAID mirrors are different, can you compare
-them block-by-block?
+Actually it looks as though the faulty logic is in scsi_end_request()  
+and/or scsi_io_completion().  The interface between those two routines
+is quite confusing in regard to how the "requeue" argument is used.
 
-First step to solving any data corruption issue is characterizing
-the corruption: length of wrong data, alignment of wrong data,
-and if possible, determine if wrong data is "stale" or where it
-originates. jejb already suggested this.
+At the site of the first call to scsi_end_request(), the code says:
 
-If you can destroy (and later restore) the data on one or more
-of the disks, you might consider running disktest from:
-   http://test.kernel.org/autotest/
+	/* A number of bytes were successfully read.  If there
+	 * are leftovers and there is some kind of error
+	 * (result != 0), retry the rest.
+	 */
+	if (scsi_end_request(cmd, 0, good_bytes, result == 0) == NULL)
+		return;
 
-I've parked an SVN snapshot on:
-   http://iou.parisc-linux.org/~grundler/autotest-20080307.tgz
+	/* good_bytes = 0, or (inclusive) there were leftovers and
+	 * result = 0, so scsi_end_request couldn't retry.
+	 */
 
-See autotest/tests/disktest/ . IIRC this test will tag each 512 byte
-"sector" it writes to a file and will read back those tags later to
-verify the sectors made it to media.
+These comments do a wonderful job of misdirecting the reader and 
+encouraging him to conflate "requeue" with "retry".
 
-hth,
-grant
+If there are leftovers but error is 0, it seems reasonable to requeue
+the remainder only when blk_fs_request(req) is true.  Anything else 
+could simply be a short, variable-length response.
+
+Do you think adding something like this is the right way to go?  I'm 
+not sure it will work correctly.  What does one pass to 
+blk_end_request() to indicate that the remaining data can't be 
+transferred because it doesn't exist?
+
+Or do you think that when blk_fs_request(req) isn't true, then 
+scsi_io_completion() should get to decide whether or not to retry it?
+
+Alan Stern
+
+
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -667,10 +667,15 @@ static struct scsi_cmnd *scsi_end_reques
+ 		if (blk_pc_request(req))
+ 			leftover = req->data_len;
+ 
+-		/* kill remainder if no retrys */
+-		if (error && blk_noretry_request(req))
++		/* Kill remainder if no retrys.  For request types
++		 * other than REQ_TYPE_FS, !error indicates a normal
++		 * variable-length response so the remainder should
++		 * not be requeued.
++		 */
++		if ((error && blk_noretry_request(req)) ||
++		    (!error && !blk_fs_request(req))) {
+ 			blk_end_request(req, error, leftover);
+-		else {
++		} else {
+ 			if (requeue) {
+ 				/*
+ 				 * Bleah.  Leftovers again.  Stick the
+@@ -888,15 +893,16 @@ void scsi_io_completion(struct scsi_cmnd
+ 	if (clear_errors)
+ 		req->errors = 0;
+ 
+-	/* A number of bytes were successfully read.  If there
+-	 * are leftovers and there is some kind of error
+-	 * (result != 0), retry the rest.
++	/* A number of bytes were successfully read.  If there are
++	 * leftovers and no error (result == 0), simply requeue them.
++	 * But if this isn't possible, we must figure out whether to
++	 * retry the command.
+ 	 */
+ 	if (scsi_end_request(cmd, 0, good_bytes, result == 0) == NULL)
+ 		return;
+ 
+ 	/* good_bytes = 0, or (inclusive) there were leftovers and
+-	 * result = 0, so scsi_end_request couldn't retry.
++	 * result != 0, so scsi_end_request couldn't requeue.
+ 	 */
+ 	if (sense_valid && !sense_deferred) {
+ 		switch (sshdr.sense_key) {
+
