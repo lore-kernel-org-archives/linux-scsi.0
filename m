@@ -1,87 +1,104 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI: make use of the residue value
-Date: Sat, 8 Mar 2008 22:05:22 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0803082144050.10362-100000@netrider.rowland.org>
-References: <1205022257.2893.29.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 06/10] ips: use sg buffer copy helper funcitons
+Date: Sun,  9 Mar 2008 13:44:33 +0900
+Message-ID: <1205037877-12843-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1205037877-12843-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1205037877-12843-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1205037877-12843-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1205037877-12843-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1205037877-12843-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1205037877-12843-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:2162 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750987AbYCIDFY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2008 22:05:24 -0500
-In-Reply-To: <1205022257.2893.29.camel@localhost.localdomain>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:47268 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751002AbYCIEqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Mar 2008 23:46:03 -0500
+In-Reply-To: <1205037877-12843-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Sat, 8 Mar 2008, James Bottomley wrote:
+This rewrites ips_scmd_buf_write/read with scsi_sg_copy_from/to_buffer
+respectively.
 
-> This is really pretty complex, and it's adjusting an already complex
-> path we've had quite a bit of difficulty with previously.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Salyzyn, Mark <Mark_Salyzyn@adaptec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/ips.c |   50 ++++++++------------------------------------------
+ 1 files changed, 8 insertions(+), 42 deletions(-)
 
-The new part of the patch isn't complex.  Apart from modifying a bunch
-of comments, all it does is add one more clause to an "if" test.  But I
-have to agree that the test is in a rather complex path.  And it looks
-as though that path, complex as it is, isn't set up to handle
-situations where variable-length data ends up being shorter than
-requested.  Am I missing something pretty basic?
-
-(I still think that modifying the comments is a good idea.  When
-dealing with complex code, misleading comments are the last thing you
-need.)
-
-> What I was actually looking for was something simpler.  How about this?
-> I'll still have to run it through the test wringer since it might still
-> end up causing problems if drivers are careless about their residue
-> calculations.
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index e5c6f6a..96dbc63 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -759,9 +759,16 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
->  
->  	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
->          if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
-> +		int old_good_bytes = good_bytes;
->  		drv = scsi_cmd_to_driver(cmd);
->  		if (drv->done)
->  			good_bytes = drv->done(cmd);
-> +		/*
-> +		 * USB may not give sense identifying bad sector and
-> +		 * simply return a residue instead.
-> +		 */
-
-This comment is inaccurate.  It would be better to say "USB may provide
-a residue to indicate the data isn't entirely valid, even if there is
-no sense".  That is, a residue may be provided even when:
-
-	the requested amount of data has been transferred; or
-
-	the data is variable length, not a group of sectors.
-
-Furthermore this is true for any type of request, including BLOCK_PC.  
-In fact, I would expect this to be true for any transport, not just
-USB.  How else would you know that the amount of VPD data returned is
-less than the amount asked for?
-
-> +		if (good_bytes == old_good_bytes)
-> +			good_bytes -= scsi_get_resid(cmd);
-
-I don't like this calculation.  The residue should be checked, not
-blindly accepted.  It is reasonable only it doesn't cause good_bytes to
-wrap below 0.  Maybe the lower-level driver can be relied on for this 
-checking, maybe not.
-
->  	}
->  	scsi_io_completion(cmd, good_bytes);
->  }
-
-Alan Stern
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 6264036..cc4f44f 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3502,28 +3502,11 @@ ips_send_wait(ips_ha_t * ha, ips_scb_t * scb, int timeout, int intr)
+ static void
+ ips_scmd_buf_write(struct scsi_cmnd *scmd, void *data, unsigned int count)
+ {
+-        int i;
+-        unsigned int min_cnt, xfer_cnt;
+-        char *cdata = (char *) data;
+-        unsigned char *buffer;
+-        unsigned long flags;
+-        struct scatterlist *sg = scsi_sglist(scmd);
+-
+-        for (i = 0, xfer_cnt = 0;
+-	(i < scsi_sg_count(scmd)) && (xfer_cnt < count);
+-             i++, sg = sg_next(sg)) {
+-                min_cnt = min(count - xfer_cnt, sg->length);
+-
+-                /* kmap_atomic() ensures addressability of the data buffer.*/
+-                /* local_irq_save() protects the KM_IRQ0 address slot.     */
+-                local_irq_save(flags);
+-		buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
+-                memcpy(buffer, &cdata[xfer_cnt], min_cnt);
+-		kunmap_atomic(buffer - sg->offset, KM_IRQ0);
+-                local_irq_restore(flags);
++	unsigned long flags;
+ 
+-                xfer_cnt += min_cnt;
+-        }
++	local_irq_save(flags);
++	scsi_sg_copy_from_buffer(scmd, data, count);
++	local_irq_restore(flags);
+ }
+ 
+ /****************************************************************************/
+@@ -3536,28 +3519,11 @@ ips_scmd_buf_write(struct scsi_cmnd *scmd, void *data, unsigned int count)
+ static void
+ ips_scmd_buf_read(struct scsi_cmnd *scmd, void *data, unsigned int count)
+ {
+-        int i;
+-        unsigned int min_cnt, xfer_cnt;
+-        char *cdata = (char *) data;
+-        unsigned char *buffer;
+-        unsigned long flags;
+-        struct scatterlist *sg = scsi_sglist(scmd);
+-
+-        for (i = 0, xfer_cnt = 0;
+-             (i < scsi_sg_count(scmd)) && (xfer_cnt < count);
+-             i++, sg = sg_next(sg)) {
+-		min_cnt = min(count - xfer_cnt, sg->length);
+-
+-                /* kmap_atomic() ensures addressability of the data buffer.*/
+-                /* local_irq_save() protects the KM_IRQ0 address slot.     */
+-                local_irq_save(flags);
+-		buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
+-                memcpy(&cdata[xfer_cnt], buffer, min_cnt);
+-		kunmap_atomic(buffer - sg->offset, KM_IRQ0);
+-                local_irq_restore(flags);
++	unsigned long flags;
+ 
+-                xfer_cnt += min_cnt;
+-        }
++	local_irq_save(flags);
++	scsi_sg_copy_to_buffer(scmd, data, count);
++	local_irq_restore(flags);
+ }
+ 
+ /****************************************************************************/
+-- 
+1.5.3.7
 
