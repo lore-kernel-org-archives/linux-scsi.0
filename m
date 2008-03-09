@@ -1,91 +1,53 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: [BUG 3/3] bsg mutex hang with iscsi logout
-Date: Sun, 9 Mar 2008 12:55:17 -0400
-Message-ID: <20080309165517.GC24388@osc.edu>
-References: <20080309165359.GA24388@osc.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] drivers: fix dma_get_required_mask
+Date: Sun, 09 Mar 2008 11:57:56 -0500
+Message-ID: <1205081877.3792.30.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:54855 "EHLO marge.padd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341AbYCIQzW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Mar 2008 12:55:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20080309165359.GA24388@osc.edu>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34391 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751333AbYCIQ6B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Mar 2008 12:58:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>
 
-Here's an interesting hang.  Mount a target with iscsi, again one that
-may be slow in responding.  Send it a command via bsg.  Kill the target
-or unplug the network before the response returns.  At this point the
-kernel notices and iscsid goes about trying to reconnect.
+There's a bug in the current implementation of dma_get_required_mask()
+where it ands the returned mask with the current device mask.  This
+rather defeats the purpose if you're using the call to determine what
+your mask should be (since you will at that time have the default
+DMA_32BIT_MASK).  This bug results in any driver that uses this function
+*always* getting a 32 bit mask, which is wrong.
 
-Hit ctrl-c to try to kill the bsg-using application.  Being the last
-user of the device, it hangs during file close waiting for the
-outstanding command to complete (even in error), sleeping with bsg_mutex
-held.
+Fix by removing the and with dev->dma_mask.
 
-sgio          D ffff81007c567bc8     0  2916   2846
- ffff81007c567b98 0000000000000046 ffff81007c567b78 ffff810040e16cc8
- ffff81007f721080 ffff81007f71f830 ffff81007f721298 ffffffff80263514
- ffff81007c567b98 0000000000000282 ffff81007c567c28 ffffffff80267238
-Call Trace:
- [<ffffffff80263514>] ? __pagevec_free+0x24/0x30
- [<ffffffff80267238>] ? release_pages+0x198/0x1e0
- [<ffffffff80404ce8>] io_schedule+0x28/0x40
- [<ffffffff802f1520>] bsg_release+0x1c0/0x1e0
- [<ffffffff80244ad0>] ? autoremove_wake_function+0x0/0x40
- [<ffffffff8028ded3>] __fput+0xb3/0x1a0
- [<ffffffff8028e1d6>] fput+0x16/0x20
- [<ffffffff8028afab>] filp_close+0x4b/0x80
- [<ffffffff80232171>] put_files_struct+0xc1/0xd0
- [<ffffffff802321c5>] __exit_files+0x45/0x50
- [<ffffffff80233592>] do_exit+0x1a2/0x7a0
- [<ffffffff80233bc7>] do_group_exit+0x37/0xa0
- [<ffffffff8023ccf8>] get_signal_to_deliver+0x268/0x330
- [<ffffffff8020b614>] ? sysret_signal+0x1c/0x27
- [<ffffffff8020a814>] do_notify_resume+0xd4/0x950
- [<ffffffff80244ba0>] ? finish_wait+0x60/0x80
- [<ffffffff802f112a>] ? bsg_get_done_cmd+0x11a/0x140
- [<ffffffff802f1f8a>] ? bsg_read+0xda/0x180
- [<ffffffff8028d5f4>] ? vfs_read+0xc4/0x150
- [<ffffffff8020b614>] ? sysret_signal+0x1c/0x27
- [<ffffffff8020b8a7>] ptregscall_common+0x67/0xb0
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Meanwhile, in another shell, use iscsiadm to logout from the target.  As
-scsi removes the device, it tells bsg to unregister the queue that is
-going away, and to do that, it needs the bsg_mutex.  You have to be
-fairly quick about it to get into this situation.
+---
 
-iscsi_scan_4  D ffffffff804ff688     0  2873      2
- ffff81007c421cd0 0000000000000046 000001a800000002 fffffffffffffffc
- ffff81007c1690c0 ffff81007e4c8830 ffff81007c1692d8 0000000000015d6d
- 0000015400000002 fffffffffffffffc 0000000000015e4c 0000016400000002
-Call Trace:
- [<ffffffff804052ff>] __mutex_lock_slowpath+0x7f/0xd0
- [<ffffffff804050be>] mutex_lock+0xe/0x10
- [<ffffffff802f1d81>] bsg_unregister_queue+0x31/0xa0
- [<ffffffff8036b300>] __scsi_remove_device+0x40/0xa0
- [<ffffffff8036b38b>] scsi_remove_device+0x2b/0x40
- [<ffffffff8036b43c>] __scsi_remove_target+0x9c/0xe0
- [<ffffffff8036b4e0>] ? __remove_child+0x0/0x30
- [<ffffffff8036b4fe>] __remove_child+0x1e/0x30
- [<ffffffff80355f93>] device_for_each_child+0x33/0x60
- [<ffffffff802fafea>] ? kobject_get+0x1a/0x30
- [<ffffffff8036b4ce>] scsi_remove_target+0x4e/0x60
- [<ffffffff880f1d15>] :scsi_transport_iscsi:__iscsi_unbind_session+0x85/0xa0
- [<ffffffff880f1c90>] ? :scsi_transport_iscsi:__iscsi_unbind_session+0x0/0xa0
- [<ffffffff80240c64>] run_workqueue+0x84/0x110
- [<ffffffff80241713>] worker_thread+0x93/0xd0
- [<ffffffff80244ad0>] ? autoremove_wake_function+0x0/0x40
- [<ffffffff80241680>] ? worker_thread+0x0/0xd0
- [<ffffffff8024466d>] kthread+0x4d/0x80
- [<ffffffff8020c3b8>] child_rip+0xa/0x12
- [<ffffffff80244620>] ? kthread+0x0/0x80
- [<ffffffff8020c3ae>] ? child_rip+0x0/0x12
+This is a pretty nasty bug which can cause mysterious slow downs and
+panics on >4GB machines (we've just had one on an aic79xx production
+system).
 
-Same setup as the bug 1/3.
+It probably also needs to be backported as far as it will go.
 
-		-- Pete
+James
+
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index efaf282..911ec60 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -648,7 +648,7 @@ u64 dma_get_required_mask(struct device *dev)
+ 		high_totalram += high_totalram - 1;
+ 		mask = (((u64)high_totalram) << 32) + 0xffffffff;
+ 	}
+-	return mask & *dev->dma_mask;
++	return mask;
+ }
+ EXPORT_SYMBOL_GPL(dma_get_required_mask);
+ #endif
+
+
