@@ -1,53 +1,94 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] drivers: fix dma_get_required_mask
-Date: Sun, 09 Mar 2008 11:57:56 -0500
-Message-ID: <1205081877.3792.30.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: make use of the residue value
+Date: Sun, 9 Mar 2008 15:13:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803091444220.13999-100000@netrider.rowland.org>
+References: <1205073884.3792.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34391 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751333AbYCIQ6B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Mar 2008 12:58:01 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:3149 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750987AbYCITNn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Mar 2008 15:13:43 -0400
+In-Reply-To: <1205073884.3792.10.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-There's a bug in the current implementation of dma_get_required_mask()
-where it ands the returned mask with the current device mask.  This
-rather defeats the purpose if you're using the call to determine what
-your mask should be (since you will at that time have the default
-DMA_32BIT_MASK).  This bug results in any driver that uses this function
-*always* getting a 32 bit mask, which is wrong.
+On Sun, 9 Mar 2008, James Bottomley wrote:
 
-Fix by removing the and with dev->dma_mask.
+> > > --- a/drivers/scsi/scsi.c
+> > > +++ b/drivers/scsi/scsi.c
+> > > @@ -759,9 +759,16 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+> > >  
+> > >  	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
+> > >          if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+> > > +		int old_good_bytes = good_bytes;
+> > >  		drv = scsi_cmd_to_driver(cmd);
+> > >  		if (drv->done)
+> > >  			good_bytes = drv->done(cmd);
+> > > +		/*
+> > > +		 * USB may not give sense identifying bad sector and
+> > > +		 * simply return a residue instead.
+> > > +		 */
+> > 
+> > This comment is inaccurate.  It would be better to say "USB may provide
+> > a residue to indicate the data isn't entirely valid, even if there is
+> > no sense".  That is, a residue may be provided even when:
+> > 
+> > 	the requested amount of data has been transferred; or
+> > 
+> > 	the data is variable length, not a group of sectors.
+> 
+> That's true, but irrelevant.  Placing the condition inside the check for
+> BLOCK_PC eliminates the possibility of variable length commands, which
+> is why I did it this way.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+But the comment talks about identifying a bad sector.  That makes no 
+sense if the command isn't sector-oriented to begin with.
 
----
+Why do you think that only BLOCK_PC commands can have variable length?
 
-This is a pretty nasty bug which can cause mysterious slow downs and
-panics on >4GB machines (we've just had one on an aic79xx production
-system).
+And why do you want to ignore the residue for variable-length commands?
 
-It probably also needs to be backported as far as it will go.
+> > > +		if (good_bytes == old_good_bytes)
+> > > +			good_bytes -= scsi_get_resid(cmd);
+> > 
+> > I don't like this calculation.  The residue should be checked, not
+> > blindly accepted.  It is reasonable only it doesn't cause good_bytes to
+> > wrap below 0.  Maybe the lower-level driver can be relied on for this 
+> > checking, maybe not.
+> 
+> Um, it's actually a narrowing of what you did in your original patch.
 
-James
+Not so.
 
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index efaf282..911ec60 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -648,7 +648,7 @@ u64 dma_get_required_mask(struct device *dev)
- 		high_totalram += high_totalram - 1;
- 		mask = (((u64)high_totalram) << 32) + 0xffffffff;
- 	}
--	return mask & *dev->dma_mask;
-+	return mask;
- }
- EXPORT_SYMBOL_GPL(dma_get_required_mask);
- #endif
+> There you looked at good bytes and the original minus the residue and
+> took the smaller.
 
+Yes.
+
+> Here, I'm only subtracting the residue if good_bytes wasn't altered.
+
+Yes.  And if residue > good_bytes then you end up taking the larger
+instead of the smaller: Since good_bytes is unsigned, subtracting a
+larger quantity from it yields a very large positive result.
+
+> (If we get any error identification at all, we believe it over the
+> residue).
+
+I don't mind ignoring the residue when good_bytes was changed; 
+believing the error identification makes sense.  What I do mind about 
+your patch is:
+
+	It doesn't check for underflow when subtracting the residue;
+
+	It doesn't use the residue at all for BLOCK_PC requests.
+
+BTW, you never answered my question: How does the SCSI midlayer tell
+callers that a command returned less data than requested because the
+device claims the remainder doesn't exist?
+
+Alan Stern
 
