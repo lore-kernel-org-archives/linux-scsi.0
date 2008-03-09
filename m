@@ -1,75 +1,144 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 10/10] 3w-9xxx: use sg buffer copy helper functions
-Date: Sun,  9 Mar 2008 13:44:37 +0900
-Message-ID: <1205037877-12843-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 03/10] scsi_debug: use sg buffer copy helper functions
+Date: Sun,  9 Mar 2008 13:44:30 +0900
+Message-ID: <1205037877-12843-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1205037877-12843-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1205037877-12843-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1205037877-12843-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:50220 "EHLO mo11.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:47279 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267AbYCIEqE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751192AbYCIEqE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 8 Mar 2008 23:46:04 -0500
-In-Reply-To: <1205037877-12843-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1205037877-12843-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Adam Radford <linuxraid@amcc.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Adam Radford <linuxraid@amcc.com>
+Cc: Douglas Gilbert <dougg@torque.net>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/3w-9xxx.c |   21 +++++++++------------
- 1 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_debug.c |   79 +++++++-------------------------------------
+ 1 files changed, 13 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index b4912d1..fa922f8 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -1838,12 +1838,11 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 		if (scsi_sg_count(srb)) {
- 			if ((scsi_sg_count(srb) == 1) &&
- 			    (scsi_bufflen(srb) < TW_MIN_SGL_LENGTH)) {
--				if (srb->sc_data_direction == DMA_TO_DEVICE || srb->sc_data_direction == DMA_BIDIRECTIONAL) {
--					struct scatterlist *sg = scsi_sglist(srb);
--					char *buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
--					memcpy(tw_dev->generic_buffer_virt[request_id], buf, sg->length);
--					kunmap_atomic(buf - sg->offset, KM_IRQ0);
--				}
-+				if (srb->sc_data_direction == DMA_TO_DEVICE ||
-+				    srb->sc_data_direction == DMA_BIDIRECTIONAL)
-+					scsi_sg_copy_to_buffer(srb,
-+							       tw_dev->generic_buffer_virt[request_id],
-+							       TW_SECTOR_SIZE);
- 				command_packet->sg_list[0].address = TW_CPU_TO_SGL(tw_dev->generic_buffer_phys[request_id]);
- 				command_packet->sg_list[0].length = cpu_to_le32(TW_MIN_SGL_LENGTH);
- 			} else {
-@@ -1915,13 +1914,11 @@ static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int re
- 	    (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	     cmd->sc_data_direction == DMA_BIDIRECTIONAL)) {
- 		if (scsi_sg_count(cmd) == 1) {
--			struct scatterlist *sg = scsi_sglist(tw_dev->srb[request_id]);
--			char *buf;
--			unsigned long flags = 0;
-+			unsigned long flags;
-+			void *buf = tw_dev->generic_buffer_virt[request_id];
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3abd286..7a2a3ed 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -591,81 +591,37 @@ static int check_readiness(struct scsi_cmnd * SCpnt, int reset_only,
+ }
+ 
+ /* Returns 0 if ok else (DID_ERROR << 16). Sets scp->resid . */
+-static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
++static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+ 				int arr_len)
+ {
+-	int k, req_len, act_len, len, active;
+-	void * kaddr;
+-	void * kaddr_off;
+-	struct scatterlist *sg;
++	int act_len;
+ 	struct scsi_data_buffer *sdb = scsi_in(scp);
+ 
+ 	if (!sdb->length)
+ 		return 0;
+-	if (!sdb->table.sgl)
+-		return (DID_ERROR << 16);
+ 	if (!(scsi_bidi_cmnd(scp) || scp->sc_data_direction == DMA_FROM_DEVICE))
+ 		return (DID_ERROR << 16);
+-	active = 1;
+-	req_len = act_len = 0;
+-	for_each_sg(sdb->table.sgl, sg, sdb->table.nents, k) {
+-		if (active) {
+-			kaddr = (unsigned char *)
+-				kmap_atomic(sg_page(sg), KM_USER0);
+-			if (NULL == kaddr)
+-				return (DID_ERROR << 16);
+-			kaddr_off = (unsigned char *)kaddr + sg->offset;
+-			len = sg->length;
+-			if ((req_len + len) > arr_len) {
+-				active = 0;
+-				len = arr_len - req_len;
+-			}
+-			memcpy(kaddr_off, arr + req_len, len);
+-			kunmap_atomic(kaddr, KM_USER0);
+-			act_len += len;
+-		}
+-		req_len += sg->length;
+-	}
 +
- 			local_irq_save(flags);
--			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
--			memcpy(buf, tw_dev->generic_buffer_virt[request_id], sg->length);
--			kunmap_atomic(buf - sg->offset, KM_IRQ0);
-+			scsi_sg_copy_from_buffer(cmd, buf, TW_SECTOR_SIZE);
- 			local_irq_restore(flags);
- 		}
- 	}
++	act_len = sg_copy_from_buffer(sdb->table.sgl, sdb->table.nents,
++				      arr, arr_len);
+ 	if (sdb->resid)
+ 		sdb->resid -= act_len;
+ 	else
+-		sdb->resid = req_len - act_len;
++		sdb->resid = scsi_bufflen(scp) - act_len;
++
+ 	return 0;
+ }
+ 
+ /* Returns number of bytes fetched into 'arr' or -1 if error. */
+-static int fetch_to_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+-			       int max_arr_len)
++static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
++			       int arr_len)
+ {
+-	int k, req_len, len, fin;
+-	void * kaddr;
+-	void * kaddr_off;
+-	struct scatterlist * sg;
+-
+-	if (0 == scsi_bufflen(scp))
++	if (!scsi_bufflen(scp))
+ 		return 0;
+-	if (NULL == scsi_sglist(scp))
+-		return -1;
+ 	if (!(scsi_bidi_cmnd(scp) || scp->sc_data_direction == DMA_TO_DEVICE))
+ 		return -1;
+-	req_len = fin = 0;
+-	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), k) {
+-		kaddr = (unsigned char *)kmap_atomic(sg_page(sg), KM_USER0);
+-		if (NULL == kaddr)
+-			return -1;
+-		kaddr_off = (unsigned char *)kaddr + sg->offset;
+-		len = sg->length;
+-		if ((req_len + len) > max_arr_len) {
+-			len = max_arr_len - req_len;
+-			fin = 1;
+-		}
+-		memcpy(arr + req_len, kaddr_off, len);
+-		kunmap_atomic(kaddr, KM_USER0);
+-		if (fin)
+-			return req_len + len;
+-		req_len += sg->length;
+-	}
+-	return req_len;
++
++	return scsi_sg_copy_to_buffer(scp, arr, arr_len);
+ }
+ 
+ 
+@@ -1965,16 +1921,7 @@ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
+ 	if (!buf)
+ 		return ret;
+ 
+-	offset = 0;
+-	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), i) {
+-		kaddr = (unsigned char *)kmap_atomic(sg_page(sg), KM_USER0);
+-		if (!kaddr)
+-			goto out;
+-
+-		memcpy(buf + offset, kaddr + sg->offset, sg->length);
+-		offset += sg->length;
+-		kunmap_atomic(kaddr, KM_USER0);
+-	}
++	scsi_sg_copy_to_buffer(scp, buf, scsi_bufflen(scp));
+ 
+ 	offset = 0;
+ 	for_each_sg(sdb->table.sgl, sg, sdb->table.nents, i) {
 -- 
 1.5.3.7
 
