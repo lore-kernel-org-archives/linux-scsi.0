@@ -1,97 +1,113 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: make use of the residue value
-Date: Sun, 09 Mar 2008 09:44:44 -0500
-Message-ID: <1205073884.3792.10.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0803082144050.10362-100000@netrider.rowland.org>
+Subject: Re: kernel BUG at drivers/scsi/aic7xxx/aic79xx_osm.c:1490!
+Date: Sun, 09 Mar 2008 10:08:35 -0500
+Message-ID: <1205075315.3792.12.camel@localhost.localdomain>
+References: <47D3C8A1.6040409@msgid.tls.msk.ru>
+	 <20080309212916T.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43609 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36770 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751713AbYCIOos (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Mar 2008 10:44:48 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0803082144050.10362-100000@netrider.rowland.org>
+	by vger.kernel.org with ESMTP id S1751777AbYCIPIk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Mar 2008 11:08:40 -0400
+In-Reply-To: <20080309212916T.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: mjt@tls.msk.ru, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Sat, 2008-03-08 at 22:05 -0500, Alan Stern wrote:
-> On Sat, 8 Mar 2008, James Bottomley wrote:
+On Sun, 2008-03-09 at 21:29 +0900, FUJITA Tomonori wrote:
+> On Sun, 09 Mar 2008 14:23:13 +0300
+> Michael Tokarev <mjt@tls.msk.ru> wrote:
 > 
-> > This is really pretty complex, and it's adjusting an already complex
-> > path we've had quite a bit of difficulty with previously.
-> 
-> The new part of the patch isn't complex.  Apart from modifying a bunch
-> of comments, all it does is add one more clause to an "if" test.  But I
-> have to agree that the test is in a rather complex path.  And it looks
-> as though that path, complex as it is, isn't set up to handle
-> situations where variable-length data ends up being shorter than
-> requested.  Am I missing something pretty basic?
-> 
-> (I still think that modifying the comments is a good idea.  When
-> dealing with complex code, misleading comments are the last thing you
-> need.)
-> 
-> > What I was actually looking for was something simpler.  How about this?
-> > I'll still have to run it through the test wringer since it might still
-> > end up causing problems if drivers are careless about their residue
-> > calculations.
+> > Just got quite.. bad situation on a production server
+> > here.  The machine locked up hard several times in a
+> > row (required hard reboot).  So I finally enabled watchdog
+> > subsystem which helped.
 > > 
-> > James
+> > Now I see the following (over netconsole):
 > > 
-> > ---
-> > 
-> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > index e5c6f6a..96dbc63 100644
-> > --- a/drivers/scsi/scsi.c
-> > +++ b/drivers/scsi/scsi.c
-> > @@ -759,9 +759,16 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
-> >  
-> >  	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
-> >          if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
-> > +		int old_good_bytes = good_bytes;
-> >  		drv = scsi_cmd_to_driver(cmd);
-> >  		if (drv->done)
-> >  			good_bytes = drv->done(cmd);
-> > +		/*
-> > +		 * USB may not give sense identifying bad sector and
-> > +		 * simply return a residue instead.
-> > +		 */
+> > DMA: Out of SW-IOMMU space for 65536 bytes at device 0000:08:07.0
+> > ------------[ cut here ]------------
+> > kernel BUG at drivers/scsi/aic7xxx/aic79xx_osm.c:1490!
 > 
-> This comment is inaccurate.  It would be better to say "USB may provide
-> a residue to indicate the data isn't entirely valid, even if there is
-> no sense".  That is, a residue may be provided even when:
+> Seems that you was out of swiommu space (and aic79xx can't handle it
+> though it should). This happened because:
 > 
-> 	the requested amount of data has been transferred; or
+> a) you produced more I/Os than swiommu can handle.
 > 
-> 	the data is variable length, not a group of sectors.
+> b) swiommu space leaks due to bugs.
+> 
+> If you hit this problem due to a), the following boot option might
+> help:
+> 
+> swiotlb=65536
+> 
+> The same machine run well with old kernels? If so, probably, 2.6.24
+> has new bugs that lead to swiommu space leak.
 
-That's true, but irrelevant.  Placing the condition inside the check for
-BLOCK_PC eliminates the possibility of variable length commands, which
-is why I did it this way.
+Actually, it's worse than this.  The aic79xx is a fully 64 bit capable
+PCI card, it shouldn't be using the iommu at all.  However, it has three
+DMA modes:  64 bit, 39 bit and 32 bit; with a corresponding resource
+cost increasing with the number of bits.  It employs special APIs to
+size the masks according to the memory, in aic79xx_osm_pci.c:
 
-> Furthermore this is true for any type of request, including BLOCK_PC.  
-> In fact, I would expect this to be true for any transport, not just
-> USB.  How else would you know that the amount of VPD data returned is
-> less than the amount asked for?
-> 
-> > +		if (good_bytes == old_good_bytes)
-> > +			good_bytes -= scsi_get_resid(cmd);
-> 
-> I don't like this calculation.  The residue should be checked, not
-> blindly accepted.  It is reasonable only it doesn't cause good_bytes to
-> wrap below 0.  Maybe the lower-level driver can be relied on for this 
-> checking, maybe not.
+	if (sizeof(dma_addr_t) > 4) {
+		const u64 required_mask = dma_get_required_mask(dev);
 
-Um, it's actually a narrowing of what you did in your original patch.
-There you looked at good bytes and the original minus the residue and
-took the smaller.
+		if (required_mask > DMA_39BIT_MASK &&
+		    dma_set_mask(dev, DMA_64BIT_MASK) == 0)
+			ahd->flags |= AHD_64BIT_ADDRESSING;
+		else if (required_mask > DMA_32BIT_MASK &&
+			 dma_set_mask(dev, DMA_39BIT_MASK) == 0)
+			ahd->flags |= AHD_39BIT_ADDRESSING;
+		else
+			dma_set_mask(dev, DMA_32BIT_MASK);
+	} else {
+		dma_set_mask(dev, DMA_32BIT_MASK);
+	}
 
-Here, I'm only subtracting the residue if good_bytes wasn't altered.
-(If we get any error identification at all, we believe it over the
-residue).
+Could you firstly tell me how much memory you have, and secondly
+instrument this code with the patch below to see if we can work out what
+it's doing?
+
+Thanks,
 
 James
+
+---
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index dfaaae5..d6e46ce 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -194,14 +194,21 @@ ahd_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (sizeof(dma_addr_t) > 4) {
+ 		const u64 required_mask = dma_get_required_mask(dev);
+ 
++		printk("DEBUG: RETURNED REQUIRED MASK %llx\n",
++		       (unsigned long long)required_mask);
++
+ 		if (required_mask > DMA_39BIT_MASK &&
+-		    dma_set_mask(dev, DMA_64BIT_MASK) == 0)
++		    dma_set_mask(dev, DMA_64BIT_MASK) == 0) {
++			printk("DEBUG: SET 64 BIT ADDRESSING\n");
+ 			ahd->flags |= AHD_64BIT_ADDRESSING;
+-		else if (required_mask > DMA_32BIT_MASK &&
+-			 dma_set_mask(dev, DMA_39BIT_MASK) == 0)
++		} else if (required_mask > DMA_32BIT_MASK &&
++			   dma_set_mask(dev, DMA_39BIT_MASK) == 0) {
++			printk("DEBUG: SET 39 BIT ADDRESSING\n");
+ 			ahd->flags |= AHD_39BIT_ADDRESSING;
+-		else
++		} else {
++			printk("DEBUG: SET 32 BIT ADDRESSING\n");
+ 			dma_set_mask(dev, DMA_32BIT_MASK);
++		}
+ 	} else {
+ 		dma_set_mask(dev, DMA_32BIT_MASK);
+ 	}
+
 
