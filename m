@@ -1,164 +1,142 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 04/10] ps3rom: use sg buffer copy helper funcitons
-Date: Sun,  9 Mar 2008 13:44:31 +0900
-Message-ID: <1205037877-12843-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1205037877-12843-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1205037877-12843-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [PATCH] Fusion MPT: convert inactive_list_mutex in a mutex
+Date: Sun, 9 Mar 2008 12:16:27 +0100
+Message-ID: <20080309111627.GI2783@traven>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:47329 "EHLO mo10.iij4u.or.jp"
+Received: from mx1.riseup.net ([204.13.164.18]:60712 "EHLO mx1.riseup.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218AbYCIEqo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Mar 2008 23:46:44 -0500
-In-Reply-To: <1205037877-12843-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1752408AbYCILRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Mar 2008 07:17:18 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-Note that if scsi_bufflen(cmd) is not zero, the command always has an
-sg list. So this patch doesn't do the error checking in
-fill_from_dev_buffer and fetch_to_dev_buffer did.
+Fusion MPT driver: the semaphore inactive_list_mutex is used as a
+mutex, convert it to the mutex API
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ps3rom.c |   92 +++++-------------------------------------------
- 1 files changed, 10 insertions(+), 82 deletions(-)
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
-diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
-index 0eed5ca..d1e7845 100644
---- a/drivers/scsi/ps3rom.c
-+++ b/drivers/scsi/ps3rom.c
-@@ -90,76 +90,6 @@ static int ps3rom_slave_configure(struct scsi_device *scsi_dev)
- 	return 0;
+--
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 0c303c8..06557f2 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -2136,7 +2136,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		/*
+ 		 * Initalize link list for inactive raid volumes.
+ 		 */
+-		init_MUTEX(&ioc->raid_data.inactive_list_mutex);
++		mutex_init(&ioc->raid_data.inactive_list_mutex);
+ 		INIT_LIST_HEAD(&ioc->raid_data.inactive_list);
+ 
+ 		if (ioc->bus_type == SAS) {
+@@ -5122,13 +5122,13 @@ mpt_inactive_raid_list_free(MPT_ADAPTER *ioc)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		return;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry_safe(component_info, pNext,
+ 	    &ioc->raid_data.inactive_list, list) {
+ 		list_del(&component_info->list);
+ 		kfree(component_info);
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
  }
  
--/*
-- * copy data from device into scatter/gather buffer
-- */
--static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf)
--{
--	int k, req_len, len, fin;
--	void *kaddr;
--	struct scatterlist *sgpnt;
--	unsigned int buflen;
--
--	buflen = scsi_bufflen(cmd);
--	if (!buflen)
--		return 0;
--
--	if (!scsi_sglist(cmd))
--		return -1;
--
--	req_len = fin = 0;
--	scsi_for_each_sg(cmd, sgpnt, scsi_sg_count(cmd), k) {
--		kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
--		len = sgpnt->length;
--		if ((req_len + len) > buflen) {
--			len = buflen - req_len;
--			fin = 1;
--		}
--		memcpy(kaddr + sgpnt->offset, buf + req_len, len);
--		flush_kernel_dcache_page(sg_page(sgpnt));
--		kunmap_atomic(kaddr, KM_IRQ0);
--		req_len += len;
--		if (fin)
--			break;
--	}
--	scsi_set_resid(cmd, buflen - req_len);
--	return 0;
--}
--
--/*
-- * copy data from scatter/gather into device's buffer
-- */
--static int fetch_to_dev_buffer(struct scsi_cmnd *cmd, void *buf)
--{
--	int k, req_len, len, fin;
--	void *kaddr;
--	struct scatterlist *sgpnt;
--	unsigned int buflen;
--
--	buflen = scsi_bufflen(cmd);
--	if (!buflen)
--		return 0;
--
--	if (!scsi_sglist(cmd))
--		return -1;
--
--	req_len = fin = 0;
--	scsi_for_each_sg(cmd, sgpnt, scsi_sg_count(cmd), k) {
--		kaddr = kmap_atomic(sg_page(sgpnt), KM_IRQ0);
--		len = sgpnt->length;
--		if ((req_len + len) > buflen) {
--			len = buflen - req_len;
--			fin = 1;
--		}
--		memcpy(buf + req_len, kaddr + sgpnt->offset, len);
--		kunmap_atomic(kaddr, KM_IRQ0);
--		if (fin)
--			return req_len + len;
--		req_len += sgpnt->length;
--	}
--	return req_len;
--}
--
- static int ps3rom_atapi_request(struct ps3_storage_device *dev,
- 				struct scsi_cmnd *cmd)
- {
-@@ -193,9 +123,7 @@ static int ps3rom_atapi_request(struct ps3_storage_device *dev,
- 		else
- 			atapi_cmnd.proto = PIO_DATA_OUT_PROTO;
- 		atapi_cmnd.in_out = DIR_WRITE;
--		res = fetch_to_dev_buffer(cmd, dev->bounce_buf);
--		if (res < 0)
--			return DID_ERROR << 16;
-+		scsi_sg_copy_to_buffer(cmd, dev->bounce_buf, dev->bounce_size);
- 		break;
+ /**
+@@ -5187,7 +5187,7 @@ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (!handle_inactive_volumes)
+ 		goto out;
  
- 	default:
-@@ -267,9 +195,7 @@ static int ps3rom_write_request(struct ps3_storage_device *dev,
- 	dev_dbg(&dev->sbd.core, "%s:%u: write %u sectors starting at %u\n",
- 		__func__, __LINE__, sectors, start_sector);
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	for (i = 0; i < buffer->NumPhysDisks; i++) {
+ 		if(mpt_raid_phys_disk_pg0(ioc,
+ 		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+@@ -5207,7 +5207,7 @@ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 		list_add_tail(&component_info->list,
+ 		    &ioc->raid_data.inactive_list);
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
  
--	res = fetch_to_dev_buffer(cmd, dev->bounce_buf);
--	if (res < 0)
--		return DID_ERROR << 16;
-+	scsi_sg_copy_to_buffer(cmd, dev->bounce_buf, dev->bounce_size);
+  out:
+ 	if (buffer)
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index caadc68..88e7a15 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -51,6 +51,7 @@
  
- 	res = lv1_storage_write(dev->sbd.dev_id,
- 				dev->regions[dev->region_idx].id, start_sector,
-@@ -379,11 +305,13 @@ static irqreturn_t ps3rom_interrupt(int irq, void *data)
- 	if (!status) {
- 		/* OK, completed */
- 		if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
--			res = fill_from_dev_buffer(cmd, dev->bounce_buf);
--			if (res) {
--				cmd->result = DID_ERROR << 16;
--				goto done;
--			}
-+			int len;
-+
-+			len = scsi_sg_copy_from_buffer(cmd,
-+						       dev->bounce_buf,
-+						       dev->bounce_size);
-+
-+			scsi_set_resid(cmd, scsi_bufflen(cmd) - len);
- 		}
- 		cmd->result = DID_OK << 16;
- 		goto done;
-@@ -425,7 +353,7 @@ static struct scsi_host_template ps3rom_host_template = {
- 	.cmd_per_lun =		1,
- 	.emulated =             1,		/* only sg driver uses this */
- 	.max_sectors =		PS3ROM_MAX_SECTORS,
--	.use_clustering =	DISABLE_CLUSTERING,
-+	.use_clustering =	ENABLE_CLUSTERING,
- 	.module =		THIS_MODULE,
- };
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/mutex.h>
+ 
+ #include "lsi/mpi_type.h"
+ #include "lsi/mpi.h"		/* Fusion MPI(nterface) basic defs */
+@@ -531,7 +532,7 @@ struct inactive_raid_component_info {
+ typedef	struct _RaidCfgData {
+ 	IOCPage2_t	*pIocPg2;		/* table of Raid Volumes */
+ 	IOCPage3_t	*pIocPg3;		/* table of physical disks */
+-	struct semaphore	inactive_list_mutex;
++	struct mutex	inactive_list_mutex;
+ 	struct list_head	inactive_list; /* link list for physical
+ 						disk that belong in
+ 						inactive volumes */
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index af1de0c..4e70ef4 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -2295,14 +2295,14 @@ mptscsih_is_phys_disk(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		goto out;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry(component_info, &ioc->raid_data.inactive_list,
+ 	    list) {
+ 		if ((component_info->d.PhysDiskID == id) &&
+ 		    (component_info->d.PhysDiskBus == channel))
+ 			rc = 1;
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ 
+  out:
+ 	return rc;
+@@ -2332,14 +2332,14 @@ mptscsih_raid_id_to_num(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		goto out;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry(component_info, &ioc->raid_data.inactive_list,
+ 	    list) {
+ 		if ((component_info->d.PhysDiskID == id) &&
+ 		    (component_info->d.PhysDiskBus == channel))
+ 			rc = component_info->d.PhysDiskNum;
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ 
+  out:
+ 	return rc;
  
 -- 
-1.5.3.7
+Matthias Kaehlcke
+Linux System Developer
+Barcelona
 
+         An ounce of practice is worth more than tons of preaching
+                            (Mahatma Gandhi)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
