@@ -1,73 +1,96 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: [BUG 1/3] bsg queue oops with iscsi logout
-Date: Sun, 9 Mar 2008 12:53:59 -0400
-Message-ID: <20080309165359.GA24388@osc.edu>
+Subject: [BUG 2/3] bsg null sdev with iscsi logout
+Date: Sun, 9 Mar 2008 12:54:53 -0400
+Message-ID: <20080309165453.GB24388@osc.edu>
+References: <20080309165359.GA24388@osc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:53615 "EHLO marge.padd.com"
+Received: from marge.padd.com ([66.127.62.138]:54847 "EHLO marge.padd.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751095AbYCIQyE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Mar 2008 12:54:04 -0400
+	id S1752567AbYCIQyz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Mar 2008 12:54:55 -0400
 Content-Disposition: inline
+In-Reply-To: <20080309165359.GA24388@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Here's an oops.  Mount a target with iscsi.  Start a process that
-holds open the bsg device, in the debugger perhaps.  Then use
-iscsiadm to logout.  Let the bsg process try to submit another
-command.  Its queue is no longer usable, as blk_get_request() finds
-a NULL q->elevator->ops.
+Here's a different oops that may happen when the target goes away
+unexpectedly.  Mount a slow target with iscsi.  Start a process that
+uses bsg to issue an oustanding command, kill off the target before it
+can respond (or unplug the network), but do not ctrl-C the bsg process.
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000070
-IP: [<ffffffff802e6adb>] elv_may_queue+0xb/0x20
-PGD 3e8e1067 PUD 3e4ce067 PMD 0 
-Oops: 0000 [1] SMP 
-CPU 1 
-Modules linked in: crc32c libcrc32c rdma_ucm rdma_cm iw_cm ib_addr ib_ipoib ib_ucm ib_cm ib_sa ib_umad ib_uverbs ib_mthca iscsi_tcp libiscsi scsi_transport_iscsi ext3 jbd ib_mad ib_core i2c_nforce2 i2c_core sg sd_mod sata_nv tg3 nfs lockd sunrpc
-Pid: 3000, comm: sgio Not tainted 2.6.25-rc4-bidi-pw #29
-RIP: 0010:[<ffffffff802e6adb>]  [<ffffffff802e6adb>] elv_may_queue+0xb/0x20
-RSP: 0018:ffff81007d15fd28  EFLAGS: 00010046
-RAX: 0000000000000000 RBX: ffff81007d54d468 RCX: 0000000000000010
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff81007d54d468
-RBP: ffff81007d15fd28 R08: 0000000000000001 R09: ffff81007d093e88
-R10: 0000000000000000 R11: 0000000000000000 R12: ffff81007d54d468
-R13: ffff81007d54d488 R14: 0000000000000000 R15: 0000000000000000
-FS:  00002b05a4a17b00(0000) GS:ffff81007f600840(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000070 CR3: 000000003e497000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff4ff0 DR7: 0000000000000400
-Process sgio (pid: 3000, threadinfo ffff81007d15e000, task ffff81007f712830)
-Stack:  ffff81007d15fd98 ffffffff802ea129 ffff810040005358 ffff810040005350
- 00000010000612d0 0000000000000000 ffff81007cda6a68 ffff81007d9de020
- 0000000000000086 0000000000000000 ffff81007d54d468 0000000000000000
+In another shell, use iscsiadm to logout.  This provokes a kref
+complaint and a bug.  The bug looks like the bsg app has seen completion
+in error of its hung command, issues andother command, and ends up with
+a NULL sdev later in the SCSI processing.
+
+WARNING: at lib/kref.c:43 kref_get+0x2d/0x30()
+Modules linked in: crc32c libcrc32c rdma_ucm rdma_cm iw_cm ib_addr ib_ipoib ib_ucm ib_cm ib_sa ib_umad ib_uverbs ib_mthca iscsi_tcp libiscsi scsi_transport_iscsi ext3 jbd ib_mad sg ib_core sd_mod i2c_nforce2 i2c_core sata_nv tg3 nfs lockd sunrpc
+Pid: 3045, comm: sgio Not tainted 2.6.25-rc4-bidi-pw #29
+
 Call Trace:
- [<ffffffff802ea129>] get_request+0x39/0x330
- [<ffffffff802ea44f>] get_request_wait+0x2f/0x1c0
- [<ffffffff80286b27>] ? cache_grow+0x1b7/0x260
- [<ffffffff802ea7d8>] blk_get_request+0x38/0x80
- [<ffffffff802f171c>] bsg_map_hdr+0x9c/0x340
- [<ffffffff802f1aac>] bsg_write+0xec/0x2e0
+ [<ffffffff8022f82f>] warn_on_slowpath+0x5f/0x80
+ [<ffffffff802ea243>] ? get_request+0x153/0x330
+ [<ffffffff80247d26>] ? hrtimer_start+0xd6/0x150
+ [<ffffffff80239b96>] ? lock_timer_base+0x36/0x70
+ [<ffffffff802fc07d>] kref_get+0x2d/0x30
+ [<ffffffff802fafea>] kobject_get+0x1a/0x30
+ [<ffffffff803559f7>] get_device+0x17/0x20
+ [<ffffffff80367357>] scsi_request_fn+0x37/0x3b0
+ [<ffffffff802e9d94>] __generic_unplug_device+0x24/0x30
+ [<ffffffff802ece63>] blk_execute_rq_nowait+0x63/0x90
+ [<ffffffff802f1b48>] bsg_write+0x188/0x2e0
+ [<ffffffff8028d4a7>] vfs_write+0xc7/0x150
+ [<ffffffff8028db10>] sys_write+0x50/0x90
+ [<ffffffff8020b58b>] system_call_after_swapgs+0x7b/0x80
+
+---[ end trace dbc99ed69e02749c ]---
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000420
+IP: [<ffffffff8036513c>] scsi_prep_state_check+0xc/0xb0
+PGD 3d111067 PUD 3e9b3067 PMD 0 
+Oops: 0000 [1] SMP 
+CPU 0 
+Modules linked in: crc32c libcrc32c rdma_ucm rdma_cm iw_cm ib_addr ib_ipoib ib_ucm ib_cm ib_sa ib_umad ib_uverbs ib_mthca iscsi_tcp libiscsi scsi_transport_iscsi ext3 jbd ib_mad sg ib_core sd_mod i2c_nforce2 i2c_core sata_nv tg3 nfs lockd sunrpc
+Pid: 3045, comm: sgio Not tainted 2.6.25-rc4-bidi-pw #29
+RIP: 0010:[<ffffffff8036513c>]  [<ffffffff8036513c>] scsi_prep_state_check+0xc/0xb0
+RSP: 0018:ffff81007f5dfd68  EFLAGS: 00010092
+RAX: ffffffff80366150 RBX: 0000000000000000 RCX: 0000000000000001
+RDX: 0000000000000001 RSI: ffff81003fdcd3e0 RDI: 0000000000000000
+RBP: ffff81007f5dfd78 R08: 0000000000000000 R09: 00000000ffffffff
+R10: 0000000000000000 R11: 0000000000000020 R12: 0000000000000000
+R13: ffff81007e4ed800 R14: ffff81007c8b94e8 R15: 0000000000000001
+FS:  00007f34d7ad96f0(0000) GS:ffffffff80515000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000420 CR3: 000000003d0e0000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process sgio (pid: 3045, threadinfo ffff81007f5de000, task ffff81007e4977b0)
+Stack:  0000000100000000 ffff81003fdcd3e0 ffff81007f5dfda8 ffffffff80365fd8
+ ffff81007f5dfdb8 ffff81003fdcd3e0 ffff81007c8b94e8 ffff81007e4ed800
+ ffff81007f5dfdc8 ffffffff80366195 ffff81007c8b94e8 ffff81003fdcd3e0
+Call Trace:
+ [<ffffffff80365fd8>] scsi_setup_blk_pc_cmnd+0x18/0x190
+ [<ffffffff80366195>] scsi_prep_fn+0x45/0x50
+ [<ffffffff802e7809>] elv_next_request+0xc9/0x280
+ [<ffffffff802fafea>] ? kobject_get+0x1a/0x30
+ [<ffffffff80367529>] scsi_request_fn+0x209/0x3b0
+ [<ffffffff802e9d94>] __generic_unplug_device+0x24/0x30
+ [<ffffffff802ece63>] blk_execute_rq_nowait+0x63/0x90
+ [<ffffffff802f1b48>] bsg_write+0x188/0x2e0
  [<ffffffff8028d4a7>] vfs_write+0xc7/0x150
  [<ffffffff8028db10>] sys_write+0x50/0x90
  [<ffffffff8020b58b>] system_call_after_swapgs+0x7b/0x80
 
 
-Code: 55 48 8b 47 18 48 89 e5 48 8b 00 48 8b 40 68 48 85 c0 74 05 48 89 f7 ff d0 c9 c3 0f 1f 44 00 00 48 8b 47 18 55 48 89 e5 48 8b 00 <48> 8b 50 70 31 c0 48 85 d2 74 02 ff d2 c9 c3 66 0f 1f 44 00 00 
-RIP  [<ffffffff802e6adb>] elv_may_queue+0xb/0x20
- RSP <ffff81007d15fd28>
-CR2: 0000000000000070
----[ end trace a020f2a7368afcb4 ]---
+Code: 0a 00 4c 89 f7 48 89 45 d0 e8 a1 a4 ff ff eb ab 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 53 48 89 fb 48 83 ec 08 <8b> 87 20 04 00 00 83 f8 02 75 09 31 c0 48 83 c4 08 5b c9 c3 83 
+RIP  [<ffffffff8036513c>] scsi_prep_state_check+0xc/0xb0
+ RSP <ffff81007f5dfd68>
+CR2: 0000000000000420
+---[ end trace dbc99ed69e02749c ]---
 
-I think this used not to happen; not sure.  But I changed two things
-lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
-fedora devel (868).  Bidi and varlen patches always too.
-
-I'll follow with some more variations on this theme.  Looks like bsg
-needs to protect more carefully against the device going away.  Any
-ideas how best to do this?  What was the approach in sg?
+Same setup as the bug 1/3.
 
 		-- Pete
