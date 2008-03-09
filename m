@@ -1,75 +1,56 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: kernel BUG at drivers/scsi/aic7xxx/aic79xx_osm.c:1490!
-Date: Sun, 09 Mar 2008 15:55:03 +0300
-Message-ID: <47D3DE27.5050707@msgid.tls.msk.ru>
-References: <47D3C8A1.6040409@msgid.tls.msk.ru> <20080309212916T.tomof@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] aic79xx: fix IOMMU mapping failure handling
+Date: Sun,  9 Mar 2008 22:50:40 +0900
+Message-ID: <1205070641-450-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:21626 "EHLO hobbit.corpit.ru"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:37214 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821AbYCIMzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Mar 2008 08:55:06 -0400
-In-Reply-To: <20080309212916T.tomof@acm.org>
+	id S1751278AbYCINvZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Mar 2008 09:51:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
+Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-FUJITA Tomonori wrote:
-> On Sun, 09 Mar 2008 14:23:13 +0300
-> Michael Tokarev <mjt@tls.msk.ru> wrote:
-> 
->> Just got quite.. bad situation on a production server
->> here.  The machine locked up hard several times in a
->> row (required hard reboot).  So I finally enabled watchdog
->> subsystem which helped.
->>
->> Now I see the following (over netconsole):
->>
->> DMA: Out of SW-IOMMU space for 65536 bytes at device 0000:08:07.0
->> ------------[ cut here ]------------
->> kernel BUG at drivers/scsi/aic7xxx/aic79xx_osm.c:1490!
-> 
-> Seems that you was out of swiommu space (and aic79xx can't handle it
-> though it should). This happened because:
-> 
-> a) you produced more I/Os than swiommu can handle.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-Well, this makes little sense, right?  I mean, if just a normal
-filesystem I/O produces more I/O requests than the machine can
-handle, - it means the kernel is broken.  It shouldn't let the
-queue to grow without bounds.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 72fccd9..0081aa3 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1413,6 +1413,10 @@ ahd_linux_run_command(struct ahd_softc *ahd, struct ahd_linux_device *dev,
+ 	unsigned long flags;
+ 	int nseg;
+ 
++	nseg = scsi_dma_map(cmd);
++	if (nseg < 0)
++		return SCSI_MLQUEUE_HOST_BUSY;
++
+ 	ahd_lock(ahd, &flags);
+ 
+ 	/*
+@@ -1430,6 +1434,7 @@ ahd_linux_run_command(struct ahd_softc *ahd, struct ahd_linux_device *dev,
+ 	if ((scb = ahd_get_scb(ahd, col_idx)) == NULL) {
+ 		ahd->flags |= AHD_RESOURCE_SHORTAGE;
+ 		ahd_unlock(ahd, &flags);
++		scsi_dma_unmap(cmd);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -1485,8 +1490,6 @@ ahd_linux_run_command(struct ahd_softc *ahd, struct ahd_linux_device *dev,
+ 	ahd_set_sense_residual(scb, 0);
+ 	scb->sg_count = 0;
+ 
+-	nseg = scsi_dma_map(cmd);
+-	BUG_ON(nseg < 0);
+ 	if (nseg > 0) {
+ 		void *sg = scb->sg_list;
+ 		struct scatterlist *cur_seg;
+-- 
+1.5.3.4
 
-The hardware is quite capable - 14-drives raid10 array works
-pretty fast, that is.
-
-> b) swiommu space leaks due to bugs.
-
-which should be quite huge leakage, as it happens almost immediately,
-on a freshly booted system.
-
-> If you hit this problem due to a), the following boot option might
-> help:
-> 
-> swiotlb=65536
-
-Just tried this option.  Gzip is working for 15 minutes already, --
-previously the system hanged within a first minute, usually first
-10 secs.  It seems it will survive the test.
-
-> The same machine run well with old kernels? If so, probably, 2.6.24
-> has new bugs that lead to swiommu space leak.
-
-It's difficult to say if it was ok with older kernels.  I'll try anyway.
-The thing is that this very workload is new for this machine.  Once
-upon a time it hanged in a very similar way, but we had no time to debug
-the issue and just ignored it, in a hope for the best.
-
-By the way, is there something to look at, for swiommu space leaks --
-like slabinfo for example...?
-
-Thanks!
-
-/mjt
