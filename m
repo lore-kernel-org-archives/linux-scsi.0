@@ -1,35 +1,46 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [patch 0/2] zfcp fixes
-Date: Mon, 10 Mar 2008 17:26:43 +0100
-Message-ID: <20080310162642.GA18110@schmichrtp.de.ibm.com>
-References: <20080310151852.808020000@de.ibm.com> <1205163204.2941.10.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [BUG 1/3] bsg queue oops with iscsi logout
+Date: Mon, 10 Mar 2008 12:57:00 -0500
+Message-ID: <47D5766C.3020206@cs.wisc.edu>
+References: <20080309165359.GA24388@osc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([195.212.29.139]:37652 "EHLO
-	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbYCJQ0r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Mar 2008 12:26:47 -0400
-Content-Disposition: inline
-In-Reply-To: <1205163204.2941.10.camel@localhost.localdomain>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35059 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111AbYCJR5U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2008 13:57:20 -0400
+In-Reply-To: <20080309165359.GA24388@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+To: Pete Wyckoff <pw@osc.edu>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Erez Zilber <erezz@voltaire.com>
 
-On Mon, Mar 10, 2008 at 10:33:24AM -0500, James Bottomley wrote:
-> scsi-misc is accumulating paches for the next merge window.  If these
-> are fixes as they seem to be, shouldn't they be going into
-> scsi-rc-fixes, which is where bug fixes are accumulated for fast onward
-> transmission?
+Pete Wyckoff wrote:
+> I think this used not to happen; not sure.  But I changed two things
 
-These fixes are not critical. The one for the ERP thread was found
-during code cleanup, and i am not sure if it is possible to trigger
-the bug. The other one improves the error recovery behaviour, so that
-in this special case there are less actions necessary.
+This most likely did not happen before 2.6.25-rc* or it broke in 
+slightly different ways, because iscsi used to try and do
 
-In short: They fit scsi-misc better than the important fixes in
-scsi-rc. When there are critical zfcp fixes, i will send them for
-scsi-rc.
+echo 1 > /sys/block/sdX/device/delete
 
-Christof
+from userspace instead of calling scsi_remove_target from the kernel.
+
+As you know around 2.6.21, the behavior of doing the echo to the delete 
+file changed due to a driver model and scsi change and that broke the 
+iscsi tools. The iscsi tools userspace removal was sort of hack in the 
+first place and was racey, so we switched to removing devices/target 
+like the FC class.
+
+
+> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
+> fedora devel (868).  Bidi and varlen patches always too.
+> 
+> I'll follow with some more variations on this theme.  Looks like bsg
+> needs to protect more carefully against the device going away.  Any
+> ideas how best to do this?  What was the approach in sg?
+> 
+
+I think sg is broken in similar ways. The iser guys have some tests 
+cases that have broken sg while IO is outstanding. I am ccing Erez.
