@@ -1,107 +1,130 @@
-From: Marc Bejarano <beej@alum.mit.edu>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Fri, 07 Mar 2008 17:40:40 -0500
-Message-ID: <200803101519.m2AFJCJS032509@colby.verdasys.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [SCSI] gdth: Allocate sense_buffer to prevent NULL pointer
+ dereference
+Date: Mon, 10 Mar 2008 17:20:24 +0200
+Message-ID: <47D551B8.9080807@panasas.com>
+References: <867igc3w8r.fsf@deprecated.bitebene.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204848652.3062.100.camel@localhost.localdomain>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
-Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:57385 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874AbYCJPUm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Mar 2008 11:20:42 -0400
+In-Reply-To: <867igc3w8r.fsf@deprecated.bitebene.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sven Schnelle <svens@stackframe.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-hi, james.  thanks so much for taking the time to dig into this! :)
+On Sun, Mar 09 2008 at 14:41 +0200, Sven Schnelle <svens@stackframe.org> wrote:
+> Hi,
+> 
+> i'm facing the following kernel oops with the latest git:
+> 
+> --------------------------------------8<--------------------------------------
+> Stopping MD arrays...failed (no MD subsystem loaded).
+> Mounting root filesystem read-only...done.
+> Will now restart.
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> IP: [<ffffffff8051a97e>] __gdth_interrupt+0x96e/0xb7f
+> PGD 7e51e067 PUD 7e6a1067 PMD 0 
+> Oops: 0002 [1] PREEMPT SMP 
+> CPU 3 
+> Modules linked in: nvidia(P) lm85 hwmon_vid hwmon [last unloaded: nvidia]
+> Pid: 0, comm: swapper Tainted: P         2.6.25-rc4-smp-00134-g84c6f60 #11 
+> RIP: 0010:[<ffffffff8051a97e>]  [<ffffffff8051a97e>] __gdth_interrupt+0x96e/0xb7f
+> RSP: 0018:ffff81007fbefed8  EFLAGS: 00010086
+> RAX: 0000000000000000 RBX: ffff81007e0dda68 RCX: 0000000000000002
+> RDX: 00000000ffffffff RSI: 0000000000000000 RDI: ffffc20000330000
+> RBP: ffff81007fbeff08 R08: 0000000000000000 R09: ffff81007f01de70
+> R10: 0000000000000000 R11: 0000000000000050 R12: ffff810000b10480
+> R13: ffff810000b104ff R14: ffff81007e214200 R15: 0000000000000009
+> FS:  0000000000000000(0000) GS:ffff81007f802c80(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 0000000000000000 CR3: 000000007e643000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process swapper (pid: 0, threadinfo ffff81007fbe6000, task ffff81007fbe4000)
+> Stack:  0000000000000046 ffff81007e8a93c0 0000000000000000 0000000000000000
+>  0000000000000018 0000000000000003 ffff81007fbeff18 ffffffff8051ab9f
+>  ffff81007fbeff48 ffffffff80258cc2 ffffffff8092e300 ffff81007e8a93c0
+> Call Trace:
+>  <IRQ>  [<ffffffff8051ab9f>] gdth_interrupt+0x10/0x12
+>  [<ffffffff80258cc2>] handle_IRQ_event+0x27/0x57
+>  [<ffffffff8025a055>] handle_fasteoi_irq+0x9c/0xdc
+>  [<ffffffff8020def0>] do_IRQ+0x88/0xfc
+>  [<ffffffff80209ffe>] ? default_idle+0x0/0x5f
+>  [<ffffffff8020b851>] ret_from_intr+0x0/0xa
+>  <EOI>  [<ffffffff8020a037>] ? default_idle+0x39/0x5f
+>  [<ffffffff8020a032>] ? default_idle+0x34/0x5f
+>  [<ffffffff80209ffe>] ? default_idle+0x0/0x5f
+>  [<ffffffff8020a11c>] ? cpu_idle+0xbf/0xf5
+>  [<ffffffff806cd973>] ? start_secondary+0x3e0/0x3ef
+> 
+> 
+> Code: 00 04 eb 15 3c 17 75 11 41 0f b6 c5 48 c1 e0 05 41 80 a4 04 92 02 00 00 fb 41 c7 86 18 01 00 00 00 00 00 00 49 8b 86 c0 00 00 00 <c6> 00 00 e9 92 01 00 00 66 89 43 24 41 8b 84 24 68 02 00 00 89 
+> RIP  [<ffffffff8051a97e>] __gdth_interrupt+0x96e/0xb7f
+>  RSP <ffff81007fbefed8>
+> CR2: 0000000000000000
+> ---[ end trace e81e561a458e8791 ]---
+> Kernel panic - not syncing: Aiee, killing interrupt handler!
+> Rebooting in 5 seconds..
+> --------------------------------------8<--------------------------------------
+> 
+> From 2dc63f9f8e61fd1c89f8b4d9b2d174be1c3bfbe2 Mon Sep 17 00:00:00 2001
+> From: root <root@apollo.bitebene.org>
+> Date: Sun, 9 Mar 2008 13:25:07 +0100
+> Subject: 
+> 
+> This fixes a NULL pointer dereference during execution of Internal commands,
+> where gdth only allocates scp, but not scp->sense_buffer. The rest of
+> the code assumes that sense_buffer is allocated, which leads to a kernel
+> oops e.g. on reboot (during cache flush).
+> 
+> So we have two choices here:
+> 
+> a) Allocate the sense_buffer
+> b) surrounding all accesses to sense_buffer with some if (!internal_command)
+> 
+> I'm using solution a, as this keeps code simpler.
+> 
+> Signed-off-by: Sven Schnelle <svens@stackframe.org>
+> ---
+>  drivers/scsi/gdth.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+> index 27ebd33..0b2080d 100644
+> --- a/drivers/scsi/gdth.c
+> +++ b/drivers/scsi/gdth.c
+> @@ -493,6 +493,12 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+>      if (!scp)
+>          return -ENOMEM;
+>  
+> +    scp->sense_buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
+> +    if (!scp->sense_buffer) {
+> +	kfree(scp);
+> +	return -ENOMEM;
+> +    }
+> +
+>      scp->device = sdev;
+>      memset(&cmndinfo, 0, sizeof(cmndinfo));
+>  
+> @@ -513,6 +519,7 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+>      rval = cmndinfo.status;
+>      if (info)
+>          *info = cmndinfo.info;
+> +    kfree(scp->sense_buffer);
+>      kfree(scp);
+>      return rval;
+>  }
+James and linux-scsi CCed.
 
-At 19:10 3/6/2008, James Bottomley wrote:
- >On Thu, 2008-03-06 at 16:08 -0500, Marc Bejarano wrote:
- >> i've been doing burn-in on a new server i had hoped to deploy months
- >> ago and can't seem to figure out the cause of data corruption i've
- >> been seeing.  the SAS controller is an LSI SAS3801E connected to an
- >> xTore XJ-SA12-316 SAS enclosures (vitesses expanders) full of seagate
- >> 7200.10 750-GB SATA drives.
- >>
- >> the corruption is occurring in ext3 filesystems that live on top of
- >> an lvm2 RAID 0 stripe composed of 16 2-drive md RAID 1 sets.  the
- >> corruption has been detected both by MySQL noticing bad checksums and
- >> also by using md's "check" (sync_action) for RAID 1 consistency.
- >
- >Actually, the RAID-1 might be the most useful.  Is there anything
- >significant about the differing data?
+James it looks reasonable. It's a fallout from the sense_buffer separation patches.
+Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
 
-it looks like contiguous sectors of misplaced data.
+I will submit solution b) above as part of my sense handling patchset.
 
- >Do od dumps of the corrupt
- >sectors in both halves of the mirror and see what actually appears in
- >the data ... it might turn out to be useful.
-
-my colleague (who has been batting his head against this for far 
-longer than he'd like to have been) has been getting at the data via 
-a pread64() of the actual mysql data file.  multiple pread64()'s end 
-up giving him both halves of the mirror.
-
- >Things like how long the
- >data corruption is (are the two sectors different, or is it just a run
- >of a few bytes within them) can be useful in tracking the source of the
- >corruption.
-
-here is a cut of an email he wrote me:
-===
-In one instance of mirroring out-of-sync-ness, the disk with the bad
-data looked as follows:
-
-"a" is a currently undetermined offset into the block device divisible by 16K.
-
-a + 0x00000: "header of 16K mysql/innodb page # 178812066 followed by 
-good data"
-
-a + 0x02600: **BAD DATA**: "header of 16K mysql/innodb page # 178812067",
-should be at a+0x04000, followed by old version of first 6656 bytes 
-of page 178812067
-
-a + 0x04000: "header of 16K mysql/innodb page # 178812067 followed by 
-correct current copy of page"
-
-It looks to me like mysql/innodb "page" 178812067 at some point was 
-written to the wrong spot, and subsequently a newer version of page 
-178812067 got written out again, but to the proper spot.
-
-In another instance of out-of-sync-ness, the bad disk looked as 
-follows.  The bad disk was in a completely different md raid1 
-"device", and if it needs to be said explicitly, was a totally 
-different physical drive.
-
-b + 0x00000: "header of 16K mysql/innodb page 309713974 followed by good data"
-
-b + 0x03600: **BAD DATA**: "header of 16K mysql/innodb page 
-309713975", should be at b+0x04000, followed by first 10752 == 21*512 
-bytes of current correct value of page per disk with good copy
-
-b + 0x06000: correct current last part of page 309713975 in proper place.
-
-This is hard to explain.  It looks like page 309713975 got written 
-out to the proper spot, but then the first 10752 bytes got written 
-out again to the wrong spot?!?
-===
-
- >Do you happen to have the absolute block number (and relative block
- >number---relative to the partition start) of the corruption?
-
-no.  can you suggest an easy way to get that?
-
- >Of course, confirming
- >that git head has this problem too, so we could rule out patches added
- >to the RHEL kernel would be useful ...
-
-we're not currently git-enabled, but i suppose it wouldn't take too 
-long to become so.  would testing with the latest kernel.org snapshot 
-(currently 2.6.25-rc4-git2 from this mornging) be good enough?  or 
-were you hoping for a test with stuff from scsi-misc?
-
-cheers,
-marc
-
+Boaz
