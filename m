@@ -1,52 +1,39 @@
-From: "Massey, James" <James.Massey@goodrich.com>
-Subject: scsi target emulation
-Date: Mon, 10 Mar 2008 18:12:56 -0000
-Message-ID: <45D1B79D2DCCF34E966D24728765DDB378C265@nhc2ex11.goodrich.root.local>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Mon, 10 Mar 2008 20:02:25 +0100
+Message-ID: <20080310200225.1b9914e3@szpak>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+	<1204848652.3062.100.camel@localhost.localdomain>
+	<200803101519.m2AFJCJS032509@colby.verdasys.com>
+	<1205163386.2941.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lts-mxgateway.goodrich.com ([12.129.98.97]:36110 "EHLO
-	lts-mxgateway.goodrich.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751463AbYCJSmQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2008 14:42:16 -0400
-Received: from GR-GWI-EAST-A.goodrich.com (gr-gwi-east-a.goodrich.com [170.126.120.4])
-	by lts-mxgateway.goodrich.com (Symantec Mail Security) with ESMTP id 9A26D4DC002
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Mar 2008 14:13:01 -0400 (EDT)
-Received: from nhc1ex01.goodrich.root.local (localhost [127.0.0.1])
-	by GR-GWI-EAST-A.goodrich.com (8.13.5/8.13.5) with ESMTP id m2AICvej025036
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Mar 2008 14:13:01 -0400 (EDT)
-Content-class: urn:content-classes:message
+Received: from mx1.wp.pl ([212.77.101.5]:25834 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752470AbYCJTDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2008 15:03:08 -0400
+Received: from a3gw.hmg.inpg.fr (HELO szpak) (janek_listy@[194.254.65.43])
+          (envelope-sender <janek_listy@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with SMTP
+          for <linux-scsi@vger.kernel.org>; 10 Mar 2008 20:03:03 +0100
+In-Reply-To: <1205163386.2941.14.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 
-Hi,
+James Bottomley said:     (by the date of Mon, 10 Mar 2008 10:36:26 -0500)
 
-I am trying to setup a system which has a SCSI initiator and a SCSI
-target:
 
-Two PCs running Linux. Each PC has a fibre channel HBA. The two HBAs are
-directly connected to each other (no switch in-between). One PC acts as
-the SCSI initiator and the other a SCSI target.
+> I'm afraid the only way to confirm this theory definitively will be with
+> the destructive disktest
 
-Previously, I have used a Linux PC, the sg device driver and utilities
-to read data from a disk with a fibre channel interface. In this setup
-the sg driver was acting as a SCSI initiator and this works ok.
+you can try this destructive test:
 
-Now I wish to setup a PC running Linux to act as a SCSI target. The HBA
-claims to have SCSI target support. I am unsure of how to access the
-data (e.g. from on a write call made by the SCSI initiator) via a user
-space application. Can I use the sg driver to do this or do I need to
-use SCST in user mode?
+  badblocks -c 10240 -s -w -t random -v /dev/sdc
 
-James Massey 
---------------------------------------------------------
+or use smaller value for -c if you wish.
 
-Rosemount Aerospace Limited.
-Registered Office: Stratford Road, Solihull, West Midlands, B90 4LA.
-Registered in England No. 02849033.
-
---------------------------------------------------------
+-- 
+Janek Kozicki                                                         |
