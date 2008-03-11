@@ -1,72 +1,67 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [patch 1/2] zfcp: Fix race during ERP thread shutdown
-Date: Tue, 11 Mar 2008 17:43:41 +0100
-Message-ID: <20080311164341.GA6380@osiris.boeblingen.de.ibm.com>
-References: <20080310151852.808020000@de.ibm.com> <20080310152328.463410000@de.ibm.com>
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: [PATCH] [SCSI] gdth: Allocate sense_buffer to prevent NULL pointer dereference
+Date: Tue, 11 Mar 2008 10:39:45 -0700
+Message-ID: <20080311173945.GJ2820@one-eyed-alien.net>
+References: <867igc3w8r.fsf@deprecated.bitebene.org> <47D551B8.9080807@panasas.com> <1205183577.2941.38.camel@localhost.localdomain> <47D6B050.7070803@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EdRE1UL8d3mMOE6m"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([195.212.29.135]:21056 "EHLO
-	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbYCKQno (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2008 12:43:44 -0400
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:46598
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754061AbYCKRmB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Mar 2008 13:42:01 -0400
 Content-Disposition: inline
-In-Reply-To: <20080310152328.463410000@de.ibm.com>
+In-Reply-To: <47D6B050.7070803@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Peschke <mp3@de.ibm.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
 
-> --- a/drivers/s390/scsi/zfcp_erp.c	2008-03-10 12:34:48.000000000 +0100
-> +++ b/drivers/s390/scsi/zfcp_erp.c	2008-03-10 16:05:26.000000000 +0100
-> @@ -1002,7 +1002,7 @@ zfcp_erp_thread_setup(struct zfcp_adapte
->  					    &adapter->status));
->  		debug_text_event(adapter->erp_dbf, 5, "a_thset_ok");
->  	}
-> -
-> +	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
->  	return (retval < 0);
 
-This way the flag will be set even if the creation of the erp thread failed.
-It should be done somewhere within zfcp_erp_thread() instead.
+--EdRE1UL8d3mMOE6m
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Besides that setting the flag must be done while holding the erp_lock.
-Otherwise zfcp_erp_action_enqueue might check the flag, other cpu clears
-the flag right after that, and then enqueueing continues while the flag is
-not set.
+On Tue, Mar 11, 2008 at 06:16:16PM +0200, Boaz Harrosh wrote:
+> I would like to fix this better by calling scsi_get/put_command but there=
+ is=20
+> something fundamental that bothers me with isd200 driver. I can see that=
+=20
+> an isd200_info struct is allocated and put on a struct us_data->extra. Bu=
+t=20
+> as I understand the code, the struct us_data is associated with a scsi_ho=
+st=20
+> not a scsi_device. Are we guarantied that we have only one scsi_device=20
+> per host at all times?
 
->  }
-> 
-> @@ -1025,6 +1025,8 @@ zfcp_erp_thread_kill(struct zfcp_adapter
->  {
->  	int retval = 0;
-> 
-> +	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
-> +	zfcp_erp_wait(adapter);
->  	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL, &adapter->status);
->  	up(&adapter->erp_ready_sem);
-> 
-> @@ -2940,8 +2942,7 @@ zfcp_erp_action_enqueue(int action,
->  	 * efficient.
->  	 */
-> 
-> -	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
-> -			      &adapter->status))
-> +	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status))
->  		return -EIO;
-> 
->  	debug_event(adapter->erp_dbf, 4, &action, sizeof (int));
-> --- a/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 12:34:48.000000000 +0100
-> +++ b/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 16:05:26.000000000 +0100
-> @@ -198,7 +198,6 @@ zfcp_ccw_set_offline(struct ccw_device *
->  	down(&zfcp_data.config_sema);
->  	adapter = dev_get_drvdata(&ccw_device->dev);
->  	zfcp_erp_adapter_shutdown(adapter, 0);
-> -	zfcp_erp_wait(adapter);
->  	zfcp_erp_thread_kill(adapter);
+Yes.  We allocate a scsi_host for each USB device that we see.  The only
+time you can have more than one scsi_device is in the case of multi-target
+devices, of which the ISD-200 is NOT one.
 
-And as a sidenote, if the scenario this patch is supposed to fix can really
-happen, how can you make sure the adapter is still down before the erp thread
-gets killed? Some action could have been enqueued and finished which reopened
-the adapter after zfcp_erp_adapter_shutdown and before zfcp_erp_thread_kill.
-Just wondering... :)
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Hey, has anyone seen the Microsoft sales guy? It's his feeding time...
+					-- Mike
+User Friendly, 4/17/1998
+
+--EdRE1UL8d3mMOE6m
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFH1sPhHL9iwnUZqnkRAmhMAJkB5UlBfVPWuhk8V4qNDTqxVfmmUQCeKKSN
+xgvwLgPFw79jRClCVf+I29E=
+=FzME
+-----END PGP SIGNATURE-----
+
+--EdRE1UL8d3mMOE6m--
