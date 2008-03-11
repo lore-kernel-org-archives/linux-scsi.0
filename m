@@ -1,355 +1,93 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 7/7] scsi_dh: Remove hardware handler
-	infrastructure from dm
-Date: Mon, 10 Mar 2008 18:34:12 -0700
-Message-ID: <20080311013412.23179.64170.sendpatchset@localhost.localdomain>
-References: <20080311013328.23179.76692.sendpatchset@localhost.localdomain>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20080311013328.23179.76692.sendpatchset@localhost.localdomain>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, agk@redhat.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [BUG 1/3] bsg queue oops with iscsi logout
+Date: Tue, 11 Mar 2008 00:36:51 -0500
+Message-ID: <47D61A73.3000803@cs.wisc.edu>
+References: <20080309165359.GA24388@osc.edu> <47D5766C.3020206@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------050401070702050006030203"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36360 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755376AbYCKFhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Mar 2008 01:37:08 -0400
+In-Reply-To: <47D5766C.3020206@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Pete Wyckoff <pw@osc.edu>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Erez Zilber <erezz@voltaire.com>
 
-Subject: scsi_dh: Remove hardware handler infrastructure from dm
+This is a multi-part message in MIME format.
+--------------050401070702050006030203
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Chandra Seetharaman <sekharan@us.ibm.com>
+Mike Christie wrote:
+> Pete Wyckoff wrote:
+>> I think this used not to happen; not sure.  But I changed two things
+> 
+> This most likely did not happen before 2.6.25-rc* or it broke in 
+> slightly different ways, because iscsi used to try and do
+> 
+> echo 1 > /sys/block/sdX/device/delete
+> 
+> from userspace instead of calling scsi_remove_target from the kernel.
+> 
+> As you know around 2.6.21, the behavior of doing the echo to the delete 
+> file changed due to a driver model and scsi change and that broke the 
+> iscsi tools. The iscsi tools userspace removal was sort of hack in the 
+> first place and was racey, so we switched to removing devices/target 
+> like the FC class.
+> 
+> 
+>> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
+>> fedora devel (868).  Bidi and varlen patches always too.
+>>
+>> I'll follow with some more variations on this theme.  Looks like bsg
+>> needs to protect more carefully against the device going away.  Any
+>> ideas how best to do this?  What was the approach in sg?
+>>
+> 
+> I think sg is broken in similar ways. The iser guys have some tests 
+> cases that have broken sg while IO is outstanding. I am ccing Erez.
 
-This patch just removes infrastructure that provide support to add
-a hardware handler to dm.
+Actually one of the problems looks a little different than some of the 
+problems hit with sg and are caused because we remove the bsg device too 
+soon. I think we want to wait until all the references from the 
+commands/requests are released. The attached patch (untested) moves the 
+bsg unreg call to the scsi device release fn.
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- drivers/md/Makefile        |    2 	1 +	1 -	0 !
- drivers/md/dm-hw-handler.c |  213 	0 +	213 -	0 !
- drivers/md/dm-hw-handler.h |   63 	0 +	63 -	0 !
- drivers/md/dm-mpath.h      |    1 	0 +	1 -	0 !
- 4 files changed, 1 insertion(+), 278 deletions(-)
+--------------050401070702050006030203
+Content-Type: text/x-patch;
+ name="delay-bsg-unreg.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="delay-bsg-unreg.patch"
 
-Index: linux-2.6.25-rc2-mm1/drivers/md/dm-hw-handler.c
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/md/dm-hw-handler.c
-+++ /dev/null
-@@ -1,213 +0,0 @@
--/*
-- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
-- *
-- * This file is released under the GPL.
-- *
-- * Multipath hardware handler registration.
-- */
--
--#include "dm.h"
--#include "dm-hw-handler.h"
--
--#include <linux/slab.h>
--
--struct hwh_internal {
--	struct hw_handler_type hwht;
--
--	struct list_head list;
--	long use;
--};
--
--#define hwht_to_hwhi(__hwht) container_of((__hwht), struct hwh_internal, hwht)
--
--static LIST_HEAD(_hw_handlers);
--static DECLARE_RWSEM(_hwh_lock);
--
--static struct hwh_internal *__find_hw_handler_type(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	list_for_each_entry(hwhi, &_hw_handlers, list) {
--		if (!strcmp(name, hwhi->hwht.name))
--			return hwhi;
--	}
--
--	return NULL;
--}
--
--static struct hwh_internal *get_hw_handler(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(name);
--	if (hwhi) {
--		if ((hwhi->use == 0) && !try_module_get(hwhi->hwht.module))
--			hwhi = NULL;
--		else
--			hwhi->use++;
--	}
--	up_read(&_hwh_lock);
--
--	return hwhi;
--}
--
--struct hw_handler_type *dm_get_hw_handler(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	if (!name)
--		return NULL;
--
--	hwhi = get_hw_handler(name);
--	if (!hwhi) {
--		request_module("dm-%s", name);
--		hwhi = get_hw_handler(name);
--	}
--
--	return hwhi ? &hwhi->hwht : NULL;
--}
--
--void dm_put_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	if (!hwht)
--		return;
--
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi)
--		goto out;
--
--	if (--hwhi->use == 0)
--		module_put(hwhi->hwht.module);
--
--	BUG_ON(hwhi->use < 0);
--
--      out:
--	up_read(&_hwh_lock);
--}
--
--static struct hwh_internal *_alloc_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi = kzalloc(sizeof(*hwhi), GFP_KERNEL);
--
--	if (hwhi)
--		hwhi->hwht = *hwht;
--
--	return hwhi;
--}
--
--int dm_register_hw_handler(struct hw_handler_type *hwht)
--{
--	int r = 0;
--	struct hwh_internal *hwhi = _alloc_hw_handler(hwht);
--
--	if (!hwhi)
--		return -ENOMEM;
--
--	down_write(&_hwh_lock);
--
--	if (__find_hw_handler_type(hwht->name)) {
--		kfree(hwhi);
--		r = -EEXIST;
--	} else
--		list_add(&hwhi->list, &_hw_handlers);
--
--	up_write(&_hwh_lock);
--
--	return r;
--}
--
--int dm_unregister_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	down_write(&_hwh_lock);
--
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi) {
--		up_write(&_hwh_lock);
--		return -EINVAL;
--	}
--
--	if (hwhi->use) {
--		up_write(&_hwh_lock);
--		return -ETXTBSY;
--	}
--
--	list_del(&hwhi->list);
--
--	up_write(&_hwh_lock);
--
--	kfree(hwhi);
--
--	return 0;
--}
--
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio)
--{
--#if 0
--	int sense_key, asc, ascq;
--
--	if (bio->bi_error & BIO_SENSE) {
--		/* FIXME: This is just an initial guess. */
--		/* key / asc / ascq */
--		sense_key = (bio->bi_error >> 16) & 0xff;
--		asc = (bio->bi_error >> 8) & 0xff;
--		ascq = bio->bi_error & 0xff;
--
--		switch (sense_key) {
--			/* This block as a whole comes from the device.
--			 * So no point retrying on another path. */
--		case 0x03:	/* Medium error */
--		case 0x05:	/* Illegal request */
--		case 0x07:	/* Data protect */
--		case 0x08:	/* Blank check */
--		case 0x0a:	/* copy aborted */
--		case 0x0c:	/* obsolete - no clue ;-) */
--		case 0x0d:	/* volume overflow */
--		case 0x0e:	/* data miscompare */
--		case 0x0f:	/* reserved - no idea either. */
--			return MP_ERROR_IO;
--
--			/* For these errors it's unclear whether they
--			 * come from the device or the controller.
--			 * So just lets try a different path, and if
--			 * it eventually succeeds, user-space will clear
--			 * the paths again... */
--		case 0x02:	/* Not ready */
--		case 0x04:	/* Hardware error */
--		case 0x09:	/* vendor specific */
--		case 0x0b:	/* Aborted command */
--			return MP_FAIL_PATH;
--
--		case 0x06:	/* Unit attention - might want to decode */
--			if (asc == 0x04 && ascq == 0x01)
--				/* "Unit in the process of
--				 * becoming ready" */
--				return 0;
--			return MP_FAIL_PATH;
--
--			/* FIXME: For Unit Not Ready we may want
--			 * to have a generic pg activation
--			 * feature (START_UNIT). */
--
--			/* Should these two ever end up in the
--			 * error path? I don't think so. */
--		case 0x00:	/* No sense */
--		case 0x01:	/* Recovered error */
--			return 0;
--		}
--	}
--#endif
--
--	/* We got no idea how to decode the other kinds of errors ->
--	 * assume generic error condition. */
--	return MP_FAIL_PATH;
--}
--
--EXPORT_SYMBOL_GPL(dm_register_hw_handler);
--EXPORT_SYMBOL_GPL(dm_unregister_hw_handler);
--EXPORT_SYMBOL_GPL(dm_scsi_err_handler);
-Index: linux-2.6.25-rc2-mm1/drivers/md/dm-hw-handler.h
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/md/dm-hw-handler.h
-+++ /dev/null
-@@ -1,63 +0,0 @@
--/*
-- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
-- *
-- * This file is released under the GPL.
-- *
-- * Multipath hardware handler registration.
-- */
--
--#ifndef	DM_HW_HANDLER_H
--#define	DM_HW_HANDLER_H
--
--#include <linux/device-mapper.h>
--
--#include "dm-mpath.h"
--
--struct hw_handler_type;
--struct hw_handler {
--	struct hw_handler_type *type;
--	struct mapped_device *md;
--	void *context;
--};
--
--/*
-- * Constructs a hardware handler object, takes custom arguments
-- */
--/* Information about a hardware handler type */
--struct hw_handler_type {
--	char *name;
--	struct module *module;
--
--	int (*create) (struct hw_handler *handler, unsigned int argc,
--		       char **argv);
--	void (*destroy) (struct hw_handler *hwh);
--
--	void (*pg_init) (struct hw_handler *hwh, unsigned bypassed,
--			 struct dm_path *path);
--	unsigned (*error) (struct hw_handler *hwh, struct bio *bio);
--	int (*status) (struct hw_handler *hwh, status_type_t type,
--		       char *result, unsigned int maxlen);
--};
--
--/* Register a hardware handler */
--int dm_register_hw_handler(struct hw_handler_type *type);
--
--/* Unregister a hardware handler */
--int dm_unregister_hw_handler(struct hw_handler_type *type);
--
--/* Returns a registered hardware handler type */
--struct hw_handler_type *dm_get_hw_handler(const char *name);
--
--/* Releases a hardware handler  */
--void dm_put_hw_handler(struct hw_handler_type *hwht);
--
--/* Default err function */
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio);
--
--/* Error flags for err and dm_pg_init_complete */
--#define MP_FAIL_PATH 1
--#define MP_BYPASS_PG 2
--#define MP_ERROR_IO  4	/* Don't retry this I/O */
--#define MP_RETRY 8
--
--#endif
-Index: linux-2.6.25-rc2-mm1/drivers/md/Makefile
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/md/Makefile
-+++ linux-2.6.25-rc2-mm1/drivers/md/Makefile
-@@ -4,7 +4,7 @@
+Delay bsg unregistration, because we want to wait until all the request/cmds
+have released their reference.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ed83cdb..b9b09a7 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -294,6 +294,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	}
  
- dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-linear.o dm-stripe.o \
- 		   dm-ioctl.o dm-io.o kcopyd.o
--dm-multipath-objs := dm-hw-handler.o dm-path-selector.o dm-mpath.o
-+dm-multipath-objs := dm-path-selector.o dm-mpath.o
- dm-snapshot-objs := dm-snap.o dm-exception-store.o
- dm-mirror-objs	:= dm-log.o dm-raid1.o
- dm-rdac-objs	:= dm-mpath-rdac.o
-Index: linux-2.6.25-rc2-mm1/drivers/md/dm-mpath.h
-===================================================================
---- linux-2.6.25-rc2-mm1.orig/drivers/md/dm-mpath.h
-+++ linux-2.6.25-rc2-mm1/drivers/md/dm-mpath.h
-@@ -16,7 +16,6 @@ struct dm_path {
- 	unsigned is_active;	/* Read-only */
+ 	if (sdev->request_queue) {
++		bsg_unregister_queue(sdev->request_queue);
+ 		sdev->request_queue->queuedata = NULL;
+ 		/* user context needed to free queue */
+ 		scsi_free_queue(sdev->request_queue);
+@@ -857,7 +858,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+ 		return;
  
- 	void *pscontext;	/* For path-selector use */
--	void *hwhcontext;	/* For hw-handler use */
- };
- 
- /* Callback for hwh_pg_init_fn to use when complete */
+-	bsg_unregister_queue(sdev->request_queue);
+ 	class_device_unregister(&sdev->sdev_classdev);
+ 	transport_remove_device(dev);
+ 	device_del(dev);
 
--- 
-
-----------------------------------------------------------------------
-    Chandra Seetharaman               | Be careful what you choose....
-              - sekharan@us.ibm.com   |      .......you may get it.
-----------------------------------------------------------------------
+--------------050401070702050006030203--
