@@ -1,67 +1,115 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [PATCH] [SCSI] gdth: Allocate sense_buffer to prevent NULL pointer dereference
-Date: Tue, 11 Mar 2008 10:39:45 -0700
-Message-ID: <20080311173945.GJ2820@one-eyed-alien.net>
-References: <867igc3w8r.fsf@deprecated.bitebene.org> <47D551B8.9080807@panasas.com> <1205183577.2941.38.camel@localhost.localdomain> <47D6B050.7070803@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [0/20] Remove isa_unchecked_dma and some more GFP_DMAs
+ in the mid layer v3
+Date: Tue, 11 Mar 2008 19:55:16 +0200
+Message-ID: <47D6C784.50408@panasas.com>
+References: <20080307653.720459648@firstfloor.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EdRE1UL8d3mMOE6m"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:46598
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754061AbYCKRmB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Mar 2008 13:42:01 -0400
-Content-Disposition: inline
-In-Reply-To: <47D6B050.7070803@panasas.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:46081 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753454AbYCKRzh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2008 13:55:37 -0400
+In-Reply-To: <20080307653.720459648@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk, Jeff Garzik <jeff@garzik.org>
 
+On Fri, Mar 07 2008 at 19:53 +0200, Andi Kleen <andi@firstfloor.org> wrote:
+> v2: various cleanups, use dma_alloc_coherent instead of naked GFP_DMA
+>     add blk_* allocators to avoid bouncing in SCSI scan
+> v3: Remove cmnd/sense buffer bouncing in advansys. 
+>     Replace sense_buffer_mask with a single bit
+> 
+> Original description:
+> 
+> This patchkit fixes all existing drivers that used isa_unchecked_dma
+> to not need that anymore.  I have some upcoming infrastructure changes 
+> for DMA memory management and isa_unchecked_dma was in the way.
+> 
+> Enabling isa_unchecked_dma had several effects:
+> - All incoming scsi_cmnds were in GFP_DMA memory.
+> Only one driver relied on that actually (advansys), the others all accessed
+> the scsi_cmnds only with the CPU.
+> - scsi hostdata is allocated with GFP_DMA
+> A lot of drivers relied on that. I converted them all to allocate hostdata
+> in a separate buffer linked to rom the scsi host structure.
+> - Enabling block layer bouncing for all data. That's the most important one.
+> I changed all drivers to do that directly instead of relying on the mid
+> layer for it.
+> - sense_buffer is allocated with GFP_DMA. That was also commonly
+> required and not easy to fix so I created a separate host template
+> field that enables sense_buffer bouncing.
+> 
+> Also while I was it I removed also a lot of GFP_DMAs in the frontend
+> drivers which are not needed anymore because the block layer does
+> the bouncing for all data anyways. Or rather we ask the block layer
+> now to bounce.
+> 
+> The main problem of the patchkit is that is that I wasn't able
+> to test the drivers because I don't have any of the hardware. All
+> changes (except perhaps advansys) were relatively simple and straight
+> forward so I don't expect many problems though.
+> 
+> If anybody has any of these ISA SCSI adapters and would be willing to test
+> them with these patches that would be appreciated.
+> I suspect actually that some of the ISA drivers are actually already
+> bitrotted independently of these changes. Hopefully they won't make
+> anything worse though. 
+> 
+> Patches against 2.6.25rc4
+> 
+> These are a lot of patches. I can set up a git tree if that makes
+> merging easier. Please let me now if I should do that.
+> 
+> -Andi
 
---EdRE1UL8d3mMOE6m
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Andi hi.
 
-On Tue, Mar 11, 2008 at 06:16:16PM +0200, Boaz Harrosh wrote:
-> I would like to fix this better by calling scsi_get/put_command but there=
- is=20
-> something fundamental that bothers me with isd200 driver. I can see that=
-=20
-> an isd200_info struct is allocated and put on a struct us_data->extra. Bu=
-t=20
-> as I understand the code, the struct us_data is associated with a scsi_ho=
-st=20
-> not a scsi_device. Are we guarantied that we have only one scsi_device=20
-> per host at all times?
+First let me start by saying that your "remove of ISA cruft from
+scsi land" patchset was like the smell of flowers on that first 
+spring morning.
 
-Yes.  We allocate a scsi_host for each USB device that we see.  The only
-time you can have more than one scsi_device is in the case of multi-target
-devices, of which the ISD-200 is NOT one.
+It perfectly fits with two parallel efforts I'm perusing.
 
-Matt
+- First is with regard to scsi_cmnd->cmnd cleanup:
+  http://www.spinics.net/lists/linux-scsi/msg23676.html
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+  You have just done my job where I needed to audit all uses of 
+  scsi_cmnd->cmnd with regard to the isa_unchecked_dma.
+  (see: http://www.spinics.net/lists/linux-scsi/msg23747.html)
 
-Hey, has anyone seen the Microsoft sales guy? It's his feeding time...
-					-- Mike
-User Friendly, 4/17/1998
+- Second, with my sense buffer effort:
+  (http://www.spinics.net/lists/linux-scsi/msg23231.html)
+  The second effort might help in also eliminating the use of the new 
+  .sense_buffer_isa by streamlining the use of the sense_buffer to use 
+  the same bounce buffer mechanism used for regular IO. Though farther 
+  cleaning what you have already started.
+  (I will have some questions regarding this later)
 
---EdRE1UL8d3mMOE6m
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+The "scan-and-change of all scsi LLDS that..." is a very unrewarding and sure to 
+encounter-hidden-ghosts effort. As I should know freshly. Reviewing few of the
+drivers in this patchset I've spotted some minor problems. Mainly two things
+right now. For instance aha152x.c is a file used for both ISA and a PCMCIA
+devices, your change unnecessarily restricts the PCMCIA device. That driver, as 
+well as other drivers in the patchset, are currently allocated low by the 
+isa_unchecked_dma, but from a closer inspection, none of the host_data is actually 
+used for DMA and the allocation can stay embedded. I think it is worth it to do
+that now in one go. One more thing is the EISA devices that are now pushed to
+behave like ISA because they do not have a device, like gdth, For that particular
+driver Jeff Garzik has a patch in Q that might help. I will try to rebase your
+patch on top of his series.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+I will put all your patches on a local git tree and try to stare at them deeper.
+Do you have these (And all the dma patches sent to lkml) on a public git tree
+somewhere? I would like to study and test them.
 
-iD8DBQFH1sPhHL9iwnUZqnkRAmhMAJkB5UlBfVPWuhk8V4qNDTqxVfmmUQCeKKSN
-xgvwLgPFw79jRClCVf+I29E=
-=FzME
------END PGP SIGNATURE-----
+(The ftp url you specified in lkml returns an alphabetical order of patches and
+I'm not sure which subdirectory has the latest set)
 
---EdRE1UL8d3mMOE6m--
+Thanks for doing this and the all effort looks commendable.
+
+Boaz
