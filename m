@@ -1,200 +1,131 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Wed, 12 Mar 2008 12:01:57 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
-References: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH] 2.6.25-rc4-git3 - inquiry cmd issued via /dev/sg? device
+ causes infinite loop in 2.6.24
+Date: Wed, 12 Mar 2008 11:03:26 -0500
+Message-ID: <47D7FECE.1020901@sgi.com>
+References: <47D7035F.5000700@sgi.com> <47D7B4A1.6020909@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36170 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751075AbYCLQB5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 12:01:57 -0400
-In-Reply-To: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+Received: from relay2.sgi.com ([192.48.171.30]:52516 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751206AbYCLQDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Mar 2008 12:03:30 -0400
+In-Reply-To: <47D7B4A1.6020909@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dougg@torque.net>, linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>
 
-On Wed, 12 Mar 2008, FUJITA Tomonori wrote:
 
-> I fixed some minor issues (comments, warning, etc) and I've uploaded
-> the patchset:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git 
-> sg-copy
+Boaz Harrosh wrote:
 
-Sorry, I don't see it there yet in the gitweb interface.  Here are my
-comments on the parts you posted earlier.
+<snip>
 
-> How about this?
 > 
-> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-> index a3d567a..8951e3c 100644
-> --- a/include/linux/scatterlist.h
-> +++ b/include/linux/scatterlist.h
-> @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
->  		     sg_alloc_fn *);
->  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+> All these patches do not solve the root cause of the problem and until
+> solved, (easily) they will keep popping up.
+
+I will ask that the correctness of the sg driver's construction of
+a scatter list also be considered here.  Is it ever correct for bi_size
+to wind up larger than the request size?  Why is rounding needed in one
+case (sg_build_indirect) but not the other (sg_link_reserve)?
+
+> The root cause is that BLOCK_PC commands *can not* be retried in chunks. 
+> The midlayer has no way to know how to retry them. and any attempt to do so
+> will result in an illegal scsi command.
+> 
+> I'm really sorry for not seeing this before. I have seen all these emails
+> and patches back and forth but they addressed such remote locations, that
+> I have not paid attention to them.
+> 
+> So lets try to touch base. BLOCK_PC command can only be completed in full
+> always. In case of error or residual this should be properly reported and
+> that is all the midlayer can do. The Initiator That knows what command was
+> sent will then decide on a retry or not. In above case that will be user
+> mode.
+
+Those who truly understand this should comment.  It makes sense to this
+novice.
+
+> 
+> Just to demonstrate what I mean a patch is attached. Just as an RFC, totally
+> untested.
+
+I can try this out and see what happens.
+
+
+Mike
+
+> ---
+> git-diff --stat -p
+>  drivers/scsi/scsi_lib.c |   29 ++++++++++++++++-------------
+>  1 files changed, 16 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ba21d97..e5d05c6 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -784,17 +784,24 @@ EXPORT_SYMBOL(scsi_release_buffers);
+>   * in req->data_len and req->next_rq->data_len. The upper-layer driver can
+>   * decide what to do with this information.
+>   */
+> -void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+> +static void scsi_end_blk_request(struct scsi_cmnd *cmd)
+>  {
+>  	struct request *req = cmd->request;
+>  	unsigned int dlen = req->data_len;
+> -	unsigned int next_dlen = req->next_rq->data_len;
+> +	unsigned int next_dlen;
 >  
-> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
-> +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
-> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-> +			void *buf, int buflen);
-> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-> +		      void *buf, int buflen);
-
-These routines probably should not return int.  Maybe unsigned int or 
-unsigned long.  If you really want to be picky, it should be size_t.
-
-Same goes for the type of the buflen parameter.
-
-> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
-> +		   unsigned long *offset, void *buf, int buflen, int to_buffer)
-> +{
-> +	struct scatterlist *sg;
-> +	unsigned long buf_off = 0;
-
-The type of buf_off should be the same as the function's return type.
-
-> +	int i;
-> +
-> +	WARN_ON(!irqs_disabled());
-> +
-> +	for_each_sg(*sgl, sg, nents, i) {
-
-Will there be a problem in subsequent calls if *sgl has been
-incremented but nents hasn't been changed?  Maybe nents needs to be a 
-pointer also.
-
-> +		struct page *page;
-> +		int n = 0;
-> +		unsigned int sg_off = sg->offset;
-> +		unsigned int sg_copy = sg->length;
-> +
-> +		BUG_ON(*offset > sg_copy);
-> +
-> +		if (!buflen)
-> +			break;
-> +
-> +		sg_off += *offset;
-> +		n = sg_off >> PAGE_SHIFT;
-> +		sg_off &= ~PAGE_MASK;
-> +		sg_copy -= *offset;
-> +
-> +		if (sg_copy > buflen) {
-> +			sg_copy = buflen;
-> +			*offset += sg_copy;
-> +		} else
-> +			*offset = 0;
-> +
-> +		buflen -= sg_copy;
-> +
-> +		while (sg_copy > 0) {
-> +			unsigned int page_copy;
-> +			void *p;
-> +
-> +			page_copy = PAGE_SIZE - sg_off;
-> +			if (page_copy > sg_copy)
-> +				page_copy = sg_copy;
-> +
-> +			page = nth_page(sg_page(sg), n);
-> +			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
-> +
-> +			if (to_buffer)
-> +				memcpy(buf + buf_off, p + sg_off, page_copy);
-> +			else {
-> +				memcpy(p + sg_off, buf + buf_off, page_copy);
-> +				flush_kernel_dcache_page(page);
-> +			}
-> +
-> +			kunmap_atomic(p, KM_BIO_SRC_IRQ);
-> +
-> +			buf_off += page_copy;
-> +			sg_off += page_copy;
-> +			if (sg_off == PAGE_SIZE) {
-> +				sg_off = 0;
-> +				n++;
-> +			}
-> +			sg_copy -= page_copy;
-> +		}
-
-Here you need to add:
-
-		if (*offset)
-			break;
-
-Otherwise *sgl will be incremented wrongly if the transfer ends in the
-middle of an sg entry.
-
+> -	req->data_len = scsi_out(cmd)->resid;
+> -	req->next_rq->data_len = scsi_in(cmd)->resid;
+> +	if (blk_bidi_rq(req)) {
+> +		next_dlen = req->next_rq->data_len;
+> +		req->data_len = scsi_out(cmd)->resid;
+> +		req->next_rq->data_len = scsi_in(cmd)->resid;
+> +	} else {
+> +		next_dlen = 0;
+> +		req->data_len = scsi_get_resid(cmd);
 > +	}
-> +
-> +	*sgl = sg;
-> +
-> +	return buf_off;
-> +}
-
-> +
-> +/**
-> + * sg_copy_from_buffer - Copy from liner buffer to an SG table
-
-s/liner/linear/
-
-> + * @sgl:		 The SG table
-> + * @nents:		 Number of SG entries
-> + * @buf:		 Where to copy from
-> + * @buflen:		 The number of bytes to copy
-> + *
-> + * Returns the number of copied byte.
-
-s/byte/bytes/
-
-> + *
-> + **/
-> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-> +			void *buf, int buflen)
-> +{
-> +	struct scatterlist *s = sgl;
-> +	unsigned long offset = 0;
-> +
-> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 0);
-
-You don't have to copy sgl into s.  Just pass &sgl directly.
-
-> +}
-> +EXPORT_SYMBOL(sg_copy_from_buffer);
-> +
-> +/**
-> + * sg_copy_to_buffer - Copy from an SG table to liner buffer
-
-s/liner/linear/
-
-> + * @sgl:		 The SG table
-> + * @nents:		 Number of SG entries
-> + * @buf:		 Where to copy to
-> + * @buflen:		 The number of bytes to copy
-> + *
-> + * Returns the number of copied byte.
-
-s/byte/bytes/
-
-> + *
-> + **/
-> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-> +		      void *buf, int buflen)
-> +{
-> +	struct scatterlist *s = sgl;
-> +	unsigned long offset = 0;
-> +
-> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 1);
-
-Same thing here.
-
-> +}
-> +EXPORT_SYMBOL(sg_copy_to_buffer);
-
-On the whole it looks good.
-
-Alan Stern
-
-
+>  
+> -	/* The req and req->next_rq have not been completed */
+> -	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
+> +	if (blk_end_bidi_request(req, 0, dlen, next_dlen))
+> +		/* The req and req->next_rq have not been completed */
+> +		BUG_ON();
+>  
+>  	scsi_release_buffers(cmd);
+>  
+> @@ -866,15 +873,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  				req->sense_len = len;
+>  			}
+>  		}
+> -		if (scsi_bidi_cmnd(cmd)) {
+> -			/* will also release_buffers */
+> -			scsi_end_bidi_request(cmd);
+> -			return;
+> -		}
+> -		req->data_len = scsi_get_resid(cmd);
+> +		/* will also release_buffers */
+> +		scsi_end_blk_request(cmd);
+> +		return;
+>  	}
+>  
+> -	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
+>  	scsi_release_buffers(cmd);
+>  
+>  	/*
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
