@@ -1,27 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter
-	not working with x86_64 kernels
-Date: Wed, 12 Mar 2008 14:02:50 -0500
-Message-ID: <1205348570.2941.140.camel@localhost.localdomain>
-References: <bug-10226-10286@http.bugzilla.kernel.org/>
-	 <20080311134440.fb1609cb.akpm@linux-foundation.org>
-	 <47D7B875.4020606@panasas.com>  <200803121920.13571.us-@gmx.de>
-	 <1205347010.2941.127.camel@localhost.localdomain>
-	 <47D825B5.7060201@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
+Date: Wed, 12 Mar 2008 12:03:31 -0700 (PDT)
+Message-ID: <20080312190331.50F5611D107@picon.linux-foundation.org>
+References: <bug-10226-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42480 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751542AbYCLTCx (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40781 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751560AbYCLTD7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 15:02:53 -0400
-In-Reply-To: <47D825B5.7060201@panasas.com>
+	Wed, 12 Mar 2008 15:03:59 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2CJ4IAj008093
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2008 12:04:20 -0700
+In-Reply-To: <bug-10226-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Ulrich Schweitzer <us-@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=10226
+
+
+
+
+
+------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-03-12 12:03 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Wed, 2008-03-12 at 20:49 +0200, Boaz Harrosh wrote:
 > On Wed, Mar 12 2008 at 20:36 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
@@ -93,3 +96,7 @@ safe.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
