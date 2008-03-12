@@ -1,222 +1,169 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Wed, 12 Mar 2008 18:26:04 +0200
-Message-ID: <47D8041C.5070400@panasas.com>
-References: <Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: Re: [pnfs] [PATCH 05/28] pnfsblock: expose scsi interface
+Date: Wed, 12 Mar 2008 18:33:34 +0200
+Message-ID: <47D805DE.9000100@panasas.com>
+References: <1205263929-8346-1-git-send-email-iisaman@citi.umich.edu>	<1205263929-8346-2-git-send-email-iisaman@citi.umich.edu>	<1205263929-8346-3-git-send-email-iisaman@citi.umich.edu>	<1205263929-8346-4-git-send-email-iisaman@citi.umich.edu>	<1205263929-8346-5-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-6-git-send-email-iisaman@citi.umich.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:44538 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbYCLQ2Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 12:28:25 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:45017 "EHLO
+	bh-buildlin1.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbYCLQeS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 12:34:18 -0400
+In-Reply-To: <1205263929-8346-6-git-send-email-iisaman@citi.umich.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: Fred Isaman <iisaman@citi.umich.edu>, Andy Adamson <andros@umich.edu>
+Cc: pnfs@linux-nfs.org, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Wed, Mar 12 2008 at 18:01 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Wed, 12 Mar 2008, FUJITA Tomonori wrote:
-> 
->> I fixed some minor issues (comments, warning, etc) and I've uploaded
->> the patchset:
-> 
->> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git 
->> sg-copy
-> 
-> Sorry, I don't see it there yet in the gitweb interface.  Here are my
-> comments on the parts you posted earlier.
-> 
->> How about this?
->>
->> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
->> index a3d567a..8951e3c 100644
->> --- a/include/linux/scatterlist.h
->> +++ b/include/linux/scatterlist.h
->> @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
->>  		     sg_alloc_fn *);
->>  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
->>  
->> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
->> +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
->> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
->> +			void *buf, int buflen);
->> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
->> +		      void *buf, int buflen);
-> 
-> These routines probably should not return int.  Maybe unsigned int or 
-> unsigned long.  If you really want to be picky, it should be size_t.
-> 
-> Same goes for the type of the buflen parameter.
-> 
->> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
->> +		   unsigned long *offset, void *buf, int buflen, int to_buffer)
->> +{
->> +	struct scatterlist *sg;
->> +	unsigned long buf_off = 0;
-> 
-> The type of buf_off should be the same as the function's return type.
-> 
->> +	int i;
->> +
->> +	WARN_ON(!irqs_disabled());
->> +
->> +	for_each_sg(*sgl, sg, nents, i) {
-> 
-> Will there be a problem in subsequent calls if *sgl has been
-> incremented but nents hasn't been changed?  Maybe nents needs to be a 
-> pointer also.
-> 
->> +		struct page *page;
->> +		int n = 0;
->> +		unsigned int sg_off = sg->offset;
->> +		unsigned int sg_copy = sg->length;
->> +
->> +		BUG_ON(*offset > sg_copy);
->> +
->> +		if (!buflen)
->> +			break;
->> +
->> +		sg_off += *offset;
->> +		n = sg_off >> PAGE_SHIFT;
->> +		sg_off &= ~PAGE_MASK;
->> +		sg_copy -= *offset;
->> +
->> +		if (sg_copy > buflen) {
->> +			sg_copy = buflen;
->> +			*offset += sg_copy;
->> +		} else
->> +			*offset = 0;
->> +
->> +		buflen -= sg_copy;
->> +
->> +		while (sg_copy > 0) {
->> +			unsigned int page_copy;
->> +			void *p;
->> +
->> +			page_copy = PAGE_SIZE - sg_off;
->> +			if (page_copy > sg_copy)
->> +				page_copy = sg_copy;
->> +
->> +			page = nth_page(sg_page(sg), n);
->> +			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
->> +
->> +			if (to_buffer)
->> +				memcpy(buf + buf_off, p + sg_off, page_copy);
->> +			else {
->> +				memcpy(p + sg_off, buf + buf_off, page_copy);
->> +				flush_kernel_dcache_page(page);
->> +			}
->> +
->> +			kunmap_atomic(p, KM_BIO_SRC_IRQ);
->> +
->> +			buf_off += page_copy;
->> +			sg_off += page_copy;
->> +			if (sg_off == PAGE_SIZE) {
->> +				sg_off = 0;
->> +				n++;
->> +			}
->> +			sg_copy -= page_copy;
->> +		}
-> 
-> Here you need to add:
-> 
-> 		if (*offset)
-> 			break;
-> 
-> Otherwise *sgl will be incremented wrongly if the transfer ends in the
-> middle of an sg entry.
-> 
->> +	}
->> +
->> +	*sgl = sg;
->> +
->> +	return buf_off;
->> +}
-> 
->> +
->> +/**
->> + * sg_copy_from_buffer - Copy from liner buffer to an SG table
-> 
-> s/liner/linear/
-> 
->> + * @sgl:		 The SG table
->> + * @nents:		 Number of SG entries
->> + * @buf:		 Where to copy from
->> + * @buflen:		 The number of bytes to copy
->> + *
->> + * Returns the number of copied byte.
-> 
-> s/byte/bytes/
-> 
->> + *
->> + **/
->> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
->> +			void *buf, int buflen)
->> +{
->> +	struct scatterlist *s = sgl;
->> +	unsigned long offset = 0;
->> +
->> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 0);
-> 
-> You don't have to copy sgl into s.  Just pass &sgl directly.
-> 
->> +}
->> +EXPORT_SYMBOL(sg_copy_from_buffer);
->> +
->> +/**
->> + * sg_copy_to_buffer - Copy from an SG table to liner buffer
-> 
-> s/liner/linear/
-> 
->> + * @sgl:		 The SG table
->> + * @nents:		 Number of SG entries
->> + * @buf:		 Where to copy to
->> + * @buflen:		 The number of bytes to copy
->> + *
->> + * Returns the number of copied byte.
-> 
-> s/byte/bytes/
-> 
->> + *
->> + **/
->> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
->> +		      void *buf, int buflen)
->> +{
->> +	struct scatterlist *s = sgl;
->> +	unsigned long offset = 0;
->> +
->> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 1);
-> 
-> Same thing here.
-> 
->> +}
->> +EXPORT_SYMBOL(sg_copy_to_buffer);
-> 
-> On the whole it looks good.
-> 
-> Alan Stern
-> 
-> 
+Cc'ing scsi mailing list (and Christoph, please speak up now,
+or forever hold your peace ;-)
 
-I agree with all your comments. I think I liked your original Idea of
-putting all the sg_copy_buffer() parameters in a structure that is then
-is easier for resubmission and future changes. It will not change TOMO's
-patchset because the two wrappers stay the same and only USB is affected.
+On Mar. 11, 2008, 21:31 +0200, Fred Isaman <iisaman@citi.umich.edu> wrote:
+> Signed-off-by: Fred Isaman <iisaman@citi.umich.edu>
+> ---
+>  drivers/scsi/hosts.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 24271a8..64f2847 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -48,10 +48,11 @@ static void scsi_host_cls_release(struct class_device *class_dev)
+>  	put_device(&class_to_shost(class_dev)->shost_gendev);
+>  }
+>  
+> -static struct class shost_class = {
+> +struct class shost_class = {
+>  	.name		= "scsi_host",
+>  	.release	= scsi_host_cls_release,
+>  };
+> +EXPORT_SYMBOL(shost_class);
+>  
+>  /**
+>   *	scsi_host_set_state - Take the given host through the host
 
-TOMO
-could we not do better then that *disable interrupts* thing? I think it is
-fair to say that we disallow the memory pointed-to by the sglist to share
-cache lines with other concurrent IO. Is this not true already?
 
-I mean, come on, a pure memory access like that, we must be able to do better?
-No? 
+This calls for a layering violation.
 
-Drivers that use this API can make sure to set their masks HW_CACHE_ALIGNED
-and the block will bounce the buffers for them to make sure concurrent cache-line 
-IO will not happen. No?
+To fill-in more context, here's an excerpt from the next patch,
+showing how you use shost_class to scan all scsi disks:
 
-Thanks
-Boaz
++/* Walk the list of scsi_devices. Add disks that can be opened and claimed
++ * to the device list
++ */
++static int
++nfs4_blk_add_scsi_disk(struct Scsi_Host *shost,
++		       int index, struct list_head *dlist)
++{
++	static char *claim_ptr = "I belong to pnfs block driver";
++	struct block_device *bdev;
++	struct gendisk *gd;
++	struct scsi_device *sdev;
++	unsigned int major, minor, ret = 0;
++	dev_t dev;
++
++	dprintk("%s enter \n", __func__);
++	if (index >= MAX_VOLS) {
++		dprintk("%s MAX_VOLS hit\n", __func__);
++		return -ENOSPC;
++	}
++	dprintk("%s 1 \n", __func__);
++	index--;
++	shost_for_each_device(sdev, shost) {
++		dprintk("%s 2\n", __func__);
++		/* Need to do this check before bumping index */
++		if (sdev->type != TYPE_DISK)
++			continue;
++		dprintk("%s 3 index %d \n", __func__, index);
++		if (++index >= MAX_VOLS) {
++			scsi_device_put(sdev);
++			break;
++		}
++		major = (!(index >> 4) ? SCSI_DISK0_MAJOR :
++			 SCSI_DISK1_MAJOR-1 + (index  >> 4));
++		minor =  ((index << 4) & 255);
++
++		dprintk("%s SCSI device %d:%d \n", __func__, major, minor);
++
++		dev = MKDEV(major, minor);
++		bdev = nfs4_blkdev_get(dev);
++		if (!bdev) {
++			dprintk("%s: failed to open device %d:%d\n",
++					__func__, major, minor);
++			continue;
++		}
++		gd = bdev->bd_disk;
++
++		dprintk("%s 4\n", __func__);
++
++		if (bd_claim(bdev, claim_ptr)) {
++			dprintk("%s: failed to claim device %d:%d\n",
++				__func__, gd->major, gd->first_minor);
++			blkdev_put(bdev);
++			continue;
++		}
++
++		ret = alloc_add_disk(bdev, dlist);
++		if (ret < 0)
++			goto out_err;
++		dprintk("%s ADDED DEVICE capacity %ld, bd_block_size %d\n",
++					__func__,
++					(unsigned long)gd->capacity,
++					bdev->bd_block_size);
++
++	}
++	index++;
++	dprintk("%s returns index %d \n", __func__, index);
++	return index;
++
++out_err:
++	dprintk("%s Can't add disk to list. ERROR: %d\n", __func__, ret);
++	nfs4_blkdev_put(bdev);
++	return ret;
++}
++
++/*
++ * Create a temporary list of all SCSI disks host can see, and that have not
++ * yet been claimed.
++ * shost_class: list of all registered scsi_hosts
++ * returns -errno on error, and #of devices found on success.
++ * XXX Loosely emulate scsi_host_lookup from scsi/host.c
++*/
++int nfs4_blk_create_scsi_disk_list(struct list_head *dlist)
++{
++	struct class *class = &shost_class;
++	struct class_device *cdev;
++	struct Scsi_Host *shost;
++	int ret = 0, index = 0;
++
++	dprintk("%s enter\n", __func__);
++
++	down(&class->sem);
++	list_for_each_entry(cdev, &class->children, node) {
++		dprintk("%s 1\n", __func__);
++		shost = class_to_shost(cdev);
++		ret = nfs4_blk_add_scsi_disk(shost, index, dlist);
++		dprintk("%s 2 ret %d\n", __func__, ret);
++		if (ret < 0)
++			goto out;
++		index = ret;
++	}
++out:
++	up(&class->sem);
++	return ret;
++}
+
+My question is how should a proper API between the scsi layer and
+the block layout driver look like?
+
+Can you list your requirements, e.g.:
+- scanning all available devices,
+
+- discovering new devices on the fly
+
+- getting notified for new devices?
+
+Benny
+
