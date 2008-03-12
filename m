@@ -1,101 +1,122 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter
-	not working with x86_64 kernels
-Date: Wed, 12 Mar 2008 07:29:49 -0400
-Message-ID: <1205321389.2941.95.camel@localhost.localdomain>
-References: <bug-10226-10286@http.bugzilla.kernel.org/>
-	 <20080311134440.fb1609cb.akpm@linux-foundation.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [SCSI] gdth: Allocate sense_buffer to prevent NULL pointer
+ dereference
+Date: Wed, 12 Mar 2008 15:07:12 +0200
+Message-ID: <47D7D580.5060406@panasas.com>
+References: <Pine.LNX.4.44L0.0803111456590.26916-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37476 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751524AbYCLMN1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 08:13:27 -0400
-In-Reply-To: <20080311134440.fb1609cb.akpm@linux-foundation.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:41609 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751526AbYCLNId (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 09:08:33 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0803111456590.26916-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, us-@gmx.de, protasnb <protasnb@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
 
-
-On Tue, 2008-03-11 at 13:44 -0700, Andrew Morton wrote:
-> I thought that scsi-related bugzilla reports were being autosent to
-> linux-scsi but afacit that isn't working.  Is it supposed to be?
-
-It certainly is ... no-one's watching the bugzilla, so if it's not
-sending the email, the bug reports will just be getting dropped.   I've
-cc'd Natalie to see if she can investigate the problem.
-
-> Anyway, have a bug!  We don't appear to have a buslogic maintainer?
-
-Not since Leonard Zubkoff, I'm afraid, no.
-
-> On Tue, 11 Mar 2008 13:24:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Tue, Mar 11 2008 at 21:18 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 11 Mar 2008, Boaz Harrosh wrote:
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=10226
-> > 
-> >            Summary: BusLogic Flashpoint SCSI Adapter not working with x86_64
-> >                     kernels
-> >            Product: SCSI Drivers
-> >            Version: 2.5
-> >      KernelVersion: 2.6.24.3
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: BUSLOGIC
-> >         AssignedTo: scsi_drivers-buslogic@kernel-bugs.osdl.org
-> >         ReportedBy: us-@gmx.de
-> > 
-> > 
-> > Latest working kernel version: unknown
-> > 
-> > Earliest failing kernel version: unknown (but 2.6.18 fails, too)
-> > 
-> > Distribution: Debian Etch
-> > 
-> > Hardware Environment: BusLogic Flashpoint BT-950 UW-SCSI on ASUS M2NPV-VM with
-> > Athlon64 Brisbane
-> > 
-> > Software Environment: Minimal Debian installation (just the netinstall image
-> > plus build environment to be able to build the kernel)
-> > 
-> > Problem Description:
-> > BusLogic Flashpoint Adapter doesn't work with kernels compiled for x86_64.
-> > 'dmesg' shows
-> > 
-> > BusLogic: FlashPoint Host Adapter detected at PCI Bus 4 Device 8
-> > BusLogic: I/O Address 0xCC00 PCI Address 0xFDBFE000, irq 16, but FlashPoint
-> > BusLogic: support was omitted in this kernel configuration.
-> > 
-> > even though CONFIG_SCSI_OMIT_FLASHPOINT was not set.
-> > The SCSi Adapter works fine with a kernel compiled with the same configuration
-> > for i686. 'dmesg' in that case shows 
+>>> You can first get to the scsi_device in isd200_ata_command().  
+>> I was afraid of that. I don't think I want to call scsi_get_command
+>> from within .queuecommand. I will leave the code hacked as today.
+> 
+> What are you talking about?  isd200_ata_command isn't called by 
+> queuecommand.
+> 
+>>> The last
+>>> place you can get to the scsi_device (if one exists!) is
+>>> quiesce_and_remove_host() -- but that's part of the core, not specific
+>>> to isd200.
+>>>
+>> Here two, it looks like I need to introduce a new function pointer for isd200
+> 
+> Why?  And why do you need to get to the scsi_device in the first place?
+> 
+>> I'll leave it for now. Though I know this is not the last I'll see of this driver.
+>>
 
-Um, are you sure about that?  The kernel source has these particular
-lines enclosed in
+OK Now I see isd200_ata_command() is called from a usb.c internal thread.
 
-#ifndef CONFIG_SCSI_OMIT_FLASHPOINT 
-...
-#else
-print the message you see
-#endif
+What I need to do is call scsi_get_command(scsi_device*) on first invocation.
+Now for the call to scsi_put_command()? At the time of the call to 
+isd200_free_info_ptrs() do you think I still have a valid scsi_device at this point?
 
-So that symbol has to be defined somewhere, somehow.
+What I will do is this. I will resend my original patch with your comments
+fixed. This is for the 2.6.25-rc. And I will send another patch that uses
+the proper scsi_get/put_command() for testing and inclusion into the 2.6.26 kernel.
+Please ACK on the patch
 
-Could you do a 
+>>>> (And one more stupid question. Why does isd200_init_info allocates the info 
+>>>> structure but the isd200_free_info_ptrs does not free it, it kind of
+>>>> limits the way it can be allocated, no?)
+>>> Not at all.  isd200_free_info_ptrs() frees everything pointed to by the
+>>> info structure, and the info structure itself is freed later on by the
+>>> usb-storage core in usb_stor_release_resources().
+>>>
+>> OK so in isd200_get_inquiry_data() at the end near the call to:
+>> 			us->extra_destructor(info);
+>> 			us->extra = NULL;
+>>
+>> It leaks the info.
+> 
+> Yes.  The three lines of code there are unnecessary.  You should remove
+> them (and the comment) instead of adding more somewhere else.  Or if
+> you want to keep them, just add a line to kfree(us->extra) before 
+> us->extra is set to NULL.
 
-grep -r SCSI_OMIT_FLASHPOINT .
+How are they unnecessary? who will free them? other wise they will only be
+freed at the very end. And that is only because usb_stor_transparent_scsi_command()
+does not need any us->extra of it's own. But if ever it will, then this code
+buried here will become a leak.
 
-In your kernel build and see what turns up?
+And I disagree. with your solution. The module that did the allocation should
+do the freeing. The above is just an example of what happens with bad programing
+style. the core should not have attempted a free on a void pointer just so
+protocols can get lazy and not register a destructor. Other wise we do not
+learn from passed mistakes and keep doing the same errors. The free should
+always be at same file right next to the alloc. (And don't get me started
+on the flexibility that enables)
 
-Thanks,
+I keep the patch as it is, I recommend to commit it for solving the leak.
 
-James
+> 
+>> Please ACK the first patch sent, so James can put it in scsi-rc-fixes as part
+>> of the sense_buffer effort for 2.6.25-rc
+> 
+> The first patch is okay except for style violations:
+> 
+>> @@ -294,6 +294,7 @@ struct isd200_info {
+>>  	unsigned char MaxLUNs;
+>> 	struct scsi_cmnd srb;
+>> 	struct scatterlist sg;
+>> +	u8*	sense_buffer;
+> 
+> This should be
+> 
+> 	u8 *sense_buffer;
+> 
+> And
+> 
+>>  			isd200_free_info_ptrs(info);
+>>  			kfree(info);
+>>  			retStatus = ISD200_ERROR;
+>>  		}
+>> +		else
+>> +			info->srb.sense_buffer = info->sense_buffer;
+> 
+> The "else" should go on the same line as the closing brace, and it
+> should have its own opening brace.
+> 
+> Alan Stern
+> 
+> --
 
+The important sense_buffer bugfix is posted as reply to this mail
+
+Boaz
 
