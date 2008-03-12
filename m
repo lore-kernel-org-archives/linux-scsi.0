@@ -1,122 +1,58 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Subject: Re: [patch 1/2] zfcp: Fix race during ERP thread shutdown
-Date: Wed, 12 Mar 2008 15:13:47 +0100
-Message-ID: <1205331227.4852.102.camel@kitka.ibm.com>
-References: <20080310151852.808020000@de.ibm.com>
-	 <20080310152328.463410000@de.ibm.com>
-	 <20080311164341.GA6380@osiris.boeblingen.de.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] [SCSI] gdth: Allocate sense_buffer to prevent NULL
+ pointer dereference
+Date: Wed, 12 Mar 2008 11:08:57 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803121103390.4595-100000@iolanthe.rowland.org>
+References: <47D7D580.5060406@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:49209 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbYCLONt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 10:13:49 -0400
-In-Reply-To: <20080311164341.GA6380@osiris.boeblingen.de.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754203AbYCLPJS@vger.kernel.org>
+In-Reply-To: <47D7D580.5060406@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-On Tue, 2008-03-11 at 17:43 +0100, Heiko Carstens wrote:
-> > --- a/drivers/s390/scsi/zfcp_erp.c	2008-03-10 12:34:48.000000000 +0100
-> > +++ b/drivers/s390/scsi/zfcp_erp.c	2008-03-10 16:05:26.000000000 +0100
-> > @@ -1002,7 +1002,7 @@ zfcp_erp_thread_setup(struct zfcp_adapte
-> >  					    &adapter->status));
-> >  		debug_text_event(adapter->erp_dbf, 5, "a_thset_ok");
-> >  	}
-> > -
-> > +	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
-> >  	return (retval < 0);
+On Wed, 12 Mar 2008, Boaz Harrosh wrote:
+
+> OK Now I see isd200_ata_command() is called from a usb.c internal thread.
 > 
-> This way the flag will be set even if the creation of the erp thread failed.
+> What I need to do is call scsi_get_command(scsi_device*) on first invocation.
 
-You are right.
+Why?
 
-This used to be correct with all the cleanups pending in our queue
-applied. Looks like this flaw creeped in when the bug fix patch was
-moved to the head of queue.
+> Now for the call to scsi_put_command()? At the time of the call to 
+> isd200_free_info_ptrs() do you think I still have a valid scsi_device at this point?
 
-> It should be done somewhere within zfcp_erp_thread() instead.
+Definitely not.
 
-Setting the flag in the setup function is fine, as long as we make sure
-the thread is really up and running. I'd prefer to have it here because
-of its symmetry with zfcp_erp_thread_kill().
+> What I will do is this. I will resend my original patch with your comments
+> fixed. This is for the 2.6.25-rc. And I will send another patch that uses
+> the proper scsi_get/put_command() for testing and inclusion into the 2.6.26 kernel.
+> Please ACK on the patch
 
-> Besides that setting the flag must be done while holding the erp_lock.
-> Otherwise zfcp_erp_action_enqueue might check the flag, other cpu clears
-> the flag right after that, and then enqueueing continues while the flag is
-> not set.
+Okay.
 
-Correct.
-
-zfcp_erp_wait() might fail to wait for that new action to finish,
-because the PENDING flag is set later in the action enqueuing process.
-But we want zfcp_erp_wait() to make sure that recovery is settled, so
-that we can go on killing the thread.
-
-> >  }
-> > 
-> > @@ -1025,6 +1025,8 @@ zfcp_erp_thread_kill(struct zfcp_adapter
-> >  {
-> >  	int retval = 0;
-> > 
-> > +	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
-> > +	zfcp_erp_wait(adapter);
-> >  	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL, &adapter->status);
-> >  	up(&adapter->erp_ready_sem);
-> > 
-> > @@ -2940,8 +2942,7 @@ zfcp_erp_action_enqueue(int action,
-> >  	 * efficient.
-> >  	 */
-> > 
-> > -	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
-> > -			      &adapter->status))
-> > +	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status))
-> >  		return -EIO;
-> > 
-> >  	debug_event(adapter->erp_dbf, 4, &action, sizeof (int));
-> > --- a/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 12:34:48.000000000 +0100
-> > +++ b/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 16:05:26.000000000 +0100
-> > @@ -198,7 +198,6 @@ zfcp_ccw_set_offline(struct ccw_device *
-> >  	down(&zfcp_data.config_sema);
-> >  	adapter = dev_get_drvdata(&ccw_device->dev);
-> >  	zfcp_erp_adapter_shutdown(adapter, 0);
-> > -	zfcp_erp_wait(adapter);
-> >  	zfcp_erp_thread_kill(adapter);
+> > Yes.  The three lines of code there are unnecessary.  You should remove
+> > them (and the comment) instead of adding more somewhere else.  Or if
+> > you want to keep them, just add a line to kfree(us->extra) before 
+> > us->extra is set to NULL.
 > 
-> And as a sidenote, if the scenario this patch is supposed to fix can really
-> happen, how can you make sure the adapter is still down before the erp thread
-> gets killed? Some action could have been enqueued and finished which reopened
-> the adapter after zfcp_erp_adapter_shutdown and before zfcp_erp_thread_kill.
-> Just wondering... :)
+> How are they unnecessary? who will free them? other wise they will only be
+> freed at the very end.
 
-You acting the innocent... :)
+That's what I meant.
 
-As to question one - Is there a way for recovery being triggered when we
-are about to kill the recovery thread during the adapter offlining
-procedure:
-I am not sure. There are many potential triggers for error recovery.
-Some code path might be blocked when an adapter has been shut down
-(zfcp_fsf.c). I could review each one of them, and maybe add a comment
-about the assumption in the zfcp_ccw.c. But I don't like the idea of
-some one adding another recovery trigger somewhere in the driver in the
-future, not taking heed of this assumption.
+> And that is only because usb_stor_transparent_scsi_command()
+> does not need any us->extra of it's own. But if ever it will, then this code
+> buried here will become a leak.
 
-That is why, I'd rather have the error recovery shutdown procedure be
-airtight and self-dependent in the first place and have it not rely on
-shaky assumptions about the code which uses it.
+Any additional resources needed by the transparent-SCSI handler will be 
+added directly into the main us_data structure; they won't be part of 
+us->extra.  That hook was meant specifically for use by the nonstandard 
+subdrivers.
 
-As to question two - Do we know for sure the adapter won't be brought
-back up again?
-With or without my patch, the issue would be there.
-Actually my patch is useless as long as it only concernes itself with
-bringing recovery to a termination, while disregarding the fact that
-recovery needs to be brought to a termination in a way that guarantees
-that adapter operation has been stopped.
+But on the whole you are right, and I agree with the change in your 
+follow-up patch.
 
-Thank you,
-Martin
-
-
+Alan Stern
