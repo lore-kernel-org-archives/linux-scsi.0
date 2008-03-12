@@ -1,141 +1,200 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH] isd200: Use scsi_get_cmnd for the extra translation command
-Date: Wed, 12 Mar 2008 18:00:18 +0200
-Message-ID: <47D7FE12.1020307@panasas.com>
-References: <47D7F397.4070903@panasas.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Wed, 12 Mar 2008 12:01:57 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
+References: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <47D7F397.4070903-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36170 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751075AbYCLQB5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 12:01:57 -0400
+In-Reply-To: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 
-On Wed, Mar 12 2008 at 17:15 +0200, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org> wrote:
-> This patch is for the 2.6.26 kernel. A more prominent fix for the
-> sense_buffer allocation problem. It is based on top of an interim
-> fix: "isd200: Allocate sense_buffer for hacked up scsi_cmnd"
-> that was sent for the 2.6.25 rc-fixes.
+On Wed, 12 Mar 2008, FUJITA Tomonori wrote:
+
+> I fixed some minor issues (comments, warning, etc) and I've uploaded
+> the patchset:
+
+> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git 
+> sg-copy
+
+Sorry, I don't see it there yet in the gitweb interface.  Here are my
+comments on the parts you posted earlier.
+
+> How about this?
 > 
-> Only compile tested. Needs testing and ACK from USB Maintainers.
-> (Or it can go through the USB tree)
-> 
-> James
-> please comment on the use of DID_REQUEUE as return status for 
-> the command in case of failure to allocate the extra command the first
-> time.
-> 
-> Thanks
-> Boaz
-> 
-> ---
-> From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> Date: Wed, 12 Mar 2008 15:41:41 +0200
-> Subject: [PATCH] isd200: Use scsi_get_cmnd for the extra translation command
-> 
-> don't let the isd200 driver allocate it's own scsi_command
-> inside it's host private data. Use scsi-ml scsi_get_command()
-> scsi_put_command for that. This is to insulate the driver from
-> internal scsi-ml changes.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> ---
->  drivers/usb/storage/isd200.c |   27 ++++++++++++++++++---------
->  1 files changed, 18 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-> index 2de1f1e..12d671b 100644
-> --- a/drivers/usb/storage/isd200.c
-> +++ b/drivers/usb/storage/isd200.c
-> @@ -292,9 +292,8 @@ struct isd200_info {
+> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+> index a3d567a..8951e3c 100644
+> --- a/include/linux/scatterlist.h
+> +++ b/include/linux/scatterlist.h
+> @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
+>  		     sg_alloc_fn *);
+>  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
 >  
->  	/* maximum number of LUNs supported */
->  	unsigned char MaxLUNs;
-> -	struct scsi_cmnd srb;
-> +	struct scsi_cmnd *srb;
->  	struct scatterlist sg;
-> -	u8* sense_buffer;
->  };
->  
->  
-> @@ -415,7 +414,7 @@ static void isd200_build_sense(struct us_data *us, struct scsi_cmnd *srb)
->  static void isd200_set_srb(struct isd200_info *info,
->  	enum dma_data_direction dir, void* buff, unsigned bufflen)
->  {
-> -	struct scsi_cmnd *srb = &info->srb;
-> +	struct scsi_cmnd *srb = info->srb;
->  
->  	if (buff)
->  		sg_init_one(&info->sg, buff, bufflen);
-> @@ -446,7 +445,7 @@ static int isd200_action( struct us_data *us, int action,
->  	union ata_cdb ata;
->  	struct scsi_device srb_dev;
->  	struct isd200_info *info = (struct isd200_info *)us->extra;
-> -	struct scsi_cmnd *srb = &info->srb;
-> +	struct scsi_cmnd *srb = info->srb;
->  	int status;
->  
->  	memset(&ata, 0, sizeof(ata));
-> @@ -1265,6 +1264,15 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb, struct us_data *us,
->  
->  	memset(ataCdb, 0, sizeof(union ata_cdb));
->  
-> +	/* very first time get an extra scsi_cmnd */
-> +	if (!info->srb) {
-> +		info->srb = scsi_get_command(srb->device, GFP_KERNEL);
-> +		if (!info->srb) {
-> +			srb->result = DID_REQUEUE << 16;
-> +			return 0;
+> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
+> +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
+> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+> +			void *buf, int buflen);
+> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+> +		      void *buf, int buflen);
+
+These routines probably should not return int.  Maybe unsigned int or 
+unsigned long.  If you really want to be picky, it should be size_t.
+
+Same goes for the type of the buflen parameter.
+
+> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
+> +		   unsigned long *offset, void *buf, int buflen, int to_buffer)
+> +{
+> +	struct scatterlist *sg;
+> +	unsigned long buf_off = 0;
+
+The type of buf_off should be the same as the function's return type.
+
+> +	int i;
+> +
+> +	WARN_ON(!irqs_disabled());
+> +
+> +	for_each_sg(*sgl, sg, nents, i) {
+
+Will there be a problem in subsequent calls if *sgl has been
+incremented but nents hasn't been changed?  Maybe nents needs to be a 
+pointer also.
+
+> +		struct page *page;
+> +		int n = 0;
+> +		unsigned int sg_off = sg->offset;
+> +		unsigned int sg_copy = sg->length;
+> +
+> +		BUG_ON(*offset > sg_copy);
+> +
+> +		if (!buflen)
+> +			break;
+> +
+> +		sg_off += *offset;
+> +		n = sg_off >> PAGE_SHIFT;
+> +		sg_off &= ~PAGE_MASK;
+> +		sg_copy -= *offset;
+> +
+> +		if (sg_copy > buflen) {
+> +			sg_copy = buflen;
+> +			*offset += sg_copy;
+> +		} else
+> +			*offset = 0;
+> +
+> +		buflen -= sg_copy;
+> +
+> +		while (sg_copy > 0) {
+> +			unsigned int page_copy;
+> +			void *p;
+> +
+> +			page_copy = PAGE_SIZE - sg_off;
+> +			if (page_copy > sg_copy)
+> +				page_copy = sg_copy;
+> +
+> +			page = nth_page(sg_page(sg), n);
+> +			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
+> +
+> +			if (to_buffer)
+> +				memcpy(buf + buf_off, p + sg_off, page_copy);
+> +			else {
+> +				memcpy(p + sg_off, buf + buf_off, page_copy);
+> +				flush_kernel_dcache_page(page);
+> +			}
+> +
+> +			kunmap_atomic(p, KM_BIO_SRC_IRQ);
+> +
+> +			buf_off += page_copy;
+> +			sg_off += page_copy;
+> +			if (sg_off == PAGE_SIZE) {
+> +				sg_off = 0;
+> +				n++;
+> +			}
+> +			sg_copy -= page_copy;
 > +		}
+
+Here you need to add:
+
+		if (*offset)
+			break;
+
+Otherwise *sgl will be incremented wrongly if the transfer ends in the
+middle of an sg entry.
+
 > +	}
 > +
->  	/* SCSI Command */
->  	switch (srb->cmnd[0]) {
->  	case INQUIRY:
-> @@ -1471,7 +1479,10 @@ static void isd200_free_info_ptrs(void *info_)
->  	if (info) {
->  		kfree(info->id);
->  		kfree(info->RegsBuf);
-> -		kfree(info->sense_buffer);
+> +	*sgl = sg;
 > +
-> +		/* FIXME: Do we have a valid device here? */
-> +		if (info->srb)
-> +			scsi_put_command(info->srb);
->  	}
->  }
->  
-> @@ -1497,13 +1508,11 @@ static int isd200_init_info(struct us_data *us)
->  				kzalloc(sizeof(struct hd_driveid), GFP_KERNEL);
->  		info->RegsBuf = (unsigned char *)
->  				kmalloc(sizeof(info->ATARegs), GFP_KERNEL);
-> -		info->sense_buffer = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
-> -		if (!info->id || !info->RegsBuf || !info->sense_buffer) {
-> +		if (!info->id || !info->RegsBuf) {
->  			isd200_free_info_ptrs(info);
->  			kfree(info);
->  			retStatus = ISD200_ERROR;
-> -		} else
-> -			info->srb.sense_buffer = info->sense_buffer;
-> +		}
->  	}
->  
->  	if (retStatus == ISD200_GOOD) {
+> +	return buf_off;
+> +}
 
-I have re-audited the patch above and in theory it should work. The
-"FIXME:" above, in isd200_free_info_ptrs, should be removed. This is because
-scsi_get_command() will do a get_device() So the device will be held until
-we do scsi_put_command() here.
-But it does change the sequence of events a little bit for the isd200 devices
-so please, if anyone has Hardware for the isd200, test this patch and see
-that it can hot-unplug gracefully.
+> +
+> +/**
+> + * sg_copy_from_buffer - Copy from liner buffer to an SG table
 
-I will wait on testers and Maintainers ACKs and will repost without the FIXME:
+s/liner/linear/
 
-Thanks in advance
-Boaz
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> + * @sgl:		 The SG table
+> + * @nents:		 Number of SG entries
+> + * @buf:		 Where to copy from
+> + * @buflen:		 The number of bytes to copy
+> + *
+> + * Returns the number of copied byte.
+
+s/byte/bytes/
+
+> + *
+> + **/
+> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+> +			void *buf, int buflen)
+> +{
+> +	struct scatterlist *s = sgl;
+> +	unsigned long offset = 0;
+> +
+> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 0);
+
+You don't have to copy sgl into s.  Just pass &sgl directly.
+
+> +}
+> +EXPORT_SYMBOL(sg_copy_from_buffer);
+> +
+> +/**
+> + * sg_copy_to_buffer - Copy from an SG table to liner buffer
+
+s/liner/linear/
+
+> + * @sgl:		 The SG table
+> + * @nents:		 Number of SG entries
+> + * @buf:		 Where to copy to
+> + * @buflen:		 The number of bytes to copy
+> + *
+> + * Returns the number of copied byte.
+
+s/byte/bytes/
+
+> + *
+> + **/
+> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+> +		      void *buf, int buflen)
+> +{
+> +	struct scatterlist *s = sgl;
+> +	unsigned long offset = 0;
+> +
+> +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 1);
+
+Same thing here.
+
+> +}
+> +EXPORT_SYMBOL(sg_copy_to_buffer);
+
+On the whole it looks good.
+
+Alan Stern
+
+
