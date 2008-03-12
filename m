@@ -1,65 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: using direct IO with sgp_dd
-Date: Wed, 12 Mar 2008 18:46:19 -0400
-Message-ID: <47D85D3B.9070705@torque.net>
-References: <47D63758.9000601@voltaire.com> <e2e108260803110150g453c790bu3a21537b5eaf762d@mail.gmail.com> <47D64D08.6070601@Voltaire.COM>
-Reply-To: dougg@torque.net
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: affordable SAS HBA recommendation?
+Date: Wed, 12 Mar 2008 19:23:31 -0400
+Message-ID: <200803122323.m2CNNaM0030418@colby.verdasys.com>
+References: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36705 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694AbYCLWsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 18:48:04 -0400
-In-Reply-To: <47D64D08.6070601@Voltaire.COM>
+Received: from colby.verdasys.com ([69.20.67.85]:54078 "EHLO
+	colby.verdasys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbYCLXXl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 19:23:41 -0400
+In-Reply-To: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
+References: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doron Shoham <dorons@Voltaire.COM>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Doron Shoham wrote:
-> Bart Van Assche wrote:
->> On Tue, Mar 11, 2008 at 8:40 AM, Doron Shoham <dorons@voltaire.com> wrote:
->>>  sgp_dd if=/dev/sg1 of=/dev/null bs=512 bpt=128 thr=8 time=1 count=5M dio=1
->>>  time to transfer data was 2.236290 secs, 1200.36 MB/sec
->>>  5242880+0 records in
->>>  5242880+0 records out
->>>  Direct IO requested but incomplete 40960 times
->>>
->>>  What does it mean "Direct IO requested but incomplete 40960 times"?
->>>  And what could be the reason for this?
->> The man page of sgp_dd states that the parameter specified to bs must
->> be the block size of the physical device. You can query the block size
->> of a SCSI device with e.g. the scsi_readcap command:
->>
->> $ scsi_readcap /dev/sda
->> sg_readcap   /dev/sda
->> Read Capacity results:
->>    Last logical block address=625142447 (0x2542eaaf), Number of blocks=625142448
->>    Logical block length=512 bytes
->> Hence:
->>    Device size: 320072933376 bytes, 305245.3 MiB, 320.07 GB
->>
->> Bart.
-> 
-> Hi,
-> sg_readcap /dev/sdb
-> 
-> Read Capacity results:
->    Last block address=3221225471 (0xbfffffff), Number of blocks=3221225472
->    Block size=512 bytes
-> Hence:
->    Device size: 1649267441664 bytes, 1572864.0 MiB, 1649.27 GB
-> 
-> The block size is 512 as I used in the sgp_dd command.
-> The problem is just when using dio=1, without it it works ok.
+At 16:53 3/6/2008, Marc Bejarano wrote:
+ >i've been having some data corruption problems and i'd like to try
+ >using a different driver/HBA to see if they go away.  i'm currently
+ >using LSI SAS3801E HBA's which use the mptsas driver.  since i use
+ >linux md for RAID, i'd rather not spend a lot of money on RAID silicon
+ >that i don't want.
+ >
+ >ideally, i'd love a reasonably priced PCIe SAS HBA with an in-tree
+ >driver supported by RHEL 5.1.  any suggestions?
 
-Doron,
-Try reducing the bpt value (say to 64 or 32). To see more of
-what might be the problem add 'verbose=<n>' to the command
-line (and reduce the count to stop being flooded with
-debug messages).
+apparently not :P
 
-Doug Gilbert
+for the next lost soul, i found that marvell, LSI, and intel make 
+affordable PCIe SAS chips.
+
+marvell's 88SA6640 HBA doesn't seem to be available, yet.  in any 
+case, mvsas (if that's the right LLD) is still too new for RHEL support.
+
+LSI's HBA's are what i'm currently using and would recommend.
+
+intel has the IOP348 chip (an emulex clone?) which is currently 
+shipping in the Atto ExpressSAS H380 and friends.  atto's web page 
+for the HBA says there is linux support, but i don't know what driver it uses.
+
+if you're okay with PCI-X, adaptec's 58300 fits the bill.
+
+hth,
+marc
 
