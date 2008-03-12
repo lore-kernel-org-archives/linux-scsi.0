@@ -1,24 +1,29 @@
-From: Ulrich Schweitzer <us-@gmx.de>
-Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
-Date: Wed, 12 Mar 2008 21:25:49 +0100
-Message-ID: <200803122125.50161.us-@gmx.de>
-References: <bug-10226-10286@http.bugzilla.kernel.org/> <47D825B5.7060201@panasas.com> <1205348570.2941.140.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
+Date: Wed, 12 Mar 2008 13:26:09 -0700 (PDT)
+Message-ID: <20080312202609.3038A11D107@picon.linux-foundation.org>
+References: <bug-10226-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60644 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751828AbYCLU0A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 16:26:00 -0400
-In-Reply-To: <1205348570.2941.140.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39311 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751918AbYCLU0L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Mar 2008 16:26:11 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2CKQuZD015731
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2008 13:26:58 -0700
+In-Reply-To: <bug-10226-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=10226
+
+
+
+
+
+------- Comment #8 from us-@gmx.de  2008-03-12 13:26 -------
 On Wednesday March 12 2008, James Bottomley wrote:
 > On Wed, 2008-03-12 at 20:49 +0200, Boaz Harrosh wrote:
 > > On Wed, Mar 12 2008 at 20:36 +0200, James Bottomley 
@@ -83,3 +88,9 @@ need a different SCSI adapter. Is the Adaptec AHA-2940 supported on x86_64
 adapter would you recommend?
 
 Ulrich
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
