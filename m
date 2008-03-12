@@ -1,117 +1,122 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] isd200: Fix memory leak in isd200_get_inquiry_data
-Date: Wed, 12 Mar 2008 15:55:29 +0200
-Message-ID: <47D7E0D1.8050403@panasas.com>
-References: <Pine.LNX.4.44L0.0803111456590.26916-100000@iolanthe.rowland.org> <47D7D580.5060406@panasas.com>
+From: Martin Peschke <mp3@de.ibm.com>
+Subject: Re: [patch 1/2] zfcp: Fix race during ERP thread shutdown
+Date: Wed, 12 Mar 2008 15:13:47 +0100
+Message-ID: <1205331227.4852.102.camel@kitka.ibm.com>
+References: <20080310151852.808020000@de.ibm.com>
+	 <20080310152328.463410000@de.ibm.com>
+	 <20080311164341.GA6380@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:55265 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754257AbYCLN4W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 09:56:22 -0400
-In-Reply-To: <47D7D580.5060406@panasas.com>
+Received: from mtagate4.uk.ibm.com ([195.212.29.137]:49209 "EHLO
+	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbYCLONt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 10:13:49 -0400
+In-Reply-To: <20080311164341.GA6380@osiris.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-On Wed, Mar 12 2008 at 15:07 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> On Tue, Mar 11 2008 at 21:18 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
->> On Tue, 11 Mar 2008, Boaz Harrosh wrote:
->>
->>>> You can first get to the scsi_device in isd200_ata_command().  
->>> I was afraid of that. I don't think I want to call scsi_get_command
->>> from within .queuecommand. I will leave the code hacked as today.
->> What are you talking about?  isd200_ata_command isn't called by 
->> queuecommand.
->>
->>>> The last
->>>> place you can get to the scsi_device (if one exists!) is
->>>> quiesce_and_remove_host() -- but that's part of the core, not specific
->>>> to isd200.
->>>>
->>> Here two, it looks like I need to introduce a new function pointer for isd200
->> Why?  And why do you need to get to the scsi_device in the first place?
->>
->>> I'll leave it for now. Though I know this is not the last I'll see of this driver.
->>>
+On Tue, 2008-03-11 at 17:43 +0100, Heiko Carstens wrote:
+> > --- a/drivers/s390/scsi/zfcp_erp.c	2008-03-10 12:34:48.000000000 +0100
+> > +++ b/drivers/s390/scsi/zfcp_erp.c	2008-03-10 16:05:26.000000000 +0100
+> > @@ -1002,7 +1002,7 @@ zfcp_erp_thread_setup(struct zfcp_adapte
+> >  					    &adapter->status));
+> >  		debug_text_event(adapter->erp_dbf, 5, "a_thset_ok");
+> >  	}
+> > -
+> > +	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
+> >  	return (retval < 0);
 > 
-> OK Now I see isd200_ata_command() is called from a usb.c internal thread.
-> 
-> What I need to do is call scsi_get_command(scsi_device*) on first invocation.
-> Now for the call to scsi_put_command()? At the time of the call to 
-> isd200_free_info_ptrs() do you think I still have a valid scsi_device at this point?
-> 
-> What I will do is this. I will resend my original patch with your comments
-> fixed. This is for the 2.6.25-rc. And I will send another patch that uses
-> the proper scsi_get/put_command() for testing and inclusion into the 2.6.26 kernel.
-> Please ACK on the patch
-> 
->>>>> (And one more stupid question. Why does isd200_init_info allocates the info 
->>>>> structure but the isd200_free_info_ptrs does not free it, it kind of
->>>>> limits the way it can be allocated, no?)
->>>> Not at all.  isd200_free_info_ptrs() frees everything pointed to by the
->>>> info structure, and the info structure itself is freed later on by the
->>>> usb-storage core in usb_stor_release_resources().
->>>>
->>> OK so in isd200_get_inquiry_data() at the end near the call to:
->>> 			us->extra_destructor(info);
->>> 			us->extra = NULL;
->>>
->>> It leaks the info.
->> Yes.  The three lines of code there are unnecessary.  You should remove
->> them (and the comment) instead of adding more somewhere else.  Or if
->> you want to keep them, just add a line to kfree(us->extra) before 
->> us->extra is set to NULL.
-> 
-> How are they unnecessary? who will free them? other wise they will only be
-> freed at the very end. And that is only because usb_stor_transparent_scsi_command()
-> does not need any us->extra of it's own. But if ever it will, then this code
-> buried here will become a leak.
-> 
-> And I disagree. with your solution. The module that did the allocation should
-> do the freeing. The above is just an example of what happens with bad programing
-> style. the core should not have attempted a free on a void pointer just so
-> protocols can get lazy and not register a destructor. Other wise we do not
-> learn from passed mistakes and keep doing the same errors. The free should
-> always be at same file right next to the alloc. (And don't get me started
-> on the flexibility that enables)
-> 
-> I keep the patch as it is, I recommend to commit it for solving the leak.
-> 
+> This way the flag will be set even if the creation of the erp thread failed.
 
-rrr only I cannot do that because the destructor does not have access to the us_data
-that contains it. As I said, very ugly. New patch attached.
+You are right.
 
-Boaz
----
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Tue, 11 Mar 2008 20:30:53 +0200
-Subject: [PATCH] isd200: Fix memory leak in isd200_get_inquiry_data
+This used to be correct with all the cleanups pending in our queue
+applied. Looks like this flaw creeped in when the bug fix patch was
+moved to the head of queue.
 
-if the inquiry fails then the info structure on
-us->extra was not freed.
+> It should be done somewhere within zfcp_erp_thread() instead.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/usb/storage/isd200.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Setting the flag in the setup function is fine, as long as we make sure
+the thread is really up and running. I'd prefer to have it here because
+of its symmetry with zfcp_erp_thread_kill().
 
-diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-index ac1764b..2de1f1e 100644
---- a/drivers/usb/storage/isd200.c
-+++ b/drivers/usb/storage/isd200.c
-@@ -1231,6 +1231,7 @@ static int isd200_get_inquiry_data( struct us_data *us )
- 	    
- 			/* Free driver structure */	    
- 			us->extra_destructor(info);
-+			kfree(info);
- 			us->extra = NULL;
- 			us->extra_destructor = NULL;
- 		}
--- 
-1.5.3.3
+> Besides that setting the flag must be done while holding the erp_lock.
+> Otherwise zfcp_erp_action_enqueue might check the flag, other cpu clears
+> the flag right after that, and then enqueueing continues while the flag is
+> not set.
+
+Correct.
+
+zfcp_erp_wait() might fail to wait for that new action to finish,
+because the PENDING flag is set later in the action enqueuing process.
+But we want zfcp_erp_wait() to make sure that recovery is settled, so
+that we can go on killing the thread.
+
+> >  }
+> > 
+> > @@ -1025,6 +1025,8 @@ zfcp_erp_thread_kill(struct zfcp_adapter
+> >  {
+> >  	int retval = 0;
+> > 
+> > +	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status);
+> > +	zfcp_erp_wait(adapter);
+> >  	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL, &adapter->status);
+> >  	up(&adapter->erp_ready_sem);
+> > 
+> > @@ -2940,8 +2942,7 @@ zfcp_erp_action_enqueue(int action,
+> >  	 * efficient.
+> >  	 */
+> > 
+> > -	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
+> > -			      &adapter->status))
+> > +	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_ACCEPT, &adapter->status))
+> >  		return -EIO;
+> > 
+> >  	debug_event(adapter->erp_dbf, 4, &action, sizeof (int));
+> > --- a/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 12:34:48.000000000 +0100
+> > +++ b/drivers/s390/scsi/zfcp_ccw.c	2008-03-10 16:05:26.000000000 +0100
+> > @@ -198,7 +198,6 @@ zfcp_ccw_set_offline(struct ccw_device *
+> >  	down(&zfcp_data.config_sema);
+> >  	adapter = dev_get_drvdata(&ccw_device->dev);
+> >  	zfcp_erp_adapter_shutdown(adapter, 0);
+> > -	zfcp_erp_wait(adapter);
+> >  	zfcp_erp_thread_kill(adapter);
+> 
+> And as a sidenote, if the scenario this patch is supposed to fix can really
+> happen, how can you make sure the adapter is still down before the erp thread
+> gets killed? Some action could have been enqueued and finished which reopened
+> the adapter after zfcp_erp_adapter_shutdown and before zfcp_erp_thread_kill.
+> Just wondering... :)
+
+You acting the innocent... :)
+
+As to question one - Is there a way for recovery being triggered when we
+are about to kill the recovery thread during the adapter offlining
+procedure:
+I am not sure. There are many potential triggers for error recovery.
+Some code path might be blocked when an adapter has been shut down
+(zfcp_fsf.c). I could review each one of them, and maybe add a comment
+about the assumption in the zfcp_ccw.c. But I don't like the idea of
+some one adding another recovery trigger somewhere in the driver in the
+future, not taking heed of this assumption.
+
+That is why, I'd rather have the error recovery shutdown procedure be
+airtight and self-dependent in the first place and have it not rely on
+shaky assumptions about the code which uses it.
+
+As to question two - Do we know for sure the adapter won't be brought
+back up again?
+With or without my patch, the issue would be there.
+Actually my patch is useless as long as it only concernes itself with
+bringing recovery to a termination, while disregarding the fact that
+recovery needs to be brought to a termination in a way that guarantees
+that adapter operation has been stopped.
+
+Thank you,
+Martin
 
 
