@@ -1,66 +1,41 @@
-From: Fredric Isaman <iisaman@citi.umich.edu>
-Subject: Re: [pnfs] [PATCH 05/28] pnfsblock: expose scsi interface
-Date: Wed, 12 Mar 2008 16:30:20 -0400 (EDT)
-Message-ID: <Pine.BSO.4.64.0803121630080.20573@citi.umich.edu>
-References: <1205263929-8346-1-git-send-email-iisaman@citi.umich.edu>
- <1205263929-8346-2-git-send-email-iisaman@citi.umich.edu>
- <1205263929-8346-3-git-send-email-iisaman@citi.umich.edu>
- <1205263929-8346-4-git-send-email-iisaman@citi.umich.edu>
- <1205263929-8346-5-git-send-email-iisaman@citi.umich.edu>
- <1205263929-8346-6-git-send-email-iisaman@citi.umich.edu> <47D805DE.9000100@panasas.com>
- <20080312164306.GA3519@infradead.org> <2ea9cd5a0803121052p6569ff37l26a5448e588407ad@mail.gmail.com>
- <Pine.BSO.4.64.0803121400550.20573@citi.umich.edu> <20080312200342.GB7537@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter
+	not working with x86_64 kernels
+Date: Wed, 12 Mar 2008 16:35:33 -0500
+Message-ID: <1205357733.2941.160.camel@localhost.localdomain>
+References: <bug-10226-10286@http.bugzilla.kernel.org/>
+	 <47D825B5.7060201@panasas.com>
+	 <1205348570.2941.140.camel@localhost.localdomain>
+	 <200803122125.50161.us-@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from citi.umich.edu ([141.211.133.111]:16672 "EHLO citi.umich.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbYCLUaV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 16:30:21 -0400
-In-Reply-To: <20080312200342.GB7537@infradead.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34568 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752494AbYCLVfj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Mar 2008 17:35:39 -0400
+In-Reply-To: <200803122125.50161.us-@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jason Glasgow <jglasgow@aya.yale.edu>, Benny Halevy <bhalevy@panasas.com>, Andy Adamson <andros@umich.edu>, pnfs@linux-nfs.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Ulrich Schweitzer <us-@gmx.de>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
+On Wed, 2008-03-12 at 21:25 +0100, Ulrich Schweitzer wrote:
+> Sorry for straying off topic, but this has to be the right crowd to ask:
+> I assume that the driver won't be ported to x86_64 soon (if ever),
 
+Not unless someone volunteers, but FlashPoint.c is huge.
 
-On Wed, 12 Mar 2008, Christoph Hellwig wrote:
+>  so I'll 
+> need a different SCSI adapter. Is the Adaptec AHA-2940 supported on x86_64 
+> (those are cheap on ebay)? If not, what other, preferably cheap, SE SCSI 
+> adapter would you recommend?
 
-> On Wed, Mar 12, 2008 at 02:10:03PM -0400, Fredric Isaman wrote:
->>>> Yes, absolutely.  No one outside of few places in the core scsi code
->>>> should ever iterate over the scsi disks.
->>>>
->>
->> Is this for locking reasons?
->
-> It's for abstraction and data hiding reasons.  The existance of such
-> a list is an implementation detail.   Any inkernel or external user
-> should use the block device API to access block devices.  Even the
-> implementation using the scsi layer is an implementation detail.
->
->> Basically, we are given a disk signature, (an array of offset, byte
->> sequence pairs) and want to match it against some visible disk (ignoring
->> partitions), or know that it is not currently visible.
->>
->> Thus our requirement are:
->>
->> Scan all available block devices (though all available SCSI devices is a
->> workable substitute).
->>
->> Notification of new devices would be a helpful in optimizing rescans for
->> unmapped disk signatures.
->>
->>
->> As Jason mentions, we will pursue doing this in userspace.
->
-> Try looking into the libvolume_id and libblkid libraries which solve
-> exactly this problem already, and it's a quite complicated one to start
-> with.
->
->
+Yes, the adaptec 7xxx/79xx series work fine both on 64 bits and big
+endian.
 
-OK.  Thanks for the pointers.
+James
 
- 	Fred
 
