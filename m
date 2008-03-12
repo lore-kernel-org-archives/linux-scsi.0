@@ -1,157 +1,189 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Wed, 12 Mar 2008 09:28:56 +0900
-Message-ID: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
-References: <20080311070956E.tomof@acm.org>
-	<Pine.LNX.4.44L0.0803111543220.26916-100000@iolanthe.rowland.org>
-	<20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+From: "Gwendal Grignou" <gwendal@google.com>
+Subject: [2.6.25] scsi mid layer: add a time threshold to force device to completed command queued for a long time.
+Date: Tue, 11 Mar 2008 17:41:44 -0700
+Message-ID: <e7510f760803111741h71de33b0i3764b7759a340803@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 12 Mar 2008 09:14:00 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+Please ignore the patch I sent earlier, it was out of context.
+[scsi_sysfs: Fix cut and paste errors]
+This patch allows to throttle command queuing to a device, if
+older commands are outstanding for too long already.
+I added a new sysfs parameter [per scsi device] req_pending_time_thres.
+If a command is still outstanding after req_pending_time_thres ms, no
+new command will be sent to the device.
+This mechanism is enabled only when req_pending_time_thres!=0 and
+the device queue uses tagging defined in blk_tag.c
 
-> On Tue, 11 Mar 2008 16:09:26 -0400 (EDT)
-> Alan Stern <stern@rowland.harvard.edu> wrote:
-> 
-> > On Tue, 11 Mar 2008, FUJITA Tomonori wrote:
-> > 
-> > > On Mon, 10 Mar 2008 16:10:36 +0200
-> > > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> > > > Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
-> > > > It looks like it could also use these, but there they have a twist where they want
-> > > > to do it in parts. Do you think that the code there could also use the helpers 
-> > > > presented here somehow? (I know that one of the USB guys was asking about it)
-> > > 
-> > > I've not. If the USB people are eager to use the new APIs, I'll try
-> > > though I prefer to keep them simple.
-> > 
-> > It would be great if the code could be removed from usb-storage and put
-> > in a central library.  The problem is, as Boaz mentioned, that some of
-> > the subdrivers need to transfer their data in pieces.
-> 
-> I'm fine with add a trick for USB to the APIs as long as USB people
-> inspect and test the trick ;)
-> 
-> 
-> > It may be that the device is able to send or receive only a few blocks 
-> > at a time, or it may be that the blocks aren't stored in continguous 
-> > locations on the device.  Either way, the drivers need to do multiple 
-> > transfers, each starting from where the previous one left off.
-> > 
-> > It shouldn't be too hard to adjust your code to make this work.  
-> > Instead of passing sgl and nents directly to sg_copy_buffer(), pass a
-> > pointer to a structure containing fields for sgl, nents, n, sg_off, and
-> > sg_copy.  Then the caller could retain the ending values for use in a
-> > later call.
-> > 
-> > Does this sound reasonable?
-> 
-> How about this?
-> 
-> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-> index a3d567a..8951e3c 100644
-> --- a/include/linux/scatterlist.h
-> +++ b/include/linux/scatterlist.h
-> @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
->  		     sg_alloc_fn *);
->  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
->  
-> +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
-> +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
-> +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-> +			void *buf, int buflen);
-> +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-> +		      void *buf, int buflen);
-> +
+The rational for this patch is I noticed that some SATA hard drives with NCQ
+enabled have tendency to leave some commands in the back of their queue
+when they received a lot of outstanding commands. This is not a problem
+for synthetic read random test, like iometer, but it hurts performance of
+real-life applications: the deviation of the latency increase significantly
+when NCQ is enabled.
 
-It enables us to simplify usb_stor_access_xfer_buf like this, I think
-(it's not tested).
+This patch slightly decrease performance during synthetic test when
+req_pending_time_thres != 0 [it is still better than when NCQ is not enabled]
+but it improves the deviation.
 
-diff --git a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
-index b9b8ede..0992809 100644
---- a/drivers/usb/storage/protocol.c
-+++ b/drivers/usb/storage/protocol.c
-@@ -156,70 +156,11 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
- 	unsigned int buflen, struct scsi_cmnd *srb, struct scatterlist **sgptr,
- 	unsigned int *offset, enum xfer_buf_dir dir)
- {
--	unsigned int cnt;
--	struct scatterlist *sg = *sgptr;
--
--	/* We have to go through the list one entry
--	 * at a time.  Each s-g entry contains some number of pages, and
--	 * each page has to be kmap()'ed separately.  If the page is already
--	 * in kernel-addressable memory then kmap() will return its address.
--	 * If the page is not directly accessible -- such as a user buffer
--	 * located in high memory -- then kmap() will map it to a temporary
--	 * position in the kernel's virtual address space.
--	 */
--
--	if (!sg)
--		sg = scsi_sglist(srb);
-+	if (!*sgptr)
-+		*sgptr = scsi_sglist(srb);
- 
--	/* This loop handles a single s-g list entry, which may
--	 * include multiple pages.  Find the initial page structure
--	 * and the starting offset within the page, and update
--	 * the *offset and **sgptr values for the next loop.
--	 */
--	cnt = 0;
--	while (cnt < buflen && sg) {
--		struct page *page = sg_page(sg) +
--				((sg->offset + *offset) >> PAGE_SHIFT);
--		unsigned int poff = (sg->offset + *offset) & (PAGE_SIZE-1);
--		unsigned int sglen = sg->length - *offset;
--
--		if (sglen > buflen - cnt) {
--
--			/* Transfer ends within this s-g entry */
--			sglen = buflen - cnt;
--			*offset += sglen;
--		} else {
--
--			/* Transfer continues to next s-g entry */
--			*offset = 0;
--			sg = sg_next(sg);
--		}
--
--		/* Transfer the data for all the pages in this
--			* s-g entry.  For each page: call kmap(), do the
--			* transfer, and call kunmap() immediately after. */
--		while (sglen > 0) {
--			unsigned int plen = min(sglen, (unsigned int)
--					PAGE_SIZE - poff);
--			unsigned char *ptr = kmap(page);
--
--			if (dir == TO_XFER_BUF)
--				memcpy(ptr + poff, buffer + cnt, plen);
--			else
--				memcpy(buffer + cnt, ptr + poff, plen);
--			kunmap(page);
--
--			/* Start at the beginning of the next page */
--			poff = 0;
--			++page;
--			cnt += plen;
--			sglen -= plen;
--		}
--	}
--	*sgptr = sg;
--
--	/* Return the amount actually transferred */
--	return cnt;
-+	return sg_copy_buffer(sgptr, scsi_sg_count(srb),
-+			      offset, buffer, buflen, dir != TO_XFER_BUF);
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+---
+ block/blk-tag.c            |    2 +-
+ drivers/scsi/scsi_lib.c    |   37 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  |    9 ++++++---
+ include/linux/blkdev.h     |    4 ++++
+ include/scsi/scsi_device.h |    2 ++
+ 5 files changed, 50 insertions(+), 4 deletions(-)
+
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index 4780a46..49e4f24 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -364,7 +364,7 @@ int blk_queue_start_tag(struct request_q
+ 	rq->tag = tag;
+ 	bqt->tag_index[tag] = rq;
+ 	blkdev_dequeue_request(rq);
+-	list_add(&rq->queuelist, &q->tag_busy_list);
++	list_add_tail(&rq->queuelist, &q->tag_busy_list);
+ 	bqt->busy++;
+ 	return 0;
  }
- 
- /* Store the contents of buffer into srb's transfer buffer and set the
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ba21d97..b17a896 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1296,6 +1296,36 @@ static inline int scsi_dev_queue_ready(s
+ }
+
+ /*
++ * scsi_cmd_thres_check: if requests are in the drive too long,
++ * return 0 else return 1.
++ *
++ * Called with the queue_lock held.
++ */
++static inline int scsi_cmd_thres_check(struct request *req,
++				       struct request_queue *q,
++				       struct scsi_device *sdev)
++{
++	struct request *oldest_req;
++	if (blk_queue_tagged(q) &&
++	    (sdev->req_pending_time_thres != 0)) {
++		if (!list_empty(&q->tag_busy_list)) {
++			oldest_req = list_entry_rq(q->tag_busy_list.next);
++			if (time_after(jiffies,
++				       oldest_req->timeout_time_thres)) {
++				/*
++				 * oldest command is not completed yet,
++				 * don't queue until processed
++				 */
++				return 0;
++			}
++		}
++		req->timeout_time_thres = jiffies +
++			sdev->req_pending_time_thres * (HZ/1000);
++	}
++	return 1;
++}
++
++/*
+  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
+  * return 0. We must end up running the queue again whenever 0 is
+  * returned, else IO can hang.
+@@ -1451,6 +1481,13 @@ static void scsi_request_fn(struct reque
+ 		if (!req || !scsi_dev_queue_ready(q, sdev))
+ 			break;
+
++		/*
++		 * If the device is busy processing a request for too long,
++		 * Don't send anything.
++		 */
++		if (!scsi_cmd_thres_check(req, q, sdev))
++			break;
++
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to offline device\n");
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ed83cdb..7921cda 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -441,7 +441,7 @@ static DEVICE_ATTR(field, S_IRUGO, sdev_
+
+
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr: create a function and attribute variable for a
+  * read/write field.
+  */
+ #define sdev_rw_attr(field, format_string)				\
+@@ -452,7 +452,7 @@ sdev_store_##field (struct device *dev,
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
+-	snscanf (buf, 20, format_string, &sdev->field);			\
++	sscanf (buf, format_string, &sdev->field);			\
+ 	return count;							\
+ }									\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field,
+sdev_store_##field);
+@@ -461,7 +461,7 @@ static DEVICE_ATTR(field, S_IRUGO | S_IW
+  * so leave this code in */
+ #if 0
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr_bit: create a function and attribute variable for a
+  * read/write bit field.
+  */
+ #define sdev_rw_attr_bit(field)						\
+@@ -510,6 +510,8 @@ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
+
++sdev_rw_attr (req_pending_time_thres, "%d\n");
++
+ static ssize_t
+ sdev_show_timeout (struct device *dev, struct device_attribute *attr,
+char *buf)
+ {
+@@ -689,6 +691,7 @@ static struct attribute *scsi_sdev_attrs
+ 	&dev_attr_delete.attr,
+ 	&dev_attr_state.attr,
+ 	&dev_attr_timeout.attr,
++	&dev_attr_req_pending_time_thres.attr,
+ 	&dev_attr_iocounterbits.attr,
+ 	&dev_attr_iorequest_cnt.attr,
+ 	&dev_attr_iodone_cnt.attr,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6f79d40..8191e67 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -188,6 +188,10 @@ struct request {
+ 	struct gendisk *rq_disk;
+ 	unsigned long start_time;
+
++	/* when it should complete when req_pending_time_thres is enabled
++	 */
++	unsigned long timeout_time_thres;
++
+ 	/* Number of scatter-gather DMA addr+len pairs after
+ 	 * physical address coalescing is performed.
+ 	 */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index ab7acbe..aa57d6d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -83,6 +83,8 @@ struct scsi_device {
+ 	unsigned long last_queue_full_time;/* don't let QUEUE_FULLs on the same
+ 					   jiffie count on our counter, they
+ 					   could all be from the same event. */
++	unsigned int req_pending_time_thres; /* time a request must complete for
++					      * another request to be queued. */
+
+ 	unsigned int id, lun, channel;
