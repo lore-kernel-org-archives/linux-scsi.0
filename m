@@ -1,57 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [pnfs] [PATCH 05/28] pnfsblock: expose scsi interface
-Date: Wed, 12 Mar 2008 18:42:29 -0400
-Message-ID: <47D85C55.5060101@garzik.org>
-References: <1205263929-8346-1-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-2-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-3-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-4-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-5-git-send-email-iisaman@citi.umich.edu> <1205263929-8346-6-git-send-email-iisaman@citi.umich.edu> <47D805DE.9000100@panasas.com> <20080312164306.GA3519@infradead.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: using direct IO with sgp_dd
+Date: Wed, 12 Mar 2008 18:46:19 -0400
+Message-ID: <47D85D3B.9070705@torque.net>
+References: <47D63758.9000601@voltaire.com> <e2e108260803110150g453c790bu3a21537b5eaf762d@mail.gmail.com> <47D64D08.6070601@Voltaire.COM>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52530 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755471AbYCLWmn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 18:42:43 -0400
-In-Reply-To: <20080312164306.GA3519@infradead.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36705 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbYCLWsE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 18:48:04 -0400
+In-Reply-To: <47D64D08.6070601@Voltaire.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Benny Halevy <bhalevy@panasas.com>, Fred Isaman <iisaman@citi.umich.edu>, Andy Adamson <andros@umich.edu>, pnfs@linux-nfs.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Doron Shoham <dorons@Voltaire.COM>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Wed, Mar 12, 2008 at 06:33:34PM +0200, Benny Halevy wrote:
->> This calls for a layering violation.
+Doron Shoham wrote:
+> Bart Van Assche wrote:
+>> On Tue, Mar 11, 2008 at 8:40 AM, Doron Shoham <dorons@voltaire.com> wrote:
+>>>  sgp_dd if=/dev/sg1 of=/dev/null bs=512 bpt=128 thr=8 time=1 count=5M dio=1
+>>>  time to transfer data was 2.236290 secs, 1200.36 MB/sec
+>>>  5242880+0 records in
+>>>  5242880+0 records out
+>>>  Direct IO requested but incomplete 40960 times
+>>>
+>>>  What does it mean "Direct IO requested but incomplete 40960 times"?
+>>>  And what could be the reason for this?
+>> The man page of sgp_dd states that the parameter specified to bs must
+>> be the block size of the physical device. You can query the block size
+>> of a SCSI device with e.g. the scsi_readcap command:
 >>
->> To fill-in more context, here's an excerpt from the next patch,
->> showing how you use shost_class to scan all scsi disks:
-> 
-> Yes, absolutely.  No one outside of few places in the core scsi code
-> should ever iterate over the scsi disks.
-> 
->> My question is how should a proper API between the scsi layer and
->> the block layout driver look like?
+>> $ scsi_readcap /dev/sda
+>> sg_readcap   /dev/sda
+>> Read Capacity results:
+>>    Last logical block address=625142447 (0x2542eaaf), Number of blocks=625142448
+>>    Logical block length=512 bytes
+>> Hence:
+>>    Device size: 320072933376 bytes, 305245.3 MiB, 320.07 GB
 >>
->> Can you list your requirements, e.g.:
->> - scanning all available devices,
->>
->> - discovering new devices on the fly
->>
->> - getting notified for new devices?
+>> Bart.
 > 
-> Neither.  pnfs shouldn't open block devices from kernelspace at all,
-> but do it's disovery in userspace.
+> Hi,
+> sg_readcap /dev/sdb
 > 
-> Or even better this whole block layout driver crap should go away
-> completely and the people who have designed it beaten up until they
-> aren't recognizable anymore.
+> Read Capacity results:
+>    Last block address=3221225471 (0xbfffffff), Number of blocks=3221225472
+>    Block size=512 bytes
+> Hence:
+>    Device size: 1649267441664 bytes, 1572864.0 MiB, 1649.27 GB
+> 
+> The block size is 512 as I used in the sgp_dd command.
+> The problem is just when using dio=1, without it it works ok.
 
-The fact that NFSv4.1 requires SCSI is stupid crap, too.
+Doron,
+Try reducing the bpt value (say to 64 or 32). To see more of
+what might be the problem add 'verbose=<n>' to the command
+line (and reduce the count to stop being flooded with
+debug messages).
 
-The _design_ is a layering violation.  I say we just say "no".
-
-NFS _clients_ should not need to know deep device-level details about 
-how to store their data, and should not require SCSI in order to store data.
-
-	Jeff
-
-
+Doug Gilbert
 
