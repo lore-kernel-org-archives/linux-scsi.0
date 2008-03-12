@@ -1,97 +1,58 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [0/20] Remove isa_unchecked_dma and some more GFP_DMAs in the mid layer v3
-Date: Wed, 12 Mar 2008 01:56:49 +0100
-Message-ID: <20080312005649.GA2522@one.firstfloor.org>
-References: <20080307653.720459648@firstfloor.org> <47D6C784.50408@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [2.6.25] scsi mid layer: add a time threshold to force device
+	to completed command queued for a long time.
+Date: Tue, 11 Mar 2008 21:44:11 -0400
+Message-ID: <1205286251.2941.84.camel@localhost.localdomain>
+References: <e7510f760803111741h71de33b0i3764b7759a340803@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:39491 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbYCLAyx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2008 20:54:53 -0400
-Content-Disposition: inline
-In-Reply-To: <47D6C784.50408@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <e7510f760803111741h71de33b0i3764b7759a340803@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk, Jeff Garzik <jeff@garzik.org>
 
-On Tue, Mar 11, 2008 at 07:55:16PM +0200, Boaz Harrosh wrote:
-> It perfectly fits with two parallel efforts I'm perusing.
+On Tue, 2008-03-11 at 17:41 -0700, Gwendal Grignou wrote:
+> Please ignore the patch I sent earlier, it was out of context.
+> [scsi_sysfs: Fix cut and paste errors]
+> This patch allows to throttle command queuing to a device, if
+> older commands are outstanding for too long already.
+> I added a new sysfs parameter [per scsi device] req_pending_time_thres.
+> If a command is still outstanding after req_pending_time_thres ms, no
+> new command will be sent to the device.
+> This mechanism is enabled only when req_pending_time_thres!=0 and
+> the device queue uses tagging defined in blk_tag.c
+> The rational for this patch is I noticed that some SATA hard drives with NCQ
+> enabled have tendency to leave some commands in the back of their queue
+> when they received a lot of outstanding commands. This is not a problem
+> for synthetic read random test, like iometer, but it hurts performance of
+> real-life applications: the deviation of the latency increase significantly
+> when NCQ is enabled.
 > 
-> - First is with regard to scsi_cmnd->cmnd cleanup:
->   http://www.spinics.net/lists/linux-scsi/msg23676.html
-> 
->   You have just done my job where I needed to audit all uses of 
->   scsi_cmnd->cmnd with regard to the isa_unchecked_dma.
->   (see: http://www.spinics.net/lists/linux-scsi/msg23747.html)
+> This patch slightly decrease performance during synthetic test when
+> req_pending_time_thres != 0 [it is still better than when NCQ is not enabled]
+> but it improves the deviation.
 
-Some reauditing would be probably still a good idea, just to make
-sure i didn't miss anything. Some of the code was rather unclean
-and not always obvious too.
+Firstly there's a structural problem with this:  you don't take into
+account the fact that the tag map may be shared, so the first entry in
+the tag list may belong to a completely different device.
 
-> The "scan-and-change of all scsi LLDS that..." is a very unrewarding and sure to 
-> encounter-hidden-ghosts effort. As I should know freshly. Reviewing few of the
-> drivers in this patchset I've spotted some minor problems. Mainly two things
-> right now. For instance aha152x.c is a file used for both ISA and a PCMCIA
-> devices, your change unnecessarily restricts the PCMCIA device. That driver, as 
+Secondly, this req->timeout_time_thres is really at the wrong layer:
+it's only ever set and read from SCSI, so there's not really a good
+reason to place it in the request ... it should probably be in the
+command.  Additionally, cmnd->jiffies_at_alloc already exists, so you
+can probably get it do do everything you need without adding even a
+parameter to the command.
 
-But it was already restricted before wasn't it?
+Finally, it doesn't look like it will work well with error handling: we
+use the ->queuecommand path for certain error handling commands; if the
+device is stopped and we've passed the threshold, this will reject the
+error handling commands as well.  The basic problem here is that the tag
+is held in the block layer and isn't released until the command is
+completed (after error handling is done).
 
-I'm definitely not trying to tune or improve these drivers in any way, 
-just remove a crufty bit of infrastructure.
-
-> well as other drivers in the patchset, are currently allocated low by the 
-> isa_unchecked_dma, but from a closer inspection, none of the host_data is actually 
-> used for DMA and the allocation can stay embedded. I think it is worth it to do
-
-Hmm, I thought i had audited them for needing or not needing dma on
-hostdata and only converted the ones who needed it, but I might have
-err'ed on the side of caution in some cases I wasn't 100% sure.
-
-Even if the hostdata is allocated unnecessarily as dma it is only
-a quite small amount of memory so it shouldn't really hurt.
-
-> that now in one go. One more thing is the EISA devices that are now pushed to
-> behave like ISA because they do not have a device, like gdth, For that particular
-
-Yes, but they already behaved before like that. No change. 
-I was especially careful to not add unnecessary data bouncing for that 
-case.
-
-> driver Jeff Garzik has a patch in Q that might help. I will try to rebase your
-> patch on top of his series.
-> 
-> I will put all your patches on a local git tree and try to stare at them deeper.
-> Do you have these (And all the dma patches sent to lkml) on a public git tree
-> somewhere? I would like to study and test them.
-
-I have them in quilt on the ftp server. Actually
-it contains some more, it is just the first part of larger work I'm doing to rework
-DMA memory allocation.  The SCSI parts are up to "scsi-ch-dma" in the series.
-
-I used to have a recipe to turn quilt into git, but it doesn't seem
-to work anymore with latest git (or maybe I forgot it).
-
-I can try to reconstruct that again later if you really need it.
+James
 
 
-> (The ftp url you specified in lkml returns an alphabetical order of patches and
-> I'm not sure which subdirectory has the latest set)
-
-It's a series of patches with the "series" file defining the 
-order, aka quilt format.
-
-The usual way for quilt is to get quilt get the patches dir
-ln -s it into the source tree and then use quilt push -a to apply them
-Or if you only want the SCSI stuff only go upto "scsi-ch-dma"
-
-Or you could probably write some simple scripts to apply it based
-on the series. It's essentially just
-
-grep -v '#' patches/series | while read i ; do patch -p1 < patches/$i ; done
-
-Thanks for your help.
-
--Andi
