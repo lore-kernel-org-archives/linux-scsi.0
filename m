@@ -1,56 +1,45 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH ver3] isd200: Allocate sense_buffer for hacked up scsi_cmnd
-Date: Wed, 12 Mar 2008 19:20:09 +0200
-Message-ID: <47D810C9.90309@panasas.com>
-References: <Pine.LNX.4.44L0.0803121109210.4595-100000@iolanthe.rowland.org>	 <47D7F5A3.9010004@panasas.com> <1205340884.2941.112.camel@localhost.localdomain> <47D80D60.3060006@panasas.com>
+Subject: Re: [PATCH] isd200: Use scsi_get_cmnd for the extra translation command
+Date: Wed, 12 Mar 2008 19:27:41 +0200
+Message-ID: <47D8128D.3050405@panasas.com>
+References: <47D7F397.4070903@panasas.com> <1205341209.2941.116.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:45674 "EHLO
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:44228 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbYCLRUj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 13:20:39 -0400
-In-Reply-To: <47D80D60.3060006@panasas.com>
+	with ESMTP id S1751796AbYCLR2u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 13:28:50 -0400
+In-Reply-To: <1205341209.2941.116.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Sven Schnelle <svens@stackframe.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
+On Wed, Mar 12 2008 at 19:00 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Wed, 2008-03-12 at 17:15 +0200, Boaz Harrosh wrote:
+>> James
+>> please comment on the use of DID_REQUEUE as return status for 
+>> the command in case of failure to allocate the extra command the first
+>> time.
+> 
+> I'm afraid it won't work.  If you get a NULL return from
+> scsi_get_command, it means that the command you already have was likely
+> taken from the host free_list.  If that command is in the memory
+> clearing writeout path and we don't have any returning commands to
+> replace the free_list, the system is now deadlocked.
+> 
+> James
+> 
 
-Since the separation of sense_buffer from scsi_cmnd, Drivers that hack their
-own struct scsi_cmnd like here isd200, must also take care of their own
-sense_buffer.
+I'm not sure you are right. Please bear in mind that for isd200 an host
+has exactly one device. Now this *very first command* is some kind of
+INQUIRY in the discovery process, so it cannot be mounted for SWAP as yet.
+so it cannot be in the "clearing writeout path". Any kind of error on this
+first command will just result in an "empty" device, No? 
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/usb/storage/isd200.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+I guess a newly mounted device on a memory starved system has lots of places 
+to fail before and after this point in time.
 
-diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-index 4f2d143..971d13d 100644
---- a/drivers/usb/storage/isd200.c
-+++ b/drivers/usb/storage/isd200.c
-@@ -1470,6 +1470,7 @@ static void isd200_free_info_ptrs(void *info_)
- 	if (info) {
- 		kfree(info->id);
- 		kfree(info->RegsBuf);
-+		kfree(info->srb.sense_buffer);
- 	}
- }
- 
-@@ -1495,7 +1496,9 @@ static int isd200_init_info(struct us_data *us)
- 				kzalloc(sizeof(struct hd_driveid), GFP_KERNEL);
- 		info->RegsBuf = (unsigned char *)
- 				kmalloc(sizeof(info->ATARegs), GFP_KERNEL);
--		if (!info->id || !info->RegsBuf) {
-+		info->srb.sense_buffer =
-+				kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
-+		if (!info->id || !info->RegsBuf || !info->srb.sense_buffer) {
- 			isd200_free_info_ptrs(info);
- 			kfree(info);
- 			retStatus = ISD200_ERROR;
--- 
-1.5.3.3
-
-
+Boaz
