@@ -1,58 +1,90 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [2.6.25] scsi mid layer: add a time threshold to force device
-	to completed command queued for a long time.
-Date: Tue, 11 Mar 2008 21:44:11 -0400
-Message-ID: <1205286251.2941.84.camel@localhost.localdomain>
-References: <e7510f760803111741h71de33b0i3764b7759a340803@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Wed, 12 Mar 2008 11:24:21 +0900
+Message-ID: <20080312112421X.fujita.tomonori@lab.ntt.co.jp>
+References: <Pine.LNX.4.44L0.0803111543220.26916-100000@iolanthe.rowland.org>
+	<20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+	<20080312092856P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <e7510f760803111741h71de33b0i3764b7759a340803@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:64513 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbYCLC0n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2008 22:26:43 -0400
+In-Reply-To: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 
-On Tue, 2008-03-11 at 17:41 -0700, Gwendal Grignou wrote:
-> Please ignore the patch I sent earlier, it was out of context.
-> [scsi_sysfs: Fix cut and paste errors]
-> This patch allows to throttle command queuing to a device, if
-> older commands are outstanding for too long already.
-> I added a new sysfs parameter [per scsi device] req_pending_time_thres.
-> If a command is still outstanding after req_pending_time_thres ms, no
-> new command will be sent to the device.
-> This mechanism is enabled only when req_pending_time_thres!=0 and
-> the device queue uses tagging defined in blk_tag.c
-> The rational for this patch is I noticed that some SATA hard drives with NCQ
-> enabled have tendency to leave some commands in the back of their queue
-> when they received a lot of outstanding commands. This is not a problem
-> for synthetic read random test, like iometer, but it hurts performance of
-> real-life applications: the deviation of the latency increase significantly
-> when NCQ is enabled.
+On Wed, 12 Mar 2008 09:28:56 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+
+> On Wed, 12 Mar 2008 09:14:00 +0900
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 > 
-> This patch slightly decrease performance during synthetic test when
-> req_pending_time_thres != 0 [it is still better than when NCQ is not enabled]
-> but it improves the deviation.
+> > On Tue, 11 Mar 2008 16:09:26 -0400 (EDT)
+> > Alan Stern <stern@rowland.harvard.edu> wrote:
+> > 
+> > > On Tue, 11 Mar 2008, FUJITA Tomonori wrote:
+> > > 
+> > > > On Mon, 10 Mar 2008 16:10:36 +0200
+> > > > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > > 
+> > > > > Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
+> > > > > It looks like it could also use these, but there they have a twist where they want
+> > > > > to do it in parts. Do you think that the code there could also use the helpers 
+> > > > > presented here somehow? (I know that one of the USB guys was asking about it)
+> > > > 
+> > > > I've not. If the USB people are eager to use the new APIs, I'll try
+> > > > though I prefer to keep them simple.
+> > > 
+> > > It would be great if the code could be removed from usb-storage and put
+> > > in a central library.  The problem is, as Boaz mentioned, that some of
+> > > the subdrivers need to transfer their data in pieces.
+> > 
+> > I'm fine with add a trick for USB to the APIs as long as USB people
+> > inspect and test the trick ;)
+> > 
+> > 
+> > > It may be that the device is able to send or receive only a few blocks 
+> > > at a time, or it may be that the blocks aren't stored in continguous 
+> > > locations on the device.  Either way, the drivers need to do multiple 
+> > > transfers, each starting from where the previous one left off.
+> > > 
+> > > It shouldn't be too hard to adjust your code to make this work.  
+> > > Instead of passing sgl and nents directly to sg_copy_buffer(), pass a
+> > > pointer to a structure containing fields for sgl, nents, n, sg_off, and
+> > > sg_copy.  Then the caller could retain the ending values for use in a
+> > > later call.
+> > > 
+> > > Does this sound reasonable?
+> > 
+> > How about this?
+> > 
+> > diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+> > index a3d567a..8951e3c 100644
+> > --- a/include/linux/scatterlist.h
+> > +++ b/include/linux/scatterlist.h
+> > @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
+> >  		     sg_alloc_fn *);
+> >  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+> >  
+> > +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
+> > +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
+> > +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+> > +			void *buf, int buflen);
+> > +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+> > +		      void *buf, int buflen);
+> > +
+> 
+> It enables us to simplify usb_stor_access_xfer_buf like this, I think
+> (it's not tested).
 
-Firstly there's a structural problem with this:  you don't take into
-account the fact that the tag map may be shared, so the first entry in
-the tag list may belong to a completely different device.
+I fixed some minor issues (comments, warning, etc) and I've uploaded
+the patchset:
 
-Secondly, this req->timeout_time_thres is really at the wrong layer:
-it's only ever set and read from SCSI, so there's not really a good
-reason to place it in the request ... it should probably be in the
-command.  Additionally, cmnd->jiffies_at_alloc already exists, so you
-can probably get it do do everything you need without adding even a
-parameter to the command.
-
-Finally, it doesn't look like it will work well with error handling: we
-use the ->queuecommand path for certain error handling commands; if the
-device is stopped and we've passed the threshold, this will reject the
-error handling commands as well.  The basic problem here is that the tag
-is held in the block layer and isn't released until the command is
-completed (after error handling is done).
-
-James
-
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git sg-copy
 
