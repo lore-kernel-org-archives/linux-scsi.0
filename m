@@ -1,131 +1,108 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] 2.6.25-rc4-git3 - inquiry cmd issued via /dev/sg? device
- causes infinite loop in 2.6.24
-Date: Wed, 12 Mar 2008 11:03:26 -0500
-Message-ID: <47D7FECE.1020901@sgi.com>
-References: <47D7035F.5000700@sgi.com> <47D7B4A1.6020909@panasas.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Wed, 12 Mar 2008 12:04:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803121202150.4595-100000@iolanthe.rowland.org>
+References: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.171.30]:52516 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751206AbYCLQDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 12:03:30 -0400
-In-Reply-To: <47D7B4A1.6020909@panasas.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52420 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751596AbYCLQE0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 12:04:26 -0400
+In-Reply-To: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dougg@torque.net>, linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 
+On Wed, 12 Mar 2008, FUJITA Tomonori wrote:
 
-
-Boaz Harrosh wrote:
-
-<snip>
-
+> It enables us to simplify usb_stor_access_xfer_buf like this, I think
+> (it's not tested).
 > 
-> All these patches do not solve the root cause of the problem and until
-> solved, (easily) they will keep popping up.
-
-I will ask that the correctness of the sg driver's construction of
-a scatter list also be considered here.  Is it ever correct for bi_size
-to wind up larger than the request size?  Why is rounding needed in one
-case (sg_build_indirect) but not the other (sg_link_reserve)?
-
-> The root cause is that BLOCK_PC commands *can not* be retried in chunks. 
-> The midlayer has no way to know how to retry them. and any attempt to do so
-> will result in an illegal scsi command.
-> 
-> I'm really sorry for not seeing this before. I have seen all these emails
-> and patches back and forth but they addressed such remote locations, that
-> I have not paid attention to them.
-> 
-> So lets try to touch base. BLOCK_PC command can only be completed in full
-> always. In case of error or residual this should be properly reported and
-> that is all the midlayer can do. The Initiator That knows what command was
-> sent will then decide on a retry or not. In above case that will be user
-> mode.
-
-Those who truly understand this should comment.  It makes sense to this
-novice.
-
-> 
-> Just to demonstrate what I mean a patch is attached. Just as an RFC, totally
-> untested.
-
-I can try this out and see what happens.
-
-
-Mike
-
-> ---
-> git-diff --stat -p
->  drivers/scsi/scsi_lib.c |   29 ++++++++++++++++-------------
->  1 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ba21d97..e5d05c6 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -784,17 +784,24 @@ EXPORT_SYMBOL(scsi_release_buffers);
->   * in req->data_len and req->next_rq->data_len. The upper-layer driver can
->   * decide what to do with this information.
->   */
-> -void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-> +static void scsi_end_blk_request(struct scsi_cmnd *cmd)
+> diff --git a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
+> index b9b8ede..0992809 100644
+> --- a/drivers/usb/storage/protocol.c
+> +++ b/drivers/usb/storage/protocol.c
+> @@ -156,70 +156,11 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+>  	unsigned int buflen, struct scsi_cmnd *srb, struct scatterlist **sgptr,
+>  	unsigned int *offset, enum xfer_buf_dir dir)
 >  {
->  	struct request *req = cmd->request;
->  	unsigned int dlen = req->data_len;
-> -	unsigned int next_dlen = req->next_rq->data_len;
-> +	unsigned int next_dlen;
+> -	unsigned int cnt;
+> -	struct scatterlist *sg = *sgptr;
+> -
+> -	/* We have to go through the list one entry
+> -	 * at a time.  Each s-g entry contains some number of pages, and
+> -	 * each page has to be kmap()'ed separately.  If the page is already
+> -	 * in kernel-addressable memory then kmap() will return its address.
+> -	 * If the page is not directly accessible -- such as a user buffer
+> -	 * located in high memory -- then kmap() will map it to a temporary
+> -	 * position in the kernel's virtual address space.
+> -	 */
+> -
+> -	if (!sg)
+> -		sg = scsi_sglist(srb);
+> +	if (!*sgptr)
+> +		*sgptr = scsi_sglist(srb);
 >  
-> -	req->data_len = scsi_out(cmd)->resid;
-> -	req->next_rq->data_len = scsi_in(cmd)->resid;
-> +	if (blk_bidi_rq(req)) {
-> +		next_dlen = req->next_rq->data_len;
-> +		req->data_len = scsi_out(cmd)->resid;
-> +		req->next_rq->data_len = scsi_in(cmd)->resid;
-> +	} else {
-> +		next_dlen = 0;
-> +		req->data_len = scsi_get_resid(cmd);
-> +	}
->  
-> -	/* The req and req->next_rq have not been completed */
-> -	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
-> +	if (blk_end_bidi_request(req, 0, dlen, next_dlen))
-> +		/* The req and req->next_rq have not been completed */
-> +		BUG_ON();
->  
->  	scsi_release_buffers(cmd);
->  
-> @@ -866,15 +873,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  				req->sense_len = len;
->  			}
->  		}
-> -		if (scsi_bidi_cmnd(cmd)) {
-> -			/* will also release_buffers */
-> -			scsi_end_bidi_request(cmd);
-> -			return;
+> -	/* This loop handles a single s-g list entry, which may
+> -	 * include multiple pages.  Find the initial page structure
+> -	 * and the starting offset within the page, and update
+> -	 * the *offset and **sgptr values for the next loop.
+> -	 */
+> -	cnt = 0;
+> -	while (cnt < buflen && sg) {
+> -		struct page *page = sg_page(sg) +
+> -				((sg->offset + *offset) >> PAGE_SHIFT);
+> -		unsigned int poff = (sg->offset + *offset) & (PAGE_SIZE-1);
+> -		unsigned int sglen = sg->length - *offset;
+> -
+> -		if (sglen > buflen - cnt) {
+> -
+> -			/* Transfer ends within this s-g entry */
+> -			sglen = buflen - cnt;
+> -			*offset += sglen;
+> -		} else {
+> -
+> -			/* Transfer continues to next s-g entry */
+> -			*offset = 0;
+> -			sg = sg_next(sg);
 > -		}
-> -		req->data_len = scsi_get_resid(cmd);
-> +		/* will also release_buffers */
-> +		scsi_end_blk_request(cmd);
-> +		return;
->  	}
->  
-> -	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
->  	scsi_release_buffers(cmd);
->  
->  	/*
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -
+> -		/* Transfer the data for all the pages in this
+> -			* s-g entry.  For each page: call kmap(), do the
+> -			* transfer, and call kunmap() immediately after. */
+> -		while (sglen > 0) {
+> -			unsigned int plen = min(sglen, (unsigned int)
+> -					PAGE_SIZE - poff);
+> -			unsigned char *ptr = kmap(page);
+> -
+> -			if (dir == TO_XFER_BUF)
+> -				memcpy(ptr + poff, buffer + cnt, plen);
+> -			else
+> -				memcpy(buffer + cnt, ptr + poff, plen);
+> -			kunmap(page);
+> -
+> -			/* Start at the beginning of the next page */
+> -			poff = 0;
+> -			++page;
+> -			cnt += plen;
+> -			sglen -= plen;
+> -		}
+> -	}
+> -	*sgptr = sg;
+> -
+> -	/* Return the amount actually transferred */
+> -	return cnt;
+> +	return sg_copy_buffer(sgptr, scsi_sg_count(srb),
+> +			      offset, buffer, buflen, dir != TO_XFER_BUF);
+>  }
+
+It's a big simplification!
+
+There are two problems.  One is the types of the arguments and return 
+value.  The other is that local interrupts need to be disabled.
+
+Alan Stern
+
