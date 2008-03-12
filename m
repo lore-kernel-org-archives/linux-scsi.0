@@ -1,66 +1,101 @@
-From: Josef Bacik <jbacik@redhat.com>
-Subject: Re: some hard numbers on ext3 & batching performance issue
-Date: Wed, 12 Mar 2008 14:37:01 -0400
-Message-ID: <20080312183701.GB21187@unused.rdu.redhat.com>
-References: <47C6A46D.8020700@emc.com> <200803051520.09931.jbacik@redhat.com> <47D1A0C0.8010908@emc.com> <200803071540.13958.jbacik@redhat.com> <47D1A986.8010307@emc.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter
+ not working with x86_64 kernels
+Date: Wed, 12 Mar 2008 20:49:25 +0200
+Message-ID: <47D825B5.7060201@panasas.com>
+References: <bug-10226-10286@http.bugzilla.kernel.org/>	 <20080311134440.fb1609cb.akpm@linux-foundation.org>	 <47D7B875.4020606@panasas.com>  <200803121920.13571.us-@gmx.de> <1205347010.2941.127.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36936 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750973AbYCLSjE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 14:39:04 -0400
-Content-Disposition: inline
-In-Reply-To: <47D1A986.8010307@emc.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:41190 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbYCLSu7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 14:50:59 -0400
+In-Reply-To: <1205347010.2941.127.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Josef Bacik <jbacik@redhat.com>, David Chinner <dgc@sgi.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ulrich Schweitzer <us-@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Mar 07, 2008 at 03:45:58PM -0500, Ric Wheeler wrote:
-> Josef Bacik wrote:
->> On Friday 07 March 2008 3:08:32 pm Ric Wheeler wrote:
->>> Josef Bacik wrote:
->>>> On Wednesday 05 March 2008 2:19:48 pm Ric Wheeler wrote:
->>>>> After the IO/FS workshop last week, I posted some details on the slow
->>>>> down we see with ext3 when we have a low latency back end instead of a
->>>>> normal local disk (SCSI/S-ATA/etc).
->>> ...
->>> ...
->>>
->>> Note that this spreads the files across 64 subdirectories, each thread
->>> writes 50 files and then moves on to the next in a round robin.
->>>
+On Wed, Mar 12 2008 at 20:36 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Wed, 2008-03-12 at 19:20 +0100, Ulrich Schweitzer wrote:
+>> On Wednesday March 12 2008, Boaz Harrosh wrote:
 >>
->> I'm starting to wonder about the disks I have, because my files/second is 
->> spanking yours, and its just a local samsung 3gb/s sata drive.  With those 
->> commands I'm consistently getting over 700 files/sec.  I'm seeing about a 
->> 1-5% increase in speed locally with my patch.  I guess I'll start looking 
->> around for some other hardware and check on there in case this box is more 
->> badass than I think it is.  Thanks much,
+>>> An attached config file could help.
+>>> It looks like you need ISA_DMA_API && VIRT_TO_BUS enabled are they?
+>> They are both enabled, but consider that I didn't customize the kernel in any 
+>> way besides changing the processor type to K8 and setting CONFIG_IKCONFIG and 
+>> CONFIG_IKCONFIG_PROC. I don't know if I need the options you mentioned.
 >>
->> Josef
+>> I first noticed the problem with a Fedora kernel and compiled this one only to 
+>> confirm that the problem exists in the vanilla kernel as well.
 >>
->
-> Sounds like you might be running with write cache on & barriers off ;-)
->
-> Make sure you have write cache & barriers enabled on the drive. With a good 
-> S-ATA drive, you should be seeing about 35-50 files/sec with a single 
-> threaded writer.
->
-> The local disk that I tested on is a relatively slow s-ata disk that is 
-> more laptop quality/performance than server.
->
-> One thought I had about the results is that we might be flipping the IO 
-> sequence with the local disk case. It is the only device of the three that 
-> I tested which is seek/head movement sensitive for small files.
->
+>> Here is the complete .config:
+> 
+> Actually, this is the problem in BusLogic.h:
+> 
+> /*
+>   FlashPoint support is only available for the Intel x86 Architecture with
+>   CONFIG_PCI set.
+> */
+> 
+> #ifndef __i386__
+> #undef CONFIG_SCSI_OMIT_FLASHPOINT
+> #define CONFIG_SCSI_OMIT_FLASHPOINT
+> #endif
+> 
+> #ifndef CONFIG_PCI
+> #undef CONFIG_SCSI_OMIT_FLASHPOINT
+> #define CONFIG_SCSI_OMIT_FLASHPOINT
+> #define BusLogic_InitializeProbeInfoListISA BusLogic_InitializeProbeInfoList
+> #endif
+> 
+> Having this dependency logic done in the header file is not very user
+> friendly, but the comment is pretty clear.  I can move it to Kconfig,
+> but it will still not work on x86_64 if that comment is accurate.
+> 
+> James
+> 
 
-Ahh yes turning off write cache off and barriers on I get your numbers, however
-I'm not seeing the slowdown that you are, with and without my patch I'm seeing
-the same performance.  Its just a plane jane intel sata controller with a
-samsung sata disk set at 1.5gbps.  Same thing with an nvidia sata controller.
-I'll think about this some more and see if there is something better that could
-be done that may help you.  Thanks much,
+I think the all thing is total bullshit and should be removed. First
+it says x86 but that's not what is checked. Second if it is LE bad
+then it should be possible to be compiled on other ARCHs and problems
+reported and fixed. There is never a point in not letting it compile.
 
-Josef
+At most a | BROKEN logic in Kconfig.
+
+The all thing stinks of Windowism with the capitalized file names and all
+that stuff.
+
+My mailer crashed in the middle of last post so a repost just in case:
+
+---
+BusLogic: Remove total bullshit.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+
+git-diff --stat -p
+ drivers/scsi/BusLogic.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+index bfbfb5c..0f0d7f3 100644
+--- a/drivers/scsi/BusLogic.h
++++ b/drivers/scsi/BusLogic.h
+@@ -38,11 +38,6 @@
+   CONFIG_PCI set.
+ */
+ 
+-#ifndef __i386__
+-#undef CONFIG_SCSI_OMIT_FLASHPOINT
+-#define CONFIG_SCSI_OMIT_FLASHPOINT
+-#endif
+-
+ #ifndef CONFIG_PCI
+ #undef CONFIG_SCSI_OMIT_FLASHPOINT
+ #define CONFIG_SCSI_OMIT_FLASHPOINT
+
+
+
+
