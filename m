@@ -1,115 +1,66 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [pnfs] [PATCH 05/28] pnfsblock: expose scsi interface
-Date: Wed, 12 Mar 2008 20:36:06 +0200
-Message-ID: <47D82296.80002@panasas.com>
-References: <1205263929-8346-1-git-send-email-iisaman@citi.umich.edu>  <1205263929-8346-2-git-send-email-iisaman@citi.umich.edu>  <1205263929-8346-3-git-send-email-iisaman@citi.umich.edu>  <1205263929-8346-4-git-send-email-iisaman@citi.umich.edu>  <1205263929-8346-5-git-send-email-iisaman@citi.umich.edu>  <1205263929-8346-6-git-send-email-iisaman@citi.umich.edu>  <47D805DE.9000100@panasas.com> <20080312164306.GA3519@infradead.org> <2ea9cd5a0803121052p6569ff37l26a5448e588407ad@mail.gmail.com> <Pine.BSO.4.64.0803121400550.20573@citi.umich.edu>
+From: Josef Bacik <jbacik@redhat.com>
+Subject: Re: some hard numbers on ext3 & batching performance issue
+Date: Wed, 12 Mar 2008 14:37:01 -0400
+Message-ID: <20080312183701.GB21187@unused.rdu.redhat.com>
+References: <47C6A46D.8020700@emc.com> <200803051520.09931.jbacik@redhat.com> <47D1A0C0.8010908@emc.com> <200803071540.13958.jbacik@redhat.com> <47D1A986.8010307@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:47178 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbYCLShK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 14:37:10 -0400
-In-Reply-To: <Pine.BSO.4.64.0803121400550.20573@citi.umich.edu>
+Received: from mx1.redhat.com ([66.187.233.31]:36936 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750973AbYCLSjE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Mar 2008 14:39:04 -0400
+Content-Disposition: inline
+In-Reply-To: <47D1A986.8010307@emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fredric Isaman <iisaman@citi.umich.edu>
-Cc: Jason Glasgow <jglasgow@aya.yale.edu>, Christoph Hellwig <hch@infradead.org>, Benny Halevy <bhalevy@panasas.com>, Andy Adamson <andros@umich.edu>, pnfs@linux-nfs.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Ric Wheeler <ric@emc.com>
+Cc: Josef Bacik <jbacik@redhat.com>, David Chinner <dgc@sgi.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 12 2008 at 20:10 +0200, Fredric Isaman <iisaman@citi.umich.edu> wrote:
-> 
-> On Wed, 12 Mar 2008, Jason Glasgow wrote:
-> 
->> Christoph,
->>
->> Putting device discovery in user space a valid alternative implementation,
->> and we will pursue that model.
->>
->> -Jason
->>
->>
->> On Wed, Mar 12, 2008 at 12:43 PM, Christoph Hellwig <hch@infradead.org>
->> wrote:
->>
->>> On Wed, Mar 12, 2008 at 06:33:34PM +0200, Benny Halevy wrote:
->>>> This calls for a layering violation.
->>>>
->>>> To fill-in more context, here's an excerpt from the next patch,
->>>> showing how you use shost_class to scan all scsi disks:
-> 
-> The referenced code is an adhoc hack that does what we need it to for now. 
-> We would *love* to be able to just call in to some scsi function that fits 
-> our needs
-> 
->>> Yes, absolutely.  No one outside of few places in the core scsi code
->>> should ever iterate over the scsi disks.
+On Fri, Mar 07, 2008 at 03:45:58PM -0500, Ric Wheeler wrote:
+> Josef Bacik wrote:
+>> On Friday 07 March 2008 3:08:32 pm Ric Wheeler wrote:
+>>> Josef Bacik wrote:
+>>>> On Wednesday 05 March 2008 2:19:48 pm Ric Wheeler wrote:
+>>>>> After the IO/FS workshop last week, I posted some details on the slow
+>>>>> down we see with ext3 when we have a low latency back end instead of a
+>>>>> normal local disk (SCSI/S-ATA/etc).
+>>> ...
+>>> ...
 >>>
-> 
-> Is this for locking reasons?
-> 
->>>> My question is how should a proper API between the scsi layer and
->>>> the block layout driver look like?
->>>>
->>>> Can you list your requirements, e.g.:
->>>> - scanning all available devices,
->>>>
->>>> - discovering new devices on the fly
->>>>
->>>> - getting notified for new devices?
->>> Neither.  pnfs shouldn't open block devices from kernelspace at all,
->>> but do it's disovery in userspace.
+>>> Note that this spreads the files across 64 subdirectories, each thread
+>>> writes 50 files and then moves on to the next in a round robin.
 >>>
-> 
-> 
-> Basically, we are given a disk signature, (an array of offset, byte
-> sequence pairs) and want to match it against some visible disk (ignoring
-> partitions), or know that it is not currently visible.
-> 
-> Thus our requirement are:
-> 
-> Scan all available block devices (though all available SCSI devices is a
-> workable substitute).
-> 
-> Notification of new devices would be a helpful in optimizing rescans for 
-> unmapped disk signatures.
-> 
-> 
-> As Jason mentions, we will pursue doing this in userspace.
-> 
->  	Fred
-> 
-> 
-OK I found:
-#ifndef __i386__
-#undef CONFIG_SCSI_OMIT_FLASHPOINT
-#define CONFIG_SCSI_OMIT_FLASHPOINT
-#endif
+>>
+>> I'm starting to wonder about the disks I have, because my files/second is 
+>> spanking yours, and its just a local samsung 3gb/s sata drive.  With those 
+>> commands I'm consistently getting over 700 files/sec.  I'm seeing about a 
+>> 1-5% increase in speed locally with my patch.  I guess I'll start looking 
+>> around for some other hardware and check on there in case this box is more 
+>> badass than I think it is.  Thanks much,
+>>
+>> Josef
+>>
+>
+> Sounds like you might be running with write cache on & barriers off ;-)
+>
+> Make sure you have write cache & barriers enabled on the drive. With a good 
+> S-ATA drive, you should be seeing about 35-50 files/sec with a single 
+> threaded writer.
+>
+> The local disk that I tested on is a relatively slow s-ata disk that is 
+> more laptop quality/performance than server.
+>
+> One thought I had about the results is that we might be flipping the IO 
+> sequence with the local disk case. It is the only device of the three that 
+> I tested which is seek/head movement sensitive for small files.
+>
 
-try patch below and report
----
-BusLogic: Remove total bullshit
+Ahh yes turning off write cache off and barriers on I get your numbers, however
+I'm not seeing the slowdown that you are, with and without my patch I'm seeing
+the same performance.  Its just a plane jane intel sata controller with a
+samsung sata disk set at 1.5gbps.  Same thing with an nvidia sata controller.
+I'll think about this some more and see if there is something better that could
+be done that may help you.  Thanks much,
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
-git-diff --stat -p
- drivers/scsi/BusLogic.h |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index bfbfb5c..0f0d7f3 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -38,11 +38,6 @@
-   CONFIG_PCI set.
- */
- 
--#ifndef __i386__
--#undef CONFIG_SCSI_OMIT_FLASHPOINT
--#define CONFIG_SCSI_OMIT_FLASHPOINT
--#endif
--
- #ifndef CONFIG_PCI
- #undef CONFIG_SCSI_OMIT_FLASHPOINT
- #define CONFIG_SCSI_OMIT_FLASHPOINT
-
+Josef
