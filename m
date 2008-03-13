@@ -1,65 +1,29 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 6/9] fc class: add fc queueing helper
-Date: Thu, 13 Mar 2008 10:36:08 -0500
-Message-ID: <47D949E8.2030908@cs.wisc.edu>
-References: <1204448602-5435-1-git-send-email-michaelc@cs.wisc.edu> <1204448602-5435-2-git-send-email-michaelc@cs.wisc.edu> <1204448602-5435-3-git-send-email-michaelc@cs.wisc.edu> <1204448602-5435-4-git-send-email-michaelc@cs.wisc.edu> <1204448602-5435-5-git-send-email-michaelc@cs.wisc.edu> <1204448602-5435-6-git-send-email-michaelc@cs.wisc.edu> <47D93BAF.8030203@sgi.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with
+	x86_64 kernels
+Date: Thu, 13 Mar 2008 12:45:37 -0400
+Message-ID: <20080313164537.GA21995@infradead.org>
+References: <bug-10226-10286@http.bugzilla.kernel.org/> <200803122125.50161.us-@gmx.de> <1205357733.2941.160.camel@localhost.localdomain> <200803130709.44066.us-@gmx.de> <20080313125508.GF613@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41525 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755214AbYCMPg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Mar 2008 11:36:28 -0400
-In-Reply-To: <47D93BAF.8030203@sgi.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:33365 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752752AbYCMQp7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2008 12:45:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20080313125508.GF613@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi@vger.kernel.org, david.somayajulu@qlogic.com, andrew.vasquez@qlogic.com, James.Smart@Emulex.com, Eric.Moore@lsil.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Ulrich Schweitzer <us-@gmx.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-Michael Reed wrote:
-> 
-> michaelc@cs.wisc.edu wrote:
->> From: Mike Christie <michaelc@cs.wisc.edu>
->>
->> Add a queueing helper which will return SCSI_MLQUEUE_TARGET_BUSY
->> if we are transitioning because there is no need to call into
->> the driver anymore at that point.
->>
->> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->> ---
->>  include/scsi/scsi_transport_fc.h |   33 +++++++++++++++++++++++++++++++++
->>  1 files changed, 33 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
->> index 4769efd..62a6a74 100644
->> --- a/include/scsi/scsi_transport_fc.h
->> +++ b/include/scsi/scsi_transport_fc.h
->> @@ -29,6 +29,7 @@
->>  
->>  #include <linux/sched.h>
->>  #include <scsi/scsi.h>
->> +#include <scsi/scsi_cmnd.h>
->>  #include <scsi/scsi_netlink.h>
->>  
->>  struct scsi_transport_template;
->> @@ -640,6 +641,38 @@ struct fc_function_template {
->>  	unsigned long	disable_target_scan:1;
->>  };
->>  
->> +/**
->> + * fc_remote_port_queue_ready - called to validate the remote port state
->> + * @rport: remote port to be checked
->> + *
->> + * Returns 0 if IO can be queued or if there the cmd should be
-> 
-> Remove "there" from the comment.
-> 
->> + * completed by a call to cmd->scsi_done. Caller must check cmd->result.
->> + * Returns SCSI_MLQUEUE value if IO cannot be queued temporarily.
-> 
-> How 'bout: "Returns a SCSI_MLQUEUE value if the IO cannot be queued due
-> to an rport state transition." ?
-> 
+On Thu, Mar 13, 2008 at 06:55:08AM -0600, Matthew Wilcox wrote:
+> How does this look?  I've inverted the sense of the flashpoint config
+> option and neatened up the PCI-less support while I was there.
 
-A lot better :) I will fix that and the iscsi comment too. Thanks.
+I think it's a good start.  Long-term flashpoint should either die or
+become a driver of it's own - these cards have very little in common
+with the regular intelligent buslogic cards and if you look at the
+driver it's full of if (flashpoint) in every major function.
+
