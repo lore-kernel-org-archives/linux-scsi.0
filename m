@@ -1,47 +1,338 @@
-From: Marc Bejarano <beej@alum.mit.edu>
-Subject: Re: affordable SAS HBA recommendation?
-Date: Wed, 12 Mar 2008 19:23:31 -0400
-Message-ID: <200803122323.m2CNNaM0030418@colby.verdasys.com>
-References: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Thu, 13 Mar 2008 09:03:24 +0900
+Message-ID: <20080313085733M.tomof@acm.org>
+References: <20080312091400V.fujita.tomonori@lab.ntt.co.jp>
+	<Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colby.verdasys.com ([69.20.67.85]:54078 "EHLO
-	colby.verdasys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbYCLXXl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2008 19:23:41 -0400
-In-Reply-To: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
-References: <7.1.0.9.2.20080306154402.14f7d8f0@alum.mit.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0803121132210.4595-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-At 16:53 3/6/2008, Marc Bejarano wrote:
- >i've been having some data corruption problems and i'd like to try
- >using a different driver/HBA to see if they go away.  i'm currently
- >using LSI SAS3801E HBA's which use the mptsas driver.  since i use
- >linux md for RAID, i'd rather not spend a lot of money on RAID silicon
- >that i don't want.
- >
- >ideally, i'd love a reasonably priced PCIe SAS HBA with an in-tree
- >driver supported by RHEL 5.1.  any suggestions?
+On Wed, 12 Mar 2008 12:01:57 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-apparently not :P
+> > diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+> > index a3d567a..8951e3c 100644
+> > --- a/include/linux/scatterlist.h
+> > +++ b/include/linux/scatterlist.h
+> > @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
+> >  		     sg_alloc_fn *);
+> >  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+> >  
+> > +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
+> > +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
+> > +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+> > +			void *buf, int buflen);
+> > +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+> > +		      void *buf, int buflen);
+> 
+> These routines probably should not return int.  Maybe unsigned int or 
+> unsigned long.  If you really want to be picky, it should be size_t.
+> 
+> Same goes for the type of the buflen parameter.
 
-for the next lost soul, i found that marvell, LSI, and intel make 
-affordable PCIe SAS chips.
+OK, let's use size_t.
 
-marvell's 88SA6640 HBA doesn't seem to be available, yet.  in any 
-case, mvsas (if that's the right LLD) is still too new for RHEL support.
 
-LSI's HBA's are what i'm currently using and would recommend.
+> > +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
+> > +		   unsigned long *offset, void *buf, int buflen, int to_buffer)
+> > +{
+> > +	struct scatterlist *sg;
+> > +	unsigned long buf_off = 0;
+> 
+> The type of buf_off should be the same as the function's return type.
 
-intel has the IOP348 chip (an emulex clone?) which is currently 
-shipping in the Atto ExpressSAS H380 and friends.  atto's web page 
-for the HBA says there is linux support, but i don't know what driver it uses.
+Fixed.
 
-if you're okay with PCI-X, adaptec's 58300 fits the bill.
 
-hth,
-marc
+> > +	int i;
+> > +
+> > +	WARN_ON(!irqs_disabled());
+> > +
+> > +	for_each_sg(*sgl, sg, nents, i) {
+> 
+> Will there be a problem in subsequent calls if *sgl has been
+> incremented but nents hasn't been changed?  Maybe nents needs to be a 
+> pointer also.
 
+usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
+entries). It assumes that callers take care about the issue.
+
+If you want nents to be a pointer, I'm fine with it.
+
+
+> > +		struct page *page;
+> > +		int n = 0;
+> > +		unsigned int sg_off = sg->offset;
+> > +		unsigned int sg_copy = sg->length;
+> > +
+> > +		BUG_ON(*offset > sg_copy);
+> > +
+> > +		if (!buflen)
+> > +			break;
+> > +
+> > +		sg_off += *offset;
+> > +		n = sg_off >> PAGE_SHIFT;
+> > +		sg_off &= ~PAGE_MASK;
+> > +		sg_copy -= *offset;
+> > +
+> > +		if (sg_copy > buflen) {
+> > +			sg_copy = buflen;
+> > +			*offset += sg_copy;
+> > +		} else
+> > +			*offset = 0;
+> > +
+> > +		buflen -= sg_copy;
+> > +
+> > +		while (sg_copy > 0) {
+> > +			unsigned int page_copy;
+> > +			void *p;
+> > +
+> > +			page_copy = PAGE_SIZE - sg_off;
+> > +			if (page_copy > sg_copy)
+> > +				page_copy = sg_copy;
+> > +
+> > +			page = nth_page(sg_page(sg), n);
+> > +			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
+> > +
+> > +			if (to_buffer)
+> > +				memcpy(buf + buf_off, p + sg_off, page_copy);
+> > +			else {
+> > +				memcpy(p + sg_off, buf + buf_off, page_copy);
+> > +				flush_kernel_dcache_page(page);
+> > +			}
+> > +
+> > +			kunmap_atomic(p, KM_BIO_SRC_IRQ);
+> > +
+> > +			buf_off += page_copy;
+> > +			sg_off += page_copy;
+> > +			if (sg_off == PAGE_SIZE) {
+> > +				sg_off = 0;
+> > +				n++;
+> > +			}
+> > +			sg_copy -= page_copy;
+> > +		}
+> 
+> Here you need to add:
+> 
+> 		if (*offset)
+> 			break;
+> 
+> Otherwise *sgl will be incremented wrongly if the transfer ends in the
+> middle of an sg entry.
+
+Thanks, fixed.
+
+
+> > +	}
+> > +
+> > +	*sgl = sg;
+> > +
+> > +	return buf_off;
+> > +}
+> 
+> > +
+> > +/**
+> > + * sg_copy_from_buffer - Copy from liner buffer to an SG table
+> 
+> s/liner/linear/
+
+It was fixed in the git tree.
+
+
+> > + * @sgl:		 The SG table
+> > + * @nents:		 Number of SG entries
+> > + * @buf:		 Where to copy from
+> > + * @buflen:		 The number of bytes to copy
+> > + *
+> > + * Returns the number of copied byte.
+> 
+> s/byte/bytes/
+
+Fixed, thanks.
+
+
+> > + *
+> > + **/
+> > +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+> > +			void *buf, int buflen)
+> > +{
+> > +	struct scatterlist *s = sgl;
+> > +	unsigned long offset = 0;
+> > +
+> > +	return sg_copy_buffer(&s, nents, &offset, buf, buflen, 0);
+> 
+> You don't have to copy sgl into s.  Just pass &sgl directly.
+
+Duh, fixed.
+
+Here's an updated version.
+
+=
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index a3d567a..2f863f3 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -213,6 +213,14 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
+ 		     sg_alloc_fn *);
+ int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+ 
++size_t sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
++		      unsigned int *offset, void *buf, size_t buflen,
++		      int to_buffer);
++size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			   void *buf, size_t buflen);
++size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			 void *buf, size_t buflen);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index acca490..4f0813c 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -8,6 +8,7 @@
+  */
+ #include <linux/module.h>
+ #include <linux/scatterlist.h>
++#include <linux/highmem.h>
+ 
+ /**
+  * sg_next - return the next scatterlist entry in a list
+@@ -292,3 +293,129 @@ int sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask)
+ 	return ret;
+ }
+ EXPORT_SYMBOL(sg_alloc_table);
++
++/**
++ * sg_copy_buffer - Copy data between a linear buffer and an SG list
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @offset:		 start data transfer in the first SG entry at
++ * @buf:		 Where to copy from
++ * @buflen:		 The number of bytes to copy
++ * @to_buffer: 		 transfer direction (non zero == from an sg list to a
++ * 			 buffer, 0 == from a buffer to an sg list
++ *
++ * Returns the number of copied bytes.
++ *
++ * *sgl is updated to point a SG list that next data transfer should
++ * start with. *offset is updated to a value that next data transfer
++ * should use.
++ *
++ **/
++size_t sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
++		      unsigned int *offset, void *buf, size_t buflen,
++		      int to_buffer)
++{
++	struct scatterlist *sg;
++	size_t buf_off = 0;
++	int i;
++
++	WARN_ON(!irqs_disabled());
++
++	for_each_sg(*sgl, sg, nents, i) {
++		struct page *page;
++		int n = 0;
++		unsigned int sg_off = sg->offset;
++		unsigned int sg_copy = sg->length;
++
++		BUG_ON(*offset > sg_copy);
++
++		if (!buflen)
++			break;
++
++		sg_off += *offset;
++		n = sg_off >> PAGE_SHIFT;
++		sg_off &= ~PAGE_MASK;
++		sg_copy -= *offset;
++
++		if (sg_copy > buflen) {
++			sg_copy = buflen;
++			*offset += sg_copy;
++		} else
++			*offset = 0;
++
++		buflen -= sg_copy;
++
++		while (sg_copy > 0) {
++			unsigned int page_copy;
++			void *p;
++
++			page_copy = PAGE_SIZE - sg_off;
++			if (page_copy > sg_copy)
++				page_copy = sg_copy;
++
++			page = nth_page(sg_page(sg), n);
++			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
++
++			if (to_buffer)
++				memcpy(buf + buf_off, p + sg_off, page_copy);
++			else {
++				memcpy(p + sg_off, buf + buf_off, page_copy);
++				flush_kernel_dcache_page(page);
++			}
++
++			kunmap_atomic(p, KM_BIO_SRC_IRQ);
++
++			buf_off += page_copy;
++			sg_off += page_copy;
++			if (sg_off == PAGE_SIZE) {
++				sg_off = 0;
++				n++;
++			}
++			sg_copy -= page_copy;
++		}
++
++		if (*offset)
++			break;
++	}
++
++	*sgl = sg;
++
++	return buf_off;
++}
++EXPORT_SYMBOL(sg_copy_buffer);
++
++/**
++ * sg_copy_from_buffer - Copy from a linear buffer to an SG list
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy from
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			   void *buf, size_t buflen)
++{
++	unsigned int offset = 0;
++	return sg_copy_buffer(&sgl, nents, &offset, buf, buflen, 0);
++}
++EXPORT_SYMBOL(sg_copy_from_buffer);
++
++/**
++ * sg_copy_to_buffer - Copy from an SG list to a linear buffer
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy to
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			 void *buf, size_t buflen)
++{
++	unsigned int offset = 0;
++	return sg_copy_buffer(&sgl, nents, &offset, buf, buflen, 1);
++}
++EXPORT_SYMBOL(sg_copy_to_buffer);
