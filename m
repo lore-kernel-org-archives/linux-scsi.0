@@ -1,67 +1,38 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2/2] export command allocation and freeing functions	independently
- of the host
-Date: Thu, 13 Mar 2008 20:34:15 +0200
-Message-ID: <47D973A7.10307@panasas.com>
-References: <1205427224.2893.23.camel@localhost.localdomain>	 <47D966E6.9080606@panasas.com>	 <1205430360.2893.35.camel@localhost.localdomain>	 <47D96BDE.8090607@panasas.com> <1205432452.2893.44.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Thu, 13 Mar 2008 14:34:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803131433100.5744-100000@iolanthe.rowland.org>
+References: <20080313091848X.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4057 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750982AbYCMSeX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2008 14:34:23 -0400
-In-Reply-To: <1205432452.2893.44.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080313091848X.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Matthew Wilcox <matthew@wil.cx>
 
-On Thu, Mar 13 2008 at 20:20 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Thu, 2008-03-13 at 20:01 +0200, Boaz Harrosh wrote:
->> On Thu, Mar 13 2008 at 19:46 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->>> On Thu, 2008-03-13 at 19:39 +0200, Boaz Harrosh wrote:
->>>> On Thu, Mar 13 2008 at 18:53 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->>>> Looking long term. This will clash with Matthew Wilcox's effort of 
->>>> overridable per host command pool.
->>> Not really, since the design is to obtain commands outside of the normal
->>> host pool allocations for special purposes.  All that needs to be
->>> updated for the per host override is the setup and teardown path, which
->>> can be done in a few lines.
->>>
->> Again the concept was that an host might want a special size command for
->> the + host_priv additions that will get allocated once. This still applies
->> with "special purpose" commands, they need to be the size the host expects
->> them to be, so it can use container_of() macro to retrieve the real structure.
->> (Or any other dynamic size calculations)
-> 
-> Well, the currently presented interface is to tidy up the command use
-> for precisely two drivers, neither of which seems to want to use special
-> sized commands.  Even if that patch set were ready for merging (which it
-> isn't), adding it to the command allocators with no users would still be
-> over engineering.
-> 
->>>>  I do have a scsi_host in the USB
->>>> initialization. Perhaps:
->>>>
->>>> +struct scsi_cmnd *scsi_allocate_command(struct Scsi_Host*, gfp_t gfp_mask);
->>>> +void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd);
->>> James
->>>
->> I guess it can change later when needed. Just that I wanted that new users of the
->> API get used to the need of an Scsi_Host
-> 
-> Yes, for just two users, particularly when there's doubt over whether
-> they'd even need the potential feature set, simpler is better.
-> 
-> James
-> 
+On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
 
-Do you mean gdth? No I think gdth is not a user of this above new API.
-gdth's patch I sent should be as it is.
+> On Thu, 13 Mar 2008 09:03:26 +0900
+> FUJITA Tomonori <tomof@acm.org> wrote:
+> 
+> > > There are two problems.  One is the types of the arguments and return 
+> > > value.
+> > 
+> > They should be ok with the updated patch.
+> > 
+> > 
+> > > The other is that local interrupts need to be disabled.
+> > 
+> > Can you disable local interrupts here?
+> 
+> I meant, are you fine with disabling local interrupts here?
+> 
+> If you don't like that, we need to add another argument and seveal
+> 'if' to sg_copy_buffer. But I prefer to keep it simple.
 
-I know of only one client of the new API presented here. isd200?
+Disabling local interrupts in usb_stor_access_xfer_buf() is okay.
 
-Boaz
+Alan Stern
 
