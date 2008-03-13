@@ -1,57 +1,33 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
-Date: Thu, 13 Mar 2008 10:16:29 -0700 (PDT)
-Message-ID: <20080313171629.9E5FE11D10B@picon.linux-foundation.org>
-References: <bug-10226-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/2] export command allocation and freeing functions
+	independently of the host
+Date: Thu, 13 Mar 2008 12:35:08 -0500
+Message-ID: <1205429708.2893.30.camel@localhost.localdomain>
+References: <1205427224.2893.23.camel@localhost.localdomain>
+	 <47D95EAC.2020301@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48782 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751816AbYCMRRX (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43666 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752137AbYCMRfN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Mar 2008 13:17:23 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2DHHLrE017371
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2008 10:17:22 -0700
-In-Reply-To: <bug-10226-11613@http.bugzilla.kernel.org/>
+	Thu, 13 Mar 2008 13:35:13 -0400
+In-Reply-To: <47D95EAC.2020301@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andi Kleen <andi@firstfloor.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10226
+On Thu, 2008-03-13 at 19:04 +0200, Boaz Harrosh wrote:
+> Both me and Andi Kleen have audited all ISA drivers and found that none of them
+> use scsi_cmnd->cmnd or any other scsi_cmnd member for DMA. (Now that sense_buffer
+> is not a part of it). Should we not also kill the two pools and simplify the code
+> allot. This can be done now independently of the removal of unchecked_isa_dma?
 
+Sure, but it's not logically part of this patch.
 
-
-
-
-------- Comment #14 from anonymous@kernel-bugs.osdl.org  2008-03-13 10:16 -------
-Reply-To: hch@infradead.org
-
-On Thu, Mar 13, 2008 at 11:11:35AM -0600, Matthew Wilcox wrote:
-> On Thu, Mar 13, 2008 at 12:45:37PM -0400, Christoph Hellwig wrote:
-> > On Thu, Mar 13, 2008 at 06:55:08AM -0600, Matthew Wilcox wrote:
-> > > How does this look?  I've inverted the sense of the flashpoint config
-> > > option and neatened up the PCI-less support while I was there.
-> > 
-> > I think it's a good start.  Long-term flashpoint should either die or
-> > become a driver of it's own - these cards have very little in common
-> > with the regular intelligent buslogic cards and if you look at the
-> > driver it's full of if (flashpoint) in every major function.
-> 
-> Completely agreed about the long term direction.
-> 
-> I'm not volunteering to work on this particular obsolescent driver
-> though.  Advansys is quite enough trouble for me.
-
-Yes, that's why I said your patch is a good start :)  Anything more than
-that is not required although it would of course be nice if we could
-find someone with too much spare time on his/her hand to fix the driver
-up.
-
-Actually a proper driver for the multimaster adapters wouldn't even be
-a lot of time as this hardware is quite nice (unlike the driver).
+James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
