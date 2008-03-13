@@ -1,22 +1,29 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
-Date: Thu, 13 Mar 2008 11:11:35 -0600
-Message-ID: <20080313171135.GL613@parisc-linux.org>
-References: <bug-10226-10286@http.bugzilla.kernel.org/> <200803122125.50161.us-@gmx.de> <1205357733.2941.160.camel@localhost.localdomain> <200803130709.44066.us-@gmx.de> <20080313125508.GF613@parisc-linux.org> <20080313164537.GA21995@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
+Date: Thu, 13 Mar 2008 10:12:44 -0700 (PDT)
+Message-ID: <20080313171244.D82F9108066@picon.linux-foundation.org>
+References: <bug-10226-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48068 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952AbYCMRLh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2008 13:11:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20080313164537.GA21995@infradead.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48999 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752077AbYCMRNg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Mar 2008 13:13:36 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2DHDaCG016910
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2008 10:13:37 -0700
+In-Reply-To: <bug-10226-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ulrich Schweitzer <us-@gmx.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=10226
+
+
+
+
+
+------- Comment #13 from matthew@wil.cx  2008-03-13 10:12 -------
 On Thu, Mar 13, 2008 at 12:45:37PM -0400, Christoph Hellwig wrote:
 > On Thu, Mar 13, 2008 at 06:55:08AM -0600, Matthew Wilcox wrote:
 > > How does this look?  I've inverted the sense of the flashpoint config
@@ -32,8 +39,8 @@ Completely agreed about the long term direction.
 I'm not volunteering to work on this particular obsolescent driver
 though.  Advansys is quite enough trouble for me.
 
+
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
