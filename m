@@ -1,47 +1,76 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10226] BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
-Date: Wed, 12 Mar 2008 23:10:30 -0700 (PDT)
-Message-ID: <20080313061030.97F8A11D107@picon.linux-foundation.org>
-References: <bug-10226-11613@http.bugzilla.kernel.org/>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: some hard numbers on ext3 & batching performance issue
+Date: Thu, 13 Mar 2008 07:26:31 -0400
+Message-ID: <47D90F67.9000805@emc.com>
+References: <47C6A46D.8020700@emc.com> <200803051520.09931.jbacik@redhat.com> <47D1A0C0.8010908@emc.com> <200803071540.13958.jbacik@redhat.com> <47D1A986.8010307@emc.com> <20080312183701.GB21187@unused.rdu.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32793 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751437AbYCMGLB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Mar 2008 02:11:01 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2D6BKRa021344
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2008 23:11:21 -0700
-In-Reply-To: <bug-10226-11613@http.bugzilla.kernel.org/>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:30424 "EHLO
+	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbYCML2D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2008 07:28:03 -0400
+In-Reply-To: <20080312183701.GB21187@unused.rdu.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Josef Bacik <jbacik@redhat.com>
+Cc: David Chinner <dgc@sgi.com>, Theodore Ts'o <tytso@mit.edu>, adilger@sun.com, jack@ucw.cz, "Feld, Andy" <Feld_Andy@emc.com>, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10226
+Josef Bacik wrote:
+> On Fri, Mar 07, 2008 at 03:45:58PM -0500, Ric Wheeler wrote:
+>> Josef Bacik wrote:
+>>> On Friday 07 March 2008 3:08:32 pm Ric Wheeler wrote:
+>>>> Josef Bacik wrote:
+>>>>> On Wednesday 05 March 2008 2:19:48 pm Ric Wheeler wrote:
+>>>>>> After the IO/FS workshop last week, I posted some details on the slow
+>>>>>> down we see with ext3 when we have a low latency back end instead of a
+>>>>>> normal local disk (SCSI/S-ATA/etc).
+>>>> ...
+>>>> ...
+>>>>
+>>>> Note that this spreads the files across 64 subdirectories, each thread
+>>>> writes 50 files and then moves on to the next in a round robin.
+>>>>
+>>> I'm starting to wonder about the disks I have, because my files/second is 
+>>> spanking yours, and its just a local samsung 3gb/s sata drive.  With those 
+>>> commands I'm consistently getting over 700 files/sec.  I'm seeing about a 
+>>> 1-5% increase in speed locally with my patch.  I guess I'll start looking 
+>>> around for some other hardware and check on there in case this box is more 
+>>> badass than I think it is.  Thanks much,
+>>>
+>>> Josef
+>>>
+>> Sounds like you might be running with write cache on & barriers off ;-)
+>>
+>> Make sure you have write cache & barriers enabled on the drive. With a good 
+>> S-ATA drive, you should be seeing about 35-50 files/sec with a single 
+>> threaded writer.
+>>
+>> The local disk that I tested on is a relatively slow s-ata disk that is 
+>> more laptop quality/performance than server.
+>>
+>> One thought I had about the results is that we might be flipping the IO 
+>> sequence with the local disk case. It is the only device of the three that 
+>> I tested which is seek/head movement sensitive for small files.
+>>
+> 
+> Ahh yes turning off write cache off and barriers on I get your numbers, however
+> I'm not seeing the slowdown that you are, with and without my patch I'm seeing
+> the same performance.  Its just a plane jane intel sata controller with a
+> samsung sata disk set at 1.5gbps.  Same thing with an nvidia sata controller.
+> I'll think about this some more and see if there is something better that could
+> be done that may help you.  Thanks much,
+> 
+> Josef
+> 
 
+Thanks - you should see the numbers with write cache enabled and 
+barriers on as well, but for small files, write cache disabled is quite 
+close ;-)
 
+I am happy to rerun the tests at any point, I have a variety of disk 
+types and controllers (lots of Intel AHCI boxes) to use.
 
+ric
 
-
-------- Comment #10 from us-@gmx.de  2008-03-12 23:10 -------
-On Wednesday March 12 2008, James Bottomley wrote:
-> On Wed, 2008-03-12 at 21:25 +0100, Ulrich Schweitzer wrote:
-> > Sorry for straying off topic, but this has to be the right crowd to ask:
-> > I assume that the driver won't be ported to x86_64 soon (if ever),
->
-> Not unless someone volunteers, but FlashPoint.c is huge.
-
-If its not going to be ported, I guess we should add a sentence to the help 
-text of CONFIG_SCSI_BUSLOGIC so people like me don't think its a bug. 
-Something like "Flashpoint Host Adapter support is only available on x86 but 
-not on x86_64 systems."
-Would one of you please submit such a patch? I've never submitted a kernel 
-patch and don't know how to do it.
-
-Ulrich
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
