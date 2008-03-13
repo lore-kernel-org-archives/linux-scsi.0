@@ -1,41 +1,36 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Thu, 13 Mar 2008 09:18:48 +0900
-Message-ID: <20080313091848X.tomof@acm.org>
-References: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
-	<Pine.LNX.4.44L0.0803121202150.4595-100000@iolanthe.rowland.org>
-	<20080313090258Z.tomof@acm.org>
+From: Ulrich Schweitzer <us-@gmx.de>
+Subject: Re: [Bugme-new] [Bug 10226] New: BusLogic Flashpoint SCSI Adapter not working with x86_64 kernels
+Date: Thu, 13 Mar 2008 07:09:43 +0100
+Message-ID: <200803130709.44066.us-@gmx.de>
+References: <bug-10226-10286@http.bugzilla.kernel.org/> <200803122125.50161.us-@gmx.de> <1205357733.2941.160.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:44198 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751945AbYCMAWx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2008 20:22:53 -0400
-In-Reply-To: <20080313090258Z.tomof@acm.org>
+Received: from mail.gmx.net ([213.165.64.20]:60878 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750875AbYCMGJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Mar 2008 02:09:53 -0400
+In-Reply-To: <1205357733.2941.160.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 13 Mar 2008 09:03:26 +0900
-FUJITA Tomonori <tomof@acm.org> wrote:
+On Wednesday March 12 2008, James Bottomley wrote:
+> On Wed, 2008-03-12 at 21:25 +0100, Ulrich Schweitzer wrote:
+> > Sorry for straying off topic, but this has to be the right crowd to ask:
+> > I assume that the driver won't be ported to x86_64 soon (if ever),
+>
+> Not unless someone volunteers, but FlashPoint.c is huge.
 
-> > There are two problems.  One is the types of the arguments and return 
-> > value.
-> 
-> They should be ok with the updated patch.
-> 
-> 
-> > The other is that local interrupts need to be disabled.
-> 
-> Can you disable local interrupts here?
+If its not going to be ported, I guess we should add a sentence to the help 
+text of CONFIG_SCSI_BUSLOGIC so people like me don't think its a bug. 
+Something like "Flashpoint Host Adapter support is only available on x86 but 
+not on x86_64 systems."
+Would one of you please submit such a patch? I've never submitted a kernel 
+patch and don't know how to do it.
 
-I meant, are you fine with disabling local interrupts here?
-
-If you don't like that, we need to add another argument and seveal
-'if' to sg_copy_buffer. But I prefer to keep it simple.
-
-
-> Basically, the APIs are used in queuecommand.
+Ulrich
