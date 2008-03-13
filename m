@@ -1,30 +1,38 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 2/2] export command allocation and freeing functions independently of the host
-Date: Thu, 13 Mar 2008 22:44:02 +0100
-Message-ID: <20080313214402.GI2522@one.firstfloor.org>
-References: <1205427224.2893.23.camel@localhost.localdomain> <47D95EAC.2020301@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] mpt fusion: Power Management fixes for MPT SAS PCI-E
+	controllers-revised
+Date: Thu, 13 Mar 2008 16:41:55 -0500
+Message-ID: <1205444515.2893.77.camel@localhost.localdomain>
+References: <20080307104950.GA20496@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:37361 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755264AbYCMVl4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2008 17:41:56 -0400
-Content-Disposition: inline
-In-Reply-To: <47D95EAC.2020301@panasas.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:44747 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755460AbYCMVl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Mar 2008 17:41:59 -0400
+In-Reply-To: <20080307104950.GA20496@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andi Kleen <andi@firstfloor.org>
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com, djwong@us.ibm.com
 
-On Thu, Mar 13, 2008 at 07:04:44PM +0200, Boaz Harrosh wrote:
-> On Thu, Mar 13 2008 at 18:53 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > This is needed by things like USB storage that want to set up static
-> > commands for later use at start of day.
+On Fri, 2008-03-07 at 16:19 +0530, Prakash, Sathya wrote:
+> This patch includes the review comments from James on the previous version.
+> 
+> The system power state changes like hibernation and standby are not happening
+> properly with 106XE controllers, this patch modifies the driver to free
+> resources and allocate resources in power management entry points
 
-So what's up with applying my patchkit? You rewriting part of code
-that it touches.
+This is supposed to be a bug fix patch to get suspend/resume working.
+Because you've made it dependent on the msi_enable patch, which is a
+feature enhancement, it still can't go in the scsi-rc-fixes tree.
 
-I don't think there is anything controversal in there anymore.
+Isn't it just best at this point to go with Darrick's patch for fixing
+2.6.25 and 2.6.24?
 
--Andi
+James
+
+
