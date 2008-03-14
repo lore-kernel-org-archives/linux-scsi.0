@@ -1,99 +1,79 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] 2.6.25-rc4-git3 - inquiry cmd issued via /dev/sg? device
- causes infinite loop in 2.6.24
-Date: Fri, 14 Mar 2008 08:11:42 -0500
-Message-ID: <47DA798E.5080305@sgi.com>
-References: <47D7035F.5000700@sgi.com> <47D7B4A1.6020909@panasas.com> <47D7FECE.1020901@sgi.com> <47D8002C.9010306@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Bug in the scsi_id (0.9 version) utility
+Date: Fri, 14 Mar 2008 08:38:34 -0500
+Message-ID: <1205501914.2904.9.camel@localhost.localdomain>
+References: <alpine.LRH.1.00.0803130824450.30028@ss.netgate.net>
+	 <20080314060831.GA18884@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.171.30]:45684 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754101AbYCNNLo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Mar 2008 09:11:44 -0400
-In-Reply-To: <47D8002C.9010306@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <20080314060831.GA18884@linux.vnet.ibm.com>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: brooks@netgate.net, linux-hotplug@vger.kernel.org, Brian.Fehling@citrix.com, xen@netgate.net, cases.634568.7962_21175.de8b732451@cases.netsuite.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-
-
-Boaz Harrosh wrote:
-<snip>
->>
->>> Just to demonstrate what I mean a patch is attached. Just as an RFC, totally
->>> untested.
->> I can try this out and see what happens.
->>
->>
-> Will not compile here is a cleaner one
-
-Still in my queue.  Hopefully I'll get to poke at this today.
-
-Mike
-
+On Thu, 2008-03-13 at 23:08 -0700, Mike Anderson wrote:
+> adding a linux-scsi cc as others may have comments on checking of reserved
+> fields.
 > 
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Wed, 12 Mar 2008 13:18:49 +0200
-> Subject: [PATCH] scsi: Always complete BLOCK_PC commands
+> brooks@netgate.net <brooks@netgate.net> wrote:
+> >
+> > The utility makes the assumption that a reserved field in the 
+> > identification descriptor returned by a SCSI page 83 response will be 
+> > filled with "0x00". The Solaris iSCSI target implemenation (and possibly 
+> > others) instead fills the field with "0XFF". As a result the utility 
+> > assumes that the Solaris target is a SCSI-2 device and (incorrectly) parses 
+> > the response as such. The Solaris box actually uses the latest released 
+> > SCSI command set (SPC3):
+> >
+> >     http://www.t10.org/ftp/t10/drafts/spc3/spc3r23.pdf
+> >
+> > The fix was simple, check for 0x00 and for 0xFF instead of checking for 
+> > !0x00. Since this code is generally only used discovery discovery it's a 
+> > low risk change.
+> >
+> > As I understand it there's nothing in the SPC2/3 spec that states that 
+> > "0x00" should be written to the reserved field of the identification 
+> > descriptor so I'm not sure this is the best way to determine the device 
+> > type command set. 
+
+This is incorrect; SPC does specify zero in reserved fields.
+
+> The SAM definitions section and the SPC Keywords section provides a
+> definition of what should be in a reserved field.
+
+And just to make it totally plain, this is what it says:
+
+3.3.9 reserved: A keyword referring to bits, bytes, words, fields and
+code values that are set aside for future standardization. A reserved
+bit, byte, word or field shall be set to zero, or in accordance with a
+future extension to this standard. Recipients are not required to check
+reserved bits, bytes, words or fields for zero values. Receipt of
+reserved code values in defined fields shall be reported as an error.
+
+So your implementation is a spec violation.  You're just lucky SPC4
+leaves it reserved.  If they ever decided to implement something there,
+not only would you be in spec violation, you'd likely be claiming some
+property your device doesn't support.
+
+> That said we are not required to be checking the reserved fields for zero
+> but in this case we are doing so to work around another device issue.
 > 
-> Current code, in some IO combinations could wrongly retry
-> a BLOCK_PC command in chunks. This was never intended.
-> Fix it that BLOCK_PC will always complete atomically
+> Instead of adding yet another device work around to the "if" which
+> makes it hard to rework the code in the future as you do not know how many
+> vendor, models are running through certain non compliant checks (i.e. more
+> than the intend models may exhibit like behavior).
 > 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/scsi_lib.c |   24 +++++++++++++-----------
->  1 files changed, 13 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ba21d97..4b8b57c 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -784,14 +784,20 @@ EXPORT_SYMBOL(scsi_release_buffers);
->   * in req->data_len and req->next_rq->data_len. The upper-layer driver can
->   * decide what to do with this information.
->   */
-> -void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-> +static void scsi_end_blk_request(struct scsi_cmnd *cmd)
->  {
->  	struct request *req = cmd->request;
->  	unsigned int dlen = req->data_len;
-> -	unsigned int next_dlen = req->next_rq->data_len;
-> +	unsigned int next_dlen;
->  
-> -	req->data_len = scsi_out(cmd)->resid;
-> -	req->next_rq->data_len = scsi_in(cmd)->resid;
-> +	if (blk_bidi_rq(req)) {
-> +		next_dlen = req->next_rq->data_len;
-> +		req->data_len = scsi_out(cmd)->resid;
-> +		req->next_rq->data_len = scsi_in(cmd)->resid;
-> +	} else {
-> +		next_dlen = 0;
-> +		req->data_len = scsi_get_resid(cmd);
-> +	}
->  
->  	/* The req and req->next_rq have not been completed */
->  	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
-> @@ -866,15 +872,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  				req->sense_len = len;
->  			}
->  		}
-> -		if (scsi_bidi_cmnd(cmd)) {
-> -			/* will also release_buffers */
-> -			scsi_end_bidi_request(cmd);
-> -			return;
-> -		}
-> -		req->data_len = scsi_get_resid(cmd);
-> +		/* will also release_buffers */
-> +		scsi_end_blk_request(cmd);
-> +		return;
->  	}
->  
-> -	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
->  	scsi_release_buffers(cmd);
->  
->  	/*
+> We possible should look at updating how we handle not compliant behavior.
+> scsi_id.config is available but that must not be useful in all cases as
+> the standard page 83 code has a check for the pre-spc3-83 case even though
+> it is selectable through the config file and command line. 
+
+Some type of blacklist might work: we're already starting to find USB
+devices that aren't too happy with VPD inquiries.
+
+James
+
+
