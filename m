@@ -1,69 +1,60 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Fri, 14 Mar 2008 18:35:37 +0900
-Message-ID: <20080314183434J.tomof@acm.org>
-References: <20080313085733M.tomof@acm.org>
-	<Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+From: "nickcheng" <nick.cheng@areca.com.tw>
+Subject: [PATCH] scsi: The supplement for the arithmetic of iomem of the Type_B Adapter of arcmsr
+Date: Fri, 14 Mar 2008 20:51:17 +0800
+Message-ID: <000201c885d2$1814ecb0$9a00a8c0@Nick>
+Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0003_01C88615.26382CB0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:37630 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752325AbYCNJhL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Mar 2008 05:37:11 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+Received: from 60-248-88-209.HINET-IP.hinet.net ([60.248.88.209]:25526 "EHLO
+	areca.com.tw" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752485AbYCNMz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2008 08:55:29 -0400
+In-Reply-To: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, 'Tomas Henzl' <thenzl@redhat.com>, viro@ftp.linux.org.uk, 'Andrew Morton' <akpm@linux-foundation.org>
 
-On Thu, 13 Mar 2008 14:32:59 -0400 (EDT)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+This is a multi-part message in MIME format.
 
-> On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
-> 
-> > > > +	for_each_sg(*sgl, sg, nents, i) {
-> > > 
-> > > Will there be a problem in subsequent calls if *sgl has been
-> > > incremented but nents hasn't been changed?  Maybe nents needs to be a 
-> > > pointer also.
-> > 
-> > usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
-> > entries). It assumes that callers take care about the issue.
-> > 
-> > If you want nents to be a pointer, I'm fine with it.
-> 
-> If nents doesn't change then for_each_sg() won't work right.  There 
-> could be an alternative macro:
+------=_NextPart_000_0003_01C88615.26382CB0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 
-Oops, I thought that for_each_sg is defined like:
+Subject: [PATCH] scsi: The supplement for the arithmetic of iomem of the
+Type_B Adapter
+Description:
+add the description for the change of the arithmetic of iomem of the Type_B
+Adapter in ChangeLog.arcmsr 
+Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 
-#define for_each_sg(sglist, sg, nr, __i)	\
-	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+------=_NextPart_000_0003_01C88615.26382CB0
+Content-Type: text/plain;
+	name="patch-ChangeLog.arcmsr.txt"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="patch-ChangeLog.arcmsr.txt"
 
+=EF=BB=BF--- ChangeLog.arcmsr.old	2008-03-14 20:15:07.000000000 +0800
++++ ChangeLog.arcmsr.new	2008-03-14 20:02:12.000000000 +0800
+@@ -115,4 +115,8 @@
+ **						that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we =
+are in
+ **						atomic context, secondly this memory is not used for DMA.
+ **						Also removed some unneeded casts. Thanks to Daniel Drake =
+<dsd@gentoo.org>
++**						2.The Type B Adapter teardown does iounmap on pointers =
+subtracted by a
++**						constant offset.  Since the offset is in bytes, we need the =
+pointers to
++**						be of type void * not uint32_t * so the subtraction is done in =
+the
++**						correct units and we iounmap the correct area.
+ =
+*************************************************************************=
+*
+------=_NextPart_000_0003_01C88615.26382CB0--
 
-> /*
->  * Loop over each sg element, stopping at the end of the chain
->  */
-> #define for_each_sg_all(sglist, sg, __i)	\
-> 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
-> 
-> If you added this macro to include/linux/scatterlist.h and used it
-> instead of for_each_sg() then you can get rid of nents entirely.  
-> However I'm not sure whether this would be safe.  Do people sometimes 
-> use a subset of the entries in a scatterlist?
-
-IIRC, some drivers do that (though they might use sg_next).
-
-
-I don't think that we add a new macro just for this function. We could
-change for_each_sg in the above way or we could just do in
-usb_stor_access_xfer_buf
-
-for (i = 0, sg = *sgl; i < nents && sg; i++, sg = sg_next(sg))
-
-
-> If it isn't safe then nents would have to be passed as a pointer too.  
-> At this stage I think it would be better to encapsulate sgl, offset, 
-> and nents in a single structure than to pass multiple pointers.
