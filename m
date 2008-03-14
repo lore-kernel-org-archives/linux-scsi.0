@@ -1,60 +1,99 @@
-From: "nickcheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH] scsi: The supplement for the arithmetic of iomem of the Type_B Adapter of arcmsr
-Date: Fri, 14 Mar 2008 20:51:17 +0800
-Message-ID: <000201c885d2$1814ecb0$9a00a8c0@Nick>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH] 2.6.25-rc4-git3 - inquiry cmd issued via /dev/sg? device
+ causes infinite loop in 2.6.24
+Date: Fri, 14 Mar 2008 08:11:42 -0500
+Message-ID: <47DA798E.5080305@sgi.com>
+References: <47D7035F.5000700@sgi.com> <47D7B4A1.6020909@panasas.com> <47D7FECE.1020901@sgi.com> <47D8002C.9010306@panasas.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0003_01C88615.26382CB0"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 60-248-88-209.HINET-IP.hinet.net ([60.248.88.209]:25526 "EHLO
-	areca.com.tw" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752485AbYCNMz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Mar 2008 08:55:29 -0400
-In-Reply-To: 
+Received: from relay2.sgi.com ([192.48.171.30]:45684 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754101AbYCNNLo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2008 09:11:44 -0400
+In-Reply-To: <47D8002C.9010306@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, 'Tomas Henzl' <thenzl@redhat.com>, viro@ftp.linux.org.uk, 'Andrew Morton' <akpm@linux-foundation.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
 
-------=_NextPart_000_0003_01C88615.26382CB0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
 
-Subject: [PATCH] scsi: The supplement for the arithmetic of iomem of the
-Type_B Adapter
-Description:
-add the description for the change of the arithmetic of iomem of the Type_B
-Adapter in ChangeLog.arcmsr 
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
+Boaz Harrosh wrote:
+<snip>
+>>
+>>> Just to demonstrate what I mean a patch is attached. Just as an RFC, totally
+>>> untested.
+>> I can try this out and see what happens.
+>>
+>>
+> Will not compile here is a cleaner one
 
-------=_NextPart_000_0003_01C88615.26382CB0
-Content-Type: text/plain;
-	name="patch-ChangeLog.arcmsr.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="patch-ChangeLog.arcmsr.txt"
+Still in my queue.  Hopefully I'll get to poke at this today.
 
-=EF=BB=BF--- ChangeLog.arcmsr.old	2008-03-14 20:15:07.000000000 +0800
-+++ ChangeLog.arcmsr.new	2008-03-14 20:02:12.000000000 +0800
-@@ -115,4 +115,8 @@
- **						that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we =
-are in
- **						atomic context, secondly this memory is not used for DMA.
- **						Also removed some unneeded casts. Thanks to Daniel Drake =
-<dsd@gentoo.org>
-+**						2.The Type B Adapter teardown does iounmap on pointers =
-subtracted by a
-+**						constant offset.  Since the offset is in bytes, we need the =
-pointers to
-+**						be of type void * not uint32_t * so the subtraction is done in =
-the
-+**						correct units and we iounmap the correct area.
- =
-*************************************************************************=
-*
-------=_NextPart_000_0003_01C88615.26382CB0--
+Mike
 
+> 
+> ---
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Date: Wed, 12 Mar 2008 13:18:49 +0200
+> Subject: [PATCH] scsi: Always complete BLOCK_PC commands
+> 
+> Current code, in some IO combinations could wrongly retry
+> a BLOCK_PC command in chunks. This was never intended.
+> Fix it that BLOCK_PC will always complete atomically
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/scsi_lib.c |   24 +++++++++++++-----------
+>  1 files changed, 13 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ba21d97..4b8b57c 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -784,14 +784,20 @@ EXPORT_SYMBOL(scsi_release_buffers);
+>   * in req->data_len and req->next_rq->data_len. The upper-layer driver can
+>   * decide what to do with this information.
+>   */
+> -void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+> +static void scsi_end_blk_request(struct scsi_cmnd *cmd)
+>  {
+>  	struct request *req = cmd->request;
+>  	unsigned int dlen = req->data_len;
+> -	unsigned int next_dlen = req->next_rq->data_len;
+> +	unsigned int next_dlen;
+>  
+> -	req->data_len = scsi_out(cmd)->resid;
+> -	req->next_rq->data_len = scsi_in(cmd)->resid;
+> +	if (blk_bidi_rq(req)) {
+> +		next_dlen = req->next_rq->data_len;
+> +		req->data_len = scsi_out(cmd)->resid;
+> +		req->next_rq->data_len = scsi_in(cmd)->resid;
+> +	} else {
+> +		next_dlen = 0;
+> +		req->data_len = scsi_get_resid(cmd);
+> +	}
+>  
+>  	/* The req and req->next_rq have not been completed */
+>  	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
+> @@ -866,15 +872,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  				req->sense_len = len;
+>  			}
+>  		}
+> -		if (scsi_bidi_cmnd(cmd)) {
+> -			/* will also release_buffers */
+> -			scsi_end_bidi_request(cmd);
+> -			return;
+> -		}
+> -		req->data_len = scsi_get_resid(cmd);
+> +		/* will also release_buffers */
+> +		scsi_end_blk_request(cmd);
+> +		return;
+>  	}
+>  
+> -	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
+>  	scsi_release_buffers(cmd);
+>  
+>  	/*
