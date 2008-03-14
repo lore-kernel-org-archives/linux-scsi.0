@@ -1,90 +1,133 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
-Date: Fri, 14 Mar 2008 14:59:45 +0100
-Message-ID: <20080314135945.GO2522@one.firstfloor.org>
-References: <20080307653.720459648@firstfloor.org> <20080307175408.E290E1B41AE@basil.firstfloor.org> <1205445980.2893.85.camel@localhost.localdomain> <20080314134814.GS17940@kernel.dk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [patch] convert the scsi layer to use struct device
+Date: Fri, 14 Mar 2008 15:13:50 +0100
+Message-ID: <47DA881E.3080500@suse.de>
+References: <20080313210655.GA13468@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080202000004050909060108"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:42157 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531AbYCNN5g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Mar 2008 09:57:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20080314134814.GS17940@kernel.dk>
+Received: from ns2.suse.de ([195.135.220.15]:46982 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752039AbYCNONw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2008 10:13:52 -0400
+In-Reply-To: <20080313210655.GA13468@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Tony Jones <tonyj@suse.de>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Fri, Mar 14, 2008 at 02:48:14PM +0100, Jens Axboe wrote:
-> On Thu, Mar 13 2008, James Bottomley wrote:
-> > \On Fri, 2008-03-07 at 18:54 +0100, Andi Kleen wrote:
-> > > When a user is doing IO in the kernel and wants to avoid bouncing
-> > > it is best to just ask the block layer to allocate the memory for it.
-> > > This patch adds two simple wrappers: blk_kmalloc and blk_alloc_pages
-> > > and respective free functions to do this.
-> > > 
-> > > blk_alloc_pages is a little unusual in that it takes size
-> > > instead of order arguments -- i did this because I have later
-> > > patches to convert it over to a new allocator which does not 
-> > > require power of two for pages.
-> > 
-> > I really don't like this ... it's wedging something in the block layer
-> > that shouldn't be there just to avoid doing it properly in terms of
-> > allocations on the device dma_mask.
-> > 
-> > I also think the kfree takes a length part is asking for trouble because
-> > it's pretty fragile.
-> > 
-> > However, if Jens will ack it, I'll (reluctantly) add it.
+This is a multi-part message in MIME format.
+--------------080202000004050909060108
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
+
+Greg KH wrote:
+> Here's a huge patch from Tony and Kay that converts the scsi layer to
+> use struct device instead of class_device.
 > 
-> I agree with you, I don't like it at all (for a variety of reasons).
-
-For what reasons exactly? 
-
-In my original patchkit I didn't have blk_kmalloc etc. but just relied 
-on the block layer bouncing everything for ISA as needed, but James
-thought it was important that SCSI LUN scan etc do not bounce for ISA.
-That is when I came up with these helpers.
-
-You think it should go back to always bouncing? That would be fine
-for me too. With that they wouldn't be needed.
-
-I think the only issue where it might be a problem would be with
-sg.c where it might be a performance issue.
-
-> Since callers need to remember size for free anyway (I've always hated
-> such interfaces), they may as well do their own allocations. I don't
-> think the block abstraction buys us anything.
-
+> It doesn't seem like it could be split up any smaller due to the
+> interconectedness of the whole mess, if you have any suggestions
+> otherwise, it would be appreciated.
 > 
-> If anything, add a generic allocator helper that you can pass a mask to
-> instead.
+> If you want, I can take this through my tree as it does depend on a
+> previous IB patch to make that portion of the patch much smaller.
+> 
+> After this, all of the class_device code is now finally gone from the
+> kernel!
+> 
+Unfortunately, it doesn't apply cleanly to the current scsi-misc tree.
+I've modified it so that it actually compiles.
 
-The reason I added the size is that the mask allocator (not in the SCSI
-specific patchkit, but I posted that to l-k later) needs a size to free
-because it is based on a similar design as free_pages which always needed
-size. Also at least for the few users I converted (there are not really
-that many) the size is either constant anyways or very easy to remember
-(please take a look at the concrete patches before judging it)  
+Good that you've sent it; now I can finally push my scsi target rework
+patches.
 
-The other problem is that there is no mask, except for the bounce mask. These
-old cruft ISA drivers don't have a device (and before anybody asks
-again -- no i don't plan to rewrite them all to be device based);
-but they do have correct bounce_pfn which has all the needed information.
-I don't think it would make sense to add another field for this.
+Cheers,
 
-That is why I ended up with the helpers
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
 
-Of course if you don't want the helpers it could be something like
+--------------080202000004050909060108
+Content-Type: text/plain;
+ name="convert_scsi_layer_to_use_struct_device"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="convert_scsi_layer_to_use_struct_device"
 
-	get_pages_mask(GFP_KERNEL, size, blk_q_mask(request_Queue))
+From: Tony Jones <tonyj@suse.de>
+Subject: SCSI: convert struct class_device to struct device
 
-written out but why not have simple helpers that allows this a little nicer?  
+It's big, but there doesn't seem to be a way to split it up smaller...
 
-The nice property about the helper is that it also avoids a circular
-depency cycle in patchkits.
+Signed-off-by: Tony Jones <tonyj@suse.de>
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Roland Dreier <rolandd@cisco.com>
+Cc: Sean Hefty <sean.hefty@intel.com>
+Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
--Andi
+---
+ block/bsg.c                           |   11 +-
+ drivers/ata/ahci.c                    |    4 +-
+ drivers/ata/libata-scsi.c             |   15 +-
+ drivers/base/attribute_container.c    |   77 +++---
+ drivers/base/transport_class.c        |   14 +-
+ drivers/infiniband/ulp/srp/ib_srp.c   |  134 +++++-----
+ drivers/infiniband/ulp/srp/ib_srp.h   |    2 +-
+ drivers/message/fusion/mptscsih.c     |  122 +++++----
+ drivers/message/fusion/mptscsih.h     |    2 +-
+ drivers/misc/enclosure.c              |  118 +++++----
+ drivers/scsi/3w-9xxx.c                |    9 +-
+ drivers/scsi/3w-xxxx.c                |    9 +-
+ drivers/scsi/aacraid/aachba.c         |    2 +-
+ drivers/scsi/aacraid/aacraid.h        |    4 +-
+ drivers/scsi/aacraid/linit.c          |   93 ++++---
+ drivers/scsi/arcmsr/arcmsr.h          |    4 +-
+ drivers/scsi/arcmsr/arcmsr_attr.c     |  163 +++++++-----
+ drivers/scsi/ch.c                     |   13 +-
+ drivers/scsi/hosts.c                  |   34 ++--
+ drivers/scsi/hptiop.c                 |   14 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c      |   44 ++--
+ drivers/scsi/ibmvscsi/ibmvstgt.c      |   25 +-
+ drivers/scsi/ipr.c                    |  140 +++++-----
+ drivers/scsi/lpfc/lpfc_attr.c         |  484 +++++++++++++++++---------------
+ drivers/scsi/lpfc/lpfc_crtn.h         |    4 +-
+ drivers/scsi/megaraid/megaraid_mbox.c |   13 +-
+ drivers/scsi/ncr53c8xx.c              |    7 +-
+ drivers/scsi/osst.c                   |   76 +++---
+ drivers/scsi/pcmcia/sym53c500_cs.c    |   14 +-
+ drivers/scsi/qla2xxx/qla_attr.c       |  177 +++++++------
+ drivers/scsi/qla2xxx/qla_gbl.h        |    4 +-
+ drivers/scsi/raid_class.c             |   73 +++---
+ drivers/scsi/scsi_sas_internal.h      |   24 +-
+ drivers/scsi/scsi_sysfs.c             |  150 ++++++-----
+ drivers/scsi/scsi_transport_fc.c      |  385 ++++++++++++++------------
+ drivers/scsi/scsi_transport_iscsi.c   |  107 ++++----
+ drivers/scsi/scsi_transport_sas.c     |  157 ++++++-----
+ drivers/scsi/scsi_transport_spi.c     |  185 +++++++------
+ drivers/scsi/scsi_transport_srp.c     |   26 +-
+ drivers/scsi/sd.c                     |   78 +++---
+ drivers/scsi/ses.c                    |   28 +-
+ drivers/scsi/sg.c                     |   36 ++--
+ drivers/scsi/st.c                     |   83 +++---
+ include/linux/attribute_container.h   |   28 +-
+ include/linux/bsg.h                   |    2 +-
+ include/linux/enclosure.h             |   11 +-
+ include/linux/libata.h                |    2 +-
+ include/linux/raid_class.h            |   12 +-
+ include/linux/transport_class.h       |    6 +-
+ include/scsi/scsi_device.h            |   10 +-
+ include/scsi/scsi_host.h              |    7 +-
+ include/scsi/scsi_transport.h         |    2 +-
+ include/scsi/scsi_transport_fc.h      |   14 +-
+ include/scsi/scsi_transport_sas.h     |   12 +-
+ include/scsi/sd.h                     |    4 +-
+ 55 files changed, 1763 insertions(+), 1511 deletions(-)
 
+--------------080202000004050909060108--
