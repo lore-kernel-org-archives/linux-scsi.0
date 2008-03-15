@@ -1,220 +1,156 @@
-From: "Aron Stansvik" <elvstone@gmail.com>
-Subject: Re: Aborted commands with arcmsr and 2xWD1500ADFD in RAID1
-Date: Sat, 15 Mar 2008 11:14:10 +0100
-Message-ID: <751a4f870803150314r7bfeffaqbad33c040f95ea82@mail.gmail.com>
-References: <751a4f870802251451k2f6355d0o110d74cd226f0f84@mail.gmail.com>
-	 <000901c8781e$1cb6e780$8800a8c0@Nick>
-	 <751a4f870803141025r2cb6bf88hdee3cf9583d9ad44@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch] convert the scsi layer to use struct device
+Date: Sat, 15 Mar 2008 09:19:48 -0500
+Message-ID: <1205590788.6767.12.camel@localhost.localdomain>
+References: <20080313210655.GA13468@kroah.com>
+	 <1205514958.2904.27.camel@localhost.localdomain>
+	 <1205529619.2904.87.camel@localhost.localdomain>
+	 <1205531922.3522.57.camel@lov.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=BIG5
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:46140 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527AbYCOKON (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Mar 2008 06:14:13 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so584695fkr.5
-        for <linux-scsi@vger.kernel.org>; Sat, 15 Mar 2008 03:14:11 -0700 (PDT)
-In-Reply-To: <751a4f870803141025r2cb6bf88hdee3cf9583d9ad44@mail.gmail.com>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58641 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751804AbYCOOTx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Mar 2008 10:19:53 -0400
+In-Reply-To: <1205531922.3522.57.camel@lov.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nick.cheng@areca.com.tw
-Cc: erich <erich@areca.com.tw>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, Tony Jones <tonyj@suse.de>
 
-SGVsbG8gYWdhaW4uCgoyMDA4LzMvMTQsIEFyb24gU3RhbnN2aWsgPGVsdnN0b25lQGdtYWlsLmNv
-bT46Cj4gMjAwOC8yLzI2LCBuaWNrY2hlbmcgPG5pY2suY2hlbmdAYXJlY2EuY29tLnR3PjoKPiAg
-PiBIaSBBcm9uLAo+Cj4gPiAgVGhhbmtzIGZvciB5b3VyIHBhdGllbmNlLgo+ICA+ICBJZiB5b3Ug
-c3RpbGwgZ290IGludG8gdHJvdWJsZSwgcGxlYXNlIGxldCBtZSBrbm93Lgo+ICA+ICBUaGFuayB5
-b3UgYWdhaW4sCj4KPgo+IEkgaGF2ZSBub3cgdHJpZWQ6Cj4KPiAgKiBUdXJuaW5nIG9uL29mZiBO
-Q1EgaW4gdGhlIEFyZWNhIFJBSUQuCj4gICogVHVybmluZyBvbi9vZmYgcmVhZC1haGVhZCBjYWNo
-ZSBpbiB0aGUgQXJlY2EgUkFJRC4KPiAgKiBQdXR0aW5nIHRoZSBkaXNrcyBpbiBhbnRpLXZpYnJh
-dGlvbiBtb3VudHMgaW4gNS4yNSIgc2xvdHMuCj4gICogU3dpdGNoaW5nIFNBVEEgY2FibGVzLgo+
-ICAqIFVzaW5nIGxlZ2FjeSBBVEEgcG93ZXIgY29ubmVjdG9ycyBpbnN0ZWFkIG9mIHRoZSBTQVRB
-IG9uZXMuCj4KPiAgQnV0IEkgc3RpbGwgaGF2ZSB0aGUgcHJvYmxlbS4gVGhlIHBvd2VyIHN1cHBs
-eSBpcyA2NTBXIHNvIHRoZXJlIHNob3VsZAo+ICBiZSBwbGVudHkgb2YgcG93ZXIuIFRoZXJlJ3Mg
-b25seSB0d28gUmFwdG9yIGRpc2tzLCBhbiBPcHRlcm9uIENQVSBhbmQKPiAgYW4gblZpZGlhIDY2
-MDBHVCBpbiB0aGUgbWFjaGluZS4KPgo+ICBUaGUgUmFwdG9yIHR3byBSYXB0b3IgZGlza3MgaGF2
-ZSBkaWZmZXJlbnQgZmlybXdhcmUgb24gdGhlbSwgY291bGQKPiAgdGhhdCBjYXVzZSBhbnkgcHJv
-YmxlbT8KPgo+ICBUd28gcGVvcGxlIHdobyBoYWQgcmVhZCBteSBwb3N0IGhlcmUgb24gTEtNTCBo
-YXZlIGNvbnRhY3RlZCBtZSBvbgo+ICBlLW1haWwgYW5kIGhhdmUgdGhlIHNhbWUgcHJvYmxlbSwg
-YnV0IHRoZXkgaGF2ZSBTZWFnYXRlIGFuZCBTYW1zdW5nCj4gIGRpc2tzLCBhbmQgdXNlIHRoZSAx
-MjIwIGNvbnRyb2xsZXIuCj4KPiAgVGhlIHByb2JsZW0gaXMgaGFyZCB0byB0cmlnZ2VyLCBJJ3Zl
-IG5vdCBiZWVuIGFibGUgdG8gdHJpZ2dlciBpdCB3aXRoCj4gIGFueSBiZW5jaG1hcmtpbmcgdG9v
-bCwgYnV0IGluIH45NSUgb2YgdGhlIGNhc2VzIEkgY2FuIHRyaWdnZXIgaXQgYnkKPiAganVzdCBj
-b3B5aW5nIGEgZGlyZWN0b3J5IHdpdGggbG90cyBvZiBzbWFsbCBmaWxlcyAoYXJvdW5kIDUwMCBN
-QikuCj4KPiAgQW55b25lIGVsc2Ugc2VlaW5nIHRoaXM/IEknZCByZWFsbHkgbGlrZSB0byBnZXQg
-aXQgdG8gd29yayBzaW5jZSB0aGlzCj4gIGlzIG15IG9ubHkgY29tcHV0ZXIgOigKPgo+ICBTaG91
-bGQgSSB0cnkgd2l0aCBYRlMgb3IgUmVpc2VyRlMgaW5zdGVhZCBvZiBFWFQzPwoKSSd2ZSBub3cg
-dHJpZWQgd2l0aCBSZWlzZXJGUywgc2FtZSBwcm9ibGVtLiBNeSBkaXN0cmlidXRpb24gZGlkbid0
-CmhhdmUgWEZTIGFzIGEgY2hvaWNlIGF0IGluc3RhbGxhdGlvbiBzbyBJIGhhdmVuJ3QgdHJpZWQg
-aXQgeWV0LiBJJ2xsCnRyeSB3aXRoIGEgTGl2ZUNEIHRoYXQgc3VwcG9ydHMgWEZTIGxhdGVyLiBU
-aGUgdHdvIGRpc2tzIGluIHRoZSBhcnJheQphcmUgdGhlIG9ubHkgb25lcyBpbiB0aGUgc3lzdGVt
-LgoKQXJvbgoKPgo+ICBSZWdhcmRzLAo+Cj4gQXJvbgo+Cj4KPiAgPgo+ICA+IC0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tCj4gID4gIEZyb206IEFyb24gU3RhbnN2aWsgW21haWx0bzplbHZzdG9u
-ZUBnbWFpbC5jb21dCj4gID4KPiAgPiBTZW50OiBUdWVzZGF5LCBGZWJydWFyeSAyNiwgMjAwOCA2
-OjUyIEFNCj4gID4gIFRvOiBlcmljaAo+ICA+ICBDYzogbmljay5jaGVuZ0BhcmVjYS5jb20udHc7
-IGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc7Cj4gID4gIGxpbnV4LXNjc2lAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnCj4gID4gIFN1YmplY3Q6IFJlOiBBYm9y
-dGVkIGNvbW1hbmRzIHdpdGggYXJjbXNyIGFuZCAyeFdEMTUwMEFERkQgaW4gUkFJRDEKPiAgPgo+
-ICA+ICBIaSBFcmljaC4KPiAgPgo+ICA+ICAyMDA4LzIvMjUsIG5pY2tjaGVuZyA8bmljay5jaGVu
-Z0BhcmVjYS5jb20udHc+Ogo+ICA+ICA+IEhpIEFyb24sCj4gID4gID4gIEZyb20gb3VyIGZpZWxk
-IGV4cGVyaWVuY2VzIGFuZCBjdXN0b21lcnMnIGZlZWRiYWNrcywgYWxsIG9mIHRoZW0gZGlyZWN0
-Cj4gID4gIHRvCj4gID4gID4gIHZpYnJhdGlvbiBhbmQgcG93ZXIgaXNzdWVzLgo+ICA+ICA+ICBU
-aGUgdmlicmF0aW9uIGNvdWxkIGJlIGNhdXNlZCBieSBGQU5zIG5vdCBvbmx5IGJ5IHRoZW1zZWx2
-ZXMuCj4gID4KPiAgPiAgT2theS4gSSBoYXZlIGEgY2hhc3NpIGZhbiB0aGF0IGlzIHF1aXRlIGNs
-b3NlIHRvIHRoZSBkcml2ZXMsIEkgd2lsbAo+ICA+ICB0cnkgZGlzYWJsaW5nIGl0LiBJJ3ZlIGFs
-c28gb3JkZXJlZCB0d28gTmV4dXMgVHdpbkRpc2sgYW50aSB2aWJyYXRpb24KPiAgPiAgaGFyZGRy
-aXZlIG1vdW50cyB3aXRoIHdoaWNoIEknbGwgcGxhY2UgdGhlIGRpc2tzIGluIG15IDUuMjUiIHNs
-b3RzCj4gID4gIGluc3RlYWQsIGF3YXkgZnJvbSBhbnkgZmFucy4KPiAgPgo+ICA+ICBJZiB0aGlz
-IGRvZXNuJ3Qgd29yaywgSSdtIHN0dW1wZWQsIGFzIEkgcmVhbGx5IGRvbid0IHRoaW5rIGl0J3Mg
-dGhlCj4gID4gIHBvd2VyIHN1cHBseSBhbmQgSSBkb24ndCBoYXZlIHRoZSBtb25leSB0byBidXkg
-YSBuZXcgb25lLgo+ICA+Cj4gID4gID4gIFlvdSBtZW50aW9uZWQgaXQgY291bGQgYmUgdGhlIEYv
-VyBpc3N1ZS4KPiAgPiAgPiAgSWYgdGhlIGVudmlyb25tZW50IGRvZXMgbm90IG1lZXQgdGhlIHBy
-ZXJlcXVpc2l0ZSwgRlcgY291bGQgbm90IHdvcmsKPiAgPiAgPiAgY29ycmVjdGx5Lgo+ICA+ICA+
-ICBBY3R1YWxseSBGVyBqdXN0IHJlYWN0cyB0byB0aGUgc2l0dWF0aW9ucyBub3QgaXQgY2F1c2Vz
-IHRoZSBpc3N1ZS4KPiAgPgo+ICA+ICBPZiBjb3Vyc2UsIEkgdW5kZXJzdGFuZCB0aGlzLiBKdXN0
-IHRyeWluZyB0byBmaWd1cmUgdGhpcyBwcm9ibGVtIG91dC4uCj4gID4KPiAgPiAgPiAgUGxlYXNl
-IGNoZWNrIGl0IG91dCEhCj4gID4KPiAgPiAgSSdsbCByZXBvcnQgYmFjayB3aXRoIG15IGZpbmRp
-bmdzIHdpdGggbW92aW5nIGRpc2sgYXdheSBmcm9tIGZhbnMgYW5kCj4gID4gIHVzaW5nIGFudGkt
-dmlicmF0aW9ucyBtb3VudHMuCj4gID4KPiAgPiAgVGhhbmtzIGZvciB0YWtpbmcgeW91ciB0aW1l
-IHRvIHJlcGx5Lgo+ICA+Cj4gID4gIEFyb24KPiAgPgo+ICA+ICA+ICBUaGFuayB5b3UsCj4gID4g
-ID4KPiAgPiAgPgo+ICA+ICA+ICAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ICA+ICA+ICBG
-cm9tOiBBcm9uIFN0YW5zdmlrIFttYWlsdG86ZWx2c3RvbmVAZ21haWwuY29tXQo+ICA+ICA+ICBT
-ZW50OiBTdW5kYXksIEZlYnJ1YXJ5IDI0LCAyMDA4IDE6NTQgQU0KPiAgPiAgPiAgVG86IG5pY2su
-Y2hlbmdAYXJlY2EuY29tLnR3Cj4gID4gID4gIENjOiBlcmljaDsgYWtwbUBsaW51eC1mb3VuZGF0
-aW9uLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7Cj4gID4gID4gIGxpbnV4LWtlcm5l
-bEB2Z2VyLmtlcm5lbC5vcmcKPiAgPiAgPgo+ICA+ICA+IFN1YmplY3Q6IFJlOiBBYm9ydGVkIGNv
-bW1hbmRzIHdpdGggYXJjbXNyIGFuZCAyeFdEMTUwMEFERkQgaW4gUkFJRDEKPiAgPiAgPgo+ICA+
-ICA+ICBIZWxsbyBhZ2FpbiBBcmVjYSBhbmQgTEtNTCBoYWNrZXJzLgo+ICA+ICA+Cj4gID4gID4g
-IDIwMDgvMi8xOCwgQXJvbiBTdGFuc3ZpayA8ZWx2c3RvbmVAZ21haWwuY29tPjoKPiAgPiAgPiAg
-PiBIZWxsbyBOaWNrLgo+ICA+ICA+ICA+Cj4gID4gID4gID4gIFNvcnJ5IHRoYXQgSSdtIG5vdCBh
-bnN3ZXJpbmcgdW50aWwgbm93LiBJJ3ZlIGJlZW4gYnVzeS4KPiAgPiAgPiAgPgo+ICA+ICA+ICA+
-ICAyMDA4LzIvMTMsIG5pY2tjaGVuZyA8bmljay5jaGVuZ0BhcmVjYS5jb20udHc+Ogo+ICA+ICA+
-ICA+Cj4gID4gID4gID4gPiBIaSBBcm9uLAo+ICA+ICA+ICA+ICA+ICBGcm9tIG91ciBleHBlcmll
-bmNlIGFuZCBzb21lIGN1c3RvbWVycycgZmVlZGJhY2ssIHlvdXIgaXNzdWUgY291bGQKPiAgPiAg
-YmUKPiAgPiAgPiAgY2F1c2VkCj4gID4gID4gID4gID4gIGJ5IHBvd2VyIGluc3RhYmlsaXR5IG9y
-IHZpYnJhdGlvbiB0byB5b3VyIEhEcy4KPiAgPiAgPiAgPiAgPiAgUGxlYXNlIGNoZWNrIHN0ZXAg
-Ynkgc3RlcDoKPiAgPiAgPiAgPiAgPiAgKDEpLnVuZGVyIHlvdXIgb3JpZ2luYWwgZW52aXJvbm1l
-bnQsIGluY3JlYXNlIHRoZSBTQ1NJIGNvbW1hbmQKPiAgPiAgdmFsdWUsCj4gID4gID4gID4gID4g
-IGRlZmF1bHQ9MzAsIHdpdGggdGhlIHNoZWxsIHNjcmlwdCwgc2V0X3Njc2ljbWRfdGltZW91dCgp
-LiA5MCBvciAxMjAKPiAgPiAgaXMKPiAgPiAgPiAgPiAgPiAgZW5vdWdoLgo+ICA+ICA+ICA+ICA+
-ICAoMikuaWYgbWV0aG9kIDEgZG9lcyBub3Qgd29yaywgZmluZCBvdXQgdGhlIHZpYnJhdGlvbiBz
-b3VyY2Ugb3IKPiAgPiAgY2hhbmdlCj4gID4gID4gIHRoZQo+ICA+ICA+ICA+ICA+ICBwb3dlciBz
-dXBwbHkKPiAgPiAgPiAgPgo+ICA+ICA+ICA+Cj4gID4gID4gID4gSSB3aWxsIHRyeSB0byBpbmNy
-ZWFzZSB0aGF0IHZhbHVlLiBJIGRvbid0IHRoaW5rIGl0J3MgdmlicmF0aW9uOyB0aGUKPiAgPiAg
-PiAgPiAgZGlza3MgYXJlIGZpcm1seSBpbiBwbGFjZSBpbiBhIHZlcnkgaGVhdnkgY2hhc3NpIChT
-aWx2ZXJzdG9uZQo+ICA+ICA+ICA+ICBTU1QtVEowNUItVCkuIEFuZCBJIHJlYWxseSBkb24ndCB0
-aGluayB0aGVyZSdzIHNvbWV0aGluZyB3cm9uZyB3aXRoCj4gID4gID4gID4gIHRoZSBwb3dlciBz
-dXBwbHksIGl0J3MgYSBwcmV0dHkgbmV3IFNpbHZlcnN0b25lIFNUNjVaRiA2NTBXLiBUaGlzIGlz
-Cj4gID4gID4gID4gIG15IG93biBwZXJzb25hbCB3b3Jrc3RhdGlvbiwgc28gSSBkb24ndCBqdXN0
-IGhhdmUgYW5vdGhlciBwb3dlciBzdXBwbHkKPiAgPiAgPiAgPiAgdG8gdGVzdCB3aXRoIDovCj4g
-ID4gID4gID4KPiAgPiAgPiAgPiAgSSB3aWxsIHJlcG9ydCBiYWNrIG9uIG15IHN1Y2Nlc3MvZmFp
-bHVyZS4gVGhhbmtzIGZvciB5b3VyIGFuc3dlci4KPiAgPiAgPgo+ICA+ICA+ICBJJ3ZlIG5vdyB0
-cmllZCB3aXRoIGJvdGggOTAgYW5kIDEyMCBmb3IgdGhlIHRpbWVvdXQgdmFsdWUsIGFuZCB0aGUK
-PiAgPiAgPiAgcHJvYmxlbSBzdGlsbCBwZXJzaXN0cy4gSXQgc2VlbXMgdG8gaGFwcGVuIHdoZW4g
-bG90cyBvZiBzbWFsbCB3cml0ZXMKPiAgPiAgPiAgYXJlIG9jY3VyaW5nLCBlLmcuIHdoZW4gaW5z
-dGFsbGluZyBzb21ldGhpbmcuCj4gID4gID4KPiAgPiAgPiAgSSByZWFsbHkgZG9uJ3QgdGhpbmsg
-dGhlIGRpc2tzIGFyZSB2aWJyYXRpbmcsIEkgZG9uJ3Qgc2VlIGhvdyB0aGV5Cj4gID4gID4gIGNv
-dWxkLiBPbmUgbW9yZSB0aGluZyBJJ20gZ29pbmcgdG8gdGVzdCBpcyB0byB1c2UgdGhlIGxlZ2Fj
-eSBBVEEgcG93ZXIKPiAgPiAgPiAgY29ubmVjdG9yIGluc3RlYWQgb2YgdGhlIFNBVEEgcG93ZXIg
-Y29ubmVjdG9yLiBUaGlzIHdhcyB3aGF0IEkgd2FzCj4gID4gID4gIHVzaW5nIGJlZm9yZSB3aGVu
-IEkgb25seSBoYWQgYSBzaW5nbGUgZHJpdmUgYW5kIG5vIFJBSUQgY29udHJvbGxlci4KPiAgPiAg
-PiAgTWF5YmUgbXkgcG93ZXIgc3VwcGx5IGlzIG1hbGZ1bmN0aW9uaW5nIGFuZCBub3QgZ2l2aW5n
-IGVub3VnaCBwb3dlciBvbgo+ICA+ICA+ICB0aGUgU0FUQSBwb3dlciBjb25uZWN0b3JzLi4gYnV0
-IEkgZG91YnQgaXQuCj4gID4gID4KPiAgPiAgPiAgSXMgdGhlcmUgYW55dGhpbmcgZWxzZSB0aGF0
-IGNvdWxkIGNhdXNlIHRoaXM/IEhhdmUgeW91IGd1eXMgYXQgQXJlY2EKPiAgPiAgPiAgdGVzdGVk
-IHRoZSBBUkMtMTIwMCB3aXRoIFJhcHRvcnMgaW4gUkFJRDE/Cj4gID4gID4KPiAgPiAgPiAgOigK
-PiAgPiAgPgo+ICA+ICA+ICBSZWdhcmRzLAo+ICA+ICA+ICBBcm9uCj4gID4gID4KPiAgPiAgPiAg
-Pgo+ICA+ICA+ICA+Cj4gID4gID4gID4gIEFyb24KPiAgPiAgPiAgPgo+ICA+ICA+ICA+Cj4gID4g
-ID4gID4gID4gIElmIHlvdXIgc3RpbGwgaGF2ZSBhbnkgcXVlc3Rpb25zLCBwbGVhc2UgZmVlbCBm
-cmVlIHRvIGxldCBtZSBrbm93Lgo+ICA+ICA+ICA+ICA+Cj4gID4gID4gID4gID4gIFAuUy4gVGhl
-IGF0dGFjaGVkIGRyaXZlciBzb3VyY2UsIGFyY21zci0xLjIwLjAwLjE1LTcxMjI0LCBoYXMgYmVl
-bgo+ICA+ICA+ICA+ICA+ICB1cHN0cmVhbWVkIHRvIGtlcm5lbC5vcmcgYW5kIHdpbGwgYmUgcmVs
-ZWFzZWQgaW4ga2VybmVsIDIuNi4yNS4gSWYKPiAgPiAgeW91Cj4gID4gID4gIGxpa2UsCj4gID4g
-ID4gID4gID4gIHlvdSBjb3VsZCB1cGRhdGUgeW91ciBkcml2ZXIgd2l0aCBpdC4KPiAgPiAgPiAg
-PiAgPiAgSXQgZml4ZXMgc29tZSBtaW5vciBidWdzLCBidXQgdGhlc2UgYnVncyBhcmUgbm90aGlu
-ZyB0byBkbyB3aXRoCj4gID4gIHlvdXIKPiAgPiAgPiAgaXNzdWUuCj4gID4gID4gID4gID4KPiAg
-PiAgPiAgPiAgPgo+ICA+ICA+ICA+ICA+ICAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ICA+
-ICA+ICA+ICA+ICBGcm9tOiBlcmljaCBbbWFpbHRvOmVyaWNoQGFyZWNhLmNvbS50d10KPiAgPiAg
-PiAgPiAgPiAgU2VudDogV2VkbmVzZGF5LCBGZWJydWFyeSAxMywgMjAwOCA0OjMzIFBNCj4gID4g
-ID4gID4gID4gIFRvOiAovHOmd6zsp94pvkemdcG+Cj4gID4gID4gID4gID4gIFN1YmplY3Q6IEZ3
-OiBBYm9ydGVkIGNvbW1hbmRzIHdpdGggYXJjbXNyIGFuZCAyeFdEMTUwMEFERkQgaW4gUkFJRDEK
-PiAgPiAgPiAgPiAgPgo+ICA+ICA+ICA+ICA+Cj4gID4gID4gID4gID4KPiAgPiAgPiAgPiAgPiAg
-LS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQo+ICA+ICA+ICA+ICA+ICBGcm9tOiAiQW5kcmV3
-IE1vcnRvbiIgPGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc+Cj4gID4gID4gID4gID4gIFRvOiAi
-QXJvbiBTdGFuc3ZpayIgPGVsdnN0b25lQGdtYWlsLmNvbT4KPiAgPiAgPiAgPiAgPiAgQ2M6IDxs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3Jn
-PjsKPiAgPiAgPiAgImVyaWNoIgo+ICA+ICA+ICA+ICA+ICA8ZXJpY2hAYXJlY2EuY29tLnR3Pgo+
-ICA+ICA+ICA+ICA+ICBTZW50OiBXZWRuZXNkYXksIEZlYnJ1YXJ5IDEzLCAyMDA4IDQ6MDMgUE0K
-PiAgPiAgPiAgPiAgPiAgU3ViamVjdDogUmU6IEFib3J0ZWQgY29tbWFuZHMgd2l0aCBhcmNtc3Ig
-YW5kIDJ4V0QxNTAwQURGRCBpbiBSQUlEMQo+ICA+ICA+ICA+ICA+Cj4gID4gID4gID4gID4KPiAg
-PiAgPiAgPiAgPiAgPgo+ICA+ICA+ICA+ICA+ICA+IChjYydzIGFkZGVkKQo+ICA+ICA+ICA+ICA+
-ICA+Cj4gID4gID4gID4gID4gID4gT24gTW9uLCAxMSBGZWIgMjAwOCAxNzo0NDowOCArMDEwMCAi
-QXJvbiBTdGFuc3ZpayIKPiAgPiAgPiAgPGVsdnN0b25lQGdtYWlsLmNvbT4KPiAgPiAgPiAgPiAg
-PiAgPiB3cm90ZToKPiAgPiAgPiAgPiAgPiAgPgo+ICA+ICA+ICA+ICA+ICA+PiBIZWxsbyBMS01M
-Lgo+ICA+ICA+ICA+ICA+ICA+Pgo+ICA+ICA+ICA+ICA+ICA+PiBVbmRlciBzZW1pLWhpZ2ggZGlz
-ayBJL08gKGUuZy4gaW5zdGFsbGluZyBhIGNvbXBpbGVkIEtERSksIEkgZ2V0Cj4gID4gID4gIHRo
-ZQo+ICA+ICA+ICA+ICA+ICA+PiBmb2xsb3dpbmcgKGFjY29tcGFuaWVkIGJ5IHNlY29uZHMgb2Yg
-bG9jay11cHMgb24gdGhlIG1hY2hpbmUpOgo+ICA+ICA+ICA+ICA+ICA+Pgo+ICA+ICA+ICA+ICA+
-ICA+PiBbIDc3MjcuMzQ1MTgzXSBhcmNtc3IwOiBhYm9ydCBkZXZpY2UgY29tbWFuZCBvZiBzY3Np
-IGlkID0gMCBsdW4KPiAgPiAgPSAwCj4gID4gID4gID4gID4gID4+IFsgNzczMC4zNDg3NzZdIGFy
-Y21zcjA6ICAgICAgICAgICAgICAgICBzY3NpIGlkID0gMCBsdW4gPSAwIGNjYgo+ICA+ICA9Cj4g
-ID4gID4gID4gID4gID4+ICcweGRmYjQ2MWMwJyBwb2xsIGNvbW1hbmQgYWJvcnQgc3VjY2Vzc2Z1
-bGx5Cj4gID4gID4gID4gID4gID4+IFsgODA1My43OTU5NDNdIGFyY21zcjA6IGFib3J0IGRldmlj
-ZSBjb21tYW5kIG9mIHNjc2kgaWQgPSAwIGx1bgo+ICA+ICA9IDAKPiAgPiAgPiAgPiAgPiAgPj4g
-WyA4MDU2Ljc5OTUyOF0gYXJjbXNyMDogICAgICAgICAgICAgICAgIHNjc2kgaWQgPSAwIGx1biA9
-IDAgY2NiCj4gID4gID0KPiAgPiAgPiAgPiAgPiAgPj4gJzB4ZGZiNTk1ZTAnIHBvbGwgY29tbWFu
-ZCBhYm9ydCBzdWNjZXNzZnVsbHkKPiAgPiAgPiAgPiAgPiAgPj4gWyA4ODg0LjU5MjgxMF0gYXJj
-bXNyMDogYWJvcnQgZGV2aWNlIGNvbW1hbmQgb2Ygc2NzaSBpZCA9IDAgbHVuCj4gID4gID0gMAo+
-ICA+ICA+ICA+ICA+ICA+PiBbIDg4ODcuNTk2MzkyXSBhcmNtc3IwOiAgICAgICAgICAgICAgICAg
-c2NzaSBpZCA9IDAgbHVuID0gMCBjY2IKPiAgPiAgPQo+ICA+ICA+ICA+ICA+ICA+PiAnMHhkZmI1
-NmQ4MCcgcG9sbCBjb21tYW5kIGFib3J0IHN1Y2Nlc3NmdWxseQo+ICA+ICA+ICA+ICA+ICA+PiBb
-IDg5MTcuNzYwMjE2XSBhcmNtc3IwOiBhYm9ydCBkZXZpY2UgY29tbWFuZCBvZiBzY3NpIGlkID0g
-MCBsdW4KPiAgPiAgPSAwCj4gID4gID4gID4gID4gID4+IFsgODkyMC43NjM3OTddIGFyY21zcjA6
-ICAgICAgICAgICAgICAgICBzY3NpIGlkID0gMCBsdW4gPSAwIGNjYgo+ICA+ICA9Cj4gID4gID4g
-ID4gID4gID4+ICcweGRmYjQ3MmMwJyBwb2xsIGNvbW1hbmQgYWJvcnQgc3VjY2Vzc2Z1bGx5Cj4g
-ID4gID4gID4gID4gID4+IFsgOTA3NC4xMDY1NDddIGFyY21zcjA6IGFib3J0IGRldmljZSBjb21t
-YW5kIG9mIHNjc2kgaWQgPSAwIGx1bgo+ICA+ICA9IDAKPiAgPiAgPiAgPiAgPiAgPj4KPiAgPiAg
-PiAgPiAgPiAgPj4gVGhpcyBpcyBteSBzZXR1cDoKPiAgPiAgPiAgPiAgPiAgPj4KPiAgPiAgPiAg
-PiAgPiAgPj4gMSB4IE1TSSBLOE4gTWFzdGVyMi1GQVIKPiAgPiAgPiAgPiAgPiAgPj4gMSB4IE9w
-dGVyb24gMjUyCj4gID4gID4gID4gID4gID4+IDEgeCBBcmVjYSBBUkMxMjAwIChzaXR0aW5nIGlu
-IGEgUENJZSB4NCBzb2NrZXQpCj4gID4gID4gID4gID4gID4+IDIgeCBXRDE1MDBBREZEIGluIFJB
-SUQxCj4gID4gID4gID4gID4gID4+Cj4gID4gID4gID4gID4gID4+IGFzdGFuQHJ1YmlrOn4kIHVu
-YW1lIC1hCj4gID4gID4gID4gID4gID4+IExpbnV4IHJ1YmlrIDIuNi4yNC03LWdlbmVyaWMgIzEg
-U01QIFRodSBGZWIgNyAwMToyOTo1OCBVVEMgMjAwOAo+ICA+ICA+ICBpNjg2Cj4gID4gID4gID4g
-ID4gID4+IEdOVS9MaW51eAo+ICA+ICA+ICA+ICA+ICA+PiBhc3RhbkBydWJpazp+JCBtb2RpbmZv
-IGFyY21zcgo+ICA+ICA+ICA+ICA+ICA+PiBmaWxlbmFtZToKPiAgPiAgPiAgPiAgPiAgPj4gL2xp
-Yi9tb2R1bGVzLzIuNi4yNC03LWdlbmVyaWMva2VybmVsL2RyaXZlcnMvc2NzaS9hcmNtc3IvYXJj
-bXNyLgo+ICA+ICBrbwo+ICA+ICA+ICA+ICA+ICA+PiB2ZXJzaW9uOiAgICAgICAgRHJpdmVyIFZl
-cnNpb24gMS4yMC4wMC4xNSAyMDA3LzA4LzMwCj4gID4gID4gID4gID4gID4+IGxpY2Vuc2U6ICAg
-ICAgICBEdWFsIEJTRC9HUEwKPiAgPiAgPiAgPiAgPiAgPj4gZGVzY3JpcHRpb246ICAgIEFSRUNB
-IChBUkMxMXh4LzEyeHgvMTN4eC8xNnh4KSBTQVRBL1NBUyBSQUlECj4gID4gIEhPU1QKPiAgPiAg
-PiAgQWRhcHRlcgo+ICA+ICA+ICA+ICA+ICA+PiBhdXRob3I6ICAgICAgICAgRXJpY2ggQ2hlbiA8
-c3VwcG9ydEBhcmVjYS5jb20udHc+Cj4gID4gID4gID4gID4gID4+IHNyY3ZlcnNpb246ICAgICAy
-OEVBRDZBQjQ5RDQ0OTFDQTA0RDQ2NQo+ICA+ICA+ICA+ICA+ICA+PiBbLi4uXQo+ICA+ICA+ICA+
-ICA+ICA+Pgo+ICA+ICA+ICA+ICA+ICA+PiBJJ3ZlIHJlYWQgc29tZSBwcmV2aW91cyBwb3N0cyBo
-ZXJlIG9uIExLTUwgdGhhdCBpdCBjb3VsZCBiZSB0aGUKPiAgPiAgPiAgQXJlY2EKPiAgPiAgPiAg
-PiAgPiAgPj4gZmlybXdhcmUgd2hvIGRvZXNuJ3QgbGlrZSBteSBXRCBkaXNrcy4gQW55b25lIGtu
-b3cgaWYgdGhpcyBpcyBhbgo+ICA+ICA+ICBJUlEKPiAgPiAgPiAgPiAgPiAgPj4gaGFuZGxpbmcg
-cHJvYmxlbSBpbiB0aGUga2VybmVsLCBvciBpZiBpdCdzIGEgcHJvYmxlbSB3aXRoIHRoZQo+ICA+
-ICBSQUlECj4gID4gID4gID4gID4gID4+IGNvbnRyb2xsZXIgZmlybXdhcmU/Cj4gID4gID4gID4g
-ID4gID4+Cj4gID4gID4gID4gID4gID4+IEVyaWNoIENoZW4gKG9mIEFyZWNhKTsgaGF2ZSB5b3Ug
-dHJpZWQgdGhlIG5ldyBBUkMxMjAwIGluIFJBSUQxCj4gID4gID4gID4gID4gID4+IGNvbmZpZ3Vy
-YXRpb24gd2l0aCBSYXB0b3IgZGlza3Mgb24gTGludXg/Cj4gID4gID4gID4gID4gID4+Cj4gID4g
-ID4gID4gID4gID4+IEFzIGEgc2lkZSBub3RlLCBJIGNhbiB0ZWxsIHlvdSB0aGF0IEkgZmlyc3Qg
-dHJpZWQgcnVubmluZwo+ICA+ICBGcmVlQlNECj4gID4gID4gIDYuMwo+ICA+ICA+ICA+ICA+ICA+
-PiAoUkVMRU5HXzYpIG9uIHRoaXMgbWFjaGluZSwgYnV0IGdvdCByYW5kb20gcmVib290cyBkdXJp
-bmcgZGlzawo+ICA+ICBJL08KPiAgPiAgPiAgPiAgPiAgPj4gKGV2ZW4gd2l0aCBhIGtlcm5lbCB3
-aXRoIEtEQiBkZWJ1Z2dpbmcgdHVybmVkIG9uKS4gVGhpcyBsZWFkcyBtZQo+ICA+ICB0bwo+ICA+
-ICA+ICA+ICA+ICA+PiBiZWxpZXZlIHRoYXQgaXQgbWlnaHQgYmUgYSBmaXJtd2FyZSBpc3N1ZSwg
-YW5kIHRoYXQgTGludXgganVzdAo+ICA+ICA+ICBoYW5kbGVzCj4gID4gID4gID4gID4gID4+IGl0
-IG1vcmUgZ3JhY2VmdWxseSB0aGFuIEZyZWVCU0QuCj4gID4gID4gID4gID4gID4+Cj4gID4gID4g
-ID4gID4gID4+IEFueSBpZGVhcyBvciBhZHZpY2UgaXMgYXBwcmljaWF0ZWQuIFRoaXMgaXMgbXkg
-Zmlyc3QgcG9zdCB0byB0aGUKPiAgPiAgPiAgTEtNTCwKPiAgPiAgPiAgPiAgPiAgPj4gc28gcGxl
-YXNlIGluc3RydWN0IG1lIGlmIHlvdSB3YW50IG1vcmUgaW5mb3JtYXRpb24gb3IgaWYgeW91Cj4g
-ID4gIHdhbnQKPiAgPiAgPiAgbWUKPiAgPiAgPiAgPiAgPiAgPj4gdG8gdGFrZSBmdXJ0aGVyIGRl
-YnVnZ2luZyBhY3Rpb25zLgo+ICA+ICA+ICA+ICA+ICA+Pgo+ICA+ICA+ICA+ICA+ICA+PiBCZXN0
-IHJlZ2FyZHMsCj4gID4gID4gID4gID4gID4+IEFyb24gU3RhbnN2aWsKPiAgPiAgPiAgPiAgPiAg
-Pgo+ICA+ICA+ICA+ICA+Cj4gID4gID4gID4gID4KPiAgPiAgPiAgPgo+ICA+ICA+Cj4gID4gID4K
-PiAgPgo+ICA+Cj4K
+On Fri, 2008-03-14 at 22:58 +0100, Kay Sievers wrote:
+> On Fri, 2008-03-14 at 16:20 -0500, James Bottomley wrote:
+> > On Fri, 2008-03-14 at 12:15 -0500, James Bottomley wrote:
+> > > On Thu, 2008-03-13 at 14:06 -0700, Greg KH wrote:
+> > > > Here's a huge patch from Tony and Kay that converts the scsi la=
+yer to
+> > > > use struct device instead of class_device.
+> > > >=20
+> > > > It doesn't seem like it could be split up any smaller due to th=
+e
+> > > > interconectedness of the whole mess, if you have any suggestion=
+s
+> > > > otherwise, it would be appreciated.
+> > > >=20
+> > > > If you want, I can take this through my tree as it does depend =
+on a
+> > > > previous IB patch to make that portion of the patch much smalle=
+r.
+> > > >=20
+> > > > After this, all of the class_device code is now finally gone fr=
+om the
+> > > > kernel!
+> > >=20
+> > > Actually, I have it built and running (actually 2.6.25-rc5-mc5 wh=
+ich
+> > > includes all the changes in your tree).  Amazingly it's pretty mu=
+ch
+> > > fully functional, except ses which seems to have suffered a break=
+down in
+> > > the way its model works.  I'll see if I can fix it up.
+> >=20
+> > OK, I looked at converting ses and enclosure, but it looks impossib=
+le
+> > given the way you've set all of this up (and at the moment it's alm=
+ost
+> > non functional).
+> >=20
+> > What it wants is for the enclosure and component devices to be arra=
+nged
+> > hierarchically under the enclosure class and then the device link o=
+f the
+> > components to be populated if they're actually present (which they =
+might
+> > not be).
+> >=20
+> > Given the fact that you've chosen to have dev->parent point to the
+> > device the original class_device->dev was pointing to, there's almo=
+st no
+> > way left to express this relationship.  We can do it by having
+> > kobj->parent point to the enclosure and dev->parent point to the
+> > enclosed device, but I can't encapsulate that information into a st=
+ruct
+> > device alone.
+> >=20
+> > >From an interface point of view, this dual use of the parent point=
+er
+> > looks a bit nasty ... and you have some fun code to prove the point=
+ in
+> > drivers/base/core.c:get_device_parent()
+> >=20
+> > How about just adding a struct device *peer; entry to struct device=
+ and
+> > using it to express the former class relationship?  That way we can=
+ do
+> > all the parenting stuff correctly.
+> >=20
+> > Otherwise, I'm going to need something like a device_add_class_pare=
+nt()
+> > API that allows me to add these former class devices and set up the
+> > kobject parent correctly.
+>=20
+> Unfortunately, the enclosure/enclusure-component/component-device
+> relationship is not a tree. There is only a single "parent" for a
+> device. The "device" link already expresses the parent device, and th=
+e
+> class devices will show up as childs of the devices, where the "devic=
+e"
+> link pointed to. There can't be a second device which could be used a=
+s a
+> parent.
+
+But that's precisely my point: it is a tree; it's not a multi rooted
+tree either.  Each enclosure has a fixed number of components (the bays
+in the enclosure) that's a simple two level tree.  However, both the
+enclosure and the components may point to devices in the regular tree
+(bays only if the bay is actually populated).
+
+This was formerly representable in the class_device infrastructure,
+because class devices were allowed to have parents.  Class devices are
+supposed to represent interfaces to devices and not all interfaces are
+fully flat.
+
+> =EF=BB=BFA sysfs class device hierarchy, and at the same let the "dev=
+ice" link
+> point to a different device is not supported. Existing userspace tool=
+s
+> do not support that.
+>=20
+> We have a similar problem for raid block devices, which can't be
+> expressed in a single device tree. The "reverse tree" is constructed =
+by
+> custom holders/ slave/ directories at the devices.
+>=20
+> =EF=BB=BFI suggest to express the relationship of the enclosure compo=
+nents to
+> the enclosure device by custom symlinks, instead of expecting a "devi=
+ce"
+> link =EF=BB=BFmaintained by the core to build a "reverse tree".
+>=20
+> Would that work?
+
+There are still several problems with the symlink approach; not least o=
+f
+which is that the component namespace isn't globally unique, it's only
+unique to the enclosure:  If you have two separate enclosures connected=
+,
+they're likely each going to have a component called slot1 (the name is
+actually take from the enclosure).  I also think we're going to have
+difficulty going back from a component to an enclosure, which was prett=
+y
+much the whole point of the exercise but I need to get ses/enclosure
+actually working to look at that.
+
+James
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
