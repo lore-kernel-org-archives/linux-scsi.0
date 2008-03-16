@@ -1,47 +1,74 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: new kernel oops in recent kernels
-Date: Sun, 16 Mar 2008 10:42:23 -0600
-Message-ID: <20080316164223.GA26285@parisc-linux.org>
-References: <1205680748.3050.29.camel@localhost>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Sun, 16 Mar 2008 13:18:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803161304240.4171-100000@iolanthe.rowland.org>
+References: <20080316205500I.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39008 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061AbYCPQmj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Mar 2008 12:42:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1205680748.3050.29.camel@localhost>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080316205500I.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Giuseppe Sacco <giuseppe@eppesuigoccas.homedns.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 16, 2008 at 04:19:08PM +0100, Giuseppe Sacco wrote:
-> testing latest kernels on SGI O2, I found this new kernel oops. It has
-> been produced with kernel from linux-mips.org git of yesterday night.
-> A very similar oops has been reported by others[0] using 2.6.22.
+On Sun, 16 Mar 2008, FUJITA Tomonori wrote:
 
-> CPU 0 Unable to handle kernel paging request at virtual address 0000000000000000, epc == 0000000000000000, ra == 0000000000000000
+> On Fri, 14 Mar 2008 10:46:52 -0400 (EDT)
+> Alan Stern <stern@rowland.harvard.edu> wrote:
+> 
+> > On Fri, 14 Mar 2008, FUJITA Tomonori wrote:
+> > 
+> > > > If nents doesn't change then for_each_sg() won't work right.  There 
+> > > > could be an alternative macro:
+> > > 
+> > > Oops, I thought that for_each_sg is defined like:
+> > > 
+> > > #define for_each_sg(sglist, sg, nr, __i)	\
+> > > 	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+> > > 
+> > > 
+> > > > /*
+> > > >  * Loop over each sg element, stopping at the end of the chain
+> > > >  */
+> > > > #define for_each_sg_all(sglist, sg, __i)	\
+> > > > 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+> > > > 
+> > > > If you added this macro to include/linux/scatterlist.h and used it
+> > > > instead of for_each_sg() then you can get rid of nents entirely.  
+> > > > However I'm not sure whether this would be safe.  Do people sometimes 
+> > > > use a subset of the entries in a scatterlist?
+> > > 
+> > > IIRC, some drivers do that (though they might use sg_next).
+> > 
+> > But will usb-storage ever receive a scatterlist like that?  For 
+> > example, if there are three 4096-byte entries in the list, but the 
+> > transfer length is 8192 and nents is 2, then there could be a problem.
+> 
+> If LLDs don't use the padding or drain buffer feature (USB uses
+> neither), scsi midlayer doesn't send such (that is, the block layer
+> doesn't create such).
 
-I'm not familiar with MIPS; is epc the program counter?  If so, this
-would be a branch to 0.  That's somewhat confusing as I don't see any
-function pointers used within sr_drive_status().  How accurate are MIPS
-backtraces?
+Then it should be okay to open-code that loop and test whether sg is 
+NULL.
 
-> Call Trace:
-> [<ffffffff802460b0>] sr_drive_status+0x50/0xe8
-> [<ffffffff8024bb84>] cdrom_ioctl+0x5f4/0x1208
-> [<ffffffff80245c6c>] sr_block_ioctl+0x64/0xe8
+> As I explained above, it should be safe with USB. But in general, LLDs
+> should not rely on a scatterlist about how much data they transfer.
 
-It would be interesting to see a disassembly (objdump -dr
-drivers/scsi/sr_ioctl.o) of sr_drive_status from say 0x40 to 0x60.
+True.  Let's add a comment explaining the situation.  For example:
 
-And if that calls a function, it would be interesting to put in printks
-to figure out where we're dereferencing a null pointer.
+	/* If this routine is called multiple times for a single
+	 * scatterlist, the nents value will not be updated properly.
+	 * Transfers will stop when the end of the list is reached,
+	 * which might not be correct in cases where nents is less than
+	 * the actual number of entries in the list.  However, if 
+	 * drivers are careful not to use multiple calls to transfer
+	 * more data than was requested then this will be safe.
+	 */
+	for (sg = *sgl; nents > 0 && sg; --nents, sg = sg_next(sg)) {
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+When this change is made, we will be able to convert usb-storage over 
+to using your library routine.
+
+Alan Stern
+
