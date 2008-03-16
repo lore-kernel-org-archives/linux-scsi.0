@@ -1,73 +1,43 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Sun, 16 Mar 2008 20:55:04 +0900
-Message-ID: <20080316205500I.tomof@acm.org>
-References: <20080314183434J.tomof@acm.org>
-	<Pine.LNX.4.44L0.0803141036150.4478-100000@iolanthe.rowland.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [14/20] Don't disable direct_io for unchecked_isa_dma
+ in st.c
+Date: Sun, 16 Mar 2008 14:39:19 +0200
+Message-ID: <47DD14F7.4070607@panasas.com>
+References: <20080307653.720459648@firstfloor.org> <20080307175414.08C981B41AE@basil.firstfloor.org> <20080314135135.GT17940@kernel.dk> <20080314142412.GA30325@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:37847 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbYCPL43 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Mar 2008 07:56:29 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0803141036150.4478-100000@iolanthe.rowland.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38634 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbYCPMkc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Mar 2008 08:40:32 -0400
+In-Reply-To: <20080314142412.GA30325@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Fri, 14 Mar 2008 10:46:52 -0400 (EDT)
-Alan Stern <stern@rowland.harvard.edu> wrote:
-
-> On Fri, 14 Mar 2008, FUJITA Tomonori wrote:
+On Fri, Mar 14 2008 at 16:24 +0200, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Mar 14, 2008 at 02:51:35PM +0100, Jens Axboe wrote:
+>> Are you sure? Seems to me that st builds its own list with
+>> get_user_pages() for direct io, where will that get bounced? The block
+>> layer will only bounce things that are mapped directly, so if st used
+>> blk_rq_map_kern() and inserted that request in the queue, we could
+>> proceed with killing that check in st.
 > 
-> > > If nents doesn't change then for_each_sg() won't work right.  There 
-> > > could be an alternative macro:
-> > 
-> > Oops, I thought that for_each_sg is defined like:
-> > 
-> > #define for_each_sg(sglist, sg, nr, __i)	\
-> > 	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
-> > 
-> > 
-> > > /*
-> > >  * Loop over each sg element, stopping at the end of the chain
-> > >  */
-> > > #define for_each_sg_all(sglist, sg, __i)	\
-> > > 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
-> > > 
-> > > If you added this macro to include/linux/scatterlist.h and used it
-> > > instead of for_each_sg() then you can get rid of nents entirely.  
-> > > However I'm not sure whether this would be safe.  Do people sometimes 
-> > > use a subset of the entries in a scatterlist?
-> > 
-> > IIRC, some drivers do that (though they might use sg_next).
+> Which shouldn't be all too difficult and would be the right thing to
+> do.  We really need someone to sit down and convert st/osst/sg to use
+> the proper block layer helpers.
 > 
-> But will usb-storage ever receive a scatterlist like that?  For 
-> example, if there are three 4096-byte entries in the list, but the 
-> transfer length is 8192 and nents is 2, then there could be a problem.
 
-If LLDs don't use the padding or drain buffer feature (USB uses
-neither), scsi midlayer doesn't send such (that is, the block layer
-doesn't create such).
+First they do. They all call scsi_execute_async which at the end produces
+a BIO and then calls blk_execute_nowait(). and all is swell.
 
+Second some one did, long a go, and have submitted them rebased more then 3
+times. I'd say their time is do long a go. (I mean Mike Christie)
 
-> (This could happen if some software layer preallocated an sg chain and
-> used it over and over again, each time setting nents to whatever value
-> was needed for a particular transfer.)
-> 
-> > I don't think that we add a new macro just for this function. We could
-> > change for_each_sg in the above way or we could just do in
-> > usb_stor_access_xfer_buf
-> > 
-> > for (i = 0, sg = *sgl; i < nents && sg; i++, sg = sg_next(sg))
-> 
-> This wouldn't be safe in the example I just mentioned if the
-> usb-storage driver tried to do three transfers, each of 4096 bytes.  
-> All three would succeed, but in fact the third call shouldn't transfer
-> any data.
+Mike, please, do you have these patches on a public git somewhere I want to help
+push them.
 
-As I explained above, it should be safe with USB. But in general, LLDs
-should not rely on a scatterlist about how much data they transfer.
+Boaz
