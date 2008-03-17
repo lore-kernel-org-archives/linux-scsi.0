@@ -1,89 +1,35 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 4/4] scsi: megaraid_sas - Update the Version andChangelog
-Date: Mon, 17 Mar 2008 15:00:18 -0600
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501FE7B33@NAMAIL1.ad.lsil.com>
-References: <1205787285.6767.185.camel@localhost.localdomain>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
+Date: Mon, 17 Mar 2008 22:34:22 +0100
+Message-ID: <20080317213422.GA11966@one.firstfloor.org>
+References: <1205445980.2893.85.camel@localhost.localdomain> <20080314134814.GS17940@kernel.dk> <20080314135945.GO2522@one.firstfloor.org> <20080317082711.GB17940@kernel.dk> <20080317083603.GJ27015@one.firstfloor.org> <20080317083832.GE17940@kernel.dk> <20080317085341.GK27015@one.firstfloor.org> <20080317202931.GO17940@kernel.dk> <20080317204548.GB10846@one.firstfloor.org> <20080317204634.GQ17940@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53475 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754816AbYCQVBA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 17:01:00 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1205787285.6767.185.camel@localhost.localdomain>
+Received: from one.firstfloor.org ([213.235.205.2]:52932 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800AbYCQVby (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 17:31:54 -0400
+Content-Disposition: inline
+In-Reply-To: <20080317204634.GQ17940@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-James,
-
-Sure I will send more details.
-
-Thanks.
-
-Bo Yang 
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Monday, March 17, 2008 4:55 PM
-To: Yang, Bo
-Cc: linux-scsi@vger.kernel.org; akpm@osdl.org;
-linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
-Subject: Re: [PATCH 4/4] scsi: megaraid_sas - Update the Version
-andChangelog
-
-On Mon, 2008-03-17 at 04:18 -0400, bo yang wrote:
-> Update the Version and ChangeLog
+> Look further down in the email, queue_bounce_to_mask() or whatever you
+> would want to call it. As also written there, the PRINCIPLE is the same.
+> And that is that exporting a to_allocator_mask() helper is a lot saner
+> than exporting an allocator api tied to the queue.
 > 
-> Signed-off-by Bo Yang<bo.yang@lsi.com>
-> 
-> ---
->  Documentation/scsi/ChangeLog.megaraid_sas |   22 ++++++++++++++++++++
->  drivers/scsi/megaraid/megaraid_sas.c      |    2 -
->  drivers/scsi/megaraid/megaraid_sas.h      |    6 ++---
->  3 files changed, 26 insertions(+), 4 deletions(-)
-> 
-> diff -rupN linux-2.6.24_orig/Documentation/scsi/ChangeLog.megaraid_sas
-linux-2.6.24_new/Documentation/scsi/ChangeLog.megaraid_sas
-> --- linux-2.6.24_orig/Documentation/scsi/ChangeLog.megaraid_sas
-2008-03-10 10:17:25.000000000 -0400
-> +++ linux-2.6.24_new/Documentation/scsi/ChangeLog.megaraid_sas
-2008-03-10 10:41:39.000000000 -0400
-> @@ -3,6 +3,28 @@
->  			Sumant Patro
->  			Bo Yang
->  
-> +2 Current Version : 00.00.03.20
-> +3 Older Version   : 00.00.03.16
-> +
-> +1. Sense buffer ptr data type in the ioctl path is reverted  back to
-> +	u32 * as in previous versions of driver.
-> +
-> +2. Fixed the driver frame count.
-> +	When Driver sent wrong frame count to firmware.  As this
-particular
-> +	command is sent to drive, FW is seeing continuous chip resets
-and so
-> +	the command will timeout.
-> +
-> +3. Add the new controller(1078DE) support to the driver.
+> Can we get over this, please?
 
-It would be nice if the git change log were this detailed, as well
-please.
+Ok it would have helped if you had explained why it is saner, but I 
+bow to your superior experience on block layer issues.
 
-> +4. Increase the max_wait to 60 from 10 in the controller operational
-status.
-> +	With this max_wait increase, driver will make sure the FW will
-finish
-> +	the pending cmd for KDUMP case.   
+The only open issue is right now if it isn't better to go back
+for automatic bouncing for SCSI scan and the other users. Do you
+have an opinion on that too? If you have one can you please convince
+James of it too.
 
-Where did this change come from?  It's not in any of this change set
-that I can see.
-
-James
-
-
+-Andi
