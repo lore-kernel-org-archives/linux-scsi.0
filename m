@@ -1,57 +1,59 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] [14/20] Don't disable direct_io for unchecked_isa_dma
- in st.c
-Date: Mon, 17 Mar 2008 14:21:02 +0200
-Message-ID: <47DE622E.2000909@panasas.com>
-References: <20080307175414.08C981B41AE@basil.firstfloor.org>	<20080314135135.GT17940@kernel.dk>	<20080314142412.GA30325@infradead.org> <20080317195459I.tomof@acm.org>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH] a100u2w: fix bitmap lookup routine
+Date: Mon, 17 Mar 2008 21:32:02 +0900
+Message-ID: <20080317123200.GA17756@APFDCB5C>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:52751 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752797AbYCQMWl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 08:22:41 -0400
-In-Reply-To: <20080317195459I.tomof@acm.org>
+Received: from wf-out-1314.google.com ([209.85.200.173]:9186 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbYCQMkI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 08:40:08 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so5406005wff.4
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2008 05:40:07 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hch@infradead.org, jens.axboe@oracle.com, andi@firstfloor.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, tomof@acm.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>
 
-On Mon, Mar 17 2008 at 12:55 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Fri, 14 Mar 2008 10:24:12 -0400
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
->> On Fri, Mar 14, 2008 at 02:51:35PM +0100, Jens Axboe wrote:
->>> Are you sure? Seems to me that st builds its own list with
->>> get_user_pages() for direct io, where will that get bounced? The block
->>> layer will only bounce things that are mapped directly, so if st used
->>> blk_rq_map_kern() and inserted that request in the queue, we could
->>> proceed with killing that check in st.
->> Which shouldn't be all too difficult and would be the right thing to
->> do.  We really need someone to sit down and convert st/osst/sg to use
->> the proper block layer helpers.
-> 
-> I've been working on this (hopefully, I'll submit an updated patchset
-> this week).
-> 
-> I think that the main problem was a lack of motivation for these
-> changes. I bet that nobody reviewed the patchset that Mike posted the
-> last time. Hopefully, the new patchset will be reviewed and merged.
-> 
+This patch is only compile tested.
 
-I have ran and tested these patches for a long time, in my personal
-workstation (long story). I had no problems with them. Burn CDs and all.
+It seems that bitmap lookup routine for allocation_map in
+a100u2w driver is simply wrong.
 
-> With sg chaining, drain, padding, etc, building a scatterlist is much
-> complicated than in the past. I believe that we should kill home-made
-> scatterlist code and convert the users to use the block layer to avoid
-> potential scatterlist bugs.
-> --
+It cannot lookup more than first 32 bits. If all first 32 bits
+are set, it just returns 33-th orc_scb even though the 33-th bit
+is not set.
 
-Definitely, as I remember, Mike's code just prepares BIO's and requests
-and completely avoids any use of sg-lists. I will be waiting for your 
-patches and will test them here.
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Alan Cox <alan@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Doug Ledford <dledford@redhat.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/a100u2w.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Thanks
-Boaz
+Index: 2.6-rc/drivers/scsi/a100u2w.c
+===================================================================
+--- 2.6-rc.orig/drivers/scsi/a100u2w.c
++++ 2.6-rc/drivers/scsi/a100u2w.c
+@@ -674,12 +674,13 @@ static struct orc_scb *__orc_alloc_scb(s
+ 		for (index = 0; index < 32; index++) {
+ 			if ((host->allocation_map[channel][i] >> index) & 0x01) {
+ 				host->allocation_map[channel][i] &= ~(1 << index);
+-				break;
++				idx = index + 32 * i;
++				/*
++				 * Translate the index to a structure instance
++				 */
++				return host->scb_virt + idx;
+ 			}
+ 		}
+-		idx = index + 32 * i;
+-		/* Translate the index to a structure instance */
+-		return (struct orc_scb *) ((unsigned long) host->scb_virt + (idx * sizeof(struct orc_scb)));
+ 	}
+ 	return NULL;
+ }
