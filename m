@@ -1,48 +1,99 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] [14/20] Don't disable direct_io for unchecked_isa_dma in st.c
-Date: Mon, 17 Mar 2008 09:28:07 +0100
-Message-ID: <20080317082807.GD17940@kernel.dk>
-References: <20080307653.720459648@firstfloor.org> <20080307175414.08C981B41AE@basil.firstfloor.org> <20080314135135.GT17940@kernel.dk> <20080314142412.GA30325@infradead.org> <47DD14F7.4070607@panasas.com> <20080316124409.GB613@one.firstfloor.org>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
+Date: Mon, 17 Mar 2008 09:36:03 +0100
+Message-ID: <20080317083603.GJ27015@one.firstfloor.org>
+References: <20080307653.720459648@firstfloor.org> <20080307175408.E290E1B41AE@basil.firstfloor.org> <1205445980.2893.85.camel@localhost.localdomain> <20080314134814.GS17940@kernel.dk> <20080314135945.GO2522@one.firstfloor.org> <20080317082711.GB17940@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:15721 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752016AbYCQI2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Mar 2008 04:28:10 -0400
+Received: from one.firstfloor.org ([213.235.205.2]:51918 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026AbYCQIdh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 04:33:37 -0400
 Content-Disposition: inline
-In-Reply-To: <20080316124409.GB613@one.firstfloor.org>
+In-Reply-To: <20080317082711.GB17940@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@infradead.org>, Mike Christie <michaelc@cs.wisc.edu>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On Sun, Mar 16 2008, Andi Kleen wrote:
-> On Sun, Mar 16, 2008 at 02:39:19PM +0200, Boaz Harrosh wrote:
-> > On Fri, Mar 14 2008 at 16:24 +0200, Christoph Hellwig <hch@infradead.org> wrote:
-> > > On Fri, Mar 14, 2008 at 02:51:35PM +0100, Jens Axboe wrote:
-> > >> Are you sure? Seems to me that st builds its own list with
-> > >> get_user_pages() for direct io, where will that get bounced? The block
-> > >> layer will only bounce things that are mapped directly, so if st used
-> > >> blk_rq_map_kern() and inserted that request in the queue, we could
-> > >> proceed with killing that check in st.
+On Mon, Mar 17, 2008 at 09:27:11AM +0100, Jens Axboe wrote:
+> On Fri, Mar 14 2008, Andi Kleen wrote:
+> > On Fri, Mar 14, 2008 at 02:48:14PM +0100, Jens Axboe wrote:
+> > > On Thu, Mar 13 2008, James Bottomley wrote:
+> > > > \On Fri, 2008-03-07 at 18:54 +0100, Andi Kleen wrote:
+> > > > > When a user is doing IO in the kernel and wants to avoid bouncing
+> > > > > it is best to just ask the block layer to allocate the memory for it.
+> > > > > This patch adds two simple wrappers: blk_kmalloc and blk_alloc_pages
+> > > > > and respective free functions to do this.
+> > > > > 
+> > > > > blk_alloc_pages is a little unusual in that it takes size
+> > > > > instead of order arguments -- i did this because I have later
+> > > > > patches to convert it over to a new allocator which does not 
+> > > > > require power of two for pages.
+> > > > 
+> > > > I really don't like this ... it's wedging something in the block layer
+> > > > that shouldn't be there just to avoid doing it properly in terms of
+> > > > allocations on the device dma_mask.
+> > > > 
+> > > > I also think the kfree takes a length part is asking for trouble because
+> > > > it's pretty fragile.
+> > > > 
+> > > > However, if Jens will ack it, I'll (reluctantly) add it.
 > > > 
-> > > Which shouldn't be all too difficult and would be the right thing to
-> > > do.  We really need someone to sit down and convert st/osst/sg to use
-> > > the proper block layer helpers.
-> > > 
+> > > I agree with you, I don't like it at all (for a variety of reasons).
 > > 
-> > First they do. They all call scsi_execute_async which at the end produces
-> > a BIO and then calls blk_execute_nowait(). and all is swell.
+> > For what reasons exactly? 
 > 
-> I thought i had audited them all too, but wasn't 100% sure anymore.
-> But thanks for double checking.
+> Mainly the one I list below. Using the interface for allocation is
+> actually more involved that just doing it yourself, which is not a sign
+> of a good abstraction.
+
+hmm, missed the point sorry. How is using the interface more
+involved? It has to get a mask or a pfn from somewhere and 
+without the interface that's actually more code to write out.
+
+> > The reason I added the size is that the mask allocator (not in the SCSI
+> > specific patchkit, but I posted that to l-k later) needs a size to free
+> > because it is based on a similar design as free_pages which always needed
+> > size. Also at least for the few users I converted (there are not really
+> > that many) the size is either constant anyways or very easy to remember
+> > (please take a look at the concrete patches before judging it)  
+> > 
+> > The other problem is that there is no mask, except for the bounce mask. These
+> > old cruft ISA drivers don't have a device (and before anybody asks
+> > again -- no i don't plan to rewrite them all to be device based);
+> > but they do have correct bounce_pfn which has all the needed information.
+> > I don't think it would make sense to add another field for this.
+> > 
+> > That is why I ended up with the helpers
+> > 
+> > Of course if you don't want the helpers it could be something like
+> > 
+> > 	get_pages_mask(GFP_KERNEL, size, blk_q_mask(request_Queue))
+> > 
+> > written out but why not have simple helpers that allows this a little nicer?  
 > 
-> Jens, that answers your earlier question.
+> I'd greatly prefer that, a helper that converts the dma mask to a
+> suitable GFP for the architecture. The benefit is that all allocators
+> takes this mask, and it still leaves the driver free to do whatever it
 
-OK good, I didn't realize that that path was already done. No problem
-with this part, then.
+These are not really used by drivers (except libata) 
 
--- 
-Jens Axboe
+> wants to allocate memory.
 
+Well it already exists, it is just called blk_q_mask() and 
+is added later with the mask allocator block layer code and was used
+there internally. I can move that out into SCSI if it's really needed.
+
+Short term it would be a little problematic because it would turn
+the patch dependencies around. Currently the early SCSI patchkit
+is nicely independent from the mask allocator and it would be 
+somewhat messy to add it later. If you really it is important 
+I can do it, but if it's only a slight preference or something
+it would avoid me quite some work to not do that.
+
+Really to be honest I cannot see all that much difference between 
+blk_kmalloc(q, ...) and get_pages_mask(..., blk_q_mask(q)) 
+
+-Andi
