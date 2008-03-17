@@ -1,75 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] convert the scsi layer to use struct device
-Date: Mon, 17 Mar 2008 12:57:20 -0500
-Message-ID: <1205776640.6767.154.camel@localhost.localdomain>
-References: <20080313210655.GA13468@kroah.com>
-	 <1205514958.2904.27.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] 2.6.25-rc4-git3 - inquiry cmd issued via /dev/sg? device
+ causes infinite loop in 2.6.24
+Date: Mon, 17 Mar 2008 13:08:39 -0500
+Message-ID: <47DEB3A7.1030600@cs.wisc.edu>
+References: <47D7035F.5000700@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59940 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752467AbYCQR5X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Mar 2008 13:57:23 -0400
-In-Reply-To: <1205514958.2904.27.camel@localhost.localdomain>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47874 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750762AbYCQSIx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Mar 2008 14:08:53 -0400
+In-Reply-To: <47D7035F.5000700@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-scsi@vger.kernel.org, Tony Jones <tonyj@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Andrew Morton <akpm@linux-foundation.org>, linux-next@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Fri, 2008-03-14 at 12:15 -0500, James Bottomley wrote:
-> On Thu, 2008-03-13 at 14:06 -0700, Greg KH wrote:
-> > Here's a huge patch from Tony and Kay that converts the scsi layer to
-> > use struct device instead of class_device.
-> > 
-> > It doesn't seem like it could be split up any smaller due to the
-> > interconectedness of the whole mess, if you have any suggestions
-> > otherwise, it would be appreciated.
-> > 
-> > If you want, I can take this through my tree as it does depend on a
-> > previous IB patch to make that portion of the patch much smaller.
-> > 
-> > After this, all of the class_device code is now finally gone from the
-> > kernel!
-> 
-> Actually, I have it built and running (actually 2.6.25-rc5-mc5 which
-> includes all the changes in your tree).  Amazingly it's pretty much
-> fully functional, except ses which seems to have suffered a breakdown in
-> the way its model works.  I'll see if I can fix it up.
-> 
-> Since the patch is separable, it's probably best to take it through the
-> SCSI tree ... including the infiniband bits that depend on the
-> iser/iscsi transport classes.  You can give the rest of the infiniband
-> pieces to roland, since he's got a nasty set of clashes with the
-> __FUNCTION__->__func__ conversion which I don't want to be responsible
-> for.
+Michael Reed wrote:
+> -		++blk_size;	/* don't know why */
+> -/* round request up to next highest SG_SECTOR_SZ byte boundary */
 
-OK, I've changed my mind ... it doesn't really work well without all the
-rest of the pieces ... plus I think there are going to be merge nasties
-which I'd rather you sorted out.
+I think we can remove this code. This was asked before, and here is 
+Doug's reply:
+http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg11757.html
 
-What I'll do is run a scsi-post-merge-2.6 tree here:
-
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-post-merge-2.6.git;a=summary
-
-I've dropped a quasi stable branch from your quilt tree and plumbed it
-into the -mc tree generation machinery, so it will warn me if you make
-too radical an alteration to your quilt.
-
-Andrew,
-
-you probably won't be able to pull this into -mm without the -mc
-machinery, so the best thing will simply to be to pull in the changes
-patch here right at the end of the -mm build (the same goes for
-linux-next):
-
-http://www.kernel.org/pub/linux/kernel/people/jejb/scsi-post-merge-2.6.diff
-
-It's a roll up patch of only the SCSI pieces.  It's updated every time I
-push a patch, so it should always be current.
-
-James
-
+It was probaly due to some weirdness in that the scatterlist that sg.c 
+made used to be sent directly to the LLD (now it is only used to 
+hold/organize the pages/segments that the sg and st driver manages in 
+their internal reserves), or maybe it had something to do with that and 
+dma alignment problems or something. I really have no idea, but the 
+block layer SG IO code has not been rounding up in its indirect path and 
+it has been fine.
 
