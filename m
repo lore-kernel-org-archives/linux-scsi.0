@@ -1,117 +1,75 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
-Date: Mon, 17 Mar 2008 21:29:31 +0100
-Message-ID: <20080317202931.GO17940@kernel.dk>
-References: <20080307653.720459648@firstfloor.org> <20080307175408.E290E1B41AE@basil.firstfloor.org> <1205445980.2893.85.camel@localhost.localdomain> <20080314134814.GS17940@kernel.dk> <20080314135945.GO2522@one.firstfloor.org> <20080317082711.GB17940@kernel.dk> <20080317083603.GJ27015@one.firstfloor.org> <20080317083832.GE17940@kernel.dk> <20080317085341.GK27015@one.firstfloor.org>
+From: bo yang <bo.yang@lsi.com>
+Subject: [PATCH 3/4] scsi: megaraid_sas - Add the new controller Support to
+	Driver
+Date: Mon, 17 Mar 2008 04:13:07 -0400
+Message-ID: <1205741587.7479.17.camel@pcp021067pcs.se.lsil.com>
+References: <9738BCBE884FDB42801FAD8A7769C26501CE50E4@NAMAIL1.ad.lsil.com>
+	 <1195251505.3407.30.camel@localhost.localdomain>
+	 <9738BCBE884FDB42801FAD8A7769C26501C9A4AF@NAMAIL1.ad.lsil.com>
+	 <1205824386.7238.7.camel@pcp021067pcs.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:23749 "EHLO kernel.dk"
+Received: from mail0.lsil.com ([147.145.40.20]:51264 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753221AbYCQU3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Mar 2008 16:29:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20080317085341.GK27015@one.firstfloor.org>
+	id S1752400AbYCQUdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Mar 2008 16:33:54 -0400
+In-Reply-To: <1205824386.7238.7.camel@pcp021067pcs.se.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, neela.kolli@lsi.com, bo.yang@lsi.com
 
-On Mon, Mar 17 2008, Andi Kleen wrote:
-> On Mon, Mar 17, 2008 at 09:38:32AM +0100, Jens Axboe wrote:
-> > On Mon, Mar 17 2008, Andi Kleen wrote:
-> > > On Mon, Mar 17, 2008 at 09:27:11AM +0100, Jens Axboe wrote:
-> > > > On Fri, Mar 14 2008, Andi Kleen wrote:
-> > > > > On Fri, Mar 14, 2008 at 02:48:14PM +0100, Jens Axboe wrote:
-> > > > > > On Thu, Mar 13 2008, James Bottomley wrote:
-> > > > > > > \On Fri, 2008-03-07 at 18:54 +0100, Andi Kleen wrote:
-> > > > > > > > When a user is doing IO in the kernel and wants to avoid bouncing
-> > > > > > > > it is best to just ask the block layer to allocate the memory for it.
-> > > > > > > > This patch adds two simple wrappers: blk_kmalloc and blk_alloc_pages
-> > > > > > > > and respective free functions to do this.
-> > > > > > > > 
-> > > > > > > > blk_alloc_pages is a little unusual in that it takes size
-> > > > > > > > instead of order arguments -- i did this because I have later
-> > > > > > > > patches to convert it over to a new allocator which does not 
-> > > > > > > > require power of two for pages.
-> > > > > > > 
-> > > > > > > I really don't like this ... it's wedging something in the block layer
-> > > > > > > that shouldn't be there just to avoid doing it properly in terms of
-> > > > > > > allocations on the device dma_mask.
-> > > > > > > 
-> > > > > > > I also think the kfree takes a length part is asking for trouble because
-> > > > > > > it's pretty fragile.
-> > > > > > > 
-> > > > > > > However, if Jens will ack it, I'll (reluctantly) add it.
-> > > > > > 
-> > > > > > I agree with you, I don't like it at all (for a variety of reasons).
-> > > > > 
-> > > > > For what reasons exactly? 
-> > > > 
-> > > > Mainly the one I list below. Using the interface for allocation is
-> > > > actually more involved that just doing it yourself, which is not a sign
-> > > > of a good abstraction.
-> > > 
-> > > hmm, missed the point sorry. How is using the interface more
-> > > involved? It has to get a mask or a pfn from somewhere and 
-> > > without the interface that's actually more code to write out.
-> > 
-> > Because it requires tracking length, for instance. Your interface just
-> 
-> While the implementation in the first patch does not require tracking
-> length, the mask allocator version that is only introduced about 15 
-> patches later or so does. That is why i added the length parameter
-> in the first patch already, although it is not used yet.
-> 
-> Sorry for not making that more clear in the changelog
-> 
-> I actually considered tracking length in the struct page in the
-> mask allocator for this, but when I looked at the callers I noticed 90+% 
-> of them only used a constant length which does not really
-> need to get tracked. It is always the same. Then there are two
-> or so with a variable length, but it is all local to a single
-> function so it's also not particularly burdensome to track either.
-> Please take a look at the callers and you'll see the same.
-> 
-> > doesn't add anything useful, 
-> 
-> Well for once it allows easy conversion to the mask alloactor linux
-> world.  That is the reason'd'etre of the whole patchkit as far as I'm
-> concerned anyways.
+Add the new Controller (ID: 007C) support to driver.
 
-The queue_to_gfp_mask() would make that conversion equally simple.
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-> > it's not a good abstraction/api imho.
-> 
-> I'm still trying to figure out what exactly you object to. 
-> 
-> Is the only problem the length? Would blk_kmalloc/kfree() be ok 
-> for you if kfree didn't require a length parameter? It would
-> not be that hard to add one, although frankly I personally
-> don't see the need.
+---
+ drivers/scsi/megaraid/megaraid_sas.c |    7 +++++--
+ drivers/scsi/megaraid/megaraid_sas.h |    1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-Well both - as mentioned, the queue_to_gfp_mask() is cleaner I think.
-And I just don't think it's a good API to begin with, to me it's
-inventing something that doesn't really buy you anything. With an
-exported mask function, you can pass that to any allocator.
-
-> Or alternatively I will just remove it if James can get convinced
-> to back down on his earlier requirement for bounce less scanning.
-
-Personally, for scanning I could not care less. It may actually be a
-good idea, as bouncing would get tested more so we're sure it doesn't
-get broken ;-)
-
-> > Put it in block/ or blkdev.h and call it queue_mask_to_gfp() or
-> > something, that would be fine.
-> 
-> There is no gfp anymore for this in the mask allocator world!!!! Only
-> masks and a slight abstraction for some cases request queues with 
-> bounce pfns.
-
-Then name it queue_bounce_mask() or something, principle is the same
-(export mask vs export silly api for allocation/free).
-
--- 
-Jens Axboe
+diff -rupN linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.c	2008-03-17 13:53:49.000000000 -0400
++++ linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.c	2008-03-17 13:53:10.000000000 -0400
+@@ -68,6 +68,8 @@ static struct pci_device_id megasas_pci_
+ 	/* xscale IOP */
+ 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1078R)},
+ 	/* ppc IOP */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1078DE)},
++	/* ppc IOP */
+ 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VERDE_ZCR)},
+ 	/* xscale IOP, vega */
+ 	{PCI_DEVICE(PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DELL_PERC5)},
+@@ -1471,7 +1473,7 @@ megasas_transition_to_ready(struct megas
+ 			instance->instancet->disable_intr(instance->reg_set);
+ 			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
+ 
+-			max_wait = 10;
++			max_wait = 60;
+ 			cur_state = MFI_STATE_OPERATIONAL;
+ 			break;
+ 
+@@ -1991,7 +1993,8 @@ static int megasas_init_mfi(struct megas
+ 
+ 	switch(instance->pdev->device)
+ 	{
+-		case PCI_DEVICE_ID_LSI_SAS1078R:	
++		case PCI_DEVICE_ID_LSI_SAS1078R:
++		case PCI_DEVICE_ID_LSI_SAS1078DE:
+ 			instance->instancet = &megasas_instance_template_ppc;
+ 			break;
+ 		case PCI_DEVICE_ID_LSI_SAS1064R:
+diff -rupN linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.h
+--- linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.h	2008-03-07 14:29:14.000000000 -0500
++++ linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.h	2008-03-07 14:10:12.000000000 -0500
+@@ -26,6 +26,7 @@
+  * Device IDs
+  */
+ #define	PCI_DEVICE_ID_LSI_SAS1078R		0x0060
++#define	PCI_DEVICE_ID_LSI_SAS1078DE		0x007C
+ #define	PCI_DEVICE_ID_LSI_VERDE_ZCR		0x0413
+ 
+ /*
 
