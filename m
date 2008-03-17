@@ -1,25 +1,26 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] a100u2w: fix bitmap lookup routine
-Date: Mon, 17 Mar 2008 12:04:38 -0400
-Message-ID: <20080317160438.GA27407@devserv.devel.redhat.com>
-References: <20080317123200.GA17756@APFDCB5C> <1205765204.6767.129.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ultrastor.c is a bit-rot
+Date: Mon, 17 Mar 2008 16:07:39 +0000
+Message-ID: <20080317160739.04ad0939@core>
+References: <47DE8736.8020405@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32966 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbYCQQEp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Mar 2008 12:04:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1205765204.6767.129.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51138 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751736AbYCQQYK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 12:24:10 -0400
+In-Reply-To: <47DE8736.8020405@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Mar 17, 2008 at 09:46:44AM -0500, James Bottomley wrote:
-> It looks fine to me ... I don't suppose we can find someone with an
-> actual card to test it out, could we?
+> if the machine has more then 2^24 of memory. Then this will never
+> work, right? or I'm missing it completely?
 
-Would that be a subtle hint  - I can test patches at some point but can't
-be sure when it'll happen.
+It will work compiled in, and probably users of such cards if any don't
+have > 16MB. I doubt anyone is using the driver however.
+
+Alan
