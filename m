@@ -1,99 +1,88 @@
-From: "nickcheng" <nick.cheng@areca.com.tw>
-Subject: RE: [PATCH] scsi: The supplement for the arithmetic of iomem ofthe Type_B Adapter of arcmsr
-Date: Mon, 17 Mar 2008 10:08:42 +0800
-Message-ID: <003d01c887d3$d29fdb00$9a00a8c0@Nick>
-References: <1205526414.2904.78.camel@localhost.localdomain>
-Reply-To: <nick.cheng@areca.com.tw>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Mon, 17 Mar 2008 12:23:55 +0900
+Message-ID: <20080317122350F.tomof@acm.org>
+References: <20080316205500I.tomof@acm.org>
+	<Pine.LNX.4.44L0.0803161304240.4171-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from areca.com.tw ([220.130.178.142]:50726 "EHLO areca.com.tw"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751325AbYCQCIv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Mar 2008 22:08:51 -0400
-In-Reply-To: <1205526414.2904.78.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0803161304240.4171-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, 'Tomas Henzl' <thenzl@redhat.com>, viro@ftp.linux.org.uk, 'Andrew Morton' <akpm@linux-foundation.org>
 
-Hi James,
-What a mess I made!! Terrible
-As you suggest, I agree with you. (I hope this time I don't misconstrue
-again.)
-Thanks,
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Saturday, March 15, 2008 4:27 AM
-To: nick.cheng@areca.com.tw
-Cc: linux-scsi@vger.kernel.org; randy.dunlap@oracle.com; 'Tomas Henzl';
-viro@ftp.linux.org.uk; 'Andrew Morton'
-Subject: Re: [PATCH] scsi: The supplement for the arithmetic of iomem ofthe
-Type_B Adapter of arcmsr
+On Sun, 16 Mar 2008 13:18:07 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-On Fri, 2008-03-14 at 20:51 +0800, nickcheng wrote:
-> Subject: [PATCH] scsi: The supplement for the arithmetic of iomem of the
-> Type_B Adapter
-> Description:
-> add the description for the change of the arithmetic of iomem of the
-Type_B
-> Adapter in ChangeLog.arcmsr 
-> Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
+> On Sun, 16 Mar 2008, FUJITA Tomonori wrote:
+> 
+> > On Fri, 14 Mar 2008 10:46:52 -0400 (EDT)
+> > Alan Stern <stern@rowland.harvard.edu> wrote:
+> > 
+> > > On Fri, 14 Mar 2008, FUJITA Tomonori wrote:
+> > > 
+> > > > > If nents doesn't change then for_each_sg() won't work right.  There 
+> > > > > could be an alternative macro:
+> > > > 
+> > > > Oops, I thought that for_each_sg is defined like:
+> > > > 
+> > > > #define for_each_sg(sglist, sg, nr, __i)	\
+> > > > 	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+> > > > 
+> > > > 
+> > > > > /*
+> > > > >  * Loop over each sg element, stopping at the end of the chain
+> > > > >  */
+> > > > > #define for_each_sg_all(sglist, sg, __i)	\
+> > > > > 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+> > > > > 
+> > > > > If you added this macro to include/linux/scatterlist.h and used it
+> > > > > instead of for_each_sg() then you can get rid of nents entirely.  
+> > > > > However I'm not sure whether this would be safe.  Do people sometimes 
+> > > > > use a subset of the entries in a scatterlist?
+> > > > 
+> > > > IIRC, some drivers do that (though they might use sg_next).
+> > > 
+> > > But will usb-storage ever receive a scatterlist like that?  For 
+> > > example, if there are three 4096-byte entries in the list, but the 
+> > > transfer length is 8192 and nents is 2, then there could be a problem.
+> > 
+> > If LLDs don't use the padding or drain buffer feature (USB uses
+> > neither), scsi midlayer doesn't send such (that is, the block layer
+> > doesn't create such).
+> 
+> Then it should be okay to open-code that loop and test whether sg is 
+> NULL.
+> 
+> > As I explained above, it should be safe with USB. But in general, LLDs
+> > should not rely on a scatterlist about how much data they transfer.
+> 
+> True.  Let's add a comment explaining the situation.  For example:
+> 
+> 	/* If this routine is called multiple times for a single
+> 	 * scatterlist, the nents value will not be updated properly.
+> 	 * Transfers will stop when the end of the list is reached,
+> 	 * which might not be correct in cases where nents is less than
+> 	 * the actual number of entries in the list.  However, if 
+> 	 * drivers are careful not to use multiple calls to transfer
+> 	 * more data than was requested then this will be safe.
+> 	 */
+> 	for (sg = *sgl; nents > 0 && sg; --nents, sg = sg_next(sg)) {
+> 
+> When this change is made, we will be able to convert usb-storage over 
+> to using your library routine.
 
-I confused you when I said I want the change log clearer, didn't I? What
-I meant was the *git* changelog that precedes the patch, not your
-Changelog.arcmsr, which I don't think we really care about.
+For me, it would be much better to fix USB drivers since LLDs should
+not rely on a scatterlist about how much data they transfer, as I
+said. If LLDs do that, they are broken. It's not good to add such a
+workaround to the common API for broken LLDs.
 
-Can I suggest the below for the correct replacement for both of these
-patches?
+USB drivers should do something like this if they definitely need to
+call this API multiple times:
 
-James
-
----
-
-From: nickcheng <nick.cheng@areca.com.tw>
-Subject: [SCSI] arcmsr: fix iounmap error for Type B adapter
-
-The Type B Adapter teardown does iounmap on pointers subtracted by a
-constant offset.  Since the offset is in bytes, we need the pointers to
-be of type void * not uint32_t * so the subtraction is done in the
-correct units and we iounmap the correct area.
-
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/arcmsr/arcmsr.h |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index 0393707..3288be2 100644
---- a/drivers/scsi/arcmsr/arcmsr.h
-+++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -341,13 +341,13 @@ struct MessageUnit_B
- 	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
- 	uint32_t	postq_index;
- 	uint32_t	doneq_index;
--	uint32_t	__iomem *drv2iop_doorbell_reg;
--	uint32_t	__iomem *drv2iop_doorbell_mask_reg;
--	uint32_t	__iomem *iop2drv_doorbell_reg;
--	uint32_t	__iomem *iop2drv_doorbell_mask_reg;
--	uint32_t	__iomem *msgcode_rwbuffer_reg;
--	uint32_t	__iomem *ioctl_wbuffer_reg;
--	uint32_t	__iomem *ioctl_rbuffer_reg;
-+	void		__iomem *drv2iop_doorbell_reg;
-+	void		__iomem *drv2iop_doorbell_mask_reg;
-+	void		__iomem *iop2drv_doorbell_reg;
-+	void		__iomem *iop2drv_doorbell_mask_reg;
-+	void		__iomem *msgcode_rwbuffer_reg;
-+	void		__iomem *ioctl_wbuffer_reg;
-+	void		__iomem *ioctl_rbuffer_reg;
- };
- 
- /*
--- 
-1.5.4.1
-
-
+     done = sg_copy_buffer(buffer, scsi_bufflen(sc) - us->done_length,
+     us->done_length += done;
 
