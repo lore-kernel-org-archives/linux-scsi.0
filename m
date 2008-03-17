@@ -1,58 +1,43 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [patch] convert the scsi layer to use struct device
-Date: Sun, 16 Mar 2008 22:35:19 -0700
-Message-ID: <20080317053519.GB5229@kroah.com>
-References: <1205514958.2904.27.camel@localhost.localdomain> <1205529619.2904.87.camel@localhost.localdomain> <1205531922.3522.57.camel@lov.site> <1205590788.6767.12.camel@localhost.localdomain> <1205594256.3109.53.camel@lov.site> <1205597776.6767.40.camel@localhost.localdomain> <1205604260.3109.133.camel@lov.site> <47DD8139.1040802@emulex.com> <1205701470.11374.66.camel@lov.site> <47DDF05D.8060608@emulex.com>
+From: Giuseppe Sacco <giuseppe@eppesuigoccas.homedns.org>
+Subject: Re: new kernel oops in recent kernels
+Date: Mon, 17 Mar 2008 09:17:51 +0100
+Message-ID: <1205741871.3515.9.camel@localhost>
+References: <1205680748.3050.29.camel@localhost>
+	 <20080316164223.GA26285@parisc-linux.org>
+	 <1205692147.5470.3.camel@localhost>
+	 <20080317044142.GC26285@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33361 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbYCQFaQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 01:30:16 -0400
-Content-Disposition: inline
-In-Reply-To: <47DDF05D.8060608@emulex.com>
+Received: from host194-211-dynamic.20-79-r.retail.telecomitalia.it ([79.20.211.194]:38908
+	"EHLO eppesuigoccas.homedns.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752824AbYCQIRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Mar 2008 04:17:31 -0400
+Received: from router-wag54gp2 ([192.168.1.33] helo=[192.168.2.7])
+	by eppesuigoccas.homedns.org with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <giuseppe@eppesuigoccas.homedns.org>)
+	id 1JbAX9-0001hQ-1J
+	for linux-scsi@vger.kernel.org; Mon, 17 Mar 2008 09:17:28 +0100
+In-Reply-To: <20080317044142.GC26285@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Tony Jones <tonyj@suse.de>
+To: linux-scsi@vger.kernel.org
 
-On Mon, Mar 17, 2008 at 12:15:25AM -0400, James Smart wrote:
->
->
-> Kay Sievers wrote:
->>> Well, the <classname> prefix came about because there was namespace 
->>> overlap
->>> between different classes (e.g. scsi_host and fc_host classes use the 
->>> same name,
->>> and I think where we originally saw this was in the way serial ports were 
->>> enumerated
->>> for some base systems as well).
->>>
->>> So I don't see how you can kill the <classname>:<devname> names by 
->>> SYSFS_DEPRECATED.
->> With SYSFS_DEPRECATED, nothing will change. But these links don't exist
->> with !SYSFS_DEPRECATED, because the class devices live in
->> subdirectories, named after the class they come from, there is no
->> namespace problem, or any problem to find these devices, you don't even
->> need readdir() to look them up.
->
-> Ok, it should have read :
->   I don't see how you can kill the <classname>:<devname> names w/ 
-> !SYSFS_DEPRECATED.
->
-> You still haven't answered my question about namespace overlap. What 
-> happens when the
-> device belongs to multiple classes, and the classes have the same name for 
-> the class
-> device ?   I don't believe we ever want to be in the case where the classes 
-> have to
-> understand a global namespace.
+Hi all,
+I wrote a message to linux-mips mailing list for investigating on the
+assembly code generated in sr_cdrom_status() since adding the suggested
+printk() stopped the oops. I supposed there is a problem with the
+compiler, but people there are investigating about problem with cache
+coherency.
+You may follow the thread on public web archive, at
+http://www.linux-mips.org/archives/linux-mips/2008-03/msg00079.html
 
-I take it you haven't even looked at how !SYSFS_DEPRECATED works today,
-have you?  Try it and you will see that the namespace issue has been
-taken care of a long time ago :)
+I'll be back on this list after checking any problem with cache
+coherence and c compiler.
 
-thanks,
+Thanks,
+Giuseppe
 
-greg k-h
