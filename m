@@ -1,39 +1,30 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Mon, 17 Mar 2008 10:06:36 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803171002230.3463-100000@iolanthe.rowland.org>
-References: <20080317122350F.tomof@acm.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [patch 1/2] zfcp: Fix race during ERP thread shutdown
+Date: Mon, 17 Mar 2008 15:19:52 +0100
+Message-ID: <20080317141952.GA14110@schmichrtp.de.ibm.com>
+References: <20080310151852.808020000@de.ibm.com> <20080310152328.463410000@de.ibm.com> <20080311164341.GA6380@osiris.boeblingen.de.ibm.com> <1205331227.4852.102.camel@kitka.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:52325 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752996AbYCQOGg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 10:06:36 -0400
-In-Reply-To: <20080317122350F.tomof@acm.org>
+Received: from mtagate2.uk.ibm.com ([195.212.29.135]:45135 "EHLO
+	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbYCQOTz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2008 10:19:55 -0400
+Content-Disposition: inline
+In-Reply-To: <1205331227.4852.102.camel@kitka.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Martin Peschke <mp3@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-On Mon, 17 Mar 2008, FUJITA Tomonori wrote:
+James,
 
-> For me, it would be much better to fix USB drivers since LLDs should
-> not rely on a scatterlist about how much data they transfer, as I
-> said. If LLDs do that, they are broken. It's not good to add such a
-> workaround to the common API for broken LLDs.
-> 
-> USB drivers should do something like this if they definitely need to
-> call this API multiple times:
-> 
->      done = sg_copy_buffer(buffer, scsi_bufflen(sc) - us->done_length,
->      us->done_length += done;
+we discussed this in our team. Since the issue is not new, and nobody
+was able to trigger this so far, we will drop the patch for now, until
+there is a better solution.
 
-The USB drivers don't need to be fixed; they are already correct.
+But this does not affect the patch in "[patch 2/2] zfcp: Fix handling
+for boxed port after physical close". Could you pull this one into
+scsi-misc?
 
-But if you are going to export a library routine for general use then
-it should be written to fail gracefully -- it should not be able to
-cause an invalid memory access.
-
-Alan Stern
-
+Christof
