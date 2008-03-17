@@ -1,114 +1,117 @@
-From: bo yang <bo.yang@lsi.com>
-Subject: [PATCH 2/4] scsi: megaraid_sas - Fix the frame count calculation
-Date: Mon, 17 Mar 2008 03:36:43 -0400
-Message-ID: <1205739403.7479.9.camel@pcp021067pcs.se.lsil.com>
-References: <9738BCBE884FDB42801FAD8A7769C26501CE50E4@NAMAIL1.ad.lsil.com>
-	 <1195251505.3407.30.camel@localhost.localdomain>
-	 <9738BCBE884FDB42801FAD8A7769C26501C9A4AF@NAMAIL1.ad.lsil.com>
-	 <1205824386.7238.7.camel@pcp021067pcs.se.lsil.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
+Date: Mon, 17 Mar 2008 21:29:31 +0100
+Message-ID: <20080317202931.GO17940@kernel.dk>
+References: <20080307653.720459648@firstfloor.org> <20080307175408.E290E1B41AE@basil.firstfloor.org> <1205445980.2893.85.camel@localhost.localdomain> <20080314134814.GS17940@kernel.dk> <20080314135945.GO2522@one.firstfloor.org> <20080317082711.GB17940@kernel.dk> <20080317083603.GJ27015@one.firstfloor.org> <20080317083832.GE17940@kernel.dk> <20080317085341.GK27015@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:47939 "EHLO mail0.lsil.com"
+Received: from brick.kernel.dk ([87.55.233.238]:23749 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752938AbYCQT5L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Mar 2008 15:57:11 -0400
-In-Reply-To: <1205824386.7238.7.camel@pcp021067pcs.se.lsil.com>
+	id S1753221AbYCQU3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Mar 2008 16:29:36 -0400
+Content-Disposition: inline
+In-Reply-To: <20080317085341.GK27015@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, neela.kolli@lsi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Driver sent the wrong frame count to firmware.  This patch fixed the frame count calculation.
-  
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+On Mon, Mar 17 2008, Andi Kleen wrote:
+> On Mon, Mar 17, 2008 at 09:38:32AM +0100, Jens Axboe wrote:
+> > On Mon, Mar 17 2008, Andi Kleen wrote:
+> > > On Mon, Mar 17, 2008 at 09:27:11AM +0100, Jens Axboe wrote:
+> > > > On Fri, Mar 14 2008, Andi Kleen wrote:
+> > > > > On Fri, Mar 14, 2008 at 02:48:14PM +0100, Jens Axboe wrote:
+> > > > > > On Thu, Mar 13 2008, James Bottomley wrote:
+> > > > > > > \On Fri, 2008-03-07 at 18:54 +0100, Andi Kleen wrote:
+> > > > > > > > When a user is doing IO in the kernel and wants to avoid bouncing
+> > > > > > > > it is best to just ask the block layer to allocate the memory for it.
+> > > > > > > > This patch adds two simple wrappers: blk_kmalloc and blk_alloc_pages
+> > > > > > > > and respective free functions to do this.
+> > > > > > > > 
+> > > > > > > > blk_alloc_pages is a little unusual in that it takes size
+> > > > > > > > instead of order arguments -- i did this because I have later
+> > > > > > > > patches to convert it over to a new allocator which does not 
+> > > > > > > > require power of two for pages.
+> > > > > > > 
+> > > > > > > I really don't like this ... it's wedging something in the block layer
+> > > > > > > that shouldn't be there just to avoid doing it properly in terms of
+> > > > > > > allocations on the device dma_mask.
+> > > > > > > 
+> > > > > > > I also think the kfree takes a length part is asking for trouble because
+> > > > > > > it's pretty fragile.
+> > > > > > > 
+> > > > > > > However, if Jens will ack it, I'll (reluctantly) add it.
+> > > > > > 
+> > > > > > I agree with you, I don't like it at all (for a variety of reasons).
+> > > > > 
+> > > > > For what reasons exactly? 
+> > > > 
+> > > > Mainly the one I list below. Using the interface for allocation is
+> > > > actually more involved that just doing it yourself, which is not a sign
+> > > > of a good abstraction.
+> > > 
+> > > hmm, missed the point sorry. How is using the interface more
+> > > involved? It has to get a mask or a pfn from somewhere and 
+> > > without the interface that's actually more code to write out.
+> > 
+> > Because it requires tracking length, for instance. Your interface just
+> 
+> While the implementation in the first patch does not require tracking
+> length, the mask allocator version that is only introduced about 15 
+> patches later or so does. That is why i added the length parameter
+> in the first patch already, although it is not used yet.
+> 
+> Sorry for not making that more clear in the changelog
+> 
+> I actually considered tracking length in the struct page in the
+> mask allocator for this, but when I looked at the callers I noticed 90+% 
+> of them only used a constant length which does not really
+> need to get tracked. It is always the same. Then there are two
+> or so with a variable length, but it is all local to a single
+> function so it's also not particularly burdensome to track either.
+> Please take a look at the callers and you'll see the same.
+> 
+> > doesn't add anything useful, 
+> 
+> Well for once it allows easy conversion to the mask alloactor linux
+> world.  That is the reason'd'etre of the whole patchkit as far as I'm
+> concerned anyways.
 
----
- drivers/scsi/megaraid/megaraid_sas.c |   31 ++++++++++++++++---------
- drivers/scsi/megaraid/megaraid_sas.h |    4 +++
- 2 files changed, 25 insertions(+), 10 deletions(-)
+The queue_to_gfp_mask() would make that conversion equally simple.
 
-diff -rupN linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.c	2008-03-17 13:51:18.000000000 -0400
-+++ linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.c	2008-03-17 13:50:39.000000000 -0400
-@@ -488,12 +488,13 @@ megasas_make_sgl64(struct megasas_instan
- 
-  /**
-  * megasas_get_frame_count - Computes the number of frames
-+ * @frame_type		: type of frame- io or pthru frame
-  * @sge_count		: number of sg elements
-  *
-  * Returns the number of frames required for numnber of sge's (sge_count)
-  */
- 
--static u32 megasas_get_frame_count(u8 sge_count)
-+static u32 megasas_get_frame_count(u8 sge_count, u8 frame_type)
- {
- 	int num_cnt;
- 	int sge_bytes;
-@@ -504,13 +505,22 @@ static u32 megasas_get_frame_count(u8 sg
- 	    sizeof(struct megasas_sge32);
- 
- 	/*
--	* Main frame can contain 2 SGEs for 64-bit SGLs and
--	* 3 SGEs for 32-bit SGLs
--	*/
--	if (IS_DMA64)
--		num_cnt = sge_count - 2;
--	else
--		num_cnt = sge_count - 3;
-+	 * Main frame can contain 2 SGEs for 64-bit SGLs and
-+	 * 3 SGEs for 32-bit SGLs for ldio &
-+	 * 1 SGEs for 64-bit SGLs and
-+	 * 2 SGEs for 32-bit SGLs for pthru frame
-+	 */
-+	if (unlikely(frame_type == PTHRU_FRAME)) {
-+		if (IS_DMA64)
-+			num_cnt = sge_count - 1;
-+		else
-+			num_cnt = sge_count - 2;
-+	} else {
-+		if (IS_DMA64)
-+			num_cnt = sge_count - 2;
-+		else
-+			num_cnt = sge_count - 3;
-+	}
- 
- 	if(num_cnt>0){
- 		sge_bytes = sge_sz * num_cnt;
-@@ -592,7 +602,8 @@ megasas_build_dcdb(struct megasas_instan
- 	 * Compute the total number of frames this command consumes. FW uses
- 	 * this number to pull sufficient number of frames from host memory.
- 	 */
--	cmd->frame_count = megasas_get_frame_count(pthru->sge_count);
-+	cmd->frame_count = megasas_get_frame_count(pthru->sge_count,
-+							PTHRU_FRAME);
- 
- 	return cmd->frame_count;
- }
-@@ -709,7 +720,7 @@ megasas_build_ldio(struct megasas_instan
- 	 * Compute the total number of frames this command consumes. FW uses
- 	 * this number to pull sufficient number of frames from host memory.
- 	 */
--	cmd->frame_count = megasas_get_frame_count(ldio->sge_count);
-+	cmd->frame_count = megasas_get_frame_count(ldio->sge_count, IO_FRAME);
- 
- 	return cmd->frame_count;
- }
-diff -rupN linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.24_orig/drivers/scsi/megaraid/megaraid_sas.h	2008-03-07 13:45:43.000000000 -0500
-+++ linux-2.6.24_new/drivers/scsi/megaraid/megaraid_sas.h	2008-03-07 14:03:41.000000000 -0500
-@@ -542,6 +542,10 @@ struct megasas_ctrl_info {
- 
- #define MEGASAS_FW_BUSY				1
- 
-+/* Frame Type */
-+#define IO_FRAME				0
-+#define PTHRU_FRAME				1
-+
- /*
-  * When SCSI mid-layer calls driver's reset routine, driver waits for
-  * MEGASAS_RESET_WAIT_TIME seconds for all outstanding IO to complete. Note
+> > it's not a good abstraction/api imho.
+> 
+> I'm still trying to figure out what exactly you object to. 
+> 
+> Is the only problem the length? Would blk_kmalloc/kfree() be ok 
+> for you if kfree didn't require a length parameter? It would
+> not be that hard to add one, although frankly I personally
+> don't see the need.
 
+Well both - as mentioned, the queue_to_gfp_mask() is cleaner I think.
+And I just don't think it's a good API to begin with, to me it's
+inventing something that doesn't really buy you anything. With an
+exported mask function, you can pass that to any allocator.
+
+> Or alternatively I will just remove it if James can get convinced
+> to back down on his earlier requirement for bounce less scanning.
+
+Personally, for scanning I could not care less. It may actually be a
+good idea, as bouncing would get tested more so we're sure it doesn't
+get broken ;-)
+
+> > Put it in block/ or blkdev.h and call it queue_mask_to_gfp() or
+> > something, that would be fine.
+> 
+> There is no gfp anymore for this in the mask allocator world!!!! Only
+> masks and a slight abstraction for some cases request queues with 
+> bounce pfns.
+
+Then name it queue_bounce_mask() or something, principle is the same
+(export mask vs export silly api for allocation/free).
+
+-- 
+Jens Axboe
 
