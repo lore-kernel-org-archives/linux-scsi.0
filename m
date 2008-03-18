@@ -1,282 +1,183 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/9] scsi: Add helper code so transport classes/driver
- can control queueing
-Date: Mon, 17 Mar 2008 23:38:30 -0500
-Message-ID: <47DF4746.7040501@cs.wisc.edu>
-References: <1204448602-5435-1-git-send-email-michaelc@cs.wisc.edu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: kernel exception in Fusion MPT base driver 3.04.06
+ (linux-2.6.24.3)
+Date: Tue, 18 Mar 2008 00:25:02 -0700
+Message-ID: <20080318002502.852d0f12.akpm@linux-foundation.org>
+References: <e64671580803171629g534ebf34l89adbb14bb985dc7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48718 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751802AbYCREip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Mar 2008 00:38:45 -0400
-In-Reply-To: <1204448602-5435-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42704 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751697AbYCRHZf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Mar 2008 03:25:35 -0400
+In-Reply-To: <e64671580803171629g534ebf34l89adbb14bb985dc7@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, david.somayajulu@qlogic.com, andrew.vasquez@qlogic.com, James.Smart@Emulex.com, Eric.Moore@lsil.com
+To: Sabuj Pattanayek <sabujp@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-James,
+On Mon, 17 Mar 2008 18:29:28 -0500 "Sabuj Pattanayek" <sabujp@gmail.com> wrote:
 
-Ignore this patchset for now. I will resend later.
+> Hi,
 
-I was trying to reuse the starved list, but scsi_run_queue's check and 
-break when the blk_run_queue call put the device back on the starved 
-list will cause problems when there are multiple targets and one is 
-ready to go but the one before it is not.
+Let's add some cc's.
 
-
-
-michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
+> I'm running (uname -a):
 > 
-> SCSI-ml manages the queueing limits for the device and host, but
-> does not do so at the target level. However something something similar
-> can come in userful when a driver is transitioning a transport object to
-> the the blocked state, becuase at that time we do not want to queue
-> io and we do not want the queuecommand to be called again.
+> Linux porpoise 2.6.24.3 #11 Mon Mar 17 17:24:30 CDT 2008 ppc64
+> PPC970FX, altivec supported RackMac3,1 GNU/Linux
 > 
-> The patch adds code similar to the exisiting SCSI_ML_*BUSY handlers.
-> You can now return SCSI_MLQUEUE_TARGET_BUSY when we hit
-> a transport level queueing issue like the hw cannot allocate some
-> resource at the iscsi session/connection level, or the target has temporarily
-> closed or shrunk the queueing window, or if we are transitioning
-> to the blocked state.
+> on an Apple Xserve G5. With the following fibre channel card (lspci
+> -vvv, it has two fibre connections):
 > 
-> For bnx2i we will also need to be able to limit queueing at this level.
-> bnx2i will hook into libiscsi, but will allocate a scsi host per
-> netdevice/hba, so unlike pure software iscsi/iser which is allocating
-> a host per session, it cannot set the scsi_host->can_queue and return
-> SCSI_MLQUEUE_HOST_BUSY to reflect queueing limits on the transport.
+> 0001:06:03.0 Fibre Channel: LSI Logic / Symbios Logic FC929X Fibre
+> Channel Adapter (rev 81)
+>         Subsystem: LSI Logic / Symbios Logic Unknown device 10d0
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR+ INTx-
+>         Latency: 16 (16000ns min, 2500ns max), Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 53
+>         Region 0: I/O ports at 0400 [size=256]
+>         Region 1: Memory at 90030000 (64-bit, non-prefetchable) [size=64K]
+>         Region 3: Memory at 90020000 (64-bit, non-prefetchable) [size=64K]
+>         Expansion ROM at 90200000 [disabled] [size=1M]
+>         Capabilities: [50] Power Management version 2
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+
+> Queue=0/0 Enable-
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [68] PCI-X non-bridge device
+>                 Command: DPERE- ERO- RBC=2048 OST=8
+>                 Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
+> DMMRBC=2048 DMOST=8 DMCRS=64 RSCEM- 266MHz- 533MHz-
 > 
-> The iscsi class/driver can also set a scsi_target->can_queue value which
-> reflects the max commands the driver/class can support. For iscsi this
-> reflects the number of commands we can support for each session due to
-> session/connection hw limits, driver limits, and to also reflect the
-> session/targets's queueing window.
+> 0001:06:03.1 Fibre Channel: LSI Logic / Symbios Logic FC929X Fibre
+> Channel Adapter (rev 81)
+>         Subsystem: LSI Logic / Symbios Logic Unknown device 10d0
+>         Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 16 (16000ns min, 2500ns max), Cache Line Size: 64 bytes
+>         Interrupt: pin B routed to IRQ 53
+>         Region 0: I/O ports at <unassigned> [disabled]
+>         Region 1: Memory at 90010000 (64-bit, non-prefetchable)
+> [disabled] [size=64K]
+>         Region 3: Memory at 90000000 (64-bit, non-prefetchable)
+> [disabled] [size=64K]
+>         Expansion ROM at 90100000 [disabled] [size=1M]
+>         Capabilities: [50] Power Management version 2
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+
+> Queue=0/0 Enable-
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [68] PCI-X non-bridge device
+>                 Command: DPERE- ERO- RBC=2048 OST=8
+>                 Status: Dev=ff:1f.1 64bit+ 133MHz+ SCD- USC- DC=simple
+> DMMRBC=2048 DMOST=8 DMCRS=64 RSCEM- 266MHz- 533MHz-
 > 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/scsi.c        |   11 +++++--
->  drivers/scsi/scsi_lib.c    |   72 +++++++++++++++++++++++++++++++++++++++-----
->  drivers/scsi/scsi_scan.c   |    1 +
->  include/scsi/scsi.h        |    1 +
->  include/scsi/scsi_device.h |   10 ++++++
->  5 files changed, 84 insertions(+), 11 deletions(-)
+> After doing "modprobe mptfc" I get the following kernel exception
+> (dmesg output):
 > 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index fecba05..a26f976 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -628,9 +628,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  	if (rtn) {
->  		if (scsi_delete_timer(cmd)) {
->  			atomic_inc(&cmd->device->iodone_cnt);
-> -			scsi_queue_insert(cmd,
-> -					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-> -					  rtn : SCSI_MLQUEUE_HOST_BUSY);
-> +
-> +			if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-> +			    rtn != SCSI_MLQUEUE_TARGET_BUSY)
-> +				rtn = SCSI_MLQUEUE_HOST_BUSY;
-> +
-> +			scsi_queue_insert(cmd, rtn);
->  		}
->  		SCSI_LOG_MLQUEUE(3,
->  		    printk("queuecommand : request rejected\n"));
-> @@ -729,6 +732,7 @@ static struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
->  void scsi_finish_command(struct scsi_cmnd *cmd)
->  {
->  	struct scsi_device *sdev = cmd->device;
-> +	struct scsi_target *starget = scsi_target(sdev);
->  	struct Scsi_Host *shost = sdev->host;
->  	struct scsi_driver *drv;
->  	unsigned int good_bytes;
-> @@ -744,6 +748,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
->  	 * XXX(hch): What about locking?
->           */
->          shost->host_blocked = 0;
-> +	starget->target_blocked = 0;
->          sdev->device_blocked = 0;
->  
->  	/*
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ba21d97..92b4f0e 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -114,6 +114,7 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
->  {
->  	struct Scsi_Host *host = cmd->device->host;
->  	struct scsi_device *device = cmd->device;
-> +	struct scsi_target *starget = scsi_target(device);
->  	struct request_queue *q = device->request_queue;
->  	unsigned long flags;
->  
-> @@ -133,10 +134,17 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
->  	 * if a command is requeued with no other commands outstanding
->  	 * either for the device or for the host.
->  	 */
-> -	if (reason == SCSI_MLQUEUE_HOST_BUSY)
-> +	switch (reason) {
-> +	case SCSI_MLQUEUE_HOST_BUSY:
->  		host->host_blocked = host->max_host_blocked;
-> -	else if (reason == SCSI_MLQUEUE_DEVICE_BUSY)
-> +		break;
-> +	case SCSI_MLQUEUE_DEVICE_BUSY:
->  		device->device_blocked = device->max_device_blocked;
-> +		break;
-> +	case SCSI_MLQUEUE_TARGET_BUSY:
-> +		starget->target_blocked = starget->max_target_blocked;
-> +		break;
-> +	}
->  
->  	/*
->  	 * Decrement the counters, since these commands are no longer
-> @@ -451,10 +459,12 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
->  void scsi_device_unbusy(struct scsi_device *sdev)
->  {
->  	struct Scsi_Host *shost = sdev->host;
-> +	struct scsi_target *starget = scsi_target(sdev);
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	shost->host_busy--;
-> +	starget->target_busy--;
->  	if (unlikely(scsi_host_in_recovery(shost) &&
->  		     (shost->host_failed || shost->host_eh_scheduled)))
->  		scsi_eh_wakeup(shost);
-> @@ -1295,6 +1305,51 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
->  	return 1;
->  }
->  
-> +
-> +/*
-> + * scsi_target_queue_ready: checks if there we can send commands to target
-> + * @sdev: scsi device on starget to check.
-> + *
-> + * Called with the host lock held.
-> + */
-> +static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
-> +					   struct scsi_device *sdev)
-> +{
-> +	struct scsi_target *starget = scsi_target(sdev);
-> +
-> +	if (starget->single_lun) {
-> +		if (starget->starget_sdev_user &&
-> +		    starget->starget_sdev_user != sdev)
-> +			return 0;
-> +		starget->starget_sdev_user = sdev;
-> +	}
-> +
-> +	if (starget->target_busy == 0 && starget->target_blocked) {
-> +		/*
-> +		 * unblock after target_blocked iterates to zero
-> +		 */
-> +		if (--starget->target_blocked == 0) {
-> +			SCSI_LOG_MLQUEUE(3,
-> +				   starget_printk(KERN_INFO, starget,
-> +				   "unblocking target at zero depth\n"));
-> +		} else {
-> +			blk_plug_device(sdev->request_queue);
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	if ((starget->can_queue > 0 &&
-> +	     starget->target_busy >= starget->can_queue) ||
-> +	     starget->target_blocked) {
-> +		if (list_empty(&sdev->starved_entry))
-> +			list_add_tail(&sdev->starved_entry,
-> +				      &shost->starved_list);
-> +		return 0;
-> +	}
-> +
-> +	return 1;
-> +}
-> +
->  /*
->   * scsi_host_queue_ready: if we can send requests to shost, return 1 else
->   * return 0. We must end up running the queue again whenever 0 is
-> @@ -1342,6 +1397,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
->  {
->  	struct scsi_cmnd *cmd = req->special;
->  	struct scsi_device *sdev = cmd->device;
-> +	struct scsi_target *starget = scsi_target(sdev);
->  	struct Scsi_Host *shost = sdev->host;
->  
->  	blkdev_dequeue_request(req);
-> @@ -1365,6 +1421,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
->  	spin_unlock(sdev->request_queue->queue_lock);
->  	spin_lock(shost->host_lock);
->  	shost->host_busy++;
-> +	starget->target_busy++;
->  	spin_unlock(shost->host_lock);
->  	spin_lock(sdev->request_queue->queue_lock);
->  
-> @@ -1478,14 +1535,13 @@ static void scsi_request_fn(struct request_queue *q)
->  		}
->  		spin_lock(shost->host_lock);
->  
-> +		if (!scsi_target_queue_ready(shost, sdev))
-> +			goto not_ready;
-> +
->  		if (!scsi_host_queue_ready(q, shost, sdev))
->  			goto not_ready;
-> -		if (scsi_target(sdev)->single_lun) {
-> -			if (scsi_target(sdev)->starget_sdev_user &&
-> -			    scsi_target(sdev)->starget_sdev_user != sdev)
-> -				goto not_ready;
-> -			scsi_target(sdev)->starget_sdev_user = sdev;
-> -		}
-> +
-> +		scsi_target(sdev)->target_busy++;
->  		shost->host_busy++;
->  
->  		/*
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 1dc165a..c9f7b74 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -396,6 +396,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
->  		shost->host_no, channel, id);
->  	starget->id = id;
->  	starget->channel = channel;
-> +	starget->can_queue = 0;
->  	INIT_LIST_HEAD(&starget->siblings);
->  	INIT_LIST_HEAD(&starget->devices);
->  	starget->state = STARGET_RUNNING;
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 1f74bcd..2160b36 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -381,6 +381,7 @@ struct scsi_lun {
->  #define SCSI_MLQUEUE_HOST_BUSY   0x1055
->  #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
->  #define SCSI_MLQUEUE_EH_RETRY    0x1057
-> +#define SCSI_MLQUEUE_TARGET_BUSY 0x1058
->  
->  /*
->   *  Use these to separate status msg and our bytes
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index ab7acbe..f8e4184 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -205,6 +205,16 @@ struct scsi_target {
->  						 * for the device at a time. */
->  	unsigned int		pdt_1f_for_no_lun;	/* PDT = 0x1f */
->  						/* means no lun present */
-> +	/* commands actually active on LLD. protected by host lock. */
-> +	unsigned int		target_busy;
-> +	/*
-> +	 * LLDs should set this in the slave_alloc host template callout.
-> +	 * If set to zero then there is not limit.
-> +	 */
-> +	unsigned int		can_queue;
-> +	unsigned int		target_blocked;
-> +	unsigned int		max_target_blocked;
-> +#define SCSI_DEFAULT_TARGET_BLOCKED	3
->  
->  	char			scsi_level;
->  	struct execute_work	ew;
+> Fusion MPT base driver 3.04.06
+> Copyright (c) 1999-2007 LSI Corporation
+> Fusion MPT FC Host driver 3.04.06
+> PCI: Enabling device: (0001:06:03.0), cmd 7
+> mptbase: ioc0: Initiating bringup
+> ioc0: LSIFC929XL A1: Capabilities={Initiator,Target,LAN}
+> scsi4 : ioc0: LSIFC929XL A1, FwRev=01020e00h, Ports=1, MaxQ=1023, IRQ=53
+> mptfc: ioc0: FC Link Established, Speed = 2 Gbps
+> Oops: Exception in kernel mode, sig: 4 [#1]
+> PowerMac
+> Modules linked in: mptfc mptscsih mptbase
+> NIP: d000000000144984 LR: d00000000014923c CTR: 0000000000000000
+> REGS: c0000001387ef8f0 TRAP: 0700   Not tainted  (2.6.24.3)
+> MSR: 9000000000089032 <EE,ME,IR,DR>  CR: 24002028  XER: 00000000
+> TASK = c0000001388db040[12431] 'mptfc_wq_4' THREAD: c0000001387ec000
+> GPR00: 00000000000000d3 c0000001387efb70 d000000000163b70 c000000138a8af1c
+> GPR04: 00000000d3000000 00000000ffffffff 0000000000000000 c000000138a8af00
+> GPR08: fffffffffffffffd 00000000000000ff 0000000000000000 00000000ffffffff
+> GPR12: d000000000150040 c0000000006f8280 000000000023fb28 c0000000005e25e0
+> GPR16: c0000001387efcb0 c0000001380dd758 c0000001387efcc0 c000000138978000
+> GPR20: 0000000000000000 c0000001387da000 000000000000067d c0000001380dd454
+> GPR24: c0000001387dd3e8 0000000000010000 d000000000159b87 c0000001380dd000
+> GPR28: c0000001387efcc0 c0000001387efcd0 d000000000162500 c000000138a8af00
+> NIP [d000000000144984] .mpt_add_sge+0x14/0x50 [mptbase]
+> LR [d00000000014923c] .mpt_config+0x16c/0x3b0 [mptbase]
+> Call Trace:
+> [c0000001387efb70] [d000000000149120] .mpt_config+0x50/0x3b0 [mptbase]
+> (unreliable)
+> [c0000001387efc40] [d00000000015ec8c] .mptfc_rescan_devices+0x17c/0x780 [mptfc]
+> [c0000001387efda0] [c0000000000548ac] .run_workqueue+0xec/0x1d0
+> [c0000001387efe40] [c0000000000556cc] .worker_thread+0xdc/0x190
+> [c0000001387eff00] [c00000000005a2e8] .kthread+0xc8/0xe0
+> [c0000001387eff90] [c0000000000217cc] .kernel_thread+0x4c/0x68
+> Instruction dump:
+> 200000d0 230fff00 210000d0 00010000 02010010 08002500 09200100 03090006
+> 230fff00 200000d0 230fff00 210000d0 <00010000> 02010010 08002500 09200100
+> ---[ end trace 45fe87d4d747696e ]---
 
+OK, mtp-fusion seems to have gone splat.
+
+> Unable to handle kernel paging request for data at address 0x230fff00210000d0
+> Faulting instruction address: 0xc000000000077658
+> Oops: Kernel access of bad area, sig: 11 [#2]
+> PowerMac
+> Modules linked in: mptfc mptscsih mptbase
+> NIP: c000000000077658 LR: c000000000077624 CTR: 000000000000000c
+> REGS: c00000013a3b7530 TRAP: 0300   Tainted: G      D  (2.6.24.3)
+> MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 24002028  XER: 00000000
+> DAR: 230fff00210000d0, DSISR: 0000000040000000
+> TASK = c00000013a38a810[156] 'pdflush' THREAD: c00000013a3b4000
+> GPR00: 0000000000000010 c00000013a3b77b0 c0000000007e8218 000000000000000e
+> GPR04: 000000000000000e 00000000000008e8 c00000013897e6b8 0000000000024000
+> GPR08: 0000000000000002 0000000000000002 230fff00210000d0 0000000000000003
+> GPR12: 0000000000000010 c0000000006f8280 000000000023fb28 c0000000005e25e0
+> GPR16: c0000000006c6460 c00000013924fb28 0000000000000000 c00000013a3b7948
+> GPR20: c00000000078e2a0 0000000000000000 c0000001381dd440 c00000013924fb28
+> GPR24: ffffffffffffffff 000000000000000e 0000000000000000 c00000013a3b7da8
+> GPR28: c00000013a3b7940 000000000000000e c000000000765818 c00000013a3b7958
+> NIP [c000000000077658] .find_get_pages_tag+0x78/0x100
+> LR [c000000000077624] .find_get_pages_tag+0x44/0x100
+> Call Trace:
+> [c00000013a3b77b0] [c000000000110330]
+> .ext3_ordered_writepage+0x180/0x1e0 (unreliable)
+> [c00000013a3b7840] [c0000000000825fc] .pagevec_lookup_tag+0x2c/0x50
+> [c00000013a3b78d0] [c000000000080150] .write_cache_pages+0x1d0/0x450
+> [c00000013a3b7a50] [c0000000000804b4] .do_writepages+0xa4/0xb0
+> [c00000013a3b7ad0] [c0000000000cbf60] .__writeback_single_inode+0xb0/0x3c0
+> [c00000013a3b7bd0] [c0000000000cc724] .sync_sb_inodes+0x224/0x390
+> [c00000013a3b7c90] [c0000000000ccbb4] .writeback_inodes+0xe4/0x110
+> [c00000013a3b7d30] [c0000000000810f0] .wb_kupdate+0xf0/0x190
+> [c00000013a3b7e30] [c000000000081a28] .pdflush+0x178/0x280
+> [c00000013a3b7f00] [c00000000005a2e8] .kthread+0xc8/0xe0
+> [c00000013a3b7f90] [c0000000000217cc] .kernel_thread+0x4c/0x68
+> Instruction dump:
+> 7c7d1b79 41820074 393dffff 3ce00002 39000000 79290020 60e74000 39290001
+> 7d2903a6 60000000 79001f24 7d5f002a <e92a0000> 7d293838 7fa93800 41de0068
+> ---[ end trace 45fe87d4d747696e ]---
+
+And that's a totally, wildly different part of the kernel.  ANd it's a
+code-patch which millions of machines run all the time.
+
+It's hard to see how oops #2 could be a consequence of oops #1.  Weird.
+
+> Any ideas what's going on here? Attempting to run any further commands
+> (e.g. reboot) causes a segfault or hang of the command (e.g. ls). I
+> can send the enabled/modularized options of the .config in another
+> email if required. Please CC replies to sabujp@gmail.com since I'm not
+> on the list.
+> 
+
+Did any earlier kernel work OK?  If so, which?  2.6.23??
+
+Thanks.
