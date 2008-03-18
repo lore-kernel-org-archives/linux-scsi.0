@@ -1,197 +1,137 @@
 From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 1/8] add scsi_host and scsi_target to scsi_bus
+Subject: [PATCH 8/8] Remove reap_ref
 Date: Tue, 18 Mar 2008 14:32:28 +0100
-Message-ID: <20080318133228.49532159153@pentland.suse.de>
+Message-ID: <20080318133228.ACA1F159169@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43714 "EHLO mx2.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:51378 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752785AbYCRNcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Mar 2008 09:32:33 -0400
+	id S1752727AbYCRNcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Mar 2008 09:32:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
 
-This patch implements scsi_host and scsi_target device types
-and adds both to the scsi_bus.
+struct scsi_target contains a 'reap_ref' counter, which is
+basically a reference counter for the target.
+As we now have proper reference counting we can remove it.
+This also cleans out the calling sequence for scsi_target_reap(),
+which now will only be called from the release function of the
+scsi_device, so we're guaranteed to always have a valid target.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
 ---
- drivers/scsi/hosts.c      |   12 ++++++++++--
- drivers/scsi/scsi_proc.c  |    7 ++++++-
- drivers/scsi/scsi_scan.c  |   12 ++++++++++--
- drivers/scsi/scsi_sysfs.c |   29 ++++++++++++++++++++++++-----
- 4 files changed, 50 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_scan.c   |   23 ++++++++++++++---------
+ drivers/scsi/scsi_sysfs.c  |    3 ---
+ include/scsi/scsi_device.h |    1 -
+ 3 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8cfb70a..577e604 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -278,6 +278,11 @@ static void scsi_host_dev_release(struct device *dev)
- 	kfree(shost);
- }
- 
-+struct device_type scsi_host_type = {
-+	.name =		"scsi_host",
-+	.release =	scsi_host_dev_release,
-+};
-+
- /**
-  * scsi_host_alloc - register a scsi host adapter instance.
-  * @sht:	pointer to scsi host template
-@@ -378,7 +383,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	device_initialize(&shost->shost_gendev);
- 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
- 		shost->host_no);
--	shost->shost_gendev.release = scsi_host_dev_release;
-+#ifndef CONFIG_SYSFS_DEPRECATED
-+	shost->shost_gendev.bus = &scsi_bus_type;
-+#endif
-+	shost->shost_gendev.type = &scsi_host_type;
- 
- 	device_initialize(&shost->shost_dev);
- 	shost->shost_dev.parent = &shost->shost_gendev;
-@@ -491,7 +499,7 @@ void scsi_exit_hosts(void)
- 
- int scsi_is_host_device(const struct device *dev)
- {
--	return dev->release == scsi_host_dev_release;
-+	return dev->type == &scsi_host_type;
- }
- EXPORT_SYMBOL(scsi_is_host_device);
- 
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index ed39515..3a1c99d 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -190,10 +190,14 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
-  */
- static int proc_print_scsidevice(struct device *dev, void *data)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_device *sdev;
- 	struct seq_file *s = data;
- 	int i;
- 
-+	if (!scsi_is_sdev_device(dev))
-+		goto out;
-+
-+	sdev = to_scsi_device(dev);
- 	seq_printf(s,
- 		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
- 		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-@@ -230,6 +234,7 @@ static int proc_print_scsidevice(struct device *dev, void *data)
- 	else
- 		seq_printf(s, "\n");
- 
-+out:
- 	return 0;
- }
- 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e67c14e..e1644b2 100644
+index be54354..29f7037 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -331,9 +331,14 @@ static void scsi_target_dev_release(struct device *dev)
- 	put_device(parent);
- }
- 
-+struct device_type scsi_target_type = {
-+	.name =		"scsi_target",
-+	.release =	scsi_target_dev_release,
-+};
-+
- int scsi_is_target_device(const struct device *dev)
- {
--	return dev->release == scsi_target_dev_release;
-+	return dev->type == &scsi_target_type;
- }
- EXPORT_SYMBOL(scsi_is_target_device);
- 
-@@ -391,9 +396,12 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+@@ -402,7 +402,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	}
+ 	dev = &starget->dev;
  	device_initialize(dev);
- 	starget->reap_ref = 1;
+-	starget->reap_ref = 1;
  	dev->parent = get_device(parent);
--	dev->release = scsi_target_dev_release;
  	sprintf(dev->bus_id, "target%d:%d:%d",
  		shost->host_no, channel, id);
-+#ifndef CONFIG_SYSFS_DEPRECATED
-+	dev->bus = &scsi_bus_type;
-+#endif
-+	dev->type = &scsi_target_type;
- 	starget->id = id;
- 	starget->channel = channel;
- 	INIT_LIST_HEAD(&starget->siblings);
+@@ -448,7 +447,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	return starget;
+ 
+  found:
+-	found_target->reap_ref++;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	if (found_target->state != STARGET_DEL) {
+ 		put_device(parent);
+@@ -505,7 +503,7 @@ void scsi_target_reap(struct scsi_target *starget)
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 
+-	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
++	if (list_empty(&starget->devices)) {
+ 		if (starget->state == STARGET_CREATED) {
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			starget->state = STARGET_DEL;
+@@ -1516,8 +1514,13 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 	if (scsi_host_scan_allowed(shost))
+ 		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
+ 	mutex_unlock(&shost->scan_mutex);
+-	transport_configure_device(&starget->dev);
+-	scsi_target_reap(starget);
++	/*
++	 * scsi_target_reap is called from the release function
++	 * of each sdev.
++	 */
++	if (starget->state != STARGET_DEL)
++		transport_configure_device(&starget->dev);
++
+ 	put_device(&starget->dev);
+ 
+ 	return sdev;
+@@ -1595,10 +1598,12 @@ static void __scsi_scan_target(struct device *parent, unsigned int channel,
+ 	}
+ 
+  out_reap:
+-	/* now determine if the target has any children at all
+-	 * and if not, nuke it */
+-	transport_configure_device(&starget->dev);
+-	scsi_target_reap(starget);
++	/*
++	 * scsi_target_reap is called from the release function
++	 * of each sdev.
++	 */
++	if (starget->state != STARGET_DEL)
++		transport_configure_device(&starget->dev);
+ 
+ 	put_device(&starget->dev);
+ }
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 4e1e7ad..15928f3 100644
+index 7d744e0..df1c415 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -21,6 +21,8 @@
- #include "scsi_priv.h"
- #include "scsi_logging.h"
+@@ -297,7 +297,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	starget = to_scsi_target(parent);
  
-+static struct device_type scsi_dev_type;
-+
- static const struct {
- 	enum scsi_device_state	value;
- 	char			*name;
-@@ -336,7 +338,12 @@ static struct class sdev_class = {
- /* all probing is done in the individual ->probe routines */
- static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
- {
--	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_device *sdp;
-+
-+	if (dev->type != &scsi_dev_type)
-+		return 0;
-+
-+	sdp = to_scsi_device(dev);
- 	if (sdp->no_uld_attach)
- 		return 0;
- 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
-@@ -352,10 +359,16 @@ static int scsi_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	spin_lock_irqsave(sdev->host->host_lock, flags);
+-	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+ 	list_del(&sdev->starved_entry);
+@@ -937,7 +936,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 	struct scsi_device *sdev;
  
- static int scsi_bus_suspend(struct device * dev, pm_message_t state)
- {
--	struct device_driver *drv = dev->driver;
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct device_driver *drv;
-+	struct scsi_device *sdev;
- 	int err;
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	starget->reap_ref++;
+  restart:
+ 	list_for_each_entry(sdev, &shost->__devices, siblings) {
+ 		if (sdev->channel != starget->channel ||
+@@ -950,7 +948,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 		goto restart;
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-	scsi_target_reap(starget);
+ }
  
-+	if (dev->type != &scsi_dev_type)
-+		return 0;
-+
-+	drv = dev->driver;
-+	sdev = to_scsi_device(dev);
-+
- 	err = scsi_device_quiesce(sdev);
- 	if (err)
- 		return err;
-@@ -371,10 +384,16 @@ static int scsi_bus_suspend(struct device * dev, pm_message_t state)
- 
- static int scsi_bus_resume(struct device * dev)
- {
--	struct device_driver *drv = dev->driver;
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct device_driver *drv;
-+	struct scsi_device *sdev;
- 	int err = 0;
- 
-+	if (dev->type != &scsi_dev_type)
-+		return 0;
-+
-+	drv = dev->driver;
-+	sdev = to_scsi_device(dev);
-+
- 	if (drv && drv->resume)
- 		err = drv->resume(dev);
- 
+ static int __remove_child (struct device * dev, void * data)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f6a9fe0..ccc437b 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -196,7 +196,6 @@ struct scsi_target {
+ 	struct list_head	siblings;
+ 	struct list_head	devices;
+ 	struct device		dev;
+-	unsigned int		reap_ref; /* protected by the host lock */
+ 	unsigned int		channel;
+ 	unsigned int		id; /* target id ... replace
+ 				     * scsi_device.id eventually */
 -- 
 1.5.2.4
 
