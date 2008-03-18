@@ -1,15 +1,14 @@
 From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 2/8] Fixup initialisation oops for anonymous transport
- classes
+Subject: [PATCH 6/8] Fix spi initialisation failure
 Date: Tue, 18 Mar 2008 14:32:28 +0100
-Message-ID: <20080318133228.53EAE1F60F@pentland.suse.de>
+Message-ID: <20080318133228.6DFD9159159@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:43715 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43708 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752776AbYCRNcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752775AbYCRNcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 18 Mar 2008 09:32:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,36 +16,38 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
 
-Anonymous transport classes might call transport_add_class_devices
-with NULL classdev.
+With the target rework we cannot set the attribute of the
+sysfs files as the sysfs object is not registered yet. So
+just modify the attribute itself.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/base/transport_class.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+ drivers/scsi/scsi_transport_spi.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
-index 72cf462..61a611c 100644
---- a/drivers/base/transport_class.c
-+++ b/drivers/base/transport_class.c
-@@ -150,10 +150,16 @@ static int transport_add_class_device(struct attribute_container *cont,
- 				      struct device *dev,
- 				      struct device *classdev)
- {
--	int error = attribute_container_add_class_device(classdev);
-+	int error;
- 	struct transport_container *tcont = 
- 		attribute_container_to_transport_container(cont);
- 
-+	/* NULL if called from anonymous transport classes */
-+	if (!classdev)
-+		return 0;
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index bc12b5d..4f9c98c 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1473,13 +1473,13 @@ static int spi_target_configure(struct transport_container *tc,
+ 		 * to ignore, sysfs also does a WARN_ON and dumps a trace,
+ 		 * which is bad, so temporarily, skip attributes that are
+ 		 * already visible (the revalidate one) */
+-		if (j && attr != &dev_attr_revalidate.attr)
++		if (j && attr != &dev_attr_revalidate.attr) {
++			if ((j & 1))
++				attr->mode |= S_IWUSR;
 +
-+	error = attribute_container_add_class_device(classdev);
-+
- 	if (!error && tcont->statistics)
- 		error = sysfs_create_group(&classdev->kobj, tcont->statistics);
+ 			rc = sysfs_add_file_to_group(kobj, attr,
+ 						target_attribute_group.name);
+-		/* and make the attribute writeable if we have a set
+-		 * function */
+-		if ((j & 1))
+-			rc = sysfs_chmod_file(kobj, attr, attr->mode | S_IWUSR);
++		}
+ 	}
  
+ 	return 0;
 -- 
 1.5.2.4
 
