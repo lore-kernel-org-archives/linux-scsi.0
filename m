@@ -1,68 +1,61 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Update lsscsi to cope with upcoming SCSI sysfs rework
-Date: Tue, 18 Mar 2008 14:01:50 +0100
-Message-ID: <47DFBD3E.8050502@suse.de>
+Subject: [PATCH 0/8] Rework SCSI target allocation
+Date: Tue, 18 Mar 2008 14:28:09 +0100
+Message-ID: <47DFC369.3010406@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040103090409030604020907"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43043 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:42871 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752534AbYCRNBv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Mar 2008 09:01:51 -0400
+	id S1752354AbYCRN2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Mar 2008 09:28:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040103090409030604020907
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Hi James,
 
-Hi Doug,
+this is the patchset I talked about at LSF'08. The main idea
+here is to align the SCSI target allocation code with the driver
+core. For this I've done several things:
 
-I'm preparing a set of patches to update the SCSI midlayer to
-play more nicely with the ongoing driver core rework.
-Part of the patchset is to move every SCSI entity 
-(ie hosts, targets, and devices) into the scsi bus.
-So /sys/bus/scsi/devices will look like:
+- Move all SCSI objects into the SCSI bus: the sysfs 'scsi'
+  bus now contains all SCSI midlayer objects, equivalent
+  to the 'usb' bus
+- Use default attribute groups for SCSI hosts: with the
+  all attributes are present when the sysfs dirent is
+  created; we don't have to wait for them anymore
+- Move target cleanup code to the release function.
+  We only should cleanup the SCSI target structure once
+  the last reference is gone, hence all cleanup has to
+  be done from the release function
+- Remove reap_ref and sanitize calls to scsi_target_reap:
+  _Every_ target has at least one sdev connected to it;
+  once the last sdev is gone the target will be deleted, too.
+  So we can as well call scsi_target_reap from the release
+  function of the sdev, hereby ensuring that the target
+  will _always_ be valid during the lifetime of the sdev.
 
-hare@yarrow:/tmp> ls /sys/bus/scsi/devices
-2:0:4:0  host0  host1  host2  host3  host4  target2:0:4
-
-Currently 'lsscsi' doesn't handle this properly; it needs
-a simple fix to handle it properly. And as this fix doesn't
-affect normal parsing we can as well apply it now :-)
+There is only one driver-related fix:
+lpfc and qla2xxx re-use the existing 'state' host attribute
+to fill it with some link details. This really is an abuse
+IMO as it differs from all other SCSI host attributes.
+Hence I've renamed the attribute to 'link_state' to make
+it more obvious what's going on. But obviously I'd need
+the ACK from the maintainers for this.
 
 Cheers,
 
 Hannes
--- 
+--=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------040103090409030604020907
-Content-Type: text/plain;
- name="lsscsi-sysfs-update"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="lsscsi-sysfs-update"
-
---- lsscsi-0.19/lsscsi.c.orig	2008-03-18 13:26:59.733340500 +0100
-+++ lsscsi-0.19/lsscsi.c	2008-03-18 13:33:54.647271000 +0100
-@@ -1650,6 +1650,10 @@ static int sdev_scandir_select(const str
-         if (strstr(s->d_name, "gen"))
-                 return 0;
- /* Above no longer needed but leave for early lk 2.6 series */
-+	if (!strncmp(s->d_name, "host", 4)) /* SCSI host */
-+		return 0;
-+	if (!strncmp(s->d_name, "target", 6)) /* SCSI target */
-+		return 0;
-         if (strchr(s->d_name, ':')) {
-                 if (filter_active) {
-                         struct addr_hctl s_hctl;
-
---------------040103090409030604020907--
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
