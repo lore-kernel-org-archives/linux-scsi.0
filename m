@@ -1,131 +1,229 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Bug in the scsi_id (0.9 version) utility
-Date: Tue, 18 Mar 2008 13:15:37 -0700
-Message-ID: <20080318201537.GA23225@us.ibm.com>
-References: <alpine.LRH.1.00.0803130824450.30028@ss.netgate.net> <20080314060831.GA18884@linux.vnet.ibm.com> <1205501914.2904.9.camel@localhost.localdomain> <alpine.LRH.1.00.0803171135420.30028@ss.netgate.net>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: [PATCH]qla4xxx:fix scsi command completion, lun reset and target
+	reset code
+Date: Wed, 19 Mar 2008 11:23:03 -0700
+Message-ID: <1205950983.7334.18.camel@q-iscsi-upstream.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from over.ny.us.ibm.com ([32.97.182.150]:52160 "EHLO
-	over.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695AbYCSTb1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2008 15:31:27 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.1.00.0803171135420.30028@ss.netgate.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:47709 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037AbYCST3v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2008 15:29:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brooks@netgate.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-hotplug@vger.kernel.org, Brian.Fehling@citrix.com, xen@netgate.net, cases.634568.7962_21175.de8b732451@cases.netsuite.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, david.somayajulu@qlogic.com
 
-Hi all ...
+This patch contains the following:
+1. when hba completion status is good, check for iscsi transport errors (underflow/overflow) prior to checking the scsi status
+2. New firmware requires that one marker iocb be issued for each task management command. The patch issues marker iocb immediately following a LUN or Target reset.
 
-On Mon, Mar 17, 2008 at 11:38:41AM -0700, brooks@netgate.net wrote:
+Signed-off-by: David C Somayajulu <david.somayajulu@qlogic.com>
+----
+ drivers/scsi/qla4xxx/ql4_fw.h   |    3 +-
+ drivers/scsi/qla4xxx/ql4_glbl.h |    2 +
+ drivers/scsi/qla4xxx/ql4_iocb.c |   14 ++----------
+ drivers/scsi/qla4xxx/ql4_isr.c  |   40 ++++----------------------------------
+ drivers/scsi/qla4xxx/ql4_os.c   |   20 +++++++++++++-----
+ 5 files changed, 26 insertions(+), 53 deletions(-)
 
->>> That said we are not required to be checking the reserved fields for zero
->>> but in this case we are doing so to work around another device issue.
->>>
->>> Instead of adding yet another device work around to the "if" which
->>> makes it hard to rework the code in the future as you do not know how many
->>> vendor, models are running through certain non compliant checks (i.e. more
->>> than the intend models may exhibit like behavior).
->>>
->>> We possible should look at updating how we handle not compliant behavior.
->>> scsi_id.config is available but that must not be useful in all cases as
-
-Note Mike meant the file /etc/scsi_id.config, this file can already be
-used to blacklist devices for scsi_id. But, the scsi_id blacklist doesn't
-currently know about the transport or bus type (like USB, FCP, etc), and
-relies mainly on SCSI vendor and product names, so USB devices can't be
-easily blacklisted.
-
-udev doesn't have problems for scsi_id and USB persistent names as it
-won't call scsi_id for USB devices, see the 60-persistent-storage.rules
-
-[btw it looks like a failure in usb_id would allow scsi_id to be called
-for udev.]
-
->>> the standard page 83 code has a check for the pre-spc3-83 case even though
->>> it is selectable through the config file and command line.
-
-In hindsight that sucks here :-( we probably should have (somehow) made it
-use a black list. AFAIR the issue is that the vendor + product (AFAIR
-it's always EMC Symmetrix ... Mike as you know that all too well!) is the
-same for EMC devices that give different behaviour.
-
->> Some type of blacklist might work: we're already starting to find USB
->> devices that aren't too happy with VPD inquiries.
-
-Per above comment, udev should be OK. For other users (like multipath) it
-would be simplest if they do not call scsi_id at all for USB devices, and
-then (hopefully not for multipath!) have white lists for properly
-functioning USB devices 
-
-> That makes sense.  Please let me know what you decide, and if there's 
-> anything more I can do to help.
-
-Best is if you can get the device fixed ;-)
-
-If you can't get a fix, something like the following should be OK.
-Actually this is probably nice anyway, in case other devices hit the
-issue. [I think someone else reported this problem some time ago ...]
-
-With this, you would have to run your device with -p 0x83 (manually for
-testing, and then eventually via some blacklist rules, assuming page 0x83
-works correctly for the device), and then that blacklist rule will live
-on forever ...
-
-Also note that the version id in scsi_id has not been maintained, you need
-to specify the udev version for people to know what version you're using.
-
-Untested patch (and not easy to properly test without the actual borken
-device) on top of current udev git view:
-
---- git-udev/extras/scsi_id/scsi_serial.c	2008-03-18 09:24:46.000000000 -0700
-+++ udev/extras/scsi_id/scsi_serial.c	2008-03-18 12:16:38.000000000 -0700
-@@ -544,7 +544,8 @@ static int check_fill_0x83_prespc3(struc
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index ed8ee66..1b667a7 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -678,7 +678,8 @@ struct qla4_marker_entry {
+ 	uint32_t system_defined; /* 04-07 */
+ 	uint16_t target;	/* 08-09 */
+ 	uint16_t modifier;	/* 0A-0B */
+-#define MM_LUN_RESET	     0
++#define MM_LUN_RESET		0
++#define MM_TGT_WARM_RESET	1
  
- /* Get device identification VPD page */
- static int do_scsi_page83_inquiry(struct sysfs_device *dev_scsi, int fd,
--				  char *serial, char *serial_short, int len)
-+				  char *serial, char *serial_short, int len,
-+				  int page_code)
+ 	uint16_t flags;		/* 0C-0D */
+ 	uint16_t reserved1;	/* 0E-0F */
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index b403a17..96ebfb0 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -70,6 +70,8 @@ int qla4xxx_reinitialize_ddb_list(struct
+ int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
+ 				uint32_t fw_ddb_index, uint32_t state);
+ void qla4xxx_dump_buffer(void *b, uint32_t size);
++int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
++	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod);
+ 
+ extern int ql4xextended_error_logging;
+ extern int ql4xdiscoverywait;
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index e4461b5..912a674 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -66,8 +66,8 @@ static int qla4xxx_get_req_pkt(struct sc
+  *
+  * This routine issues a marker IOCB.
+  **/
+-static int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
+-				    struct ddb_entry *ddb_entry, int lun)
++int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
++	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod)
  {
- 	int retval;
- 	unsigned int id_ind, j;
-@@ -590,7 +591,7 @@ static int do_scsi_page83_inquiry(struct
- 	 * 0x006048.
- 	 */
- 	
--	if (page_83[6] != 0) 
-+	if ((page_code == 0x00) && (page_83[6] != 0))
- 		return check_fill_0x83_prespc3(dev_scsi, page_83, id_search_list,
- 					       serial, serial_short, len);
+ 	struct qla4_marker_entry *marker_entry;
+ 	unsigned long flags = 0;
+@@ -87,7 +87,7 @@ static int qla4xxx_send_marker_iocb(stru
+ 	marker_entry->hdr.entryType = ET_MARKER;
+ 	marker_entry->hdr.entryCount = 1;
+ 	marker_entry->target = cpu_to_le16(ddb_entry->fw_ddb_index);
+-	marker_entry->modifier = cpu_to_le16(MM_LUN_RESET);
++	marker_entry->modifier = cpu_to_le16(mrkr_mod);
+ 	int_to_scsilun(lun, &marker_entry->lun);
+ 	wmb();
  
-@@ -793,7 +794,7 @@ int scsi_get_serial (struct sysfs_device
- 			goto completed;
- 		}
- 	} else if (page_code == PAGE_83) {
--		if (do_scsi_page83_inquiry(dev_scsi, fd, serial, serial_short, len)) {
-+		if (do_scsi_page83_inquiry(dev_scsi, fd, serial, serial_short, len, page_code)) {
- 			retval = 1;
- 			goto completed;
- 		} else  {
-@@ -809,7 +810,7 @@ int scsi_get_serial (struct sysfs_device
- 			 * conform to pre-SPC3 expectations.
- 			 */
- 			if (retval == 2) {
--				if (do_scsi_page83_inquiry(dev_scsi, fd, serial, serial_short, len)) {
-+				if (do_scsi_page83_inquiry(dev_scsi, fd, serial, serial_short, len, 0x00)) {
- 					retval = 1;
- 					goto completed;
- 				} else  {
-@@ -849,7 +850,8 @@ int scsi_get_serial (struct sysfs_device
- 	for (ind = 4; ind <= page0[3] + 3; ind++)
- 		if (page0[ind] == PAGE_83)
- 			if (!do_scsi_page83_inquiry(dev_scsi, fd,
--						    serial, serial_short, len)) {
-+						    serial, serial_short,
-+						    len, 0x00)) {
- 				/*
- 				 * Success
- 				 */
+@@ -210,14 +210,6 @@ int qla4xxx_send_command_to_isp(struct s
+ 	/* Get real lun and adapter */
+ 	ddb_entry = srb->ddb;
+ 
+-	/* Send marker(s) if needed. */
+-	if (ha->marker_needed == 1) {
+-		if (qla4xxx_send_marker_iocb(ha, ddb_entry,
+-					     cmd->device->lun) != QLA_SUCCESS)
+-			return QLA_ERROR;
+-
+-		ha->marker_needed = 0;
+-	}
+ 	tot_dsds = 0;
+ 
+ 	/* Acquire hardware specific lock */
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index fc84db4..a91a57c 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -11,28 +11,6 @@
+ #include "ql4_inline.h"
+ 
+ /**
+- * qla2x00_process_completed_request() - Process a Fast Post response.
+- * @ha: SCSI driver HA context
+- * @index: SRB index
+- **/
+-static void qla4xxx_process_completed_request(struct scsi_qla_host *ha,
+-					      uint32_t index)
+-{
+-	struct srb *srb;
+-
+-	srb = qla4xxx_del_from_active_array(ha, index);
+-	if (srb) {
+-		/* Save ISP completion status */
+-		srb->cmd->result = DID_OK << 16;
+-		qla4xxx_srb_compl(ha, srb);
+-	} else {
+-		DEBUG2(printk("scsi%ld: Invalid ISP SCSI completion handle = "
+-			      "%d\n", ha->host_no, index));
+-		set_bit(DPC_RESET_HA, &ha->dpc_flags);
+-	}
+-}
+-
+-/**
+  * qla4xxx_status_entry - processes status IOCBs
+  * @ha: Pointer to host adapter structure.
+  * @sts_entry: Pointer to status entry structure.
+@@ -47,14 +25,6 @@ static void qla4xxx_status_entry(struct
+ 	uint32_t residual;
+ 	uint16_t sensebytecnt;
+ 
+-	if (sts_entry->completionStatus == SCS_COMPLETE &&
+-	    sts_entry->scsiStatus == 0) {
+-		qla4xxx_process_completed_request(ha,
+-						  le32_to_cpu(sts_entry->
+-							      handle));
+-		return;
+-	}
+-
+ 	srb = qla4xxx_del_from_active_array(ha, le32_to_cpu(sts_entry->handle));
+ 	if (!srb) {
+ 		/* FIXMEdg: Don't we need to reset ISP in this case??? */
+@@ -62,6 +32,9 @@ static void qla4xxx_status_entry(struct
+ 			      "handle 0x%x, sp=%p. This cmd may have already "
+ 			      "been completed.\n", ha->host_no, __func__,
+ 			      le32_to_cpu(sts_entry->handle), srb));
++		dev_warn(&ha->pdev->dev, "%s invalid status entry:"
++			" handle=0x%0x\n", __func__, sts_entry->handle);
++		set_bit(DPC_RESET_HA, &ha->dpc_flags);
+ 		return;
+ 	}
+ 
+@@ -88,10 +61,6 @@ static void qla4xxx_status_entry(struct
+ 	scsi_status = sts_entry->scsiStatus;
+ 	switch (sts_entry->completionStatus) {
+ 	case SCS_COMPLETE:
+-		if (scsi_status == 0) {
+-			cmd->result = DID_OK << 16;
+-			break;
+-		}
+ 
+ 		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
+ 			cmd->result = DID_ERROR << 16;
+@@ -100,7 +69,8 @@ static void qla4xxx_status_entry(struct
+ 
+ 		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
+ 			scsi_set_resid(cmd, residual);
+-			if ((scsi_bufflen(cmd) - residual) < cmd->underflow) {
++			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
++				cmd->underflow)) {
+ 
+ 				cmd->result = DID_ERROR << 16;
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 31e605c..0c78694 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1552,9 +1552,6 @@ static int qla4xxx_eh_device_reset(struc
+ 		goto eh_dev_reset_done;
+ 	}
+ 
+-	/* Send marker. */
+-	ha->marker_needed = 1;
+-
+ 	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
+ 					 cmd->device)) {
+ 		dev_info(&ha->pdev->dev,
+@@ -1563,6 +1560,11 @@ static int qla4xxx_eh_device_reset(struc
+ 		goto eh_dev_reset_done;
+ 	}
+ 
++	/* Send marker. */
++	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
++		MM_LUN_RESET) != QLA_SUCCESS)
++		goto eh_dev_reset_done;
++
+ 	dev_info(&ha->pdev->dev,
+ 		   "scsi(%ld:%d:%d:%d): DEVICE RESET SUCCEEDED.\n",
+ 		   ha->host_no, cmd->device->channel, cmd->device->id,
+@@ -1606,9 +1608,6 @@ static int qla4xxx_eh_target_reset(struc
+ 		return FAILED;
+ 	}
+ 
+-	/* Send marker. */
+-	ha->marker_needed = 1;
+-
+ 	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
+ 					 NULL)) {
+ 		starget_printk(KERN_INFO, scsi_target(cmd->device),
+@@ -1617,6 +1616,15 @@ static int qla4xxx_eh_target_reset(struc
+ 		return FAILED;
+ 	}
+ 
++	/* Send marker. */
++	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
++		MM_TGT_WARM_RESET) != QLA_SUCCESS) {
++		starget_printk(KERN_INFO, scsi_target(cmd->device),
++			       "WARM TARGET DEVICE RESET FAILED - "
++			       "marker iocb failed.\n");
++		return FAILED;
++	}
++
+ 	starget_printk(KERN_INFO, scsi_target(cmd->device),
+ 		       "WARM TARGET RESET SUCCEEDED.\n");
+ 	return SUCCESS;
+
