@@ -1,7 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [RFC PATCH 01/13] block: add request update interface
-Date: Wed, 19 Mar 2008 18:07:06 -0500 (EST)
-Message-ID: <20080319.180706.35658194.k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 03/13] block: lld busy status exporting
+	interface
+Date: Wed, 19 Mar 2008 18:09:00 -0500 (EST)
+Message-ID: <20080319.180900.99206705.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,122 +21,108 @@ To: jens.axboe@oracle.com, michaelc@cs.wisc.edu, hare@suse.de, agk@redhat.com, l
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds an interface to update request information so that
-request stacking drivers can complete only data part of a request
-without completing the request.
-Request stacking drivers can use it for partial completion.
+This patch adds an interface to check lld's busy status
+from the block layer.
+(scsi patch is also included just for example.)
+This resolves a performance problem on request stacking devices below.
 
-Request stacking drivers like request-based dm need to complete
-clone requests from bottom to top on the device stack in that order.
-If request stacking drivers use blk_end_request() to updatethe original
-request during partial completion (in bio->bi_end_io() hook),
-the original request will be completed before the clone request when
-all bios are completed.  It breaks the ordering.
 
-blk_update_request() just completes only data part of a request and
-updates information of the request, but doesn't complete the request.
+Some drivers like scsi mid layer stop dispatching request when
+they detect busy state on its low-level device like host/bus/device.
+It allows other requests to stay in the I/O scheduler's queue
+for a chance of merging.
+
+Request stacking drivers like request-based dm should follow
+the same logic.
+However, there is no generic interface for the stacked device
+to check if the underlying device(s) are busy.
+If the request stacking driver dispatches and submits requests to
+the busy underlying device, the requests will stay in
+the underlying device's queue without a chance for merging.
+This causes performance problem on burst I/O load.
+
+With this patch, busy state of the underlying device is exported
+via the queue flag.  So the request stacking driver can check it
+and stop dispatching requests if busy.
+The underlying device driver must set/clear the flag appropriately.
+
+For example, scsi sets the busy flag when low-level devices are not
+ready or the low-level driver rejects dispatching command.
+And scsi clears the busy flag when a command has been dispatched
+successfully, since there may be more spaces to dispatch (the exact
+limit check will be done in the next loop for the next request.)
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- block/blk-core.c       |   59 +++++++++++++++++++++++++++++++++++++++++--------
- include/linux/blkdev.h |    2 +
- 2 files changed, 52 insertions(+), 9 deletions(-)
+ drivers/scsi/scsi_lib.c |   11 ++++++++++-
+ include/linux/blkdev.h  |    4 ++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-Index: 2.6.25-rc5/block/blk-core.c
-===================================================================
---- 2.6.25-rc5.orig/block/blk-core.c
-+++ 2.6.25-rc5/block/blk-core.c
-@@ -1853,6 +1853,22 @@ void end_request(struct request *req, in
- }
- EXPORT_SYMBOL(end_request);
- 
-+static int end_that_request_data(struct request *rq, int error,
-+				 unsigned int nr_bytes, unsigned int bidi_bytes)
-+{
-+	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-+		if (__end_that_request_first(rq, error, nr_bytes))
-+			return 1;
-+
-+		/* Bidi request must be completed as a whole */
-+		if (blk_bidi_rq(rq) &&
-+		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * blk_end_io - Generic end_io function to complete a request.
-  * @rq:           the request being processed
-@@ -1879,15 +1895,8 @@ static int blk_end_io(struct request *rq
- 	struct request_queue *q = rq->q;
- 	unsigned long flags = 0UL;
- 
--	if (blk_fs_request(rq) || blk_pc_request(rq)) {
--		if (__end_that_request_first(rq, error, nr_bytes))
--			return 1;
--
--		/* Bidi request must be completed as a whole */
--		if (blk_bidi_rq(rq) &&
--		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
--			return 1;
--	}
-+	if (end_that_request_data(rq, error, nr_bytes, bidi_bytes))
-+		return 1;
- 
- 	/* Special feature for tricky drivers */
- 	if (drv_callback && drv_callback(rq))
-@@ -1972,6 +1981,38 @@ int blk_end_bidi_request(struct request 
- EXPORT_SYMBOL_GPL(blk_end_bidi_request);
- 
- /**
-+ * blk_update_request - Special helper function for request stacking drivers
-+ * @rq:           the request being processed
-+ * @error:        0 for success, < 0 for error
-+ * @nr_bytes:     number of bytes to complete @rq
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @rq, but doesn't complete
-+ *     the request structure even if @rq doesn't have leftover.
-+ *     If @rq has leftover, sets it up for the next range of segments.
-+ *
-+ *     This special helper function is only for request stacking drivers
-+ *     (e.g. request-based dm) so that they can handle partial completion.
-+ *     Actual device drivers should use blk_end_request instead.
-+ **/
-+void blk_update_request(struct request *rq, int error, unsigned int nr_bytes)
-+{
-+	if (!end_that_request_data(rq, error, nr_bytes, 0)) {
-+		/*
-+		 * All bios in the request have been completed.
-+		 * Then, members of the request are not updated.
-+		 * Update those members to avoid double charge of diskstat
-+		 * when the stacking driver calls blk_end_request()
-+		 * to complete the request actually.
-+		 */
-+		rq->nr_sectors = rq->hard_nr_sectors = 0;
-+		rq->current_nr_sectors = rq->hard_cur_sectors = 0;
-+		rq->nr_phys_segments = rq->nr_hw_segments = 0;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(blk_update_request);
-+
-+/**
-  * blk_end_request_callback - Special helper function for tricky drivers
-  * @rq:           the request being processed
-  * @error:        0 for success, < 0 for error
 Index: 2.6.25-rc5/include/linux/blkdev.h
 ===================================================================
 --- 2.6.25-rc5.orig/include/linux/blkdev.h
 +++ 2.6.25-rc5/include/linux/blkdev.h
-@@ -673,6 +673,8 @@ extern int blk_end_request_callback(stru
- 				unsigned int nr_bytes,
- 				int (drv_callback)(struct request *));
- extern void blk_complete_request(struct request *);
-+extern void blk_update_request(struct request *rq, int error,
-+			       unsigned int nr_bytes);
+@@ -405,6 +405,7 @@ struct request_queue
+ #define QUEUE_FLAG_PLUGGED	7	/* queue is plugged */
+ #define QUEUE_FLAG_ELVSWITCH	8	/* don't use elevator, just do FIFO */
+ #define QUEUE_FLAG_BIDI		9	/* queue supports bidi requests */
++#define QUEUE_FLAG_BUSY		10	/* device/host under queue is busy */
  
- /*
-  * blk_end_request() takes bytes instead of sectors as a complete size.
+ enum {
+ 	/*
+@@ -450,6 +451,9 @@ enum {
+ #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
+ #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
+ #define blk_queue_flushing(q)	((q)->ordseq)
++#define blk_lld_busy(q)		test_bit(QUEUE_FLAG_BUSY, &(q)->queue_flags)
++#define blk_set_lld_busy(q)	set_bit(QUEUE_FLAG_BUSY, &(q)->queue_flags)
++#define blk_clear_lld_busy(q)	clear_bit(QUEUE_FLAG_BUSY, &(q)->queue_flags)
+ 
+ #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
+Index: 2.6.25-rc5/drivers/scsi/scsi_lib.c
+===================================================================
+--- 2.6.25-rc5.orig/drivers/scsi/scsi_lib.c
++++ 2.6.25-rc5/drivers/scsi/scsi_lib.c
+@@ -1448,9 +1448,14 @@ static void scsi_request_fn(struct reque
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
+ 			break;
+ 
++		if (!scsi_dev_queue_ready(q, sdev)) {
++			blk_set_lld_busy(q);
++			break;
++		}
++
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to offline device\n");
+@@ -1506,6 +1511,8 @@ static void scsi_request_fn(struct reque
+ 		rtn = scsi_dispatch_cmd(cmd);
+ 		spin_lock_irq(q->queue_lock);
+ 		if(rtn) {
++			blk_set_lld_busy(q);
++
+ 			/* we're refusing the command; because of
+ 			 * the way locks get dropped, we need to 
+ 			 * check here if plugging is required */
+@@ -1514,6 +1521,7 @@ static void scsi_request_fn(struct reque
+ 
+ 			break;
+ 		}
++		blk_clear_lld_busy(q);
+ 	}
+ 
+ 	goto out;
+@@ -1530,6 +1538,7 @@ static void scsi_request_fn(struct reque
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
++	blk_set_lld_busy(q);
+ 	blk_requeue_request(q, req);
+ 	sdev->device_busy--;
+ 	if(sdev->device_busy == 0)
