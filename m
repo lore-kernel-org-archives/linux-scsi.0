@@ -1,63 +1,85 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 6/8] Fix spi initialisation failure
-Date: Tue, 18 Mar 2008 09:39:41 -0500
-Message-ID: <1205851181.2900.3.camel@localhost.localdomain>
-References: <20080318133228.6DFD9159159@pentland.suse.de>
+Subject: Re: [PATCH] fix media change events for polled devices
+Date: Wed, 19 Mar 2008 11:54:02 -0500
+Message-ID: <1205945642.11527.23.camel@localhost.localdomain>
+References: <1205928287.8810.18.camel@lov.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52635 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52638 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753037AbYCSTYr (ORCPT
+	by vger.kernel.org with ESMTP id S1753121AbYCSTYw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:24:47 -0400
-In-Reply-To: <20080318133228.6DFD9159159@pentland.suse.de>
+	Wed, 19 Mar 2008 15:24:52 -0400
+In-Reply-To: <1205928287.8810.18.camel@lov.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: scsi <linux-scsi@vger.kernel.org>, David Zeuthen <david@fubar.dk>, kristen accardi <kaccardi@gmail.com>, Jeff Garzik <jeff@garzik.org>
 
-On Tue, 2008-03-18 at 14:32 +0100, Hannes Reinecke wrote:
-> With the target rework we cannot set the attribute of the
-> sysfs files as the sysfs object is not registered yet. So
-> just modify the attribute itself.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_transport_spi.c |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-> index bc12b5d..4f9c98c 100644
-> --- a/drivers/scsi/scsi_transport_spi.c
-> +++ b/drivers/scsi/scsi_transport_spi.c
-> @@ -1473,13 +1473,13 @@ static int spi_target_configure(struct transport_container *tc,
->  		 * to ignore, sysfs also does a WARN_ON and dumps a trace,
->  		 * which is bad, so temporarily, skip attributes that are
->  		 * already visible (the revalidate one) */
-> -		if (j && attr != &dev_attr_revalidate.attr)
-> +		if (j && attr != &dev_attr_revalidate.attr) {
-> +			if ((j & 1))
-> +				attr->mode |= S_IWUSR;
-> +
->  			rc = sysfs_add_file_to_group(kobj, attr,
->  						target_attribute_group.name);
-> -		/* and make the attribute writeable if we have a set
-> -		 * function */
-> -		if ((j & 1))
-> -			rc = sysfs_chmod_file(kobj, attr, attr->mode | S_IWUSR);
-> +		}
->  	}
+On Wed, 2008-03-19 at 13:04 +0100, Kay Sievers wrote:
+> Hi James,
+> we like to see this in 2.6.25, as "change" events for polled devices are
+> broken at the moment.
 
-We can't do it like this, I'm afraid.  The attribute passed in is global
-to the entire transport class.  You'd basically make every following
-revalidate attribute writeable.
+I'm not happy just killing the code, since when the AN infrastructure
+gets fixed, it will work.  How about this instead as a fix for 2.6.25?
 
-My initial reaction is that the target should obviously be visible when
-we call configure, the same way the device is.  Could this be fixed just
-by moving the configure event?
+Also, acks from Jeff and Kristin would be nice.
 
 James
+
+---
+>From 4d1566ed2100d074ccc654e5cf2e44cdea3a01d0 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Wed, 19 Mar 2008 13:04:47 +0100
+Subject: [SCSI] fix media change events for polled devices
+
+Commit:
+  a341cd0f (SCSI: add asynchronous event notification API)
+breaks:
+  285e9670 (sr,sd: send media state change modification events)
+by introducing an event filter, which is removed here, to make
+events, we are depending on, happen again.
+
+Fix this by removing the event filter.  It's pretty much broken at the
+moment, since a user can't set it (the attribute being read only).  A
+proper fix will be to make the event discriminator distinguish between
+AN and Polled media change events.
+
+Cc: David Zeuthen <david@fubar.dk>
+Cc: kristen accardi <kaccardi@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/scsi_lib.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ba21d97..f40898d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2162,10 +2162,15 @@ void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
+ {
+ 	unsigned long flags;
+ 
++#if 0
++	/* FIXME: currently this check eliminates all media change events
++	 * for polled devices.  Need to update to discriminate between AN
++	 * and polled events */
+ 	if (!test_bit(evt->evt_type, sdev->supported_events)) {
+ 		kfree(evt);
+ 		return;
+ 	}
++#endif
+ 
+ 	spin_lock_irqsave(&sdev->list_lock, flags);
+ 	list_add_tail(&evt->node, &sdev->event_list);
+-- 
+1.5.4.1
+
+
 
 
