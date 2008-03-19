@@ -1,44 +1,46 @@
-From: Benny Amorsen <benny+usenet@amorsen.dk>
-Subject: Re: ultrastor.c is a bit-rot
-Date: Tue, 18 Mar 2008 23:07:11 +0100
-Message-ID: <m363vj1yb4.fsf@ursa.amorsen.dk>
-References: <47DE8736.8020405@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 9010] SCSI device is not offlined properly and tries to
+	cache data from previous device
+Date: Wed, 19 Mar 2008 15:24:11 -0500
+Message-ID: <1205958251.11527.44.camel@localhost.localdomain>
+References: <20080319084344.0FDE310806C@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:33111 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759166AbYCSUUU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Mar 2008 16:20:20 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Jbu4c-00024V-Ku
-	for linux-scsi@vger.kernel.org; Wed, 19 Mar 2008 08:55:02 +0000
-Received: from hd5b9080a.c45-01-12.sta.perspektivbredband.net ([213.185.8.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 08:55:02 +0000
-Received: from benny+usenet by hd5b9080a.c45-01-12.sta.perspektivbredband.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 08:55:02 +0000
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33845 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932957AbYCSUYP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Mar 2008 16:24:15 -0400
+In-Reply-To: <20080319084344.0FDE310806C@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Boaz Harrosh <bharrosh@panasas.com> writes:
+On Wed, 2008-03-19 at 01:43 -0700, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=9010
+> 
+> 
+> protasnb@gmail.com changed:
+> 
+>            What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                  CC|                            |linux-scsi@vger.kernel.org
+> 
+> 
+> 
+> 
+> ------- Comment #24 from protasnb@gmail.com  2008-03-19 01:43 -------
+> Since bug analysis shows this is scsi layer problem - copying to SCSI devel
 
-> if the machine has more then 2^24 of memory. Then this will never
-> work, right? or I'm missing it completely?
+That's rather a long bug report; what I can't seem to find is a
+description of what the problem actually is.  If I had to guess I'd say
+that unplugging and replugging a different SATA drive in the same slot
+doesn't properly get the parameters of the new device; is that it?
 
-I used to have a machine with the VL-bus version of that card. I spent
-a fortune upgrading that machine from 8x1MB to 4x4MB + 4x1MB, so it
-did indeed work with larger than 16MB. The card got awfully hot and it
-only worked when clocked at 33MHz (not the 40MHz the PC could do
-without the card), but otherwise it worked fine.
-
-I'm not sure whether that machine made it to kernel 2.0 though.
-
-
-/Benny
+James
 
 
