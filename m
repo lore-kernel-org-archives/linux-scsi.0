@@ -1,376 +1,97 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [RFC PATCH 13/13] dm-mpath: convert to request-based
-Date: Wed, 19 Mar 2008 18:12:12 -0500 (EST)
-Message-ID: <20080319.181212.106439712.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Sabuj Pattanayek" <sabujp@gmail.com>
+Subject: Re: kernel exception in Fusion MPT base driver 3.04.06 (linux-2.6.24.3)
+Date: Wed, 19 Mar 2008 18:36:05 -0500
+Message-ID: <e64671580803191636r59d0cd0ar93692dc50d852be7@mail.gmail.com>
+References: <e64671580803171629g534ebf34l89adbb14bb985dc7@mail.gmail.com>
+	 <20080318002502.852d0f12.akpm@linux-foundation.org>
+	 <47DFFE90.8050808@sgi.com>
+	 <e64671580803191411r7ca57fffu885e173f9b3285d0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jens.axboe@oracle.com, michaelc@cs.wisc.edu, hare@suse.de, agk@redhat.com, linux-kernel@vger.kernel.org
-Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.159]:14631 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932201AbYCSXgK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2008 19:36:10 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so554241fgb.17
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 16:36:05 -0700 (PDT)
+In-Reply-To: <e64671580803191411r7ca57fffu885e173f9b3285d0@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-This patch converts dm-multipath target to request-based from bio-based.
+Hi,
 
-In I/O completion, the clone request doesn't have clone bios,
-so the target driver can't resubmit it as it is, even if the target
-driver wants to retry it using another path.
-To resubmit the clone request, memory allocation for clone bios is
-needed.  There is no big benefit to resubmit the clone request.
+>  >  Does the exception happen every time?
 
-So the target driver doesn't requeue a clone in the target queue.
-Instead, the target driver ask dm core for requeueing and remapping
-the original request of the clone (do_end_io()).
-As a result, the target driver don't need to record/restore
-the information of the original request for resubmitting the clone.
+Well, I just got the kernel to boot all the way with both 2.6.24.3 and
+2.6.20 accidentally by changing the FC host side settings on all the
+target infortrend eonstor RAID boxes to point-to-point from loop. All
+the targets and initiators are connected to a QLogic 5600 FC switch
+and zones have been setup such that the initiators can see only the
+targets. This active zoning has not changed during testing.
 
+At the time I was actually testing the eonstor boxes outside the FC
+switch by connecting them directly to another Apple Xserve running OS
+X, which is using the same LSI FC HBA that I reported in my first post
+regarding this issue. After testing that each target (LUN) could be
+seen by the LSI FC HBA in the OSX Xserve, I reconnected the targets
+back into the switch. Since the Linux Xserve was endlessly rebooting
+itself after each kernel panic, to my surprise I had found that it
+completed booting! All targets and LUNs can be seen under "cat
+/proc/scsi/scsi".
 
-Actual path selection is done at congestion state checking time
-(multipath_congested()), since we'd like to check the path which
-will be definitely used for next I/O.
+To confirm that the loop host side setting was causing the problem, I
+set one of the eonstor's back to loop and reset it. Immediately after
+the eonstor came up it caused a kernel panic on the Linux Xserve
+(which was already booted into the OS). This was the output on the
+console:
 
-Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
----
- drivers/md/dm-mpath.c |  175 +++++++++++++++++++++++++++++++-------------------
- 1 files changed, 109 insertions(+), 66 deletions(-)
+porpoise login: Unrecoverable FP Unavailable Exception 800 at d000000000073da0
+Oops: Unrecoverable FP Unavailable Exception, sig: 6 [#1]
 
-Index: 2.6.25-rc5/drivers/md/dm-mpath.c
-===================================================================
---- 2.6.25-rc5.orig/drivers/md/dm-mpath.c
-+++ 2.6.25-rc5/drivers/md/dm-mpath.c
-@@ -8,8 +8,6 @@
- #include "dm.h"
- #include "dm-path-selector.h"
- #include "dm-hw-handler.h"
--#include "dm-bio-list.h"
--#include "dm-bio-record.h"
- #include "dm-uevent.h"
- 
- #include <linux/ctype.h>
-@@ -80,7 +78,7 @@ struct multipath {
- 	unsigned pg_init_count;		/* Number of times pg_init called */
- 
- 	struct work_struct process_queued_ios;
--	struct bio_list queued_ios;
-+	struct list_head queued_ios;
- 	unsigned queue_size;
- 
- 	struct work_struct trigger_event;
-@@ -97,7 +95,6 @@ struct multipath {
-  */
- struct dm_mpath_io {
- 	struct pgpath *pgpath;
--	struct dm_bio_details details;
- };
- 
- typedef int (*action_fn) (struct pgpath *pgpath);
-@@ -174,6 +171,7 @@ static struct multipath *alloc_multipath
- 	m = kzalloc(sizeof(*m), GFP_KERNEL);
- 	if (m) {
- 		INIT_LIST_HEAD(&m->priority_groups);
-+		INIT_LIST_HEAD(&m->queued_ios);
- 		spin_lock_init(&m->lock);
- 		m->queue_io = 1;
- 		INIT_WORK(&m->process_queued_ios, process_queued_ios);
-@@ -304,12 +302,13 @@ static int __must_push_back(struct multi
- 		dm_noflush_suspending(m->ti));
- }
- 
--static int map_io(struct multipath *m, struct bio *bio,
-+static int map_io(struct multipath *m, struct request *clone,
- 		  struct dm_mpath_io *mpio, unsigned was_queued)
- {
- 	int r = DM_MAPIO_REMAPPED;
- 	unsigned long flags;
- 	struct pgpath *pgpath;
-+	struct block_device *bdev;
- 
- 	spin_lock_irqsave(&m->lock, flags);
- 
-@@ -326,19 +325,28 @@ static int map_io(struct multipath *m, s
- 	if ((pgpath && m->queue_io) ||
- 	    (!pgpath && m->queue_if_no_path)) {
- 		/* Queue for the daemon to resubmit */
--		bio_list_add(&m->queued_ios, bio);
-+		list_add_tail(&clone->queuelist, &m->queued_ios);
- 		m->queue_size++;
- 		if ((m->pg_init_required && !m->pg_init_in_progress) ||
- 		    !m->queue_io)
- 			queue_work(kmultipathd, &m->process_queued_ios);
- 		pgpath = NULL;
-+		clone->q = NULL;
-+		clone->rq_disk = NULL;
- 		r = DM_MAPIO_SUBMITTED;
--	} else if (pgpath)
--		bio->bi_bdev = pgpath->path.dev->bdev;
--	else if (__must_push_back(m))
-+	} else if (pgpath) {
-+		bdev = pgpath->path.dev->bdev;
-+		clone->q = bdev_get_queue(bdev);
-+		clone->rq_disk = bdev->bd_disk;
-+	} else if (__must_push_back(m)) {
-+		clone->q = NULL;
-+		clone->rq_disk = NULL;
- 		r = DM_MAPIO_REQUEUE;
--	else
-+	} else {
-+		clone->q = NULL;
-+		clone->rq_disk = NULL;
- 		r = -EIO;	/* Failed */
-+	}
- 
- 	mpio->pgpath = pgpath;
- 
-@@ -378,30 +386,29 @@ static void dispatch_queued_ios(struct m
- {
- 	int r;
- 	unsigned long flags;
--	struct bio *bio = NULL, *next;
- 	struct dm_mpath_io *mpio;
- 	union map_info *info;
-+	struct request *clone, *n;
-+	LIST_HEAD(cl);
- 
- 	spin_lock_irqsave(&m->lock, flags);
--	bio = bio_list_get(&m->queued_ios);
-+	list_splice_init(&m->queued_ios, &cl);
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
--	while (bio) {
--		next = bio->bi_next;
--		bio->bi_next = NULL;
-+	list_for_each_entry_safe(clone, n, &cl, queuelist) {
-+		list_del_init(&clone->queuelist);
- 
--		info = dm_get_mapinfo(bio);
-+		info = dm_get_rq_mapinfo(clone);
- 		mpio = info->ptr;
- 
--		r = map_io(m, bio, mpio, 1);
--		if (r < 0)
--			bio_endio(bio, r);
--		else if (r == DM_MAPIO_REMAPPED)
--			generic_make_request(bio);
--		else if (r == DM_MAPIO_REQUEUE)
--			bio_endio(bio, -EIO);
--
--		bio = next;
-+		r = map_io(m, clone, mpio, 1);
-+		if (r < 0 || r == DM_MAPIO_REQUEUE) {
-+			mempool_free(mpio, m->mpio_pool);
-+			if (r == DM_MAPIO_REQUEUE)
-+				r = DM_ENDIO_REQUEUE;
-+			dm_end_request(clone, r);
-+		} else if (r == DM_MAPIO_REMAPPED)
-+			dm_dispatch_request(clone);
- 	}
- }
- 
-@@ -813,21 +820,25 @@ static void multipath_dtr(struct dm_targ
- }
- 
- /*
-- * Map bios, recording original fields for later in case we have to resubmit
-+ * Map cloned requests
-  */
--static int multipath_map(struct dm_target *ti, struct bio *bio,
-+static int multipath_map(struct dm_target *ti, struct request *clone,
- 			 union map_info *map_context)
- {
- 	int r;
- 	struct dm_mpath_io *mpio;
- 	struct multipath *m = (struct multipath *) ti->private;
- 
--	mpio = mempool_alloc(m->mpio_pool, GFP_NOIO);
--	dm_bio_record(&mpio->details, bio);
-+	mpio = mempool_alloc(m->mpio_pool, GFP_ATOMIC);
-+	if (!mpio)
-+		/* ENOMEM, requeue */
-+		return DM_MAPIO_REQUEUE;
-+	memset(mpio, 0, sizeof(*mpio));
- 
- 	map_context->ptr = mpio;
--	bio->bi_rw |= (1 << BIO_RW_FAILFAST);
--	r = map_io(m, bio, mpio, 0);
-+	clone->cmd_flags |= REQ_FAILFAST;
-+
-+	r = map_io(m, clone, mpio, 0);
- 	if (r < 0 || r == DM_MAPIO_REQUEUE)
- 		mempool_free(mpio, m->mpio_pool);
- 
-@@ -1066,39 +1077,34 @@ void dm_pg_init_complete(struct dm_path 
- /*
-  * end_io handling
-  */
--static int do_end_io(struct multipath *m, struct bio *bio,
-+static int do_end_io(struct multipath *m, struct request *clone,
- 		     int error, struct dm_mpath_io *mpio)
- {
- 	struct hw_handler *hwh = &m->hw_handler;
- 	unsigned err_flags = MP_FAIL_PATH;	/* Default behavior */
- 	unsigned long flags;
-+	int r;
- 
--	if (!error)
-+	if (!error && !clone->errors)
- 		return 0;	/* I/O complete */
- 
--	if ((error == -EWOULDBLOCK) && bio_rw_ahead(bio))
--		return error;
--
- 	if (error == -EOPNOTSUPP)
- 		return error;
- 
- 	spin_lock_irqsave(&m->lock, flags);
- 	if (!m->nr_valid_paths) {
--		if (__must_push_back(m)) {
--			spin_unlock_irqrestore(&m->lock, flags);
--			return DM_ENDIO_REQUEUE;
--		} else if (!m->queue_if_no_path) {
--			spin_unlock_irqrestore(&m->lock, flags);
--			return -EIO;
--		} else {
--			spin_unlock_irqrestore(&m->lock, flags);
--			goto requeue;
--		}
-+		if (__must_push_back(m) || m->queue_if_no_path)
-+			r = DM_ENDIO_REQUEUE;
-+		else
-+			r = -EIO;
-+
-+		spin_unlock_irqrestore(&m->lock, flags);
-+		return r;
- 	}
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
--	if (hwh->type && hwh->type->error)
--		err_flags = hwh->type->error(hwh, bio);
-+	if (hwh->type && hwh->type->error_rq)
-+		err_flags = hwh->type->error_rq(hwh, clone);
- 
- 	if (mpio->pgpath) {
- 		if (err_flags & MP_FAIL_PATH)
-@@ -1111,21 +1117,10 @@ static int do_end_io(struct multipath *m
- 	if (err_flags & MP_ERROR_IO)
- 		return -EIO;
- 
--      requeue:
--	dm_bio_restore(&mpio->details, bio);
--
--	/* queue for the daemon to resubmit or fail */
--	spin_lock_irqsave(&m->lock, flags);
--	bio_list_add(&m->queued_ios, bio);
--	m->queue_size++;
--	if (!m->queue_io)
--		queue_work(kmultipathd, &m->process_queued_ios);
--	spin_unlock_irqrestore(&m->lock, flags);
--
--	return DM_ENDIO_INCOMPLETE;	/* io not complete */
-+	return DM_ENDIO_REQUEUE;
- }
- 
--static int multipath_end_io(struct dm_target *ti, struct bio *bio,
-+static int multipath_end_io(struct dm_target *ti, struct request *clone,
- 			    int error, union map_info *map_context)
- {
- 	struct multipath *m = ti->private;
-@@ -1134,14 +1129,13 @@ static int multipath_end_io(struct dm_ta
- 	struct path_selector *ps;
- 	int r;
- 
--	r  = do_end_io(m, bio, error, mpio);
-+	r  = do_end_io(m, clone, error, mpio);
- 	if (pgpath) {
- 		ps = &pgpath->pg->ps;
- 		if (ps->type->end_io)
- 			ps->type->end_io(ps, &pgpath->path);
- 	}
--	if (r != DM_ENDIO_INCOMPLETE)
--		mempool_free(mpio, m->mpio_pool);
-+	mempool_free(mpio, m->mpio_pool);
- 
- 	return r;
- }
-@@ -1380,6 +1374,54 @@ static int multipath_ioctl(struct dm_tar
- 					 bdev->bd_disk, cmd, arg);
- }
- 
-+static int __pgpath_congested(struct pgpath *pgpath)
-+{
-+	struct request_queue *q = bdev_get_queue(pgpath->path.dev->bdev);
-+
-+	if (dm_underlying_device_congested(q))
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static int multipath_congested(struct dm_target *ti)
-+{
-+	int congested = 0;
-+	struct multipath *m = (struct multipath *) ti->private;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&m->lock, flags);
-+
-+	if (m->current_pgpath && m->repeat_count > 1) {
-+		/* m->current_pgpath is surely used at next mapping time. */
-+		if (__pgpath_congested(m->current_pgpath))
-+			congested = 1;
-+
-+		goto out;
-+	}
-+
-+	/*
-+	 * We are here means that path selection will be executed
-+	 * at next mapping time.
-+	 * We run the path selection here and check congestion status
-+	 * of the next path.
-+	 * And increment repeat_count to avoid path selection again
-+	 * in map_io().
-+	 */
-+	__choose_pgpath(m);
-+	if (m->current_pgpath) {
-+		if (__pgpath_congested(m->current_pgpath))
-+			congested = 1;
-+
-+		m->repeat_count++;
-+	}
-+
-+out:
-+	spin_unlock_irqrestore(&m->lock, flags);
-+
-+	return congested;
-+}
-+
- /*-----------------------------------------------------------------
-  * Module setup
-  *---------------------------------------------------------------*/
-@@ -1389,13 +1431,14 @@ static struct target_type multipath_targ
- 	.module = THIS_MODULE,
- 	.ctr = multipath_ctr,
- 	.dtr = multipath_dtr,
--	.map = multipath_map,
--	.end_io = multipath_end_io,
-+	.map_rq = multipath_map,
-+	.rq_end_io = multipath_end_io,
- 	.presuspend = multipath_presuspend,
- 	.resume = multipath_resume,
- 	.status = multipath_status,
- 	.message = multipath_message,
- 	.ioctl  = multipath_ioctl,
-+	.congested = multipath_congested,
- };
- 
- static int __init dm_multipath_init(void)
+Modules linked in: mptfc mptscsih mptbase
+NIP: D000000000073DA0 LR: D0000000000675BC CTR: D000000000073DA0
+REGS: c00000000076b4e0 TRAP: 0800   Not tainted  (2.6.20)
+MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 48004048  XER: 00000000
+TASK = c000000000671420[0] 'swapper' THREAD: c000000000768000
+GPR00: D000000000073DA0 C00000000076B760 D0000000000803D0 C00000000FA46000
+GPR04: C000000001B81310 0000000000000053 C00000000076B833 9000000000049032
+GPR08: C000000001B82800 D0000000000782F8 0000000000000000 0000000000000000
+GPR12: D00000000006A2F0 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C000000000664DB0 000000000023FB20 C00000000058B380 C00000000058C5E8
+GPR20: C000000000664B40 C00000000058B130 0000000000000001 000000000023FB30
+GPR24: C00000000058C6D8 0000000000000006 C00000000FA46000 C000000001B81310
+GPR28: D000000000071AD0 0000000000000000 D000000000078B80 D000000000071B40
+NIP [D000000000073DA0] .mptfc_event_process+0x0/0xc0 [mptfc]
+LR [D0000000000675BC] .mpt_base_reply+0x4bc/0xdd0 [mptbase]
+Call Trace:
+[C00000000076B760] [D0000000000672BC] .mpt_base_reply+0x1bc/0xdd0
+[mptbase] (unreliable)
+[C00000000076B890] [D0000000000680FC] .mpt_interrupt+0x22c/0x770 [mptbase]
+[C00000000076B940] [C00000000006CAC0] .handle_IRQ_event+0x70/0x100
+[C00000000076B9E0] [C00000000006E76C] .handle_fasteoi_irq+0x8c/0x120
+[C00000000076BA70] [C00000000000C788] .do_IRQ+0xe8/0x120
+[C00000000076BAF0] [C0000000000041DC] hardware_interrupt_entry+0x18/0x1c
+--- Exception: 501 at .cpu_idle+0xd8/0x140
+    LR = .cpu_idle+0xd8/0x140
+[C00000000076BDE0] [C000000000011934] .cpu_idle+0x124/0x140 (unreliable)
+[C00000000076BE70] [C000000000009394] .rest_init+0x34/0x50
+[C00000000076BEF0] [C00000000062D910] .start_kernel+0x260/0x300
+[C00000000076BF90] [C000000000008460] .start_here_common+0x54/0xf4
+Instruction dump:
+c0000001 36947878 c0000001 3694789c c0000001 369478c0 c0000001 369478e4
+c0000001 36947908 c0000001 3694792c <c0000001> 36947950 c0000001 36947974
+ <0>Kernel panic - not syncing: Fatal exception in interrupt
+ <0>Rebooting in 180 seconds..
+
+I set the FC host side connection back to point-to-point and the Linux
+Xserve was again able to boot into the OS. In any case, don't think
+this is normal because the OSX XServe doesn't panic if it sees targets
+set to loop.
+
+Thanks,
+Sabuj Pattanayek
