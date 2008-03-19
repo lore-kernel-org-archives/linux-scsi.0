@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [RFC PATCH 06/13] dm: tidy local_init
-Date: Wed, 19 Mar 2008 18:09:56 -0500 (EST)
-Message-ID: <20080319.180956.17868120.k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 08/13] dm: add target interfaces
+Date: Wed, 19 Mar 2008 18:10:37 -0500 (EST)
+Message-ID: <20080319.181037.78496647.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,78 +20,70 @@ To: jens.axboe@oracle.com, michaelc@cs.wisc.edu, hare@suse.de, agk@redhat.com, l
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch tidies local_init() as preparation for request-based dm.
-No functional change.
-
-This patch is just a clean up of the codes and not functionally
-related to request-based dm.  But included here due to literal
-dependency.
+This patch adds target interfaces for request-based dm.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/md/dm.c |   34 +++++++++++++++++-----------------
- 1 files changed, 17 insertions(+), 17 deletions(-)
+ include/linux/device-mapper.h |   12 ++++++++++++
+ 1 files changed, 12 insertions(+)
 
-Index: 2.6.25-rc5/drivers/md/dm.c
+Index: 2.6.25-rc5/include/linux/device-mapper.h
 ===================================================================
---- 2.6.25-rc5.orig/drivers/md/dm.c
-+++ 2.6.25-rc5/drivers/md/dm.c
-@@ -151,40 +151,40 @@ static struct kmem_cache *_tio_cache;
+--- 2.6.25-rc5.orig/include/linux/device-mapper.h
++++ 2.6.25-rc5/include/linux/device-mapper.h
+@@ -10,6 +10,7 @@
  
- static int __init local_init(void)
- {
--	int r;
-+	int r = -ENOMEM;
+ #ifdef __KERNEL__
  
- 	/* allocate a slab for the dm_ios */
- 	_io_cache = KMEM_CACHE(dm_io, 0);
- 	if (!_io_cache)
--		return -ENOMEM;
-+		return r;
++struct request;
+ struct dm_target;
+ struct dm_table;
+ struct dm_dev;
+@@ -45,6 +46,9 @@ typedef void (*dm_dtr_fn) (struct dm_tar
+ typedef int (*dm_map_fn) (struct dm_target *ti, struct bio *bio,
+ 			  union map_info *map_context);
  
- 	/* allocate a slab for the target ios */
- 	_tio_cache = KMEM_CACHE(dm_target_io, 0);
--	if (!_tio_cache) {
--		kmem_cache_destroy(_io_cache);
--		return -ENOMEM;
--	}
-+	if (!_tio_cache)
-+		goto out_free_io_cache;
- 
- 	r = dm_uevent_init();
--	if (r) {
--		kmem_cache_destroy(_tio_cache);
--		kmem_cache_destroy(_io_cache);
--		return r;
--	}
-+	if (r)
-+		goto out_free_tio_cache;
- 
- 	_major = major;
- 	r = register_blkdev(_major, _name);
--	if (r < 0) {
--		kmem_cache_destroy(_tio_cache);
--		kmem_cache_destroy(_io_cache);
--		dm_uevent_exit();
--		return r;
--	}
-+	if (r < 0)
-+		goto out_uevent_exit;
- 
- 	if (!_major)
- 		_major = r;
- 
- 	return 0;
++typedef int (*dm_map_request_fn) (struct dm_target *ti, struct request *clone,
++				  union map_info *map_context);
 +
-+out_uevent_exit:
-+	dm_uevent_exit();
-+out_free_tio_cache:
-+	kmem_cache_destroy(_tio_cache);
-+out_free_io_cache:
-+	kmem_cache_destroy(_io_cache);
-+
-+	return r;
- }
+ /*
+  * Returns:
+  * < 0 : error (currently ignored)
+@@ -57,6 +61,10 @@ typedef int (*dm_endio_fn) (struct dm_ta
+ 			    struct bio *bio, int error,
+ 			    union map_info *map_context);
  
- static void local_exit(void)
++typedef int (*dm_request_endio_fn) (struct dm_target *ti,
++				    struct request *clone, int error,
++				    union map_info *map_context);
++
+ typedef void (*dm_flush_fn) (struct dm_target *ti);
+ typedef void (*dm_presuspend_fn) (struct dm_target *ti);
+ typedef void (*dm_postsuspend_fn) (struct dm_target *ti);
+@@ -71,6 +79,7 @@ typedef int (*dm_message_fn) (struct dm_
+ typedef int (*dm_ioctl_fn) (struct dm_target *ti, struct inode *inode,
+ 			    struct file *filp, unsigned int cmd,
+ 			    unsigned long arg);
++typedef int (*dm_congested_fn) (struct dm_target *ti);
+ 
+ void dm_error(const char *message);
+ 
+@@ -98,7 +107,9 @@ struct target_type {
+ 	dm_ctr_fn ctr;
+ 	dm_dtr_fn dtr;
+ 	dm_map_fn map;
++	dm_map_request_fn map_rq;
+ 	dm_endio_fn end_io;
++	dm_request_endio_fn rq_end_io;
+ 	dm_flush_fn flush;
+ 	dm_presuspend_fn presuspend;
+ 	dm_postsuspend_fn postsuspend;
+@@ -107,6 +118,7 @@ struct target_type {
+ 	dm_status_fn status;
+ 	dm_message_fn message;
+ 	dm_ioctl_fn ioctl;
++	dm_congested_fn congested;
+ };
+ 
+ struct io_restrictions {
