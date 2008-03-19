@@ -1,100 +1,822 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] convert the scsi layer to use struct device
-Date: Wed, 19 Mar 2008 15:38:18 -0500
-Message-ID: <1205959098.11527.51.camel@localhost.localdomain>
-References: <20080313210655.GA13468@kroah.com>
-	 <1205514958.2904.27.camel@localhost.localdomain>
-	 <1205776640.6767.154.camel@localhost.localdomain>
-	 <20080319004807.GB8298@kroah.com>
+From: "Sabuj Pattanayek" <sabujp@gmail.com>
+Subject: Re: kernel exception in Fusion MPT base driver 3.04.06 (linux-2.6.24.3)
+Date: Wed, 19 Mar 2008 16:11:37 -0500
+Message-ID: <e64671580803191411r7ca57fffu885e173f9b3285d0@mail.gmail.com>
+References: <e64671580803171629g534ebf34l89adbb14bb985dc7@mail.gmail.com>
+	 <20080318002502.852d0f12.akpm@linux-foundation.org>
+	 <47DFFE90.8050808@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45846 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964774AbYCSUiX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Mar 2008 16:38:23 -0400
-In-Reply-To: <20080319004807.GB8298@kroah.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:45189 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936466AbYCSVLk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2008 17:11:40 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so344048nfb.21
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 14:11:37 -0700 (PDT)
+In-Reply-To: <47DFFE90.8050808@sgi.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-scsi@vger.kernel.org, Tony Jones <tonyj@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Andrew Morton <akpm@linux-foundation.org>, linux-next@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Tue, 2008-03-18 at 17:48 -0700, Greg KH wrote:
-> On Mon, Mar 17, 2008 at 12:57:20PM -0500, James Bottomley wrote:
-> > On Fri, 2008-03-14 at 12:15 -0500, James Bottomley wrote:
-> > > On Thu, 2008-03-13 at 14:06 -0700, Greg KH wrote:
-> > > > Here's a huge patch from Tony and Kay that converts the scsi layer to
-> > > > use struct device instead of class_device.
-> > > > 
-> > > > It doesn't seem like it could be split up any smaller due to the
-> > > > interconectedness of the whole mess, if you have any suggestions
-> > > > otherwise, it would be appreciated.
-> > > > 
-> > > > If you want, I can take this through my tree as it does depend on a
-> > > > previous IB patch to make that portion of the patch much smaller.
-> > > > 
-> > > > After this, all of the class_device code is now finally gone from the
-> > > > kernel!
-> > > 
-> > > Actually, I have it built and running (actually 2.6.25-rc5-mc5 which
-> > > includes all the changes in your tree).  Amazingly it's pretty much
-> > > fully functional, except ses which seems to have suffered a breakdown in
-> > > the way its model works.  I'll see if I can fix it up.
-> > > 
-> > > Since the patch is separable, it's probably best to take it through the
-> > > SCSI tree ... including the infiniband bits that depend on the
-> > > iser/iscsi transport classes.  You can give the rest of the infiniband
-> > > pieces to roland, since he's got a nasty set of clashes with the
-> > > __FUNCTION__->__func__ conversion which I don't want to be responsible
-> > > for.
-> > 
-> > OK, I've changed my mind ... it doesn't really work well without all the
-> > rest of the pieces ... plus I think there are going to be merge nasties
-> > which I'd rather you sorted out.
-> 
-> Ok, so what do you want me to do?
+Hi,
 
-Keep the patch in your tree.
+>  > Did any earlier kernel work OK?  If so, which?  2.6.23??
 
->   I can keep the scsi patch and the IB
-> patches in my tree and merge them that way, but I think it causes
-> problems with your scsi patches.  That will cause the -next and -mm tree
-> issues, right?
+2.6.24.3 was the first kernel I tested.
 
-No, that's what the post-merge tree is below.  Its an unstable (as in
-fairly rapidly rebasing) tree built on your quilt that includes all the
-device changes.  After you push your gregkh-drivers tree upstream, I'll
-rebase it on the final history in Linus tree, and then it should only
-have the added SCSI pieces ready for merging.
+>  Does the exception happen every time?
 
-Any changes that come in which would cause a conflict in the generic
-device stuff, we'll force to be rediffed against the post merge tree.
-Effectively I'm running two merge window trees now:  scsi-misc-2.6 which
-contains all the fixes ready for integration now (and will go at the
-start of the merge window) and scsi-post-merge-2.6 which contains
-changes dependent on you getting your gregkh-drivers quilt upstream
-before it can go.
+Yes and now I've tested older kernels:
 
-The only difference between the current post merge tree and the one I
-had to run for 2.6.24 is that 2.6.24 was built on Jens block git tree
-because of the sg_table changes.  This time I'm building on a quilt,
-which makes the tree a bit more difficult to deal with for people
-pulling from it.
+Linux porpoise 2.6.20 #4 Wed Mar 19 15:32:32 CDT 2008 ppc64 PPC970FX,
+altivec supported RackMac3,1 GNU/Linux
 
-> > What I'll do is run a scsi-post-merge-2.6 tree here:
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-post-merge-2.6.git;a=summary
-> > 
-> > I've dropped a quasi stable branch from your quilt tree and plumbed it
-> > into the -mc tree generation machinery, so it will warn me if you make
-> > too radical an alteration to your quilt.
-> 
-> So I shouldn't drop the patch from my tree?
-
-Correct.
-
-James
+...and put another very similar LSI FC card into the box that is known
+to be working (the card in the previous email was also known to be
+working, but just to be sure...):
 
 
+0001:06:03.0 Fibre Channel: LSI Logic / Symbios Logic FC929X Fibre
+Channel Adapter (rev 81)
+        Subsystem: LSI Logic / Symbios Logic Unknown device 10d0
+        Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+>TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 16 (16000ns min, 2500ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: I/O ports at 0400 [disabled] [size=256]
+        Region 1: Memory at 90030000 (64-bit, non-prefetchable)
+[disabled] [size=64K]
+        Region 3: Memory at 90020000 (64-bit, non-prefetchable)
+[disabled] [size=64K]
+        Expansion ROM at 90200000 [disabled] [size=1M]
+        Capabilities: [50] Power Management version 2
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [68] PCI-X non-bridge device
+                Command: DPERE- ERO- RBC=2048 OST=8
+                Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
+DMMRBC=2048 DMOST=8 DMCRS=64 RSCEM- 266MHz- 533MHz-
+
+
+0001:06:03.1 Fibre Channel: LSI Logic / Symbios Logic FC929X Fibre
+Channel Adapter (rev 81)
+        Subsystem: LSI Logic / Symbios Logic Unknown device 10d0
+        Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+>TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 16 (16000ns min, 2500ns max), Cache Line Size: 64 bytes
+        Interrupt: pin B routed to IRQ 53
+        Region 0: I/O ports at <unassigned> [disabled]
+        Region 1: Memory at 90010000 (64-bit, non-prefetchable)
+[disabled] [size=64K]
+        Region 3: Memory at 90000000 (64-bit, non-prefetchable)
+[disabled] [size=64K]
+        Expansion ROM at 90100000 [disabled] [size=1M]
+        Capabilities: [50] Power Management version 2
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [68] PCI-X non-bridge device
+                Command: DPERE- ERO- RBC=2048 OST=8
+                Status: Dev=ff:1f.1 64bit+ 133MHz+ SCD- USC- DC=simple
+DMMRBC=2048 DMOST=8 DMCRS=64 RSCEM- 266MHz- 533MHz-
+
+
+on "modprobe mptfc" I get:
+
+porpoise linux-2.6.20 # modprobe mptfc
+
+Oops: Kernel access of bad area, sig: 11 [#1]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C0000000000C1494 LR: C0000000000C1768 CTR: C000000000516B90
+REGS: c000000001d0b930 TRAP: 0300   Not tainted  (2.6.20)
+MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 24000024  XER: 20000000
+DAR: 0201001008002568, DSISR: 0000000040000000
+TASK = c000000001d137e0[141] 'pdflush' THREAD: c000000001d08000
+GPR00: 0000000000000400 C000000001D0BBB0 C000000000768910 0000000000000001
+GPR04: C000000001D13AA0 0000000000000000 C00000013AB574F8 C00000000000FBD8
+GPR08: C000000001D0B760 0201001008002500 0000000000000116 0000000000000000
+GPR12: D00000000016B050 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C000000000664DB0 000000000023FB20 C00000000058B380 C00000000058C5E8
+GPR20: C000000000664B40 C00000000058B130 C00000000058C018 C000000000674D70
+GPR24: 000000010000EBBB 0000000000000000 C00000000FE90CD8 C000000001D0BD88
+GPR28: C00000000FE90C00 C00000000FEE9350 C0000000006A3370 C00000013AB574E8
+NIP [C0000000000C1494] .sync_sb_inodes+0x74/0x3d0
+LR [C0000000000C1768] .sync_sb_inodes+0x348/0x3d0
+Call Trace:
+[C000000001D0BBB0] [C0000000000C1768] .sync_sb_inodes+0x348/0x3d0 (unreliable)
+[C000000001D0BC70] [C0000000000C1D04] .writeback_inodes+0xf4/0x120
+[C000000001D0BD10] [C0000000000782E0] .wb_kupdate+0xe0/0x180
+[C000000001D0BE10] [C000000000078B58] .pdflush+0x168/0x270
+[C000000001D0BEE0] [C00000000005A538] .kthread+0x158/0x170
+[C000000001D0BF90] [C000000000021D4C] .kernel_thread+0x4c/0x68
+Instruction dump:
+eb170000 78091fe1 418200c4 e92300d8 3b4300d8 7fba4800 419e00bc 7fba4800
+41de0078 e8dc00e0 3be6fff0 e93f0108 <eba90068> 801d0010 7809ffe3 418200d0
+
+<1>Unable to handle kernel paging request for data at address 0x3090006230fff00
+Faulting instruction address: 0xc0000000000958f0
+Oops: Kernel access of bad area, sig: 11 [#2]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C0000000000958F0 LR: C000000000095A54 CTR: C0000000000976E0
+REGS: c00000007efb38d0 TRAP: 0300   Not tainted  (2.6.20)
+MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 28000044  XER: 00000000
+DAR: 03090006230FFF00, DSISR: 0000000042000000
+TASK = c00000007ef92040[4] 'events/0' THREAD: c00000007efb0000
+GPR00: 0000000000100100 C00000007EFB3B50 C000000000768910 C00000000FFA8B80
+GPR04: C0000000062DB6B8 0000000000000018 C00000013AEB1250 C00000013BF37B00
+GPR08: C00000013AEB1000 0000000000200200 03090006230FFF00 0800250009200100
+GPR12: 0000000000000000 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C000000000664DB0 000000000023FB20 C00000000058B380 C00000000058C5E8
+GPR20: C000000000664B40 C00000000058B130 C00000000058C018 000000000023FB30
+GPR24: C00000000FFAB010 0000000000000018 C000000000795E38 0000000000000000
+GPR28: C00000000FFA8B80 0000000000000000 C000000000683EF8 0000000000000000
+NIP [C0000000000958F0] .free_block+0x100/0x1e0
+LR [C000000000095A54] .drain_array+0x84/0x160
+Call Trace:
+[C00000007EFB3B50] [C00000007EFB3BF0] 0xc00000007efb3bf0 (unreliable)
+[C00000007EFB3C00] [C000000000095A54] .drain_array+0x84/0x160
+[C00000007EFB3CA0] [C000000000097790] .cache_reap+0xb0/0x1c0
+[C00000007EFB3D40] [C000000000054EE4] .run_workqueue+0xf4/0x200
+[C00000007EFB3DF0] [C000000000055AC4] .worker_thread+0x1a4/0x200
+[C00000007EFB3EE0] [C00000000005A538] .kthread+0x158/0x170
+[C00000007EFB3F90] [C000000000021D4C] .kernel_thread+0x4c/0x68
+Instruction dump:
+68000080 7800cfe2 0b000000 e9040030 7d3be214 3c000010 e8e90020 3d200020
+60000100 e9680000 e9480008 61290200 <f96a0000> f94b0008 f8080000 f9280008
+ <1>Unable to handle kernel paging request for data at address
+0x200000d0230fff58
+Faulting instruction address: 0xc000000000116b38
+Oops: Kernel access of bad area, sig: 11 [#3]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C000000000116B38 LR: C0000000001174BC CTR: C000000000516B90
+REGS: c00000013bda38c0 TRAP: 0300   Not tainted  (2.6.20)
+MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 44000088  XER: 20000000
+DAR: 200000D0230FFF58, DSISR: 0000000040000000
+TASK = c00000013bcdb7e0[918] 'kjournald' THREAD: c00000013bda0000
+GPR00: 0000000000000000 C00000013BDA3B40 C000000000768910 200000D0230FFF00
+GPR04: C00000013BDA3C70 0000000000000000 0000000024000082 C00000000000FBD8
+GPR08: C00000013BDA3AC0 C00000013BDA0000 00000000000000A9 C00000013B065780
+GPR12: 0000000000000000 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C00000013BCC8000 000000000023FB20 C00000000058B380 C00000000058C5E8
+GPR20: C000000000664B40 C00000000058B130 C00000007EC2D200 C00000013BDA3C70
+GPR24: 0000000000000000 0800250009200100 C00000013BDA3C70 0000000000000000
+GPR28: C00000013BDA0048 0001000002010010 C0000000006A5620 C00000013B065780
+NIP [C000000000116B38] .journal_clean_one_cp_list+0x48/0x130
+LR [C0000000001174BC] .__journal_clean_checkpoint_list+0x6c/0xe0
+Call Trace:
+[C00000013BDA3C00] [C0000000001174BC] .__journal_clean_checkpoint_list+0x6c/0xe0
+[C00000013BDA3CC0] [C000000000114C08] .journal_commit_transaction+0x1b8/0x1240
+[C00000013BDA3E00] [C00000000011A610] .kjournald+0xd0/0x260
+[C00000013BDA3EE0] [C00000000005A538] .kthread+0x158/0x170
+[C00000013BDA3F90] [C000000000021D4C] .kernel_thread+0x4c/0x68
+Instruction dump:
+fb61ffd8 fb81ffe0 f8010010 fba1ffe8 fbe1fff8 f821ff41 38000000 7c972378
+3b000000 90040000 41820068 78290464 <eb230058> 7c7f1b78 3b490048 60000000
+ <3>BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+BUG: scheduling while atomic: automount/0x09200100/4810
+Call Trace:
+[C00000013B0B7CA0] [C00000000000F384] .show_stack+0x54/0x1f0 (unreliable)
+[C00000013B0B7D50] [C0000000005170C4] .schedule+0x534/0x620
+[C00000013B0B7E30] [C000000000008BBC] do_work+0x14/0x2c
+------------[ cut here ]------------
+kernel BUG at kernel/timer.c:528!
+Oops: Exception in kernel mode, sig: 5 [#4]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C00000000004B5F4 LR: C00000000004B840 CTR: C0000000002E8F50
+REGS: c000000006af3100 TRAP: 0700   Not tainted  (2.6.20)
+MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 48002088  XER: 20000000
+TASK = c0000000066f6040[5878] 'mptfc_wq_4' THREAD: c000000006af0000
+GPR00: 0000000000000001 C000000006AF3380 C000000000768910 C000000000791360
+GPR04: C00000013B0B3B30 000000000000003F 0000000000000100 00000000000448EA
+GPR08: C000000006AF34A0 E00000D02376EC5F C000000001C98AF0 C00000013B0B3B30
+GPR12: 0000000028002042 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C000000006AF3C50 C000000006AF3C60 C0000000007943E0 20C49BA5E353F7CF
+GPR20: 431BDE82D7B634DB 000000000000000A C000000006AF0000 0000000000000000
+GPR24: C000000000674D70 0000000000200200 0000000000000100 000000000000003F
+GPR28: C000000000791360 C000000006AF33F0 C000000000680DD0 230FFF00200000D0
+NIP [C00000000004B5F4] .cascade+0x74/0xc0
+LR [C00000000004B840] .run_timer_softirq+0xe0/0x250
+Call Trace:
+[C000000006AF3380] [C00000000070AE18] 0xc00000000070ae18 (unreliable)
+[C000000006AF3430] [C00000000004B840] .run_timer_softirq+0xe0/0x250
+[C000000006AF3500] [C000000000046428] .__do_softirq+0xc8/0x1a0
+[C000000006AF35C0] [C00000000000C664] .do_softirq+0x64/0xa0
+[C000000006AF3640] [C000000000046214] .irq_exit+0x64/0x80
+[C000000006AF36C0] [C00000000000C790] .do_IRQ+0xf0/0x120
+[C000000006AF3740] [C0000000000041DC] hardware_interrupt_entry+0x18/0x1c
+--- Exception: 501 at .local_irq_restore+0x38/0x50
+    LR = .schedule+0x2e4/0x620
+[C000000006AF3A30] [C000000000516E4C] .schedule+0x2bc/0x620 (unreliable)
+[C000000006AF3B10] [D000000000166184] .mpt_config+0x294/0x330 [mptbase]
+[C000000006AF3BE0] [D00000000017544C] .mptfc_rescan_devices+0x1ec/0x6e0 [mptfc]
+[C000000006AF3D40] [C000000000054EE4] .run_workqueue+0xf4/0x200
+[C000000006AF3DF0] [C000000000055AC4] .worker_thread+0x1a4/0x200
+[C000000006AF3EE0] [C00000000005A538] .kthread+0x158/0x170
+[C000000006AF3F90] [C000000000021D4C] .kernel_thread+0x4c/0x68
+Instruction dump:
+fbaa0000 7d24012a f9410078 e8810070 7fbd2000 e8040000 419e0034 7c1f0378
+e8040028 7f800278 3120ffff 7c090110 <0b000000> 7f83e378 4bfffc95 7fbdf800
+ <0>Kernel panic - not syncing: Fatal exception in interrupt
+ <0>Rebooting in 180 seconds..
+
+
+and on boot I get the following:
+
+
+ * Letting udev process events ... *   udev loading module mptfc
+Oops: Exception in kernel mode, sig: 4 [#1]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C000000000EB44B0 LR: D0000000000618B4 CTR: C000000000EB44B0
+REGS: c000000006513810 TRAP: 0700   Not tainted  (2.6.20)
+MSR: 9000000000089032 <EE,ME,IR,DR>  CR: 24002028  XER: 00000000
+TASK = c00000000655b040[2701] 'mptfc_wq_4' THREAD: c000000006510000
+GPR00: 0000000000000002 C000000006513A90 C000000000768910 0000000000000001
+GPR04: C00000000FBDE800 C00000000067A1B8 0000000000000000 000000000000000F
+GPR08: 0000000000200200 00000000000006B8 0000000000100100 C000000000EB44B0
+GPR12: D000000000069E40 C000000000671C80 000000000023FB28 C00000000058C6D8
+GPR16: C000000006513C50 C000000006513C60 0000000000000ACD C00000000FA31E68
+GPR20: C00000000FBDEED8 C000000000EB44D4 0000000000010000 C00000000FA2C800
+GPR24: 0000000000000000 0000000000000024 D000000000070438 C00000000FBDE800
+GPR28: C00000000FBDE800 C000000006513C60 D000000000078B80 C00000013B28FF00
+NIP [C000000000EB44B0] 0xc000000000eb44b0
+LR [D0000000000618B4] .mpt_get_msg_frame+0x64/0xf0 [mptbase]
+Call Trace:
+[C000000006513A90] [0000000000000ACC] 0xacc (unreliable)
+[C000000006513B10] [D000000000064F70] .mpt_config+0x80/0x330 [mptbase]
+[C000000006513BE0] [D00000000007444C] .mptfc_rescan_devices+0x1ec/0x6e0 [mptfc]
+[C000000006513D40] [C000000000054EE4] .run_workqueue+0xf4/0x200
+[C000000006513DF0] [C000000000055AC4] .worker_thread+0x1a4/0x200
+[C000000006513EE0] [C00000000005A538] .kthread+0x158/0x170
+[C000000006513F90] [C000000000021D4C] .kernel_thread+0x4c/0x68
+Instruction dump:
+XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+
+<0>------------[ cut here ]------------
+kernel BUG at lib/prio_tree.c:149!
+Oops: Exception in kernel mode, sig: 5 [#2]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C000000000240550 LR: C00000000007DC9C CTR: 000000000000000C
+REGS: c00000000fe03490 TRAP: 0700   Not tainted  (2.6.20)
+MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 24224442  XER: 20000000
+TASK = c00000013bcd37e0[925] 'bash' THREAD: c00000000fe00000
+GPR00: 0000000000000001 C00000000FE03710 C000000000768910 C000000000EB42C0
+GPR04: C00000007ED18A08 C00000013BD856C0 C00000000FE036D0 C00000007ED18A28
+GPR08: C00000007ED189C0 E00000D05DDE7507 C00000000FF7D228 C00000013BD856C0
+GPR12: 0000000024224444 C000000000671C80 00000000100F5C3C 0000000000000001
+GPR16: 00000000100F5C40 00000000100F4B20 00000000100F5BBC FFFFFFFFFFFFFFFF
+GPR20: 00000000100D9650 00000FFFFF813760 0000000000000001 0000000000000000
+GPR24: C00000000FE03EA0 0000000000000000 0000000000000000 C00000000FE03940
+GPR28: 0000040000000000 C00000013BD85678 C000000000683930 C00000000FF7D1E0
+NIP [C000000000240550] .prio_tree_replace+0xa0/0xc0
+LR [C00000000007DC9C] .vma_prio_tree_remove+0x7c/0x1a0
+Call Trace:
+[C00000000FE03710] [C00000000007DD24]
+.vma_prio_tree_remove+0x104/0x1a0 (unreliable)
+[C00000000FE037A0] [C000000000085C54] .__remove_shared_vm_struct+0x74/0xb0
+[C00000000FE03820] [C000000000084000] .free_pgtables+0xb0/0x140
+[C00000000FE038D0] [C000000000085910] .exit_mmap+0xb0/0x140
+[C00000000FE03980] [C00000000003CD70] .mmput+0x60/0x100
+[C00000000FE03A00] [C0000000000418A4] .exit_mm+0xa4/0x140
+[C00000000FE03A90] [C0000000000436CC] .do_exit+0x17c/0x920
+[C00000000FE03B70] [C000000000043EB4] .do_group_exit+0x44/0xb0
+[C00000000FE03BF0] [C00000000004F904] .get_signal_to_deliver+0x364/0x4b0
+[C00000000FE03CA0] [C000000000016BAC] .do_signal+0x8c/0x750
+[C00000000FE03E30] [C000000000008BD0] do_work+0x28/0x2c
+Instruction dump:
+4d9e0020 f8050008 60000000 60000000 60000000 e9240008 f8a90010 4e800020
+e8030000 7c800278 3120ffff 7c090110 <0b000000> f8a50010 f8a30000 4bffff94
+ <1>Fixing recursive fault but reboot is needed!
+
+Unable to handle kernel paging request for data at address 0x230fff0021000138
+Faulting instruction address: 0xc000000000073198
+Oops: Kernel access of bad area, sig: 11 [#3]
+
+Modules linked in: mptfc mptscsih mptbase
+NIP: C000000000073198 LR: C000000000081358 CTR: C000000000073120
+REGS: c00000000670b810 TRAP: 0300   Not tainted  (2.6.20)
+MSR: 9000000000009032 <EE,ME,IR,DR>  CR: 28002448  XER: 20000000
+DAR: 230FFF0021000138, DSISR: 0000000040000000
+TASK = c00000013bccf7e0[2196] 'udevd' THREAD: c000000006708000
+GPR00: 00000400001D7000 C00000000670BA90 C000000000768910 C00000000FF7D090
+GPR04: 000000000000000C C00000000670BBD0 0000000000000000 0000000000000400
+GPR08: C00000007EB6A980 0000000000000000 C000000000073120 0000000000000000
+GPR12: 0000000048002444 C000000000671C80 000000000023FB28 0000000028224422
+GPR16: 6DB6DB6DB6DB6DB7 C000000000795E38 C00000000670BBD0 00000400001E3000
+GPR20: C00000000670BBD0 230FFF00210000D0 C00000000FF7D090 0000000000000002
+GPR24: C000000000795D10 0000000000000000 C00000013BC804E0 000000000000000C
+GPR28: C00000013BC80480 C000000000EB42A0 C0000000006832D0 C000000006708000
+NIP [C000000000073198] .filemap_nopage+0x78/0x480
+LR [C000000000081358] .__handle_mm_fault+0x318/0xbe0
+Call Trace:
+[C00000000670BA90] [C000000000073298] .filemap_nopage+0x178/0x480 (unreliable)
+[C00000000670BB60] [C000000000081358] .__handle_mm_fault+0x318/0xbe0
+[C00000000670BC60] [C000000000028098] .do_page_fault+0x478/0x630
+[C00000000670BE30] [C0000000000048FC] handle_page_fault+0x20/0x58
+Instruction dump:
+3b200000 3ae00002 eb1e8058 eb830090 e8030008 e9230088 ebbc00d0 7c802050
+3b5c0060 7884a302 eabd0000 7f644a14 <e9350068> 39290fff 7929a302 7fbb4840
+
+
+Thanks,
+Sabuj Pattanayek
