@@ -1,72 +1,54 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
-   count
-Date: Thu, 20 Mar 2008 21:54:51 +0900
-Message-ID: <200803201254.m2KCstCa031594@mbox.iij4u.or.jp>
-References: <1204730484.3047.10.camel@localhost.localdomain>
-	<20080306134146A.fujita.tomonori@lab.ntt.co.jp>
-	<20080306134138.GF17940@kernel.dk>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Denis Cheng <crquan@gmail.com>
+Subject: [RFC][PATCH] mark /proc/sys/dev/scsi/logging_level to be removed
+Date: Thu, 20 Mar 2008 21:03:10 +0800
+Message-ID: <1206018190-5888-1-git-send-email-crquan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:32853 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754550AbYCTMz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Mar 2008 08:55:57 -0400
-In-Reply-To: <20080306134138.GF17940@kernel.dk>
+Received: from rn-out-0910.google.com ([64.233.170.186]:38290 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754435AbYCTNEM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2008 09:04:12 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so690201rnb.15
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 06:04:11 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
-Date: Thu, 6 Mar 2008 14:41:39 +0100
+Signed-off-by: Denis Cheng <crquan@gmail.com>
+---
+Since scsi_logging_level module_param can be read/written while system
+running, the demand for /proc/sys/dev/scsi/logging_level has been no longer
+mandotory.
 
-> On Thu, Mar 06 2008, FUJITA Tomonori wrote:
-> > On Wed, 05 Mar 2008 09:21:24 -0600
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
-> > > > On Wed, Mar 05 2008, Tejun Heo wrote:
-> > > > > This is getting insanely subtle.  Let's say there's PIO driver which
-> > > > > transfer certain sized chunks at a time and completes request partially
-> > > > > after completing each chunk and the driver uses draining to eat up
-> > > > > whatever excess data, which seems like a legit use case to me.  But it
-> > > > > won't work because __end_that_request_first() will terminate when it
-> > > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
-> > > > > 
-> > > > > Nacked-by: Tejun Heo <htejun@gmail.com>
-> > > > 
-> > > > Yeah, I think I may have gone a bit overboard in applying this so
-> > > > quickly. It's just not a good interface, silently adding the extra
-> > > > length if asked to complete more. It may even happen right now, for a
-> > > > driver that does no padding (it probably wont do any harm here either,
-> > > > but still).
-> > > > 
-> > > > I'll try and see if I can come up with something cleaner.
-> > > > 
-> > > > My basic design paradigm for this is that the _driver_ (or mid layer, if
-> > > > SCSI wants to handle it) should care about the padding. So make it easy
-> > > > for them to pad, but have it 'unrolled' by completion time. We should
-> > > > NOT need any extra_len checks or additions in the block/ directory,
-> > > > period.
-> > > 
-> > > Right, that's why my original proposal was to do nothing for padding
-> > > (other than ensure the driver could adjust the length if it wanted to)
-> > > and to add an extra element always for draining, which the driver could
-> > > ignore.  It basically pushed the use paradigm onto the driver.
-> > > 
-> > > If we want the use paradigm shared between block and driver, then I
-> > > think the best approach is to keep all the bios the same (so not adjust
-> > > for padding), but do adjust in the blk_rq_map_sg().  That way we have
-> > > the padding and draining unwind information by comparing with the bio.
-> > 
-> > Adjusting only sg in blk_rq_map_sg (like drain) looks much
-> > better. This works with libata for me.
-> 
-> Looks like a much better solution to me. Anyone have any valid
-> objections against moving the padding to the sg map time?
+But someone might have already set this value in /etc/sysctl.conf, so
+mark it to be removed in one year (until March 2009).
 
-What's the situation with this fix?
+One year might be not enough or too long, this period should also be discussed.
+
+ Documentation/feature-removal-schedule.txt |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index c1d1fd0..97bdb96 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -328,3 +328,16 @@ Why:	Not used in-tree. The current out-of-tree users used it to
+ 	code / infrastructure should be in the kernel and not in some
+ 	out-of-tree driver.
+ Who:	Thomas Gleixner <tglx@linutronix.de>
++
++---------------------------
++
++What:	/proc/sys/dev/scsi/logging_level
++When:	March 2009
++Files:	drivers/scsi/scsi_sysctl.c
++Check:	/etc/sysctl.conf
++Why:	its functionality is also provided by the scsi_mod's module param,
++	module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
++	that can be read and written with
++	/sys/module/scsi_mod/parameters/scsi_logging_level
++	like the sysctl interface while system running.
++Who:	Denis Cheng <crquan@gmail.com> or linux-scsi@vger.kernel.org
+-- 
+1.5.4.4
+
