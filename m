@@ -1,92 +1,79 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] a100u2w: fix bitmap lookup routine
-Date: Thu, 20 Mar 2008 13:56:28 +0900
-Message-ID: <20080320135518W.tomof@acm.org>
-References: <20080317123200.GA17756@APFDCB5C>
-	<1205765204.6767.129.camel@localhost.localdomain>
-	<20080319142419.GA27779@devserv.devel.redhat.com>
+From: "Siva Kodiganti" <kodiganti@gmail.com>
+Subject: scsi layer interfaces for hypervisors
+Date: Wed, 19 Mar 2008 22:57:21 -0700
+Message-ID: <b8c77ef10803192257w5629e931y28eed9ab32ed02a9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:40368 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751437AbYCTE5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Mar 2008 00:57:15 -0400
-In-Reply-To: <20080319142419.GA27779@devserv.devel.redhat.com>
+Received: from fg-out-1718.google.com ([72.14.220.153]:32793 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbYCTF5Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2008 01:57:25 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so684151fgb.17
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 22:57:22 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: alan@redhat.com
-Cc: James.Bottomley@HansenPartnership.com, akinobu.mita@gmail.com, linux-scsi@vger.kernel.org, hch@lst.de, dledford@redhat.com, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
+Cc: siva@3leafsystems.com
 
-On Wed, 19 Mar 2008 10:24:19 -0400
-Alan Cox <alan@redhat.com> wrote:
+Hello Linux community,
 
-> On Mon, Mar 17, 2008 at 09:46:44AM -0500, James Bottomley wrote:
-> > On Mon, 2008-03-17 at 21:32 +0900, Akinobu Mita wrote:
-> > > This patch is only compile tested.
-> > 
-> > It looks fine to me ... I don't suppose we can find someone with an
-> > actual card to test it out, could we?
-> > 
-> > Another observation is that this code is really trying to reinvent
-> > bitmaps, so if someone with a card cares they could convert it over to
-> > the linux bitmap infrastructure.
-> 
-> If you want it tested then send me the patch.
+ A Project page for Virt_HBA is created on source forge.
+ https://sourceforge.net/projects/npivhba
 
-Can you try this?
+ Project Virt_HBA is targeted for a providing patch for
+ Linux kernels to provide set of scsi layer interfaces to
+ aid Hypervisors in Linux to export Scsi Hosts to Guest
+ VMs.  Using these interfaces  Hypervisors could export
+ Scsi_Host of a virtual hba emulated by HBA hardware to
+ Guest VMs.  FC, and FCOE (may) have support for Nport
+ Virtualization, a FW/HW mechanism to emulate multiple
+ hbas(nports) using a single HBA HW.  Qlogic, and
+ Emulex have support for FC NPIV.  With this mechanism,
+ Hypervisor would be capable of mapping appropriate
+ Guest VM's shost queuecommand to underlying NPIV host's
+ queue_command, and other hostt relevant entry points(one
+ to one mapping).  This could also provide a means of
+ security for luns exported through NPIV host to be
+ visible for appropriate Guest OS, hiding from HostOS.
 
-Thanks,
+ Scsi Layer interfaces:
 
-diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-index f608d4a..a183dab 100644
---- a/drivers/scsi/a100u2w.c
-+++ b/drivers/scsi/a100u2w.c
-@@ -664,22 +664,16 @@ static int orc_device_reset(struct orc_host * host, struct scsi_cmnd *cmd, unsig
- 
- static struct orc_scb *__orc_alloc_scb(struct orc_host * host)
- {
--	u8 channel;
--	unsigned long idx;
--	u8 index;
--	u8 i;
-+	long idx;
-+	unsigned size = sizeof(host->allocation_map[host->index]) * 8;
-+	unsigned long *map = (unsigned long *)host->allocation_map[host->index];
- 
--	channel = host->index;
--	for (i = 0; i < 8; i++) {
--		for (index = 0; index < 32; index++) {
--			if ((host->allocation_map[channel][i] >> index) & 0x01) {
--				host->allocation_map[channel][i] &= ~(1 << index);
--				break;
--			}
--		}
--		idx = index + 32 * i;
-+	idx = find_first_bit(map, size);
-+	if (idx < size) {
-+		clear_bit(idx, map);
- 		/* Translate the index to a structure instance */
--		return (struct orc_scb *) ((unsigned long) host->scb_virt + (idx * sizeof(struct orc_scb)));
-+		return (struct orc_scb *)((unsigned long) host->scb_virt
-+					  + (idx * sizeof(struct orc_scb)));
- 	}
- 	return NULL;
+ Hypervisor's registration with scsi layer
+
+ scsi_register_hypertt(xn_hostt, xsize);
+ xsize is size of private structure maintained by
+ hypervisor per npiv host.
+
+ struct scsi_hyper_hostt xn_hostt {
+         .hyp_module             = "xn",
+         .hyp_psize              = size of( xhost);
+         .hyp_alloc_vhost        = xn_alloc_vhost,
+         .hyp_add_vhost          = xn_add_vhost,
+         .hyp_remove_vhost       = xn_remove_vhost,
+         .hyp_trans_func         = xn_trans_vhost,
+         .hyp_async_notifier     = xn_async_ntfr,
+         .hyp_reboot_notifier    = xn_reboot_ntfr,
+ };
+
+ Scsi_Host {
+
+         /* flag for FC or FCOE hw or fw hba virtulization */
+         unsigned virt_host:1;
+
  }
-@@ -715,14 +709,9 @@ static struct orc_scb *orc_alloc_scb(struct orc_host * host)
- static void orc_release_scb(struct orc_host *host, struct orc_scb *scb)
- {
- 	unsigned long flags;
--	u8 index, i, channel;
- 
- 	spin_lock_irqsave(&(host->allocation_lock), flags);
--	channel = host->index;	/* Channel */
--	index = scb->scbidx;
--	i = index / 32;
--	index %= 32;
--	host->allocation_map[channel][i] |= (1 << index);
-+	set_bit(scb->scbidx, host->allocation_map[host->index]);
- 	spin_unlock_irqrestore(&(host->allocation_lock), flags);
- }
- 
+
+ scsi_alloc_host(), scsi_add_host(), and scsi_remove_host()
+ interfaces notify registered hypervisor about FC/FCOE
+ virtual Scsi_Host.  scsi_alloc_host() would allocate private
+ data area per scsi_host for registered hypervisors, which
+ export to Guest VMs.
+
+ Hypervisors uses these virtual hosts' lld driver hostt entry
+ points to queue,abort,etc scsi commands to HBA driver directly
+ bypassing Host BlK, SD layers.
+
+ Thanks,
+ Siva
