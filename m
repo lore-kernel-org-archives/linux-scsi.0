@@ -1,68 +1,72 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH] a100u2w: fix bitmap lookup routine
-Date: Thu, 20 Mar 2008 18:36:28 +0900
-Message-ID: <20080320093626.GB30888@APFDCB5C>
-References: <20080317123200.GA17756@APFDCB5C> <1205765204.6767.129.camel@localhost.localdomain> <20080319142419.GA27779@devserv.devel.redhat.com> <20080320135518W.tomof@acm.org> <20080320093448.GA30888@APFDCB5C>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Buffered I/O to block device very slow and other SCSI issues...
+Date: Thu, 20 Mar 2008 03:20:10 -0700
+Message-ID: <20080320032010.e640c52a.akpm@linux-foundation.org>
+References: <20080319231654.GA103321673@sgi.com>
+	<20080320010807.GA27620@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:41265 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756526AbYCTJoh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2008 05:44:37 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so945781wah.23
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 02:44:35 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20080320093448.GA30888@APFDCB5C>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43341 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754125AbYCTKUu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2008 06:20:50 -0400
+In-Reply-To: <20080320010807.GA27620@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: alan@redhat.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hch@lst.de, dledford@redhat.com, fujita.tomonori@lab.ntt.co.jp
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Thu, Mar 20, 2008 at 06:34:48PM +0900, Akinobu Mita wrote:
-> This is incremental patch to the original bugfix patch.
+On Wed, 19 Mar 2008 18:08:07 -0700 Jeremy Higdon <jeremy@sgi.com> wrote:
+>
 
-This is the original bugfix for the reference
+(cc's added.  It matters)
 
-Subject: [patch 1/2] a100u2w: fix bitmap lookup routine
+> On Thu, Mar 20, 2008 at 10:16:54AM +1100, David Chinner wrote:
+> > 4p ia64, 24GB RAM, 2.6.25-rc3, qla1280, 15krpm scsi disk.
+> > 
+> > Direct I/O:
+> > 
+> > dgc@budgie:~/xfstests$ sudo dd if=/dev/zero of=/dev/sdb6 bs=1024k count=1024 oflag=direct
+> > 1024+0 records in
+> > 1024+0 records out
+> > 1073741824 bytes (1.1 GB) copied, 27.8974 s, 38.5 MB/s
+> > 
+> > Doing approximately 80 512k I/os per second (disk bandwidth).
+> > 
+> > Buffered I/O:
+> > 
+> > dgc@budgie:~/xfstests$ sudo dd if=/dev/zero of=/dev/sdb6 bs=1024k count=4096
+> > 4096+0 records in
+> > 4096+0 records out
+> > 4294967296 bytes (4.3 GB) copied, 427.872 s, 10.0 MB/s
+> 
+> How big is sdb6?  How many '2's do you see in
+> 
+> 	factor `cat /sys/block/sdb/sdb6/size`
 
-This patch is only compile tested.
+There have always been problems with thsi and I'm not sure that anyone
+cared enough about buffered writes to blockdevs to get to the bottom of
+them.
 
-It seems that bitmap lookup routine for allocation_map in
-a100u2w driver is simply wrong.
+I assume you aren't running i386 highmem...
 
-It cannot lookup more than first 32 bits. If all first 32 bits
-are not set, it always returns 33-th orc_scb even though the 33-th bit
-is not set.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Alan Cox <alan@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/a100u2w.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+> > I also suspect that CTQ has not been set up correctly on this
+> > kernel, because:
+> > 
+> > $ cat /sys/block/sdb/device/queue_depth
+> > 3
+> > $ ls -l /sys/block/sdb/device/queue_depth
+> > -r--r--r-- 1 root root 0 Mar 20 09:59 /sys/block/sdb/device/queue_depth
+> > $
+> > 
+> > It appears to be hard coded to 3 and can't be changed....
+> 
+> That's a bug in the qla1280 driver.  I thought that had gotten fixed.
+> It's looking at the wrong mailbox register after setting device parameters.
+> 
 
-Index: 2.6-rc/drivers/scsi/a100u2w.c
-===================================================================
---- 2.6-rc.orig/drivers/scsi/a100u2w.c
-+++ 2.6-rc/drivers/scsi/a100u2w.c
-@@ -674,12 +674,13 @@ static struct orc_scb *__orc_alloc_scb(s
- 		for (index = 0; index < 32; index++) {
- 			if ((host->allocation_map[channel][i] >> index) & 0x01) {
- 				host->allocation_map[channel][i] &= ~(1 << index);
--				break;
-+				idx = index + 32 * i;
-+				/*
-+				 * Translate the index to a structure instance
-+				 */
-+				return host->scb_virt + idx;
- 			}
- 		}
--		idx = index + 32 * i;
--		/* Translate the index to a structure instance */
--		return (struct orc_scb *) ((unsigned long) host->scb_virt + (idx * sizeof(struct orc_scb)));
- 	}
- 	return NULL;
- }
+Was there a patch anywhere?
