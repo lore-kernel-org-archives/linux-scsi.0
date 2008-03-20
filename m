@@ -1,54 +1,48 @@
-From: Denis Cheng <crquan@gmail.com>
-Subject: [RFC][PATCH] mark /proc/sys/dev/scsi/logging_level to be removed
-Date: Thu, 20 Mar 2008 21:03:10 +0800
-Message-ID: <1206018190-5888-1-git-send-email-crquan@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 6280] new line of Xyratex RAID products and a patch to
+	update for 2.4.x non-sequential LUN mapping
+Date: Thu, 20 Mar 2008 08:51:55 -0500
+Message-ID: <1206021115.3038.0.camel@localhost.localdomain>
+References: <20080320073456.F366D108039@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:38290 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754435AbYCTNEM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2008 09:04:12 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so690201rnb.15
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 06:04:11 -0700 (PDT)
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48639 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755048AbYCTNwB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2008 09:52:01 -0400
+In-Reply-To: <20080320073456.F366D108039@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Denis Cheng <crquan@gmail.com>
----
-Since scsi_logging_level module_param can be read/written while system
-running, the demand for /proc/sys/dev/scsi/logging_level has been no longer
-mandotory.
+On Thu, 2008-03-20 at 00:34 -0700, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=6280
+> 
+> 
+> protasnb@gmail.com changed:
+> 
+>            What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                  CC|                            |protasnb@gmail.com
+>          AssignedTo|scsi_drivers-other@kernel-  |linux-scsi@vger.kernel.org
+>                    |bugs.osdl.org               |
+> 
+> 
+> 
+> 
+> ------- Comment #2 from protasnb@gmail.com  2008-03-20 00:34 -------
+> Petros,
+> This bugzilla is about 2.6.XX. Do you think your patch makes sense for latest
+> kernels, or this support is already implemented there?
 
-But someone might have already set this value in /etc/sysctl.conf, so
-mark it to be removed in one year (until March 2009).
+Depends what SCSI level the array reports.  If > 2 then the REPORT_LUNS
+scan will already have taken care of all of this.
 
-One year might be not enough or too long, this period should also be discussed.
+James
 
- Documentation/feature-removal-schedule.txt |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index c1d1fd0..97bdb96 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -328,3 +328,16 @@ Why:	Not used in-tree. The current out-of-tree users used it to
- 	code / infrastructure should be in the kernel and not in some
- 	out-of-tree driver.
- Who:	Thomas Gleixner <tglx@linutronix.de>
-+
-+---------------------------
-+
-+What:	/proc/sys/dev/scsi/logging_level
-+When:	March 2009
-+Files:	drivers/scsi/scsi_sysctl.c
-+Check:	/etc/sysctl.conf
-+Why:	its functionality is also provided by the scsi_mod's module param,
-+	module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
-+	that can be read and written with
-+	/sys/module/scsi_mod/parameters/scsi_logging_level
-+	like the sysctl interface while system running.
-+Who:	Denis Cheng <crquan@gmail.com> or linux-scsi@vger.kernel.org
--- 
-1.5.4.4
 
