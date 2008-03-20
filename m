@@ -1,79 +1,43 @@
-From: "Siva Kodiganti" <kodiganti@gmail.com>
-Subject: scsi layer interfaces for hypervisors
-Date: Wed, 19 Mar 2008 22:57:21 -0700
-Message-ID: <b8c77ef10803192257w5629e931y28eed9ab32ed02a9@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 6280] new line of Xyratex RAID products and a patch to update for 2.4.x non-sequential LUN mapping
+Date: Thu, 20 Mar 2008 00:34:56 -0700 (PDT)
+Message-ID: <20080320073456.F366D108039@picon.linux-foundation.org>
+References: <bug-6280-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:32793 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbYCTF5Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2008 01:57:25 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so684151fgb.17
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 22:57:22 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46305 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753065AbYCTHe6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2008 03:34:58 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2K7YvKC023153
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 00:34:58 -0700
+In-Reply-To: <bug-6280-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: siva@3leafsystems.com
 
-Hello Linux community,
+http://bugzilla.kernel.org/show_bug.cgi?id=6280
 
- A Project page for Virt_HBA is created on source forge.
- https://sourceforge.net/projects/npivhba
 
- Project Virt_HBA is targeted for a providing patch for
- Linux kernels to provide set of scsi layer interfaces to
- aid Hypervisors in Linux to export Scsi Hosts to Guest
- VMs.  Using these interfaces  Hypervisors could export
- Scsi_Host of a virtual hba emulated by HBA hardware to
- Guest VMs.  FC, and FCOE (may) have support for Nport
- Virtualization, a FW/HW mechanism to emulate multiple
- hbas(nports) using a single HBA HW.  Qlogic, and
- Emulex have support for FC NPIV.  With this mechanism,
- Hypervisor would be capable of mapping appropriate
- Guest VM's shost queuecommand to underlying NPIV host's
- queue_command, and other hostt relevant entry points(one
- to one mapping).  This could also provide a means of
- security for luns exported through NPIV host to be
- visible for appropriate Guest OS, hiding from HostOS.
+protasnb@gmail.com changed:
 
- Scsi Layer interfaces:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |protasnb@gmail.com
+         AssignedTo|scsi_drivers-other@kernel-  |linux-scsi@vger.kernel.org
+                   |bugs.osdl.org               |
 
- Hypervisor's registration with scsi layer
 
- scsi_register_hypertt(xn_hostt, xsize);
- xsize is size of private structure maintained by
- hypervisor per npiv host.
 
- struct scsi_hyper_hostt xn_hostt {
-         .hyp_module             = "xn",
-         .hyp_psize              = size of( xhost);
-         .hyp_alloc_vhost        = xn_alloc_vhost,
-         .hyp_add_vhost          = xn_add_vhost,
-         .hyp_remove_vhost       = xn_remove_vhost,
-         .hyp_trans_func         = xn_trans_vhost,
-         .hyp_async_notifier     = xn_async_ntfr,
-         .hyp_reboot_notifier    = xn_reboot_ntfr,
- };
 
- Scsi_Host {
+------- Comment #2 from protasnb@gmail.com  2008-03-20 00:34 -------
+Petros,
+This bugzilla is about 2.6.XX. Do you think your patch makes sense for latest
+kernels, or this support is already implemented there?
 
-         /* flag for FC or FCOE hw or fw hba virtulization */
-         unsigned virt_host:1;
 
- }
-
- scsi_alloc_host(), scsi_add_host(), and scsi_remove_host()
- interfaces notify registered hypervisor about FC/FCOE
- virtual Scsi_Host.  scsi_alloc_host() would allocate private
- data area per scsi_host for registered hypervisors, which
- export to Guest VMs.
-
- Hypervisors uses these virtual hosts' lld driver hostt entry
- points to queue,abort,etc scsi commands to HBA driver directly
- bypassing Host BlK, SD layers.
-
- Thanks,
- Siva
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
