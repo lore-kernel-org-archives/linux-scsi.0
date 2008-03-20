@@ -1,90 +1,92 @@
-From: "Kay Sievers" <kay.sievers@vrfy.org>
-Subject: Re: [PATCH] fix media change events for polled devices
-Date: Thu, 20 Mar 2008 03:16:14 +0100
-Message-ID: <3ae72650803191916u3f6f910fta95a77ba91194df7@mail.gmail.com>
-References: <1205928287.8810.18.camel@lov.site>
-	 <1205945642.11527.23.camel@localhost.localdomain>
-	 <1205975933.5498.11.camel@lov.site>
-	 <1205976357.11527.63.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] a100u2w: fix bitmap lookup routine
+Date: Thu, 20 Mar 2008 13:56:28 +0900
+Message-ID: <20080320135518W.tomof@acm.org>
+References: <20080317123200.GA17756@APFDCB5C>
+	<1205765204.6767.129.camel@localhost.localdomain>
+	<20080319142419.GA27779@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:63445 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176AbYCTCQR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2008 22:16:17 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so763410wah.23
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2008 19:16:14 -0700 (PDT)
-In-Reply-To: <1205976357.11527.63.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:40368 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751437AbYCTE5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2008 00:57:15 -0400
+In-Reply-To: <20080319142419.GA27779@devserv.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, David Zeuthen <david@fubar.dk>, kristen accardi <kaccardi@gmail.com>, Jeff Garzik <jeff@garzik.org>
+To: alan@redhat.com
+Cc: James.Bottomley@HansenPartnership.com, akinobu.mita@gmail.com, linux-scsi@vger.kernel.org, hch@lst.de, dledford@redhat.com, fujita.tomonori@lab.ntt.co.jp
 
-On Thu, Mar 20, 2008 at 2:53 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Thu, 2008-03-20 at 02:18 +0100, Kay Sievers wrote:
-> > On Wed, 2008-03-19 at 11:54 -0500, James Bottomley wrote:
->  > > On Wed, 2008-03-19 at 13:04 +0100, Kay Sievers wrote:
->
-> > > > we like to see this in 2.6.25, as "change" events for polled devices are
->  > > > broken at the moment.
->  > >
->  > > I'm not happy just killing the code, since when the AN infrastructure
->  > > gets fixed, it will work.
->  >
->  > Who is going to fix what and when? Jeff did not even reply the last two
->  > weeks to the simple question why he added this filter, and why events
->  > need to dropped if something wants to send them. :)
->
->  Oh ... who else ... I'll fix it.
+On Wed, 19 Mar 2008 10:24:19 -0400
+Alan Cox <alan@redhat.com> wrote:
 
-Ah, great! :)
+> On Mon, Mar 17, 2008 at 09:46:44AM -0500, James Bottomley wrote:
+> > On Mon, 2008-03-17 at 21:32 +0900, Akinobu Mita wrote:
+> > > This patch is only compile tested.
+> > 
+> > It looks fine to me ... I don't suppose we can find someone with an
+> > actual card to test it out, could we?
+> > 
+> > Another observation is that this code is really trying to reinvent
+> > bitmaps, so if someone with a card cares they could convert it over to
+> > the linux bitmap infrastructure.
+> 
+> If you want it tested then send me the patch.
 
->  It looks pretty simple: we need two
->  separate events for the filter: polled and AN media change notifies.  We
->  should be able to turn either of them off, so two separate flags.  They
->  need to be unified into the single media change event at the top of the
->  stack before we call udev.
-
-Yes, they should be both simple "change" uevents.
-
->  This will allow us to turn off the AN notifies if we get a problem,
->  which was the original idea.
-
-Sure, that sounds useful.
-
->  > These events are for non-AN devices, which we still poll for media
->  > changes. Userspace wants the same kind of events for both types of
->  > devices.
->
-> >
->  > > How about this instead as a fix for 2.6.25?
->  >
->  > We are currently working on a the next generation of the storage part of
->  > the hal daemon, which needs these events. So it would be nice, if we can
->  > make them working now, like they worked with Kristens original patches.
->
->  If we emit the same event at the top of the stack, what more needs be
->  done?
-
-We just want "change" uevents when the media state for the LUN
-changes, regardless if it is an AN event, or an event caused by
-revalidating the device after open(). Userspace will look at the
-device with every change event. If possible, we could carry a variable
-in the event environment to distinguish both event sources.
-
->  I take it all you want is an indication that we will be using AN
->  instead of polling, which you will be able to get from the sysfs file.
-
-The sysfs flag will be read and if it indicates a non-AN device, we
-will not start polling the device periodically, if we don't need to.
-
-That way the polling process will be completely dumb and optional, and
-the media handling side will be the same code for all types of
-devices.
+Can you try this?
 
 Thanks,
-Kay
+
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index f608d4a..a183dab 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -664,22 +664,16 @@ static int orc_device_reset(struct orc_host * host, struct scsi_cmnd *cmd, unsig
+ 
+ static struct orc_scb *__orc_alloc_scb(struct orc_host * host)
+ {
+-	u8 channel;
+-	unsigned long idx;
+-	u8 index;
+-	u8 i;
++	long idx;
++	unsigned size = sizeof(host->allocation_map[host->index]) * 8;
++	unsigned long *map = (unsigned long *)host->allocation_map[host->index];
+ 
+-	channel = host->index;
+-	for (i = 0; i < 8; i++) {
+-		for (index = 0; index < 32; index++) {
+-			if ((host->allocation_map[channel][i] >> index) & 0x01) {
+-				host->allocation_map[channel][i] &= ~(1 << index);
+-				break;
+-			}
+-		}
+-		idx = index + 32 * i;
++	idx = find_first_bit(map, size);
++	if (idx < size) {
++		clear_bit(idx, map);
+ 		/* Translate the index to a structure instance */
+-		return (struct orc_scb *) ((unsigned long) host->scb_virt + (idx * sizeof(struct orc_scb)));
++		return (struct orc_scb *)((unsigned long) host->scb_virt
++					  + (idx * sizeof(struct orc_scb)));
+ 	}
+ 	return NULL;
+ }
+@@ -715,14 +709,9 @@ static struct orc_scb *orc_alloc_scb(struct orc_host * host)
+ static void orc_release_scb(struct orc_host *host, struct orc_scb *scb)
+ {
+ 	unsigned long flags;
+-	u8 index, i, channel;
+ 
+ 	spin_lock_irqsave(&(host->allocation_lock), flags);
+-	channel = host->index;	/* Channel */
+-	index = scb->scbidx;
+-	i = index / 32;
+-	index %= 32;
+-	host->allocation_map[channel][i] |= (1 << index);
++	set_bit(scb->scbidx, host->allocation_map[host->index]);
+ 	spin_unlock_irqrestore(&(host->allocation_lock), flags);
+ }
+ 
