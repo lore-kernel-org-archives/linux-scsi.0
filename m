@@ -1,40 +1,66 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 6280] new line of Xyratex RAID products and a patch to update for 2.4.x non-sequential LUN mapping
-Date: Thu, 20 Mar 2008 09:58:43 -0700 (PDT)
-Message-ID: <20080320165843.8B96311D109@picon.linux-foundation.org>
-References: <bug-6280-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50338 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754628AbYCTQ6p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Mar 2008 12:58:45 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2KGwhRL000813
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 09:58:44 -0700
-In-Reply-To: <bug-6280-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PATCH] SCSI fixes for 2.6.25-rc6
+Date: Thu, 20 Mar 2008 12:01:39 -0500
+Message-ID: <1206032499.3038.27.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757929AbYCTRB4@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6280
+This is basically a round of small bug fixes.  The patch is available
+here:
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+The short changelog is:
+
+Akinobu Mita (1):
+      a100u2w: fix bitmap lookup routine
+
+Boaz Harrosh (1):
+      isd200: Allocate sense_buffer for hacked up scsi_cmnd
+
+James Bottomley (1):
+      Fix dependency problems in SCSI drivers
+
+Kay Sievers (2):
+      fix media change events for polled devices
+      sd, sr: do not emit change event at device add
+
+Matthew Wilcox (1):
+      advansys: Fix bug in AdvLoadMicrocode
+
+Mike Christie (1):
+      fix bsg queue oops with iscsi logout
+
+Prakash, Sathya (1):
+      mpt fusion: Power Management fixes for MPT SAS PCI-E controllers
+
+Sven Schnelle (1):
+      gdth: Allocate sense_buffer to prevent NULL pointer dereference
+
+nickcheng (1):
+      arcmsr: fix iounmap error for Type B adapter
 
 
-protasnb@gmail.com changed:
+And the diffstat:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |PATCH_ALREADY_AVAILABLE
+ drivers/message/fusion/mptbase.c  |  276 +++++++++++++++++++++-----------------
+ drivers/message/fusion/mptscsih.c |   11 +
+ drivers/scsi/Kconfig              |    2 
+ drivers/scsi/a100u2w.c            |    9 -
+ drivers/scsi/advansys.c           |    2 
+ drivers/scsi/arcmsr/arcmsr.h      |   14 -
+ drivers/scsi/gdth.c               |    7 
+ drivers/scsi/scsi_lib.c           |    5 
+ drivers/scsi/scsi_sysfs.c         |    2 
+ drivers/scsi/sd.c                 |    1 
+ drivers/scsi/sr.c                 |    1 
+ drivers/usb/storage/isd200.c      |    5 
+ 12 files changed, 199 insertions(+), 136 deletions(-)
 
-
-
-
-------- Comment #5 from protasnb@gmail.com  2008-03-20 09:58 -------
-Closing the bug, thanks.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+James
