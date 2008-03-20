@@ -1,80 +1,102 @@
-From: Alexis Bruemmer <alexisb@us.ibm.com>
-Subject: Re: aic94xx driver woes continued
-Date: Thu, 20 Mar 2008 15:18:47 -0700
-Message-ID: <1206051527.19541.14.camel@alexis>
-References: <47E2B044.70705@ipax.at>
-	 <1206039714.3038.40.camel@localhost.localdomain> <47E2B7EF.1050203@ipax.at>
-	 <1206043027.3038.48.camel@localhost.localdomain> <47E2D268.2070609@ipax.at>
-	 <1206047850.3038.52.camel@localhost.localdomain>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH] mpt fusion: mptsas - do not use ioc->handle to locate hba
+ portinfo structure
+Date: Thu, 20 Mar 2008 17:32:05 -0500
+Message-ID: <47E2E5E5.4070905@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:37832 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755481AbYCTWV4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Mar 2008 18:21:56 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m2KMLfQP026399
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 18:21:41 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m2KMLfhi238174
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 18:21:41 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m2KMLft1030050
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2008 18:21:41 -0400
-In-Reply-To: <1206047850.3038.52.camel@localhost.localdomain>
+Received: from relay2.sgi.com ([192.48.171.30]:59592 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757029AbYCTWcI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2008 18:32:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, Jeremy Higdon <jeremy@sgi.com>
+
+While performing hardware raid reset testing via the raid's client, I noticed that
+sometimes, following the reset, that there would be more raid targets in
+the lsscsi output than there actually were raid targets.  I tracked this down
+to the following issue.
+
+Fusion cannot always find the mptsas_portinfo structure for the hba because it
+uses the handle stored in ioc->handle to locate it.  The problem is that the
+firmware can change the handle associated with the hba when h/w raid is reset
+(via the raid client).  When this happens, the driver will allocate another
+mptsas_portinfo structure and link it into the chain of said structures.
+This ultimately causes confusion within the driver resulting in targets not
+being removed when they should be.
+
+Eric Moore pointed out that the hba's portinfo structure is always the
+first structure on the sas_topology list.  This patch modifies mptsas.c
+to access the hba's portinfo structure by taking the first structure
+on said list.
+
+Applies to 2.6.25-rc6-git5
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
-On Thu, 2008-03-20 at 16:17 -0500, James Bottomley wrote:
-> On Thu, 2008-03-20 at 22:08 +0100, Raoul Bhatia [IPAX] wrote:
-> > hi james,
-> > 
-> > James Bottomley wrote:
-> >  > A work around might be to lower the queue depth to say 4 or 8 and up the
-> >  > retries (this latter can only be done by altering the SD_MAX_RETRIES
-> >  > parameter in include/scsi/sd.h and recompiling).
-> > 
-> > any suggestions for these parameters:
-> > 
-> > include/scsi/sd.h:
-> >  > #define SD_TIMEOUT              (30 * HZ)
-> >  > #define SD_MOD_TIMEOUT          (75 * HZ)
-> >  >
-> >  > #define SD_MAX_RETRIES          5
-> >  > #define SD_PASSTHROUGH_RETRIES  1
-> > 
-> > shall i alter the timeouts?
-> 
-> The timeouts can be altered on the fly
-> at /sys/class/scsi_device/<device>/device/timeout
-> 
-> but I'd leave them as is for now ... it wasn't the timeouts that fired.
-> 
-> > what is a good value for the retries? time it by 2? by 5? by 10?
-> 
-> I'd up the retries to say 15 and see if that works.
-> 
-> > moreover, where can i lower the queue?
-> 
-> echo <new depth> > /sys/class/scsi_device/<device>/device/queue_depth
-
-We have played a lot with the queue depth on this controller.  So far
-the best we have done is extended the time before an end device is
-eventually dropped.  I am very curious to see what happens in Raoul's
-test case.
-
-
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--- lu/drivers/message/fusion/mptbase.h	2008-03-20 17:01:34.000000000 -0500
++++ l/drivers/message/fusion/mptbase.h	2008-03-20 17:15:35.517242637 -0500
+@@ -693,7 +693,6 @@ typedef struct _MPT_ADAPTER
+ 	struct mutex		 sas_discovery_mutex;
+ 	u8			 sas_discovery_runtime;
+ 	u8			 sas_discovery_ignore_events;
+-	u16			 handle;
+ 	int			 sas_index; /* index refrencing */
+ 	MPT_SAS_MGMT		 sas_mgmt;
+ 	struct work_struct	 sas_persist_task;
+--- lu/drivers/message/fusion/mptsas.c	2008-03-20 17:01:34.000000000 -0500
++++ l/drivers/message/fusion/mptsas.c	2008-03-20 17:29:33.071753167 -0500
+@@ -230,6 +230,20 @@ static inline MPT_ADAPTER *rphy_to_ioc(s
+ 	return ((MPT_SCSI_HOST *)shost->hostdata)->ioc;
+ }
+ 
++static struct mptsas_portinfo *
++mptsas_get_hba_portinfo(MPT_ADAPTER *ioc)
++{
++        struct list_head	*head = &ioc->sas_topology;
++	struct mptsas_portinfo	*pi=NULL;
++
++	/* always the first entry on sas_topology list */
++ 
++	if (!list_empty(head))
++		pi = list_entry(head->next, struct mptsas_portinfo, list);
++
++	return pi;
++}
++
+ /*
+  * mptsas_find_portinfo_by_handle
+  *
+@@ -1290,7 +1304,7 @@ static int mptsas_smp_handler(struct Scs
+ 		struct mptsas_portinfo *port_info;
+ 
+ 		mutex_lock(&ioc->sas_topology_mutex);
+-		port_info = mptsas_find_portinfo_by_handle(ioc, ioc->handle);
++		port_info = mptsas_get_hba_portinfo(ioc);
+ 		if (port_info && port_info->phy_info)
+ 			sas_address =
+ 				port_info->phy_info[0].phy->identify.sas_address;
+@@ -2028,8 +2042,7 @@ static int mptsas_probe_one_phy(struct d
+ 			int i;
+ 
+ 			mutex_lock(&ioc->sas_topology_mutex);
+-			port_info = mptsas_find_portinfo_by_handle(ioc,
+-								   ioc->handle);
++			port_info = mptsas_get_hba_portinfo(ioc);
+ 			mutex_unlock(&ioc->sas_topology_mutex);
+ 
+ 			for (i = 0; i < port_info->num_phys; i++)
+@@ -2099,8 +2112,7 @@ mptsas_probe_hba_phys(MPT_ADAPTER *ioc)
+ 
+ 	mptsas_sas_io_unit_pg1(ioc);
+ 	mutex_lock(&ioc->sas_topology_mutex);
+-	ioc->handle = hba->phy_info[0].handle;
+-	port_info = mptsas_find_portinfo_by_handle(ioc, ioc->handle);
++	port_info = mptsas_get_hba_portinfo(ioc);
+ 	if (!port_info) {
+ 		port_info = hba;
+ 		list_add_tail(&port_info->list, &ioc->sas_topology);
