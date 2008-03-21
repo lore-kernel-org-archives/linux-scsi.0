@@ -1,16 +1,16 @@
 From: Ke Wei <kewei@marvell.com>
-Subject: [PATCH 1/8] fill in error info record and phy mode6 bits.
-Date: Fri, 21 Mar 2008 18:21:25 +0800
-Message-ID: <47E38C25.5000506@marvell.com>
+Subject: [PATCH 1/8] mvsas: fill in error info record and phy mode6 bits.
+Date: Fri, 21 Mar 2008 19:00:56 +0800
+Message-ID: <47E39568.60407@marvell.com>
 Reply-To: kewei@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:10748 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:11707 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753357AbYCUKVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2008 06:21:42 -0400
+	id S1754378AbYCULBA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Mar 2008 07:01:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -20,49 +20,49 @@ and remove some unused members from struct.
 
 Signed-off-by: Ke Wei <kewei@marvell.com>
 ---
- drivers/scsi/mvsas.c |  123 
+drivers/scsi/mvsas.c |  123
 +++++++++++++++++++++++++++++++++++---------------
- 1 files changed, 87 insertions(+), 36 deletions(-)
+1 files changed, 87 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
 index 5ec0665..3a447fe 100644
 --- a/drivers/scsi/mvsas.c
 +++ b/drivers/scsi/mvsas.c
 @@ -37,11 +37,13 @@
- #include <linux/dma-mapping.h>
- #include <linux/ctype.h>
- #include <scsi/libsas.h>
+#include <linux/dma-mapping.h>
+#include <linux/ctype.h>
+#include <scsi/libsas.h>
 +#include <scsi/scsi_tcq.h>
 +#include <scsi/sas_ata.h>
- #include <asm/io.h>
- 
- #define DRV_NAME    "mvsas"
+#include <asm/io.h>
+
+#define DRV_NAME    "mvsas"
 -#define DRV_VERSION    "0.5.1"
 -#define _MV_DUMP 0
 +#define DRV_VERSION    "0.5.2"
 +#define _MV_DUMP    0
- #define MVS_DISABLE_NVRAM
- #define MVS_DISABLE_MSI
- 
+#define MVS_DISABLE_NVRAM
+#define MVS_DISABLE_MSI
+
 @@ -52,7 +54,7 @@
      readl(regs + MVS_##reg);        \
      } while (0)
- 
+
 -#define MVS_ID_NOT_MAPPED    0xff
 +#define MVS_ID_NOT_MAPPED    0x7f
- #define MVS_CHIP_SLOT_SZ    (1U << mvi->chip->slot_width)
- 
- /* offset for D2H FIS in the Received FIS List Structure */
+#define MVS_CHIP_SLOT_SZ    (1U << mvi->chip->slot_width)
+
+/* offset for D2H FIS in the Received FIS List Structure */
 @@ -84,6 +86,7 @@ enum driver_configuration {
      MVS_RX_FIS_COUNT    = 17,    /* Optional rx'd FISs (max 17) */
- 
+
      MVS_QUEUE_SIZE        = 30,    /* Support Queue depth */
 +    MVS_CAN_QUEUE        = MVS_SLOTS - 1,    /* SCSI Queue depth */
- };
- 
- /* unchangeable hardware details */
+};
+
+/* unchangeable hardware details */
 @@ -358,7 +361,20 @@ enum hw_register_bits {
- 
+
      /* VSR */
      /* PHYMODE 6 (CDB) */
 -    PHY_MODE6_DTL_SPEED    = (1U << 27),
@@ -70,7 +70,7 @@ index 5ec0665..3a447fe 100644
 +    PHY_MODE6_DTL_SPEED    = (1U << 27),    /* Digital Loop Speed */
 +    PHY_MODE6_FC_ORDER    = (1U << 26),    /* Fibre Channel Mode Order*/
 +    PHY_MODE6_MUCNT_EN    = (1U << 24),    /* u Count Enable */
-+    PHY_MODE6_SEL_MUCNT_LEN    = (1U << 22),    /* Training Length 
++    PHY_MODE6_SEL_MUCNT_LEN    = (1U << 22),    /* Training Length
 Select */
 +    PHY_MODE6_SELMUPI    = (1U << 20),    /* Phase Multi Select (init) */
 +    PHY_MODE6_SELMUPF    = (1U << 18),    /* Phase Multi Select (final) */
@@ -81,13 +81,13 @@ Select */
 +    PHY_MODE6_FRC_RXFOFFS    = (1U << 2),    /* Initial Rx CDR Offset */
 +    PHY_MODE6_STAU_0D8    = (1U << 1),    /* Rx CDR Freq Loop Saturate */
 +    PHY_MODE6_RXSAT_DIS    = (1U << 0),    /* Saturate Ctl */
- };
- 
- enum mvs_info_flags {
+};
+
+enum mvs_info_flags {
 @@ -511,7 +527,43 @@ enum status_buffer {
- };
- 
- enum error_info_rec {
+};
+
+enum error_info_rec {
 -    CMD_ISS_STPD    =  (1U << 31),    /* Cmd Issue Stopped */
 +    CMD_ISS_STPD    = (1U << 31),    /* Cmd Issue Stopped */
 +    CMD_PI_ERR    = (1U << 30),    /* Protection info error.  see flags2 */
@@ -126,13 +126,13 @@ Select */
 +    APP_CHK_ERR    = (1U << 13),    /* Application Check error */
 +    REF_CHK_ERR    = (1U << 12),    /* Reference Check Error */
 +    USR_BLK_NM    = (1U << 0),    /* User Block Number */
- };
- 
- struct mvs_chip_info {
+};
+
+struct mvs_chip_info {
 @@ -543,28 +595,12 @@ struct mvs_cmd_hdr {
      __le32            reserved[4];
- };
- 
+};
+
 -struct mvs_slot_info {
 -    struct sas_task        *task;
 -    u32            n_elem;
@@ -150,15 +150,15 @@ Select */
 -    void            *response;
 -};
 -
- struct mvs_port {
+struct mvs_port {
      struct asd_sas_port    sas_port;
      u8            port_attached;
      u8            taskfileset;
      u8            wide_port_phymap;
 +    struct list_head    list;
- };
- 
- struct mvs_phy {
+};
+
+struct mvs_phy {
 @@ -582,6 +618,27 @@ struct mvs_phy {
      u32        frame_rcvd_size;
      u8        frame_rcvd[32];
@@ -184,13 +184,13 @@ Select */
 +
 +    void            *response;
 +    struct mvs_port        *port;
- };
- 
- struct mvs_info {
+};
+
+struct mvs_info {
 @@ -612,21 +669,14 @@ struct mvs_info {
- 
+
      const struct mvs_chip_info *chip;
- 
+
 -    unsigned long        tags[MVS_SLOTS];
 +    u8            tags[MVS_SLOTS];
      struct mvs_slot_info    slot_info[MVS_SLOTS];
@@ -210,23 +210,23 @@ Select */
 +#ifdef MVS_USE_TASKLET
 +    struct tasklet_struct    tasklet;
 +#endif
- };
- 
- static int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
-@@ -641,10 +691,11 @@ static u32 mvs_read_port_irq_mask(struct mvs_info 
+};
+
+static int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+@@ -641,10 +691,11 @@ static u32 mvs_read_port_irq_mask(struct mvs_info
 *mvi, u32 port);
- static u32 mvs_is_phy_ready(struct mvs_info *mvi, int i);
- static void mvs_detect_porttype(struct mvs_info *mvi, int i);
- static void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st);
+static u32 mvs_is_phy_ready(struct mvs_info *mvi, int i);
+static void mvs_detect_porttype(struct mvs_info *mvi, int i);
+static void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st);
 +static void mvs_release_task(struct mvs_info *mvi, int phy_no);
- 
- static int mvs_scan_finished(struct Scsi_Host *, unsigned long);
- static void mvs_scan_start(struct Scsi_Host *);
+
+static int mvs_scan_finished(struct Scsi_Host *, unsigned long);
+static void mvs_scan_start(struct Scsi_Host *);
 -static int mvs_sas_slave_alloc(struct scsi_device *scsi_dev);
 +static int mvs_slave_configure(struct scsi_device *sdev);
- 
- static struct scsi_transport_template *mvs_stt;
- 
+
+static struct scsi_transport_template *mvs_stt;
+
 @@ -659,7 +710,7 @@ static struct scsi_host_template mvs_sht = {
      .name            = DRV_NAME,
      .queuecommand        = sas_queuecommand,
@@ -244,9 +244,11 @@ Select */
 +    .slave_alloc        = sas_slave_alloc,
      .target_destroy        = sas_target_destroy,
      .ioctl            = sas_ioctl,
- };
+};
 -- 
 1.5.4
+
+
 
 
 
