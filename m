@@ -1,70 +1,122 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] hosts.c fixes for "no error" reported after error scenarios
-Date: Fri, 21 Mar 2008 17:18:23 -0400
-Message-ID: <1206134303.17617.2.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Subject: [PATCH] WD33C93: let platform stub override no_sync/fast/dma_mode
+Date: Fri, 21 Mar 2008 22:25:43 +0100 (CET)
+Message-ID: <20080321212543.6F769C2DF8@solo.franken.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:52929 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762037AbYCUVSL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Mar 2008 17:18:11 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m2LLI7Iq010849
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2008 14:18:09 -0700 (PDT)
+Received: from elvis.franken.de ([193.175.24.41]:40028 "EHLO elvis.franken.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752273AbYCUV1A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Mar 2008 17:27:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
+Cc: ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
 
-This patch corrects some cases in scsi_add_host() that fail, but the "error"
-return code was not reset after a prior use which set it to a non-error value.
+SGI machines with WD33C93 allow usage of burst mode DMA, which increases
+performance noticable. To make this selectable by the sgiwd93 stub,
+setting the values for no_sync, fast and dma_mode has been moved to the
+individual platform stubs.
 
-Patch cut against scsi-rc-fixes-2.6
+Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+---
 
--- james s
+Please apply for 2.6.26
 
- Signed-off-by: James Smart <james.smart@emulex.com>
+ drivers/scsi/a2091.c   |    3 +++
+ drivers/scsi/a3000.c   |    3 +++
+ drivers/scsi/gvp11.c   |    3 +++
+ drivers/scsi/mvme147.c |    3 +++
+ drivers/scsi/sgiwd93.c |    7 ++++---
+ drivers/scsi/wd33c93.c |    3 ---
+ 6 files changed, 16 insertions(+), 6 deletions(-)
 
- ---
-
- hosts.c |   16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-
-diff -upNr a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c	2008-03-17 09:15:25.000000000 -0400
-+++ b/drivers/scsi/hosts.c	2008-03-21 17:10:31.000000000 -0400
-@@ -218,18 +218,24 @@ int scsi_add_host(struct Scsi_Host *shos
+diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
+index 5ac3a3e..1d1bb25 100644
+--- a/drivers/scsi/a2091.c
++++ b/drivers/scsi/a2091.c
+@@ -179,6 +179,9 @@ int __init a2091_detect(struct scsi_host_template *tpnt)
+ 	DMA(instance)->DAWR = DAWR_A2091;
+ 	regs.SASR = &(DMA(instance)->SASR);
+ 	regs.SCMD = &(DMA(instance)->SCMD);
++	HDATA(a3000_host)->no_sync = 0xff;
++	HDATA(a3000_host)->fast = 0;
++	HDATA(a3000_host)->dma_mode = CTRL_DMA;
+ 	wd33c93_init(instance, regs, dma_setup, dma_stop, WD33C93_FS_8_10);
+ 	request_irq(IRQ_AMIGA_PORTS, a2091_intr, IRQF_SHARED, "A2091 SCSI",
+ 		    instance);
+diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
+index 3aeec96..8b449d8 100644
+--- a/drivers/scsi/a3000.c
++++ b/drivers/scsi/a3000.c
+@@ -178,6 +178,9 @@ int __init a3000_detect(struct scsi_host_template *tpnt)
+     DMA(a3000_host)->DAWR = DAWR_A3000;
+     regs.SASR = &(DMA(a3000_host)->SASR);
+     regs.SCMD = &(DMA(a3000_host)->SCMD);
++    HDATA(a3000_host)->no_sync = 0xff;
++    HDATA(a3000_host)->fast = 0;
++    HDATA(a3000_host)->dma_mode = CTRL_DMA;
+     wd33c93_init(a3000_host, regs, dma_setup, dma_stop, WD33C93_FS_12_15);
+     if (request_irq(IRQ_AMIGA_PORTS, a3000_intr, IRQF_SHARED, "A3000 SCSI",
+ 		    a3000_intr))
+diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
+index 91f8522..e75a7ba 100644
+--- a/drivers/scsi/gvp11.c
++++ b/drivers/scsi/gvp11.c
+@@ -322,6 +322,9 @@ int __init gvp11_detect(struct scsi_host_template *tpnt)
+ 	 */
+ 	regs.SASR = &(DMA(instance)->SASR);
+ 	regs.SCMD = &(DMA(instance)->SCMD);
++	HDATA(a3000_host)->no_sync = 0xff;
++	HDATA(a3000_host)->fast = 0;
++	HDATA(a3000_host)->dma_mode = CTRL_DMA;
+ 	wd33c93_init(instance, regs, dma_setup, dma_stop,
+ 		     (epc & GVP_SCSICLKMASK) ? WD33C93_FS_8_10
+ 					     : WD33C93_FS_12_15);
+diff --git a/drivers/scsi/mvme147.c b/drivers/scsi/mvme147.c
+index be41aad..6a8cf17 100644
+--- a/drivers/scsi/mvme147.c
++++ b/drivers/scsi/mvme147.c
+@@ -82,6 +82,9 @@ int mvme147_detect(struct scsi_host_template *tpnt)
+     mvme147_host->irq = MVME147_IRQ_SCSI_PORT;
+     regs.SASR = (volatile unsigned char *)0xfffe4000;
+     regs.SCMD = (volatile unsigned char *)0xfffe4001;
++    HDATA(a3000_host)->no_sync = 0xff;
++    HDATA(a3000_host)->fast = 0;
++    HDATA(a3000_host)->dma_mode = CTRL_DMA;
+     wd33c93_init(mvme147_host, regs, dma_setup, dma_stop, WD33C93_FS_8_10);
  
- 	get_device(&shost->shost_gendev);
+     if (request_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr, 0, "MVME147 SCSI PORT", mvme147_intr))
+diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+index 26cfc56..03e3596 100644
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -263,10 +263,11 @@ static int __init sgiwd93_probe(struct platform_device *pdev)
+ 	regs.SASR = wdregs + 3;
+ 	regs.SCMD = wdregs + 7;
  
--	if (shost->transportt->host_size &&
--	    (shost->shost_data = kzalloc(shost->transportt->host_size,
--					 GFP_KERNEL)) == NULL)
--		goto out_del_classdev;
-+	if (shost->transportt->host_size) {
-+		shost->shost_data = kzalloc(shost->transportt->host_size,
-+					 GFP_KERNEL);
-+		if (shost->shost_data == NULL) {
-+			error = -ENOMEM;
-+			goto out_del_classdev;
-+		}
-+	}
+-	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_MHZ(20));
++	hdata->wh.no_sync = 0;
++	hdata->wh.fast = 1;
++	hdata->wh.dma_mode = CTRL_BURST;
  
- 	if (shost->transportt->create_work_queue) {
- 		snprintf(shost->work_q_name, KOBJ_NAME_LEN, "scsi_wq_%d",
- 			shost->host_no);
- 		shost->work_q = create_singlethread_workqueue(
- 					shost->work_q_name);
--		if (!shost->work_q)
-+		if (!shost->work_q) {
-+			error = -EINVAL;
- 			goto out_free_shost_data;
-+		}
- 	}
+-	if (hdata->wh.no_sync == 0xff)
+-		hdata->wh.no_sync = 0;
++	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_MHZ(20));
  
- 	error = scsi_sysfs_add_host(shost);
-
-
+ 	err = request_irq(irq, sgiwd93_intr, 0, "SGI WD93", host);
+ 	if (err) {
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index f286c37..5fda881 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -1973,10 +1973,7 @@ wd33c93_init(struct Scsi_Host *instance, const wd33c93_regs regs,
+ 	hostdata->incoming_ptr = 0;
+ 	hostdata->outgoing_len = 0;
+ 	hostdata->default_sx_per = DEFAULT_SX_PER;
+-	hostdata->no_sync = 0xff;	/* sync defaults to off */
+ 	hostdata->no_dma = 0;	/* default is DMA enabled */
+-	hostdata->fast = 0;	/* default is Fast SCSI transfers disabled */
+-	hostdata->dma_mode = CTRL_DMA;	/* default is Single Byte DMA */
+ 
+ #ifdef PROC_INTERFACE
+ 	hostdata->proc = PR_VERSION | PR_INFO | PR_STATISTICS |
