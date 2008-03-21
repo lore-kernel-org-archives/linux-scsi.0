@@ -1,39 +1,41 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH] WD33C93: let platform stub override
-	no_sync/fast/dma_mode
-Date: Fri, 21 Mar 2008 22:12:30 +0000
-Message-ID: <20080321221230.GA5097@linux-mips.org>
-References: <20080321212543.6F769C2DF8@solo.franken.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 1/2] sysfs: allow the group is_visible() method to
+	return a mode and add an update API
+Date: Fri, 21 Mar 2008 15:26:35 -0700
+Message-ID: <20080321222635.GA2674@kroah.com>
+References: <1206134832.2961.64.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:48730 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbYCUWMm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Mar 2008 18:12:42 -0400
-Received: from localhost.localdomain ([127.0.0.1]:49884 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S28578770AbYCUWMk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2008 22:12:40 +0000
+Received: from pentafluge.infradead.org ([213.146.154.40]:38255 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbYCUW0r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Mar 2008 18:26:47 -0400
 Content-Disposition: inline
-In-Reply-To: <20080321212543.6F769C2DF8@solo.franken.de>
+In-Reply-To: <1206134832.2961.64.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, James.Bottomley@HansenPartnership.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Mar 21, 2008 at 10:25:43PM +0100, Thomas Bogendoerfer wrote:
-
-> SGI machines with WD33C93 allow usage of burst mode DMA, which increases
-> performance noticable. To make this selectable by the sgiwd93 stub,
-> setting the values for no_sync, fast and dma_mode has been moved to the
-> individual platform stubs.
+On Fri, Mar 21, 2008 at 04:27:12PM -0500, James Bottomley wrote:
+> We have a problem in scsi_transport_spi in that we need to customise
+> not only the visibility of the attributes, but also their mode.  Fix
+> this by making the is_visible() callback return a mode, with 0
+> indicating is not visible.
 > 
-> Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> Also add a sysfs_update_group() API to allow us to change either the
+> visibility or mode of the files at any time on the fly.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+> 
+> Greg, can I take this through SCSI, please ... assuming it's OK?  We
+> need this to fix up the SPI transport class.
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+Sure.  But can you document that "update" field a bit more so we can
+remember what it means in the future?
 
-This is one of the things on my list of things to be fixed for IP22 for
-even longer than I can recall.  Thanks Thomas!
+thanks,
 
-  Ralf
+greg k-h
