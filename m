@@ -1,23 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 9010] SCSI device is not offlined properly and tries to
-	cache data from previous device
-Date: Fri, 21 Mar 2008 09:30:21 -0500
-Message-ID: <1206109821.2961.19.camel@localhost.localdomain>
-References: <20080321133526.D313210803D@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9010] SCSI device is not offlined properly and tries to cache data from previous device
+Date: Fri, 21 Mar 2008 07:30:46 -0700 (PDT)
+Message-ID: <20080321143046.33EBB10803F@picon.linux-foundation.org>
+References: <bug-9010-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55926 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753424AbYCUOa0 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44533 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753580AbYCUOas (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2008 10:30:26 -0400
-In-Reply-To: <20080321133526.D313210803D@picon.linux-foundation.org>
+	Fri, 21 Mar 2008 10:30:48 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2LEUlQF029356
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2008 07:30:48 -0700
+In-Reply-To: <bug-9010-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=9010
+
+
+
+
+
+------- Comment #27 from anonymous@kernel-bugs.osdl.org  2008-03-21 07:30 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Fri, 2008-03-21 at 06:35 -0700, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -134,3 +141,7 @@ could be causing this, but it's not impossible.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
