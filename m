@@ -1,205 +1,87 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 1/2] sysfs: allow the group is_visible() method to return a
-	mode and add an update API
-Date: Fri, 21 Mar 2008 16:27:12 -0500
-Message-ID: <1206134832.2961.64.camel@localhost.localdomain>
+Subject: [PATCH 2/2] scsi_transport_spi: fix the attribute settings
+Date: Fri, 21 Mar 2008 16:29:29 -0500
+Message-ID: <1206134969.2961.67.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50204 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33240 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754859AbYCUV1R (ORCPT
+	by vger.kernel.org with ESMTP id S1757667AbYCUV3e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2008 17:27:17 -0400
+	Fri, 21 Mar 2008 17:29:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-We have a problem in scsi_transport_spi in that we need to customise
-not only the visibility of the attributes, but also their mode.  Fix
-this by making the is_visible() callback return a mode, with 0
-indicating is not visible.
-
-Also add a sysfs_update_group() API to allow us to change either the
-visibility or mode of the files at any time on the fly.
+We now take advantage of the mode_t return of is_valid, and also
+update the attributes when the target is configured.
 
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
+ drivers/scsi/scsi_transport_spi.c |   32 ++++++++------------------------
+ 1 files changed, 8 insertions(+), 24 deletions(-)
 
-Greg, can I take this through SCSI, please ... assuming it's OK?  We
-need this to fix up the SPI transport class.
-
-Thanks,
-
-James
-
-
- fs/sysfs/file.c       |   14 ++++++++++----
- fs/sysfs/group.c      |   47 +++++++++++++++++++++++++++++++++++------------
- fs/sysfs/sysfs.h      |    2 ++
- include/linux/sysfs.h |    4 +++-
- 4 files changed, 50 insertions(+), 17 deletions(-)
-
-diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-index 6f5954a..8f7ee10 100644
---- a/fs/sysfs/file.c
-+++ b/fs/sysfs/file.c
-@@ -490,11 +490,10 @@ const struct file_operations sysfs_file_operations = {
- 	.poll		= sysfs_poll,
- };
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index bc12b5d..3a26f74 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1374,11 +1374,11 @@ static int spi_host_configure(struct transport_container *tc,
+  * overloads the return by setting 1<<1 if the attribute should
+  * be writeable */
+ #define TARGET_ATTRIBUTE_HELPER(name) \
+-	(si->f->show_##name ? 1 : 0) + \
+-	(si->f->set_##name ? 2 : 0)
++	(si->f->show_##name ? S_IRUGO : 0) | \
++	(si->f->set_##name ? S_IWUSR : 0)
  
+-static int target_attribute_is_visible(struct kobject *kobj,
+-				       struct attribute *attr, int i)
++static mode_t target_attribute_is_visible(struct kobject *kobj,
++					  struct attribute *attr, int i)
+ {
+ 	struct device *cdev = container_of(kobj, struct device, kobj);
+ 	struct scsi_target *starget = transport_class_to_starget(cdev);
+@@ -1428,7 +1428,7 @@ static int target_attribute_is_visible(struct kobject *kobj,
+ 		 spi_support_ius(starget))
+ 		return TARGET_ATTRIBUTE_HELPER(hold_mcs);
+ 	else if (attr == &dev_attr_revalidate.attr)
+-		return 1;
++		return S_IWUSR;
+ 
+ 	return 0;
+ }
+@@ -1462,25 +1462,9 @@ static int spi_target_configure(struct transport_container *tc,
+ 				struct device *cdev)
+ {
+ 	struct kobject *kobj = &cdev->kobj;
+-	int i;
+-	struct attribute *attr;
+-	int rc;
 -
--int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
--		   int type)
-+int sysfs_add_file_mode(struct sysfs_dirent *dir_sd,
-+			const struct attribute *attr, int type, mode_t amode)
- {
--	umode_t mode = (attr->mode & S_IALLUGO) | S_IFREG;
-+	umode_t mode = (amode & S_IALLUGO) | S_IFREG;
- 	struct sysfs_addrm_cxt acxt;
- 	struct sysfs_dirent *sd;
- 	int rc;
-@@ -515,6 +514,13 @@ int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
+-	for (i = 0; (attr = target_attributes[i]) != NULL; i++) {
+-		int j = target_attribute_group.is_visible(kobj, attr, i);
+-
+-		/* FIXME: as well as returning -EEXIST, which we'd like
+-		 * to ignore, sysfs also does a WARN_ON and dumps a trace,
+-		 * which is bad, so temporarily, skip attributes that are
+-		 * already visible (the revalidate one) */
+-		if (j && attr != &dev_attr_revalidate.attr)
+-			rc = sysfs_add_file_to_group(kobj, attr,
+-						target_attribute_group.name);
+-		/* and make the attribute writeable if we have a set
+-		 * function */
+-		if ((j & 1))
+-			rc = sysfs_chmod_file(kobj, attr, attr->mode | S_IWUSR);
+-	}
++
++	/* force an update based on parameters read from the device */
++	sysfs_update_group(kobj, &target_attribute_group);
+ 
+ 	return 0;
  }
- 
- 
-+int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
-+		   int type)
-+{
-+	return sysfs_add_file_mode(dir_sd, attr, type, attr->mode);
-+}
-+
-+
- /**
-  *	sysfs_create_file - create an attribute file for an object.
-  *	@kobj:	object we're creating for. 
-diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
-index 4779049..6c1232a 100644
---- a/fs/sysfs/group.c
-+++ b/fs/sysfs/group.c
-@@ -23,30 +23,38 @@ static void remove_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
- 	int i;
- 
- 	for (i = 0, attr = grp->attrs; *attr; i++, attr++)
--		if (!grp->is_visible ||
--		    grp->is_visible(kobj, *attr, i))
--			sysfs_hash_and_remove(dir_sd, (*attr)->name);
-+		sysfs_hash_and_remove(dir_sd, (*attr)->name);
- }
- 
- static int create_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
--			const struct attribute_group *grp)
-+			const struct attribute_group *grp, int update)
- {
- 	struct attribute *const* attr;
- 	int error = 0, i;
- 
--	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++)
--		if (!grp->is_visible ||
--		    grp->is_visible(kobj, *attr, i))
--			error |=
--				sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
-+	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++) {
-+		mode_t mode = 0;
-+
-+		if (update)
-+			sysfs_hash_and_remove(dir_sd, (*attr)->name);
-+		if (grp->is_visible) {
-+			mode = grp->is_visible(kobj, *attr, i);
-+			if (!mode)
-+				continue;
-+		}
-+		error = sysfs_add_file_mode(dir_sd, *attr, SYSFS_KOBJ_ATTR,
-+					    (*attr)->mode | mode);
-+		if (unlikely(error))
-+			break;
-+	}
- 	if (error)
- 		remove_files(dir_sd, kobj, grp);
- 	return error;
- }
- 
- 
--int sysfs_create_group(struct kobject * kobj, 
--		       const struct attribute_group * grp)
-+static int internal_create_group(struct kobject * kobj, int update,
-+				 const struct attribute_group * grp)
- {
- 	struct sysfs_dirent *sd;
- 	int error;
-@@ -60,7 +68,7 @@ int sysfs_create_group(struct kobject * kobj,
- 	} else
- 		sd = kobj->sd;
- 	sysfs_get(sd);
--	error = create_files(sd, kobj, grp);
-+	error = create_files(sd, kobj, grp, update);
- 	if (error) {
- 		if (grp->name)
- 			sysfs_remove_subdir(sd);
-@@ -69,6 +77,20 @@ int sysfs_create_group(struct kobject * kobj,
- 	return error;
- }
- 
-+int sysfs_create_group(struct kobject * kobj,
-+		       const struct attribute_group * grp)
-+{
-+	return internal_create_group(kobj, 0, grp);
-+}
-+
-+int sysfs_update_group(struct kobject * kobj,
-+		       const struct attribute_group * grp)
-+{
-+	return internal_create_group(kobj, 1, grp);
-+}
-+
-+
-+
- void sysfs_remove_group(struct kobject * kobj, 
- 			const struct attribute_group * grp)
- {
-@@ -95,4 +117,5 @@ void sysfs_remove_group(struct kobject * kobj,
- 
- 
- EXPORT_SYMBOL_GPL(sysfs_create_group);
-+EXPORT_SYMBOL_GPL(sysfs_update_group);
- EXPORT_SYMBOL_GPL(sysfs_remove_group);
-diff --git a/fs/sysfs/sysfs.h b/fs/sysfs/sysfs.h
-index 52aaa8c..2915959 100644
---- a/fs/sysfs/sysfs.h
-+++ b/fs/sysfs/sysfs.h
-@@ -155,6 +155,8 @@ extern const struct file_operations sysfs_file_operations;
- int sysfs_add_file(struct sysfs_dirent *dir_sd,
- 		   const struct attribute *attr, int type);
- 
-+int sysfs_add_file_mode(struct sysfs_dirent *dir_sd,
-+			const struct attribute *attr, int type, mode_t amode);
- /*
-  * bin.c
-  */
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index 0f388af..07d9c12 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -32,7 +32,7 @@ struct attribute {
- 
- struct attribute_group {
- 	const char		*name;
--	int			(*is_visible)(struct kobject *,
-+	mode_t			(*is_visible)(struct kobject *,
- 					      struct attribute *, int);
- 	struct attribute	**attrs;
- };
-@@ -105,6 +105,8 @@ void sysfs_remove_link(struct kobject *kobj, const char *name);
- 
- int __must_check sysfs_create_group(struct kobject *kobj,
- 				    const struct attribute_group *grp);
-+int sysfs_update_group(struct kobject *kobj,
-+		       const struct attribute_group *grp);
- void sysfs_remove_group(struct kobject *kobj,
- 			const struct attribute_group *grp);
- int sysfs_add_file_to_group(struct kobject *kobj,
 -- 
 1.5.4.3
 
