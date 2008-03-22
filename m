@@ -1,54 +1,41 @@
-From: peter fuerst <post@pfrst.de>
-Subject: Re: [PATCH] WD33C93: let platform stub override no_sync/fast/dma_mode
-Date: Sat, 22 Mar 2008 00:45:03 +0100 (CET)
-Message-ID: <Pine.LNX.4.58.0803220038510.622@Indigo2.Peter>
-References: <20080321212543.6F769C2DF8@solo.franken.de>
- <Pine.LNX.4.58.0803212302190.564@Indigo2.Peter> <20080321230424.GA31455@alpha.franken.de>
-Reply-To: post@pfrst.de
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9010] SCSI device is not offlined properly and tries to cache data from previous device
+Date: Sat, 22 Mar 2008 04:52:27 -0700 (PDT)
+Message-ID: <20080322115227.EB80F10803D@picon.linux-foundation.org>
+References: <bug-9010-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.pearl-online.net ([62.159.194.147]:6986 "EHLO
-	mail1.pearl-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbYCUXyo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Mar 2008 19:54:44 -0400
-In-Reply-To: <20080321230424.GA31455@alpha.franken.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41878 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754776AbYCVLxB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Mar 2008 07:53:01 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2MBqT0U013362
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Mar 2008 04:52:30 -0700
+In-Reply-To: <bug-9010-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=9010
 
 
 
-On Sat, 22 Mar 2008, Thomas Bogendoerfer wrote:
 
-> Date: Sat, 22 Mar 2008 00:04:24 +0100
-> From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-> To: peter fuerst <post@pfrst.de>
-> Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org,
->      ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
-> Subject: Re: [PATCH] WD33C93: let platform stub override
->     no_sync/fast/dma_mode
->
-> On Fri, Mar 21, 2008 at 11:20:07PM +0100, peter fuerst wrote:
-> > ...
->
-> this hack is IMHO no longer needed. If the user wants to override no_sync
-> via kernel command line, it works as before. If the user doesn't no_sync
-> will be 0 (now set in sgiwd93.c before calling wd33c93_init()) and the
-> driver will try to do sync transfers for all devices. It works like before.
 
-It works cleaner than before :-)
+------- Comment #28 from lkmlist@gmail.com  2008-03-22 04:52 -------
+Hotplug works fine on my ICH7 ports, it's just that damn jmicron controller. So
+it must be an effect trigered by a hardware or firmware "feature".
 
-> Or did I miss something ?
+So finally someone from libata has to fix this problem?
 
-No. As already said, just forget it, i missed to look at the whole patch in time.
+thanks for the explanation
 
->
-> Thomas
->
-> --
-> Crap can work. Given enough thrust pigs will fly, but it's not necessary a
-> good idea.                                                [ RFC1925, 2.3 ]
->
->
+regards
+Bjoern
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
