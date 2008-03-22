@@ -1,93 +1,262 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: transport_class: BUG if we can't release the attribute container
-Date: Sat, 22 Mar 2008 11:39:17 -0500
-Message-ID: <1206203957.4393.16.camel@localhost.localdomain>
+Subject: Re: [PATCH 1/2] sysfs: allow the group is_visible() method to
+	return a mode and add an update API
+Date: Sat, 22 Mar 2008 13:02:28 -0500
+Message-ID: <1206208949.4393.25.camel@localhost.localdomain>
+References: <1206134832.2961.64.camel@localhost.localdomain>
+	 <20080321222635.GA2674@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41528 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47927 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753255AbYCVQjW (ORCPT
+	by vger.kernel.org with ESMTP id S1757429AbYCVSCe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Mar 2008 12:39:22 -0400
+	Sat, 22 Mar 2008 14:02:34 -0400
+In-Reply-To: <20080321222635.GA2674@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Greg KH <greg@kroah.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Every current transport class calls transport_container_release but
-ignores the return value.  This is catastrophic if it returns an error
-because the containers are part of a global list and the next action of
-almost every transport class is to free the memory used by the
-container.
 
-Fix this by making transport_container_release a void, but making it BUG
-if attribute_container_release returns an error ... this catches the
-root cause of a system panic much earlier.  If we don't do this, we get
-an eventual BUG when the attribute container list notices the corruption
-caused by the freed memory it's still referencing.
+On Fri, 2008-03-21 at 15:26 -0700, Greg KH wrote:
+> On Fri, Mar 21, 2008 at 04:27:12PM -0500, James Bottomley wrote:
+> > We have a problem in scsi_transport_spi in that we need to customise
+> > not only the visibility of the attributes, but also their mode.  Fix
+> > this by making the is_visible() callback return a mode, with 0
+> > indicating is not visible.
+> > 
+> > Also add a sysfs_update_group() API to allow us to change either the
+> > visibility or mode of the files at any time on the fly.
+> > 
+> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > ---
+> > 
+> > Greg, can I take this through SCSI, please ... assuming it's OK?  We
+> > need this to fix up the SPI transport class.
+> 
+> Sure.  But can you document that "update" field a bit more so we can
+> remember what it means in the future?
 
-Also made attribute_container_release __must_check as a reminder.
+How about this?  I also added docbook for create and update attribute
+group.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+James
 
 ---
 
-diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
-index 40bca48..06861ae 100644
---- a/drivers/base/transport_class.c
-+++ b/drivers/base/transport_class.c
-@@ -108,7 +108,7 @@ EXPORT_SYMBOL_GPL(anon_transport_class_register);
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Thu, 20 Mar 2008 20:47:52 -0500
+Subject: [SCSI] sysfs: make group is_valid return a mode_t
+
+We have a problem in scsi_transport_spi in that we need to customise
+not only the visibility of the attributes, but also their mode.  Fix
+this by making the is_visible() callback return a mode, with 0
+indicating is not visible.
+
+Also add a sysfs_update_group() API to allow us to change either the
+visibility or mode of the files at any time on the fly.
+
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ fs/sysfs/file.c       |   14 ++++++--
+ fs/sysfs/group.c      |   77 +++++++++++++++++++++++++++++++++++++++++-------
+ fs/sysfs/sysfs.h      |    2 +
+ include/linux/sysfs.h |    4 ++-
+ 4 files changed, 80 insertions(+), 17 deletions(-)
+
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index 6f5954a..8f7ee10 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -490,11 +490,10 @@ const struct file_operations sysfs_file_operations = {
+ 	.poll		= sysfs_poll,
+ };
+ 
+-
+-int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
+-		   int type)
++int sysfs_add_file_mode(struct sysfs_dirent *dir_sd,
++			const struct attribute *attr, int type, mode_t amode)
+ {
+-	umode_t mode = (attr->mode & S_IALLUGO) | S_IFREG;
++	umode_t mode = (amode & S_IALLUGO) | S_IFREG;
+ 	struct sysfs_addrm_cxt acxt;
+ 	struct sysfs_dirent *sd;
+ 	int rc;
+@@ -515,6 +514,13 @@ int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
+ }
+ 
+ 
++int sysfs_add_file(struct sysfs_dirent *dir_sd, const struct attribute *attr,
++		   int type)
++{
++	return sysfs_add_file_mode(dir_sd, attr, type, attr->mode);
++}
++
++
+ /**
+  *	sysfs_create_file - create an attribute file for an object.
+  *	@kobj:	object we're creating for. 
+diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
+index 4779049..dac9383 100644
+--- a/fs/sysfs/group.c
++++ b/fs/sysfs/group.c
+@@ -23,30 +23,41 @@ static void remove_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
+ 	int i;
+ 
+ 	for (i = 0, attr = grp->attrs; *attr; i++, attr++)
+-		if (!grp->is_visible ||
+-		    grp->is_visible(kobj, *attr, i))
+-			sysfs_hash_and_remove(dir_sd, (*attr)->name);
++		sysfs_hash_and_remove(dir_sd, (*attr)->name);
+ }
+ 
+ static int create_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
+-			const struct attribute_group *grp)
++			const struct attribute_group *grp, int update)
+ {
+ 	struct attribute *const* attr;
+ 	int error = 0, i;
+ 
+-	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++)
+-		if (!grp->is_visible ||
+-		    grp->is_visible(kobj, *attr, i))
+-			error |=
+-				sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
++	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++) {
++		mode_t mode = 0;
++
++		/* in update mode, we're changing the permissions or
++		 * visibility.  Do this by first removing then
++		 * re-adding (if required) the file */
++		if (update)
++			sysfs_hash_and_remove(dir_sd, (*attr)->name);
++		if (grp->is_visible) {
++			mode = grp->is_visible(kobj, *attr, i);
++			if (!mode)
++				continue;
++		}
++		error = sysfs_add_file_mode(dir_sd, *attr, SYSFS_KOBJ_ATTR,
++					    (*attr)->mode | mode);
++		if (unlikely(error))
++			break;
++	}
+ 	if (error)
+ 		remove_files(dir_sd, kobj, grp);
+ 	return error;
+ }
+ 
+ 
+-int sysfs_create_group(struct kobject * kobj, 
+-		       const struct attribute_group * grp)
++static int internal_create_group(struct kobject *kobj, int update,
++				 const struct attribute_group *grp)
+ {
+ 	struct sysfs_dirent *sd;
+ 	int error;
+@@ -60,7 +71,7 @@ int sysfs_create_group(struct kobject * kobj,
+ 	} else
+ 		sd = kobj->sd;
+ 	sysfs_get(sd);
+-	error = create_files(sd, kobj, grp);
++	error = create_files(sd, kobj, grp, update);
+ 	if (error) {
+ 		if (grp->name)
+ 			sysfs_remove_subdir(sd);
+@@ -69,6 +80,47 @@ int sysfs_create_group(struct kobject * kobj,
+ 	return error;
+ }
+ 
++/**
++ * sysfs_create_group - given a directory kobject, create an attribute group
++ * @kobj:	The kobject to create the group on
++ * @grp:	The attribute group to create
++ *
++ * This function creates a group for the first time.  It will explicitly
++ * warn and error if any of the attribute files being created already exist.
++ *
++ * Returns 0 on success or error.
++ */
++int sysfs_create_group(struct kobject *kobj,
++		       const struct attribute_group *grp)
++{
++	return internal_create_group(kobj, 0, grp);
++}
++
++/**
++ * sysfs_update_group - given a directory kobject, create an attribute group
++ * @kobj:	The kobject to create the group on
++ * @grp:	The attribute group to create
++ *
++ * This function updates an attribute group.  Unlike
++ * sysfs_create_group(), it will explicitly not warn or error if any
++ * of the attribute files being created already exist.  Furthermore,
++ * if the visibility of the files has changed through the is_visible()
++ * callback, it will update the permissions and add or remove the
++ * relevant files.
++ *
++ * The primary use for this function is to call it after making a change
++ * that affects group visibility.
++ *
++ * Returns 0 on success or error.
++ */
++int sysfs_update_group(struct kobject *kobj,
++		       const struct attribute_group *grp)
++{
++	return internal_create_group(kobj, 1, grp);
++}
++
++
++
+ void sysfs_remove_group(struct kobject * kobj, 
+ 			const struct attribute_group * grp)
+ {
+@@ -95,4 +147,5 @@ void sysfs_remove_group(struct kobject * kobj,
+ 
+ 
+ EXPORT_SYMBOL_GPL(sysfs_create_group);
++EXPORT_SYMBOL_GPL(sysfs_update_group);
+ EXPORT_SYMBOL_GPL(sysfs_remove_group);
+diff --git a/fs/sysfs/sysfs.h b/fs/sysfs/sysfs.h
+index 52aaa8c..2915959 100644
+--- a/fs/sysfs/sysfs.h
++++ b/fs/sysfs/sysfs.h
+@@ -155,6 +155,8 @@ extern const struct file_operations sysfs_file_operations;
+ int sysfs_add_file(struct sysfs_dirent *dir_sd,
+ 		   const struct attribute *attr, int type);
+ 
++int sysfs_add_file_mode(struct sysfs_dirent *dir_sd,
++			const struct attribute *attr, int type, mode_t amode);
+ /*
+  * bin.c
   */
- void anon_transport_class_unregister(struct anon_transport_class *atc)
- {
--	attribute_container_unregister(&atc->container);
-+	BUG_ON(attribute_container_unregister(&atc->container));
- }
- EXPORT_SYMBOL_GPL(anon_transport_class_unregister);
+diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+index 0f388af..07d9c12 100644
+--- a/include/linux/sysfs.h
++++ b/include/linux/sysfs.h
+@@ -32,7 +32,7 @@ struct attribute {
  
-diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-index 86e1318..52182a7 100644
---- a/drivers/scsi/raid_class.c
-+++ b/drivers/scsi/raid_class.c
-@@ -289,7 +289,7 @@ raid_class_release(struct raid_template *r)
- {
- 	struct raid_internal *i = to_raid_internal(r);
+ struct attribute_group {
+ 	const char		*name;
+-	int			(*is_visible)(struct kobject *,
++	mode_t			(*is_visible)(struct kobject *,
+ 					      struct attribute *, int);
+ 	struct attribute	**attrs;
+ };
+@@ -105,6 +105,8 @@ void sysfs_remove_link(struct kobject *kobj, const char *name);
  
--	attribute_container_unregister(&i->r.raid_attrs.ac);
-+	BUG_ON(attribute_container_unregister(&i->r.raid_attrs.ac));
- 
- 	kfree(i);
- }
-diff --git a/include/linux/attribute_container.h b/include/linux/attribute_container.h
-index f558233..574b201 100644
---- a/include/linux/attribute_container.h
-+++ b/include/linux/attribute_container.h
-@@ -37,7 +37,7 @@ attribute_container_set_no_classdevs(struct attribute_container *atc)
- }
- 
- int attribute_container_register(struct attribute_container *cont);
--int attribute_container_unregister(struct attribute_container *cont);
-+int __must_check attribute_container_unregister(struct attribute_container *cont);
- void attribute_container_create_device(struct device *dev,
- 				       int (*fn)(struct attribute_container *,
- 						 struct device *,
-diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
-index 1d6cc22..e74c6dc 100644
---- a/include/linux/transport_class.h
-+++ b/include/linux/transport_class.h
-@@ -86,9 +86,9 @@ static inline int transport_container_register(struct transport_container *tc)
- 	return attribute_container_register(&tc->ac);
- }
- 
--static inline int transport_container_unregister(struct transport_container *tc)
-+static inline void transport_container_unregister(struct transport_container *tc)
- {
--	return attribute_container_unregister(&tc->ac);
-+	BUG_ON(attribute_container_unregister(&tc->ac));
- }
- 
- int transport_class_register(struct transport_class *);
+ int __must_check sysfs_create_group(struct kobject *kobj,
+ 				    const struct attribute_group *grp);
++int sysfs_update_group(struct kobject *kobj,
++		       const struct attribute_group *grp);
+ void sysfs_remove_group(struct kobject *kobj,
+ 			const struct attribute_group *grp);
+ int sysfs_add_file_to_group(struct kobject *kobj,
+-- 
+1.5.4.3
+
 
 
