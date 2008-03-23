@@ -1,33 +1,39 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: ultrastor.c is a bit-rot
-Date: Sun, 23 Mar 2008 11:54:39 +0200
-Message-ID: <47E628DF.6070301@panasas.com>
-References: <47DE8736.8020405@panasas.com> <20080317152344.GE26285@parisc-linux.org> <47E41D7D.9050409@zytor.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 7/8] Fix refcounting for attribute_container
+Date: Sun, 23 Mar 2008 09:59:47 -0500
+Message-ID: <1206284387.3494.8.camel@localhost.localdomain>
+References: <20080318133228.7B58F159166@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758899AbYCWJzR@vger.kernel.org>
-In-Reply-To: <47E41D7D.9050409@zytor.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49318 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757327AbYCWO7u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Mar 2008 10:59:50 -0400
+In-Reply-To: <20080318133228.7B58F159166@pentland.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Mar 21 2008 at 22:41 +0200, "H. Peter Anvin" <hpa@zytor.com> wrote:
-> Matthew Wilcox wrote:
->> VESA Local Bus.  It was (in some sense) the predecessor of AGP.  We
->> treat it like ISA inside the kernel.  On x86, EISA depends on ISA, so
->> the dependency, while wrong, does not affect any x86 users who have an
->> EISA card.
->>
-> 
-> Well, one can say VLB was to ISA (a souped-up ISA bus with some of the 
-> worst limitations removed) what AGP is to PCI...
-> 
-> 	-hpa
+On Tue, 2008-03-18 at 14:32 +0100, Hannes Reinecke wrote:
+> attribute_container_add_device() takes an explicit reference on the
+> parent device, making it impossible to remove the parent by doing
+> a simple put_device(). So we'd rather _not_ take a reference here as
+> attribute_container will be handled explicitly by calls to
+> attribute_container_remove_device()/_destroy_device() anyway.
 
-Hmm interesting, so someone took the VGA thing and made a storage device
-for it. Did that ever happen with AGP? Any AGP scsi cards. I guess I can
-Google for it.
+I really don't think this is right.  The attribute container does hold a
+reference to the device, so we should make it explicit.  You could argue
+that in the new parent indicates class device model there's *already* a
+reference, so this one is superfluous, but it does help to make the
+relationship explicit.  Regardless, because we have an implicit
+reference, your comment for the patch can't work (whether we explicitly
+take the ref or not, you can't expect the device to be unrefereced by
+the attribute container).
 
-Boaz
+James
+
+
