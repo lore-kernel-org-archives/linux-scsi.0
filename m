@@ -1,52 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 8/8] Remove reap_ref
-Date: Sun, 23 Mar 2008 10:19:36 -0500
-Message-ID: <1206285576.3494.17.camel@localhost.localdomain>
-References: <20080318133228.ACA1F159169@pentland.suse.de>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ultrastor.c is a bit-rot
+Date: Sun, 23 Mar 2008 09:24:03 -0700
+Message-ID: <47E68423.2010507@zytor.com>
+References: <47DE8736.8020405@panasas.com> <20080317152344.GE26285@parisc-linux.org> <47E41D7D.9050409@zytor.com> <47E628DF.6070301@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35284 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750884AbYCWPTj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Mar 2008 11:19:39 -0400
-In-Reply-To: <20080318133228.ACA1F159169@pentland.suse.de>
+Received: from terminus.zytor.com ([198.137.202.10]:41180 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846AbYCWQ3Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Mar 2008 12:29:16 -0400
+In-Reply-To: <47E628DF.6070301@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2008-03-18 at 14:32 +0100, Hannes Reinecke wrote:
-> struct scsi_target contains a 'reap_ref' counter, which is
-> basically a reference counter for the target.
+Boaz Harrosh wrote:
+> On Fri, Mar 21 2008 at 22:41 +0200, "H. Peter Anvin" <hpa@zytor.com> wrote:
+>> Matthew Wilcox wrote:
+>>> VESA Local Bus.  It was (in some sense) the predecessor of AGP.  We
+>>> treat it like ISA inside the kernel.  On x86, EISA depends on ISA, so
+>>> the dependency, while wrong, does not affect any x86 users who have an
+>>> EISA card.
+>>>
+>> Well, one can say VLB was to ISA (a souped-up ISA bus with some of the 
+>> worst limitations removed) what AGP is to PCI...
+>>
+>> 	-hpa
+> 
+> Hmm interesting, so someone took the VGA thing and made a storage device
+> for it. Did that ever happen with AGP? Any AGP scsi cards. I guess I can
+> Google for it.
 
-Actually, it's not a reference counter, it's an indicator that the
-target may not be removed regardless of whether it has any children.
+A lot less likely, IMO.  Unlike AGP-PCI, VLB slots were compatible with 
+ISA cards, and the electricals were less complex, so several motherboard 
+manufacturers built boards with 3 or more VESA slots (I think I saw a 
+board with 6 at one point.)
 
-> As we now have proper reference counting we can remove it.
-> This also cleans out the calling sequence for scsi_target_reap(),
-> which now will only be called from the release function of the
-> scsi_device, so we're guaranteed to always have a valid target.
+AGP electricals pretty much require that it be point to point.
 
-Unfortunately, no.  This patch is founded on a wrong assumption.
-
-The way the reap_ref works is that it's effectively a semaphore on
-"don't delete target, I'm using it"---protecting critical target use
-sections where we're manipulating or adding its children.  We have to
-have a separate counter for this because the target is eligible for
-deletion any time it doesn't have any children.  Unfortunately, there
-are several times in the life cycle of a target when this may be true:
-most notably at creation, but also around deletion (we don't want early
-kills on the target until we're ready).
-
-So, when a target is created, it comes with a reap_ref of one.  You
-don't reduce it to zero until you're done with the scan otherwise your
-target may be killed by a racing delete.  Likewise in deletion, you
-raise the reap ref do your deletion and then reap, so the target doesn't
-disappear prematurely due to a racing scan.
-
-James
-
-
+	-hpa
