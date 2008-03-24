@@ -1,26 +1,26 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: SCSI transport class docs
-Date: Mon, 24 Mar 2008 16:47:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803241644120.25254-100000@iolanthe.rowland.org>
+From: Sven Crouse <svenc@snet.net>
+Subject: FC target mode ?
+Date: Mon, 24 Mar 2008 17:47:24 -0400
+Message-ID: <1206395244.7719.50.camel@lanker>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38318 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751190AbYCXUra (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Mar 2008 16:47:30 -0400
+Received: from smtp109.sbc.mail.re2.yahoo.com ([68.142.229.96]:25104 "HELO
+	smtp109.sbc.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752839AbYCXVyH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Mar 2008 17:54:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James:
+Can anybody show commands or suggest documentation that explains how I
+would associate a volume with a HBA on the same host such that any
+connected host with a HBA can utilize that volume as if it were its own.
+Put another way, I want to make a SAN of a Linux server with a SCSI RAID
+and doing so requires "target mode"?, but I can find nothing about how
+to do so.
 
-I'm completely at sea when it comes to transport classes.  Is there a 
-writeup describing how they are meant to be used, and which doesn't 
-presuppose the reader already understands the overall architecture?
-
-If not, what would be the best way to learn about them?
-
-Alan Stern
+Sven
 
