@@ -1,80 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/5] add scsi_build_sense_buffer helper function
-Date: Mon, 24 Mar 2008 12:10:09 -0500
-Message-ID: <1206378609.3494.50.camel@localhost.localdomain>
-References: <1206377695-26084-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1206377695-26084-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Greg KH <greg@kroah.com>
+Subject: Re: What should be done with wrong warning "please use bus_type
+	methods." on sd, sr, st and osst?
+Date: Mon, 24 Mar 2008 10:59:22 -0700
+Message-ID: <20080324175922.GB13816@kroah.com>
+References: <47E7B40D.1000509@tremplin-utc.net> <1206372247.3494.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43158 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753772AbYCXRKP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Mar 2008 13:10:15 -0400
-In-Reply-To: <1206377695-26084-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from pentafluge.infradead.org ([213.146.154.40]:45900 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657AbYCXRyD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Mar 2008 13:54:03 -0400
+Content-Disposition: inline
+In-Reply-To: <1206372247.3494.22.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, tomof@acm.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Eric Piel <eric.piel@tremplin-utc.net>, linux-scsi@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>, Tilman Schmidt <tilman@imap.cc>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Tue, 2008-03-25 at 01:54 +0900, FUJITA Tomonori wrote:
-> This adds scsi_build_sense_buffer, a simple helper function to build
-> sense data in a buffer.
+On Mon, Mar 24, 2008 at 10:24:07AM -0500, James Bottomley wrote:
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  drivers/scsi/scsi_error.c |   30 ++++++++++++++++++++++++++++++
->  include/scsi/scsi_eh.h    |    5 ++++-
->  2 files changed, 34 insertions(+), 1 deletions(-)
+> On Mon, 2008-03-24 at 15:00 +0100, Eric Piel wrote:
+> > Since commit 751bf4d7865e4ced406be93b04c7436d866d3684 (scsi_sysfs: 
+> > restore prep_fn when ULD is removed), the warning "Driver '%s' needs 
+> > updating - please use bus_type methods." is generated for several scsi 
+> > drivers (sr, sg, st and osst). It does so because it thinks that the 
+> > driver remove() functions will not be called (cf 
+> > __device_release_driver()). Actually, they are called by scsi_bus_remove().
+> > 
+> > This has been noted already a couple of times [1] [2] [3], but it seems 
+> > absolutely nothing conclusive came out of the reports.
+> > 
+> > What should be done? Delete the warning? Change it so it doesn't get 
+> > triggered if drv->bus->remove == scsi_bus_remove? Merge 
+> > scsi_bus_remove() into the driver remove() functions? Disregard the 
+> > monthly warming reports?
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 1221d2c..85add5b 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1993,3 +1993,33 @@ int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
->  	}
->  }
->  EXPORT_SYMBOL(scsi_get_sense_info_fld);
-> +
-> +/**
-> + * scsi_build_sense_buffer - build sense data in a buffer
-> + * @desc:	Sense format (non zero == descriptor format,
-> + * 		0 == fixed format
-> + * @buf:	Where to build sense data
-> + * @key:	Sense key
-> + * @asc:	Additional sense code
-> + * @ascq:	Additional sense code qualifier
-> + * @addlen:	Additional sense length
-> + *
-> + **/
-> +void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq,
-> +			     int addlen)
-> +{
-> +	if (desc) {
-> +		buf[0] = 0x72;	/* descriptor, current */
-> +		buf[1] = key;
-> +		buf[2] = asc;
-> +		buf[3] = ascq;
-> +		buf[7] = addlen;
-> +	} else {
-> +		buf[0] = 0x70;	/* fixed, current */
-> +		buf[2] = key;
-> +		buf[7] = addlen;
-> +		buf[12] = asc;
-> +		buf[13] = ascq;
-> +	}
+> At least for SCSI, the warning is wrong .. the drivers are properly
+> converted.  The issue that triggers the warning is that we use the
+> bus_type power management methods to receive the notifies in the
+> mid-layer (where we do mid-layer specific stuff) then we notify the
+> drivers through the driver power management methods.
+> 
+> A solution would be to duplicate the power management methods in the
+> scsi_driver structure, but this is a complete waste of space since the
+> generic driver ones aren't going away (at least according to Kay and
+> Greg).  I still think the best thing to do is just to turn off this
+> spurious warning.
 
-This doesn't look quite right ... if you're using this call to
-manufacture sense data, you're always doing it at a fixed size, aren't
-you (i.e. addlen is always 0 for descriptor format and 10 for fixed
-format, isn't it)?  So we should just hard code that rather than
-requiring it to be passed in.
+Do you have a patch that can detect the usage that you currently have so
+that I can change the warning message to not trigger if things are set
+up that way instead?
 
-Also, the libata piece needs to go to linux-ide@vger.kernel.org as well.
+thanks,
 
-James
-
-
+greg k-h
