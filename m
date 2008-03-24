@@ -1,86 +1,254 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: What should be done with wrong warning "please use bus_type
-	methods." on sd, sr, st and osst?
-Date: Mon, 24 Mar 2008 13:16:33 -0500
-Message-ID: <1206382594.3494.76.camel@localhost.localdomain>
-References: <47E7B40D.1000509@tremplin-utc.net>
-	 <1206372247.3494.22.camel@localhost.localdomain>
-	 <20080324175922.GB13816@kroah.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: [PATCH] SCSI support for REQ_TYPE_LINUX_BLOCK requests
+Date: Mon, 24 Mar 2008 18:56:05 +0100
+Message-ID: <871w60j9ai.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-=-="
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42752 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757984AbYCXSQm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Mar 2008 14:16:42 -0400
-In-Reply-To: <20080324175922.GB13816@kroah.com>
+Received: from nebensachen.de ([195.34.83.29]:38762 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753439AbYCXSTA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Mar 2008 14:19:00 -0400
+Received: from c-134-104-46.k.dial.de.ignite.net ([62.134.104.46] helo=denkblock.local)
+	by mail.nebensachen.de with esmtpsa (TLS-1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <eo@nebensachen.de>)
+	id 1Jdqxj-0004dN-JV
+	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2008 19:00:16 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Eric Piel <eric.piel@tremplin-utc.net>, linux-scsi@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>, Tilman Schmidt <tilman@imap.cc>, Kay Sievers <kay.sievers@vrfy.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2008-03-24 at 10:59 -0700, Greg KH wrote:
-> On Mon, Mar 24, 2008 at 10:24:07AM -0500, James Bottomley wrote:
-> > 
-> > On Mon, 2008-03-24 at 15:00 +0100, Eric Piel wrote:
-> > > Since commit 751bf4d7865e4ced406be93b04c7436d866d3684 (scsi_sysfs: 
-> > > restore prep_fn when ULD is removed), the warning "Driver '%s' needs 
-> > > updating - please use bus_type methods." is generated for several scsi 
-> > > drivers (sr, sg, st and osst). It does so because it thinks that the 
-> > > driver remove() functions will not be called (cf 
-> > > __device_release_driver()). Actually, they are called by scsi_bus_remove().
-> > > 
-> > > This has been noted already a couple of times [1] [2] [3], but it seems 
-> > > absolutely nothing conclusive came out of the reports.
-> > > 
-> > > What should be done? Delete the warning? Change it so it doesn't get 
-> > > triggered if drv->bus->remove == scsi_bus_remove? Merge 
-> > > scsi_bus_remove() into the driver remove() functions? Disregard the 
-> > > monthly warming reports?
-> > 
-> > At least for SCSI, the warning is wrong .. the drivers are properly
-> > converted.  The issue that triggers the warning is that we use the
-> > bus_type power management methods to receive the notifies in the
-> > mid-layer (where we do mid-layer specific stuff) then we notify the
-> > drivers through the driver power management methods.
-> > 
-> > A solution would be to duplicate the power management methods in the
-> > scsi_driver structure, but this is a complete waste of space since the
-> > generic driver ones aren't going away (at least according to Kay and
-> > Greg).  I still think the best thing to do is just to turn off this
-> > spurious warning.
-> 
-> Do you have a patch that can detect the usage that you currently have so
-> that I can change the warning message to not trigger if things are set
-> up that way instead?
+--=-=-=
 
-Well, my suggested fix would be the attached one since you and Kay seem
-to be telling me that converting to bus_type X methods still leaves us
-free to reuse the driver X methods.  If you're planning on deprecating
-the driver X methods, then sure, it makes sense for me to duplicate them
-in the scsi driver.
+Hi all,
 
-James
+this patch adds support for REQ_TYPE_LINUX_BLOCK requests to the scsi
+midlayer. Low level drivers have the option to register their own
+handlers for these special requests if necessary.
+
+This patch is required in order to implement disk shock protection in
+libata eventually. Please see [1] for further details and the full patch
+series. Please note that this patch applies to 2.6.25-rc6 whereas the
+original patch series (see [1]) applies to 2.6.24.3.
+
+Please let me know what you think about the patch and if could go into
+mainline.
+
+Regards,
+
+Elias
+
+[1] <http://permalink.gmane.org/gmane.linux.ide/29519>
+
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: inline; filename=scsi-req_lb-support.patch
 
 ---
 
-diff --git a/drivers/base/driver.c b/drivers/base/driver.c
-index bf31a01..bc9f76d 100644
---- a/drivers/base/driver.c
-+++ b/drivers/base/driver.c
-@@ -215,11 +215,6 @@ int driver_register(struct device_driver *drv)
- {
- 	int ret;
+ drivers/scsi/scsi_lib.c  |   65 +++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/sd.c        |    9 ++++++
+ drivers/scsi/sr.c        |    9 ++++++
+ include/linux/blkdev.h   |    1 +
+ include/scsi/scsi_host.h |   22 ++++++++++++++++
+ 5 files changed, 104 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ba21d97..dd9bea2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1262,6 +1262,15 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
  
--	if ((drv->bus->probe && drv->probe) ||
--	    (drv->bus->remove && drv->remove) ||
--	    (drv->bus->shutdown && drv->shutdown))
--		printk(KERN_WARNING "Driver '%s' needs updating - please use "
--			"bus_type methods\n", drv->name);
- 	ret = bus_add_driver(drv);
- 	if (ret)
- 		return ret;
+ 	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
+ 		ret = scsi_setup_blk_pc_cmnd(sdev, req);
++	else if (req->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdev->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++	}
+ 	return scsi_prep_return(q, req, ret);
+ }
+ 
+@@ -1371,12 +1380,30 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	__scsi_done(cmd);
+ }
+ 
++static void scsi_finish_lb_req(struct request *req)
++{
++	struct request_queue *q = req->q;
++	struct scsi_device *sdev = q->queuedata;
++	unsigned long flags;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	end_that_request_last(req, 1);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++	put_device(&sdev->sdev_gendev);
++}
++
+ static void scsi_softirq_done(struct request *rq)
+ {
+ 	struct scsi_cmnd *cmd = rq->completion_data;
+-	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
++	unsigned long wait_for;
+ 	int disposition;
+ 
++	if (blk_lb_request(rq)) {
++		scsi_finish_lb_req(rq);
++		return;
++	}
++
++	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
+ 
+ 	disposition = scsi_decide_disposition(cmd);
+@@ -1406,6 +1433,24 @@ static void scsi_softirq_done(struct request *rq)
+ 	}
+ }
+ 
++static void scsi_exec_lb_req(struct request *req)
++{
++	struct scsi_device *sdev = req->q->queuedata;
++	struct scsi_host_template *shostt = sdev->host->hostt;
++	int rc;
++
++	if (shostt->lb_request_fn)
++		rc = shostt->lb_request_fn(req);
++	else
++		rc = FAILED;
++
++	if (rc == FAILED)
++		req->errors = -EIO;
++	else if (rc == QUEUED)
++		return;
++	blk_complete_request(req);
++}
++
+ /*
+  * Function:    scsi_request_fn()
+  *
+@@ -1448,7 +1493,23 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
++			break;
++
++		/*
++		 * We do not account for linux blk req in the device
++		 * or host busy accounting because it is not necessarily
++		 * a scsi command that is sent to some object. The lower
++		 * level can translate it into a request/scsi_cmnd, if
++		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
++		 */
++		if (blk_lb_request(req)) {
++			blkdev_dequeue_request(req);
++			scsi_exec_lb_req(req);
++			continue;
++		}
++
++		if (!scsi_dev_queue_ready(q, sdev))
+ 			break;
+ 
+ 		if (unlikely(!scsi_device_online(sdev))) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7aee64d..fff8b49 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -357,6 +357,15 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
++	} else if (rq->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdp->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++		goto out;
+ 	} else if (rq->cmd_type != REQ_TYPE_FS) {
+ 		ret = BLKPREP_KILL;
+ 		goto out;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 208565b..b478b3f 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -337,6 +337,15 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
++	} else if (rq->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdp->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++		goto out;
+ 	} else if (rq->cmd_type != REQ_TYPE_FS) {
+ 		ret = BLKPREP_KILL;
+ 		goto out;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6f79d40..f4ed034 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -453,6 +453,7 @@ enum {
+ 
+ #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
++#define blk_lb_request(rq)	((rq)->cmd_type == REQ_TYPE_LINUX_BLOCK)
+ #define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
+ #define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 530ff4c..1765855 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -9,6 +9,7 @@
+ #include <scsi/scsi.h>
+ 
+ struct request_queue;
++struct request;
+ struct block_device;
+ struct completion;
+ struct module;
+@@ -153,6 +154,27 @@ struct scsi_host_template {
+ 				  void (*done)(struct scsi_cmnd *));
+ 
+ 	/*
++	 * The lb_request_fn function is used to pass
++	 * REQ_TYPE_LINUX_BLOCK requests to the LLDD. The return value
++	 * FAILED indicates that the command opcode has not been known
++	 * by lb_request_fn. In contrast, the return value SUCCESS
++	 * means that the opcode has been recognised and the request
++	 * has been processed accordingly. Note, however, that SUCCESS
++	 * does not necessarily mean that all actions have been
++	 * performed successfully; errors are recorded in req->errors.
++	 * lb_request_fn can also return QUEUED in order to prevent
++	 * midlayer from enqueueng the request for completion.
++	 * Obviously, the LLDD must take care that the request will be
++	 * completed by means of blk_complete_request eventually.
++	 *
++	 * Status: OPTIONAL
++	 */
++	/* TODO: We might need to accept a return value NEEDS_RETRY some
++	 * time.
++	 */
++	int (* lb_request_fn)(struct request *req);
++
++	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+ 	 * routine that is present that should work in most cases.  For those
 
-
+--=-=-=--
