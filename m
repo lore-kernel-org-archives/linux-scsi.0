@@ -1,107 +1,89 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH v2 1/5] add scsi_build_sense_buffer helper function
-Date: Tue, 25 Mar 2008 19:01:52 +0900
-Message-ID: <20080325190152L.fujita.tomonori@lab.ntt.co.jp>
-References: <1206404816-21710-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<47E8C9B7.1040406@panasas.com>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH v2 5/5] ps3rom: use scsi_build_sense_buffer
+Date: Tue, 25 Mar 2008 13:17:41 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0803251316320.1672@vixen.sonytel.be>
+References: 1206378609.3494.50.camel@localhost.localdomain
+ <1206404816-21710-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1206404816-21710-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1206404816-21710-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1206404816-21710-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1206404816-21710-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1650271770-1206447461=:1672"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:36509 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754106AbYCYKEk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 06:04:40 -0400
-In-Reply-To: <47E8C9B7.1040406@panasas.com>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:59221 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754047AbYCYMRp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Mar 2008 08:17:45 -0400
+In-Reply-To: <1206404816-21710-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-On Tue, 25 Mar 2008 11:45:27 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On Tue, Mar 25 2008 at 2:26 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > This adds scsi_build_sense_buffer, a simple helper function to build
-> > sense data in a buffer.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > ---
-> >  drivers/scsi/scsi_error.c |   28 ++++++++++++++++++++++++++++
-> >  include/scsi/scsi_eh.h    |    4 +++-
-> >  2 files changed, 31 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> > index 1221d2c..221f31e 100644
-> > --- a/drivers/scsi/scsi_error.c
-> > +++ b/drivers/scsi/scsi_error.c
-> > @@ -1993,3 +1993,31 @@ int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
-> >  	}
-> >  }
-> >  EXPORT_SYMBOL(scsi_get_sense_info_fld);
-> > +
-> > +/**
-> > + * scsi_build_sense_buffer - build sense data in a buffer
-> > + * @desc:	Sense format (non zero == descriptor format,
-> > + * 		0 == fixed format)
-> > + * @buf:	Where to build sense data
-> > + * @key:	Sense key
-> > + * @asc:	Additional sense code
-> > + * @ascq:	Additional sense code qualifier
-> > + *
-> > + **/
-> > +void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
-> > +{
-> > +	if (desc) {
-> > +		buf[0] = 0x72;	/* descriptor, current */
-> > +		buf[1] = key;
-> > +		buf[2] = asc;
-> > +		buf[3] = ascq;
-> > +		buf[7] = 0;
-> > +	} else {
-> > +		buf[0] = 0x70;	/* fixed, current */
-> > +		buf[2] = key;
-> > +		buf[7] = 0xa;
-> > +		buf[12] = asc;
-> > +		buf[13] = ascq;
-> > +	}
-> > +}
-> > +EXPORT_SYMBOL(scsi_build_sense_buffer);
-> > diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-> > index 37a7614..d3a133b 100644
-> > --- a/include/scsi/scsi_eh.h
-> > +++ b/include/scsi/scsi_eh.h
-> > @@ -57,7 +57,9 @@ extern const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
-> >  
-> >  extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
-> >  				   u64 * info_out);
-> > - 
-> > +
-> > +extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
-> > +
-> >  /*
-> >   * Reset request from external source
-> >   */
-> Tomo Hi.
+---584349381-1650271770-1206447461=:1672
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Tue, 25 Mar 2008, FUJITA Tomonori wrote:
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+
+Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  drivers/scsi/ps3rom.c |    7 ++-----
+>  1 files changed, 2 insertions(+), 5 deletions(-)
 > 
-> Thanks for doing this. It was requested before by few people.
-> 
-> I have one small request please? This is to help me  with my "sense" effort.
-> (See here: http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=boaz_sense_effort)
-> Could you change it that a struct scsi_cmnd * is passed to the new API, instead of the
-> u8 * directly. This is because I'm removing the buffer at scsi_cmnd. Something like:
-> 
-> extern void scsi_build_sense_buffer(struct scsi_cmnd *, int desc, u8 key, u8 asc, u8 ascq);
+> diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+> index d1e7845..ce48e2d 100644
+> --- a/drivers/scsi/ps3rom.c
+> +++ b/drivers/scsi/ps3rom.c
+> @@ -26,6 +26,7 @@
+>  #include <scsi/scsi_dbg.h>
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h>
+> +#include <scsi/scsi_eh.h>
+>  
+>  #include <asm/lv1call.h>
+>  #include <asm/ps3stor.h>
+> @@ -330,11 +331,7 @@ static irqreturn_t ps3rom_interrupt(int irq, void *data)
+>  		goto done;
+>  	}
+>  
+> -	cmd->sense_buffer[0]  = 0x70;
+> -	cmd->sense_buffer[2]  = sense_key;
+> -	cmd->sense_buffer[7]  = 16 - 6;
+> -	cmd->sense_buffer[12] = asc;
+> -	cmd->sense_buffer[13] = ascq;
+> +	scsi_build_sense_buffer(0, cmd->sense_buffer, sense_key, asc, ascq);
+>  	cmd->result = SAM_STAT_CHECK_CONDITION;
+>  
+>  done:
+> -- 
+> 1.5.3.7
 
-Unfortunately, it doesn't work for scsi_debug (doesn't build sense
-data in scsi_cmnd).
+With kind regards,
 
-I guess, later on you could change something like:
+Geert Uytterhoeven
+Software Architect
 
-extern void __scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
-void scsi_build_sense_buffer(struct scsi_cmnd *cmd, int desc, u8 key, u8 asc, u8 ascq)
-{
-	__scsi_build_sense_buffer(desc, cmd->sense_buffer, desc, key, asc, ascq);
-}
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-1650271770-1206447461=:1672--
