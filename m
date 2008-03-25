@@ -1,28 +1,49 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 3/8] Rename 'state' attribute in lpfc and qla2xxx
-Date: Mon, 24 Mar 2008 20:53:20 -0700
-Message-ID: <20080325035320.GB21434@plap4.local>
-References: <20080318133228.61EE225918@pentland.suse.de>
+From: Mark Lord <lkml@rtr.ca>
+Subject: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 00:02:10 -0400
+Message-ID: <47E87942.2020409@rtr.ca>
+References: <47E875AD.1000901@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:36031 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756899AbYCYDx1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Mar 2008 23:53:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20080318133228.61EE225918@pentland.suse.de>
+Received: from rtr.ca ([76.10.145.34]:3236 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750842AbYCYECM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Mar 2008 00:02:12 -0400
+In-Reply-To: <47E875AD.1000901@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 18 Mar 2008, Hannes Reinecke wrote:
+(resending .. forgot to copy the lists originally)
 
-> lpfc and qla2xxx overwrite the standard 'state' attribute with
-> custom callbacks. So rename the custom attributes to 'link_state'
-> and retain the original meaning of the 'state' attribute.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+We have a problem coming down the pipeline.
 
-Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Practically all utilities that care about it,
+use ioctl(fd, HDIO_GETGEO) to determine the starting
+sector offset of a hard disk partition.
+
+SCSI, libata, IDE, USB, Firewire.. you name it.
+
+The return value uses "unsigned long",
+which on a 32-bit system limits drive offsets to 2TB.
+
+There will be single drives exceeding this limit within
+the next 12 months or less, and we already have RAID arrays
+that exceed 2TB.
+
+So.. what's the replacement for HDIO_GETGEO on 32-bits ?
+
+One candidate might seem to be the existing /sys/block/dev/partition/start
+which I expect is already 64-bit friendly.
+
+But this requires about 150 lines of somewhat complex C code to access,
+using only the dev_t (from stat(2) on a file) as a starting point,
+or less if one relies upon the udev device name matching the sysfs device name.
+
+Is it time now for HDIO_GETGEO64 to make an appearance?
+Similar to how the existing BLKGETSIZE64 is supplanting BLKGETSIZE ?
+
+??
