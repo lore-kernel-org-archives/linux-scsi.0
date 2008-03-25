@@ -1,50 +1,57 @@
 From: Mark Lord <lkml@rtr.ca>
 Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 25 Mar 2008 13:31:17 -0400
-Message-ID: <47E936E5.7090506@rtr.ca>
-References: <47E875AD.1000901@rtr.ca>  <47E87942.2020409@rtr.ca> <1206458278.3273.5.camel@localhost.localdomain>
+Date: Tue, 25 Mar 2008 13:37:03 -0400
+Message-ID: <47E9383F.3050908@rtr.ca>
+References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1485 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2704 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755670AbYCYRbT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Mar 2008 13:31:19 -0400
-In-Reply-To: <1206458278.3273.5.camel@localhost.localdomain>
+	id S1756130AbYCYRhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Mar 2008 13:37:04 -0400
+In-Reply-To: <47E90458.7030801@zytor.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Tue, 2008-03-25 at 00:02 -0400, Mark Lord wrote:
->..
->> Practically all utilities that care about it,
->> use ioctl(fd, HDIO_GETGEO) to determine the starting
->> sector offset of a hard disk partition.
+H. Peter Anvin wrote:
+> Mark Lord wrote:
+>>
+>> Yeah, that would be just as good, really.  Maybe even better.
+>>
+>> Mark Lord wrote (later on):
+>>> Instead, software has to search everything inside /sys/block/
+>>> looking for a "dev" file whose contents match,
+>>> rather than just trying to access something like this:
+>>>
+>>>   /sys/block/8:1/start
+>>> or
+>>>   /sys/block/majors/8/minors/1/start
+>>>
+>>> Or any one of a number of similar ways to arrange it. 
+>> ..
+> 
+> It shouldn't be under /sys/block... there are enough many things that 
+> scan /sys/block and assume any directory underneath it has the current 
+> format.
 ..
-> Perhaps I've missed something, but surely geometry doesn't make sense on
-> a >2TB drive does it?  The only reason we use it on modern disks (which
-> usually make it up specially for us) is that the DOS partition scheme
-> requires it.  Once we're over 2TB, isn't it impossible to use DOS
-> partitions (well, OK, unless you increase the sector size, but that's
-> only delaying the inevitable), so we can just go with a proper disk
-> labelling scheme and use BLKGETSIZE64 all the time.
-..
 
-I haven't thought much about problems with the virtual geometry,
-because, as you say, we really don't care about it for the most part.
-We use LBA values from the partition tables rather than CHS.
-I suppose those also likely to be 32-bit limited.
+So long as we only add things, and not remove them, then any software
+that scans /sys/block/ shouldn't care, really.
 
-The "partition offset", or "starting sector" is the important
-bit of information for most things.  And that's currently available
-from HDIO_GETGEO, and from /sys/block/XXX/XXXn/start, if sysfs is mounted.
+But yes, it could go elsewhere, too.
+Perhaps a /sys/dev/ directory, populated with symbolic links
+(or hard links?) back to the /sys/block/ entries, something like this:
 
-We just need an easy way to get it, given a dev_t from stat(2).
-Currently there isn't an easy way, and HDIO_GETGEO returns
-only 32-bits on a 32-bit system.
+   /sys/dev/block/8:0 -> ../../../block/sda
+   /sys/dev/block/8:1 -> ../../../block/sda/sda1
+   /sys/dev/block/8:2 -> ../../../block/sda/sda2
+   ...
 
-Cheers
+That's just a suggestion, really.
+And what about character devices?
 
+Perhaps Greg will chime in.
