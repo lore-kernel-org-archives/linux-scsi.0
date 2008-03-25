@@ -1,22 +1,19 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: [PATCHSET 0/3] Is it time for varlen extended and vendor-specific
  cdbs
-Date: Tue, 25 Mar 2008 17:57:57 +0200
-Message-ID: <47E92105.2060703@panasas.com>
-References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com>
+Date: Tue, 25 Mar 2008 18:21:06 +0200
+Message-ID: <47E92672.1040208@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:45562 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756768AbYCYP7u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 11:59:50 -0400
-In-Reply-To: <47AF1321.7000107@panasas.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:3171 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756995AbYCYQWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 12:22:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew
 
 Submitted is a patchset for adding support for variable-length, extended,
 and vendor specific CDBs. It should now cover the entire range of the 
@@ -62,6 +59,4 @@ So over all, this cleans things up, and add fixtures without
   cdbs at the scsi mid-layer.
 
 Boaz
-
-
 
