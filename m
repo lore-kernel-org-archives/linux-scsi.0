@@ -1,88 +1,45 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: RE: [PATCH v2 4/5] stex: use scsi_build_sense_buffer
-Date: Tue, 25 Mar 2008 15:44:14 -0700
-Message-ID: <85ABFDC4641C4847BA6088F2982EFD8FB06579@nonamew.ptu.promise.com>
-References: <1206404816-21710-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 16:00:09 -0700
+Message-ID: <20080325230009.GA25062@suse.de>
+References: <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de> <20080325123454.4eba7644.randy.dunlap@oracle.com> <47E96263.9000808@zytor.com> <20080325212032.GA24495@suse.de> <47E96E15.7020105@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:52898 "EHLO
-	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753851AbYCYWoQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 18:44:16 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1206404816-21710-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755077AbYCYXAj@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47E96E15.7020105@zytor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, James Bottomley <James.Bottomley@SteelEye.com>
 
+On Tue, Mar 25, 2008 at 02:26:45PM -0700, H. Peter Anvin wrote:
+> Greg KH wrote:
+>> On Tue, Mar 25, 2008 at 01:36:51PM -0700, H. Peter Anvin wrote:
+>>> Randy Dunlap wrote:
+>>>>> Come on people, adding symlinks for device major:minor numbers in sysfs
+>>>>> to save a few 10s of lines of userspace code?  Can things get sillier?
+>>>>>
+>>>>> You can add a single udev rule to probably build these in a tree in 
+>>>>> /dev
+>>>>> if you really need such a thing...
+>>>>>
+>>>>> And what's wrong with your new ioctl recomendation?
+>>>> Ah, there's some sanity.  :)
+>>> It's not so much an issue of a few tens of lines of user space code, but 
+>>> rather the fact that something that should be O(1) is currently O(n).
+>> "should"?  why?  Is this some new requirement that everyone needs?  I've
+>> _never_ seen anyone ask for the ability to find sysfs devices by
+>> major:minor number in O(1) time.  Is this somehow a place where such
+>> optimization is warranted?
+>
+> Well, when dealing with shell scripts a O(n) very easily becomes O(n^2).  
+> For the stuff that I, personally, do, it's not a big deal, but people with 
+> large number of disks have serious gripes with our boot times.
 
+How does this have anything to do with boot times?  Do you really have a
+foolish shell script that iteratorates over every single disk in the
+sysfs tree for every disk?  What does it do that for?
 
->-----Original Message-----
->From: fujita [mailto:tomof@acm.org] On Behalf Of FUJITA Tomonori
->Sent: Monday, March 24, 2008 5:27 PM
->To: linux-scsi@vger.kernel.org
->Cc: tomof@acm.org; FUJITA Tomonori; Ed Lin; James Bottomley
->Subject: [PATCH v2 4/5] stex: use scsi_build_sense_buffer
->
->
->Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->Cc: Ed Lin <ed.lin@promise.com>
->Cc: James Bottomley <James.Bottomley@SteelEye.com>
->---
-> drivers/scsi/stex.c |   17 +++++------------
-> 1 files changed, 5 insertions(+), 12 deletions(-)
->
->diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
->index 8c7b183..f308a03 100644
->--- a/drivers/scsi/stex.c
->+++ b/drivers/scsi/stex.c
->@@ -33,6 +33,7 @@
-> #include <scsi/scsi_host.h>
-> #include <scsi/scsi_tcq.h>
-> #include <scsi/scsi_dbg.h>
->+#include <scsi/scsi_eh.h>
-> 
-> #define DRV_NAME "stex"
-> #define ST_DRIVER_VERSION "3.6.0000.1"
->@@ -362,22 +363,14 @@ static struct status_msg 
->*stex_get_status(struct st_hba *hba)
-> 	return status;
-> }
-> 
->-static void stex_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 
->asc, u8 ascq)
->-{
->-	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
->-
->-	cmd->sense_buffer[0] = 0x70;    /* fixed format, current */
->-	cmd->sense_buffer[2] = sk;
->-	cmd->sense_buffer[7] = 18 - 8;  /* additional sense length */
->-	cmd->sense_buffer[12] = asc;
->-	cmd->sense_buffer[13] = ascq;
->-}
->-
-> static void stex_invalid_field(struct scsi_cmnd *cmd,
-> 			       void (*done)(struct scsi_cmnd *))
-> {
->+	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
->+
-> 	/* "Invalid field in cbd" */
->-	stex_set_sense(cmd, ILLEGAL_REQUEST, 0x24, 0x0);
->+	scsi_build_sense_buffer(0, cmd->sense_buffer, 
->ILLEGAL_REQUEST, 0x24,
->+				0x0);
-> 	done(cmd);
-> }
-> 
->-- 
->1.5.3.7
->
->
-
-ACK patch 4.
-
-Ed Lin
+I thought we were talking about 2TB disks here, with a proposed new
+ioctl, not foolishness of boot scripts...
