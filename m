@@ -1,37 +1,67 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 25 Mar 2008 09:34:23 -0600
-Message-ID: <20080325153423.GD16721@parisc-linux.org>
-References: <47E875AD.1000901@rtr.ca> <alpine.LFD.1.00.0803242254020.2775@woody.linux-foundation.org> <47E8FF58.8050209@rtr.ca> <47E90CDA.600@emc.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCHSET 0/3] Is it time for varlen extended and vendor-specific
+ cdbs
+Date: Tue, 25 Mar 2008 17:57:57 +0200
+Message-ID: <47E92105.2060703@panasas.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47E90CDA.600@emc.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH l <gregkh@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:45562 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756768AbYCYP7u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 11:59:50 -0400
+In-Reply-To: <47AF1321.7000107@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25, 2008 at 10:31:54AM -0400, Ric Wheeler wrote:
-> I think that there are many embedded applications (lots of them linux based)
-> which have large amounts of storage behind low power, low cost 32 bit CPU's.
-> 
-> Think of the home/small office NAS boxes that you can get from bestbuy or 
-> other big box stores. Those devices today have 4 S-ATA drives (each of 
-> which can be 1TB in size).
-> 
-> Also, if you have a very low end box, it can still access really large 
-> storage
-> over iSCSI or a SAN which will present as a local, large device.
+Submitted is a patchset for adding support for variable-length, extended,
+and vendor specific CDBs. It should now cover the entire range of the 
+SCSI standard. (and/or any other use of command packets in block devices)
 
-Don't those devices run into trouble with fsck?  The amount of memory
-you need to fsck a device is obviously going to depend on the filesystem,
-but it has to grow with device size, and I'm not sure that 4GB is enough
-virtual address space to fsck 2TB.
+They are based on scsi-misc/scsi-rc-fixes/linux-block. They are aimed
+for the 2.6.26 merge window. Andrew please also include them in -mm
+for testing.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Difference from last time, is at struct request. I did a smallish
+hack to save the extra pointer space. The pointer now shares it's
+space with the request->cmd, as they are mutual exclusive. The
+flag to switch between them is when cmd_len == 0 and varlen_cdb_len != 0
+I've added 2 accessors to hide the mess. I think this approach
+should be safe with legacy drivers.
+
+This is on top of the size shrink to struct scsi_cmnd gained
+in the first patch. We save upto 12 bytes on 32 bit ARCHs
+
+So over all, this cleans things up, and add fixtures without
+*any extra cost*.
+
+[1/3] Let scsi_cmnd->cmnd use request->cmd buffer
+  Here I let scsi_cmnd->cmnd point to the space allocated by
+  request->cmd, instead of copying the data. The scsi_cmnd->cmd_len
+  is guaranteed to contain the right length of the command.
+  I have tried to go over every single place in the kernel that uses
+  scsi_cmnd->cmnd and make sure it looks sane. Surprisingly to me,
+  that was not at all bad. I hope I did not miss anything.
+
+  I've tested on an x86_64 machine booting from a sata disk and
+  ran the iscsi regression tests as well as my bidi and varlen tests
+  on top of the complete patchset and all tests passed.
+
+[2/3] block layer varlen-cd
+   Here I added an option to use a user supplied buffer for an arbitrary
+   large command. Buffer must be kept valid until execution of request
+   ends. The pointer to the buffer shares it's space with the fixed
+   length command, so the size of struct request does not change.
+
+[3/3] scsi: varlen extended and vendor-specific cdbs
+  Adds support for variable length, extended, and vendor-specific
+  cdbs at the scsi mid-layer.
+
+Boaz
+
+
+
