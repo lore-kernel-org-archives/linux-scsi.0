@@ -1,64 +1,56 @@
-From: Greg KH <gregkh@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 25 Mar 2008 12:25:15 -0700
-Message-ID: <20080325192515.GA24234@suse.de>
-References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca>
+Date: Tue, 25 Mar 2008 12:32:15 -0700
+Message-ID: <1206473536.3273.14.camel@localhost.localdomain>
+References: <47E875AD.1000901@rtr.ca>  <47E87942.2020409@rtr.ca>
+	 <1206458278.3273.5.camel@localhost.localdomain>  <47E936E5.7090506@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47E9383F.3050908@rtr.ca>
+In-Reply-To: <47E936E5.7090506@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 To: Mark Lord <lkml@rtr.ca>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25, 2008 at 01:37:03PM -0400, Mark Lord wrote:
-> H. Peter Anvin wrote:
->> Mark Lord wrote:
->>>
->>> Yeah, that would be just as good, really.  Maybe even better.
->>>
->>> Mark Lord wrote (later on):
->>>> Instead, software has to search everything inside /sys/block/
->>>> looking for a "dev" file whose contents match,
->>>> rather than just trying to access something like this:
->>>>
->>>>   /sys/block/8:1/start
->>>> or
->>>>   /sys/block/majors/8/minors/1/start
->>>>
->>>> Or any one of a number of similar ways to arrange it. 
->>> ..
->> It shouldn't be under /sys/block... there are enough many things that scan 
->> /sys/block and assume any directory underneath it has the current format.
+On Tue, 2008-03-25 at 13:31 -0400, Mark Lord wrote:
+> James Bottomley wrote:
+> > On Tue, 2008-03-25 at 00:02 -0400, Mark Lord wrote:
+> >..
+> >> Practically all utilities that care about it,
+> >> use ioctl(fd, HDIO_GETGEO) to determine the starting
+> >> sector offset of a hard disk partition.
 > ..
->
-> So long as we only add things, and not remove them, then any software
-> that scans /sys/block/ shouldn't care, really.
->
-> But yes, it could go elsewhere, too.
-> Perhaps a /sys/dev/ directory, populated with symbolic links
-> (or hard links?) back to the /sys/block/ entries, something like this:
->
->   /sys/dev/block/8:0 -> ../../../block/sda
->   /sys/dev/block/8:1 -> ../../../block/sda/sda1
->   /sys/dev/block/8:2 -> ../../../block/sda/sda2
->   ...
->
-> That's just a suggestion, really.
-> And what about character devices?
->
-> Perhaps Greg will chime in.
+> > Perhaps I've missed something, but surely geometry doesn't make sense on
+> > a >2TB drive does it?  The only reason we use it on modern disks (which
+> > usually make it up specially for us) is that the DOS partition scheme
+> > requires it.  Once we're over 2TB, isn't it impossible to use DOS
+> > partitions (well, OK, unless you increase the sector size, but that's
+> > only delaying the inevitable), so we can just go with a proper disk
+> > labelling scheme and use BLKGETSIZE64 all the time.
+> ..
+> 
+> I haven't thought much about problems with the virtual geometry,
+> because, as you say, we really don't care about it for the most part.
+> We use LBA values from the partition tables rather than CHS.
+> I suppose those also likely to be 32-bit limited.
+> 
+> The "partition offset", or "starting sector" is the important
+> bit of information for most things.  And that's currently available
+> from HDIO_GETGEO, and from /sys/block/XXX/XXXn/start, if sysfs is mounted.
+> 
+> We just need an easy way to get it, given a dev_t from stat(2).
+> Currently there isn't an easy way, and HDIO_GETGEO returns
+> only 32-bits on a 32-bit system.
 
-I've been waiting to see if sanity will take hold of anyone here.
+But I think where this is leading is that you've been using the geometry
+call, but all you really want to know is the actual partition start in
+sector units, so a new BLKGETPARTSTART (or something) ioctl that was
+designed to return a u64 would work for you?  That sounds reasonable to
+me; so not a HDIO_GETGEO64 which gets us into trouble with geometries,
+but a simple ioctl that gives you exactly what you're looking for.
 
-Come on people, adding symlinks for device major:minor numbers in sysfs
-to save a few 10s of lines of userspace code?  Can things get sillier?
+James
 
-You can add a single udev rule to probably build these in a tree in /dev
-if you really need such a thing...
 
-And what's wrong with your new ioctl recomendation?
-
-greg k-h
