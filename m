@@ -1,55 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 5/5] ps3rom: use scsi_build_sense_buffer
-Date: Tue, 25 Mar 2008 09:26:53 +0900
-Message-ID: <1206404816-21710-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: 1206378609.3494.50.camel@localhost.localdomain
- <1206404816-21710-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1206404816-21710-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1206404816-21710-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1206404816-21710-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [SCSI] fix media change events for polled devices
+Date: Mon, 24 Mar 2008 23:09:08 -0400
+Message-ID: <47E86CD4.7040502@garzik.org>
+References: <200803211559.m2LFxPi6017869@hera.kernel.org>	 <47E3EC67.4050404@garzik.org>	 <1206128662.2961.37.camel@localhost.localdomain>	 <47E41C50.4020406@garzik.org>	 <1206133280.2961.45.camel@localhost.localdomain>	 <47E422F1.7080806@garzik.org>	 <1206133787.2961.52.camel@localhost.localdomain>	 <47E424E2.1030801@garzik.org>	 <1206136150.2961.79.camel@localhost.localdomain>	 <47E4383F.4030804@garzik.org> <1206139925.2961.94.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:37888 "EHLO mo10.iij4u.or.jp"
+Received: from srv5.dvmed.net ([207.36.208.214]:47901 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754539AbYCYAxP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Mar 2008 20:53:15 -0400
-In-Reply-To: <1206404816-21710-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1754492AbYCYDJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Mar 2008 23:09:11 -0400
+In-Reply-To: <1206139925.2961.94.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: tomof@acm.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kay Sievers <kay.sievers@vrfy.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ps3rom.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+James Bottomley wrote:
+> The current published API is the media_events file.  HAL is using that
+> to indicate support for AN.  This is why we can't simply change it to 1
+> wholesale because we'll confuse HAL (HAL still has to send polling
+> events if AN isn't supported).
+> 
+> So, the best fix for 2.6.25 at the current -rc6 is to keep the meaning
+> of the media_change file the same (0 for no AN, 1 for AN) and let HAL
+> take the polled events via udev, which basically means it's preserving
+> the behaviour and isn't a regression.
+> 
+> For 2.6.26 we can add a new media_events_polled (or some other name)
+> file, fix the sysfs ro attribute and make them true writeable filters so
+> some raving user can turn off polled events if they want and everyone
+> will be happy.
 
-diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
-index d1e7845..ce48e2d 100644
---- a/drivers/scsi/ps3rom.c
-+++ b/drivers/scsi/ps3rom.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_eh.h>
- 
- #include <asm/lv1call.h>
- #include <asm/ps3stor.h>
-@@ -330,11 +331,7 @@ static irqreturn_t ps3rom_interrupt(int irq, void *data)
- 		goto done;
- 	}
- 
--	cmd->sense_buffer[0]  = 0x70;
--	cmd->sense_buffer[2]  = sense_key;
--	cmd->sense_buffer[7]  = 16 - 6;
--	cmd->sense_buffer[12] = asc;
--	cmd->sense_buffer[13] = ascq;
-+	scsi_build_sense_buffer(0, cmd->sense_buffer, sense_key, asc, ascq);
- 	cmd->result = SAM_STAT_CHECK_CONDITION;
- 
- done:
--- 
-1.5.3.7
+
+So version 3 of the interface will be the first stable and usable one... 
+sigh :/
+
+It's just disheartening that the userspace filtering stuff (including 
+interface) was disabled rather than fixed, given that that change came 
+first and arguably the follow-on change (285e9670) was an abuse of the 
+API that was never corrected -- which seems to be tacitly acknowledged 
+since everyone seems to agree more than one flag is needed.
+
+	Jeff
+
 
