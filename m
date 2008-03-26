@@ -1,22 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 6868] Crash with Nat consumption in sg_add
-Date: Wed, 26 Mar 2008 07:43:08 -0700
-Message-ID: <1206542588.3019.10.camel@localhost.localdomain>
-References: <20080326090719.667CF10803B@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 6868] Crash with Nat consumption in sg_add
+Date: Wed, 26 Mar 2008 07:43:54 -0700 (PDT)
+Message-ID: <20080326144354.F2F8411D109@picon.linux-foundation.org>
+References: <bug-6868-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37201 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750724AbYCZOnM (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54956 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752622AbYCZOo0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 10:43:12 -0400
-In-Reply-To: <20080326090719.667CF10803B@picon.linux-foundation.org>
+	Wed, 26 Mar 2008 10:44:26 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2QEhttV006984
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Mar 2008 07:43:56 -0700
+In-Reply-To: <bug-6868-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=6868
+
+
+
+
+
+------- Comment #4 from anonymous@kernel-bugs.osdl.org  2008-03-26 07:43 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Wed, 2008-03-26 at 02:07 -0700, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -47,3 +55,7 @@ Date:   Tue Jan 15 13:18:00 2008 +0900
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
