@@ -1,84 +1,259 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
- with	iscsi logout
-Date: Wed, 26 Mar 2008 23:22:47 +0900
-Message-ID: <20080326232226X.tomof@acm.org>
-References: <47D5766C.3020206@cs.wisc.edu>
-	<47D61A73.3000803@cs.wisc.edu>
-	<1206201960.4393.8.camel@localhost.localdomain>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] SCSI support for REQ_TYPE_LINUX_BLOCK requests
+Date: Wed, 26 Mar 2008 15:23:05 +0100
+Message-ID: <87r6dxy37a.fsf@denkblock.local>
+References: <871w60j9ai.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-=-="
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:34913 "EHLO mo10.iij4u.or.jp"
+Received: from nebensachen.de ([195.34.83.29]:53261 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752257AbYCZOYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 10:24:07 -0400
-In-Reply-To: <1206201960.4393.8.camel@localhost.localdomain>
+	id S1754795AbYCZO3M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Mar 2008 10:29:12 -0400
+Received: from c-134-104-218.k.dial.de.ignite.net ([62.134.104.218] helo=denkblock.local)
+	by mail.nebensachen.de with esmtpsa (TLS-1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <eo@nebensachen.de>)
+	id 1JeWcR-0003hQ-Il
+	for linux-scsi@vger.kernel.org; Wed, 26 Mar 2008 15:28:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: michaelc@cs.wisc.edu, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
+To: linux-scsi@vger.kernel.org
 
-On Sat, 22 Mar 2008 11:06:00 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+--=-=-=
 
-> On Tue, 2008-03-11 at 00:36 -0500, Mike Christie wrote:
-> > Mike Christie wrote:
-> > > Pete Wyckoff wrote:
-> > >> I think this used not to happen; not sure.  But I changed two things
-> > > 
-> > > This most likely did not happen before 2.6.25-rc* or it broke in 
-> > > slightly different ways, because iscsi used to try and do
-> > > 
-> > > echo 1 > /sys/block/sdX/device/delete
-> > > 
-> > > from userspace instead of calling scsi_remove_target from the kernel.
-> > > 
-> > > As you know around 2.6.21, the behavior of doing the echo to the delete 
-> > > file changed due to a driver model and scsi change and that broke the 
-> > > iscsi tools. The iscsi tools userspace removal was sort of hack in the 
-> > > first place and was racey, so we switched to removing devices/target 
-> > > like the FC class.
-> > > 
-> > > 
-> > >> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
-> > >> fedora devel (868).  Bidi and varlen patches always too.
-> > >>
-> > >> I'll follow with some more variations on this theme.  Looks like bsg
-> > >> needs to protect more carefully against the device going away.  Any
-> > >> ideas how best to do this?  What was the approach in sg?
-> > >>
-> > > 
-> > > I think sg is broken in similar ways. The iser guys have some tests 
-> > > cases that have broken sg while IO is outstanding. I am ccing Erez.
-> > 
-> > Actually one of the problems looks a little different than some of the 
-> > problems hit with sg and are caused because we remove the bsg device too 
-> > soon. I think we want to wait until all the references from the 
-> > commands/requests are released. The attached patch (untested) moves the 
-> > bsg unreg call to the scsi device release fn.
-> 
-> Well, this fix is now upstream.  However, it's causing all our
-> scsi_devices never to get released, which is a serious regression.
-> We're also doing spurious bsg_unregister_queue() for things that never
-> actually registered one (all scan devices that return DID_NO_CONNECT),
-> but bsg doesn't seem to be complaining about this.
-> 
-> The essence of the problem is that bsg_register_queue() takes a ref to
-> the sdev_gendev, so you can't move bsg_unregister_queue() into the
-> release function because nothing ever puts bsg's device ref and so
-> release is never called.
-> 
-> Options for fixing this before 2.6.25 are
-> 
->      1. revert the patch
->      2. Do an additional put for the bsg reference in
->         __scsi_remove_device (patch below).  It's nasty but it preserves
->         the semantics and does what you want
+Elias Oltmanns <eo@nebensachen.de> wrote:
+> Hi all,
+>
+> this patch adds support for REQ_TYPE_LINUX_BLOCK requests to the scsi
+> midlayer. Low level drivers have the option to register their own
+> handlers for these special requests if necessary.
+>
+[...]
+> +static void scsi_finish_lb_req(struct request *req)
+> +{
+> +	struct request_queue *q = req->q;
+> +	struct scsi_device *sdev = q->queuedata;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(q->queue_lock, flags);
+> +	end_that_request_last(req, 1);
 
-After some investigation, this patch doesn't fix the bug that Pete
-reported (I'll send a new patch shortly).
+That's obsolete, of course. Sorry for missing that. See the correct
+patch for 2.6.25-rc7 below.
 
-Can you revert the commit 4b6f5b3a993cbe34b4280f252bccc76967c185c8
-instead of merging this?
+Regards,
+
+Elias
+
+
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: inline; filename=scsi-req_lb-support
+
+---
+
+ drivers/scsi/scsi_lib.c  |   66 +++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/sd.c        |    9 ++++++
+ drivers/scsi/sr.c        |    9 ++++++
+ include/linux/blkdev.h   |    1 +
+ include/scsi/scsi_host.h |   22 +++++++++++++++
+ 5 files changed, 105 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f40898d..5e72640 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1262,6 +1262,15 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 
+ 	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
+ 		ret = scsi_setup_blk_pc_cmnd(sdev, req);
++	else if (req->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdev->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++	}
+ 	return scsi_prep_return(q, req, ret);
+ }
+ 
+@@ -1371,12 +1380,31 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	__scsi_done(cmd);
+ }
+ 
++static void scsi_finish_lb_req(struct request *req)
++{
++	struct scsi_device *sdev = req->q->queuedata;
++
++	/*
++	 * TODO: Perhaps the data_len or extra_len of
++	 * REQ_TYPE_LINUX_BLOCK requests are allowed to be different
++	 * from 0?
++	 */
++	blk_end_request(req, 0, 0);
++	put_device(&sdev->sdev_gendev);
++}
++
+ static void scsi_softirq_done(struct request *rq)
+ {
+ 	struct scsi_cmnd *cmd = rq->completion_data;
+-	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
++	unsigned long wait_for;
+ 	int disposition;
+ 
++	if (blk_lb_request(rq)) {
++		scsi_finish_lb_req(rq);
++		return;
++	}
++
++	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
+ 
+ 	disposition = scsi_decide_disposition(cmd);
+@@ -1406,6 +1434,24 @@ static void scsi_softirq_done(struct request *rq)
+ 	}
+ }
+ 
++static void scsi_exec_lb_req(struct request *req)
++{
++	struct scsi_device *sdev = req->q->queuedata;
++	struct scsi_host_template *shostt = sdev->host->hostt;
++	int rc;
++
++	if (shostt->lb_request_fn)
++		rc = shostt->lb_request_fn(req);
++	else
++		rc = FAILED;
++
++	if (rc == FAILED)
++		req->errors = -EIO;
++	else if (rc == QUEUED)
++		return;
++	blk_complete_request(req);
++}
++
+ /*
+  * Function:    scsi_request_fn()
+  *
+@@ -1448,7 +1494,23 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
++			break;
++
++		/*
++		 * We do not account for linux blk req in the device
++		 * or host busy accounting because it is not necessarily
++		 * a scsi command that is sent to some object. The lower
++		 * level can translate it into a request/scsi_cmnd, if
++		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
++		 */
++		if (blk_lb_request(req)) {
++			blkdev_dequeue_request(req);
++			scsi_exec_lb_req(req);
++			continue;
++		}
++
++		if (!scsi_dev_queue_ready(q, sdev))
+ 			break;
+ 
+ 		if (unlikely(!scsi_device_online(sdev))) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5fe7aae..95eba9f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -357,6 +357,15 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
++	} else if (rq->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdp->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++		goto out;
+ 	} else if (rq->cmd_type != REQ_TYPE_FS) {
+ 		ret = BLKPREP_KILL;
+ 		goto out;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7ee86d4..24bdfae 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -337,6 +337,15 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
++	} else if (rq->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdp->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++		goto out;
+ 	} else if (rq->cmd_type != REQ_TYPE_FS) {
+ 		ret = BLKPREP_KILL;
+ 		goto out;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6f79d40..f4ed034 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -453,6 +453,7 @@ enum {
+ 
+ #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
++#define blk_lb_request(rq)	((rq)->cmd_type == REQ_TYPE_LINUX_BLOCK)
+ #define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
+ #define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 530ff4c..1765855 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -9,6 +9,7 @@
+ #include <scsi/scsi.h>
+ 
+ struct request_queue;
++struct request;
+ struct block_device;
+ struct completion;
+ struct module;
+@@ -153,6 +154,27 @@ struct scsi_host_template {
+ 				  void (*done)(struct scsi_cmnd *));
+ 
+ 	/*
++	 * The lb_request_fn function is used to pass
++	 * REQ_TYPE_LINUX_BLOCK requests to the LLDD. The return value
++	 * FAILED indicates that the command opcode has not been known
++	 * by lb_request_fn. In contrast, the return value SUCCESS
++	 * means that the opcode has been recognised and the request
++	 * has been processed accordingly. Note, however, that SUCCESS
++	 * does not necessarily mean that all actions have been
++	 * performed successfully; errors are recorded in req->errors.
++	 * lb_request_fn can also return QUEUED in order to prevent
++	 * midlayer from enqueueng the request for completion.
++	 * Obviously, the LLDD must take care that the request will be
++	 * completed by means of blk_complete_request eventually.
++	 *
++	 * Status: OPTIONAL
++	 */
++	/* TODO: We might need to accept a return value NEEDS_RETRY some
++	 * time.
++	 */
++	int (* lb_request_fn)(struct request *req);
++
++	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+ 	 * routine that is present that should work in most cases.  For those
+
+--=-=-=--
