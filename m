@@ -1,75 +1,52 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Tue, 25 Mar 2008 17:12:35 -0700
-Message-ID: <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
-	 <1204848652.3062.100.camel@localhost.localdomain>
-	 <200803101519.m2AFJCJS032509@colby.verdasys.com>
-	 <1205163386.2941.14.camel@localhost.localdomain>
-	 <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
-	 <200803252343.m2PNh8kl020506@colby.verdasys.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 20:34:10 -0400
+Message-ID: <47E99A02.7040903@rtr.ca>
+References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:7747 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976AbYCZAMs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Mar 2008 20:12:48 -0400
-Received: from zps35.corp.google.com (zps35.corp.google.com [172.25.146.35])
-	by smtp-out.google.com with ESMTP id m2Q0CkVS025533
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Mar 2008 17:12:46 -0700
-Received: from rv-out-0910.google.com (rvbl15.prod.google.com [10.140.88.15])
-	by zps35.corp.google.com with ESMTP id m2Q0CakH012256
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Mar 2008 17:12:39 -0700
-Received: by rv-out-0910.google.com with SMTP id l15so1709630rvb.20
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Mar 2008 17:12:35 -0700 (PDT)
-In-Reply-To: <200803252343.m2PNh8kl020506@colby.verdasys.com>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:2876 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756661AbYCZAeM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Mar 2008 20:34:12 -0400
+In-Reply-To: <20080325192515.GA24234@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Bejarano <beej@alum.mit.edu>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 4:43 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
-...
->  >thanks to you (and grant) for the pointer!  will try that next.
->
->  unfortunately,  we have been unable to reproduce the corruption using
->  disktest :(  running for days ends up with no corruption.  my
->  colleague had already written a similar tool and wasn't able to
->  reproduce the problem with it, either.  i don't think this rules out
->  a head positioning problem, though.
+Greg KH wrote:
+> On Tue, Mar 25, 2008 at 01:37:03PM -0400, Mark Lord wrote:
+>> Perhaps Greg will chime in.
+> 
+> I've been waiting to see if sanity will take hold of anyone here.
+..
 
-Agreed. Unfortunate that it's not reproducable with disktest. :(
+So have we.  sysfs is a total nightmare to extract information from
+under program / script control.  The idea presented in this thread,
+is to have it cross-index the contents with a method that actually
+makes it easy to access in many common scenarios, without requiring
+huge gobs of code in user space.  Or in kernel space.
 
->  we can easily reproduce the issue using the server's intended
->  workload with the intended configuration, but that isn't something we
->  can give to seagate to reproduce in-house.
->
->  having never played with blocktrace, i have no idea what it's
->  capabilities are.  can it be used to record not just the IOs, but
->  also their timings?  any other ideas?  i'm at a loss for how to turn
->  my reproducible test case into something i can send to seagate for
->  investigation.
+And it's not just a few 10s of lines of code currently,
+but rather about 80-100 lines just to find the correct device subdir,
+and *then* a few more 10s of lines of code to retrieve the value.
 
-Yes and yes (I think). But by itself, it won't help since block
-trace tools don't generally do any data validation. Perhaps put
-some wrappers around the block replay script to put known data
-on the disk and then validate the contents once the block replay
-has completed.
+In a bulletproof fashion, that is.  Sure it can be slightly smaller
+if niceties such as error checking/handling are omitted.
 
-You might also look at:
-    http://www.cse.unsw.edu.au/~jmr/iomkc.tar.gz
+There's no guarantee that udev is present, and even if it were present,
+there's no guarantee that the names in /dev/ will match /sysfs/ pathnames,
+since udev is very configurable to do otherwise.
 
-since it has a README on how to use block trace with their
-Markov chain generator. I'm sure other places describe how
-to use Blocktrace replay as well.
+So lookups are by dev_t, which sysfs has no simple or even easy way
+of accomplishing.  O(n) at a minimum.
 
-hth,
-grant
+If we make it easier to access, then more programs will use it
+rather than us having to expand our tricky binary ioctl interfaces.
 
->  thanks,
->  marc
->
->
+Isn't that part of the idea of sysfs -- to limit the need for new ioctls ?
+
+Cheers
