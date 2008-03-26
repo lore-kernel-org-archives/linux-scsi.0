@@ -1,35 +1,93 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Adaptec AIC-9410W (AIC94xx) + SATA HDDs
-Date: Wed, 26 Mar 2008 07:35:09 -0700
-Message-ID: <1206542109.3019.3.camel@localhost.localdomain>
-References: <47EA5A3B.1070200@ipax.at>
+Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
+	with	iscsi logout
+Date: Wed, 26 Mar 2008 07:36:26 -0700
+Message-ID: <1206542186.3019.5.camel@localhost.localdomain>
+References: <47D5766C.3020206@cs.wisc.edu> <47D61A73.3000803@cs.wisc.edu>
+	 <1206201960.4393.8.camel@localhost.localdomain>
+	 <20080326232226X.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41097 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:41117 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751295AbYCZOfP (ORCPT
+	by vger.kernel.org with ESMTP id S1752424AbYCZOgp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 10:35:15 -0400
-In-Reply-To: <47EA5A3B.1070200@ipax.at>
+	Wed, 26 Mar 2008 10:36:45 -0400
+In-Reply-To: <20080326232226X.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: michaelc@cs.wisc.edu, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
 
-On Wed, 2008-03-26 at 15:14 +0100, Raoul Bhatia [IPAX] wrote:
-> can anyone point me out, why the adaptec aic-9410W sas controller
-> detects my sata drive but the kernel does not?
-[...]
-> sas: unhandled device 5
+On Wed, 2008-03-26 at 23:22 +0900, FUJITA Tomonori wrote:
+> On Sat, 22 Mar 2008 11:06:00 -0500
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> 
+> > On Tue, 2008-03-11 at 00:36 -0500, Mike Christie wrote:
+> > > Mike Christie wrote:
+> > > > Pete Wyckoff wrote:
+> > > >> I think this used not to happen; not sure.  But I changed two things
+> > > > 
+> > > > This most likely did not happen before 2.6.25-rc* or it broke in 
+> > > > slightly different ways, because iscsi used to try and do
+> > > > 
+> > > > echo 1 > /sys/block/sdX/device/delete
+> > > > 
+> > > > from userspace instead of calling scsi_remove_target from the kernel.
+> > > > 
+> > > > As you know around 2.6.21, the behavior of doing the echo to the delete 
+> > > > file changed due to a driver model and scsi change and that broke the 
+> > > > iscsi tools. The iscsi tools userspace removal was sort of hack in the 
+> > > > first place and was racey, so we switched to removing devices/target 
+> > > > like the FC class.
+> > > > 
+> > > > 
+> > > >> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
+> > > >> fedora devel (868).  Bidi and varlen patches always too.
+> > > >>
+> > > >> I'll follow with some more variations on this theme.  Looks like bsg
+> > > >> needs to protect more carefully against the device going away.  Any
+> > > >> ideas how best to do this?  What was the approach in sg?
+> > > >>
+> > > > 
+> > > > I think sg is broken in similar ways. The iser guys have some tests 
+> > > > cases that have broken sg while IO is outstanding. I am ccing Erez.
+> > > 
+> > > Actually one of the problems looks a little different than some of the 
+> > > problems hit with sg and are caused because we remove the bsg device too 
+> > > soon. I think we want to wait until all the references from the 
+> > > commands/requests are released. The attached patch (untested) moves the 
+> > > bsg unreg call to the scsi device release fn.
+> > 
+> > Well, this fix is now upstream.  However, it's causing all our
+> > scsi_devices never to get released, which is a serious regression.
+> > We're also doing spurious bsg_unregister_queue() for things that never
+> > actually registered one (all scan devices that return DID_NO_CONNECT),
+> > but bsg doesn't seem to be complaining about this.
+> > 
+> > The essence of the problem is that bsg_register_queue() takes a ref to
+> > the sdev_gendev, so you can't move bsg_unregister_queue() into the
+> > release function because nothing ever puts bsg's device ref and so
+> > release is never called.
+> > 
+> > Options for fixing this before 2.6.25 are
+> > 
+> >      1. revert the patch
+> >      2. Do an additional put for the bsg reference in
+> >         __scsi_remove_device (patch below).  It's nasty but it preserves
+> >         the semantics and does what you want
+> 
+> After some investigation, this patch doesn't fix the bug that Pete
+> reported (I'll send a new patch shortly).
+> 
+> Can you revert the commit 4b6f5b3a993cbe34b4280f252bccc76967c185c8
+> instead of merging this?
 
-This is what libsas produces when it's compiled with CONFIG_SCSI_SAS_ATA
-set to N.  You need to recompile libsas with support for ATA devices
-(it's a separate compile option because it sucks in the whole of libata
-and thus doubles the size of the code).
+Sure ... I didn't like the hack either.  As long as iSCSI is fine with
+the reversion it's the quickest way to fix the problem.
 
 James
-
 
 
