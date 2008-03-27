@@ -1,66 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 9/9][RESEND] mvsas: ATAPI lun issue
-Date: Thu, 27 Mar 2008 09:38:54 -0400
-Message-ID: <47EBA36E.10606@garzik.org>
-References: <47EB44F6.8070708@marvell.com>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [patch 08/11] zfcp: Add traces for state changes.
+Date: Thu, 27 Mar 2008 15:20:01 +0100
+Message-ID: <20080327142001.GA4122@osiris.boeblingen.de.ibm.com>
+References: <20080327132154.826339000@de.ibm.com> <20080327133028.840759000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54524 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755883AbYC0Niz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 09:38:55 -0400
-In-Reply-To: <47EB44F6.8070708@marvell.com>
+Received: from mtagate6.uk.ibm.com ([195.212.29.139]:38788 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbYC0OUE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 10:20:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20080327133028.840759000@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kewei@marvell.com
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Peschke <mp3@de.ibm.com>
 
-Ke Wei wrote:
->     I found that sending REPORT_LUNS command to some DVD device will cause fis error and controller error record. As a result, scsi mid layer get some wrong LUNs. Also I can get some queer messages.
+> -	zfcp_erp_modify_adapter_status(adapter,
+> +	zfcp_erp_modify_adapter_status(adapter, 24, 0,
+>  				       ZFCP_STATUS_COMMON_OPEN, ZFCP_CLEAR);
+>  }
 > 
-> scsi: host 12 channel 0 id 2 lun 0x30302e302f686f73 has a LUN larger
-> than currently supported.
-> scsi: host 12 channel 0 id 2 lun 0x7431322f706f7274 has a LUN larger
-> than currently supported.
-> scsi: host 12 channel 0 id 2 lun 0x2d31323a322f656e has a LUN larger
-> than currently supported.
-> ...
-> 
->     The patch forced to clear the sg buffer of SATA response if FIS is error. But I suggest these codes should merge to the libsas module.
-> 
-> 
-> Signed-off-by: Ke Wei <kewei@marvell.com>
-> ---
->  drivers/scsi/mvsas.c |    8 +++++++-
->  1 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-> index e55b903..42f3e90 100644
-> --- a/drivers/scsi/mvsas.c
-> +++ b/drivers/scsi/mvsas.c
-> @@ -1263,8 +1263,14 @@ static int mvs_sata_done(struct mvs_info *mvi, struct sas_task *task,
->  	       SATA_RECEIVED_D2H_FIS(port->taskfileset),
->  	       sizeof(struct dev_to_host_fis));
->  	tstat->buf_valid_size = sizeof(*resp);
-> -	if (unlikely(err))
-> +	if (unlikely(err)) {
-> +		struct scatterlist *sg = task->scatter;
-> +		u8 *buf;
->  		stat = SAS_PROTO_RESPONSE;
-> +		buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
-> +		memset(buf, 0, sg->length);
-> +		kunmap_atomic(buf - sg->offset, KM_IRQ0);
-> +	}
+> @@ -216,7 +216,7 @@ zfcp_erp_adapter_reopen_internal(struct 
+>  			       zfcp_get_busid_by_adapter(adapter));
+>  		debug_text_event(adapter->erp_dbf, 5, "a_ro_f");
+>  		/* ensure propagation of failed status to new devices */
+> -		zfcp_erp_adapter_failed(adapter);
+> +		zfcp_erp_adapter_failed(adapter, 13, 0);
 
-double-check that this is inside spin_lock_irqsave()
-
-if not, kmap_atomic()..kunmap_atomic() needs to be surrounded by 
-local_irq_save() and local_irq_restore()
-
-	Jeff
-
-
-
-
+24, 13? I bet you made sure that these numbers fit the huge list.. and
+hopefully nobody will ever add anything in between.
+Why not just pass a string? This looks way too complicated and error-prone.
