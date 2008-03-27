@@ -1,60 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 7/9][RESEND] mvsas: get phy info.
-Date: Thu, 27 Mar 2008 10:13:54 -0700
-Message-ID: <1206638034.3662.4.camel@localhost.localdomain>
-References: <47EB44E5.9080204@marvell.com>
-	 <da824cf30803271004i64a785afn6c0030984dca96eb@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] [14/20] Don't disable direct_io for unchecked_isa_dma
+ in st.c
+Date: Thu, 27 Mar 2008 12:26:54 -0500
+Message-ID: <47EBD8DE.4080502@cs.wisc.edu>
+References: <20080307653.720459648@firstfloor.org> <20080307175414.08C981B41AE@basil.firstfloor.org> <20080314135135.GT17940@kernel.dk> <20080314142412.GA30325@infradead.org> <47DD14F7.4070607@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53222 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758457AbYC0ROA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 13:14:00 -0400
-In-Reply-To: <da824cf30803271004i64a785afn6c0030984dca96eb@mail.gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36533 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751705AbYC0R2E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 13:28:04 -0400
+In-Reply-To: <47DD14F7.4070607@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: kewei@marvell.com, linux-scsi@vger.kernel.org, jeff@garzik.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Thu, 2008-03-27 at 10:04 -0700, Grant Grundler wrote:
-> On Wed, Mar 26, 2008 at 11:55 PM, Ke Wei <kewei@marvell.com> wrote:
-> > removed unused code and attached SATA address makes use of port id.
-> >  enable HBA interrupt after calling sas_register_ha();
+Boaz Harrosh wrote:
+> On Fri, Mar 14 2008 at 16:24 +0200, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Fri, Mar 14, 2008 at 02:51:35PM +0100, Jens Axboe wrote:
+>>> Are you sure? Seems to me that st builds its own list with
+>>> get_user_pages() for direct io, where will that get bounced? The block
+>>> layer will only bounce things that are mapped directly, so if st used
+>>> blk_rq_map_kern() and inserted that request in the queue, we could
+>>> proceed with killing that check in st.
+>> Which shouldn't be all too difficult and would be the right thing to
+>> do.  We really need someone to sit down and convert st/osst/sg to use
+>> the proper block layer helpers.
+>>
 > 
-> just one small nit and one question.
+> First they do. They all call scsi_execute_async which at the end produces
+> a BIO and then calls blk_execute_nowait(). and all is swell.
 > 
-> ...
-> >  @@ -2837,20 +2812,34 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
-> >                         } else {
-> >                                 dev_printk(KERN_DEBUG, &pdev->dev,
-> >                                         "No sig fis\n");
-> >  +                               phy->phy_type &= ~(PORT_TYPE_SATA);
+> Second some one did, long a go, and have submitted them rebased more then 3
+> times. I'd say their time is do long a go. (I mean Mike Christie)
 > 
-> shouldn't need '()'s around the constant.
+> Mike, please, do you have these patches on a public git somewhere I want to help
+> push them.
 > 
-> >  +                               goto out_done;
-> >                         }
-> >                 }
-> >  +               tmp64 = cpu_to_be64(phy->att_dev_sas_addr);
-> >  +               memcpy(sas_phy->attached_sas_addr, &tmp64, SAS_ADDR_SIZE);
-> 
-> Why does this need to be a memcpy and not just a simple store operation?
-> Is it misaligned? (even if it is, the kernel will deal with it. It
-> just won't be fast.)
 
-Because if you look in include/scsi/libsas.h, you find the definition:
-
-struct asd_sas_phy {
-[...]
-	u8   attached_sas_addr[SAS_ADDR_SIZE]; /* class:RO, driver: R/W */
-
-
-We're annoyingly schizophrenic on this ... most of the time we have a
-sas_addr defined as u64, but not in a lot of the libsas code.
-
-James
-
-
+Sorry I have been so bad with my linux-scsi email. Here is my current 
+patches:
+http://kernel.org/pub/linux/kernel/people/mnc/sg/sg-bioset17/
+They are very broken (patch -p1 wise), because of all the block layer 
+changes. I got around to converting st. It is not tested. I just need to 
+convert osst and we can kill scsi_execute_async.
