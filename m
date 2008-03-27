@@ -1,133 +1,108 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
- with	iscsi logout
-Date: Wed, 26 Mar 2008 21:18:02 -0500
-Message-ID: <47EB03DA.805@cs.wisc.edu>
-References: <1206201960.4393.8.camel@localhost.localdomain>	<20080326232226X.tomof@acm.org>	<1206542186.3019.5.camel@localhost.localdomain> <20080326235900H.tomof@acm.org> <47EAFDB0.4090503@cs.wisc.edu>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Wed, 26 Mar 2008 20:52:57 -0700
+Message-ID: <20080327035257.GB9566@suse.de>
+References: <ablib-2zv-65@gated-at.bofh.it> <abn0B-735-35@gated-at.bofh.it> <abna7-7jK-3@gated-at.bofh.it> <abo6b-11J-9@gated-at.bofh.it> <aboSP-2Wf-29@gated-at.bofh.it> <aboSP-2Wf-27@gated-at.bofh.it> <abqrq-6eX-29@gated-at.bofh.it> <abqrq-6eX-27@gated-at.bofh.it> <abqKM-6Ka-13@gated-at.bofh.it> <E1JeTq5-00018y-MO@be1.7eggert.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35298 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.suse.de ([195.135.220.2]:33963 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754068AbYC0CSa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 22:18:30 -0400
-In-Reply-To: <47EAFDB0.4090503@cs.wisc.edu>
+	id S1750798AbYC0ECA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 00:02:00 -0400
+Content-Disposition: inline
+In-Reply-To: <E1JeTq5-00018y-MO@be1.7eggert.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: James.Bottomley@HansenPartnership.com, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
+To: Bodo Eggert <7eggert@gmx.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> FUJITA Tomonori wrote:
->> On Wed, 26 Mar 2008 07:36:26 -0700
->> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->>
->>> On Wed, 2008-03-26 at 23:22 +0900, FUJITA Tomonori wrote:
->>>> On Sat, 22 Mar 2008 11:06:00 -0500
->>>> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->>>>
->>>>> On Tue, 2008-03-11 at 00:36 -0500, Mike Christie wrote:
->>>>>> Mike Christie wrote:
->>>>>>> Pete Wyckoff wrote:
->>>>>>>> I think this used not to happen; not sure.  But I changed two 
->>>>>>>> things
->>>>>>> This most likely did not happen before 2.6.25-rc* or it broke in 
->>>>>>> slightly different ways, because iscsi used to try and do
->>>>>>>
->>>>>>> echo 1 > /sys/block/sdX/device/delete
->>>>>>>
->>>>>>> from userspace instead of calling scsi_remove_target from the 
->>>>>>> kernel.
->>>>>>>
->>>>>>> As you know around 2.6.21, the behavior of doing the echo to the 
->>>>>>> delete file changed due to a driver model and scsi change and 
->>>>>>> that broke the iscsi tools. The iscsi tools userspace removal was 
->>>>>>> sort of hack in the first place and was racey, so we switched to 
->>>>>>> removing devices/target like the FC class.
->>>>>>>
->>>>>>>
->>>>>>>> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils 
->>>>>>>> (865) to
->>>>>>>> fedora devel (868).  Bidi and varlen patches always too.
->>>>>>>>
->>>>>>>> I'll follow with some more variations on this theme.  Looks like 
->>>>>>>> bsg
->>>>>>>> needs to protect more carefully against the device going away.  Any
->>>>>>>> ideas how best to do this?  What was the approach in sg?
->>>>>>>>
->>>>>>> I think sg is broken in similar ways. The iser guys have some 
->>>>>>> tests cases that have broken sg while IO is outstanding. I am 
->>>>>>> ccing Erez.
->>>>>> Actually one of the problems looks a little different than some of 
->>>>>> the problems hit with sg and are caused because we remove the bsg 
->>>>>> device too soon. I think we want to wait until all the references 
->>>>>> from the commands/requests are released. The attached patch 
->>>>>> (untested) moves the bsg unreg call to the scsi device release fn.
->>>>> Well, this fix is now upstream.  However, it's causing all our
->>>>> scsi_devices never to get released, which is a serious regression.
->>>>> We're also doing spurious bsg_unregister_queue() for things that never
->>>>> actually registered one (all scan devices that return DID_NO_CONNECT),
->>>>> but bsg doesn't seem to be complaining about this.
->>>>>
->>>>> The essence of the problem is that bsg_register_queue() takes a ref to
->>>>> the sdev_gendev, so you can't move bsg_unregister_queue() into the
->>>>> release function because nothing ever puts bsg's device ref and so
->>>>> release is never called.
->>>>>
->>>>> Options for fixing this before 2.6.25 are
->>>>>
->>>>>      1. revert the patch
->>>>>      2. Do an additional put for the bsg reference in
->>>>>         __scsi_remove_device (patch below).  It's nasty but it 
->>>>> preserves
->>>>>         the semantics and does what you want
->>>> After some investigation, this patch doesn't fix the bug that Pete
->>>> reported (I'll send a new patch shortly).
->>>>
->>>> Can you revert the commit 4b6f5b3a993cbe34b4280f252bccc76967c185c8
->>>> instead of merging this?
->>> Sure ... I didn't like the hack either.  As long as iSCSI is fine with
->>> the reversion it's the quickest way to fix the problem.
->>
->> How about this? With the commit reversion, I confirmed that this patch
->> fixes the first bug that Pete reported:
->>
->> http://marc.info/?l=linux-scsi&m=120508166505141&w=2
->>
->> I suspect that this could fix the rest too.
->>
->> =
->> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->> Subject: [PATCH] bsg: takes a ref to struct device in fops->open
->>
->> bsg_register_queue() takes a ref to struct device that a caller
->> passes. For example, it takes a ref to the sdev_gendev with scsi
->> devices. However, bsg doesn't takes a ref to it in fops->open. So
->> while an application opens a bsg device, the scsi device that the bsg
->> device holds can go away (bsg also takes a ref to a queue, but it
->> doesn't prevent the device from going away).
->>
->> With this, bsg takes a ref to struct device in fops->open and frees it
->> in fops->release.
->>
->> Note that bsg doesn't need to takes a ref to a queue for SCSI devices
->> at least. I think that it would be better to remove the code but I let
->> it alone for now.
->>
+On Wed, Mar 26, 2008 at 12:30:40PM +0100, Bodo Eggert wrote:
+> Greg KH <gregkh@suse.de> wrote:
+> > On Tue, Mar 25, 2008 at 04:05:32PM -0700, H. Peter Anvin wrote:
 > 
-> Why does bsg_add_device do kobject_get instead of blk_get_queue?
+> >>> How does this have anything to do with boot times?  Do you really have a
+> >>> foolish shell script that iteratorates over every single disk in the
+> >>> sysfs tree for every disk?  What does it do that for?
+> >>
+> >> Any time you want to get the sysfs information for a filesystem which is
+> >> already mounted, that's what you're forced to do.
+> >>
+> >>> I thought we were talking about 2TB disks here, with a proposed new
+> >>> ioctl, not foolishness of boot scripts...
+> >>
+> >> I pointed out that having a way to map device numbers to sysfs directories
+> >> would have the same effect, *and* would be usable for other purposes.  I'd
+> >> rather see that than a new ioctl, and another, and another...
+> > 
+> > Again, a simple udev rule will give you that today if you really want
+> > it...
 > 
-> It seems like if we added a blk_qet_queue when we opened the device and 
-> a blk_put_queue when bsg_release is called we could remove the 
-> get/put_device calls. I am not sure if that is cleaner or not. I was 
-> just thinking that bsg goes from bsg->request_queue->scsi_device so 
-> maybe it should not worry about the device.
+> So e.g. lilo should depend on sysfs and *a*special*configuration* of udev,
+> while the admin MUST NOT use mknod'ed device files nor manually create
+> symlinks pointing to them, and not use relative path names?
+> That's plain stupid.
 
-Doh, I guess we sort of do this today. It looks like the blk_execute 
-functions are bypassing the QUEUE_FLAG_DEAD checks, so 
-scsi_device_dev_release_usercontext could have called scsi_free_queue, 
-but if bsg calls blk_execute at the same time then it could stick a 
-request into the queue and end up calling the scsi_request_fn (maybe 
-this is what happens in #2 and when scsi_request_fn calls get_device we 
-get that weird error since the refcount on the device is zero).
+If sysfs is stupid, then use an ioctl, have I objected to that?
+
+> > And I think 'udevinfo' can be used to retrieve this information as well.
+> 
+> $ udevinfo /dev/hda
+> missing option
+> $ udevinfo /dev/hda --help
+> Usage: udevinfo OPTIONS
+>   --query=<type>    query database for the specified value:
+>     name            name of device node
+>     symlink         pointing to node
+>     path            sysfs device path
+>     env             the device related imported environment
+>     all             all values
+> 
+>   --path=<devpath>  sysfs device path used for query or chain
+>   --name=<name>     node or symlink name used for query
+> 
+>   --root            prepend to query result or print udev_root
+>   --attribute-walk  print all SYSFS_attributes along the device chain
+>   --export-db       export the content of the udev database
+>   --help            print this text
+> $ udevinfo --name=/dev/hda
+> missing option
+> $ udevinfo --name=/dev/hda --query=all
+> P: /block/hda
+> N: hda
+> S: disk/by-id/ata-Maxtor_2F040L0_F1748ZQE
+> S: disk/by-path/pci-0000:00:0f.0-ide-0:0
+> E: DEVTYPE=disk
+> E: ID_TYPE=disk
+> E: ID_MODEL=Maxtor_2F040L0
+> E: ID_SERIAL=F1748ZQE
+> E: ID_REVISION=VAM51JJ0
+> E: ID_BUS=ata
+> E: ID_PATH=pci-0000:00:0f.0-ide-0:0
+> 
+> 
+> As you can see, it gives no major:minor information. But it is in the DB:
+
+That should be easy to add, no one has ever asked for this information
+from udevinfo before.  If it's needed, it can be provided.
+
+> $ cd /dev/.udev/db
+> $ grep -l hda * 2>/dev/null
+> \x2fblock\x2fhda
+> \x2fblock\x2fhda\x2fhda1
+> $ cat "\x2fblock\x2fhda"
+> N:hda
+> S:disk/by-id/ata-Maxtor_2F040L0_F1748ZQE
+> S:disk/by-path/pci-0000:00:0f.0-ide-0:0
+> M:3:0
+> E:DEVTYPE=disk
+> E:ID_TYPE=disk
+> E:ID_MODEL=Maxtor_2F040L0
+> E:ID_SERIAL=F1748ZQE
+> E:ID_REVISION=VAM51JJ0
+> E:ID_BUS=ata
+> E:ID_PATH=pci-0000:00:0f.0-ide-0:0
+> 
+> What a great tool - for making linux look bad.
+
+Your constructive criticism is greatly appreciated, please continue.
