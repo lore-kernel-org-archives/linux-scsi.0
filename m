@@ -1,26 +1,26 @@
 From: FUJITA Tomonori <tomof@acm.org>
 Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
  with	iscsi logout
-Date: Thu, 27 Mar 2008 20:11:50 +0900
-Message-ID: <20080327195106U.tomof@acm.org>
+Date: Thu, 27 Mar 2008 20:11:52 +0900
+Message-ID: <20080327200827V.tomof@acm.org>
 References: <1206542186.3019.5.camel@localhost.localdomain>
 	<20080326235900H.tomof@acm.org>
-	<47EAF91D.3000505@cs.wisc.edu>
+	<47EAFDB0.4090503@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:38417 "EHLO mo11.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:45988 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754779AbYC0LNI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 07:13:08 -0400
-In-Reply-To: <47EAF91D.3000505@cs.wisc.edu>
+	id S1755491AbYC0LNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 07:13:09 -0400
+In-Reply-To: <47EAFDB0.4090503@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu
-Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.comfujita.tomonori@lab.ntt.co.jp
+Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
 
-On Wed, 26 Mar 2008 20:32:13 -0500
+On Wed, 26 Mar 2008 20:51:44 -0500
 Mike Christie <michaelc@cs.wisc.edu> wrote:
 
 > FUJITA Tomonori wrote:
@@ -109,22 +109,76 @@ Mike Christie <michaelc@cs.wisc.edu> wrote:
 > > With this, bsg takes a ref to struct device in fops->open and frees it
 > > in fops->release.
 > > 
+> > Note that bsg doesn't need to takes a ref to a queue for SCSI devices
+> > at least. I think that it would be better to remove the code but I let
+> > it alone for now.
+> > 
 > 
-> It looks like it fixes the life time problem.
+> Why does bsg_add_device do kobject_get instead of blk_get_queue?
 
-With the reverting and my patch, seems that all the problems (#1, #2,
-and #3) has gone for me.
+I think that it's a bug. But both takes a ref to a queue (though
+kobject_get doesn't see QUEUE_FLAG_DEAD), so I think that it's not
+related with the current problems.
 
 
-> My patch was actually supposed to fix #3 and fixing #1 was a side 
-> affect. Will bsg_release still be called when the device is closed. If 
-> so then it may not fix #3 because the bsg_release function still needs 
-> to grab the mutex. Maybe bsg_complete_all_commands just needs to drop 
-> the mutex while it waits for IO to complete.
+> It seems like if we added a blk_qet_queue when we opened the device and 
+> a blk_put_queue when bsg_release is called we could remove the 
+> get/put_device calls. I am not sure if that is cleaner or not. I was 
+> just thinking that bsg goes from bsg->request_queue->scsi_device so 
+> maybe it should not worry about the device.
 
-I don't hit #3 problem. A process holds the mutex and waiting for I/O
-completion. But fail_all_commands() makes all the commands fail, the
-process releases the mutex and then bsg_unregister_queue is called.
+kobject_get takes a ref to a queue. If we don't take a ref to a
+device, the scsi device has gone though the queue is still there
+because the queue release is done from the device release. If the scsi
+device has gone, we are dead, right?
 
-But yeah, I think that we don't need to hold the mutex during waiting
-for I/O completion here.
+
+Anyway, here's a patch to replace kobject_get with blk_get_queue.
+
+James, please apply this patch too.
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: replace kobject_get with blk_get_queue
+
+Both takes a ref to a queue. But the former checks QUEUE_FLAG_DEAD and
+is more appropriate interface here.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ block/bsg.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index a348a79..b07efd3 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -740,16 +740,21 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
+ 					 struct file *file)
+ {
+ 	struct bsg_device *bd;
++	int ret;
+ #ifdef BSG_DEBUG
+ 	unsigned char buf[32];
+ #endif
++	ret = blk_get_queue(rq);
++	if (ret)
++		return -ENXIO;
+ 
+ 	bd = bsg_alloc_device();
+-	if (!bd)
++	if (!bd) {
++		blk_put_queue(rq);
+ 		return ERR_PTR(-ENOMEM);
++	}
+ 
+ 	bd->queue = rq;
+-	kobject_get(&rq->kobj);
+ 	bsg_set_block(bd, file);
+ 
+ 	atomic_set(&bd->ref_count, 1);
+-- 
+1.5.3.6
+
