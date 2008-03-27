@@ -1,100 +1,122 @@
 From: Ke Wei <kewei@marvell.com>
-Subject: [PATCH 5/9][RESEND] mvsas: retry aborting task.
-Date: Thu, 27 Mar 2008 14:55:04 +0800
-Message-ID: <47EB44C8.2090208@marvell.com>
+Subject: [PATCH 6/9][RESEND] mvsas: fix the buffer of rx DMA overflow bug
+Date: Thu, 27 Mar 2008 14:55:23 +0800
+Message-ID: <47EB44DB.5060008@marvell.com>
 Reply-To: kewei@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:45357 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:45365 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754207AbYC0GzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 02:55:08 -0400
+	id S1753914AbYC0Gz0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 02:55:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: james.bottomley@hansenpartnership.com, jeff@garzik.org
 
+fix the buffer of rx DMA overflow bug.
+fix default queue depth.
+
 
 Signed-off-by: Ke Wei <kewei@marvell.com>
 ---
- drivers/scsi/mvsas.c |   33 +++++++++++++++++++++++++--------
- 1 files changed, 25 insertions(+), 8 deletions(-)
+ drivers/scsi/mvsas.c |   25 ++++++++++++++++---------
+ 1 files changed, 16 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-index ebfe164..f4f7b0a 100644
+index f4f7b0a..761beeb 100644
 --- a/drivers/scsi/mvsas.c
 +++ b/drivers/scsi/mvsas.c
-@@ -2159,42 +2159,59 @@ out_done:
+@@ -2240,7 +2240,7 @@ static void mvs_free(struct mvs_info *mvi)
+ 				  mvi->rx_fis, mvi->rx_fis_dma);
+ 	if (mvi->rx)
+ 		dma_free_coherent(&mvi->pdev->dev,
+-				  sizeof(*mvi->rx) * MVS_RX_RING_SZ,
++				  sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
+ 				  mvi->rx, mvi->rx_dma);
+ 	if (mvi->slot)
+ 		dma_free_coherent(&mvi->pdev->dev,
+@@ -2348,6 +2348,9 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 		return NULL;
  
- static int mvs_task_abort(struct sas_task *task)
- {
--	int rc = 1;
-+	int rc;
- 	unsigned long flags;
- 	struct mvs_info *mvi = task->dev->port->ha->lldd_ha;
- 	struct pci_dev *pdev = mvi->pdev;
-+	int tag;
- 
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		rc = TMF_RESP_FUNC_COMPLETE;
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		goto out_done;
- 	}
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
--	/*FIXME*/
--	rc = TMF_RESP_FUNC_COMPLETE;
--
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SMP:
--		dev_printk(KERN_DEBUG, &pdev->dev, "SMP Abort! ");
-+		dev_printk(KERN_DEBUG, &pdev->dev, "SMP Abort! \n");
- 		break;
- 	case SAS_PROTOCOL_SSP:
--		dev_printk(KERN_DEBUG, &pdev->dev, "SSP Abort! ");
-+		dev_printk(KERN_DEBUG, &pdev->dev, "SSP Abort! \n");
- 		break;
- 	case SAS_PROTOCOL_SATA:
- 	case SAS_PROTOCOL_STP:
- 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:{
--		dev_printk(KERN_DEBUG, &pdev->dev, "STP Abort! "
--			"Dump D2H FIS: \n");
-+		dev_printk(KERN_DEBUG, &pdev->dev, "STP Abort! \n");
-+#if _MV_DUMP
-+		dev_printk(KERN_DEBUG, &pdev->dev, "Dump D2H FIS: \n");
- 		mvs_hexdump(sizeof(struct host_to_dev_fis),
- 				(void *)&task->ata_task.fis, 0);
- 		dev_printk(KERN_DEBUG, &pdev->dev, "Dump ATAPI Cmd : \n");
- 		mvs_hexdump(16, task->ata_task.atapi_packet, 0);
+ 	spin_lock_init(&mvi->lock);
++#ifdef MVS_USE_TASKLET
++	tasklet_init(&mvi->tasklet, mvs_tasklet, (unsigned long)mvi);
 +#endif
-+		spin_lock_irqsave(&task->task_state_lock, flags);
-+		if (task->task_state_flags & SAS_TASK_NEED_DEV_RESET) {
-+			/* TODO */
-+			;
-+		}
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		break;
+ 	mvi->pdev = pdev;
+ 	mvi->chip = chip;
+ 
+@@ -2371,6 +2374,10 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 		mvs_phy_init(mvi, i);
+ 		arr_phy[i] = &mvi->phy[i].sas_phy;
+ 		arr_port[i] = &mvi->port[i].sas_port;
++		mvi->port[i].taskfileset = MVS_ID_NOT_MAPPED;
++		mvi->port[i].wide_port_phymap = 0;
++		mvi->port[i].port_attached = 0;
++		INIT_LIST_HEAD(&mvi->port[i].list);
  	}
- 	default:
- 		break;
+ 
+ 	SHOST_TO_SAS_HA(mvi->shost) = &mvi->sas;
+@@ -2387,9 +2394,10 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 	mvi->sas.sas_phy = arr_phy;
+ 	mvi->sas.sas_port = arr_port;
+ 	mvi->sas.num_phys = chip->n_phy;
+-	mvi->sas.lldd_max_execute_num = MVS_CHIP_SLOT_SZ - 1;
++	mvi->sas.lldd_max_execute_num = 1;
+ 	mvi->sas.lldd_queue_size = MVS_QUEUE_SIZE;
+-	mvi->can_queue = (MVS_CHIP_SLOT_SZ >> 1) - 1;
++	mvi->shost->can_queue = MVS_CAN_QUEUE;
++	mvi->shost->cmd_per_lun = MVS_SLOTS / mvi->sas.num_phys;
+ 	mvi->sas.lldd_ha = mvi;
+ 	mvi->sas.core.shost = mvi->shost;
+ 
+@@ -2442,11 +2450,11 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
+ 
+ 	mvi->rx = dma_alloc_coherent(&pdev->dev,
+-				     sizeof(*mvi->rx) * MVS_RX_RING_SZ,
++				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
+ 				     &mvi->rx_dma, GFP_KERNEL);
+ 	if (!mvi->rx)
+ 		goto err_out;
+-	memset(mvi->rx, 0, sizeof(*mvi->rx) * MVS_RX_RING_SZ);
++	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
+ 
+ 	mvi->rx[0] = cpu_to_le32(0xfff);
+ 	mvi->rx_cons = 0xfff;
+@@ -2596,7 +2604,7 @@ static void __devinit mvs_phy_hacks(struct mvs_info *mvi)
+ 	mvs_cw32(regs, CMD_SAS_CTL0, tmp);
+ 
+ 	/* workaround for WDTIMEOUT , set to 550 ms */
+-	mvs_cw32(regs, CMD_WD_TIMER, 0xffffff);
++	mvs_cw32(regs, CMD_WD_TIMER, 0x86470);
+ 
+ 	/* not to halt for different port op during wideport link change */
+ 	mvs_cw32(regs, CMD_APP_ERR_CONFIG, 0xffefbf7d);
+@@ -2704,17 +2712,16 @@ static u32 mvs_is_phy_ready(struct mvs_info *mvi, int i)
+ {
+ 	u32 tmp;
+ 	struct mvs_phy *phy = &mvi->phy[i];
+-	struct mvs_port *port;
++	struct mvs_port *port = phy->port;;
+ 
+ 	tmp = mvs_read_phy_ctl(mvi, i);
+ 
+ 	if ((tmp & PHY_READY_MASK) && !(phy->irq_status & PHYEV_POOF)) {
+-		if (!phy->port)
++		if (!port)
+ 			phy->phy_attached = 1;
+ 		return tmp;
  	}
-+
-+	if (mvs_find_tag(mvi, task, &tag)) {
-+		spin_lock_irqsave(&mvi->lock, flags);
-+		mvs_slot_task_free(mvi, task, &mvi->slot_info[tag], tag);
-+		spin_unlock_irqrestore(&mvi->lock, flags);
-+	}
-+	if (!mvs_task_exec(task, 1, GFP_ATOMIC))
-+		rc = TMF_RESP_FUNC_COMPLETE;
-+	else
-+		rc = TMF_RESP_FUNC_FAILED;
- out_done:
- 	return rc;
- }
+ 
+-	port = phy->port;
+ 	if (port) {
+ 		if (phy->phy_type & PORT_TYPE_SAS) {
+ 			port->wide_port_phymap &= ~(1U << i);
 -- 
 1.5.4
+
 
 
