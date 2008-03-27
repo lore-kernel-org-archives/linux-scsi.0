@@ -1,31 +1,49 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: sg reserved buffer sharing
-Date: Thu, 27 Mar 2008 15:30:08 -0700
-Message-ID: <8202f4270803271530j244edb2ctb31c6bb76aafa16a@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] mvsas: ATAPI LUN issue
+Date: Thu, 27 Mar 2008 15:07:55 -0700
+Message-ID: <1206655675.3662.14.camel@localhost.localdomain>
+References: <47E87F67.4080501@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:22119 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbYC0WaT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 18:30:19 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so4858483wxd.4
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2008 15:30:19 -0700 (PDT)
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60429 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752104AbYC0XUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 19:20:43 -0400
+In-Reply-To: <47E87F67.4080501@marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: dougg@torque.net
+To: kewei@marvell.com
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org
 
-Hi All,
+On Tue, 2008-03-25 at 12:28 +0800, Ke Wei wrote:
+> I found that sending REPORT_LUNS command to some DVD device will 
+> cause fis error and controller error record. As a result, scsi mid layer 
+> get some wrong LUNs. Also I can get some queer messages.
+> 
+> scsi: host 12 channel 0 id 2 lun 0x30302e302f686f73 has a LUN larger 
+> than currently supported.
+> scsi: host 12 channel 0 id 2 lun 0x7431322f706f7274 has a LUN larger 
+> than currently supported.
+> scsi: host 12 channel 0 id 2 lun 0x2d31323a322f656e has a LUN larger 
+> than currently supported.
+> ...
+> 
+>     The patch forced to clear the sg buffer of SATA response if FIS is 
+> error. But I suggest these codes should remove to the libsas module.
 
-We use sg's reserved buffer through mmap in kernel 2.6.18.  This has
-been working well for us until a new requirement comes up.  We need
-the capability to share the buffer across processes.  For instance,
-after a command is completed in process 1, we want to dump out the
-buffer in process 2.  Is there any way to do this? Based on sg howto
-document, sg reserved buffer is allocated per sg file descriptor.
+My first observation is that this isn't the correct approach:  Most of
+the CD/DVD simply respond with an error or the correct information.  The
+odd media changer will actually respond with real LUNs.  Doing a blanket
+erase of the REPORT LUN information will cause problems for media
+changers.
 
-Thanks,
-Fajun
+I think the correct way to fix your problem is to blacklist the
+particular CD.  We have a BLIST_NOREPORTLUN for devices which behave
+like this ... what are the INQUIRY strings?
+
+James
+
+
