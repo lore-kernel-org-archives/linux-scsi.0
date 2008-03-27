@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 03/11] zfcp: Remove qtcb dump to kernel log
-Date: Thu, 27 Mar 2008 14:21:57 +0100
-Message-ID: <20080327133024.594716000@de.ibm.com>
+Subject: [patch 01/11] zfcp: Introduce a helper function that dumps hex data to a zfcp trace.
+Date: Thu, 27 Mar 2008 14:21:55 +0100
+Message-ID: <20080327133022.774992000@de.ibm.com>
 References: <20080327132154.826339000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:2649 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759291AbYC0Na1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 09:30:27 -0400
-Content-Disposition: inline; filename=zfcp_msg_cleanup_qtcb_trace.diff
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:50805 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758531AbYC0NaZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 09:30:25 -0400
+Content-Disposition: inline; filename=zfcp_dbf_add_hex_dump_function.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,53 +16,38 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Peschke <mp3@
 
 From: Martin Peschke <mp3@de.ibm.com>
 
-Is not appropriate to printk() tons of hardware trace data.
-
 Signed-off-by: Martin Peschke <mp3@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
- drivers/s390/scsi/zfcp_fsf.c |   31 -------------------------------
- 1 file changed, 31 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.c |   18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -284,37 +284,6 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
- 		goto skip_protstatus;
- 	}
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -31,6 +31,24 @@ MODULE_PARM_DESC(dbfsize,
  
--	/* log additional information provided by FSF (if any) */
--	if (likely(qtcb->header.log_length)) {
--		/* do not trust them ;-) */
--		if (unlikely(qtcb->header.log_start >
--			     sizeof(struct fsf_qtcb))) {
--			ZFCP_LOG_NORMAL
--			    ("bug: ULP (FSF logging) log data starts "
--			     "beyond end of packet header. Ignored. "
--			     "(start=%i, size=%li)\n",
--			     qtcb->header.log_start,
--			     sizeof(struct fsf_qtcb));
--			goto forget_log;
--		}
--		if (unlikely((size_t) (qtcb->header.log_start +
--				       qtcb->header.log_length) >
--			     sizeof(struct fsf_qtcb))) {
--			ZFCP_LOG_NORMAL("bug: ULP (FSF logging) log data ends "
--					"beyond end of packet header. Ignored. "
--					"(start=%i, length=%i, size=%li)\n",
--					qtcb->header.log_start,
--					qtcb->header.log_length,
--					sizeof(struct fsf_qtcb));
--			goto forget_log;
--		}
--		ZFCP_LOG_TRACE("ULP log data: \n");
--		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_TRACE,
--			      (char *) qtcb + qtcb->header.log_start,
--			      qtcb->header.log_length);
--	}
-- forget_log:
--
- 	/* evaluate FSF Protocol Status */
- 	switch (qtcb->prefix.prot_status) {
+ #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_OTHER
  
++static void zfcp_dbf_hexdump(debug_info_t *dbf, void *to, int to_len,
++			     int level, char *from, int from_len)
++{
++	int offset;
++	struct zfcp_dbf_dump *dump = to;
++	int room = to_len - sizeof(*dump);
++
++	for (offset = 0; offset < from_len; offset += dump->size) {
++		memset(to, 0, to_len);
++		strncpy(dump->tag, "dump", ZFCP_DBF_TAG_SIZE);
++		dump->total_size = from_len;
++		dump->offset = offset;
++		dump->size = min(from_len - offset, room);
++		memcpy(dump->data, from + offset, dump->size);
++		debug_event(dbf, level, dump, dump->size);
++	}
++}
++
+ static int
+ zfcp_dbf_stck(char *out_buf, const char *label, unsigned long long stck)
+ {
 
 -- 
