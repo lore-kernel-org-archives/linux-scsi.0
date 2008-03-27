@@ -1,122 +1,198 @@
 From: Ke Wei <kewei@marvell.com>
-Subject: [PATCH 6/9][RESEND] mvsas: fix the buffer of rx DMA overflow bug
-Date: Thu, 27 Mar 2008 14:55:23 +0800
-Message-ID: <47EB44DB.5060008@marvell.com>
+Subject: [PATCH 7/9][RESEND] mvsas: get phy info.
+Date: Thu, 27 Mar 2008 14:55:33 +0800
+Message-ID: <47EB44E5.9080204@marvell.com>
 Reply-To: kewei@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:45365 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:45372 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753914AbYC0Gz0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 02:55:26 -0400
+	id S1754234AbYC0Gzh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 02:55:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: james.bottomley@hansenpartnership.com, jeff@garzik.org
 
-fix the buffer of rx DMA overflow bug.
-fix default queue depth.
+removed unused code and attached SATA address makes use of port id.
+enable HBA interrupt after calling sas_register_ha();
 
 
 Signed-off-by: Ke Wei <kewei@marvell.com>
 ---
- drivers/scsi/mvsas.c |   25 ++++++++++++++++---------
- 1 files changed, 16 insertions(+), 9 deletions(-)
+ drivers/scsi/mvsas.c |   88 ++++++++++++++++++++++++--------------------------
+ 1 files changed, 42 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
-index f4f7b0a..761beeb 100644
+index 761beeb..b5de3d0 100644
 --- a/drivers/scsi/mvsas.c
 +++ b/drivers/scsi/mvsas.c
-@@ -2240,7 +2240,7 @@ static void mvs_free(struct mvs_info *mvi)
- 				  mvi->rx_fis, mvi->rx_fis_dma);
- 	if (mvi->rx)
- 		dma_free_coherent(&mvi->pdev->dev,
--				  sizeof(*mvi->rx) * MVS_RX_RING_SZ,
-+				  sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
- 				  mvi->rx, mvi->rx_dma);
- 	if (mvi->slot)
- 		dma_free_coherent(&mvi->pdev->dev,
-@@ -2348,6 +2348,9 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
- 		return NULL;
- 
- 	spin_lock_init(&mvi->lock);
-+#ifdef MVS_USE_TASKLET
-+	tasklet_init(&mvi->tasklet, mvs_tasklet, (unsigned long)mvi);
-+#endif
- 	mvi->pdev = pdev;
- 	mvi->chip = chip;
- 
-@@ -2371,6 +2374,10 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
- 		mvs_phy_init(mvi, i);
- 		arr_phy[i] = &mvi->phy[i].sas_phy;
- 		arr_port[i] = &mvi->port[i].sas_port;
-+		mvi->port[i].taskfileset = MVS_ID_NOT_MAPPED;
-+		mvi->port[i].wide_port_phymap = 0;
-+		mvi->port[i].port_attached = 0;
-+		INIT_LIST_HEAD(&mvi->port[i].list);
- 	}
- 
- 	SHOST_TO_SAS_HA(mvi->shost) = &mvi->sas;
-@@ -2387,9 +2394,10 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
- 	mvi->sas.sas_phy = arr_phy;
- 	mvi->sas.sas_port = arr_port;
- 	mvi->sas.num_phys = chip->n_phy;
--	mvi->sas.lldd_max_execute_num = MVS_CHIP_SLOT_SZ - 1;
-+	mvi->sas.lldd_max_execute_num = 1;
- 	mvi->sas.lldd_queue_size = MVS_QUEUE_SIZE;
--	mvi->can_queue = (MVS_CHIP_SLOT_SZ >> 1) - 1;
-+	mvi->shost->can_queue = MVS_CAN_QUEUE;
-+	mvi->shost->cmd_per_lun = MVS_SLOTS / mvi->sas.num_phys;
- 	mvi->sas.lldd_ha = mvi;
- 	mvi->sas.core.shost = mvi->shost;
- 
-@@ -2442,11 +2450,11 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
- 	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
- 
- 	mvi->rx = dma_alloc_coherent(&pdev->dev,
--				     sizeof(*mvi->rx) * MVS_RX_RING_SZ,
-+				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
- 				     &mvi->rx_dma, GFP_KERNEL);
- 	if (!mvi->rx)
- 		goto err_out;
--	memset(mvi->rx, 0, sizeof(*mvi->rx) * MVS_RX_RING_SZ);
-+	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
- 
- 	mvi->rx[0] = cpu_to_le32(0xfff);
- 	mvi->rx_cons = 0xfff;
-@@ -2596,7 +2604,7 @@ static void __devinit mvs_phy_hacks(struct mvs_info *mvi)
- 	mvs_cw32(regs, CMD_SAS_CTL0, tmp);
- 
- 	/* workaround for WDTIMEOUT , set to 550 ms */
--	mvs_cw32(regs, CMD_WD_TIMER, 0xffffff);
-+	mvs_cw32(regs, CMD_WD_TIMER, 0x86470);
- 
- 	/* not to halt for different port op during wideport link change */
- 	mvs_cw32(regs, CMD_APP_ERR_CONFIG, 0xffefbf7d);
-@@ -2704,17 +2712,16 @@ static u32 mvs_is_phy_ready(struct mvs_info *mvi, int i)
+@@ -2743,7 +2743,7 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
  {
- 	u32 tmp;
  	struct mvs_phy *phy = &mvi->phy[i];
--	struct mvs_port *port;
-+	struct mvs_port *port = phy->port;;
+ 	struct pci_dev *pdev = mvi->pdev;
+-	u32 tmp, j;
++	u32 tmp;
+ 	u64 tmp64;
  
- 	tmp = mvs_read_phy_ctl(mvi, i);
+ 	mvs_write_port_cfg_addr(mvi, i, PHYR_IDENTIFY);
+@@ -2770,46 +2770,20 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+ 		sas_phy->linkrate =
+ 			(phy->phy_status & PHY_NEG_SPP_PHYS_LINK_RATE_MASK) >>
+ 				PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET;
+-
+-		/* Updated attached_sas_addr */
+-		mvs_write_port_cfg_addr(mvi, i, PHYR_ATT_ADDR_HI);
+-		phy->att_dev_sas_addr =
+-				(u64) mvs_read_port_cfg_data(mvi, i) << 32;
+-
+-		mvs_write_port_cfg_addr(mvi, i, PHYR_ATT_ADDR_LO);
+-		phy->att_dev_sas_addr |= mvs_read_port_cfg_data(mvi, i);
+-
+-		dev_printk(KERN_DEBUG, &pdev->dev,
+-			"phy[%d] Get Attached Address 0x%llX ,"
+-			" SAS Address 0x%llX\n",
+-			i, phy->att_dev_sas_addr, phy->dev_sas_addr);
+-		dev_printk(KERN_DEBUG, &pdev->dev,
+-			"Rate = %x , type = %d\n",
+-			sas_phy->linkrate, phy->phy_type);
+-
+-#if 1
+-		/*
+-		* If the device is capable of supporting a wide port
+-		* on its phys, it may configure the phys as a wide port.
+-		*/
+-		if (phy->phy_type & PORT_TYPE_SAS)
+-			for (j = 0; j < mvi->chip->n_phy && j != i; ++j) {
+-				if ((mvi->phy[j].phy_attached) &&
+-					(mvi->phy[j].phy_type & PORT_TYPE_SAS))
+-					if (phy->att_dev_sas_addr ==
+-					mvi->phy[j].att_dev_sas_addr - 1) {
+-						phy->att_dev_sas_addr =
+-						mvi->phy[j].att_dev_sas_addr;
+-						break;
+-					}
+-			}
+-
+-#endif
+-
+-		tmp64 = cpu_to_be64(phy->att_dev_sas_addr);
+-		memcpy(sas_phy->attached_sas_addr, &tmp64, SAS_ADDR_SIZE);
++		phy->minimum_linkrate =
++			(phy->phy_status &
++				PHY_MIN_SPP_PHYS_LINK_RATE_MASK) >> 8;
++		phy->maximum_linkrate =
++			(phy->phy_status &
++				PHY_MAX_SPP_PHYS_LINK_RATE_MASK) >> 12;
  
- 	if ((tmp & PHY_READY_MASK) && !(phy->irq_status & PHYEV_POOF)) {
--		if (!phy->port)
-+		if (!port)
- 			phy->phy_attached = 1;
- 		return tmp;
- 	}
- 
--	port = phy->port;
- 	if (port) {
  		if (phy->phy_type & PORT_TYPE_SAS) {
- 			port->wide_port_phymap &= ~(1U << i);
++			/* Updated attached_sas_addr */
++			mvs_write_port_cfg_addr(mvi, i, PHYR_ATT_ADDR_HI);
++			phy->att_dev_sas_addr =
++				(u64) mvs_read_port_cfg_data(mvi, i) << 32;
++			mvs_write_port_cfg_addr(mvi, i, PHYR_ATT_ADDR_LO);
++			phy->att_dev_sas_addr |= mvs_read_port_cfg_data(mvi, i);
+ 			mvs_write_port_cfg_addr(mvi, i, PHYR_ATT_DEV_INFO);
+ 			phy->att_dev_info = mvs_read_port_cfg_data(mvi, i);
+ 			phy->identify.device_type =
+@@ -2828,6 +2802,7 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+ 		} else if (phy->phy_type & PORT_TYPE_SATA) {
+ 			phy->identify.target_port_protocols = SAS_PROTOCOL_STP;
+ 			if (mvs_is_sig_fis_received(phy->irq_status)) {
++				phy->att_dev_sas_addr = i;	/* temp */
+ 				if (phy_st & PHY_OOB_DTCTD)
+ 					sas_phy->oob_mode = SATA_OOB_MODE;
+ 				phy->frame_rcvd_size =
+@@ -2837,20 +2812,34 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+ 			} else {
+ 				dev_printk(KERN_DEBUG, &pdev->dev,
+ 					"No sig fis\n");
++				phy->phy_type &= ~(PORT_TYPE_SATA);
++				goto out_done;
+ 			}
+ 		}
++		tmp64 = cpu_to_be64(phy->att_dev_sas_addr);
++		memcpy(sas_phy->attached_sas_addr, &tmp64, SAS_ADDR_SIZE);
++
++		dev_printk(KERN_DEBUG, &pdev->dev,
++			"phy[%d] Get Attached Address 0x%llX ,"
++			" SAS Address 0x%llX\n",
++			i, phy->att_dev_sas_addr, phy->dev_sas_addr);
++		dev_printk(KERN_DEBUG, &pdev->dev,
++			"Rate = %x , type = %d\n",
++			sas_phy->linkrate, phy->phy_type);
++
+ 		/* workaround for HW phy decoding error on 1.5g disk drive */
+ 		mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE6);
+ 		tmp = mvs_read_port_vsr_data(mvi, i);
+ 		if (((phy->phy_status & PHY_NEG_SPP_PHYS_LINK_RATE_MASK) >>
+ 		     PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET) ==
+ 			SAS_LINK_RATE_1_5_GBPS)
+-			tmp &= ~PHY_MODE6_DTL_SPEED;
++			tmp &= ~PHY_MODE6_LATECLK;
+ 		else
+-			tmp |= PHY_MODE6_DTL_SPEED;
++			tmp |= PHY_MODE6_LATECLK;
+ 		mvs_write_port_vsr_data(mvi, i, tmp);
+ 
+ 	}
++out_done:
+ 	if (get_st)
+ 		mvs_write_port_irq_stat(mvi, i, phy->irq_status);
+ }
+@@ -2875,6 +2864,11 @@ static void mvs_port_formed(struct asd_sas_phy *sas_phy)
+ 	spin_unlock_irqrestore(&mvi->lock, flags);
+ }
+ 
++static int mvs_I_T_nexus_reset(struct domain_device *dev)
++{
++	return TMF_RESP_FUNC_FAILED;
++}
++
+ static int __devinit mvs_hw_init(struct mvs_info *mvi)
+ {
+ 	void __iomem *regs = mvi->regs;
+@@ -3036,13 +3030,12 @@ static int __devinit mvs_hw_init(struct mvs_info *mvi)
+ 	/* enable CMD/CMPL_Q/RESP mode */
+ 	mw32(PCS, PCS_SATA_RETRY | PCS_FIS_RX_EN | PCS_CMD_EN);
+ 
+-	/* re-enable interrupts globally */
+-	mvs_hba_interrupt_enable(mvi);
+-
+ 	/* enable completion queue interrupt */
+-	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM);
++	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM | CINT_SRS);
+ 	mw32(INT_MASK, tmp);
+ 
++	/* Enable SRS interrupt */
++	mw32(INT_MASK_SRS, 0xFF);
+ 	return 0;
+ }
+ 
+@@ -3116,6 +3109,8 @@ static int __devinit mvs_pci_init(struct pci_dev *pdev,
+ 
+ 	mvs_print_info(mvi);
+ 
++	mvs_hba_interrupt_enable(mvi);
++
+ 	scsi_scan_host(mvi->shost);
+ 
+ 	return 0;
+@@ -3161,7 +3156,8 @@ static struct sas_domain_function_template mvs_transport_ops = {
+ 	.lldd_execute_task	= mvs_task_exec,
+ 	.lldd_control_phy	= mvs_phy_control,
+ 	.lldd_abort_task	= mvs_task_abort,
+-	.lldd_port_formed	= mvs_port_formed
++	.lldd_port_formed	= mvs_port_formed,
++	.lldd_I_T_nexus_reset	= mvs_I_T_nexus_reset,
+ };
+ 
+ static struct pci_device_id __devinitdata mvs_pci_table[] = {
 -- 
 1.5.4
+
 
 
 
