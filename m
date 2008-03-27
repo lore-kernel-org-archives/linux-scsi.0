@@ -1,49 +1,90 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] [14/20] Don't disable direct_io for unchecked_isa_dma
- in st.c
-Date: Thu, 27 Mar 2008 12:26:54 -0500
-Message-ID: <47EBD8DE.4080502@cs.wisc.edu>
-References: <20080307653.720459648@firstfloor.org> <20080307175414.08C981B41AE@basil.firstfloor.org> <20080314135135.GT17940@kernel.dk> <20080314142412.GA30325@infradead.org> <47DD14F7.4070607@panasas.com>
+From: "Sagar Borikar" <Sagar_Borikar@pmc-sierra.com>
+Subject: System reboots after insertion and removal of disks in 2.6.18 kernel
+Date: Thu, 27 Mar 2008 10:46:14 -0700
+Message-ID: <340C71CD25A7EB49BFA81AE8C8392667D4C7E7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36533 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751705AbYC0R2E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 13:28:04 -0400
-In-Reply-To: <47DD14F7.4070607@panasas.com>
+Received: from pmc216-241-226-183.pmc-sierra.bc.ca ([216.241.226.183]:56710
+	"EHLO pmxedge1.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750727AbYC0RpA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 13:45:00 -0400
+Received: from bby1exg02.pmc_nt.nt.pmc-sierra.bc.ca (BBY1EXG02.pmc-sierra.bc.ca [216.241.231.167])
+	by pmxedge1.pmc-sierra.bc.ca (8.13.4/8.12.11) with ESMTP id m2RHiki7021528
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2008 10:44:47 -0700
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Andi Kleen <andi@firstfloor.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <'linux-scsi@vger.kernel.org'>
 
-Boaz Harrosh wrote:
-> On Fri, Mar 14 2008 at 16:24 +0200, Christoph Hellwig <hch@infradead.org> wrote:
->> On Fri, Mar 14, 2008 at 02:51:35PM +0100, Jens Axboe wrote:
->>> Are you sure? Seems to me that st builds its own list with
->>> get_user_pages() for direct io, where will that get bounced? The block
->>> layer will only bounce things that are mapped directly, so if st used
->>> blk_rq_map_kern() and inserted that request in the queue, we could
->>> proceed with killing that check in st.
->> Which shouldn't be all too difficult and would be the right thing to
->> do.  We really need someone to sit down and convert st/osst/sg to use
->> the proper block layer helpers.
->>
-> 
-> First they do. They all call scsi_execute_async which at the end produces
-> a BIO and then calls blk_execute_nowait(). and all is swell.
-> 
-> Second some one did, long a go, and have submitted them rebased more then 3
-> times. I'd say their time is do long a go. (I mean Mike Christie)
-> 
-> Mike, please, do you have these patches on a public git somewhere I want to help
-> push them.
-> 
+Hello folks,
+ 
+I am currently working on NAS which has sil 3114 SATA controller.There is some strange scenario reported by product validation team.When I insert the drive and remove immediately without settling down,
+the system gets reset after roughly 30 seconds. Tried to capture the log from drivers but couldn't get any of the stack dump or kernel panic in due course. I am using 2.6.18 kernel and sata_sil is enabled.
+Rest functionality works pretty fine. But only when I do insert and remove without time gap, the system resets. Strange thing is when I insert the disk and remove it back immediately the interrupt line asserted is only for insert and not for removal.  Sata controller is not getting interrupt for second immediate drive removal. Hence I guess that the interrupt line should be level triggered. Now based on the logs captured, I can say that in this typical case, sata controller first gets the request to handle drive insertion. It waits for some time to check the status to ensure that it is proper request and after that it again reads the line. It finds that drive is removed till that time. But actually SATA controller is not detecting the remove instance as it is not reflected in GPIO transiti
+ on as well. So I get messages like COMRESET Failed and hard reset failed. This doesn't happen if I insert back the drive immediately. The system immediately recovers. 
+ 
+Attaching the log
+ 
+After only inserting drive:
+( No issues here: )
+ 
+?[root@NAS00180001310e ~]# Drive 2 inserted
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: port is slow to respond, please be patient
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: ATA-7, max UDMA/133, 490234752 sectors: LBA48 NCQ (depth
+0/32)
+ata2.00: ata2: dev 0 multi count 0
+ata2.00: configured for UDMA/100
+ata2: EH complete
+ Vendor: ATA       Model: WDC WD2500YS-01S  Rev: 20.0
+ Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
+sdd: Write Protect is off
+SCSI device sdd: drive cache: write back
+SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
+sdd: Write Protect is off
+SCSI device sdd: drive cache: write back
+ sdd:
+sd 1:0:0:0: Attached scsi disk sdd
+sd 1:0:0:0: Attached scsi generic sg3 type 0
+ 
+After insertion and immediate removal: Reboot:
+ 
 
-Sorry I have been so bad with my linux-scsi email. Here is my current 
-patches:
-http://kernel.org/pub/linux/kernel/people/mnc/sg/sg-bioset17/
-They are very broken (patch -p1 wise), because of all the block layer 
-changes. I got around to converting st. It is not tested. I just need to 
-convert osst and we can kill scsi_execute_async.
+?[root@NAS00180001310e ~]# Drive 2 inserted
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: port is slow to respond, please be patient
+ata2: port failed to respond (30 secs)  ---------------------> At this state, actually the drive is removed. But not detected. 
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ 
+?
+PMON2000 MIPS Initializing. Standby...
+ERRORPC=bfc00004 CONFIG=0042e4bb STATUS=00400000
+CPU PRID 000034c1, MaskID 00001320
+Initializing caches...done (CONFIG=0042e4bb)
+Switching to runtime address map...done
+Setting up SDRAM controller: sdram config 0x80010000
+master clock 100 Mhz, MulFundBIU 0x02, DivXSDRAM 0x02
+sdram freq 0x09ef21aa hz, sdram period: 0x06 nsec
+dimm0: density 256Mbit, width 16, single-sided, unbuffered, size
+0x08000000
+ supported CAS latency: 2.5 2, using 2.5 cycles, byte18=0x0c
+ RAS to CAS delay (tRCD) 0x12 nsec, byte29=0x
+ 
+
+Any pointers are really appreciated.
+ 
+Thanks in advance,
+Sagar
+ 
+ 
