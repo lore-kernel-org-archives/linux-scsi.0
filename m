@@ -1,26 +1,82 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Thu, 27 Mar 2008 08:15:28 -0700
-Message-ID: <20080327151528.GB13661@suse.de>
-References: <abna7-7jK-3@gated-at.bofh.it> <abo6b-11J-9@gated-at.bofh.it> <aboSP-2Wf-29@gated-at.bofh.it> <aboSP-2Wf-27@gated-at.bofh.it> <abqrq-6eX-29@gated-at.bofh.it> <abqrq-6eX-27@gated-at.bofh.it> <abqKM-6Ka-13@gated-at.bofh.it> <E1JeTq5-00018y-MO@be1.7eggert.dyndns.org> <20080327035257.GB9566@suse.de> <47EBB322.6000402@rtr.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/8] mvsas: fill in error info record and phy
+	mode6	bits.
+Date: Thu, 27 Mar 2008 08:35:34 -0700
+Message-ID: <1206632134.3239.21.camel@localhost.localdomain>
+References: <47E39568.60407@marvell.com>
+	 <1206565072.3019.39.camel@localhost.localdomain>
+	 <47EB4AF5.1070500@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47EBB322.6000402@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Bodo Eggert <7eggert@gmx.de>, "H. Peter Anvin" <hpa@zytor.com>, Randy Dunlap <randy.dunlap@oracle.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58486 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753906AbYC0Pfp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 11:35:45 -0400
+In-Reply-To: <47EB4AF5.1070500@marvell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kewei@marvell.com
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, jacky@marvell.com, qzhao@marvell.com, qswang@marvell.com
 
-On Thu, Mar 27, 2008 at 10:45:54AM -0400, Mark Lord wrote:
-> Greg KH wrote:
->>
->> If sysfs is stupid, then use an ioctl, have I objected to that?
-> ..
->
-> Well, at this point it certainly seems a lot simpler
-> than trying to get the sysfs "maintainers" to improve it.
+On Thu, 2008-03-27 at 15:21 +0800, Ke Wei wrote:
+> James Bottomley wrote:
+> > On Fri, 2008-03-21 at 19:00 +0800, Ke Wei wrote:
+> >> and remove some unused members from struct.
+> > 
+> > This patch (and the following ones) look great.  I'm afraid I can't
+> > apply them, though ... it looks like your mail tool has stripped some
+> > leading spaces:
+> > 
+> >> @@ -37,11 +37,13 @@
+> >> #include <linux/dma-mapping.h>
+> >> #include <linux/ctype.h>
+> >> #include <scsi/libsas.h>
+> >> +#include <scsi/scsi_tcq.h>
+> >> +#include <scsi/sas_ata.h>
+> >> #include <asm/io.h>
+> > 
+> > And also added line breaks:
+> > 
+> >> +    PHY_MODE6_MUCNT_EN    = (1U << 24),    /* u Count Enable */
+> >> +    PHY_MODE6_SEL_MUCNT_LEN    = (1U << 22),    /* Training Length
+> >> Select */
+> >> +    PHY_MODE6_SELMUPI    = (1U << 20),    /* Phase Multi Select (init) */
+> > 
+> > If you need to add the patches as an attachment to get them through your
+> > mailer undamaged, that's fine ... the tools we have will cope with that.
+> > 
+> > Thanks,
+> > 
+> > James
+> > 
+> > 
+> 
+> Hello James:
+> 	I resended mvsas patch set to community. Thank you for your help. I
+> am moving my email client from Outlook to Thunderbird. So sometimes I
+> need to try some configuration. 
 
-I'm sorry, have I missed a patch that was submitted that adds this new
-functionality?
+Thanks ... although we have contributors whose use of outlook is
+mandated by their companies ... although they tend to have to attach
+patches instead of inlining them.
+
+Thunderbird apparently can be a bit of a problem.  There's a section
+about configuring it in the kernel documentation:
+
+Documentation/email-clients.txt
+
+> 	I have already past mvsas driver testing. By far, look well. If you
+> have any suggestions to help me, pls let me know.
+
+Will do ... let me review the patches first (got a long flight coming
+up).
+
+Thanks,
+
+James
+
+
+
