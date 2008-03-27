@@ -1,17 +1,17 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
  with	iscsi logout
-Date: Wed, 26 Mar 2008 20:51:44 -0500
-Message-ID: <47EAFDB0.4090503@cs.wisc.edu>
+Date: Wed, 26 Mar 2008 20:59:30 -0500
+Message-ID: <47EAFF82.70603@cs.wisc.edu>
 References: <1206201960.4393.8.camel@localhost.localdomain>	<20080326232226X.tomof@acm.org>	<1206542186.3019.5.camel@localhost.localdomain> <20080326235900H.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35242 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35260 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325AbYC0BwN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 21:52:13 -0400
+	id S1754595AbYC0CAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Mar 2008 22:00:44 -0400
 In-Reply-To: <20080326235900H.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -107,12 +107,9 @@ FUJITA Tomonori wrote:
 > Note that bsg doesn't need to takes a ref to a queue for SCSI devices
 > at least. I think that it would be better to remove the code but I let
 > it alone for now.
-> 
 
-Why does bsg_add_device do kobject_get instead of blk_get_queue?
-
-It seems like if we added a blk_qet_queue when we opened the device and 
-a blk_put_queue when bsg_release is called we could remove the 
-get/put_device calls. I am not sure if that is cleaner or not. I was 
-just thinking that bsg goes from bsg->request_queue->scsi_device so 
-maybe it should not worry about the device.
+I think you need the ref count on the queue for scsi_transport_sas 
+because it does not have the multi layer shutdown like how the 
+scsi_devices do. If a request was just added to the queue and 
+sas_smp_request was running, but then sas_bsg_remove is called the call 
+to blk_cleanup_queue would free the queue from under the request fn.
