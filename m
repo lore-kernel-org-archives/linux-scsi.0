@@ -1,62 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi0: PCI error Interrupt with  Adaptec ASC-29320A
-Date: Thu, 27 Mar 2008 08:47:41 -0700
-Message-ID: <1206632861.3239.26.camel@localhost.localdomain>
-References: <47EB7FC4.7080408@cosylab.com>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: [PATCH 7/9][RESEND] mvsas: get phy info.
+Date: Thu, 27 Mar 2008 10:04:49 -0700
+Message-ID: <da824cf30803271004i64a785afn6c0030984dca96eb@mail.gmail.com>
+References: <47EB44E5.9080204@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47188 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755993AbYC0Prq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 11:47:46 -0400
-In-Reply-To: <47EB7FC4.7080408@cosylab.com>
+Received: from smtp-out.google.com ([216.239.45.13]:43688 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756719AbYC0REz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 13:04:55 -0400
+Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
+	by smtp-out.google.com with ESMTP id m2RH4pRh017378
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2008 10:04:51 -0700
+Received: from wf-out-1314.google.com (wfg23.prod.google.com [10.142.7.23])
+	by zps76.corp.google.com with ESMTP id m2RH4ojm010771
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2008 10:04:50 -0700
+Received: by wf-out-1314.google.com with SMTP id 23so4337041wfg.21
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2008 10:04:50 -0700 (PDT)
+In-Reply-To: <47EB44E5.9080204@marvell.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Primoz Kolaric <primoz.kolaric@cosylab.com>
-Cc: linux-scsi@vger.kernel.org
+To: kewei@marvell.com
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, jeff@garzik.org
 
-On Thu, 2008-03-27 at 12:06 +0100, Primoz Kolaric wrote:
-> I have a strange problem with my SCSI subsystem. After a few days (7-10 
-> days) of normal work the linux kernel starts to report these messages:
-> 
-> Mar 20 08:19:53 xxxx kernel: scsi0: PCI error Interrupt
+On Wed, Mar 26, 2008 at 11:55 PM, Ke Wei <kewei@marvell.com> wrote:
+> removed unused code and attached SATA address makes use of port id.
+>  enable HBA interrupt after calling sas_register_ha();
 
-The adaptec card gives this type of interrupt when it detects an error
-on the PCI bus.
+just one small nit and one question.
 
-This cryptic piece at the end is the actual error:
+...
+>  @@ -2837,20 +2812,34 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+>                         } else {
+>                                 dev_printk(KERN_DEBUG, &pdev->dev,
+>                                         "No sig fis\n");
+>  +                               phy->phy_type &= ~(PORT_TYPE_SATA);
 
-> Mar 20 08:19:53 xxxx kernel: scsi0: Data Parity Error has been reported 
-> via PERR# in DFF1
-> Mar 20 08:19:53 xxxx kernel: scsi0: Split completion read data parity 
-> error in DFF1
-> Mar 20 08:19:53 xxxx kernel: scsi0: Signal System Error Detected in DFF1
-> Mar 20 08:19:53 xxxx kernel: scsi0: Address or Write Phase Parity Error 
-> Detected in DFF1.
+shouldn't need '()'s around the constant.
 
-But it's claiming an actual PCI bus parity error.
+>  +                               goto out_done;
+>                         }
+>                 }
+>  +               tmp64 = cpu_to_be64(phy->att_dev_sas_addr);
+>  +               memcpy(sas_phy->attached_sas_addr, &tmp64, SAS_ADDR_SIZE);
 
+Why does this need to be a memcpy and not just a simple store operation?
+Is it misaligned? (even if it is, the kernel will deal with it. It
+just won't be fast.)
 
-> I already tried changing the scsi cables, terminators, running without 
-> terminators, changing the SCSI controler card (unfortunately i only had 
-> exactly same model) but nothing helps and i'm running out of ideas. I 
-> have two identical machines: same motherboard, same scsi controler 
-> connected to almost the same (difference is only in the number of hard 
-> disk bays) external RAID units and it happens on both of them. On one it 
-> happens regularly on the other it only happened twice in one year.
-> 
-> The same SCSI setup (same external raid and scsi controlers) was used 
-> before on different motherboard  and it worked ok, so i'm assuming that 
-> the problem isn't between the scsi controler and the external RAID.
-
-I'm afraid if the problem is on the PCI bus, changing the SCSI piece
-won't necessarily help.  Unless anyone with specific PCI advice can
-chime in, about the best you can do is reseat the card (or preferably
-move it to a different slot) and hope the error goes away.
-
-James
-
-
+hth,
+grant
