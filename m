@@ -1,60 +1,42 @@
-From: Ke Wei <kewei@marvell.com>
-Subject: Re: [PATCH 1/8] mvsas: fill in error info record and phy mode6	bits.
-Date: Thu, 27 Mar 2008 15:21:25 +0800
-Message-ID: <47EB4AF5.1070500@marvell.com>
-References: <47E39568.60407@marvell.com> <1206565072.3019.39.camel@localhost.localdomain>
-Reply-To: kewei@marvell.com
+From: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
+Subject: Re: Adaptec AIC-9410W (AIC94xx) + SATA HDDs
+Date: Thu, 27 Mar 2008 09:28:36 +0100
+Message-ID: <47EB5AB4.8090900@ipax.at>
+References: <47EA5A3B.1070200@ipax.at>	 <1206542109.3019.3.camel@localhost.localdomain>  <47EA7533.8030304@ipax.at> <1206548773.3019.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:45997 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754797AbYC0HVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 03:21:34 -0400
-In-Reply-To: <1206565072.3019.39.camel@localhost.localdomain>
+Received: from mail.ipax.at ([80.64.143.40]:41933 "EHLO mail.ipax.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755402AbYC0I2j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 04:28:39 -0400
+In-Reply-To: <1206548773.3019.35.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, jacky@marvell.com, qzhao@marvell.com, qswang@marvell.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+
+hi james,
 
 James Bottomley wrote:
-> On Fri, 2008-03-21 at 19:00 +0800, Ke Wei wrote:
->> and remove some unused members from struct.
-> 
-> This patch (and the following ones) look great.  I'm afraid I can't
-> apply them, though ... it looks like your mail tool has stripped some
-> leading spaces:
-> 
->> @@ -37,11 +37,13 @@
->> #include <linux/dma-mapping.h>
->> #include <linux/ctype.h>
->> #include <scsi/libsas.h>
->> +#include <scsi/scsi_tcq.h>
->> +#include <scsi/sas_ata.h>
->> #include <asm/io.h>
-> 
-> And also added line breaks:
-> 
->> +    PHY_MODE6_MUCNT_EN    = (1U << 24),    /* u Count Enable */
->> +    PHY_MODE6_SEL_MUCNT_LEN    = (1U << 22),    /* Training Length
->> Select */
->> +    PHY_MODE6_SELMUPI    = (1U << 20),    /* Phase Multi Select (init) */
-> 
-> If you need to add the patches as an attachment to get them through your
-> mailer undamaged, that's fine ... the tools we have will cope with that.
-> 
-> Thanks,
-> 
-> James
-> 
-> 
+> It's no bother and the warning is, um, a bit cryptic.  I'm not sure how
+> anyone who didn't know the code intimately could work out what's going
+> on.
 
-Hello James:
-	I resended mvsas patch set to community. Thank you for your help. I am moving my email client from Outlook to Thunderbird. So sometimes I need to try some configuration. 
-	I have already past mvsas driver testing. By far, look well. If you have any suggestions to help me, pls let me know.
+an error message like this looks good and would solve some headake :)
 
+maybe it could be a little improved (for example provide some more
+information about the device, phy, port, etc.
 
-Best regards.
-Ke
+cheers,
+raoul
+-- 
+____________________________________________________________________
+DI (FH) Raoul Bhatia M.Sc.          email.          r.bhatia@ipax.at
+Technischer Leiter
 
+IPAX - Aloy Bhatia Hava OEG         web.          http://www.ipax.at
+Barawitzkagasse 10/2/2/11           email.            office@ipax.at
+1190 Wien                           tel.               +43 1 3670030
+FN 277995t HG Wien                  fax.            +43 1 3670030 15
+____________________________________________________________________
