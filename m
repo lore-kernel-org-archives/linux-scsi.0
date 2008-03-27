@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 02/11] zfcp: Clean up _zfcp_san_dbf_event_common_els
-Date: Thu, 27 Mar 2008 14:21:56 +0100
-Message-ID: <20080327133023.786277000@de.ibm.com>
+Subject: [patch 03/11] zfcp: Remove qtcb dump to kernel log
+Date: Thu, 27 Mar 2008 14:21:57 +0100
+Message-ID: <20080327133024.594716000@de.ibm.com>
 References: <20080327132154.826339000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:2648 "EHLO
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:2649 "EHLO
 	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758093AbYC0Na0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 09:30:26 -0400
-Content-Disposition: inline; filename=zfcp_san_dbf_simplify_els_hex_dump.diff
+	with ESMTP id S1759291AbYC0Na1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2008 09:30:27 -0400
+Content-Disposition: inline; filename=zfcp_msg_cleanup_qtcb_trace.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,65 +16,53 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Peschke <mp3@
 
 From: Martin Peschke <mp3@de.ibm.com>
 
-Clean up _zfcp_san_dbf_event_common_els using zfcp_dbf_hexdump()
-helper.
+Is not appropriate to printk() tons of hardware trace data.
 
 Signed-off-by: Martin Peschke <mp3@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
- drivers/s390/scsi/zfcp_dbf.c |   39 ++++++++++-----------------------------
- 1 file changed, 10 insertions(+), 29 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   31 -------------------------------
+ 1 file changed, 31 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -562,38 +562,19 @@ _zfcp_san_dbf_event_common_els(const cha
- {
- 	struct zfcp_adapter *adapter = fsf_req->adapter;
- 	struct zfcp_san_dbf_record *rec = &adapter->san_dbf_buf;
--	struct zfcp_dbf_dump *dump = (struct zfcp_dbf_dump *)rec;
- 	unsigned long flags;
--	int offset = 0;
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -284,37 +284,6 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
+ 		goto skip_protstatus;
+ 	}
  
- 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
--	do {
--		memset(rec, 0, sizeof(struct zfcp_san_dbf_record));
--		if (offset == 0) {
--			strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
--			rec->fsf_reqid = (unsigned long)fsf_req;
--			rec->fsf_seqno = fsf_req->seq_no;
--			rec->s_id = s_id;
--			rec->d_id = d_id;
--			rec->type.els.ls_code = ls_code;
--			buflen = min(buflen, ZFCP_DBF_ELS_MAX_PAYLOAD);
--			rec->type.els.payload_size = buflen;
--			memcpy(rec->type.els.payload,
--			       buffer, min(buflen, ZFCP_DBF_ELS_PAYLOAD));
--			offset += min(buflen, ZFCP_DBF_ELS_PAYLOAD);
--		} else {
--			strncpy(dump->tag, "dump", ZFCP_DBF_TAG_SIZE);
--			dump->total_size = buflen;
--			dump->offset = offset;
--			dump->size = min(buflen - offset,
--					 (int)sizeof(struct zfcp_san_dbf_record)
--					 - (int)sizeof(struct zfcp_dbf_dump));
--			memcpy(dump->data, buffer + offset, dump->size);
--			offset += dump->size;
+-	/* log additional information provided by FSF (if any) */
+-	if (likely(qtcb->header.log_length)) {
+-		/* do not trust them ;-) */
+-		if (unlikely(qtcb->header.log_start >
+-			     sizeof(struct fsf_qtcb))) {
+-			ZFCP_LOG_NORMAL
+-			    ("bug: ULP (FSF logging) log data starts "
+-			     "beyond end of packet header. Ignored. "
+-			     "(start=%i, size=%li)\n",
+-			     qtcb->header.log_start,
+-			     sizeof(struct fsf_qtcb));
+-			goto forget_log;
 -		}
--		debug_event(adapter->san_dbf, level,
--			    rec, sizeof(struct zfcp_san_dbf_record));
--	} while (offset < buflen);
-+	memset(rec, 0, sizeof(struct zfcp_san_dbf_record));
-+	strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
-+	rec->fsf_reqid = (unsigned long)fsf_req;
-+	rec->fsf_seqno = fsf_req->seq_no;
-+	rec->s_id = s_id;
-+	rec->d_id = d_id;
-+	rec->type.els.ls_code = ls_code;
-+	debug_event(adapter->san_dbf, level, rec, sizeof(*rec));
-+	zfcp_dbf_hexdump(adapter->san_dbf, rec, sizeof(*rec), level,
-+			 buffer, min(buflen, ZFCP_DBF_ELS_MAX_PAYLOAD));
- 	spin_unlock_irqrestore(&adapter->san_dbf_lock, flags);
- }
+-		if (unlikely((size_t) (qtcb->header.log_start +
+-				       qtcb->header.log_length) >
+-			     sizeof(struct fsf_qtcb))) {
+-			ZFCP_LOG_NORMAL("bug: ULP (FSF logging) log data ends "
+-					"beyond end of packet header. Ignored. "
+-					"(start=%i, length=%i, size=%li)\n",
+-					qtcb->header.log_start,
+-					qtcb->header.log_length,
+-					sizeof(struct fsf_qtcb));
+-			goto forget_log;
+-		}
+-		ZFCP_LOG_TRACE("ULP log data: \n");
+-		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_TRACE,
+-			      (char *) qtcb + qtcb->header.log_start,
+-			      qtcb->header.log_length);
+-	}
+- forget_log:
+-
+ 	/* evaluate FSF Protocol Status */
+ 	switch (qtcb->prefix.prot_status) {
  
 
 -- 
