@@ -1,184 +1,145 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
- with	iscsi logout
-Date: Thu, 27 Mar 2008 20:11:52 +0900
-Message-ID: <20080327200827V.tomof@acm.org>
-References: <1206542186.3019.5.camel@localhost.localdomain>
-	<20080326235900H.tomof@acm.org>
-	<47EAFDB0.4090503@cs.wisc.edu>
+Subject: Re: [PATCH] scsi_debug: fix lba and data length calculation bugs
+Date: Thu, 27 Mar 2008 20:23:42 +0900
+Message-ID: <20080327202340C.tomof@acm.org>
+References: <20080325170446H.fujita.tomonori@lab.ntt.co.jp>
+	<47EABE5A.9050805@torque.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:45988 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:47501 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755491AbYC0LNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 07:13:09 -0400
-In-Reply-To: <47EAFDB0.4090503@cs.wisc.edu>
+	id S1753849AbYC0LXv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2008 07:23:51 -0400
+In-Reply-To: <47EABE5A.9050805@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
+To: dougg@torque.net
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Wed, 26 Mar 2008 20:51:44 -0500
-Mike Christie <michaelc@cs.wisc.edu> wrote:
+On Wed, 26 Mar 2008 17:21:30 -0400
+Douglas Gilbert <dougg@torque.net> wrote:
 
 > FUJITA Tomonori wrote:
-> > On Wed, 26 Mar 2008 07:36:26 -0700
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > This fixes lba calculation bugs in scsi_debug (it might happen only
+> > with over 1TB virtual devices).
 > > 
-> >> On Wed, 2008-03-26 at 23:22 +0900, FUJITA Tomonori wrote:
-> >>> On Sat, 22 Mar 2008 11:06:00 -0500
-> >>> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >>>
-> >>>> On Tue, 2008-03-11 at 00:36 -0500, Mike Christie wrote:
-> >>>>> Mike Christie wrote:
-> >>>>>> Pete Wyckoff wrote:
-> >>>>>>> I think this used not to happen; not sure.  But I changed two things
-> >>>>>> This most likely did not happen before 2.6.25-rc* or it broke in 
-> >>>>>> slightly different ways, because iscsi used to try and do
-> >>>>>>
-> >>>>>> echo 1 > /sys/block/sdX/device/delete
-> >>>>>>
-> >>>>>> from userspace instead of calling scsi_remove_target from the kernel.
-> >>>>>>
-> >>>>>> As you know around 2.6.21, the behavior of doing the echo to the delete 
-> >>>>>> file changed due to a driver model and scsi change and that broke the 
-> >>>>>> iscsi tools. The iscsi tools userspace removal was sort of hack in the 
-> >>>>>> first place and was racey, so we switched to removing devices/target 
-> >>>>>> like the FC class.
-> >>>>>>
-> >>>>>>
-> >>>>>>> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
-> >>>>>>> fedora devel (868).  Bidi and varlen patches always too.
-> >>>>>>>
-> >>>>>>> I'll follow with some more variations on this theme.  Looks like bsg
-> >>>>>>> needs to protect more carefully against the device going away.  Any
-> >>>>>>> ideas how best to do this?  What was the approach in sg?
-> >>>>>>>
-> >>>>>> I think sg is broken in similar ways. The iser guys have some tests 
-> >>>>>> cases that have broken sg while IO is outstanding. I am ccing Erez.
-> >>>>> Actually one of the problems looks a little different than some of the 
-> >>>>> problems hit with sg and are caused because we remove the bsg device too 
-> >>>>> soon. I think we want to wait until all the references from the 
-> >>>>> commands/requests are released. The attached patch (untested) moves the 
-> >>>>> bsg unreg call to the scsi device release fn.
-> >>>> Well, this fix is now upstream.  However, it's causing all our
-> >>>> scsi_devices never to get released, which is a serious regression.
-> >>>> We're also doing spurious bsg_unregister_queue() for things that never
-> >>>> actually registered one (all scan devices that return DID_NO_CONNECT),
-> >>>> but bsg doesn't seem to be complaining about this.
-> >>>>
-> >>>> The essence of the problem is that bsg_register_queue() takes a ref to
-> >>>> the sdev_gendev, so you can't move bsg_unregister_queue() into the
-> >>>> release function because nothing ever puts bsg's device ref and so
-> >>>> release is never called.
-> >>>>
-> >>>> Options for fixing this before 2.6.25 are
-> >>>>
-> >>>>      1. revert the patch
-> >>>>      2. Do an additional put for the bsg reference in
-> >>>>         __scsi_remove_device (patch below).  It's nasty but it preserves
-> >>>>         the semantics and does what you want
-> >>> After some investigation, this patch doesn't fix the bug that Pete
-> >>> reported (I'll send a new patch shortly).
-> >>>
-> >>> Can you revert the commit 4b6f5b3a993cbe34b4280f252bccc76967c185c8
-> >>> instead of merging this?
-> >> Sure ... I didn't like the hack either.  As long as iSCSI is fine with
-> >> the reversion it's the quickest way to fix the problem.
+> > This is against scsi-misc. scsi-fixes, 2.6.24, 2.6.23, ... probably
+> > all the versions of scsi_debug have the same bugs too but I guess that
+> > there are few people who play scsi_debug with over virtual 1TB devices
+> > (though this can be cleanly applied to scsi-fixes).
 > > 
-> > How about this? With the commit reversion, I confirmed that this patch
-> > fixes the first bug that Pete reported:
-> > 
-> > http://marc.info/?l=linux-scsi&m=120508166505141&w=2
-> > 
-> > I suspect that this could fix the rest too.
+> > Several LLDs have the own code to do the same calculation. It might be
+> > nice to sweep up them?
 > > 
 > > =
 > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] bsg: takes a ref to struct device in fops->open
 > > 
-> > bsg_register_queue() takes a ref to struct device that a caller
-> > passes. For example, it takes a ref to the sdev_gendev with scsi
-> > devices. However, bsg doesn't takes a ref to it in fops->open. So
-> > while an application opens a bsg device, the scsi device that the bsg
-> > device holds can go away (bsg also takes a ref to a queue, but it
-> > doesn't prevent the device from going away).
+> > For example, `modprobe scsi_debug virtual_gb=1100` gives:
 > > 
-> > With this, bsg takes a ref to struct device in fops->open and frees it
-> > in fops->release.
+> > scsi7 : scsi_debug, version 1.81 [20070104], dev_size_mb=8, opts=0x0
+> > scsi 7:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
+> > sd 7:0:0:0: [sdc] 2306867200 512-byte hardware sectors (1181116 MB)
+> > sd 7:0:0:0: [sdc] Write Protect is off
+> > sd 7:0:0:0: [sdc] Mode Sense: 73 00 10 08
+> > sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> > sd 7:0:0:0: [sdc] 2306867200 512-byte hardware sectors (1181116 MB)
+> > sd 7:0:0:0: [sdc] Write Protect is off
+> > sd 7:0:0:0: [sdc] Mode Sense: 73 00 10 08
+> > sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> >  sdc: unknown partition table
+> > sd 7:0:0:0: [sdc] Attached SCSI disk
+> > sd 7:0:0:0: Attached scsi generic sg6 type 0
+> > end_request: I/O error, dev sdc, sector 2306867072
+> > Buffer I/O error on device sdc, logical block 288358384
+> > end_request: I/O error, dev sdc, sector 2306867072
+> > Buffer I/O error on device sdc, logical block 288358384
+> > end_request: I/O error, dev sdc, sector 2306867192
 > > 
-> > Note that bsg doesn't need to takes a ref to a queue for SCSI devices
-> > at least. I think that it would be better to remove the code but I let
-> > it alone for now.
+> > (snip)
 > > 
+> > Note that this converts all the calculations (including the correct
+> > calculations) for unification.
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Cc: Douglas Gilbert <dougg@torque.net>
+> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > ---
+> >  drivers/scsi/scsi_debug.c |   32 ++++++++++++++++++--------------
+> >  1 files changed, 18 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> > index 4f4c5b7..46a136a 100644
+> > --- a/drivers/scsi/scsi_debug.c
+> > +++ b/drivers/scsi/scsi_debug.c
+> > @@ -251,33 +251,37 @@ static struct bus_type pseudo_lld_bus;
+> >  static void get_data_transfer_info(unsigned char *cmd,
+> >  				   unsigned long long *lba, unsigned int *num)
+> >  {
+> > -	int i;
+> > -
+> >  	switch (*cmd) {
+> >  	case WRITE_16:
+> >  	case READ_16:
+> > -		for (*lba = 0, i = 0; i < 8; ++i) {
+> > -			if (i > 0)
+> > -				*lba <<= 8;
+> > -			*lba += cmd[2 + i];
+> > -		}
+> > -		*num = cmd[13] + (cmd[12] << 8) +
+> > -			(cmd[11] << 16) + (cmd[10] << 24);
+> > +		*lba = (u64)cmd[9] | (u64)cmd[8] << 8 |
+> > +			(u64)cmd[7] << 16 | (u64)cmd[6] << 24 |
+> > +			(u64)cmd[5] << 32 | (u64)cmd[4] << 40 |
+> > +			(u64)cmd[3] << 48 | (u64)cmd[2] << 56;
+> > +
+> > +		*num = (u32)cmd[13] | (u32)cmd[12] << 8 | (u32)cmd[11] << 16 |
+> > +			(u32)cmd[10] << 24;
+> >  		break;
+> >  	case WRITE_12:
+> >  	case READ_12:
+> > -		*lba = cmd[5] + (cmd[4] << 8) +	(cmd[3] << 16) + (cmd[2] << 24);
+> > -		*num = cmd[9] + (cmd[8] << 8) +	(cmd[7] << 16) + (cmd[6] << 24);
+> > +		*lba = (u32)cmd[5] | (u32)cmd[4] << 8 | (u32)cmd[3] << 16 |
+> > +			(u32)cmd[2] << 24;
+> > +
+> > +		*num = (u32)cmd[9] | (u32)cmd[8] << 8 | (u32)cmd[7] << 16 |
+> > +			(u32)cmd[6] << 24;
+> >  		break;
+> >  	case WRITE_10:
+> >  	case READ_10:
+> >  	case XDWRITEREAD_10:
+> > -		*lba = cmd[5] + (cmd[4] << 8) +	(cmd[3] << 16) + (cmd[2] << 24);
+> > -		*num = cmd[8] + (cmd[7] << 8);
+> > +		*lba = (u32)cmd[5] | (u32)cmd[4] << 8 |	(u32)cmd[3] << 16 |
+> > +			(u32)cmd[2] << 24;
+> > +
+> > +		*num = (u32)cmd[8] | (u32)cmd[7] << 8;
+> >  		break;
+> >  	case WRITE_6:
+> >  	case READ_6:
+> > -		*lba = cmd[3] + (cmd[2] << 8) + ((cmd[1] & 0x1f) << 16);
+> > +		*lba = (u32)cmd[3] | (u32)cmd[2] << 8 |
+> > +			(u32)(cmd[1] & 0x1f) << 16;
+> >  		*num = (0 == cmd[4]) ? 256 : cmd[4];
+> >  		break;
+> >  	default:
 > 
-> Why does bsg_add_device do kobject_get instead of blk_get_queue?
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> 
+> 
+> Can't actually see the "lba calculation bugs" but I'm happy
+> to let Tomo do it his way.
 
-I think that it's a bug. But both takes a ref to a queue (though
-kobject_get doesn't see QUEUE_FLAG_DEAD), so I think that it's not
-related with the current problems.
+Let me make things clear though we've already agreed offline.
 
+Something like the following code doesn't work.
 
-> It seems like if we added a blk_qet_queue when we opened the device and 
-> a blk_put_queue when bsg_release is called we could remove the 
-> get/put_device calls. I am not sure if that is cleaner or not. I was 
-> just thinking that bsg goes from bsg->request_queue->scsi_device so 
-> maybe it should not worry about the device.
+unsigned char *cmd;
+unsigned long long *lba;
 
-kobject_get takes a ref to a queue. If we don't take a ref to a
-device, the scsi device has gone though the queue is still there
-because the queue release is done from the device release. If the scsi
-device has gone, we are dead, right?
+*lba = cmd[2] << 24;
 
 
-Anyway, here's a patch to replace kobject_get with blk_get_queue.
-
-James, please apply this patch too.
-
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: replace kobject_get with blk_get_queue
-
-Both takes a ref to a queue. But the former checks QUEUE_FLAG_DEAD and
-is more appropriate interface here.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- block/bsg.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index a348a79..b07efd3 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -740,16 +740,21 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
- 					 struct file *file)
- {
- 	struct bsg_device *bd;
-+	int ret;
- #ifdef BSG_DEBUG
- 	unsigned char buf[32];
- #endif
-+	ret = blk_get_queue(rq);
-+	if (ret)
-+		return -ENXIO;
- 
- 	bd = bsg_alloc_device();
--	if (!bd)
-+	if (!bd) {
-+		blk_put_queue(rq);
- 		return ERR_PTR(-ENOMEM);
-+	}
- 
- 	bd->queue = rq;
--	kobject_get(&rq->kobj);
- 	bsg_set_block(bd, file);
- 
- 	atomic_set(&bd->ref_count, 1);
--- 
-1.5.3.6
-
+So surely there are lba calculation bugs.
