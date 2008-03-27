@@ -1,17 +1,17 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
  with	iscsi logout
-Date: Wed, 26 Mar 2008 20:32:13 -0500
-Message-ID: <47EAF91D.3000505@cs.wisc.edu>
+Date: Wed, 26 Mar 2008 20:51:44 -0500
+Message-ID: <47EAFDB0.4090503@cs.wisc.edu>
 References: <1206201960.4393.8.camel@localhost.localdomain>	<20080326232226X.tomof@acm.org>	<1206542186.3019.5.camel@localhost.localdomain> <20080326235900H.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35202 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35242 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013AbYC0Bcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Mar 2008 21:32:42 -0400
+	id S1753325AbYC0BwN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Mar 2008 21:52:13 -0400
 In-Reply-To: <20080326235900H.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -104,11 +104,15 @@ FUJITA Tomonori wrote:
 > With this, bsg takes a ref to struct device in fops->open and frees it
 > in fops->release.
 > 
+> Note that bsg doesn't need to takes a ref to a queue for SCSI devices
+> at least. I think that it would be better to remove the code but I let
+> it alone for now.
+> 
 
-It looks like it fixes the life time problem.
+Why does bsg_add_device do kobject_get instead of blk_get_queue?
 
-My patch was actually supposed to fix #3 and fixing #1 was a side 
-affect. Will bsg_release still be called when the device is closed. If 
-so then it may not fix #3 because the bsg_release function still needs 
-to grab the mutex. Maybe bsg_complete_all_commands just needs to drop 
-the mutex while it waits for IO to complete.
+It seems like if we added a blk_qet_queue when we opened the device and 
+a blk_put_queue when bsg_release is called we could remove the 
+get/put_device calls. I am not sure if that is cleaner or not. I was 
+just thinking that bsg goes from bsg->request_queue->scsi_device so 
+maybe it should not worry about the device.
