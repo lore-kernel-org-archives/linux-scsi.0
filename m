@@ -1,98 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/17] scsi: ch.c fix shadowed variable warnings
-Date: Fri, 28 Mar 2008 14:48:39 -0700
-Message-ID: <200803282148.m2SLmdA5012246@imap1.linux-foundation.org>
+Subject: [patch 14/17] drivers/scsi/hptiop.c: fix build warning
+Date: Fri, 28 Mar 2008 14:48:41 -0700
+Message-ID: <200803282148.m2SLmfAG012255@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52580 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34168 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756611AbYC1VtO (ORCPT
+	by vger.kernel.org with ESMTP id S1757410AbYC1VtW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 17:49:14 -0400
+	Fri, 28 Mar 2008 17:49:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp, linux@highpoint-tech.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-err shadows the array of errors in this driver, switch to ch_err
-drivers/scsi/ch.c:271:6: warning: symbol 'err' shadows an earlier one
-drivers/scsi/ch.c:116:3: originally declared here
+powerpc:
 
-cmd shadows the argument to this function, switch to ch_cmd
-drivers/scsi/ch.c:724:11: warning: symbol 'cmd' shadows an earlier one
-drivers/scsi/ch.c:596:20: originally declared here
+drivers/scsi/hptiop.c: In function 'iop_set_config_mv':
+drivers/scsi/hptiop.c:395: warning: large integer implicitly truncated to unsigned type
 
-Small code cleanup as well in if() statement.
+This field is only 32-bit, so cpu_to_le64() seems wrong.
 
-[akpm@linux-foundation.org: coding-style fixes]
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: HighPoint Linux Team <linux@highpoint-tech.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ch.c |   29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/hptiop.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings drivers/scsi/ch.c
---- a/drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings
-+++ a/drivers/scsi/ch.c
-@@ -268,16 +268,16 @@ ch_read_element_status(scsi_changer *ch,
- static int
- ch_init_elem(scsi_changer *ch)
- {
--	int err;
-+	int ch_err;
- 	u_char cmd[6];
+diff -puN drivers/scsi/hptiop.c~drivers-scsi-hptiopc-fix-build-warning drivers/scsi/hptiop.c
+--- a/drivers/scsi/hptiop.c~drivers-scsi-hptiopc-fix-build-warning
++++ a/drivers/scsi/hptiop.c
+@@ -392,7 +392,7 @@ static int iop_set_config_mv(struct hpti
+ 	req->header.size =
+ 		cpu_to_le32(sizeof(struct hpt_iop_request_set_config));
+ 	req->header.result = cpu_to_le32(IOP_RESULT_PENDING);
+-	req->header.context = cpu_to_le64(IOP_REQUEST_TYPE_SET_CONFIG<<5);
++	req->header.context = cpu_to_le32(IOP_REQUEST_TYPE_SET_CONFIG<<5);
  
- 	vprintk("INITIALIZE ELEMENT STATUS, may take some time ...\n");
- 	memset(cmd,0,sizeof(cmd));
- 	cmd[0] = INITIALIZE_ELEMENT_STATUS;
- 	cmd[1] = ch->device->lun << 5;
--	err = ch_do_scsi(ch, cmd, NULL, 0, DMA_NONE);
-+	ch_err = ch_do_scsi(ch, cmd, NULL, 0, DMA_NONE);
- 	vprintk("... finished\n");
--	return err;
-+	return ch_err;
- }
- 
- static int
-@@ -721,7 +721,7 @@ static long ch_ioctl(struct file *file,
- 	case CHIOGELEM:
- 	{
- 		struct changer_get_element cge;
--		u_char  cmd[12];
-+		u_char  ch_cmd[12];
- 		u_char  *buffer;
- 		unsigned int elem;
- 		int     result,i;
-@@ -739,17 +739,18 @@ static long ch_ioctl(struct file *file,
- 		mutex_lock(&ch->lock);
- 
- 	voltag_retry:
--		memset(cmd,0,sizeof(cmd));
--		cmd[0] = READ_ELEMENT_STATUS;
--		cmd[1] = (ch->device->lun << 5) |
--			(ch->voltags ? 0x10 : 0) |
--			ch_elem_to_typecode(ch,elem);
--		cmd[2] = (elem >> 8) & 0xff;
--		cmd[3] = elem        & 0xff;
--		cmd[5] = 1;
--		cmd[9] = 255;
-+		memset(ch_cmd, 0, sizeof(ch_cmd));
-+		ch_cmd[0] = READ_ELEMENT_STATUS;
-+		ch_cmd[1] = (ch->device->lun << 5) |
-+			    (ch->voltags ? 0x10 : 0) |
-+			    ch_elem_to_typecode(ch, elem);
-+		ch_cmd[2] = (elem >> 8) & 0xff;
-+		ch_cmd[3] = elem        & 0xff;
-+		ch_cmd[5] = 1;
-+		ch_cmd[9] = 255;
- 
--		if (0 == (result = ch_do_scsi(ch, cmd, buffer, 256, DMA_FROM_DEVICE))) {
-+		result = ch_do_scsi(ch, ch_cmd, buffer, 256, DMA_FROM_DEVICE);
-+		if (!result) {
- 			cge.cge_status = buffer[18];
- 			cge.cge_flags = 0;
- 			if (buffer[18] & CESTATUS_EXCEPT) {
+ 	if (iop_send_sync_request_mv(hba, 0, 20000)) {
+ 		dprintk("Set config send cmd failed\n");
 _
