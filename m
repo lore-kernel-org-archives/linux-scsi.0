@@ -1,54 +1,61 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/17] mptbase: reset ioc initiator during PCI resume
-Date: Fri, 28 Mar 2008 14:48:31 -0700
-Message-ID: <200803282148.m2SLmVkL012216@imap1.linux-foundation.org>
+Subject: [patch 06/17] scsi: fix section mismatch in aic94xx
+Date: Fri, 28 Mar 2008 14:48:36 -0700
+Message-ID: <200803282148.m2SLma9o012231@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36473 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40274 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754704AbYC1VtE (ORCPT
+	by vger.kernel.org with ESMTP id S1757034AbYC1VtK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 17:49:04 -0400
+	Fri, 28 Mar 2008 17:49:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, djwong@us.ibm.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, sam@ravnborg.org, James.Bottomley@SteelEye.com, gilbert_wu@adaptec.com
 
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Sam Ravnborg <sam@ravnborg.org>
 
-It appears that the LSI SAS 1064E chip needs to be reset after a
-suspend/resume cycle before the driver attempts further communications with
-the chip.  Without this patch, resuming the chip results in this error
-message being printed repeatedly and no more disk I/O.
+Fix following warnings:
+WARNING: vmlinux.o(.data+0x17aa88): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
+WARNING: vmlinux.o(.data+0x17aa98): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
+WARNING: vmlinux.o(.data+0x17aaa8): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9405_setup()
 
-mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
+asd_pcidev_data is only used by __devinit asd_pci_probe.  So mark is const and
+annotate it __devinitconst to fix the warnings.
 
-So far it seems to fix suspend/resume on all the MPT Fusion cards I have
-(SAS and U320 SCSI) but since I don't know the internals of that chip I
-can't say for sure if this is a proper fix.
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: <Sathya.Prakash@lsi.com>
+[akpm@linux-foundation.org: fix warning]
+Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+Cc: Gilbert Wu <gilbert_wu@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/aic94xx/aic94xx_init.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1892,6 +1892,12 @@ mpt_resume(struct pci_dev *pdev)
- 		}
- 	}
- 
-+	/* put ioc into READY_STATE */
-+	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+		printk(MYIOC_s_ERR_FMT
-+		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
-+	}
-+
- 	/* bring ioc to operational state */
- 	printk(MYIOC_s_INFO_FMT "Sending mpt_do_ioc_recovery\n", ioc->name);
- 	recovery_state = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
+diff -puN drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx drivers/scsi/aic94xx/aic94xx_init.c
+--- a/drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx
++++ a/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -529,10 +529,10 @@ static void asd_remove_dev_attrs(struct 
+ /* The first entry, 0, is used for dynamic ids, the rest for devices
+  * we know about.
+  */
+-static struct asd_pcidev_struct {
++static const struct asd_pcidev_struct {
+ 	const char * name;
+ 	int (*setup)(struct asd_ha_struct *asd_ha);
+-} asd_pcidev_data[] = {
++} asd_pcidev_data[] __devinitconst = {
+ 	/* Id 0 is used for dynamic ids. */
+ 	{ .name  = "Adaptec AIC-94xx SAS/SATA Host Adapter",
+ 	  .setup = asd_aic9410_setup
+@@ -735,7 +735,7 @@ static int asd_unregister_sas_ha(struct 
+ static int __devinit asd_pci_probe(struct pci_dev *dev,
+ 				   const struct pci_device_id *id)
+ {
+-	struct asd_pcidev_struct *asd_dev;
++	const struct asd_pcidev_struct *asd_dev;
+ 	unsigned asd_id = (unsigned) id->driver_data;
+ 	struct asd_ha_struct *asd_ha;
+ 	struct Scsi_Host *shost;
 _
