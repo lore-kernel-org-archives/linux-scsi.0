@@ -1,49 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] mvsas: ATAPI LUN issue
-Date: Thu, 27 Mar 2008 15:07:55 -0700
-Message-ID: <1206655675.3662.14.camel@localhost.localdomain>
-References: <47E87F67.4080501@marvell.com>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: [PATCH] 2.6.25-rc6 initio senselen warning
+Date: Thu, 27 Mar 2008 23:51:43 -0600
+Message-ID: <20080328055143.GA27045@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60429 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752104AbYC0XUn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2008 19:20:43 -0400
-In-Reply-To: <47E87F67.4080501@marvell.com>
+Received: from colo.lackof.org ([198.49.126.79]:44628 "EHLO colo.lackof.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752445AbYC1Fvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2008 01:51:55 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kewei@marvell.com
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org
-
-On Tue, 2008-03-25 at 12:28 +0800, Ke Wei wrote:
-> I found that sending REPORT_LUNS command to some DVD device will 
-> cause fis error and controller error record. As a result, scsi mid layer 
-> get some wrong LUNs. Also I can get some queer messages.
-> 
-> scsi: host 12 channel 0 id 2 lun 0x30302e302f686f73 has a LUN larger 
-> than currently supported.
-> scsi: host 12 channel 0 id 2 lun 0x7431322f706f7274 has a LUN larger 
-> than currently supported.
-> scsi: host 12 channel 0 id 2 lun 0x2d31323a322f656e has a LUN larger 
-> than currently supported.
-> ...
-> 
->     The patch forced to clear the sg buffer of SATA response if FIS is 
-> error. But I suggest these codes should remove to the libsas module.
-
-My first observation is that this isn't the correct approach:  Most of
-the CD/DVD simply respond with an error or the correct information.  The
-odd media changer will actually respond with real LUNs.  Doing a blanket
-erase of the REPORT LUN information will cause problems for media
-changers.
-
-I think the correct way to fix your problem is to blacklist the
-particular CD.  We have a BLIST_NOREPORTLUN for devices which behave
-like this ... what are the INQUIRY strings?
-
-James
+To: linux-scsi@vger.kernel.org
+Cc: Alan Cox <alan@redhat.com>
 
 
+Building initio on parisc with gcc-4.3 yielded this warning:
+drivers/scsi/initio.c:2585: warning: large integer implicitly truncated to unsigned type
+
+and the code was:
+        cblk->senselen = cpu_to_le32(SENSE_SIZE);
+
+Given senselen is a u8, code is wrong.
+
+Signed-off-by: Grant Grundler <grundler@parisc-linux.org>
+
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 0cc8868..0a21863 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2582,7 +2582,7 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+ 	dma_addr = dma_map_single(&host->pci_dev->dev, cmnd->sense_buffer,
+ 				  SENSE_SIZE, DMA_FROM_DEVICE);
+ 	cblk->senseptr = cpu_to_le32((u32)dma_addr);
+-	cblk->senselen = cpu_to_le32(SENSE_SIZE);
++	cblk->senselen = SENSE_SIZE;
+ 	cmnd->SCp.ptr = (char *)(unsigned long)dma_addr;
+ 	cblk->cdblen = cmnd->cmd_len;
+ 
