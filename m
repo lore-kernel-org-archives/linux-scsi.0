@@ -1,103 +1,45 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] SCSI support for REQ_TYPE_LINUX_BLOCK requests
-Date: Fri, 28 Mar 2008 12:43:02 +0100
-Message-ID: <87y783ula1.fsf@denkblock.local>
-References: <871w60j9ai.fsf@denkblock.local> <87r6dxy37a.fsf@denkblock.local>
-	<47EA689B.4080109@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 6921] cpqarray fails to detect array when built as a module
+Date: Fri, 28 Mar 2008 07:45:12 -0700 (PDT)
+Message-ID: <20080328144512.C660F11D109@picon.linux-foundation.org>
+References: <bug-6921-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:47851 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758431AbYC1OlK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 10:41:10 -0400
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53087 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757716AbYC1Ope (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2008 10:45:34 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2SEjC86017169
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2008 07:45:13 -0700
+In-Reply-To: <bug-6921-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-> On Wed, Mar 26 2008 at 16:23 +0200, Elias Oltmanns <eo@nebensachen.de> wrote:
->> Elias Oltmanns <eo@nebensachen.de> wrote:
->>> Hi all,
->>>
->>> this patch adds support for REQ_TYPE_LINUX_BLOCK requests to the scsi
->>> midlayer. Low level drivers have the option to register their own
->>> handlers for these special requests if necessary.
->>>
->> [...]
->>> +static void scsi_finish_lb_req(struct request *req)
->>> +{
->>> +	struct request_queue *q = req->q;
->>> +	struct scsi_device *sdev = q->queuedata;
->>> +	unsigned long flags;
->>> +
->>> +	spin_lock_irqsave(q->queue_lock, flags);
->>> +	end_that_request_last(req, 1);
->> 
->> That's obsolete, of course. Sorry for missing that. See the correct
->> patch for 2.6.25-rc7 below.
->> 
->> Regards,
->> 
->> Elias
->> 
->> 
->
-> It looks to me like you can accomplish any of that (and more) with
-> regular BLOCK_PC commands plus the varlen facility I have sent:
-> (http://www.spinics.net/lists/linux-scsi/msg25202.html)
+http://bugzilla.kernel.org/show_bug.cgi?id=6921
 
-Thanks for the hint, the varlen facility certainly is a nice
-enhancement. However, I wonder whether this really is a replacement for
-REQ_TYPE_LINUX_BLOCK requests. This is a linux specific type of requests
-intended to be used as generic block layer messages. In my patch set,
-for instance, a REQ_TYPE_LINUX_BLOCK request is enqueued to notify LLDs
-that the queue has just been frozen / thawed. The block layer doesn't
-really care (or know, for that matter) whether the device is an SCSI,
-IDE, or an loop device. Thus, only the LLD itself can decide what kind
-of commands (if any) have to be executed in response to the generic
-block layer message.
 
-Of course, the same can be achieved by means of the varlen facility if
-we could, for instance, reserve a certain range of codes in the service
-action of a variable length CDB for this kind of requests. Is that what
-you had in mind?
 
-[...]
-> BLOCK_PC commands with-or-without data, are always completed at once.
 
-??? At once, as opposed to what? For all I know, they are enqueued for
-asynchronous completion.
 
->
-> The LLD in question will only need to filter for those special commands
-> at the .queuecommand entry and act accordingly.
->
-> The only problem you might have is with a dumb initiator that might issue
-> commands to devices that do not know what to do with the new none-standard
-> commands. There is 3 things you can do.
+------- Comment #4 from joshua@rubixlinux.org  2008-03-28 07:45 -------
+Hi Natalie,
 
-This will be a common situation and we are not just talking about scsi
-devices either.
+I no longer have access to the hardware (nor have I for some time now). But we
+did get things working. As I remember, the kernel in Debian 4.0 (Etch) worked
+out of the box. Please see the debian bug report listed above to follow that
+discussion. What I do not remember was if the fix was in the vanilla source or
+in the debian patch set.
 
-> 1. Make the Initiator smarter to only send these commands to good
->    devices In a manner of a special flag or a registration process.
+It looks like this patch was the one that fixed things:
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
 
-We wanted to avoid just that.
+Thanks,
+Joshua
 
-> 2. use commands that are bigger than 16 so .max_cmd_len of legacy
->    drivers will not allow these commands through.
-> 3. Do nothing and let the setup process only setup the compatible
->    devices to be issued the new commands.
->
-> The bsg driver can already be used to issue such commands from user space.
-> Tell me if you need example code to easily issue such commands from kernel.
 
-If you still think that all of the above can (and should) be
-accomplished using BLOCK_PC commands and the varlen facility, I'd be
-interested in some example code.
-
-Regards,
-
-Elias
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
