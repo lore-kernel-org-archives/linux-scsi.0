@@ -1,39 +1,51 @@
 From: akpm@linux-foundation.org
-Subject: [patch 17/17] scsi: removed one unneeded shost->active_mode assignment
-Date: Fri, 28 Mar 2008 14:48:45 -0700
-Message-ID: <200803282148.m2SLmjW4012264@imap1.linux-foundation.org>
+Subject: [patch 15/17] drivers/scsi/mvsas.c: fix build warnings
+Date: Fri, 28 Mar 2008 14:48:42 -0700
+Message-ID: <200803282148.m2SLmgoG012258@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42803 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43841 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755661AbYC1V6E (ORCPT
+	by vger.kernel.org with ESMTP id S1757348AbYC1V7G (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 17:58:04 -0400
+	Fri, 28 Mar 2008 17:59:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, crquan@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, kewei@marvell.com, oliver.pntr@gmail.com
 
-From: Denis Cheng <crquan@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-In the following if/else statement, shost->active_mode will always be set, so
-this assignment is unneeded.
+powerpc:
 
-Signed-off-by: Denis Cheng <crquan@gmail.com>
+drivers/scsi/mvsas.c: In function 'mvs_update_phyinfo':
+drivers/scsi/mvsas.c:2536: warning: format '%llX' expects type 'long long unsigned int', but argument 5 has type 'u64'
+drivers/scsi/mvsas.c:2536: warning: format '%llX' expects type 'long long unsigned int', but argument 6 has type 'u64'
+
+we do not know what type the architecture uses to implement u64 hence we
+cannot print them directly.
+
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Oliver Pinter <oliver.pntr@gmail.com>
+Cc: Ke Wei <kewei@marvell.com>
+Cc: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/hosts.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/mvsas.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/hosts.c~scsi-removed-one-unneeded-shost-active_mode-assignment drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c~scsi-removed-one-unneeded-shost-active_mode-assignment
-+++ a/drivers/scsi/hosts.c
-@@ -341,7 +341,6 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->use_clustering = sht->use_clustering;
- 	shost->ordered_tag = sht->ordered_tag;
--	shost->active_mode = sht->supported_mode;
- 
- 	if (sht->supported_mode == MODE_UNKNOWN)
- 		/* means we didn't set it ... default to INITIATOR */
+diff -puN drivers/scsi/mvsas.c~drivers-scsi-mvsasc-fix-build-warnings drivers/scsi/mvsas.c
+--- a/drivers/scsi/mvsas.c~drivers-scsi-mvsasc-fix-build-warnings
++++ a/drivers/scsi/mvsas.c
+@@ -2536,7 +2536,9 @@ static void mvs_update_phyinfo(struct mv
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			"phy[%d] Get Attached Address 0x%llX ,"
+ 			" SAS Address 0x%llX\n",
+-			i, phy->att_dev_sas_addr, phy->dev_sas_addr);
++			i,
++			(unsigned long long)phy->att_dev_sas_addr,
++			(unsigned long long)phy->dev_sas_addr);
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			"Rate = %x , type = %d\n",
+ 			sas_phy->linkrate, phy->phy_type);
 _
