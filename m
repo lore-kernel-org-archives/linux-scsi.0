@@ -1,13 +1,13 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/17] scsi: replace remaining __FUNCTION__ occurrences
-Date: Fri, 28 Mar 2008 14:48:37 -0700
-Message-ID: <200803282148.m2SLmbog012237@imap1.linux-foundation.org>
+Subject: [patch 10/17] scsi: replace __inline with inline
+Date: Fri, 28 Mar 2008 14:48:38 -0700
+Message-ID: <200803282148.m2SLmdUl012243@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49861 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35348 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757276AbYC1VtN (ORCPT
+	by vger.kernel.org with ESMTP id S1757309AbYC1VtT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 17:49:13 -0400
+	Fri, 28 Mar 2008 17:49:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
@@ -15,1600 +15,1881 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail
 
 From: Harvey Harrison <harvey.harrison@gmail.com>
 
-__FUNCTION__ is gcc-specific, use __func__
-
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/advansys.c               |    2 -
- drivers/scsi/aha152x.c                |   12 +++---
- drivers/scsi/aic94xx/aic94xx.h        |    4 +-
- drivers/scsi/aic94xx/aic94xx_hwi.c    |    2 -
- drivers/scsi/aic94xx/aic94xx_scb.c    |   46 ++++++++++++------------
- drivers/scsi/aic94xx/aic94xx_task.c   |    2 -
- drivers/scsi/aic94xx/aic94xx_tmf.c    |   18 ++++-----
- drivers/scsi/arm/fas216.c             |    4 +-
- drivers/scsi/ibmvscsi/ibmvstgt.c      |    2 -
- drivers/scsi/imm.c                    |    2 -
- drivers/scsi/ipr.h                    |    6 +--
- drivers/scsi/iscsi_tcp.c              |   12 +++---
- drivers/scsi/libsas/sas_ata.c         |   16 ++++----
- drivers/scsi/libsas/sas_expander.c    |   12 +++---
- drivers/scsi/libsas/sas_port.c        |    4 +-
- drivers/scsi/libsas/sas_scsi_host.c   |   28 +++++++-------
- drivers/scsi/libsrp.c                 |    2 -
- drivers/scsi/lpfc/lpfc_init.c         |    4 +-
- drivers/scsi/lpfc/lpfc_scsi.c         |    2 -
- drivers/scsi/lpfc/lpfc_sli.c          |    6 +--
- drivers/scsi/megaraid/mega_common.h   |    2 -
- drivers/scsi/megaraid/megaraid_mbox.c |   16 ++++----
- drivers/scsi/megaraid/megaraid_mm.c   |    4 +-
- drivers/scsi/nsp32.c                  |    4 +-
- drivers/scsi/nsp32_debug.c            |    2 -
- drivers/scsi/pcmcia/nsp_cs.c          |    4 +-
- drivers/scsi/pcmcia/nsp_debug.c       |    2 -
- drivers/scsi/ppa.c                    |    2 -
- drivers/scsi/qla1280.c                |   12 +++---
- drivers/scsi/scsi_debug.c             |   12 +++---
- drivers/scsi/scsi_devinfo.c           |    6 +--
- drivers/scsi/scsi_error.c             |   26 ++++++-------
- drivers/scsi/scsi_lib.c               |    6 +--
- drivers/scsi/scsi_netlink.c           |    8 ++--
- drivers/scsi/scsi_proc.c              |    4 +-
- drivers/scsi/scsi_scan.c              |   12 +++---
- drivers/scsi/scsi_tgt_priv.h          |    2 -
- drivers/scsi/scsi_transport_fc.c      |   12 +++---
- drivers/scsi/scsi_transport_sas.c     |    4 +-
- drivers/scsi/tmscsim.c                |    8 ++--
- drivers/scsi/wd7000.c                 |    8 ++--
- drivers/scsi/zalon.c                  |    8 ++--
- 42 files changed, 175 insertions(+), 175 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c   |   14 -
+ drivers/scsi/aic7xxx/aic79xx_inline.h |  218 ++++++++++++------------
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |    4 
+ drivers/scsi/aic7xxx/aic79xx_osm.h    |  110 ++++++------
+ drivers/scsi/aic7xxx/aic79xx_pci.c    |    2 
+ drivers/scsi/aic7xxx/aic7xxx_inline.h |  126 ++++++-------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    8 
+ drivers/scsi/aic7xxx/aic7xxx_osm.h    |  100 +++++------
+ drivers/scsi/aic7xxx/aic7xxx_pci.c    |    2 
+ drivers/scsi/aic7xxx/aiclib.h         |    4 
+ drivers/scsi/sym53c8xx_2/sym_glue.h   |    6 
+ drivers/scsi/sym53c8xx_2/sym_hipd.c   |    2 
+ drivers/scsi/sym53c8xx_2/sym_hipd.h   |    6 
+ drivers/scsi/sym53c8xx_2/sym_malloc.c |    2 
+ drivers/scsi/sym53c8xx_2/sym_misc.h   |   18 -
+ 15 files changed, 311 insertions(+), 311 deletions(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/advansys.c
-@@ -2278,7 +2278,7 @@ do { \
- #define ASC_DBG(lvl, format, arg...) {					\
- 	if (asc_dbglvl >= (lvl))					\
- 		printk(KERN_DEBUG "%s: %s: " format, DRV_NAME,		\
--			__FUNCTION__ , ## arg);				\
-+			__func__ , ## arg);				\
- }
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -268,7 +268,7 @@ static int		ahd_match_scb(struct ahd_sof
  
- #define ASC_DBG_PRT_SCSI_HOST(lvl, s) \
-diff -puN drivers/scsi/aha152x.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/aha152x.c
---- a/drivers/scsi/aha152x.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aha152x.c
-@@ -288,20 +288,20 @@ static LIST_HEAD(aha152x_host_list);
- #define DO_LOCK(flags)	\
- 	do { \
- 		if(spin_is_locked(&QLOCK)) { \
--			DPRINTK(debug_intr, DEBUG_LEAD "(%s:%d) already locked at %s:%d\n", CMDINFO(CURRENT_SC), __FUNCTION__, __LINE__, QLOCKER, QLOCKERL); \
-+			DPRINTK(debug_intr, DEBUG_LEAD "(%s:%d) already locked at %s:%d\n", CMDINFO(CURRENT_SC), __func__, __LINE__, QLOCKER, QLOCKERL); \
- 		} \
--		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) locking\n", CMDINFO(CURRENT_SC), __FUNCTION__, __LINE__); \
-+		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) locking\n", CMDINFO(CURRENT_SC), __func__, __LINE__); \
- 		spin_lock_irqsave(&QLOCK,flags); \
--		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) locked\n", CMDINFO(CURRENT_SC), __FUNCTION__, __LINE__); \
--		QLOCKER=__FUNCTION__; \
-+		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) locked\n", CMDINFO(CURRENT_SC), __func__, __LINE__); \
-+		QLOCKER=__func__; \
- 		QLOCKERL=__LINE__; \
- 	} while(0)
+ /******************************** Private Inlines *****************************/
  
- #define DO_UNLOCK(flags)	\
- 	do { \
--		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) unlocking (locked at %s:%d)\n", CMDINFO(CURRENT_SC), __FUNCTION__, __LINE__, QLOCKER, QLOCKERL); \
-+		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) unlocking (locked at %s:%d)\n", CMDINFO(CURRENT_SC), __func__, __LINE__, QLOCKER, QLOCKERL); \
- 		spin_unlock_irqrestore(&QLOCK,flags); \
--		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) unlocked\n", CMDINFO(CURRENT_SC), __FUNCTION__, __LINE__); \
-+		DPRINTK(debug_locking, DEBUG_LEAD "(%s:%d) unlocked\n", CMDINFO(CURRENT_SC), __func__, __LINE__); \
- 		QLOCKER="(not locked)"; \
- 		QLOCKERL=0; \
- 	} while(0)
-diff -puN drivers/scsi/aic94xx/aic94xx.h~scsi-replace-remaining-__function__-occurrences drivers/scsi/aic94xx/aic94xx.h
---- a/drivers/scsi/aic94xx/aic94xx.h~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aic94xx/aic94xx.h
-@@ -39,9 +39,9 @@
- 
- #ifdef ASD_ENTER_EXIT
- #define ENTER  printk(KERN_NOTICE "%s: ENTER %s\n", ASD_DRIVER_NAME, \
--		__FUNCTION__)
-+		__func__)
- #define EXIT   printk(KERN_NOTICE "%s: --EXIT %s\n", ASD_DRIVER_NAME, \
--		__FUNCTION__)
-+		__func__)
- #else
- #define ENTER
- #define EXIT
-diff -puN drivers/scsi/aic94xx/aic94xx_hwi.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/aic94xx/aic94xx_hwi.c
---- a/drivers/scsi/aic94xx/aic94xx_hwi.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aic94xx/aic94xx_hwi.c
-@@ -1359,7 +1359,7 @@ int asd_enable_phys(struct asd_ha_struct
- 	struct asd_ascb *ascb_list;
- 
- 	if (!phy_mask) {
--		asd_printk("%s called with phy_mask of 0!?\n", __FUNCTION__);
-+		asd_printk("%s called with phy_mask of 0!?\n", __func__);
- 		return 0;
- 	}
- 
-diff -puN drivers/scsi/aic94xx/aic94xx_scb.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/aic94xx/aic94xx_scb.c
---- a/drivers/scsi/aic94xx/aic94xx_scb.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aic94xx/aic94xx_scb.c
-@@ -211,7 +211,7 @@ static void asd_form_port(struct asd_ha_
- 		phy->asd_port = port;
- 	}
- 	ASD_DPRINTK("%s: updating phy_mask 0x%x for phy%d\n",
--		    __FUNCTION__, phy->asd_port->phy_mask, sas_phy->id);
-+		    __func__, phy->asd_port->phy_mask, sas_phy->id);
- 	asd_update_port_links(asd_ha, phy);
- 	spin_unlock_irqrestore(&asd_ha->asd_ports_lock, flags);
- }
-@@ -294,7 +294,7 @@ static void asd_link_reset_err_tasklet(s
- 		struct asd_ascb *cp = asd_ascb_alloc_list(ascb->ha, &num,
- 							  GFP_ATOMIC);
- 		if (!cp) {
--			asd_printk("%s: out of memory\n", __FUNCTION__);
-+			asd_printk("%s: out of memory\n", __func__);
- 			goto out;
- 		}
- 		ASD_DPRINTK("phy%d: retries:0 performing link reset seq\n",
-@@ -446,7 +446,7 @@ static void escb_tasklet_complete(struct
- 		struct domain_device *failed_dev = NULL;
- 
- 		ASD_DPRINTK("%s: REQ_TASK_ABORT, reason=0x%X\n",
--			    __FUNCTION__, dl->status_block[3]);
-+			    __func__, dl->status_block[3]);
- 
- 		/*
- 		 * Find the task that caused the abort and abort it first.
-@@ -474,7 +474,7 @@ static void escb_tasklet_complete(struct
- 
- 		if (!failed_dev) {
- 			ASD_DPRINTK("%s: Can't find task (tc=%d) to abort!\n",
--				    __FUNCTION__, tc_abort);
-+				    __func__, tc_abort);
- 			goto out;
- 		}
- 
-@@ -502,7 +502,7 @@ static void escb_tasklet_complete(struct
- 		conn_handle = *((u16*)(&dl->status_block[1]));
- 		conn_handle = le16_to_cpu(conn_handle);
- 
--		ASD_DPRINTK("%s: REQ_DEVICE_RESET, reason=0x%X\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: REQ_DEVICE_RESET, reason=0x%X\n", __func__,
- 			    dl->status_block[3]);
- 
- 		/* Find the last pending task for the device... */
-@@ -522,7 +522,7 @@ static void escb_tasklet_complete(struct
- 
- 		if (!last_dev_task) {
- 			ASD_DPRINTK("%s: Device reset for idle device %d?\n",
--				    __FUNCTION__, conn_handle);
-+				    __func__, conn_handle);
- 			goto out;
- 		}
- 
-@@ -549,10 +549,10 @@ static void escb_tasklet_complete(struct
- 		goto out;
- 	}
- 	case SIGNAL_NCQ_ERROR:
--		ASD_DPRINTK("%s: SIGNAL_NCQ_ERROR\n", __FUNCTION__);
-+		ASD_DPRINTK("%s: SIGNAL_NCQ_ERROR\n", __func__);
- 		goto out;
- 	case CLEAR_NCQ_ERROR:
--		ASD_DPRINTK("%s: CLEAR_NCQ_ERROR\n", __FUNCTION__);
-+		ASD_DPRINTK("%s: CLEAR_NCQ_ERROR\n", __func__);
- 		goto out;
- 	}
- 
-@@ -560,26 +560,26 @@ static void escb_tasklet_complete(struct
- 
- 	switch (sb_opcode) {
- 	case BYTES_DMAED:
--		ASD_DPRINTK("%s: phy%d: BYTES_DMAED\n", __FUNCTION__, phy_id);
-+		ASD_DPRINTK("%s: phy%d: BYTES_DMAED\n", __func__, phy_id);
- 		asd_bytes_dmaed_tasklet(ascb, dl, edb, phy_id);
- 		break;
- 	case PRIMITIVE_RECVD:
--		ASD_DPRINTK("%s: phy%d: PRIMITIVE_RECVD\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: phy%d: PRIMITIVE_RECVD\n", __func__,
- 			    phy_id);
- 		asd_primitive_rcvd_tasklet(ascb, dl, phy_id);
- 		break;
- 	case PHY_EVENT:
--		ASD_DPRINTK("%s: phy%d: PHY_EVENT\n", __FUNCTION__, phy_id);
-+		ASD_DPRINTK("%s: phy%d: PHY_EVENT\n", __func__, phy_id);
- 		asd_phy_event_tasklet(ascb, dl);
- 		break;
- 	case LINK_RESET_ERROR:
--		ASD_DPRINTK("%s: phy%d: LINK_RESET_ERROR\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: phy%d: LINK_RESET_ERROR\n", __func__,
- 			    phy_id);
- 		asd_link_reset_err_tasklet(ascb, dl, phy_id);
- 		break;
- 	case TIMER_EVENT:
- 		ASD_DPRINTK("%s: phy%d: TIMER_EVENT, lost dw sync\n",
--			    __FUNCTION__, phy_id);
-+			    __func__, phy_id);
- 		asd_turn_led(asd_ha, phy_id, 0);
- 		/* the device is gone */
- 		sas_phy_disconnected(sas_phy);
-@@ -587,7 +587,7 @@ static void escb_tasklet_complete(struct
- 		sas_ha->notify_port_event(sas_phy, PORTE_TIMER_EVENT);
- 		break;
- 	default:
--		ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __func__,
- 			    phy_id, sb_opcode);
- 		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
- 			    edb, dl->opcode);
-@@ -654,7 +654,7 @@ static void control_phy_tasklet_complete
- 
- 	if (status != 0) {
- 		ASD_DPRINTK("%s: phy%d status block opcode:0x%x\n",
--			    __FUNCTION__, phy_id, status);
-+			    __func__, phy_id, status);
- 		goto out;
- 	}
- 
-@@ -663,7 +663,7 @@ static void control_phy_tasklet_complete
- 		asd_ha->hw_prof.enabled_phys &= ~(1 << phy_id);
- 		asd_turn_led(asd_ha, phy_id, 0);
- 		asd_control_led(asd_ha, phy_id, 0);
--		ASD_DPRINTK("%s: disable phy%d\n", __FUNCTION__, phy_id);
-+		ASD_DPRINTK("%s: disable phy%d\n", __func__, phy_id);
- 		break;
- 
- 	case ENABLE_PHY:
-@@ -673,40 +673,40 @@ static void control_phy_tasklet_complete
- 			get_lrate_mode(phy, oob_mode);
- 			asd_turn_led(asd_ha, phy_id, 1);
- 			ASD_DPRINTK("%s: phy%d, lrate:0x%x, proto:0x%x\n",
--				    __FUNCTION__, phy_id,phy->sas_phy.linkrate,
-+				    __func__, phy_id,phy->sas_phy.linkrate,
- 				    phy->sas_phy.iproto);
- 		} else if (oob_status & CURRENT_SPINUP_HOLD) {
- 			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
- 			asd_turn_led(asd_ha, phy_id, 1);
--			ASD_DPRINTK("%s: phy%d, spinup hold\n", __FUNCTION__,
-+			ASD_DPRINTK("%s: phy%d, spinup hold\n", __func__,
- 				    phy_id);
- 		} else if (oob_status & CURRENT_ERR_MASK) {
- 			asd_turn_led(asd_ha, phy_id, 0);
- 			ASD_DPRINTK("%s: phy%d: error: oob status:0x%02x\n",
--				    __FUNCTION__, phy_id, oob_status);
-+				    __func__, phy_id, oob_status);
- 		} else if (oob_status & (CURRENT_HOT_PLUG_CNCT
- 					 | CURRENT_DEVICE_PRESENT))  {
- 			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
- 			asd_turn_led(asd_ha, phy_id, 1);
- 			ASD_DPRINTK("%s: phy%d: hot plug or device present\n",
--				    __FUNCTION__, phy_id);
-+				    __func__, phy_id);
- 		} else {
- 			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
- 			asd_turn_led(asd_ha, phy_id, 0);
- 			ASD_DPRINTK("%s: phy%d: no device present: "
- 				    "oob_status:0x%x\n",
--				    __FUNCTION__, phy_id, oob_status);
-+				    __func__, phy_id, oob_status);
- 		}
- 		break;
- 	case RELEASE_SPINUP_HOLD:
- 	case PHY_NO_OP:
- 	case EXECUTE_HARD_RESET:
--		ASD_DPRINTK("%s: phy%d: sub_func:0x%x\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: phy%d: sub_func:0x%x\n", __func__,
- 			    phy_id, control_phy->sub_func);
- 		/* XXX finish */
- 		break;
- 	default:
--		ASD_DPRINTK("%s: phy%d: sub_func:0x%x?\n", __FUNCTION__,
-+		ASD_DPRINTK("%s: phy%d: sub_func:0x%x?\n", __func__,
- 			    phy_id, control_phy->sub_func);
- 		break;
- 	}
-diff -puN drivers/scsi/aic94xx/aic94xx_task.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/aic94xx/aic94xx_task.c
---- a/drivers/scsi/aic94xx/aic94xx_task.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -320,7 +320,7 @@ Again:
- 	case TC_RESUME:
- 	case TC_PARTIAL_SG_LIST:
- 	default:
--		ASD_DPRINTK("%s: dl opcode: 0x%x?\n", __FUNCTION__, opcode);
-+		ASD_DPRINTK("%s: dl opcode: 0x%x?\n", __func__, opcode);
- 		break;
- 	}
- 
-diff -puN drivers/scsi/aic94xx/aic94xx_tmf.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/aic94xx/aic94xx_tmf.c
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -75,12 +75,12 @@ static void asd_clear_nexus_tasklet_comp
- 					     struct done_list_struct *dl)
+-static __inline void
++static inline void
+ ahd_assert_atn(struct ahd_softc *ahd)
  {
- 	struct tasklet_completion_status *tcs = ascb->uldd_task;
--	ASD_DPRINTK("%s: here\n", __FUNCTION__);
-+	ASD_DPRINTK("%s: here\n", __func__);
- 	if (!del_timer(&ascb->timer)) {
--		ASD_DPRINTK("%s: couldn't delete timer\n", __FUNCTION__);
-+		ASD_DPRINTK("%s: couldn't delete timer\n", __func__);
- 		return;
- 	}
--	ASD_DPRINTK("%s: opcode: 0x%x\n", __FUNCTION__, dl->opcode);
-+	ASD_DPRINTK("%s: opcode: 0x%x\n", __func__, dl->opcode);
- 	tcs->dl_opcode = dl->opcode;
- 	complete(ascb->completion);
- 	asd_ascb_free(ascb);
-@@ -91,7 +91,7 @@ static void asd_clear_nexus_timedout(uns
- 	struct asd_ascb *ascb = (void *)data;
- 	struct tasklet_completion_status *tcs = ascb->uldd_task;
- 
--	ASD_DPRINTK("%s: here\n", __FUNCTION__);
-+	ASD_DPRINTK("%s: here\n", __func__);
- 	tcs->dl_opcode = TMF_RESP_FUNC_FAILED;
- 	complete(ascb->completion);
+ 	ahd_outb(ahd, SCSISIGO, ATNO);
+@@ -280,7 +280,7 @@ ahd_assert_atn(struct ahd_softc *ahd)
+  * are currently in a packetized transfer.  We could
+  * just as easily be sending or receiving a message.
+  */
+-static __inline int
++static inline int
+ ahd_currently_packetized(struct ahd_softc *ahd)
+ {
+ 	ahd_mode_state	 saved_modes;
+@@ -303,7 +303,7 @@ ahd_currently_packetized(struct ahd_soft
+ 	return (packetized);
  }
-@@ -103,7 +103,7 @@ static void asd_clear_nexus_timedout(uns
- 	DECLARE_COMPLETION_ONSTACK(completion); \
- 	DECLARE_TCS(tcs); \
- 		\
--	ASD_DPRINTK("%s: PRE\n", __FUNCTION__); \
-+	ASD_DPRINTK("%s: PRE\n", __func__); \
-         res = 1;                \
- 	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL); \
- 	if (!ascb)              \
-@@ -115,12 +115,12 @@ static void asd_clear_nexus_timedout(uns
- 	scb->header.opcode = CLEAR_NEXUS
  
- #define CLEAR_NEXUS_POST        \
--	ASD_DPRINTK("%s: POST\n", __FUNCTION__); \
-+	ASD_DPRINTK("%s: POST\n", __func__); \
- 	res = asd_enqueue_internal(ascb, asd_clear_nexus_tasklet_complete, \
- 				   asd_clear_nexus_timedout);              \
- 	if (res)                \
- 		goto out_err;   \
--	ASD_DPRINTK("%s: clear nexus posted, waiting...\n", __FUNCTION__); \
-+	ASD_DPRINTK("%s: clear nexus posted, waiting...\n", __func__); \
- 	wait_for_completion(&completion); \
- 	res = tcs.dl_opcode; \
- 	if (res == TC_NO_ERROR) \
-@@ -417,7 +417,7 @@ int asd_abort_task(struct sas_task *task
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		res = TMF_RESP_FUNC_COMPLETE;
--		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
-+		ASD_DPRINTK("%s: task 0x%p done\n", __func__, task);
- 		goto out_done;
- 	}
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-@@ -481,7 +481,7 @@ int asd_abort_task(struct sas_task *task
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		res = TMF_RESP_FUNC_COMPLETE;
--		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
-+		ASD_DPRINTK("%s: task 0x%p done\n", __func__, task);
- 		goto out_done;
- 	}
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-diff -puN drivers/scsi/arm/fas216.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/arm/fas216.c
---- a/drivers/scsi/arm/fas216.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/arm/fas216.c
-@@ -240,7 +240,7 @@ static void __fas216_checkmagic(FAS216_I
- 		panic("scsi memory space corrupted in %s", func);
+-static __inline int
++static inline int
+ ahd_set_active_fifo(struct ahd_softc *ahd)
+ {
+ 	u_int active_fifo;
+@@ -320,7 +320,7 @@ ahd_set_active_fifo(struct ahd_softc *ah
  	}
  }
--#define fas216_checkmagic(info) __fas216_checkmagic((info), __FUNCTION__)
-+#define fas216_checkmagic(info) __fas216_checkmagic((info), __func__)
- #else
- #define fas216_checkmagic(info)
- #endif
-@@ -2658,7 +2658,7 @@ int fas216_eh_host_reset(struct scsi_cmn
- 	fas216_checkmagic(info);
  
- 	printk("scsi%d.%c: %s: resetting host\n",
--		info->host->host_no, '0' + SCpnt->device->id, __FUNCTION__);
-+		info->host->host_no, '0' + SCpnt->device->id, __func__);
+-static __inline void
++static inline void
+ ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
+ {
+ 	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
+@@ -330,7 +330,7 @@ ahd_unbusy_tcl(struct ahd_softc *ahd, u_
+  * Determine whether the sequencer reported a residual
+  * for this SCB/transaction.
+  */
+-static __inline void
++static inline void
+ ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	uint32_t sgptr;
+@@ -340,7 +340,7 @@ ahd_update_residual(struct ahd_softc *ah
+ 		ahd_calc_residual(ahd, scb);
+ }
  
+-static __inline void
++static inline void
+ ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	uint32_t sgptr;
+@@ -7209,7 +7209,7 @@ ahd_resume(struct ahd_softc *ahd)
+  * scbid that should be restored once manipualtion
+  * of the TCL entry is complete.
+  */
+-static __inline u_int
++static inline u_int
+ ahd_index_busy_tcl(struct ahd_softc *ahd, u_int *saved_scbid, u_int tcl)
+ {
  	/*
- 	 * Reset the SCSI chip.
-diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/ibmvscsi/ibmvstgt.c
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -55,7 +55,7 @@
- /* tmp - will replace with SCSI logging stuff */
- #define eprintk(fmt, args...)					\
- do {								\
--	printk("%s(%d) " fmt, __FUNCTION__, __LINE__, ##args);	\
-+	printk("%s(%d) " fmt, __func__, __LINE__, ##args);	\
- } while (0)
- /* #define dprintk eprintk */
- #define dprintk(fmt, args...)
-diff -puN drivers/scsi/imm.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/imm.c
---- a/drivers/scsi/imm.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/imm.c
-@@ -163,7 +163,7 @@ static int imm_proc_info(struct Scsi_Hos
+diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_inline.h
+--- a/drivers/scsi/aic7xxx/aic79xx_inline.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic79xx_inline.h
+@@ -46,37 +46,37 @@
+ #define _AIC79XX_INLINE_H_
  
- #if IMM_DEBUG > 0
- #define imm_fail(x,y) printk("imm: imm_fail(%i) from %s at line %d\n",\
--	   y, __FUNCTION__, __LINE__); imm_fail_func(x,y);
-+	   y, __func__, __LINE__); imm_fail_func(x,y);
- static inline void
- imm_fail_func(imm_struct *dev, int error_code)
- #else
-diff -puN drivers/scsi/ipr.h~scsi-replace-remaining-__function__-occurrences drivers/scsi/ipr.h
---- a/drivers/scsi/ipr.h~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/ipr.h
-@@ -1403,10 +1403,10 @@ struct ipr_ucode_image_header {
+ /******************************** Debugging ***********************************/
+-static __inline char *ahd_name(struct ahd_softc *ahd);
++static inline char *ahd_name(struct ahd_softc *ahd);
+ 
+-static __inline char *
++static inline char *
+ ahd_name(struct ahd_softc *ahd)
+ {
+ 	return (ahd->name);
  }
  
- #define ipr_trace ipr_dbg("%s: %s: Line: %d\n",\
--	__FILE__, __FUNCTION__, __LINE__)
-+	__FILE__, __func__, __LINE__)
+ /************************ Sequencer Execution Control *************************/
+-static __inline void ahd_known_modes(struct ahd_softc *ahd,
++static inline void ahd_known_modes(struct ahd_softc *ahd,
+ 				     ahd_mode src, ahd_mode dst);
+-static __inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
++static inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
+ 						    ahd_mode src,
+ 						    ahd_mode dst);
+-static __inline void ahd_extract_mode_state(struct ahd_softc *ahd,
++static inline void ahd_extract_mode_state(struct ahd_softc *ahd,
+ 					    ahd_mode_state state,
+ 					    ahd_mode *src, ahd_mode *dst);
+-static __inline void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
++static inline void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
+ 				   ahd_mode dst);
+-static __inline void ahd_update_modes(struct ahd_softc *ahd);
+-static __inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
++static inline void ahd_update_modes(struct ahd_softc *ahd);
++static inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 				      ahd_mode dstmode, const char *file,
+ 				      int line);
+-static __inline ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
+-static __inline void ahd_restore_modes(struct ahd_softc *ahd,
++static inline ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
++static inline void ahd_restore_modes(struct ahd_softc *ahd,
+ 				       ahd_mode_state state);
+-static __inline int  ahd_is_paused(struct ahd_softc *ahd);
+-static __inline void ahd_pause(struct ahd_softc *ahd);
+-static __inline void ahd_unpause(struct ahd_softc *ahd);
++static inline int  ahd_is_paused(struct ahd_softc *ahd);
++static inline void ahd_pause(struct ahd_softc *ahd);
++static inline void ahd_unpause(struct ahd_softc *ahd);
  
--#define ENTER IPR_DBG_CMD(printk(KERN_INFO IPR_NAME": Entering %s\n", __FUNCTION__))
--#define LEAVE IPR_DBG_CMD(printk(KERN_INFO IPR_NAME": Leaving %s\n", __FUNCTION__))
-+#define ENTER IPR_DBG_CMD(printk(KERN_INFO IPR_NAME": Entering %s\n", __func__))
-+#define LEAVE IPR_DBG_CMD(printk(KERN_INFO IPR_NAME": Leaving %s\n", __func__))
- 
- #define ipr_err_separator \
- ipr_err("----------------------------------------------------------\n")
-diff -puN drivers/scsi/iscsi_tcp.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/iscsi_tcp.c
---- a/drivers/scsi/iscsi_tcp.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/iscsi_tcp.c
-@@ -535,7 +535,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, 
- 
- 	if (tcp_ctask->exp_datasn != datasn) {
- 		debug_tcp("%s: ctask->exp_datasn(%d) != rhdr->datasn(%d)\n",
--		          __FUNCTION__, tcp_ctask->exp_datasn, datasn);
-+		          __func__, tcp_ctask->exp_datasn, datasn);
- 		return ISCSI_ERR_DATASN;
- 	}
- 
-@@ -544,7 +544,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, 
- 	tcp_ctask->data_offset = be32_to_cpu(rhdr->offset);
- 	if (tcp_ctask->data_offset + tcp_conn->in.datalen > scsi_bufflen(sc)) {
- 		debug_tcp("%s: data_offset(%d) + data_len(%d) > total_length_in(%d)\n",
--		          __FUNCTION__, tcp_ctask->data_offset,
-+		          __func__, tcp_ctask->data_offset,
- 		          tcp_conn->in.datalen, scsi_bufflen(sc));
- 		return ISCSI_ERR_DATA_OFFSET;
- 	}
-@@ -637,7 +637,7 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, s
- 
- 	if (tcp_ctask->exp_datasn != r2tsn){
- 		debug_tcp("%s: ctask->exp_datasn(%d) != rhdr->r2tsn(%d)\n",
--		          __FUNCTION__, tcp_ctask->exp_datasn, r2tsn);
-+		          __func__, tcp_ctask->exp_datasn, r2tsn);
- 		return ISCSI_ERR_R2TSN;
- 	}
- 
-@@ -1174,7 +1174,7 @@ iscsi_tcp_send_hdr_prep(struct iscsi_con
+-static __inline void
++static inline void
+ ahd_known_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
  {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 
--	debug_tcp("%s(%p%s)\n", __FUNCTION__, tcp_conn,
-+	debug_tcp("%s(%p%s)\n", __func__, tcp_conn,
- 			conn->hdrdgst_en? ", digest enabled" : "");
- 
- 	/* Clear the data segment - needs to be filled in by the
-@@ -1215,7 +1215,7 @@ iscsi_tcp_send_data_prep(struct iscsi_co
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __FUNCTION__,
-+	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __func__,
- 			tcp_conn, offset, len,
- 			conn->datadgst_en? ", digest enabled" : "");
- 
-@@ -1240,7 +1240,7 @@ iscsi_tcp_send_linear_data_prepare(struc
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, datalen=%d%s)\n", __FUNCTION__, tcp_conn, len,
-+	debug_tcp("%s(%p, datalen=%d%s)\n", __func__, tcp_conn, len,
- 		  conn->datadgst_en? ", digest enabled" : "");
- 
- 	/* Make sure the datalen matches what the caller
-diff -puN drivers/scsi/libsas/sas_ata.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/libsas/sas_ata.c
---- a/drivers/scsi/libsas/sas_ata.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/libsas/sas_ata.c
-@@ -74,7 +74,7 @@ static enum ata_completion_errors sas_to
- 		case SAS_OPEN_TO:
- 		case SAS_OPEN_REJECT:
- 			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
--				    __FUNCTION__, ts->stat);
-+				    __func__, ts->stat);
- 			return AC_ERR_OTHER;
- 
- 		case SAS_ABORTED_TASK:
-@@ -115,7 +115,7 @@ static void sas_ata_task_done(struct sas
- 	} else if (stat->stat != SAM_STAT_GOOD) {
- 		ac = sas_to_ata_err(stat);
- 		if (ac) {
--			SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__,
-+			SAS_DPRINTK("%s: SAS error %x\n", __func__,
- 				    stat->stat);
- 			/* We saw a SAS error. Send a vague error. */
- 			qc->err_mask = ac;
-@@ -242,20 +242,20 @@ static void sas_ata_phy_reset(struct ata
- 		res = i->dft->lldd_I_T_nexus_reset(dev);
- 
- 	if (res != TMF_RESP_FUNC_COMPLETE)
--		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __FUNCTION__);
-+		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __func__);
- 
- 	switch (dev->sata_dev.command_set) {
- 		case ATA_COMMAND_SET:
--			SAS_DPRINTK("%s: Found ATA device.\n", __FUNCTION__);
-+			SAS_DPRINTK("%s: Found ATA device.\n", __func__);
- 			ap->link.device[0].class = ATA_DEV_ATA;
- 			break;
- 		case ATAPI_COMMAND_SET:
--			SAS_DPRINTK("%s: Found ATAPI device.\n", __FUNCTION__);
-+			SAS_DPRINTK("%s: Found ATAPI device.\n", __func__);
- 			ap->link.device[0].class = ATA_DEV_ATAPI;
- 			break;
- 		default:
- 			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
--				    __FUNCTION__,
-+				    __func__,
- 				    dev->sata_dev.command_set);
- 			ap->link.device[0].class = ATA_DEV_UNKNOWN;
- 			break;
-@@ -303,7 +303,7 @@ static int sas_ata_scr_write(struct ata_
- {
- 	struct domain_device *dev = ap->private_data;
- 
--	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-+	SAS_DPRINTK("STUB %s\n", __func__);
- 	switch (sc_reg_in) {
- 		case SCR_STATUS:
- 			dev->sata_dev.sstatus = val;
-@@ -328,7 +328,7 @@ static int sas_ata_scr_read(struct ata_p
- {
- 	struct domain_device *dev = ap->private_data;
- 
--	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-+	SAS_DPRINTK("STUB %s\n", __func__);
- 	switch (sc_reg_in) {
- 		case SCR_STATUS:
- 			*val = dev->sata_dev.sstatus;
-diff -puN drivers/scsi/libsas/sas_expander.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/libsas/sas_expander.c
---- a/drivers/scsi/libsas/sas_expander.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/libsas/sas_expander.c
-@@ -121,7 +121,7 @@ static int smp_execute_task(struct domai
- 			break;
- 		} else {
- 			SAS_DPRINTK("%s: task to dev %016llx response: 0x%x "
--				    "status 0x%x\n", __FUNCTION__,
-+				    "status 0x%x\n", __func__,
- 				    SAS_ADDR(dev->sas_addr),
- 				    task->task_status.resp,
- 				    task->task_status.stat);
-@@ -1279,7 +1279,7 @@ static int sas_configure_present(struct 
- 			goto out;
- 		} else if (res != SMP_RESP_FUNC_ACC) {
- 			SAS_DPRINTK("%s: dev %016llx phy 0x%x index 0x%x "
--				    "result 0x%x\n", __FUNCTION__,
-+				    "result 0x%x\n", __func__,
- 				    SAS_ADDR(dev->sas_addr), phy_id, i, res);
- 			goto out;
- 		}
-@@ -1901,7 +1901,7 @@ int sas_smp_handler(struct Scsi_Host *sh
- 
- 	if (!rsp) {
- 		printk("%s: space for a smp response is missing\n",
--		       __FUNCTION__);
-+		       __func__);
- 		return -EINVAL;
- 	}
- 
-@@ -1914,20 +1914,20 @@ int sas_smp_handler(struct Scsi_Host *sh
- 	if (type != SAS_EDGE_EXPANDER_DEVICE &&
- 	    type != SAS_FANOUT_EXPANDER_DEVICE) {
- 		printk("%s: can we send a smp request to a device?\n",
--		       __FUNCTION__);
-+		       __func__);
- 		return -EINVAL;
- 	}
- 
- 	dev = sas_find_dev_by_rphy(rphy);
- 	if (!dev) {
--		printk("%s: fail to find a domain_device?\n", __FUNCTION__);
-+		printk("%s: fail to find a domain_device?\n", __func__);
- 		return -EINVAL;
- 	}
- 
- 	/* do we need to support multiple segments? */
- 	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
- 		printk("%s: multiple segments req %u %u, rsp %u %u\n",
--		       __FUNCTION__, req->bio->bi_vcnt, req->data_len,
-+		       __func__, req->bio->bi_vcnt, req->data_len,
- 		       rsp->bio->bi_vcnt, rsp->data_len);
- 		return -EINVAL;
- 	}
-diff -puN drivers/scsi/libsas/sas_port.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/libsas/sas_port.c
---- a/drivers/scsi/libsas/sas_port.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/libsas/sas_port.c
-@@ -50,7 +50,7 @@ static void sas_form_port(struct asd_sas
- 			sas_deform_port(phy);
- 		else {
- 			SAS_DPRINTK("%s: phy%d belongs to port%d already(%d)!\n",
--				    __FUNCTION__, phy->id, phy->port->id,
-+				    __func__, phy->id, phy->port->id,
- 				    phy->port->num_phys);
- 			return;
- 		}
-@@ -78,7 +78,7 @@ static void sas_form_port(struct asd_sas
- 
- 	if (i >= sas_ha->num_phys) {
- 		printk(KERN_NOTICE "%s: couldn't find a free port, bug?\n",
--		       __FUNCTION__);
-+		       __func__);
- 		spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 		return;
- 	}
-diff -puN drivers/scsi/libsas/sas_scsi_host.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/libsas/sas_scsi_host.c
---- a/drivers/scsi/libsas/sas_scsi_host.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/libsas/sas_scsi_host.c
-@@ -343,7 +343,7 @@ static enum task_disposition sas_scsi_fi
- 						       flags);
- 				SAS_DPRINTK("%s: task 0x%p aborted from "
- 					    "task_queue\n",
--					    __FUNCTION__, task);
-+					    __func__, task);
- 				return TASK_IS_ABORTED;
- 			}
- 		}
-@@ -351,13 +351,13 @@ static enum task_disposition sas_scsi_fi
- 	}
- 
- 	for (i = 0; i < 5; i++) {
--		SAS_DPRINTK("%s: aborting task 0x%p\n", __FUNCTION__, task);
-+		SAS_DPRINTK("%s: aborting task 0x%p\n", __func__, task);
- 		res = si->dft->lldd_abort_task(task);
- 
- 		spin_lock_irqsave(&task->task_state_lock, flags);
- 		if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 			spin_unlock_irqrestore(&task->task_state_lock, flags);
--			SAS_DPRINTK("%s: task 0x%p is done\n", __FUNCTION__,
-+			SAS_DPRINTK("%s: task 0x%p is done\n", __func__,
- 				    task);
- 			return TASK_IS_DONE;
- 		}
-@@ -365,24 +365,24 @@ static enum task_disposition sas_scsi_fi
- 
- 		if (res == TMF_RESP_FUNC_COMPLETE) {
- 			SAS_DPRINTK("%s: task 0x%p is aborted\n",
--				    __FUNCTION__, task);
-+				    __func__, task);
- 			return TASK_IS_ABORTED;
- 		} else if (si->dft->lldd_query_task) {
- 			SAS_DPRINTK("%s: querying task 0x%p\n",
--				    __FUNCTION__, task);
-+				    __func__, task);
- 			res = si->dft->lldd_query_task(task);
- 			switch (res) {
- 			case TMF_RESP_FUNC_SUCC:
- 				SAS_DPRINTK("%s: task 0x%p at LU\n",
--					    __FUNCTION__, task);
-+					    __func__, task);
- 				return TASK_IS_AT_LU;
- 			case TMF_RESP_FUNC_COMPLETE:
- 				SAS_DPRINTK("%s: task 0x%p not at LU\n",
--					    __FUNCTION__, task);
-+					    __func__, task);
- 				return TASK_IS_NOT_AT_LU;
- 			case TMF_RESP_FUNC_FAILED:
-                                 SAS_DPRINTK("%s: task 0x%p failed to abort\n",
--                                                __FUNCTION__, task);
-+                                                __func__, task);
-                                 return TASK_ABORT_FAILED;
-                         }
- 
-@@ -556,13 +556,13 @@ Again:
- 
- 		switch (res) {
- 		case TASK_IS_DONE:
--			SAS_DPRINTK("%s: task 0x%p is done\n", __FUNCTION__,
-+			SAS_DPRINTK("%s: task 0x%p is done\n", __func__,
- 				    task);
- 			sas_eh_finish_cmd(cmd);
- 			continue;
- 		case TASK_IS_ABORTED:
- 			SAS_DPRINTK("%s: task 0x%p is aborted\n",
--				    __FUNCTION__, task);
-+				    __func__, task);
- 			sas_eh_finish_cmd(cmd);
- 			continue;
- 		case TASK_IS_AT_LU:
-@@ -633,7 +633,7 @@ Again:
- 	}
- 	return list_empty(work_q);
- clear_q:
--	SAS_DPRINTK("--- Exit %s -- clear_q\n", __FUNCTION__);
-+	SAS_DPRINTK("--- Exit %s -- clear_q\n", __func__);
- 	list_for_each_entry_safe(cmd, n, work_q, eh_entry)
- 		sas_eh_finish_cmd(cmd);
- 
-@@ -650,7 +650,7 @@ void sas_scsi_recover_host(struct Scsi_H
- 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	SAS_DPRINTK("Enter %s\n", __FUNCTION__);
-+	SAS_DPRINTK("Enter %s\n", __func__);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism)
-@@ -669,7 +669,7 @@ void sas_scsi_recover_host(struct Scsi_H
- 
- out:
- 	scsi_eh_flush_done_q(&ha->eh_done_q);
--	SAS_DPRINTK("--- Exit %s\n", __FUNCTION__);
-+	SAS_DPRINTK("--- Exit %s\n", __func__);
- 	return;
+ 	ahd->src_mode = src;
+@@ -85,13 +85,13 @@ ahd_known_modes(struct ahd_softc *ahd, a
+ 	ahd->saved_dst_mode = dst;
  }
  
-@@ -990,7 +990,7 @@ int __sas_task_abort(struct sas_task *ta
- 	if (task->task_state_flags & SAS_TASK_STATE_ABORTED ||
- 	    task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
--		SAS_DPRINTK("%s: Task %p already finished.\n", __FUNCTION__,
-+		SAS_DPRINTK("%s: Task %p already finished.\n", __func__,
- 			    task);
- 		return 0;
- 	}
-diff -puN drivers/scsi/libsrp.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/libsrp.c
---- a/drivers/scsi/libsrp.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/libsrp.c
-@@ -39,7 +39,7 @@ enum srp_task_attributes {
- /* tmp - will replace with SCSI logging stuff */
- #define eprintk(fmt, args...)					\
- do {								\
--	printk("%s(%d) " fmt, __FUNCTION__, __LINE__, ##args);	\
-+	printk("%s(%d) " fmt, __func__, __LINE__, ##args);	\
- } while (0)
- /* #define dprintk eprintk */
- #define dprintk(fmt, args...)
-diff -puN drivers/scsi/lpfc/lpfc_init.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/lpfc/lpfc_init.c
-@@ -2106,7 +2106,7 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
- 		if (iocbq_entry == NULL) {
- 			printk(KERN_ERR "%s: only allocated %d iocbs of "
- 				"expected %d count. Unloading driver.\n",
--				__FUNCTION__, i, LPFC_IOCB_LIST_CNT);
-+				__func__, i, LPFC_IOCB_LIST_CNT);
- 			error = -ENOMEM;
- 			goto out_free_iocbq;
- 		}
-@@ -2116,7 +2116,7 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
- 			kfree (iocbq_entry);
- 			printk(KERN_ERR "%s: failed to allocate IOTAG. "
- 			       "Unloading driver.\n",
--				__FUNCTION__);
-+				__func__);
- 			error = -ENOMEM;
- 			goto out_free_iocbq;
- 		}
-diff -puN drivers/scsi/lpfc/lpfc_scsi.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -342,7 +342,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
- 			printk(KERN_ERR "%s: Too many sg segments from "
- 			       "dma_map_sg.  Config %d, seg_cnt %d",
--			       __FUNCTION__, phba->cfg_sg_seg_cnt,
-+			       __func__, phba->cfg_sg_seg_cnt,
- 			       lpfc_cmd->seg_cnt);
- 			scsi_dma_unmap(scsi_cmnd);
- 			return 1;
-diff -puN drivers/scsi/lpfc/lpfc_sli.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/lpfc/lpfc_sli.c
-@@ -219,7 +219,7 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case CMD_IOCB_LOGENTRY_CN:
- 	case CMD_IOCB_LOGENTRY_ASYNC_CN:
- 		printk("%s - Unhandled SLI-3 Command x%x\n",
--				__FUNCTION__, iocb_cmnd);
-+				__func__, iocb_cmnd);
- 		type = LPFC_UNKNOWN_IOCB;
- 		break;
- 	default:
-@@ -1719,7 +1719,7 @@ lpfc_sli_handle_slow_ring_event(struct l
- 		rspiocbp = __lpfc_sli_get_iocbq(phba);
- 		if (rspiocbp == NULL) {
- 			printk(KERN_ERR "%s: out of buffers! Failing "
--			       "completion.\n", __FUNCTION__);
-+			       "completion.\n", __func__);
- 			break;
- 		}
+-static __inline ahd_mode_state
++static inline ahd_mode_state
+ ahd_build_mode_state(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+ {
+ 	return ((src << SRC_MODE_SHIFT) | (dst << DST_MODE_SHIFT));
+ }
  
-@@ -3770,7 +3770,7 @@ lpfc_sli_validate_fcp_iocb(struct lpfc_i
- 		break;
- 	default:
- 		printk(KERN_ERR "%s: Unknown context cmd type, value %d\n",
--			__FUNCTION__, ctx_cmd);
-+			__func__, ctx_cmd);
- 		break;
- 	}
+-static __inline void
++static inline void
+ ahd_extract_mode_state(struct ahd_softc *ahd, ahd_mode_state state,
+ 		       ahd_mode *src, ahd_mode *dst)
+ {
+@@ -99,7 +99,7 @@ ahd_extract_mode_state(struct ahd_softc 
+ 	*dst = (state & DST_MODE) >> DST_MODE_SHIFT;
+ }
  
-diff -puN drivers/scsi/megaraid/mega_common.h~scsi-replace-remaining-__function__-occurrences drivers/scsi/megaraid/mega_common.h
---- a/drivers/scsi/megaraid/mega_common.h~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/megaraid/mega_common.h
-@@ -266,7 +266,7 @@ typedef struct {
- #define ASSERT(expression)						\
- 	if (!(expression)) {						\
- 	ASSERT_ACTION("assertion failed:(%s), file: %s, line: %d:%s\n",	\
--			#expression, __FILE__, __LINE__, __FUNCTION__);	\
-+			#expression, __FILE__, __LINE__, __func__);	\
- 	}
- #else
- #define ASSERT(expression)
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -458,7 +458,7 @@ megaraid_probe_one(struct pci_dev *pdev,
+-static __inline void
++static inline void
+ ahd_set_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+ {
+ 	if (ahd->src_mode == src && ahd->dst_mode == dst)
+@@ -117,7 +117,7 @@ ahd_set_modes(struct ahd_softc *ahd, ahd
+ 	ahd->dst_mode = dst;
+ }
  
- 	if (adapter == NULL) {
- 		con_log(CL_ANN, (KERN_WARNING
--		"megaraid: out of memory, %s %d.\n", __FUNCTION__, __LINE__));
-+		"megaraid: out of memory, %s %d.\n", __func__, __LINE__));
+-static __inline void
++static inline void
+ ahd_update_modes(struct ahd_softc *ahd)
+ {
+ 	ahd_mode_state mode_ptr;
+@@ -133,7 +133,7 @@ ahd_update_modes(struct ahd_softc *ahd)
+ 	ahd_known_modes(ahd, src, dst);
+ }
  
- 		goto out_probe_one;
- 	}
-@@ -1002,7 +1002,7 @@ megaraid_alloc_cmd_packets(adapter_t *ad
- 
- 	if (!raid_dev->una_mbox64) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 		return -1;
- 	}
-@@ -1030,7 +1030,7 @@ megaraid_alloc_cmd_packets(adapter_t *ad
- 	if (!adapter->ibuf) {
- 
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 
- 		goto out_free_common_mbox;
-@@ -1052,7 +1052,7 @@ megaraid_alloc_cmd_packets(adapter_t *ad
- 
- 	if (adapter->kscb_list == NULL) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 		goto out_free_ibuf;
- 	}
-@@ -1060,7 +1060,7 @@ megaraid_alloc_cmd_packets(adapter_t *ad
- 	// memory allocation for our command packets
- 	if (megaraid_mbox_setup_dma_pools(adapter) != 0) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 		goto out_free_scb_list;
- 	}
-@@ -2981,7 +2981,7 @@ megaraid_mbox_product_info(adapter_t *ad
- 
- 	if (pinfo == NULL) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 
- 		return -1;
-@@ -3508,7 +3508,7 @@ megaraid_cmm_register(adapter_t *adapter
- 
- 	if (adapter->uscb_list == NULL) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 		return -1;
- 	}
-@@ -3879,7 +3879,7 @@ megaraid_sysfs_alloc_resources(adapter_t
- 		!raid_dev->sysfs_buffer) {
- 
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 
- 		rval = -ENOMEM;
-diff -puN drivers/scsi/megaraid/megaraid_mm.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/megaraid/megaraid_mm.c
---- a/drivers/scsi/megaraid/megaraid_mm.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/megaraid/megaraid_mm.c
-@@ -927,7 +927,7 @@ mraid_mm_register_adp(mraid_mmadp_t *lld
- 			!adapter->pthru_dma_pool) {
- 
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid cmm: out of memory, %s %d\n", __FUNCTION__,
-+			"megaraid cmm: out of memory, %s %d\n", __func__,
- 			__LINE__));
- 
- 		rval = (-ENOMEM);
-@@ -955,7 +955,7 @@ mraid_mm_register_adp(mraid_mmadp_t *lld
- 
- 			con_log(CL_ANN, (KERN_WARNING
- 				"megaraid cmm: out of memory, %s %d\n",
--					__FUNCTION__, __LINE__));
-+					__func__, __LINE__));
- 
- 			rval = (-ENOMEM);
- 
-diff -puN drivers/scsi/nsp32.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/nsp32.c
---- a/drivers/scsi/nsp32.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/nsp32.c
-@@ -299,9 +299,9 @@ static struct scsi_host_template nsp32_t
- #else
- # define NSP32_DEBUG_MASK	      0xffffff
- # define nsp32_msg(type, args...) \
--	nsp32_message (__FUNCTION__, __LINE__, (type), args)
-+	nsp32_message (__func__, __LINE__, (type), args)
- # define nsp32_dbg(mask, args...) \
--	nsp32_dmessage(__FUNCTION__, __LINE__, (mask), args)
-+	nsp32_dmessage(__func__, __LINE__, (mask), args)
+-static __inline void
++static inline void
+ ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 		 ahd_mode dstmode, const char *file, int line)
+ {
+@@ -146,7 +146,7 @@ ahd_assert_modes(struct ahd_softc *ahd, 
  #endif
- 
- #define NSP32_DEBUG_QUEUECOMMAND	BIT(0)
-diff -puN drivers/scsi/nsp32_debug.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/nsp32_debug.c
---- a/drivers/scsi/nsp32_debug.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/nsp32_debug.c
-@@ -88,7 +88,7 @@ static void print_commandk (unsigned cha
- 	int i,s;
- //	printk(KERN_DEBUG);
- 	print_opcodek(command[0]);
--	/*printk(KERN_DEBUG "%s ", __FUNCTION__);*/
-+	/*printk(KERN_DEBUG "%s ", __func__);*/
- 	if ((command[0] >> 5) == 6 ||
- 	    (command[0] >> 5) == 7 ) {
- 		s = 12; /* vender specific */
-diff -puN drivers/scsi/pcmcia/nsp_cs.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/pcmcia/nsp_cs.c
---- a/drivers/scsi/pcmcia/nsp_cs.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/pcmcia/nsp_cs.c
-@@ -107,9 +107,9 @@ static nsp_hw_data nsp_data_base; /* att
- #else
- # define NSP_DEBUG_MASK		0xffffff
- # define nsp_msg(type, args...) \
--	nsp_cs_message (__FUNCTION__, __LINE__, (type), args)
-+	nsp_cs_message (__func__, __LINE__, (type), args)
- # define nsp_dbg(mask, args...) \
--	nsp_cs_dmessage(__FUNCTION__, __LINE__, (mask), args)
-+	nsp_cs_dmessage(__func__, __LINE__, (mask), args)
- #endif
- 
- #define NSP_DEBUG_QUEUECOMMAND		BIT(0)
-diff -puN drivers/scsi/pcmcia/nsp_debug.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/pcmcia/nsp_debug.c
---- a/drivers/scsi/pcmcia/nsp_debug.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/pcmcia/nsp_debug.c
-@@ -90,7 +90,7 @@ static void print_commandk (unsigned cha
- 	int i, s;
- 	printk(KERN_DEBUG);
- 	print_opcodek(command[0]);
--	/*printk(KERN_DEBUG "%s ", __FUNCTION__);*/
-+	/*printk(KERN_DEBUG "%s ", __func__);*/
- 	if ((command[0] >> 5) == 6 ||
- 	    (command[0] >> 5) == 7 ) {
- 		s = 12; /* vender specific */
-diff -puN drivers/scsi/ppa.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/ppa.c
---- a/drivers/scsi/ppa.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/ppa.c
-@@ -171,7 +171,7 @@ static int device_check(ppa_struct *dev)
- 
- #if PPA_DEBUG > 0
- #define ppa_fail(x,y) printk("ppa: ppa_fail(%i) from %s at line %d\n",\
--	   y, __FUNCTION__, __LINE__); ppa_fail_func(x,y);
-+	   y, __func__, __LINE__); ppa_fail_func(x,y);
- static inline void ppa_fail_func(ppa_struct *dev, int error_code)
- #else
- static inline void ppa_fail(ppa_struct *dev, int error_code)
-diff -puN drivers/scsi/qla1280.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/qla1280.c
---- a/drivers/scsi/qla1280.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/qla1280.c
-@@ -1700,7 +1700,7 @@ qla1280_load_firmware_dma(struct scsi_ql
- 	risc_code_size = *ql1280_board_tbl[ha->devnum].fwlen;
- 
- 	dprintk(1, "%s: DMA RISC code (%i) words\n",
--			__FUNCTION__, risc_code_size);
-+			__func__, risc_code_size);
- 
- 	num = 0;
- 	while (risc_code_size > 0) {
-@@ -1726,7 +1726,7 @@ qla1280_load_firmware_dma(struct scsi_ql
- 		mb[7] = pci_dma_hi32(ha->request_dma) & 0xffff;
- 		mb[6] = pci_dma_hi32(ha->request_dma) >> 16;
- 		dprintk(2, "%s: op=%d  0x%p = 0x%4x,0x%4x,0x%4x,0x%4x\n",
--				__FUNCTION__, mb[0],
-+				__func__, mb[0],
- 				(void *)(long)ha->request_dma,
- 				mb[6], mb[7], mb[2], mb[3]);
- 		err = qla1280_mailbox_command(ha, BIT_4 | BIT_3 | BIT_2 |
-@@ -1758,10 +1758,10 @@ qla1280_load_firmware_dma(struct scsi_ql
- 			if (tbuf[i] != sp[i] && warn++ < 10) {
- 				printk(KERN_ERR "%s: FW compare error @ "
- 						"byte(0x%x) loop#=%x\n",
--						__FUNCTION__, i, num);
-+						__func__, i, num);
- 				printk(KERN_ERR "%s: FWbyte=%x  "
- 						"FWfromChip=%x\n",
--						__FUNCTION__, sp[i], tbuf[i]);
-+						__func__, sp[i], tbuf[i]);
- 				/*break; */
- 			}
- 		}
-@@ -1786,7 +1786,7 @@ qla1280_start_firmware(struct scsi_qla_h
- 	int err;
- 
- 	dprintk(1, "%s: Verifying checksum of loaded RISC code.\n",
--			__FUNCTION__);
-+			__func__);
- 
- 	/* Verify checksum of loaded RISC code. */
- 	mb[0] = MBC_VERIFY_CHECKSUM;
-@@ -1799,7 +1799,7 @@ qla1280_start_firmware(struct scsi_qla_h
- 	}
- 
- 	/* Start firmware execution. */
--	dprintk(1, "%s: start firmware running.\n", __FUNCTION__);
-+	dprintk(1, "%s: start firmware running.\n", __func__);
- 	mb[0] = MBC_EXECUTE_FIRMWARE;
- 	mb[1] = *ql1280_board_tbl[ha->devnum].fwstart;
- 	err = qla1280_mailbox_command(ha, BIT_1 | BIT_0, &mb[0]);
-diff -puN drivers/scsi/scsi_debug.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_debug.c
---- a/drivers/scsi/scsi_debug.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_debug.c
-@@ -1781,7 +1781,7 @@ static struct sdebug_dev_info * devInfoR
- 		open_devip = sdebug_device_create(sdbg_host, GFP_ATOMIC);
- 		if (!open_devip) {
- 			printk(KERN_ERR "%s: out of memory at line %d\n",
--				__FUNCTION__, __LINE__);
-+				__func__, __LINE__);
- 			return NULL;
- 		}
- 	}
-@@ -2661,7 +2661,7 @@ static int sdebug_add_adapter(void)
-         sdbg_host = kzalloc(sizeof(*sdbg_host),GFP_KERNEL);
-         if (NULL == sdbg_host) {
-                 printk(KERN_ERR "%s: out of memory at line %d\n",
--                       __FUNCTION__, __LINE__);
-+                       __func__, __LINE__);
-                 return -ENOMEM;
-         }
- 
-@@ -2672,7 +2672,7 @@ static int sdebug_add_adapter(void)
- 		sdbg_devinfo = sdebug_device_create(sdbg_host, GFP_KERNEL);
- 		if (!sdbg_devinfo) {
-                         printk(KERN_ERR "%s: out of memory at line %d\n",
--                               __FUNCTION__, __LINE__);
-+                               __func__, __LINE__);
-                         error = -ENOMEM;
- 			goto clean;
-                 }
-@@ -2992,7 +2992,7 @@ static int sdebug_driver_probe(struct de
- 
-         hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(sdbg_host));
-         if (NULL == hpnt) {
--                printk(KERN_ERR "%s: scsi_register failed\n", __FUNCTION__);
-+                printk(KERN_ERR "%s: scsi_register failed\n", __func__);
-                 error = -ENODEV;
- 		return error;
-         }
-@@ -3007,7 +3007,7 @@ static int sdebug_driver_probe(struct de
- 
-         error = scsi_add_host(hpnt, &sdbg_host->dev);
-         if (error) {
--                printk(KERN_ERR "%s: scsi_add_host failed\n", __FUNCTION__);
-+                printk(KERN_ERR "%s: scsi_add_host failed\n", __func__);
-                 error = -ENODEV;
- 		scsi_host_put(hpnt);
-         } else
-@@ -3026,7 +3026,7 @@ static int sdebug_driver_remove(struct d
- 
- 	if (!sdbg_host) {
- 		printk(KERN_ERR "%s: Unable to locate host info\n",
--		       __FUNCTION__);
-+		       __func__);
- 		return -ENODEV;
- 	}
- 
-diff -puN drivers/scsi/scsi_devinfo.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_devinfo.c
---- a/drivers/scsi/scsi_devinfo.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_devinfo.c
-@@ -272,7 +272,7 @@ static void scsi_strcpy_devinfo(char *na
- 	}
- 	if (from_length > to_length)
- 		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
--			__FUNCTION__, name, from);
-+			__func__, name, from);
  }
  
- /**
-@@ -298,7 +298,7 @@ static int scsi_dev_info_list_add(int co
- 
- 	devinfo = kmalloc(sizeof(*devinfo), GFP_KERNEL);
- 	if (!devinfo) {
--		printk(KERN_ERR "%s: no memory\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: no memory\n", __func__);
- 		return -ENOMEM;
- 	}
- 
-@@ -363,7 +363,7 @@ static int scsi_dev_info_list_add_str(ch
- 			strflags = strsep(&next, next_check);
- 		if (!model || !strflags) {
- 			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
--			       " '%s'\n", __FUNCTION__, vendor, model,
-+			       " '%s'\n", __func__, vendor, model,
- 			       strflags);
- 			res = -EINVAL;
- 		} else
-diff -puN drivers/scsi/scsi_error.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_error.c
-@@ -139,7 +139,7 @@ void scsi_add_timer(struct scsi_cmnd *sc
- 	scmd->eh_timeout.function = (void (*)(unsigned long)) complete;
- 
- 	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p, time:"
--					  " %d, (%p)\n", __FUNCTION__,
-+					  " %d, (%p)\n", __func__,
- 					  scmd, timeout, complete));
- 
- 	add_timer(&scmd->eh_timeout);
-@@ -163,7 +163,7 @@ int scsi_delete_timer(struct scsi_cmnd *
- 	rtn = del_timer(&scmd->eh_timeout);
- 
- 	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p,"
--					 " rtn: %d\n", __FUNCTION__,
-+					 " rtn: %d\n", __func__,
- 					 scmd, rtn));
- 
- 	scmd->eh_timeout.data = (unsigned long)NULL;
-@@ -233,7 +233,7 @@ int scsi_block_when_processing_errors(st
- 
- 	online = scsi_device_online(sdev);
- 
--	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: rtn: %d\n", __FUNCTION__,
-+	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: rtn: %d\n", __func__,
- 					  online));
- 
- 	return online;
-@@ -271,7 +271,7 @@ static inline void scsi_eh_prt_fail_stat
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				sdev_printk(KERN_INFO, sdev,
- 					    "%s: cmds failed: %d, cancel: %d\n",
--					    __FUNCTION__, cmd_failed,
-+					    __func__, cmd_failed,
- 					    cmd_cancel));
- 			cmd_cancel = 0;
- 			cmd_failed = 0;
-@@ -459,7 +459,7 @@ static void scsi_eh_done(struct scsi_cmn
- 
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		printk("%s scmd: %p result: %x\n",
--			__FUNCTION__, scmd, scmd->result));
-+			__func__, scmd, scmd->result));
- 
- 	eh_action = scmd->device->host->eh_action;
- 	if (eh_action)
-@@ -476,7 +476,7 @@ static int scsi_try_host_reset(struct sc
- 	int rtn;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
--					  __FUNCTION__));
-+					  __func__));
- 
- 	if (!scmd->device->host->hostt->eh_host_reset_handler)
- 		return FAILED;
-@@ -505,7 +505,7 @@ static int scsi_try_bus_reset(struct scs
- 	int rtn;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
--					  __FUNCTION__));
-+					  __func__));
- 
- 	if (!scmd->device->host->hostt->eh_bus_reset_handler)
- 		return FAILED;
-@@ -754,7 +754,7 @@ static int scsi_send_eh_cmnd(struct scsi
- 
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		printk("%s: scmd: %p, timeleft: %ld\n",
--			__FUNCTION__, scmd, timeleft));
-+			__func__, scmd, timeleft));
- 
- 	/*
- 	 * If there is time left scsi_eh_done got called, and we will
-@@ -766,7 +766,7 @@ static int scsi_send_eh_cmnd(struct scsi
- 		rtn = scsi_eh_completed_normally(scmd);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			printk("%s: scsi_eh_completed_normally %x\n",
--			       __FUNCTION__, rtn));
-+			       __func__, rtn));
- 
- 		switch (rtn) {
- 		case SUCCESS:
-@@ -901,7 +901,7 @@ retry_tur:
- 	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6, SENSE_TIMEOUT, 0);
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd %p rtn %x\n",
--		__FUNCTION__, scmd, rtn));
-+		__func__, scmd, rtn));
- 
- 	switch (rtn) {
- 	case NEEDS_RETRY:
-@@ -1284,7 +1284,7 @@ int scsi_decide_disposition(struct scsi_
- 	if (!scsi_device_online(scmd->device)) {
- 		SCSI_LOG_ERROR_RECOVERY(5, printk("%s: device offline - report"
- 						  " as SUCCESS\n",
--						  __FUNCTION__));
-+						  __func__));
- 		return SUCCESS;
- 	}
- 
-@@ -1499,7 +1499,7 @@ static void scsi_restart_operations(stru
- 	 * ioctls to queued block devices.
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: waking up host to restart\n",
--					  __FUNCTION__));
-+					  __func__));
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (scsi_host_set_state(shost, SHOST_RUNNING))
-@@ -1822,7 +1822,7 @@ scsi_reset_provider(struct scsi_device *
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		printk("%s: waking up host to restart after TMF\n",
--		__FUNCTION__));
-+		__func__));
- 
- 	wake_up(&shost->host_wait);
- 
-diff -puN drivers/scsi/scsi_lib.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_lib.c
-@@ -1348,7 +1348,7 @@ static void scsi_kill_request(struct req
- 
- 	if (unlikely(cmd == NULL)) {
- 		printk(KERN_CRIT "impossible request in %s.\n",
--				 __FUNCTION__);
-+				 __func__);
- 		BUG();
- 	}
- 
-@@ -1472,7 +1472,7 @@ static void scsi_request_fn(struct reque
- 			printk(KERN_CRIT "impossible request in %s.\n"
- 					 "please mail a stack trace to "
- 					 "linux-scsi@vger.kernel.org\n",
--					 __FUNCTION__);
-+					 __func__);
- 			blk_dump_rq_flags(req, "foo");
- 			BUG();
- 		}
-@@ -2466,7 +2466,7 @@ void *scsi_kmap_atomic_sg(struct scatter
- 	if (unlikely(i == sg_count)) {
- 		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
- 			"elements %d\n",
--		       __FUNCTION__, sg_len, *offset, sg_count);
-+		       __func__, sg_len, *offset, sg_count);
- 		WARN_ON(1);
- 		return NULL;
- 	}
-diff -puN drivers/scsi/scsi_netlink.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_netlink.c
---- a/drivers/scsi/scsi_netlink.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_netlink.c
-@@ -55,7 +55,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
- 		if ((nlh->nlmsg_len < (sizeof(*nlh) + sizeof(*hdr))) ||
- 		    (skb->len < nlh->nlmsg_len)) {
- 			printk(KERN_WARNING "%s: discarding partial skb\n",
--				 __FUNCTION__);
-+				 __func__);
- 			return;
- 		}
- 
-@@ -82,7 +82,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
- 
- 		if (nlh->nlmsg_len < (sizeof(*nlh) + hdr->msglen)) {
- 			printk(KERN_WARNING "%s: discarding partial message\n",
--				 __FUNCTION__);
-+				 __func__);
- 			return;
- 		}
- 
-@@ -139,7 +139,7 @@ scsi_netlink_init(void)
- 	error = netlink_register_notifier(&scsi_netlink_notifier);
- 	if (error) {
- 		printk(KERN_ERR "%s: register of event handler failed - %d\n",
--				__FUNCTION__, error);
-+				__func__, error);
- 		return;
- 	}
- 
-@@ -148,7 +148,7 @@ scsi_netlink_init(void)
- 				THIS_MODULE);
- 	if (!scsi_nl_sock) {
- 		printk(KERN_ERR "%s: register of recieve handler failed\n",
--				__FUNCTION__);
-+				__func__);
- 		netlink_unregister_notifier(&scsi_netlink_notifier);
- 	}
- 
-diff -puN drivers/scsi/scsi_proc.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_proc.c
---- a/drivers/scsi/scsi_proc.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_proc.c
-@@ -114,7 +114,7 @@ void scsi_proc_hostdir_add(struct scsi_h
- 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
-         	if (!sht->proc_dir)
- 			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
--			       __FUNCTION__, sht->proc_name);
-+			       __func__, sht->proc_name);
- 		else
- 			sht->proc_dir->owner = sht->module;
- 	}
-@@ -157,7 +157,7 @@ void scsi_proc_host_add(struct Scsi_Host
- 			sht->proc_dir, proc_scsi_read, shost);
- 	if (!p) {
- 		printk(KERN_ERR "%s: Failed to register host %d in"
--		       "%s\n", __FUNCTION__, shost->host_no,
-+		       "%s\n", __func__, shost->host_no,
- 		       sht->proc_name);
- 		return;
- 	} 
-diff -puN drivers/scsi/scsi_scan.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_scan.c
-@@ -318,7 +318,7 @@ out_device_destroy:
- 	put_device(&sdev->sdev_gendev);
- out:
- 	if (display_failure_msg)
--		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-+		printk(ALLOC_FAILURE_MSG, __func__);
- 	return NULL;
- }
- 
-@@ -384,7 +384,7 @@ static struct scsi_target *scsi_alloc_ta
- 
- 	starget = kzalloc(size, GFP_KERNEL);
- 	if (!starget) {
--		printk(KERN_ERR "%s: allocation failure\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: allocation failure\n", __func__);
- 		return NULL;
- 	}
- 	dev = &starget->dev;
-@@ -1331,7 +1331,7 @@ static int scsi_report_lun_scan(struct s
- 	lun_data = kmalloc(length, GFP_ATOMIC |
- 			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
- 	if (!lun_data) {
--		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-+		printk(ALLOC_FAILURE_MSG, __func__);
- 		goto out;
- 	}
- 
-@@ -1645,7 +1645,7 @@ int scsi_scan_host_selected(struct Scsi_
+-static __inline ahd_mode_state
++static inline ahd_mode_state
+ ahd_save_modes(struct ahd_softc *ahd)
  {
- 	SCSI_LOG_SCAN_BUS(3, shost_printk (KERN_INFO, shost,
- 		"%s: <%u:%u:%u>\n",
--		__FUNCTION__, channel, id, lun));
-+		__func__, channel, id, lun));
+ 	if (ahd->src_mode == AHD_MODE_UNKNOWN
+@@ -156,7 +156,7 @@ ahd_save_modes(struct ahd_softc *ahd)
+ 	return (ahd_build_mode_state(ahd, ahd->src_mode, ahd->dst_mode));
+ }
  
- 	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
- 	    ((id != SCAN_WILD_CARD) && (id >= shost->max_id)) ||
-@@ -1699,7 +1699,7 @@ static struct async_scan_data *scsi_prep
- 		return NULL;
+-static __inline void
++static inline void
+ ahd_restore_modes(struct ahd_softc *ahd, ahd_mode_state state)
+ {
+ 	ahd_mode src;
+@@ -173,7 +173,7 @@ ahd_restore_modes(struct ahd_softc *ahd,
+  * Determine whether the sequencer has halted code execution.
+  * Returns non-zero status if the sequencer is stopped.
+  */
+-static __inline int
++static inline int
+ ahd_is_paused(struct ahd_softc *ahd)
+ {
+ 	return ((ahd_inb(ahd, HCNTRL) & PAUSE) != 0);
+@@ -186,7 +186,7 @@ ahd_is_paused(struct ahd_softc *ahd)
+  * cleared in the SEQCTL register.  The sequencer may use PAUSEDIS
+  * for critical sections.
+  */
+-static __inline void
++static inline void
+ ahd_pause(struct ahd_softc *ahd)
+ {
+ 	ahd_outb(ahd, HCNTRL, ahd->pause);
+@@ -209,7 +209,7 @@ ahd_pause(struct ahd_softc *ahd)
+  * into our interrupt handler and dealing with this new
+  * condition.
+  */
+-static __inline void
++static inline void
+ ahd_unpause(struct ahd_softc *ahd)
+ {
+ 	/*
+@@ -230,17 +230,17 @@ ahd_unpause(struct ahd_softc *ahd)
+ }
  
- 	if (shost->async_scan) {
--		printk("%s called twice for host %d", __FUNCTION__,
-+		printk("%s called twice for host %d", __func__,
- 				shost->host_no);
- 		dump_stack();
- 		return NULL;
-@@ -1753,7 +1753,7 @@ static void scsi_finish_async_scan(struc
- 	mutex_lock(&shost->scan_mutex);
+ /*********************** Scatter Gather List Handling *************************/
+-static __inline void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
++static inline void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+ 				      void *sgptr, dma_addr_t addr,
+ 				      bus_size_t len, int last);
+-static __inline void	 ahd_setup_scb_common(struct ahd_softc *ahd,
++static inline void	 ahd_setup_scb_common(struct ahd_softc *ahd,
+ 					      struct scb *scb);
+-static __inline void	 ahd_setup_data_scb(struct ahd_softc *ahd,
++static inline void	 ahd_setup_data_scb(struct ahd_softc *ahd,
+ 					    struct scb *scb);
+-static __inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
++static inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
+ 					      struct scb *scb);
  
- 	if (!shost->async_scan) {
--		printk("%s called twice for host %d", __FUNCTION__,
-+		printk("%s called twice for host %d", __func__,
- 				shost->host_no);
- 		dump_stack();
- 		return;
-diff -puN drivers/scsi/scsi_tgt_priv.h~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_tgt_priv.h
---- a/drivers/scsi/scsi_tgt_priv.h~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_tgt_priv.h
-@@ -6,7 +6,7 @@ struct task_struct;
- /* tmp - will replace with SCSI logging stuff */
- #define eprintk(fmt, args...)					\
- do {								\
--	printk("%s(%d) " fmt, __FUNCTION__, __LINE__, ##args);	\
-+	printk("%s(%d) " fmt, __func__, __LINE__, ##args);	\
+-static __inline void *
++static inline void *
+ ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+ 	     void *sgptr, dma_addr_t addr, bus_size_t len, int last)
+ {
+@@ -264,7 +264,7 @@ ahd_sg_setup(struct ahd_softc *ahd, stru
+ 	}
+ }
+ 
+-static __inline void
++static inline void
+ ahd_setup_scb_common(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	/* XXX Handle target mode SCBs. */
+@@ -285,7 +285,7 @@ ahd_setup_scb_common(struct ahd_softc *a
+ 		    ahd_htole32(scb->sense_busaddr);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_setup_data_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	/*
+@@ -322,7 +322,7 @@ ahd_setup_data_scb(struct ahd_softc *ahd
+ 	scb->hscb->sgptr = ahd_htole32(scb->sg_list_busaddr|SG_FULL_RESID);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_setup_noxfer_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	scb->hscb->sgptr = ahd_htole32(SG_LIST_NULL);
+@@ -331,26 +331,26 @@ ahd_setup_noxfer_scb(struct ahd_softc *a
+ }
+ 
+ /************************** Memory mapping routines ***************************/
+-static __inline size_t	ahd_sg_size(struct ahd_softc *ahd);
+-static __inline void *
++static inline size_t	ahd_sg_size(struct ahd_softc *ahd);
++static inline void *
+ 			ahd_sg_bus_to_virt(struct ahd_softc *ahd,
+ 					   struct scb *scb,
+ 					   uint32_t sg_busaddr);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahd_sg_virt_to_bus(struct ahd_softc *ahd,
+ 					   struct scb *scb,
+ 					   void *sg);
+-static __inline void	ahd_sync_scb(struct ahd_softc *ahd,
++static inline void	ahd_sync_scb(struct ahd_softc *ahd,
+ 				     struct scb *scb, int op);
+-static __inline void	ahd_sync_sglist(struct ahd_softc *ahd,
++static inline void	ahd_sync_sglist(struct ahd_softc *ahd,
+ 					struct scb *scb, int op);
+-static __inline void	ahd_sync_sense(struct ahd_softc *ahd,
++static inline void	ahd_sync_sense(struct ahd_softc *ahd,
+ 				       struct scb *scb, int op);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahd_targetcmd_offset(struct ahd_softc *ahd,
+ 					     u_int index);
+ 
+-static __inline size_t
++static inline size_t
+ ahd_sg_size(struct ahd_softc *ahd)
+ {
+ 	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0)
+@@ -358,7 +358,7 @@ ahd_sg_size(struct ahd_softc *ahd)
+ 	return (sizeof(struct ahd_dma_seg));
+ }
+ 
+-static __inline void *
++static inline void *
+ ahd_sg_bus_to_virt(struct ahd_softc *ahd, struct scb *scb, uint32_t sg_busaddr)
+ {
+ 	dma_addr_t sg_offset;
+@@ -368,7 +368,7 @@ ahd_sg_bus_to_virt(struct ahd_softc *ahd
+ 	return ((uint8_t *)scb->sg_list + sg_offset);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_sg_virt_to_bus(struct ahd_softc *ahd, struct scb *scb, void *sg)
+ {
+ 	dma_addr_t sg_offset;
+@@ -380,7 +380,7 @@ ahd_sg_virt_to_bus(struct ahd_softc *ahd
+ 	return (scb->sg_list_busaddr + sg_offset);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_sync_scb(struct ahd_softc *ahd, struct scb *scb, int op)
+ {
+ 	ahd_dmamap_sync(ahd, ahd->scb_data.hscb_dmat,
+@@ -389,7 +389,7 @@ ahd_sync_scb(struct ahd_softc *ahd, stru
+ 			/*len*/sizeof(*scb->hscb), op);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_sync_sglist(struct ahd_softc *ahd, struct scb *scb, int op)
+ {
+ 	if (scb->sg_count == 0)
+@@ -401,7 +401,7 @@ ahd_sync_sglist(struct ahd_softc *ahd, s
+ 			/*len*/ahd_sg_size(ahd) * scb->sg_count, op);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_sync_sense(struct ahd_softc *ahd, struct scb *scb, int op)
+ {
+ 	ahd_dmamap_sync(ahd, ahd->scb_data.sense_dmat,
+@@ -410,7 +410,7 @@ ahd_sync_sense(struct ahd_softc *ahd, st
+ 			/*len*/AHD_SENSE_BUFSIZE, op);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_targetcmd_offset(struct ahd_softc *ahd, u_int index)
+ {
+ 	return (((uint8_t *)&ahd->targetcmds[index])
+@@ -418,48 +418,48 @@ ahd_targetcmd_offset(struct ahd_softc *a
+ }
+ 
+ /*********************** Miscellaneous Support Functions ***********************/
+-static __inline struct ahd_initiator_tinfo *
++static inline struct ahd_initiator_tinfo *
+ 			ahd_fetch_transinfo(struct ahd_softc *ahd,
+ 					    char channel, u_int our_id,
+ 					    u_int remote_id,
+ 					    struct ahd_tmode_tstate **tstate);
+-static __inline uint16_t
++static inline uint16_t
+ 			ahd_inw(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outw(struct ahd_softc *ahd, u_int port,
++static inline void	ahd_outw(struct ahd_softc *ahd, u_int port,
+ 				 u_int value);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahd_inl(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outl(struct ahd_softc *ahd, u_int port,
++static inline void	ahd_outl(struct ahd_softc *ahd, u_int port,
+ 				 uint32_t value);
+-static __inline uint64_t
++static inline uint64_t
+ 			ahd_inq(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outq(struct ahd_softc *ahd, u_int port,
++static inline void	ahd_outq(struct ahd_softc *ahd, u_int port,
+ 				 uint64_t value);
+-static __inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
+-static __inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
+-static __inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
+-static __inline void	ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_get_hescb_qoff(struct ahd_softc *ahd);
+-static __inline void	ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_get_snscb_qoff(struct ahd_softc *ahd);
+-static __inline void	ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_get_sescb_qoff(struct ahd_softc *ahd);
+-static __inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
+-static __inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint32_t
++static inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
++static inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
++static inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
++static inline void	ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value);
++static inline u_int	ahd_get_hescb_qoff(struct ahd_softc *ahd);
++static inline void	ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value);
++static inline u_int	ahd_get_snscb_qoff(struct ahd_softc *ahd);
++static inline void	ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value);
++static inline u_int	ahd_get_sescb_qoff(struct ahd_softc *ahd);
++static inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
++static inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
++static inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
++static inline u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
++static inline u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
++static inline uint32_t
+ 			ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint64_t
++static inline uint64_t
+ 			ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline void	ahd_swap_with_next_hscb(struct ahd_softc *ahd,
++static inline void	ahd_swap_with_next_hscb(struct ahd_softc *ahd,
+ 						struct scb *scb);
+-static __inline void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
+-static __inline uint8_t *
++static inline void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
++static inline uint8_t *
+ 			ahd_get_sense_buf(struct ahd_softc *ahd,
+ 					  struct scb *scb);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahd_get_sense_bufaddr(struct ahd_softc *ahd,
+ 					      struct scb *scb);
+ 
+@@ -467,7 +467,7 @@ static __inline uint32_t
+  * Return pointers to the transfer negotiation information
+  * for the specified our_id/remote_id pair.
+  */
+-static __inline struct ahd_initiator_tinfo *
++static inline struct ahd_initiator_tinfo *
+ ahd_fetch_transinfo(struct ahd_softc *ahd, char channel, u_int our_id,
+ 		    u_int remote_id, struct ahd_tmode_tstate **tstate)
+ {
+@@ -489,7 +489,7 @@ do {								\
+ 	dst->hscb->lun = src->hscb->lun;			\
  } while (0)
  
- #define dprintk(fmt, args...)
-diff -puN drivers/scsi/scsi_transport_fc.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_transport_fc.c
-@@ -570,7 +570,7 @@ send_fail:
- 	name = get_fc_host_event_code_name(event_code);
- 	printk(KERN_WARNING
- 		"%s: Dropped Event : host %d %s data 0x%08x - err %d\n",
--		__FUNCTION__, shost->host_no,
-+		__func__, shost->host_no,
- 		(name) ? name : "<unknown>", event_data, err);
- 	return;
- }
-@@ -643,7 +643,7 @@ send_vendor_fail_skb:
- send_vendor_fail:
- 	printk(KERN_WARNING
- 		"%s: Dropped Event : host %d vendor_unique - err %d\n",
--		__FUNCTION__, shost->host_no, err);
-+		__func__, shost->host_no, err);
- 	return;
- }
- EXPORT_SYMBOL(fc_host_post_vendor_event);
-@@ -2417,7 +2417,7 @@ fc_rport_create(struct Scsi_Host *shost,
- 	size = (sizeof(struct fc_rport) + fci->f->dd_fcrport_size);
- 	rport = kzalloc(size, GFP_KERNEL);
- 	if (unlikely(!rport)) {
--		printk(KERN_ERR "%s: allocation failure\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: allocation failure\n", __func__);
- 		return NULL;
- 	}
- 
-@@ -3090,7 +3090,7 @@ fc_vport_create(struct Scsi_Host *shost,
- 	size = (sizeof(struct fc_vport) + fci->f->dd_fcvport_size);
- 	vport = kzalloc(size, GFP_KERNEL);
- 	if (unlikely(!vport)) {
--		printk(KERN_ERR "%s: allocation failure\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: allocation failure\n", __func__);
- 		return -ENOMEM;
- 	}
- 
-@@ -3154,7 +3154,7 @@ fc_vport_create(struct Scsi_Host *shost,
- 			printk(KERN_ERR
- 				"%s: Cannot create vport symlinks for "
- 				"%s, err=%d\n",
--				__FUNCTION__, dev->bus_id, error);
-+				__func__, dev->bus_id, error);
- 	}
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	vport->flags &= ~FC_VPORT_CREATING;
-@@ -3267,7 +3267,7 @@ fc_vport_sched_delete(struct work_struct
- 	if (stat)
- 		dev_printk(KERN_ERR, vport->dev.parent,
- 			"%s: %s could not be deleted created via "
--			"shost%d channel %d - error %d\n", __FUNCTION__,
-+			"shost%d channel %d - error %d\n", __func__,
- 			vport->dev.bus_id, vport->shost->host_no,
- 			vport->channel, stat);
- }
-diff -puN drivers/scsi/scsi_transport_sas.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/scsi_transport_sas.c
---- a/drivers/scsi/scsi_transport_sas.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/scsi_transport_sas.c
-@@ -768,7 +768,7 @@ static void sas_port_create_link(struct 
- 	return;
- err:
- 	printk(KERN_ERR "%s: Cannot create port links, err=%d\n",
--	       __FUNCTION__, res);
-+	       __func__, res);
+-static __inline uint16_t
++static inline uint16_t
+ ahd_inw(struct ahd_softc *ahd, u_int port)
+ {
+ 	/*
+@@ -501,7 +501,7 @@ ahd_inw(struct ahd_softc *ahd, u_int por
+ 	return r | ahd_inb(ahd, port);
  }
  
- static void sas_port_delete_link(struct sas_port *port,
-@@ -1018,7 +1018,7 @@ void sas_port_mark_backlink(struct sas_p
- 	return;
- err:
- 	printk(KERN_ERR "%s: Cannot create port backlink, err=%d\n",
--	       __FUNCTION__, res);
-+	       __func__, res);
- 
- }
- EXPORT_SYMBOL(sas_port_mark_backlink);
-diff -puN drivers/scsi/tmscsim.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/tmscsim.c
-@@ -452,7 +452,7 @@ static int dc390_pci_map (struct dc390_s
- 		/* TODO: error handling */
- 		if (pSRB->SGcount != 1)
- 			error = 1;
--		DEBUG1(printk("%s(): Mapped sense buffer %p at %x\n", __FUNCTION__, pcmd->sense_buffer, cmdp->saved_dma_handle));
-+		DEBUG1(printk("%s(): Mapped sense buffer %p at %x\n", __func__, pcmd->sense_buffer, cmdp->saved_dma_handle));
- 	/* Map SG list */
- 	} else if (scsi_sg_count(pcmd)) {
- 		int nseg;
-@@ -466,7 +466,7 @@ static int dc390_pci_map (struct dc390_s
- 		if (nseg < 0)
- 			error = 1;
- 		DEBUG1(printk("%s(): Mapped SG %p with %d (%d) elements\n",\
--			      __FUNCTION__, scsi_sglist(pcmd), nseg, scsi_sg_count(pcmd)));
-+			      __func__, scsi_sglist(pcmd), nseg, scsi_sg_count(pcmd)));
- 	/* Map single segment */
- 	} else
- 		pSRB->SGcount = 0;
-@@ -483,11 +483,11 @@ static void dc390_pci_unmap (struct dc39
- 
- 	if (pSRB->SRBFlag) {
- 		pci_unmap_sg(pdev, &pSRB->Segmentx, 1, DMA_FROM_DEVICE);
--		DEBUG1(printk("%s(): Unmapped sense buffer at %x\n", __FUNCTION__, cmdp->saved_dma_handle));
-+		DEBUG1(printk("%s(): Unmapped sense buffer at %x\n", __func__, cmdp->saved_dma_handle));
- 	} else {
- 		scsi_dma_unmap(pcmd);
- 		DEBUG1(printk("%s(): Unmapped SG at %p with %d elements\n",
--			      __FUNCTION__, scsi_sglist(pcmd), scsi_sg_count(pcmd)));
-+			      __func__, scsi_sglist(pcmd), scsi_sg_count(pcmd)));
- 	}
+-static __inline void
++static inline void
+ ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
+ {
+ 	/*
+@@ -512,7 +512,7 @@ ahd_outw(struct ahd_softc *ahd, u_int po
+ 	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
  }
  
-diff -puN drivers/scsi/wd7000.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/wd7000.c
---- a/drivers/scsi/wd7000.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/wd7000.c
-@@ -148,7 +148,7 @@
-  *
-  * 2002/10/04 - Alan Cox <alan@redhat.com>
-  *
-- * Use dev_id for interrupts, kill __FUNCTION__ pasting
-+ * Use dev_id for interrupts, kill __func__ pasting
-  * Add a lock for the scb pool, clean up all other cli/sti usage stuff
-  * Use the adapter lock for the other places we had the cli's
-  *
-@@ -640,12 +640,12 @@ static int __init wd7000_setup(char *str
- 	(void) get_options(str, ARRAY_SIZE(ints), ints);
+-static __inline uint32_t
++static inline uint32_t
+ ahd_inl(struct ahd_softc *ahd, u_int port)
+ {
+ 	return ((ahd_inb(ahd, port))
+@@ -521,7 +521,7 @@ ahd_inl(struct ahd_softc *ahd, u_int por
+ 	      | (ahd_inb(ahd, port+3) << 24));
+ }
  
- 	if (wd7000_card_num >= NUM_CONFIGS) {
--		printk(KERN_ERR "%s: Too many \"wd7000=\" configurations in " "command line!\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: Too many \"wd7000=\" configurations in " "command line!\n", __func__);
- 		return 0;
+-static __inline void
++static inline void
+ ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value)
+ {
+ 	ahd_outb(ahd, port, (value) & 0xFF);
+@@ -530,7 +530,7 @@ ahd_outl(struct ahd_softc *ahd, u_int po
+ 	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
+ }
+ 
+-static __inline uint64_t
++static inline uint64_t
+ ahd_inq(struct ahd_softc *ahd, u_int port)
+ {
+ 	return ((ahd_inb(ahd, port))
+@@ -543,7 +543,7 @@ ahd_inq(struct ahd_softc *ahd, u_int por
+ 	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
+ {
+ 	ahd_outb(ahd, port, value & 0xFF);
+@@ -556,7 +556,7 @@ ahd_outq(struct ahd_softc *ahd, u_int po
+ 	ahd_outb(ahd, port+7, (value >> 56) & 0xFF);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_scbptr(struct ahd_softc *ahd)
+ {
+ 	AHD_ASSERT_MODES(ahd, ~(AHD_MODE_UNKNOWN_MSK|AHD_MODE_CFG_MSK),
+@@ -564,7 +564,7 @@ ahd_get_scbptr(struct ahd_softc *ahd)
+ 	return (ahd_inb(ahd, SCBPTR) | (ahd_inb(ahd, SCBPTR + 1) << 8));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr)
+ {
+ 	AHD_ASSERT_MODES(ahd, ~(AHD_MODE_UNKNOWN_MSK|AHD_MODE_CFG_MSK),
+@@ -573,31 +573,31 @@ ahd_set_scbptr(struct ahd_softc *ahd, u_
+ 	ahd_outb(ahd, SCBPTR+1, (scbptr >> 8) & 0xFF);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_hnscb_qoff(struct ahd_softc *ahd)
+ {
+ 	return (ahd_inw_atomic(ahd, HNSCB_QOFF));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value)
+ {
+ 	ahd_outw_atomic(ahd, HNSCB_QOFF, value);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_hescb_qoff(struct ahd_softc *ahd)
+ {
+ 	return (ahd_inb(ahd, HESCB_QOFF));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value)
+ {
+ 	ahd_outb(ahd, HESCB_QOFF, value);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_snscb_qoff(struct ahd_softc *ahd)
+ {
+ 	u_int oldvalue;
+@@ -608,35 +608,35 @@ ahd_get_snscb_qoff(struct ahd_softc *ahd
+ 	return (oldvalue);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value)
+ {
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
+ 	ahd_outw(ahd, SNSCB_QOFF, value);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_sescb_qoff(struct ahd_softc *ahd)
+ {
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
+ 	return (ahd_inb(ahd, SESCB_QOFF));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value)
+ {
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
+ 	ahd_outb(ahd, SESCB_QOFF, value);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_get_sdscb_qoff(struct ahd_softc *ahd)
+ {
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
+ 	return (ahd_inb(ahd, SDSCB_QOFF) | (ahd_inb(ahd, SDSCB_QOFF + 1) << 8));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value)
+ {
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
+@@ -644,7 +644,7 @@ ahd_set_sdscb_qoff(struct ahd_softc *ahd
+ 	ahd_outb(ahd, SDSCB_QOFF+1, (value >> 8) & 0xFF);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_inb_scbram(struct ahd_softc *ahd, u_int offset)
+ {
+ 	u_int value;
+@@ -669,28 +669,28 @@ ahd_inb_scbram(struct ahd_softc *ahd, u_
+ 	return (value);
+ }
+ 
+-static __inline u_int
++static inline u_int
+ ahd_inw_scbram(struct ahd_softc *ahd, u_int offset)
+ {
+ 	return (ahd_inb_scbram(ahd, offset)
+ 	      | (ahd_inb_scbram(ahd, offset+1) << 8));
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
+ {
+ 	return (ahd_inw_scbram(ahd, offset)
+ 	      | (ahd_inw_scbram(ahd, offset+2) << 16));
+ }
+ 
+-static __inline uint64_t
++static inline uint64_t
+ ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
+ {
+ 	return (ahd_inl_scbram(ahd, offset)
+ 	      | ((uint64_t)ahd_inl_scbram(ahd, offset+4)) << 32);
+ }
+ 
+-static __inline struct scb *
++static inline struct scb *
+ ahd_lookup_scb(struct ahd_softc *ahd, u_int tag)
+ {
+ 	struct scb* scb;
+@@ -704,7 +704,7 @@ ahd_lookup_scb(struct ahd_softc *ahd, u_
+ 	return (scb);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_swap_with_next_hscb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	struct	 hardware_scb *q_hscb;
+@@ -743,7 +743,7 @@ ahd_swap_with_next_hscb(struct ahd_softc
+ /*
+  * Tell the sequencer about a new transaction to execute.
+  */
+-static __inline void
++static inline void
+ ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	ahd_swap_with_next_hscb(ahd, scb);
+@@ -788,25 +788,25 @@ ahd_queue_scb(struct ahd_softc *ahd, str
+ 	ahd_set_hnscb_qoff(ahd, ahd->qinfifonext);
+ }
+ 
+-static __inline uint8_t *
++static inline uint8_t *
+ ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	return (scb->sense_data);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_get_sense_bufaddr(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	return (scb->sense_busaddr);
+ }
+ 
+ /************************** Interrupt Processing ******************************/
+-static __inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
+-static __inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
+-static __inline u_int	ahd_check_cmdcmpltqueues(struct ahd_softc *ahd);
+-static __inline int	ahd_intr(struct ahd_softc *ahd);
++static inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
++static inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
++static inline u_int	ahd_check_cmdcmpltqueues(struct ahd_softc *ahd);
++static inline int	ahd_intr(struct ahd_softc *ahd);
+ 
+-static __inline void
++static inline void
+ ahd_sync_qoutfifo(struct ahd_softc *ahd, int op)
+ {
+ 	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
+@@ -814,7 +814,7 @@ ahd_sync_qoutfifo(struct ahd_softc *ahd,
+ 			/*len*/AHD_SCB_MAX * sizeof(struct ahd_completion), op);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_sync_tqinfifo(struct ahd_softc *ahd, int op)
+ {
+ #ifdef AHD_TARGET_MODE
+@@ -834,7 +834,7 @@ ahd_sync_tqinfifo(struct ahd_softc *ahd,
+  */
+ #define AHD_RUN_QOUTFIFO 0x1
+ #define AHD_RUN_TQINFIFO 0x2
+-static __inline u_int
++static inline u_int
+ ahd_check_cmdcmpltqueues(struct ahd_softc *ahd)
+ {
+ 	u_int retval;
+@@ -864,7 +864,7 @@ ahd_check_cmdcmpltqueues(struct ahd_soft
+ /*
+  * Catch an interrupt from the adapter
+  */
+-static __inline int
++static inline int
+ ahd_intr(struct ahd_softc *ahd)
+ {
+ 	u_int	intstat;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -370,9 +370,9 @@ static int ahd_linux_unit;
+ 
+ 
+ /****************************** Inlines ***************************************/
+-static __inline void ahd_linux_unmap_scb(struct ahd_softc*, struct scb*);
++static inline void ahd_linux_unmap_scb(struct ahd_softc*, struct scb*);
+ 
+-static __inline void
++static inline void
+ ahd_linux_unmap_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	struct scsi_cmnd *cmd;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -223,10 +223,10 @@ typedef struct timer_list ahd_timer_t;
+ #define ahd_timer_init init_timer
+ #define ahd_timer_stop del_timer_sync
+ typedef void ahd_linux_callback_t (u_long);  
+-static __inline void ahd_timer_reset(ahd_timer_t *timer, int usec,
++static inline void ahd_timer_reset(ahd_timer_t *timer, int usec,
+ 				     ahd_callback_t *func, void *arg);
+ 
+-static __inline void
++static inline void
+ ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
+ {
+ 	struct ahd_softc *ahd;
+@@ -386,8 +386,8 @@ struct ahd_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahd_delay(long);
+-static __inline void
++static inline void ahd_delay(long);
++static inline void
+ ahd_delay(long usec)
+ {
+ 	/*
+@@ -403,17 +403,17 @@ ahd_delay(long usec)
+ 
+ 
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahd_inb(struct ahd_softc * ahd, long port);
+-static __inline uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
+-static __inline void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
+-static __inline void ahd_outw_atomic(struct ahd_softc * ahd,
++static inline uint8_t ahd_inb(struct ahd_softc * ahd, long port);
++static inline uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
++static inline void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
++static inline void ahd_outw_atomic(struct ahd_softc * ahd,
+ 				     long port, uint16_t val);
+-static __inline void ahd_outsb(struct ahd_softc * ahd, long port,
++static inline void ahd_outsb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+-static __inline void ahd_insb(struct ahd_softc * ahd, long port,
++static inline void ahd_insb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+ 
+-static __inline uint8_t
++static inline uint8_t
+ ahd_inb(struct ahd_softc * ahd, long port)
+ {
+ 	uint8_t x;
+@@ -427,7 +427,7 @@ ahd_inb(struct ahd_softc * ahd, long por
+ 	return (x);
+ }
+ 
+-static __inline uint16_t
++static inline uint16_t
+ ahd_inw_atomic(struct ahd_softc * ahd, long port)
+ {
+ 	uint8_t x;
+@@ -441,7 +441,7 @@ ahd_inw_atomic(struct ahd_softc * ahd, l
+ 	return (x);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
+ {
+ 	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+@@ -452,7 +452,7 @@ ahd_outb(struct ahd_softc * ahd, long po
+ 	mb();
+ }
+ 
+-static __inline void
++static inline void
+ ahd_outw_atomic(struct ahd_softc * ahd, long port, uint16_t val)
+ {
+ 	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+@@ -463,7 +463,7 @@ ahd_outw_atomic(struct ahd_softc * ahd, 
+ 	mb();
+ }
+ 
+-static __inline void
++static inline void
+ ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
+ {
+ 	int i;
+@@ -477,7 +477,7 @@ ahd_outsb(struct ahd_softc * ahd, long p
+ 		ahd_outb(ahd, port, *array++);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
+ {
+ 	int i;
+@@ -504,19 +504,19 @@ struct info_str {
+ };
+ 
+ /******************************** Locking *************************************/
+-static __inline void
++static inline void
+ ahd_lockinit(struct ahd_softc *ahd)
+ {
+ 	spin_lock_init(&ahd->platform_data->spin_lock);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_lock(struct ahd_softc *ahd, unsigned long *flags)
+ {
+ 	spin_lock_irqsave(&ahd->platform_data->spin_lock, *flags);
+ }
+ 
+-static __inline void
++static inline void
+ ahd_unlock(struct ahd_softc *ahd, unsigned long *flags)
+ {
+ 	spin_unlock_irqrestore(&ahd->platform_data->spin_lock, *flags);
+@@ -593,10 +593,10 @@ void			 ahd_linux_pci_exit(void);
+ int			 ahd_pci_map_registers(struct ahd_softc *ahd);
+ int			 ahd_pci_map_int(struct ahd_softc *ahd);
+ 
+-static __inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
++static inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_pci_read_config(ahd_dev_softc_t pci, int reg, int width)
+ {
+ 	switch (width) {
+@@ -626,11 +626,11 @@ ahd_pci_read_config(ahd_dev_softc_t pci,
  	}
+ }
  
- 	if ((ints[0] < 3) || (ints[0] > 5)) {
--		printk(KERN_ERR "%s: Error in command line!  " "Usage: wd7000=<IRQ>,<DMA>,IO>[,<BUS_ON>" "[,<BUS_OFF>]]\n", __FUNCTION__);
-+		printk(KERN_ERR "%s: Error in command line!  " "Usage: wd7000=<IRQ>,<DMA>,IO>[,<BUS_ON>" "[,<BUS_OFF>]]\n", __func__);
- 	} else {
- 		for (i = 0; i < NUM_IRQS; i++)
- 			if (ints[1] == wd7000_irq[i])
-@@ -1642,7 +1642,7 @@ static int wd7000_biosparam(struct scsi_
- 			ip[2] = info[2];
+-static __inline void ahd_pci_write_config(ahd_dev_softc_t pci,
++static inline void ahd_pci_write_config(ahd_dev_softc_t pci,
+ 					  int reg, uint32_t value,
+ 					  int width);
  
- 			if (info[0] == 255)
--				printk(KERN_INFO "%s: current partition table is " "using extended translation.\n", __FUNCTION__);
-+				printk(KERN_INFO "%s: current partition table is " "using extended translation.\n", __func__);
- 		}
+-static __inline void
++static inline void
+ ahd_pci_write_config(ahd_dev_softc_t pci, int reg, uint32_t value, int width)
+ {
+ 	switch (width) {
+@@ -649,29 +649,29 @@ ahd_pci_write_config(ahd_dev_softc_t pci
  	}
+ }
  
-diff -puN drivers/scsi/zalon.c~scsi-replace-remaining-__function__-occurrences drivers/scsi/zalon.c
---- a/drivers/scsi/zalon.c~scsi-replace-remaining-__function__-occurrences
-+++ a/drivers/scsi/zalon.c
-@@ -68,11 +68,11 @@ lasi_scsi_clock(void * hpa, int defaultc
- 	if (status == PDC_RET_OK) {
- 		clock = (int) pdc_result[16];
- 	} else {
--		printk(KERN_WARNING "%s: pdc_iodc_read returned %d\n", __FUNCTION__, status);
-+		printk(KERN_WARNING "%s: pdc_iodc_read returned %d\n", __func__, status);
- 		clock = defaultclock; 
+-static __inline int ahd_get_pci_function(ahd_dev_softc_t);
+-static __inline int
++static inline int ahd_get_pci_function(ahd_dev_softc_t);
++static inline int
+ ahd_get_pci_function(ahd_dev_softc_t pci)
+ {
+ 	return (PCI_FUNC(pci->devfn));
+ }
+ 
+-static __inline int ahd_get_pci_slot(ahd_dev_softc_t);
+-static __inline int
++static inline int ahd_get_pci_slot(ahd_dev_softc_t);
++static inline int
+ ahd_get_pci_slot(ahd_dev_softc_t pci)
+ {
+ 	return (PCI_SLOT(pci->devfn));
+ }
+ 
+-static __inline int ahd_get_pci_bus(ahd_dev_softc_t);
+-static __inline int
++static inline int ahd_get_pci_bus(ahd_dev_softc_t);
++static inline int
+ ahd_get_pci_bus(ahd_dev_softc_t pci)
+ {
+ 	return (pci->bus->number);
+ }
+ 
+-static __inline void ahd_flush_device_writes(struct ahd_softc *);
+-static __inline void
++static inline void ahd_flush_device_writes(struct ahd_softc *);
++static inline void
+ ahd_flush_device_writes(struct ahd_softc *ahd)
+ {
+ 	/* XXX Is this sufficient for all architectures??? */
+@@ -683,29 +683,29 @@ int	ahd_linux_proc_info(struct Scsi_Host
+ 			    off_t, int, int);
+ 
+ /*********************** Transaction Access Wrappers **************************/
+-static __inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
+-static __inline void ahd_set_transaction_status(struct scb *, uint32_t);
+-static __inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
+-static __inline void ahd_set_scsi_status(struct scb *, uint32_t);
+-static __inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
+-static __inline uint32_t ahd_get_transaction_status(struct scb *);
+-static __inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
+-static __inline uint32_t ahd_get_scsi_status(struct scb *);
+-static __inline void ahd_set_transaction_tag(struct scb *, int, u_int);
+-static __inline u_long ahd_get_transfer_length(struct scb *);
+-static __inline int ahd_get_transfer_dir(struct scb *);
+-static __inline void ahd_set_residual(struct scb *, u_long);
+-static __inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
+-static __inline u_long ahd_get_residual(struct scb *);
+-static __inline u_long ahd_get_sense_residual(struct scb *);
+-static __inline int ahd_perform_autosense(struct scb *);
+-static __inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
++static inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
++static inline void ahd_set_transaction_status(struct scb *, uint32_t);
++static inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
++static inline void ahd_set_scsi_status(struct scb *, uint32_t);
++static inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
++static inline uint32_t ahd_get_transaction_status(struct scb *);
++static inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
++static inline uint32_t ahd_get_scsi_status(struct scb *);
++static inline void ahd_set_transaction_tag(struct scb *, int, u_int);
++static inline u_long ahd_get_transfer_length(struct scb *);
++static inline int ahd_get_transfer_dir(struct scb *);
++static inline void ahd_set_residual(struct scb *, u_long);
++static inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
++static inline u_long ahd_get_residual(struct scb *);
++static inline u_long ahd_get_sense_residual(struct scb *);
++static inline int ahd_perform_autosense(struct scb *);
++static inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
+ 					       struct scb *);
+-static __inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
++static inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
+ 						     struct ahd_devinfo *);
+-static __inline void ahd_platform_scb_free(struct ahd_softc *ahd,
++static inline void ahd_platform_scb_free(struct ahd_softc *ahd,
+ 					   struct scb *scb);
+-static __inline void ahd_freeze_scb(struct scb *scb);
++static inline void ahd_freeze_scb(struct scb *scb);
+ 
+ static __inline
+ void ahd_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
+@@ -813,20 +813,20 @@ int ahd_perform_autosense(struct scb *sc
+ 	return (1);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahd_get_sense_bufsize(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	return (sizeof(struct scsi_sense_data));
+ }
+ 
+-static __inline void
++static inline void
+ ahd_notify_xfer_settings_change(struct ahd_softc *ahd,
+ 				struct ahd_devinfo *devinfo)
+ {
+ 	/* Nothing to do here for linux */
+ }
+ 
+-static __inline void
++static inline void
+ ahd_platform_scb_free(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	ahd->flags &= ~AHD_RESOURCE_SHORTAGE;
+@@ -837,7 +837,7 @@ void	ahd_platform_free(struct ahd_softc 
+ void	ahd_platform_init(struct ahd_softc *ahd);
+ void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
+ 
+-static __inline void
++static inline void
+ ahd_freeze_scb(struct scb *scb)
+ {
+ 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
+diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -51,7 +51,7 @@
+ 
+ #include "aic79xx_pci.h"
+ 
+-static __inline uint64_t
++static inline uint64_t
+ ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
+ {
+ 	uint64_t id;
+diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_inline.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_inline.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic7xxx_inline.h
+@@ -46,10 +46,10 @@
+ #define _AIC7XXX_INLINE_H_
+ 
+ /************************* Sequencer Execution Control ************************/
+-static __inline void ahc_pause_bug_fix(struct ahc_softc *ahc);
+-static __inline int  ahc_is_paused(struct ahc_softc *ahc);
+-static __inline void ahc_pause(struct ahc_softc *ahc);
+-static __inline void ahc_unpause(struct ahc_softc *ahc);
++static inline void ahc_pause_bug_fix(struct ahc_softc *ahc);
++static inline int  ahc_is_paused(struct ahc_softc *ahc);
++static inline void ahc_pause(struct ahc_softc *ahc);
++static inline void ahc_unpause(struct ahc_softc *ahc);
+ 
+ /*
+  * Work around any chip bugs related to halting sequencer execution.
+@@ -59,7 +59,7 @@ static __inline void ahc_unpause(struct 
+  * manual pause while accessing scb ram, accesses to certain registers
+  * will hang the system (infinite pci retries).
+  */
+-static __inline void
++static inline void
+ ahc_pause_bug_fix(struct ahc_softc *ahc)
+ {
+ 	if ((ahc->features & AHC_ULTRA2) != 0)
+@@ -70,7 +70,7 @@ ahc_pause_bug_fix(struct ahc_softc *ahc)
+  * Determine whether the sequencer has halted code execution.
+  * Returns non-zero status if the sequencer is stopped.
+  */
+-static __inline int
++static inline int
+ ahc_is_paused(struct ahc_softc *ahc)
+ {
+ 	return ((ahc_inb(ahc, HCNTRL) & PAUSE) != 0);
+@@ -83,7 +83,7 @@ ahc_is_paused(struct ahc_softc *ahc)
+  * cleared in the SEQCTL register.  The sequencer may use PAUSEDIS
+  * for critical sections.
+  */
+-static __inline void
++static inline void
+ ahc_pause(struct ahc_softc *ahc)
+ {
+ 	ahc_outb(ahc, HCNTRL, ahc->pause);
+@@ -108,7 +108,7 @@ ahc_pause(struct ahc_softc *ahc)
+  * into our interrupt handler and dealing with this new
+  * condition.
+  */
+-static __inline void
++static inline void
+ ahc_unpause(struct ahc_softc *ahc)
+ {
+ 	if ((ahc_inb(ahc, INTSTAT) & (SCSIINT | SEQINT | BRKADRINT)) == 0)
+@@ -116,14 +116,14 @@ ahc_unpause(struct ahc_softc *ahc)
+ }
+ 
+ /*********************** Untagged Transaction Routines ************************/
+-static __inline void	ahc_freeze_untagged_queues(struct ahc_softc *ahc);
+-static __inline void	ahc_release_untagged_queues(struct ahc_softc *ahc);
++static inline void	ahc_freeze_untagged_queues(struct ahc_softc *ahc);
++static inline void	ahc_release_untagged_queues(struct ahc_softc *ahc);
+ 
+ /*
+  * Block our completion routine from starting the next untagged
+  * transaction for this target or target lun.
+  */
+-static __inline void
++static inline void
+ ahc_freeze_untagged_queues(struct ahc_softc *ahc)
+ {
+ 	if ((ahc->flags & AHC_SCB_BTT) == 0)
+@@ -136,7 +136,7 @@ ahc_freeze_untagged_queues(struct ahc_so
+  * to be acquired recursively.  Once the count drops to zero, the
+  * transaction queues will be run.
+  */
+-static __inline void
++static inline void
+ ahc_release_untagged_queues(struct ahc_softc *ahc)
+ {
+ 	if ((ahc->flags & AHC_SCB_BTT) == 0) {
+@@ -147,23 +147,23 @@ ahc_release_untagged_queues(struct ahc_s
+ }
+ 
+ /************************** Memory mapping routines ***************************/
+-static __inline struct ahc_dma_seg *
++static inline struct ahc_dma_seg *
+ 			ahc_sg_bus_to_virt(struct scb *scb,
+ 					   uint32_t sg_busaddr);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahc_sg_virt_to_bus(struct scb *scb,
+ 					   struct ahc_dma_seg *sg);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahc_hscb_busaddr(struct ahc_softc *ahc, u_int index);
+-static __inline void	ahc_sync_scb(struct ahc_softc *ahc,
++static inline void	ahc_sync_scb(struct ahc_softc *ahc,
+ 				     struct scb *scb, int op);
+-static __inline void	ahc_sync_sglist(struct ahc_softc *ahc,
++static inline void	ahc_sync_sglist(struct ahc_softc *ahc,
+ 					struct scb *scb, int op);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahc_targetcmd_offset(struct ahc_softc *ahc,
+ 					     u_int index);
+ 
+-static __inline struct ahc_dma_seg *
++static inline struct ahc_dma_seg *
+ ahc_sg_bus_to_virt(struct scb *scb, uint32_t sg_busaddr)
+ {
+ 	int sg_index;
+@@ -175,7 +175,7 @@ ahc_sg_bus_to_virt(struct scb *scb, uint
+ 	return (&scb->sg_list[sg_index]);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_sg_virt_to_bus(struct scb *scb, struct ahc_dma_seg *sg)
+ {
+ 	int sg_index;
+@@ -186,14 +186,14 @@ ahc_sg_virt_to_bus(struct scb *scb, stru
+ 	return (scb->sg_list_phys + (sg_index * sizeof(*scb->sg_list)));
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_hscb_busaddr(struct ahc_softc *ahc, u_int index)
+ {
+ 	return (ahc->scb_data->hscb_busaddr
+ 		+ (sizeof(struct hardware_scb) * index));
+ }
+ 
+-static __inline void
++static inline void
+ ahc_sync_scb(struct ahc_softc *ahc, struct scb *scb, int op)
+ {
+ 	ahc_dmamap_sync(ahc, ahc->scb_data->hscb_dmat,
+@@ -202,7 +202,7 @@ ahc_sync_scb(struct ahc_softc *ahc, stru
+ 			/*len*/sizeof(*scb->hscb), op);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_sync_sglist(struct ahc_softc *ahc, struct scb *scb, int op)
+ {
+ 	if (scb->sg_count == 0)
+@@ -214,16 +214,16 @@ ahc_sync_sglist(struct ahc_softc *ahc, s
+ 			/*len*/sizeof(struct ahc_dma_seg) * scb->sg_count, op);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_targetcmd_offset(struct ahc_softc *ahc, u_int index)
+ {
+ 	return (((uint8_t *)&ahc->targetcmds[index]) - ahc->qoutfifo);
+ }
+ 
+ /******************************** Debugging ***********************************/
+-static __inline char *ahc_name(struct ahc_softc *ahc);
++static inline char *ahc_name(struct ahc_softc *ahc);
+ 
+-static __inline char *
++static inline char *
+ ahc_name(struct ahc_softc *ahc)
+ {
+ 	return (ahc->name);
+@@ -231,35 +231,35 @@ ahc_name(struct ahc_softc *ahc)
+ 
+ /*********************** Miscellaneous Support Functions ***********************/
+ 
+-static __inline void	ahc_update_residual(struct ahc_softc *ahc,
++static inline void	ahc_update_residual(struct ahc_softc *ahc,
+ 					    struct scb *scb);
+-static __inline struct ahc_initiator_tinfo *
++static inline struct ahc_initiator_tinfo *
+ 			ahc_fetch_transinfo(struct ahc_softc *ahc,
+ 					    char channel, u_int our_id,
+ 					    u_int remote_id,
+ 					    struct ahc_tmode_tstate **tstate);
+-static __inline uint16_t
++static inline uint16_t
+ 			ahc_inw(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outw(struct ahc_softc *ahc, u_int port,
++static inline void	ahc_outw(struct ahc_softc *ahc, u_int port,
+ 				 u_int value);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahc_inl(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outl(struct ahc_softc *ahc, u_int port,
++static inline void	ahc_outl(struct ahc_softc *ahc, u_int port,
+ 				 uint32_t value);
+-static __inline uint64_t
++static inline uint64_t
+ 			ahc_inq(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outq(struct ahc_softc *ahc, u_int port,
++static inline void	ahc_outq(struct ahc_softc *ahc, u_int port,
+ 				 uint64_t value);
+-static __inline struct scb*
++static inline struct scb*
+ 			ahc_get_scb(struct ahc_softc *ahc);
+-static __inline void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
+-static __inline void	ahc_swap_with_next_hscb(struct ahc_softc *ahc,
++static inline void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
++static inline void	ahc_swap_with_next_hscb(struct ahc_softc *ahc,
+ 						struct scb *scb);
+-static __inline void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
+-static __inline struct scsi_sense_data *
++static inline void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
++static inline struct scsi_sense_data *
+ 			ahc_get_sense_buf(struct ahc_softc *ahc,
+ 					  struct scb *scb);
+-static __inline uint32_t
++static inline uint32_t
+ 			ahc_get_sense_bufaddr(struct ahc_softc *ahc,
+ 					      struct scb *scb);
+ 
+@@ -267,7 +267,7 @@ static __inline uint32_t
+  * Determine whether the sequencer reported a residual
+  * for this SCB/transaction.
+  */
+-static __inline void
++static inline void
+ ahc_update_residual(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	uint32_t sgptr;
+@@ -281,7 +281,7 @@ ahc_update_residual(struct ahc_softc *ah
+  * Return pointers to the transfer negotiation information
+  * for the specified our_id/remote_id pair.
+  */
+-static __inline struct ahc_initiator_tinfo *
++static inline struct ahc_initiator_tinfo *
+ ahc_fetch_transinfo(struct ahc_softc *ahc, char channel, u_int our_id,
+ 		    u_int remote_id, struct ahc_tmode_tstate **tstate)
+ {
+@@ -297,21 +297,21 @@ ahc_fetch_transinfo(struct ahc_softc *ah
+ 	return (&(*tstate)->transinfo[remote_id]);
+ }
+ 
+-static __inline uint16_t
++static inline uint16_t
+ ahc_inw(struct ahc_softc *ahc, u_int port)
+ {
+ 	uint16_t r = ahc_inb(ahc, port+1) << 8;
+ 	return r | ahc_inb(ahc, port);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_outw(struct ahc_softc *ahc, u_int port, u_int value)
+ {
+ 	ahc_outb(ahc, port, value & 0xFF);
+ 	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_inl(struct ahc_softc *ahc, u_int port)
+ {
+ 	return ((ahc_inb(ahc, port))
+@@ -320,7 +320,7 @@ ahc_inl(struct ahc_softc *ahc, u_int por
+ 	      | (ahc_inb(ahc, port+3) << 24));
+ }
+ 
+-static __inline void
++static inline void
+ ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
+ {
+ 	ahc_outb(ahc, port, (value) & 0xFF);
+@@ -329,7 +329,7 @@ ahc_outl(struct ahc_softc *ahc, u_int po
+ 	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
+ }
+ 
+-static __inline uint64_t
++static inline uint64_t
+ ahc_inq(struct ahc_softc *ahc, u_int port)
+ {
+ 	return ((ahc_inb(ahc, port))
+@@ -342,7 +342,7 @@ ahc_inq(struct ahc_softc *ahc, u_int por
+ 	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
+ }
+ 
+-static __inline void
++static inline void
+ ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
+ {
+ 	ahc_outb(ahc, port, value & 0xFF);
+@@ -358,7 +358,7 @@ ahc_outq(struct ahc_softc *ahc, u_int po
+ /*
+  * Get a free scb. If there are none, see if we can allocate a new SCB.
+  */
+-static __inline struct scb *
++static inline struct scb *
+ ahc_get_scb(struct ahc_softc *ahc)
+ {
+ 	struct scb *scb;
+@@ -376,7 +376,7 @@ ahc_get_scb(struct ahc_softc *ahc)
+ /*
+  * Return an SCB resource to the free list.
+  */
+-static __inline void
++static inline void
+ ahc_free_scb(struct ahc_softc *ahc, struct scb *scb)
+ {       
+ 	struct hardware_scb *hscb;
+@@ -393,7 +393,7 @@ ahc_free_scb(struct ahc_softc *ahc, stru
+ 	ahc_platform_scb_free(ahc, scb);
+ }
+ 
+-static __inline struct scb *
++static inline struct scb *
+ ahc_lookup_scb(struct ahc_softc *ahc, u_int tag)
+ {
+ 	struct scb* scb;
+@@ -405,7 +405,7 @@ ahc_lookup_scb(struct ahc_softc *ahc, u_
+ 	return (scb);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	struct hardware_scb *q_hscb;
+@@ -445,7 +445,7 @@ ahc_swap_with_next_hscb(struct ahc_softc
+ /*
+  * Tell the sequencer about a new transaction to execute.
+  */
+-static __inline void
++static inline void
+ ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	ahc_swap_with_next_hscb(ahc, scb);
+@@ -485,7 +485,7 @@ ahc_queue_scb(struct ahc_softc *ahc, str
  	}
+ }
  
--	printk(KERN_DEBUG "%s: SCSI clock %d\n", __FUNCTION__, clock);
-+	printk(KERN_DEBUG "%s: SCSI clock %d\n", __func__, clock);
-  	return clock;
+-static __inline struct scsi_sense_data *
++static inline struct scsi_sense_data *
+ ahc_get_sense_buf(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	int offset;
+@@ -494,7 +494,7 @@ ahc_get_sense_buf(struct ahc_softc *ahc,
+ 	return (&ahc->scb_data->sense[offset]);
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_get_sense_bufaddr(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	int offset;
+@@ -505,19 +505,19 @@ ahc_get_sense_bufaddr(struct ahc_softc *
+ }
+ 
+ /************************** Interrupt Processing ******************************/
+-static __inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
+-static __inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
+-static __inline u_int	ahc_check_cmdcmpltqueues(struct ahc_softc *ahc);
+-static __inline int	ahc_intr(struct ahc_softc *ahc);
++static inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
++static inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
++static inline u_int	ahc_check_cmdcmpltqueues(struct ahc_softc *ahc);
++static inline int	ahc_intr(struct ahc_softc *ahc);
+ 
+-static __inline void
++static inline void
+ ahc_sync_qoutfifo(struct ahc_softc *ahc, int op)
+ {
+ 	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
+ 			/*offset*/0, /*len*/256, op);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_sync_tqinfifo(struct ahc_softc *ahc, int op)
+ {
+ #ifdef AHC_TARGET_MODE
+@@ -537,7 +537,7 @@ ahc_sync_tqinfifo(struct ahc_softc *ahc,
+  */
+ #define AHC_RUN_QOUTFIFO 0x1
+ #define AHC_RUN_TQINFIFO 0x2
+-static __inline u_int
++static inline u_int
+ ahc_check_cmdcmpltqueues(struct ahc_softc *ahc)
+ {
+ 	u_int retval;
+@@ -566,7 +566,7 @@ ahc_check_cmdcmpltqueues(struct ahc_soft
+ /*
+  * Catch an interrupt from the adapter
+  */
+-static __inline int
++static inline int
+ ahc_intr(struct ahc_softc *ahc)
+ {
+ 	u_int	intstat;
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -389,13 +389,13 @@ static int ahc_linux_unit;
+ 
+ 
+ /********************************* Inlines ************************************/
+-static __inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
++static inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
+ 
+-static __inline int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
++static inline int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		 		      struct ahc_dma_seg *sg,
+ 				      dma_addr_t addr, bus_size_t len);
+ 
+-static __inline void
++static inline void
+ ahc_linux_unmap_scb(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	struct scsi_cmnd *cmd;
+@@ -406,7 +406,7 @@ ahc_linux_unmap_scb(struct ahc_softc *ah
+ 	scsi_dma_unmap(cmd);
+ }
+ 
+-static __inline int
++static inline int
+ ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		  struct ahc_dma_seg *sg, dma_addr_t addr, bus_size_t len)
+ {
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_osm.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -230,7 +230,7 @@ int	ahc_dmamap_unload(struct ahc_softc *
+ #include "aic7xxx.h"
+ 
+ /***************************** Timer Facilities *******************************/
+-static __inline void
++static inline void
+ ahc_scb_timer_reset(struct scb *scb, u_int usec)
+ {
+ }
+@@ -375,8 +375,8 @@ struct ahc_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahc_delay(long);
+-static __inline void
++static inline void ahc_delay(long);
++static inline void
+ ahc_delay(long usec)
+ {
+ 	/*
+@@ -392,14 +392,14 @@ ahc_delay(long usec)
+ 
+ 
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahc_inb(struct ahc_softc * ahc, long port);
+-static __inline void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
+-static __inline void ahc_outsb(struct ahc_softc * ahc, long port,
++static inline uint8_t ahc_inb(struct ahc_softc * ahc, long port);
++static inline void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
++static inline void ahc_outsb(struct ahc_softc * ahc, long port,
+ 			       uint8_t *, int count);
+-static __inline void ahc_insb(struct ahc_softc * ahc, long port,
++static inline void ahc_insb(struct ahc_softc * ahc, long port,
+ 			       uint8_t *, int count);
+ 
+-static __inline uint8_t
++static inline uint8_t
+ ahc_inb(struct ahc_softc * ahc, long port)
+ {
+ 	uint8_t x;
+@@ -413,7 +413,7 @@ ahc_inb(struct ahc_softc * ahc, long por
+ 	return (x);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_outb(struct ahc_softc * ahc, long port, uint8_t val)
+ {
+ 	if (ahc->tag == BUS_SPACE_MEMIO) {
+@@ -424,7 +424,7 @@ ahc_outb(struct ahc_softc * ahc, long po
+ 	mb();
+ }
+ 
+-static __inline void
++static inline void
+ ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+ {
+ 	int i;
+@@ -438,7 +438,7 @@ ahc_outsb(struct ahc_softc * ahc, long p
+ 		ahc_outb(ahc, port, *array++);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+ {
+ 	int i;
+@@ -470,19 +470,19 @@ void	ahc_format_transinfo(struct info_st
+ /******************************** Locking *************************************/
+ /* Lock protecting internal data structures */
+ 
+-static __inline void
++static inline void
+ ahc_lockinit(struct ahc_softc *ahc)
+ {
+ 	spin_lock_init(&ahc->platform_data->spin_lock);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_lock(struct ahc_softc *ahc, unsigned long *flags)
+ {
+ 	spin_lock_irqsave(&ahc->platform_data->spin_lock, *flags);
+ }
+ 
+-static __inline void
++static inline void
+ ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
+ {
+ 	spin_unlock_irqrestore(&ahc->platform_data->spin_lock, *flags);
+@@ -555,10 +555,10 @@ void			 ahc_linux_pci_exit(void);
+ int			 ahc_pci_map_registers(struct ahc_softc *ahc);
+ int			 ahc_pci_map_int(struct ahc_softc *ahc);
+ 
+-static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
++static inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+-static __inline uint32_t
++static inline uint32_t
+ ahc_pci_read_config(ahc_dev_softc_t pci, int reg, int width)
+ {
+ 	switch (width) {
+@@ -588,11 +588,11 @@ ahc_pci_read_config(ahc_dev_softc_t pci,
+ 	}
+ }
+ 
+-static __inline void ahc_pci_write_config(ahc_dev_softc_t pci,
++static inline void ahc_pci_write_config(ahc_dev_softc_t pci,
+ 					  int reg, uint32_t value,
+ 					  int width);
+ 
+-static __inline void
++static inline void
+ ahc_pci_write_config(ahc_dev_softc_t pci, int reg, uint32_t value, int width)
+ {
+ 	switch (width) {
+@@ -611,22 +611,22 @@ ahc_pci_write_config(ahc_dev_softc_t pci
+ 	}
+ }
+ 
+-static __inline int ahc_get_pci_function(ahc_dev_softc_t);
+-static __inline int
++static inline int ahc_get_pci_function(ahc_dev_softc_t);
++static inline int
+ ahc_get_pci_function(ahc_dev_softc_t pci)
+ {
+ 	return (PCI_FUNC(pci->devfn));
+ }
+ 
+-static __inline int ahc_get_pci_slot(ahc_dev_softc_t);
+-static __inline int
++static inline int ahc_get_pci_slot(ahc_dev_softc_t);
++static inline int
+ ahc_get_pci_slot(ahc_dev_softc_t pci)
+ {
+ 	return (PCI_SLOT(pci->devfn));
+ }
+ 
+-static __inline int ahc_get_pci_bus(ahc_dev_softc_t);
+-static __inline int
++static inline int ahc_get_pci_bus(ahc_dev_softc_t);
++static inline int
+ ahc_get_pci_bus(ahc_dev_softc_t pci)
+ {
+ 	return (pci->bus->number);
+@@ -639,8 +639,8 @@ static inline void ahc_linux_pci_exit(vo
  }
  #endif
-@@ -108,13 +108,13 @@ zalon_probe(struct parisc_device *dev)
- 	*/
- 	dev->irq = gsc_alloc_irq(&gsc_irq);
  
--	printk(KERN_INFO "%s: Zalon version %d, IRQ %d\n", __FUNCTION__,
-+	printk(KERN_INFO "%s: Zalon version %d, IRQ %d\n", __func__,
- 		zalon_vers, dev->irq);
+-static __inline void ahc_flush_device_writes(struct ahc_softc *);
+-static __inline void
++static inline void ahc_flush_device_writes(struct ahc_softc *);
++static inline void
+ ahc_flush_device_writes(struct ahc_softc *ahc)
+ {
+ 	/* XXX Is this sufficient for all architectures??? */
+@@ -653,29 +653,29 @@ int	ahc_linux_proc_info(struct Scsi_Host
  
- 	__raw_writel(gsc_irq.txn_addr | gsc_irq.txn_data, zalon + IO_MODULE_EIM);
+ /*************************** Domain Validation ********************************/
+ /*********************** Transaction Access Wrappers *************************/
+-static __inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
+-static __inline void ahc_set_transaction_status(struct scb *, uint32_t);
+-static __inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
+-static __inline void ahc_set_scsi_status(struct scb *, uint32_t);
+-static __inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
+-static __inline uint32_t ahc_get_transaction_status(struct scb *);
+-static __inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
+-static __inline uint32_t ahc_get_scsi_status(struct scb *);
+-static __inline void ahc_set_transaction_tag(struct scb *, int, u_int);
+-static __inline u_long ahc_get_transfer_length(struct scb *);
+-static __inline int ahc_get_transfer_dir(struct scb *);
+-static __inline void ahc_set_residual(struct scb *, u_long);
+-static __inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
+-static __inline u_long ahc_get_residual(struct scb *);
+-static __inline u_long ahc_get_sense_residual(struct scb *);
+-static __inline int ahc_perform_autosense(struct scb *);
+-static __inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
++static inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
++static inline void ahc_set_transaction_status(struct scb *, uint32_t);
++static inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
++static inline void ahc_set_scsi_status(struct scb *, uint32_t);
++static inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
++static inline uint32_t ahc_get_transaction_status(struct scb *);
++static inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
++static inline uint32_t ahc_get_scsi_status(struct scb *);
++static inline void ahc_set_transaction_tag(struct scb *, int, u_int);
++static inline u_long ahc_get_transfer_length(struct scb *);
++static inline int ahc_get_transfer_dir(struct scb *);
++static inline void ahc_set_residual(struct scb *, u_long);
++static inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
++static inline u_long ahc_get_residual(struct scb *);
++static inline u_long ahc_get_sense_residual(struct scb *);
++static inline int ahc_perform_autosense(struct scb *);
++static inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
+ 					       struct scb *);
+-static __inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
++static inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
+ 						     struct ahc_devinfo *);
+-static __inline void ahc_platform_scb_free(struct ahc_softc *ahc,
++static inline void ahc_platform_scb_free(struct ahc_softc *ahc,
+ 					   struct scb *scb);
+-static __inline void ahc_freeze_scb(struct scb *scb);
++static inline void ahc_freeze_scb(struct scb *scb);
  
- 	if (zalon_vers == 0)
--		printk(KERN_WARNING "%s: Zalon 1.1 or earlier\n", __FUNCTION__);
-+		printk(KERN_WARNING "%s: Zalon 1.1 or earlier\n", __func__);
+ static __inline
+ void ahc_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
+@@ -783,20 +783,20 @@ int ahc_perform_autosense(struct scb *sc
+ 	return (1);
+ }
  
- 	memset(&device, 0, sizeof(struct ncr_device));
+-static __inline uint32_t
++static inline uint32_t
+ ahc_get_sense_bufsize(struct ahc_softc *ahc, struct scb *scb)
+ {
+ 	return (sizeof(struct scsi_sense_data));
+ }
+ 
+-static __inline void
++static inline void
+ ahc_notify_xfer_settings_change(struct ahc_softc *ahc,
+ 				struct ahc_devinfo *devinfo)
+ {
+ 	/* Nothing to do here for linux */
+ }
+ 
+-static __inline void
++static inline void
+ ahc_platform_scb_free(struct ahc_softc *ahc, struct scb *scb)
+ {
+ }
+@@ -805,7 +805,7 @@ int	ahc_platform_alloc(struct ahc_softc 
+ void	ahc_platform_free(struct ahc_softc *ahc);
+ void	ahc_platform_freeze_devq(struct ahc_softc *ahc, struct scb *scb);
+ 
+-static __inline void
++static inline void
+ ahc_freeze_scb(struct scb *scb)
+ {
+ 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
+diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_pci.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_pci.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aic7xxx_pci.c
+@@ -54,7 +54,7 @@
+ 
+ #include "aic7xxx_pci.h"
+ 
+-static __inline uint64_t
++static inline uint64_t
+ ahc_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
+ {
+ 	uint64_t id;
+diff -puN drivers/scsi/aic7xxx/aiclib.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aiclib.h
+--- a/drivers/scsi/aic7xxx/aiclib.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/aic7xxx/aiclib.h
+@@ -133,7 +133,7 @@ struct scsi_sense_data
+ #define SCSI_STATUS_TASK_ABORTED	0x40
+ 
+ /************************* Large Disk Handling ********************************/
+-static __inline int
++static inline int
+ aic_sector_div(sector_t capacity, int heads, int sectors)
+ {
+ 	/* ugly, ugly sector_div calling convention.. */
+@@ -141,7 +141,7 @@ aic_sector_div(sector_t capacity, int he
+ 	return (int)capacity;
+ }
+ 
+-static __inline uint32_t
++static inline uint32_t
+ scsi_4btoul(uint8_t *bytes)
+ {
+ 	uint32_t rv;
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_glue.h
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -234,7 +234,7 @@ static inline struct sym_hcb * sym_get_h
+ /*
+  *  Set the status field of a CAM CCB.
+  */
+-static __inline void 
++static inline void
+ sym_set_cam_status(struct scsi_cmnd *cmd, int status)
+ {
+ 	cmd->result &= ~(0xff  << 16);
+@@ -244,7 +244,7 @@ sym_set_cam_status(struct scsi_cmnd *cmd
+ /*
+  *  Get the status field of a CAM CCB.
+  */
+-static __inline int 
++static inline int
+ sym_get_cam_status(struct scsi_cmnd *cmd)
+ {
+ 	return host_byte(cmd->result);
+@@ -253,7 +253,7 @@ sym_get_cam_status(struct scsi_cmnd *cmd
+ /*
+  *  Build CAM result for a successful IO and for a failed IO.
+  */
+-static __inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
++static inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
+ {
+ 	scsi_set_resid(cmd, resid);
+ 	cmd->result = (((DID_OK) << 16) + ((cp->ssss_status) & 0x7f));
+diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -602,7 +602,7 @@ sym_getsync(struct sym_hcb *np, u_char d
+ /*
+  *  Set initial io register bits from burst code.
+  */
+-static __inline void sym_init_burst(struct sym_hcb *np, u_char bc)
++static inline void sym_init_burst(struct sym_hcb *np, u_char bc)
+ {
+ 	np->rv_ctest4	&= ~0x80;
+ 	np->rv_dmode	&= ~(0x3 << 6);
+diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_hipd.h
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -1092,7 +1092,7 @@ do {									\
+ #elif SYM_CONF_DMA_ADDRESSING_MODE == 2
+ #define DMA_DAC_MASK	DMA_64BIT_MASK
+ int sym_lookup_dmap(struct sym_hcb *np, u32 h, int s);
+-static __inline void 
++static inline void
+ sym_build_sge(struct sym_hcb *np, struct sym_tblmove *data, u64 badd, int len)
+ {
+ 	u32 h = (badd>>32);
+@@ -1197,7 +1197,7 @@ dma_addr_t __vtobus(m_pool_ident_t dev_d
+ 
+ #define sym_m_pool_match(mp_id1, mp_id2)	(mp_id1 == mp_id2)
+ 
+-static __inline void *sym_m_get_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
++static inline void *sym_m_get_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
+ {
+ 	void *vaddr = NULL;
+ 	dma_addr_t baddr = 0;
+@@ -1211,7 +1211,7 @@ static __inline void *sym_m_get_dma_mem_
+ 	return vaddr;
+ }
+ 
+-static __inline void sym_m_free_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
++static inline void sym_m_free_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
+ {
+ 	dma_free_coherent(mp->dev_dmat, SYM_MEM_CLUSTER_SIZE, vbp->vaddr,
+ 			vbp->baddr);
+diff -puN drivers/scsi/sym53c8xx_2/sym_malloc.c~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_malloc.c
+--- a/drivers/scsi/sym53c8xx_2/sym_malloc.c~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/sym53c8xx_2/sym_malloc.c
+@@ -262,7 +262,7 @@ static void ___free_dma_mem_cluster(m_po
+ #endif
+ 
+ /* Fetch the memory pool for a given pool id (i.e. DMA constraints) */
+-static __inline m_pool_p ___get_dma_pool(m_pool_ident_t dev_dmat)
++static inline m_pool_p ___get_dma_pool(m_pool_ident_t dev_dmat)
+ {
+ 	m_pool_p mp;
+ 	for (mp = mp0.next;
+diff -puN drivers/scsi/sym53c8xx_2/sym_misc.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_misc.h
+--- a/drivers/scsi/sym53c8xx_2/sym_misc.h~scsi-replace-__inline-with-inline
++++ a/drivers/scsi/sym53c8xx_2/sym_misc.h
+@@ -52,17 +52,17 @@ typedef struct sym_quehead {
+ 	(ptr)->flink = (ptr); (ptr)->blink = (ptr); \
+ } while (0)
+ 
+-static __inline struct sym_quehead *sym_que_first(struct sym_quehead *head)
++static inline struct sym_quehead *sym_que_first(struct sym_quehead *head)
+ {
+ 	return (head->flink == head) ? 0 : head->flink;
+ }
+ 
+-static __inline struct sym_quehead *sym_que_last(struct sym_quehead *head)
++static inline struct sym_quehead *sym_que_last(struct sym_quehead *head)
+ {
+ 	return (head->blink == head) ? 0 : head->blink;
+ }
+ 
+-static __inline void __sym_que_add(struct sym_quehead * new,
++static inline void __sym_que_add(struct sym_quehead * new,
+ 	struct sym_quehead * blink,
+ 	struct sym_quehead * flink)
+ {
+@@ -72,19 +72,19 @@ static __inline void __sym_que_add(struc
+ 	blink->flink	= new;
+ }
+ 
+-static __inline void __sym_que_del(struct sym_quehead * blink,
++static inline void __sym_que_del(struct sym_quehead * blink,
+ 	struct sym_quehead * flink)
+ {
+ 	flink->blink = blink;
+ 	blink->flink = flink;
+ }
+ 
+-static __inline int sym_que_empty(struct sym_quehead *head)
++static inline int sym_que_empty(struct sym_quehead *head)
+ {
+ 	return head->flink == head;
+ }
+ 
+-static __inline void sym_que_splice(struct sym_quehead *list,
++static inline void sym_que_splice(struct sym_quehead *list,
+ 	struct sym_quehead *head)
+ {
+ 	struct sym_quehead *first = list->flink;
+@@ -101,7 +101,7 @@ static __inline void sym_que_splice(stru
+ 	}
+ }
+ 
+-static __inline void sym_que_move(struct sym_quehead *orig,
++static inline void sym_que_move(struct sym_quehead *orig,
+ 	struct sym_quehead *dest)
+ {
+ 	struct sym_quehead *first, *last;
+@@ -131,7 +131,7 @@ static __inline void sym_que_move(struct
+ 
+ #define sym_insque_head(new, head)	__sym_que_add(new, head, (head)->flink)
+ 
+-static __inline struct sym_quehead *sym_remque_head(struct sym_quehead *head)
++static inline struct sym_quehead *sym_remque_head(struct sym_quehead *head)
+ {
+ 	struct sym_quehead *elem = head->flink;
+ 
+@@ -144,7 +144,7 @@ static __inline struct sym_quehead *sym_
+ 
+ #define sym_insque_tail(new, head)	__sym_que_add(new, (head)->blink, head)
+ 
+-static __inline struct sym_quehead *sym_remque_tail(struct sym_quehead *head)
++static inline struct sym_quehead *sym_remque_tail(struct sym_quehead *head)
+ {
+ 	struct sym_quehead *elem = head->blink;
  
 _
