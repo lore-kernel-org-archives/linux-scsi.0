@@ -1,47 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 05/17] scsi: le*_add_cpu conversion
-Date: Fri, 28 Mar 2008 18:09:08 -0400
-Message-ID: <47ED6C84.3070304@garzik.org>
-References: <200803282148.m2SLmZlt012228@imap1.linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 13/17] drivers/scsi/initio.c: suppress compile warning
+Date: Fri, 28 Mar 2008 15:13:16 -0700
+Message-ID: <20080328151316.58c43596.akpm@linux-foundation.org>
+References: <200803282148.m2SLmfg7012252@imap1.linux-foundation.org>
+	<da824cf30803281455g22334554y8cb3887beec951a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55229 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754181AbYC1WJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 18:09:13 -0400
-In-Reply-To: <200803282148.m2SLmZlt012228@imap1.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37572 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752897AbYC1WN0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2008 18:13:26 -0400
+In-Reply-To: <da824cf30803281455g22334554y8cb3887beec951a@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, marcin.slusarz@gmail.com, Mark_Salyzyn@adaptec.com
+To: Grant Grundler <grundler@google.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-akpm@linux-foundation.org wrote:
-> From: Marcin Slusarz <marcin.slusarz@gmail.com>
+On Fri, 28 Mar 2008 14:55:28 -0700
+"Grant Grundler" <grundler@google.com> wrote:
+
+> On Fri, Mar 28, 2008 at 2:48 PM,  <akpm@linux-foundation.org> wrote:
+> > From: Andrew Morton <akpm@linux-foundation.org>
+> >
+> >  powerpc:
+> >
+> >  drivers/scsi/initio.c: In function 'initio_build_scb':
+> >  drivers/scsi/initio.c:2585: warning: large integer implicitly truncated to unsigned type
 > 
-> replace all:
-> little_endian_variable = cpu_to_leX(leX_to_cpu(little_endian_variable) +
-> 					expression_in_cpu_byteorder);
-> with:
-> 	leX_add_cpu(&little_endian_variable, expression_in_cpu_byteorder);
-> generated with semantic patch
-> 
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: James.Bottomley@HansenPartnership.com
-> Acked-by: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/aacraid/commsup.c |    2 +-
->  drivers/scsi/ips.c             |    8 ++------
->  2 files changed, 3 insertions(+), 7 deletions(-)
+> I posted a fix for this yesterday and Alan Cox ACKed it.
 
-Not commenting on the patch, but the API:  it should be le32_add() not 
-le32_add_cpu()
+Oh well, I droped this one then.
 
-	Jeff
+> It's here:
+>     http://marc.info/?l=linux-scsi&m=120668352622659&w=2
 
-
-
+And there it will probably stay.  Please send me a copy if you want to
+delegate the send-it-until-it-sticks slog.
 
