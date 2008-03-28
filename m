@@ -1,47 +1,48 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/17] #if 0 ses_match_host()
-Date: Fri, 28 Mar 2008 14:48:36 -0700
-Message-ID: <200803282148.m2SLmaFb012234@imap1.linux-foundation.org>
+Subject: [patch 12/17] ips.c: fix build warning
+Date: Fri, 28 Mar 2008 14:48:40 -0700
+Message-ID: <200803282148.m2SLmeDg012249@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46858 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49680 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757076AbYC1Vt1 (ORCPT
+	by vger.kernel.org with ESMTP id S1757407AbYC1VtW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2008 17:49:27 -0400
+	Fri, 28 Mar 2008 17:49:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Mark_Salyzyn@adaptec.com, aacraid@adaptec.com, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-#if 0 the unused ses_match_host()
+powerpc:
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+drivers/scsi/ips.c: In function 'ips_issue_copperhead':
+drivers/scsi/ips.c:5436: warning: large integer implicitly truncated to unsigned type
+
+it doesn't seem necessary to do outw(cpu_to_le32(...), ...) anyway.
+
+Acked-by: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: <aacraid@adaptec.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ses.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ips.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ses.c~if-0-ses_match_host drivers/scsi/ses.c
---- a/drivers/scsi/ses.c~if-0-ses_match_host
-+++ a/drivers/scsi/ses.c
-@@ -264,6 +264,7 @@ struct ses_host_edev {
- 	struct enclosure_device *edev;
- };
+diff -puN drivers/scsi/ips.c~ipsc-fix-build-warning drivers/scsi/ips.c
+--- a/drivers/scsi/ips.c~ipsc-fix-build-warning
++++ a/drivers/scsi/ips.c
+@@ -5399,7 +5399,7 @@ ips_issue_copperhead(ips_ha_t * ha, ips_
+ 	}			/* end while */
  
-+#if 0
- int ses_match_host(struct enclosure_device *edev, void *data)
- {
- 	struct ses_host_edev *sed = data;
-@@ -280,6 +281,7 @@ int ses_match_host(struct enclosure_devi
- 	sed->edev = edev;
- 	return 1;
+ 	outl(cpu_to_le32(scb->scb_busaddr), ha->io_addr + IPS_REG_CCSAR);
+-	outw(cpu_to_le32(IPS_BIT_START_CMD), ha->io_addr + IPS_REG_CCCR);
++	outw(cpu_to_le16(IPS_BIT_START_CMD), ha->io_addr + IPS_REG_CCCR);
+ 
+ 	return (IPS_SUCCESS);
  }
-+#endif  /*  0  */
- 
- static void ses_process_descriptor(struct enclosure_component *ecomp,
- 				   unsigned char *desc)
 _
