@@ -1,74 +1,88 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 4/5] scsi_debug: support large non-fake virtual disk
-Date: Sat, 29 Mar 2008 14:09:29 -0400
-Message-ID: <47EE85D9.5070803@torque.net>
-References: <1206806398-22205-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1206806398-22205-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1206806398-22205-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1206806398-22205-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1206806398-22205-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Reply-To: dougg@torque.net
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: aic94xx driver woes continued
+Date: Sat, 29 Mar 2008 15:39:18 -0700 (PDT)
+Message-ID: <663394.20251.qm@web31802.mail.mud.yahoo.com>
+References: <1206043027.3038.48.camel@localhost.localdomain>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-relay2e.uniserve.ca ([216.113.195.59]:60082 "EHLO
-	smtp-relay2.uniserve.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754078AbYC2TyF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Mar 2008 15:54:05 -0400
-In-Reply-To: <1206806398-22205-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from web31802.mail.mud.yahoo.com ([68.142.207.65]:35836 "HELO
+	web31802.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750963AbYC2WjT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Mar 2008 18:39:19 -0400
+In-Reply-To: <1206043027.3038.48.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> Currently, the maximum amount of RAM that scsi_debug can allocate is
-> 4GB. This patch increases it to 2TB; scsi_debug can allocates 2TB
-> memory and export it as if it were 2TB scsi disk.
+--- On Thu, 3/20/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Thu, 2008-03-20 at 20:15 +0100, Raoul Bhatia [IPAX]
+> wrote:
+> > James Bottomley wrote:
+> > > This is all normal.  Seagate drives are known for
+> throwing protocol
+> > > errors under stress at certain revs of firmware. 
+> That's what
+> > > REQ_TASK_ABORT, reason=0x6 is.
+> > > 
+> > > Your logs indicate that the recovery occurred
+> correctly (as in all tasks
+> > > were eventually retried), so it doesn't show
+> an actual problem.
+> > 
+> > ok, i already filed a trouble ticket at seagate - lets
+> see if they
+> > provide a firmware update for the disks. afaik mine is
+> "firmware 0002"
+> > 
+> > >> sometimes even a disk is kicked out of the
+> raid configuration.
+> > > 
+> > > This would be abnormal, if you have a log of
+> this, could you post it.  I
+> > > assume it was because of I/O errors?
+> > 
+> > i attached a bigger syslog file (.gz format).
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Douglas Gilbert <dougg@torque.net>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  drivers/scsi/scsi_debug.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+> OK, this looks more definitive, thanks!
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index c98559e..1b6a6d8 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -1949,7 +1949,7 @@ static void __init init_all_queued(void)
->  }
->  
->  static void __init sdebug_build_parts(unsigned char *ramp,
-> -				      unsigned int store_size)
-> +				      unsigned long store_size)
->  {
->  	struct partition * pp;
->  	int starts[SDEBUG_MAX_PARTS + 2];
-> @@ -2476,14 +2476,14 @@ static void do_remove_driverfs_files(void)
->  
->  static int __init scsi_debug_init(void)
->  {
-> -	unsigned int sz;
-> +	unsigned long sz;
->  	int host_to_add;
->  	int k;
->  	int ret;
->  
->  	if (scsi_debug_dev_size_mb < 1)
->  		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
-> -	sz = (unsigned int)scsi_debug_dev_size_mb * 1048576;
-> +	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
->  	sdebug_store_sectors = sz / SECT_SIZE;
->  	sdebug_capacity = get_sdebug_capacity();
->  
+> What appears to be happening is that you get a run of
+> protocol errors,
+> not necessarily all on the same command, but what happens
+> every time (by
+> current design of the aic94xx driver) is that we halt the
+> aic94xx, abort
+> all the outstanding commands and resubmit them.  Because
+> the disk is
+> being hammered, there are rather a lot, so all it takes is
+> five protocol
+> errors in a few seconds for one unlucky command to get
+> aborted five
+> times (not necessarily through any fault of its own) and
+> run out of
+> retries.  This causes it to return to the upper layers with
+> DID_ABORT
+> and be treated as an I/O error.
+> 
+> A work around might be to lower the queue depth to say 4 or
+> 8 and up the
+> retries (this latter can only be done by altering the
+> SD_MAX_RETRIES
+> parameter in include/scsi/sd.h and recompiling).
+> 
+> Longer term, I think REQ_TASK_ABORT needs to be handled
+> better on the
+> fly.  What we should do is abort only the task we've
+> been asked to abort
+> and return it to the upper layer for a retry without
+> invoking the error
+> handler ... I can look into this, but it will take a while.
 
-Tomo,
-Unsigned long is 32 bits on i386 (and 64 bits in the LP64
-data model). Don't you want 64 bits in all cases? Either
-unsigned long long, uint64_t or one of those crappy
-kernel typedefs for 64 bits.
+The original driver, from which you forked off, has always supported
+this correct (SCSI) behaviour.
 
-BTW I recently removed just about all the "unsigned long"
-declarations out of sg3_utils due the uncertainty about the
-size of "long".
+   Luben
 
-Doug Gilbert
