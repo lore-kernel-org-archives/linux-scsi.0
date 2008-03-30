@@ -1,42 +1,47 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make scsi_end_bidi_request() static
-Date: Mon, 31 Mar 2008 01:53:55 +0300
-Message-ID: <20080330225355.GK28445@cs181133002.pp.htv.fi>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [patch 12/17] ips.c: fix build warning
+Date: Mon, 31 Mar 2008 08:57:30 +0900
+Message-ID: <20080331085730T.fujita.tomonori@lab.ntt.co.jp>
+References: <200803282148.m2SLmeDg012249@imap1.linux-foundation.org>
+	<1206896842.4224.46.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:53413 "EHLO smtp5.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758813AbYC3WyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Mar 2008 18:54:08 -0400
-Content-Disposition: inline
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:61008 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbYC3X62 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Mar 2008 19:58:28 -0400
+In-Reply-To: <1206896842.4224.46.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com, aacraid@adaptec.com, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org
 
-This patch makes the needlessly global scsi_end_bidi_request() static.
+On Sun, 30 Mar 2008 12:07:22 -0500
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
+> > From: Andrew Morton <akpm@linux-foundation.org>
+> > 
+> > powerpc:
+> > 
+> > drivers/scsi/ips.c: In function 'ips_issue_copperhead':
+> > drivers/scsi/ips.c:5436: warning: large integer implicitly truncated to unsigned type
+> > 
+> > it doesn't seem necessary to do outw(cpu_to_le32(...), ...) anyway.
+> 
+> Actually, it's not only not necessary ... it's an actual bug on BE
+> platforms.  Both writeX and outX/inX automatically convert from native
+> to bus endian (usually simply to LE since the bus is PCI).  Therefore if
+> you add a cpu_to_leX, you actually write the wrong value on a BE system.
+> 
+> Mark, it looks like the correct fix is simply to strip all of these ...
+> has this driver actually been tested on a BE platform (like parisc or
+> PPC)?
 
----
+I guess that it hasn't. ips.c includes:
 
-This patch has been sent on:
-- 27 Feb 2008
-- 13 Feb 2008
-
-48e50a33ee11afb02eadc790ae2d9542b0805608 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b12fb31..148c8b0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -785,7 +785,7 @@ EXPORT_SYMBOL(scsi_release_buffers);
-  * in req->data_len and req->next_rq->data_len. The upper-layer driver can
-  * decide what to do with this information.
-  */
--void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-+static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
- {
- 	struct request *req = cmd->request;
- 	unsigned int dlen = req->data_len;
-
+#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
+#warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+#endif
