@@ -1,52 +1,94 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/5] scsi_debug: increase the amount of ram that scsi_ram
- can allocate
-Date: Sun, 30 Mar 2008 13:11:49 -0400
-Message-ID: <47EFC9D5.8080107@torque.net>
-References: <1206806398-22205-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 14/17] drivers/scsi/hptiop.c: fix build warning
+Date: Sun, 30 Mar 2008 12:36:26 -0500
+Message-ID: <1206898586.4224.61.camel@localhost.localdomain>
+References: <200803282148.m2SLmfAG012255@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-relay1.uniserve.ca ([204.239.42.80]:57918 "EHLO
-	smtp-relay1.uniserve.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422AbYC3R2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Mar 2008 13:28:46 -0400
-In-Reply-To: <1206806398-22205-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40104 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751610AbYC3Rg3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Mar 2008 13:36:29 -0400
+In-Reply-To: <200803282148.m2SLmfAG012255@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux@highpoint-tech.com
 
-FUJITA Tomonori wrote:
-> Currently, the maximum amount of RAM that scsi_debug can actually
-> allocate is 4GB. This patchset increase it to 2TB.
+On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
 > 
-> Here's an example, scsi_debug allocates 6GB ram and exports it as if
-> it were 6GB disk.
+> powerpc:
 > 
-> fujita@rose:/sys/bus/pseudo/drivers/scsi_debug$ cat virtual_gb
-> 0
-> fujita@rose:/sys/bus/pseudo/drivers/scsi_debug$ cat dev_size_mb
-> 6144
+> drivers/scsi/hptiop.c: In function 'iop_set_config_mv':
+> drivers/scsi/hptiop.c:395: warning: large integer implicitly truncated to unsigned type
 > 
-> scsi3 : scsi_debug, version 1.81 [20070104], dev_size_mb=6144, opts=0x0
-> scsi 3:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
-> sd 3:0:0:0: [sdc] 12582912 512-byte hardware sectors (6442 MB)
+> This field is only 32-bit, so cpu_to_le64() seems wrong.
 > 
+> Cc: HighPoint Linux Team <linux@highpoint-tech.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
 > 
-> This patchset also include minor cleanup.
+>  drivers/scsi/hptiop.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> This is against scsi-misc with the scsi_build_sense_buffer helper
-> patchset and the scsi_debug lba fix:
-> 
-> http://marc.info/?l=linux-scsi&m=120640632301595&w=2
-> 
-> http://marc.info/?l=linux-scsi&m=120643343003171&w=2
+> diff -puN drivers/scsi/hptiop.c~drivers-scsi-hptiopc-fix-build-warning drivers/scsi/hptiop.c
+> --- a/drivers/scsi/hptiop.c~drivers-scsi-hptiopc-fix-build-warning
+> +++ a/drivers/scsi/hptiop.c
+> @@ -392,7 +392,7 @@ static int iop_set_config_mv(struct hpti
+>  	req->header.size =
+>  		cpu_to_le32(sizeof(struct hpt_iop_request_set_config));
+>  	req->header.result = cpu_to_le32(IOP_RESULT_PENDING);
+> -	req->header.context = cpu_to_le64(IOP_REQUEST_TYPE_SET_CONFIG<<5);
+> +	req->header.context = cpu_to_le32(IOP_REQUEST_TYPE_SET_CONFIG<<5);
+>  
+>  	if (iop_send_sync_request_mv(hba, 0, 20000)) {
+>  		dprintk("Set config send cmd failed\n");
 
-For patches 1/5, 2/5, 3/5, 4/5 and 5/5 associated with this post:
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+I'm curious to know why the identical statement in iop_get_config_mv()
+doesn't trigger any warnings.
 
+Regardless, the usage of this field is 64 bits; it's just split high and
+low, so the correct fix is to do the le32 for the low field and to zero
+out the high one.
 
-Doug Gilbert
+Fortunately, I suspect nothing ever sets the high field, so it's
+probably accidentally zero most of the time.
+
+Can I get an ack for this (or a better fix) from the highpoint team?
+
+James
+
+---
+
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 44dccf2..beecda9 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -338,7 +338,8 @@ static int iop_get_config_mv(struct hptiop_hba *hba,
+ 	req->header.size =
+ 		cpu_to_le32(sizeof(struct hpt_iop_request_get_config));
+ 	req->header.result = cpu_to_le32(IOP_RESULT_PENDING);
+-	req->header.context = cpu_to_le64(IOP_REQUEST_TYPE_GET_CONFIG<<5);
++	req->header.context = cpu_to_le32(IOP_REQUEST_TYPE_GET_CONFIG<<5);
++	req->header.context_hi32 = 0;
+ 
+ 	if (iop_send_sync_request_mv(hba, 0, 20000)) {
+ 		dprintk("Get config send cmd failed\n");
+@@ -392,7 +393,8 @@ static int iop_set_config_mv(struct hptiop_hba *hba,
+ 	req->header.size =
+ 		cpu_to_le32(sizeof(struct hpt_iop_request_set_config));
+ 	req->header.result = cpu_to_le32(IOP_RESULT_PENDING);
+-	req->header.context = cpu_to_le64(IOP_REQUEST_TYPE_SET_CONFIG<<5);
++	req->header.context = cpu_to_le32(IOP_REQUEST_TYPE_SET_CONFIG<<5);
++	req->header.context_hi32 = 0;
+ 
+ 	if (iop_send_sync_request_mv(hba, 0, 20000)) {
+ 		dprintk("Set config send cmd failed\n");
+ 
+
