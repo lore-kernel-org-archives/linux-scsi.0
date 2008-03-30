@@ -1,88 +1,40 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/5] scsi_debug: support large non-fake virtual disk
-Date: Sun, 30 Mar 2008 11:58:29 +0900
-Message-ID: <20080330115826G.tomof@acm.org>
-References: <1206806398-22205-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1206806398-22205-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<47EE85D9.5070803@torque.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 7007] LSI CERC ATA/100 Controller not found anymore when using kernel > 2.6.12.6 with "MEGARAID_LEGACY"
+Date: Sat, 29 Mar 2008 21:15:05 -0700 (PDT)
+Message-ID: <20080330041505.2FF9210803A@picon.linux-foundation.org>
+References: <bug-7007-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:42811 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751191AbYC3C6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Mar 2008 22:58:40 -0400
-In-Reply-To: <47EE85D9.5070803@torque.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57762 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750765AbYC3EPH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Mar 2008 00:15:07 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2U4F5l9015269
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Mar 2008 21:15:06 -0700
+In-Reply-To: <bug-7007-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com
+To: linux-scsi@vger.kernel.org
 
-On Sat, 29 Mar 2008 14:09:29 -0400
-Douglas Gilbert <dougg@torque.net> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=7007
 
-> FUJITA Tomonori wrote:
-> > Currently, the maximum amount of RAM that scsi_debug can allocate is
-> > 4GB. This patch increases it to 2TB; scsi_debug can allocates 2TB
-> > memory and export it as if it were 2TB scsi disk.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Douglas Gilbert <dougg@torque.net>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > ---
-> >  drivers/scsi/scsi_debug.c |    6 +++---
-> >  1 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index c98559e..1b6a6d8 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -1949,7 +1949,7 @@ static void __init init_all_queued(void)
-> >  }
-> >  
-> >  static void __init sdebug_build_parts(unsigned char *ramp,
-> > -				      unsigned int store_size)
-> > +				      unsigned long store_size)
-> >  {
-> >  	struct partition * pp;
-> >  	int starts[SDEBUG_MAX_PARTS + 2];
-> > @@ -2476,14 +2476,14 @@ static void do_remove_driverfs_files(void)
-> >  
-> >  static int __init scsi_debug_init(void)
-> >  {
-> > -	unsigned int sz;
-> > +	unsigned long sz;
-> >  	int host_to_add;
-> >  	int k;
-> >  	int ret;
-> >  
-> >  	if (scsi_debug_dev_size_mb < 1)
-> >  		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
-> > -	sz = (unsigned int)scsi_debug_dev_size_mb * 1048576;
-> > +	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
-> >  	sdebug_store_sectors = sz / SECT_SIZE;
-> >  	sdebug_capacity = get_sdebug_capacity();
-> >  
-> 
-> Tomo,
-> Unsigned long is 32 bits on i386 (and 64 bits in the LP64
-> data model). Don't you want 64 bits in all cases? Either
-> unsigned long long, uint64_t or one of those crappy
-> kernel typedefs for 64 bits.
 
-I don't think that u64 is useful.
+protasnb@gmail.com changed:
 
-scsi_debug uses vmalloc for logical unit's contents. so u32 is large
-enough for 32-bit systems.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |protasnb@gmail.com
 
-Even if we change scsi_debug use alloc_pages to allocate multiple
-pages, 32-bit systems can have only several GB memory at most. So u32
-is large enough for them in most cases. The advantage of vmalloc, a
-continuous memory area, making the driver simpler a bit, is nice.
 
-vmalloc takes unsigned long so I changed 'unsigned int' to 'unsigned
-long' here.
 
-In the end, you need a 64-bit system if you want scsi_debug use huge
-amount memory.
+
+------- Comment #9 from protasnb@gmail.com  2008-03-29 21:15 -------
+Frank, have you tested your card with recent kernel? The Megaraid should be
+sorted out by now.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
