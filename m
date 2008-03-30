@@ -1,92 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 11/17] scsi: ch.c fix shadowed variable warnings
-Date: Sun, 30 Mar 2008 12:21:55 -0500
-Message-ID: <1206897715.4224.55.camel@localhost.localdomain>
-References: <200803282148.m2SLmdA5012246@imap1.linux-foundation.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 0/5] scsi_debug: increase the amount of ram that scsi_ram
+ can allocate
+Date: Sun, 30 Mar 2008 13:11:49 -0400
+Message-ID: <47EFC9D5.8080107@torque.net>
+References: <1206806398-22205-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40244 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751378AbYC3RWE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Mar 2008 13:22:04 -0400
-In-Reply-To: <200803282148.m2SLmdA5012246@imap1.linux-foundation.org>
+Received: from smtp-relay1.uniserve.ca ([204.239.42.80]:57918 "EHLO
+	smtp-relay1.uniserve.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbYC3R2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Mar 2008 13:28:46 -0400
+In-Reply-To: <1206806398-22205-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com
 
-On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
+FUJITA Tomonori wrote:
+> Currently, the maximum amount of RAM that scsi_debug can actually
+> allocate is 4GB. This patchset increase it to 2TB.
 > 
-> err shadows the array of errors in this driver, switch to ch_err
-> drivers/scsi/ch.c:271:6: warning: symbol 'err' shadows an earlier one
-> drivers/scsi/ch.c:116:3: originally declared here
+> Here's an example, scsi_debug allocates 6GB ram and exports it as if
+> it were 6GB disk.
 > 
-> cmd shadows the argument to this function, switch to ch_cmd
-> drivers/scsi/ch.c:724:11: warning: symbol 'cmd' shadows an earlier one
-> drivers/scsi/ch.c:596:20: originally declared here
+> fujita@rose:/sys/bus/pseudo/drivers/scsi_debug$ cat virtual_gb
+> 0
+> fujita@rose:/sys/bus/pseudo/drivers/scsi_debug$ cat dev_size_mb
+> 6144
 > 
-> Small code cleanup as well in if() statement.
+> scsi3 : scsi_debug, version 1.81 [20070104], dev_size_mb=6144, opts=0x0
+> scsi 3:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
+> sd 3:0:0:0: [sdc] 12582912 512-byte hardware sectors (6442 MB)
 > 
-> [akpm@linux-foundation.org: coding-style fixes]
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
 > 
->  drivers/scsi/ch.c |   29 +++++++++++++++--------------
->  1 file changed, 15 insertions(+), 14 deletions(-)
+> This patchset also include minor cleanup.
 > 
-> diff -puN drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings drivers/scsi/ch.c
-> --- a/drivers/scsi/ch.c~scsi-chc-fix-shadowed-variable-warnings
-> +++ a/drivers/scsi/ch.c
-> @@ -268,16 +268,16 @@ ch_read_element_status(scsi_changer *ch,
->  static int
->  ch_init_elem(scsi_changer *ch)
->  {
-> -	int err;
-> +	int ch_err;
+> This is against scsi-misc with the scsi_build_sense_buffer helper
+> patchset and the scsi_debug lba fix:
+> 
+> http://marc.info/?l=linux-scsi&m=120640632301595&w=2
+> 
+> http://marc.info/?l=linux-scsi&m=120643343003171&w=2
 
-This isn't really the correct fix, is it?  The driver stupidity is
-having a global (although static) variable called err which invites
-problems like this.  How about this fix?
-
-James
-
----
-
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 7aad154..b1be2d8 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -113,7 +113,7 @@ static const struct {
- 	unsigned char  asc;
- 	unsigned char  ascq;
- 	int	       errno;
--} err[] = {
-+} ch_err_desc[] = {
- /* Just filled in what looks right. Hav'nt checked any standard paper for
-    these errno assignments, so they may be wrong... */
- 	{
-@@ -155,11 +155,11 @@ static int ch_find_errno(struct scsi_sense_hdr *sshdr)
- 	/* Check to see if additional sense information is available */
- 	if (scsi_sense_valid(sshdr) &&
- 	    sshdr->asc != 0) {
--		for (i = 0; err[i].errno != 0; i++) {
--			if (err[i].sense == sshdr->sense_key &&
--			    err[i].asc   == sshdr->asc &&
--			    err[i].ascq  == sshdr->ascq) {
--				errno = -err[i].errno;
-+		for (i = 0; ch_err_desc[i].errno != 0; i++) {
-+			if (ch_err_desc[i].sense == sshdr->sense_key &&
-+			    ch_err_desc[i].asc   == sshdr->asc &&
-+			    ch_err_desc[i].ascq  == sshdr->ascq) {
-+				errno = -ch_err_desc[i].errno;
- 				break;
- 			}
- 		}
+For patches 1/5, 2/5, 3/5, 4/5 and 5/5 associated with this post:
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
 
+Doug Gilbert
