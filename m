@@ -1,78 +1,53 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [patch 06/17] scsi: fix section mismatch in aic94xx
-Date: Sun, 30 Mar 2008 20:44:56 +0200
-Message-ID: <20080330184456.GA19733@uranus.ravnborg.org>
-References: <200803282148.m2SLma9o012231@imap1.linux-foundation.org> <1206900305.4224.78.camel@localhost.localdomain>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [patch 08/17] scsi: replace remaining __FUNCTION__ occurrences
+Date: Sun, 30 Mar 2008 11:45:42 -0700
+Message-ID: <1206902742.6543.35.camel@brick>
+References: <200803282148.m2SLmbog012237@imap1.linux-foundation.org>
+	 <1206743704.3662.61.camel@localhost.localdomain>
+	 <20080328154518.1a178afa.akpm@linux-foundation.org>
+	 <1206886107.4224.12.camel@localhost.localdomain>
+	 <20080330080748.5b40231d.akpm@linux-foundation.org>
+	 <1206891402.4224.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:43984 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751725AbYC3Soe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Mar 2008 14:44:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1206900305.4224.78.camel@localhost.localdomain>
+Received: from wx-out-0506.google.com ([66.249.82.227]:45996 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbYC3Spf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Mar 2008 14:45:35 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1213850wxd.4
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Mar 2008 11:45:32 -0700 (PDT)
+In-Reply-To: <1206891402.4224.35.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, gilbert_wu@adaptec.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
 
-On Sun, Mar 30, 2008 at 01:05:04PM -0500, James Bottomley wrote:
-> On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
-> > From: Sam Ravnborg <sam@ravnborg.org>
+On Sun, 2008-03-30 at 10:36 -0500, James Bottomley wrote:
+> On Sun, 2008-03-30 at 08:07 -0700, Andrew Morton wrote:
+> > On Sun, 30 Mar 2008 09:08:27 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > > 
-> > Fix following warnings:
-> > WARNING: vmlinux.o(.data+0x17aa88): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
-> > WARNING: vmlinux.o(.data+0x17aa98): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
-> > WARNING: vmlinux.o(.data+0x17aaa8): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9405_setup()
-> > 
-> > asd_pcidev_data is only used by __devinit asd_pci_probe.  So mark is const and
-> > annotate it __devinitconst to fix the warnings.
-> > 
-> > [akpm@linux-foundation.org: fix warning]
-> > Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-> > Cc: Gilbert Wu <gilbert_wu@adaptec.com>
-> > Cc: James Bottomley <James.Bottomley@SteelEye.com>
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> > 
-> >  drivers/scsi/aic94xx/aic94xx_init.c |    6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff -puN drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx drivers/scsi/aic94xx/aic94xx_init.c
-> > --- a/drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx
-> > +++ a/drivers/scsi/aic94xx/aic94xx_init.c
-> > @@ -529,10 +529,10 @@ static void asd_remove_dev_attrs(struct 
-> >  /* The first entry, 0, is used for dynamic ids, the rest for devices
-> >   * we know about.
-> >   */
-> > -static struct asd_pcidev_struct {
-> > +static const struct asd_pcidev_struct {
-> >  	const char * name;
-> >  	int (*setup)(struct asd_ha_struct *asd_ha);
-> > -} asd_pcidev_data[] = {
-> > +} asd_pcidev_data[] __devinitconst = {
-> >  	/* Id 0 is used for dynamic ids. */
-> >  	{ .name  = "Adaptec AIC-94xx SAS/SATA Host Adapter",
-> >  	  .setup = asd_aic9410_setup
+> No, my complaint isn't that we can't do this ... given an infinite
+> amount of time, everything can be done.  The problem is that time spent
+> on SCSI is a finite and quite precious resource ... I allocate it like
+> this:
 > 
-> If your tools say this patch is correct, then the tools are wrong.
+>      1. Bug fixes
+>      2. Driver Maintenance
+>      3. Feature Enhancments
+>      4. Trivial Cleanups
 > 
-> This patch actually takes something that's functionally correct but your
-> tools can't see it and transforms it to something that's actually
-> functionally wrong ... and the tool should spot that.
-> 
-> the problem is the contents of the .name field ... they can't live in
-> the devinit rodata section because we actually take a pointer to it (as
-> asd_ha->name and later ha->sas_ha_name) in asd_pci_probe() that lives
-> the entire lifetime of the driver and is used.  derefing it will trigger
-> a bug after the __devinit section is discarded in the non hotplug case.
-asd_pcidev_dada[].name is dereferenced only in the above mentioned function.
-The string is used in other places - correct. But this patch does
-not try to move the defined string anywhere only the data member
-holding the pointer to the string.
+> However, for 4. I do still require there to be some actual benefit to
+> the cleanup (remove a warning, eliminate dead code) etc which is what
+> I'm still struggling to find with the __FUNCTION__->__func__
+> transformation.
 
-Take a look at the content of .rodata.str1.1 to see the string
-being contained there.
+Well, instead of spending energy arguing over this, could you let me
+know what files are conflicting with acpi causing a revert...then
+I can send you the non-conflicting stuff in a new patch, and get the
+rest in through the acpi tree?
 
-	Sam
+
+Harvey
+
