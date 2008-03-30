@@ -1,212 +1,73 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Serious regression caused by fix for [BUG 1/3] bsg queue oops
-	with	iscsi logout
-Date: Sun, 30 Mar 2008 12:39:36 -0500
-Message-ID: <1206898777.4224.64.camel@localhost.localdomain>
-References: <20080326235900H.tomof@acm.org> <47EAFDB0.4090503@cs.wisc.edu>
-	 <20080327200827V.tomof@acm.org>  <20080327211842X.tomof@acm.org>
+Subject: Re: [patch 06/17] scsi: fix section mismatch in aic94xx
+Date: Sun, 30 Mar 2008 13:05:04 -0500
+Message-ID: <1206900305.4224.78.camel@localhost.localdomain>
+References: <200803282148.m2SLma9o012231@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40164 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40176 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751688AbYC3Rjm (ORCPT
+	by vger.kernel.org with ESMTP id S1751554AbYC3SFJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Mar 2008 13:39:42 -0400
-In-Reply-To: <20080327211842X.tomof@acm.org>
+	Sun, 30 Mar 2008 14:05:09 -0400
+In-Reply-To: <200803282148.m2SLma9o012231@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: michaelc@cs.wisc.edu, pw@osc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, erezz@voltaire.com, Jens.Axboe@oracle.com
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, sam@ravnborg.org, gilbert_wu@adaptec.com
 
+On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
+> From: Sam Ravnborg <sam@ravnborg.org>
+> 
+> Fix following warnings:
+> WARNING: vmlinux.o(.data+0x17aa88): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
+> WARNING: vmlinux.o(.data+0x17aa98): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9410_setup()
+> WARNING: vmlinux.o(.data+0x17aaa8): Section mismatch in reference from the variable asd_pcidev_data to the function .devinit.text:asd_aic9405_setup()
+> 
+> asd_pcidev_data is only used by __devinit asd_pci_probe.  So mark is const and
+> annotate it __devinitconst to fix the warnings.
+> 
+> [akpm@linux-foundation.org: fix warning]
+> Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+> Cc: Gilbert Wu <gilbert_wu@adaptec.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/aic94xx/aic94xx_init.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff -puN drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx drivers/scsi/aic94xx/aic94xx_init.c
+> --- a/drivers/scsi/aic94xx/aic94xx_init.c~scsi-fix-section-mismatch-in-aic94xx
+> +++ a/drivers/scsi/aic94xx/aic94xx_init.c
+> @@ -529,10 +529,10 @@ static void asd_remove_dev_attrs(struct 
+>  /* The first entry, 0, is used for dynamic ids, the rest for devices
+>   * we know about.
+>   */
+> -static struct asd_pcidev_struct {
+> +static const struct asd_pcidev_struct {
+>  	const char * name;
+>  	int (*setup)(struct asd_ha_struct *asd_ha);
+> -} asd_pcidev_data[] = {
+> +} asd_pcidev_data[] __devinitconst = {
+>  	/* Id 0 is used for dynamic ids. */
+>  	{ .name  = "Adaptec AIC-94xx SAS/SATA Host Adapter",
+>  	  .setup = asd_aic9410_setup
 
-On Thu, 2008-03-27 at 21:18 +0900, FUJITA Tomonori wrote:
-> On Thu, 27 Mar 2008 20:11:52 +0900
-> FUJITA Tomonori <tomof@acm.org> wrote:
-> 
-> > On Wed, 26 Mar 2008 20:51:44 -0500
-> > Mike Christie <michaelc@cs.wisc.edu> wrote:
-> > 
-> > > FUJITA Tomonori wrote:
-> > > > On Wed, 26 Mar 2008 07:36:26 -0700
-> > > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > > 
-> > > >> On Wed, 2008-03-26 at 23:22 +0900, FUJITA Tomonori wrote:
-> > > >>> On Sat, 22 Mar 2008 11:06:00 -0500
-> > > >>> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > >>>
-> > > >>>> On Tue, 2008-03-11 at 00:36 -0500, Mike Christie wrote:
-> > > >>>>> Mike Christie wrote:
-> > > >>>>>> Pete Wyckoff wrote:
-> > > >>>>>>> I think this used not to happen; not sure.  But I changed two things
-> > > >>>>>> This most likely did not happen before 2.6.25-rc* or it broke in 
-> > > >>>>>> slightly different ways, because iscsi used to try and do
-> > > >>>>>>
-> > > >>>>>> echo 1 > /sys/block/sdX/device/delete
-> > > >>>>>>
-> > > >>>>>> from userspace instead of calling scsi_remove_target from the kernel.
-> > > >>>>>>
-> > > >>>>>> As you know around 2.6.21, the behavior of doing the echo to the delete 
-> > > >>>>>> file changed due to a driver model and scsi change and that broke the 
-> > > >>>>>> iscsi tools. The iscsi tools userspace removal was sort of hack in the 
-> > > >>>>>> first place and was racey, so we switched to removing devices/target 
-> > > >>>>>> like the FC class.
-> > > >>>>>>
-> > > >>>>>>
-> > > >>>>>>> lately.  2.6.25-rc1 to -rc4 and fedora 8 iscsi-initiator-utils (865) to
-> > > >>>>>>> fedora devel (868).  Bidi and varlen patches always too.
-> > > >>>>>>>
-> > > >>>>>>> I'll follow with some more variations on this theme.  Looks like bsg
-> > > >>>>>>> needs to protect more carefully against the device going away.  Any
-> > > >>>>>>> ideas how best to do this?  What was the approach in sg?
-> > > >>>>>>>
-> > > >>>>>> I think sg is broken in similar ways. The iser guys have some tests 
-> > > >>>>>> cases that have broken sg while IO is outstanding. I am ccing Erez.
-> > > >>>>> Actually one of the problems looks a little different than some of the 
-> > > >>>>> problems hit with sg and are caused because we remove the bsg device too 
-> > > >>>>> soon. I think we want to wait until all the references from the 
-> > > >>>>> commands/requests are released. The attached patch (untested) moves the 
-> > > >>>>> bsg unreg call to the scsi device release fn.
-> > > >>>> Well, this fix is now upstream.  However, it's causing all our
-> > > >>>> scsi_devices never to get released, which is a serious regression.
-> > > >>>> We're also doing spurious bsg_unregister_queue() for things that never
-> > > >>>> actually registered one (all scan devices that return DID_NO_CONNECT),
-> > > >>>> but bsg doesn't seem to be complaining about this.
-> > > >>>>
-> > > >>>> The essence of the problem is that bsg_register_queue() takes a ref to
-> > > >>>> the sdev_gendev, so you can't move bsg_unregister_queue() into the
-> > > >>>> release function because nothing ever puts bsg's device ref and so
-> > > >>>> release is never called.
-> > > >>>>
-> > > >>>> Options for fixing this before 2.6.25 are
-> > > >>>>
-> > > >>>>      1. revert the patch
-> > > >>>>      2. Do an additional put for the bsg reference in
-> > > >>>>         __scsi_remove_device (patch below).  It's nasty but it preserves
-> > > >>>>         the semantics and does what you want
-> > > >>> After some investigation, this patch doesn't fix the bug that Pete
-> > > >>> reported (I'll send a new patch shortly).
-> > > >>>
-> > > >>> Can you revert the commit 4b6f5b3a993cbe34b4280f252bccc76967c185c8
-> > > >>> instead of merging this?
-> > > >> Sure ... I didn't like the hack either.  As long as iSCSI is fine with
-> > > >> the reversion it's the quickest way to fix the problem.
-> > > > 
-> > > > How about this? With the commit reversion, I confirmed that this patch
-> > > > fixes the first bug that Pete reported:
-> > > > 
-> > > > http://marc.info/?l=linux-scsi&m=120508166505141&w=2
-> > > > 
-> > > > I suspect that this could fix the rest too.
-> > > > 
-> > > > =
-> > > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > Subject: [PATCH] bsg: takes a ref to struct device in fops->open
-> > > > 
-> > > > bsg_register_queue() takes a ref to struct device that a caller
-> > > > passes. For example, it takes a ref to the sdev_gendev with scsi
-> > > > devices. However, bsg doesn't takes a ref to it in fops->open. So
-> > > > while an application opens a bsg device, the scsi device that the bsg
-> > > > device holds can go away (bsg also takes a ref to a queue, but it
-> > > > doesn't prevent the device from going away).
-> > > > 
-> > > > With this, bsg takes a ref to struct device in fops->open and frees it
-> > > > in fops->release.
-> > > > 
-> > > > Note that bsg doesn't need to takes a ref to a queue for SCSI devices
-> > > > at least. I think that it would be better to remove the code but I let
-> > > > it alone for now.
-> > > > 
-> > > 
-> > > Why does bsg_add_device do kobject_get instead of blk_get_queue?
-> > 
-> > I think that it's a bug. But both takes a ref to a queue (though
-> > kobject_get doesn't see QUEUE_FLAG_DEAD), so I think that it's not
-> > related with the current problems.
-> > 
-> > 
-> > > It seems like if we added a blk_qet_queue when we opened the device and 
-> > > a blk_put_queue when bsg_release is called we could remove the 
-> > > get/put_device calls. I am not sure if that is cleaner or not. I was 
-> > > just thinking that bsg goes from bsg->request_queue->scsi_device so 
-> > > maybe it should not worry about the device.
-> > 
-> > kobject_get takes a ref to a queue. If we don't take a ref to a
-> > device, the scsi device has gone though the queue is still there
-> > because the queue release is done from the device release. If the scsi
-> > device has gone, we are dead, right?
-> > 
-> > 
-> > Anyway, here's a patch to replace kobject_get with blk_get_queue.
-> > 
-> > James, please apply this patch too.
-> > 
-> > =
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] bsg: replace kobject_get with blk_get_queue
-> 
-> Really sorry, please apply this one.
-> 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] bsg: replace kobject_get with blk_get_queue
-> 
-> Both takes a ref to a queue. But blk_get_queue checks QUEUE_FLAG_DEAD
-> and is more appropriate interface here.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+If your tools say this patch is correct, then the tools are wrong.
 
+This patch actually takes something that's functionally correct but your
+tools can't see it and transforms it to something that's actually
+functionally wrong ... and the tool should spot that.
 
-This looks reasonable to me.  It's probably a rc-fixes patch, so could I
-get Jen's ack and some evidence of testing (and that it actually fixes
-the bug).
-
-Thanks,
+the problem is the contents of the .name field ... they can't live in
+the devinit rodata section because we actually take a pointer to it (as
+asd_ha->name and later ha->sas_ha_name) in asd_pci_probe() that lives
+the entire lifetime of the driver and is used.  derefing it will trigger
+a bug after the __devinit section is discarded in the non hotplug case.
 
 James
 
-
->  block/bsg.c |   11 ++++++++---
->  1 files changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 28f0d1e..e2c65a1 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -740,16 +740,21 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
->  					 struct file *file)
->  {
->  	struct bsg_device *bd;
-> +	int ret;
->  #ifdef BSG_DEBUG
->  	unsigned char buf[32];
->  #endif
-> +	ret = blk_get_queue(rq);
-> +	if (ret)
-> +		return ERR_PTR(-ENXIO);
->  
->  	bd = bsg_alloc_device();
-> -	if (!bd)
-> +	if (!bd) {
-> +		blk_put_queue(rq);
->  		return ERR_PTR(-ENOMEM);
-> +	}
->  
->  	bd->queue = rq;
-> -	kobject_get(&rq->kobj);
->  	bsg_set_block(bd, file);
->  
->  	atomic_set(&bd->ref_count, 1);
-> @@ -808,7 +813,7 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
->  		return bd;
->  
->  	bd = bsg_add_device(inode, bcd->queue, file);
-> -	if (!bd)
-> +	if (IS_ERR(bd))
->  		put_device(bcd->dev);
->  
->  	return bd;
 
