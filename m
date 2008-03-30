@@ -1,41 +1,40 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Sat, 29 Mar 2008 23:28:11 -0500
-Message-ID: <20080330042811.GB27330@auslistsprd01.us.dell.com>
-References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <1206458278.3273.5.camel@localhost.localdomain> <87f94c370803251045h46cbdc0auc541302fbad4a3b9@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87f94c370803251045h46cbdc0auc541302fbad4a3b9@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 7130] loading driver eat all CPU and since some time may block all system disk IO (even can not reboot)
+Date: Sat, 29 Mar 2008 23:07:30 -0700 (PDT)
+Message-ID: <20080330060730.BED26108039@picon.linux-foundation.org>
+References: <bug-7130-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56469 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751147AbYC3GIA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Mar 2008 02:08:00 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2U67UbW019856
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Mar 2008 23:07:31 -0700
+In-Reply-To: <bug-7130-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25, 2008 at 01:45:35PM -0400, Greg Freemyer wrote:
-> I believe GUID Partition Tables (GPTs) are the answer.
-> 
-> I believe one of the features of GPT is the elimination of the 32-bit
-> sector restrictions.
-> 
-> http://en.wikipedia.org/wiki/GUID_Partition_Table
-> 
-> Windows VISTA 64-bit supports GPTs on data disks and new Mac OS based
-> systems have been using it on internal drives for a couple years at
-> least.
-> 
-> GPTs are part of the Extensible Firmware Interface (EFI), so they
-> should be usable for PC bootable disks at some point.  (Maybe now in
-> some cases?)
-> 
-> I'm not sure what the Linux Kernel support is for GPTs.
+http://bugzilla.kernel.org/show_bug.cgi?id=7130
 
-It has been supported since the first Itanium systems shipped.  It's
-the first code I wrote 7+ years before it was really needed. :-)  Most
-distributions have it enabled, as do userspace tools like GNU Parted.
+
+protasnb@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |protasnb@gmail.com
+
+
+
+
+------- Comment #10 from protasnb@gmail.com  2008-03-29 23:07 -------
+I think the bug should be closed.
+wizard, I hope you found better solution for your server needs.
+
 
 -- 
-Matt Domsch
-Linux Technology Strategist, Dell Office of the CTO
-linux.dell.com & www.dell.com/linux
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
