@@ -1,49 +1,52 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [2.6 patch] make scsi_end_bidi_request() static
-Date: Mon, 31 Mar 2008 10:19:23 +0300
-Message-ID: <47F0907B.4010807@panasas.com>
-References: <20080330225355.GK28445@cs181133002.pp.htv.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 3/9] zfcp: Remove obsolete output function from debug trace.
+Date: Mon, 31 Mar 2008 11:15:25 +0200
+Message-ID: <20080331091831.269784000@de.ibm.com>
+References: <20080331091522.688709000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:37335 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753008AbYCaHTq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2008 03:19:46 -0400
-In-Reply-To: <20080330225355.GK28445@cs181133002.pp.htv.fi>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:32969 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754588AbYCaJSe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2008 05:18:34 -0400
+Content-Disposition: inline; filename=zfcp_dbf_cleanup_rm_unused_view_function.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Peschke <mp3@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-On Mon, Mar 31 2008 at 1:53 +0300, Adrian Bunk <bunk@kernel.org> wrote:
-> This patch makes the needlessly global scsi_end_bidi_request() static.
-> 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> 
-> ---
-> 
-> This patch has been sent on:
-> - 27 Feb 2008
-> - 13 Feb 2008
-> 
-> 48e50a33ee11afb02eadc790ae2d9542b0805608 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b12fb31..148c8b0 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -785,7 +785,7 @@ EXPORT_SYMBOL(scsi_release_buffers);
->   * in req->data_len and req->next_rq->data_len. The upper-layer driver can
->   * decide what to do with this information.
->   */
-> -void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-> +static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
->  {
->  	struct request *req = cmd->request;
->  	unsigned int dlen = req->data_len;
-> 
-> --
-I thought it went in. Yes it is good. Sorry about that.
+From: Martin Peschke <mp3@de.ibm.com>
 
-Boaz
+Remove obsolete output function.
+
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_dbf.c |   15 ---------------
+ 1 file changed, 15 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_dbf.c	2008-03-27 14:58:34.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_dbf.c	2008-03-27 14:58:47.000000000 +0100
+@@ -74,21 +74,6 @@ static int zfcp_dbf_tag(char *out_buf, c
+ 	return len;
+ }
+ 
+-static int
+-zfcp_dbf_view(char *out_buf, const char *label, const char *format, ...)
+-{
+-	va_list arg;
+-	int len = 0;
+-
+-	len += sprintf(out_buf + len, "%-24s", label);
+-	va_start(arg, format);
+-	len += vsprintf(out_buf + len, format, arg);
+-	va_end(arg);
+-	len += sprintf(out_buf + len, "\n");
+-
+-	return len;
+-}
+-
+ static void zfcp_dbf_outs(char **buf, const char *s1, const char *s2)
+ {
+ 	*buf += sprintf(*buf, "%-24s%s\n", s1, s2);
+
+-- 
