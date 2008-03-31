@@ -1,57 +1,70 @@
-From: Ke Wei <kewei@marvell.com>
-Subject: Re: [PATCH 1/9][RESEND] mvsas: fill in error info record and phy
- mode6 bits.
-Date: Mon, 31 Mar 2008 18:44:15 +0800
-Message-ID: <47F0C07F.8060109@marvell.com>
-References: <47EB4464.4070308@marvell.com> <1206889392.4224.16.camel@localhost.localdomain>
-Reply-To: kewei@marvell.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10370] New: mount failed on ubuntu-8.04_ppc
+Date: Mon, 31 Mar 2008 06:04:45 -0700 (PDT)
+Message-ID: <bug-10370-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:49541 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751543AbYCaKoT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Mar 2008 06:44:19 -0400
-In-Reply-To: <1206889392.4224.16.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48309 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754694AbYCaNFQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Mar 2008 09:05:16 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2VD4jEj029639
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2008 06:04:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> Well ... I'll put this in, since it's an improvement.  However, it looks
-> like error handling is broken; this is what I get ejecting a CD (which
-> was successfully inserted and read):
-> 
-Today I checked this bug report. It doesn't happen. Do you have more detail information? 
-But I observed that the GPCMD_GET_EVENT_STATUS_NOTIFICATION command will be retried when timeout occurs. Maybe it will cause WARNING then system hangs sometimes. 
+http://bugzilla.kernel.org/show_bug.cgi?id=10370
 
-------------[ cut here ]------------
-WARNING: at drivers/ata/libata-core.c:5769 __ata_qc_complete+0x9f/0xc0()
-Modules linked in: mvsas dm_mod md_mod lp parport_pc psmouse floppy parport serio_raw pcspkr rng_core ide_pci_generic it821x button af_packet evdev ide_generic piix usbhid thermal processor fan [last unloaded: mvsas]
-Pid: 1437, comm: cc1 Not tainted 2.6.25-rc6 #5
- [<c01289cf>] warn_on_slowpath+0x5f/0xa0
- [<c0149e20>] __lock_acquire+0x250/0x10b0
- [<c03eb61f>] __ata_qc_complete+0x9f/0xc0
- [<c03cb19b>] sas_ata_task_done+0xdb/0x250
- [<d78d52f0>] mvs_slot_complete+0x160/0x2f0 [mvsas]
- [<d78d52fa>] mvs_slot_complete+0x16a/0x2f0 [mvsas]
- [<d78d5578>] mvs_int_full+0x98/0x480 [mvsas]
- [<d78d599c>] mvs_interrupt+0x3c/0x60 [mvsas]
- [<c015c1d0>] handle_IRQ_event+0x20/0x60
- [<c015dcc9>] handle_fasteoi_irq+0x79/0x110
- [<c010734b>] do_IRQ+0x3b/0x80
- [<c0105792>] common_interrupt+0x2e/0x34
- [<c012007b>] pick_next_highest_task_rt+0x6b/0x110
- [<c012dce2>] __do_softirq+0x72/0x100
- [<c012ddc5>] do_softirq+0x55/0x60
- [<c0111f54>] smp_apic_timer_interrupt+0x54/0x80
- [<c0105869>] apic_timer_interrupt+0x29/0x38
- [<c0105873>] apic_timer_interrupt+0x33/0x38
- =======================
----[ end trace ea458b53b1ca42bf ]---
-sr0: CDROM (ioctl) error, command: Read TOC/PMA/ATIP 43 00 00 00 00 00 00 00 0c 00
-sr: Sense Key : No Sense [current] 
-sr: Add. Sense: No additional sense information
+           Summary: mount failed on ubuntu-8.04_ppc
+           Product: SCSI Drivers
+           Version: 2.5
+     KernelVersion: 2.6.24-12
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: GDT SCSI
+        AssignedTo: scsi_drivers-gdt-scsi@kernel-bugs.osdl.org
+        ReportedBy: pbarnabe@gmail.com
 
+
+Latest working kernel version: 2.6.20-16
+Earliest failing kernel version: 2.6.24-12
+Distribution: Ubuntu-8.04_ppc
+Hardware Environment: ibook G4
+Software Environment:
+Problem Description: when I tasted to mount a audio cdrom, mount failed, only
+for audio cdrom; other cdrom works correttly.
+
+Steps to reproduce: 
+
+pietro@trip:~$ mount /media/cdrom0
+mount: block device /dev/hdc is write-protected, mounting read-only
+mount: wrong fs type, bad option, bad superblock on /dev/hdc,
+       missing codepage or helper program, or other error
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
+
+pietro@trip:~$ dmesg | tail
+[ 1388.428934] ide: failed opcode was: unknown
+[ 1388.429343] hdc: error code: 0x70  sense_key: 0x05  asc: 0x64  ascq: 0x00
+[ 1388.429350] end_request: I/O error, dev hdc, sector 1024
+[ 1388.429378] UDF-fs: No partition found (1)
+[ 1388.625844] hdc: command error: status=0x51 { DriveReady SeekComplete Error
+}
+[ 1388.625857] hdc: command error: error=0x54 { AbortedCommand
+LastFailedSense=0x05 }
+[ 1388.625862] ide: failed opcode was: unknown
+[ 1388.626273] hdc: error code: 0x70  sense_key: 0x05  asc: 0x64  ascq: 0x00
+[ 1388.626281] end_request: I/O error, dev hdc, sector 64
+[ 1388.626308] isofs_fill_super: bread failed, dev=hdc, iso_blknum=16, block=16
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
