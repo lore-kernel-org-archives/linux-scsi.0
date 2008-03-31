@@ -1,62 +1,31 @@
-From: dv9999 <dyu9999@yahoo.com>
-Subject: REQ_FAILFAST flag in async calls
-Date: Mon, 31 Mar 2008 10:06:41 -0700 (PDT)
-Message-ID: <16397218.post@talk.nabble.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [patch 08/17] scsi: replace remaining __FUNCTION__ occurrences
+Date: Mon, 31 Mar 2008 14:34:07 -0500
+Message-ID: <47F13CAF.1080707@cs.wisc.edu>
+References: <200803282148.m2SLmbog012237@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:49733 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830AbYCaRGl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2008 13:06:41 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1JgNSz-00020k-4n
-	for linux-scsi@vger.kernel.org; Mon, 31 Mar 2008 10:06:41 -0700
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42963 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753699AbYCaTex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Mar 2008 15:34:53 -0400
+In-Reply-To: <200803282148.m2SLmbog012237@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
+
+akpm@linux-foundation.org wrote:
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> __FUNCTION__ is gcc-specific, use __func__
+> 
 
 
-Hi Linux kernel scsi experts, 
+>  drivers/scsi/iscsi_tcp.c              |   12 +++---
 
-I would appreciate some information from you or dm-devel on the following:
-
-I am wondering how to pass and support REQ_FAILFAST in scsi_execute_async
-function in latest kernel. In sync mode (scsi_execute), caller can pass this
-as flag parameter, but how this is done in case of scsi_execute_async?
-
-Thanks.
-Dave
-
-Note: the comment below is not accurate in kernel code...
-
-/**
- * scsi_execute_async - insert request
- * @sdev:       scsi device
- * @cmd:        scsi command
- * @cmd_len:    length of scsi cdb
- * @data_direction: data direction
- * @buffer:     data buffer (this can be a kernel buffer or scatterlist)
- * @bufflen:    len of buffer
- * @use_sg:     if buffer is a scatterlist this is the number of elements
- * @timeout:    request timeout in seconds
- * @retries:    number of times to retry request
- * @flags:      or into request flags
- **/
-int scsi_execute_async(struct scsi_device *sdev, const unsigned char *cmd,
-                       int cmd_len, int data_direction, void *buffer,
-unsigned bufflen,
-                       int use_sg, int timeout, int retries, void *privdata,
-                       void (*done)(void *, char *, int, int), gfp_t gfp)
-
-
-
-
-
--- 
-View this message in context: http://www.nabble.com/REQ_FAILFAST-flag-in-async-calls-tp16397218p16397218.html
-Sent from the linux-scsi mailing list archive at Nabble.com.
-
+I have some other patches which conflict with the iscsi bits. Could we 
+drop the iscsi parts from this patch, and I will send them with my other 
+updates for 2.6.26?
