@@ -1,95 +1,67 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH 1/2] sysfs: allow the group is_visible() method to
-	return a mode and add an update API
-Date: Mon, 31 Mar 2008 15:42:09 +0200
-Message-ID: <1206970929.20492.27.camel@lov.site>
-References: <1206134832.2961.64.camel@localhost.localdomain>
-	 <20080321222635.GA2674@kroah.com>
-	 <1206208949.4393.25.camel@localhost.localdomain>
-	 <1206896083.4224.40.camel@localhost.localdomain>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [patch 02/17] Dell CERC support for megaraid_mbox
+Date: Mon, 31 Mar 2008 08:33:05 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26502084DD9@NAMAIL1.ad.lsil.com>
+References: <1206897220.4224.50.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charybdis-ext.suse.de ([195.135.221.2]:53553 "EHLO
-	emea5-mh.id5.novell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750863AbYCaNhW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2008 09:37:22 -0400
-In-Reply-To: <1206896083.4224.40.camel@localhost.localdomain>
+Received: from mail0.lsil.com ([147.145.40.20]:46808 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750719AbYCaOds convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2008 10:33:48 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1206897220.4224.50.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Greg KH <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-
-On Sun, 2008-03-30 at 11:54 -0500, James Bottomley wrote:
-> On Sat, 2008-03-22 at 13:02 -0500, James Bottomley wrote:
-> > On Fri, 2008-03-21 at 15:26 -0700, Greg KH wrote:
-> > > On Fri, Mar 21, 2008 at 04:27:12PM -0500, James Bottomley wrote:
-> > > > We have a problem in scsi_transport_spi in that we need to cust=
-omise
-> > > > not only the visibility of the attributes, but also their mode.=
-  Fix
-> > > > this by making the is_visible() callback return a mode, with 0
-> > > > indicating is not visible.
-> > > >=20
-> > > > Also add a sysfs_update_group() API to allow us to change eithe=
-r the
-> > > > visibility or mode of the files at any time on the fly.
-> > > >=20
-> > > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnersh=
-ip.com>
-> > > > ---
-> > > >=20
-> > > > Greg, can I take this through SCSI, please ... assuming it's OK=
-?  We
-> > > > need this to fix up the SPI transport class.
-> > >=20
-> > > Sure.  But can you document that "update" field a bit more so we =
-can
-> > > remember what it means in the future?
-> >=20
-> > How about this?  I also added docbook for create and update attribu=
-te
-> > group.
-
-Looks good to me.
-
-I think with the "visible" stuff for attribute groups, will be able to
-fix the USB event timing problem, by moving the creation of the device
-attributes to default attributes. So I'm looking forward to have this i=
-n
-the tree.
-
-> Can I get an ACK from someone from sysfs for this, please?
-
-> > ---
-> >=20
-> > From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Date: Thu, 20 Mar 2008 20:47:52 -0500
-> > Subject: [SCSI] sysfs: make group is_valid return a mode_t
-> >=20
-> > We have a problem in scsi_transport_spi in that we need to customis=
-e
-> > not only the visibility of the attributes, but also their mode.  Fi=
-x
-> > this by making the is_visible() callback return a mode, with 0
-> > indicating is not visible.
-> >=20
-> > Also add a sysfs_update_group() API to allow us to change either th=
-e
-> > visibility or mode of the files at any time on the fly.
-
-Acked-by: Kay Sievers <kay.sievers@vrfy.org>
-
-> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.c=
-om>
-
-=EF=BB=BFThanks for doing this,
-Kay
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James,
+
+I am checking with our FW team for the random deletion logic drive
+(RDLD) for Dell CERC firmware (>= 6.62) implementation.  We should have
+the RDLD support if the driver found the FW support the RDLD.
+
+Thanks.
+
+Bo Yang
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Sunday, March 30, 2008 1:14 PM
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org; hare@suse.de; Yang, Bo; Patro, Sumant
+Subject: Re: [patch 02/17] Dell CERC support for megaraid_mbox
+
+On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> 
+> Newer Dell CERC firmware (>= 6.62) implement a random deletion 
+> handling compatible with the legacy megaraid driver.  The legacy 
+> handling shifted the target ID by 0x80 only for I/O commands 
+> (READ/WRITE/etc), whereas megaraid_mbox shifts the target ID always if
+random deletion is supported.
+> The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
+
+> and not finding any devices, obviously.
+> 
+> So we disable the random deletion support if the offending firmware is
+
+> found.
+> 
+> Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Bo,
+
+You said you'd review this patch and give feedback "soon" twenty five
+days ago (5 March).  My patience finally ran out on this one; you have
+three days (that's until midnight CST on 2 April) to provide an ack or a
+replacement patch for this otherwise I'll apply it anyway.
+
+James
+
+
