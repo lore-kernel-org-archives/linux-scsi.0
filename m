@@ -1,28 +1,36 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 10374] New: sym53c8xx: weird behavior with
- udev
-Date: Tue, 1 Apr 2008 01:15:18 -0700
-Message-ID: <20080401011518.eb683cff.akpm@linux-foundation.org>
-References: <bug-10374-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10374] sym53c8xx: weird behavior with udev
+Date: Tue,  1 Apr 2008 01:15:22 -0700 (PDT)
+Message-ID: <20080401081522.634D310803B@picon.linux-foundation.org>
+References: <bug-10374-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55186 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37723 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752448AbYDAIPV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 04:15:21 -0400
-In-Reply-To: <bug-10374-10286@http.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1754505AbYDAIPY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 04:15:24 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m318FMEB017341
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 01:15:23 -0700
+In-Reply-To: <bug-10374-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, seraph@xs4all.nl
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=10374
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-04-01 01:15 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
 bugzilla web interface).
 
-On Tue,  1 Apr 2008 01:01:22 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Tue,  1 Apr 2008 01:01:22 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
+wrote:
 
 > http://bugzilla.kernel.org/show_bug.cgi?id=10374
 > 
@@ -82,3 +90,8 @@ I'd suggest that the next step would be to send us the `dmesg -s 1000000'
 output for both good and bad kernels.  A comparison might show where things
 went bad.
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
