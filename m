@@ -1,48 +1,39 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] scsi: ch.c fix sparse shadowed variable warnings
-Date: Tue, 01 Apr 2008 18:16:07 +0300
-Message-ID: <47F251B7.1010203@panasas.com>
-References: <200803282148.m2SLmdA5012246@imap1.linux-foundation.org>	 <1206897715.4224.55.camel@localhost.localdomain>	 <1206902620.6543.32.camel@brick>	 <1206903356.4224.87.camel@localhost.localdomain>	 <1206903583.6543.38.camel@brick>	 <1207019451.3192.92.camel@localhost.localdomain>	 <1207026330.12466.12.camel@brick> <1207061497.3100.14.camel@localhost.localdomain>
+From: Jos van der Ende <seraph@xs4all.nl>
+Subject: Re: [Bugme-new] [Bug 10374] New: sym53c8xx: weird behavior with
+ udev
+Date: Tue, 1 Apr 2008 21:05:21 +0200
+Message-ID: <20080401210521.abbb443c.seraph@xs4all.nl>
+References: <bug-10374-10286@http.bugzilla.kernel.org/>
+	<20080401011518.eb683cff.akpm@linux-foundation.org>
+	<1207059115.3100.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:55844 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbYDAPQn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 11:16:43 -0400
-In-Reply-To: <1207061497.3100.14.camel@localhost.localdomain>
+Received: from pearlgates.net ([82.92.180.13]:38792 "EHLO mail.pearlgates.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755393AbYDATFY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Apr 2008 15:05:24 -0400
+In-Reply-To: <1207059115.3100.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Harvey Harrison <harvey.harrison@gmail.com>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
 
-On Tue, Apr 01 2008 at 17:51 +0300, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Mon, 2008-03-31 at 22:05 -0700, Harvey Harrison wrote:
->> Replace the global err array with ch_err.
->> drivers/scsi/ch.c:271:6: warning: symbol 'err' shadows an earlier one
->> drivers/scsi/ch.c:116:3: originally declared here
->>
->> Replace the temporary cmd buffer with ch_err to avoid shadowing the cmd
->> function parameter.
->> drivers/scsi/ch.c:724:11: warning: symbol 'cmd' shadows an earlier one
->> drivers/scsi/ch.c:596:20: originally declared here
->>
->> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
->> ---
->> James, incorporated your comments.
-> 
-> Yes, that looks fine, thanks.
-> 
-> I have a challenge for you:  It looks like this driver has three
-> incorrect unconditional uses of GFP_DMA.  It gets a 512 byte bufer and
-> then only uses 256 bytes of it on several occasions and the routine with
-> the shadowed cmd variable looks like it should be calling
-> ch_read_element_status() rather than duplicating it.
-> 
-> James
-> 
-I have the GFP_DMA and allocation stuff covered for this driver.
+Hello all,
 
-Boaz
 
+I did a bit more testing, and I think this may be related to the order in which modules are loaded.
+
+If I let udev load sungem, and load sym53c8xx manually, everything works.
+
+If I let udev load sym53c8xx, and load sungem manually, I get the non-functional network.
+
+If I let udev load both modules, I also get the non-functional network. While udev loads sungem first and sym53c8xx later, I don't suppose it waits for one module to 'settle' before loading the next. :-)
+
+
+So to sum it up, the bug is triggered if sym53c8xx is loaded before sungem is.
+
+
+-- 
+Jos van der Ende <seraph@xs4all.nl>
