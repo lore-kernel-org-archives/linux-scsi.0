@@ -1,115 +1,68 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH] scsi: ch.c fix sparse shadowed variable warnings
-Date: Mon, 31 Mar 2008 22:05:30 -0700
-Message-ID: <1207026330.12466.12.camel@brick>
-References: <200803282148.m2SLmdA5012246@imap1.linux-foundation.org>
-	 <1206897715.4224.55.camel@localhost.localdomain>
-	 <1206902620.6543.32.camel@brick>
-	 <1206903356.4224.87.camel@localhost.localdomain>
-	 <1206903583.6543.38.camel@brick>
-	 <1207019451.3192.92.camel@localhost.localdomain>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [RFC] sysfs attributes for additional zfcp adapter statistics
+Date: Tue, 1 Apr 2008 09:52:40 +0200
+Message-ID: <20080401075239.GA7682@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:22340 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbYDAFF3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 01:05:29 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1122541rvb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2008 22:05:28 -0700 (PDT)
-In-Reply-To: <1207019451.3192.92.camel@localhost.localdomain>
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:57234 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623AbYDAHwq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 03:52:46 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate8.de.ibm.com (8.13.8/8.13.8) with ESMTP id m317qiQi243980
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 07:52:44 GMT
+Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m317qiot3735580
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 09:52:44 +0200
+Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m317qiYF011657
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 09:52:44 +0200
+Received: from localhost (ICON-9-164-144-71.megacenter.de.ibm.com [9.164.144.71])
+	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m317qhVa011628
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 09:52:44 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Replace the global err array with ch_err.
-drivers/scsi/ch.c:271:6: warning: symbol 'err' shadows an earlier one
-drivers/scsi/ch.c:116:3: originally declared here
+For zfcp, we still have the patch from
+http://marc.info/?l=linux-scsi&m=119461369332621&w=2
+pending that adds the export of additional statistics from the adapter
+to sysfs. There were some discussions, whether the attributes should
+be added to the SCSI host and devices, but there was no conclusion.
 
-Replace the temporary cmd buffer with ch_err to avoid shadowing the cmd
-function parameter.
-drivers/scsi/ch.c:724:11: warning: symbol 'cmd' shadows an earlier one
-drivers/scsi/ch.c:596:20: originally declared here
+To find a solution that can be merged upstream, here is an overview of
+the data currently available and the data that we want to add for the
+adapter (The above patch also adds latencies to the SCSI devices, but
+i think this should be discussed later).
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
-James, incorporated your comments.
+As short background, on s390, an FCP adapter can be shared by multiple
+Linux systems, that is the reason for the two data sets.
 
- drivers/scsi/ch.c |   33 +++++++++++++++++----------------
- 1 files changed, 17 insertions(+), 16 deletions(-)
+Currently, there is in the FC transport class
+ - number of input/output/control requests
+ - input/output megabytes
+for the FCP adapter (== the sum of requests/transferred data for all
+systems sharing the adapter).
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 7aad154..92d1cb1 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -113,7 +113,7 @@ static const struct {
- 	unsigned char  asc;
- 	unsigned char  ascq;
- 	int	       errno;
--} err[] = {
-+} ch_err[] = {
- /* Just filled in what looks right. Hav'nt checked any standard paper for
-    these errno assignments, so they may be wrong... */
- 	{
-@@ -155,11 +155,11 @@ static int ch_find_errno(struct scsi_sense_hdr *sshdr)
- 	/* Check to see if additional sense information is available */
- 	if (scsi_sense_valid(sshdr) &&
- 	    sshdr->asc != 0) {
--		for (i = 0; err[i].errno != 0; i++) {
--			if (err[i].sense == sshdr->sense_key &&
--			    err[i].asc   == sshdr->asc &&
--			    err[i].ascq  == sshdr->ascq) {
--				errno = -err[i].errno;
-+		for (i = 0; ch_err[i].errno != 0; i++) {
-+			if (ch_err[i].sense == sshdr->sense_key &&
-+			    ch_err[i].asc   == sshdr->asc &&
-+			    ch_err[i].ascq  == sshdr->ascq) {
-+				errno = -ch_err[i].errno;
- 				break;
- 			}
- 		}
-@@ -721,8 +721,8 @@ static long ch_ioctl(struct file *file,
- 	case CHIOGELEM:
- 	{
- 		struct changer_get_element cge;
--		u_char  cmd[12];
--		u_char  *buffer;
-+		u_char ch_cmd[12];
-+		u_char *buffer;
- 		unsigned int elem;
- 		int     result,i;
- 
-@@ -739,17 +739,18 @@ static long ch_ioctl(struct file *file,
- 		mutex_lock(&ch->lock);
- 
- 	voltag_retry:
--		memset(cmd,0,sizeof(cmd));
--		cmd[0] = READ_ELEMENT_STATUS;
--		cmd[1] = (ch->device->lun << 5) |
-+		memset(ch_cmd, 0, sizeof(ch_cmd));
-+		ch_cmd[0] = READ_ELEMENT_STATUS;
-+		ch_cmd[1] = (ch->device->lun << 5) |
- 			(ch->voltags ? 0x10 : 0) |
- 			ch_elem_to_typecode(ch,elem);
--		cmd[2] = (elem >> 8) & 0xff;
--		cmd[3] = elem        & 0xff;
--		cmd[5] = 1;
--		cmd[9] = 255;
-+		ch_cmd[2] = (elem >> 8) & 0xff;
-+		ch_cmd[3] = elem        & 0xff;
-+		ch_cmd[5] = 1;
-+		ch_cmd[9] = 255;
- 
--		if (0 == (result = ch_do_scsi(ch, cmd, buffer, 256, DMA_FROM_DEVICE))) {
-+		result = ch_do_scsi(ch, ch_cmd, buffer, 256, DMA_FROM_DEVICE);
-+		if (!result) {
- 			cge.cge_status = buffer[18];
- 			cge.cge_flags = 0;
- 			if (buffer[18] & CESTATUS_EXCEPT) {
--- 
-1.5.5.rc1.135.g8527
+The new patch adds 
+ - number of input/output/control requests
+ - input/ouput megabytes
+for the current system using the adapter.  The proposal of the
+patch was to add the attributes 'requests' and 'megabytes' to the SCSI
+host in sysfs. Alternatives i currently see:
+ - add attributes to the underlying CCW device (not the adapter)
+ - add new attributes to the FC transport class
 
+What is the best way to export the data?
 
+The other two attributes for
+ - utilization of channel and adapter and
+ - time the connection between Linux and FCP adapter has been active
+are not related to any existing attributes, but the question is the
+same: Does the proposal for adding the data to the SCSI host make
+sense, or should the data be added to the CCW device or the FC host
+statistics?
 
+Christof
