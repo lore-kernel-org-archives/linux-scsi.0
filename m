@@ -1,25 +1,28 @@
-From: Jos van der Ende <seraph@xs4all.nl>
-Subject: Re: [Bugme-new] [Bug 10374] New: sym53c8xx: weird behavior with
- udev
-Date: Tue, 1 Apr 2008 16:47:40 +0200
-Message-ID: <20080401164740.c4a5ec3f.seraph@xs4all.nl>
-References: <bug-10374-10286@http.bugzilla.kernel.org/>
-	<20080401011518.eb683cff.akpm@linux-foundation.org>
-	<1207059115.3100.9.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10374] sym53c8xx: weird behavior with udev
+Date: Tue,  1 Apr 2008 07:48:15 -0700 (PDT)
+Message-ID: <20080401144815.EC61A11D108@picon.linux-foundation.org>
+References: <bug-10374-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pearlgates.net ([82.92.180.13]:36458 "EHLO mail.pearlgates.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755779AbYDAOrn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Apr 2008 10:47:43 -0400
-In-Reply-To: <1207059115.3100.9.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36288 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752220AbYDAOsp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 10:48:45 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m31EmGbf015109
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 07:48:17 -0700
+In-Reply-To: <bug-10374-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=10374
+
+
+
+
+
+------- Comment #4 from seraph@xs4all.nl  2008-04-01 07:48 -------
 On Tue, 01 Apr 2008 09:11:55 -0500
 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
@@ -37,7 +40,10 @@ James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
 > I'm assuming eth0 is the problem?
 
-Yes, the Sun GEM interface is the problem. Ethernet over FireWire (a direct link between the webserver and database server) works just fine. In a minimal config with no devices enabled except the SU serial line (needed for console), the dual SCSI adapter and the Sun GEM nic, the problem still remained the same.
+Yes, the Sun GEM interface is the problem. Ethernet over FireWire (a direct
+link between the webserver and database server) works just fine. In a minimal
+config with no devices enabled except the SU serial line (needed for console),
+the dual SCSI adapter and the Sun GEM nic, the problem still remained the same.
 
 > Could you also send us the output of /proc/interrupts, /proc/iomem
 > and /proc/ioports just to see if we have a problem.  Also, if eth0 is on
@@ -93,4 +99,6 @@ seraphim ~ # cat /proc/ioports
 
 
 -- 
-Jos van der Ende <seraph@xs4all.nl>
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
