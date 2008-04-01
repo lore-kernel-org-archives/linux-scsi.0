@@ -1,54 +1,58 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10374] sym53c8xx: weird behavior with udev
-Date: Tue,  1 Apr 2008 13:20:41 -0700 (PDT)
-Message-ID: <20080401202041.3BC3311D108@picon.linux-foundation.org>
-References: <bug-10374-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PATCH] SCSI fixes for 2.6.25-rc8
+Date: Tue, 01 Apr 2008 15:36:37 -0500
+Message-ID: <1207082197.3100.26.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36885 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756907AbYDAUVb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 16:21:31 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m31KKfVB011366
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Apr 2008 13:20:42 -0700
-In-Reply-To: <bug-10374-11613@http.bugzilla.kernel.org/>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:38503 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756131AbYDAUgl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2008 16:36:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10374
+This patch constitutes three bug fixes (the reversion of the BSG queue
+fix is the most serious; without it we're getting eventual corruption in
+systems).  The other two fix error legs or misleading reporting.  The
+remaining 8 patches are all updates to the mvsas driver which was a late
+addition at the -rc1 phase, so while they're not truly bug fixes, they
+are enhancements to make that unreleased driver more roubust for 2.6.25.
 
+The patch is here:
 
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
+The short changelog is:
 
+James Bottomley (2):
+      libsas: Warn if ATA device detected but CONFIG_SCSI_SAS_ATA not set
+      Revert " fix bsg queue oops with iscsi logout"
 
-------- Comment #6 from anonymous@kernel-bugs.osdl.org  2008-04-01 13:20 -------
-Reply-To: James.Bottomley@HansenPartnership.com
+James Smart (1):
+      hosts.c: fixes for "no error" reported after error scenarios
 
-On Tue, 2008-04-01 at 21:05 +0200, Jos van der Ende wrote:
-> Hello all,
-> 
-> 
-> I did a bit more testing, and I think this may be related to the order in which modules are loaded.
-> 
-> If I let udev load sungem, and load sym53c8xx manually, everything works.
-> 
-> If I let udev load sym53c8xx, and load sungem manually, I get the non-functional network.
-> 
-> If I let udev load both modules, I also get the non-functional network. While udev loads sungem first and sym53c8xx later, I don't suppose it waits for one module to 'settle' before loading the next. :-)
+Ke Wei (8):
+      mvsas: check subsystem id
+      mvsas: get phy info.
+      mvsas: fix the buffer of rx DMA overflow bug
+      mvsas: retry aborting task.
+      mvsas: check hd whether unplugged
+      mvsas : interrupt handling
+      mvsas: a tag handler implementation
+      mvsas: fill in error info record and phy mode6 bits.
 
-That's odd ... it's behaving like a resource conflict.  However, the
-ports and interrupt trace didn't betray anything.  What does lspci -vv
-say for each of the devices?  Also, if you remove the sym2 module in the
-problem case, does the sungem come back to life?
+and the diffstat:
 
-I'm afraid I can't see anything relevant looking over the sym2 changes,
-so you might need to bisect this to identify the culprit.
+ drivers/scsi/hosts.c               |   16 
+ drivers/scsi/libsas/sas_discover.c |    5 
+ drivers/scsi/mvsas.c               |  711 +++++++++++++++++++++++++------------
+ drivers/scsi/scsi_sysfs.c          |    2 
+ 4 files changed, 497 insertions(+), 237 deletions(-)
 
 James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
