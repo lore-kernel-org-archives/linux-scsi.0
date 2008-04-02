@@ -1,38 +1,64 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10374] sym53c8xx: weird behavior with udev
-Date: Wed,  2 Apr 2008 03:29:52 -0700 (PDT)
-Message-ID: <20080402102952.8332711D108@picon.linux-foundation.org>
-References: <bug-10374-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
+Date: Wed, 2 Apr 2008 20:08:36 +0900
+Message-ID: <20080402200815I.tomof@acm.org>
+References: <20080317213422.GA11966@one.firstfloor.org>
+	<20080402123727B.tomof@acm.org>
+	<47F34729.6060608@panasas.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46550 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752126AbYDBKaV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 06:30:21 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m32ATqrF000503
-	for <linux-scsi@vger.kernel.org>; Wed, 2 Apr 2008 03:29:53 -0700
-In-Reply-To: <bug-10374-11613@http.bugzilla.kernel.org/>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:34240 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753118AbYDBLJr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Apr 2008 07:09:47 -0400
+In-Reply-To: <47F34729.6060608@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, andi@firstfloor.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.orgtomof@acm.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10374
+On Wed, 02 Apr 2008 11:43:21 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
+> On Wed, Apr 02 2008 at 6:37 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > On Mon, 17 Mar 2008 22:34:22 +0100
+> > Andi Kleen <andi@firstfloor.org> wrote:
+> > 
+> >>> Look further down in the email, queue_bounce_to_mask() or whatever you
+> >>> would want to call it. As also written there, the PRINCIPLE is the same.
+> >>> And that is that exporting a to_allocator_mask() helper is a lot saner
+> >>> than exporting an allocator api tied to the queue.
+> >>>
+> >>> Can we get over this, please?
+> >> Ok it would have helped if you had explained why it is saner, but I 
+> >> bow to your superior experience on block layer issues.
+> >>
+> >> The only open issue is right now if it isn't better to go back
+> >> for automatic bouncing for SCSI scan and the other users. Do you
+> >> have an opinion on that too? If you have one can you please convince
+> >> James of it too.
+> > 
+> > There are other things that don't want the automatic bouncing; sg, st,
+> > and osst.
+> > 
+> > Your patches remove unchecked_isa_dma in them and Boaz said that they
+> > are fine since they get bounced anyway, however, it's not correct.
+> > 
+> > As Doug said in another thread (about your patch to change GFP_ATOMIC
+> > to GFP_KERNEL in sg), they try to avoid waiting for a long time and
+> > want an early failure (though they are not complete; can't avoid non
+> > unchecked_isa_dma bouncing) .
+> > 
+> > We can change the bounce path in that way, but I think it's better if
+> > they can allocate memory that will not get bounced.
+> 
+> I was looking in blk_queue_bounce (in mm/bounce.c) and have not seen any
+> case of q->bounce_gfp with __GFP_WAIT. Are you sure we are waiting for
+> the bounce buffers? It will take few more CPU cycles, but I don't see
+> where it will sleep.
 
-
-
-
-------- Comment #10 from seraph@xs4all.nl  2008-04-02 03:29 -------
-Maybe it's nothing, but I did notice that sym53c8xx compiles with a warning of
-a possibly uninitialized variable:
-
-  CC [M]  drivers/scsi/sym53c8xx_2/sym_glue.o
-drivers/scsi/sym53c8xx_2/sym_glue.c: In function 'sym_eh_handler':
-drivers/scsi/sym53c8xx_2/sym_glue.c:612: warning: 'io_reset' may be used
-uninitialized in this function
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Hmm, q->bounce_gfp is GFP_NOIO or (GFP_NOIO | __GFP_DMA). And
+__blk_queue_bounce also allocates bio with GFP_NOIO. So the bounce
+path always use __GFP_WAIT.
