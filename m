@@ -1,114 +1,109 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [patch 02/17] Dell CERC support for megaraid_mbox
-Date: Wed, 2 Apr 2008 15:48:30 -0600
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26502085504@NAMAIL1.ad.lsil.com>
-References: <200803282148.m2SLmXhQ012219@imap1.linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] block: fix barrier error transmission
+Date: Wed, 02 Apr 2008 18:11:52 -0500
+Message-ID: <1207177912.3082.57.camel@localhost.localdomain>
+References: <1207159348.3082.45.camel@localhost.localdomain>
+	 <20080402190827.GJ12774@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:63352 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760316AbYDBVtZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 17:49:25 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200803282148.m2SLmXhQ012219@imap1.linux-foundation.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42239 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755108AbYDBXL7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 19:11:59 -0400
+In-Reply-To: <20080402190827.GJ12774@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, hare@suse.de, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, mtosatti@redhat.com
 
-Hannes,
+On Wed, 2008-04-02 at 21:08 +0200, Jens Axboe wrote:
+> > diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+> > index 55c5f1f..3a3947c 100644
+> > --- a/block/blk-barrier.c
+> > +++ b/block/blk-barrier.c
+> > @@ -114,18 +114,24 @@ void blk_ordered_complete_seq(struct request_queue *q, unsigned seq, int error)
+> >  
+> >  static void pre_flush_end_io(struct request *rq, int error)
+> >  {
+> > +	error = rq->errors ? -EIO : error;
+> > +
+> >  	elv_completed_request(rq->q, rq);
+> >  	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_PREFLUSH, error);
+> >  }
+> 
+> It's a bit of a hack, SCSI really should pass the error value back
+> instead of fiddling around with possibly perhaps finding it in ->errors.
+> And please don't use these ?: constructs, in this case it doesn't even
+> make a lot of sense and a
+> 
+>         if (rq->errors)
+>                 error = -EIO;
+> 
+> would have been much cleaner ;-)
+> 
+> So my question is why does the model not allow you to return the error
+> properly?
 
-We can not find out why need to disable the random deletion of the
-logical drive for the FW version>=6.62?  Where is the 6.62 come from?
+I thought it was the sg_io that would be the problem, but apparently on
+further research, it simply discards the error as does scsi_execute_req.
 
-Thanks.
+I suppose that's a strong enough reason to try returning an error ...
+I'm just a bit leery this close to a release.
 
-Bo Yang  
+I think this will work ... it just really needs quite a bit of
+testing ...
 
------Original Message-----
-From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
-Sent: Friday, March 28, 2008 5:49 PM
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; hare@suse.de;
-Yang, Bo; James.Bottomley@SteelEye.com; Patro, Sumant
-Subject: [patch 02/17] Dell CERC support for megaraid_mbox
+James
 
-From: Hannes Reinecke <hare@suse.de>
-
-Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
-compatible with the legacy megaraid driver.  The legacy handling shifted
-the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
-megaraid_mbox shifts the target ID always if random deletion is
-supported. 
-The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
-and not finding any devices, obviously.
-
-So we disable the random deletion support if the offending firmware is
-found.
-
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 18 insertions(+)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1b199e1..67f412b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -839,7 +839,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	int this_count = scsi_bufflen(cmd);
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+-	int clear_errors = 1;
++	int error = 0;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+@@ -853,7 +853,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	if (blk_pc_request(req)) { /* SG_IO ioctl from block level */
+ 		req->errors = result;
+ 		if (result) {
+-			clear_errors = 0;
+ 			if (sense_valid && req->sense) {
+ 				/*
+ 				 * SG_IO wants current and deferred errors
+@@ -865,6 +864,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				memcpy(req->sense, cmd->sense_buffer,  len);
+ 				req->sense_len = len;
+ 			}
++			if (!sense_deferred)
++				error = -EIO;
+ 		}
+ 		if (scsi_bidi_cmnd(cmd)) {
+ 			/* will also release_buffers */
+@@ -885,14 +886,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				      "%d bytes done.\n",
+ 				      req->nr_sectors, good_bytes));
+ 
+-	if (clear_errors)
+-		req->errors = 0;
+-
+ 	/* A number of bytes were successfully read.  If there
+ 	 * are leftovers and there is some kind of error
+ 	 * (result != 0), retry the rest.
+ 	 */
+-	if (scsi_end_request(cmd, 0, good_bytes, result == 0) == NULL)
++	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
+ 
+ 	/* good_bytes = 0, or (inclusive) there were leftovers and
 
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbo
-x drivers/scsi/megaraid/megaraid_mbox.c
----
-a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_m
-box
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device ==
-PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random
-deletion\n"));
-+		return 0;
-+	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbo
-x drivers/scsi/megaraid/megaraid_mbox.h
----
-a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_m
-box
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
- 
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
-kernel
-_
+
