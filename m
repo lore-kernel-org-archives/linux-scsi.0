@@ -1,65 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [RFC] block: fix barrier error transmission
-Date: Wed, 02 Apr 2008 13:02:28 -0500
-Message-ID: <1207159348.3082.45.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [GIT PATCH] SCSI fixes for 2.6.25-rc8
+Date: Wed, 02 Apr 2008 21:05:48 +0300
+Message-ID: <47F3CAFC.2050401@panasas.com>
+References: <1207082197.3100.26.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:44642 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757868AbYDBSCd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 14:02:33 -0400
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22941 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755263AbYDBSGG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 14:06:06 -0400
+In-Reply-To: <1207082197.3100.26.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <Jens.Axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, mtosatti@redhat.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-There's a problem with barriers in SCSI.  They're prepared as a
-SYNCHRONIZE_CACHE REQ_TYPE_BLOCK_PC command.  However, our processing
-model dictates that we always return no block error but set req->errors
-to the SCSI result.  The upshot is that if we get an error on a flush
-barrier, it's never seen by the block layer.
+On Tue, Apr 01 2008 at 23:36 +0300, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> This patch constitutes three bug fixes (the reversion of the BSG queue
+> fix is the most serious; without it we're getting eventual corruption in
+> systems).  The other two fix error legs or misleading reporting.  The
+> remaining 8 patches are all updates to the mvsas driver which was a late
+> addition at the -rc1 phase, so while they're not truly bug fixes, they
+> are enhancements to make that unreleased driver more roubust for 2.6.25.
+> 
+> The patch is here:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> 
+> The short changelog is:
+> 
+> James Bottomley (2):
+>       libsas: Warn if ATA device detected but CONFIG_SCSI_SAS_ATA not set
+>       Revert " fix bsg queue oops with iscsi logout"
+> 
+<snip>
 
-This patch attempts to get the block layer to see such errors.  Note,
-it's still not quite right.  There are possible sense errors that could
-indicate success of the command (like deferred errors) that this will
-treat as failures.  I suppose we could process the sense in scsi and try
-to return a first pass error even for REQ_TYPE_BLOCK_PC ... I'm just not
-sure what that will do to the other users.
+Does this mean that we still have the iscsi logout bug if used from bsg
+in 2.6.25 kernel? I just want to know what are the out-of-tree patches 
+I will need. Will the proper fix be candidate for the stable releases
+of 2.6.25?
 
-James
-
----
-
-diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-index 55c5f1f..3a3947c 100644
---- a/block/blk-barrier.c
-+++ b/block/blk-barrier.c
-@@ -114,18 +114,24 @@ void blk_ordered_complete_seq(struct request_queue *q, unsigned seq, int error)
- 
- static void pre_flush_end_io(struct request *rq, int error)
- {
-+	error = rq->errors ? -EIO : error;
-+
- 	elv_completed_request(rq->q, rq);
- 	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_PREFLUSH, error);
- }
- 
- static void bar_end_io(struct request *rq, int error)
- {
-+	error = rq->errors ? -EIO : error;
-+
- 	elv_completed_request(rq->q, rq);
- 	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_BAR, error);
- }
- 
- static void post_flush_end_io(struct request *rq, int error)
- {
-+	error = rq->errors ? -EIO : error;
-+
- 	elv_completed_request(rq->q, rq);
- 	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_POSTFLUSH, error);
- }
-
-
+Thanks
+Boaz
