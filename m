@@ -1,52 +1,58 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
-Date: Wed, 2 Apr 2008 12:37:33 +0900
-Message-ID: <20080402123727B.tomof@acm.org>
-References: <20080317204548.GB10846@one.firstfloor.org>
-	<20080317204634.GQ17940@kernel.dk>
-	<20080317213422.GA11966@one.firstfloor.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: transport_class: BUG if we can't release the attribute
+	container
+Date: Tue, 1 Apr 2008 23:32:32 -0700
+Message-ID: <20080402063232.GD8158@kroah.com>
+References: <1206203957.4393.16.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:58135 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbYDBDil (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Apr 2008 23:38:41 -0400
-In-Reply-To: <20080317213422.GA11966@one.firstfloor.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:56170 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbYDBGc4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 02:32:56 -0400
+Content-Disposition: inline
+In-Reply-To: <1206203957.4393.16.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andi@firstfloor.org
-Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 17 Mar 2008 22:34:22 +0100
-Andi Kleen <andi@firstfloor.org> wrote:
-
-> > Look further down in the email, queue_bounce_to_mask() or whatever you
-> > would want to call it. As also written there, the PRINCIPLE is the same.
-> > And that is that exporting a to_allocator_mask() helper is a lot saner
-> > than exporting an allocator api tied to the queue.
-> > 
-> > Can we get over this, please?
+On Sat, Mar 22, 2008 at 11:39:17AM -0500, James Bottomley wrote:
+> Every current transport class calls transport_container_release but
+> ignores the return value.  This is catastrophic if it returns an error
+> because the containers are part of a global list and the next action of
+> almost every transport class is to free the memory used by the
+> container.
 > 
-> Ok it would have helped if you had explained why it is saner, but I 
-> bow to your superior experience on block layer issues.
+> Fix this by making transport_container_release a void, but making it BUG
+> if attribute_container_release returns an error ... this catches the
+> root cause of a system panic much earlier.  If we don't do this, we get
+> an eventual BUG when the attribute container list notices the corruption
+> caused by the freed memory it's still referencing.
 > 
-> The only open issue is right now if it isn't better to go back
-> for automatic bouncing for SCSI scan and the other users. Do you
-> have an opinion on that too? If you have one can you please convince
-> James of it too.
+> Also made attribute_container_release __must_check as a reminder.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
+> index 40bca48..06861ae 100644
+> --- a/drivers/base/transport_class.c
+> +++ b/drivers/base/transport_class.c
+> @@ -108,7 +108,7 @@ EXPORT_SYMBOL_GPL(anon_transport_class_register);
+>   */
+>  void anon_transport_class_unregister(struct anon_transport_class *atc)
+>  {
+> -	attribute_container_unregister(&atc->container);
+> +	BUG_ON(attribute_container_unregister(&atc->container));
 
-There are other things that don't want the automatic bouncing; sg, st,
-and osst.
+BUG_ON() should not do anything in the macro except test for a value, no
+function calling.  I think checkpatch.pl checks for this...
 
-Your patches remove unchecked_isa_dma in them and Boaz said that they
-are fine since they get bounced anyway, however, it's not correct.
+If you change that, I have no problem with this.
 
-As Doug said in another thread (about your patch to change GFP_ATOMIC
-to GFP_KERNEL in sg), they try to avoid waiting for a long time and
-want an early failure (though they are not complete; can't avoid non
-unchecked_isa_dma bouncing) .
+thanks,
 
-We can change the bounce path in that way, but I think it's better if
-they can allocate memory that will not get bounced.
+greg k-h
