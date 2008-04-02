@@ -1,59 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: transport_class: BUG if we can't release the attribute
-	container
-Date: Wed, 02 Apr 2008 09:32:55 -0500
-Message-ID: <1207146776.3082.9.camel@localhost.localdomain>
-References: <1206203957.4393.16.camel@localhost.localdomain>
-	 <20080402063232.GD8158@kroah.com>
-	 <1207145753.3082.7.camel@localhost.localdomain>
-	 <20080402143040.GU16451@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: transport_class: BUG if we can't release the attribute container
+Date: Wed, 02 Apr 2008 17:32:46 +0300
+Message-ID: <47F3990E.1010002@panasas.com>
+References: <1206203957.4393.16.camel@localhost.localdomain>	 <20080402063232.GD8158@kroah.com> <1207145753.3082.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56950 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756657AbYDBOc7 (ORCPT
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:60370 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756566AbYDBOc7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 10:32:59 -0400
-In-Reply-To: <20080402143040.GU16451@parisc-linux.org>
+In-Reply-To: <1207145753.3082.7.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2008-04-02 at 08:30 -0600, Matthew Wilcox wrote:
-> On Wed, Apr 02, 2008 at 09:15:53AM -0500, James Bottomley wrote:
-> > On Tue, 2008-04-01 at 23:32 -0700, Greg KH wrote:
-> > > BUG_ON() should not do anything in the macro except test for a value, no
-> > > function calling.  I think checkpatch.pl checks for this...
-> > 
-> > Well, we can agree to differ on this.  The camp that wants no side
-> > effects for BUG_ON() does so in case they want to define it to be a nop.
+James Bottomley wrote:
+<snip> 
+> Well, we can agree to differ on this.  The camp that wants no side
+> effects for BUG_ON() does so in case they want to define it to be a nop.
+> I've always argued that having special rules for this that differ from
+> functions is asking for trouble.  It's also easy to preserve the side
+> effects by making the compile out do this:
 > 
-> That's one argument, but to me, the most important thing is that reading
-> the content of BUG_ON is unnecessary for understanding the function.
+> #define BUG_ON(x) (void)(x)
 > 
-> > OK ... your subsystem tree your call, I suppose.  How about the
-> > attached.
+> That lets the compiler process the side effects and discard the result.
+> This basically means the rules for BUG_ON() arguments are identical to
+> the rules for function arguments ... I think that's consonant with the
+> principle of least surprise.
 > 
-> > -static inline int transport_container_unregister(struct transport_container *tc)
-> > +static inline void transport_container_unregister(struct transport_container *tc)
-> >  {
-> > -	return attribute_container_unregister(&tc->ac);
-> > +	int err = attribute_container_unregister(&tc->ac);
-> > +	BUG_ON(err);
-> >  }
-> 
-> What's wrong with:
-> 
-> 	if (attribute_container_unregister(&tc->ac))
-> 		BUG();
 
-You've lost the unlikely designation which is one of the main reasons
-for using BUG_ON().  Most people who write in this form also forget it
-leading to a heap of suboptimal jump prediction code in the kernel and
-another reason not to encourage it.
+The Kernel seems to agree with you:
+#define BUG_ON(condition) do { if (condition) ; } while(0)
 
-James
+what should we do with stuff like
+	BUG_ON(check_foo_valid()); 
+which is time consuming and should not run on production machines
 
+should we directly use:
+#ifdef CONFIG_BUG
+or is there some other facility for that?
 
+Boaz
