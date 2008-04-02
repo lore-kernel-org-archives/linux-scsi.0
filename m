@@ -1,58 +1,74 @@
 From: Greg KH <greg@kroah.com>
-Subject: Re: transport_class: BUG if we can't release the attribute
-	container
-Date: Tue, 1 Apr 2008 23:32:32 -0700
-Message-ID: <20080402063232.GD8158@kroah.com>
-References: <1206203957.4393.16.camel@localhost.localdomain>
+Subject: Re: [PATCH 1/2] sysfs: allow the group is_visible() method to
+	return a mode and add an update API
+Date: Tue, 1 Apr 2008 23:30:47 -0700
+Message-ID: <20080402063047.GC8158@kroah.com>
+References: <1206134832.2961.64.camel@localhost.localdomain> <20080321222635.GA2674@kroah.com> <1206208949.4393.25.camel@localhost.localdomain> <1206896083.4224.40.camel@localhost.localdomain> <1206970929.20492.27.camel@lov.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56170 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:56171 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbYDBGc4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 02:32:56 -0400
+	with ESMTP id S1753174AbYDBGc5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 02:32:57 -0400
 Content-Disposition: inline
-In-Reply-To: <1206203957.4393.16.camel@localhost.localdomain>
+In-Reply-To: <1206970929.20492.27.camel@lov.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, Mar 22, 2008 at 11:39:17AM -0500, James Bottomley wrote:
-> Every current transport class calls transport_container_release but
-> ignores the return value.  This is catastrophic if it returns an error
-> because the containers are part of a global list and the next action of
-> almost every transport class is to free the memory used by the
-> container.
+On Mon, Mar 31, 2008 at 03:42:09PM +0200, Kay Sievers wrote:
+> On Sun, 2008-03-30 at 11:54 -0500, James Bottomley wrote:
+> > On Sat, 2008-03-22 at 13:02 -0500, James Bottomley wrote:
+> > > On Fri, 2008-03-21 at 15:26 -0700, Greg KH wrote:
+> > > > On Fri, Mar 21, 2008 at 04:27:12PM -0500, James Bottomley wrote:
+> > > > > We have a problem in scsi_transport_spi in that we need to customise
+> > > > > not only the visibility of the attributes, but also their mode.  Fix
+> > > > > this by making the is_visible() callback return a mode, with 0
+> > > > > indicating is not visible.
+> > > > > 
+> > > > > Also add a sysfs_update_group() API to allow us to change either the
+> > > > > visibility or mode of the files at any time on the fly.
+> > > > > 
+> > > > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > > > ---
+> > > > > 
+> > > > > Greg, can I take this through SCSI, please ... assuming it's OK?  We
+> > > > > need this to fix up the SPI transport class.
+> > > > 
+> > > > Sure.  But can you document that "update" field a bit more so we can
+> > > > remember what it means in the future?
+> > > 
+> > > How about this?  I also added docbook for create and update attribute
+> > > group.
 > 
-> Fix this by making transport_container_release a void, but making it BUG
-> if attribute_container_release returns an error ... this catches the
-> root cause of a system panic much earlier.  If we don't do this, we get
-> an eventual BUG when the attribute container list notices the corruption
-> caused by the freed memory it's still referencing.
+> Looks good to me.
 > 
-> Also made attribute_container_release __must_check as a reminder.
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
-> index 40bca48..06861ae 100644
-> --- a/drivers/base/transport_class.c
-> +++ b/drivers/base/transport_class.c
-> @@ -108,7 +108,7 @@ EXPORT_SYMBOL_GPL(anon_transport_class_register);
->   */
->  void anon_transport_class_unregister(struct anon_transport_class *atc)
->  {
-> -	attribute_container_unregister(&atc->container);
-> +	BUG_ON(attribute_container_unregister(&atc->container));
+> I think with the "visible" stuff for attribute groups, will be able to
+> fix the USB event timing problem, by moving the creation of the device
+> attributes to default attributes. So I'm looking forward to have this in
+> the tree.
 
-BUG_ON() should not do anything in the macro except test for a value, no
-function calling.  I think checkpatch.pl checks for this...
+Me too.
 
-If you change that, I have no problem with this.
+> > Can I get an ACK from someone from sysfs for this, please?
+> 
+> > > ---
+> > > 
+> > > From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > Date: Thu, 20 Mar 2008 20:47:52 -0500
+> > > Subject: [SCSI] sysfs: make group is_valid return a mode_t
+> > > 
+> > > We have a problem in scsi_transport_spi in that we need to customise
+> > > not only the visibility of the attributes, but also their mode.  Fix
+> > > this by making the is_visible() callback return a mode, with 0
+> > > indicating is not visible.
+> > > 
+> > > Also add a sysfs_update_group() API to allow us to change either the
+> > > visibility or mode of the files at any time on the fly.
+> 
+> Acked-by: Kay Sievers <kay.sievers@vrfy.org>
 
-thanks,
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-greg k-h
