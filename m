@@ -1,29 +1,28 @@
-From: Jos van der Ende <seraph@xs4all.nl>
-Subject: Re: [Bugme-new] [Bug 10374] New: sym53c8xx: weird behavior with
- udev
-Date: Wed, 2 Apr 2008 18:06:51 +0200
-Message-ID: <20080402180651.6b3e0247.seraph@xs4all.nl>
-References: <bug-10374-10286@http.bugzilla.kernel.org/>
-	<20080401011518.eb683cff.akpm@linux-foundation.org>
-	<1207059115.3100.9.camel@localhost.localdomain>
-	<20080401210521.abbb443c.seraph@xs4all.nl>
-	<1207081169.3100.20.camel@localhost.localdomain>
-	<20080401225717.7d936f91.seraph@xs4all.nl>
-	<1207084454.3100.31.camel@localhost.localdomain>
-	<20080402122944.7fe8e924.seraph@xs4all.nl>
-	<20080402120651.GS16451@parisc-linux.org>
-	<20080402160920.dc219007.seraph@xs4all.nl>
-	<1207151359.3082.36.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1207151359.3082.36.camel@localhost.localdomain>
-Sender: sparclinux-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10374] sym53c8xx: weird behavior with udev
+Date: Wed,  2 Apr 2008 09:07:27 -0700 (PDT)
+Message-ID: <20080402160727.AC64310805F@picon.linux-foundation.org>
+References: <bug-10374-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35164 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754819AbYDBQH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 12:07:59 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m32G7RLq001654
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Apr 2008 09:07:28 -0700
+In-Reply-To: <bug-10374-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=10374
+
+
+
+
+
+------- Comment #14 from seraph@xs4all.nl  2008-04-02 09:07 -------
 On Wed, 02 Apr 2008 10:49:19 -0500
 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
@@ -37,8 +36,13 @@ So Andrew's first hunch that interrupts were somehow involved is right.
 > descriptors are separate entities in the irq_desc array) I can't really
 > see how sym2 would be doing this.
 
-Yeah, that has me baffled too. Still, the fact is that I can only trigger the bug by loading sym53c8xx before sungem. I have yet to find any other conditions that trigger it. Loading sungem before sym53c8xx on an affected kernel gives no trouble at all.
+Yeah, that has me baffled too. Still, the fact is that I can only trigger the
+bug by loading sym53c8xx before sungem. I have yet to find any other conditions
+that trigger it. Loading sungem before sym53c8xx on an affected kernel gives no
+trouble at all.
 
 
 -- 
-Jos van der Ende <seraph@xs4all.nl>
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
