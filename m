@@ -1,74 +1,59 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/2] sysfs: allow the group is_visible() method to
-	return a mode and add an update API
-Date: Tue, 1 Apr 2008 23:30:47 -0700
-Message-ID: <20080402063047.GC8158@kroah.com>
-References: <1206134832.2961.64.camel@localhost.localdomain> <20080321222635.GA2674@kroah.com> <1206208949.4393.25.camel@localhost.localdomain> <1206896083.4224.40.camel@localhost.localdomain> <1206970929.20492.27.camel@lov.site>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [9/20] Add blk_kmalloc/blk_alloc_pages
+Date: Wed, 02 Apr 2008 11:43:21 +0300
+Message-ID: <47F34729.6060608@panasas.com>
+References: <20080317204548.GB10846@one.firstfloor.org>	<20080317204634.GQ17940@kernel.dk>	<20080317213422.GA11966@one.firstfloor.org> <20080402123727B.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56171 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbYDBGc5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 02:32:57 -0400
-Content-Disposition: inline
-In-Reply-To: <1206970929.20492.27.camel@lov.site>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33694 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbYDBIoV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2008 04:44:21 -0400
+In-Reply-To: <20080402123727B.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: andi@firstfloor.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Mon, Mar 31, 2008 at 03:42:09PM +0200, Kay Sievers wrote:
-> On Sun, 2008-03-30 at 11:54 -0500, James Bottomley wrote:
-> > On Sat, 2008-03-22 at 13:02 -0500, James Bottomley wrote:
-> > > On Fri, 2008-03-21 at 15:26 -0700, Greg KH wrote:
-> > > > On Fri, Mar 21, 2008 at 04:27:12PM -0500, James Bottomley wrote:
-> > > > > We have a problem in scsi_transport_spi in that we need to customise
-> > > > > not only the visibility of the attributes, but also their mode.  Fix
-> > > > > this by making the is_visible() callback return a mode, with 0
-> > > > > indicating is not visible.
-> > > > > 
-> > > > > Also add a sysfs_update_group() API to allow us to change either the
-> > > > > visibility or mode of the files at any time on the fly.
-> > > > > 
-> > > > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > > > ---
-> > > > > 
-> > > > > Greg, can I take this through SCSI, please ... assuming it's OK?  We
-> > > > > need this to fix up the SPI transport class.
-> > > > 
-> > > > Sure.  But can you document that "update" field a bit more so we can
-> > > > remember what it means in the future?
-> > > 
-> > > How about this?  I also added docbook for create and update attribute
-> > > group.
+On Wed, Apr 02 2008 at 6:37 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Mon, 17 Mar 2008 22:34:22 +0100
+> Andi Kleen <andi@firstfloor.org> wrote:
 > 
-> Looks good to me.
+>>> Look further down in the email, queue_bounce_to_mask() or whatever you
+>>> would want to call it. As also written there, the PRINCIPLE is the same.
+>>> And that is that exporting a to_allocator_mask() helper is a lot saner
+>>> than exporting an allocator api tied to the queue.
+>>>
+>>> Can we get over this, please?
+>> Ok it would have helped if you had explained why it is saner, but I 
+>> bow to your superior experience on block layer issues.
+>>
+>> The only open issue is right now if it isn't better to go back
+>> for automatic bouncing for SCSI scan and the other users. Do you
+>> have an opinion on that too? If you have one can you please convince
+>> James of it too.
 > 
-> I think with the "visible" stuff for attribute groups, will be able to
-> fix the USB event timing problem, by moving the creation of the device
-> attributes to default attributes. So I'm looking forward to have this in
-> the tree.
+> There are other things that don't want the automatic bouncing; sg, st,
+> and osst.
+> 
+> Your patches remove unchecked_isa_dma in them and Boaz said that they
+> are fine since they get bounced anyway, however, it's not correct.
+> 
+> As Doug said in another thread (about your patch to change GFP_ATOMIC
+> to GFP_KERNEL in sg), they try to avoid waiting for a long time and
+> want an early failure (though they are not complete; can't avoid non
+> unchecked_isa_dma bouncing) .
+> 
+> We can change the bounce path in that way, but I think it's better if
+> they can allocate memory that will not get bounced.
 
-Me too.
+I was looking in blk_queue_bounce (in mm/bounce.c) and have not seen any
+case of q->bounce_gfp with __GFP_WAIT. Are you sure we are waiting for
+the bounce buffers? It will take few more CPU cycles, but I don't see
+where it will sleep.
 
-> > Can I get an ACK from someone from sysfs for this, please?
-> 
-> > > ---
-> > > 
-> > > From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > Date: Thu, 20 Mar 2008 20:47:52 -0500
-> > > Subject: [SCSI] sysfs: make group is_valid return a mode_t
-> > > 
-> > > We have a problem in scsi_transport_spi in that we need to customise
-> > > not only the visibility of the attributes, but also their mode.  Fix
-> > > this by making the is_visible() callback return a mode, with 0
-> > > indicating is not visible.
-> > > 
-> > > Also add a sysfs_update_group() API to allow us to change either the
-> > > visibility or mode of the files at any time on the fly.
-> 
-> Acked-by: Kay Sievers <kay.sievers@vrfy.org>
+Boaz
 
-Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
 
