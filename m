@@ -1,495 +1,342 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 08/21] qla2xxx: Add hardware trace-logging support.
-Date: Thu,  3 Apr 2008 13:13:19 -0700
-Message-ID: <1207253612-15538-8-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 11/21] qla2xxx: Add Flash Descriptor Table layout support.
+Date: Thu,  3 Apr 2008 13:13:22 -0700
+Message-ID: <1207253612-15538-11-git-send-email-andrew.vasquez@qlogic.com>
 References: <20080403201152.GB8033@plap4.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:6416 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932125AbYDCUNx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2008 16:13:53 -0400
+	with ESMTP id S1761632AbYDCUNy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2008 16:13:54 -0400
 In-Reply-To: <20080403201152.GB8033@plap4.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-Recent ISPs have a region within FLASH which acts as a repository
-for the logging of serious hardware and software failures.
-Currently, the region is large enough to support up to 255
-entries.
+The Flash Descriptor Table (FDT) present on many recent HBAs
+encodes flash accessing characteristics of the flash-part used on
+the HBA.  Use this information during flash manipulation (writes)
+rather than using specific hard-coded values based on queried
+manufacturer and device IDs.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |   10 +++
- drivers/scsi/qla2xxx/qla_fw.h   |   14 +++-
- drivers/scsi/qla2xxx/qla_gbl.h  |    5 +
- drivers/scsi/qla2xxx/qla_init.c |   11 +++
- drivers/scsi/qla2xxx/qla_isr.c  |   15 ++++
- drivers/scsi/qla2xxx/qla_mbx.c  |    8 ++
- drivers/scsi/qla2xxx/qla_os.c   |   23 ++++++
- drivers/scsi/qla2xxx/qla_sup.c  |  168 +++++++++++++++++++++++++++++++++------
- 8 files changed, 229 insertions(+), 25 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |    7 ++
+ drivers/scsi/qla2xxx/qla_fw.h   |   32 ++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +
+ drivers/scsi/qla2xxx/qla_init.c |    1 +
+ drivers/scsi/qla2xxx/qla_sup.c  |  153 ++++++++++++++++++++++++++++-----------
+ 5 files changed, 152 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 35c730a..13ffeda 100644
+index 047973f..7e6b6da 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2118,6 +2118,7 @@ struct qla_msix_entry {
- /* Work events.  */
- enum qla_work_type {
- 	QLA_EVT_AEN,
-+	QLA_EVT_HWE_LOG,
- };
+@@ -2521,6 +2521,13 @@ typedef struct scsi_qla_host {
+ 	uint8_t		fcode_revision[16];
+ 	uint32_t	fw_revision[4];
  
- 
-@@ -2132,6 +2133,10 @@ struct qla_work_evt {
- 			enum fc_host_event_code code;
- 			u32 data;
- 		} aen;
-+		struct {
-+			uint16_t code;
-+			uint16_t d1, d2, d3;
-+		} hwe;
- 	} u;
- };
- 
-@@ -2173,6 +2178,7 @@ typedef struct scsi_qla_host {
- 		uint32_t        vsan_enabled            :1;
- 		uint32_t	npiv_supported		:1;
- 		uint32_t	fce_enabled		:1;
-+		uint32_t	hw_event_marker_found	:1;
- 	} flags;
- 
- 	atomic_t	loop_state;
-@@ -2478,6 +2484,10 @@ typedef struct scsi_qla_host {
- 	uint64_t	fce_wr, fce_rd;
- 	struct mutex	fce_mutex;
- 
-+	uint32_t	hw_event_start;
-+	uint32_t	hw_event_ptr;
-+	uint32_t	hw_event_pause_errors;
++	uint16_t	fdt_odd_index;
++	uint32_t	fdt_wrt_disable;
++	uint32_t	fdt_erase_cmd;
++	uint32_t	fdt_block_size;
++	uint32_t	fdt_unprotect_sec_cmd;
++	uint32_t	fdt_protect_sec_cmd;
 +
- 	uint8_t		host_str[16];
- 	uint32_t	pci_attr;
- 	uint16_t	chip_revision;
+ 	/* Needed for BEACON */
+ 	uint16_t	beacon_blink_led;
+ 	uint8_t		beacon_color_state;
 diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 4ae2653..5d19b0e 100644
+index 5d19b0e..38adc0f 100644
 --- a/drivers/scsi/qla2xxx/qla_fw.h
 +++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -793,7 +793,19 @@ struct device_reg_24xx {
- #define FA_VPD_NVRAM_ADDR	0x48000
- #define FA_FEATURE_ADDR		0x4C000
- #define FA_FLASH_DESCR_ADDR	0x50000
--#define FA_HW_EVENT_ADDR	0x54000
-+#define FA_HW_EVENT0_ADDR	0x54000
-+#define FA_HW_EVENT1_ADDR	0x54200
-+#define FA_HW_EVENT_SIZE	0x200
-+#define FA_HW_EVENT_ENTRY_SIZE	4
-+/*
-+ * Flash Error Log Event Codes.
-+ */
-+#define HW_EVENT_RESET_ERR	0xF00B
-+#define HW_EVENT_ISP_ERR	0xF020
-+#define HW_EVENT_PARITY_ERR	0xF022
-+#define HW_EVENT_NVRAM_CHKSUM_ERR	0xF023
-+#define HW_EVENT_FLASH_FW_ERR	0xF024
+@@ -1186,4 +1186,36 @@ struct vf_evfp_entry_24xx {
+ };
+ 
+ /* END MID Support ***********************************************************/
 +
- #define FA_BOOT_LOG_ADDR	0x58000
- #define FA_FW_DUMP0_ADDR	0x60000
- #define FA_FW_DUMP1_ADDR	0x70000
++/* Flash Description Table ***************************************************/
++
++struct qla_fdt_layout {
++	uint8_t sig[4];
++	uint16_t version;
++	uint16_t len;
++	uint16_t checksum;
++	uint8_t unused1[2];
++	uint8_t model[16];
++	uint16_t man_id;
++	uint16_t id;
++	uint8_t flags;
++	uint8_t erase_cmd;
++	uint8_t alt_erase_cmd;
++	uint8_t wrt_enable_cmd;
++	uint8_t wrt_enable_bits;
++	uint8_t wrt_sts_reg_cmd;
++	uint8_t unprotect_sec_cmd;
++	uint8_t read_man_id_cmd;
++	uint32_t block_size;
++	uint32_t alt_block_size;
++	uint32_t flash_size;
++	uint32_t wrt_enable_data;
++	uint8_t read_id_addr_len;
++	uint8_t wrt_disable_bits;
++	uint8_t read_dev_id_len;
++	uint8_t chip_erase_cmd;
++	uint16_t read_timeout;
++	uint8_t protect_sec_cmd;
++	uint8_t unused2[65];
++};
+ #endif
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index ee52f3e..276bd26 100644
+index 10c3f90..f25aa63 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -69,6 +69,8 @@ extern int qla2x00_loop_reset(scsi_qla_host_t *);
- extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
- extern int qla2x00_post_aen_work(struct scsi_qla_host *, enum
-     fc_host_event_code, u32);
-+extern int qla2x00_post_hwe_work(struct scsi_qla_host *, uint16_t , uint16_t,
-+    uint16_t, uint16_t);
+@@ -300,6 +300,8 @@ extern int qla24xx_get_flash_version(scsi_qla_host_t *, void *);
+ extern int qla2xxx_hw_event_log(scsi_qla_host_t *, uint16_t , uint16_t,
+     uint16_t, uint16_t);
  
- /*
-  * Global Functions in qla_mid.c source file.
-@@ -298,6 +300,9 @@ extern uint8_t *qla25xx_read_optrom_data(struct scsi_qla_host *, uint8_t *,
- extern int qla2x00_get_flash_version(scsi_qla_host_t *, void *);
- extern int qla24xx_get_flash_version(scsi_qla_host_t *, void *);
- 
-+extern int qla2xxx_hw_event_log(scsi_qla_host_t *, uint16_t , uint16_t,
-+    uint16_t, uint16_t);
++extern void qla2xxx_get_flash_info(scsi_qla_host_t *);
 +
  /*
   * Global Function Prototypes in qla_dbg.c source file.
   */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e773697..e9a7c2d 100644
+index d429e2f..10e6995 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -500,6 +500,7 @@ qla2x00_reset_chip(scsi_qla_host_t *ha)
- static inline void
- qla24xx_reset_risc(scsi_qla_host_t *ha)
- {
-+	int hw_evt = 0;
- 	unsigned long flags = 0;
- 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
- 	uint32_t cnt, d2;
-@@ -528,6 +529,8 @@ qla24xx_reset_risc(scsi_qla_host_t *ha)
- 		d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
- 		barrier();
+@@ -106,6 +106,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *ha)
+ 		rval = qla2x00_setup_chip(ha);
+ 		if (rval)
+ 			return (rval);
++		qla2xxx_get_flash_info(ha);
  	}
-+	if (cnt == 0)
-+		hw_evt = 1;
+ 	rval = qla2x00_init_rings(ha);
  
- 	/* Wait for soft-reset to complete. */
- 	d2 = RD_REG_DWORD(&reg->ctrl_status);
-@@ -536,6 +539,10 @@ qla24xx_reset_risc(scsi_qla_host_t *ha)
- 		d2 = RD_REG_DWORD(&reg->ctrl_status);
- 		barrier();
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index c10ccc7..eda11f6 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -543,6 +543,96 @@ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
  	}
-+	if (cnt == 0 || hw_evt)
-+		qla2xxx_hw_event_log(ha, HW_EVENT_RESET_ERR,
-+		    RD_REG_WORD(&reg->mailbox1), RD_REG_WORD(&reg->mailbox2),
-+		    RD_REG_WORD(&reg->mailbox3));
- 
- 	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_RESET);
- 	RD_REG_DWORD(&reg->hccr);
-@@ -1555,6 +1562,10 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
- 		qla_printk(KERN_WARNING, ha, "Falling back to functioning (yet "
- 		    "invalid -- WWPN) defaults.\n");
- 
-+		if (chksum)
-+			qla2xxx_hw_event_log(ha, HW_EVENT_NVRAM_CHKSUM_ERR, 0,
-+			    MSW(chksum), LSW(chksum));
-+
- 		/*
- 		 * Set default initialization control block.
- 		 */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index e9d8a79..0884642 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -349,6 +349,7 @@ qla2x00_async_event(scsi_qla_host_t *ha, uint16_t *mb)
- 		    "ISP System Error - mbx1=%xh mbx2=%xh mbx3=%xh.\n",
- 		    mb[1], mb[2], mb[3]);
- 
-+		qla2x00_post_hwe_work(ha, mb[0], mb[1], mb[2], mb[3]);
- 		ha->isp_ops->fw_dump(ha, 1);
- 
- 		if (IS_FWI2_CAPABLE(ha)) {
-@@ -373,6 +374,7 @@ qla2x00_async_event(scsi_qla_host_t *ha, uint16_t *mb)
- 		    ha->host_no));
- 		qla_printk(KERN_WARNING, ha, "ISP Request Transfer Error.\n");
- 
-+		qla2x00_post_hwe_work(ha, mb[0], mb[1], mb[2], mb[3]);
- 		set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
- 		break;
- 
-@@ -381,6 +383,7 @@ qla2x00_async_event(scsi_qla_host_t *ha, uint16_t *mb)
- 		    ha->host_no));
- 		qla_printk(KERN_WARNING, ha, "ISP Response Transfer Error.\n");
- 
-+		qla2x00_post_hwe_work(ha, mb[0], mb[1], mb[2], mb[3]);
- 		set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
- 		break;
- 
-@@ -1558,6 +1561,12 @@ qla24xx_intr_handler(int irq, void *dev_id)
- 			if (pci_channel_offline(ha->pdev))
- 				break;
- 
-+			if (ha->hw_event_pause_errors == 0)
-+				qla2x00_post_hwe_work(ha, HW_EVENT_PARITY_ERR,
-+				    0, MSW(stat), LSW(stat));
-+			else if (ha->hw_event_pause_errors < 0xffffffff)
-+				ha->hw_event_pause_errors++;
-+
- 			hccr = RD_REG_DWORD(&reg->hccr);
- 
- 			qla_printk(KERN_INFO, ha, "RISC paused -- HCCR=%x, "
-@@ -1693,6 +1702,12 @@ qla24xx_msix_default(int irq, void *dev_id)
- 			if (pci_channel_offline(ha->pdev))
- 				break;
- 
-+			if (ha->hw_event_pause_errors == 0)
-+				qla2x00_post_hwe_work(ha, HW_EVENT_PARITY_ERR,
-+				    0, MSW(stat), LSW(stat));
-+			else if (ha->hw_event_pause_errors < 0xffffffff)
-+				ha->hw_event_pause_errors++;
-+
- 			hccr = RD_REG_DWORD(&reg->hccr);
- 
- 			qla_printk(KERN_INFO, ha, "RISC paused -- HCCR=%x, "
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 898847e..b25c15a 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -587,6 +587,14 @@ qla2x00_mbx_reg_test(scsi_qla_host_t *ha)
- 		if (mcp->mb[5] != 0xA5A5 || mcp->mb[6] != 0x5A5A ||
- 		    mcp->mb[7] != 0x2525)
- 			rval = QLA_FUNCTION_FAILED;
-+		if (rval == QLA_FUNCTION_FAILED) {
-+			struct device_reg_24xx __iomem *reg =
-+			    &ha->iobase->isp24;
-+
-+			qla2xxx_hw_event_log(ha, HW_EVENT_ISP_ERR, 0,
-+			    LSW(RD_REG_DWORD(&reg->hccr)),
-+			    LSW(RD_REG_DWORD(&reg->istatus)));
-+		}
- 	}
- 
- 	if (rval != QLA_SUCCESS) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index eb77067..3d29041 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1690,6 +1690,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->gid_list_info_size = 8;
- 		ha->optrom_size = OPTROM_SIZE_25XX;
- 		ha->isp_ops = &qla25xx_isp_ops;
-+		ha->hw_event_start = PCI_FUNC(pdev->devfn) ?
-+		    FA_HW_EVENT1_ADDR: FA_HW_EVENT0_ADDR;
- 	}
- 	host->can_queue = ha->request_q_length + 128;
- 
-@@ -2244,6 +2246,23 @@ qla2x00_post_aen_work(struct scsi_qla_host *ha, enum fc_host_event_code code,
- 	return qla2x00_post_work(ha, e, 1);
  }
  
-+int
-+qla2x00_post_hwe_work(struct scsi_qla_host *ha, uint16_t code, uint16_t d1,
-+    uint16_t d2, uint16_t d3)
++void
++qla2xxx_get_flash_info(scsi_qla_host_t *ha)
 +{
-+	struct qla_work_evt *e;
++#define FLASH_BLK_SIZE_32K	0x8000
++#define FLASH_BLK_SIZE_64K	0x10000
++	uint16_t cnt, chksum;
++	uint16_t *wptr;
++	struct qla_fdt_layout *fdt;
++	uint8_t	man_id, flash_id;
 +
-+	e = qla2x00_alloc_work(ha, QLA_EVT_HWE_LOG, 1);
-+	if (!e)
-+		return QLA_FUNCTION_FAILED;
++	if (!IS_QLA24XX(ha) && !IS_QLA25XX(ha))
++		return;
 +
-+	e->u.hwe.code = code;
-+	e->u.hwe.d1 = d1;
-+	e->u.hwe.d2 = d2;
-+	e->u.hwe.d3 = d3;
-+	return qla2x00_post_work(ha, e, 1);
++	wptr = (uint16_t *)ha->request_ring;
++	fdt = (struct qla_fdt_layout *)ha->request_ring;
++	ha->isp_ops->read_optrom(ha, (uint8_t *)ha->request_ring,
++	    FA_FLASH_DESCR_ADDR << 2, OPTROM_BURST_SIZE);
++	if (*wptr == __constant_cpu_to_le16(0xffff))
++		goto no_flash_data;
++	if (fdt->sig[0] != 'Q' || fdt->sig[1] != 'L' || fdt->sig[2] != 'I' ||
++	    fdt->sig[3] != 'D')
++		goto no_flash_data;
++
++	for (cnt = 0, chksum = 0; cnt < sizeof(struct qla_fdt_layout) >> 1;
++	    cnt++)
++		chksum += le16_to_cpu(*wptr++);
++	if (chksum) {
++		DEBUG2(qla_printk(KERN_INFO, ha, "Inconsistent FDT detected: "
++		    "checksum=0x%x id=%c version=0x%x.\n", chksum, fdt->sig[0],
++		    le16_to_cpu(fdt->version)));
++		DEBUG9(qla2x00_dump_buffer((uint8_t *)fdt, sizeof(*fdt)));
++		goto no_flash_data;
++	}
++
++	ha->fdt_odd_index = le16_to_cpu(fdt->man_id) == 0x1f;
++	ha->fdt_wrt_disable = fdt->wrt_disable_bits;
++	ha->fdt_erase_cmd = flash_conf_to_access_addr(0x0300 | fdt->erase_cmd);
++	ha->fdt_block_size = le32_to_cpu(fdt->block_size);
++	if (fdt->unprotect_sec_cmd) {
++		ha->fdt_unprotect_sec_cmd = flash_conf_to_access_addr(0x0300 |
++		    fdt->unprotect_sec_cmd);
++		ha->fdt_protect_sec_cmd = fdt->protect_sec_cmd ?
++		    flash_conf_to_access_addr(0x0300 | fdt->protect_sec_cmd):
++		    flash_conf_to_access_addr(0x0336);
++	}
++
++	DEBUG2(qla_printk(KERN_DEBUG, ha, "Flash[FDT]: (0x%x/0x%x) erase=0x%x "
++	    "pro=%x upro=%x idx=%d wrtd=0x%x blk=0x%x.\n",
++	    le16_to_cpu(fdt->man_id), le16_to_cpu(fdt->id), ha->fdt_erase_cmd,
++	    ha->fdt_protect_sec_cmd, ha->fdt_unprotect_sec_cmd,
++	    ha->fdt_odd_index, ha->fdt_wrt_disable, ha->fdt_block_size));
++	return;
++
++no_flash_data:
++	qla24xx_get_flash_manufacturer(ha, &man_id, &flash_id);
++	ha->fdt_wrt_disable = 0x9c;
++	ha->fdt_erase_cmd = flash_conf_to_access_addr(0x03d8);
++	switch (man_id) {
++	case 0xbf: /* STT flash. */
++		if (flash_id == 0x8e)
++			ha->fdt_block_size = FLASH_BLK_SIZE_64K;
++		else
++			ha->fdt_block_size = FLASH_BLK_SIZE_32K;
++
++		if (flash_id == 0x80)
++			ha->fdt_erase_cmd = flash_conf_to_access_addr(0x0352);
++		break;
++	case 0x13: /* ST M25P80. */
++		ha->fdt_block_size = FLASH_BLK_SIZE_64K;
++		break;
++	case 0x1f: /* Atmel 26DF081A. */
++		ha->fdt_odd_index = 1;
++		ha->fdt_block_size = FLASH_BLK_SIZE_64K;
++		ha->fdt_erase_cmd = flash_conf_to_access_addr(0x0320);
++		ha->fdt_unprotect_sec_cmd = flash_conf_to_access_addr(0x0339);
++		ha->fdt_protect_sec_cmd = flash_conf_to_access_addr(0x0336);
++		break;
++	default:
++		/* Default to 64 kb sector size. */
++		ha->fdt_block_size = FLASH_BLK_SIZE_64K;
++		break;
++	}
++
++	DEBUG2(qla_printk(KERN_DEBUG, ha, "Flash[MID]: (0x%x/0x%x) erase=0x%x "
++	    "pro=%x upro=%x idx=%d wrtd=0x%x blk=0x%x.\n", man_id, flash_id,
++	    ha->fdt_erase_cmd, ha->fdt_protect_sec_cmd,
++	    ha->fdt_unprotect_sec_cmd, ha->fdt_odd_index, ha->fdt_wrt_disable,
++	    ha->fdt_block_size));
 +}
 +
  static void
- qla2x00_do_work(struct scsi_qla_host *ha)
+ qla24xx_unprotect_flash(scsi_qla_host_t *ha)
  {
-@@ -2260,6 +2279,10 @@ qla2x00_do_work(struct scsi_qla_host *ha)
- 			fc_host_post_event(ha->host, fc_get_event_number(),
- 			    e->u.aen.code, e->u.aen.data);
- 			break;
-+		case QLA_EVT_HWE_LOG:
-+			qla2xxx_hw_event_log(ha, e->u.hwe.code, e->u.hwe.d1,
-+			    e->u.hwe.d2, e->u.hwe.d3);
-+			break;
- 		}
- 		if (e->flags & QLA_EVT_FLAG_FREE)
- 			kfree(e);
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index 317cd8f..c10ccc7 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -543,6 +543,43 @@ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
- 	}
- }
+@@ -553,6 +643,9 @@ qla24xx_unprotect_flash(scsi_qla_host_t *ha)
+ 	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
+ 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
  
-+static void
-+qla24xx_unprotect_flash(scsi_qla_host_t *ha)
-+{
-+	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
++	if (!ha->fdt_wrt_disable)
++		return;
 +
-+	/* Enable flash write. */
-+	WRT_REG_DWORD(&reg->ctrl_status,
-+	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
-+	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
+ 	/* Disable flash write-protection. */
+ 	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0);
+ 	/* Some flash parts need an additional zero-write to clear bits.*/
+@@ -565,8 +658,12 @@ qla24xx_protect_flash(scsi_qla_host_t *ha)
+ 	uint32_t cnt;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 
++	if (!ha->fdt_wrt_disable)
++		goto skip_wrt_protect;
 +
-+	/* Disable flash write-protection. */
-+	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0);
-+	/* Some flash parts need an additional zero-write to clear bits.*/
-+	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0);
-+}
-+
-+static void
-+qla24xx_protect_flash(scsi_qla_host_t *ha)
-+{
-+	uint32_t cnt;
-+	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
-+
-+	/* Enable flash write-protection and wait for completion. */
-+	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0x9c);
-+	for (cnt = 300; cnt &&
-+	    qla24xx_read_flash_dword(ha,
-+		    flash_conf_to_access_addr(0x005)) & BIT_0;
-+	    cnt--) {
-+		udelay(10);
-+	}
-+
-+	/* Disable flash write. */
-+	WRT_REG_DWORD(&reg->ctrl_status,
-+	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
-+	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
-+}
-+
- static int
- qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
-     uint32_t dwords)
-@@ -550,9 +587,8 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+ 	/* Enable flash write-protection and wait for completion. */
+-	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0x9c);
++	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101),
++	    ha->fdt_wrt_disable);
+ 	for (cnt = 300; cnt &&
+ 	    qla24xx_read_flash_dword(ha,
+ 		    flash_conf_to_access_addr(0x005)) & BIT_0;
+@@ -574,6 +671,7 @@ qla24xx_protect_flash(scsi_qla_host_t *ha)
+ 		udelay(10);
+ 	}
+ 
++skip_wrt_protect:
+ 	/* Disable flash write. */
+ 	WRT_REG_DWORD(&reg->ctrl_status,
+ 	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
+@@ -586,9 +684,8 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+ {
  	int ret;
  	uint32_t liter, miter;
- 	uint32_t sec_mask, rest_addr, conf_addr;
--	uint32_t fdata, findex, cnt;
-+	uint32_t fdata, findex;
- 	uint8_t	man_id, flash_id;
--	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t sec_mask, rest_addr, conf_addr;
++	uint32_t sec_mask, rest_addr;
+ 	uint32_t fdata, findex;
+-	uint8_t	man_id, flash_id;
  	dma_addr_t optrom_dma;
  	void *optrom = NULL;
  	uint32_t *s, *d;
-@@ -604,15 +640,7 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
- 		break;
+@@ -607,43 +704,13 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+ 		}
  	}
  
--	/* Enable flash write. */
--	WRT_REG_DWORD(&reg->ctrl_status,
--	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
--	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
+-	qla24xx_get_flash_manufacturer(ha, &man_id, &flash_id);
+-	DEBUG9(printk("%s(%ld): Flash man_id=%d flash_id=%d\n", __func__,
+-	    ha->host_no, man_id, flash_id));
 -
--	/* Disable flash write-protection. */
--	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0);
--	/* Some flash parts need an additional zero-write to clear bits.*/
--	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0);
-+	qla24xx_unprotect_flash(ha);
+-	conf_addr = flash_conf_to_access_addr(0x03d8);
+-	switch (man_id) {
+-	case 0xbf: /* STT flash. */
+-		if (flash_id == 0x8e) {
+-			rest_addr = 0x3fff;
+-			sec_mask = 0x7c000;
+-		} else {
+-			rest_addr = 0x1fff;
+-			sec_mask = 0x7e000;
+-		}
+-		if (flash_id == 0x80)
+-			conf_addr = flash_conf_to_access_addr(0x0352);
+-		break;
+-	case 0x13: /* ST M25P80. */
+-		rest_addr = 0x3fff;
+-		sec_mask = 0x7c000;
+-		break;
+-	case 0x1f: // Atmel 26DF081A
+-		rest_addr = 0x3fff;
+-		sec_mask = 0x7c000;
+-		conf_addr = flash_conf_to_access_addr(0x0320);
+-		break;
+-	default:
+-		/* Default to 64 kb sector size. */
+-		rest_addr = 0x3fff;
+-		sec_mask = 0x7c000;
+-		break;
+-	}
++	rest_addr = (ha->fdt_block_size >> 2) - 1;
++	sec_mask = 0x80000 - (ha->fdt_block_size >> 2);
+ 
+ 	qla24xx_unprotect_flash(ha);
  
  	for (liter = 0; liter < dwords; liter++, faddr++, dwptr++) {
- 		if (man_id == 0x1f) {
-@@ -690,19 +718,7 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+-		if (man_id == 0x1f) {
++		if (ha->fdt_odd_index) {
+ 			findex = faddr << 2;
+ 			fdata = findex & sec_mask;
+ 		} else {
+@@ -653,13 +720,13 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+ 
+ 		/* Are we at the beginning of a sector? */
+ 		if ((findex & rest_addr) == 0) {
+-			/* Do sector unprotect at 4K boundry for Atmel part. */
+-			if (man_id == 0x1f)
++			/* Do sector unprotect. */
++			if (ha->fdt_unprotect_sec_cmd)
+ 				qla24xx_write_flash_dword(ha,
+-				    flash_conf_to_access_addr(0x0339),
++				    ha->fdt_unprotect_sec_cmd,
+ 				    (fdata & 0xff00) | ((fdata << 16) &
+ 				    0xff0000) | ((fdata >> 16) & 0xff));
+-			ret = qla24xx_write_flash_dword(ha, conf_addr,
++			ret = qla24xx_write_flash_dword(ha, ha->fdt_erase_cmd,
+ 			    (fdata & 0xff00) |((fdata << 16) &
+ 			    0xff0000) | ((fdata >> 16) & 0xff));
+ 			if (ret != QLA_SUCCESS) {
+@@ -709,11 +776,11 @@ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+ 			break;
+ 		}
+ 
+-		/* Do sector protect at 4K boundry for Atmel part. */
+-		if (man_id == 0x1f &&
++		/* Do sector protect. */
++		if (ha->fdt_unprotect_sec_cmd &&
+ 		    ((faddr & rest_addr) == rest_addr))
+ 			qla24xx_write_flash_dword(ha,
+-			    flash_conf_to_access_addr(0x0336),
++			    ha->fdt_protect_sec_cmd,
+ 			    (fdata & 0xff00) | ((fdata << 16) &
  			    0xff0000) | ((fdata >> 16) & 0xff));
  	}
- 
--	/* Enable flash write-protection and wait for completion. */
--	qla24xx_write_flash_dword(ha, flash_conf_to_access_addr(0x101), 0x9c);
--	for (cnt = 300; cnt &&
--	    qla24xx_read_flash_dword(ha,
--		    flash_conf_to_access_addr(0x005)) & BIT_0;
--	    cnt--) {
--		udelay(10);
--	}
--
--	/* Disable flash write. */
--	WRT_REG_DWORD(&reg->ctrl_status,
--	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
--	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
-+	qla24xx_protect_flash(ha);
- 
- 	if (optrom)
- 		dma_free_coherent(&ha->pdev->dev,
-@@ -2221,3 +2237,107 @@ qla24xx_get_flash_version(scsi_qla_host_t *ha, void *mbuf)
- 
- 	return ret;
- }
-+
-+static int
-+qla2xxx_hw_event_store(scsi_qla_host_t *ha, uint32_t *fdata)
-+{
-+	uint32_t d[2], faddr;
-+
-+	/* Locate first empty entry. */
-+	for (;;) {
-+		if (ha->hw_event_ptr >=
-+		    ha->hw_event_start + FA_HW_EVENT_SIZE) {
-+			DEBUG2(qla_printk(KERN_WARNING, ha,
-+			    "HW event -- Log Full!\n"));
-+			return QLA_MEMORY_ALLOC_FAILED;
-+		}
-+
-+		qla24xx_read_flash_data(ha, d, ha->hw_event_ptr, 2);
-+		faddr = flash_data_to_access_addr(ha->hw_event_ptr);
-+		ha->hw_event_ptr += FA_HW_EVENT_ENTRY_SIZE;
-+		if (d[0] == __constant_cpu_to_le32(0xffffffff) &&
-+		    d[1] == __constant_cpu_to_le32(0xffffffff)) {
-+			qla24xx_unprotect_flash(ha);
-+
-+			qla24xx_write_flash_dword(ha, faddr++,
-+			    cpu_to_le32(jiffies));
-+			qla24xx_write_flash_dword(ha, faddr++, 0);
-+			qla24xx_write_flash_dword(ha, faddr++, *fdata++);
-+			qla24xx_write_flash_dword(ha, faddr++, *fdata);
-+
-+			qla24xx_protect_flash(ha);
-+			break;
-+		}
-+	}
-+	return QLA_SUCCESS;
-+}
-+
-+int
-+qla2xxx_hw_event_log(scsi_qla_host_t *ha, uint16_t code, uint16_t d1,
-+    uint16_t d2, uint16_t d3)
-+{
-+#define QMARK(a, b, c, d) \
-+    cpu_to_le32(LSB(a) << 24 | LSB(b) << 16 | LSB(c) << 8 | LSB(d))
-+
-+	int rval;
-+	uint32_t marker[2], fdata[4];
-+
-+	if (ha->hw_event_start == 0)
-+		return QLA_FUNCTION_FAILED;
-+
-+	DEBUG2(qla_printk(KERN_WARNING, ha,
-+	    "HW event -- code=%x, d1=%x, d2=%x, d3=%x.\n", code, d1, d2, d3));
-+
-+	/* If marker not already found, locate or write.  */
-+	if (!ha->flags.hw_event_marker_found) {
-+		/* Create marker. */
-+		marker[0] = QMARK('L', ha->fw_major_version,
-+		    ha->fw_minor_version, ha->fw_subminor_version);
-+		marker[1] = QMARK(QLA_DRIVER_MAJOR_VER, QLA_DRIVER_MINOR_VER,
-+		    QLA_DRIVER_PATCH_VER, QLA_DRIVER_BETA_VER);
-+
-+		/* Locate marker. */
-+		ha->hw_event_ptr = ha->hw_event_start;
-+		for (;;) {
-+			qla24xx_read_flash_data(ha, fdata, ha->hw_event_ptr,
-+			    4);
-+			if (fdata[0] == __constant_cpu_to_le32(0xffffffff) &&
-+			    fdata[1] == __constant_cpu_to_le32(0xffffffff))
-+				break;
-+			ha->hw_event_ptr += FA_HW_EVENT_ENTRY_SIZE;
-+			if (ha->hw_event_ptr >=
-+			    ha->hw_event_start + FA_HW_EVENT_SIZE) {
-+				DEBUG2(qla_printk(KERN_WARNING, ha,
-+				    "HW event -- Log Full!\n"));
-+				return QLA_MEMORY_ALLOC_FAILED;
-+			}
-+			if (fdata[2] == marker[0] && fdata[3] == marker[1]) {
-+				ha->flags.hw_event_marker_found = 1;
-+				break;
-+			}
-+		}
-+		/* No marker, write it. */
-+		if (!ha->flags.hw_event_marker_found) {
-+			rval = qla2xxx_hw_event_store(ha, marker);
-+			if (rval != QLA_SUCCESS) {
-+				DEBUG2(qla_printk(KERN_WARNING, ha,
-+				    "HW event -- Failed marker write=%x.!\n",
-+				    rval));
-+				return rval;
-+			}
-+			ha->flags.hw_event_marker_found = 1;
-+		}
-+	}
-+
-+	/* Store error.  */
-+	fdata[0] = cpu_to_le32(code << 16 | d1);
-+	fdata[1] = cpu_to_le32(d2 << 16 | d3);
-+	rval = qla2xxx_hw_event_store(ha, fdata);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "HW event -- Failed error write=%x.!\n",
-+		    rval));
-+	}
-+
-+	return rval;
-+}
 -- 
 1.5.5.rc2
 
