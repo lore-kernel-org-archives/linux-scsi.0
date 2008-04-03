@@ -1,45 +1,62 @@
-From: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
-Subject: sas raid controller /harddisk recommendation
-Date: Thu, 03 Apr 2008 13:01:07 +0200
-Message-ID: <47F4B8F3.9060405@ipax.at>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: mptsas and ioc0: ERRORs
+Date: Thu, 3 Apr 2008 13:13:21 +0200
+Message-ID: <200804031313.22257.bs@q-leap.de>
+References: <20080331150434.a3fb336b.taeuber@bbaw.de> <20080403123107.71d82746.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ipax.at ([80.64.143.40]:36661 "EHLO mail.ipax.at"
+Received: from ns1.q-leap.de ([153.94.51.193]:42544 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753987AbYDCLBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Apr 2008 07:01:11 -0400
-Received: from [192.168.1.110] (vie-078-142-128-152.dsl.sil.at [78.142.128.152])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.ipax.at (Postfix) with ESMTP id 9A54447743C
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Apr 2008 13:01:09 +0200 (CEST)
+	id S1753756AbYDCLNY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2008 07:13:24 -0400
+In-Reply-To: <20080403123107.71d82746.taeuber@bbaw.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Lars =?iso-8859-1?q?T=E4uber?= <taeuber@bbaw.de>
+Cc: linux-scsi@vger.kernel.org
 
-hi list,
+Hello Lars,
 
-after struggeling with the adaptec aic9410w [1], we are looking to buy
-a new sas controller (and 1-2 new sas hdds) for testing.
+On Thursday 03 April 2008 12:31:07 Lars T=E4uber wrote:
+> Hi!
+>
+> OK, I understand. Being ignored means having asked at the wrong place=
+=2E
+> Can someone give me a hint where to ask instead?
 
-which sas (raid) controllers (need not be full hardware raid) can
-you recommend?
+no, I think you did ask at the right place, but nobody does know what i=
+s the=20
+cause of the problem.
+Well, from my point of view linux-scsi is by far to quiet in case of er=
+rors. I=20
+have patches for 2.6.22 to improve this situation and the error handler=
+ in=20
+general, but presently don't have the time to clean it up and to push i=
+t=20
+upstream.
 
-which sas harddisk can you recommend. please keep in mind, that
-we're currently using seagate cheetah 15.k5 73gb sas hdds.
+If you would be willing to use 2.6.22 + my scsi patches we would at lea=
+st find=20
+out which scsi commands fail.
 
-cheers,
-raoul
-[1] http://marc.info/?t=120603924200004
--- 
-____________________________________________________________________
-DI (FH) Raoul Bhatia M.Sc.          email.          r.bhatia@ipax.at
-Technischer Leiter
+Eric also did sent me a more recent version of the MPT driver, it also =
+might=20
+be worth to try this version. It fixed a really troublesome mpt-scsi bu=
+g for=20
+us, but I don't know how well it works for SAS.
 
-IPAX - Aloy Bhatia Hava OEG         web.          http://www.ipax.at
-Barawitzkagasse 10/2/2/11           email.            office@ipax.at
-1190 Wien                           tel.               +43 1 3670030
-FN 277995t HG Wien                  fax.            +43 1 3670030 15
-____________________________________________________________________
+
+Cheers,
+Bernd
+
+--=20
+Bernd Schubert
+Q-Leap Networks GmbH
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
