@@ -1,139 +1,181 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: Re: [PATCH 2/3] block layer varlen-cdb
-Date: Thu, 03 Apr 2008 20:26:56 +0300
-Message-ID: <47F51360.1030604@panasas.com>
-References: <47E92672.1040208@panasas.com>  <47E92934.6040903@panasas.com> <1207240982.3048.45.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 12/17] ips.c: fix build warning
+Date: Thu, 03 Apr 2008 12:28:20 -0500
+Message-ID: <1207243700.3048.52.camel@localhost.localdomain>
+References: <200803282148.m2SLmeDg012249@imap1.linux-foundation.org>
+	 <1206896842.4224.46.camel@localhost.localdomain>
+	 <20080331085730T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:41613 "EHLO
-	bh-buildlin1.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483AbYDCR2B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2008 13:28:01 -0400
-In-Reply-To: <1207240982.3048.45.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52807 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753408AbYDCR2Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2008 13:28:24 -0400
+In-Reply-To: <20080331085730T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, Mark_Salyzyn@adaptec.com, aacraid@adaptec.com, jeff@garzik.org
 
-On Apr. 03, 2008, 19:43 +0300, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Tue, 2008-03-25 at 18:32 +0200, Boaz Harrosh wrote:
->> - add varlen_cdb and varlen_cdb_len to hold a large user cdb
->>   if needed. They start as empty. Allocation of buffer must
->>   be done by user and held until request execution is done.
->> - Since there can be either a fix_length command up to 16 bytes
->>   or a variable_length, larger then 16 bytes, commands but never
->>   both, we hold the two types in a union to save space. The
->>   presence of varlen_cdb_len and cmd_len==0 signals a varlen_cdb
->>   mode.
->> - Please use added rq_{set,get}_varlen_cdb() to set every thing
->>   up in a way that will not confuse drivers that do not support
->>   varlen_cdb's.
->> - Note that this patch does not add any size to struct request
->>   since the unsigned cmd_len is split here to 2 ushorts, which
->>   is more then enough.
+On Mon, 2008-03-31 at 08:57 +0900, FUJITA Tomonori wrote:
+> On Sun, 30 Mar 2008 12:07:22 -0500
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
-> My first observation is that the block stuff all looks a bit
-> misnamed ... it's not about variable length commands it's about getting
-> block to accept packet commands larger than BLK_MAX_CDB, be they SCSI
-> OSD commands or ATA taskfiles.
+> > On Fri, 2008-03-28 at 14:48 -0700, akpm@linux-foundation.org wrote:
+> > > From: Andrew Morton <akpm@linux-foundation.org>
+> > > 
+> > > powerpc:
+> > > 
+> > > drivers/scsi/ips.c: In function 'ips_issue_copperhead':
+> > > drivers/scsi/ips.c:5436: warning: large integer implicitly truncated to unsigned type
+> > > 
+> > > it doesn't seem necessary to do outw(cpu_to_le32(...), ...) anyway.
+> > 
+> > Actually, it's not only not necessary ... it's an actual bug on BE
+> > platforms.  Both writeX and outX/inX automatically convert from native
+> > to bus endian (usually simply to LE since the bus is PCI).  Therefore if
+> > you add a cpu_to_leX, you actually write the wrong value on a BE system.
+> > 
+> > Mark, it looks like the correct fix is simply to strip all of these ...
+> > has this driver actually been tested on a BE platform (like parisc or
+> > PPC)?
 > 
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> ---
->>  block/blk-core.c       |    2 ++
->>  include/linux/blkdev.h |   27 +++++++++++++++++++++++++--
->>  2 files changed, 27 insertions(+), 2 deletions(-)
->>
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 2a438a9..70d32f7 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -141,6 +141,8 @@ void rq_init(struct request_queue *q, struct request *rq)
->>  	rq->end_io = NULL;
->>  	rq->end_io_data = NULL;
->>  	rq->next_rq = NULL;
->> +	rq->varlen_cdb_len = 0;
->> +	rq->varlen_cdb = NULL;
+> I guess that it hasn't. ips.c includes:
 > 
-> possibly s/varlen/large/
+> #if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
+> #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+> #endif
 
+At least it only warns, it doesn't #error
 
-If we change any names, just please do not use "large".
-I'd prefer ext_cdb, where "ext" can stand for "extended" as well
-as "external" (this chimes well with iSCSI naming BTW).
+OK, does this look like the roughly correct fix (I suppose there's no
+chance of finding someone to actually test it on a BE platform?).
 
-> 
->>  }
->>  
->>  static void req_bio_endio(struct request *rq, struct bio *bio,
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index 6f79d40..f829571 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -213,8 +213,15 @@ struct request {
->>  	/*
->>  	 * when request is used as a packet command carrier
->>  	 */
->> -	unsigned int cmd_len;
->> -	unsigned char cmd[BLK_MAX_CDB];
->> +	unsigned short cmd_len;
->> +	unsigned short varlen_cdb_len;  /* length of varlen_cdb buffer */
->> +	union {
->> +		unsigned char cmd[BLK_MAX_CDB];
->> +		unsigned char *varlen_cdb;/* an optional variable-length cdb.
->> +	                                   * points to a user buffer that must
->> +	                                   * be valid until end of request
->> +	                                   */
-> 
-> again s/varlen/large/
-> 
->> +	};
->>  
->>  	unsigned int data_len;
->>  	unsigned int extra_len;	/* length of alignment and padding */
->> @@ -484,6 +491,22 @@ enum {
->>  #define rq_is_sync(rq)		(rq_data_dir((rq)) == READ || (rq)->cmd_flags & REQ_RW_SYNC)
->>  #define rq_is_meta(rq)		((rq)->cmd_flags & REQ_RW_META)
->>  
->> +static inline void rq_set_varlen_cdb(struct request *rq, u8 *cdb, short cdb_len)
->> +{
->> +	rq->cmd_len = 0; /* Make sure legacy drivers don't get confused */
->> +	rq->varlen_cdb_len = cdb_len;
->> +	rq->varlen_cdb = cdb;
->> +}
->> +
->> +/* If ! a varlen_cdb than return NULL */
->> +static inline u8 *rq_get_varlen_cdb(struct request *rq)
->> +{
->> +	if (!rq->cmd_len && rq->varlen_cdb_len)
->> +		return rq->varlen_cdb;
->> +	else
->> +		return NULL;
->> +}
-> 
-> These accessors look wrong ... I think what we want is rq_get_cdb and
-> rq_set_cdb that handles both <= BLK_MAX_CDB by simply a memcpy and >
-> BLK_MAX_CDB by setting up the large_cdb pointer.  That way we can
-> accessorize the whole lot and the drivers don't have to care about what
-> BLK_MAX_CDB is set to (it simply becomes an internal convenience of
-> block ... and possibly allows us to eliminate the request carries
-> command data entirely).
+James
 
-That's seems like a terrific idea.
+---
 
-Benny
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index c450194..7c615c7 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -2377,7 +2377,7 @@ ips_get_bios_version(ips_ha_t * ha, int intr)
+ 			if (inb(ha->io_addr + IPS_REG_FLDP) != 0x55)
+ 				return;
+ 
+-			outl(cpu_to_le32(1), ha->io_addr + IPS_REG_FLAP);
++			outl(1, ha->io_addr + IPS_REG_FLAP);
+ 			if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 				udelay(25);	/* 25 us */
+ 
+@@ -2385,21 +2385,21 @@ ips_get_bios_version(ips_ha_t * ha, int intr)
+ 				return;
+ 
+ 			/* Get Major version */
+-			outl(cpu_to_le32(0x1FF), ha->io_addr + IPS_REG_FLAP);
++			outl(0x1FF, ha->io_addr + IPS_REG_FLAP);
+ 			if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 				udelay(25);	/* 25 us */
+ 
+ 			major = inb(ha->io_addr + IPS_REG_FLDP);
+ 
+ 			/* Get Minor version */
+-			outl(cpu_to_le32(0x1FE), ha->io_addr + IPS_REG_FLAP);
++			outl(0x1FE, ha->io_addr + IPS_REG_FLAP);
+ 			if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 				udelay(25);	/* 25 us */
+ 
+ 			minor = inb(ha->io_addr + IPS_REG_FLDP);
+ 
+ 			/* Get SubMinor version */
+-			outl(cpu_to_le32(0x1FD), ha->io_addr + IPS_REG_FLAP);
++			outl(0x1FD, ha->io_addr + IPS_REG_FLAP);
+ 			if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 				udelay(25);	/* 25 us */
+ 
+@@ -4852,7 +4852,7 @@ ips_init_copperhead(ips_ha_t * ha)
+ 		return (0);
+ 
+ 	/* setup CCCR */
+-	outl(cpu_to_le32(0x1010), ha->io_addr + IPS_REG_CCCR);
++	outl(0x1010, ha->io_addr + IPS_REG_CCCR);
+ 
+ 	/* Enable busmastering */
+ 	outb(IPS_BIT_EBM, ha->io_addr + IPS_REG_SCPR);
+@@ -5234,12 +5234,12 @@ ips_statinit(ips_ha_t * ha)
+ 	ha->adapt->p_status_tail = ha->adapt->status;
+ 
+ 	phys_status_start = ha->adapt->hw_status_start;
+-	outl(cpu_to_le32(phys_status_start), ha->io_addr + IPS_REG_SQSR);
+-	outl(cpu_to_le32(phys_status_start + IPS_STATUS_Q_SIZE),
++	outl(phys_status_start, ha->io_addr + IPS_REG_SQSR);
++	outl(phys_status_start + IPS_STATUS_Q_SIZE,
+ 	     ha->io_addr + IPS_REG_SQER);
+-	outl(cpu_to_le32(phys_status_start + IPS_STATUS_SIZE),
++	outl(phys_status_start + IPS_STATUS_SIZE,
+ 	     ha->io_addr + IPS_REG_SQHR);
+-	outl(cpu_to_le32(phys_status_start), ha->io_addr + IPS_REG_SQTR);
++	outl(phys_status_start, ha->io_addr + IPS_REG_SQTR);
+ 
+ 	ha->adapt->hw_status_tail = phys_status_start;
+ }
+@@ -5296,7 +5296,7 @@ ips_statupd_copperhead(ips_ha_t * ha)
+ 		ha->adapt->hw_status_tail = ha->adapt->hw_status_start;
+ 	}
+ 
+-	outl(cpu_to_le32(ha->adapt->hw_status_tail),
++	outl(ha->adapt->hw_status_tail,
+ 	     ha->io_addr + IPS_REG_SQTR);
+ 
+ 	return (ha->adapt->p_status_tail->value);
+@@ -5398,8 +5398,8 @@ ips_issue_copperhead(ips_ha_t * ha, ips_scb_t * scb)
+ 		}		/* end if */
+ 	}			/* end while */
+ 
+-	outl(cpu_to_le32(scb->scb_busaddr), ha->io_addr + IPS_REG_CCSAR);
+-	outw(cpu_to_le32(IPS_BIT_START_CMD), ha->io_addr + IPS_REG_CCCR);
++	outl(scb->scb_busaddr, ha->io_addr + IPS_REG_CCSAR);
++	outw(IPS_BIT_START_CMD, ha->io_addr + IPS_REG_CCCR);
+ 
+ 	return (IPS_SUCCESS);
+ }
+@@ -5484,7 +5484,7 @@ ips_issue_i2o(ips_ha_t * ha, ips_scb_t * scb)
+ 			  ips_name, ha->host_num, scb->cmd.basic_io.command_id);
+ 	}
+ 
+-	outl(cpu_to_le32(scb->scb_busaddr), ha->io_addr + IPS_REG_I2O_INMSGQ);
++	outl(scb->scb_busaddr, ha->io_addr + IPS_REG_I2O_INMSGQ);
+ 
+ 	return (IPS_SUCCESS);
+ }
+@@ -6376,7 +6376,7 @@ ips_program_bios(ips_ha_t * ha, char *buffer, uint32_t buffersize,
+ 
+ 	for (i = 0; i < buffersize; i++) {
+ 		/* write a byte */
+-		outl(cpu_to_le32(i + offset), ha->io_addr + IPS_REG_FLAP);
++		outl(i + offset, ha->io_addr + IPS_REG_FLAP);
+ 		if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 			udelay(25);	/* 25 us */
+ 
+@@ -6561,7 +6561,7 @@ ips_verify_bios(ips_ha_t * ha, char *buffer, uint32_t buffersize,
+ 	if (inb(ha->io_addr + IPS_REG_FLDP) != 0x55)
+ 		return (1);
+ 
+-	outl(cpu_to_le32(1), ha->io_addr + IPS_REG_FLAP);
++	outl(1, ha->io_addr + IPS_REG_FLAP);
+ 	if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 		udelay(25);	/* 25 us */
+ 	if (inb(ha->io_addr + IPS_REG_FLDP) != 0xAA)
+@@ -6570,7 +6570,7 @@ ips_verify_bios(ips_ha_t * ha, char *buffer, uint32_t buffersize,
+ 	checksum = 0xff;
+ 	for (i = 2; i < buffersize; i++) {
+ 
+-		outl(cpu_to_le32(i + offset), ha->io_addr + IPS_REG_FLAP);
++		outl(i + offset, ha->io_addr + IPS_REG_FLAP);
+ 		if (ha->pcidev->revision == IPS_REVID_TROMBONE64)
+ 			udelay(25);	/* 25 us */
+ 
 
-> 
->>  static inline int blk_queue_full(struct request_queue *q, int rw)
->>  {
->>  	if (rw == READ)
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
