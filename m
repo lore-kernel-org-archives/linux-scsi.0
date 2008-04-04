@@ -1,54 +1,55 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [patch 13/17] drivers/scsi/initio.c: suppress compile warning
-Date: Fri, 4 Apr 2008 00:05:01 -0700
-Message-ID: <da824cf30804040005w7ae131c5he1248462041a658a@mail.gmail.com>
-References: <200803282148.m2SLmfg7012252@imap1.linux-foundation.org>
-	 <da824cf30803281455g22334554y8cb3887beec951a@mail.gmail.com>
-	 <1206743181.3662.55.camel@localhost.localdomain>
-	 <20080328224335.1f14cf6a@core>
-	 <1206748313.3662.66.camel@localhost.localdomain>
-	 <da824cf30803281749l614c3592t89cce073c9b043c8@mail.gmail.com>
-	 <1206760156.3662.79.camel@localhost.localdomain>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: mptsas and ioc0: ERRORs
+Date: Fri, 4 Apr 2008 09:21:28 +0200
+Message-ID: <20080404092128.e5ae33a2.taeuber@bbaw.de>
+References: <20080331150434.a3fb336b.taeuber@bbaw.de>
+	<20080403123107.71d82746.taeuber@bbaw.de>
+	<200804031313.22257.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:62426 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbYDDHFL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2008 03:05:11 -0400
-Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
-	by smtp-out.google.com with ESMTP id m34753sv003878
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Apr 2008 08:05:04 +0100
-Received: from wf-out-1314.google.com (wff29.prod.google.com [10.142.6.29])
-	by zps76.corp.google.com with ESMTP id m34751OC001076
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Apr 2008 00:05:01 -0700
-Received: by wf-out-1314.google.com with SMTP id 29so3757704wff.8
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Apr 2008 00:05:01 -0700 (PDT)
-In-Reply-To: <1206760156.3662.79.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from mail.bbaw.de ([194.95.188.6]:37089 "EHLO mail.bbaw.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758349AbYDDHUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Apr 2008 03:20:52 -0400
+Received: from mailhub.bbaw.de (unknown [192.168.4.1])
+	by mail.bbaw.de (Postfix) with ESMTP id 9B7C84A8076
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:49 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mailhub.bbaw.de (Postfix) with ESMTP id 5F011937CE
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:49 +0200 (CEST)
+Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
+	by mailhub.bbaw.de (Postfix) with SMTP id 0B426937C1
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:42 +0200 (CEST)
+In-Reply-To: <200804031313.22257.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Grant Grundler <grundler@parisc-linux.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Mar 28, 2008 at 8:09 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-...
->  If you can verify my analysis of the way the driver works, then the
->  complete fix should be pretty simple: just remove the cpu_to_le32 from
->  everywhere except the sg list construction.
+Hallo Bernd,
 
-When I started striping out cpu_to_le32, I found one more nit:
-        if (cmnd->SCp.ptr) {
-                dma_unmap_single(&pci_dev->dev,
-                                 (dma_addr_t)((unsigned long)cmnd->SCp.ptr),
-                                 SENSE_SIZE, DMA_FROM_DEVICE);
-                cmnd->SCp.ptr = NULL;
-        }
+Bernd Schubert <bs@q-leap.de> schrieb:
+> Well, from my point of view linux-scsi is by far to quiet in case of errors. I 
+> have patches for 2.6.22 to improve this situation and the error handler in 
+> general, but presently don't have the time to clean it up and to push it 
+> upstream.
+> 
+> If you would be willing to use 2.6.22 + my scsi patches we would at least find 
+> out which scsi commands fail.
 
-cmnd->SCp.ptr can be assigned a NULL value that is a perfectly valid
-DMA address (possibly from an IOMMU). I'm not going to attempt to fix
-this since it's obviously working....just want to point it out.
+I could try this. But it is also poosible that there where some more messages in the log, because I only grepped for (scsi|mpt).
+ 
+> Eric also did sent me a more recent version of the MPT driver, it also might 
+> be worth to try this version. It fixed a really troublesome mpt-scsi bug for 
+> us, but I don't know how well it works for SAS.
 
-grant
+As it could be a solution I would try this too, because I have to solve this issue as early as possible.
+
+Seems my choice for an LSI SAS HBA might have not been the best one.
+ 
+> Cheers,
+> Bernd
+
+Greetings
+Lars
