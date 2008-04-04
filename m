@@ -1,55 +1,66 @@
 From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
 Subject: Re: mptsas and ioc0: ERRORs
-Date: Fri, 4 Apr 2008 09:21:28 +0200
-Message-ID: <20080404092128.e5ae33a2.taeuber@bbaw.de>
+Date: Fri, 4 Apr 2008 09:14:30 +0200
+Message-ID: <20080404091430.66daa159.taeuber@bbaw.de>
 References: <20080331150434.a3fb336b.taeuber@bbaw.de>
 	<20080403123107.71d82746.taeuber@bbaw.de>
-	<200804031313.22257.bs@q-leap.de>
+	<1207231308.3048.14.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:37089 "EHLO mail.bbaw.de"
+Received: from mail.bbaw.de ([194.95.188.6]:37090 "EHLO mail.bbaw.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758349AbYDDHUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758355AbYDDHUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 4 Apr 2008 03:20:52 -0400
 Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id 9B7C84A8076
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:49 +0200 (CEST)
+	by mail.bbaw.de (Postfix) with ESMTP id 6962C4A8078
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:50 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 5F011937CE
+	by mailhub.bbaw.de (Postfix) with ESMTP id 5935A937CC
 	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:49 +0200 (CEST)
 Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id 0B426937C1
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:42 +0200 (CEST)
-In-Reply-To: <200804031313.22257.bs@q-leap.de>
+	by mailhub.bbaw.de (Postfix) with SMTP id AF207937C1
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:41 +0200 (CEST)
+In-Reply-To: <1207231308.3048.14.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hallo Bernd,
+Hi James,
 
-Bernd Schubert <bs@q-leap.de> schrieb:
-> Well, from my point of view linux-scsi is by far to quiet in case of errors. I 
-> have patches for 2.6.22 to improve this situation and the error handler in 
-> general, but presently don't have the time to clean it up and to push it 
-> upstream.
+James Bottomley <James.Bottomley@HansenPartnership.com> schrieb:
+> Actually, LSI support might be better.  This:
 > 
-> If you would be willing to use 2.6.22 + my scsi patches we would at least find 
-> out which scsi commands fail.
+> > Mar 28 21:45:37 monosan kernel: mptscsih: ioc0: attempting task abort! (sc=ffff8100395bd1c0)
+> > Mar 28 21:45:48 monosan kernel: mptbase: Initiating ioc0 recovery
+> > Mar 28 21:45:48 monosan kernel: mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+> > Mar 28 21:45:51 monosan kernel: mptbase: ioc0: Recovered from IOC FAULT
+> 
+> Indicates some type of firmware problem on the card (ioc fault means
+> fault in the firmware engine).
 
-I could try this. But it is also poosible that there where some more messages in the log, because I only grepped for (scsi|mpt).
+thank you for this descriptive info. 
  
-> Eric also did sent me a more recent version of the MPT driver, it also might 
-> be worth to try this version. It fixed a really troublesome mpt-scsi bug for 
-> us, but I don't know how well it works for SAS.
+> This:
+> 
+> > Mar 28 21:47:23 monosan kernel: mptscsih: ioc0: ERROR - Received a mf that was already freed
+> > Mar 28 21:47:23 monosan kernel: mptscsih: ioc0: ERROR - req_idx=8380 req_idx_MR=8380 mf=ffff81007db02900 mr=0000000000000000 sc=0000000000000000
+> 
+> Indicates a rendezvous failure between the ioc firmware and the driver.
+> The firmware is sending a response to a task that the driver thinks it
+> previously sent.
 
-As it could be a solution I would try this too, because I have to solve this issue as early as possible.
+Ah, ok. It's really good to understand the errors a bit better. 
 
-Seems my choice for an LSI SAS HBA might have not been the best one.
- 
-> Cheers,
-> Bernd
+> The problem for us is that while the driver is open source, it's really
+> just a translator for the on board firmware engine.  If the firmware
+> engine is truly the cause of these faults, there's not much anyone
+> except LSI can do to help.
 
-Greetings
+Do you think it helps to ask LSI directly?
+
+> James
+
+Best regards.
 Lars
