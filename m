@@ -1,66 +1,77 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: mptsas and ioc0: ERRORs
-Date: Fri, 4 Apr 2008 09:14:30 +0200
-Message-ID: <20080404091430.66daa159.taeuber@bbaw.de>
-References: <20080331150434.a3fb336b.taeuber@bbaw.de>
-	<20080403123107.71d82746.taeuber@bbaw.de>
-	<1207231308.3048.14.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC] block: fix barrier error transmission
+Date: Fri, 4 Apr 2008 13:46:11 +0200
+Message-ID: <20080404114611.GH29686@kernel.dk>
+References: <1207159348.3082.45.camel@localhost.localdomain> <20080402190827.GJ12774@kernel.dk> <1207177912.3082.57.camel@localhost.localdomain> <20080403080626.GO12774@kernel.dk> <1207231339.3048.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:37090 "EHLO mail.bbaw.de"
+Received: from brick.kernel.dk ([87.55.233.238]:22736 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758355AbYDDHUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Apr 2008 03:20:52 -0400
-Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id 6962C4A8078
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:50 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 5935A937CC
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:49 +0200 (CEST)
-Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id AF207937C1
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Apr 2008 09:20:41 +0200 (CEST)
-In-Reply-To: <1207231308.3048.14.camel@localhost.localdomain>
+	id S1757454AbYDDLtC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Apr 2008 07:49:02 -0400
+Content-Disposition: inline
+In-Reply-To: <1207231339.3048.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, mtosatti@redhat.com
 
-Hi James,
-
-James Bottomley <James.Bottomley@HansenPartnership.com> schrieb:
-> Actually, LSI support might be better.  This:
+On Thu, Apr 03 2008, James Bottomley wrote:
+> On Thu, 2008-04-03 at 10:06 +0200, Jens Axboe wrote:
+> > On Wed, Apr 02 2008, James Bottomley wrote:
+> > > On Wed, 2008-04-02 at 21:08 +0200, Jens Axboe wrote:
+> > > > > diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+> > > > > index 55c5f1f..3a3947c 100644
+> > > > > --- a/block/blk-barrier.c
+> > > > > +++ b/block/blk-barrier.c
+> > > > > @@ -114,18 +114,24 @@ void blk_ordered_complete_seq(struct request_queue *q, unsigned seq, int error)
+> > > > >  
+> > > > >  static void pre_flush_end_io(struct request *rq, int error)
+> > > > >  {
+> > > > > +	error = rq->errors ? -EIO : error;
+> > > > > +
+> > > > >  	elv_completed_request(rq->q, rq);
+> > > > >  	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_PREFLUSH, error);
+> > > > >  }
+> > > > 
+> > > > It's a bit of a hack, SCSI really should pass the error value back
+> > > > instead of fiddling around with possibly perhaps finding it in ->errors.
+> > > > And please don't use these ?: constructs, in this case it doesn't even
+> > > > make a lot of sense and a
+> > > > 
+> > > >         if (rq->errors)
+> > > >                 error = -EIO;
+> > > > 
+> > > > would have been much cleaner ;-)
+> > > > 
+> > > > So my question is why does the model not allow you to return the error
+> > > > properly?
+> > > 
+> > > I thought it was the sg_io that would be the problem, but apparently on
+> > > further research, it simply discards the error as does scsi_execute_req.
+> > > 
+> > > I suppose that's a strong enough reason to try returning an error ...
+> > > I'm just a bit leery this close to a release.
+> > > 
+> > > I think this will work ... it just really needs quite a bit of
+> > > testing ...
+> > 
+> > This looks much better, but I'm with you on the danger of applying
+> > something like this so close to a release...
 > 
-> > Mar 28 21:45:37 monosan kernel: mptscsih: ioc0: attempting task abort! (sc=ffff8100395bd1c0)
-> > Mar 28 21:45:48 monosan kernel: mptbase: Initiating ioc0 recovery
-> > Mar 28 21:45:48 monosan kernel: mptbase: ioc0: WARNING - IOC is in FAULT state!!!
-> > Mar 28 21:45:51 monosan kernel: mptbase: ioc0: Recovered from IOC FAULT
+> Yes.
 > 
-> Indicates some type of firmware problem on the card (ioc fault means
-> fault in the firmware engine).
-
-thank you for this descriptive info. 
- 
-> This:
+> > Now, this isn't a regression, but it also impacts barrier reliability
+> > and as such it's a big nasty to leave this open for another release.
 > 
-> > Mar 28 21:47:23 monosan kernel: mptscsih: ioc0: ERROR - Received a mf that was already freed
-> > Mar 28 21:47:23 monosan kernel: mptscsih: ioc0: ERROR - req_idx=8380 req_idx_MR=8380 mf=ffff81007db02900 mr=0000000000000000 sc=0000000000000000
-> 
-> Indicates a rendezvous failure between the ioc firmware and the driver.
-> The firmware is sending a response to a task that the driver thinks it
-> previously sent.
+> Yes, I agree ... let's put it in after 2.6.25 (so into scsi-misc) but if
+> no problems turn up by -rc2 say, I'll send it as a backport to stable
+> 2.6.25.X.  That way we don't have to wait out the entire release cycle
+> for users to see the benefit.
 
-Ah, ok. It's really good to understand the errors a bit better. 
+Sounds like a good plan.
 
-> The problem for us is that while the driver is open source, it's really
-> just a translator for the on board firmware engine.  If the firmware
-> engine is truly the cause of these faults, there's not much anyone
-> except LSI can do to help.
+-- 
+Jens Axboe
 
-Do you think it helps to ask LSI directly?
-
-> James
-
-Best regards.
-Lars
