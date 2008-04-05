@@ -1,66 +1,76 @@
-From: TJ <linux@tjworld.net>
-Subject: aacraid: BUG: soft lockup - CPU#0 stuck for 61s!
-Date: Sat, 05 Apr 2008 17:01:12 +0100
-Message-ID: <1207411272.8003.27.camel@hephaestion.lan.tjworld.net>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: [patch 13/17] drivers/scsi/initio.c: suppress compile warning
+Date: Sat, 5 Apr 2008 10:14:22 -0600
+Message-ID: <20080405161422.GA19742@colo.lackof.org>
+References: <200803282148.m2SLmfg7012252@imap1.linux-foundation.org> <da824cf30803281455g22334554y8cb3887beec951a@mail.gmail.com> <1206743181.3662.55.camel@localhost.localdomain> <20080328224335.1f14cf6a@core> <1206748313.3662.66.camel@localhost.localdomain> <da824cf30803281749l614c3592t89cce073c9b043c8@mail.gmail.com> <1206760156.3662.79.camel@localhost.localdomain> <da824cf30804040005w7ae131c5he1248462041a658a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tjworld.net ([67.18.187.6]:34359 "EHLO tjworld.net"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752432AbYDEQHe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Apr 2008 12:07:34 -0400
-Received: from [10.254.252.6] (hephaestion.lan.tjworld.net [10.254.252.6])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by tjworld.net (Postfix) with ESMTP id 6D6051813A
-	for <linux-scsi@vger.kernel.org>; Sat,  5 Apr 2008 17:01:13 +0100 (BST)
+Received: from colo.lackof.org ([198.49.126.79]:60287 "EHLO colo.lackof.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752290AbYDEQOf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Apr 2008 12:14:35 -0400
+Content-Disposition: inline
+In-Reply-To: <da824cf30804040005w7ae131c5he1248462041a658a@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Please see bug report #10396
+On Fri, Apr 04, 2008 at 12:05:01AM -0700, Grant Grundler wrote:
+> On Fri, Mar 28, 2008 at 8:09 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> ...
+> >  If you can verify my analysis of the way the driver works, then the
+> >  complete fix should be pretty simple: just remove the cpu_to_le32 from
+> >  everywhere except the sg list construction.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10396
+Ok...here's a patch that builds clean on parisc (Big endian) and I *think*
+addresses the issues we found.
 
+thanks,
+grant
 
-[  152.474463] BUG: soft lockup - CPU#0 stuck for 61s! [modprobe:2096]
-[  152.474463] 
-[  152.474463] Pid: 2096, comm: modprobe Not tainted (2.6.25-rc8-custom #1)
-[  152.474463] EIP: 0060:[<c0209db0>] EFLAGS: 00000293 CPU: 0
-[  152.474463] EIP is at native_read_tsc+0x0/0x10
-[  152.474463] EAX: 00000474 EBX: b8fd8e27 ECX: 02a52000 EDX: 0000004a
-[  152.474463] ESI: 00000aac EDI: 0142f9cb EBP: f54dda84 ESP: f7c5dd1c
-[  152.474463]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-[  152.474463] CR0: 8005003b CR2: 080f91cf CR3: 37a60000 CR4: 000006d0
-[  152.474463] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[  152.474463] DR6: ffff0ff0 DR7: 00000400
-[  152.474463]  [<c0305067>] ? delay_tsc+0x17/0x20
-[  152.474463]  [<c0305016>] ? __delay+0x6/0x10
-[  152.474463]  [<f8a5aa40>] ? aac_fib_send+0x220/0x2d0 [aacraid]
-[  152.474463]  [<f8a569c4>] ? aac_get_adapter_info+0x74/0x680 [aacraid]
-[  152.474463]  [<c021937b>] ? __resched_task+0x5b/0x70
-[  152.474463]  [<c021ccda>] ? try_to_wake_up+0x6a/0x100
-[  152.474463]  [<f8a5d55a>] ? aac_probe_one+0x23a/0x4a4 [aacraid]
-[  152.474463]  [<f8a5af50>] ? aac_command_thread+0x0/0x6d0 [aacraid]
-[  152.474463]  [<c0310146>] ? pci_device_probe+0x56/0x80
-[  152.474463]  [<c0367948>] ? driver_probe_device+0x88/0x170
-[  152.474463]  [<c0367b9e>] ? __driver_attach+0x9e/0xa0
-[  152.474463]  [<c0366cea>] ? bus_for_each_dev+0x3a/0x60
-[  152.474463]  [<c03100f0>] ? pci_device_probe+0x0/0x80
-[  152.474463]  [<c03677c6>] ? driver_attach+0x16/0x20
-[  152.474463]  [<c0367b00>] ? __driver_attach+0x0/0xa0
-[  152.474463]  [<c0367674>] ? bus_add_driver+0x1a4/0x210
-[  152.474463]  [<c0310090>] ? pci_device_remove+0x0/0x40
-[  152.474463]  [<c03100f0>] ? pci_device_probe+0x0/0x80
-[  152.474463]  [<c0367d3b>] ? driver_register+0x3b/0xf0
-[  152.474463]  [<c040b744>] ? _spin_unlock_irqrestore+0x4/0x10
-[  152.474463]  [<c031034d>] ? __pci_register_driver+0x3d/0x80
-[  152.474463]  [<f890a033>] ? aac_init+0x33/0x74 [aacraid]
-[  152.474463]  [<c024696e>] ? sys_init_module+0x13e/0x1c40
-[  152.474463]  [<c040d37f>] ? do_page_fault+0x13f/0x670
-[  152.474463]  [<c02294ec>] ? irq_exit+0x3c/0x70
-[  152.474463]  [<c0204d76>] ? syscall_call+0x7/0xb
-[  152.474463]  =======================
+---
 
+Most of the cpu_to_le32() usage was wrong in one way or another.
+Compiler warning on BE builds was just the tip of the iceberg.
+This patch attempts to make this driver work on BE though I
+don't have the HW to test it.
 
+Signed-off-by: Grant Grundler <grundler@parisc-linux.org>
+
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 0cc8868..dbae3fd 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2581,8 +2581,8 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+ 	/* Map the sense buffer into bus memory */
+ 	dma_addr = dma_map_single(&host->pci_dev->dev, cmnd->sense_buffer,
+ 				  SENSE_SIZE, DMA_FROM_DEVICE);
+-	cblk->senseptr = cpu_to_le32((u32)dma_addr);
+-	cblk->senselen = cpu_to_le32(SENSE_SIZE);
++	cblk->senseptr = (u32)dma_addr;
++	cblk->senselen = SENSE_SIZE;
+ 	cmnd->SCp.ptr = (char *)(unsigned long)dma_addr;
+ 	cblk->cdblen = cmnd->cmd_len;
+ 
+@@ -2606,7 +2606,7 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+ 		dma_addr = dma_map_single(&host->pci_dev->dev, &cblk->sglist[0],
+ 					  sizeof(struct sg_entry) * TOTAL_SG_ENTRY,
+ 					  DMA_BIDIRECTIONAL);
+-		cblk->bufptr = cpu_to_le32((u32)dma_addr);
++		cblk->bufptr = (u32)dma_addr;
+ 		cmnd->SCp.dma_handle = dma_addr;
+ 
+ 		cblk->sglen = nseg;
+@@ -2616,7 +2616,8 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+ 		sg = &cblk->sglist[0];
+ 		scsi_for_each_sg(cmnd, sglist, cblk->sglen, i) {
+ 			sg->data = cpu_to_le32((u32)sg_dma_address(sglist));
+-			total_len += sg->len = cpu_to_le32((u32)sg_dma_len(sglist));
++			sg->len = cpu_to_le32((u32)sg_dma_len(sglist));
++			total_len += sg_dma_len(sglist);
+ 			++sg;
+ 		}
+ 
