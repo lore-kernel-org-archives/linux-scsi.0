@@ -1,78 +1,37 @@
 From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: mptsas problem
-Date: Sun, 6 Apr 2008 21:04:53 -0400
-Message-ID: <20080407010453.GA1952@animx.eu.org>
-References: <47F95F5C.500@sauce.co.nz>
+Date: Sun, 6 Apr 2008 21:07:38 -0400
+Message-ID: <20080407010738.GB1952@animx.eu.org>
+References: <20080406195628.GA1084@animx.eu.org> <0631C836DBF79F42B5A60C8C8D4E8229F64FC1@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:60384 "EHLO animx.eu.org"
+Received: from animx.eu.org ([216.98.75.249]:53833 "EHLO animx.eu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755501AbYDGBE7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Apr 2008 21:04:59 -0400
+	id S1755601AbYDGBHo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Apr 2008 21:07:44 -0400
 Content-Disposition: inline
-In-Reply-To: <47F95F5C.500@sauce.co.nz>
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229F64FC1@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
 Cc: linux-scsi@vger.kernel.org
 
-Richard Scobie wrote:
-> > I recall seeing some of this problem on the list a few days ago, but 
-> I > can't remember what the subject was and was unable to find the thread.
-> 
-> You are perhaps thinking of this:
-> 
-> http://marc.info/?l=linux-scsi&m=120696978819085&w=2
+Moore, Eric wrote:
+> The other fellow was having his controller go into fault state, that is not
+> the case here.   Here commands are not completing back from [0:0:0:0]
+> device in the timeout period, typically 30 seconds.   Its hard to tell from
 
-Yes.
+Is it possible that with queue_depth > 31 was causing the problem?  I read
+something about that (32 would cause the device to look like it was hot
+unplugged or something.  I did not experience this though, or if I did, it
+never said the device came back as I had read)
 
-> but it seems to be a different issue.
+> the information provided what is going on.    A sas trace and/or pci trace
+> would help in root cause whether the commands got lost out on the device or
+> controller firmware.  
 
-Ok.
-
-> From the message you posted, it looks as though there may be a problem 
-> with sda.
-
-It's working fine with /sys/block/sd[abc]/device/queue_depth = 1 (on boot up,
-as stated before, it's 64)
-
-I performed the same copy again with queue_depth=1 after the array rebuilt.
-It worked fine then.  No errors.
-
-> Does smartctl -a -d ata /dev/sda show any obvious problems?
-
-smartctl doesn't work on sd[a-d] at all:
-# smartctl -a -d ata /dev/sdd
-smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
-
-A mandatory SMART command failed: exiting. To continue, add one or more '-T
-permissive' options.
-# smartctl -a -d ata -T permissive /dev/sdd
-smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
-
-=== START OF INFORMATION SECTION ===
-Device Model:     [No Information Found]
-Serial Number:    [No Information Found]
-Firmware Version: [No Information Found]
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   1
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Sun Apr  6 21:02:45 2008 EDT
-SMART is only available in ATA Version 3 Revision 3 or greater.
-We will try to proceed in spite of this.
-SMART support is: Ambiguous - ATA IDENTIFY DEVICE words 82-83 don't show if SMART supported.
-                  Checking for SMART support by trying SMART ENABLE command.
-Error SMART Enable failed: Invalid argument
-                  SMART ENABLE failed - this establishes that this device lacks SMART functionality.
-A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
-# 
+I don't know how to do a trace of either.
 
 -- 
  Lab tests show that use of micro$oft causes cancer in lab animals
