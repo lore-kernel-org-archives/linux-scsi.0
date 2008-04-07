@@ -1,50 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [patch 02/17] Dell CERC support for megaraid_mbox
-Date: Mon, 07 Apr 2008 14:44:40 +0200
-Message-ID: <47FA1738.4020909@suse.de>
-References: <9738BCBE884FDB42801FAD8A7769C26502085504@NAMAIL1.ad.lsil.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] block: move the padding adjustment to blk_rq_map_sg
+Date: Mon, 7 Apr 2008 22:11:05 +0900
+Message-ID: <20080407221103Y.tomof@acm.org>
+References: <47F45035.8060003@gmail.com>
+	<20080407200756G.fujita.tomonori@lab.ntt.co.jp>
+	<47FA061A.8000107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:50988 "EHLO mx1.suse.de"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:40509 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752891AbYDGMon (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Apr 2008 08:44:43 -0400
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26502085504@NAMAIL1.ad.lsil.com>
+	id S1757340AbYDGNOe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Apr 2008 09:14:34 -0400
+In-Reply-To: <47FA061A.8000107@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
+To: htejun@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
 
-Yang, Bo wrote:
-> Hannes,
->=20
-> We can not find out why need to disable the random deletion of the
-> logical drive for the FW version>=3D6.62?  Where is the 6.62 come fro=
-m?
->=20
-=46rom the bug reports we had. Dell machines with a fw rev < 6.61 work
-with this driver, whereas newer rev (the said 6.62) don't.
-As to the details: No idea. This is just what I found by comparing
-the older megaraid driver (which worked, but is unsupported) and the
-newer megaraid_mbox driver.
-The noticeable difference was just the random deletion feature.
-As I don't have any details about the driver I certainly can't
-tell you any details. This is a workaround.
-But as Dell (or LSI, for that matter) refuse to update the
-BIOS on these drivers we're stuck with it.
+On Mon, 07 Apr 2008 20:31:38 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Cheers,
+> FUJITA Tomonori wrote:
+> >> Maybe we need yet another flag indicating padding space
+> >> availability?
+> > 
+> > How about doing the exact same thing that the drain buffer does? We
+> > can put pre-allocated buffer to a queue and save one sg entry for it.
+> 
+> Each sg entry should be aligned so extra sg doesn't really help or am I 
+> missing something?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sorry, please scratch the previous mail. I think that I misunderstood
+what you meant.
+
+The current code does padding only for requests that we call
+__blk_rq_map_user (bio_copy_user) for. You meant that if we create a
+new flag like REQ_NEED_PADDING and set it in blk_rq_map_user,
+blk_rq_map_sg can do padding only when it was set.
+
+Right?
