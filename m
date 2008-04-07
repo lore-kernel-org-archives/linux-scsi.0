@@ -1,43 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] debloat aic7xxx and aic79xx drivers
-Date: Mon, 07 Apr 2008 12:36:37 +0200
-Message-ID: <47F9F935.4030901@suse.de>
-References: <200803230440.40685.vda.linux@googlemail.com> <200803230441.22926.vda.linux@googlemail.com> <200803230442.02771.vda.linux@googlemail.com> <200803230442.35311.vda.linux@googlemail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] block: move the padding adjustment to blk_rq_map_sg
+Date: Mon, 07 Apr 2008 20:07:56 +0900
+Message-ID: <20080407200756G.fujita.tomonori@lab.ntt.co.jp>
+References: <1207155180-8069-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<1207155180-8069-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<47F45035.8060003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:40142 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756649AbYDGKgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Apr 2008 06:36:39 -0400
-In-Reply-To: <200803230442.35311.vda.linux@googlemail.com>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:45956 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970AbYDGLIm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2008 07:08:42 -0400
+In-Reply-To: <47F45035.8060003@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: htejun@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
 
-Hi Denys,
+Hi,
 
-Denys Vlasenko wrote:
-> Adds more consts
->=20
-> Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
-> --
-> vda
->=20
-ACK. Looks ok.
+On Thu, 03 Apr 2008 12:34:13 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Cheers,
+> Hello,
+> 
+> FUJITA Tomonori wrote:
+> > -	/*
+> > -	 * __blk_rq_map_user() copies the buffers if starting address
+> > -	 * or length isn't aligned to dma_pad_mask.  As the copied
+> > -	 * buffer is always page aligned, we know that there's enough
+> > -	 * room for padding.  Extend the last bio and update
+> > -	 * rq->data_len accordingly.
+> > -	 *
+> > -	 * On unmap, bio_uncopy_user() will use unmodified
+> > -	 * bio_map_data pointed to by bio->bi_private.
+> > -	 */
+> > -	if (len & q->dma_pad_mask) {
+> > -		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
+> > -		struct bio *tail = rq->biotail;
+> > -
+> > -		tail->bi_io_vec[tail->bi_vcnt - 1].bv_len += pad_len;
+> > -		tail->bi_size += pad_len;
+> > -
+> > -		rq->extra_len += pad_len;
+> > -	}
+> > -
+> >  	rq->buffer = rq->data = NULL;
+> >  	return 0;
+> >  unmap_rq:
+> > diff --git a/block/blk-merge.c b/block/blk-merge.c
+> > index 0f58616..2a81c87 100644
+> > --- a/block/blk-merge.c
+> > +++ b/block/blk-merge.c
+> > @@ -220,6 +220,13 @@ new_segment:
+> >  		bvprv = bvec;
+> >  	} /* segments in rq */
+> >  
+> > +	if (sg && (q->dma_pad_mask & rq->data_len)) {
+> > +		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
+> > +
+> > +		sg->length += pad_len;
+> > +		rq->extra_len += pad_len;
+> > +	}
+> > +
+> 
+> We're not sure it will always have the extra room.  For example, 
+> map_user_iov doesn't do it and there can be in-kernel issuers.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah, I see.
+
+
+> Maybe we need yet another flag indicating padding space
+> availability?
+
+How about doing the exact same thing that the drain buffer does? We
+can put pre-allocated buffer to a queue and save one sg entry for it.
