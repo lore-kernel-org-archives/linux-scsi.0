@@ -1,35 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2] block: move the padding adjustment to blk_rq_map_sg
-Date: Mon, 07 Apr 2008 20:31:38 +0900
-Message-ID: <47FA061A.8000107@gmail.com>
-References: <1207155180-8069-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>	<1207155180-8069-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>	<47F45035.8060003@gmail.com> <20080407200756G.fujita.tomonori@lab.ntt.co.jp>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: mptsas problem
+Date: Mon, 7 Apr 2008 13:36:36 +0200
+Message-ID: <200804071336.36686.bs@q-leap.de>
+References: <20080406195628.GA1084@animx.eu.org> <0631C836DBF79F42B5A60C8C8D4E8229F64FC1@NAMAIL2.ad.lsil.com> <20080407010738.GB1952@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:7453 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753179AbYDGLbp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2008 07:31:45 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1380616wff.4
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2008 04:31:45 -0700 (PDT)
-In-Reply-To: <20080407200756G.fujita.tomonori@lab.ntt.co.jp>
+Received: from ns1.q-leap.de ([153.94.51.193]:37088 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752862AbYDGLgi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2008 07:36:38 -0400
+In-Reply-To: <20080407010738.GB1952@animx.eu.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, tomof@acm.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org, Lars =?iso-8859-1?q?T=E4uber?= <taeuber@bbaw.de>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-FUJITA Tomonori wrote:
->> Maybe we need yet another flag indicating padding space
->> availability?
-> 
-> How about doing the exact same thing that the drain buffer does? We
-> can put pre-allocated buffer to a queue and save one sg entry for it.
+Hi all,
 
-Each sg entry should be aligned so extra sg doesn't really help or am I 
-missing something?
+On Monday 07 April 2008 03:07:38 Wakko Warner wrote:
+> Moore, Eric wrote:
+> > The other fellow was having his controller go into fault state, that is
+> > not the case here.   Here commands are not completing back from [0:0:0:0]
+> > device in the timeout period, typically 30 seconds.   Its hard to tell
+> > from
 
-Thanks.
+from my point of view the error handler is by far too quiet by default. Below 
+are some patches to improve the situation. I tested these patches with 
+Infortrend scsi-raid systems und LSI scsi HBAs.
+
+With these patches the error handler will now tell why it got activated. We 
+also had  the problem the error handler got activated in an endless loop, 
+several of these patches are to prevent this.
+
+http://www.pci.uni-heidelberg.de/tc/usr/bernd/downloads/scsi/2.6.22-eh-patches.tar.bz2
+
+>From the series file:
+
+print_eh_activation.patch
+scsi_error_limit.patch
+scsi_error_state.patch
+soft_error_requeue.patch
+starget_quiesce_ignore_offlined.patch
+scsi_eh_did_no_connect.patch
+fusion_tip.patch
+
+All except the fusion_tip.patch are patches for the error handler. 
+fusion_tip.patch will replace the kernel mpt fusion driver by a more recent 
+version I got from Eric.
+
+
+
+Cheers,
+Bernd
+
 
 -- 
-tejun
+Bernd Schubert
+Q-Leap Networks GmbH
