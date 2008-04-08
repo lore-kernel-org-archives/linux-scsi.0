@@ -1,40 +1,47 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 7630] os_scsi_tapes_lock should not be acquired before calling new_tape_buffer
-Date: Tue,  8 Apr 2008 15:50:36 -0700 (PDT)
-Message-ID: <20080408225036.780D9108065@picon.linux-foundation.org>
-References: <bug-7630-11613@http.bugzilla.kernel.org/>
+From: Rick Warner <rick@microway.com>
+Subject: errors from mptsas
+Date: Tue, 8 Apr 2008 18:20:19 -0400
+Message-ID: <200804081820.19607.rick@microway.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49983 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752294AbYDHWvM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2008 18:51:12 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m38Moa2t008372
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Apr 2008 15:50:37 -0700
-In-Reply-To: <bug-7630-11613@http.bugzilla.kernel.org/>
+Received: from mail.microway.com ([64.80.227.22]:51898 "EHLO microway.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752137AbYDHWyy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Apr 2008 18:54:54 -0400
+Received: from herp.microway.com (warden.microway.com [64.80.227.66])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by microway.com (Postfix) with ESMTP id 676E82216
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2008 18:20:20 -0400 (EDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7630
+Hello,
 
+I am working on 2 dual opteron systems using LSI 3041E SAS cards (1064E(b3)).  
+They each have (1) 73G Seagate SAS drive and (2) 750G Seagate SATA drives 
+hooked up to them.
 
-protasnb@gmail.com changed:
+One of the stress tests we run on systems is looping through the hard drives 
+running "dd if=/dev/sdX of=/dev/null". With that running, we get a steady 
+stream of these errors in the dmesg-
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |protasnb@gmail.com,
-                   |                            |jejb@steeleye.com
+mptbase: ioc0: LogInfo(0x31123000): Originator={PL}, Code={Abort}, 
+SubCode(0x3000)
 
+Any idea what's going on here? I have already updated to the latest firmware 
+for the card.  The system is loaded with FC8 running 2.6.24.4-64.fc8.
 
-
-
-------- Comment #5 from protasnb@gmail.com  2008-04-08 15:50 -------
-Lin, can you update status on this bug please. I am not sure which comment was
-in error, but you can just re-state what you were intending to write.
-
+Right now, I have 
+Thanks,
+Rick
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Richard Warner
+Lead Systems Integrator
+Microway, Inc
+(508)732-5517
