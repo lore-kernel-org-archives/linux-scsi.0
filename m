@@ -1,367 +1,315 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: mptsas and ioc0: ERRORs
-Date: Tue, 8 Apr 2008 09:38:58 +0200
-Message-ID: <20080408093858.5ea6f2ed.taeuber@bbaw.de>
-References: <20080407104940.5c7c89d1.taeuber@bbaw.de>
-	<0631C836DBF79F42B5A60C8C8D4E8229F79FF7@NAMAIL2.ad.lsil.com>
+From: Ke Wei <kewei@marvell.com>
+Subject: [PATCH scsi-rc-fixes-2.6] mvsas: fix error handling.
+Date: Tue, 08 Apr 2008 18:31:38 +0800
+Message-ID: <47FB498A.2010107@marvell.com>
+Reply-To: kewei@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:59693 "EHLO mail.bbaw.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbYDHHhT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2008 03:37:19 -0400
-Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id E6A5F4A807D
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2008 09:37:15 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 29E4E93782
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2008 09:37:15 +0200 (CEST)
-Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id 0EDE793782
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2008 09:37:15 +0200 (CEST)
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229F79FF7@NAMAIL2.ad.lsil.com>
+Received: from host2.marvell.com ([65.219.4.2]:24550 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752380AbYDHKbl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Apr 2008 06:31:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, jeff@garzik.org
 
-Hi Eric,
-
-"Moore, Eric" <Eric.Moore@lsi.com> schrieb:
-> NOTICE: This e-mail has been altered by MIMEDefang.
-> The change made to this email was:
->=20
-> An attachment named "Calculator.lnk" was removed from this
-> email.  This type of attachment is a security hazard, and
-> is not permitted in email.  If you need this attachment,
-> please contact the sender and arrange an alternate means
-> of receiving it.
->=20
-> For more information, see the web page=20
-> <http://gns.lsil.com/email/virus-filter.html>.
-
-this looks strange.
-
-> Did you received the email I sent over the weekend?  I was having pro=
-blems with ccmail, so I wasn't sure if you received it.     =20
->=20
-
-No, I didn't receive any mail by you. Sorry.
-
-> The  bottom line is your controller went into fault state, and I need=
- to know what the fault code is.  Your logs you were missing that.    F=
-ollowing the string "IOC is in FAULT state!!!", I would expect "FAULT c=
-ode =3D %04xh".      With that information, I can talk to the firmware =
-group to gather more information on what occurred.  =20
-
-Sorry my grep was to hard:
-monosan:~ # fgrep "Mar 28 21:45" /var/log/messages=20
-Mar 28 21:45:37 monosan kernel: mptscsih: ioc0: attempting task abort! =
-(sc=3Dffff8100395bd1c0)
-Mar 28 21:45:37 monosan kernel: sd 6:0:26:0: [sdab] CDB: Read(10): 28 0=
-0 5f c1 64 10 00 00 20 00
-Mar 28 21:45:48 monosan kernel: mptbase: Initiating ioc0 recovery
-Mar 28 21:45:48 monosan kernel: mptbase: ioc0: WARNING - IOC is in FAUL=
-T state!!!
-Mar 28 21:45:48 monosan kernel:            FAULT code =3D 0b09h
-Mar 28 21:45:51 monosan kernel: mptbase: ioc0: Recovered from IOC FAULT
+ Changed error handling: Add a internal queue to send command in mvs_task_abort function.
+ Set max_id and max_lun to a valid value. It's good for 64xx chip.
+ BTW, DVD-ROM compatibility needs to test carefully.
 
 
+Signed-off-by: Ke Wei <kewei@marvell.com>
+---
+ drivers/scsi/mvsas.c |  101 +++++++++++++++++++++++--------------------------
+ 1 files changed, 47 insertions(+), 54 deletions(-)
 
-> The "Received a mf that was  already freed" strings occurring because=
- the driver will flush out all the outstanding command  following host =
-reset.   After host reset, the controller suppose to of dropped all the=
- outstanding command to the floor, however in your case something got c=
-ompleted back to driver after we did the flush.  Really nothing to be c=
-oncern over. =20
->=20
-> Eric
-> LSI
+diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
+index e55b903..b45185e 100644
+--- a/drivers/scsi/mvsas.c
++++ b/drivers/scsi/mvsas.c
+@@ -639,6 +639,7 @@ struct mvs_slot_info {
+ 
+ 	void			*response;
+ 	struct mvs_port		*port;
++	struct completion	*completion;
+ };
+ 
+ struct mvs_info {
+@@ -674,9 +675,6 @@ struct mvs_info {
+ 				/* further per-slot information */
+ 	struct mvs_phy		phy[MVS_MAX_PHYS];
+ 	struct mvs_port		port[MVS_MAX_PHYS];
+-#ifdef MVS_USE_TASKLET
+-	struct tasklet_struct	tasklet;
+-#endif
+ };
+ 
+ static int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+@@ -1225,7 +1223,7 @@ static void mvs_int_sata(struct mvs_info *mvi)
+ }
+ 
+ static void mvs_slot_reset(struct mvs_info *mvi, struct sas_task *task,
+-				u32 slot_idx)
++				u32 slot_idx, struct completion *completion)
+ {
+ 	void __iomem *regs = mvi->regs;
+ 	struct domain_device *dev = task->dev;
+@@ -1233,6 +1231,7 @@ static void mvs_slot_reset(struct mvs_info *mvi, struct sas_task *task,
+ 	struct mvs_port *port = mvi->slot_info[slot_idx].port;
+ 	u32 reg_set, phy_mask;
+ 
++	mvi->slot_info[slot_idx].completion = completion;
+ 	if (!sas_protocol_ata(task->task_proto)) {
+ 		reg_set = 0;
+ 		phy_mask = (port->wide_port_phymap) ? port->wide_port_phymap :
+@@ -1313,7 +1312,7 @@ static int mvs_slot_err(struct mvs_info *mvi, struct sas_task *task,
+ 
+ 	if (err_dw1 & SLOT_BSY_ERR) {
+ 		stat = SAS_QUEUE_FULL;
+-		mvs_slot_reset(mvi, task, slot_idx);
++		mvs_slot_reset(mvi, task, slot_idx, NULL);
+ 	}
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SSP:
+@@ -1350,17 +1349,17 @@ static int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	mvs_hba_cq_dump(mvi);
+ 
+ 	spin_lock(&task->task_state_lock);
++	task->task_state_flags &=
++		~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
++	task->task_state_flags |= SAS_TASK_STATE_DONE;
+ 	aborted = task->task_state_flags & SAS_TASK_STATE_ABORTED;
+-	if (!aborted) {
+-		task->task_state_flags &=
+-		    ~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
+-		task->task_state_flags |= SAS_TASK_STATE_DONE;
+-	}
+ 	spin_unlock(&task->task_state_lock);
+-
+-	if (aborted) {
++	if (unlikely(aborted)) {
++		struct completion *completion = slot->completion;
+ 		mvs_slot_task_free(mvi, task, slot, slot_idx);
+ 		mvs_slot_free(mvi, rx_desc);
++		if (completion)
++			complete(completion);
+ 		return -1;
+ 	}
+ 
+@@ -1426,7 +1425,7 @@ static int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 
+ out:
+ 	mvs_slot_task_free(mvi, task, slot, slot_idx);
+-	if (unlikely(tstat->stat != SAS_QUEUE_FULL))
++	if (tstat->stat != SAS_QUEUE_FULL)
+ 		mvs_slot_free(mvi, rx_desc);
+ 
+ 	spin_unlock(&mvi->lock);
+@@ -1521,9 +1520,9 @@ static int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
+ 			dev_printk(KERN_DEBUG, &pdev->dev, "RXQ_ERR %X\n",
+ 				rx_desc);
+ 		} else if (rx_desc & RXQ_SLOT_RESET) {
++			mvs_slot_free(mvi, rx_desc);
+ 			dev_printk(KERN_DEBUG, &pdev->dev, "Slot reset[%X]\n",
+ 				rx_desc);
+-			mvs_slot_free(mvi, rx_desc);
+ 		}
+ 	}
+ 
+@@ -1533,23 +1532,6 @@ static int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
+ 	return 0;
+ }
+ 
+-#ifdef MVS_USE_TASKLET
+-static void mvs_tasklet(unsigned long data)
+-{
+-	struct mvs_info *mvi = (struct mvs_info *) data;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&mvi->lock, flags);
+-
+-#ifdef MVS_DISABLE_MSI
+-	mvs_int_full(mvi);
+-#else
+-	mvs_int_rx(mvi, true);
+-#endif
+-	spin_unlock_irqrestore(&mvi->lock, flags);
+-}
+-#endif
+-
+ static irqreturn_t mvs_interrupt(int irq, void *opaque)
+ {
+ 	struct mvs_info *mvi = opaque;
+@@ -1564,15 +1546,12 @@ static irqreturn_t mvs_interrupt(int irq, void *opaque)
+ 	/* clear CMD_CMPLT ASAP */
+ 	mw32_f(INT_STAT, CINT_DONE);
+ 
+-#ifndef MVS_USE_TASKLET
+ 	spin_lock(&mvi->lock);
+ 
+ 	mvs_int_full(mvi);
+ 
+ 	spin_unlock(&mvi->lock);
+-#else
+-	tasklet_schedule(&mvi->tasklet);
+-#endif
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1581,15 +1560,12 @@ static irqreturn_t mvs_msi_interrupt(int irq, void *opaque)
+ {
+ 	struct mvs_info *mvi = opaque;
+ 
+-#ifndef MVS_USE_TASKLET
+ 	spin_lock(&mvi->lock);
+ 
+ 	mvs_int_rx(mvi, true);
+ 
+ 	spin_unlock(&mvi->lock);
+-#else
+-	tasklet_schedule(&mvi->tasklet);
+-#endif
++
+ 	return IRQ_HANDLED;
+ }
+ #endif
+@@ -2037,7 +2013,8 @@ static int mvs_task_prep_ssp(struct mvs_info *mvi,
+ 	return 0;
+ }
+ 
+-static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags)
++static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
++				struct completion *completion)
+ {
+ 	struct domain_device *dev = task->dev;
+ 	struct mvs_info *mvi = dev->port->ha->lldd_ha;
+@@ -2093,6 +2070,8 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags)
+ 		t->lldd_task = NULL;
+ 		slot->n_elem = n_elem;
+ 		memset(slot->buf, 0, MVS_SLOT_BUF_SZ);
++		slot->completion = completion;
++
+ 		tei.task = t;
+ 		tei.hdr = &mvi->slot[tag];
+ 		tei.tag = tag;
+@@ -2157,6 +2136,12 @@ out_done:
+ 	return rc;
+ }
+ 
++static int mvs_queue_command(struct sas_task *task, const int num,
++				gfp_t gfp_flags)
++{
++	return mvs_task_exec(task, num, gfp_flags, NULL);
++}
++
+ static int mvs_task_abort(struct sas_task *task)
+ {
+ 	int rc;
+@@ -2164,6 +2149,7 @@ static int mvs_task_abort(struct sas_task *task)
+ 	struct mvs_info *mvi = task->dev->port->ha->lldd_ha;
+ 	struct pci_dev *pdev = mvi->pdev;
+ 	int tag;
++	DECLARE_COMPLETION_ONSTACK(completion);
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+@@ -2208,10 +2194,18 @@ static int mvs_task_abort(struct sas_task *task)
+ 		mvs_slot_task_free(mvi, task, &mvi->slot_info[tag], tag);
+ 		spin_unlock_irqrestore(&mvi->lock, flags);
+ 	}
+-	if (!mvs_task_exec(task, 1, GFP_ATOMIC))
++	mvs_task_exec(task, 1, GFP_ATOMIC, &completion);
++	wait_for_completion_timeout(&completion, 5 * HZ);
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 		rc = TMF_RESP_FUNC_COMPLETE;
+-	else
+-		rc = TMF_RESP_FUNC_FAILED;
++		dev_printk(KERN_DEBUG, &pdev->dev, "%s: task 0x%p done\n",
++			__func__, task);
++		goto out_done;
++	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++	rc = TMF_RESP_FUNC_FAILED;
+ out_done:
+ 	return rc;
+ }
+@@ -2348,9 +2342,7 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 		return NULL;
+ 
+ 	spin_lock_init(&mvi->lock);
+-#ifdef MVS_USE_TASKLET
+-	tasklet_init(&mvi->tasklet, mvs_tasklet, (unsigned long)mvi);
+-#endif
++
+ 	mvi->pdev = pdev;
+ 	mvi->chip = chip;
+ 
+@@ -2382,8 +2374,8 @@ static struct mvs_info *__devinit mvs_alloc(struct pci_dev *pdev,
+ 
+ 	SHOST_TO_SAS_HA(mvi->shost) = &mvi->sas;
+ 	mvi->shost->transportt = mvs_stt;
+-	mvi->shost->max_id = 21;
+-	mvi->shost->max_lun = ~0;
++	mvi->shost->max_id = 128;
++	mvi->shost->max_lun = 1;
+ 	mvi->shost->max_channel = 0;
+ 	mvi->shost->max_cmd_len = 16;
+ 
+@@ -2812,7 +2804,7 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+ 			} else {
+ 				dev_printk(KERN_DEBUG, &pdev->dev,
+ 					"No sig fis\n");
+-				phy->phy_type &= ~(PORT_TYPE_SATA);
++				phy->phy_type &= ~PORT_TYPE_SATA;
+ 				goto out_done;
+ 			}
+ 		}
+@@ -2822,7 +2814,9 @@ static void mvs_update_phyinfo(struct mvs_info *mvi, int i,
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			"phy[%d] Get Attached Address 0x%llX ,"
+ 			" SAS Address 0x%llX\n",
+-			i, phy->att_dev_sas_addr, phy->dev_sas_addr);
++			i,
++			(unsigned long long)phy->att_dev_sas_addr,
++			(unsigned long long)phy->dev_sas_addr);
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			"Rate = %x , type = %d\n",
+ 			sas_phy->linkrate, phy->phy_type);
+@@ -2918,7 +2912,7 @@ static int __devinit mvs_hw_init(struct mvs_info *mvi)
+ 	else
+ 		mw32_f(CTL, cctl | CCTL_RST);
+ 
+-	/* write to device control _AND_ device status register? - A.C. */
++	/* write to device control _AND_ device status register */
+ 	pci_read_config_dword(mvi->pdev, PCR_DEV_CTRL, &tmp);
+ 	tmp &= ~PRD_REQ_MASK;
+ 	tmp |= PRD_REQ_SIZE;
+@@ -2998,8 +2992,7 @@ static int __devinit mvs_hw_init(struct mvs_info *mvi)
+ 	/* FIXME: update wide port bitmaps */
+ 
+ 	/* little endian for open address and command table, etc. */
+-	/* A.C.
+-	 * it seems that ( from the spec ) turning on big-endian won't
++	/* it seems that ( from the spec ) turning on big-endian won't
+ 	 * do us any good on big-endian machines, need further confirmation
+ 	 */
+ 	cctl = mr32(CTL);
+@@ -3153,7 +3146,7 @@ static void __devexit mvs_pci_remove(struct pci_dev *pdev)
+ }
+ 
+ static struct sas_domain_function_template mvs_transport_ops = {
+-	.lldd_execute_task	= mvs_task_exec,
++	.lldd_execute_task	= mvs_queue_command,
+ 	.lldd_control_phy	= mvs_phy_control,
+ 	.lldd_abort_task	= mvs_task_abort,
+ 	.lldd_port_formed	= mvs_port_formed,
+-- 
+1.5.4
 
-Yesterday the machine failed again. But now I run a kernel with Roberts=
- patch:
-Apr  7 18:37:38 monosan kernel: sd 6:0:18:0: Bernd, check this: scmd re=
-try 1/9
-Apr  7 18:37:38 monosan kernel: sd 6:0:18:0: Activating scsi error reco=
-very
-Apr  7 18:37:38 monosan kernel: mptbase: ioc0: LogInfo(0x31110b00): Ori=
-ginator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)
-Apr  7 18:37:38 monosan kernel: sd 6:0:26:0: Activating scsi error reco=
-very
-Apr  7 18:37:38 monosan kernel: mptbase: ioc0: LogInfo(0x31110b00): Ori=
-ginator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)
-Apr  7 18:37:40 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c1c77c0)
-Apr  7 18:37:42 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c1c77c0)
-Apr  7 18:37:42 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff810037c2d280)
-Apr  7 18:37:47 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff810037c2d280)
-Apr  7 18:37:51 monosan kernel: mptscsih: ioc0: attempting bus reset! (=
-sc=3Dffff81007c1c77c0)
-Apr  7 18:37:53 monosan kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=3D=
-ffff81007c1c77c0)
-Apr  7 18:38:03 monosan kernel: mptscsih: ioc0: attempting host reset! =
-(sc=3Dffff81007c1c77c0)
-Apr  7 18:38:14 monosan kernel: mptscsih: ioc0: host reset: SUCCESS (sc=
-=3Dffff81007c1c77c0)
-Apr  7 18:38:24 monosan kernel: sd 6:0:18:0: scsi: Device offlined - no=
-t ready after error recovery
-Apr  7 18:38:24 monosan kernel: sd 6:0:29:0: Bernd, check this: scmd re=
-try 1/9
-Apr  7 18:38:24 monosan kernel: sd 6:0:29:0: Activating scsi error reco=
-very
-Apr  7 18:38:24 monosan kernel: sd 6:0:30:0: Activating scsi error reco=
-very
-Apr  7 18:38:24 monosan kernel: sd 6:0:31:0: Activating scsi error reco=
-very
-Apr  7 18:38:24 monosan kernel: sd 6:0:32:0: Activating scsi error reco=
-very
-Apr  7 18:38:24 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81011b415800)
-Apr  7 18:38:26 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81011b415800)
-Apr  7 18:38:26 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c1497c0)
-Apr  7 18:38:31 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c1497c0)
-Apr  7 18:38:36 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007bfc0380)
-Apr  7 18:38:38 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007bfc0380)
-Apr  7 18:38:42 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007db21a80)
-Apr  7 18:38:45 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007db21a80)
-Apr  7 18:38:45 monosan kernel: mptscsih: ioc0: attempting bus reset! (=
-sc=3Dffff81011b415800)
-Apr  7 18:38:50 monosan kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=3D=
-ffff81011b415800)
-Apr  7 18:39:00 monosan kernel: mptscsih: ioc0: attempting host reset! =
-(sc=3Dffff81011b415800)
-Apr  7 18:39:10 monosan kernel: mptscsih: ioc0: host reset: SUCCESS (sc=
-=3Dffff81011b415800)
-Apr  7 18:39:20 monosan kernel: sd 6:0:29:0: scsi: Device offlined - no=
-t ready after error recovery
-Apr  7 18:39:20 monosan kernel: sd 6:0:32:0: scsi: Device offlined - no=
-t ready after error recovery
-Apr  7 18:39:20 monosan kernel: sd 6:0:1:0: Bernd, check this: scmd ret=
-ry 1/9
-Apr  7 18:39:20 monosan kernel: sd 6:0:1:0: Activating scsi error recov=
-ery
-Apr  7 18:39:20 monosan kernel: sd 6:0:2:0: Activating scsi error recov=
-ery
-Apr  7 18:39:20 monosan kernel: sd 6:0:3:0: Activating scsi error recov=
-ery
-Apr  7 18:39:20 monosan kernel: sd 6:0:4:0: Activating scsi error recov=
-ery
-Apr  7 18:39:20 monosan kernel: sd 6:0:5:0: Activating scsi error recov=
-ery
-Apr  7 18:39:20 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149280)
-Apr  7 18:39:23 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149280)
-Apr  7 18:39:23 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007bfc01c0)
-Apr  7 18:39:27 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007bfc01c0)
-Apr  7 18:39:32 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149600)
-Apr  7 18:39:34 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149600)
-Apr  7 18:39:39 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149b40)
-Apr  7 18:39:41 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149b40)
-Apr  7 18:39:41 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007cf4a980)
-Apr  7 18:39:46 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007cf4a980)
-Apr  7 18:39:50 monosan kernel: mptscsih: ioc0: attempting bus reset! (=
-sc=3Dffff81007c149280)
-Apr  7 18:39:53 monosan kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=3D=
-ffff81007c149280)
-Apr  7 18:40:03 monosan kernel: sd 6:0:6:0: Bernd, check this: scmd ret=
-ry 1/9
-Apr  7 18:40:03 monosan kernel: sd 6:0:6:0: Activating scsi error recov=
-ery
-Apr  7 18:40:03 monosan kernel: sd 6:0:7:0: Activating scsi error recov=
-ery
-Apr  7 18:40:03 monosan kernel: sd 6:0:8:0: Activating scsi error recov=
-ery
-Apr  7 18:40:03 monosan kernel: sd 6:0:9:0: Activating scsi error recov=
-ery
-Apr  7 18:40:03 monosan kernel: sd 6:0:10:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: sd 6:0:11:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: sd 6:0:12:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: sd 6:0:13:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: sd 6:0:14:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: sd 6:0:15:0: Activating scsi error reco=
-very
-Apr  7 18:40:03 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c1490c0)
-Apr  7 18:40:05 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c1490c0)
-Apr  7 18:40:06 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007ccedd40)
-Apr  7 18:40:09 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007ccedd40)
-Apr  7 18:40:09 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149440)
-Apr  7 18:40:10 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149440)
-Apr  7 18:40:10 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149d00)
-Apr  7 18:40:15 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149d00)
-Apr  7 18:40:19 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007bfc0a80)
-Apr  7 18:40:22 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007bfc0a80)
-Apr  7 18:40:26 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8100379a2400)
-Apr  7 18:40:28 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8100379a2400)
-Apr  7 18:40:28 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8100379a2cc0)
-Apr  7 18:40:33 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8100379a2cc0)
-Apr  7 18:40:38 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8100379a2240)
-Apr  7 18:40:40 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8100379a2240)
-Apr  7 18:40:41 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8100379a2080)
-Apr  7 18:40:44 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8100379a2080)
-Apr  7 18:40:44 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8100379a2780)
-Apr  7 18:40:45 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8100379a2780)
-Apr  7 18:40:45 monosan kernel: mptscsih: ioc0: attempting bus reset! (=
-sc=3Dffff81007ccedd40)
-Apr  7 18:40:50 monosan kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=3D=
-ffff81007ccedd40)
-Apr  7 18:41:00 monosan kernel: sd 6:0:6:0: Bernd, check this: scmd ret=
-ry 1/9
-Apr  7 18:41:00 monosan kernel: sd 6:0:6:0: Activating scsi error recov=
-ery
-Apr  7 18:41:00 monosan kernel: sd 6:0:9:0: Activating scsi error recov=
-ery
-Apr  7 18:41:00 monosan kernel: sd 6:0:10:0: Activating scsi error reco=
-very
-Apr  7 18:41:00 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c1490c0)
-Apr  7 18:41:02 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c1490c0)
-Apr  7 18:41:07 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff81007c149d00)
-Apr  7 18:41:09 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff81007c149d00)
-Apr  7 18:41:09 monosan kernel: mptscsih: ioc0: attempting target reset=
-! (sc=3Dffff8101199afcc0)
-Apr  7 18:41:14 monosan kernel: mptscsih: ioc0: target reset: SUCCESS (=
-sc=3Dffff8101199afcc0)
-Apr  7 18:41:18 monosan kernel: mptscsih: ioc0: attempting bus reset! (=
-sc=3Dffff81007c149d00)
-Apr  7 18:41:21 monosan kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=3D=
-ffff81007c149d00)
-Apr  7 18:41:31 monosan kernel: sd 6:0:7:0: Bernd, check this: scmd ret=
-ry 1/9
-Apr  7 18:41:31 monosan kernel: scsi 6:0:16:0: Device offlined - too ma=
-ny errors (6)=20
-Apr  7 18:41:31 monosan kernel: scsi 6:0:33:0: Device offlined - too ma=
-ny errors (6)=20
 
-If there is something important missing just tell me.
-This time I get some errors on the disc enclosure too:
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-cli> link=20
-Link Status:
-     Port  Type  Rate  Init  Dev   Link  PRdy
-P 0  D01   SATA  3.0G   OK   End   ----  Rdy  =20
-P 1  D02   SATA  3.0G   OK   End   ----  Rdy  =20
-P 2  D03   SATA  3.0G   OK   End   ----  Rdy  =20
-P 3  D04   SATA  3.0G   OK   End   ----  Rdy  =20
-P 4  D05   SATA  3.0G   OK   End   ----  Rdy  =20
-P 5  D06   SATA  3.0G   OK   End   ----  Rdy  =20
-P 6  D07   SATA  3.0G   OK   End   ----  Rdy  =20
-P 7  D08   SATA  3.0G   OK   End   ----  Rdy  =20
-P 8  D09   SATA  3.0G   OK   End   ----  Rdy  =20
-P 9  D10   SATA  3.0G   OK   End   ----  Rdy  =20
-P10  D11   SATA  3.0G   OK   End   ----  Rdy  =20
-P11  D12   SATA  3.0G   OK   End   ----  Rdy  =20
-P12  D13   SATA  3.0G   OK   End   ----  Rdy  =20
-P13  D14   SATA  3.0G   OK   End   ----  Rdy  =20
-P14  D15   SATA  3.0G   OK   End   ----  Rdy  =20
-P15  D16   SATA  3.0G   OK   End   ----  Rdy  =20
-P16  CN1   ----  ----  ----  ----  ----  ----
-P17  CN1   ----  ----  ----  ----  ----  ----
-P18  CN1   ----  ----  ----  ----  ----  ----
-P19  CN1   ----  ----  ----  ----  ----  ----
-P20  CN2   SAS   3.0G   OK   End   ----  Rdy  =20
-P21  CN2   SAS   3.0G   OK   End   ----  Rdy  =20
-P22  CN2   SAS   3.0G   OK   End   ----  Rdy  =20
-P23  CN2   SAS   3.0G   OK   End   ----  Rdy  =20
-
-Port:Port Id        Type:SAS or SATA    Rate:Rate 1.5G/3G=20
-Init:Init Passed    Dev :Device Type    Link:Link Connected
-PRdy:Phy Ready
-
-Link Counter:
-        InDW       DsEr       DwLo       PhRe       CoVi    PhCh
-P 0  ---------- ---------- ---------- ---------- ---------- 0x13
-P 1  0x00000037 0x00000037 0x00000004 ---------- 0x00000033 0x41
-P 2  ---------- ---------- ---------- ---------- ---------- 0x14
-P 3  ---------- ---------- ---------- ---------- ---------- 0x16
-P 4  0x00000029 0x00000029 0x00000003 ---------- 0x0000001B 0x37
-P 5  ---------- ---------- ---------- ---------- ---------- 0x15
-P 6  0x00000035 0x00000034 0x00000004 ---------- 0x00000030 0x42
-P 7  0x0000000E 0x0000000D 0x00000001 ---------- 0x00000008 0x22
-P 8  0x0000000E 0x0000000E 0x00000001 ---------- 0x0000000C 0x1F
-P 9  0x00000038 0x00000037 0x00000004 ---------- 0x00000029 0x48
-P10  0x00000039 0x00000039 0x00000004 ---------- 0x0000002F 0x42
-P11  0x0000000C 0x0000000B 0x00000001 ---------- 0x00000006 0x22
-P12  0x00000037 0x00000037 0x00000004 ---------- 0x00000026 0x43
-P13  0x00000029 0x00000029 0x00000003 ---------- 0x00000019 0x43
-P14  0x0000000E 0x0000000E 0x00000001 ---------- 0x0000000A 0x20
-P15  0x0000000E 0x0000000E 0x00000001 ---------- 0x00000009 0x2B
-P16  ---------- ---------- ---------- ---------- ---------- ----
-P17  ---------- ---------- ---------- ---------- ---------- ----
-P18  ---------- ---------- ---------- ---------- ---------- ----
-P19  ---------- ---------- ---------- ---------- ---------- ----
-P20  0x000000F8 0x000000F7 0x00000012 ---------- 0x000000D8 0xA5
-P21  0x000000FD 0x000000FB 0x00000012 ---------- 0x000000C2 0xA5
-P22  0x000000F7 0x000000F3 0x00000012 ---------- 0x000000BB 0xA5
-P23  0x000000F6 0x000000F3 0x00000012 ---------- 0x000000BC 0xA5
-
-InDW:Invalid Dword Count      DsEr:Disparity Err Count  DwLo:Dword Sync=
- Loss Count
-PhRe:Phy Reset Problem Count  CoVi:Code Violations Cnt  PhCh:Phy Change=
- Count
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-Last time this hasn't happened.
-
-
-Thanks
-Lars
-
---=20
-                            Informationstechnologie
-Berlin-Brandenburgische Akademie der Wissenschaften
-J=C3=A4gerstrasse 22-23                     10117 Berlin
-Tel.: +49 30 20370-352           http://www.bbaw.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
