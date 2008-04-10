@@ -1,41 +1,103 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] tgt: use KMEM_CACHE macro
-Date: Thu, 10 Apr 2008 23:48:14 +0900
-Message-ID: <1207838894-24527-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: + aacraid-fix-unchecked-down_interruptible.patch added to -mm
+	tree
+Date: Thu, 10 Apr 2008 15:54:42 -0500
+Message-ID: <1207860882.4915.35.camel@localhost.localdomain>
+References: <200804102037.m3AKb2g4016314@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:46471 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756747AbYDJPIS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2008 11:08:18 -0400
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39091 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754448AbYDJUyr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2008 16:54:47 -0400
+In-Reply-To: <200804102037.m3AKb2g4016314@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: akpm@linux-foundation.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-scsi <linux-scsi@vger.kernel.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 
-This uses new KMEM_CACHE() macro instead of kmem_cache_create directly
-to simplify slab cache creation.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/scsi_tgt_lib.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+On Thu, 2008-04-10 at 13:26 -0700, akpm@linux-foundation.org wrote:
+> The patch titled
+>      aacraid: fix unchecked down_interruptible()
+> has been added to the -mm tree.  Its filename is
+>      aacraid-fix-unchecked-down_interruptible.patch
+> 
+> Before you just go and hit "reply", please:
+>    a) Consider who else should be cc'ed
+>    b) Prefer to cc a suitable mailing list as well
+>    c) Ideally: find the original patch on the mailing list and do a
+>       reply-to-all to that, adding suitable additional cc's
+> 
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> 
+> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+> out what to do about this
+> 
+> The current -mm tree may be found at http://userweb.kernel.org/~akpm/mmotm/
+> 
+> ------------------------------------------------------
+> Subject: aacraid: fix unchecked down_interruptible()
+> From: Andrew Morton <akpm@linux-foundation.org>
+> 
+> drivers/scsi/aacraid/commsup.c: In function 'aac_fib_send':
+> drivers/scsi/aacraid/commsup.c:519: warning: ignoring return value of 'down_interruptible', declared with attribute warn_unused_result
+> 
+> This is a bug.  Code *must* check whether or not down_interruptible()
+> succeeded.  This driver has lost track of whether or not the lock was taken.
+> 
+> (I thought I already fixed this once?)
 
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index a0f308b..ee8496a 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -621,9 +621,7 @@ static int __init scsi_tgt_init(void)
- {
- 	int err;
- 
--	scsi_tgt_cmd_cache = kmem_cache_create("scsi_tgt_cmd",
--					       sizeof(struct scsi_tgt_cmd),
--					       0, 0, NULL);
-+	scsi_tgt_cmd_cache =  KMEM_CACHE(scsi_tgt_cmd, 0);
- 	if (!scsi_tgt_cmd_cache)
- 		return -ENOMEM;
- 
--- 
-1.5.4.2
+You added the patch once before, it seems to have dropped out of the -mm
+tree, but it was never sent upstream.
+
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+
+I researched this with Adaptec.  This is what they say:
+
+> We had to use down_interruptible because if the Firmware locked up,  
+> unresponsive or retiscent, and the system was being shut down, it  
+> would never complete the shutdown. The user task is 'in driver' and  
+> can not be shut down.
+> 
+> The loss of this one fib because a user is interrupting the
+> management  
+> applications is a small price to pay. This FIB remains in the open  
+> queue and needs to since the Adapter has not completed it...
+
+So the point about this is that if you ever hit the interrupt, you lose
+a FIB, but on the other hand, there's nothing the driver can actually do
+to recover it, hence it wouldn't behave differently regardless of the
+return value of down_interruptible().  On the other hand, if you change
+the down_interruptible() to down() we lock up the system when we hit the
+wait forever condition.  I'm sympathetic, even though I agree we don't
+want this bad programming example persisting for someone to cut and
+paste, so I think we have to keep the interruptible, but I'm open to
+other ways of making the warning go away.
+
+> ---
+> 
+>  drivers/scsi/aacraid/commsup.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff -puN drivers/scsi/aacraid/commsup.c~aacraid-fix-unchecked-down_interruptible drivers/scsi/aacraid/commsup.c
+> --- a/drivers/scsi/aacraid/commsup.c~aacraid-fix-unchecked-down_interruptible
+> +++ a/drivers/scsi/aacraid/commsup.c
+> @@ -516,7 +516,7 @@ int aac_fib_send(u16 command, struct fib
+>  				udelay(5);
+>  			}
+>  		} else
+> -			(void)down_interruptible(&fibptr->event_wait);
+> +			down(&fibptr->event_wait);
+>  		spin_lock_irqsave(&fibptr->event_lock, flags);
+>  		if (fibptr->done == 0) {
+>  			fibptr->done = 2; /* Tell interrupt we aborted */
+
+James
+
 
