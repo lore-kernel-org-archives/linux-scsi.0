@@ -1,41 +1,151 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 0/3] block: adds padding support to blk_rq_map_user_iov
-Date: Thu, 10 Apr 2008 23:17:10 +0900
-Message-ID: <1207837033-23835-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/3] block: move the padding adjustment to blk_rq_map_sg
+Date: Thu, 10 Apr 2008 23:17:13 +0900
+Message-ID: <1207837033-23835-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1207837033-23835-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1207837033-23835-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1207837033-23835-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:41208 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:41223 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754631AbYDJOT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2008 10:19:58 -0400
+	id S1755434AbYDJOUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2008 10:20:04 -0400
+In-Reply-To: <1207837033-23835-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Tejun Heo <htejun@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
 
-As discussed [*1], blk_rq_map_user_iov path is broken regarding
-padding at the moment. In 2.6.24, libata did padding but libata's
-padding code was removed and now libata expects the block layer to do
-that.
+blk_rq_map_user adjusts bi_size of the last bio. It breaks the rule
+that req->data_len (the true data length) is equal to sum(bio). It
+broke the scsi command completion code.
 
-blk_rq_map_user does padding but blk_rq_map_user_iov doesn't so
-blk_rq_map_user_iov doesn't work in case libata needs padding (so far
-nobody has complained, maybe nobody uses blk_rq_map_user_iov
-interface).
+commit e97a294ef6938512b655b1abf17656cf2b26f709 was introduced to fix
+the above issue. However, the partial completion code doesn't work
+with it. The commit is also a layer violation (scsi mid-layer should
+not know about the block layer's padding).
 
-This patchset adds padding support to blk_rq_map_user_iov. I converted
-convert bio_copy_user to bio_copy_user_iov, which uses a temporary
-kernel buffers.  blk_rq_map_user_iov uses bio_copy_user_iov when a low
-level driver needs padding or a buffer in sg_iovec isn't aligned. We
-can safely do padding in blk_rq_map_sg.
+This patch moves the padding adjustment to blk_rq_map_sg (suggested by
+James). The padding works like the drain buffer. This patch breaks the
+rule that req->data_len is equal to sum(sg), however, the drain buffer
+already broke it. So this patch just restores the rule that
+req->data_len is equal to sub(bio) without breaking anything new.
 
-In the long run, I want to integrate several mapping APIs for PC
-commands (and new API should be useful for sg/st/osst) but I need more
-time to finish that work.
+Now when a low level driver needs padding, blk_rq_map_user and
+blk_rq_map_user_iov guarantee there's enough room for padding.
+blk_rq_map_sg can safely extend the last entry of a scatter list.
 
-This is against the latest Linus tree. Can we merge this after 2.6.25?
+blk_rq_map_sg must extend the last entry of a scatter list only for a
+request that got through bio_copy_user_iov. This patches introduces
+new REQ_COPY_USER flag.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/blk-map.c        |   24 +++++-------------------
+ block/blk-merge.c      |    9 +++++++++
+ drivers/scsi/scsi.c    |    2 +-
+ include/linux/blkdev.h |    2 ++
+ 4 files changed, 17 insertions(+), 20 deletions(-)
 
-[*1]
-http://marc.info/?t=120716961000004&r=1&w=2
-
+diff --git a/block/blk-map.c b/block/blk-map.c
+index ab43533..3c942bd 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -141,25 +141,8 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 		ubuf += ret;
+ 	}
+ 
+-	/*
+-	 * __blk_rq_map_user() copies the buffers if starting address
+-	 * or length isn't aligned to dma_pad_mask.  As the copied
+-	 * buffer is always page aligned, we know that there's enough
+-	 * room for padding.  Extend the last bio and update
+-	 * rq->data_len accordingly.
+-	 *
+-	 * On unmap, bio_uncopy_user() will use unmodified
+-	 * bio_map_data pointed to by bio->bi_private.
+-	 */
+-	if (len & q->dma_pad_mask) {
+-		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
+-		struct bio *tail = rq->biotail;
+-
+-		tail->bi_io_vec[tail->bi_vcnt - 1].bv_len += pad_len;
+-		tail->bi_size += pad_len;
+-
+-		rq->extra_len += pad_len;
+-	}
++	if (!bio_flagged(bio, BIO_USER_MAPPED))
++		rq->cmd_flags |= REQ_COPY_USER;
+ 
+ 	rq->buffer = rq->data = NULL;
+ 	return 0;
+@@ -224,6 +207,9 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 		return -EINVAL;
+ 	}
+ 
++	if (!bio_flagged(bio, BIO_USER_MAPPED))
++		rq->cmd_flags |= REQ_COPY_USER;
++
+ 	bio_get(bio);
+ 	blk_rq_bio_prep(q, rq, bio);
+ 	rq->buffer = rq->data = NULL;
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 0f58616..b5c5c4a 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -220,6 +220,15 @@ new_segment:
+ 		bvprv = bvec;
+ 	} /* segments in rq */
+ 
++
++	if (unlikely(rq->cmd_flags & REQ_COPY_USER) &&
++	    (rq->data_len & q->dma_pad_mask)) {
++		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
++
++		sg->length += pad_len;
++		rq->extra_len += pad_len;
++	}
++
+ 	if (q->dma_drain_size && q->dma_drain_needed(rq)) {
+ 		if (rq->cmd_flags & REQ_RW)
+ 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index c78b836..7a85cb3 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -759,7 +759,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"Notifying upper driver of completion "
+ 				"(result %x)\n", cmd->result));
+ 
+-	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
++	good_bytes = scsi_bufflen(cmd);
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6f79d40..b3a58ad 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -112,6 +112,7 @@ enum rq_flag_bits {
+ 	__REQ_RW_SYNC,		/* request is sync (O_DIRECT) */
+ 	__REQ_ALLOCED,		/* request came from our alloc pool */
+ 	__REQ_RW_META,		/* metadata io request */
++	__REQ_COPY_USER,	/* contains copies of user pages */
+ 	__REQ_NR_BITS,		/* stops here */
+ };
+ 
+@@ -133,6 +134,7 @@ enum rq_flag_bits {
+ #define REQ_RW_SYNC	(1 << __REQ_RW_SYNC)
+ #define REQ_ALLOCED	(1 << __REQ_ALLOCED)
+ #define REQ_RW_META	(1 << __REQ_RW_META)
++#define REQ_COPY_USER	(1 << __REQ_COPY_USER)
+ 
+ #define BLK_MAX_CDB	16
+ 
+-- 
+1.5.4.2
 
