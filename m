@@ -1,25 +1,23 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH 0/3] block: adds padding support to blk_rq_map_user_iov
-Date: Fri, 11 Apr 2008 14:43:27 +0900
-Message-ID: <47FEFA7F.8010900@gmail.com>
+Date: Fri, 11 Apr 2008 12:55:18 +0200
+Message-ID: <20080411105517.GR12774@kernel.dk>
 References: <1207837033-23835-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.233]:25457 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045AbYDKFne (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2008 01:43:34 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so371426qbe.15
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Apr 2008 22:43:34 -0700 (PDT)
+Received: from brick.kernel.dk ([87.55.233.238]:12801 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756803AbYDKKzX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2008 06:55:23 -0400
+Content-Disposition: inline
 In-Reply-To: <1207837033-23835-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-FUJITA Tomonori wrote:
+On Thu, Apr 10 2008, FUJITA Tomonori wrote:
 > As discussed [*1], blk_rq_map_user_iov path is broken regarding
 > padding at the moment. In 2.6.24, libata did padding but libata's
 > padding code was removed and now libata expects the block layer to do
@@ -42,9 +40,8 @@ FUJITA Tomonori wrote:
 > 
 > This is against the latest Linus tree. Can we merge this after 2.6.25?
 
-Haven't really reviewed line by line but generally looks good to me.
-
-Thanks.
+Thanks Tomo, this looks good to me know. I'll queue it up.
 
 -- 
-tejun
+Jens Axboe
+
