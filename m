@@ -1,54 +1,73 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH 1/1] AIC94XX: Ports and Phys memory space fixed.
-Date: Fri, 11 Apr 2008 10:16:27 -0700
-Message-ID: <20080411171627.GB7112@tree.beaverton.ibm.com>
-References: <FE3F06125A99254E8D92161AA4569C6F02BE7E62@sc-exch02.marvell.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] aic7xxx: fix MMIO for PPC 44x platforms
+Date: Fri, 11 Apr 2008 17:41:09 -0400
+Message-ID: <1207950070.5066.44.camel@localhost.localdomain>
+References: <200804092309.32130.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:33851 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760407AbYDKRQw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2008 13:16:52 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m3BHGpMP025642
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2008 13:16:51 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3BHGk9X082276
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2008 11:16:51 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3BHGjbc005141
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2008 11:16:45 -0600
-Content-Disposition: inline
-In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F02BE7E62@sc-exch02.marvell.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59534 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755177AbYDKVlP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2008 17:41:15 -0400
+In-Reply-To: <200804092309.32130.sshtylyov@ru.mvista.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Chu <jasonchu@marvell.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Michael Wang <qswang@marvell.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-On Thu, Apr 10, 2008 at 08:44:26PM -0700, Jason Chu wrote:
-> No need more spaces for sas_phys and sas_port.
+On Wed, 2008-04-09 at 23:09 +0400, Sergei Shtylyov wrote:
+> The driver stores the the PCI resource address into 'u_long' variable before
+> calling ioremap_nocache() on it. This warrants kernel oops when the registers
+> are accessed on PPC 44x platforms which (being 32-bit) have PCI memory space
+> mapped beyond 4 GB.
 > 
-> Signed-off-by:: Ying Chu <jasonchu@marvell.com>
-> ---
-> driver/scsi/aic94xx/aic94xx_init.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> The arch/ppc/ kernel has a fixup in ioremap() that creates an illusion of the
+> PCI I/O and memory resources are mapped below 4 GB, but arch/powerpc/ code got
+> rid of this trick, having instead CONFIG_RESOURCES_64BIT enabled.
 > 
-> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c
-> b/drivers/scsi/aic94xx/aic94xx_init.c
-> index 88d1e73..0400bd2 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_init.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
-> @@ -689,9 +689,9 @@ static int asd_register_sas_ha(struct as
->  {
->  	int i;
->  	struct asd_sas_phy   **sas_phys =
-> -		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy),
-> GFP_KERNEL);
-> +		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy *),
-> GFP_KERNEL);
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Given that sas_phys is a pointer to pointers, I don't think that taking
-the pointer out of the sizeof is the proper thing to do.
+Well, all I can say about the architecture is: yuk!
 
---D
+However, if this is truly a problem, you only fixed half of it:
+aic79xx_osm.h and aic79xx_osm_pci.c have the same problems.
+
+Also, your fixes don't look complete.  This statement in
+ahc_pci_map_registers(struct ahc_softc *ahc)
+
+			ahc->bsh.ioport = base;
+
+Should be warning because bsh.ioport is still u_long and base should be
+u64 (so a truncation warning).  I think the correct fix (unless you also
+have a ludicrous port space?) is simply to cast to (u_long).
+
+
+> -               printf("aic7xxx: PCI%d:%d:%d MEM region 0x%lx "
+> +               printf("aic7xxx: PCI%d:%d:%d MEM region 0x%llx "
+>                        "unavailable. Cannot memory map device.\n",
+>                        ahc_get_pci_bus(ahc->dev_softc),
+>                        ahc_get_pci_slot(ahc->dev_softc),
+>                        ahc_get_pci_function(ahc->dev_softc),
+> -                      base);
+> +                      (uint64_t)base);
+
+This isn't quite right: uint64_t is unsigned long on 64 bit platforms,
+so it won't match %llx (you need it to be unsigned long long
+explicitly).
+
+> @@ -398,7 +398,7 @@ ahc_pci_map_registers(struct ahc_softc *
+>                                ahc_get_pci_bus(ahc->dev_softc),
+>                                ahc_get_pci_slot(ahc->dev_softc),
+>                                ahc_get_pci_function(ahc->dev_softc),
+> -                              base);
+> +                              (u_long)base);
+
+This also isn't right ... you need to cast it to unsigned long long and
+use %llx in the printf.
+
+James
+
+
