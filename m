@@ -1,84 +1,105 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/3 ver2] block layer extended-cdb support
-Date: Sat, 12 Apr 2008 14:52:00 +0900
-Message-ID: <20080412145152C.tomof@acm.org>
-References: <47F522A6.3080806@panasas.com>
-	<20080404114614.GJ29686@kernel.dk>
-	<47F89948.9060503@panasas.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] aic7xxx: fix MMIO for PPC 44x platforms
+Date: Sat, 12 Apr 2008 18:52:32 +0400
+Message-ID: <4800CCB0.7010401@ru.mvista.com>
+References: <200804092309.32130.sshtylyov@ru.mvista.com> <1207950070.5066.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:51798 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753165AbYDLFwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Apr 2008 01:52:41 -0400
-In-Reply-To: <47F89948.9060503@panasas.com>
+Received: from h155.mvista.com ([63.81.120.155]:43886 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752566AbYDLOxP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Apr 2008 10:53:15 -0400
+In-Reply-To: <1207950070.5066.44.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-On Sun, 06 Apr 2008 12:35:04 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+Hello.
 
-> On Fri, Apr 04 2008 at 14:46 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Thu, Apr 03 2008, Boaz Harrosh wrote:
-> >>  static void req_bio_endio(struct request *rq, struct bio *bio,
-> >> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> >> index 6f79d40..2f87c9d 100644
-> >> --- a/include/linux/blkdev.h
-> >> +++ b/include/linux/blkdev.h
-> >> @@ -213,8 +213,15 @@ struct request {
-> >>  	/*
-> >>  	 * when request is used as a packet command carrier
-> >>  	 */
-> >> -	unsigned int cmd_len;
-> >> -	unsigned char cmd[BLK_MAX_CDB];
-> >> +	unsigned short cmd_len;
-> >> +	unsigned short ext_cdb_len;  /* length of ext_cdb buffer */
-> >> +	union {
-> >> +		unsigned char cmd[BLK_MAX_CDB];
-> >> +		unsigned char *ext_cdb;/* an optional extended cdb.
-> >> +	                                   * points to a user buffer that must
-> >> +	                                   * be valid until end of request
-> >> +	                                   */
-> >> +	};
-> > 
-> > Why not just something ala
-> > 
-> >         unsigned short cmd_len;
-> >         unsigned char __cmd[BLK_MAX_CDB];
-> >         unsigned char *cmd;
-> > 
-> > and then have rq_init() do
-> > 
-> >         rq->cmd = rq->__cmd;
-> > 
-> > and just have a function for setting up a larger ->cmd and adjusting
-> > ->cmd_len in the process?
-> > 
-> > Then rq_set_cdb() would be
-> > 
-> > static inline void rq_set_cdb(struct request *rq, u8 *cdb, short cdb_len)
-> > {
-> >         rq->cmd = cdb;
-> >         rq->cmd_len = cdb_len;
-> > }
-> > 
-> > and rq_get_cdb() plus rq_get_cdb_len() could just go away.
-> > 
-> 
-> Because this way it is dangerous if large commands are issued to legacy
-> drivers. In scsi-land we have .cmd_len at host template that will govern if
-> we are allow to issue larger commands to the driver. In block devices we do
-> not have such a facility, and the danger is if such commands are issued through
-> bsg or other means, even by malicious code. What you say is the ideal and it
-> is what I've done for scsi, but for block devices we can not do that yet.
-> With the way I did it here, Legacy drivers will see zero length command and
-> will do the right thing, from what I've seen.
+James Bottomley wrote:
 
-What are exactly block devices? ub and ide?
+>>The driver stores the the PCI resource address into 'u_long' variable before
+>>calling ioremap_nocache() on it. This warrants kernel oops when the registers
+>>are accessed on PPC 44x platforms which (being 32-bit) have PCI memory space
+>>mapped beyond 4 GB.
 
-bsg are created only for scsi devices (and scsi objects like sas host)
-now. Are there other means to send commands except for ioctl?
+>>The arch/ppc/ kernel has a fixup in ioremap() that creates an illusion of the
+>>PCI I/O and memory resources are mapped below 4 GB, but arch/powerpc/ code got
+
+    Not I/O, just memory, of course. :-]
+    Although PCI I/O space is mapped beyond 4 GB...
+
+>>rid of this trick, having instead CONFIG_RESOURCES_64BIT enabled.
+
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Well, all I can say about the architecture is: yuk!
+
+    It's not alone, there's also Alchemy MIPS SOCs -- arch/mips/ still uses 
+the ioremap() trick for their PCI space.
+
+> However, if this is truly a problem, you only fixed half of it:
+
+    A nice machine check occurs in the siimage driver on 44x due to the same 
+issue.
+
+> aic79xx_osm.h and aic79xx_osm_pci.c have the same problems.
+
+    Yes, I can fix it in a separate patch.
+
+> Also, your fixes don't look complete.  This statement in
+> ahc_pci_map_registers(struct ahc_softc *ahc)
+
+> 			ahc->bsh.ioport = base;
+
+> Should be warning because bsh.ioport is still u_long and base should be
+> u64 (so a truncation warning).
+
+    No warnings, just silent truncation (as it was before the patch when the 
+64-bit 'resource_size_t' result of pci_resource_start() was put into 'u_long' 
+variable).  And since when C compilers warn about truncations due to implicit 
+type converions? :-O
+
+> I think the correct fix (unless you also
+> have a ludicrous port space?) is simply to cast to (u_long).
+
+    There's nothing to fix here I think. But if you insist I may add an 
+explicit type cast...
+
+>>-               printf("aic7xxx: PCI%d:%d:%d MEM region 0x%lx "
+>>+               printf("aic7xxx: PCI%d:%d:%d MEM region 0x%llx "
+>>                       "unavailable. Cannot memory map device.\n",
+>>                       ahc_get_pci_bus(ahc->dev_softc),
+>>                       ahc_get_pci_slot(ahc->dev_softc),
+>>                       ahc_get_pci_function(ahc->dev_softc),
+>>-                      base);
+>>+                      (uint64_t)base);
+
+> This isn't quite right: uint64_t is unsigned long on 64 bit platforms,
+
+    However, 'unsigned long long' and 'unsigned long' are both 64-bit there.
+
+> so it won't match %llx (you need it to be unsigned long long
+> explicitly).
+
+    OK.
+
+>>@@ -398,7 +398,7 @@ ahc_pci_map_registers(struct ahc_softc *
+>>                               ahc_get_pci_bus(ahc->dev_softc),
+>>                               ahc_get_pci_slot(ahc->dev_softc),
+>>                               ahc_get_pci_function(ahc->dev_softc),
+>>-                              base);
+>>+                              (u_long)base);
+
+> This also isn't right ... you need to cast it to unsigned long long and
+> use %llx in the printf.
+
+    I can do that if you insist but truncation to u_long is safe for I/O ports...
+
+> James
+
+MBR, Sergei
+
