@@ -1,66 +1,93 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 7644] Race: host lock is not acquired before calling ql_icmd
-Date: Sat, 12 Apr 2008 19:55:40 -0700 (PDT)
-Message-ID: <20080413025540.8DA36108064@picon.linux-foundation.org>
-References: <bug-7644-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3 ver2] block layer extended-cdb support
+Date: Sun, 13 Apr 2008 12:13:18 +0300
+Message-ID: <4801CEAE.6030309@panasas.com>
+References: <47F522A6.3080806@panasas.com>	<20080404114614.GJ29686@kernel.dk>	<47F89948.9060503@panasas.com> <20080412145152C.tomof@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50477 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752556AbYDMCzm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Apr 2008 22:55:42 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3D2tefh011282
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Apr 2008 19:55:41 -0700
-In-Reply-To: <bug-7644-11613@http.bugzilla.kernel.org/>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:46164 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380AbYDMJOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2008 05:14:37 -0400
+In-Reply-To: <20080412145152C.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7644
+On Sat, Apr 12 2008 at 8:52 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Sun, 06 Apr 2008 12:35:04 +0300
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>> On Fri, Apr 04 2008 at 14:46 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
+>>> On Thu, Apr 03 2008, Boaz Harrosh wrote:
+>>>>  static void req_bio_endio(struct request *rq, struct bio *bio,
+>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>>>> index 6f79d40..2f87c9d 100644
+>>>> --- a/include/linux/blkdev.h
+>>>> +++ b/include/linux/blkdev.h
+>>>> @@ -213,8 +213,15 @@ struct request {
+>>>>  	/*
+>>>>  	 * when request is used as a packet command carrier
+>>>>  	 */
+>>>> -	unsigned int cmd_len;
+>>>> -	unsigned char cmd[BLK_MAX_CDB];
+>>>> +	unsigned short cmd_len;
+>>>> +	unsigned short ext_cdb_len;  /* length of ext_cdb buffer */
+>>>> +	union {
+>>>> +		unsigned char cmd[BLK_MAX_CDB];
+>>>> +		unsigned char *ext_cdb;/* an optional extended cdb.
+>>>> +	                                   * points to a user buffer that must
+>>>> +	                                   * be valid until end of request
+>>>> +	                                   */
+>>>> +	};
+>>> Why not just something ala
+>>>
+>>>         unsigned short cmd_len;
+>>>         unsigned char __cmd[BLK_MAX_CDB];
+>>>         unsigned char *cmd;
+>>>
+>>> and then have rq_init() do
+>>>
+>>>         rq->cmd = rq->__cmd;
+>>>
+>>> and just have a function for setting up a larger ->cmd and adjusting
+>>> ->cmd_len in the process?
+>>>
+>>> Then rq_set_cdb() would be
+>>>
+>>> static inline void rq_set_cdb(struct request *rq, u8 *cdb, short cdb_len)
+>>> {
+>>>         rq->cmd = cdb;
+>>>         rq->cmd_len = cdb_len;
+>>> }
+>>>
+>>> and rq_get_cdb() plus rq_get_cdb_len() could just go away.
+>>>
+>> Because this way it is dangerous if large commands are issued to legacy
+>> drivers. In scsi-land we have .cmd_len at host template that will govern if
+>> we are allow to issue larger commands to the driver. In block devices we do
+>> not have such a facility, and the danger is if such commands are issued through
+>> bsg or other means, even by malicious code. What you say is the ideal and it
+>> is what I've done for scsi, but for block devices we can not do that yet.
+>> With the way I did it here, Legacy drivers will see zero length command and
+>> will do the right thing, from what I've seen.
+> 
+> What are exactly block devices? ub and ide?
+> 
+> bsg are created only for scsi devices (and scsi objects like sas host)
+> now. Are there other means to send commands except for ioctl?
 
+I'm not 100% sure either way, so I would like to be safe. Any way, there
+is the size issue, this way we add *nothing* at all, so it looks preferable.
+The final outcome will be the same both ways.
 
-protasnb@gmail.com changed:
+I would like if you reconsider the ugliness issue. I admit that at first I
+personally disliked it, but now that I look at it, I think it is cleaner,
+coding style, this way. Because the union points out the exclusiveness of
+the two systems, the striate way give the notion of two separate systems.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |protasnb@gmail.com
-             Status|NEW                         |REJECTED
-         Resolution|                            |INVALID
+Boaz
 
-
-
-
-------- Comment #1 from protasnb@gmail.com  2008-04-12 19:55 -------
-We do hold the lock in generic scsi code when call queuecommand.
-in scsi_dispatch_cmd:
-
-...
-        spin_lock_irqsave(host->host_lock, flags);
-        scsi_cmd_get_serial(host, cmd);
-
-        if (unlikely(host->shost_state == SHOST_DEL)) {
-                cmd->result = (DID_NO_CONNECT << 16);
-                scsi_done(cmd);
-        } else {
-                rtn = host->hostt->queuecommand(cmd, scsi_done);
-        }
-        spin_unlock_irqrestore(host->host_lock, flags);
-...
-
-scsi_send)eh_command:
-
-...
-        spin_lock_irqsave(shost->host_lock, flags);
-        scsi_log_send(scmd);
-        shost->hostt->queuecommand(scmd, scsi_eh_done);
-        spin_unlock_irqrestore(shost->host_lock, flags);
-...
-
-So it looks like we are good.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
