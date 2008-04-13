@@ -1,40 +1,40 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/3 ver2] block layer extended-cdb support
-Date: Sun, 13 Apr 2008 09:07:55 -0500
-Message-ID: <1208095676.4707.6.camel@localhost.localdomain>
-References: <47F522A6.3080806@panasas.com>
-	 <20080404114614.GJ29686@kernel.dk> <47F89948.9060503@panasas.com>
-	 <20080412145152C.tomof@acm.org>
+Subject: Re: mptsas problem
+Date: Sun, 13 Apr 2008 09:31:11 -0500
+Message-ID: <1208097071.4707.21.camel@localhost.localdomain>
+References: <47F95F5C.500@sauce.co.nz>  <20080407010453.GA1952@animx.eu.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37803 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49888 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757447AbYDMOIF (ORCPT
+	by vger.kernel.org with ESMTP id S1751441AbYDMObQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Apr 2008 10:08:05 -0400
-In-Reply-To: <20080412145152C.tomof@acm.org>
+	Sun, 13 Apr 2008 10:31:16 -0400
+In-Reply-To: <20080407010453.GA1952@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, jens.axboe@oracle.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
 
-On Sat, 2008-04-12 at 14:52 +0900, FUJITA Tomonori wrote:
-> bsg are created only for scsi devices (and scsi objects like sas host)
-> now. Are there other means to send commands except for ioctl?
+On Sun, 2008-04-06 at 21:04 -0400, Wakko Warner wrote:
+> > From the message you posted, it looks as though there may be a problem 
+> > with sda.
+> 
+> It's working fine with /sys/block/sd[abc]/device/queue_depth = 1 (on boot up,
+> as stated before, it's 64)
+> 
+> I performed the same copy again with queue_depth=1 after the array rebuilt.
+> It worked fine then.  No errors.
 
-Right now they are ... but the design was to allow for arbitrary packet
-commands (like the frame in/frame out type that SMP needs), so the
-anticipation is that it will be usable by arbitrary packet commands for
-any block conforming device, examples of which would be ide taskfiles,
-raid firmware commands and any other weirder native protocols.  On the
-other hand, this is future work and won't depend on the legacy 16 byte
-cmd size.
+Actually, I'd say this is a signal for NCQ errors with the drive.
 
-The only block device I know that implements SG_IO is cciss, so perhaps
-there's no need to support a legacy mode at all for large packet
-commands.
+I'm afraid only LSI would be able to say for certain, because the mptsas
+implements its NCQ handling in firmware.  libata-core doesn't show any
+special workarounds for your device (ST3750640AS) but that doesn't mean
+there isn't a problem.  If it's really an NCQ implementation issue, then
+clamping the queue depth to 1 is about the only fix, I'm afraid.
 
 James
 
