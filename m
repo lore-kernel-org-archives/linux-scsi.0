@@ -1,144 +1,78 @@
-From: Sebastian Wasilewski <sebastian@wasilewski.name>
-Subject: Re: mptbase Code={Abort}
-Date: Sun, 13 Apr 2008 21:54:28 +0100
-Message-ID: <48027304.2080201@wasilewski.name>
-References: <48027149.7090502@sauce.co.nz>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: mptsas problem
+Date: Mon, 14 Apr 2008 08:22:26 +1000
+Message-ID: <480287A2.7030308@torque.net>
+References: <47F95F5C.500@sauce.co.nz> <20080407010453.GA1952@animx.eu.org>	 <1208097071.4707.21.camel@localhost.localdomain>	 <20080413164800.GA23094@animx.eu.org>	 <1208105925.4707.27.camel@localhost.localdomain>	 <20080413170644.GA1234@animx.eu.org> <1208108263.4707.37.camel@localhost.localdomain>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms070108040902050003080304"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hel.fizyka.umk.pl ([158.75.5.90]:41911 "EHLO hel.fizyka.umk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204AbYDMU5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Apr 2008 16:57:00 -0400
-Received: from [172.20.1.117] (vampire.vpn.phys.uni.torun.pl [172.20.1.117])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by hel.fizyka.umk.pl (Postfix) with ESMTP id 3062F30A7C3
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Apr 2008 22:56:50 +0200 (CEST)
-In-Reply-To: <48027149.7090502@sauce.co.nz>
+Received: from pentafluge.infradead.org ([213.146.154.40]:49831 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750AbYDMWWu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2008 18:22:50 -0400
+In-Reply-To: <1208108263.4707.37.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Wakko Warner <wakko@animx.eu.org>, Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
 
-This is a cryptographically signed message in MIME format.
-
---------------ms070108040902050003080304
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Richard Scobie wrote:
+James Bottomley wrote:
+> On Sun, 2008-04-13 at 13:06 -0400, Wakko Warner wrote:
+>>> There's an easy way to verify:  smartctl -i will print the firmware
+>>> version string.
+>> The aic sas one shows 3.AAE
+>> The lsi mptsas can't be queried:
+>> # smartctl -d scsi -i /dev/sdc
+>> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+>> Home page is http://smartmontools.sourceforge.net/
+>>
+>> Serial number:             3QD076X8
+>> Device type: disk
+>> Local Time is: Sun Apr 13 13:02:36 2008 EDT
+>> Device supports SMART and is Enabled
+>> Temperature Warning Disabled or Not Supported
+>> #
+>>
+>> I tried -d ata, -d sat and not using -d, provided no information.  -T
+>> permissive didn't work either.
 > 
-> I have already tried this and found that the errors were slightly more 
-> frequent, but I had updated the HBA BIOS and firmware before I set the 
-> queues to 1, so I'm not sure which change had an effect.
+> That's a bit unfortunate ... it means the LSI firmware SAT layer doesn't
+> support ATA_16.  you can try ATA_12 just to make sure (little chance it
+> will work, but just in case):
+> 
+> smartctl -i -d sat,12 /dev/sd<x>
+> 
+> If that doesn't work, I'm afraid you'll need to transfer the drive to a
+> card that does support the command (like the aic).
+> 
+> However, it doesn't have to be a drive firmware fault, it could be some
+> type of corner case NCQ failure triggered by the NCQ handler inside the
+> LSI firmware ... in which case, your only hope for fixing it lies with
+> LSI.
+> 
+> There is one final thought:  the reason the aic94xx has a queue depth of
+> 31 is because that's the maximum NCQ can support (well, it's 32 max, but
+> we need one command for error handling).  So, if the LSI shows a queue
+> depth of 64 it may be queueing internally as well.  You could try
+> lowering the lsi queue to 31 and seeing if it makes a difference.
 
-In my case, setting it reduced amount of errors from ~100 to ~30 during 
-full raid rebuild. But anyway -- it is still 30 to more.
+If memory serves, I needed to upgrade the firmware on my
+MPT SAS fusion cards before the SCSI ATA PASS-THROUGH commands
+worked (properly). I'm a long way away from my hardware
+at the moment so I can't provide any further information
+(such as firmware version numbers).
 
-I have made an updated of the BIOS and firmware as a first thing after I 
-have connected controllers so I cannot compare results with the old BIOS 
-unfortunately.
 
-Regards,
-Sebastian
+I have just asked Bruce Allen to place a date in the
+smartctl copyright line because there are so many
+versions of version 5.38 floating around! smartmontools
+version 5.38 was recently released but beta (and sometimes
+partially broken) versions of 5.38 have been available via
+CVS for over 18 months. That said, the 5.38 versions
+that mention 2008 (as in "2002-8") are most likely the
+final release version.
 
---------------ms070108040902050003080304
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+Doug Gilbert
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIPSzCC
-BGQwggNMoAMCAQICAhtMMA0GCSqGSIb3DQEBBAUAMIGDMQswCQYDVQQGEwJQTDExMC8GA1UE
-ChMoVW5pd2Vyc3l0ZXQgTWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMY
-Q2VudHJ1bSBDZXJ0eWZpa2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4u
-cGwwHhcNMDYwNTA1MjAxOTU2WhcNMTEwNTA0MjAxOTU2WjCB0DELMAkGA1UEBhMCUEwxMTAv
-BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxPDA6BgNV
-BAsTM1d5ZHppYWwgRml6eWtpLCBBc3Ryb25vbWlpIGkgSW5mb3JtYXR5a2kgU3Rvc293YW5l
-ajEdMBsGA1UEAxMUU2ViYXN0aWFuIFdhc2lsZXdza2kxMTAvBgkqhkiG9w0BCQEWIlNlYmFz
-dGlhbi5XYXNpbGV3c2tpQGZpenlrYS51bWsucGwwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJ
-AoGBAMrwrPasXgbvrz65NTM4NPohCfBVAUG4JCpcPQi9JIMIjtsX6DfitQReQJfhlVNLvKTj
-8ClfncrAbam76l8H5THkQGv8XomTBJfW4WPTwSNlJaURllTaiyafGaf44mIJhzc/8axHbttz
-XpRgKSo6yDF8eveFo0uQpXZ3JVCcVHDfAgMBAAGjggEVMIIBETARBglghkgBhvhCAQEEBAMC
-BaAwCwYDVR0PBAQDAgWgMB0GA1UdDgQWBBRh4gBvapXgSvzjJc88cQ7E0vXfSzCBsAYDVR0j
-BIGoMIGlgBSAZUHaCDgyd1NzAuti4PrVLpspMKGBiaSBhjCBgzELMAkGA1UEBhMCUEwxMTAv
-BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNV
-BAMTGENlbnRydW0gQ2VydHlmaWthY2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRv
-cnVuLnBsggEAMB0GA1UdJQQWMBQGA1UdDgYDVR0jBggrBgEFBQcDAzANBgkqhkiG9w0BAQQF
-AAOCAQEAaxBZz0uEpenGvNLEr5d3sTE4XsQmvzAsUOYAY45SHZRzacCUzmTgHeCW0k27rMx4
-ensJqZ5GuIV06zfNsJue+XQY8HORxBCiSsQGQYeIiyyttgQcy9b10u4dPlU0x7xO/gfGbzD6
-j+BSKXxc7c0YAX2wduIyq1e1JS4rBPlUQLx3wziKLVi/5MoLXwzHsKV+jczj1p0kRpj3snPt
-Q0sQxLW2iYQrGFTEG/x5LkgkYM++dIsx7/F3CIHKmeFss0hD2YY80jIYmW1qJ7zSLwX9MfO8
-rxafbgNrpfmdyvJzO4VWuJQxp8tpVDTZnIQTqkv3U8ulLSk0TAFqEv1A/AhpRjCCBIowggNy
-oAMCAQICECf06hH0eobEbp27bqkXBwcwDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UEBhMCU0Ux
-FDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5hbCBUVFAg
-TmV0d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0wNTA2MDcw
-ODA5MTBaFw0yMDA1MzAxMDQ4MzhaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAV
-BgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsx
-ITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJG
-aXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEF
-AAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVNNRm5pELl
-zkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQylbsMTzC9
-mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6
-Dpvq/NonWz1zHyLmSGHGTPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPh
-wvCkxWeM1tZUOt4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws
-6wIDAQABo4HhMIHeMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1QaMB0GA1UdDgQW
-BBSJgmd9xJ0mcABLtFBIfN49rgRufTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB
-/zB7BgNVHR8EdDByMDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA2oDSgMoYwaHR0cDovL2NybC5jb21vZG8ubmV0L0FkZFRydXN0
-RXh0ZXJuYWxDQVJvb3QuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQAZ2IkRbyispgCi54fBm5AD
-236hEv0e8+LwAamUVEJrmgnEoG3XkJIEA2Z5Q3H8+G+v23ZF4jcaPd3kWQR4rBz0g0bzes9b
-hHIt5UbBuhgRKfPLSXmHPLptBZ2kbWhPrXIUNqi5sf2/z3/wpGqUNVCPz4FtVbHdWTBK322g
-nGQfSXzvNrv042n0+DmPWq1LhTq3Du3Tzw1EovsEv+QvcI4l+1pUBrPQxLxtjftzMizpm4Qk
-LdZ/kXpoAlAfDj9N6cz1u2fo3BwuO/xOzf4CjuOoEwqlJkRl6RDyTVKnrtw+ymsyXEFs/vVd
-oOr/0fqbhlhtPZZH5f4ulQTCAMyOofK7MIIGUTCCBTmgAwIBAgIRAIuGSd9lm5YjiBVwEZuS
-ZaowDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UE
-BxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8G
-A1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0
-LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgRW1haWwwHhcNMDcwODI3MDAwMDAwWhcNMDgw
-ODI2MjM1OTU5WjCB6TE1MDMGA1UECxMsQ29tb2RvIFRydXN0IE5ldHdvcmsgLSBQRVJTT05B
-IE5PVCBWQUxJREFURUQxRjBEBgNVBAsTPVRlcm1zIGFuZCBDb25kaXRpb25zIG9mIHVzZTog
-aHR0cDovL3d3dy5jb21vZG8ubmV0L3JlcG9zaXRvcnkxHzAdBgNVBAsTFihjKTIwMDMgQ29t
-b2RvIExpbWl0ZWQxHTAbBgNVBAMTFFNlYmFzdGlhbiBXYXNpbGV3c2tpMSgwJgYJKoZIhvcN
-AQkBFhlzZWJhc3RpYW5Ad2FzaWxld3NraS5uYW1lMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAtNlOUL8oeETIvEOcAwq5lBDq+7TqdtxT4ri+kA/VqN71NuaIbvQKb6zEziE9
-fSuAcdYpo2uLgOx+9K6EJUAjPEzBw25ZKCa05lrdS9K8Xale0fJ6ZVH9JiM80WeBf2UjeDFh
-2WK2EWRl6t+QNxOpYAfFcg58k0w2Lljk0l447q1tacVSpNrA0CtTh9Zve5ho26Gdrh5TPIL1
-RiVWSAHSpA6JLMfgIBxWbZcPthQ7kdFVu414dOchcCjKY9o2tbG0sMYeAzeLaTgccEW7B/o6
-gGSS+BH/v8Kv3QmXtlPFwZh7SFfL/CZlPpYAzoQ4WaVQjMOwTRQLR38YgeXXqvximQIDAQAB
-o4ICKzCCAicwHwYDVR0jBBgwFoAUiYJnfcSdJnAAS7RQSHzePa4Ebn0wHQYDVR0OBBYEFDOg
-M7vsGeGAj200arcExeUQkoKnMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1Ud
-JQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0g
-BD8wPTA7BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29t
-b2RvLm5ldC9DUFMwgaUGA1UdHwSBnTCBmjBMoEqgSIZGaHR0cDovL2NybC5jb21vZG9jYS5j
-b20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRoZW50aWNhdGlvbmFuZEVtYWlsLmNybDBKoEig
-RoZEaHR0cDovL2NybC5jb21vZG8ubmV0L1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGlj
-YXRpb25hbmRFbWFpbC5jcmwwfAYIKwYBBQUHAQEEcDBuMDYGCCsGAQUFBzAChipodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9VVE5BQUFDbGllbnRDQS5jcnQwNAYIKwYBBQUHMAKGKGh0dHA6
-Ly9jcnQuY29tb2RvLm5ldC9VVE5BQUFDbGllbnRDQS5jcnQwJAYDVR0RBB0wG4EZc2ViYXN0
-aWFuQHdhc2lsZXdza2kubmFtZTANBgkqhkiG9w0BAQUFAAOCAQEAMkro/eoHrznPnh3YmoyJ
-8V91GC7SMJ9R2ezqAfDVdjp3qCBqoPlHjcy3tgn0Hc2LyCoLMRUb2OHhRP7umnQVdELtwehS
-jnFohZrAY+WKSq4bcU8oe/jXHOTA1PzgkTeGUjTjA2ChwhUwLZxvinIYVXuI7EqgPVaKTAy4
-2XxDKDB44ussql6pYViEZT7xtZfFxOni2uPQS0Ex9keHxdnTK6kDkpj+gPyxNHgkaKbnhN7/
-PUeX407VMN0+iUKEt+mEbQMjPu2taZkfxrB9+BZYTYo/eSonsa0X1VdxlV2p+CHaVQHVbyRb
-enwKWYaRtC4o+0T2lhgc0uWlwJgqF2XGWTGCA98wggPbAgEBMIHEMIGuMQswCQYDVQQGEwJV
-UzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUg
-VVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2
-MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWls
-AhEAi4ZJ32WbliOIFXARm5JlqjAJBgUrDgMCGgUAoIIB7zAYBgkqhkiG9w0BCQMxCwYJKoZI
-hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MTMyMDU0MjhaMCMGCSqGSIb3DQEJBDEWBBQP
-hKJUFQPqokzfA6KnNcsnglBo/zBSBgkqhkiG9w0BCQ8xRTBDMAoGCCqGSIb3DQMHMA4GCCqG
-SIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCBmwYJ
-KwYBBAGCNxAEMYGNMIGKMIGDMQswCQYDVQQGEwJQTDExMC8GA1UEChMoVW5pd2Vyc3l0ZXQg
-TWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMYQ2VudHJ1bSBDZXJ0eWZp
-a2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4ucGwCAhtMMIGdBgsqhkiG
-9w0BCRACCzGBjaCBijCBgzELMAkGA1UEBhMCUEwxMTAvBgNVBAoTKFVuaXdlcnN5dGV0IE1p
-a29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNVBAMTGENlbnRydW0gQ2VydHlmaWth
-Y2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRvcnVuLnBsAgIbTDANBgkqhkiG9w0B
-AQEFAASCAQBnjRoDGDEAJ+WXcqo1yu7AMj1e1AiPBXCKYfprFDnzLDszjcWyb6QguC0eq9KL
-aw2C6sEH+jG9Xi+3tpZU25wvRXGhu++JzOtZDlTQU1hIbxac/97biaUQ92/sB4TnEnCqDRtW
-46oWNhrY5SP5RV7N7a4f49w/DWo5amjybnFp350lkzeCgwE/5KHLesFqTHjxWqUxKhGtPYEt
-eztzEEYpENRxmqmn0Oxj/dQNKXSbtuyFmwf4Vr7iUdp/8CSEK8awpkNqSo8VzCJ+ByQfDobC
-jYr2isN4jdkFpPOVg4edpshShMCLiLz9Ku06r4G/oMqnYy0es0jlzZLUp1+frWl8AAAAAAAA
-
---------------ms070108040902050003080304--
