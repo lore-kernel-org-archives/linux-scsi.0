@@ -1,167 +1,37 @@
-From: Sebastian Wasilewski <sebastian@wasilewski.name>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: mptbase Code={Abort}
-Date: Sun, 13 Apr 2008 21:24:30 +0100
-Message-ID: <48026BFE.7000801@wasilewski.name>
-References: <48025F21.8000107@sauce.co.nz>
+Date: Mon, 14 Apr 2008 08:47:05 +1200
+Message-ID: <48027149.7090502@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms050306010209070508010301"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hel.fizyka.umk.pl ([158.75.5.90]:42453 "EHLO hel.fizyka.umk.pl"
+Received: from smtp.sauce.co.nz ([210.48.49.72]:38763 "EHLO smtp.sauce.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752717AbYDMU1C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Apr 2008 16:27:02 -0400
-Received: from [172.20.1.117] (vampire.vpn.phys.uni.torun.pl [172.20.1.117])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by hel.fizyka.umk.pl (Postfix) with ESMTP id B137130A7C3
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Apr 2008 22:26:51 +0200 (CEST)
-In-Reply-To: <48025F21.8000107@sauce.co.nz>
+	id S1750896AbYDMUqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Apr 2008 16:46:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a cryptographically signed message in MIME format.
 
---------------ms050306010209070508010301
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-> 
-> Will try compiling latest mpt fusion driver today.
+ > Could you let me know when he replies, please? I would like know
+ > whether it is something serious or can be ignored.
 
-I have already done it. Nothing has changed.
+Certainly. I think this is certainly impacting performance badly, 
+judging by the LED's on each drive - each time an error occurs, it can 
+take up to 10 seconds for them toi settle back to a stable pattern of 
+activity.
 
-> 
-> Have sent a similar mail, including lsiutil dump offlist to eric at LSI.
+ > I have noticed that turning off NCQ significantly reduces amount of
+ > the errors.
 
-Could you let me know when he replies, please? I would like know whether 
-it is something serious or can be ignored.
-
-I have noticed that turning off NCQ significantly reduces amount of the 
-errors.
-
-I have set for each disk (sda,sdb... ($dev)):
-echo 1 > /sys/block/$dev/device/queue_depth
-
-and the same value for "SATA Maximum Queue Depth" using lsiutils.
-
-Better but the error message still did not disappear.
+I have already tried this and found that the errors were slightly more 
+frequent, but I had updated the HBA BIOS and firmware before I set the 
+queues to 1, so I'm not sure which change had an effect.
 
 Regards,
-Sebastian
 
--- 
-"Computer Science is no more about computers
-  than astronomy is about telescopes"
-                         Edsger Wybe Dijkstra
+Richard
 
-Sebastian Wasilewski
-Division of Physical Biochemistry
-MRC National Institute for Medical Research
-The Ridgeway, London NW7 1AA
-+442088162089
-
-swasile@nimr.mrc.ac.uk
-sebastian@wasilewski.name
-
-
---------------ms050306010209070508010301
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIPSzCC
-BGQwggNMoAMCAQICAhtMMA0GCSqGSIb3DQEBBAUAMIGDMQswCQYDVQQGEwJQTDExMC8GA1UE
-ChMoVW5pd2Vyc3l0ZXQgTWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMY
-Q2VudHJ1bSBDZXJ0eWZpa2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4u
-cGwwHhcNMDYwNTA1MjAxOTU2WhcNMTEwNTA0MjAxOTU2WjCB0DELMAkGA1UEBhMCUEwxMTAv
-BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxPDA6BgNV
-BAsTM1d5ZHppYWwgRml6eWtpLCBBc3Ryb25vbWlpIGkgSW5mb3JtYXR5a2kgU3Rvc293YW5l
-ajEdMBsGA1UEAxMUU2ViYXN0aWFuIFdhc2lsZXdza2kxMTAvBgkqhkiG9w0BCQEWIlNlYmFz
-dGlhbi5XYXNpbGV3c2tpQGZpenlrYS51bWsucGwwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJ
-AoGBAMrwrPasXgbvrz65NTM4NPohCfBVAUG4JCpcPQi9JIMIjtsX6DfitQReQJfhlVNLvKTj
-8ClfncrAbam76l8H5THkQGv8XomTBJfW4WPTwSNlJaURllTaiyafGaf44mIJhzc/8axHbttz
-XpRgKSo6yDF8eveFo0uQpXZ3JVCcVHDfAgMBAAGjggEVMIIBETARBglghkgBhvhCAQEEBAMC
-BaAwCwYDVR0PBAQDAgWgMB0GA1UdDgQWBBRh4gBvapXgSvzjJc88cQ7E0vXfSzCBsAYDVR0j
-BIGoMIGlgBSAZUHaCDgyd1NzAuti4PrVLpspMKGBiaSBhjCBgzELMAkGA1UEBhMCUEwxMTAv
-BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNV
-BAMTGENlbnRydW0gQ2VydHlmaWthY2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRv
-cnVuLnBsggEAMB0GA1UdJQQWMBQGA1UdDgYDVR0jBggrBgEFBQcDAzANBgkqhkiG9w0BAQQF
-AAOCAQEAaxBZz0uEpenGvNLEr5d3sTE4XsQmvzAsUOYAY45SHZRzacCUzmTgHeCW0k27rMx4
-ensJqZ5GuIV06zfNsJue+XQY8HORxBCiSsQGQYeIiyyttgQcy9b10u4dPlU0x7xO/gfGbzD6
-j+BSKXxc7c0YAX2wduIyq1e1JS4rBPlUQLx3wziKLVi/5MoLXwzHsKV+jczj1p0kRpj3snPt
-Q0sQxLW2iYQrGFTEG/x5LkgkYM++dIsx7/F3CIHKmeFss0hD2YY80jIYmW1qJ7zSLwX9MfO8
-rxafbgNrpfmdyvJzO4VWuJQxp8tpVDTZnIQTqkv3U8ulLSk0TAFqEv1A/AhpRjCCBIowggNy
-oAMCAQICECf06hH0eobEbp27bqkXBwcwDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UEBhMCU0Ux
-FDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5hbCBUVFAg
-TmV0d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0wNTA2MDcw
-ODA5MTBaFw0yMDA1MzAxMDQ4MzhaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAV
-BgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsx
-ITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJG
-aXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEF
-AAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVNNRm5pELl
-zkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQylbsMTzC9
-mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6
-Dpvq/NonWz1zHyLmSGHGTPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPh
-wvCkxWeM1tZUOt4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws
-6wIDAQABo4HhMIHeMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1QaMB0GA1UdDgQW
-BBSJgmd9xJ0mcABLtFBIfN49rgRufTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB
-/zB7BgNVHR8EdDByMDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA2oDSgMoYwaHR0cDovL2NybC5jb21vZG8ubmV0L0FkZFRydXN0
-RXh0ZXJuYWxDQVJvb3QuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQAZ2IkRbyispgCi54fBm5AD
-236hEv0e8+LwAamUVEJrmgnEoG3XkJIEA2Z5Q3H8+G+v23ZF4jcaPd3kWQR4rBz0g0bzes9b
-hHIt5UbBuhgRKfPLSXmHPLptBZ2kbWhPrXIUNqi5sf2/z3/wpGqUNVCPz4FtVbHdWTBK322g
-nGQfSXzvNrv042n0+DmPWq1LhTq3Du3Tzw1EovsEv+QvcI4l+1pUBrPQxLxtjftzMizpm4Qk
-LdZ/kXpoAlAfDj9N6cz1u2fo3BwuO/xOzf4CjuOoEwqlJkRl6RDyTVKnrtw+ymsyXEFs/vVd
-oOr/0fqbhlhtPZZH5f4ulQTCAMyOofK7MIIGUTCCBTmgAwIBAgIRAIuGSd9lm5YjiBVwEZuS
-ZaowDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UE
-BxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8G
-A1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0
-LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgRW1haWwwHhcNMDcwODI3MDAwMDAwWhcNMDgw
-ODI2MjM1OTU5WjCB6TE1MDMGA1UECxMsQ29tb2RvIFRydXN0IE5ldHdvcmsgLSBQRVJTT05B
-IE5PVCBWQUxJREFURUQxRjBEBgNVBAsTPVRlcm1zIGFuZCBDb25kaXRpb25zIG9mIHVzZTog
-aHR0cDovL3d3dy5jb21vZG8ubmV0L3JlcG9zaXRvcnkxHzAdBgNVBAsTFihjKTIwMDMgQ29t
-b2RvIExpbWl0ZWQxHTAbBgNVBAMTFFNlYmFzdGlhbiBXYXNpbGV3c2tpMSgwJgYJKoZIhvcN
-AQkBFhlzZWJhc3RpYW5Ad2FzaWxld3NraS5uYW1lMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAtNlOUL8oeETIvEOcAwq5lBDq+7TqdtxT4ri+kA/VqN71NuaIbvQKb6zEziE9
-fSuAcdYpo2uLgOx+9K6EJUAjPEzBw25ZKCa05lrdS9K8Xale0fJ6ZVH9JiM80WeBf2UjeDFh
-2WK2EWRl6t+QNxOpYAfFcg58k0w2Lljk0l447q1tacVSpNrA0CtTh9Zve5ho26Gdrh5TPIL1
-RiVWSAHSpA6JLMfgIBxWbZcPthQ7kdFVu414dOchcCjKY9o2tbG0sMYeAzeLaTgccEW7B/o6
-gGSS+BH/v8Kv3QmXtlPFwZh7SFfL/CZlPpYAzoQ4WaVQjMOwTRQLR38YgeXXqvximQIDAQAB
-o4ICKzCCAicwHwYDVR0jBBgwFoAUiYJnfcSdJnAAS7RQSHzePa4Ebn0wHQYDVR0OBBYEFDOg
-M7vsGeGAj200arcExeUQkoKnMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1Ud
-JQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0g
-BD8wPTA7BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29t
-b2RvLm5ldC9DUFMwgaUGA1UdHwSBnTCBmjBMoEqgSIZGaHR0cDovL2NybC5jb21vZG9jYS5j
-b20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRoZW50aWNhdGlvbmFuZEVtYWlsLmNybDBKoEig
-RoZEaHR0cDovL2NybC5jb21vZG8ubmV0L1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGlj
-YXRpb25hbmRFbWFpbC5jcmwwfAYIKwYBBQUHAQEEcDBuMDYGCCsGAQUFBzAChipodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9VVE5BQUFDbGllbnRDQS5jcnQwNAYIKwYBBQUHMAKGKGh0dHA6
-Ly9jcnQuY29tb2RvLm5ldC9VVE5BQUFDbGllbnRDQS5jcnQwJAYDVR0RBB0wG4EZc2ViYXN0
-aWFuQHdhc2lsZXdza2kubmFtZTANBgkqhkiG9w0BAQUFAAOCAQEAMkro/eoHrznPnh3YmoyJ
-8V91GC7SMJ9R2ezqAfDVdjp3qCBqoPlHjcy3tgn0Hc2LyCoLMRUb2OHhRP7umnQVdELtwehS
-jnFohZrAY+WKSq4bcU8oe/jXHOTA1PzgkTeGUjTjA2ChwhUwLZxvinIYVXuI7EqgPVaKTAy4
-2XxDKDB44ussql6pYViEZT7xtZfFxOni2uPQS0Ex9keHxdnTK6kDkpj+gPyxNHgkaKbnhN7/
-PUeX407VMN0+iUKEt+mEbQMjPu2taZkfxrB9+BZYTYo/eSonsa0X1VdxlV2p+CHaVQHVbyRb
-enwKWYaRtC4o+0T2lhgc0uWlwJgqF2XGWTGCA98wggPbAgEBMIHEMIGuMQswCQYDVQQGEwJV
-UzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUg
-VVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2
-MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWls
-AhEAi4ZJ32WbliOIFXARm5JlqjAJBgUrDgMCGgUAoIIB7zAYBgkqhkiG9w0BCQMxCwYJKoZI
-hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MTMyMDI0MzBaMCMGCSqGSIb3DQEJBDEWBBRn
-MGW9CwpZMowHvkHGPKDXaWGe8DBSBgkqhkiG9w0BCQ8xRTBDMAoGCCqGSIb3DQMHMA4GCCqG
-SIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCBmwYJ
-KwYBBAGCNxAEMYGNMIGKMIGDMQswCQYDVQQGEwJQTDExMC8GA1UEChMoVW5pd2Vyc3l0ZXQg
-TWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMYQ2VudHJ1bSBDZXJ0eWZp
-a2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4ucGwCAhtMMIGdBgsqhkiG
-9w0BCRACCzGBjaCBijCBgzELMAkGA1UEBhMCUEwxMTAvBgNVBAoTKFVuaXdlcnN5dGV0IE1p
-a29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNVBAMTGENlbnRydW0gQ2VydHlmaWth
-Y2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRvcnVuLnBsAgIbTDANBgkqhkiG9w0B
-AQEFAASCAQCeiaz775GOH8lCMO0PG8cgo4Z9CTZf1eguSocUab8DF75hjeaavoIydd6fbQip
-WAbnEoMBiXXCdlYRc0KUaKPd0aK9wdWrrIWwRN1Gl3Pm9pfRiV5A4PAAdcTC1ziVq4Snmg3O
-5OPjX8uz9JtIm7hmNzusNMpLbUbVSLhvT1tKpfZt5gkGvSG4gn32tJfU2h5uPs6xuunFvzGc
-gOk8HpVEJnSnU2S6+Fm0dk9BFPtfkF8r8meAytkzjmKLnLU/Pt+OtkYJMB3SNKvH2h78QpWX
-EJoOf4M4ixKcSRleLWePIF/NN8UlgDirCedxBXoB/c5Yp7nqI8heZ83tVQxjOBH8AAAAAAAA
-
---------------ms050306010209070508010301--
