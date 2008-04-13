@@ -1,45 +1,49 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] iscsi_tcp: Enable large command
-Date: Sun, 13 Apr 2008 19:41:18 +0300
-Message-ID: <480237AE.4040101@panasas.com>
-References: <47E92672.1040208@panasas.com> <48023526.5050709@panasas.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: mptsas problem
+Date: Sun, 13 Apr 2008 12:48:00 -0400
+Message-ID: <20080413164800.GA23094@animx.eu.org>
+References: <47F95F5C.500@sauce.co.nz> <20080407010453.GA1952@animx.eu.org> <1208097071.4707.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:56837 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755608AbYDMQlu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2008 12:41:50 -0400
-In-Reply-To: <48023526.5050709@panasas.com>
+Received: from animx.eu.org ([216.98.75.249]:39700 "EHLO animx.eu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758193AbYDMQsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Apr 2008 12:48:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1208097071.4707.21.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mike
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
 
+James Bottomley wrote:
+> On Sun, 2008-04-06 at 21:04 -0400, Wakko Warner wrote:
+> > > From the message you posted, it looks as though there may be a problem 
+> > > with sda.
+> > 
+> > It's working fine with /sys/block/sd[abc]/device/queue_depth = 1 (on boot up,
+> > as stated before, it's 64)
+> > 
+> > I performed the same copy again with queue_depth=1 after the array rebuilt.
+> > It worked fine then.  No errors.
+> 
+> Actually, I'd say this is a signal for NCQ errors with the drive.
 
-Let through up to the largest command of 260 defined by the scsi standard.
-iscsi core supports this already. Now that the scsi-ml supports it we can
-start using large commands.
+Unless it's this specific drive firmware, I'd have to disagree.  I have 6 of
+the exact same drives (can't confirm firmware is the same though) in raid5
+on an aic9410 sas controller w/o problems.  The queue_depth for those are
+31.  I considered setting that value to the ones I'm having problems with,
+but I really don't want to go through another 4 hour rebuild.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/iscsi_tcp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I'm afraid only LSI would be able to say for certain, because the mptsas
+> implements its NCQ handling in firmware.  libata-core doesn't show any
+> special workarounds for your device (ST3750640AS) but that doesn't mean
+> there isn't a problem.  If it's really an NCQ implementation issue, then
+> clamping the queue depth to 1 is about the only fix, I'm afraid.
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 555f4e3..6500192 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1859,7 +1859,7 @@ iscsi_tcp_session_create(struct Scsi_Host *shost, uint16_t cmds_max,
- 	shost->max_lun = iscsi_max_lun;
- 	shost->max_id = 0;
- 	shost->max_channel = 0;
--	shost->max_cmd_len = 16;
-+	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
- 	shost->can_queue = cmds_max;
- 
- 	if (iscsi_host_add(shost, NULL))
+If it survives another week, I'd say using depth of 1 worked.
+
 -- 
-1.5.3.3
-
-
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
