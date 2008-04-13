@@ -1,126 +1,60 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2/3 ver2] block layer extended-cdb support
-Date: Sun, 13 Apr 2008 19:50:26 +0300
-Message-ID: <480239D2.3040206@panasas.com>
-References: <47F89948.9060503@panasas.com>	<20080412145152C.tomof@acm.org>	<4801CEAE.6030309@panasas.com> <20080414010112W.tomof@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: mptsas problem
+Date: Sun, 13 Apr 2008 11:58:45 -0500
+Message-ID: <1208105925.4707.27.camel@localhost.localdomain>
+References: <47F95F5C.500@sauce.co.nz> <20080407010453.GA1952@animx.eu.org>
+	 <1208097071.4707.21.camel@localhost.localdomain>
+	 <20080413164800.GA23094@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:43455 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924AbYDMQvX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2008 12:51:23 -0400
-In-Reply-To: <20080414010112W.tomof@acm.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:54202 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752691AbYDMQ6t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Apr 2008 12:58:49 -0400
+In-Reply-To: <20080413164800.GA23094@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
 
-On Sun, Apr 13 2008 at 19:17 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Sun, 13 Apr 2008 12:13:18 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Sun, 2008-04-13 at 12:48 -0400, Wakko Warner wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-04-06 at 21:04 -0400, Wakko Warner wrote:
+> > > > From the message you posted, it looks as though there may be a problem 
+> > > > with sda.
+> > > 
+> > > It's working fine with /sys/block/sd[abc]/device/queue_depth = 1 (on boot up,
+> > > as stated before, it's 64)
+> > > 
+> > > I performed the same copy again with queue_depth=1 after the array rebuilt.
+> > > It worked fine then.  No errors.
+> > 
+> > Actually, I'd say this is a signal for NCQ errors with the drive.
 > 
->> On Sat, Apr 12 2008 at 8:52 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->>> On Sun, 06 Apr 2008 12:35:04 +0300
->>> Boaz Harrosh <bharrosh@panasas.com> wrote:
->>>
->>>> On Fri, Apr 04 2008 at 14:46 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
->>>>> On Thu, Apr 03 2008, Boaz Harrosh wrote:
->>>>>>  static void req_bio_endio(struct request *rq, struct bio *bio,
->>>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->>>>>> index 6f79d40..2f87c9d 100644
->>>>>> --- a/include/linux/blkdev.h
->>>>>> +++ b/include/linux/blkdev.h
->>>>>> @@ -213,8 +213,15 @@ struct request {
->>>>>>  	/*
->>>>>>  	 * when request is used as a packet command carrier
->>>>>>  	 */
->>>>>> -	unsigned int cmd_len;
->>>>>> -	unsigned char cmd[BLK_MAX_CDB];
->>>>>> +	unsigned short cmd_len;
->>>>>> +	unsigned short ext_cdb_len;  /* length of ext_cdb buffer */
->>>>>> +	union {
->>>>>> +		unsigned char cmd[BLK_MAX_CDB];
->>>>>> +		unsigned char *ext_cdb;/* an optional extended cdb.
->>>>>> +	                                   * points to a user buffer that must
->>>>>> +	                                   * be valid until end of request
->>>>>> +	                                   */
->>>>>> +	};
->>>>> Why not just something ala
->>>>>
->>>>>         unsigned short cmd_len;
->>>>>         unsigned char __cmd[BLK_MAX_CDB];
->>>>>         unsigned char *cmd;
->>>>>
->>>>> and then have rq_init() do
->>>>>
->>>>>         rq->cmd = rq->__cmd;
->>>>>
->>>>> and just have a function for setting up a larger ->cmd and adjusting
->>>>> ->cmd_len in the process?
->>>>>
->>>>> Then rq_set_cdb() would be
->>>>>
->>>>> static inline void rq_set_cdb(struct request *rq, u8 *cdb, short cdb_len)
->>>>> {
->>>>>         rq->cmd = cdb;
->>>>>         rq->cmd_len = cdb_len;
->>>>> }
->>>>>
->>>>> and rq_get_cdb() plus rq_get_cdb_len() could just go away.
->>>>>
->>>> Because this way it is dangerous if large commands are issued to legacy
->>>> drivers. In scsi-land we have .cmd_len at host template that will govern if
->>>> we are allow to issue larger commands to the driver. In block devices we do
->>>> not have such a facility, and the danger is if such commands are issued through
->>>> bsg or other means, even by malicious code. What you say is the ideal and it
->>>> is what I've done for scsi, but for block devices we can not do that yet.
->>>> With the way I did it here, Legacy drivers will see zero length command and
->>>> will do the right thing, from what I've seen.
->>> What are exactly block devices? ub and ide?
->>>
->>> bsg are created only for scsi devices (and scsi objects like sas host)
->>> now. Are there other means to send commands except for ioctl?
->> I'm not 100% sure either way, so I would like to be safe. Any way, there
->> is the size issue, this way we add *nothing* at all, so it looks preferable.
->> The final outcome will be the same both ways.
-> 
-> I think that a clean design is an important issue than the sizeof of
-> struct request.
-> 
-> 
->> I would like if you reconsider the ugliness issue. I admit that at first I
->> personally disliked it, but now that I look at it, I think it is cleaner,
->> coding style, this way. Because the union points out the exclusiveness of
->> the two systems, the striate way give the notion of two separate systems.
-> 
-> That's a ugly hack for me.
-> 
-> Why do we have two separate systems to represent the command length?
-> If the command length is smaller than 16 bytes, we use cmd_len. If the
-> length is larger than 16 bytes, we use varlen_cdb_len?
-> 
-> For me, as Jens proposed, having only cmd_len is the right way.
-> 
-> And 'cdb' name is not appropriate for the block layer, I think.
-> 
-> I agreed that changing the block layer and the scsi midlayer gradually
-> is a safe option. Shortly, I'll send patches to clean up the hack on
-> the top of your patchset.
-> --
+> Unless it's this specific drive firmware, I'd have to disagree.  I have 6 of
+> the exact same drives (can't confirm firmware is the same though) in raid5
+> on an aic9410 sas controller w/o problems.  The queue_depth for those are
+> 31.  I considered setting that value to the ones I'm having problems with,
+> but I really don't want to go through another 4 hour rebuild.
 
-Sorry TOMO, I was sending the ver2 patchset and only saw your mail in
-the middle, so anyway you have the latest I have now.
+Well, yes, different revs of the firmware can behave differently.  The
+libata-core blacklist includes the firmware version as part of the
+pattern matching.
 
-If it's ok with you I will squash your patches onto mine and add your
-sign-off-by. There is no use putting code in the tree that will be changed
-immediately after.
+There's an easy way to verify:  smartctl -i will print the firmware
+version string.
 
-Please note that I'm a bit afraid to put code that has both length as one
-if you are more confident then me, I will take your word for it.
+> > I'm afraid only LSI would be able to say for certain, because the mptsas
+> > implements its NCQ handling in firmware.  libata-core doesn't show any
+> > special workarounds for your device (ST3750640AS) but that doesn't mean
+> > there isn't a problem.  If it's really an NCQ implementation issue, then
+> > clamping the queue depth to 1 is about the only fix, I'm afraid.
+> 
+> If it survives another week, I'd say using depth of 1 worked.
 
-Thanks for helping out, as you can see I did it very safe, but with your
-help maybe it can finally go in. Thanks++
+James
 
-Boaz
+
