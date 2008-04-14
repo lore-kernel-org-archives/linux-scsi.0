@@ -1,109 +1,46 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: [patch 2.6.25-rc9] scsi: fix platform driver hotplug/coldplug
-Date: Sun, 13 Apr 2008 20:06:24 -0700
-Message-ID: <200804132006.24469.david-b@pacbell.net>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: mptsas and ioc0: ERRORs
+Date: Mon, 14 Apr 2008 09:22:30 +0200
+Message-ID: <20080414092230.91fcd030.taeuber@bbaw.de>
+References: <20080407104940.5c7c89d1.taeuber@bbaw.de>
+	<0631C836DBF79F42B5A60C8C8D4E8229F79FF7@NAMAIL2.ad.lsil.com>
+	<20080408093858.5ea6f2ed.taeuber@bbaw.de>
+	<200804082010.44090.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:38033 "HELO
-	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752709AbYDNDK6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Apr 2008 23:10:58 -0400
-Content-Disposition: inline
+Received: from mail.bbaw.de ([194.95.188.6]:54764 "EHLO mail.bbaw.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751780AbYDNHV5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2008 03:21:57 -0400
+Received: from mailhub.bbaw.de (unknown [192.168.4.1])
+	by mail.bbaw.de (Postfix) with ESMTP id A50314A8073
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mailhub.bbaw.de (Postfix) with ESMTP id 4EF5E93767
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
+Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
+	by mailhub.bbaw.de (Postfix) with SMTP id 37E839375C
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
+In-Reply-To: <200804082010.44090.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: kay.sievers@vrfy.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-=46rom: Kay Sievers <kay.sievers@vrfy.org>
+Hi there!
 
-Since 43cc71eed1250755986da4c0f9898f9a635cb3bf, the platform modalias
-is prefixed with "platform:". Add MODULE_ALIAS() to the hotpluggable
-SCSI platform drivers, to re-enable auto loading.
+Just for completeness:
+It seems my problem was caused by a very old firmware on the recently bought new HBA.
+It's a bit inconsistent but the firmware is told in hex under proc:
 
-[ dbrownell@users.sourceforge.net: more drivers, registration fixes ]
-Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
-Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
----
- drivers/scsi/jazz_esp.c   |    4 ++++
- drivers/scsi/sgiwd93.c    |    2 ++
- drivers/scsi/sni_53c710.c |    2 ++
- drivers/scsi/sun3x_esp.c  |    2 ++
- 4 files changed, 10 insertions(+)
+monosan:~ # cat /proc/mpt/summary 
+ioc0: LSISAS1068 B1, FwRev=01180100h, Ports=1, MaxQ=366, IRQ=4347
 
---- g26.orig/drivers/scsi/jazz_esp.c	2008-04-13 19:48:19.000000000 -070=
-0
-+++ g26/drivers/scsi/jazz_esp.c	2008-04-13 19:48:57.000000000 -0700
-@@ -217,11 +217,15 @@ static int __devexit esp_jazz_remove(str
- 	return 0;
- }
-=20
-+/* work with hotplug and coldplug */
-+MODULE_ALIAS("platform:jazz_esp");
-+
- static struct platform_driver esp_jazz_driver =3D {
- 	.probe		=3D esp_jazz_probe,
- 	.remove		=3D __devexit_p(esp_jazz_remove),
- 	.driver	=3D {
- 		.name	=3D "jazz_esp",
-+		.owner	=3D THIS_MODULE,
- 	},
- };
-=20
---- g26.orig/drivers/scsi/sgiwd93.c	2008-04-13 19:35:17.000000000 -0700
-+++ g26/drivers/scsi/sgiwd93.c	2008-04-13 19:49:16.000000000 -0700
-@@ -313,6 +313,7 @@ static struct platform_driver sgiwd93_dr
- 	.remove =3D __devexit_p(sgiwd93_remove),
- 	.driver =3D {
- 		.name   =3D "sgiwd93"
-+		.owner	=3D THIS_MODULE,
- 	}
- };
-=20
-@@ -332,3 +333,4 @@ module_exit(sgiwd93_module_exit);
- MODULE_DESCRIPTION("SGI WD33C93 driver");
- MODULE_AUTHOR("Ralf Baechle <ralf@linux-mips.org>");
- MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:sgiwd93");
---- g26.orig/drivers/scsi/sni_53c710.c	2008-04-13 19:35:17.000000000 -0=
-700
-+++ g26/drivers/scsi/sni_53c710.c	2008-04-13 20:02:00.000000000 -0700
-@@ -53,6 +53,7 @@
- MODULE_AUTHOR("Thomas Bogend=F6rfer");
- MODULE_DESCRIPTION("SNI RM 53c710 SCSI Driver");
- MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:snirm_53c710");
-=20
- #define SNIRM710_CLOCK	32
-=20
-@@ -136,6 +137,7 @@ static struct platform_driver snirm710_d
- 	.remove	=3D __devexit_p(snirm710_driver_remove),
- 	.driver	=3D {
- 		.name	=3D "snirm_53c710",
-+		.owner	=3D THIS_MODULE,
- 	},
- };
-=20
---- g26.orig/drivers/scsi/sun3x_esp.c	2008-04-13 19:35:17.000000000 -07=
-00
-+++ g26/drivers/scsi/sun3x_esp.c	2008-04-13 19:50:02.000000000 -0700
-@@ -294,6 +294,7 @@ static struct platform_driver esp_sun3x_
- 	.remove         =3D __devexit_p(esp_sun3x_remove),
- 	.driver =3D {
- 		.name   =3D "sun3x_esp",
-+		.owner	=3D THIS_MODULE,
- 	},
- };
-=20
-@@ -314,3 +315,4 @@ MODULE_VERSION(DRV_VERSION);
-=20
- module_init(sun3x_esp_init);
- module_exit(sun3x_esp_exit);
-+MODULE_ALIAS("platform:sun3x_esp");
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and in dec on the website:
+SAS3801X  	FW:1.24.01 BIOS:6.20.00  	10-DEC-07
+
+The problem hasn't occured since 4 days now. I hope the best.
+
+Regards
+Lars
