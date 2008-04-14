@@ -1,100 +1,105 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Mon, 14 Apr 2008 21:08:32 +0900
-Message-ID: <20080414210826Y.tomof@acm.org>
-References: <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20080414112919.GF12774@kernel.dk>
+Subject: Re: [PATCH 2/3 ver3] block layer extended-cdb support
+Date: Mon, 14 Apr 2008 21:08:31 +0900
+Message-ID: <20080414210821S.tomof@acm.org>
+References: <480328BD.7050206@panasas.com>
+	<20080414200431M.tomof@acm.org>
+	<48033FED.5060307@panasas.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080414112919.GF12774@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:36768 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753789AbYDNMJT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2008 08:09:19 -0400
+In-Reply-To: <48033FED.5060307@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, pw@osc.edu
 
-On Mon, 14 Apr 2008 13:29:20 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+On Mon, 14 Apr 2008 14:28:45 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> > This patch changes rq->cmd from the static array to a pointer to
-> > support large commands.
+> On Mon, Apr 14 2008 at 14:04 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > On Mon, 14 Apr 2008 12:49:49 +0300
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
 > > 
-> > We rarely handle large commands. So for optimization, a struct request
-> > still has a static array for a command. rq_init sets rq->cmd pointer
-> > to the static array.
+> >> On Sun, Apr 13 2008 at 19:50 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> >>> On Sun, Apr 13 2008 at 19:17 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> >>>> On Sun, 13 Apr 2008 12:13:18 +0300
+> >>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> >>>>
+> >>>> That's a ugly hack for me.
+> >>>>
+> >>>> Why do we have two separate systems to represent the command length?
+> >>>> If the command length is smaller than 16 bytes, we use cmd_len. If the
+> >>>> length is larger than 16 bytes, we use varlen_cdb_len?
+> >>>>
+> >>>> For me, as Jens proposed, having only cmd_len is the right way.
+> >>>>
+> >>>> And 'cdb' name is not appropriate for the block layer, I think.
+> >>>>
+> >>>> I agreed that changing the block layer and the scsi midlayer gradually
+> >>>> is a safe option. Shortly, I'll send patches to clean up the hack on
+> >>>> the top of your patchset.
+> >>>> --
+> >>> Sorry TOMO, I was sending the ver2 patchset and only saw your mail in
+> >>> the middle, so anyway you have the latest I have now.
+> >>>
+> >>> If it's ok with you I will squash your patches onto mine and add your
+> >>> sign-off-by. There is no use putting code in the tree that will be changed
+> >>> immediately after.
+> >>>
+> >>> Please note that I'm a bit afraid to put code that has both length as one
+> >>> if you are more confident then me, I will take your word for it.
+> >>>
+> >>> Thanks for helping out, as you can see I did it very safe, but with your
+> >>> help maybe it can finally go in. Thanks++
+> >>>
+> >>> Boaz
+> >>> --
+> >> Maybe you mean something like below. I changed cdb => cmd and I use one
+> >> cmd_len. I think that "cdb" was a good name. Note that we have BLK_MAX_CDB
+> >> right there next to it. But if you don't like it then I don't mind to
+> >> change the name, I think it was James idea.
 > > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > ---
-> >  block/blk-core.c       |    1 +
-> >  drivers/ide/ide-io.c   |    1 +
-> >  include/linux/blkdev.h |   12 ++++++++++--
-> >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > I don't. I've been talking mainly about how to represent the length of
+> > command.
 > > 
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index 6669238..6f0968f 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> >  	rq->errors = 0;
-> >  	rq->ref_count = 1;
-> >  	rq->cmd_len = 0;
-> > +	rq->cmd = rq->__cmd;
-> >  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> >  	rq->data_len = 0;
-> >  	rq->extra_len = 0;
-> > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> > index 7153796..bac5ea1 100644
-> > --- a/drivers/ide/ide-io.c
-> > +++ b/drivers/ide/ide-io.c
-> > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> >  {
-> >  	memset(rq, 0, sizeof(*rq));
-> >  	rq->ref_count = 1;
-> > +	rq->cmd = rq->__cmd;
-> >  }
-> >  
-> >  EXPORT_SYMBOL(ide_init_drive_cmd);
-> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > index b3a58ad..5710ae4 100644
-> > --- a/include/linux/blkdev.h
-> > +++ b/include/linux/blkdev.h
-> > @@ -215,8 +215,9 @@ struct request {
-> >  	/*
-> >  	 * when request is used as a packet command carrier
-> >  	 */
-> > -	unsigned int cmd_len;
-> > -	unsigned char cmd[BLK_MAX_CDB];
-> > +	unsigned short cmd_len;
-> > +	unsigned char __cmd[BLK_MAX_CDB];
-> > +	unsigned char *cmd;
-> >  
-> >  	unsigned int data_len;
-> >  	unsigned int extra_len;	/* length of alignment and padding */
-> > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
-> >  	page_cache_release(p.v);
-> >  }
-> >  
-> > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
-> > +			      unsigned short cmd_len)
-> > +{
-> > +	rq->cmd = cmd;
-> > +	rq->cmd_len = cmd_len;
-> > +}
-> > +
+> > About 'cdb' name, I thought that there is a better name than
+> > BLK_MAX_CDB. But it's up to Jens.
+> > 
+> > 
+> >> But please note!!!
+> >> I think having one cmd_len is DANGEROUS. And it forces a full code audit
+> >> to be sure, has with my approach we are much more safe. There, I said it.
+> > 
+> > Could you be more specific? So far, you have not explained how it can
+> > be dangerous.
 > 
-> This is 100% identical to what I suggested be done instead, so of course
-> I agree with this.
+> There is a pending patch by Pete, and our main goal, is to push OSD commands 
+> through bsg. All over the kernel there are cooked up char-devices, like in 
+> gdth, that do vendor specific management commands. All these, and future, 
+> special-command can go from user-mode through bsg in a common way. Via support 
+> of vendor specific and extended commands. All the new scsi defined commands 
+> that are bigger then 16 are not going to be sent through sg, but through 
+> bsg right? So we do want to use this facility from kernel and from user-land
+> but we need some protection. In scsi LLDs we have .max_cmnd but block devices
+> don't have that. So either you need to restrict what can be done, or play it safe
+> like I did.
 
-Yeah, I think that it's the most straightforward. We have one value to
-represent one item, the length of command. We can access to rq->cmd
-and rq->cmd_len as before.
+If we creates bsg devices for block devices, of course, we need to a
+mechanism to govern the length of commands.
 
-I don't see how it's is dangerous to have a single value to represent
-the length of command though changing rq->cmd from the static array to
-a pointer to support large commands is tricky. It's possible that I
-overlooked something that uses the block layer in an uncommon way as
-ide does.
+But why do you want to create bsg devices for block devices? If block
+devices want large commands for some reasons, their bsg hook functions
+need to handle the length of commands anyway. There is no reason that
+the block layer has two values to represent one item, the length of
+command.
+
+If we want to govern the command length in a common place, then I
+think that it would be better to add the limit to request queue.
+
+And again, what are your block devices? What do they want bsg for?
