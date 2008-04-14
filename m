@@ -1,142 +1,53 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/3 ver2] block layer extended-cdb support
-Date: Mon, 14 Apr 2008 20:04:48 +0900
-Message-ID: <20080414200315I.tomof@acm.org>
-References: <4801CEAE.6030309@panasas.com>
-	<20080414010112W.tomof@acm.org>
-	<480239D2.3040206@panasas.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/4] add large command support to the block layer
+Date: Mon, 14 Apr 2008 19:50:33 +0900
+Message-ID: <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <20080414010112W.tomof@acm.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:34057 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:34053 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752866AbYDNLGT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2008 07:06:19 -0400
-In-Reply-To: <480239D2.3040206@panasas.com>
+	id S1752707AbYDNLGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2008 07:06:17 -0400
+In-Reply-To: <20080414010112W.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: linux-scsi@vger.kernel.org
+Cc: bharrosh@panasas.com, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alasdair G Kergon <agk@redhat.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Sun, 13 Apr 2008 19:50:26 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+This patchset adds large command support to the block layer.
 
-> On Sun, Apr 13 2008 at 19:17 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > On Sun, 13 Apr 2008 12:13:18 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >> On Sat, Apr 12 2008 at 8:52 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> >>> On Sun, 06 Apr 2008 12:35:04 +0300
-> >>> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >>>
-> >>>> On Fri, Apr 04 2008 at 14:46 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> >>>>> On Thu, Apr 03 2008, Boaz Harrosh wrote:
-> >>>>>>  static void req_bio_endio(struct request *rq, struct bio *bio,
-> >>>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> >>>>>> index 6f79d40..2f87c9d 100644
-> >>>>>> --- a/include/linux/blkdev.h
-> >>>>>> +++ b/include/linux/blkdev.h
-> >>>>>> @@ -213,8 +213,15 @@ struct request {
-> >>>>>>  	/*
-> >>>>>>  	 * when request is used as a packet command carrier
-> >>>>>>  	 */
-> >>>>>> -	unsigned int cmd_len;
-> >>>>>> -	unsigned char cmd[BLK_MAX_CDB];
-> >>>>>> +	unsigned short cmd_len;
-> >>>>>> +	unsigned short ext_cdb_len;  /* length of ext_cdb buffer */
-> >>>>>> +	union {
-> >>>>>> +		unsigned char cmd[BLK_MAX_CDB];
-> >>>>>> +		unsigned char *ext_cdb;/* an optional extended cdb.
-> >>>>>> +	                                   * points to a user buffer that must
-> >>>>>> +	                                   * be valid until end of request
-> >>>>>> +	                                   */
-> >>>>>> +	};
-> >>>>> Why not just something ala
-> >>>>>
-> >>>>>         unsigned short cmd_len;
-> >>>>>         unsigned char __cmd[BLK_MAX_CDB];
-> >>>>>         unsigned char *cmd;
-> >>>>>
-> >>>>> and then have rq_init() do
-> >>>>>
-> >>>>>         rq->cmd = rq->__cmd;
-> >>>>>
-> >>>>> and just have a function for setting up a larger ->cmd and adjusting
-> >>>>> ->cmd_len in the process?
-> >>>>>
-> >>>>> Then rq_set_cdb() would be
-> >>>>>
-> >>>>> static inline void rq_set_cdb(struct request *rq, u8 *cdb, short cdb_len)
-> >>>>> {
-> >>>>>         rq->cmd = cdb;
-> >>>>>         rq->cmd_len = cdb_len;
-> >>>>> }
-> >>>>>
-> >>>>> and rq_get_cdb() plus rq_get_cdb_len() could just go away.
-> >>>>>
-> >>>> Because this way it is dangerous if large commands are issued to legacy
-> >>>> drivers. In scsi-land we have .cmd_len at host template that will govern if
-> >>>> we are allow to issue larger commands to the driver. In block devices we do
-> >>>> not have such a facility, and the danger is if such commands are issued through
-> >>>> bsg or other means, even by malicious code. What you say is the ideal and it
-> >>>> is what I've done for scsi, but for block devices we can not do that yet.
-> >>>> With the way I did it here, Legacy drivers will see zero length command and
-> >>>> will do the right thing, from what I've seen.
-> >>> What are exactly block devices? ub and ide?
-> >>>
-> >>> bsg are created only for scsi devices (and scsi objects like sas host)
-> >>> now. Are there other means to send commands except for ioctl?
-> >> I'm not 100% sure either way, so I would like to be safe. Any way, there
-> >> is the size issue, this way we add *nothing* at all, so it looks preferable.
-> >> The final outcome will be the same both ways.
-> > 
-> > I think that a clean design is an important issue than the sizeof of
-> > struct request.
-> > 
-> > 
-> >> I would like if you reconsider the ugliness issue. I admit that at first I
-> >> personally disliked it, but now that I look at it, I think it is cleaner,
-> >> coding style, this way. Because the union points out the exclusiveness of
-> >> the two systems, the striate way give the notion of two separate systems.
-> > 
-> > That's a ugly hack for me.
-> > 
-> > Why do we have two separate systems to represent the command length?
-> > If the command length is smaller than 16 bytes, we use cmd_len. If the
-> > length is larger than 16 bytes, we use varlen_cdb_len?
-> > 
-> > For me, as Jens proposed, having only cmd_len is the right way.
-> > 
-> > And 'cdb' name is not appropriate for the block layer, I think.
-> > 
-> > I agreed that changing the block layer and the scsi midlayer gradually
-> > is a safe option. Shortly, I'll send patches to clean up the hack on
-> > the top of your patchset.
-> > --
-> 
-> Sorry TOMO, I was sending the ver2 patchset and only saw your mail in
-> the middle, so anyway you have the latest I have now.
-> 
-> If it's ok with you I will squash your patches onto mine and add your
-> sign-off-by. There is no use putting code in the tree that will be changed
-> immediately after.
+We rarely handle large commands. So for optimization, a struct request
+still has a static array for a command. rq_init sets rq->cmd pointer
+to the static array. In short, rq_init() does
 
-There is no mergeable stuff between yours and my patchset. I've just
-sent four patches. The first three patches are not related your
-patchset (they are cleanups for changing rq->cmd from the static array
-to a pointer). The fourth patch is a substitute for your second
-patch. Nothing are common between them.
+rq->cmd = rq->__cmd;
+
+So we can access to rq->cmd and rq->cmd_len as before.
+
+Boaz argues that having single cmd_len is dangerous:
+
+> Because this way it is dangerous if large commands are issued to legacy
+> drivers. In scsi-land we have .cmd_len at host template that will govern if
+> we are allow to issue larger commands to the driver. In block devices we do
+> not have such a facility, and the danger is if such commands are issued through
+> bsg or other means, even by malicious code. What you say is the ideal and it
+
+I don't see how it is dangerous. We don't send large commands to block
+devices via bsg. We can send large commands to block devices via only
+SG_IO. SG_IO (block/scsi_ioctl.c) forbids us sending commands large
+than 16 bytes, BLK_MAX_CDB. So how can we send large commands to block
+devices?
+
+The first, second, and third patches are safe cleanups (a preparation
+for changing rq->cmd from the static array to a pointer). They don't
+conflict with Boaz's patchset. Even if we choose Boaz's approach now,
+we'll move to the approach to have one command length in struct
+request in the long term. So they can be applied now.
+
+The forth patch adds large command support. It's a substitute for
+Boaz's second patch. It's pretty simple except for one hack for
+ide-io. It's necessary since the ide subsystem allocates struct
+request without using blk_get_request. In the long term, it would
+better to convert it to use blk_get_request properly.
 
 
-> Please note that I'm a bit afraid to put code that has both length as one
-> if you are more confident then me, I will take your word for it.
-> 
-> Thanks for helping out, as you can see I did it very safe, but with your
-> help maybe it can finally go in. Thanks++
-> 
-> Boaz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
