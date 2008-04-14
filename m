@@ -1,69 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/3] block: adds padding support to blk_rq_map_user_iov
-Date: Mon, 14 Apr 2008 19:55:04 +0200
-Message-ID: <20080414175504.GS12774@kernel.dk>
-References: <1207837033-23835-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080411105517.GR12774@kernel.dk> <20080411235743H.tomof@acm.org>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: mptsas problem
+Date: Mon, 14 Apr 2008 12:16:11 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229FBE34D@NAMAIL2.ad.lsil.com>
+References: <20080413204910.GA19651@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:6151 "EHLO kernel.dk"
+Received: from mail0.lsil.com ([147.145.40.20]:40553 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764362AbYDNRzL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2008 13:55:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20080411235743H.tomof@acm.org>
+	id S1765920AbYDNSRP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2008 14:17:15 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20080413204910.GA19651@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, htejun@gmail.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
+To: Wakko Warner <wakko@animx.eu.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
 
-On Fri, Apr 11 2008, FUJITA Tomonori wrote:
-> On Fri, 11 Apr 2008 12:55:18 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
-> 
-> > On Thu, Apr 10 2008, FUJITA Tomonori wrote:
-> > > As discussed [*1], blk_rq_map_user_iov path is broken regarding
-> > > padding at the moment. In 2.6.24, libata did padding but libata's
-> > > padding code was removed and now libata expects the block layer to do
-> > > that.
-> > > 
-> > > blk_rq_map_user does padding but blk_rq_map_user_iov doesn't so
-> > > blk_rq_map_user_iov doesn't work in case libata needs padding (so far
-> > > nobody has complained, maybe nobody uses blk_rq_map_user_iov
-> > > interface).
-> > > 
-> > > This patchset adds padding support to blk_rq_map_user_iov. I converted
-> > > convert bio_copy_user to bio_copy_user_iov, which uses a temporary
-> > > kernel buffers.  blk_rq_map_user_iov uses bio_copy_user_iov when a low
-> > > level driver needs padding or a buffer in sg_iovec isn't aligned. We
-> > > can safely do padding in blk_rq_map_sg.
-> > > 
-> > > In the long run, I want to integrate several mapping APIs for PC
-> > > commands (and new API should be useful for sg/st/osst) but I need more
-> > > time to finish that work.
-> > > 
-> > > This is against the latest Linus tree. Can we merge this after 2.6.25?
-> > 
-> > Thanks Tomo, this looks good to me know. I'll queue it up.
-> 
-> My pleasure!
-> 
-> BTW, what do you think about a patch to change blk_rq_unmap_user to
-> take a request instead of a bio?
-> 
-> http://marc.info/?l=linux-scsi&m=120716475703416&w=2
-> 
-> I know that you are unwilling to add somthing to struct request (a
-> pointer to bio in this case) but symmetrical mapping APIs are more
-> handy (the patch also cleans ups the users of the mapping APIs like
-> bsg) and less error prone...
+On Sunday, April 13, 2008 2:49 PM, Wakko Warner wrote:
 
-I like symmetric APIs as much as the next guy, but it's not really that
-ugly in this case I think. As such I'd be willing to take such a patch
-only if it cleans up drivers considerably - that is, they have to go
-through lengths to hang on to the bio to pass in for unmapping. Your
-patch is just borderline I'd say :-)
+> > depth of 64 it may be queueing internally as well.  You could try
+> > lowering the lsi queue to 31 and seeing if it makes a difference.
+> 
+> IIRC, someone said the LSIs does queue in firmware.
+> 
 
--- 
-Jens Axboe
+It was probably me that told you that.   Anyways,  the lsiutil 100
+output you sent me last week indicated youre controller has NCQ
+disabled.     You need new firmware and controller chip rev in order to
+support NCQ.  You should contact LSI support to obtain which versions of
+firmware and chip rev that is required.   Meanwhile your controller will
+queuing commands for SATA, only sending one command across the wire at a
+time.   For SAS, you will not have this issue.
 
+Eric
