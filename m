@@ -1,69 +1,66 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [patch 02/17] Dell CERC support for megaraid_mbox
-Date: Mon, 14 Apr 2008 09:56:43 -0600
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265020D687C@NAMAIL1.ad.lsil.com>
-References: <47FA1738.4020909@suse.de>
+From: Leonid Kalmankin <lvk@mashcenter.ru>
+Subject: aic94xx + ST3146855SS still failing under heavy load
+Date: Mon, 14 Apr 2008 21:03:37 +0400
+Message-ID: <1208192617.10361.18.camel@lvk-nb.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62660 "EHLO mail0.lsil.com"
+Received: from ns.mashcenter.ru ([195.14.58.214]:55576 "EHLO ns.mashcenter.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754406AbYDNP5u convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2008 11:57:50 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <47FA1738.4020909@suse.de>
+	id S1755626AbYDNRNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2008 13:13:31 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by ns.mashcenter.ru (Postfix) with ESMTP id 1DC511F415
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 21:03:08 +0400 (MSD)
+Received: from ns.mashcenter.ru ([127.0.0.1])
+	by localhost (mail.mashcenter.ru [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id l-0pzsOBj7Iu for <linux-scsi@vger.kernel.org>;
+	Mon, 14 Apr 2008 21:03:06 +0400 (MSD)
+Received: from [172.16.1.10] (unknown [172.16.1.10])
+	by ns.mashcenter.ru (Postfix) with ESMTP id 5EA121F411
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 21:03:06 +0400 (MSD)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-Hannes,
+Hello!
 
-I was on vacation last week. Sorry for late response.  I am trying to f=
-indout the details of the DELL FW 6.62 release and will give the update=
- as soon as I have them.
+We have a system with:
 
-Regards.
+vanilla 2.6.25-rc8 (2.6.23, 2.6.24 have the same behaviour)
 
-Bo Yang  =20
+Adaptec AIC-9410W SAS (Razor ASIC RAID) (rev 09)
+aic94xx: Found sequencer Firmware version 1.1 (V30)
+  (Firmware version 1.1 (V17/10c6) makes no difference)
+scsi 2:0:0:0: Direct-Access  SEAGATE ST3146855SS 0002 PQ: 0 ANSI: 5
 
------Original Message-----
-=46rom: Hannes Reinecke [mailto:hare@suse.de]=20
-Sent: Monday, April 07, 2008 8:45 AM
-To: Yang, Bo
-Cc: akpm@linux-foundation.org; James.Bottomley@HansenPartnership.com; l=
-inux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com; Patro, Sumant
-Subject: Re: [patch 02/17] Dell CERC support for megaraid_mbox
 
-Yang, Bo wrote:
-> Hannes,
->=20
-> We can not find out why need to disable the random deletion of the=20
-> logical drive for the FW version>=3D6.62?  Where is the 6.62 come fro=
-m?
->=20
-=46rom the bug reports we had. Dell machines with a fw rev < 6.61 work =
-with this driver, whereas newer rev (the said 6.62) don't.
-As to the details: No idea. This is just what I found by comparing the =
-older megaraid driver (which worked, but is unsupported) and the newer =
-megaraid_mbox driver.
-The noticeable difference was just the random deletion feature.
-As I don't have any details about the driver I certainly can't tell you=
- any details. This is a workaround.
-But as Dell (or LSI, for that matter) refuse to update the BIOS on thes=
-e drivers we're stuck with it.
+It reliably fails under heavy IO:
 
-Cheers,
+> sas: command 0xffff81022c5f5640, task 0xffff8101f6b0f000, timed out: EH_NOT_HANDLED
+> sas: command 0xffff81022c5f5500, task 0xffff8101f6b0f1c0, timed out: EH_NOT_HANDLED
+> ....
+> sas: Enter sas_scsi_recover_host
+> sas: trying to find task 0xffff8101f6b0f000
+> sas: sas_scsi_find_task: aborting task 0xffff8101f6b0f000
+> aic94xx: task 0xffff8101f6b0f000 done with opcode 0x1e resp 0x0 stat 0x8d but aborted by upper layer!
+> aic94xx: tmf tasklet complete
+> aic94xx: tmf came back
+> aic94xx: asd_abort_task: task 0xffff8101f6b0f000 done
+> aic94xx: task 0xffff8101f6b0f000 aborted, res: 0x0
+> sas: sas_scsi_find_task: task 0xffff8101f6b0f000 is done
+> sas: sas_eh_handle_sas_errors: task 0xffff8101f6b0f000 is done
+> sas: --- Exit sas_scsi_recover_host
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sometimes it successfully recovers; sometimes the disk is lost until the reboot.
+
+I've read http://archive.netbsd.se/?ml=linux-scsi&a=2008-01&t=6260524
+Asked Seagate about firmware update; they told me they do not have any.
+
+As I understood, the root of this problem is protocol errors in disk's firmware
+(other disks, for example FUJITSU MBA3147RC work fine); however, that kind of errors
+should be recoverable by sas/aic94xx drivers.
+
+If that is true, I could test some patches/ideas, where should I start?
+
