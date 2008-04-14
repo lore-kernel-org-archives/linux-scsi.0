@@ -1,46 +1,149 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: mptsas and ioc0: ERRORs
-Date: Mon, 14 Apr 2008 09:22:30 +0200
-Message-ID: <20080414092230.91fcd030.taeuber@bbaw.de>
-References: <20080407104940.5c7c89d1.taeuber@bbaw.de>
-	<0631C836DBF79F42B5A60C8C8D4E8229F79FF7@NAMAIL2.ad.lsil.com>
-	<20080408093858.5ea6f2ed.taeuber@bbaw.de>
-	<200804082010.44090.bs@q-leap.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 2/3 ver3] block layer extended-cdb support
+Date: Mon, 14 Apr 2008 12:49:49 +0300
+Message-ID: <480328BD.7050206@panasas.com>
+References: <47F89948.9060503@panasas.com>	<20080412145152C.tomof@acm.org>	<4801CEAE.6030309@panasas.com> <20080414010112W.tomof@acm.org> <480239D2.3040206@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:54764 "EHLO mail.bbaw.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751780AbYDNHV5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2008 03:21:57 -0400
-Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id A50314A8073
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 4EF5E93767
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
-Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id 37E839375C
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2008 09:21:55 +0200 (CEST)
-In-Reply-To: <200804082010.44090.bs@q-leap.de>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:30526 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751536AbYDNJuY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2008 05:50:24 -0400
+In-Reply-To: <480239D2.3040206@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-Hi there!
+On Sun, Apr 13 2008 at 19:50 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> On Sun, Apr 13 2008 at 19:17 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+>> On Sun, 13 Apr 2008 12:13:18 +0300
+>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>
+>> That's a ugly hack for me.
+>>
+>> Why do we have two separate systems to represent the command length?
+>> If the command length is smaller than 16 bytes, we use cmd_len. If the
+>> length is larger than 16 bytes, we use varlen_cdb_len?
+>>
+>> For me, as Jens proposed, having only cmd_len is the right way.
+>>
+>> And 'cdb' name is not appropriate for the block layer, I think.
+>>
+>> I agreed that changing the block layer and the scsi midlayer gradually
+>> is a safe option. Shortly, I'll send patches to clean up the hack on
+>> the top of your patchset.
+>> --
+> 
+> Sorry TOMO, I was sending the ver2 patchset and only saw your mail in
+> the middle, so anyway you have the latest I have now.
+> 
+> If it's ok with you I will squash your patches onto mine and add your
+> sign-off-by. There is no use putting code in the tree that will be changed
+> immediately after.
+> 
+> Please note that I'm a bit afraid to put code that has both length as one
+> if you are more confident then me, I will take your word for it.
+> 
+> Thanks for helping out, as you can see I did it very safe, but with your
+> help maybe it can finally go in. Thanks++
+> 
+> Boaz
+> --
+Maybe you mean something like below. I changed cdb => cmd and I use one
+cmd_len. I think that "cdb" was a good name. Note that we have BLK_MAX_CDB
+right there next to it. But if you don't like it then I don't mind to
+change the name, I think it was James idea.
 
-Just for completeness:
-It seems my problem was caused by a very old firmware on the recently bought new HBA.
-It's a bit inconsistent but the firmware is told in hex under proc:
+But please note!!!
+I think having one cmd_len is DANGEROUS. And it forces a full code audit
+to be sure, has with my approach we are much more safe. There, I said it.
 
-monosan:~ # cat /proc/mpt/summary 
-ioc0: LSISAS1068 B1, FwRev=01180100h, Ports=1, MaxQ=366, IRQ=4347
+---
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Wed, 31 Oct 2007 14:56:09 +0200
+Subject: [PATCH] block layer extended-command support
 
-and in dec on the website:
-SAS3801X  	FW:1.24.01 BIOS:6.20.00  	10-DEC-07
+  - add ext_cmd to hold a large external cdb if needed. Allocation
+    of buffer must be done by user and held until request execution
+    is done.
+  - Since there can be either a fix_length command up to 16 bytes
+    or an external extended command but never both, we hold the two
+    types in a union to save space. cmd_len > BLK_MAX_CDB signals
+    an ext_cmd mode.
+  - Use new rq_set_cmd() to set everything properly.
+  - Use rq_get_cmd() to retrieve the command in a generic way.
+  - Once all drivers and users convert to the new accessors the cmd[]
+    16 bytes buffer can be discarded.
 
-The problem hasn't occured since 4 days now. I hope the best.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ block/blk-core.c       |    2 ++
+ include/linux/blkdev.h |   25 ++++++++++++++++++++++++-
+ 2 files changed, 26 insertions(+), 1 deletions(-)
 
-Regards
-Lars
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 2a438a9..a2bf07f 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -141,6 +141,8 @@ void rq_init(struct request_queue *q, struct request *rq)
+ 	rq->end_io = NULL;
+ 	rq->end_io_data = NULL;
+ 	rq->next_rq = NULL;
++	rq->cmd_len = 0;
++	rq->ext_cmd = NULL;
+ }
+ 
+ static void req_bio_endio(struct request *rq, struct bio *bio,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6f79d40..0c4f5f5 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -214,7 +214,13 @@ struct request {
+ 	 * when request is used as a packet command carrier
+ 	 */
+ 	unsigned int cmd_len;
+-	unsigned char cmd[BLK_MAX_CDB];
++	union {
++		unsigned char cmd[BLK_MAX_CDB];
++		unsigned char *ext_cmd;/* an optional extended cdb.
++	                                   * points to a user buffer that must
++	                                   * be valid until end of request
++	                                   */
++	};
+ 
+ 	unsigned int data_len;
+ 	unsigned int extra_len;	/* length of alignment and padding */
+@@ -484,6 +490,23 @@ enum {
+ #define rq_is_sync(rq)		(rq_data_dir((rq)) == READ || (rq)->cmd_flags & REQ_RW_SYNC)
+ #define rq_is_meta(rq)		((rq)->cmd_flags & REQ_RW_META)
+ 
++static inline void rq_set_cmd(struct request *rq, u8 *cmd, short cmd_len)
++{
++	rq->cmd_len = cmd_len;
++	if (cmd_len <= BLK_MAX_CDB)
++		memcpy(rq->cmd, cmd, cmd_len);
++	else
++		rq->ext_cmd = cmd;
++}
++
++static inline u8 *rq_get_cmd(struct request *rq)
++{
++	if (rq->cmd_len <= BLK_MAX_CDB)
++		return rq->cmd;
++	else
++		return rq->ext_cmd;
++}
++
+ static inline int blk_queue_full(struct request_queue *q, int rw)
+ {
+ 	if (rw == READ)
+-- 
+1.5.3.3
+
+ 
+
+
+
