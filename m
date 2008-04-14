@@ -1,77 +1,131 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 0/4] add large command support to the block layer
-Date: Mon, 14 Apr 2008 15:36:17 +0300
-Message-ID: <48034FC1.1050403@panasas.com>
-References: <20080414010112W.tomof@acm.org> <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <48034246.7040702@panasas.com>
+Date: Mon, 14 Apr 2008 22:06:06 +0900
+Message-ID: <20080414220602N.tomof@acm.org>
+References: <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<48034246.7040702@panasas.com>
+	<48034FC1.1050403@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:34246 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854AbYDNMiM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2008 08:38:12 -0400
-In-Reply-To: <48034246.7040702@panasas.com>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:44588 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751876AbYDNNJ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2008 09:09:26 -0400
+In-Reply-To: <48034FC1.1050403@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alasdair G Kergon <agk@redhat.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
 
-On Mon, Apr 14 2008 at 14:38 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> On Mon, Apr 14 2008 at 13:50 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->> This patchset adds large command support to the block layer.
->>
->> We rarely handle large commands. So for optimization, a struct request
->> still has a static array for a command. rq_init sets rq->cmd pointer
->> to the static array. In short, rq_init() does
->>
->> rq->cmd = rq->__cmd;
->>
->> So we can access to rq->cmd and rq->cmd_len as before.
->>
->> Boaz argues that having single cmd_len is dangerous:
->>
->>> Because this way it is dangerous if large commands are issued to legacy
->>> drivers. In scsi-land we have .cmd_len at host template that will govern if
->>> we are allow to issue larger commands to the driver. In block devices we do
->>> not have such a facility, and the danger is if such commands are issued through
->>> bsg or other means, even by malicious code. What you say is the ideal and it
->> I don't see how it is dangerous. We don't send large commands to block
->> devices via bsg. We can send large commands to block devices via only
->> SG_IO. SG_IO (block/scsi_ioctl.c) forbids us sending commands large
->> than 16 bytes, BLK_MAX_CDB. So how can we send large commands to block
->> devices?
->>
->> The first, second, and third patches are safe cleanups (a preparation
->> for changing rq->cmd from the static array to a pointer). They don't
->> conflict with Boaz's patchset. Even if we choose Boaz's approach now,
->> we'll move to the approach to have one command length in struct
->> request in the long term. So they can be applied now.
->>
->> The forth patch adds large command support. It's a substitute for
->> Boaz's second patch. It's pretty simple except for one hack for
->> ide-io. It's necessary since the ide subsystem allocates struct
->> request without using blk_get_request. In the long term, it would
->> better to convert it to use blk_get_request properly.
->>
->>
+On Mon, 14 Apr 2008 15:22:21 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> On Mon, Apr 14 2008 at 15:08 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > On Mon, 14 Apr 2008 14:28:45 +0300
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > 
+> >> On Mon, Apr 14 2008 at 14:04 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> >>> On Mon, 14 Apr 2008 12:49:49 +0300
+> >>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> >>>
+> >>>> On Sun, Apr 13 2008 at 19:50 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> >>>>> On Sun, Apr 13 2008 at 19:17 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> >>>>>> On Sun, 13 Apr 2008 12:13:18 +0300
+> >>>>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> >>>>>>
+> >>>>>> That's a ugly hack for me.
+> >>>>>>
+> >>>>>> Why do we have two separate systems to represent the command length?
+> >>>>>> If the command length is smaller than 16 bytes, we use cmd_len. If the
+> >>>>>> length is larger than 16 bytes, we use varlen_cdb_len?
+> >>>>>>
+> >>>>>> For me, as Jens proposed, having only cmd_len is the right way.
+> >>>>>>
+> >>>>>> And 'cdb' name is not appropriate for the block layer, I think.
+> >>>>>>
+> >>>>>> I agreed that changing the block layer and the scsi midlayer gradually
+> >>>>>> is a safe option. Shortly, I'll send patches to clean up the hack on
+> >>>>>> the top of your patchset.
+> >>>>>> --
+> >>>>> Sorry TOMO, I was sending the ver2 patchset and only saw your mail in
+> >>>>> the middle, so anyway you have the latest I have now.
+> >>>>>
+> >>>>> If it's ok with you I will squash your patches onto mine and add your
+> >>>>> sign-off-by. There is no use putting code in the tree that will be changed
+> >>>>> immediately after.
+> >>>>>
+> >>>>> Please note that I'm a bit afraid to put code that has both length as one
+> >>>>> if you are more confident then me, I will take your word for it.
+> >>>>>
+> >>>>> Thanks for helping out, as you can see I did it very safe, but with your
+> >>>>> help maybe it can finally go in. Thanks++
+> >>>>>
+> >>>>> Boaz
+> >>>>> --
+> >>>> Maybe you mean something like below. I changed cdb => cmd and I use one
+> >>>> cmd_len. I think that "cdb" was a good name. Note that we have BLK_MAX_CDB
+> >>>> right there next to it. But if you don't like it then I don't mind to
+> >>>> change the name, I think it was James idea.
+> >>> I don't. I've been talking mainly about how to represent the length of
+> >>> command.
+> >>>
+> >>> About 'cdb' name, I thought that there is a better name than
+> >>> BLK_MAX_CDB. But it's up to Jens.
+> >>>
+> >>>
+> >>>> But please note!!!
+> >>>> I think having one cmd_len is DANGEROUS. And it forces a full code audit
+> >>>> to be sure, has with my approach we are much more safe. There, I said it.
+> >>> Could you be more specific? So far, you have not explained how it can
+> >>> be dangerous.
+> >> There is a pending patch by Pete, and our main goal, is to push OSD commands 
+> >> through bsg. All over the kernel there are cooked up char-devices, like in 
+> >> gdth, that do vendor specific management commands. All these, and future, 
+> >> special-command can go from user-mode through bsg in a common way. Via support 
+> >> of vendor specific and extended commands. All the new scsi defined commands 
+> >> that are bigger then 16 are not going to be sent through sg, but through 
+> >> bsg right? So we do want to use this facility from kernel and from user-land
+> >> but we need some protection. In scsi LLDs we have .max_cmnd but block devices
+> >> don't have that. So either you need to restrict what can be done, or play it safe
+> >> like I did.
+> > 
+> > If we creates bsg devices for block devices, of course, we need to a
+> > mechanism to govern the length of commands.
+> > 
+> > But why do you want to create bsg devices for block devices? If block
+> > devices want large commands for some reasons, their bsg hook functions
+> > need to handle the length of commands anyway. There is no reason that
+> > the block layer has two values to represent one item, the length of
+> > command.
+> > 
+> > If we want to govern the command length in a common place, then I
+> > think that it would be better to add the limit to request queue.
+> > 
+> > And again, what are your block devices? What do they want bsg for?
+> > --
 > 
-> I still think that my last patch with one cmd_len and the Union is
-> nicer and more simple. And does not waist the extra pointer that is 
-> never ever used but by me. (And does not need 3 preparation patches)
-> 
-> Boaz
-> 
-Tomo hi.
+> I don't have any block devices personally. I just thought that the diff
+> between sg a bsg is that bsg will support any block device, so I guess
+> I was wrong, bsg is a user-to-scsi bridge just like sg is. I thought
+> bsg registers on every request_queue, how does bsg filter which devices
+> to export and which not?
 
-Please don't miss understand me.
-ACK-by: Boaz Harrosh <bharrosh@panasas.com>
+bsg is not a user-to-scsi bridge just like sg is. You can create bsg
+devices for any request queue but we don't create bsg devices for
+every request queue in kernel.
 
-I really don't mind, it is fine by me and it does what I want.
-So thanks yes please push this through, and I'll rebase my
-two patches to yours.
+When you create a bsg device, you need your hook funciton to perform a
+request via the bsg device. The hook function needs to handle large
+commands if necessary.
 
-Thanks
-Boaz
+If you are interested in how bsg works for non scsi devices, see
+scsi_transport_sas.c. It creates bsg devices for sas objects to handle
+SMP requests.
 
 
+> What about the union, don't we care about the space saved?
+
+I think that the approach to use a cmd pointer is clearer. But it's up
+to Jens.
