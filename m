@@ -1,101 +1,69 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Mon, 14 Apr 2008 10:41:54 -0400
-Message-ID: <20080414144154.GB10288@osc.edu>
-References: <20080414010112W.tomof@acm.org> <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [patch 02/17] Dell CERC support for megaraid_mbox
+Date: Mon, 14 Apr 2008 09:56:43 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265020D687C@NAMAIL1.ad.lsil.com>
+References: <47FA1738.4020909@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:47855 "EHLO quasar.osc.edu"
+Received: from mail0.lsil.com ([147.145.40.20]:62660 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759905AbYDNOwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2008 10:52:06 -0400
-Content-Disposition: inline
-In-Reply-To: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1754406AbYDNP5u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2008 11:57:50 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <47FA1738.4020909@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, bharrosh@panasas.com, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-fujita.tomonori@lab.ntt.co.jp wrote on Mon, 14 Apr 2008 19:50 +0900:
-> This patch changes rq->cmd from the static array to a pointer to
-> support large commands.
-> 
-> We rarely handle large commands. So for optimization, a struct request
-> still has a static array for a command. rq_init sets rq->cmd pointer
-> to the static array.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-[..]
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index b3a58ad..5710ae4 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -215,8 +215,9 @@ struct request {
->  	/*
->  	 * when request is used as a packet command carrier
->  	 */
-> -	unsigned int cmd_len;
-> -	unsigned char cmd[BLK_MAX_CDB];
-> +	unsigned short cmd_len;
-> +	unsigned char __cmd[BLK_MAX_CDB];
-> +	unsigned char *cmd;
->  
->  	unsigned int data_len;
->  	unsigned int extra_len;	/* length of alignment and padding */
-> @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
->  	page_cache_release(p.v);
->  }
->  
-> +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
-> +			      unsigned short cmd_len)
-> +{
-> +	rq->cmd = cmd;
-> +	rq->cmd_len = cmd_len;
-> +}
+Hannes,
 
-Here's one way this will be used, in a patched bsg that understands
-large commands.  Complication is the need to copy and hold onto the
-big command across the duration of the request.
+I was on vacation last week. Sorry for late response.  I am trying to f=
+indout the details of the DELL FW 6.62 release and will give the update=
+ as soon as I have them.
 
-Submit time is fairly clean:
+Regards.
 
-	/* buf, len from user request */
-	rq = blk_get_request(..);
-	rq->cmd_len = len;
-	if (len > BLK_MAX_CDB) {
-		rq->cmd = kmalloc(len);
-		if (rq->cmd == NULL)
-			goto out;
-	}
-	copy_from_user(rq->cmd, buf, len);
+Bo Yang  =20
 
-Completion time needs to know when to free rq->cmd:
+-----Original Message-----
+=46rom: Hannes Reinecke [mailto:hare@suse.de]=20
+Sent: Monday, April 07, 2008 8:45 AM
+To: Yang, Bo
+Cc: akpm@linux-foundation.org; James.Bottomley@HansenPartnership.com; l=
+inux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com; Patro, Sumant
+Subject: Re: [patch 02/17] Dell CERC support for megaraid_mbox
 
-	if (rq->cmd_len > BLK_MAX_CDB)
-		kfree(rq->cmd);
-	blk_put_request(rq);
+Yang, Bo wrote:
+> Hannes,
+>=20
+> We can not find out why need to disable the random deletion of the=20
+> logical drive for the FW version>=3D6.62?  Where is the 6.62 come fro=
+m?
+>=20
+=46rom the bug reports we had. Dell machines with a fw rev < 6.61 work =
+with this driver, whereas newer rev (the said 6.62) don't.
+As to the details: No idea. This is just what I found by comparing the =
+older megaraid driver (which worked, but is unsupported) and the newer =
+megaraid_mbox driver.
+The noticeable difference was just the random deletion feature.
+As I don't have any details about the driver I certainly can't tell you=
+ any details. This is a workaround.
+But as Dell (or LSI, for that matter) refuse to update the BIOS on thes=
+e drivers we're stuck with it.
 
-Could use (rq->cmd != rq->__cmd) instead, but nothing had better
-ever touch rq->cmd_len.
+Cheers,
 
-I don't think the helper rq_set_cmd() will be very useful, as the
-caller (bsg) must think about allocation of the command buffer if it
-is big.
-
-One option would be to handle allocation/freeing of the big command
-in rq_set_... functions, but I don't think you want to constrain the
-interface like that.
-
-Boaz's concern about big rq->cmd_len still worries me, although I
-think this approach is better and worth solving bugs in drivers as
-they arise.  It only matters in the case that someone adds, say, a
-bsg interface to all block devices though.  The queuecommand of ub
-shows a good example of how this will break.
-
-In sum, this is a cleaner approach, and a bit easier for callers
-with long commands to deal with.  And you could get rid of the
-trivial helper.
-
-		-- Pete
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
