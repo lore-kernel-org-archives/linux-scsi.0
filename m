@@ -1,68 +1,109 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: mptsas problem
-Date: Sun, 13 Apr 2008 18:51:24 -0500
-Message-ID: <1208130684.4707.70.camel@localhost.localdomain>
-References: <47F95F5C.500@sauce.co.nz> <20080407010453.GA1952@animx.eu.org>
-	 <1208097071.4707.21.camel@localhost.localdomain>
-	 <20080413164800.GA23094@animx.eu.org>
-	 <1208105925.4707.27.camel@localhost.localdomain>
-	 <20080413170644.GA1234@animx.eu.org>
-	 <1208108263.4707.37.camel@localhost.localdomain>
-	 <480287A2.7030308@torque.net>
+From: David Brownell <david-b@pacbell.net>
+Subject: [patch 2.6.25-rc9] scsi: fix platform driver hotplug/coldplug
+Date: Sun, 13 Apr 2008 20:06:24 -0700
+Message-ID: <200804132006.24469.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38072 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753182AbYDMXv2 (ORCPT
+Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:38033 "HELO
+	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752709AbYDNDK6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Apr 2008 19:51:28 -0400
-In-Reply-To: <480287A2.7030308@torque.net>
+	Sun, 13 Apr 2008 23:10:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Wakko Warner <wakko@animx.eu.org>, Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: kay.sievers@vrfy.org, linux-scsi@vger.kernel.org
 
-On Mon, 2008-04-14 at 08:22 +1000, Douglas Gilbert wrote:
-> > There is one final thought:  the reason the aic94xx has a queue depth of
-> > 31 is because that's the maximum NCQ can support (well, it's 32 max, but
-> > we need one command for error handling).  So, if the LSI shows a queue
-> > depth of 64 it may be queueing internally as well.  You could try
-> > lowering the lsi queue to 31 and seeing if it makes a difference.
-> 
-> If memory serves, I needed to upgrade the firmware on my
-> MPT SAS fusion cards before the SCSI ATA PASS-THROUGH commands
-> worked (properly). I'm a long way away from my hardware
-> at the moment so I can't provide any further information
-> (such as firmware version numbers).
+=46rom: Kay Sievers <kay.sievers@vrfy.org>
 
-OK, this prompted me to try mine, and it does work with my mptsas.  This
-is all of my information from the sysfs files in the host directory:
+Since 43cc71eed1250755986da4c0f9898f9a635cb3bf, the platform modalias
+is prefixed with "platform:". Add MODULE_ALIAS() to the hotpluggable
+SCSI platform drivers, to re-enable auto loading.
 
-active_mode:    Initiator
-board_assembly: 03-01088-03B
-board_name:     SAS3800X
-board_tracer:   P185695005
-can_queue:      127
-cmd_per_lun:    7
-debug_level:    00000000h
-device_delay:   00
-host_busy:      0
-io_delay:       00
-proc_name:      mptsas
-sg_tablesize:   128
-state:  running
-supported_mode: Initiator
-unchecked_isa_dma:      0
-unique_id:      2
-version_bios:   00.00.00.00
-version_fw:     01.24.00.00
-version_mpi:    105
-version_nvdata_default: 2d02h
-version_nvdata_persistent:      2d02h
-version_product:        LSISAS1068 B0
+[ dbrownell@users.sourceforge.net: more drivers, registration fixes ]
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+---
+ drivers/scsi/jazz_esp.c   |    4 ++++
+ drivers/scsi/sgiwd93.c    |    2 ++
+ drivers/scsi/sni_53c710.c |    2 ++
+ drivers/scsi/sun3x_esp.c  |    2 ++
+ 4 files changed, 10 insertions(+)
 
-James
-
-
+--- g26.orig/drivers/scsi/jazz_esp.c	2008-04-13 19:48:19.000000000 -070=
+0
++++ g26/drivers/scsi/jazz_esp.c	2008-04-13 19:48:57.000000000 -0700
+@@ -217,11 +217,15 @@ static int __devexit esp_jazz_remove(str
+ 	return 0;
+ }
+=20
++/* work with hotplug and coldplug */
++MODULE_ALIAS("platform:jazz_esp");
++
+ static struct platform_driver esp_jazz_driver =3D {
+ 	.probe		=3D esp_jazz_probe,
+ 	.remove		=3D __devexit_p(esp_jazz_remove),
+ 	.driver	=3D {
+ 		.name	=3D "jazz_esp",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+--- g26.orig/drivers/scsi/sgiwd93.c	2008-04-13 19:35:17.000000000 -0700
++++ g26/drivers/scsi/sgiwd93.c	2008-04-13 19:49:16.000000000 -0700
+@@ -313,6 +313,7 @@ static struct platform_driver sgiwd93_dr
+ 	.remove =3D __devexit_p(sgiwd93_remove),
+ 	.driver =3D {
+ 		.name   =3D "sgiwd93"
++		.owner	=3D THIS_MODULE,
+ 	}
+ };
+=20
+@@ -332,3 +333,4 @@ module_exit(sgiwd93_module_exit);
+ MODULE_DESCRIPTION("SGI WD33C93 driver");
+ MODULE_AUTHOR("Ralf Baechle <ralf@linux-mips.org>");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:sgiwd93");
+--- g26.orig/drivers/scsi/sni_53c710.c	2008-04-13 19:35:17.000000000 -0=
+700
++++ g26/drivers/scsi/sni_53c710.c	2008-04-13 20:02:00.000000000 -0700
+@@ -53,6 +53,7 @@
+ MODULE_AUTHOR("Thomas Bogend=F6rfer");
+ MODULE_DESCRIPTION("SNI RM 53c710 SCSI Driver");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:snirm_53c710");
+=20
+ #define SNIRM710_CLOCK	32
+=20
+@@ -136,6 +137,7 @@ static struct platform_driver snirm710_d
+ 	.remove	=3D __devexit_p(snirm710_driver_remove),
+ 	.driver	=3D {
+ 		.name	=3D "snirm_53c710",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+--- g26.orig/drivers/scsi/sun3x_esp.c	2008-04-13 19:35:17.000000000 -07=
+00
++++ g26/drivers/scsi/sun3x_esp.c	2008-04-13 19:50:02.000000000 -0700
+@@ -294,6 +294,7 @@ static struct platform_driver esp_sun3x_
+ 	.remove         =3D __devexit_p(esp_sun3x_remove),
+ 	.driver =3D {
+ 		.name   =3D "sun3x_esp",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+@@ -314,3 +315,4 @@ MODULE_VERSION(DRV_VERSION);
+=20
+ module_init(sun3x_esp_init);
+ module_exit(sun3x_esp_exit);
++MODULE_ALIAS("platform:sun3x_esp");
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
