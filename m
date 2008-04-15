@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd buffer
-Date: Tue, 15 Apr 2008 15:30:36 +0300
-Message-ID: <48049FEC.6010808@panasas.com>
+Subject: [PATCH 2/3] scsi: varlen extended and vendor-specific cdbs
+Date: Tue, 15 Apr 2008 15:34:47 +0300
+Message-ID: <4804A0E7.6050002@panasas.com>
 References: <20080414010112W.tomof@acm.org> <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <48049E8A.7030700@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:26593 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7466 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754798AbYDOMcm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2008 08:32:42 -0400
+	with ESMTP id S1752566AbYDOMg3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2008 08:36:29 -0400
 In-Reply-To: <48049E8A.7030700@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,403 +18,276 @@ To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bott
 Cc: linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alasdair G Kergon <agk@redhat.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
 
- - struct scsi_cmnd had a 16 bytes command buffer of its own.
-   This is an unnecessary duplication and copy of request's
-   cmd. It is probably left overs from the time that scsi_cmnd
-   could function without a request attached. So clean that up.
+Add support for variable-length, extended, and vendor specific
+CDBs to scsi-ml. It is now possible for initiators and ULD's
+to issue these types of commands. LLDs need not change much.
+All they need is to raise the .max_cmd_len to the longest command
+they support (see iscsi patch).
 
- - Once above is done, few places, apart from scsi-ml, needed
-   adjustments due to changing the data type of scsi_cmnd->cmnd.
-
- - Lots of drivers still use MAX_COMMAND_SIZE. So I have left
-   that #define but equate it to BLK_MAX_CDB. The way I see it
-   and is reflected in the patch below is.
-   MAX_COMMAND_SIZE - means: The longest fixed-length (*) SCSI CDB
-                      as per the SCSI standard and is not related
-                      to the implementation.
-   BLK_MAX_CDB.     - The allocated space at the request level
-
- - I have audit all ISA drivers and made sure none use ->cmnd in a DMA
-   Operation. Same audit was done by Andi Kleen.
-
-(*)fixed-length here means commands that their size can be determined
-   by their opcode and the CDB does not carry a length specifier, (unlike
-   the VARIABLE_LENGTH_CMD(0x7f) command). This is actually not exactly
-   true and the SCSI standard also defines extended commands and
-   vendor specific commands that can be bigger than 16 bytes. The kernel
-   will support these using the same infrastructure used for VARLEN CDB's.
-   So in effect MAX_COMMAND_SIZE means the maximum size command
-   scsi-ml supports without specifying a cmd_len by ULD's
+- clean-up some code paths that did not expect commands to be
+  larger than 16, and change cmd_len members' type to short as
+  char is not enough.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Benny Halevy <bhalevy@panasas.com>
 ---
- drivers/firewire/fw-sbp2.c       |    2 +-
- drivers/s390/scsi/zfcp_dbf.c     |    2 +-
- drivers/s390/scsi/zfcp_fsf.c     |    2 +-
- drivers/scsi/53c700.c            |    6 +++---
- drivers/scsi/a100u2w.c           |    2 +-
- drivers/scsi/gdth.c              |    2 +-
- drivers/scsi/hptiop.c            |    6 +++---
- drivers/scsi/ibmvscsi/ibmvscsi.c |    2 +-
- drivers/scsi/initio.c            |    2 +-
- drivers/scsi/qla1280.c           |    4 ++--
- drivers/scsi/scsi_error.c        |   14 ++++++++------
- drivers/scsi/scsi_lib.c          |    5 +++--
- drivers/scsi/scsi_tgt_lib.c      |    2 ++
- drivers/usb/storage/isd200.c     |    2 ++
- include/scsi/scsi_cmnd.h         |   21 +++++++++++++++++++--
- include/scsi/scsi_eh.h           |    4 ++--
- 16 files changed, 51 insertions(+), 27 deletions(-)
+ block/scsi_ioctl.c       |    5 ++---
+ drivers/scsi/constants.c |   10 +++-------
+ drivers/scsi/scsi.c      |   22 +++++++++++-----------
+ drivers/scsi/scsi_lib.c  |    8 ++++++--
+ include/scsi/scsi.h      |   40 +++++++++++++++++++++++++++++++++-------
+ include/scsi/scsi_cmnd.h |    2 +-
+ include/scsi/scsi_host.h |    8 +++-----
+ 7 files changed, 59 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
-index 62b4e47..2260e56 100644
---- a/drivers/firewire/fw-sbp2.c
-+++ b/drivers/firewire/fw-sbp2.c
-@@ -1492,7 +1492,7 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index a2c3a93..aaf07e4 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -33,13 +33,12 @@
+ #include <scsi/scsi_cmnd.h>
  
- 	memset(orb->request.command_block,
- 	       0, sizeof(orb->request.command_block));
--	memcpy(orb->request.command_block, cmd->cmnd, COMMAND_SIZE(*cmd->cmnd));
-+	memcpy(orb->request.command_block, cmd->cmnd, cmd->cmd_len);
+ /* Command group 3 is reserved and should never be used.  */
+-const unsigned char scsi_command_size[8] =
++const unsigned char scsi_command_size_tbl[8] =
+ {
+ 	6, 10, 10, 12,
+ 	16, 12, 10, 10
+ };
+-
+-EXPORT_SYMBOL(scsi_command_size);
++EXPORT_SYMBOL(scsi_command_size_tbl);
  
- 	orb->base.callback = complete_command_orb;
- 	orb->base.request_bus =
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index 85ba4cc..1bec0b2 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -1057,7 +1057,7 @@ static void zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
- 				rec->scsi_result = scsi_cmnd->result;
- 				rec->scsi_cmnd = (unsigned long)scsi_cmnd;
- 				rec->scsi_serial = scsi_cmnd->serial_number;
--				memcpy(rec->scsi_opcode, &scsi_cmnd->cmnd,
-+				memcpy(rec->scsi_opcode, scsi_cmnd->cmnd,
- 					min((int)scsi_cmnd->cmd_len,
- 						ZFCP_DBF_SCSI_OPCODE));
- 				rec->scsi_retries = scsi_cmnd->retries;
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index b7aa969..ea46881 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -4024,7 +4024,7 @@ zfcp_fsf_send_fcp_command_task_handler(struct zfcp_fsf_req *fsf_req)
- 		ZFCP_LOG_TRACE("scpnt->result =0x%x, command was:\n",
- 			       scpnt->result);
- 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_TRACE,
--			      (void *) &scpnt->cmnd, scpnt->cmd_len);
-+			      scpnt->cmnd, scpnt->cmd_len);
+ #include <scsi/sg.h>
  
- 		ZFCP_LOG_TRACE("%i bytes sense data provided by FCP\n",
- 			       fcp_rsp_iu->fcp_sns_len);
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index f4c4fe9..f5a9add 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -599,7 +599,7 @@ NCR_700_scsi_done(struct NCR_700_Host_Parameters *hostdata,
- 			(struct NCR_700_command_slot *)SCp->host_scribble;
- 		
- 		dma_unmap_single(hostdata->dev, slot->pCmd,
--				 sizeof(SCp->cmnd), DMA_TO_DEVICE);
-+				 MAX_COMMAND_SIZE, DMA_TO_DEVICE);
- 		if (slot->flags == NCR_700_FLAG_AUTOSENSE) {
- 			char *cmnd = NCR_700_get_sense_cmnd(SCp->device);
- #ifdef NCR_700_DEBUG
-@@ -1004,7 +1004,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 				 * here */
- 				NCR_700_unmap(hostdata, SCp, slot);
- 				dma_unmap_single(hostdata->dev, slot->pCmd,
--						 sizeof(SCp->cmnd),
-+						 MAX_COMMAND_SIZE,
- 						 DMA_TO_DEVICE);
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 403a7f2..9785d73 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -28,7 +28,6 @@
+ #define SERVICE_ACTION_OUT_12 0xa9
+ #define SERVICE_ACTION_IN_16 0x9e
+ #define SERVICE_ACTION_OUT_16 0x9f
+-#define VARIABLE_LENGTH_CMD 0x7f
  
- 				cmnd[0] = REQUEST_SENSE;
-@@ -1901,7 +1901,7 @@ NCR_700_queuecommand(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *))
- 	}
- 	slot->resume_offset = 0;
- 	slot->pCmd = dma_map_single(hostdata->dev, SCp->cmnd,
--				    sizeof(SCp->cmnd), DMA_TO_DEVICE);
-+				    MAX_COMMAND_SIZE, DMA_TO_DEVICE);
- 	NCR_700_start_command(SCp);
- 	return 0;
- }
-diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-index 792b2e8..ced3eeb 100644
---- a/drivers/scsi/a100u2w.c
-+++ b/drivers/scsi/a100u2w.c
-@@ -895,7 +895,7 @@ static void inia100_build_scb(struct orc_host * host, struct orc_scb * scb, stru
- 	} else {
- 		scb->tag_msg = 0;	/* No tag support               */
- 	}
--	memcpy(&scb->cdb[0], &cmd->cmnd, scb->cdb_len);
-+	memcpy(scb->cdb, cmd->cmnd, scb->cdb_len);
- }
  
- /**
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index c6d6e7c..8e2e964 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -465,7 +465,7 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
-     scp->request = (struct request *)&wait;
-     scp->timeout_per_command = timeout*HZ;
-     scp->cmd_len = 12;
--    memcpy(scp->cmnd, cmnd, 12);
-+    scp->cmnd = cmnd;
-     cmndinfo.priority = IOCTL_PRI;
-     cmndinfo.internal_cmd_str = gdtcmd;
-     cmndinfo.internal_command = 1;
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index beecda9..a24c5e3 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -763,9 +763,9 @@ static int hptiop_queuecommand(struct scsi_cmnd *scp,
- 			scp,
- 			host->host_no, scp->device->channel,
- 			scp->device->id, scp->device->lun,
--			*((u32 *)&scp->cmnd),
--			*((u32 *)&scp->cmnd + 1),
--			*((u32 *)&scp->cmnd + 2),
-+			((u32 *)scp->cmnd)[0],
-+			((u32 *)scp->cmnd)[1],
-+			((u32 *)scp->cmnd)[2],
- 			_req->index, _req->req_virt);
  
- 	scp->result = 0;
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 78d46a9..df9b865 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -738,7 +738,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
- 	srp_cmd = &evt_struct->iu.srp.cmd;
- 	memset(srp_cmd, 0x00, SRP_MAX_IU_LEN);
- 	srp_cmd->opcode = SRP_CMD;
--	memcpy(srp_cmd->cdb, cmnd->cmnd, sizeof(cmnd->cmnd));
-+	memcpy(srp_cmd->cdb, cmnd->cmnd, sizeof(srp_cmd->cdb));
- 	srp_cmd->lun = ((u64) lun) << 48;
+@@ -210,7 +209,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	cdb0 = cdbp[0];
+ 	switch(cdb0) {
+ 	case VARIABLE_LENGTH_CMD:
+-		len = cdbp[7] + 8;
++		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short variable length command, "
+ 			       "len=%d ext_len=%d", len, cdb_len);
+@@ -300,7 +299,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	cdb0 = cdbp[0];
+ 	switch(cdb0) {
+ 	case VARIABLE_LENGTH_CMD:
+-		len = cdbp[7] + 8;
++		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short opcode=0x%x command, len=%d "
+ 			       "ext_len=%d", cdb0, len, cdb_len);
+@@ -335,10 +334,7 @@ void __scsi_print_command(unsigned char *cdb)
+ 	int k, len;
  
- 	if (!map_data_for_srp_cmd(cmnd, evt_struct, srp_cmd, hostdata->dev)) {
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index dbae3fd..e3f7397 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2590,7 +2590,7 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
- 	cblk->hastat = 0;
- 	cblk->tastat = 0;
- 	/* Command the command */
--	memcpy(&cblk->cdb[0], &cmnd->cmnd, cmnd->cmd_len);
-+	memcpy(cblk->cdb, cmnd->cmnd, cmnd->cmd_len);
+ 	print_opcode_name(cdb, 0);
+-	if (VARIABLE_LENGTH_CMD == cdb[0])
+-		len = cdb[7] + 8;
+-	else
+-		len = COMMAND_SIZE(cdb[0]);
++	len = scsi_command_size(cdb);
+ 	/* print out all bytes in cdb */
+ 	for (k = 0; k < len; ++k) 
+ 		printk(" %02x", cdb[k]);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index f6980bd..3dabecb 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -79,15 +79,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
+ #define MIN_RESET_PERIOD (15*HZ)
  
- 	/* Set up tags */
- 	if (cmnd->device->tagged_supported) {	/* Tag Support                  */
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 68c0d09..b53420b 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -2863,7 +2863,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
+ /*
+- * Macro to determine the size of SCSI command. This macro takes vendor
+- * unique commands into account. SCSI commands in groups 6 and 7 are
+- * vendor unique and we will depend upon the command length being
+- * supplied correctly in cmd_len.
+- */
+-#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
+-				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
+-
+-/*
+  * Note - the initial logging level can be set here to log events at boot time.
+  * After the system is up, you may enable logging via the /proc interface.
+  */
+@@ -620,6 +611,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	unsigned long flags = 0;
+ 	unsigned long timeout;
+ 	int rtn = 0;
++	unsigned cmd_len;
  
- 	/* Load SCSI command packet. */
- 	pkt->cdb_len = cpu_to_le16(CMD_CDBLEN(cmd));
--	memcpy(pkt->scsi_cdb, &(CMD_CDBP(cmd)), CMD_CDBLEN(cmd));
-+	memcpy(pkt->scsi_cdb, CMD_CDBP(cmd), CMD_CDBLEN(cmd));
- 	/* dprintk(1, "Build packet for command[0]=0x%x\n",pkt->scsi_cdb[0]); */
- 
- 	/* Set transfer direction. */
-@@ -3132,7 +3132,7 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 
- 	/* Load SCSI command packet. */
- 	pkt->cdb_len = cpu_to_le16(CMD_CDBLEN(cmd));
--	memcpy(pkt->scsi_cdb, &(CMD_CDBP(cmd)), CMD_CDBLEN(cmd));
-+	memcpy(pkt->scsi_cdb, CMD_CDBP(cmd), CMD_CDBLEN(cmd));
- 
- 	/*dprintk(1, "Build packet for command[0]=0x%x\n",pkt->scsi_cdb[0]); */
- 	/* Set transfer direction. */
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 221f31e..8b5748a 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -626,7 +626,7 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
-  * @scmd:       SCSI command structure to hijack
-  * @ses:        structure to save restore information
-  * @cmnd:       CDB to send. Can be NULL if no new cmnd is needed
-- * @cmnd_size:  size in bytes of @cmnd
-+ * @cmnd_size:  size in bytes of @cmnd (must be <= BLK_MAX_CDB)
-  * @sense_bytes: size of sense data to copy. or 0 (if != 0 @cmnd is ignored)
-  *
-  * This function is used to save a scsi command information before re-execution
-@@ -648,12 +648,14 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	 * command.
+ 	/* check if the device is still usable */
+ 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
+@@ -701,9 +693,17 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	 * Before we queue this command, check if the command
+ 	 * length exceeds what the host adapter can handle.
  	 */
- 	ses->cmd_len = scmd->cmd_len;
--	memcpy(ses->cmnd, scmd->cmnd, sizeof(scmd->cmnd));
-+	ses->cmnd = scmd->cmnd;
- 	ses->data_direction = scmd->sc_data_direction;
- 	ses->sdb = scmd->sdb;
- 	ses->next_rq = scmd->request->next_rq;
- 	ses->result = scmd->result;
+-	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
++	cmd_len = cmd->cmd_len;
++	if (!cmd_len) {
++		BUG_ON(cmd->cmnd[0] == VARIABLE_LENGTH_CMD);
++		cmd_len = COMMAND_SIZE((cmd)->cmnd[0]);
++	}
++
++	if (cmd_len > cmd->device->host->max_cmd_len) {
+ 		SCSI_LOG_MLQUEUE(3,
+-				printk("queuecommand : command too long.\n"));
++			printk("queuecommand : command too long. "
++			       "cdb_size=%d host->max_cmd_len=%d\n",
++			       cmd->cmd_len, cmd->device->host->max_cmd_len));
+ 		cmd->result = (DID_ABORT << 16);
  
-+	scmd->cmnd = ses->eh_cmnd;
-+	memset(scmd->cmnd, 0, BLK_MAX_CDB);
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
- 	scmd->request->next_rq = NULL;
- 
-@@ -665,14 +667,13 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 		scmd->sdb.table.sgl = &ses->sense_sgl;
- 		scmd->sc_data_direction = DMA_FROM_DEVICE;
- 		scmd->sdb.table.nents = 1;
--		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
- 		scmd->cmnd[0] = REQUEST_SENSE;
- 		scmd->cmnd[4] = scmd->sdb.length;
- 		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
- 	} else {
- 		scmd->sc_data_direction = DMA_NONE;
- 		if (cmnd) {
--			memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
-+			BUG_ON(cmnd_size > BLK_MAX_CDB);
- 			memcpy(scmd->cmnd, cmnd, cmnd_size);
- 			scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
- 		}
-@@ -705,7 +706,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	 * Restore original data
- 	 */
- 	scmd->cmd_len = ses->cmd_len;
--	memcpy(scmd->cmnd, ses->cmnd, sizeof(scmd->cmnd));
-+	scmd->cmnd = ses->cmnd;
- 	scmd->sc_data_direction = ses->data_direction;
- 	scmd->sdb = ses->sdb;
- 	scmd->request->next_rq = ses->next_rq;
-@@ -1774,7 +1775,8 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	scmd->request = &req;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
- 
--	memset(&scmd->cmnd, '\0', sizeof(scmd->cmnd));
-+	scmd->cmnd = req.cmd;
-+	memset(scmd->cmnd, 0, BLK_MAX_CDB);
-     
- 	scmd->scsi_done		= scsi_reset_provider_done_command;
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
+ 		scsi_done(cmd);
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 67f412b..325270b 100644
+index 325270b..e621505 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1090,6 +1090,8 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
- 	cmd->tag = req->tag;
- 	cmd->request = req;
+@@ -195,6 +195,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
  
-+	cmd->cmnd = req->cmd;
+ 	req->cmd_len = COMMAND_SIZE(cmd[0]);
+ 	memcpy(req->cmd, cmd, req->cmd_len);
 +
- 	return cmd;
+ 	req->sense = sense;
+ 	req->sense_len = 0;
+ 	req->retries = retries;
+@@ -445,7 +446,7 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 	scsi_set_resid(cmd, 0);
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 	if (cmd->cmd_len == 0)
+-		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
++		cmd->cmd_len = scsi_command_size(cmd->cmnd);
  }
  
-@@ -1127,8 +1129,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 		req->buffer = NULL;
+ void scsi_device_unbusy(struct scsi_device *sdev)
+@@ -1130,13 +1131,16 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
  	}
  
--	BUILD_BUG_ON(sizeof(req->cmd) > sizeof(cmd->cmnd));
--	memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
  	cmd->cmd_len = req->cmd_len;
++	if (!cmd->cmd_len)
++		cmd->cmd_len = scsi_command_size(cmd->cmnd);
++
  	if (!req->data_len)
  		cmd->sc_data_direction = DMA_NONE;
-@@ -1165,6 +1165,7 @@ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
- 	if (unlikely(!cmd))
- 		return BLKPREP_DEFER;
- 
-+	memset(cmd->cmnd, 0, BLK_MAX_CDB);
- 	return scsi_init_io(cmd, GFP_ATOMIC);
- }
- EXPORT_SYMBOL(scsi_setup_fs_cmnd);
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index a0f308b..8c92ef3 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -107,6 +107,8 @@ struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
- 	cmd->jiffies_at_alloc = jiffies;
- 	cmd->request = rq;
- 
-+	cmd->cmnd = rq->cmd;
+ 	else if (rq_data_dir(req) == WRITE)
+ 		cmd->sc_data_direction = DMA_TO_DEVICE;
+ 	else
+ 		cmd->sc_data_direction = DMA_FROM_DEVICE;
+-	
 +
- 	rq->special = cmd;
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd_flags |= REQ_TYPE_BLOCK_PC;
-diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-index 971d13d..3addcd8 100644
---- a/drivers/usb/storage/isd200.c
-+++ b/drivers/usb/storage/isd200.c
-@@ -292,6 +292,7 @@ struct isd200_info {
+ 	cmd->transfersize = req->data_len;
+ 	cmd->allowed = req->retries;
+ 	cmd->timeout_per_command = req->timeout;
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 1f74bcd..32742c4 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -30,13 +30,6 @@
+ #endif
  
- 	/* maximum number of LUNs supported */
- 	unsigned char MaxLUNs;
-+	unsigned char cmnd[BLK_MAX_CDB];
- 	struct scsi_cmnd srb;
- 	struct scatterlist sg;
- };
-@@ -450,6 +451,7 @@ static int isd200_action( struct us_data *us, int action,
+ /*
+- *	SCSI command lengths
+- */
+-
+-extern const unsigned char scsi_command_size[8];
+-#define COMMAND_SIZE(opcode) scsi_command_size[((opcode) >> 5) & 7]
+-
+-/*
+  * Special value for scanning to specify scanning or rescanning of all
+  * possible channels, (target) ids, or luns on a given shost.
+  */
+@@ -109,6 +102,7 @@ extern const unsigned char scsi_command_size[8];
+ #define MODE_SENSE_10         0x5a
+ #define PERSISTENT_RESERVE_IN 0x5e
+ #define PERSISTENT_RESERVE_OUT 0x5f
++#define VARIABLE_LENGTH_CMD   0x7f
+ #define REPORT_LUNS           0xa0
+ #define MAINTENANCE_IN        0xa3
+ #define MOVE_MEDIUM           0xa5
+@@ -136,6 +130,38 @@ extern const unsigned char scsi_command_size[8];
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
  
- 	memset(&ata, 0, sizeof(ata));
- 	memset(&srb_dev, 0, sizeof(srb_dev));
-+	srb->cmnd = info->cmnd;
- 	srb->device = &srb_dev;
- 	++srb->serial_number;
- 
+ /*
++ *	SCSI command lengths
++ */
++
++#define SCSI_MAX_VARLEN_CDB_SIZE 260
++
++/* defined in T10 SCSI Primary Commands-2 (SPC2) */
++struct scsi_varlen_cdb_hdr {
++	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	u8 control;
++	u8 misc[5];
++	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__be16 service_action;
++	/* service specific data follows */
++};
++
++static inline unsigned
++scsi_varlen_cdb_length(const void *hdr)
++{
++	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
++}
++
++extern const unsigned char scsi_command_size_tbl[8];
++#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
++
++static inline unsigned
++scsi_command_size(const unsigned char *cmnd)
++{
++	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
++		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
++}
++
++/*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+  */
 diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 8d20e60..dea73e5 100644
+index dea73e5..f4dacb1 100644
 --- a/include/scsi/scsi_cmnd.h
 +++ b/include/scsi/scsi_cmnd.h
-@@ -7,10 +7,28 @@
- #include <linux/types.h>
- #include <linux/timer.h>
- #include <linux/scatterlist.h>
-+#include <linux/blkdev.h>
+@@ -78,7 +78,7 @@ struct scsi_cmnd {
+ 	int allowed;
+ 	int timeout_per_command;
  
- struct Scsi_Host;
- struct scsi_device;
- 
-+/*
-+ * MAX_COMMAND_SIZE is:
-+ * The longest fixed-length SCSI CDB as per the SCSI standard.
-+ * fixed-length means: commands that their size can be determined
-+ * by their opcode and the CDB does not carry a length specifier, (unlike
-+ * the VARIABLE_LENGTH_CMD(0x7f) command). This is actually not exactly
-+ * true and the SCSI standard also defines extended commands and
-+ * vendor specific commands that can be bigger than 16 bytes. The kernel
-+ * will support these using the same infrastructure used for VARLEN CDB's.
-+ * So in effect MAX_COMMAND_SIZE means the maximum size command scsi-ml
-+ * supports without specifying a cmd_len by ULD's
-+ */
-+#define MAX_COMMAND_SIZE 16
-+#if (MAX_COMMAND_SIZE > BLK_MAX_CDB)
-+# error MAX_COMMAND_SIZE can not be smaller than BLK_MAX_CDB
-+#endif
-+
- struct scsi_data_buffer {
- 	struct sg_table table;
- 	unsigned length;
-@@ -64,8 +82,7 @@ struct scsi_cmnd {
+-	unsigned char cmd_len;
++	unsigned short cmd_len;
  	enum dma_data_direction sc_data_direction;
  
  	/* These elements define the operation we are about to perform */
--#define MAX_COMMAND_SIZE	16
--	unsigned char cmnd[MAX_COMMAND_SIZE];
-+	unsigned char *cmnd;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 4913286..31f1bfd 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -573,13 +573,11 @@ struct Scsi_Host {
+ 	/*
+ 	 * The maximum length of SCSI commands that this host can accept.
+ 	 * Probably 12 for most host adapters, but could be 16 for others.
++	 * or 260 if the driver supports variable length cdbs.
+ 	 * For drivers that don't set this field, a value of 12 is
+-	 * assumed.  I am leaving this as a number rather than a bit
+-	 * because you never know what subsequent SCSI standards might do
+-	 * (i.e. could there be a 20 byte or a 24-byte command a few years
+-	 * down the road?).  
++	 * assumed.
+ 	 */
+-	unsigned char max_cmd_len;
++	unsigned short max_cmd_len;
  
- 	struct timer_list eh_timeout;	/* Used to time out the command. */
- 
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index d3a133b..2a9add2 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -75,11 +75,11 @@ struct scsi_eh_save {
- 	int result;
- 	enum dma_data_direction data_direction;
- 	unsigned char cmd_len;
--	unsigned char cmnd[MAX_COMMAND_SIZE];
-+	unsigned char *cmnd;
- 	struct scsi_data_buffer sdb;
- 	struct request *next_rq;
--
- 	/* new command support */
-+	unsigned char eh_cmnd[BLK_MAX_CDB];
- 	struct scatterlist sense_sgl;
- };
- 
+ 	int this_id;
+ 	int can_queue;
 -- 
 1.5.3.3
 
