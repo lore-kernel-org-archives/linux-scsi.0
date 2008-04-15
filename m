@@ -1,205 +1,203 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 15 Apr 2008 16:43:15 -0700
-Message-ID: <1208302995.21877.12.camel@dwillia2-linux.ch.intel.com>
-References: <47E875AD.1000901@rtr.ca> <47E88A13.70808@zytor.com>
-	 <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com>
-	 <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de>
-	 <47E99A02.7040903@rtr.ca> <47E99EBE.7010708@gmail.com>
-	 <3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
-	 <47EBF7D0.6000901@zytor.com>
-	 <e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com>
-	 <20080415001828.b0c9ed64.akpm@linux-foundation.org>
-	 <1208269202.3131.3.camel@localhost.localdomain>
-	 <4804F108.6020505@zytor.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Wed, 16 Apr 2008 07:57:43 +0900
+Message-ID: <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
+References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<20080414112919.GF12774@kernel.dk>
+	<200804160050.54842.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752765AbYDOXnc@vger.kernel.org>
-In-Reply-To: <4804F108.6020505@zytor.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:56489 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752044AbYDOXEW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2008 19:04:22 -0400
+In-Reply-To: <200804160050.54842.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-Subject: sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
+On Wed, 16 Apr 2008 00:50:54 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-From: Dan Williams <dan.j.williams@intel.com>
+> 
+> Hi,
+> 
+> On Monday 14 April 2008, Jens Axboe wrote:
+> > On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > > This patch changes rq->cmd from the static array to a pointer to
+> > > support large commands.
+> > > 
+> > > We rarely handle large commands. So for optimization, a struct request
+> > > still has a static array for a command. rq_init sets rq->cmd pointer
+> > > to the static array.
+> > > 
+> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > ---
+> > >  block/blk-core.c       |    1 +
+> > >  drivers/ide/ide-io.c   |    1 +
+> > >  include/linux/blkdev.h |   12 ++++++++++--
+> > >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/block/blk-core.c b/block/blk-core.c
+> > > index 6669238..6f0968f 100644
+> > > --- a/block/blk-core.c
+> > > +++ b/block/blk-core.c
+> > > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> > >  	rq->errors = 0;
+> > >  	rq->ref_count = 1;
+> > >  	rq->cmd_len = 0;
+> > > +	rq->cmd = rq->__cmd;
+> > >  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > >  	rq->data_len = 0;
+> > >  	rq->extra_len = 0;
+> > > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > > index 7153796..bac5ea1 100644
+> > > --- a/drivers/ide/ide-io.c
+> > > +++ b/drivers/ide/ide-io.c
+> > > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> > >  {
+> > >  	memset(rq, 0, sizeof(*rq));
+> > >  	rq->ref_count = 1;
+> > > +	rq->cmd = rq->__cmd;
+> > >  }
+> 
+> Tomo, some more changes are needed:
+> 
+> Please think about all _static_/dynamic allocations of 'struct request'
+> used together with REQ_TYPE_SPECIAL etc., i.e.
 
-Why?:
-There are occasions where userspace would like to access sysfs
-attributes for a device but it may not know how sysfs has named the
-device or the path.  For example what is the sysfs path for
-/dev/disk/by-id/ata-ST3160827AS_5MT004CK?  With this change a call to
-stat(2) returns the major:minor then userspace can see that
-/sys/dev/block/8:32 links to /sys/block/sdc.
+I think that using struct request allocated statically is wrong from
+the perspective of the block layer design, that is, you always need to
+use blk_get_request. I think that except ide, everyone does.
 
-What are the alternatives?:
-1/ Add an ioctl to return the path: Doable, but sysfs is meant to reduce
-   the need to proliferate ioctl interfaces into the kernel, so this
-   seems counter productive.
-
-2/ Use udev to create these symlinks: Also doable, but it adds a
-   udev dependency to utilities that might be running in a limited
-   environment like an initramfs.
-
-3/ Do a full-tree search of sysfs.
-
-Cc: NeilBrown <neilb@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Greg KH <gregkh@suse.de>
-Acked-by: Mark Lord <lkml@rtr.ca>
-Acked-by: H. Peter Anvin <hpa@zytor.com>
-Reviewed-by: SL Baur <steve@xemacs.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
-Andrew here is an updated patch with some presumptive acked-by's from Mark and hpa.
-
-* fixed up ENOMEM handling in devices_init()
-* added a short blurb in Documentation/filesystems/sysfs.txt
-* dropped the size of the buffer passed to format_dev_t a bit
-
- Documentation/filesystems/sysfs.txt |    6 +++++
- drivers/base/core.c                 |   46 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 51 insertions(+), 1 deletions(-)
+I try to convert ide to use blk_get_request properly if you want.
 
 
-diff --git a/Documentation/filesystems/sysfs.txt b/Documentation/filesystems/sysfs.txt
-index 7f27b8f..9e9c348 100644
---- a/Documentation/filesystems/sysfs.txt
-+++ b/Documentation/filesystems/sysfs.txt
-@@ -248,6 +248,7 @@ The top level sysfs directory looks like:
- block/
- bus/
- class/
-+dev/
- devices/
- firmware/
- net/
-@@ -274,6 +275,11 @@ fs/ contains a directory for some filesystems.  Currently each
- filesystem wanting to export attributes must create its own hierarchy
- below fs/ (see ./fuse.txt for an example).
- 
-+dev/ contains two directories char/ and block/. Inside these two
-+directories there are symlinks named <major>:<minor>.  These symlinks
-+point to the sysfs directory for the given device.  /sys/dev provides a
-+quick way to lookup the sysfs interface for a device from the result of
-+a stat(2) operation.
- 
- More information can driver-model specific features can be found in
- Documentation/driver-model/. 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 24198ad..ba21118 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -27,6 +27,9 @@
- 
- int (*platform_notify)(struct device *dev) = NULL;
- int (*platform_notify_remove)(struct device *dev) = NULL;
-+static struct kobject *dev_kobj;
-+static struct kobject *char_kobj;
-+static struct kobject *block_kobj;
- 
- #ifdef CONFIG_BLOCK
- static inline int device_is_not_partition(struct device *dev)
-@@ -759,6 +762,11 @@ static void device_remove_class_symlinks(struct device *dev)
- 	sysfs_remove_link(&dev->kobj, "subsystem");
- }
- 
-+static struct kobject *device_to_dev_kobj(struct device *dev)
-+{
-+	return dev->class == &block_class ? block_kobj : char_kobj;
-+}
-+
- /**
-  * device_add - add device to device hierarchy.
-  * @dev: device.
-@@ -775,6 +783,7 @@ int device_add(struct device *dev)
- 	struct device *parent = NULL;
- 	struct class_interface *class_intf;
- 	int error;
-+	char devt_str[15];
- 
- 	dev = get_device(dev);
- 	if (!dev || !strlen(dev->bus_id)) {
-@@ -806,9 +815,16 @@ int device_add(struct device *dev)
- 		goto attrError;
- 
- 	if (MAJOR(dev->devt)) {
-+		struct kobject *kobj = device_to_dev_kobj(dev);
-+
- 		error = device_create_file(dev, &devt_attr);
- 		if (error)
- 			goto ueventattrError;
-+
-+		format_dev_t(devt_str, dev->devt);
-+		error = sysfs_create_link(kobj, &dev->kobj, devt_str);
-+		if (error)
-+			goto devtattrError;
- 	}
- 
- 	error = device_add_class_symlinks(dev);
-@@ -854,6 +870,9 @@ int device_add(struct device *dev)
- 	device_remove_class_symlinks(dev);
-  SymlinkError:
- 	if (MAJOR(dev->devt))
-+		sysfs_remove_link(device_to_dev_kobj(dev), devt_str);
-+ devtattrError:
-+	if (MAJOR(dev->devt))
- 		device_remove_file(dev, &devt_attr);
-  ueventattrError:
- 	device_remove_file(dev, &uevent_attr);
-@@ -925,12 +944,16 @@ void device_del(struct device *dev)
- {
- 	struct device *parent = dev->parent;
- 	struct class_interface *class_intf;
-+	char devt_str[15];
- 
- 	device_pm_remove(dev);
- 	if (parent)
- 		klist_del(&dev->knode_parent);
--	if (MAJOR(dev->devt))
-+	if (MAJOR(dev->devt)) {
-+		format_dev_t(devt_str, dev->devt);
-+		sysfs_remove_link(device_to_dev_kobj(dev), devt_str);
- 		device_remove_file(dev, &devt_attr);
-+	}
- 	if (dev->class) {
- 		device_remove_class_symlinks(dev);
- 
-@@ -1055,7 +1078,25 @@ int __init devices_init(void)
- 	devices_kset = kset_create_and_add("devices", &device_uevent_ops, NULL);
- 	if (!devices_kset)
- 		return -ENOMEM;
-+	dev_kobj = kobject_create_and_add("dev", NULL);
-+	if (!dev_kobj)
-+		goto dev_kobj_err;
-+	block_kobj = kobject_create_and_add("block", dev_kobj);
-+	if (!block_kobj)
-+		goto block_kobj_err;
-+	char_kobj = kobject_create_and_add("char", dev_kobj);
-+	if (!char_kobj)
-+		goto char_kobj_err;
-+
- 	return 0;
-+
-+ char_kobj_err:
-+	kobject_put(block_kobj);
-+ block_kobj_err:
-+	kobject_put(dev_kobj);
-+ dev_kobj_err:
-+	kset_unregister(devices_kset);
-+	return -ENOMEM;
- }
- 
- EXPORT_SYMBOL_GPL(device_for_each_child);
-@@ -1380,4 +1421,7 @@ void device_shutdown(void)
- 			dev->driver->shutdown(dev);
- 		}
- 	}
-+	kobject_put(char_kobj);
-+	kobject_put(block_kobj);
-+	kobject_put(dev_kobj);
- }
+> static void idetape_init_rq(struct request *rq, u8 cmd)
+> 
+> [ rq can be from privately allocated driver's "stack" so no rq_init() ]
+> 
+> {
+> 	memset(rq, 0, sizeof(*rq));
+> 	rq->cmd_type = REQ_TYPE_SPECIAL;
+> 	rq->cmd[0] = cmd;
+> }
+> 
+> in ide-tape.c or REQ_TYPE_SENSE in ide-cd.c:
+
+Thanks, I overlooked this. As I did for ide_init_drive_cmd, we need:
+
+
++	rq->cmd = rq->__cmd;
+
+
+> static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+>                                       struct request *failed_command)
+> {
+>         struct cdrom_info *info         = drive->driver_data;
+>         struct request *rq              = &info->request_sense_request;
+> 
+>         if (sense == NULL)
+>                 sense = &info->sense_data;
+> 
+>         /* stuff the sense request in front of our current request */
+>         ide_cd_init_rq(drive, rq);
+> 
+>         rq->data = sense;
+>         rq->cmd[0] = GPCMD_REQUEST_SENSE;
+>         rq->cmd[4] = rq->data_len = 18;
+> 
+>         rq->cmd_type = REQ_TYPE_SENSE;
+> 
+>         /* NOTE! Save the failed command in "rq->buffer" */
+>         rq->buffer = (void *) failed_command;
+> 
+>         (void) ide_do_drive_cmd(drive, rq, ide_preempt);
+> }
+
+This should work since I put the above hack to ide_init_drive_cmd (I
+tested the patchset with an ide cdrom drive).
+
+
+> > >  EXPORT_SYMBOL(ide_init_drive_cmd);
+> > > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > > index b3a58ad..5710ae4 100644
+> > > --- a/include/linux/blkdev.h
+> > > +++ b/include/linux/blkdev.h
+> > > @@ -215,8 +215,9 @@ struct request {
+> > >  	/*
+> > >  	 * when request is used as a packet command carrier
+> > >  	 */
+> > > -	unsigned int cmd_len;
+> > > -	unsigned char cmd[BLK_MAX_CDB];
+> > > +	unsigned short cmd_len;
+> > > +	unsigned char __cmd[BLK_MAX_CDB];
+> > > +	unsigned char *cmd;
+> 
+> The source issue lies here:
+> 
+> rq->cmd _silently_ becomes something else and unconverted code will happily
+> compile without even a _single_ warning (+ memory corruption / oops later).
+> 
+> This is _guaranteed_ to cause problems:
+> 
+> - overlooked code (like the IDE code above, with the current approach
+>   you have to _manually_ audit all code and still _can't_ be sure about
+>   the result)
+
+As far as I know, only ide does that.
+
+
+> - unmerged code from other trees (i.e., I _have_ WIP patches mapping
+>   REQ_TYPE_TASKFILE requests onto rq->cmd)
+> 
+> - out of tree code (in theory we don't care but in this specific
+>   case there is no reason to break things silently)
+
+Again, I think that we can say that we need to use the block layer
+properly, struct request always needs to be allocated via
+blk_get_request.
+
+
+> Please just add new field instead (cost should be negligable and if
+> we're concerned about it I see no problem with using unnamed union like
+> it was done by Boaz). 
+> 
+> [ Probably it is also worth to add new length field instead of re-using
+>   ->cmd_len, just to stay on the safe side (+ for better consistency). ]
+
+As we discussed, we don't like that hack:
+
+http://marc.info/?t=120724777800003&r=1&w=2
+
+
+> > >  	unsigned int data_len;
+> > >  	unsigned int extra_len;	/* length of alignment and padding */
+> > > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
+> > >  	page_cache_release(p.v);
+> > >  }
+> > >  
+> > > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
+> > > +			      unsigned short cmd_len)
+> > > +{
+> > > +	rq->cmd = cmd;
+> > > +	rq->cmd_len = cmd_len;
+> > > +}
+> > > +
+> > 
+> > This is 100% identical to what I suggested be done instead, so of course
+> > I agree with this.
+> 
+> Jens, I see that you've applied this patch to block tree
+> - please revert it for now, it needs to be re-designed.
+> 
+> Thanks,
+> Bart
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
