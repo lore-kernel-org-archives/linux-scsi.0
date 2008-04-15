@@ -1,46 +1,46 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/3] iscsi_tcp: Enable large commands
-Date: Tue, 15 Apr 2008 16:38:02 +0300
-Message-ID: <4804AFBA.1070105@panasas.com>
-References: <20080414010112W.tomof@acm.org> <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <48049E8A.7030700@panasas.com> <4804A16D.7000002@panasas.com> <4804A8C7.504@emulex.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 15 Apr 2008 09:47:12 -0400
+Message-ID: <4804B1E0.10200@rtr.ca>
+References: <47E875AD.1000901@rtr.ca>	<47E88A13.70808@zytor.com>	<47E90019.3050006@rtr.ca>	<47E90458.7030801@zytor.com>	<47E9383F.3050908@rtr.ca>	<20080325192515.GA24234@suse.de>	<47E99A02.7040903@rtr.ca>	<47E99EBE.7010708@gmail.com>	<3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>	<47EBF7D0.6000901@zytor.com>	<e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com> <20080415001828.b0c9ed64.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:35344 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756419AbYDONkU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2008 09:40:20 -0400
-In-Reply-To: <4804A8C7.504@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760928AbYDONrl@vger.kernel.org>
+In-Reply-To: <20080415001828.b0c9ed64.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alasdair G Kergon <agk@redhat.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-On Tue, Apr 15 2008 at 16:08 +0300, James Smart <James.Smart@Emulex.Com> wrote:
-> Boaz Harrosh wrote:
->> Let through up to the largest command of 260 defined by the scsi standard.
->> iscsi core supports this already. Now that the scsi-ml supports it we can
->> start using large commands.
+Andrew Morton wrote:
+> On Fri, 11 Apr 2008 16:25:32 -0700 "Dan Williams" <dan.j.williams@intel.com> wrote:
 > 
-> Just to double-check:
-> if we use sg_io to pass through requests from user-land, which are addressed to
-> drivers or transports, and which may not be a SCSI command but rather just something
-> utilizing the sg_io infrastructure for management or pass-thru, are we limited to
-> 260 bytes for request/cmd payload ?
+>>>  It doesn't really seem to be to belong under class at all.  I would suggest
+>>> /sys/dev/char/ and /sys/dev/block/, for char and block respectively.
+>>>
+>> This thread fizzled out without a patch... here goes:
+>>
+>> ...
+>>
+>> sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
 > 
-> -- james s
+> Crickets are chirping and I can't remember what the conclusion to all this
+> was.  In fact the thread was more than ten-deep so I probably fell asleep.
+..
 
-I think that only bsg, after the pending patches get accepted, will let you
-pass larger then 16 bytes commands from user-land. sg_io is I think limited 
-to 16. However this could be fixed. (With sg_io, did you mean commands going
-through the sg.c driver?)
+Last I recall, Greg was vehemently opposed to having direct path access
+by device number in sysfs, but many other people saw benefit.
 
-The block layer imposes no limits, and so is scsi-ml. The only limits are from
-ULDs, and LLDs, like here, iscsi protocol does not support more then 
-SCSI_MAX_VARLEN_CDB_SIZE (260).
+Myself (the originator), I simply decided that my sysfs access code has
+to work with older kernels too, so for now I'm just doing a brute force
+tree search to find things in sysfs.  I did get the code size down smaller
+for it, but it's still a pain.
 
-If you need support in any other ULD, I will be happy to help.
+When the direct access feature goes in, I'll just change my code to try it first,
+and then still fall back to the tree search method on failure.
 
-Boaz
+> I queued it up so that others cannot do the same ;)
+..
 
+Good!
