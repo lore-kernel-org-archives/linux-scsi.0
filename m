@@ -1,49 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 15 Apr 2008 09:20:02 -0500
-Message-ID: <1208269202.3131.3.camel@localhost.localdomain>
-References: <47E875AD.1000901@rtr.ca> <47E88A13.70808@zytor.com>
-	 <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com>
-	 <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de>
-	 <47E99A02.7040903@rtr.ca> <47E99EBE.7010708@gmail.com>
-	 <3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
-	 <47EBF7D0.6000901@zytor.com>
-	 <e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com>
-	 <20080415001828.b0c9ed64.akpm@linux-foundation.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/3] debloat aic7xxx and aic79xx drivers
+Date: Tue, 15 Apr 2008 16:44:48 +0200
+Message-ID: <4804BF60.2070701@suse.de>
+References: <200803230440.40685.vda.linux@googlemail.com> <47FB63C2.4030006@suse.de> <200804081608.43248.vda.linux@googlemail.com> <200804142046.31080.vda.linux@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080415001828.b0c9ed64.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.suse.de ([195.135.220.2]:54925 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757713AbYDOOot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Apr 2008 10:44:49 -0400
+In-Reply-To: <200804142046.31080.vda.linux@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2008-04-15 at 00:18 -0700, Andrew Morton wrote:
-> On Fri, 11 Apr 2008 16:25:32 -0700 "Dan Williams" <dan.j.williams@intel.com> wrote:
-> 
-> > >  It doesn't really seem to be to belong under class at all.  I would suggest
-> > > /sys/dev/char/ and /sys/dev/block/, for char and block respectively.
-> > >
-> > 
-> > This thread fizzled out without a patch... here goes:
-> > 
-> > ...
-> >
-> > sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
-> 
-> Crickets are chirping and I can't remember what the conclusion to all this
-> was.  In fact the thread was more than ten-deep so I probably fell asleep.
-> 
-> I queued it up so that others cannot do the same ;)
+Hi Denys,
 
-The expressed preference was simply to expand the ioctl (or add a new
-one that got the required information without having to go through the
-old HDIOGETGEO path to extract the value from a fictitious geometry).
+Denys Vlasenko wrote:
+> Hi Hannes,
+>=20
+> On Tuesday 08 April 2008 16:08, Denys Vlasenko wrote:
+[ .. ]
+>> I do understand this, and I do understnad then _shipped files
+>> are generated. But I failed to find out HOW they are generated.
+>> I don't want to _only_ patch aicasm/* files and skip checking
+>> that my changes work (or at least compile).
+>>
+>> Please let me know how to regenerate these _shipped files,
+>> and I will fix it "correctly" by modifying aicasm/* files.
+>=20
+> I didn't get any reply. Perhaps you were busy with more important stu=
+ff.
+>=20
+There are such strange creatures named 'customers'. They have a habit
+of get into the way ...
 
-Greg was a bit sceptical of the value of the above proposal ...
+But I thought I had answered this already ...
+Anyway, you'll have to enable the firmware build for aic7xxx / aic79xx
+and do a diff between the files used for compiling and the *_shipped
+files.
+Then fixup the assembler in aicasm/* to print out the files in the way
+you'd like it.
+Once you're done you copy the generated files over to the *_shipped
+files and send the diff.
 
-James
+Cheers,
 
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
