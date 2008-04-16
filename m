@@ -1,150 +1,212 @@
-From: "Petrakis, Peter" <Peter.Petrakis@stratus.com>
-Subject: RE: aic94xx + ST3146855SS still failing under heavy load
-Date: Wed, 16 Apr 2008 13:34:22 -0400
-Message-ID: <4DF9D710A2BB344BAFDE19178756F58BD845DF@EXNA.corp.stratus.com>
-References: <1208192617.10361.18.camel@lvk-nb.localdomain> 48062D6C.6070807@ipax.at
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: <gregkh@suse.de>
+Subject: patch sysfs-add-sys-dev-char-block-to-lookup-sysfs-path-by-major-minor.patch added to gregkh-2.6 tree
+Date: Wed, 16 Apr 2008 13:55:53 -0700
+Message-ID: <12083793533386@kroah.org>
+References: <1208302995.21877.12.camel@dwillia2-linux.ch.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.18]:43821 "EHLO
-	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbYDPScQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Apr 2008 14:32:16 -0400
-Received: from EXNAR.corp.stratus.com (exnar.corp.stratus.com [134.111.200.165])
-	by mailhub5.stratus.com (8.12.11/8.12.11) with ESMTP id m3GHYK8n021838
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Apr 2008 13:34:20 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: 48062D6C.6070807@ipax.at
+Received: from cantor.suse.de ([195.135.220.2]:51431 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752772AbYDPU5d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Apr 2008 16:57:33 -0400
+In-Reply-To: <1208302995.21877.12.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dan.j.williams@intel.com, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, axboe@kernel.dk, gregkh@suse.de, hpa@zytor.com, htejun@gmail.com, jgarzik@pobox.com, kay.si
 
-Hi Raoul,
 
-We use the same disks with the same firmware here at Stratus and have
-never experienced the issue you're observing. Maybe it's due to the fact
-that the hardware raid on the AIC-9410W is enabled? If you're using md
-then there's no reason to keep it on. Our configurations as almost
-identical except for:
+This is a note to let you know that I've just added the patch titled
 
-- hardware RAID disabled
-- directly attached
-- md level 1
-- seq: V32A4
-- bios/firmware 2.0-2 1822/1021
+     Subject: sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
 
-The bios and firmware revs may be specific to our implementation since
-the SAS chip is glued to our PCI-X riser. Are your disks directly
-attached or are you using a SAS expander?
+to my gregkh-2.6 tree.  Its filename is
 
-Peter 
+     sysfs-add-sys-dev-char-block-to-lookup-sysfs-path-by-major-minor.patch
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Raoul Bhatia [IPAX]
-> Sent: Wednesday, April 16, 2008 12:47 PM
-> To: Leonid Kalmankin
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: aic94xx + ST3146855SS still failing under heavy load
-> 
-> hi,
-> 
-> some others, like me, are struggeling with this problem.
-> afaik, james bottomley (or someone else?) is working on a fix,
-> but it will take some more time.
-> 
-> please see [1] and [2].
-> 
-> btw. i asked seagate and adaptec and both did not come up with a
-decent
-> solution. seagate asked me to verify this with a different controller
-> and said that they know of no issue and adaptec gave me a new
-sequencer
-> firmware - so at least the server is still responding properly - and
-> told me that all the fixes went into the recent 2.6.25rc6+ kernel.
-> 
-> cheers,
-> raoul
-> [1] http://marc.info/?t=120603924200004
-> [2] http://marc.info/?t=120757821700007
-> 
-> Leonid Kalmankin wrote:
-> > Hello!
-> >
-> > We have a system with:
-> >
-> > vanilla 2.6.25-rc8 (2.6.23, 2.6.24 have the same behaviour)
-> >
-> > Adaptec AIC-9410W SAS (Razor ASIC RAID) (rev 09)
-> > aic94xx: Found sequencer Firmware version 1.1 (V30)
-> >   (Firmware version 1.1 (V17/10c6) makes no difference)
-> > scsi 2:0:0:0: Direct-Access  SEAGATE ST3146855SS 0002 PQ: 0 ANSI: 5
-> >
-> >
-> > It reliably fails under heavy IO:
-> >
-> >> sas: command 0xffff81022c5f5640, task 0xffff8101f6b0f000, timed
-out:
-> EH_NOT_HANDLED
-> >> sas: command 0xffff81022c5f5500, task 0xffff8101f6b0f1c0, timed
-out:
-> EH_NOT_HANDLED
-> >> ....
-> >> sas: Enter sas_scsi_recover_host
-> >> sas: trying to find task 0xffff8101f6b0f000
-> >> sas: sas_scsi_find_task: aborting task 0xffff8101f6b0f000
-> >> aic94xx: task 0xffff8101f6b0f000 done with opcode 0x1e resp 0x0
-stat
-> 0x8d but aborted by upper layer!
-> >> aic94xx: tmf tasklet complete
-> >> aic94xx: tmf came back
-> >> aic94xx: asd_abort_task: task 0xffff8101f6b0f000 done
-> >> aic94xx: task 0xffff8101f6b0f000 aborted, res: 0x0
-> >> sas: sas_scsi_find_task: task 0xffff8101f6b0f000 is done
-> >> sas: sas_eh_handle_sas_errors: task 0xffff8101f6b0f000 is done
-> >> sas: --- Exit sas_scsi_recover_host
-> >
-> > Sometimes it successfully recovers; sometimes the disk is lost until
-the
-> reboot.
-> >
-> > I've read
-http://archive.netbsd.se/?ml=linux-scsi&a=2008-01&t=6260524
-> > Asked Seagate about firmware update; they told me they do not have
-any.
-> >
-> > As I understood, the root of this problem is protocol errors in
-disk's
-> firmware
-> > (other disks, for example FUJITSU MBA3147RC work fine); however,
-that
-> kind of errors
-> > should be recoverable by sas/aic94xx drivers.
-> >
-> > If that is true, I could test some patches/ideas, where should I
-start?
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> --
-> ____________________________________________________________________
-> DI (FH) Raoul Bhatia M.Sc.          email.          r.bhatia@ipax.at
-> Technischer Leiter
-> 
-> IPAX - Aloy Bhatia Hava OEG         web.          http://www.ipax.at
-> Barawitzkagasse 10/2/2/11           email.            office@ipax.at
-> 1190 Wien                           tel.               +43 1 3670030
-> FN 277995t HG Wien                  fax.            +43 1 3670030 15
-> ____________________________________________________________________
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This tree can be found at 
+    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+
+
+>From dan.j.williams@intel.com  Wed Apr 16 13:49:38 2008
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 15 Apr 2008 16:43:15 -0700
+Subject: sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>
+Message-ID: <1208302995.21877.12.camel@dwillia2-linux.ch.intel.com>
+
+
+From: Dan Williams <dan.j.williams@intel.com>
+
+Why?:
+There are occasions where userspace would like to access sysfs
+attributes for a device but it may not know how sysfs has named the
+device or the path.  For example what is the sysfs path for
+/dev/disk/by-id/ata-ST3160827AS_5MT004CK?  With this change a call to
+stat(2) returns the major:minor then userspace can see that
+/sys/dev/block/8:32 links to /sys/block/sdc.
+
+What are the alternatives?:
+1/ Add an ioctl to return the path: Doable, but sysfs is meant to reduce
+   the need to proliferate ioctl interfaces into the kernel, so this
+   seems counter productive.
+
+2/ Use udev to create these symlinks: Also doable, but it adds a
+   udev dependency to utilities that might be running in a limited
+   environment like an initramfs.
+
+3/ Do a full-tree search of sysfs.
+
+Cc: Neil Brown <neilb@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Greg KH <gregkh@suse.de>
+Acked-by: Mark Lord <lkml@rtr.ca>
+Acked-by: H. Peter Anvin <hpa@zytor.com>
+Reviewed-by: SL Baur <steve@xemacs.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ Documentation/filesystems/sysfs.txt |    6 ++++
+ drivers/base/core.c                 |   46 +++++++++++++++++++++++++++++++++++-
+ 2 files changed, 51 insertions(+), 1 deletion(-)
+
+--- a/Documentation/filesystems/sysfs.txt
++++ b/Documentation/filesystems/sysfs.txt
+@@ -248,6 +248,7 @@ The top level sysfs directory looks like
+ block/
+ bus/
+ class/
++dev/
+ devices/
+ firmware/
+ net/
+@@ -274,6 +275,11 @@ fs/ contains a directory for some filesy
+ filesystem wanting to export attributes must create its own hierarchy
+ below fs/ (see ./fuse.txt for an example).
+ 
++dev/ contains two directories char/ and block/. Inside these two
++directories there are symlinks named <major>:<minor>.  These symlinks
++point to the sysfs directory for the given device.  /sys/dev provides a
++quick way to lookup the sysfs interface for a device from the result of
++a stat(2) operation.
+ 
+ More information can driver-model specific features can be found in
+ Documentation/driver-model/. 
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -27,6 +27,9 @@
+ 
+ int (*platform_notify)(struct device *dev) = NULL;
+ int (*platform_notify_remove)(struct device *dev) = NULL;
++static struct kobject *dev_kobj;
++static struct kobject *char_kobj;
++static struct kobject *block_kobj;
+ 
+ #ifdef CONFIG_BLOCK
+ static inline int device_is_not_partition(struct device *dev)
+@@ -760,6 +763,11 @@ static void device_remove_class_symlinks
+ 	sysfs_remove_link(&dev->kobj, "subsystem");
+ }
+ 
++static struct kobject *device_to_dev_kobj(struct device *dev)
++{
++	return dev->class == &block_class ? block_kobj : char_kobj;
++}
++
+ /**
+  * device_add - add device to device hierarchy.
+  * @dev: device.
+@@ -776,6 +784,7 @@ int device_add(struct device *dev)
+ 	struct device *parent = NULL;
+ 	struct class_interface *class_intf;
+ 	int error;
++	char devt_str[15];
+ 
+ 	dev = get_device(dev);
+ 	if (!dev || !strlen(dev->bus_id)) {
+@@ -807,9 +816,16 @@ int device_add(struct device *dev)
+ 		goto attrError;
+ 
+ 	if (MAJOR(dev->devt)) {
++		struct kobject *kobj = device_to_dev_kobj(dev);
++
+ 		error = device_create_file(dev, &devt_attr);
+ 		if (error)
+ 			goto ueventattrError;
++
++		format_dev_t(devt_str, dev->devt);
++		error = sysfs_create_link(kobj, &dev->kobj, devt_str);
++		if (error)
++			goto devtattrError;
+ 	}
+ 
+ 	error = device_add_class_symlinks(dev);
+@@ -854,6 +870,9 @@ int device_add(struct device *dev)
+ 	device_remove_class_symlinks(dev);
+  SymlinkError:
+ 	if (MAJOR(dev->devt))
++		sysfs_remove_link(device_to_dev_kobj(dev), devt_str);
++ devtattrError:
++	if (MAJOR(dev->devt))
+ 		device_remove_file(dev, &devt_attr);
+  ueventattrError:
+ 	device_remove_file(dev, &uevent_attr);
+@@ -925,12 +944,16 @@ void device_del(struct device *dev)
+ {
+ 	struct device *parent = dev->parent;
+ 	struct class_interface *class_intf;
++	char devt_str[15];
+ 
+ 	device_pm_remove(dev);
+ 	if (parent)
+ 		klist_del(&dev->knode_parent);
+-	if (MAJOR(dev->devt))
++	if (MAJOR(dev->devt)) {
++		format_dev_t(devt_str, dev->devt);
++		sysfs_remove_link(device_to_dev_kobj(dev), devt_str);
+ 		device_remove_file(dev, &devt_attr);
++	}
+ 	if (dev->class) {
+ 		device_remove_class_symlinks(dev);
+ 
+@@ -1055,7 +1078,25 @@ int __init devices_init(void)
+ 	devices_kset = kset_create_and_add("devices", &device_uevent_ops, NULL);
+ 	if (!devices_kset)
+ 		return -ENOMEM;
++	dev_kobj = kobject_create_and_add("dev", NULL);
++	if (!dev_kobj)
++		goto dev_kobj_err;
++	block_kobj = kobject_create_and_add("block", dev_kobj);
++	if (!block_kobj)
++		goto block_kobj_err;
++	char_kobj = kobject_create_and_add("char", dev_kobj);
++	if (!char_kobj)
++		goto char_kobj_err;
++
+ 	return 0;
++
++ char_kobj_err:
++	kobject_put(block_kobj);
++ block_kobj_err:
++	kobject_put(dev_kobj);
++ dev_kobj_err:
++	kset_unregister(devices_kset);
++	return -ENOMEM;
+ }
+ 
+ EXPORT_SYMBOL_GPL(device_for_each_child);
+@@ -1351,4 +1392,7 @@ void device_shutdown(void)
+ 			dev->driver->shutdown(dev);
+ 		}
+ 	}
++	kobject_put(char_kobj);
++	kobject_put(block_kobj);
++	kobject_put(dev_kobj);
+ }
+
+
+Patches currently in gregkh-2.6 which might be from dan.j.williams@intel.com are
+
+driver-core/sysfs-refill-attribute-buffer-when-reading-from-offset-0.patch
+driver-core/sysfs-add-sys-dev-char-block-to-lookup-sysfs-path-by-major-minor.patch
