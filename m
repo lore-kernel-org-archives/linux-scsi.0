@@ -1,100 +1,82 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: bdev size not updated correctly after underlying device is
-	resized
-Date: Wed, 16 Apr 2008 15:59:45 -0600
-Message-ID: <1208383185.3859.24.camel@bluto.andrew>
-References: <1207783782.31821.80.camel@bluto.andrew>
-	 <20080415160314.11e9b7e1.akpm@linux-foundation.org>
-	 <1208301719.24092.21.camel@bluto.andrew>
+From: Martin Peschke <mp3@de.ibm.com>
+Subject: [Patch] zfcp: fix compiler warning caused by poking inside new
+	semaphore (linux-next)
+Date: Thu, 17 Apr 2008 00:08:03 +0200
+Message-ID: <1208383683.4163.14.camel@kitka.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:16148 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754755AbYDPV7q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Apr 2008 17:59:46 -0400
-In-Reply-To: <1208301719.24092.21.camel@bluto.andrew>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:50614 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbYDPWIF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Apr 2008 18:08:05 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate4.de.ibm.com (8.13.8/8.13.8) with ESMTP id m3GM84Sq047020
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Apr 2008 22:08:04 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3GM84sr4124920
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2008 00:08:04 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3GM83mk022507
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2008 00:08:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, dm-devel@redhat.com, axboe@kernel.dk, andmike@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linux-Scsi <linux-scsi@vger.kernel.org>, heiko.carstens@de.ibm.com, schmichr@de.ibm.com
 
-On Tue, 2008-04-15 at 17:21 -0600, Andrew Patterson wrote:
-> On Tue, 2008-04-15 at 16:03 -0700, Andrew Morton wrote:
-> > On Wed, 09 Apr 2008 17:29:42 -0600
-> > .
-> > > Subject: [PATCH] Reset bdev size regardless of other openers.
-> > > 
-> > > A block device may be resized while online.  If the revalidate_disk
-> > > routine is called after the resize, the gendisk->capacity value is
-> > > updated for the device.  However, the bdev->bd_inode->i_size is not
-> > > updated when the block device is opened if there are any other openers
-> > > on the device.  This means that apps like LVM are unlikely to see the
-> > > size change as they tend to keep their block devices open.  There is a
-> > > discussion of this problem at:
-> > > 
-> > >   http://lkml.org/lkml/2007/7/3/83
-> > > 
-> > > This patch changes block_dev.c:do_open() to call bd_set_size()
-> > > regardless if there are other openers on the device.  It should not be
-> > > applied in its existing state as changing i_size should be protected by
-> > > a lock. Also, there needs to be some analysis on the effects of changing
-> > > the device size underneath an app.
-> > 
-> > hm, tricky.
-> > 
-> > I don't know what problems a change like this might cause - probably few,
-> > given the rarity and slowness of block device resizing.
-> 
-> I have been looking through code where this might be a problem.  The
-> sort of things I was worried about is where something might try and do a
-> calculation based on the i_size and write/read data from there after it
-> has been resized, possibly corrupting data.  The COW code in dm seems to
-> come the closest, but then if you are resizing the device that has
-> snapshots on it, you might be getting what you deserve.
-> 
-> > 
-> > Presumably increasing the device size will cause les problems than
-> > decreasing it would. 
-> 
-> Agreed.
-> 
-> >  Do we even support device shrinking?
-> 
-> Yes, this common with LVM at least.  Whether it is a good idea to do
-> this with a mounted file-system on it is another matter.
-> 
-> > 
-> > > diff --git a/fs/block_dev.c b/fs/block_dev.c
-> > > index 7d822fa..d13a4e5 100644
-> > > --- a/fs/block_dev.c
-> > > +++ b/fs/block_dev.c
-> > > @@ -992,6 +992,9 @@ static int do_open(struct block_device *bdev, struct file *file, int for_part)
-> > >  				ret = bdev->bd_disk->fops->open(bdev->bd_inode, file);
-> > >  				if (ret)
-> > >  					goto out;
-> > > +				/* device may have been resized with revalidate_disk */
-> > > +				if (!part)
-> > > +					bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
-> > >  			}
-> > >  			if (bdev->bd_invalidated)
-> > >  				rescan_partitions(bdev->bd_disk, bdev);
-> > 
-> > I'd have thought that an appropriate way to fix all this would be to
-> > perform the i_size update between freeze_bdev() and thaw_bdev(), when the
-> > fs is quiesced.  But it's not really in my comfort zone.
-> 
-> Except that this is not only done with file-systems.  In my case I am
-> just trying to extend an LVM logical volume after a resize but cannot
-> because it is open (activated). In practice, however, it is probably
-> only useful to do this with an online file-system.  Otherwise you could
-> just close all openers and the resize will work fine.
-> 
-> > 
-> 
+=46rom: Martin Peschke <mp3@de.ibm.com>
 
-Adding linux-scsi.  
+as seen in linux-next tree:
+
+drivers/s390/scsi/zfcp_dbf.c: In function =E2=80=98zfcp_rec_dbf_event_t=
+hread=E2=80=99:
+drivers/s390/scsi/zfcp_dbf.c:697: warning: passing argument 1 of =E2=80=
+=98atomic_read=E2=80=99
+ from incompatible pointer type
+
+Caused by recent git commit 348447e85749120ad600a5c8e23b6bb7058b931d
+
+We are not supposed to poke inside semaphore.
+
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_dbf.c |    2 --
+ drivers/s390/scsi/zfcp_dbf.h |    1 -
+ 2 files changed, 3 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -623,7 +623,6 @@ static int zfcp_rec_dbf_view_format(debu
+ 	zfcp_dbf_out(&p, "id", "%d", r->id2);
+ 	switch (r->id) {
+ 	case ZFCP_REC_DBF_ID_THREAD:
+-		zfcp_dbf_out(&p, "sema", "%d", r->u.thread.sema);
+ 		zfcp_dbf_out(&p, "total", "%d", r->u.thread.total);
+ 		zfcp_dbf_out(&p, "ready", "%d", r->u.thread.ready);
+ 		zfcp_dbf_out(&p, "running", "%d", r->u.thread.running);
+@@ -694,7 +693,6 @@ void zfcp_rec_dbf_event_thread(u8 id2, s
+ 	memset(r, 0, sizeof(*r));
+ 	r->id =3D ZFCP_REC_DBF_ID_THREAD;
+ 	r->id2 =3D id2;
+-	r->u.thread.sema =3D atomic_read(&adapter->erp_ready_sem.count);
+ 	r->u.thread.total =3D total;
+ 	r->u.thread.ready =3D ready;
+ 	r->u.thread.running =3D running;
+--- a/drivers/s390/scsi/zfcp_dbf.h
++++ b/drivers/s390/scsi/zfcp_dbf.h
+@@ -35,7 +35,6 @@ struct zfcp_dbf_dump {
+ } __attribute__ ((packed));
+=20
+ struct zfcp_rec_dbf_record_thread {
+-	u32 sema;
+ 	u32 total;
+ 	u32 ready;
+ 	u32 running;
 
 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
