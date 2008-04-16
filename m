@@ -1,119 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: bdev size not updated correctly after underlying device is
-	resized
-Date: Wed, 16 Apr 2008 18:54:54 -0500
-Message-ID: <1208390094.3227.79.camel@localhost.localdomain>
-References: <1207783782.31821.80.camel@bluto.andrew>
-	 <20080415160314.11e9b7e1.akpm@linux-foundation.org>
-	 <1208301719.24092.21.camel@bluto.andrew>
-	 <1208383185.3859.24.camel@bluto.andrew>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [dm-devel] [PATCH 4/7] scsi_dh: add EMC Clariion device handler
+Date: Wed, 16 Apr 2008 16:59:44 -0700
+Message-ID: <1208390384.1025.40.camel@chandra-ubuntu>
+References: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>
+	 <20080416011842.19580.92056.sendpatchset@chandra-ubuntu>
+	 <4806294C.9090703@cs.wisc.edu>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49983 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750853AbYDPXy7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Apr 2008 19:54:59 -0400
-In-Reply-To: <1208383185.3859.24.camel@bluto.andrew>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:58487 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbYDPX7j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Apr 2008 19:59:39 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m3GNvOct019049
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Apr 2008 19:57:24 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3GNxaMA171458
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Apr 2008 17:59:36 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3GNxYtN009236
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Apr 2008 17:59:35 -0600
+In-Reply-To: <4806294C.9090703@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Patterson <andrew.patterson@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, dm-devel@redhat.com, axboe@kernel.dk, andmike@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com, agk@redhat.com
 
-On Wed, 2008-04-16 at 15:59 -0600, Andrew Patterson wrote:
-> On Tue, 2008-04-15 at 17:21 -0600, Andrew Patterson wrote:
-> > On Tue, 2008-04-15 at 16:03 -0700, Andrew Morton wrote:
-> > > On Wed, 09 Apr 2008 17:29:42 -0600
-> > > .
-> > > > Subject: [PATCH] Reset bdev size regardless of other openers.
-> > > > 
-> > > > A block device may be resized while online.  If the revalidate_disk
-> > > > routine is called after the resize, the gendisk->capacity value is
-> > > > updated for the device.  However, the bdev->bd_inode->i_size is not
-> > > > updated when the block device is opened if there are any other openers
-> > > > on the device.  This means that apps like LVM are unlikely to see the
-> > > > size change as they tend to keep their block devices open.  There is a
-> > > > discussion of this problem at:
-> > > > 
-> > > >   http://lkml.org/lkml/2007/7/3/83
-> > > > 
-> > > > This patch changes block_dev.c:do_open() to call bd_set_size()
-> > > > regardless if there are other openers on the device.  It should not be
-> > > > applied in its existing state as changing i_size should be protected by
-> > > > a lock. Also, there needs to be some analysis on the effects of changing
-> > > > the device size underneath an app.
-> > > 
-> > > hm, tricky.
-> > > 
-> > > I don't know what problems a change like this might cause - probably few,
-> > > given the rarity and slowness of block device resizing.
-> > 
-> > I have been looking through code where this might be a problem.  The
-> > sort of things I was worried about is where something might try and do a
-> > calculation based on the i_size and write/read data from there after it
-> > has been resized, possibly corrupting data.  The COW code in dm seems to
-> > come the closest, but then if you are resizing the device that has
-> > snapshots on it, you might be getting what you deserve.
-> > 
-> > > 
-> > > Presumably increasing the device size will cause les problems than
-> > > decreasing it would. 
-> > 
-> > Agreed.
-> > 
-> > >  Do we even support device shrinking?
-> > 
-> > Yes, this common with LVM at least.  Whether it is a good idea to do
-> > this with a mounted file-system on it is another matter.
-> > 
-> > > 
-> > > > diff --git a/fs/block_dev.c b/fs/block_dev.c
-> > > > index 7d822fa..d13a4e5 100644
-> > > > --- a/fs/block_dev.c
-> > > > +++ b/fs/block_dev.c
-> > > > @@ -992,6 +992,9 @@ static int do_open(struct block_device *bdev, struct file *file, int for_part)
-> > > >  				ret = bdev->bd_disk->fops->open(bdev->bd_inode, file);
-> > > >  				if (ret)
-> > > >  					goto out;
-> > > > +				/* device may have been resized with revalidate_disk */
-> > > > +				if (!part)
-> > > > +					bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
-> > > >  			}
-> > > >  			if (bdev->bd_invalidated)
-> > > >  				rescan_partitions(bdev->bd_disk, bdev);
-> > > 
-> > > I'd have thought that an appropriate way to fix all this would be to
-> > > perform the i_size update between freeze_bdev() and thaw_bdev(), when the
-> > > fs is quiesced.  But it's not really in my comfort zone.
-> > 
-> > Except that this is not only done with file-systems.  In my case I am
-> > just trying to extend an LVM logical volume after a resize but cannot
-> > because it is open (activated). In practice, however, it is probably
-> > only useful to do this with an online file-system.  Otherwise you could
-> > just close all openers and the resize will work fine.
-> > 
-> > > 
-> > 
+
+On Wed, 2008-04-16 at 11:29 -0500, Mike Christie wrote:
+> Chandra Seetharaman wrote:
+> > +
+> > +static int send_cmd(struct scsi_device *sdev, int cmd)
+> > +{
+> > +	struct request *rq = get_req(sdev, cmd);
+> > +
+> > +	if (!rq)
+> > +		return SCSI_DH_RES_TEMP_UNAVAIL;
+> > +
+> > +	return blk_execute_rq(sdev->request_queue, NULL, rq, 1);
+> > +}
+> > +
 > 
-> Adding linux-scsi.  
+> My only concerns are:
+> 
+> 1. EMC and HP need to send a command to every device to transition them. 
+> Because we do blk_execute_rq from the dm multipath workqueue we can now 
+> only failover/failback for a couple devices at a time.
+> 
 
-Thanks!
+> I am not sure if this is a big deal, because this the error handler path 
+> so it is going to be slower than the normal path. But it seems like 
 
-Actually this looks like a bit of an incredible hack to me since it
-requires another open to trigger.
+Yes. But...
 
-What probably should happen is that if the disk grew, then updating the
-new size should be fine (fs can then expand into the space).  But if it
-shrank, we probably want to invalidate the whole lot just to make sure
-we don't have pages or inodes which are backed by now non-existent
-pieces of the disk.
+pg_init() due to failover/failback will be sent only when I/O is
+sent/resent to a multipath device, isn't it ? and we don't expect I/Os
+to be sent to all the devices at the same time (all the time), do we ?
 
-So, what about doing the check in revalidate instead?  If old size ==
-new size, do nothing; if > do invalidation like media change and if <
-just update the actual size?
+So, as you pointed, is it a big deal ? :)
 
-James
-
+BTW, As you know, it was originally coded that way(patchset posted on
+Jan 23, 2008) and later changed as per James comments (through you) that
+the code was overusing blk_execute_rq_nowait().
+ 
+> customers are really picky about failover times and want them as fast as 
+> possible. If they have a couple hundred devices doing a couple at a time 
+> might be something that users see as a regression from the old code. I 
+> am not sure though. I just do not want the bugzillas when they come to 
+> work :)
+> 
+> 2. EMC guys did you test the short vs long tress pass stuff? Do we need 
+> to add some code to handle the case where we send a short one, but we 
+> needed to send a long one. Is there some sense error or some inquiry 
+> data we can base this off of?
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
 
