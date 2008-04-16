@@ -1,34 +1,119 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH] endianness bug in sas_ata
-Date: Wed, 16 Apr 2008 23:27:45 +0100
-Message-ID: <20080416222745.GE27459@ZenIV.linux.org.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: bdev size not updated correctly after underlying device is
+	resized
+Date: Wed, 16 Apr 2008 18:54:54 -0500
+Message-ID: <1208390094.3227.79.camel@localhost.localdomain>
+References: <1207783782.31821.80.camel@bluto.andrew>
+	 <20080415160314.11e9b7e1.akpm@linux-foundation.org>
+	 <1208301719.24092.21.camel@bluto.andrew>
+	 <1208383185.3859.24.camel@bluto.andrew>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:40893 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbYDPW1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Apr 2008 18:27:46 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1JmG6T-0004Ic-Ih
-	for linux-scsi@vger.kernel.org; Wed, 16 Apr 2008 23:27:45 +0100
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49983 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750853AbYDPXy7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Apr 2008 19:54:59 -0400
+In-Reply-To: <1208383185.3859.24.camel@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, dm-devel@redhat.com, axboe@kernel.dk, andmike@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index b0e5ac3..06ad2fa 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -698,7 +698,7 @@ static int sas_discover_sata_dev(struct domain_device *dev)
- 		/* incomplete response */
- 		SAS_DPRINTK("sending SET FEATURE/PUP_STBY_SPIN_UP to "
- 			    "dev %llx\n", SAS_ADDR(dev->sas_addr));
--		if (!le16_to_cpu(identify_x[83] & (1<<6)))
-+		if (!(identify_x[83] & cpu_to_le16(1<<6)))
- 			goto cont1;
- 		res = sas_issue_ata_cmd(dev, ATA_SET_FEATURES,
- 					ATA_FEATURE_PUP_STBY_SPIN_UP,
+On Wed, 2008-04-16 at 15:59 -0600, Andrew Patterson wrote:
+> On Tue, 2008-04-15 at 17:21 -0600, Andrew Patterson wrote:
+> > On Tue, 2008-04-15 at 16:03 -0700, Andrew Morton wrote:
+> > > On Wed, 09 Apr 2008 17:29:42 -0600
+> > > .
+> > > > Subject: [PATCH] Reset bdev size regardless of other openers.
+> > > > 
+> > > > A block device may be resized while online.  If the revalidate_disk
+> > > > routine is called after the resize, the gendisk->capacity value is
+> > > > updated for the device.  However, the bdev->bd_inode->i_size is not
+> > > > updated when the block device is opened if there are any other openers
+> > > > on the device.  This means that apps like LVM are unlikely to see the
+> > > > size change as they tend to keep their block devices open.  There is a
+> > > > discussion of this problem at:
+> > > > 
+> > > >   http://lkml.org/lkml/2007/7/3/83
+> > > > 
+> > > > This patch changes block_dev.c:do_open() to call bd_set_size()
+> > > > regardless if there are other openers on the device.  It should not be
+> > > > applied in its existing state as changing i_size should be protected by
+> > > > a lock. Also, there needs to be some analysis on the effects of changing
+> > > > the device size underneath an app.
+> > > 
+> > > hm, tricky.
+> > > 
+> > > I don't know what problems a change like this might cause - probably few,
+> > > given the rarity and slowness of block device resizing.
+> > 
+> > I have been looking through code where this might be a problem.  The
+> > sort of things I was worried about is where something might try and do a
+> > calculation based on the i_size and write/read data from there after it
+> > has been resized, possibly corrupting data.  The COW code in dm seems to
+> > come the closest, but then if you are resizing the device that has
+> > snapshots on it, you might be getting what you deserve.
+> > 
+> > > 
+> > > Presumably increasing the device size will cause les problems than
+> > > decreasing it would. 
+> > 
+> > Agreed.
+> > 
+> > >  Do we even support device shrinking?
+> > 
+> > Yes, this common with LVM at least.  Whether it is a good idea to do
+> > this with a mounted file-system on it is another matter.
+> > 
+> > > 
+> > > > diff --git a/fs/block_dev.c b/fs/block_dev.c
+> > > > index 7d822fa..d13a4e5 100644
+> > > > --- a/fs/block_dev.c
+> > > > +++ b/fs/block_dev.c
+> > > > @@ -992,6 +992,9 @@ static int do_open(struct block_device *bdev, struct file *file, int for_part)
+> > > >  				ret = bdev->bd_disk->fops->open(bdev->bd_inode, file);
+> > > >  				if (ret)
+> > > >  					goto out;
+> > > > +				/* device may have been resized with revalidate_disk */
+> > > > +				if (!part)
+> > > > +					bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
+> > > >  			}
+> > > >  			if (bdev->bd_invalidated)
+> > > >  				rescan_partitions(bdev->bd_disk, bdev);
+> > > 
+> > > I'd have thought that an appropriate way to fix all this would be to
+> > > perform the i_size update between freeze_bdev() and thaw_bdev(), when the
+> > > fs is quiesced.  But it's not really in my comfort zone.
+> > 
+> > Except that this is not only done with file-systems.  In my case I am
+> > just trying to extend an LVM logical volume after a resize but cannot
+> > because it is open (activated). In practice, however, it is probably
+> > only useful to do this with an online file-system.  Otherwise you could
+> > just close all openers and the resize will work fine.
+> > 
+> > > 
+> > 
+> 
+> Adding linux-scsi.  
+
+Thanks!
+
+Actually this looks like a bit of an incredible hack to me since it
+requires another open to trigger.
+
+What probably should happen is that if the disk grew, then updating the
+new size should be fine (fs can then expand into the space).  But if it
+shrank, we probably want to invalidate the whole lot just to make sure
+we don't have pages or inodes which are backed by now non-existent
+pieces of the disk.
+
+So, what about doing the check in revalidate instead?  If old size ==
+new size, do nothing; if > do invalidation like media change and if <
+just update the actual size?
+
+James
+
+
