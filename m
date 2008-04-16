@@ -1,320 +1,1391 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/3] scsi: varlen extended and vendor-specific cdbs
-Date: Wed, 16 Apr 2008 11:09:07 +0900
-Message-ID: <20080416110907B.fujita.tomonori@lab.ntt.co.jp>
-References: <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<48049E8A.7030700@panasas.com>
-	<4804A0E7.6050002@panasas.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:61846 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbYDPCL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2008 22:11:57 -0400
-In-Reply-To: <4804A0E7.6050002@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH 6/7] scsi_dh: Remove hardware handlers from dm
+Date: Tue, 15 Apr 2008 18:18:54 -0700
+Message-ID: <20080416011854.19580.99730.sendpatchset@chandra-ubuntu>
+References: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
 
-On Tue, 15 Apr 2008 15:34:47 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+Subject: scsi_dh: Remove hardware handlers from dm
 
-> 
-> Add support for variable-length, extended, and vendor specific
-> CDBs to scsi-ml. It is now possible for initiators and ULD's
-> to issue these types of commands. LLDs need not change much.
-> All they need is to raise the .max_cmd_len to the longest command
-> they support (see iscsi patch).
-> 
-> - clean-up some code paths that did not expect commands to be
->   larger than 16, and change cmd_len members' type to short as
->   char is not enough.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> Signed-off-by: Benny Halevy <bhalevy@panasas.com>
-> ---
->  block/scsi_ioctl.c       |    5 ++---
->  drivers/scsi/constants.c |   10 +++-------
->  drivers/scsi/scsi.c      |   22 +++++++++++-----------
->  drivers/scsi/scsi_lib.c  |    8 ++++++--
->  include/scsi/scsi.h      |   40 +++++++++++++++++++++++++++++++++-------
->  include/scsi/scsi_cmnd.h |    2 +-
->  include/scsi/scsi_host.h |    8 +++-----
->  7 files changed, 59 insertions(+), 36 deletions(-)
-> 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index a2c3a93..aaf07e4 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -33,13 +33,12 @@
->  #include <scsi/scsi_cmnd.h>
->  
->  /* Command group 3 is reserved and should never be used.  */
-> -const unsigned char scsi_command_size[8] =
-> +const unsigned char scsi_command_size_tbl[8] =
->  {
->  	6, 10, 10, 12,
->  	16, 12, 10, 10
->  };
-> -
-> -EXPORT_SYMBOL(scsi_command_size);
-> +EXPORT_SYMBOL(scsi_command_size_tbl);
->  
->  #include <scsi/sg.h>
->  
-> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index 403a7f2..9785d73 100644
-> --- a/drivers/scsi/constants.c
-> +++ b/drivers/scsi/constants.c
-> @@ -28,7 +28,6 @@
->  #define SERVICE_ACTION_OUT_12 0xa9
->  #define SERVICE_ACTION_IN_16 0x9e
->  #define SERVICE_ACTION_OUT_16 0x9f
-> -#define VARIABLE_LENGTH_CMD 0x7f
->  
->  
->  
-> @@ -210,7 +209,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
->  	cdb0 = cdbp[0];
->  	switch(cdb0) {
->  	case VARIABLE_LENGTH_CMD:
-> -		len = cdbp[7] + 8;
-> +		len = scsi_varlen_cdb_length(cdbp);
->  		if (len < 10) {
->  			printk("short variable length command, "
->  			       "len=%d ext_len=%d", len, cdb_len);
-> @@ -300,7 +299,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
->  	cdb0 = cdbp[0];
->  	switch(cdb0) {
->  	case VARIABLE_LENGTH_CMD:
-> -		len = cdbp[7] + 8;
-> +		len = scsi_varlen_cdb_length(cdbp);
->  		if (len < 10) {
->  			printk("short opcode=0x%x command, len=%d "
->  			       "ext_len=%d", cdb0, len, cdb_len);
-> @@ -335,10 +334,7 @@ void __scsi_print_command(unsigned char *cdb)
->  	int k, len;
->  
->  	print_opcode_name(cdb, 0);
-> -	if (VARIABLE_LENGTH_CMD == cdb[0])
-> -		len = cdb[7] + 8;
-> -	else
-> -		len = COMMAND_SIZE(cdb[0]);
-> +	len = scsi_command_size(cdb);
->  	/* print out all bytes in cdb */
->  	for (k = 0; k < len; ++k) 
->  		printk(" %02x", cdb[k]);
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index f6980bd..3dabecb 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -79,15 +79,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
->  #define MIN_RESET_PERIOD (15*HZ)
->  
->  /*
-> - * Macro to determine the size of SCSI command. This macro takes vendor
-> - * unique commands into account. SCSI commands in groups 6 and 7 are
-> - * vendor unique and we will depend upon the command length being
-> - * supplied correctly in cmd_len.
-> - */
-> -#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
-> -				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
-> -
-> -/*
->   * Note - the initial logging level can be set here to log events at boot time.
->   * After the system is up, you may enable logging via the /proc interface.
->   */
-> @@ -620,6 +611,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  	unsigned long flags = 0;
->  	unsigned long timeout;
->  	int rtn = 0;
-> +	unsigned cmd_len;
->  
->  	/* check if the device is still usable */
->  	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
-> @@ -701,9 +693,17 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  	 * Before we queue this command, check if the command
->  	 * length exceeds what the host adapter can handle.
->  	 */
-> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
-> +	cmd_len = cmd->cmd_len;
-> +	if (!cmd_len) {
-> +		BUG_ON(cmd->cmnd[0] == VARIABLE_LENGTH_CMD);
-> +		cmd_len = COMMAND_SIZE((cmd)->cmnd[0]);
-> +	}
+From: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hmm, how can cmd->cmd_len be zero here?
+This patch removes the 3 hardware handlers that currently exist 
+under dm as they are moved to SCSI layer in the previous patches.
 
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+ drivers/md/Kconfig          |   18 	0 +	18 -	0 !
+ drivers/md/Makefile         |    3 	0 +	3 -	0 !
+ drivers/md/dm-emc.c         |  347 	0 +	347 -	0 !
+ drivers/md/dm-mpath-hp-sw.c |  248 	0 +	248 -	0 !
+ drivers/md/dm-mpath-rdac.c  |  701 	0 +	701 -	0 !
+ 5 files changed, 1317 deletions(-)
 
-> +	if (cmd_len > cmd->device->host->max_cmd_len) {
->  		SCSI_LOG_MLQUEUE(3,
-> -				printk("queuecommand : command too long.\n"));
-> +			printk("queuecommand : command too long. "
-> +			       "cdb_size=%d host->max_cmd_len=%d\n",
-> +			       cmd->cmd_len, cmd->device->host->max_cmd_len));
->  		cmd->result = (DID_ABORT << 16);
-
-Why can't we just do:
-
-if (scsi_command_size(cmd->cmnd) > cmd->device->host->max_cmd_len) {
-
-
->  		scsi_done(cmd);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 325270b..e621505 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -195,6 +195,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
->  
->  	req->cmd_len = COMMAND_SIZE(cmd[0]);
->  	memcpy(req->cmd, cmd, req->cmd_len);
-> +
-
-Please don't put a new line at a place unrelated with this patch.
-
-
->  	req->sense = sense;
->  	req->sense_len = 0;
->  	req->retries = retries;
-> @@ -445,7 +446,7 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
->  	scsi_set_resid(cmd, 0);
->  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->  	if (cmd->cmd_len == 0)
-> -		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
-> +		cmd->cmd_len = scsi_command_size(cmd->cmnd);
->  }
->  
->  void scsi_device_unbusy(struct scsi_device *sdev)
-> @@ -1130,13 +1131,16 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
->  	}
->  
->  	cmd->cmd_len = req->cmd_len;
-> +	if (!cmd->cmd_len)
-> +		cmd->cmd_len = scsi_command_size(cmd->cmnd);
-> +
-
-how can cmd->cmd_len be zero here? SG_IO path sets up req->cmd_len
-properly for PC commands.
-
-
->  	if (!req->data_len)
->  		cmd->sc_data_direction = DMA_NONE;
->  	else if (rq_data_dir(req) == WRITE)
->  		cmd->sc_data_direction = DMA_TO_DEVICE;
->  	else
->  		cmd->sc_data_direction = DMA_FROM_DEVICE;
-> -	
-> +
->  	cmd->transfersize = req->data_len;
->  	cmd->allowed = req->retries;
->  	cmd->timeout_per_command = req->timeout;
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 1f74bcd..32742c4 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -30,13 +30,6 @@
->  #endif
->  
->  /*
-> - *	SCSI command lengths
-> - */
-> -
-> -extern const unsigned char scsi_command_size[8];
-> -#define COMMAND_SIZE(opcode) scsi_command_size[((opcode) >> 5) & 7]
-> -
-> -/*
->   * Special value for scanning to specify scanning or rescanning of all
->   * possible channels, (target) ids, or luns on a given shost.
->   */
-> @@ -109,6 +102,7 @@ extern const unsigned char scsi_command_size[8];
->  #define MODE_SENSE_10         0x5a
->  #define PERSISTENT_RESERVE_IN 0x5e
->  #define PERSISTENT_RESERVE_OUT 0x5f
-> +#define VARIABLE_LENGTH_CMD   0x7f
->  #define REPORT_LUNS           0xa0
->  #define MAINTENANCE_IN        0xa3
->  #define MOVE_MEDIUM           0xa5
-> @@ -136,6 +130,38 @@ extern const unsigned char scsi_command_size[8];
->  #define	ATA_12		      0xa1	/* 12-byte pass-thru */
->  
->  /*
-> + *	SCSI command lengths
-> + */
-> +
-> +#define SCSI_MAX_VARLEN_CDB_SIZE 260
-> +
-> +/* defined in T10 SCSI Primary Commands-2 (SPC2) */
-> +struct scsi_varlen_cdb_hdr {
-> +	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-> +	u8 control;
-> +	u8 misc[5];
-> +	u8 additional_cdb_length;         /* total cdb length - 8 */
-> +	__be16 service_action;
-> +	/* service specific data follows */
-> +};
-> +
-> +static inline unsigned
-> +scsi_varlen_cdb_length(const void *hdr)
-> +{
-> +	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
-> +}
-> +
-> +extern const unsigned char scsi_command_size_tbl[8];
-> +#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
-> +
-> +static inline unsigned
-> +scsi_command_size(const unsigned char *cmnd)
-> +{
-> +	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
-> +		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
-> +}
-> +
-> +/*
->   *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
->   *  T10/1561-D Revision 4 Draft dated 7th November 2002.
->   */
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index dea73e5..f4dacb1 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -78,7 +78,7 @@ struct scsi_cmnd {
->  	int allowed;
->  	int timeout_per_command;
->  
-> -	unsigned char cmd_len;
-> +	unsigned short cmd_len;
->  	enum dma_data_direction sc_data_direction;
->  
->  	/* These elements define the operation we are about to perform */
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 4913286..31f1bfd 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -573,13 +573,11 @@ struct Scsi_Host {
->  	/*
->  	 * The maximum length of SCSI commands that this host can accept.
->  	 * Probably 12 for most host adapters, but could be 16 for others.
-> +	 * or 260 if the driver supports variable length cdbs.
->  	 * For drivers that don't set this field, a value of 12 is
-> -	 * assumed.  I am leaving this as a number rather than a bit
-> -	 * because you never know what subsequent SCSI standards might do
-> -	 * (i.e. could there be a 20 byte or a 24-byte command a few years
-> -	 * down the road?).  
-> +	 * assumed.
->  	 */
-> -	unsigned char max_cmd_len;
-> +	unsigned short max_cmd_len;
->  
->  	int this_id;
->  	int can_queue;
-> -- 
-> 1.5.3.3
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux-2.6.25-rc8-mm2/drivers/md/Kconfig
+===================================================================
+--- linux-2.6.25-rc8-mm2.orig/drivers/md/Kconfig
++++ linux-2.6.25-rc8-mm2/drivers/md/Kconfig
+@@ -256,24 +256,6 @@ config DM_MULTIPATH
+ 	---help---
+ 	  Allow volume managers to support multipath hardware.
+ 
+-config DM_MULTIPATH_EMC
+-	tristate "EMC CX/AX multipath support"
+-	depends on DM_MULTIPATH && BLK_DEV_DM
+-	---help---
+-	  Multipath support for EMC CX/AX series hardware.
+-
+-config DM_MULTIPATH_RDAC
+-	tristate "LSI/Engenio RDAC multipath support (EXPERIMENTAL)"
+-	depends on DM_MULTIPATH && BLK_DEV_DM && SCSI && EXPERIMENTAL
+-	---help---
+-	  Multipath support for LSI/Engenio RDAC.
+-
+-config DM_MULTIPATH_HP
+-        tristate "HP MSA multipath support (EXPERIMENTAL)"
+-        depends on DM_MULTIPATH && BLK_DEV_DM && SCSI && EXPERIMENTAL
+-        ---help---
+-          Multipath support for HP MSA (Active/Passive) series hardware.
+-
+ config DM_DELAY
+ 	tristate "I/O delaying target (EXPERIMENTAL)"
+ 	depends on BLK_DEV_DM && EXPERIMENTAL
+Index: linux-2.6.25-rc8-mm2/drivers/md/Makefile
+===================================================================
+--- linux-2.6.25-rc8-mm2.orig/drivers/md/Makefile
++++ linux-2.6.25-rc8-mm2/drivers/md/Makefile
+@@ -35,9 +35,6 @@ obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
+ obj-$(CONFIG_DM_CRYPT)		+= dm-crypt.o
+ obj-$(CONFIG_DM_DELAY)		+= dm-delay.o
+ obj-$(CONFIG_DM_MULTIPATH)	+= dm-multipath.o dm-round-robin.o
+-obj-$(CONFIG_DM_MULTIPATH_EMC)	+= dm-emc.o
+-obj-$(CONFIG_DM_MULTIPATH_HP)	+= dm-hp-sw.o
+-obj-$(CONFIG_DM_MULTIPATH_RDAC)	+= dm-rdac.o
+ obj-$(CONFIG_DM_SNAPSHOT)	+= dm-snapshot.o
+ obj-$(CONFIG_DM_MIRROR)		+= dm-mirror.o dm-log.o
+ obj-$(CONFIG_DM_ZERO)		+= dm-zero.o
+Index: linux-2.6.25-rc8-mm2/drivers/md/dm-emc.c
+===================================================================
+--- linux-2.6.25-rc8-mm2.orig/drivers/md/dm-emc.c
++++ /dev/null
+@@ -1,347 +0,0 @@
+-/*
+- * Copyright (C) 2004 SUSE LINUX Products GmbH. All rights reserved.
+- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+- *
+- * This file is released under the GPL.
+- *
+- * Multipath support for EMC CLARiiON AX/CX-series hardware.
+- */
+-
+-#include "dm.h"
+-#include "dm-hw-handler.h"
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
+-
+-#define DM_MSG_PREFIX "multipath emc"
+-
+-struct emc_handler {
+-	spinlock_t lock;
+-
+-	/* Whether we should send the short trespass command (FC-series)
+-	 * or the long version (default for AX/CX CLARiiON arrays). */
+-	unsigned short_trespass;
+-	/* Whether or not to honor SCSI reservations when initiating a
+-	 * switch-over. Default: Don't. */
+-	unsigned hr;
+-
+-	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
+-};
+-
+-#define TRESPASS_PAGE 0x22
+-#define EMC_FAILOVER_TIMEOUT (60 * HZ)
+-
+-/* Code borrowed from dm-lsi-rdac by Mike Christie */
+-
+-static inline void free_bio(struct bio *bio)
+-{
+-	__free_page(bio->bi_io_vec[0].bv_page);
+-	bio_put(bio);
+-}
+-
+-static void emc_endio(struct bio *bio, int error)
+-{
+-	struct dm_path *path = bio->bi_private;
+-
+-	/* We also need to look at the sense keys here whether or not to
+-	 * switch to the next PG etc.
+-	 *
+-	 * For now simple logic: either it works or it doesn't.
+-	 */
+-	if (error)
+-		dm_pg_init_complete(path, MP_FAIL_PATH);
+-	else
+-		dm_pg_init_complete(path, 0);
+-
+-	/* request is freed in block layer */
+-	free_bio(bio);
+-}
+-
+-static struct bio *get_failover_bio(struct dm_path *path, unsigned data_size)
+-{
+-	struct bio *bio;
+-	struct page *page;
+-
+-	bio = bio_alloc(GFP_ATOMIC, 1);
+-	if (!bio) {
+-		DMERR("get_failover_bio: bio_alloc() failed.");
+-		return NULL;
+-	}
+-
+-	bio->bi_rw |= (1 << BIO_RW);
+-	bio->bi_bdev = path->dev->bdev;
+-	bio->bi_sector = 0;
+-	bio->bi_private = path;
+-	bio->bi_end_io = emc_endio;
+-
+-	page = alloc_page(GFP_ATOMIC);
+-	if (!page) {
+-		DMERR("get_failover_bio: alloc_page() failed.");
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	if (bio_add_page(bio, page, data_size, 0) != data_size) {
+-		DMERR("get_failover_bio: bio_add_page() failed.");
+-		__free_page(page);
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	return bio;
+-}
+-
+-static struct request *get_failover_req(struct emc_handler *h,
+-					struct bio *bio, struct dm_path *path)
+-{
+-	struct request *rq;
+-	struct block_device *bdev = bio->bi_bdev;
+-	struct request_queue *q = bdev_get_queue(bdev);
+-
+-	/* FIXME: Figure out why it fails with GFP_ATOMIC. */
+-	rq = blk_get_request(q, WRITE, __GFP_WAIT);
+-	if (!rq) {
+-		DMERR("get_failover_req: blk_get_request failed");
+-		return NULL;
+-	}
+-
+-	blk_rq_append_bio(q, rq, bio);
+-
+-	rq->sense = h->sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	memset(&rq->cmd, 0, BLK_MAX_CDB);
+-
+-	rq->timeout = EMC_FAILOVER_TIMEOUT;
+-	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
+-
+-	return rq;
+-}
+-
+-static struct request *emc_trespass_get(struct emc_handler *h,
+-					struct dm_path *path)
+-{
+-	struct bio *bio;
+-	struct request *rq;
+-	unsigned char *page22;
+-	unsigned char long_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x09,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff, 0xff,           /* Trespass target */
+-		0, 0, 0, 0, 0, 0      /* Reserved bytes / unknown */
+-		};
+-	unsigned char short_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x02,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff,                 /* Trespass target */
+-		};
+-	unsigned data_size = h->short_trespass ? sizeof(short_trespass_pg) :
+-				sizeof(long_trespass_pg);
+-
+-	/* get bio backing */
+-	if (data_size > PAGE_SIZE)
+-		/* this should never happen */
+-		return NULL;
+-
+-	bio = get_failover_bio(path, data_size);
+-	if (!bio) {
+-		DMERR("emc_trespass_get: no bio");
+-		return NULL;
+-	}
+-
+-	page22 = (unsigned char *)bio_data(bio);
+-	memset(page22, 0, data_size);
+-
+-	memcpy(page22, h->short_trespass ?
+-		short_trespass_pg : long_trespass_pg, data_size);
+-
+-	/* get request for block layer packet command */
+-	rq = get_failover_req(h, bio, path);
+-	if (!rq) {
+-		DMERR("emc_trespass_get: no rq");
+-		free_bio(bio);
+-		return NULL;
+-	}
+-
+-	/* Prepare the command. */
+-	rq->cmd[0] = MODE_SELECT;
+-	rq->cmd[1] = 0x10;
+-	rq->cmd[4] = data_size;
+-	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
+-
+-	return rq;
+-}
+-
+-static void emc_pg_init(struct hw_handler *hwh, unsigned bypassed,
+-			struct dm_path *path)
+-{
+-	struct request *rq;
+-	struct request_queue *q = bdev_get_queue(path->dev->bdev);
+-
+-	/*
+-	 * We can either blindly init the pg (then look at the sense),
+-	 * or we can send some commands to get the state here (then
+-	 * possibly send the fo cmnd), or we can also have the
+-	 * initial state passed into us and then get an update here.
+-	 */
+-	if (!q) {
+-		DMINFO("emc_pg_init: no queue");
+-		goto fail_path;
+-	}
+-
+-	/* FIXME: The request should be pre-allocated. */
+-	rq = emc_trespass_get(hwh->context, path);
+-	if (!rq) {
+-		DMERR("emc_pg_init: no rq");
+-		goto fail_path;
+-	}
+-
+-	DMINFO("emc_pg_init: sending switch-over command");
+-	elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 1);
+-	return;
+-
+-fail_path:
+-	dm_pg_init_complete(path, MP_FAIL_PATH);
+-}
+-
+-static struct emc_handler *alloc_emc_handler(void)
+-{
+-	struct emc_handler *h = kzalloc(sizeof(*h), GFP_KERNEL);
+-
+-	if (h)
+-		spin_lock_init(&h->lock);
+-
+-	return h;
+-}
+-
+-static int emc_create(struct hw_handler *hwh, unsigned argc, char **argv)
+-{
+-	struct emc_handler *h;
+-	unsigned hr, short_trespass;
+-
+-	if (argc == 0) {
+-		/* No arguments: use defaults */
+-		hr = 0;
+-		short_trespass = 0;
+-	} else if (argc != 2) {
+-		DMWARN("incorrect number of arguments");
+-		return -EINVAL;
+-	} else {
+-		if ((sscanf(argv[0], "%u", &short_trespass) != 1)
+-			|| (short_trespass > 1)) {
+-			DMWARN("invalid trespass mode selected");
+-			return -EINVAL;
+-		}
+-
+-		if ((sscanf(argv[1], "%u", &hr) != 1)
+-			|| (hr > 1)) {
+-			DMWARN("invalid honor reservation flag selected");
+-			return -EINVAL;
+-		}
+-	}
+-
+-	h = alloc_emc_handler();
+-	if (!h)
+-		return -ENOMEM;
+-
+-	hwh->context = h;
+-
+-	if ((h->short_trespass = short_trespass))
+-		DMWARN("short trespass command will be send");
+-	else
+-		DMWARN("long trespass command will be send");
+-
+-	if ((h->hr = hr))
+-		DMWARN("honor reservation bit will be set");
+-	else
+-		DMWARN("honor reservation bit will not be set (default)");
+-
+-	return 0;
+-}
+-
+-static void emc_destroy(struct hw_handler *hwh)
+-{
+-	struct emc_handler *h = (struct emc_handler *) hwh->context;
+-
+-	kfree(h);
+-	hwh->context = NULL;
+-}
+-
+-static unsigned emc_error(struct hw_handler *hwh, struct bio *bio)
+-{
+-	/* FIXME: Patch from axboe still missing */
+-#if 0
+-	int sense;
+-
+-	if (bio->bi_error & BIO_SENSE) {
+-		sense = bio->bi_error & 0xffffff; /* sense key / asc / ascq */
+-
+-		if (sense == 0x020403) {
+-			/* LUN Not Ready - Manual Intervention Required
+-			 * indicates this is a passive path.
+-			 *
+-			 * FIXME: However, if this is seen and EVPD C0
+-			 * indicates that this is due to a NDU in
+-			 * progress, we should set FAIL_PATH too.
+-			 * This indicates we might have to do a SCSI
+-			 * inquiry in the end_io path. Ugh. */
+-			return MP_BYPASS_PG | MP_RETRY_IO;
+-		} else if (sense == 0x052501) {
+-			/* An array based copy is in progress. Do not
+-			 * fail the path, do not bypass to another PG,
+-			 * do not retry. Fail the IO immediately.
+-			 * (Actually this is the same conclusion as in
+-			 * the default handler, but lets make sure.) */
+-			return 0;
+-		} else if (sense == 0x062900) {
+-			/* Unit Attention Code. This is the first IO
+-			 * to the new path, so just retry. */
+-			return MP_RETRY_IO;
+-		}
+-	}
+-#endif
+-
+-	/* Try default handler */
+-	return dm_scsi_err_handler(hwh, bio);
+-}
+-
+-static struct hw_handler_type emc_hwh = {
+-	.name = "emc",
+-	.module = THIS_MODULE,
+-	.create = emc_create,
+-	.destroy = emc_destroy,
+-	.pg_init = emc_pg_init,
+-	.error = emc_error,
+-};
+-
+-static int __init dm_emc_init(void)
+-{
+-	int r = dm_register_hw_handler(&emc_hwh);
+-
+-	if (r < 0)
+-		DMERR("register failed %d", r);
+-
+-	DMINFO("version 0.0.3 loaded");
+-
+-	return r;
+-}
+-
+-static void __exit dm_emc_exit(void)
+-{
+-	int r = dm_unregister_hw_handler(&emc_hwh);
+-
+-	if (r < 0)
+-		DMERR("unregister failed %d", r);
+-}
+-
+-module_init(dm_emc_init);
+-module_exit(dm_emc_exit);
+-
+-MODULE_DESCRIPTION(DM_NAME " EMC CX/AX/FC-family multipath");
+-MODULE_AUTHOR("Lars Marowsky-Bree <lmb@suse.de>");
+-MODULE_LICENSE("GPL");
+Index: linux-2.6.25-rc8-mm2/drivers/md/dm-mpath-hp-sw.c
+===================================================================
+--- linux-2.6.25-rc8-mm2.orig/drivers/md/dm-mpath-hp-sw.c
++++ /dev/null
+@@ -1,248 +0,0 @@
+-/*
+- * Copyright (C) 2005 Mike Christie, All rights reserved.
+- * Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+- * Authors: Mike Christie
+- *          Dave Wysochanski
+- *
+- * This file is released under the GPL.
+- *
+- * This module implements the specific path activation code for
+- * HP StorageWorks and FSC FibreCat Asymmetric (Active/Passive)
+- * storage arrays.
+- * These storage arrays have controller-based failover, not
+- * LUN-based failover.  However, LUN-based failover is the design
+- * of dm-multipath. Thus, this module is written for LUN-based failover.
+- */
+-#include <linux/blkdev.h>
+-#include <linux/list.h>
+-#include <linux/types.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_dbg.h>
+-
+-#include "dm.h"
+-#include "dm-hw-handler.h"
+-
+-#define DM_MSG_PREFIX "multipath hp-sw"
+-#define DM_HP_HWH_NAME "hp-sw"
+-#define DM_HP_HWH_VER "1.0.0"
+-
+-struct hp_sw_context {
+-	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
+-};
+-
+-/*
+- * hp_sw_error_is_retryable - Is an HP-specific check condition retryable?
+- * @req: path activation request
+- *
+- * Examine error codes of request and determine whether the error is retryable.
+- * Some error codes are already retried by scsi-ml (see
+- * scsi_decide_disposition), but some HP specific codes are not.
+- * The intent of this routine is to supply the logic for the HP specific
+- * check conditions.
+- *
+- * Returns:
+- *  1 - command completed with retryable error
+- *  0 - command completed with non-retryable error
+- *
+- * Possible optimizations
+- * 1. More hardware-specific error codes
+- */
+-static int hp_sw_error_is_retryable(struct request *req)
+-{
+-	/*
+-	 * NOT_READY is known to be retryable
+-	 * For now we just dump out the sense data and call it retryable
+-	 */
+-	if (status_byte(req->errors) == CHECK_CONDITION)
+-		__scsi_print_sense(DM_HP_HWH_NAME, req->sense, req->sense_len);
+-
+-	/*
+-	 * At this point we don't have complete information about all the error
+-	 * codes from this hardware, so we are just conservative and retry
+-	 * when in doubt.
+-	 */
+-	return 1;
+-}
+-
+-/*
+- * hp_sw_end_io - Completion handler for HP path activation.
+- * @req: path activation request
+- * @error: scsi-ml error
+- *
+- *  Check sense data, free request structure, and notify dm that
+- *  pg initialization has completed.
+- *
+- * Context: scsi-ml softirq
+- *
+- */
+-static void hp_sw_end_io(struct request *req, int error)
+-{
+-	struct dm_path *path = req->end_io_data;
+-	unsigned err_flags = 0;
+-
+-	if (!error) {
+-		DMDEBUG("%s path activation command - success",
+-			path->dev->name);
+-		goto out;
+-	}
+-
+-	if (hp_sw_error_is_retryable(req)) {
+-		DMDEBUG("%s path activation command - retry",
+-			path->dev->name);
+-		err_flags = MP_RETRY;
+-		goto out;
+-	}
+-
+-	DMWARN("%s path activation fail - error=0x%x",
+-	       path->dev->name, error);
+-	err_flags = MP_FAIL_PATH;
+-
+-out:
+-	req->end_io_data = NULL;
+-	__blk_put_request(req->q, req);
+-	dm_pg_init_complete(path, err_flags);
+-}
+-
+-/*
+- * hp_sw_get_request - Allocate an HP specific path activation request
+- * @path: path on which request will be sent (needed for request queue)
+- *
+- * The START command is used for path activation request.
+- * These arrays are controller-based failover, not LUN based.
+- * One START command issued to a single path will fail over all
+- * LUNs for the same controller.
+- *
+- * Possible optimizations
+- * 1. Make timeout configurable
+- * 2. Preallocate request
+- */
+-static struct request *hp_sw_get_request(struct dm_path *path)
+-{
+-	struct request *req;
+-	struct block_device *bdev = path->dev->bdev;
+-	struct request_queue *q = bdev_get_queue(bdev);
+-	struct hp_sw_context *h = path->hwhcontext;
+-
+-	req = blk_get_request(q, WRITE, GFP_NOIO);
+-	if (!req)
+-		goto out;
+-
+-	req->timeout = 60 * HZ;
+-
+-	req->errors = 0;
+-	req->cmd_type = REQ_TYPE_BLOCK_PC;
+-	req->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
+-	req->end_io_data = path;
+-	req->sense = h->sense;
+-	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-
+-	memset(&req->cmd, 0, BLK_MAX_CDB);
+-	req->cmd[0] = START_STOP;
+-	req->cmd[4] = 1;
+-	req->cmd_len = COMMAND_SIZE(req->cmd[0]);
+-
+-out:
+-	return req;
+-}
+-
+-/*
+- * hp_sw_pg_init - HP path activation implementation.
+- * @hwh: hardware handler specific data
+- * @bypassed: unused; is the path group bypassed? (see dm-mpath.c)
+- * @path: path to send initialization command
+- *
+- * Send an HP-specific path activation command on 'path'.
+- * Do not try to optimize in any way, just send the activation command.
+- * More than one path activation command may be sent to the same controller.
+- * This seems to work fine for basic failover support.
+- *
+- * Possible optimizations
+- * 1. Detect an in-progress activation request and avoid submitting another one
+- * 2. Model the controller and only send a single activation request at a time
+- * 3. Determine the state of a path before sending an activation request
+- *
+- * Context: kmpathd (see process_queued_ios() in dm-mpath.c)
+- */
+-static void hp_sw_pg_init(struct hw_handler *hwh, unsigned bypassed,
+-			  struct dm_path *path)
+-{
+-	struct request *req;
+-	struct hp_sw_context *h;
+-
+-	path->hwhcontext = hwh->context;
+-	h = hwh->context;
+-
+-	req = hp_sw_get_request(path);
+-	if (!req) {
+-		DMERR("%s path activation command - allocation fail",
+-		      path->dev->name);
+-		goto retry;
+-	}
+-
+-	DMDEBUG("%s path activation command - sent", path->dev->name);
+-
+-	blk_execute_rq_nowait(req->q, NULL, req, 1, hp_sw_end_io);
+-	return;
+-
+-retry:
+-	dm_pg_init_complete(path, MP_RETRY);
+-}
+-
+-static int hp_sw_create(struct hw_handler *hwh, unsigned argc, char **argv)
+-{
+-	struct hp_sw_context *h;
+-
+-	h = kmalloc(sizeof(*h), GFP_KERNEL);
+-	if (!h)
+-		return -ENOMEM;
+-
+-	hwh->context = h;
+-
+-	return 0;
+-}
+-
+-static void hp_sw_destroy(struct hw_handler *hwh)
+-{
+-	struct hp_sw_context *h = hwh->context;
+-
+-	kfree(h);
+-}
+-
+-static struct hw_handler_type hp_sw_hwh = {
+-	.name = DM_HP_HWH_NAME,
+-	.module = THIS_MODULE,
+-	.create = hp_sw_create,
+-	.destroy = hp_sw_destroy,
+-	.pg_init = hp_sw_pg_init,
+-};
+-
+-static int __init hp_sw_init(void)
+-{
+-	int r;
+-
+-	r = dm_register_hw_handler(&hp_sw_hwh);
+-	if (r < 0)
+-		DMERR("register failed %d", r);
+-	else
+-		DMINFO("version " DM_HP_HWH_VER " loaded");
+-
+-	return r;
+-}
+-
+-static void __exit hp_sw_exit(void)
+-{
+-	int r;
+-
+-	r = dm_unregister_hw_handler(&hp_sw_hwh);
+-	if (r < 0)
+-		DMERR("unregister failed %d", r);
+-}
+-
+-module_init(hp_sw_init);
+-module_exit(hp_sw_exit);
+-
+-MODULE_DESCRIPTION("DM Multipath HP StorageWorks / FSC FibreCat (A/P) support");
+-MODULE_AUTHOR("Mike Christie, Dave Wysochanski <dm-devel@redhat.com>");
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION(DM_HP_HWH_VER);
+Index: linux-2.6.25-rc8-mm2/drivers/md/dm-mpath-rdac.c
+===================================================================
+--- linux-2.6.25-rc8-mm2.orig/drivers/md/dm-mpath-rdac.c
++++ /dev/null
+@@ -1,701 +0,0 @@
+-/*
+- * Engenio/LSI RDAC DM HW handler
+- *
+- * Copyright (C) 2005 Mike Christie. All rights reserved.
+- * Copyright (C) Chandra Seetharaman, IBM Corp. 2007
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+- *
+- */
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_eh.h>
+-
+-#define DM_MSG_PREFIX "multipath rdac"
+-
+-#include "dm.h"
+-#include "dm-hw-handler.h"
+-
+-#define RDAC_DM_HWH_NAME "rdac"
+-#define RDAC_DM_HWH_VER "0.4"
+-
+-/*
+- * LSI mode page stuff
+- *
+- * These struct definitions and the forming of the
+- * mode page were taken from the LSI RDAC 2.4 GPL'd
+- * driver, and then converted to Linux conventions.
+- */
+-#define RDAC_QUIESCENCE_TIME 20;
+-/*
+- * Page Codes
+- */
+-#define RDAC_PAGE_CODE_REDUNDANT_CONTROLLER 0x2c
+-
+-/*
+- * Controller modes definitions
+- */
+-#define RDAC_MODE_TRANSFER_ALL_LUNS		0x01
+-#define RDAC_MODE_TRANSFER_SPECIFIED_LUNS	0x02
+-
+-/*
+- * RDAC Options field
+- */
+-#define RDAC_FORCED_QUIESENCE 0x02
+-
+-#define RDAC_FAILOVER_TIMEOUT (60 * HZ)
+-
+-struct rdac_mode_6_hdr {
+-	u8	data_len;
+-	u8	medium_type;
+-	u8	device_params;
+-	u8	block_desc_len;
+-};
+-
+-struct rdac_mode_10_hdr {
+-	u16	data_len;
+-	u8	medium_type;
+-	u8	device_params;
+-	u16	reserved;
+-	u16	block_desc_len;
+-};
+-
+-struct rdac_mode_common {
+-	u8	controller_serial[16];
+-	u8	alt_controller_serial[16];
+-	u8	rdac_mode[2];
+-	u8	alt_rdac_mode[2];
+-	u8	quiescence_timeout;
+-	u8	rdac_options;
+-};
+-
+-struct rdac_pg_legacy {
+-	struct rdac_mode_6_hdr hdr;
+-	u8	page_code;
+-	u8	page_len;
+-	struct rdac_mode_common common;
+-#define MODE6_MAX_LUN	32
+-	u8	lun_table[MODE6_MAX_LUN];
+-	u8	reserved2[32];
+-	u8	reserved3;
+-	u8	reserved4;
+-};
+-
+-struct rdac_pg_expanded {
+-	struct rdac_mode_10_hdr hdr;
+-	u8	page_code;
+-	u8	subpage_code;
+-	u8	page_len[2];
+-	struct rdac_mode_common common;
+-	u8	lun_table[256];
+-	u8	reserved3;
+-	u8	reserved4;
+-};
+-
+-struct c9_inquiry {
+-	u8	peripheral_info;
+-	u8	page_code;	/* 0xC9 */
+-	u8	reserved1;
+-	u8	page_len;
+-	u8	page_id[4];	/* "vace" */
+-	u8	avte_cvp;
+-	u8	path_prio;
+-	u8	reserved2[38];
+-};
+-
+-#define SUBSYS_ID_LEN	16
+-#define SLOT_ID_LEN	2
+-
+-struct c4_inquiry {
+-	u8	peripheral_info;
+-	u8	page_code;	/* 0xC4 */
+-	u8	reserved1;
+-	u8	page_len;
+-	u8	page_id[4];	/* "subs" */
+-	u8	subsys_id[SUBSYS_ID_LEN];
+-	u8	revision[4];
+-	u8	slot_id[SLOT_ID_LEN];
+-	u8	reserved[2];
+-};
+-
+-struct rdac_controller {
+-	u8			subsys_id[SUBSYS_ID_LEN];
+-	u8			slot_id[SLOT_ID_LEN];
+-	int			use_10_ms;
+-	struct kref		kref;
+-	struct list_head	node; /* list of all controllers */
+-	spinlock_t		lock;
+-	int			submitted;
+-	struct list_head	cmd_list; /* list of commands to be submitted */
+-	union			{
+-		struct rdac_pg_legacy legacy;
+-		struct rdac_pg_expanded expanded;
+-	} mode_select;
+-};
+-struct c8_inquiry {
+-	u8	peripheral_info;
+-	u8	page_code; /* 0xC8 */
+-	u8	reserved1;
+-	u8	page_len;
+-	u8	page_id[4]; /* "edid" */
+-	u8	reserved2[3];
+-	u8	vol_uniq_id_len;
+-	u8	vol_uniq_id[16];
+-	u8	vol_user_label_len;
+-	u8	vol_user_label[60];
+-	u8	array_uniq_id_len;
+-	u8	array_unique_id[16];
+-	u8	array_user_label_len;
+-	u8	array_user_label[60];
+-	u8	lun[8];
+-};
+-
+-struct c2_inquiry {
+-	u8	peripheral_info;
+-	u8	page_code;	/* 0xC2 */
+-	u8	reserved1;
+-	u8	page_len;
+-	u8	page_id[4];	/* "swr4" */
+-	u8	sw_version[3];
+-	u8	sw_date[3];
+-	u8	features_enabled;
+-	u8	max_lun_supported;
+-	u8	partitions[239]; /* Total allocation length should be 0xFF */
+-};
+-
+-struct rdac_handler {
+-	struct list_head	entry; /* list waiting to submit MODE SELECT */
+-	unsigned		timeout;
+-	struct rdac_controller	*ctlr;
+-#define UNINITIALIZED_LUN	(1 << 8)
+-	unsigned		lun;
+-	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+-	struct dm_path		*path;
+-	struct work_struct	work;
+-#define	SEND_C2_INQUIRY		1
+-#define	SEND_C4_INQUIRY		2
+-#define	SEND_C8_INQUIRY		3
+-#define	SEND_C9_INQUIRY		4
+-#define	SEND_MODE_SELECT	5
+-	int			cmd_to_send;
+-	union			{
+-		struct c2_inquiry c2;
+-		struct c4_inquiry c4;
+-		struct c8_inquiry c8;
+-		struct c9_inquiry c9;
+-	} inq;
+-};
+-
+-static LIST_HEAD(ctlr_list);
+-static DEFINE_SPINLOCK(list_lock);
+-static struct workqueue_struct *rdac_wkqd;
+-
+-static inline int had_failures(struct request *req, int error)
+-{
+-	return (error || host_byte(req->errors) != DID_OK ||
+-			msg_byte(req->errors) != COMMAND_COMPLETE);
+-}
+-
+-static void rdac_resubmit_all(struct rdac_handler *h)
+-{
+-	struct rdac_controller *ctlr = h->ctlr;
+-	struct rdac_handler *tmp, *h1;
+-
+-	spin_lock(&ctlr->lock);
+-	list_for_each_entry_safe(h1, tmp, &ctlr->cmd_list, entry) {
+-		h1->cmd_to_send = SEND_C9_INQUIRY;
+-		queue_work(rdac_wkqd, &h1->work);
+-		list_del(&h1->entry);
+-	}
+-	ctlr->submitted = 0;
+-	spin_unlock(&ctlr->lock);
+-}
+-
+-static void mode_select_endio(struct request *req, int error)
+-{
+-	struct rdac_handler *h = req->end_io_data;
+-	struct scsi_sense_hdr sense_hdr;
+-	int sense = 0, fail = 0;
+-
+-	if (had_failures(req, error)) {
+-		fail = 1;
+-		goto failed;
+-	}
+-
+-	if (status_byte(req->errors) == CHECK_CONDITION) {
+-		scsi_normalize_sense(req->sense, SCSI_SENSE_BUFFERSIZE,
+-				&sense_hdr);
+-		sense = (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
+-				sense_hdr.ascq;
+-		/* If it is retryable failure, submit the c9 inquiry again */
+-		if (sense == 0x59136 || sense == 0x68b02 || sense == 0xb8b02 ||
+-		    sense == 0x62900) {
+-			/* 0x59136    - Command lock contention
+-			 * 0x[6b]8b02 - Quiesense in progress or achieved
+-			 * 0x62900    - Power On, Reset, or Bus Device Reset
+-			 */
+-			h->cmd_to_send = SEND_C9_INQUIRY;
+-			queue_work(rdac_wkqd, &h->work);
+-			goto done;
+-		}
+-		if (sense)
+-			DMINFO("MODE_SELECT failed on %s with sense 0x%x",
+-						h->path->dev->name, sense);
+- 	}
+-failed:
+-	if (fail || sense)
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-	else
+-		dm_pg_init_complete(h->path, 0);
+-
+-done:
+-	rdac_resubmit_all(h);
+-	__blk_put_request(req->q, req);
+-}
+-
+-static struct request *get_rdac_req(struct rdac_handler *h,
+-			void *buffer, unsigned buflen, int rw)
+-{
+-	struct request *rq;
+-	struct request_queue *q = bdev_get_queue(h->path->dev->bdev);
+-
+-	rq = blk_get_request(q, rw, GFP_KERNEL);
+-
+-	if (!rq) {
+-		DMINFO("get_rdac_req: blk_get_request failed");
+-		return NULL;
+-	}
+-
+-	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
+-		blk_put_request(rq);
+-		DMINFO("get_rdac_req: blk_rq_map_kern failed");
+-		return NULL;
+-	}
+-
+- 	memset(&rq->cmd, 0, BLK_MAX_CDB);
+-	rq->sense = h->sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	rq->end_io_data = h;
+-	rq->timeout = h->timeout;
+-	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
+-	return rq;
+-}
+-
+-static struct request *rdac_failover_get(struct rdac_handler *h)
+-{
+-	struct request *rq;
+-	struct rdac_mode_common *common;
+-	unsigned data_size;
+-
+-	if (h->ctlr->use_10_ms) {
+-		struct rdac_pg_expanded *rdac_pg;
+-
+-		data_size = sizeof(struct rdac_pg_expanded);
+-		rdac_pg = &h->ctlr->mode_select.expanded;
+-		memset(rdac_pg, 0, data_size);
+-		common = &rdac_pg->common;
+-		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER + 0x40;
+-		rdac_pg->subpage_code = 0x1;
+-		rdac_pg->page_len[0] = 0x01;
+-		rdac_pg->page_len[1] = 0x28;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+-	} else {
+-		struct rdac_pg_legacy *rdac_pg;
+-
+-		data_size = sizeof(struct rdac_pg_legacy);
+-		rdac_pg = &h->ctlr->mode_select.legacy;
+-		memset(rdac_pg, 0, data_size);
+-		common = &rdac_pg->common;
+-		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+-		rdac_pg->page_len = 0x68;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+-	}
+-	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+-	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+-	common->rdac_options = RDAC_FORCED_QUIESENCE;
+-
+-	/* get request for block layer packet command */
+-	rq = get_rdac_req(h, &h->ctlr->mode_select, data_size, WRITE);
+-	if (!rq) {
+-		DMERR("rdac_failover_get: no rq");
+-		return NULL;
+-	}
+-
+-	/* Prepare the command. */
+-	if (h->ctlr->use_10_ms) {
+-		rq->cmd[0] = MODE_SELECT_10;
+-		rq->cmd[7] = data_size >> 8;
+-		rq->cmd[8] = data_size & 0xff;
+-	} else {
+-		rq->cmd[0] = MODE_SELECT;
+-		rq->cmd[4] = data_size;
+-	}
+-	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
+-
+-	return rq;
+-}
+-
+-/* Acquires h->ctlr->lock */
+-static void submit_mode_select(struct rdac_handler *h)
+-{
+-	struct request *rq;
+-	struct request_queue *q = bdev_get_queue(h->path->dev->bdev);
+-
+-	spin_lock(&h->ctlr->lock);
+-	if (h->ctlr->submitted) {
+-		list_add(&h->entry, &h->ctlr->cmd_list);
+-		goto drop_lock;
+-	}
+-
+-	if (!q) {
+-		DMINFO("submit_mode_select: no queue");
+-		goto fail_path;
+-	}
+-
+-	rq = rdac_failover_get(h);
+-	if (!rq) {
+-		DMERR("submit_mode_select: no rq");
+-		goto fail_path;
+-	}
+-
+-	DMINFO("queueing MODE_SELECT command on %s", h->path->dev->name);
+-
+-	blk_execute_rq_nowait(q, NULL, rq, 1, mode_select_endio);
+-	h->ctlr->submitted = 1;
+-	goto drop_lock;
+-fail_path:
+-	dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-drop_lock:
+-	spin_unlock(&h->ctlr->lock);
+-}
+-
+-static void release_ctlr(struct kref *kref)
+-{
+-	struct rdac_controller *ctlr;
+-	ctlr = container_of(kref, struct rdac_controller, kref);
+-
+-	spin_lock(&list_lock);
+-	list_del(&ctlr->node);
+-	spin_unlock(&list_lock);
+-	kfree(ctlr);
+-}
+-
+-static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id)
+-{
+-	struct rdac_controller *ctlr, *tmp;
+-
+-	spin_lock(&list_lock);
+-
+-	list_for_each_entry(tmp, &ctlr_list, node) {
+-		if ((memcmp(tmp->subsys_id, subsys_id, SUBSYS_ID_LEN) == 0) &&
+-			  (memcmp(tmp->slot_id, slot_id, SLOT_ID_LEN) == 0)) {
+-			kref_get(&tmp->kref);
+-			spin_unlock(&list_lock);
+-			return tmp;
+-		}
+-	}
+-	ctlr = kmalloc(sizeof(*ctlr), GFP_ATOMIC);
+-	if (!ctlr)
+-		goto done;
+-
+-	/* initialize fields of controller */
+-	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+-	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+-	kref_init(&ctlr->kref);
+-	spin_lock_init(&ctlr->lock);
+-	ctlr->submitted = 0;
+-	ctlr->use_10_ms = -1;
+-	INIT_LIST_HEAD(&ctlr->cmd_list);
+-	list_add(&ctlr->node, &ctlr_list);
+-done:
+-	spin_unlock(&list_lock);
+-	return ctlr;
+-}
+-
+-static void c4_endio(struct request *req, int error)
+-{
+-	struct rdac_handler *h = req->end_io_data;
+-	struct c4_inquiry *sp;
+-
+-	if (had_failures(req, error)) {
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-		goto done;
+-	}
+-
+-	sp = &h->inq.c4;
+-
+-	h->ctlr = get_controller(sp->subsys_id, sp->slot_id);
+-
+-	if (h->ctlr) {
+-		h->cmd_to_send = SEND_C9_INQUIRY;
+-		queue_work(rdac_wkqd, &h->work);
+-	} else
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-done:
+-	__blk_put_request(req->q, req);
+-}
+-
+-static void c2_endio(struct request *req, int error)
+-{
+-	struct rdac_handler *h = req->end_io_data;
+-	struct c2_inquiry *sp;
+-
+-	if (had_failures(req, error)) {
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-		goto done;
+-	}
+-
+-	sp = &h->inq.c2;
+-
+-	/* If more than MODE6_MAX_LUN luns are supported, use mode select 10 */
+-	if (sp->max_lun_supported >= MODE6_MAX_LUN)
+-		h->ctlr->use_10_ms = 1;
+-	else
+-		h->ctlr->use_10_ms = 0;
+-
+-	h->cmd_to_send = SEND_MODE_SELECT;
+-	queue_work(rdac_wkqd, &h->work);
+-done:
+-	__blk_put_request(req->q, req);
+-}
+-
+-static void c9_endio(struct request *req, int error)
+-{
+-	struct rdac_handler *h = req->end_io_data;
+-	struct c9_inquiry *sp;
+-
+-	if (had_failures(req, error)) {
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-		goto done;
+-	}
+-
+-	/* We need to look at the sense keys here to take clear action.
+-	 * For now simple logic: If the host is in AVT mode or if controller
+-	 * owns the lun, return dm_pg_init_complete(), otherwise submit
+-	 * MODE SELECT.
+-	 */
+-	sp = &h->inq.c9;
+-
+-	/* If in AVT mode, return success */
+-	if ((sp->avte_cvp >> 7) == 0x1) {
+-		dm_pg_init_complete(h->path, 0);
+-		goto done;
+-	}
+-
+-	/* If the controller on this path owns the LUN, return success */
+-	if (sp->avte_cvp & 0x1) {
+-		dm_pg_init_complete(h->path, 0);
+-		goto done;
+-	}
+-
+-	if (h->ctlr) {
+-		if (h->ctlr->use_10_ms == -1)
+-			h->cmd_to_send = SEND_C2_INQUIRY;
+-		else
+-			h->cmd_to_send = SEND_MODE_SELECT;
+-	} else
+-		h->cmd_to_send = SEND_C4_INQUIRY;
+-	queue_work(rdac_wkqd, &h->work);
+-done:
+-	__blk_put_request(req->q, req);
+-}
+-
+-static void c8_endio(struct request *req, int error)
+-{
+-	struct rdac_handler *h = req->end_io_data;
+-	struct c8_inquiry *sp;
+-
+-	if (had_failures(req, error)) {
+-		dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-		goto done;
+-	}
+-
+-	/* We need to look at the sense keys here to take clear action.
+-	 * For now simple logic: Get the lun from the inquiry page.
+-	 */
+-	sp = &h->inq.c8;
+-	h->lun = sp->lun[7]; /* currently it uses only one byte */
+-	h->cmd_to_send = SEND_C9_INQUIRY;
+-	queue_work(rdac_wkqd, &h->work);
+-done:
+-	__blk_put_request(req->q, req);
+-}
+-
+-static void submit_inquiry(struct rdac_handler *h, int page_code,
+-		unsigned int len, rq_end_io_fn endio)
+-{
+-	struct request *rq;
+-	struct request_queue *q = bdev_get_queue(h->path->dev->bdev);
+-
+-	if (!q)
+-		goto fail_path;
+-
+-	rq = get_rdac_req(h, &h->inq, len, READ);
+-	if (!rq)
+-		goto fail_path;
+-
+-	/* Prepare the command. */
+-	rq->cmd[0] = INQUIRY;
+-	rq->cmd[1] = 1;
+-	rq->cmd[2] = page_code;
+-	rq->cmd[4] = len;
+-	rq->cmd_len = COMMAND_SIZE(INQUIRY);
+-	blk_execute_rq_nowait(q, NULL, rq, 1, endio);
+-	return;
+-
+-fail_path:
+-	dm_pg_init_complete(h->path, MP_FAIL_PATH);
+-}
+-
+-static void service_wkq(struct work_struct *work)
+-{
+-	struct rdac_handler *h = container_of(work, struct rdac_handler, work);
+-
+-	switch (h->cmd_to_send) {
+-	case SEND_C2_INQUIRY:
+-		submit_inquiry(h, 0xC2, sizeof(struct c2_inquiry), c2_endio);
+-		break;
+-	case SEND_C4_INQUIRY:
+-		submit_inquiry(h, 0xC4, sizeof(struct c4_inquiry), c4_endio);
+-		break;
+-	case SEND_C8_INQUIRY:
+-		submit_inquiry(h, 0xC8, sizeof(struct c8_inquiry), c8_endio);
+-		break;
+-	case SEND_C9_INQUIRY:
+-		submit_inquiry(h, 0xC9, sizeof(struct c9_inquiry), c9_endio);
+-		break;
+-	case SEND_MODE_SELECT:
+-		submit_mode_select(h);
+-		break;
+-	default:
+-		BUG();
+-	}
+-}
+-/*
+- * only support subpage2c until we confirm that this is just a matter of
+- * of updating firmware or not, and RDAC (basic AVT works already) for now
+- * but we can add these in in when we get time and testers
+- */
+-static int rdac_create(struct hw_handler *hwh, unsigned argc, char **argv)
+-{
+-	struct rdac_handler *h;
+-	unsigned timeout;
+-
+-	if (argc == 0) {
+-		/* No arguments: use defaults */
+-		timeout = RDAC_FAILOVER_TIMEOUT;
+-	} else if (argc != 1) {
+-		DMWARN("incorrect number of arguments");
+-		return -EINVAL;
+-	} else {
+-		if (sscanf(argv[1], "%u", &timeout) != 1) {
+-			DMWARN("invalid timeout value");
+-			return -EINVAL;
+-		}
+-	}
+-
+-	h = kzalloc(sizeof(*h), GFP_KERNEL);
+-	if (!h)
+-		return -ENOMEM;
+-
+-	hwh->context = h;
+-	h->timeout = timeout;
+-	h->lun = UNINITIALIZED_LUN;
+-	INIT_WORK(&h->work, service_wkq);
+-	DMWARN("using RDAC command with timeout %u", h->timeout);
+-
+-	return 0;
+-}
+-
+-static void rdac_destroy(struct hw_handler *hwh)
+-{
+-	struct rdac_handler *h = hwh->context;
+-
+-	if (h->ctlr)
+-		kref_put(&h->ctlr->kref, release_ctlr);
+-	kfree(h);
+-	hwh->context = NULL;
+-}
+-
+-static unsigned rdac_error(struct hw_handler *hwh, struct bio *bio)
+-{
+-	/* Try default handler */
+-	return dm_scsi_err_handler(hwh, bio);
+-}
+-
+-static void rdac_pg_init(struct hw_handler *hwh, unsigned bypassed,
+-			struct dm_path *path)
+-{
+-	struct rdac_handler *h = hwh->context;
+-
+-	h->path = path;
+-	switch (h->lun) {
+-	case UNINITIALIZED_LUN:
+-		submit_inquiry(h, 0xC8, sizeof(struct c8_inquiry), c8_endio);
+-		break;
+-	default:
+-		submit_inquiry(h, 0xC9, sizeof(struct c9_inquiry), c9_endio);
+-	}
+-}
+-
+-static struct hw_handler_type rdac_handler = {
+-	.name = RDAC_DM_HWH_NAME,
+-	.module = THIS_MODULE,
+-	.create = rdac_create,
+-	.destroy = rdac_destroy,
+-	.pg_init = rdac_pg_init,
+-	.error = rdac_error,
+-};
+-
+-static int __init rdac_init(void)
+-{
+-	int r;
+-
+-	rdac_wkqd = create_singlethread_workqueue("rdac_wkqd");
+-	if (!rdac_wkqd) {
+-		DMERR("Failed to create workqueue rdac_wkqd.");
+-		return -ENOMEM;
+-	}
+-
+-	r = dm_register_hw_handler(&rdac_handler);
+-	if (r < 0) {
+-		DMERR("%s: register failed %d", RDAC_DM_HWH_NAME, r);
+-		destroy_workqueue(rdac_wkqd);
+-		return r;
+-	}
+-
+-	DMINFO("%s: version %s loaded", RDAC_DM_HWH_NAME, RDAC_DM_HWH_VER);
+-	return 0;
+-}
+-
+-static void __exit rdac_exit(void)
+-{
+-	int r = dm_unregister_hw_handler(&rdac_handler);
+-
+-	destroy_workqueue(rdac_wkqd);
+-	if (r < 0)
+-		DMERR("%s: unregister failed %d", RDAC_DM_HWH_NAME, r);
+-}
+-
+-module_init(rdac_init);
+-module_exit(rdac_exit);
+-
+-MODULE_DESCRIPTION("DM Multipath LSI/Engenio RDAC support");
+-MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION(RDAC_DM_HWH_VER);
