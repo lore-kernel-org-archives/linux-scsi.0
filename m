@@ -1,154 +1,48 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Wed, 16 Apr 2008 11:42:45 +0200
-Message-ID: <20080416094244.GC12774@kernel.dk>
-References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080414112919.GF12774@kernel.dk> <200804160050.54842.bzolnier@gmail.com> <20080416075743R.fujita.tomonori@lab.ntt.co.jp> <20080416083305.GY12774@kernel.dk> <4805C209.6040606@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Subject: Re: [PATCH] [AACRAID] Do not describe check_reset parameter with its value
+Date: Wed, 16 Apr 2008 08:29:32 -0400
+Message-ID: <7151509B-739F-4568-8C0C-2240C8561B6B@adaptec.com>
+References: <1208334879.5614.34.camel@compaq.thuisdomein>
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:20372 "EHLO kernel.dk"
+Received: from ts.adaptec.com ([162.62.93.58]:38999 "EHLO mail-gw3.adaptec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756144AbYDPJmt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Apr 2008 05:42:49 -0400
-Content-Disposition: inline
-In-Reply-To: <4805C209.6040606@panasas.com>
+	id S1758503AbYDPM3e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Apr 2008 08:29:34 -0400
+In-Reply-To: <1208334879.5614.34.camel@compaq.thuisdomein>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
+To: Paul Bolle <pebolle@tiscali.nl>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 16 2008, Boaz Harrosh wrote:
-> On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
-> >> On Wed, 16 Apr 2008 00:50:54 +0200
-> >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> >>
-> >>> Hi,
-> >>>
-> >>> On Monday 14 April 2008, Jens Axboe wrote:
-> >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> >>>>> This patch changes rq->cmd from the static array to a pointer to
-> >>>>> support large commands.
-> >>>>>
-> >>>>> We rarely handle large commands. So for optimization, a struct request
-> >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
-> >>>>> to the static array.
-> >>>>>
-> >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
-> >>>>> ---
-> >>>>>  block/blk-core.c       |    1 +
-> >>>>>  drivers/ide/ide-io.c   |    1 +
-> >>>>>  include/linux/blkdev.h |   12 ++++++++++--
-> >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
-> >>>>>
-> >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
-> >>>>> index 6669238..6f0968f 100644
-> >>>>> --- a/block/blk-core.c
-> >>>>> +++ b/block/blk-core.c
-> >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> >>>>>  	rq->errors = 0;
-> >>>>>  	rq->ref_count = 1;
-> >>>>>  	rq->cmd_len = 0;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> >>>>>  	rq->data_len = 0;
-> >>>>>  	rq->extra_len = 0;
-> >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> >>>>> index 7153796..bac5ea1 100644
-> >>>>> --- a/drivers/ide/ide-io.c
-> >>>>> +++ b/drivers/ide/ide-io.c
-> >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> >>>>>  {
-> >>>>>  	memset(rq, 0, sizeof(*rq));
-> >>>>>  	rq->ref_count = 1;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  }
-> >>> Tomo, some more changes are needed:
-> >>>
-> >>> Please think about all _static_/dynamic allocations of 'struct request'
-> >>> used together with REQ_TYPE_SPECIAL etc., i.e.
-> >> I think that using struct request allocated statically is wrong from
-> >> the perspective of the block layer design, that is, you always need to
-> >> use blk_get_request. I think that except ide, everyone does.
-> >>
-> >> I try to convert ide to use blk_get_request properly if you want.
-> > 
-> > That would be best, but the on-stack allocation has the benefit that
-> > it'll always work. So until we can completely get rid of that, lets just
-> > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
-> > lot saner than doing a memset() anyway.
-> > 
-> 
-> Just a patch that I had for ages since the bad old request bidi times,
-> perhaps is also good today. (rebased to for-2.6.26 branch)
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Wed, 16 Apr 2008 12:05:33 +0300
-> Subject: [PATCH] Initialize all members of struct request in rq_init
-> 
-> Before, every member added/removed from struct request would entitle a change
-> to rq_init, for initialization. Now all members are default to zero and only
-> the none zero members are specifically initialized.
-> 
-> Users that need requests on the stack or pre-allocated, must call rq_init()
-> before use.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  block/blk-core.c |   22 ++--------------------
->  1 files changed, 2 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 6f0968f..3f4c563 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
->   */
->  void rq_init(struct request_queue *q, struct request *rq)
->  {
-> +	memset(rq, 0, sizeof(*rq));
->  	INIT_LIST_HEAD(&rq->queuelist);
->  	INIT_LIST_HEAD(&rq->donelist);
->  	rq->q = q;
->  	rq->sector = rq->hard_sector = (sector_t) -1;
-> -	rq->nr_sectors = rq->hard_nr_sectors = 0;
-> -	rq->current_nr_sectors = rq->hard_cur_sectors = 0;
-> -	rq->bio = rq->biotail = NULL;
->  	INIT_HLIST_NODE(&rq->hash);
->  	RB_CLEAR_NODE(&rq->rb_node);
-> -	rq->rq_disk = NULL;
-> -	rq->nr_phys_segments = 0;
-> -	rq->nr_hw_segments = 0;
-> -	rq->ioprio = 0;
-> -	rq->special = NULL;
-> -	rq->buffer = NULL;
->  	rq->tag = -1;
-> -	rq->errors = 0;
->  	rq->ref_count = 1;
-> -	rq->cmd_len = 0;
->  	rq->cmd = rq->__cmd;
-> -	memset(rq->cmd, 0, BLK_MAX_CDB);
-> -	rq->data_len = 0;
-> -	rq->extra_len = 0;
-> -	rq->sense_len = 0;
-> -	rq->data = NULL;
-> -	rq->sense = NULL;
-> -	rq->end_io = NULL;
-> -	rq->end_io_data = NULL;
-> -	rq->next_rq = NULL;
->  }
-> +EXPORT_SYMBOL(rq_init);
->  
->  static void req_bio_endio(struct request *rq, struct bio *bio,
->  			  unsigned int nbytes, int error)
-> -- 
-> 1.5.3.3
-> 
+ACK
 
-Totally agree, if we expand rq_init() to all users (including on stack),
-this must be included as well.
+On Apr 16, 2008, at 4:34 AM, Paul Bolle wrote:
 
--- 
-Jens Axboe
+From: Paul Bolle <pebolle@tiscali.nl>
+
+Describe check_reset parameter with its name (and not its value)
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/ 
+aachba.c
+index c05092f..43c7890 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -205,7 +205,7 @@ MODULE_PARM_DESC(check_interval, "Interval in  
+seconds between adapter health"
+
+int aac_check_reset = 1;
+module_param_named(check_reset, aac_check_reset, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(aac_check_reset, "If adapter fails health check,  
+reset the"
++MODULE_PARM_DESC(check_reset, "If adapter fails health check, reset  
+the"
+        " adapter. a value of -1 forces the reset to adapters  
+programmed to"
+        " ignore it.");
+
+
 
