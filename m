@@ -1,8 +1,8 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 5/7] scsi_dh: Use SCSI device handler in
-	dm-multipath
-Date: Tue, 15 Apr 2008 18:18:48 -0700
-Message-ID: <20080416011848.19580.49851.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 1/7] scsi_dh: add skeleton for SCSI Device
+	Handlers
+Date: Tue, 15 Apr 2008 18:18:24 -0700
+Message-ID: <20080416011824.19580.4223.sendpatchset@chandra-ubuntu>
 References: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
@@ -20,420 +20,389 @@ To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Subject: scsi_dh: Use SCSI device handler in dm-multipath
+Subject: scsi_dh: add skeleton for SCSI Device Handlers
 
 From: Chandra Seetharaman <sekharan@us.ibm.com>
 
-This patch converts dm-mpath to scsi hw handlers. It does
-not add any new functionality and old behaviors and userspace
-tools work as is except we use the safe clariion default instead
-of using the userspace setting.
+Add base support to the SCSI subsystem for SCSI device handlers.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/md/Kconfig    |    1 	1 +	0 -	0 !
- drivers/md/dm-mpath.c |  226 	111 +	115 -	0 !
- 2 files changed, 112 insertions(+), 115 deletions(-)
 
-Index: linux-2.6.25-rc8-mm2/drivers/md/dm-mpath.c
-===================================================================
---- linux-2.6.25-rc8-mm2.orig/drivers/md/dm-mpath.c
-+++ linux-2.6.25-rc8-mm2/drivers/md/dm-mpath.c
-@@ -7,7 +7,6 @@
+ drivers/scsi/Kconfig                  |    2 	2 +	0 -	0 !
+ drivers/scsi/Makefile                 |    1 	1 +	0 -	0 !
+ drivers/scsi/device_handler/Kconfig   |   12 	12 +	0 -	0 !
+ drivers/scsi/device_handler/Makefile  |    4 	4 +	0 -	0 !
+ drivers/scsi/device_handler/scsi_dh.c |  151 	151 +	0 -	0 !
+ drivers/scsi/scsi_error.c             |   11 	11 +	0 -	0 !
+ drivers/scsi/scsi_lib.c               |    8 	8 +	0 -	0 !
+ drivers/scsi/scsi_sysfs.c             |    1 	1 +	0 -	0 !
+ include/scsi/scsi.h                   |    1 	1 +	0 -	0 !
+ include/scsi/scsi_device.h            |   22 	22 +	0 -	0 !
+ include/scsi/scsi_dh.h                |   58 	58 +	0 -	0 !
+ 11 files changed, 271 insertions(+)
+
+--- linux-2.6.25-rc8-mm2.orig/drivers/scsi/Kconfig
++++ linux-2.6.25-rc8-mm2/drivers/scsi/Kconfig
+@@ -1761,4 +1761,6 @@ endif # SCSI_LOWLEVEL
  
- #include "dm.h"
- #include "dm-path-selector.h"
--#include "dm-hw-handler.h"
- #include "dm-bio-list.h"
- #include "dm-bio-record.h"
- #include "dm-uevent.h"
-@@ -20,6 +19,7 @@
- #include <linux/slab.h>
- #include <linux/time.h>
- #include <linux/workqueue.h>
+ source "drivers/scsi/pcmcia/Kconfig"
+ 
++source "drivers/scsi/device_handler/Kconfig"
++
+ endmenu
+--- linux-2.6.25-rc8-mm2.orig/drivers/scsi/Makefile
++++ linux-2.6.25-rc8-mm2/drivers/scsi/Makefile
+@@ -34,6 +34,7 @@ obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_t
+ obj-$(CONFIG_SCSI_SAS_ATTRS)	+= scsi_transport_sas.o
+ obj-$(CONFIG_SCSI_SAS_LIBSAS)	+= libsas/
+ obj-$(CONFIG_SCSI_SRP_ATTRS)	+= scsi_transport_srp.o
++obj-$(CONFIG_SCSI_DH)		+= device_handler/
+ 
+ obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	iscsi_tcp.o
+ obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+--- /dev/null
++++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Kconfig
+@@ -0,0 +1,12 @@
++#
++# SCSI Device Handler configuration
++#
++
++menuconfig SCSI_DH
++	tristate "SCSI Device Handlers"
++	depends on SCSI
++	default n
++	help
++	  SCSI Device Handlers provide device specific support for
++	  devices utilized in multipath configurations. Say Y here to
++	  select support for specific hardware.
+--- /dev/null
++++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Makefile
+@@ -0,0 +1,4 @@
++#
++# SCSI Device Handler
++#
++obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
+--- linux-2.6.25-rc8-mm2.orig/drivers/scsi/scsi_error.c
++++ linux-2.6.25-rc8-mm2/drivers/scsi/scsi_error.c
+@@ -298,6 +298,7 @@ static inline void scsi_eh_prt_fail_stat
+  */
+ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ {
++	struct scsi_device *sdev = scmd->device;
+ 	struct scsi_sense_hdr sshdr;
+ 
+ 	if (! scsi_command_normalize_sense(scmd, &sshdr))
+@@ -306,6 +307,16 @@ static int scsi_check_sense(struct scsi_
+ 	if (scsi_sense_is_deferred(&sshdr))
+ 		return NEEDS_RETRY;
+ 
++	if (sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh &&
++			sdev->scsi_dh_data->scsi_dh->check_sense) {
++		int rc;
++
++		rc = sdev->scsi_dh_data->scsi_dh->check_sense(sdev, &sshdr);
++		if (rc != SCSI_RETURN_NOT_HANDLED)
++			return rc;
++		/* handler does not care. Drop down to default handling */
++	}
++
+ 	/*
+ 	 * Previous logic looked for FILEMARK, EOM or ILI which are
+ 	 * mainly associated with tapes and returned SUCCESS.
+--- linux-2.6.25-rc8-mm2.orig/include/scsi/scsi_device.h
++++ linux-2.6.25-rc8-mm2/include/scsi/scsi_device.h
+@@ -161,9 +161,29 @@ struct scsi_device {
+ 
+ 	struct execute_work	ew; /* used to get process context on put */
+ 
++	struct scsi_dh_data	*scsi_dh_data;
+ 	enum scsi_device_state sdev_state;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
++
++struct scsi_device_handler {
++	/* Used by the infrastructure */
++	struct list_head list; /* list of scsi_device_handlers */
++	struct notifier_block nb;
++
++	/* Filled by the hardware handler */
++	struct module *module;
++	const char *name;
++	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
++	int (*activate)(struct scsi_device *);
++	int (*prep_fn)(struct scsi_device *, struct request *);
++};
++
++struct scsi_dh_data {
++	struct scsi_device_handler *scsi_dh;
++	char buf[0];
++};
++
+ #define	to_scsi_device(d)	\
+ 	container_of(d, struct scsi_device, sdev_gendev)
+ #define	class_to_sdev(d)	\
+@@ -229,7 +249,9 @@ extern struct scsi_device *__scsi_add_de
+ 		uint, uint, uint, void *hostdata);
+ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 			   uint target, uint lun);
++extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
+ extern void scsi_remove_device(struct scsi_device *);
++extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+ 
+ extern int scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
+--- /dev/null
++++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh.c
+@@ -0,0 +1,151 @@
++/*
++ * SCSI device handler infrastruture.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2 of the License, or (at your
++ * option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ * Copyright IBM Corporation, 2007
++ *      Authors:
++ *               Chandra Seetharaman <sekharan@us.ibm.com>
++ *               Mike Anderson <andmike@linux.vnet.ibm.com>
++ */
++
 +#include <scsi/scsi_dh.h>
- #include <asm/atomic.h>
- 
- #define DM_MSG_PREFIX "multipath"
-@@ -61,9 +61,14 @@ struct multipath {
- 
- 	spinlock_t lock;
- 
--	struct hw_handler hw_handler;
- 	unsigned nr_priority_groups;
- 	struct list_head priority_groups;
++#include "../scsi_priv.h"
 +
-+	/* Fields used by hardware handler usage */
-+	char *hw_handler_name;
-+	struct work_struct activate_passive_path;
-+	struct dm_path *path_to_activate;
++static DEFINE_SPINLOCK(list_lock);
++static LIST_HEAD(scsi_dh_list);
 +
- 	unsigned pg_init_required;	/* pg_init needs calling? */
- 	unsigned pg_init_in_progress;	/* Only one pg_init allowed at once */
- 
-@@ -106,9 +111,13 @@ typedef int (*action_fn) (struct pgpath 
- 
- static struct kmem_cache *_mpio_cache;
- 
--static struct workqueue_struct *kmultipathd;
-+static struct workqueue_struct *kmultipathd, *hw_handlerd;
- static void process_queued_ios(struct work_struct *work);
- static void trigger_event(struct work_struct *work);
-+static void activate_passive_path(struct work_struct *work);
-+static void bypass_pg(struct multipath *m, struct priority_group *pg,
-+		      int bypassed);
-+static int fail_path(struct pgpath *pgpath);
- 
- 
- /*-----------------------------------------------
-@@ -178,6 +187,7 @@ static struct multipath *alloc_multipath
- 		m->queue_io = 1;
- 		INIT_WORK(&m->process_queued_ios, process_queued_ios);
- 		INIT_WORK(&m->trigger_event, trigger_event);
-+		INIT_WORK(&m->activate_passive_path, activate_passive_path);
- 		m->mpio_pool = mempool_create_slab_pool(MIN_IOS, _mpio_cache);
- 		if (!m->mpio_pool) {
- 			kfree(m);
-@@ -193,18 +203,13 @@ static struct multipath *alloc_multipath
- static void free_multipath(struct multipath *m)
- {
- 	struct priority_group *pg, *tmp;
--	struct hw_handler *hwh = &m->hw_handler;
- 
- 	list_for_each_entry_safe(pg, tmp, &m->priority_groups, list) {
- 		list_del(&pg->list);
- 		free_priority_group(pg, m->ti);
- 	}
- 
--	if (hwh->type) {
--		hwh->type->destroy(hwh);
--		dm_put_hw_handler(hwh->type);
--	}
--
-+	kfree(m->hw_handler_name);
- 	mempool_destroy(m->mpio_pool);
- 	kfree(m);
- }
-@@ -216,12 +221,10 @@ static void free_multipath(struct multip
- 
- static void __switch_pg(struct multipath *m, struct pgpath *pgpath)
- {
--	struct hw_handler *hwh = &m->hw_handler;
--
- 	m->current_pg = pgpath->pg;
- 
- 	/* Must we initialise the PG first, and queue I/O till it's ready? */
--	if (hwh->type && hwh->type->pg_init) {
-+	if (m->hw_handler_name) {
- 		m->pg_init_required = 1;
- 		m->queue_io = 1;
- 	} else {
-@@ -405,11 +408,86 @@ static void dispatch_queued_ios(struct m
- 	}
- }
- 
-+static void pg_init_done(struct dm_path *path, int errors)
++static struct scsi_device_handler *get_device_handler(const char *name)
 +{
-+	struct pgpath *pgpath = path_to_pgpath(path);
-+	struct priority_group *pg = pgpath->pg;
-+	struct multipath *m = pg->m;
-+	unsigned long flags;
++	struct scsi_device_handler *tmp, *found = NULL;
 +
-+	/* device or driver problems */
-+	switch (errors) {
-+	case SCSI_DH_OK:
-+		break;
-+	case SCSI_DH_NOSYS:
-+		if (!m->hw_handler_name) {
-+			errors = 0;
++	spin_lock(&list_lock);
++	list_for_each_entry(tmp, &scsi_dh_list, list) {
++		if (!strcmp(tmp->name, name)) {
++			found = tmp;
 +			break;
 +		}
-+		DMERR("Cannot failover device because hw-%s may not be "
-+		      "loaded.", m->hw_handler_name);
-+		/*
-+		 * Fail path for now, so we do not ping poing
-+		 */
-+		fail_path(pgpath);
-+		break;
-+	case SCSI_DH_DEV_TEMP_BUSY:
-+		/*
-+		 * Probably doing something like FW upgrade on the
-+		 * controller so try the other pg.
-+		 */
-+		bypass_pg(m, pg, 1);
-+		break;
-+	/* TODO: For SCSI_DH_RETRY we should wait a couple seconds */
-+	case SCSI_DH_RETRY:
-+	case SCSI_DH_IMM_RETRY:
-+	case SCSI_DH_RES_TEMP_UNAVAIL:
-+		break;
-+	default:
-+		/*
-+		 * We probably do not want to fail the path for a device
-+		 * error, but this is what the old dm did. In future
-+		 * patches we can do more advanced handling.
-+		 */
-+		fail_path(pgpath);
++	}
++	spin_unlock(&list_lock);
++	return found;
++}
++
++static int scsi_dh_notifier_add(struct device *dev, void *data)
++{
++	struct scsi_device_handler *scsi_dh = data;
++
++	scsi_dh->nb.notifier_call(&scsi_dh->nb, BUS_NOTIFY_ADD_DEVICE, dev);
++	return 0;
++}
++
++/*
++ * scsi_register_device_handler - register a device handler personality
++ *      module.
++ * @scsi_dh - device handler to be registered.
++ *
++ * Returns 0 on success, -EBUSY if handler already registered.
++ */
++int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
++{
++	int ret = -EBUSY;
++	struct scsi_device_handler *tmp;
++
++	tmp = get_device_handler(scsi_dh->name);
++	if (tmp)
++		goto done;
++
++	ret = bus_register_notifier(&scsi_bus_type, &scsi_dh->nb);
++
++	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh, scsi_dh_notifier_add);
++	spin_lock(&list_lock);
++	list_add(&scsi_dh->list, &scsi_dh_list);
++	spin_unlock(&list_lock);
++
++done:
++	return ret;
++}
++EXPORT_SYMBOL_GPL(scsi_register_device_handler);
++
++static int scsi_dh_notifier_remove(struct device *dev, void *data)
++{
++	struct scsi_device_handler *scsi_dh = data;
++
++	scsi_dh->nb.notifier_call(&scsi_dh->nb, BUS_NOTIFY_DEL_DEVICE, dev);
++	return 0;
++}
++
++/*
++ * scsi_unregister_device_handler - register a device handler personality
++ *      module.
++ * @scsi_dh - device handler to be unregistered.
++ *
++ * Returns 0 on success, -ENODEV if handler not registered.
++ */
++int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
++{
++	int ret = -ENODEV;
++	struct scsi_device_handler *tmp;
++
++	tmp = get_device_handler(scsi_dh->name);
++	if (!tmp)
++		goto done;
++
++	ret = bus_unregister_notifier(&scsi_bus_type, &scsi_dh->nb);
++
++	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh,
++					scsi_dh_notifier_remove);
++	spin_lock(&list_lock);
++	list_del(&scsi_dh->list);
++	spin_unlock(&list_lock);
++
++done:
++	return ret;
++}
++EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
++
++/*
++ * scsi_dh_activate - activate the path associated with the scsi_device
++ *      corresponding to the given request queue.
++ * @q - Request queue that is associated with the scsi_device to be
++ *      activated.
++ */
++int scsi_dh_activate(struct request_queue *q)
++{
++	int err = 0;
++	unsigned long flags;
++	struct scsi_device *sdev;
++	struct scsi_device_handler *scsi_dh = NULL;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	sdev = q->queuedata;
++	if (sdev && sdev->scsi_dh_data)
++		scsi_dh = sdev->scsi_dh_data->scsi_dh;
++	if (!scsi_dh || !get_device(&sdev->sdev_gendev))
++		err = SCSI_DH_NOSYS;
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	if (err)
++		return err;
++
++	if (scsi_dh->activate)
++		err = scsi_dh->activate(sdev);
++	put_device(&sdev->sdev_gendev);
++	return err;
++}
++EXPORT_SYMBOL_GPL(scsi_dh_activate);
++
++MODULE_DESCRIPTION("SCSI device handler");
++MODULE_AUTHOR("Chandra Seetharaman <sekharan@us.ibm.com>");
++MODULE_LICENSE("GPL");
+--- /dev/null
++++ linux-2.6.25-rc8-mm2/include/scsi/scsi_dh.h
+@@ -0,0 +1,58 @@
++/*
++ * Header file for SCSI device handler infrastruture.
++ *
++ * Modified version of patches posted by Mike Christie <michaelc@cs.wisc.edu>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2 of the License, or (at your
++ * option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ * Copyright IBM Corporation, 2007
++ *      Authors:
++ *               Chandra Seetharaman <sekharan@us.ibm.com>
++ *               Mike Anderson <andmike@linux.vnet.ibm.com>
++ */
++
++#include <scsi/scsi_device.h>
++
++enum {
++	SCSI_DH_OK = 0,
++	/*
++	 * device errors
++	 */
++	SCSI_DH_DEV_FAILED,	/* generic device error */
++	SCSI_DH_DEV_TEMP_BUSY,
++	SCSI_DH_DEVICE_MAX,	/* max device blkerr definition */
++
++	/*
++	 * transport errors
++	 */
++	SCSI_DH_NOTCONN = SCSI_DH_DEVICE_MAX + 1,
++	SCSI_DH_CONN_FAILURE,
++	SCSI_DH_TRANSPORT_MAX,	/* max transport blkerr definition */
++
++	/*
++	 * driver and generic errors
++	 */
++	SCSI_DH_IO = SCSI_DH_TRANSPORT_MAX + 1,	/* generic error */
++	SCSI_DH_INVALID_IO,
++	SCSI_DH_RETRY,		/* retry the req, but not immediately */
++	SCSI_DH_IMM_RETRY,	/* immediately retry the req */
++	SCSI_DH_TIMED_OUT,
++	SCSI_DH_RES_TEMP_UNAVAIL,
++	SCSI_DH_DEV_OFFLINED,
++	SCSI_DH_NOSYS,
++	SCSI_DH_DRIVER_MAX,
++};
++
++extern int scsi_dh_activate(struct request_queue *);
+--- linux-2.6.25-rc8-mm2.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6.25-rc8-mm2/drivers/scsi/scsi_lib.c
+@@ -1156,6 +1156,14 @@ int scsi_setup_fs_cmnd(struct scsi_devic
+ 
+ 	if (ret != BLKPREP_OK)
+ 		return ret;
++
++	if (unlikely(sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh
++			 && sdev->scsi_dh_data->scsi_dh->prep_fn)) {
++		ret = sdev->scsi_dh_data->scsi_dh->prep_fn(sdev, req);
++		if (ret != BLKPREP_OK)
++			return ret;
 +	}
 +
-+	spin_lock_irqsave(&m->lock, flags);
-+	if (errors) {
-+		DMERR("Could not failover device. Error %d.", errors);
-+		m->current_pgpath = NULL;
-+		m->current_pg = NULL;
-+	} else if (!m->pg_init_required) {
-+		m->queue_io = 0;
-+		pg->bypassed = 0;
-+	}
-+
-+	m->pg_init_in_progress = 0;
-+	queue_work(kmultipathd, &m->process_queued_ios);
-+	spin_unlock_irqrestore(&m->lock, flags);
-+}
-+
-+static void activate_passive_path(struct work_struct *work)
-+{
-+	int ret;
-+	struct multipath *m =
-+		container_of(work, struct multipath, activate_passive_path);
-+	struct dm_path *path = m->path_to_activate;
-+
-+	ret = scsi_dh_activate(bdev_get_queue(path->dev->bdev));
-+	pg_init_done(path, ret);
-+}
-+
-+static void pg_init(struct multipath *m, struct dm_path *path)
-+{
-+	m->path_to_activate = path;
-+	queue_work(hw_handlerd, &m->activate_passive_path);
-+}
-+
- static void process_queued_ios(struct work_struct *work)
- {
- 	struct multipath *m =
- 		container_of(work, struct multipath, process_queued_ios);
--	struct hw_handler *hwh = &m->hw_handler;
- 	struct pgpath *pgpath = NULL;
- 	unsigned init_required = 0, must_queue = 1;
- 	unsigned long flags;
-@@ -439,7 +517,7 @@ out:
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
- 	if (init_required)
--		hwh->type->pg_init(hwh, pgpath->pg->bypassed, &pgpath->path);
-+		pg_init(m, &pgpath->path);
- 
- 	if (!must_queue)
- 		dispatch_queued_ios(m);
-@@ -652,10 +730,9 @@ static struct priority_group *parse_prio
- 
- static int parse_hw_handler(struct arg_set *as, struct multipath *m)
- {
-+	struct dm_target *ti = m->ti;
- 	int r;
--	struct hw_handler_type *hwht;
- 	unsigned hw_argc;
--	struct dm_target *ti = m->ti;
- 
- 	static struct param _params[] = {
- 		{0, 1024, "invalid number of hardware handler args"},
-@@ -668,25 +745,9 @@ static int parse_hw_handler(struct arg_s
- 	if (!hw_argc)
- 		return 0;
- 
--	hwht = dm_get_hw_handler(shift(as));
--	if (!hwht) {
--		ti->error = "unknown hardware handler type";
--		return -EINVAL;
--	}
--
--	m->hw_handler.md = dm_table_get_md(ti->table);
--	dm_put(m->hw_handler.md);
--
--	r = hwht->create(&m->hw_handler, hw_argc - 1, as->argv);
--	if (r) {
--		dm_put_hw_handler(hwht);
--		ti->error = "hardware handler constructor failed";
--		return r;
--	}
--
--	m->hw_handler.type = hwht;
-+	m->hw_handler_name = kstrdup(shift(as), GFP_KERNEL);
-+	request_module("scsi_dh_%s", m->hw_handler_name);
- 	consume(as, hw_argc - 1);
--
- 	return 0;
- }
- 
-@@ -808,6 +869,7 @@ static void multipath_dtr(struct dm_targ
- {
- 	struct multipath *m = (struct multipath *) ti->private;
- 
-+	flush_workqueue(hw_handlerd);
- 	flush_workqueue(kmultipathd);
- 	free_multipath(m);
- }
-@@ -1006,71 +1068,11 @@ static int bypass_pg_num(struct multipat
- }
+ 	/*
+ 	 * Filesystem requests must transfer data.
+ 	 */
+--- linux-2.6.25-rc8-mm2.orig/include/scsi/scsi.h
++++ linux-2.6.25-rc8-mm2/include/scsi/scsi.h
+@@ -374,6 +374,7 @@ struct scsi_lun {
+ #define SOFT_ERROR      0x2005
+ #define ADD_TO_MLQUEUE  0x2006
+ #define TIMEOUT_ERROR   0x2007
++#define SCSI_RETURN_NOT_HANDLED   0x2008
  
  /*
-- * Should we retry pg_init immediately?
-- */
--static int pg_init_limit_reached(struct multipath *m, struct pgpath *pgpath)
--{
--	unsigned long flags;
--	int limit_reached = 0;
--
--	spin_lock_irqsave(&m->lock, flags);
--
--	if (m->pg_init_count <= m->pg_init_retries)
--		m->pg_init_required = 1;
--	else
--		limit_reached = 1;
--
--	spin_unlock_irqrestore(&m->lock, flags);
--
--	return limit_reached;
--}
--
--/*
-- * pg_init must call this when it has completed its initialisation
-- */
--void dm_pg_init_complete(struct dm_path *path, unsigned err_flags)
--{
--	struct pgpath *pgpath = path_to_pgpath(path);
--	struct priority_group *pg = pgpath->pg;
--	struct multipath *m = pg->m;
--	unsigned long flags;
--
--	/*
--	 * If requested, retry pg_init until maximum number of retries exceeded.
--	 * If retry not requested and PG already bypassed, always fail the path.
--	 */
--	if (err_flags & MP_RETRY) {
--		if (pg_init_limit_reached(m, pgpath))
--			err_flags |= MP_FAIL_PATH;
--	} else if (err_flags && pg->bypassed)
--		err_flags |= MP_FAIL_PATH;
--
--	if (err_flags & MP_FAIL_PATH)
--		fail_path(pgpath);
--
--	if (err_flags & MP_BYPASS_PG)
--		bypass_pg(m, pg, 1);
--
--	spin_lock_irqsave(&m->lock, flags);
--	if (err_flags & ~MP_RETRY) {
--		m->current_pgpath = NULL;
--		m->current_pg = NULL;
--	} else if (!m->pg_init_required)
--		m->queue_io = 0;
--
--	m->pg_init_in_progress = 0;
--	queue_work(kmultipathd, &m->process_queued_ios);
--	spin_unlock_irqrestore(&m->lock, flags);
--}
--
--/*
-  * end_io handling
-  */
- static int do_end_io(struct multipath *m, struct bio *bio,
- 		     int error, struct dm_mpath_io *mpio)
+  * Midlevel queue return values.
+--- linux-2.6.25-rc8-mm2.orig/drivers/scsi/scsi_sysfs.c
++++ linux-2.6.25-rc8-mm2/drivers/scsi/scsi_sysfs.c
+@@ -406,6 +406,7 @@ struct bus_type scsi_bus_type = {
+ 	.resume		= scsi_bus_resume,
+ 	.remove		= scsi_bus_remove,
+ };
++EXPORT_SYMBOL_GPL(scsi_bus_type);
+ 
+ int scsi_sysfs_register(void)
  {
--	struct hw_handler *hwh = &m->hw_handler;
--	unsigned err_flags = MP_FAIL_PATH;	/* Default behavior */
- 	unsigned long flags;
- 
- 	if (!error)
-@@ -1097,19 +1099,8 @@ static int do_end_io(struct multipath *m
- 	}
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
--	if (hwh->type && hwh->type->error)
--		err_flags = hwh->type->error(hwh, bio);
--
--	if (mpio->pgpath) {
--		if (err_flags & MP_FAIL_PATH)
--			fail_path(mpio->pgpath);
--
--		if (err_flags & MP_BYPASS_PG)
--			bypass_pg(m, mpio->pgpath->pg, 1);
--	}
--
--	if (err_flags & MP_ERROR_IO)
--		return -EIO;
-+	if (mpio->pgpath)
-+		fail_path(mpio->pgpath);
- 
-       requeue:
- 	dm_bio_restore(&mpio->details, bio);
-@@ -1194,7 +1185,6 @@ static int multipath_status(struct dm_ta
- 	int sz = 0;
- 	unsigned long flags;
- 	struct multipath *m = (struct multipath *) ti->private;
--	struct hw_handler *hwh = &m->hw_handler;
- 	struct priority_group *pg;
- 	struct pgpath *p;
- 	unsigned pg_num;
-@@ -1214,12 +1204,10 @@ static int multipath_status(struct dm_ta
- 			DMEMIT("pg_init_retries %u ", m->pg_init_retries);
- 	}
- 
--	if (hwh->type && hwh->type->status)
--		sz += hwh->type->status(hwh, type, result + sz, maxlen - sz);
--	else if (!hwh->type || type == STATUSTYPE_INFO)
--		DMEMIT("0 ");
-+	if (m->hw_handler_name)
-+		DMEMIT("1 %s ", m->hw_handler_name);
- 	else
--		DMEMIT("1 %s ", hwh->type->name);
-+		DMEMIT("0 ");
- 
- 	DMEMIT("%u ", m->nr_priority_groups);
- 
-@@ -1422,6 +1410,15 @@ static int __init dm_multipath_init(void
- 		return -ENOMEM;
- 	}
- 
-+	hw_handlerd = create_workqueue("khwhandlerd");
-+	if (!hw_handlerd) {
-+		DMERR("failed to create workqueue khwhandlerd");
-+		destroy_workqueue(kmultipathd);
-+		dm_unregister_target(&multipath_target);
-+		kmem_cache_destroy(_mpio_cache);
-+		return -ENOMEM;
-+	}
-+
- 	DMINFO("version %u.%u.%u loaded",
- 	       multipath_target.version[0], multipath_target.version[1],
- 	       multipath_target.version[2]);
-@@ -1433,6 +1430,7 @@ static void __exit dm_multipath_exit(voi
- {
- 	int r;
- 
-+	destroy_workqueue(hw_handlerd);
- 	destroy_workqueue(kmultipathd);
- 
- 	r = dm_unregister_target(&multipath_target);
-@@ -1441,8 +1439,6 @@ static void __exit dm_multipath_exit(voi
- 	kmem_cache_destroy(_mpio_cache);
- }
- 
--EXPORT_SYMBOL_GPL(dm_pg_init_complete);
--
- module_init(dm_multipath_init);
- module_exit(dm_multipath_exit);
- 
-Index: linux-2.6.25-rc8-mm2/drivers/md/Kconfig
-===================================================================
---- linux-2.6.25-rc8-mm2.orig/drivers/md/Kconfig
-+++ linux-2.6.25-rc8-mm2/drivers/md/Kconfig
-@@ -252,6 +252,7 @@ config DM_ZERO
- config DM_MULTIPATH
- 	tristate "Multipath target"
- 	depends on BLK_DEV_DM
-+	select SCSI_DH
- 	---help---
- 	  Allow volume managers to support multipath hardware.
- 
