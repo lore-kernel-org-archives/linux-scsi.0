@@ -1,7 +1,7 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 4/7] scsi_dh: add EMC Clariion device handler
-Date: Tue, 15 Apr 2008 18:18:42 -0700
-Message-ID: <20080416011842.19580.92056.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 2/7] scsi_dh: add lsi rdac device handler
+Date: Tue, 15 Apr 2008 18:18:30 -0700
+Message-ID: <20080416011830.19580.27485.sendpatchset@chandra-ubuntu>
 References: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
@@ -19,53 +19,49 @@ To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Subject: scsi_dh: add EMC Clariion device handler
+Subject: scsi_dh: add lsi rdac device handler
 
 From: Chandra Seetharaman <sekharan@us.ibm.com>
 
-This adds support for EMC Clariions. This patch has the features that 
-currently exists in mainline and advanced features from Ed's patches.
+add LSI RDAC SCSI device handler
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
 
- drivers/scsi/device_handler/Kconfig       |    6 	6 +	0 -	0 !
- drivers/scsi/device_handler/Makefile      |    1 	1 +	0 -	0 !
- drivers/scsi/device_handler/scsi_dh_emc.c |  499 	499 +	0 -	0 !
- 3 files changed, 506 insertions(+)
+ drivers/scsi/device_handler/Kconfig        |    6 	6 +	0 -	0 !
+ drivers/scsi/device_handler/Makefile       |    1 	1 +	0 -	0 !
+ drivers/scsi/device_handler/scsi_dh_rdac.c |  678 	678 +	0 -	0 !
+ 3 files changed, 685 insertions(+)
 
 Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Kconfig
 ===================================================================
 --- linux-2.6.25-rc8-mm2.orig/drivers/scsi/device_handler/Kconfig
 +++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Kconfig
-@@ -24,3 +24,9 @@ config SCSI_DH_HP_SW
- 	If you have a HP/COMPAQ MSA device that requires START_STOP to
- 	be sent to start it and cannot upgrade the firmware then select y.
- 	Otherwise, say N.
+@@ -10,3 +10,9 @@ menuconfig SCSI_DH
+ 	  SCSI Device Handlers provide device specific support for
+ 	  devices utilized in multipath configurations. Say Y here to
+ 	  select support for specific hardware.
 +
-+config SCSI_DH_EMC
-+	tristate "EMC CLARiiON Device Handler"
++config SCSI_DH_RDAC
++	tristate "LSI RDAC Device Handler"
 +	depends on SCSI_DH
 +	help
-+	If you have a EMC CLARiiON select y. Otherwise, say N.
-Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_emc.c
++	If you have a LSI RDAC select y. Otherwise, say N.
+Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_rdac.c
 ===================================================================
 --- /dev/null
-+++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -0,0 +1,499 @@
++++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -0,0 +1,678 @@
 +/*
-+ * Target driver for EMC CLARiiON AX/CX-series hardware.
-+ * Based on code from Lars Marowsky-Bree <lmb@suse.de>
-+ * and Ed Goggin <egoggin@emc.com>.
++ * Engenio/LSI RDAC SCSI Device Handler
 + *
-+ * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-+ * Copyright (C) 2006 Mike Christie
++ * Copyright (C) 2005 Mike Christie. All rights reserved.
++ * Copyright (C) Chandra Seetharaman, IBM Corp. 2007
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
 + *
 + * This program is distributed in the hope that it will be useful,
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -73,417 +69,598 @@ Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_emc.c
 + * GNU General Public License for more details.
 + *
 + * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
 + */
 +#include <scsi/scsi.h>
 +#include <scsi/scsi_eh.h>
 +#include <scsi/scsi_dh.h>
-+#include <scsi/scsi_device.h>
 +
-+#define CLARIION_NAME			"emc_clariion"
++#define RDAC_NAME "rdac"
 +
-+#define CLARIION_TRESPASS_PAGE		0x22
-+#define CLARIION_BUFFER_SIZE		0x80
-+#define CLARIION_TIMEOUT		(60 * HZ)
-+#define CLARIION_RETRIES		3
-+#define CLARIION_UNBOUND_LU		-1
++/*
++ * LSI mode page stuff
++ *
++ * These struct definitions and the forming of the
++ * mode page were taken from the LSI RDAC 2.4 GPL'd
++ * driver, and then converted to Linux conventions.
++ */
++#define RDAC_QUIESCENCE_TIME 20;
++/*
++ * Page Codes
++ */
++#define RDAC_PAGE_CODE_REDUNDANT_CONTROLLER 0x2c
 +
-+static unsigned char long_trespass[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x09,			/* Page length - 2 */
-+	0x81,			/* Trespass code + Honor reservation bit */
-+	0xff, 0xff,		/* Trespass target */
-+	0, 0, 0, 0, 0, 0	/* Reserved bytes / unknown */
++/*
++ * Controller modes definitions
++ */
++#define RDAC_MODE_TRANSFER_SPECIFIED_LUNS	0x02
++
++/*
++ * RDAC Options field
++ */
++#define RDAC_FORCED_QUIESENCE 0x02
++
++#define RDAC_TIMEOUT	(60 * HZ)
++#define RDAC_RETRIES	3
++
++struct rdac_mode_6_hdr {
++	u8	data_len;
++	u8	medium_type;
++	u8	device_params;
++	u8	block_desc_len;
 +};
 +
-+static unsigned char long_trespass_hr[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x09,			/* Page length - 2 */
-+	0x01,			/* Trespass code + Honor reservation bit */
-+	0xff, 0xff,		/* Trespass target */
-+	0, 0, 0, 0, 0, 0	/* Reserved bytes / unknown */
++struct rdac_mode_10_hdr {
++	u16	data_len;
++	u8	medium_type;
++	u8	device_params;
++	u16	reserved;
++	u16	block_desc_len;
 +};
 +
-+static unsigned char short_trespass[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x02,			/* Page length - 2 */
-+	0x81,			/* Trespass code + Honor reservation bit */
-+	0xff,			/* Trespass target */
++struct rdac_mode_common {
++	u8	controller_serial[16];
++	u8	alt_controller_serial[16];
++	u8	rdac_mode[2];
++	u8	alt_rdac_mode[2];
++	u8	quiescence_timeout;
++	u8	rdac_options;
 +};
 +
-+static unsigned char short_trespass_hr[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x02,			/* Page length - 2 */
-+	0x01,			/* Trespass code + Honor reservation bit */
-+	0xff,			/* Trespass target */
++struct rdac_pg_legacy {
++	struct rdac_mode_6_hdr hdr;
++	u8	page_code;
++	u8	page_len;
++	struct rdac_mode_common common;
++#define MODE6_MAX_LUN	32
++	u8	lun_table[MODE6_MAX_LUN];
++	u8	reserved2[32];
++	u8	reserved3;
++	u8	reserved4;
 +};
 +
-+struct clariion_dh_data {
-+	/*
-+	 * Use short trespass command (FC-series) or the long version
-+	 * (default for AX/CX CLARiiON arrays).
-+	 */
-+	unsigned short_trespass;
-+	/*
-+	 * Whether or not (default) to honor SCSI reservations when
-+	 * initiating a switch-over.
-+	 */
-+	unsigned hr;
-+	/* I/O buffer for both MODE_SELECT and INQUIRY commands. */
-+	char buffer[CLARIION_BUFFER_SIZE];
-+	/*
-+	 * SCSI sense buffer for commands -- assumes serial issuance
-+	 * and completion sequence of all commands for same multipath.
-+	 */
-+	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-+	/* which SP (A=0,B=1,UNBOUND=-1) is dflt SP for path's mapped dev */
-+	int default_sp;
-+	/* which SP (A=0,B=1,UNBOUND=-1) is active for path's mapped dev */
-+	int current_sp;
++struct rdac_pg_expanded {
++	struct rdac_mode_10_hdr hdr;
++	u8	page_code;
++	u8	subpage_code;
++	u8	page_len[2];
++	struct rdac_mode_common common;
++	u8	lun_table[256];
++	u8	reserved3;
++	u8	reserved4;
 +};
 +
-+static inline struct clariion_dh_data
-+			*get_clariion_data(struct scsi_device *sdev)
++struct c9_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC9 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "vace" */
++	u8	avte_cvp;
++	u8	path_prio;
++	u8	reserved2[38];
++};
++
++#define SUBSYS_ID_LEN	16
++#define SLOT_ID_LEN	2
++
++struct c4_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC4 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "subs" */
++	u8	subsys_id[SUBSYS_ID_LEN];
++	u8	revision[4];
++	u8	slot_id[SLOT_ID_LEN];
++	u8	reserved[2];
++};
++
++struct rdac_controller {
++	u8			subsys_id[SUBSYS_ID_LEN];
++	u8			slot_id[SLOT_ID_LEN];
++	int			use_ms10;
++	struct kref		kref;
++	struct list_head	node; /* list of all controllers */
++	union			{
++		struct rdac_pg_legacy legacy;
++		struct rdac_pg_expanded expanded;
++	} mode_select;
++};
++struct c8_inquiry {
++	u8	peripheral_info;
++	u8	page_code; /* 0xC8 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4]; /* "edid" */
++	u8	reserved2[3];
++	u8	vol_uniq_id_len;
++	u8	vol_uniq_id[16];
++	u8	vol_user_label_len;
++	u8	vol_user_label[60];
++	u8	array_uniq_id_len;
++	u8	array_unique_id[16];
++	u8	array_user_label_len;
++	u8	array_user_label[60];
++	u8	lun[8];
++};
++
++struct c2_inquiry {
++	u8	peripheral_info;
++	u8	page_code;	/* 0xC2 */
++	u8	reserved1;
++	u8	page_len;
++	u8	page_id[4];	/* "swr4" */
++	u8	sw_version[3];
++	u8	sw_date[3];
++	u8	features_enabled;
++	u8	max_lun_supported;
++	u8	partitions[239]; /* Total allocation length should be 0xFF */
++};
++
++struct rdac_dh_data {
++	struct rdac_controller	*ctlr;
++#define UNINITIALIZED_LUN	(1 << 8)
++	unsigned		lun;
++#define RDAC_STATE_ACTIVE	0
++#define RDAC_STATE_PASSIVE	1
++	unsigned char		state;
++	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
++	union			{
++		struct c2_inquiry c2;
++		struct c4_inquiry c4;
++		struct c8_inquiry c8;
++		struct c9_inquiry c9;
++	} inq;
++};
++
++static LIST_HEAD(ctlr_list);
++static DEFINE_SPINLOCK(list_lock);
++
++static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
 +{
 +	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
 +	BUG_ON(scsi_dh_data == NULL);
-+	return ((struct clariion_dh_data *) scsi_dh_data->buf);
++	return ((struct rdac_dh_data *) scsi_dh_data->buf);
 +}
 +
-+/*
-+ * Parse MODE_SELECT cmd reply.
-+ */
-+static int trespass_endio(struct scsi_device *sdev, int result)
++static struct request *get_rdac_req(struct scsi_device *sdev,
++			void *buffer, unsigned buflen, int rw)
 +{
-+	int err = SCSI_DH_OK;
-+	struct scsi_sense_hdr sshdr;
-+	struct clariion_dh_data *csdev = get_clariion_data(sdev);
-+	char *sense = csdev->sense;
-+
-+	if (status_byte(result) == CHECK_CONDITION &&
-+	    scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, &sshdr)) {
-+		sdev_printk(KERN_ERR, sdev, "Found valid sense data 0x%2x, "
-+			    "0x%2x, 0x%2x while sending CLARiiON trespass "
-+			    "command.\n", sshdr.sense_key, sshdr.asc,
-+			     sshdr.ascq);
-+
-+		if ((sshdr.sense_key == 0x05) && (sshdr.asc == 0x04) &&
-+		     (sshdr.ascq == 0x00)) {
-+			/*
-+			 * Array based copy in progress -- do not send
-+			 * mode_select or copy will be aborted mid-stream.
-+			 */
-+			sdev_printk(KERN_INFO, sdev, "Array Based Copy in "
-+				    "progress while sending CLARiiON trespass "
-+				    "command.\n");
-+			err = SCSI_DH_DEV_TEMP_BUSY;
-+		} else if ((sshdr.sense_key == 0x02) && (sshdr.asc == 0x04) &&
-+			    (sshdr.ascq == 0x03)) {
-+			/*
-+			 * LUN Not Ready - Manual Intervention Required
-+			 * indicates in-progress ucode upgrade (NDU).
-+			 */
-+			sdev_printk(KERN_INFO, sdev, "Detected in-progress "
-+				    "ucode upgrade NDU operation while sending "
-+				    "CLARiiON trespass command.\n");
-+			err = SCSI_DH_DEV_TEMP_BUSY;
-+		} else
-+			err = SCSI_DH_DEV_FAILED;
-+	} else if (result) {
-+		sdev_printk(KERN_ERR, sdev, "Error 0x%x while sending "
-+			    "CLARiiON trespass command.\n", result);
-+		err = SCSI_DH_IO;
-+	}
-+
-+	return err;
-+}
-+
-+static int parse_sp_info_reply(struct scsi_device *sdev, int result,
-+		int *default_sp, int *current_sp, int *new_current_sp)
-+{
-+	int err = SCSI_DH_OK;
-+	struct clariion_dh_data *csdev = get_clariion_data(sdev);
-+
-+	if (result == 0) {
-+		/* check for in-progress ucode upgrade (NDU) */
-+		if (csdev->buffer[48] != 0) {
-+			sdev_printk(KERN_NOTICE, sdev, "Detected in-progress "
-+			       "ucode upgrade NDU operation while finding "
-+			       "current active SP.");
-+			err = SCSI_DH_DEV_TEMP_BUSY;
-+		} else {
-+			*default_sp = csdev->buffer[5];
-+
-+			if (csdev->buffer[4] == 2)
-+				/* SP for path is current */
-+				*current_sp = csdev->buffer[8];
-+			else {
-+				if (csdev->buffer[4] == 1)
-+					/* SP for this path is NOT current */
-+					if (csdev->buffer[8] == 0)
-+						*current_sp = 1;
-+					else
-+						*current_sp = 0;
-+				else
-+					/* unbound LU or LUNZ */
-+					*current_sp = CLARIION_UNBOUND_LU;
-+			}
-+			*new_current_sp =  csdev->buffer[8];
-+		}
-+	} else {
-+		struct scsi_sense_hdr sshdr;
-+
-+		err = SCSI_DH_IO;
-+
-+		if (scsi_normalize_sense(csdev->sense, SCSI_SENSE_BUFFERSIZE,
-+							   &sshdr))
-+			sdev_printk(KERN_ERR, sdev, "Found valid sense data "
-+			      "0x%2x, 0x%2x, 0x%2x while finding current "
-+			      "active SP.", sshdr.sense_key, sshdr.asc,
-+			      sshdr.ascq);
-+		else
-+			sdev_printk(KERN_ERR, sdev, "Error 0x%x finding "
-+			      "current active SP.", result);
-+	}
-+
-+	return err;
-+}
-+
-+static int sp_info_endio(struct scsi_device *sdev, int result,
-+					int mode_select_sent, int *done)
-+{
-+	struct clariion_dh_data *csdev = get_clariion_data(sdev);
-+	int err_flags, default_sp, current_sp, new_current_sp;
-+
-+	err_flags = parse_sp_info_reply(sdev, result, &default_sp,
-+					     &current_sp, &new_current_sp);
-+
-+	if (err_flags != SCSI_DH_OK)
-+		goto done;
-+
-+	if (mode_select_sent) {
-+		csdev->default_sp = default_sp;
-+		csdev->current_sp = current_sp;
-+	} else {
-+		/*
-+		 * Issue the actual module_selec request IFF either
-+		 * (1) we do not know the identity of the current SP OR
-+		 * (2) what we think we know is actually correct.
-+		 */
-+		if ((current_sp != CLARIION_UNBOUND_LU) &&
-+		    (new_current_sp != current_sp)) {
-+
-+			csdev->default_sp = default_sp;
-+			csdev->current_sp = current_sp;
-+
-+			sdev_printk(KERN_INFO, sdev, "Ignoring path group "
-+			       "switch-over command for CLARiiON SP%s since "
-+			       " mapped device is already initialized.",
-+			       current_sp ? "B" : "A");
-+			if (done)
-+				*done = 1; /* as good as doing it */
-+		}
-+	}
-+done:
-+	return err_flags;
-+}
-+
-+/*
-+* Get block request for REQ_BLOCK_PC command issued to path.  Currently
-+* limited to MODE_SELECT (trespass) and INQUIRY (VPD page 0xC0) commands.
-+*
-+* Uses data and sense buffers in hardware handler context structure and
-+* assumes serial servicing of commands, both issuance and completion.
-+*/
-+static struct request *get_req(struct scsi_device *sdev, int cmd)
-+{
-+	struct clariion_dh_data *csdev = get_clariion_data(sdev);
 +	struct request *rq;
-+	unsigned char *page22;
-+	int len = 0;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
 +
-+	rq = blk_get_request(sdev->request_queue,
-+			(cmd == MODE_SELECT) ? WRITE : READ, GFP_ATOMIC);
++	rq = blk_get_request(q, rw, GFP_KERNEL);
++
 +	if (!rq) {
-+		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
++		sdev_printk(KERN_INFO, sdev,
++				"get_rdac_req: blk_get_request failed.\n");
++		return NULL;
++	}
++
++	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
++		blk_put_request(rq);
++		sdev_printk(KERN_INFO, sdev,
++				"get_rdac_req: blk_rq_map_kern failed.\n");
 +		return NULL;
 +	}
 +
 +	memset(&rq->cmd, 0, BLK_MAX_CDB);
-+	rq->cmd[0] = cmd;
-+	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
-+
-+	switch (cmd) {
-+	case MODE_SELECT:
-+		if (csdev->short_trespass) {
-+			page22 = csdev->hr ? short_trespass_hr : short_trespass;
-+			len = sizeof(short_trespass);
-+		} else {
-+			page22 = csdev->hr ? long_trespass_hr : long_trespass;
-+			len = sizeof(long_trespass);
-+		}
-+		/*
-+		 * Can't DMA from kernel BSS -- must copy selected trespass
-+		 * command mode page contents to context buffer which is
-+		 * allocated by kmalloc.
-+		 */
-+		BUG_ON((len > CLARIION_BUFFER_SIZE));
-+		memcpy(csdev->buffer, page22, len);
-+		rq->cmd_flags |= REQ_RW;
-+		rq->cmd[1] = 0x10;
-+		break;
-+	case INQUIRY:
-+		rq->cmd[1] = 0x1;
-+		rq->cmd[2] = 0xC0;
-+		len = CLARIION_BUFFER_SIZE;
-+		memset(csdev->buffer, 0, CLARIION_BUFFER_SIZE);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	rq->cmd[4] = len;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_flags |= REQ_FAILFAST;
-+	rq->timeout = CLARIION_TIMEOUT;
-+	rq->retries = CLARIION_RETRIES;
-+
-+	rq->sense = csdev->sense;
++	rq->sense = h->sense;
 +	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
 +	rq->sense_len = 0;
 +
-+	if (blk_rq_map_kern(sdev->request_queue, rq, csdev->buffer,
-+							len, GFP_ATOMIC)) {
-+		__blk_put_request(rq->q, rq);
-+		return NULL;
-+	}
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
++	rq->retries = RDAC_RETRIES;
++	rq->timeout = RDAC_TIMEOUT;
 +
 +	return rq;
 +}
 +
-+static int send_cmd(struct scsi_device *sdev, int cmd)
++static struct request *rdac_failover_get(struct scsi_device *sdev)
 +{
-+	struct request *rq = get_req(sdev, cmd);
++	struct request *rq;
++	struct rdac_mode_common *common;
++	unsigned data_size;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
 +
++	if (h->ctlr->use_ms10) {
++		struct rdac_pg_expanded *rdac_pg;
++
++		data_size = sizeof(struct rdac_pg_expanded);
++		rdac_pg = &h->ctlr->mode_select.expanded;
++		memset(rdac_pg, 0, data_size);
++		common = &rdac_pg->common;
++		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER + 0x40;
++		rdac_pg->subpage_code = 0x1;
++		rdac_pg->page_len[0] = 0x01;
++		rdac_pg->page_len[1] = 0x28;
++		rdac_pg->lun_table[h->lun] = 0x81;
++	} else {
++		struct rdac_pg_legacy *rdac_pg;
++
++		data_size = sizeof(struct rdac_pg_legacy);
++		rdac_pg = &h->ctlr->mode_select.legacy;
++		memset(rdac_pg, 0, data_size);
++		common = &rdac_pg->common;
++		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
++		rdac_pg->page_len = 0x68;
++		rdac_pg->lun_table[h->lun] = 0x81;
++	}
++	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
++	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
++	common->rdac_options = RDAC_FORCED_QUIESENCE;
++
++	/* get request for block layer packet command */
++	rq = get_rdac_req(sdev, &h->ctlr->mode_select, data_size, WRITE);
 +	if (!rq)
-+		return SCSI_DH_RES_TEMP_UNAVAIL;
++		return NULL;
 +
-+	return blk_execute_rq(sdev->request_queue, NULL, rq, 1);
++	/* Prepare the command. */
++	if (h->ctlr->use_ms10) {
++		rq->cmd[0] = MODE_SELECT_10;
++		rq->cmd[7] = data_size >> 8;
++		rq->cmd[8] = data_size & 0xff;
++	} else {
++		rq->cmd[0] = MODE_SELECT;
++		rq->cmd[4] = data_size;
++	}
++	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
++
++	return rq;
 +}
 +
-+static int clariion_activate(struct scsi_device *sdev)
++static void release_controller(struct kref *kref)
 +{
-+	int result, done = 0;
++	struct rdac_controller *ctlr;
++	ctlr = container_of(kref, struct rdac_controller, kref);
 +
-+	result = send_cmd(sdev, INQUIRY);
-+	result = sp_info_endio(sdev, result, 0, &done);
-+	if (result || done)
-+		goto done;
-+
-+	result = send_cmd(sdev, MODE_SELECT);
-+	result = trespass_endio(sdev, result);
-+	if (result)
-+		goto done;
-+
-+	result = send_cmd(sdev, INQUIRY);
-+	result = sp_info_endio(sdev, result, 1, NULL);
-+done:
-+	return result;
++	spin_lock(&list_lock);
++	list_del(&ctlr->node);
++	spin_unlock(&list_lock);
++	kfree(ctlr);
 +}
 +
-+static int clariion_check_sense(struct scsi_device *sdev,
++static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id)
++{
++	struct rdac_controller *ctlr, *tmp;
++
++	spin_lock(&list_lock);
++
++	list_for_each_entry(tmp, &ctlr_list, node) {
++		if ((memcmp(tmp->subsys_id, subsys_id, SUBSYS_ID_LEN) == 0) &&
++			  (memcmp(tmp->slot_id, slot_id, SLOT_ID_LEN) == 0)) {
++			kref_get(&tmp->kref);
++			spin_unlock(&list_lock);
++			return tmp;
++		}
++	}
++	ctlr = kmalloc(sizeof(*ctlr), GFP_ATOMIC);
++	if (!ctlr)
++		goto done;
++
++	/* initialize fields of controller */
++	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
++	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
++	kref_init(&ctlr->kref);
++	ctlr->use_ms10 = -1;
++	list_add(&ctlr->node, &ctlr_list);
++done:
++	spin_unlock(&list_lock);
++	return ctlr;
++}
++
++static int submit_inquiry(struct scsi_device *sdev, int page_code,
++		unsigned int len)
++{
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++	int err = SCSI_DH_RES_TEMP_UNAVAIL;
++
++	rq = get_rdac_req(sdev, &h->inq, len, READ);
++	if (!rq)
++		goto done;
++
++	/* Prepare the command. */
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 1;
++	rq->cmd[2] = page_code;
++	rq->cmd[4] = len;
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++	err = blk_execute_rq(q, NULL, rq, 1);
++	if (err == -EIO)
++		err = SCSI_DH_IO;
++done:
++	return err;
++}
++
++static int get_lun(struct scsi_device *sdev)
++{
++	int err;
++	struct c8_inquiry *inqp;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++
++	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c8;
++		h->lun = inqp->lun[7]; /* currently it uses only one byte */
++	}
++	return err;
++}
++
++#define RDAC_OWNED	0
++#define RDAC_UNOWNED	1
++#define RDAC_FAILED	2
++static int check_ownership(struct scsi_device *sdev)
++{
++	int err;
++	struct c9_inquiry *inqp;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++
++	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
++	if (err == SCSI_DH_OK) {
++		err = RDAC_UNOWNED;
++		inqp = &h->inq.c9;
++		/*
++		 * If in AVT mode or if the path already owns the LUN,
++		 * return RDAC_OWNED;
++		 */
++		if (((inqp->avte_cvp >> 7) == 0x1) ||
++				 ((inqp->avte_cvp & 0x1) != 0))
++			err = RDAC_OWNED;
++	} else
++		err = RDAC_FAILED;
++	return err;
++}
++
++static int initialize_controller(struct scsi_device *sdev)
++{
++	int err;
++	struct c4_inquiry *inqp;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++
++	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c4;
++		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
++		if (!h->ctlr)
++			err = SCSI_DH_RES_TEMP_UNAVAIL;
++	}
++	return err;
++}
++
++static int set_mode_select(struct scsi_device *sdev)
++{
++	int err;
++	struct c2_inquiry *inqp;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++
++	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry));
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c2;
++		/*
++		 * If more than MODE6_MAX_LUN luns are supported, use
++		 * mode select 10
++		 */
++		if (inqp->max_lun_supported >= MODE6_MAX_LUN)
++			h->ctlr->use_ms10 = 1;
++		else
++			h->ctlr->use_ms10 = 0;
++	}
++	return err;
++}
++
++static int mode_select_handle_sense(struct scsi_device *sdev)
++{
++	struct scsi_sense_hdr sense_hdr;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++	int sense, err = SCSI_DH_IO, ret;
++
++	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
++	if (!ret)
++		goto done;
++
++	err = SCSI_DH_OK;
++	sense = (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
++			sense_hdr.ascq;
++	/* If it is retryable failure, submit the c9 inquiry again */
++	if (sense == 0x59136 || sense == 0x68b02 || sense == 0xb8b02 ||
++			    sense == 0x62900) {
++		/* 0x59136    - Command lock contention
++		 * 0x[6b]8b02 - Quiesense in progress or achieved
++		 * 0x62900    - Power On, Reset, or Bus Device Reset
++		 */
++		err = SCSI_DH_DEV_TEMP_BUSY;
++	}
++
++	if (sense)
++		sdev_printk(KERN_INFO, sdev,
++			"MODE_SELECT failed with sense 0x%x.\n", sense);
++done:
++	return err;
++}
++
++static int send_mode_select(struct scsi_device *sdev)
++{
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++	int err = SCSI_DH_RES_TEMP_UNAVAIL;
++
++	rq = rdac_failover_get(sdev);
++	if (!rq)
++		goto done;
++
++	sdev_printk(KERN_INFO, sdev, "queueing MODE_SELECT command.\n");
++
++	err = blk_execute_rq(q, NULL, rq, 1);
++	if (err != SCSI_DH_OK)
++		err = mode_select_handle_sense(sdev);
++	if (err == SCSI_DH_OK)
++		h->state = RDAC_STATE_ACTIVE;
++done:
++	return err;
++}
++
++static int rdac_activate(struct scsi_device *sdev)
++{
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++	int err = SCSI_DH_OK;
++
++	if (h->lun == UNINITIALIZED_LUN) {
++		err = get_lun(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	err = check_ownership(sdev);
++	switch (err) {
++	case RDAC_UNOWNED:
++		break;
++	case RDAC_OWNED:
++		err = SCSI_DH_OK;
++		goto done;
++	case RDAC_FAILED:
++	default:
++		err = SCSI_DH_IO;
++		goto done;
++	}
++
++	if (!h->ctlr) {
++		err = initialize_controller(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	if (h->ctlr->use_ms10 == -1) {
++		err = set_mode_select(sdev);
++		if (err != SCSI_DH_OK)
++			goto done;
++	}
++
++	err = send_mode_select(sdev);
++done:
++	return err;
++}
++
++static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
++{
++	struct rdac_dh_data *h = get_rdac_data(sdev);
++	int ret = BLKPREP_OK;
++
++	if (h->state != RDAC_STATE_ACTIVE) {
++		ret = BLKPREP_KILL;
++		req->cmd_flags |= REQ_QUIET;
++	}
++	return ret;
++
++}
++
++static int rdac_check_sense(struct scsi_device *sdev,
 +				struct scsi_sense_hdr *sense_hdr)
 +{
++	struct rdac_dh_data *h = get_rdac_data(sdev);
 +	switch (sense_hdr->sense_key) {
 +	case NOT_READY:
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x03)
-+			/*
-+			 * LUN Not Ready - Manual Intervention Required
-+			 * indicates this is a passive path.
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x81)
++			/* LUN Not Ready - Storage firmware incompatible
++			 * Manual code synchonisation required.
 +			 *
-+			 * FIXME: However, if this is seen and EVPD C0
-+			 * indicates that this is due to a NDU in
-+			 * progress, we should set FAIL_PATH too.
-+			 * This indicates we might have to do a SCSI
-+			 * inquiry in the end_io path. Ugh.
-+			 *
-+			 * Can return FAILED only when we want the error
-+			 * recovery process to kick in.
++			 * Nothing we can do here. Try to bypass the path.
 +			 */
 +			return SUCCESS;
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0xA1)
++			/* LUN Not Ready - Quiescense in progress
++			 *
++			 * Just retry and wait.
++			 */
++			return NEEDS_RETRY;
 +		break;
 +	case ILLEGAL_REQUEST:
-+		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
-+			/*
-+			 * An array based copy is in progress. Do not
-+			 * fail the path, do not bypass to another PG,
-+			 * do not retry. Fail the IO immediately.
-+			 * (Actually this is the same conclusion as in
-+			 * the default handler, but lets make sure.)
-+			 *
-+			 * Can return FAILED only when we want the error
-+			 * recovery process to kick in.
++		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01) {
++			/* Invalid Request - Current Logical Unit Ownership.
++			 * Controller is not the current owner of the LUN,
++			 * Fail the path, so that the other path be used.
 +			 */
++			h->state = RDAC_STATE_PASSIVE;
 +			return SUCCESS;
++		}
 +		break;
 +	case UNIT_ATTENTION:
 +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
 +			/*
-+			 * Unit Attention Code. This is the first IO
-+			 * to the new path, so just retry.
++			 * Power On, Reset, or Bus Device Reset, just retry.
 +			 */
 +			return NEEDS_RETRY;
 +		break;
 +	}
-+
 +	/* success just means we do not care what scsi-ml does */
-+	return SUCCESS;
++	return SCSI_RETURN_NOT_HANDLED;
 +}
 +
 +static const struct {
 +	char *vendor;
 +	char *model;
-+} clariion_dev_list[] = {
-+	{"DGC", "RAID"},
-+	{"DGC", "DISK"},
++} rdac_dev_list[] = {
++	{"IBM", "1815"},
 +	{NULL, NULL},
 +};
 +
-+static int clariion_bus_notify(struct notifier_block *, unsigned long, void *);
++static int rdac_bus_notify(struct notifier_block *, unsigned long, void *);
 +
-+static struct scsi_device_handler clariion_dh = {
-+	.name		= CLARIION_NAME,
-+	.module		= THIS_MODULE,
-+	.nb.notifier_call = clariion_bus_notify,
-+	.check_sense	= clariion_check_sense,
-+	.activate	= clariion_activate,
++static struct scsi_device_handler rdac_dh = {
++	.name = RDAC_NAME,
++	.module = THIS_MODULE,
++	.nb.notifier_call = rdac_bus_notify,
++	.prep_fn = rdac_prep_fn,
++	.check_sense = rdac_check_sense,
++	.activate = rdac_activate,
 +};
 +
 +/*
 + * TODO: need some interface so we can set trespass values
 + */
-+static int clariion_bus_notify(struct notifier_block *nb,
-+				unsigned long action, void *data)
++static int rdac_bus_notify(struct notifier_block *nb,
++			    unsigned long action, void *data)
 +{
 +	struct device *dev = data;
 +	struct scsi_device *sdev = to_scsi_device(dev);
 +	struct scsi_dh_data *scsi_dh_data;
-+	struct clariion_dh_data *h;
++	struct rdac_dh_data *h;
 +	int i, found = 0;
 +	unsigned long flags;
 +
 +	if (action == BUS_NOTIFY_ADD_DEVICE) {
-+		for (i = 0; clariion_dev_list[i].vendor; i++) {
-+			if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-+				     strlen(clariion_dev_list[i].vendor)) &&
-+			    !strncmp(sdev->model, clariion_dev_list[i].model,
-+				     strlen(clariion_dev_list[i].model))) {
++		for (i = 0; rdac_dev_list[i].vendor; i++) {
++			if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
++				     strlen(rdac_dev_list[i].vendor)) &&
++			    !strncmp(sdev->model, rdac_dev_list[i].model,
++				     strlen(rdac_dev_list[i].model))) {
 +				found = 1;
 +				break;
 +			}
@@ -495,25 +672,24 @@ Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_emc.c
 +				+ sizeof(*h) , GFP_KERNEL);
 +		if (!scsi_dh_data) {
 +			sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
-+				    CLARIION_NAME);
++				    RDAC_NAME);
 +			goto out;
 +		}
 +
-+		scsi_dh_data->scsi_dh = &clariion_dh;
-+		h = (struct clariion_dh_data *) scsi_dh_data->buf;
-+		h->default_sp = CLARIION_UNBOUND_LU;
-+		h->current_sp = CLARIION_UNBOUND_LU;
-+
++		scsi_dh_data->scsi_dh = &rdac_dh;
++		h = (struct rdac_dh_data *) scsi_dh_data->buf;
++		h->lun = UNINITIALIZED_LUN;
++		h->state = RDAC_STATE_ACTIVE;
 +		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
 +		sdev->scsi_dh_data = scsi_dh_data;
 +		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+
-+		sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", CLARIION_NAME);
 +		try_module_get(THIS_MODULE);
++
++		sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", RDAC_NAME);
 +
 +	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
 +		BUG_ON(sdev->scsi_dh_data == NULL);
-+		if (sdev->scsi_dh_data->scsi_dh != &clariion_dh)
++		if (sdev->scsi_dh_data->scsi_dh != &rdac_dh)
 +			goto out;
 +
 +		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
@@ -521,44 +697,45 @@ Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/scsi_dh_emc.c
 +		sdev->scsi_dh_data = NULL;
 +		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
 +
-+		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
-+			    CLARIION_NAME);
-+
++		h = (struct rdac_dh_data *) scsi_dh_data->buf;
++		if (h->ctlr)
++			kref_put(&h->ctlr->kref, release_controller);
 +		kfree(scsi_dh_data);
 +		module_put(THIS_MODULE);
++		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n", RDAC_NAME);
 +	}
 +
 +out:
 +	return 0;
 +}
 +
-+static int __init clariion_init(void)
++static int __init rdac_init(void)
 +{
 +	int r;
 +
-+	r = scsi_register_device_handler(&clariion_dh);
++	r = scsi_register_device_handler(&rdac_dh);
 +	if (r != 0)
 +		printk(KERN_ERR "Failed to register scsi device handler.");
 +	return r;
 +}
 +
-+static void __exit clariion_exit(void)
++static void __exit rdac_exit(void)
 +{
-+	scsi_unregister_device_handler(&clariion_dh);
++	scsi_unregister_device_handler(&rdac_dh);
 +}
 +
-+module_init(clariion_init);
-+module_exit(clariion_exit);
++module_init(rdac_init);
++module_exit(rdac_exit);
 +
-+MODULE_DESCRIPTION("EMC CX/AX/FC-family driver");
-+MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu>, Chandra Seetharaman <sekharan@us.ibm.com>");
++MODULE_DESCRIPTION("Multipath LSI/Engenio RDAC driver");
++MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
 +MODULE_LICENSE("GPL");
 Index: linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Makefile
 ===================================================================
 --- linux-2.6.25-rc8-mm2.orig/drivers/scsi/device_handler/Makefile
 +++ linux-2.6.25-rc8-mm2/drivers/scsi/device_handler/Makefile
-@@ -4,3 +4,4 @@
+@@ -2,3 +2,4 @@
+ # SCSI Device Handler
+ #
  obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
- obj-$(CONFIG_SCSI_DH_RDAC)	+= scsi_dh_rdac.o
- obj-$(CONFIG_SCSI_DH_HP_SW)	+= scsi_dh_hp_sw.o
-+obj-$(CONFIG_SCSI_DH_EMC)	+= scsi_dh_emc.o
++obj-$(CONFIG_SCSI_DH_RDAC)	+= scsi_dh_rdac.o
