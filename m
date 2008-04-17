@@ -1,72 +1,63 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2/3 ver3] scsi: varlen extended and vendor-specific cdbs
-Date: Thu, 17 Apr 2008 16:29:13 +0300
-Message-ID: <480750A9.2070008@panasas.com>
-References: <48059F51.9060401@panasas.com> <20080417123224X.tomof@acm.org>
- <480741B3.2080709@panasas.com> <20080417220450J.tomof@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Query regarding modifying the DMA Mask based on the available
+	memory in the system
+Date: Thu, 17 Apr 2008 09:18:52 -0500
+Message-ID: <1208441932.3150.4.camel@localhost.localdomain>
+References: <5AE055B67BB5764693E2900C7E3699BE010CAB76@pamail.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxout4.netvision.net.il ([194.90.9.27]:44904 "EHLO
-	mxout4.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbYDQN3Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2008 09:29:16 -0400
-Received: from bh-buildlin2.bhalevy.com ([212.235.53.3])
- by mxout4.netvision.net.il
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0JZH00MRA1GQH7A0@mxout4.netvision.net.il> for
- linux-scsi@vger.kernel.org; Thu, 17 Apr 2008 16:29:14 +0300 (IDT)
-In-reply-to: <20080417220450J.tomof@acm.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42324 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754564AbYDQOS4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Apr 2008 10:18:56 -0400
+In-Reply-To: <5AE055B67BB5764693E2900C7E3699BE010CAB76@pamail.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Pete Wyckoff <pw@osc.edu>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
+To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 17 2008 at 16:04 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Thu, 17 Apr 2008 15:25:23 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Thu, 2008-04-17 at 16:40 +0800, Prakash, Sathya wrote:
+> Currently the MPT Fusion drivers set DMA Mask to 64 bit if the
+> architecture of the system is 64bit and if the hardware supports 64 bit
+> DMA address. 
+> Also in all 64 bit systems the fusion drivers use SGESimple64_t to send
+> scatter gather elements to firmware. 
 > 
->>   Add support for variable-length, extended, and vendor specific
->>   CDBs to scsi-ml. It is now possible for initiators and ULD's
->>   to issue these types of commands. LLDs need not change much.
->>   All they need is to raise the .max_cmd_len to the longest command
->>   they support (see iscsi patch).
->>
->>   - clean-up some code paths that did not expect commands to be
->>     larger than 16, and change cmd_len members' type to short as
->>     char is not enough.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> Signed-off-by: Benny Halevy <bhalevy@panasas.com>
->> ---
->>  block/scsi_ioctl.c       |    5 ++---
->>  drivers/scsi/constants.c |   10 +++-------
->>  drivers/scsi/scsi.c      |   15 ++++-----------
->>  drivers/scsi/scsi_lib.c  |    2 +-
->>  include/scsi/scsi.h      |   40 +++++++++++++++++++++++++++++++++-------
->>  include/scsi/scsi_cmnd.h |    2 +-
->>  include/scsi/scsi_host.h |    8 +++-----
->>  7 files changed, 47 insertions(+), 35 deletions(-)
+> Even with 64 bit systems which has available memory less than 4GB the
+> SGESimple64_t is used, to increase the performance I am thinking of
+> modifying the driver to check the system memory in the system using the
+> function si_meminfo() and if the memory is less than 4GB, then the
+> driver will set the 32 bit DMA mask and will use SGESimple32_t to send
+> the SGE to firmware. 
 > 
-> looks fine to me though I've not tested it.
-> --
+> I am not sure whether this change works fine? I couldn't see any SCSI
+> driver using the si_meminfo and this function seems not to return the
+> physical layout of the memory. 
 
-I agree, we need more testing. I'm doing that right now.
-I've been running with the old patch for ages and also
-Pete had a nice heavy load on that code. But this here
-was not tried as log. Pete if you have a ready made setup
-maybe you can give it a go. Tomo perhaps you can add these
-3 patches to your tests.
+That's because it's not the right way to do this.
 
-You need:
-   linux-block for-2.6.26 branch - for block support of large commands
-   scsi-misc - for iscsi's bidi and extended commands
-   these three patches. - scsi varlen support
-And then the patch for bsg.
+For drivers that can alter their descriptor types, we have this
+function:
 
-But over all I have audit the code and it looks good, Tomo
-was right it was redundant code.
+dma_get_required_mask()
 
-Boaz
+It returns the largest mask necessary to reach all of memory.  Note:
+This isn't necessarily the same as the largest physical memory on
+systems because some systems with IOMMUs deliberately always return
+addresses in 32 bits even in a 64 bit system.
+
+For a usage example, see:
+
+aic79xx_osm_pci.c:ahd_linux_pci_dev_probe()
+
+The aic79xx has three possible descriptor formats:  A 32 bit one; a
+packed 39 bit one and a full 64 bit one (which takes double the space).
+It uses the above function to find out what it needs to use (the 64 bit
+descriptor is operationally slower on the chip).
+
+James
+
 
