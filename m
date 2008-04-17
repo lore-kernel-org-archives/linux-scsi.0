@@ -1,257 +1,260 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Thu, 17 Apr 2008 21:07:32 +0900
-Message-ID: <20080417210730T.tomof@acm.org>
-References: <4805C209.6040606@panasas.com>
-	<20080417123218V.tomof@acm.org>
-	<20080417070704.GO12774@kernel.dk>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 2/3 ver3] scsi: varlen extended and vendor-specific cdbs
+Date: Thu, 17 Apr 2008 15:25:23 +0300
+Message-ID: <480741B3.2080709@panasas.com>
+References: <4804A0E7.6050002@panasas.com>
+ <20080416110907B.fujita.tomonori@lab.ntt.co.jp> <48059F51.9060401@panasas.com>
+ <20080417123224X.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:53613 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751849AbYDQMIQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2008 08:08:16 -0400
-In-Reply-To: <20080417070704.GO12774@kernel.dk>
+Received: from mxout4.netvision.net.il ([194.90.9.27]:33058 "EHLO
+	mxout4.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756434AbYDQMkk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2008 08:40:40 -0400
+Received: from bh-buildlin2.bhalevy.com ([212.235.53.3])
+ by mxout4.netvision.net.il
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZG00MF8YILG680@mxout4.netvision.net.il> for
+ linux-scsi@vger.kernel.org; Thu, 17 Apr 2008 15:25:34 +0300 (IDT)
+In-reply-to: <20080417123224X.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
 
-On Thu, 17 Apr 2008 09:07:05 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
 
-> On Thu, Apr 17 2008, FUJITA Tomonori wrote:
-> > On Wed, 16 Apr 2008 12:08:25 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> > > On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
-> > > >> On Wed, 16 Apr 2008 00:50:54 +0200
-> > > >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > > >>
-> > > >>> Hi,
-> > > >>>
-> > > >>> On Monday 14 April 2008, Jens Axboe wrote:
-> > > >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> > > >>>>> This patch changes rq->cmd from the static array to a pointer to
-> > > >>>>> support large commands.
-> > > >>>>>
-> > > >>>>> We rarely handle large commands. So for optimization, a struct request
-> > > >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
-> > > >>>>> to the static array.
-> > > >>>>>
-> > > >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > >>>>> ---
-> > > >>>>>  block/blk-core.c       |    1 +
-> > > >>>>>  drivers/ide/ide-io.c   |    1 +
-> > > >>>>>  include/linux/blkdev.h |   12 ++++++++++--
-> > > >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
-> > > >>>>>
-> > > >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
-> > > >>>>> index 6669238..6f0968f 100644
-> > > >>>>> --- a/block/blk-core.c
-> > > >>>>> +++ b/block/blk-core.c
-> > > >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> > > >>>>>  	rq->errors = 0;
-> > > >>>>>  	rq->ref_count = 1;
-> > > >>>>>  	rq->cmd_len = 0;
-> > > >>>>> +	rq->cmd = rq->__cmd;
-> > > >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> > > >>>>>  	rq->data_len = 0;
-> > > >>>>>  	rq->extra_len = 0;
-> > > >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> > > >>>>> index 7153796..bac5ea1 100644
-> > > >>>>> --- a/drivers/ide/ide-io.c
-> > > >>>>> +++ b/drivers/ide/ide-io.c
-> > > >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> > > >>>>>  {
-> > > >>>>>  	memset(rq, 0, sizeof(*rq));
-> > > >>>>>  	rq->ref_count = 1;
-> > > >>>>> +	rq->cmd = rq->__cmd;
-> > > >>>>>  }
-> > > >>> Tomo, some more changes are needed:
-> > > >>>
-> > > >>> Please think about all _static_/dynamic allocations of 'struct request'
-> > > >>> used together with REQ_TYPE_SPECIAL etc., i.e.
-> > > >> I think that using struct request allocated statically is wrong from
-> > > >> the perspective of the block layer design, that is, you always need to
-> > > >> use blk_get_request. I think that except ide, everyone does.
-> > > >>
-> > > >> I try to convert ide to use blk_get_request properly if you want.
-> > > > 
-> > > > That would be best, but the on-stack allocation has the benefit that
-> > > > it'll always work. So until we can completely get rid of that, lets just
-> > > > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
-> > > > lot saner than doing a memset() anyway.
-> > > > 
-> > > 
-> > > Just a patch that I had for ages since the bad old request bidi times,
-> > > perhaps is also good today. (rebased to for-2.6.26 branch)
-> > > ---
-> > > From: Boaz Harrosh <bharrosh@panasas.com>
-> > > Date: Wed, 16 Apr 2008 12:05:33 +0300
-> > > Subject: [PATCH] Initialize all members of struct request in rq_init
-> > > 
-> > > Before, every member added/removed from struct request would entitle a change
-> > > to rq_init, for initialization. Now all members are default to zero and only
-> > > the none zero members are specifically initialized.
-> > > 
-> > > Users that need requests on the stack or pre-allocated, must call rq_init()
-> > > before use.
-> > > 
-> > > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> > > ---
-> > >  block/blk-core.c |   22 ++--------------------
-> > >  1 files changed, 2 insertions(+), 20 deletions(-)
-> > > 
-> > > diff --git a/block/blk-core.c b/block/blk-core.c
-> > > index 6f0968f..3f4c563 100644
-> > > --- a/block/blk-core.c
-> > > +++ b/block/blk-core.c
-> > > @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
-> > >   */
-> > >  void rq_init(struct request_queue *q, struct request *rq)
-> > >  {
-> > > +	memset(rq, 0, sizeof(*rq));
-> > 
-> > Hmm, rq_init comment says:
-> > 
-> > /*
-> >  * We can't just memset() the structure, since the allocation path
-> >  * already stored some information in the request.
-> >  */
-> > 
-> > I think that we can't initialize rq->cmd_flags here.
-> 
-> That is correct, the patch wont work as-is. The principle of clearing
-> every member except block internal is sound and should be applied,
-> though.
+  Add support for variable-length, extended, and vendor specific
+  CDBs to scsi-ml. It is now possible for initiators and ULD's
+  to issue these types of commands. LLDs need not change much.
+  All they need is to raise the .max_cmd_len to the longest command
+  they support (see iscsi patch).
 
-1) calls rq_init() and initializes rq->cmd_flags manually.
-2) adds a new helper function to just memset() against rq.
-3) modifies the block layer so that rq_init() can memset() against rq.
-4) uses blk_get_request
+  - clean-up some code paths that did not expect commands to be
+    larger than 16, and change cmd_len members' type to short as
+    char is not enough.
 
-I think that the second option would be the best for now but I don't
-have a good name for such function.
-
-The third or fourth option looks preferable for me in the long term
-(probably, for 2.6.27).
-
-Here's a patch to initialize rq->cmd by hand. I think that it's ok for
-now.
-
-drivers/scsi_errro.c doesn't need this hack now (since it doesn't use
-struct request) but pending Boaz's extended cdbs patch needs this hack
-since it removes scmd->cmnd array and uses rq->cmd.
-
-===
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] block: initialize the cmd pointer in struct request
-
-struct request that is not allocated via blk_get_request needs to
-set up the cmd pointer.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Benny Halevy <bhalevy@panasas.com>
 ---
- drivers/block/nbd.c        |    3 +++
- drivers/block/paride/pd.c  |    1 +
- drivers/ide/ide-tape.c     |    1 +
- drivers/ide/ide-taskfile.c |    3 +--
- drivers/ide/ide.c          |    2 ++
- drivers/scsi/scsi_error.c  |    1 +
- 6 files changed, 9 insertions(+), 2 deletions(-)
+ block/scsi_ioctl.c       |    5 ++---
+ drivers/scsi/constants.c |   10 +++-------
+ drivers/scsi/scsi.c      |   15 ++++-----------
+ drivers/scsi/scsi_lib.c  |    2 +-
+ include/scsi/scsi.h      |   40 +++++++++++++++++++++++++++++++++-------
+ include/scsi/scsi_cmnd.h |    2 +-
+ include/scsi/scsi_host.h |    8 +++-----
+ 7 files changed, 47 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index 60cc543..ebc653d 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -534,6 +534,9 @@ static int nbd_ioctl(struct inode *inode, struct file *file,
- 	dprintk(DBG_IOCTL, "%s: nbd_ioctl cmd=%s(0x%x) arg=%lu\n",
- 			lo->disk->disk_name, ioctl_cmd_to_ascii(cmd), cmd, arg);
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index a2c3a93..aaf07e4 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -33,13 +33,12 @@
+ #include <scsi/scsi_cmnd.h>
  
-+	memset(&sreq, 0, sizeof(sreq));
-+	sreq.cmd = sreq.__cmd;
-+
- 	switch (cmd) {
- 	case NBD_DISCONNECT:
- 	        printk(KERN_INFO "%s: NBD_DISCONNECT\n", lo->disk->disk_name);
-diff --git a/drivers/block/paride/pd.c b/drivers/block/paride/pd.c
-index df819f8..e82a669 100644
---- a/drivers/block/paride/pd.c
-+++ b/drivers/block/paride/pd.c
-@@ -717,6 +717,7 @@ static int pd_special_command(struct pd_unit *disk,
- 	int err = 0;
- 
- 	memset(&rq, 0, sizeof(rq));
-+	rq.cmd = rq.__cmd;
- 	rq.errors = 0;
- 	rq.rq_disk = disk->gd;
- 	rq.ref_count = 1;
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 0598ecf..d9c0267 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -946,6 +946,7 @@ static void idetape_create_request_sense_cmd(idetape_pc_t *pc)
- static void idetape_init_rq(struct request *rq, u8 cmd)
+ /* Command group 3 is reserved and should never be used.  */
+-const unsigned char scsi_command_size[8] =
++const unsigned char scsi_command_size_tbl[8] =
  {
- 	memset(rq, 0, sizeof(*rq));
-+	rq->cmd = rq->__cmd;
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd[0] = cmd;
+ 	6, 10, 10, 12,
+ 	16, 12, 10, 10
+ };
+-
+-EXPORT_SYMBOL(scsi_command_size);
++EXPORT_SYMBOL(scsi_command_size_tbl);
+ 
+ #include <scsi/sg.h>
+ 
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 403a7f2..9785d73 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -28,7 +28,6 @@
+ #define SERVICE_ACTION_OUT_12 0xa9
+ #define SERVICE_ACTION_IN_16 0x9e
+ #define SERVICE_ACTION_OUT_16 0x9f
+-#define VARIABLE_LENGTH_CMD 0x7f
+ 
+ 
+ 
+@@ -210,7 +209,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	cdb0 = cdbp[0];
+ 	switch(cdb0) {
+ 	case VARIABLE_LENGTH_CMD:
+-		len = cdbp[7] + 8;
++		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short variable length command, "
+ 			       "len=%d ext_len=%d", len, cdb_len);
+@@ -300,7 +299,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	cdb0 = cdbp[0];
+ 	switch(cdb0) {
+ 	case VARIABLE_LENGTH_CMD:
+-		len = cdbp[7] + 8;
++		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short opcode=0x%x command, len=%d "
+ 			       "ext_len=%d", cdb0, len, cdb_len);
+@@ -335,10 +334,7 @@ void __scsi_print_command(unsigned char *cdb)
+ 	int k, len;
+ 
+ 	print_opcode_name(cdb, 0);
+-	if (VARIABLE_LENGTH_CMD == cdb[0])
+-		len = cdb[7] + 8;
+-	else
+-		len = COMMAND_SIZE(cdb[0]);
++	len = scsi_command_size(cdb);
+ 	/* print out all bytes in cdb */
+ 	for (k = 0; k < len; ++k) 
+ 		printk(" %02x", cdb[k]);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index f6980bd..dd9dd65 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -79,15 +79,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
+ #define MIN_RESET_PERIOD (15*HZ)
+ 
+ /*
+- * Macro to determine the size of SCSI command. This macro takes vendor
+- * unique commands into account. SCSI commands in groups 6 and 7 are
+- * vendor unique and we will depend upon the command length being
+- * supplied correctly in cmd_len.
+- */
+-#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
+-				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
+-
+-/*
+  * Note - the initial logging level can be set here to log events at boot time.
+  * After the system is up, you may enable logging via the /proc interface.
+  */
+@@ -701,9 +692,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	 * Before we queue this command, check if the command
+ 	 * length exceeds what the host adapter can handle.
+ 	 */
+-	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
++	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
+ 		SCSI_LOG_MLQUEUE(3,
+-				printk("queuecommand : command too long.\n"));
++			printk("queuecommand : command too long. "
++			       "cdb_size=%d host->max_cmd_len=%d\n",
++			       cmd->cmd_len, cmd->device->host->max_cmd_len));
+ 		cmd->result = (DID_ABORT << 16);
+ 
+ 		scsi_done(cmd);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 325270b..ba7e8ad 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -445,7 +445,7 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 	scsi_set_resid(cmd, 0);
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 	if (cmd->cmd_len == 0)
+-		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
++		cmd->cmd_len = scsi_command_size(cmd->cmnd);
  }
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 4c86a8d..1c30a57 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -529,8 +529,7 @@ int ide_raw_taskfile(ide_drive_t *drive, ide_task_t *task, u8 *buf, u16 nsect)
- {
- 	struct request rq;
  
--	memset(&rq, 0, sizeof(rq));
--	rq.ref_count = 1;
-+	ide_init_drive_cmd(&rq);
- 	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
- 	rq.buffer = buf;
+ void scsi_device_unbusy(struct scsi_device *sdev)
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 1f74bcd..32742c4 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -30,13 +30,6 @@
+ #endif
  
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index fc69fe2..96aaec2 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -881,6 +881,7 @@ static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
- 		ide_acpi_get_timing(hwif);
+ /*
+- *	SCSI command lengths
+- */
+-
+-extern const unsigned char scsi_command_size[8];
+-#define COMMAND_SIZE(opcode) scsi_command_size[((opcode) >> 5) & 7]
+-
+-/*
+  * Special value for scanning to specify scanning or rescanning of all
+  * possible channels, (target) ids, or luns on a given shost.
+  */
+@@ -109,6 +102,7 @@ extern const unsigned char scsi_command_size[8];
+ #define MODE_SENSE_10         0x5a
+ #define PERSISTENT_RESERVE_IN 0x5e
+ #define PERSISTENT_RESERVE_OUT 0x5f
++#define VARIABLE_LENGTH_CMD   0x7f
+ #define REPORT_LUNS           0xa0
+ #define MAINTENANCE_IN        0xa3
+ #define MOVE_MEDIUM           0xa5
+@@ -136,6 +130,38 @@ extern const unsigned char scsi_command_size[8];
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
  
- 	memset(&rq, 0, sizeof(rq));
-+	rq.cmd = rq.__cmd;
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	memset(&args, 0, sizeof(args));
- 	rq.cmd_type = REQ_TYPE_PM_SUSPEND;
-@@ -919,6 +920,7 @@ static int generic_ide_resume(struct device *dev)
- 	ide_acpi_exec_tfs(drive);
+ /*
++ *	SCSI command lengths
++ */
++
++#define SCSI_MAX_VARLEN_CDB_SIZE 260
++
++/* defined in T10 SCSI Primary Commands-2 (SPC2) */
++struct scsi_varlen_cdb_hdr {
++	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	u8 control;
++	u8 misc[5];
++	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__be16 service_action;
++	/* service specific data follows */
++};
++
++static inline unsigned
++scsi_varlen_cdb_length(const void *hdr)
++{
++	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
++}
++
++extern const unsigned char scsi_command_size_tbl[8];
++#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
++
++static inline unsigned
++scsi_command_size(const unsigned char *cmnd)
++{
++	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
++		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
++}
++
++/*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+  */
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index dea73e5..f4dacb1 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -78,7 +78,7 @@ struct scsi_cmnd {
+ 	int allowed;
+ 	int timeout_per_command;
  
- 	memset(&rq, 0, sizeof(rq));
-+	rq.cmd = rq.__cmd;
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	memset(&args, 0, sizeof(args));
- 	rq.cmd_type = REQ_TYPE_PM_RESUME;
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 045a086..020b678 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1690,6 +1690,7 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	unsigned long flags;
- 	int rtn;
+-	unsigned char cmd_len;
++	unsigned short cmd_len;
+ 	enum dma_data_direction sc_data_direction;
  
-+	req.cmd = req.__cmd;
- 	scmd->request = &req;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
+ 	/* These elements define the operation we are about to perform */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 4913286..31f1bfd 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -573,13 +573,11 @@ struct Scsi_Host {
+ 	/*
+ 	 * The maximum length of SCSI commands that this host can accept.
+ 	 * Probably 12 for most host adapters, but could be 16 for others.
++	 * or 260 if the driver supports variable length cdbs.
+ 	 * For drivers that don't set this field, a value of 12 is
+-	 * assumed.  I am leaving this as a number rather than a bit
+-	 * because you never know what subsequent SCSI standards might do
+-	 * (i.e. could there be a 20 byte or a 24-byte command a few years
+-	 * down the road?).  
++	 * assumed.
+ 	 */
+-	unsigned char max_cmd_len;
++	unsigned short max_cmd_len;
  
+ 	int this_id;
+ 	int can_queue;
 -- 
-1.5.4.2
+1.5.3.3
 
