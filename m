@@ -1,91 +1,131 @@
-From: Leonid Kalmankin <lvk@mashcenter.ru>
-Subject: RE: aic94xx + ST3146855SS still failing under heavy load
-Date: Thu, 17 Apr 2008 19:08:30 +0400
-Message-ID: <1208444910.10371.56.camel@lvk-nb.localdomain>
-References: <1208192617.10361.18.camel@lvk-nb.localdomain>
-	 48062D6C.6070807@ipax.at  <4DF9D710A2BB344BAFDE19178756F58BD845DF@EXNA.corp.stratus.com>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: bdev size not updated correctly after underlying device is
+	resized
+Date: Thu, 17 Apr 2008 09:49:07 -0600
+Message-ID: <1208447347.3859.31.camel@bluto.andrew>
+References: <1207783782.31821.80.camel@bluto.andrew>
+	 <20080415160314.11e9b7e1.akpm@linux-foundation.org>
+	 <1208301719.24092.21.camel@bluto.andrew>
+	 <1208383185.3859.24.camel@bluto.andrew>
+	 <1208390094.3227.79.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.mashcenter.ru ([195.14.58.214]:44302 "EHLO ns.mashcenter.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759240AbYDQPIB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2008 11:08:01 -0400
-In-Reply-To: <4DF9D710A2BB344BAFDE19178756F58BD845DF@EXNA.corp.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933718AbYDQPt1@vger.kernel.org>
+In-Reply-To: <1208390094.3227.79.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, dm-devel@redhat.com, axboe@kernel.dk, andmike@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Petrakis, Peter" <Peter.Petrakis@stratus.com>
-Cc: linux-scsi@vger.kernel.org
 
-Hi Peter!
-
-On Wed, 2008-04-16 at 13:34 -0400, Petrakis, Peter wrote:
-> Hi Raoul,
+On Wed, 2008-04-16 at 18:54 -0500, James Bottomley wrote:
+> On Wed, 2008-04-16 at 15:59 -0600, Andrew Patterson wrote:
+> > On Tue, 2008-04-15 at 17:21 -0600, Andrew Patterson wrote:
+> > > On Tue, 2008-04-15 at 16:03 -0700, Andrew Morton wrote:
+> > > > On Wed, 09 Apr 2008 17:29:42 -0600
+> > > > .
+> > > > > Subject: [PATCH] Reset bdev size regardless of other openers.
+> > > > > 
+> > > > > A block device may be resized while online.  If the revalidate_disk
+> > > > > routine is called after the resize, the gendisk->capacity value is
+> > > > > updated for the device.  However, the bdev->bd_inode->i_size is not
+> > > > > updated when the block device is opened if there are any other openers
+> > > > > on the device.  This means that apps like LVM are unlikely to see the
+> > > > > size change as they tend to keep their block devices open.  There is a
+> > > > > discussion of this problem at:
+> > > > > 
+> > > > >   http://lkml.org/lkml/2007/7/3/83
+> > > > > 
+> > > > > This patch changes block_dev.c:do_open() to call bd_set_size()
+> > > > > regardless if there are other openers on the device.  It should not be
+> > > > > applied in its existing state as changing i_size should be protected by
+> > > > > a lock. Also, there needs to be some analysis on the effects of changing
+> > > > > the device size underneath an app.
+> > > > 
+> > > > hm, tricky.
+> > > > 
+> > > > I don't know what problems a change like this might cause - probably few,
+> > > > given the rarity and slowness of block device resizing.
+> > > 
+> > > I have been looking through code where this might be a problem.  The
+> > > sort of things I was worried about is where something might try and do a
+> > > calculation based on the i_size and write/read data from there after it
+> > > has been resized, possibly corrupting data.  The COW code in dm seems to
+> > > come the closest, but then if you are resizing the device that has
+> > > snapshots on it, you might be getting what you deserve.
+> > > 
+> > > > 
+> > > > Presumably increasing the device size will cause les problems than
+> > > > decreasing it would. 
+> > > 
+> > > Agreed.
+> > > 
+> > > >  Do we even support device shrinking?
+> > > 
+> > > Yes, this common with LVM at least.  Whether it is a good idea to do
+> > > this with a mounted file-system on it is another matter.
+> > > 
+> > > > 
+> > > > > diff --git a/fs/block_dev.c b/fs/block_dev.c
+> > > > > index 7d822fa..d13a4e5 100644
+> > > > > --- a/fs/block_dev.c
+> > > > > +++ b/fs/block_dev.c
+> > > > > @@ -992,6 +992,9 @@ static int do_open(struct block_device *bdev, struct file *file, int for_part)
+> > > > >  				ret = bdev->bd_disk->fops->open(bdev->bd_inode, file);
+> > > > >  				if (ret)
+> > > > >  					goto out;
+> > > > > +				/* device may have been resized with revalidate_disk */
+> > > > > +				if (!part)
+> > > > > +					bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
+> > > > >  			}
+> > > > >  			if (bdev->bd_invalidated)
+> > > > >  				rescan_partitions(bdev->bd_disk, bdev);
+> > > > 
+> > > > I'd have thought that an appropriate way to fix all this would be to
+> > > > perform the i_size update between freeze_bdev() and thaw_bdev(), when the
+> > > > fs is quiesced.  But it's not really in my comfort zone.
+> > > 
+> > > Except that this is not only done with file-systems.  In my case I am
+> > > just trying to extend an LVM logical volume after a resize but cannot
+> > > because it is open (activated). In practice, however, it is probably
+> > > only useful to do this with an online file-system.  Otherwise you could
+> > > just close all openers and the resize will work fine.
+> > > 
+> > > > 
+> > > 
+> > 
+> > Adding linux-scsi.  
 > 
-> We use the same disks with the same firmware here at Stratus and have
-> never experienced the issue you're observing. Maybe it's due to the fact
-> that the hardware raid on the AIC-9410W is enabled? If you're using md
-
-No, disabling hardware raid didn't help, got same errors.
-
-> then there's no reason to keep it on. Our configurations as almost
-> identical except for:
+> Thanks!
 > 
-> - hardware RAID disabled
-> - directly attached
-> - md level 1
-> - seq: V32A4
-
-where did you get that? the lastest i have is V30
-
-> - bios/firmware 2.0-2 1822/1021
+> Actually this looks like a bit of an incredible hack to me since it
+> requires another open to trigger.
 > 
-> The bios and firmware revs may be specific to our implementation since
-> the SAS chip is glued to our PCI-X riser. Are your disks directly
-> attached or are you using a SAS expander?
-> 
-> Peter 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Raoul Bhatia [IPAX]
-> > Sent: Wednesday, April 16, 2008 12:47 PM
-> > To: Leonid Kalmankin
-> > Cc: linux-scsi@vger.kernel.org
-> > Subject: Re: aic94xx + ST3146855SS still failing under heavy load
-> > 
-> > hi,
-> > 
-> > some others, like me, are struggeling with this problem.
-> > afaik, james bottomley (or someone else?) is working on a fix,
-> > but it will take some more time.
-> > 
-> > please see [1] and [2].
-> > 
-> > btw. i asked seagate and adaptec and both did not come up with a
-> decent
-> > solution. seagate asked me to verify this with a different controller
-> > and said that they know of no issue and adaptec gave me a new
-> sequencer
-> > firmware - so at least the server is still responding properly - and
-> > told me that all the fixes went into the recent 2.6.25rc6+ kernel.
-> > 
-> > cheers,
-> > raoul
-> > [1] http://marc.info/?t=120603924200004
-> > [2] http://marc.info/?t=120757821700007
-> > 
-> > Leonid Kalmankin wrote:
-> > > Hello!
-> > >
-> > > We have a system with:
-> > >
-> > > vanilla 2.6.25-rc8 (2.6.23, 2.6.24 have the same behaviour)
-> > >
-> > > Adaptec AIC-9410W SAS (Razor ASIC RAID) (rev 09)
-> > > aic94xx: Found sequencer Firmware version 1.1 (V30)
-> > >   (Firmware version 1.1 (V17/10c6) makes no difference)
-> > > scsi 2:0:0:0: Direct-Access  SEAGATE ST3146855SS 0002 PQ: 0 ANSI: 5
 
+Indeed.
 
+> What probably should happen is that if the disk grew, then updating the
+> new size should be fine (fs can then expand into the space).  But if it
+> shrank, we probably want to invalidate the whole lot just to make sure
+> we don't have pages or inodes which are backed by now non-existent
+> pieces of the disk.
+
+Well, to be pendantic, the disk could have been shrunk, then expanded,
+before revalidate was called.  If we are not going to trust the user to
+resize his disk correctly (i.e, shrink to far), we might as well assume
+the above can happen as well.
+
+> 
+> So, what about doing the check in revalidate instead?  If old size ==
+> new size, do nothing; if > do invalidation like media change and if <
+> just update the actual size?
+
+I can work something up like this.  This was sort of my first thought
+(minus the invalidation stuff), but seemed fairly intrusive at the time.
+
+Andrew
+
+> 
+> James
+> 
+> 
