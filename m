@@ -1,167 +1,88 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 4/4] block: add large command support
-Date: Thu, 17 Apr 2008 12:59:32 +0900
-Message-ID: <20080417123218V.tomof@acm.org>
-References: <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
+Date: Thu, 17 Apr 2008 13:02:00 +0900
+Message-ID: <20080417125900E.tomof@acm.org>
+References: <200804160050.54842.bzolnier@gmail.com>
+	<20080416075743R.fujita.tomonori@lab.ntt.co.jp>
 	<20080416083305.GY12774@kernel.dk>
-	<4805C209.6040606@panasas.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:52258 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192AbYDQEB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2008 00:01:29 -0400
-In-Reply-To: <4805C209.6040606@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080416083305.GY12774@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-On Wed, 16 Apr 2008 12:08:25 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, 16 Apr 2008 10:33:06 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-> On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
-> >> On Wed, 16 Apr 2008 00:50:54 +0200
-> >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> >>
-> >>> Hi,
-> >>>
-> >>> On Monday 14 April 2008, Jens Axboe wrote:
-> >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> >>>>> This patch changes rq->cmd from the static array to a pointer to
-> >>>>> support large commands.
-> >>>>>
-> >>>>> We rarely handle large commands. So for optimization, a struct request
-> >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
-> >>>>> to the static array.
-> >>>>>
-> >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
-> >>>>> ---
-> >>>>>  block/blk-core.c       |    1 +
-> >>>>>  drivers/ide/ide-io.c   |    1 +
-> >>>>>  include/linux/blkdev.h |   12 ++++++++++--
-> >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
-> >>>>>
-> >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
-> >>>>> index 6669238..6f0968f 100644
-> >>>>> --- a/block/blk-core.c
-> >>>>> +++ b/block/blk-core.c
-> >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> >>>>>  	rq->errors = 0;
-> >>>>>  	rq->ref_count = 1;
-> >>>>>  	rq->cmd_len = 0;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> >>>>>  	rq->data_len = 0;
-> >>>>>  	rq->extra_len = 0;
-> >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> >>>>> index 7153796..bac5ea1 100644
-> >>>>> --- a/drivers/ide/ide-io.c
-> >>>>> +++ b/drivers/ide/ide-io.c
-> >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> >>>>>  {
-> >>>>>  	memset(rq, 0, sizeof(*rq));
-> >>>>>  	rq->ref_count = 1;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  }
-> >>> Tomo, some more changes are needed:
-> >>>
-> >>> Please think about all _static_/dynamic allocations of 'struct request'
-> >>> used together with REQ_TYPE_SPECIAL etc., i.e.
-> >> I think that using struct request allocated statically is wrong from
-> >> the perspective of the block layer design, that is, you always need to
-> >> use blk_get_request. I think that except ide, everyone does.
-> >>
-> >> I try to convert ide to use blk_get_request properly if you want.
+> On Wed, Apr 16 2008, FUJITA Tomonori wrote:
+> > On Wed, 16 Apr 2008 00:50:54 +0200
+> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > > 
-> > That would be best, but the on-stack allocation has the benefit that
-> > it'll always work. So until we can completely get rid of that, lets just
-> > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
-> > lot saner than doing a memset() anyway.
+> > > 
+> > > Hi,
+> > > 
+> > > On Monday 14 April 2008, Jens Axboe wrote:
+> > > > On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > > > > This patch changes rq->cmd from the static array to a pointer to
+> > > > > support large commands.
+> > > > > 
+> > > > > We rarely handle large commands. So for optimization, a struct request
+> > > > > still has a static array for a command. rq_init sets rq->cmd pointer
+> > > > > to the static array.
+> > > > > 
+> > > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > > > ---
+> > > > >  block/blk-core.c       |    1 +
+> > > > >  drivers/ide/ide-io.c   |    1 +
+> > > > >  include/linux/blkdev.h |   12 ++++++++++--
+> > > > >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > > > > 
+> > > > > diff --git a/block/blk-core.c b/block/blk-core.c
+> > > > > index 6669238..6f0968f 100644
+> > > > > --- a/block/blk-core.c
+> > > > > +++ b/block/blk-core.c
+> > > > > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> > > > >  	rq->errors = 0;
+> > > > >  	rq->ref_count = 1;
+> > > > >  	rq->cmd_len = 0;
+> > > > > +	rq->cmd = rq->__cmd;
+> > > > >  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > > > >  	rq->data_len = 0;
+> > > > >  	rq->extra_len = 0;
+> > > > > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > > > > index 7153796..bac5ea1 100644
+> > > > > --- a/drivers/ide/ide-io.c
+> > > > > +++ b/drivers/ide/ide-io.c
+> > > > > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> > > > >  {
+> > > > >  	memset(rq, 0, sizeof(*rq));
+> > > > >  	rq->ref_count = 1;
+> > > > > +	rq->cmd = rq->__cmd;
+> > > > >  }
+> > > 
+> > > Tomo, some more changes are needed:
+> > > 
+> > > Please think about all _static_/dynamic allocations of 'struct request'
+> > > used together with REQ_TYPE_SPECIAL etc., i.e.
 > > 
+> > I think that using struct request allocated statically is wrong from
+> > the perspective of the block layer design, that is, you always need to
+> > use blk_get_request. I think that except ide, everyone does.
+> > 
+> > I try to convert ide to use blk_get_request properly if you want.
 > 
-> Just a patch that I had for ages since the bad old request bidi times,
-> perhaps is also good today. (rebased to for-2.6.26 branch)
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Wed, 16 Apr 2008 12:05:33 +0300
-> Subject: [PATCH] Initialize all members of struct request in rq_init
-> 
-> Before, every member added/removed from struct request would entitle a change
-> to rq_init, for initialization. Now all members are default to zero and only
-> the none zero members are specifically initialized.
-> 
-> Users that need requests on the stack or pre-allocated, must call rq_init()
-> before use.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  block/blk-core.c |   22 ++--------------------
->  1 files changed, 2 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 6f0968f..3f4c563 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
->   */
->  void rq_init(struct request_queue *q, struct request *rq)
->  {
-> +	memset(rq, 0, sizeof(*rq));
+> That would be best, but the on-stack allocation has the benefit that
+> it'll always work. So until we can completely get rid of that, lets just
+> make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
+> lot saner than doing a memset() anyway.
 
-Hmm, rq_init comment says:
+I'm fine with that.
 
-/*
- * We can't just memset() the structure, since the allocation path
- * already stored some information in the request.
- */
-
-I think that we can't initialize rq->cmd_flags here.
-
-
-
->  	INIT_LIST_HEAD(&rq->queuelist);
->  	INIT_LIST_HEAD(&rq->donelist);
->  	rq->q = q;
->  	rq->sector = rq->hard_sector = (sector_t) -1;
-> -	rq->nr_sectors = rq->hard_nr_sectors = 0;
-> -	rq->current_nr_sectors = rq->hard_cur_sectors = 0;
-> -	rq->bio = rq->biotail = NULL;
->  	INIT_HLIST_NODE(&rq->hash);
->  	RB_CLEAR_NODE(&rq->rb_node);
-> -	rq->rq_disk = NULL;
-> -	rq->nr_phys_segments = 0;
-> -	rq->nr_hw_segments = 0;
-> -	rq->ioprio = 0;
-> -	rq->special = NULL;
-> -	rq->buffer = NULL;
->  	rq->tag = -1;
-> -	rq->errors = 0;
->  	rq->ref_count = 1;
-> -	rq->cmd_len = 0;
->  	rq->cmd = rq->__cmd;
-> -	memset(rq->cmd, 0, BLK_MAX_CDB);
-> -	rq->data_len = 0;
-> -	rq->extra_len = 0;
-> -	rq->sense_len = 0;
-> -	rq->data = NULL;
-> -	rq->sense = NULL;
-> -	rq->end_io = NULL;
-> -	rq->end_io_data = NULL;
-> -	rq->next_rq = NULL;
->  }
-> +EXPORT_SYMBOL(rq_init);
->  
->  static void req_bio_endio(struct request *rq, struct bio *bio,
->  			  unsigned int nbytes, int error)
-> -- 
-> 1.5.3.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There is one minor issue. rq_init doesn't initialize rq->cmd_flags so
+the callers need to do it for themselves (If they don't, probably they
+hit BUG_ON in blk_queue_end_tag).
