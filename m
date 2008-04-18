@@ -1,365 +1,221 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] SCSI updates for 2.6.25
-Date: Fri, 18 Apr 2008 12:41:56 -0500
-Message-ID: <1208540517.3063.18.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759056AbYDRRm0@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/2] bsg: add release callback support
+Date: Sat, 19 Apr 2008 00:43:14 +0900
+Message-ID: <1208533395-31610-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1208533395-31610-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:52914 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753880AbYDRPoJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2008 11:44:09 -0400
+In-Reply-To: <1208533395-31610-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-This is the first piece of our merge for the merge window.  I have a bit
-of other stuff with dependent patches, and I'm sure there will be
-something else crawling out of the woodwork.
+This patch adds release callback support, which is called when a bsg
+device goes away. bsg_register_queue() takes a pointer to a callback
+function. This feature is useful for stuff like sas_host that can't
+use the release callback in struct device.
 
-It's the usual grab bag of driver updates and mid-layer changes.
-There's no new stand out features in this one.
+If a caller doesn't need bsg's release callback, it can call
+bsg_register_queue() with NULL pointer (e.g. scsi devices can use
+release callback in struct device so they don't need bsg's callback).
 
-The patch is available here:
+With this patch, bsg uses kref for refcounts on bsg devices instead of
+get/put_device in fops->open/release. bsg calls put_device and the
+caller's release callback (if it was registered) in kref_put's
+release.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ block/bsg.c                       |   43 +++++++++++++++++++++++++------------
+ drivers/scsi/scsi_sysfs.c         |    2 +-
+ drivers/scsi/scsi_transport_sas.c |    2 +-
+ include/linux/bsg.h               |   14 ++++++++---
+ 4 files changed, 41 insertions(+), 20 deletions(-)
 
-The short change log is:
+diff --git a/block/bsg.c b/block/bsg.c
+index f51172e..23ea4fd 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -699,14 +699,26 @@ static struct bsg_device *bsg_alloc_device(void)
+ 	return bd;
+ }
+ 
++static void bsg_kref_release_function(struct kref *kref)
++{
++	struct bsg_class_device *bcd =
++		container_of(kref, struct bsg_class_device, ref);
++
++	if (bcd->release)
++		bcd->release(bcd->parent);
++
++	put_device(bcd->parent);
++}
++
+ static int bsg_put_device(struct bsg_device *bd)
+ {
+-	int ret = 0;
+-	struct device *dev = bd->queue->bsg_dev.dev;
++	int ret = 0, do_free;
++	struct request_queue *q = bd->queue;
+ 
+ 	mutex_lock(&bsg_mutex);
+ 
+-	if (!atomic_dec_and_test(&bd->ref_count))
++	do_free = atomic_dec_and_test(&bd->ref_count);
++	if (!do_free)
+ 		goto out;
+ 
+ 	dprintk("%s: tearing down\n", bd->name);
+@@ -723,12 +735,13 @@ static int bsg_put_device(struct bsg_device *bd)
+ 	 */
+ 	ret = bsg_complete_all_commands(bd);
+ 
+-	blk_put_queue(bd->queue);
+ 	hlist_del(&bd->dev_list);
+ 	kfree(bd);
+ out:
+ 	mutex_unlock(&bsg_mutex);
+-	put_device(dev);
++	kref_put(&q->bsg_dev.ref, bsg_kref_release_function);
++	if (do_free)
++		blk_put_queue(q);
+ 	return ret;
+ }
+ 
+@@ -796,7 +809,7 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
+ 	mutex_lock(&bsg_mutex);
+ 	bcd = idr_find(&bsg_minor_idr, iminor(inode));
+ 	if (bcd)
+-		get_device(bcd->dev);
++		kref_get(&bcd->ref);
+ 	mutex_unlock(&bsg_mutex);
+ 
+ 	if (!bcd)
+@@ -808,7 +821,7 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
+ 
+ 	bd = bsg_add_device(inode, bcd->queue, file);
+ 	if (IS_ERR(bd))
+-		put_device(bcd->dev);
++		kref_put(&bcd->ref, bsg_kref_release_function);
+ 
+ 	return bd;
+ }
+@@ -947,14 +960,14 @@ void bsg_unregister_queue(struct request_queue *q)
+ 	idr_remove(&bsg_minor_idr, bcd->minor);
+ 	sysfs_remove_link(&q->kobj, "bsg");
+ 	device_unregister(bcd->class_dev);
+-	put_device(bcd->dev);
+ 	bcd->class_dev = NULL;
++	kref_put(&bcd->ref, bsg_kref_release_function);
+ 	mutex_unlock(&bsg_mutex);
+ }
+ EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+ 
+-int bsg_register_queue(struct request_queue *q, struct device *gdev,
+-		       const char *name)
++int bsg_register_queue(struct request_queue *q, struct device *parent,
++		       const char *name, void (*release)(struct device *))
+ {
+ 	struct bsg_class_device *bcd;
+ 	dev_t dev;
+@@ -965,7 +978,7 @@ int bsg_register_queue(struct request_queue *q, struct device *gdev,
+ 	if (name)
+ 		devname = name;
+ 	else
+-		devname = gdev->bus_id;
++		devname = parent->bus_id;
+ 
+ 	/*
+ 	 * we need a proper transport to send commands, not a stacked device
+@@ -996,9 +1009,11 @@ int bsg_register_queue(struct request_queue *q, struct device *gdev,
+ 
+ 	bcd->minor = minor;
+ 	bcd->queue = q;
+-	bcd->dev = get_device(gdev);
++	bcd->parent = get_device(parent);
++	bcd->release = release;
++	kref_init(&bcd->ref);
+ 	dev = MKDEV(bsg_major, bcd->minor);
+-	class_dev = device_create(bsg_class, gdev, dev, "%s", devname);
++	class_dev = device_create(bsg_class, parent, dev, "%s", devname);
+ 	if (IS_ERR(class_dev)) {
+ 		ret = PTR_ERR(class_dev);
+ 		goto put_dev;
+@@ -1017,7 +1032,7 @@ int bsg_register_queue(struct request_queue *q, struct device *gdev,
+ unregister_class_dev:
+ 	device_unregister(class_dev);
+ put_dev:
+-	put_device(gdev);
++	put_device(parent);
+ remove_idr:
+ 	idr_remove(&bsg_minor_idr, minor);
+ unlock:
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 198aa45..049103f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -889,7 +889,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 		goto out;
+ 	}
+ 
+-	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL);
++	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL);
+ 
+ 	if (error)
+ 		sdev_printk(KERN_INFO, sdev,
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 27ec625..94ff29f 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -219,7 +219,7 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
+ 	if (!q)
+ 		return -ENOMEM;
+ 
+-	error = bsg_register_queue(q, dev, name);
++	error = bsg_register_queue(q, dev, name, NULL);
+ 	if (error) {
+ 		blk_cleanup_queue(q);
+ 		return -ENOMEM;
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index e8406c5..cf0303a 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -56,19 +56,25 @@ struct sg_io_v4 {
+ #if defined(CONFIG_BLK_DEV_BSG)
+ struct bsg_class_device {
+ 	struct device *class_dev;
+-	struct device *dev;
++	struct device *parent;
+ 	int minor;
+ 	struct request_queue *queue;
++	struct kref ref;
++	void (*release)(struct device *);
+ };
+ 
+-extern int bsg_register_queue(struct request_queue *, struct device *, const char *);
++extern int bsg_register_queue(struct request_queue *q,
++			      struct device *parent, const char *name,
++			      void (*release)(struct device *));
+ extern void bsg_unregister_queue(struct request_queue *);
+ #else
+-static inline int bsg_register_queue(struct request_queue * rq, struct device *dev, const char *name)
++static inline int bsg_register_queue(struct request_queue *q,
++				     struct device *parent, const char *name,
++				     void (*release)(struct device *))
+ {
+ 	return 0;
+ }
+-static inline void bsg_unregister_queue(struct request_queue *rq)
++static inline void bsg_unregister_queue(struct request_queue *q)
+ {
+ }
+ #endif
+-- 
+1.5.3.4
 
-Adrian Bunk (5):
-      qla1280: remove version check
-      sun3_scsi_vme: add MODULE_LICENSE
-      st: rename flush_write_buffer()
-      aic94xx: cleanups
-      make scsi_end_bidi_request() static
-
-Al Viro (1):
-      libsas: fix endianness bug in sas_ata
-
-Andi Kleen (1):
-      Remove random noop unchecked_isa_dma users
-
-Andrew Vasquez (15):
-      qla2xxx: Update version number to 8.02.01-k1.
-      qla2xxx: Remove unused member (dma_handle) from srb_t structure.
-      qla2xxx: Add midlayer target/device reset support.
-      qla2xxx: Check alternate 'reason' code during GPSC status handling.
-      qla2xxx: Add Flash Descriptor Table layout support.
-      qla2xxx: Use PCI-SIG nomenclature for PCIe bandwidth units.
-      qla2xxx: Cruft cleanup of functions and structures.
-      qla2xxx: Add hardware trace-logging support.
-      qla2xxx: Add FC-transport Asynchronous Event Notification support.
-      qla2xxx: Simplify interrupt handler locking.
-      qla2xxx: Use an rport's scsi_target_id member consistently throughout driv
-      qla2xxx: Remove unused and obsolete #define's.
-      qla2xxx: Add support for host supported speeds FC transport attribute.
-      qla2xxx: Update copyright banner.
-      qla2xxx: Update firmware filenames for new ISP parts.
-
-Boaz Harrosh (4):
-      iscsi: bidi support for iscsi_tcp
-      iscsi: bidi support at the generic libiscsi level
-      iscsi: extended cdb support
-      gdth: remove command accessors
-
-Christof Schmitt (5):
-      zfcp: Fix error handling for blocked unit for send FCP command
-      zfcp: Remove zfcp_erp_wait from slave destory handler to fix deadlock
-      zfcp: Move DBF definitions to private header file
-      zfcp: Fix handling for boxed port after physical close
-      zfcp: convert zfcp to use target reset and device reset handler
-
-Darrick J. Wong (2):
-      aic94xx: Use sas_request_addr() to provide SAS WWN if the adapter lacks on
-      libsas: Provide a transport-level facility to request SAS addrs
-
-David C Somayajulu (1):
-      qla4xxx: fix scsi command completion, lun reset and target reset code
-
-Denis Cheng (2):
-      hosts.c: removed one unneeded shost->active_mode assignment
-      3w-9xxx, 3w-xxxx: memset not needed in probe
-
-FUJITA Tomonori (40):
-      bsg: no need to set BSG_F_BLOCK bit in bsg_complete_all_commands
-      bsg: remove minor in struct bsg_device
-      bsg: use better helper list functions
-      bsg: replace kobject_get with blk_get_queue
-      bsg: takes a ref to struct device in fops->open
-      tgt: use KMEM_CACHE macro
-      scsi_debug: remove unnecessary function declarations
-      scsi_debug: support large non-fake virtual disk
-      scsi_debug: remove the duplicated code in resp_read and resp_write
-      scsi_debug: sweep up sdebug_capacity calculation
-      scsi_debug: remove unnecessary sdebug_store_size
-      scsi_debug: fix lba and data length calculation bugs
-      ps3rom: use scsi_build_sense_buffer
-      stex: use scsi_build_sense_buffer
-      libata: use scsi_build_sense_buffer
-      scsi_debug: use scsi_build_sense_buffer
-      add scsi_build_sense_buffer helper function
-      scsi_debug: remove unnecessary function declarations
-      scsi_debug: use list_for_each_entry_safe
-      scsi_debug: remove unnecessary condition test in devInfoReg
-      scsi_debug: create new scsi_debug devices at a single place
-      scsi_debug: remove temporary hack around sscanf for negative values
-      3w-9xxx: use sg buffer copy helper functions
-      3w-xxxx: use sg buffer copy helper functions
-      stex: use sg buffer copy helper functions
-      aacraid: use sg buffer copy helper functions
-      ips: use sg buffer copy helper funcitons
-      simscsi: use sg buffer copy helper funcitons
-      ps3rom: use sg buffer copy helper funcitons
-      scsi_debug: use sg buffer copy helper functions
-      scsi: add wrapper functions for sg buffer copy helper functions
-      block: add sg buffer copy helper functions
-      aic79xx: fix IOMMU mapping failure handling
-      aic7xxx: fix IOMMU mapping failure handling
-      scsi_debug: use shost_priv macro
-      scsi_debug: remove unnecessary checking
-      scsi_debug: remove scsi_debug.h
-      scsi_debug: stop including drivers/scsi/scsi.h
-      aacraid: READ_CAPACITY_16 shouldn't trust allocation length in cdb
-      ips: sg chaining support to the path to non I/O commands
-
-Geert Uytterhoeven (1):
-      ps3rom: Simplify fill_from_dev_buffer()
-
-Grant Grundler (1):
-      initio: fix big endian problems for auto request sense
-
-Harihara Kadayam (1):
-      qla2xxx: Add ISP84XX support.
-
-Harvey Harrison (1):
-      ch: fix sparse shadowed variable warnings
-
-James Bottomley (9):
-      ips: remove spurious cpu_to_leX on outX statements
-      libsas: fix missing inlines in header file
-      transport_class: BUG if we can't release the attribute container
-      fix barrier failure issue
-      hptiop: fix header.context usage
-      wd33c93: fix up cut and paste error
-      mpt fusion: fix up msi_enable in mpt_suspend
-      export command allocation and freeing functions independently of the host
-      consolidate command allocation in a single place
-
-James Smart (4):
-      lpfc 8.2.6 : Update lpfc driver version to 8.2.6
-      lpfc 8.2.6 : Miscellaneous Fixes
-      lpfc 8.2.6 : PCI Parity and EEH handling fixes
-      lpfc 8.2.6 : Multiple discovery fixes
-
-Jeff Garzik (2):
-      gdth: convert to PCI hotplug API
-      gdth: PCI probe cleanups, prep for PCI hotplug API conversion
-
-Kai Makisara (2):
-      st: show options currently set in sysfs
-      st: add option to use SILI in variable block reads
-
-Marcin Slusarz (1):
-      aacraid, ips: leX_add_cpu conversion
-
-Mark Salyzyn (1):
-      aacraid: Fix down_interruptible() to check the return value
-
-Martin Peschke (21):
-      zfcp: fix 31 bit compile warnings
-      zfcp: fix compiler warning caused by poking inside new semaphore (linux-ne
-      zfcp: Add docbook comments to debug trace.
-      zfcp: Cleanup line breaks in debug trace.
-      zfcp: Shorten excessive names in debug trace.
-      zfcp: Simplify zfcp_dbf_tag and related functions in debug trace.
-      zfcp: Simplify usage of hex dump output function for debug trace.
-      zfcp: Remove obsolete output function from debug trace.
-      zfcp: Cleanup debug trace view functions.
-      zfcp: simplify zfcp_dbf_timestamp()
-      zfcp: Remove obsolete erp_dbf trace
-      zfcp: Add trace records for recovery actions.
-      zfcp: Trace all triggers of error recovery activity
-      zfcp: Add traces for state changes.
-      zfcp: Add trace records for recovery thread and its queues
-      zfcp: Register new recovery trace.
-      zfcp: Introduce printf helper functions for debug trace.
-      zfcp: Add qtcb dump to hba debug trace
-      zfcp: Remove qtcb dump to kernel log
-      zfcp: Clean up _zfcp_san_dbf_event_common_els
-      zfcp: Introduce a helper function that dumps hex data to a zfcp trace.
-
-Matthew Wilcox (1):
-      BusLogic: make FlashPoint support x86-32 only
-
-Matthias Kaehlcke (1):
-      mpt fusion: convert inactive_list_mutex to a mutex
-
-Michael Reed (1):
-      mptsas: do not use ioc->handle to locate hba portinfo structure
-
-Mike Christie (2):
-      qla4xxx: Add target reset functionality
-      scsi_error: add target reset handler
-
-Paul Bolle (1):
-      aacraid: Do not describe check_reset parameter with its value
-
-Prakash, Sathya (1):
-      mpt fusion: Enable MSI by default for SAS controllers
-
-Ravi Anand (1):
-      qla2xxx: Assign mailbox command timeout values in a consistent manner.
-
-Roel Kluin (1):
-      aic7xxx: Test opcode, not definition in aicasm:type_check()
-
-Seokmann Ju (4):
-      qla2xxx: Correct vport configuration-change handling.
-      qla2xxx: Use proper HA during asynchrounous event handling.
-      qla2xxx: Check DFLG_NO_CABLE only on physical port.
-      qla2xxx: Consistently access the physical HA port.
-
-Thomas Bogendoerfer (1):
-      WD33C93: let platform stub override no_sync/fast/dma_mode
-
-bo yang (3):
-      megaraid_sas: Add the new controller(1078DE) support to the driver
-      megaraid_sas: Fix the frame count calculation
-      megaraid_sas: rollback the sense info implementation
-
-and the diffstat:
-
- Documentation/scsi/st.txt                 |   12 
- arch/ia64/hp/sim/simscsi.c                |   23 
- block/bsg.c                               |   52 -
- drivers/ata/libata-scsi.c                 |    6 
- drivers/base/transport_class.c            |    3 
- drivers/message/fusion/mptbase.c          |   29 
- drivers/message/fusion/mptbase.h          |    5 
- drivers/message/fusion/mptsas.c           |   22 
- drivers/message/fusion/mptscsih.c         |    8 
- drivers/s390/scsi/zfcp_aux.c              |   33 
- drivers/s390/scsi/zfcp_ccw.c              |   24 
- drivers/s390/scsi/zfcp_dbf.c              | 1281 ++++++++++++++++++------------
- drivers/s390/scsi/zfcp_dbf.h              |  228 +++++
- drivers/s390/scsi/zfcp_def.h              |  169 ---
- drivers/s390/scsi/zfcp_erp.c              |  688 +++++-----------
- drivers/s390/scsi/zfcp_ext.h              |   59 -
- drivers/s390/scsi/zfcp_fsf.c              |  397 ++-------
- drivers/s390/scsi/zfcp_qdio.c             |    7 
- drivers/s390/scsi/zfcp_scsi.c             |   69 -
- drivers/s390/scsi/zfcp_sysfs_adapter.c    |   11 
- drivers/s390/scsi/zfcp_sysfs_port.c       |    9 
- drivers/s390/scsi/zfcp_sysfs_unit.c       |    5 
- drivers/scsi/3w-9xxx.c                    |   23 
- drivers/scsi/3w-xxxx.c                    |   14 
- drivers/scsi/BusLogic.c                   |    5 
- drivers/scsi/BusLogic.h                   |   21 
- drivers/scsi/FlashPoint.c                 |    6 
- drivers/scsi/Kconfig                      |   14 
- drivers/scsi/a2091.c                      |    3 
- drivers/scsi/a3000.c                      |    3 
- drivers/scsi/aacraid/aachba.c             |   69 -
- drivers/scsi/aacraid/commsup.c            |   10 
- drivers/scsi/aic7xxx/aic79xx_osm.c        |    7 
- drivers/scsi/aic7xxx/aic7xxx_osm.c        |   10 
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y |    2 
- drivers/scsi/aic94xx/aic94xx.h            |   16 
- drivers/scsi/aic94xx/aic94xx_dev.c        |    8 
- drivers/scsi/aic94xx/aic94xx_dump.c       |   10 
- drivers/scsi/aic94xx/aic94xx_dump.h       |    9 
- drivers/scsi/aic94xx/aic94xx_hwi.c        |   44 -
- drivers/scsi/aic94xx/aic94xx_hwi.h        |    2 
- drivers/scsi/aic94xx/aic94xx_init.c       |   10 
- drivers/scsi/aic94xx/aic94xx_reg.c        |   53 -
- drivers/scsi/aic94xx/aic94xx_scb.c        |   33 
- drivers/scsi/aic94xx/aic94xx_sds.c        |    4 
- drivers/scsi/aic94xx/aic94xx_seq.c        |   31 
- drivers/scsi/aic94xx/aic94xx_seq.h        |    4 
- drivers/scsi/aic94xx/aic94xx_task.c       |   12 
- drivers/scsi/aic94xx/aic94xx_tmf.c        |    2 
- drivers/scsi/arm/acornscsi.c              |    1 
- drivers/scsi/arm/cumana_1.c               |    1 
- drivers/scsi/ch.c                         |   33 
- drivers/scsi/dc395x.c                     |    1 
- drivers/scsi/eata_pio.c                   |    2 
- drivers/scsi/gdth.c                       |  320 +++----
- drivers/scsi/gdth.h                       |    2 
- drivers/scsi/gvp11.c                      |    3 
- drivers/scsi/hosts.c                      |    1 
- drivers/scsi/hptiop.c                     |    7 
- drivers/scsi/initio.c                     |    9 
- drivers/scsi/ips.c                        |   89 --
- drivers/scsi/iscsi_tcp.c                  |   31 
- drivers/scsi/libiscsi.c                   |  140 ++-
- drivers/scsi/libsas/sas_ata.c             |    2 
- drivers/scsi/libsas/sas_scsi_host.c       |   41 
- drivers/scsi/lpfc/lpfc.h                  |    5 
- drivers/scsi/lpfc/lpfc_attr.c             |   10 
- drivers/scsi/lpfc/lpfc_ct.c               |   48 -
- drivers/scsi/lpfc/lpfc_debugfs.c          |    2 
- drivers/scsi/lpfc/lpfc_els.c              |  121 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c          |   73 -
- drivers/scsi/lpfc/lpfc_init.c             |   98 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c        |   40 
- drivers/scsi/lpfc/lpfc_scsi.c             |   34 
- drivers/scsi/lpfc/lpfc_sli.c              |  112 +-
- drivers/scsi/lpfc/lpfc_version.h          |    2 
- drivers/scsi/lpfc/lpfc_vport.c            |    3 
- drivers/scsi/mac_scsi.c                   |    1 
- drivers/scsi/megaraid/megaraid_sas.c      |   49 -
- drivers/scsi/megaraid/megaraid_sas.h      |    5 
- drivers/scsi/mvme147.c                    |    3 
- drivers/scsi/ps3rom.c                     |  101 --
- drivers/scsi/qla1280.c                    |    5 
- drivers/scsi/qla2xxx/Kconfig              |    3 
- drivers/scsi/qla2xxx/qla_attr.c           |   36 
- drivers/scsi/qla2xxx/qla_dbg.c            |  124 --
- drivers/scsi/qla2xxx/qla_dbg.h            |   23 
- drivers/scsi/qla2xxx/qla_def.h            |   78 +
- drivers/scsi/qla2xxx/qla_dfs.c            |    2 
- drivers/scsi/qla2xxx/qla_fw.h             |  173 +++-
- drivers/scsi/qla2xxx/qla_gbl.h            |   33 
- drivers/scsi/qla2xxx/qla_gs.c             |   16 
- drivers/scsi/qla2xxx/qla_init.c           |  192 +++-
- drivers/scsi/qla2xxx/qla_inline.h         |   87 --
- drivers/scsi/qla2xxx/qla_iocb.c           |    5 
- drivers/scsi/qla2xxx/qla_isr.c            |  223 ++---
- drivers/scsi/qla2xxx/qla_mbx.c            |  318 +++++--
- drivers/scsi/qla2xxx/qla_mid.c            |   30 
- drivers/scsi/qla2xxx/qla_os.c             |  443 +++++-----
- drivers/scsi/qla2xxx/qla_settings.h       |   16 
- drivers/scsi/qla2xxx/qla_sup.c            |  315 +++++--
- drivers/scsi/qla2xxx/qla_version.h        |    6 
- drivers/scsi/qla4xxx/ql4_fw.h             |    4 
- drivers/scsi/qla4xxx/ql4_glbl.h           |    4 
- drivers/scsi/qla4xxx/ql4_iocb.c           |   14 
- drivers/scsi/qla4xxx/ql4_isr.c            |   40 
- drivers/scsi/qla4xxx/ql4_mbx.c            |   39 
- drivers/scsi/qla4xxx/ql4_os.c             |   96 +-
- drivers/scsi/raid_class.c                 |    2 
- drivers/scsi/scsi.c                       |  229 +++--
- drivers/scsi/scsi_debug.c                 | 1219 ++++++++++++----------------
- drivers/scsi/scsi_debug.h                 |   24 
- drivers/scsi/scsi_error.c                 |  150 +++
- drivers/scsi/scsi_lib.c                   |   12 
- drivers/scsi/scsi_tgt_lib.c               |    4 
- drivers/scsi/sgiwd93.c                    |    7 
- drivers/scsi/st.c                         |   89 +-
- drivers/scsi/st.h                         |    3 
- drivers/scsi/st_options.h                 |    6 
- drivers/scsi/stex.c                       |   83 -
- drivers/scsi/sun3_scsi_vme.c              |    1 
- drivers/scsi/wd33c93.c                    |    3 
- include/linux/attribute_container.h       |    2 
- include/linux/mtio.h                      |    1 
- include/linux/scatterlist.h               |    5 
- include/linux/transport_class.h           |    5 
- include/scsi/iscsi_proto.h                |    6 
- include/scsi/libsas.h                     |    2 
- include/scsi/sas_ata.h                    |    4 
- include/scsi/scsi_cmnd.h                  |   17 
- include/scsi/scsi_eh.h                    |    5 
- include/scsi/scsi_host.h                  |    1 
- lib/scatterlist.c                         |  102 ++
- 133 files changed, 4873 insertions(+), 4389 deletions(-)
-
-James
