@@ -1,79 +1,122 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/10] Dell CERC support for megaraid_mbox
-Date: Fri, 18 Apr 2008 13:57:20 -0700
-Message-ID: <200804182057.m3IKvK6K015358@imap1.linux-foundation.org>
+Subject: [patch 01/10] scsi: fix platform driver hotplug/coldplug
+Date: Fri, 18 Apr 2008 13:57:19 -0700
+Message-ID: <200804182057.m3IKvKO6015354@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54609 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39793 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758980AbYDRU5b (ORCPT
+	by vger.kernel.org with ESMTP id S1759201AbYDRU5b (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 18 Apr 2008 16:57:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, Bo.Yang@lsi.com, James.Bottomley@SteelEye.com, Sumant.Patro@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kay.sievers@vrfy.org, dbrownell@users.sourceforge.net
 
-From: Hannes Reinecke <hare@suse.de>
+=46rom: Kay Sievers <kay.sievers@vrfy.org>
 
-Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
-compatible with the legacy megaraid driver.  The legacy handling shifted
-the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
-megaraid_mbox shifts the target ID always if random deletion is supported. 
-The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
-not finding any devices, obviously.
+Since 43cc71eed1250755986da4c0f9898f9a635cb3bf, the platform modalias
+is prefixed with "platform:". Add MODULE_ALIAS() to the hotpluggable
+SCSI platform drivers, to re-enable auto loading.
 
-So we disable the random deletion support if the offending firmware is
-found.
-
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+[dbrownell@users.sourceforge.net: more drivers, registration fixes]
+[akpm@linux-foundation.org: fix sgiwd93.c]
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 18 insertions(+)
+ drivers/scsi/jazz_esp.c   |    4 ++++
+ drivers/scsi/sgiwd93.c    |    4 +++-
+ drivers/scsi/sni_53c710.c |    2 ++
+ drivers/scsi/sun3x_esp.c  |    2 ++
+ 4 files changed, 11 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
-+		return 0;
-+	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
---- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
- 
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+diff -puN drivers/scsi/jazz_esp.c~scsi-fix-platform-driver-hotplug-cold=
+plug drivers/scsi/jazz_esp.c
+--- a/drivers/scsi/jazz_esp.c~scsi-fix-platform-driver-hotplug-coldplug
++++ a/drivers/scsi/jazz_esp.c
+@@ -217,11 +217,15 @@ static int __devexit esp_jazz_remove(str
+ 	return 0;
+ }
+=20
++/* work with hotplug and coldplug */
++MODULE_ALIAS("platform:jazz_esp");
++
+ static struct platform_driver esp_jazz_driver =3D {
+ 	.probe		=3D esp_jazz_probe,
+ 	.remove		=3D __devexit_p(esp_jazz_remove),
+ 	.driver	=3D {
+ 		.name	=3D "jazz_esp",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+diff -puN drivers/scsi/sgiwd93.c~scsi-fix-platform-driver-hotplug-coldp=
+lug drivers/scsi/sgiwd93.c
+--- a/drivers/scsi/sgiwd93.c~scsi-fix-platform-driver-hotplug-coldplug
++++ a/drivers/scsi/sgiwd93.c
+@@ -313,7 +313,8 @@ static struct platform_driver sgiwd93_dr
+ 	.probe  =3D sgiwd93_probe,
+ 	.remove =3D __devexit_p(sgiwd93_remove),
+ 	.driver =3D {
+-		.name   =3D "sgiwd93"
++		.name   =3D "sgiwd93",
++		.owner	=3D THIS_MODULE,
+ 	}
+ };
+=20
+@@ -333,3 +334,4 @@ module_exit(sgiwd93_module_exit);
+ MODULE_DESCRIPTION("SGI WD33C93 driver");
+ MODULE_AUTHOR("Ralf Baechle <ralf@linux-mips.org>");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:sgiwd93");
+diff -puN drivers/scsi/sni_53c710.c~scsi-fix-platform-driver-hotplug-co=
+ldplug drivers/scsi/sni_53c710.c
+--- a/drivers/scsi/sni_53c710.c~scsi-fix-platform-driver-hotplug-coldpl=
+ug
++++ a/drivers/scsi/sni_53c710.c
+@@ -53,6 +53,7 @@
+ MODULE_AUTHOR("Thomas Bogend=F6rfer");
+ MODULE_DESCRIPTION("SNI RM 53c710 SCSI Driver");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:snirm_53c710");
+=20
+ #define SNIRM710_CLOCK	32
+=20
+@@ -136,6 +137,7 @@ static struct platform_driver snirm710_d
+ 	.remove	=3D __devexit_p(snirm710_driver_remove),
+ 	.driver	=3D {
+ 		.name	=3D "snirm_53c710",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+diff -puN drivers/scsi/sun3x_esp.c~scsi-fix-platform-driver-hotplug-col=
+dplug drivers/scsi/sun3x_esp.c
+--- a/drivers/scsi/sun3x_esp.c~scsi-fix-platform-driver-hotplug-coldplu=
+g
++++ a/drivers/scsi/sun3x_esp.c
+@@ -294,6 +294,7 @@ static struct platform_driver esp_sun3x_
+ 	.remove         =3D __devexit_p(esp_sun3x_remove),
+ 	.driver =3D {
+ 		.name   =3D "sun3x_esp",
++		.owner	=3D THIS_MODULE,
+ 	},
+ };
+=20
+@@ -314,3 +315,4 @@ MODULE_VERSION(DRV_VERSION);
+=20
+ module_init(sun3x_esp_init);
+ module_exit(sun3x_esp_exit);
++MODULE_ALIAS("platform:sun3x_esp");
 _
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
