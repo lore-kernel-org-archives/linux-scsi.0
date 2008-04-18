@@ -1,83 +1,47 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC] results of endianness review of qla2xxx
-Date: Fri, 18 Apr 2008 20:06:58 +0100
-Message-ID: <20080418190658.GI27459@ZenIV.linux.org.uk>
-References: <20080416055458.GC27459@ZenIV.linux.org.uk> <20080418181758.GJ22973@plap4.local>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] libata: fix boot panic with SATAPI devices on non-SFF HBAs
+Date: Fri, 18 Apr 2008 13:18:48 -0500
+Message-ID: <1208542728.3063.25.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:33756 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759131AbYDRTG7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Apr 2008 15:06:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20080418181758.GJ22973@plap4.local>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58659 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760201AbYDRSSx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2008 14:18:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Seokmann Ju <seokmann.ju@qlogic.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 18, 2008 at 11:17:58AM -0700, Andrew Vasquez wrote:
-> > 7) qla2x00_async_event():
-> > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
-> > 		...
-> > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
-> > 		handles[1] = le32_to_cpu(
-> > 		    ((uint32_t)(RD_MAILBOX_REG(ha, reg, 7) << 16)) |
-> > and then those values are passed to qla2x00_process_completed_request() which
-> > expects a host-endian (and uses it as index in array, among other things).
-> 
-> THis is correct (though a bit confuscated), each of the two 16bit
-> mailbox-registers makes-up a 32bit LE value, which is converted to
-> cpu-endian and passed to qla2x00_process_completed_request().
+Current 2.6.25 git head now panics reliably on boot if you have a SATAPI
+device connected.
 
-Um, no.  First of all, other branches in that switch clearly assume
-that mb[] is already host-endian.  But leaving that aside, what you
-are doing here will _not_ work even if mb[1] and mb[2] are l-e in
-this case.
+The problem was introduced by the libata merge trying to pull out all
+the SFF code into a separate module.  Unfortunately, if you're a satapi
+device you usually need to call atapi_request_sense, which has a bare
+invocation of a SFF callback which is NULL on non-SFF HBAs.  Fix this by
+making the call conditional.
 
-Look what happens:
-* l-e host:
-	handles[0] = (mb[2] << 16) | mb[1], which is equal to
-(le16_to_cpu(mb[2]) << 16) | le16_to_cpu(mb[1])
-* on b-e host:
-	handles[0] = swab32((mb[2] << 16) | mb[1]), which is equal to
-(swab16(mb[1]) << 16) | swab16(mb[2]), which is equal to
-(le16_to_cpu(mb[1]) << 16) | le16_to_cpu(mb[2])
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-IOW, resulting host-endian value will be different with the same contents
-in mb[].  Put it another way, suppose you have mb[1] == 0, mb[2] == 0x101.
-Then on l-e you'll get handles[0] == 0x10100 and on b-e - 0x101.  The latter
-will pass the check for index being too high, the former will fail...
+---
 
-BTW, RD_MAILBOX_REG() boils down to readw(), which is definitely host-endian.
-And we have
-                        mb[0] = MBA_SCSI_COMPLETION;
-                        mb[1] = MSW(stat);
-                        mb[2] = RD_MAILBOX_REG(ha, reg, 2);
-                        qla2x00_async_event(ha, mb);
-so there's at least one path reaching qla2x00_async_event() with mb[0]
-equal to MBA_SCSI_COMPLETION and mb[2] containing host-endian...  Looking
-at the contents of stat and the things we do to it (switch (stat & 0xff) right
-outside that code), mb[1] is host-endian as well...  AFAICS, the same holds
-for all codepaths - contents of mb[] is host-endian.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 784ac41..f3c69a8 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2390,7 +2390,8 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+ #ifdef CONFIG_ATA_SFF
+-	ap->ops->sff_tf_read(ap, &qc->tf);
++	if (ap->ops->sff_tf_read)
++		ap->ops->sff_tf_read(ap, &qc->tf);
+ #endif
+ 
+ 	/* fill these in, for the case where they are -not- overwritten */
 
-> > 9) qla2x00_clear_nvram_protection():
-> >         wprot_old = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
-> > 	stat = qla2x00_write_nvram_word_tmo(ha, ha->nvram_base,
-> > 		    __constant_cpu_to_le16(0x1234), 100000);
-> > 	wprot = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
-> > 	if (stat != QLA_SUCCESS || wprot != 0x1234) {
-> > Odd, since qla2x00_get_nvram_word() returns a host-endian and 
-> > qla2x00_write_nvram_word_tmo() expects one (this stuff is bit-banging
-> > 16bit values through).
-> 
-> Odd, yes.  I was never happy with this endianess intermixing, but
-> after numerous cycles within our qual-testing, this code works in both
-> big and little-endian systems...
 
-It looks like check that location is writable; what happens if you replace
-the first instance with 0x1234 and the second (in wprot == ...) with
-cpu_to_le16(0x1234)?  One "we won't find it there by accident, must've been
-successful write" value seems to be as good as other, unless something else
-is going on...
