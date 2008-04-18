@@ -1,46 +1,29 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/4] iscsi_tcp: Enable large command
-Date: Fri, 18 Apr 2008 12:11:13 -0500
-Message-ID: <4808D631.1080507@cs.wisc.edu>
-References: <47E92672.1040208@panasas.com> <48023526.5050709@panasas.com> <480237AE.4040101@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi update for 2.6.26
+Date: Fri, 18 Apr 2008 10:11:50 -0500
+Message-ID: <1208531513-5122-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48132 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([66.187.233.31]:60643 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755093AbYDRRNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Apr 2008 13:13:21 -0400
-In-Reply-To: <480237AE.4040101@panasas.com>
+	id S1751227AbYDRPMB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2008 11:12:01 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m3IFC0W5023753
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2008 11:12:00 -0400
+Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m3IFBxFg008296
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2008 11:12:00 -0400
+Received: from localhost.localdomain (vpn-14-102.rdu.redhat.com [10.11.14.102])
+	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m3IFBxGb013334
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2008 11:11:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
-Boaz Harrosh wrote:
-> Let through up to the largest command of 260 defined by the scsi standard.
-> iscsi core supports this already. Now that the scsi-ml supports it we can
-> start using large commands.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/iscsi_tcp.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 555f4e3..6500192 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -1859,7 +1859,7 @@ iscsi_tcp_session_create(struct Scsi_Host *shost, uint16_t cmds_max,
->  	shost->max_lun = iscsi_max_lun;
->  	shost->max_id = 0;
->  	shost->max_channel = 0;
-> -	shost->max_cmd_len = 16;
-> +	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
->  	shost->can_queue = cmds_max;
->  
->  	if (iscsi_host_add(shost, NULL))
+Here is a iscsi update for 2.6.26. It is just the three patches Boaz
+had sent for 2.6.25 but missed the last window. I was not sure if you were
+going to pick up them up from that thread. I am guessing they are
+something only me and Boaz would remember and care about :), so I am
+sending them here. Thanks.
 
-This is fine whenever all this stuff gets in.
 
-acked-by: Mike Christie <michaelc@cs.wisc.edu>
