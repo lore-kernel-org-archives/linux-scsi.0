@@ -1,126 +1,83 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 1/2] aic7xxx: fix MMIO for PPC 44x platforms
-Date: Fri, 18 Apr 2008 23:30:45 +0400
-Message-ID: <200804182330.45435.sshtylyov@ru.mvista.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC] results of endianness review of qla2xxx
+Date: Fri, 18 Apr 2008 20:06:58 +0100
+Message-ID: <20080418190658.GI27459@ZenIV.linux.org.uk>
+References: <20080416055458.GC27459@ZenIV.linux.org.uk> <20080418181758.GJ22973@plap4.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:33756 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759131AbYDRTG7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Apr 2008 15:06:59 -0400
 Content-Disposition: inline
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: James.Bottomley@HansenPartnership.com, hare@suse.de
-Cc: linuxppc-dev@ozlabs.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20080418181758.GJ22973@plap4.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, Seokmann Ju <seokmann.ju@qlogic.com>
 
-The driver stores the PCI resource address into 'u_long' variable before
-calling ioremap_nocache() on it. This warrants kernel oops when the registers
-are accessed on PPC 44x platforms which (being 32-bit) have PCI memory space
-mapped beyond 4 GB.
+On Fri, Apr 18, 2008 at 11:17:58AM -0700, Andrew Vasquez wrote:
+> > 7) qla2x00_async_event():
+> > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+> > 		...
+> > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+> > 		handles[1] = le32_to_cpu(
+> > 		    ((uint32_t)(RD_MAILBOX_REG(ha, reg, 7) << 16)) |
+> > and then those values are passed to qla2x00_process_completed_request() which
+> > expects a host-endian (and uses it as index in array, among other things).
+> 
+> THis is correct (though a bit confuscated), each of the two 16bit
+> mailbox-registers makes-up a 32bit LE value, which is converted to
+> cpu-endian and passed to qla2x00_process_completed_request().
 
-The arch/ppc/ kernel has a fixup in ioremap() that helps create an illusion
-that the PCI memory resources are mapped below 4 GB, but arch/powerpc/ code
-got rid of this trick, having instead CONFIG_RESOURCES_64BIT enabled.
+Um, no.  First of all, other branches in that switch clearly assume
+that mb[] is already host-endian.  But leaving that aside, what you
+are doing here will _not_ work even if mb[1] and mb[2] are l-e in
+this case.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Look what happens:
+* l-e host:
+	handles[0] = (mb[2] << 16) | mb[1], which is equal to
+(le16_to_cpu(mb[2]) << 16) | le16_to_cpu(mb[1])
+* on b-e host:
+	handles[0] = swab32((mb[2] << 16) | mb[1]), which is equal to
+(swab16(mb[1]) << 16) | swab16(mb[2]), which is equal to
+(le16_to_cpu(mb[1]) << 16) | le16_to_cpu(mb[2])
 
----
-Reworked to address James' comments.
-This is the same issue as the one that has been recently addressed by commits
-3c34ac36ac1084e571ef9b6fb1d6a5b10ccc1fd0 (e1000: Fix for 32 bits platforms with
-64 bits resources) and c976816b6e901341ec3c4653147316c15549a1c4 (siimage: fix
-kernel oops on PPC 44x).  The patch has only been compile tested though...
+IOW, resulting host-endian value will be different with the same contents
+in mb[].  Put it another way, suppose you have mb[1] == 0, mb[2] == 0x101.
+Then on l-e you'll get handles[0] == 0x10100 and on b-e - 0x101.  The latter
+will pass the check for index being too high, the former will fail...
 
- drivers/scsi/aic7xxx/aic7xxx_osm.h     |    2 +-
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   18 +++++++++---------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+BTW, RD_MAILBOX_REG() boils down to readw(), which is definitely host-endian.
+And we have
+                        mb[0] = MBA_SCSI_COMPLETION;
+                        mb[1] = MSW(stat);
+                        mb[2] = RD_MAILBOX_REG(ha, reg, 2);
+                        qla2x00_async_event(ha, mb);
+so there's at least one path reaching qla2x00_async_event() with mb[0]
+equal to MBA_SCSI_COMPLETION and mb[2] containing host-endian...  Looking
+at the contents of stat and the things we do to it (switch (stat & 0xff) right
+outside that code), mb[1] is host-endian as well...  AFAICS, the same holds
+for all codepaths - contents of mb[] is host-endian.
 
-Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.h
-+++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -365,7 +365,7 @@ struct ahc_platform_data {
- #define AHC_LINUX_NOIRQ	((uint32_t)~0)
- 	uint32_t		 irq;		/* IRQ for this adapter */
- 	uint32_t		 bios_address;
--	uint32_t		 mem_busaddr;	/* Mem Base Addr */
-+	resource_size_t 	 mem_busaddr;	/* Mem Base Addr */
- };
- 
- /************************** OS Utility Wrappers *******************************/
-Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-+++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-@@ -293,7 +293,7 @@ ahc_linux_pci_exit(void)
- }
- 
- static int
--ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc, u_long *base)
-+ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc, resource_size_t *base)
- {
- 	if (aic7xxx_allow_memio == 0)
- 		return (ENOMEM);
-@@ -308,10 +308,10 @@ ahc_linux_pci_reserve_io_region(struct a
- 
- static int
- ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
--				 u_long *bus_addr,
-+				 resource_size_t *bus_addr,
- 				 uint8_t __iomem **maddr)
- {
--	u_long	start;
-+	resource_size_t	start;
- 	int	error;
- 
- 	error = 0;
-@@ -336,7 +336,7 @@ int
- ahc_pci_map_registers(struct ahc_softc *ahc)
- {
- 	uint32_t command;
--	u_long	 base;
-+	resource_size_t	base;
- 	uint8_t	__iomem *maddr;
- 	int	 error;
- 
-@@ -374,12 +374,12 @@ ahc_pci_map_registers(struct ahc_softc *
- 		} else
- 			command |= PCIM_CMD_MEMEN;
- 	} else {
--		printf("aic7xxx: PCI%d:%d:%d MEM region 0x%lx "
-+		printf("aic7xxx: PCI%d:%d:%d MEM region 0x%llx "
- 		       "unavailable. Cannot memory map device.\n",
- 		       ahc_get_pci_bus(ahc->dev_softc),
- 		       ahc_get_pci_slot(ahc->dev_softc),
- 		       ahc_get_pci_function(ahc->dev_softc),
--		       base);
-+		       (unsigned long long)base);
- 	}
- 
- 	/*
-@@ -390,15 +390,15 @@ ahc_pci_map_registers(struct ahc_softc *
- 		error = ahc_linux_pci_reserve_io_region(ahc, &base);
- 		if (error == 0) {
- 			ahc->tag = BUS_SPACE_PIO;
--			ahc->bsh.ioport = base;
-+			ahc->bsh.ioport = (u_long)base;
- 			command |= PCIM_CMD_PORTEN;
- 		} else {
--			printf("aic7xxx: PCI%d:%d:%d IO region 0x%lx[0..255] "
-+			printf("aic7xxx: PCI%d:%d:%d IO region 0x%llx[0..255] "
- 			       "unavailable. Cannot map device.\n",
- 			       ahc_get_pci_bus(ahc->dev_softc),
- 			       ahc_get_pci_slot(ahc->dev_softc),
- 			       ahc_get_pci_function(ahc->dev_softc),
--			       base);
-+			       (unsigned long long)base);
- 		}
- 	}
- 	ahc_pci_write_config(ahc->dev_softc, PCIR_COMMAND, command, 4);
+> > 9) qla2x00_clear_nvram_protection():
+> >         wprot_old = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
+> > 	stat = qla2x00_write_nvram_word_tmo(ha, ha->nvram_base,
+> > 		    __constant_cpu_to_le16(0x1234), 100000);
+> > 	wprot = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
+> > 	if (stat != QLA_SUCCESS || wprot != 0x1234) {
+> > Odd, since qla2x00_get_nvram_word() returns a host-endian and 
+> > qla2x00_write_nvram_word_tmo() expects one (this stuff is bit-banging
+> > 16bit values through).
+> 
+> Odd, yes.  I was never happy with this endianess intermixing, but
+> after numerous cycles within our qual-testing, this code works in both
+> big and little-endian systems...
+
+It looks like check that location is writable; what happens if you replace
+the first instance with 0x1234 and the second (in wprot == ...) with
+cpu_to_le16(0x1234)?  One "we won't find it there by accident, must've been
+successful write" value seems to be as good as other, unless something else
+is going on...
