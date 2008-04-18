@@ -1,115 +1,144 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/2] scsi_transport_sas: fix the lifetime of sas bsg objects
-Date: Sat, 19 Apr 2008 00:43:15 +0900
-Message-ID: <1208533395-31610-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1208533395-31610-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1208533395-31610-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 3/3] iscsi: bidi support - iscsi_tcp
+Date: Fri, 18 Apr 2008 10:11:53 -0500
+Message-ID: <1208531513-5122-4-git-send-email-michaelc@cs.wisc.edu>
+References: <1208531513-5122-1-git-send-email-michaelc@cs.wisc.edu>
+ <1208531513-5122-2-git-send-email-michaelc@cs.wisc.edu>
+ <1208531513-5122-3-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:59354 "EHLO mo10.iij4u.or.jp"
+Received: from mx1.redhat.com ([66.187.233.31]:60702 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757219AbYDRPoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Apr 2008 11:44:17 -0400
-In-Reply-To: <1208533395-31610-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751019AbYDRPMg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2008 11:12:36 -0400
+In-Reply-To: <1208531513-5122-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-scsi_transport_sas calls blk_cleanup_queue too early for bsg
-queues. If a user holds a sas_host, end_device, or expander device
-open, remove the device, then send a request to it, we get a kernel
-crash. We need to call blk_cleanup_queue in the release callback as we
-do with scsi devices.
+From: Boaz Harrosh <bharrosh@panasas.com>
 
-This patch moves blk_cleanup_queue to sas_expander_release and
-sas_end_device_release from sas_bsg_remove. sas_host can't use the
-release callback in struct device so use bsg's release callback.
+  bidi support for iscsi_tcp
+  - access the right scsi_in() and/or scsi_out() side of things.
+    also for resid
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Reviewed-by: Pete Wyckoff <pw@osc.edu>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi_transport_sas.c |   22 ++++++++++++++++++++--
- 1 files changed, 20 insertions(+), 2 deletions(-)
+ drivers/scsi/iscsi_tcp.c |   31 +++++++++++++++++--------------
+ 1 files changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 94ff29f..7899e3d 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -192,6 +192,16 @@ static void sas_non_host_smp_request(struct request_queue *q)
- 	sas_smp_request(q, rphy_to_shost(rphy), rphy);
- }
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 8a17867..72b9b2a 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -528,6 +528,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = ctask->sc;
+ 	int datasn = be32_to_cpu(rhdr->datasn);
++	unsigned total_in_length = scsi_in(sc)->length;
  
-+static void sas_host_release(struct device *dev)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	struct request_queue *q = sas_host->q;
-+
-+	if (q)
-+		blk_cleanup_queue(q);
-+}
-+
- static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- {
- 	struct request_queue *q;
-@@ -199,6 +209,7 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 	struct device *dev;
- 	char namebuf[BUS_ID_SIZE];
- 	const char *name;
-+	void (*release)(struct device *);
+ 	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
+ 	if (tcp_conn->in.datalen == 0)
+@@ -542,10 +543,10 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 	tcp_ctask->exp_datasn++;
  
- 	if (!to_sas_internal(shost->transportt)->f->smp_handler) {
- 		printk("%s can't handle SMP requests\n", shost->hostt->name);
-@@ -209,17 +220,19 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 		q = blk_init_queue(sas_non_host_smp_request, NULL);
- 		dev = &rphy->dev;
- 		name = dev->bus_id;
-+		release = NULL;
- 	} else {
- 		q = blk_init_queue(sas_host_smp_request, NULL);
- 		dev = &shost->shost_gendev;
- 		snprintf(namebuf, sizeof(namebuf),
- 			 "sas_host%d", shost->host_no);
- 		name = namebuf;
-+		release = sas_host_release;
+ 	tcp_ctask->data_offset = be32_to_cpu(rhdr->offset);
+-	if (tcp_ctask->data_offset + tcp_conn->in.datalen > scsi_bufflen(sc)) {
++	if (tcp_ctask->data_offset + tcp_conn->in.datalen > total_in_length) {
+ 		debug_tcp("%s: data_offset(%d) + data_len(%d) > total_length_in(%d)\n",
+ 		          __FUNCTION__, tcp_ctask->data_offset,
+-		          tcp_conn->in.datalen, scsi_bufflen(sc));
++		          tcp_conn->in.datalen, total_in_length);
+ 		return ISCSI_ERR_DATA_OFFSET;
  	}
- 	if (!q)
- 		return -ENOMEM;
  
--	error = bsg_register_queue(q, dev, name, NULL);
-+	error = bsg_register_queue(q, dev, name, release);
- 	if (error) {
- 		blk_cleanup_queue(q);
- 		return -ENOMEM;
-@@ -253,7 +266,6 @@ static void sas_bsg_remove(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 		return;
+@@ -558,8 +559,8 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
  
- 	bsg_unregister_queue(q);
--	blk_cleanup_queue(q);
- }
+ 			if (res_count > 0 &&
+ 			    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
+-			     res_count <= scsi_bufflen(sc)))
+-				scsi_set_resid(sc, res_count);
++			     res_count <= total_in_length))
++				scsi_in(sc)->resid = res_count;
+ 			else
+ 				sc->result = (DID_BAD_TARGET << 16) |
+ 					rhdr->cmd_status;
+@@ -670,11 +671,11 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 			    r2t->data_length, session->max_burst);
  
- /*
-@@ -1301,6 +1313,9 @@ static void sas_expander_release(struct device *dev)
- 	struct sas_rphy *rphy = dev_to_rphy(dev);
- 	struct sas_expander_device *edev = rphy_to_expander_device(rphy);
+ 	r2t->data_offset = be32_to_cpu(rhdr->data_offset);
+-	if (r2t->data_offset + r2t->data_length > scsi_bufflen(ctask->sc)) {
++	if (r2t->data_offset + r2t->data_length > scsi_out(ctask->sc)->length) {
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "invalid R2T with data len %u at offset %u "
+ 				  "and total length %d\n", r2t->data_length,
+-				  r2t->data_offset, scsi_bufflen(ctask->sc));
++				  r2t->data_offset, scsi_out(ctask->sc)->length);
+ 		__kfifo_put(tcp_ctask->r2tpool.queue, (void*)&r2t,
+ 			    sizeof(void*));
+ 		return ISCSI_ERR_DATALEN;
+@@ -771,6 +772,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 		if (tcp_conn->in.datalen) {
+ 			struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+ 			struct hash_desc *rx_hash = NULL;
++			struct scsi_data_buffer *sdb = scsi_in(ctask->sc);
  
-+	if (rphy->q)
-+		blk_cleanup_queue(rphy->q);
-+
- 	put_device(dev->parent);
- 	kfree(edev);
- }
-@@ -1310,6 +1325,9 @@ static void sas_end_device_release(struct device *dev)
- 	struct sas_rphy *rphy = dev_to_rphy(dev);
- 	struct sas_end_device *edev = rphy_to_end_device(rphy);
+ 			/*
+ 			 * Setup copy of Data-In into the Scsi_Cmnd
+@@ -788,8 +790,8 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 				  tcp_ctask->data_offset,
+ 				  tcp_conn->in.datalen);
+ 			return iscsi_segment_seek_sg(&tcp_conn->in.segment,
+-						     scsi_sglist(ctask->sc),
+-						     scsi_sg_count(ctask->sc),
++						     sdb->table.sgl,
++						     sdb->table.nents,
+ 						     tcp_ctask->data_offset,
+ 						     tcp_conn->in.datalen,
+ 						     iscsi_tcp_process_data_in,
+@@ -1332,7 +1334,8 @@ iscsi_tcp_ctask_init(struct iscsi_cmd_task *ctask)
+ 		return 0;
  
-+	if (rphy->q)
-+		blk_cleanup_queue(rphy->q);
-+
- 	put_device(dev->parent);
- 	kfree(edev);
- }
+ 	/* If we have immediate data, attach a payload */
+-	err = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc), scsi_sg_count(sc),
++	err = iscsi_tcp_send_data_prep(conn, scsi_out(sc)->table.sgl,
++				       scsi_out(sc)->table.nents,
+ 				       0, ctask->imm_count);
+ 	if (err)
+ 		return err;
+@@ -1386,6 +1389,7 @@ iscsi_tcp_ctask_xmit(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ {
+ 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+ 	struct scsi_cmnd *sc = ctask->sc;
++	struct scsi_data_buffer *sdb = scsi_out(sc);
+ 	int rc = 0;
+ 
+ flush:
+@@ -1412,9 +1416,8 @@ flush:
+ 				ctask->itt, tcp_ctask->sent, ctask->data_count);
+ 
+ 		iscsi_tcp_send_hdr_prep(conn, hdr, sizeof(*hdr));
+-		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
+-					      scsi_sg_count(sc),
+-					      tcp_ctask->sent,
++		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
++					      sdb->table.nents, tcp_ctask->sent,
+ 					      ctask->data_count);
+ 		if (rc)
+ 			goto fail;
+@@ -1460,8 +1463,8 @@ flush:
+ 		iscsi_tcp_send_hdr_prep(conn, &r2t->dtask.hdr,
+ 					sizeof(struct iscsi_hdr));
+ 
+-		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
+-					      scsi_sg_count(sc),
++		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
++					      sdb->table.nents,
+ 					      r2t->data_offset + r2t->sent,
+ 					      r2t->data_count);
+ 		if (rc)
 -- 
-1.5.3.4
+1.5.4.1
 
