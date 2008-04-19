@@ -1,41 +1,67 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC] results of endianness review of qla2xxx
-Date: Sat, 19 Apr 2008 21:12:05 +0100
-Message-ID: <20080419201205.GM27459@ZenIV.linux.org.uk>
-References: <20080416055458.GC27459@ZenIV.linux.org.uk> <20080418181758.GJ22973@plap4.local> <20080419175207.GK27459@ZenIV.linux.org.uk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PATCH] SCSI updates for 2.6.25
+Date: Sat, 19 Apr 2008 13:14:23 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0804191305360.2779@woody.linux-foundation.org>
+References: <1208540517.3063.18.camel@localhost.localdomain>  <20080419151934.GA17089@elte.hu>  <1208620484.3280.23.camel@localhost.localdomain>  <20080419170530.GD1595@cs181133002.pp.htv.fi> <1208626496.3280.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:60853 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754349AbYDSUMH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Apr 2008 16:12:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20080419175207.GK27459@ZenIV.linux.org.uk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45175 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755205AbYDSUPj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Apr 2008 16:15:39 -0400
+In-Reply-To: <1208626496.3280.40.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Seokmann Ju <seokmann.ju@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Adrian Bunk <bunk@kernel.org>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-... and while we are at it,
-                        for (miter = 0, s = optrom, d = dwptr;
-                            miter < OPTROM_BURST_DWORDS; miter++, s++, d++)
-                                *s = cpu_to_le32(*d);
 
-                        ret = qla2x00_load_ram(ha, optrom_dma,
-                            flash_data_to_access_addr(faddr),
-                            OPTROM_BURST_DWORDS);
 
-in qla24xx_write_flash_data() looks bloody odd.  We have dwptr pointing
-to fixed-endian data, so conversion gets us host-endian and then we pass
-the area filled with results of conversion for DMA?
+On Sat, 19 Apr 2008, James Bottomley wrote:
+> 
+> Well, we already had this argument on linux-scsi when the interface was
+> first proposed:  Apart from select being very nasty and should only be
+> sparingly used
 
-And yes, dwptr points to fixed-endian - it comes from
-qla24xx_write_optrom_data(struct scsi_qla_host *ha, uint8_t *buf,
-    uint32_t offset, uint32_t length)
-{
-...
-        rval = qla24xx_write_flash_data(ha, (uint32_t *)buf, offset >> 2,
-            length >> 2);
+I'm still not understanding people who say that.
 
-Comments?
+Yes, select has problems, in that it doesn't guarantee dependencies.
+
+But that said, select is a whole lot better than having simply *different* 
+behaviour (or build errors) depending on totally unrelated config options.
+
+So people: stop this total *idiocy* with "select is bad". It's not. The 
+lack of select is *much* worse.
+
+If you want LIBSAS to have two different modes, how about just making that 
+explicit in the configuration, ie using something like
+
+	config LIBSAS_SET_ADDR
+		bool "Provide user-settable SAS address" 
+		depends on SCSI_SAS_LIBSAS
+		help
+		  This allows a runtime "firmware" loader that loads the 
+		  SAS address
+
+	config LIBSAS_SET_ADDR_FWLOAD
+		tristate
+		depends on SCSI_SAS_LIBSAS && LIBSAS_SET_ADDR
+		default y
+		select FW_LOADER
+
+and now you have the explicit option to turn it on or off - and FW_LOADER 
+is loaded appropriately.
+
+> Even if I changed it to select, a user could still defeat it by making
+> CONFIG_SCSI_AIC94XX=y (because now the initialisation is before early
+> boot userland, so the request always fails).
+
+Not true. That's why we have initrd and ramdisks etc.
+
+Not that any normal people will ever care about LIBSAS, but anyway.. The 
+ones that do care about these kinds of things are probably happy to have 
+special initrd images.
+
+		Linus
