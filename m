@@ -1,28 +1,40 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Test mail-a, please ignore
-Date: Thu, 17 Apr 2008 15:52:12 -0700
-Message-ID: <20080417225212.27413.80284.sendpatchset@chandra-ubuntu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:47578 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763AbYDQWwA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2008 18:52:00 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m3HMpx7v008046
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2008 18:51:59 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3HMpsdm189566
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2008 16:51:59 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3HMps4M018757
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2008 16:51:54 -0600
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: aacraid broken in git
+Date: Fri, 18 Apr 2008 18:55:42 -0700
+Message-ID: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755030AbYDSB4A@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark_Salyzyn@adaptec.com, James.Bottomley@hansenpartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hi All,
+4/18 2.6-git got
 
-Just a test mail. please ignore.
+Calling initcall 0xffffffff80f10f97: aac_init+0x0/0x95()
+Adaptec aacraid driver 1.1-5[2455]-ms
+ACPI: PCI Interrupt 0000:04:00.0[A] -> Link [LNEB] -> GSI 18 (level, low) -> IRQ
+ 18
+PCI: Enabling bus mastering for device 0000:04:00.0
+PCI: Setting latency timer of device 0000:04:00.0 to 64
+AAC0: kernel 5.2-0[15594]
+AAC0: monitor 5.2-0[15594]
+AAC0: bios 5.2-0[15594]
+AAC0: serial AA0009
+AAC0: Non-DASD support enabled.
+AAC0: 64bit support enabled.
+AAC0: 64 Bit DAC enabled
+aac_fib_free, XferState != 0, fibptr = 0xffff8108232e0000, XferState = 0x810ad
+ACPI: PCI interrupt for device 0000:04:00.0 disabled
+aacraid: probe of 0000:04:00.0 failed with error -4
+initcall 0xffffffff80f10f97: aac_init+0x0/0x95() returned 0.
+initcall 0xffffffff80f10f97 ran for 286 msecs: aac_init+0x0/0x95()
 
-chandra
+
+Linux LBSuse 2.6.25-x86-latest.git-01659-g1f8551e #106 SMP Fri Apr 18
+18:24:39 PDT 2008 x86_64 x86_64 x86_64 GNU/Linux
+
+YH
