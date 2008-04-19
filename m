@@ -1,46 +1,96 @@
-From: walt <w41ter@gmail.com>
-Subject: Re: [PATCH] libata: fix boot panic with SATAPI devices on non-SFF
- HBAs
-Date: Sat, 19 Apr 2008 06:34:30 -0700
-Message-ID: <fucsch$ah0$1@ger.gmane.org>
-References: <1208542728.3063.25.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: esp_scsi incorrect unsigned test
+Date: Sat, 19 Apr 2008 08:05:56 -0600
+Message-ID: <20080419140555.GJ20637@parisc-linux.org>
+References: <4808C90A.5040600@tiscali.nl> <Pine.LNX.4.64.0804182101200.14832@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:40017 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755129AbYDSNe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Apr 2008 09:34:26 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JnDCt-0005xx-NG
-	for linux-scsi@vger.kernel.org; Sat, 19 Apr 2008 13:34:19 +0000
-Received: from adsl-69-234-190-202.dsl.irvnca.pacbell.net ([69.234.190.202])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Apr 2008 13:34:19 +0000
-Received: from w41ter by adsl-69-234-190-202.dsl.irvnca.pacbell.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Apr 2008 13:34:19 +0000
-In-Reply-To: <1208542728.3063.25.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:51970 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753600AbYDSOGM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Apr 2008 10:06:12 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0804182101200.14832@ask.diku.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Julia Lawall <julia@diku.dk>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org
+Cc: Roel Kluin <12o3l@tiscali.nl>, kernel-janitors@vger.kernel.org, kernelnewbies-bounce@nl.linux.org
 
-James Bottomley wrote:
-> Current 2.6.25 git head now panics reliably on boot if you have a SATAPI
-> device connected.
->
-> The problem was introduced by the libata merge trying to pull out all
-> the SFF code into a separate module...
+On Fri, Apr 18, 2008 at 09:08:55PM +0200, Julia Lawall wrote:
+> I found 63 occurrences of this problem with the following semantic match
+> (http://www.emn.fr/x-info/coccinelle/):
+> 
+> @@ unsigned int i; @@
+> 
+> * i < 0
+> 
+> I looked through all of the results by hand, and they all seem to be 
+> problems.  In many cases, it seems like the variable should not be 
+> unsigned as it is used to hold the return value of a function that might 
+> return a negative error code, but I haven't looked into this in detail.
+> 
+> In the output below, the lines that begin with a single start contain a 
+> test of whether an unsigned variable or structure field is less than 0.
+> The output is actually generated with diff, but I converted the -s to *s 
+> to avoid confusion.
 
-Hi James,
+> diff -u -p a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> *** a/drivers/scsi/esp_scsi.c 2008-03-12 14:13:14.000000000 +0100
+> @@ -380,7 +380,7 @@ static void esp_advance_dma(struct esp *
+>  
+>  	p->cur_residue -= len;
+>  	p->tot_residue -= len;
+> *	if (p->cur_residue < 0 || p->tot_residue < 0) {
+>  		printk(KERN_ERR PFX "esp%d: Data transfer overflow.\n",
+>  		       esp->host->unique_id);
+>  		printk(KERN_ERR PFX "esp%d: cur_residue[%d] tot_residue[%d] "
 
-When I saw your commit I thought it would fix the panic introduced by Tejun's
-commit <305d2a1a>, but no luck.
+This is clearly buggy.  A residue is, though, inherently unsigned, so I
+don't think we should change the type of the variable.  Rather, we
+should test it before subtraction.  Dave, what do you think?
 
-I have a pata drive connected to a sata controller using a plugin adapter.
-After Tejun's commit the kernel panics with unknown-block (8,9) instead of
-mounting /dev/sda9.  Is this the scenario your patch is intended to fix?
+----
 
+Fix ESP data transfer overflow checks
+
+The current code attempts to detect data transfer overflow by checking
+whether an unsigned variable is negative.  Instead, we should
+compare the two variables before subtracting them.
+
+Reported-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index bfdee59..b5e8a94 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -378,9 +378,7 @@ static void esp_advance_dma(struct esp *esp, struct esp_cmd_entry *ent,
+ 		return;
+ 	}
+ 
+-	p->cur_residue -= len;
+-	p->tot_residue -= len;
+-	if (p->cur_residue < 0 || p->tot_residue < 0) {
++	if (unlikely(p->cur_residue < len || p->tot_residue < len)) {
+ 		printk(KERN_ERR PFX "esp%d: Data transfer overflow.\n",
+ 		       esp->host->unique_id);
+ 		printk(KERN_ERR PFX "esp%d: cur_residue[%d] tot_residue[%d] "
+@@ -389,7 +387,11 @@ static void esp_advance_dma(struct esp *esp, struct esp_cmd_entry *ent,
+ 		       p->cur_residue, p->tot_residue, len);
+ 		p->cur_residue = 0;
+ 		p->tot_residue = 0;
++	} else {
++		p->cur_residue -= len;
++		p->tot_residue -= len;
+ 	}
++
+ 	if (!p->cur_residue && p->tot_residue) {
+ 		p->cur_sg++;
+ 		p->cur_residue = sg_dma_len(p->cur_sg);
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
