@@ -1,36 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.25
-Date: Sat, 19 Apr 2008 17:14:47 -0600
-Message-ID: <20080419231446.GR20637@parisc-linux.org>
-References: <1208540517.3063.18.camel@localhost.localdomain> <20080419151934.GA17089@elte.hu> <1208620484.3280.23.camel@localhost.localdomain> <20080419170530.GD1595@cs181133002.pp.htv.fi> <1208626496.3280.40.camel@localhost.localdomain> <alpine.LFD.1.10.0804191305360.2779@woody.linux-foundation.org> <1208644076.3280.54.camel@localhost.localdomain>
+From: David Miller <davem@davemloft.net>
+Subject: Re: esp_scsi incorrect unsigned test
+Date: Sat, 19 Apr 2008 17:59:13 -0700 (PDT)
+Message-ID: <20080419.175913.166084026.davem@davemloft.net>
+References: <Pine.LNX.4.64.0804182101200.14832@ask.diku.dk>
+	<20080419140555.GJ20637@parisc-linux.org>
+	<1208614598.3280.11.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54550 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514AbYDSXP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Apr 2008 19:15:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1208644076.3280.54.camel@localhost.localdomain>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40086
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752776AbYDTA7M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Apr 2008 20:59:12 -0400
+In-Reply-To: <1208614598.3280.11.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Adrian Bunk <bunk@kernel.org>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: matthew@wil.cx, julia@diku.dk, linux-scsi@vger.kernel.org, 12o3l@tiscali.nl, kernel-janitors@vger.kernel.org, kernelnewbies-bounce@nl.linux.org
 
-On Sat, Apr 19, 2008 at 05:27:56PM -0500, James Bottomley wrote:
-> > Not true. That's why we have initrd and ramdisks etc.
-> 
-> They don't currently seem to work for compiled in drivers ... we have
-> the same issue with drivers that actually need firmware (like aic94xx or
-> qla2xxx): no-one seems to have figured out how to provide it for them;
-> it seems the device is already initialised and has failed to find its
-> firmware before the initrd/initramfs is running.
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Sat, 19 Apr 2008 09:16:38 -0500
 
-WorksForMe ... or it did a few months ago.  I can re-test it with a
-modern kernel ... wonder which machine I had that needed it ...
+> It look fine to me ... although an alternative (and possibly simpler)
+> fix would just be to remove the unsigned from the two residue
+> definitions in the struct.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+I think that's the better approach too.  James, please
+apply.
+
+esp_scsi: Make cur_residue and tot_residue signed.
+
+Many of the overflow checks test whether the value has
+gone negative, and we want to retain such checks.
+
+Reported by Julia Lawall.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index d5576d5..9367a88 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -240,9 +240,9 @@ struct esp_cmd_priv {
+ 		int		num_sg;
+ 	} u;
+ 
+-	unsigned int		cur_residue;
++	int			cur_residue;
+ 	struct scatterlist	*cur_sg;
+-	unsigned int		tot_residue;
++	int			tot_residue;
+ };
+ #define ESP_CMD_PRIV(CMD)	((struct esp_cmd_priv *)(&(CMD)->SCp))
+ 
