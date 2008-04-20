@@ -1,42 +1,151 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9133] aacraid driver fails with Dell PowerEdge Expandable RAID Controller 3/Di
-Date: Sun, 20 Apr 2008 05:40:36 -0700 (PDT)
-Message-ID: <20080420124037.0467910805F@picon.linux-foundation.org>
-References: <bug-9133-11613@http.bugzilla.kernel.org/>
+From: Sebastian Wasilewski <sebastian@wasilewski.name>
+Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
+Date: Sun, 20 Apr 2008 14:14:20 +0100
+Message-ID: <480B41AC.6050206@wasilewski.name>
+References: <48027149.7090502@sauce.co.nz> <48027304.2080201@wasilewski.name>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms090408080201030104060702"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49350 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753754AbYDTMlH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Apr 2008 08:41:07 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3KCebNU002721
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Apr 2008 05:40:38 -0700
-In-Reply-To: <bug-9133-11613@http.bugzilla.kernel.org/>
+Received: from hel.fizyka.umk.pl ([158.75.5.90]:40643 "EHLO hel.fizyka.umk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751066AbYDTNRm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Apr 2008 09:17:42 -0400
+Received: from [172.20.1.117] (vampire.vpn.phys.uni.torun.pl [172.20.1.117])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by hel.fizyka.umk.pl (Postfix) with ESMTP id 81E0630A7C3
+	for <linux-scsi@vger.kernel.org>; Sun, 20 Apr 2008 15:17:39 +0200 (CEST)
+In-Reply-To: <48027304.2080201@wasilewski.name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9133
+This is a cryptographically signed message in MIME format.
+
+--------------ms090408080201030104060702
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Hi All,
+
+The problem still exists. With NCQ turned off as well as with NCQ turned on.
+
+# dmesg  |grep 'Code={Abort}, SubCode(0x3000)'
+mptbase: ioc0: LogInfo(0x31123000): Originator={PL}, Code={Abort}, 
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator={PL}, Code={Abort}, 
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator={PL}, Code={Abort}, 
+SubCode(0x3000)
+(...)
+
+# dmesg  |grep 'Code={Abort}, SubCode(0x3000)' |wc -l
+377
+
+Does anyone know, what that messages mean?
+
+Regards,
+Sebastian
 
 
-Matt_Domsch@dell.com changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |linux-bugs@dell.com
+--------------ms090408080201030104060702
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIPSzCC
+BGQwggNMoAMCAQICAhtMMA0GCSqGSIb3DQEBBAUAMIGDMQswCQYDVQQGEwJQTDExMC8GA1UE
+ChMoVW5pd2Vyc3l0ZXQgTWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMY
+Q2VudHJ1bSBDZXJ0eWZpa2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4u
+cGwwHhcNMDYwNTA1MjAxOTU2WhcNMTEwNTA0MjAxOTU2WjCB0DELMAkGA1UEBhMCUEwxMTAv
+BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxPDA6BgNV
+BAsTM1d5ZHppYWwgRml6eWtpLCBBc3Ryb25vbWlpIGkgSW5mb3JtYXR5a2kgU3Rvc293YW5l
+ajEdMBsGA1UEAxMUU2ViYXN0aWFuIFdhc2lsZXdza2kxMTAvBgkqhkiG9w0BCQEWIlNlYmFz
+dGlhbi5XYXNpbGV3c2tpQGZpenlrYS51bWsucGwwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJ
+AoGBAMrwrPasXgbvrz65NTM4NPohCfBVAUG4JCpcPQi9JIMIjtsX6DfitQReQJfhlVNLvKTj
+8ClfncrAbam76l8H5THkQGv8XomTBJfW4WPTwSNlJaURllTaiyafGaf44mIJhzc/8axHbttz
+XpRgKSo6yDF8eveFo0uQpXZ3JVCcVHDfAgMBAAGjggEVMIIBETARBglghkgBhvhCAQEEBAMC
+BaAwCwYDVR0PBAQDAgWgMB0GA1UdDgQWBBRh4gBvapXgSvzjJc88cQ7E0vXfSzCBsAYDVR0j
+BIGoMIGlgBSAZUHaCDgyd1NzAuti4PrVLpspMKGBiaSBhjCBgzELMAkGA1UEBhMCUEwxMTAv
+BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNV
+BAMTGENlbnRydW0gQ2VydHlmaWthY2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRv
+cnVuLnBsggEAMB0GA1UdJQQWMBQGA1UdDgYDVR0jBggrBgEFBQcDAzANBgkqhkiG9w0BAQQF
+AAOCAQEAaxBZz0uEpenGvNLEr5d3sTE4XsQmvzAsUOYAY45SHZRzacCUzmTgHeCW0k27rMx4
+ensJqZ5GuIV06zfNsJue+XQY8HORxBCiSsQGQYeIiyyttgQcy9b10u4dPlU0x7xO/gfGbzD6
+j+BSKXxc7c0YAX2wduIyq1e1JS4rBPlUQLx3wziKLVi/5MoLXwzHsKV+jczj1p0kRpj3snPt
+Q0sQxLW2iYQrGFTEG/x5LkgkYM++dIsx7/F3CIHKmeFss0hD2YY80jIYmW1qJ7zSLwX9MfO8
+rxafbgNrpfmdyvJzO4VWuJQxp8tpVDTZnIQTqkv3U8ulLSk0TAFqEv1A/AhpRjCCBIowggNy
+oAMCAQICECf06hH0eobEbp27bqkXBwcwDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UEBhMCU0Ux
+FDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5hbCBUVFAg
+TmV0d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0wNTA2MDcw
+ODA5MTBaFw0yMDA1MzAxMDQ4MzhaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAV
+BgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsx
+ITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJG
+aXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVNNRm5pELl
+zkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQylbsMTzC9
+mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6
+Dpvq/NonWz1zHyLmSGHGTPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPh
+wvCkxWeM1tZUOt4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws
+6wIDAQABo4HhMIHeMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1QaMB0GA1UdDgQW
+BBSJgmd9xJ0mcABLtFBIfN49rgRufTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB
+/zB7BgNVHR8EdDByMDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA2oDSgMoYwaHR0cDovL2NybC5jb21vZG8ubmV0L0FkZFRydXN0
+RXh0ZXJuYWxDQVJvb3QuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQAZ2IkRbyispgCi54fBm5AD
+236hEv0e8+LwAamUVEJrmgnEoG3XkJIEA2Z5Q3H8+G+v23ZF4jcaPd3kWQR4rBz0g0bzes9b
+hHIt5UbBuhgRKfPLSXmHPLptBZ2kbWhPrXIUNqi5sf2/z3/wpGqUNVCPz4FtVbHdWTBK322g
+nGQfSXzvNrv042n0+DmPWq1LhTq3Du3Tzw1EovsEv+QvcI4l+1pUBrPQxLxtjftzMizpm4Qk
+LdZ/kXpoAlAfDj9N6cz1u2fo3BwuO/xOzf4CjuOoEwqlJkRl6RDyTVKnrtw+ymsyXEFs/vVd
+oOr/0fqbhlhtPZZH5f4ulQTCAMyOofK7MIIGUTCCBTmgAwIBAgIRAIuGSd9lm5YjiBVwEZuS
+ZaowDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UE
+BxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8G
+A1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0
+LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgRW1haWwwHhcNMDcwODI3MDAwMDAwWhcNMDgw
+ODI2MjM1OTU5WjCB6TE1MDMGA1UECxMsQ29tb2RvIFRydXN0IE5ldHdvcmsgLSBQRVJTT05B
+IE5PVCBWQUxJREFURUQxRjBEBgNVBAsTPVRlcm1zIGFuZCBDb25kaXRpb25zIG9mIHVzZTog
+aHR0cDovL3d3dy5jb21vZG8ubmV0L3JlcG9zaXRvcnkxHzAdBgNVBAsTFihjKTIwMDMgQ29t
+b2RvIExpbWl0ZWQxHTAbBgNVBAMTFFNlYmFzdGlhbiBXYXNpbGV3c2tpMSgwJgYJKoZIhvcN
+AQkBFhlzZWJhc3RpYW5Ad2FzaWxld3NraS5uYW1lMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAtNlOUL8oeETIvEOcAwq5lBDq+7TqdtxT4ri+kA/VqN71NuaIbvQKb6zEziE9
+fSuAcdYpo2uLgOx+9K6EJUAjPEzBw25ZKCa05lrdS9K8Xale0fJ6ZVH9JiM80WeBf2UjeDFh
+2WK2EWRl6t+QNxOpYAfFcg58k0w2Lljk0l447q1tacVSpNrA0CtTh9Zve5ho26Gdrh5TPIL1
+RiVWSAHSpA6JLMfgIBxWbZcPthQ7kdFVu414dOchcCjKY9o2tbG0sMYeAzeLaTgccEW7B/o6
+gGSS+BH/v8Kv3QmXtlPFwZh7SFfL/CZlPpYAzoQ4WaVQjMOwTRQLR38YgeXXqvximQIDAQAB
+o4ICKzCCAicwHwYDVR0jBBgwFoAUiYJnfcSdJnAAS7RQSHzePa4Ebn0wHQYDVR0OBBYEFDOg
+M7vsGeGAj200arcExeUQkoKnMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1Ud
+JQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0g
+BD8wPTA7BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29t
+b2RvLm5ldC9DUFMwgaUGA1UdHwSBnTCBmjBMoEqgSIZGaHR0cDovL2NybC5jb21vZG9jYS5j
+b20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRoZW50aWNhdGlvbmFuZEVtYWlsLmNybDBKoEig
+RoZEaHR0cDovL2NybC5jb21vZG8ubmV0L1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGlj
+YXRpb25hbmRFbWFpbC5jcmwwfAYIKwYBBQUHAQEEcDBuMDYGCCsGAQUFBzAChipodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9VVE5BQUFDbGllbnRDQS5jcnQwNAYIKwYBBQUHMAKGKGh0dHA6
+Ly9jcnQuY29tb2RvLm5ldC9VVE5BQUFDbGllbnRDQS5jcnQwJAYDVR0RBB0wG4EZc2ViYXN0
+aWFuQHdhc2lsZXdza2kubmFtZTANBgkqhkiG9w0BAQUFAAOCAQEAMkro/eoHrznPnh3YmoyJ
+8V91GC7SMJ9R2ezqAfDVdjp3qCBqoPlHjcy3tgn0Hc2LyCoLMRUb2OHhRP7umnQVdELtwehS
+jnFohZrAY+WKSq4bcU8oe/jXHOTA1PzgkTeGUjTjA2ChwhUwLZxvinIYVXuI7EqgPVaKTAy4
+2XxDKDB44ussql6pYViEZT7xtZfFxOni2uPQS0Ex9keHxdnTK6kDkpj+gPyxNHgkaKbnhN7/
+PUeX407VMN0+iUKEt+mEbQMjPu2taZkfxrB9+BZYTYo/eSonsa0X1VdxlV2p+CHaVQHVbyRb
+enwKWYaRtC4o+0T2lhgc0uWlwJgqF2XGWTGCA98wggPbAgEBMIHEMIGuMQswCQYDVQQGEwJV
+UzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUg
+VVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2
+MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWls
+AhEAi4ZJ32WbliOIFXARm5JlqjAJBgUrDgMCGgUAoIIB7zAYBgkqhkiG9w0BCQMxCwYJKoZI
+hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MjAxMzE0MjBaMCMGCSqGSIb3DQEJBDEWBBRI
+GFigcHIEcNnDBGjw285tqeC9aTBSBgkqhkiG9w0BCQ8xRTBDMAoGCCqGSIb3DQMHMA4GCCqG
+SIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCBmwYJ
+KwYBBAGCNxAEMYGNMIGKMIGDMQswCQYDVQQGEwJQTDExMC8GA1UEChMoVW5pd2Vyc3l0ZXQg
+TWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMYQ2VudHJ1bSBDZXJ0eWZp
+a2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4ucGwCAhtMMIGdBgsqhkiG
+9w0BCRACCzGBjaCBijCBgzELMAkGA1UEBhMCUEwxMTAvBgNVBAoTKFVuaXdlcnN5dGV0IE1p
+a29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNVBAMTGENlbnRydW0gQ2VydHlmaWth
+Y2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRvcnVuLnBsAgIbTDANBgkqhkiG9w0B
+AQEFAASCAQCCbp/5krIFHSrxENAB0CLY/MBAGops6IvWkSF+WqobUMyE60YLecsqQ8I/W0if
+BRtEIZBWpHfRMfJ6JMh0Cs2BY7rvy94Rb5MUaQkQNaFnqk5cT+CO0+c3xfPn1H532/fcldA9
+dbmmDR6DTYkoTEKD4e/F0iGLCTgTrD8pIdBqREngIyfjQvtYysiCNfg4NqqArXRVisugXg/L
+rurxpeUepbD+bWl3b+TC2f/w8QjvsS+3ah7MTFFD6smDccNP4tgYITtJzdUfQnx+uRmARhcG
+CIxTT/qt+VeO8M5UNJQQuwKZnWmgmYw+1ua0I/Lo330oui8WX8Zyyy42zgN3mrT1AAAAAAAA
 
-
-
-------- Comment #7 from Matt_Domsch@dell.com  2008-04-20 05:40 -------
-If specific firmware versions (e.g. less than X) for a given card are known to
-be problematic, the driver init routine should detect these and warn loudly, if
-not fail to load all together.  We did this with the megaraid_legacy driver a
-long time ago to avoid firmware-induced data corruption.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--------------ms090408080201030104060702--
