@@ -1,151 +1,140 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: MPTSAS: ("activate status led" | "find disc") in external
-	enclosure
-Date: Mon, 21 Apr 2008 10:16:45 -0500
-Message-ID: <1208791005.3640.10.camel@localhost.localdomain>
-References: <20080418124104.9ca87130.taeuber@bbaw.de>
-	 <1208528945.3063.7.camel@localhost.localdomain>
-	 <20080421110148.1918485e.taeuber@bbaw.de>
+Subject: Re: [bug] SCSI/SLUB - latest -git: WARNING: at mm/slub.c:2443
+	kmem_cache_destroy, scsi_put_host_cmd_pool()
+Date: Mon, 21 Apr 2008 10:57:20 -0500
+Message-ID: <1208793440.3640.22.camel@localhost.localdomain>
+References: <20080419085758.GA18612@elte.hu>
+	 <1208611357.3280.5.camel@localhost.localdomain>
+	 <20080421134925.GK9554@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50059 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58668 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754115AbYDUPQs (ORCPT
+	by vger.kernel.org with ESMTP id S1762151AbYDUP5Y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2008 11:16:48 -0400
-In-Reply-To: <20080421110148.1918485e.taeuber@bbaw.de>
+	Mon, 21 Apr 2008 11:57:24 -0400
+In-Reply-To: <20080421134925.GK9554@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lars =?ISO-8859-1?Q?T=E4uber?= <taeuber@bbaw.de>
-Cc: linux-scsi@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Christoph Lameter <clameter@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-04-21 at 11:01 +0200, Lars T=C3=A4uber wrote:
-> Hi James,
->=20
-> James Bottomley <James.Bottomley@HansenPartnership.com> schrieb:
-> > On Fri, 2008-04-18 at 12:41 +0200, Lars T=C3=A4uber wrote:
-> > > Is there a standard way to lit the led in the enclosure with linu=
-x means or anything alike?
-> > > The enclosure does not tell the serial numbers of the included di=
-sc.
-> > > The HBA is an LSI SAS 3801X.
-> >=20
-> > It depends on whether you have the HBA configured in RAID mode or n=
-ot.
-> > If you have, then it takes absolute control of the enclosure manage=
-ment
-> > at the moment and I don't think you can get to it.
->=20
-> our HBA has no RAID option.
->=20
-> > If you run the HBA as a pure SAS one, then the promise website says=
- this
-> > enclosure is ses2 compliant, so you should just be able to insert t=
-he
-> > ses module and have enclosure management (2.6.24+ kernels).  This r=
-elies
-> > on the HBA exposing the enclosure device, but I think mptsas only e=
-ats
-> > it for RAID configurations.
+On Mon, 2008-04-21 at 15:49 +0200, Ingo Molnar wrote:
+> * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> 
+> > > x86.git allyesconfig bootup test produced the following warning in 
+> > > slub.c (and a stream of similar warnings later on):
+> [...]
+> 
+> > > config and bootlog at:
+> > > 
+> > >  http://redhat.com/~mingo/misc/config-Sat_Apr_19_10_28_28_CEST_2008.bad
+> > >  http://redhat.com/~mingo/misc/log-Sat_Apr_19_10_28_28_CEST_2008.bad
+> > > 
+> > > [a few .config options were turned off: just accept all the defaults 
+> > >  after 'make oldconfig']
+> > 
+> > The WARN_ON is caused by kmem_cache_destroy() with apparently 
+> > outstanding objects, isn't it?
+> > 
+> > The most significant piece of the log seems to be before with all 
+> > those isa SCSI drivers ... I assume you don't actually have any of the 
+> > hardware, you're just randomly inserting the modules?
+> 
+> correct. As i mentioned it in the first sentence this is an allyesconfig 
+> bzImage bootup. I.e. this is the bootup log of a "make allyesconfig" 
+> kernel - roughly analogous to (trying to) insert every module in 
+> existence. In the boot log you'll find 4871 initcalls, done by over 3000 
+> drivers that each is attempted to be loaded by the kernel (!).
+> 
+> I do those bootups to "run as much as possible" kernel code and to make 
+> sure that the maximum combination of debug and other features still 
+> produces a working kernel.
+> 
+> I had to work half a year to gradually get the kernel to that stage 
+> (started with it more than a year ago, as part of the -rt kernel) but 
+> these days i'm booting a 32-bit and a 64-bit allyesconfig bzImage kernel 
+> almost daily :) These bootups already caught a healthy amount of bugs in 
+> the kernel, both important and unimportant ones. Recently the size of 
+> the allyesconfig bzImage kernel surpassed 42MB, so it's massive.
+> 
+> Btw., i also boot "allnoconfig" kernels. [with just the minimal set of 
+> features turned on to make the kernel minimally boot up and report back 
+> via networking.]
 
-> I tried 2.6.24.5 but the ses seems to be introduced in 2.6.25.
+Thanks ... it looks like we may have trouble from devices that alter the
+unchecked isa dma flag after scsi_host_alloc.  The guilty parties appear
+to be gdth, eata, u14-34f, ultrastor, BusLogic and advansys.
 
-OK ... it's hard for me to keep track of what went when.  It must have
-gone in after 2.6.24 in the merge window.
-=20
-> > to see what's in the enclosure, just do
-> >=20
-> > ls /sys/class/enclosure/*/
->=20
-> # ls /sys/class/enclosure/*/
-> /sys/class/enclosure/6:0:16:0/:
-> 0  10  12  14  2  4  6  8  components  subsystem
-> 1  11  13  15  3  5  7  9  device      uevent
->=20
-> /sys/class/enclosure/6:0:33:0/:
-> 0  10  12  14  2  4  6  8  components  subsystem
-> 1  11  13  15  3  5  7  9  device      uevent
->=20
-> This is two times the same enclosure.
+The trouble is that if you alloc the host with it one way and free it
+with it the other, the wrong freelist is used and the ref counts are
+invalid.
 
-That's unusual .. to have two devices managing the same enclosure, but
-if you only have 16 slots and not 32, I suppose it must be so.  I'd als=
-o
-guess the enclosure information doesn't provide slot names, so ses
-automatically provided the numbering.
-
-I have a 12 slot vitesse enclosure with two enclosure devices but they
-each manage half the slots:
-
-/sys/class/enclosure/0:0:1:0/:
-components  power/     SLOT 007/  SLOT 009/  SLOT 011/   uevent
-device@     SLOT 006/  SLOT 008/  SLOT 010/  subsystem@
-
-/sys/class/enclosure/0:0:3:0/:
-components  power/     SLOT 001/  SLOT 003/  SLOT 005/   uevent
-device@     SLOT 000/  SLOT 002/  SLOT 004/  subsystem@
-
-> > each of the subdirectories has a slot label (name taken from SES) t=
-o
-> > locate the enclosure, just echo 1 to the locate file and it will fl=
-ash
-> > the lights.  If it has a disk, there should be a device link in the=
- slot
-> > directory (might not be, this depends on ses working correctly and =
-VPD
-> > inquiries identifying the right disk).
->=20
-> monosan:/sys/class/enclosure/6:0:16:0/0 # ls -l
-> insgesamt 0
-> -rw-r--r-- 1 root root 4096 21. Apr 10:48 active
-> -rw-r--r-- 1 root root 4096 21. Apr 10:48 fault
-> -rw-r--r-- 1 root root 4096 21. Apr 10:48 locate
-> -rw-r--r-- 1 root root 4096 21. Apr 10:48 status
-> lrwxrwxrwx 1 root root    0 21. Apr 10:46 subsystem -> ../../../enclo=
-sure_component
-> -r--r--r-- 1 root root 4096 21. Apr 10:48 type
-> --w------- 1 root root 4096 21. Apr 10:48 uevent
->=20
-> There seems to be no device link if I understood you correctly.
-> Is the subdirctory numbering somehow in relation to the SCSI ID?
-
-No ... the subdirectory numbering is taken from the enclosure
-information (if available)... it should be the slot numbers of the
-enclosure.  If the slot is populated a device link should appear (this
-is the tricky bit because the ses driver uses VPD inquiries to match up
-the reported disk, assuming the enclosure reports it, to the actual one=
-=2E
-These work for SAS disks, but not for SATA ones).  Empty slots have no
-device link (but you can still flash the lights using the files).
-
-If you look at my enclosure, I only have two devices:
-
-sparkweed:~# ls -l /sys/class/enclosure/*/*/device
-lrwxrwxrwx 1 root root 0 2008-04-21 10:16 /sys/class/enclosure/0:0:1:0/=
-SLOT 006/device -> ../../../../../../../port-0:0:0/end_device-0:0:0/tar=
-get0:0:0/0:0:0:0
-lrwxrwxrwx 1 root root 0 2008-04-21 10:16 /sys/class/enclosure/0:0:3:0/=
-SLOT 001/device -> ../../../../../../../port-0:1:11/end_device-0:1:11/t=
-arget0:0:2/0:0:2:0
+Try this pseudo fix: it avoids allocating the freelist until add time
+(by which time they should all have fixed the flag).  It still doesn't
+change the fact that the host is allocated in the wrong region, but that
+shouldn't matter too much.
 
 James
 
+---
 
-James
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 1592640..75af254 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -199,9 +199,13 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
+ 	if (!shost->can_queue) {
+ 		printk(KERN_ERR "%s: can_queue = 0 no longer supported\n",
+ 				sht->name);
+-		goto out;
++		goto fail;
+ 	}
+ 
++	error = scsi_setup_command_freelist(shost);
++	if (error)
++		goto fail;
++
+ 	if (!shost->shost_gendev.parent)
+ 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
+ 
+@@ -255,6 +259,8 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
+  out_del_gendev:
+ 	device_del(&shost->shost_gendev);
+  out:
++	scsi_destroy_command_freelist(shost);
++ fail:
+ 	return error;
+ }
+ EXPORT_SYMBOL(scsi_add_host);
+@@ -376,10 +382,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	else
+ 		shost->dma_boundary = 0xffffffff;
+ 
+-	rval = scsi_setup_command_freelist(shost);
+-	if (rval)
+-		goto fail_kfree;
+-
+ 	device_initialize(&shost->shost_gendev);
+ 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
+ 		shost->host_no);
+@@ -395,14 +397,12 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 			"scsi_eh_%d", shost->host_no);
+ 	if (IS_ERR(shost->ehandler)) {
+ 		rval = PTR_ERR(shost->ehandler);
+-		goto fail_destroy_freelist;
++		goto fail_kfree;
+ 	}
+ 
+ 	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
+ 
+- fail_destroy_freelist:
+-	scsi_destroy_command_freelist(shost);
+  fail_kfree:
+ 	kfree(shost);
+ 	return NULL;
 
 
-> Thanks
-> Lars
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
