@@ -1,73 +1,41 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: Re: PATCH: 64 bit support for dpt_i2o driver (take 2)
-Date: Mon, 21 Apr 2008 14:47:27 -0400
-Message-ID: <C4F0B40B-F679-45EE-9153-543FAAB2E909@adaptec.com>
-References: <xs4all.20080418215937.GA15199@xs4all.net> <E1JnKNB-00049W-OY@n2o.xs4all.nl>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10486] kernel 2.6.24  4G FC arrays don't work properly with qla2xxx driver
+Date: Mon, 21 Apr 2008 12:02:13 -0700 (PDT)
+Message-ID: <20080421190213.CAF31108060@picon.linux-foundation.org>
+References: <bug-10486-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:59723 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753381AbYDUSr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2008 14:47:29 -0400
-In-Reply-To: <E1JnKNB-00049W-OY@n2o.xs4all.nl>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41290 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753673AbYDUTCq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Apr 2008 15:02:46 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3LJ2FKx018648
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2008 12:02:17 -0700
+In-Reply-To: <bug-10486-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Scsi <linux-scsi@vger.kernel.org>
-Cc: Miquel van Smoorenburg <miquels@cistron.nl>
+To: linux-scsi@vger.kernel.org
 
-Good catch on round two,
+http://bugzilla.kernel.org/show_bug.cgi?id=10486
 
-ACK
 
--- Mark Salyzyn
 
-On Apr 19, 2008, at 5:13 PM, Miquel van Smoorenburg wrote:
 
-> This is an update for the patch I sent two days ago. It appears
-> that on some hardware the debug registers are not mapped into
-> the same range as the standard registers, so we need an
-> extra ioremap() call for them.
->
-> Please consider this for 2.6.26.
->
-> # --
->
-> I've been running supermicro hardware with the Adaptec 2005/2010/2015
-> zero channel raid controllers for a long while. The dpt_i2o driver
-> in the kernel doesn't support 64-bit mode, yet I wanted to run
-> a 64-bit system. The i2o_block driver wasn't 64-bit capable either.
-> Mark Salyzyn from Adaptec kindly provided me with a 64-bit version
-> of the dpt_i2o driver, unfortunately it never made its way to
-> the upstream kernel.
->
-> In my experience, the dpt_i2o driver is rock-stable for the
-> Adaptec ZCR hardware, while the i2o_block driver isn't.
-> Because the dpt_i2o driver is still in the kernel and actively
-> being used, I decided to merge the essential 64 bits parts
-> of the alternative driver into the current kernel dpt_i2o driver.
->
-> # --------- dpt_i2o-64bit-2.6.25.patch ----------------
->
-> This patch is an update for drivers/scsi/dpt_i2o.c.
-> It applies to both 2.6.24.4 and 2.6.25
->
-> It contains the following changes:
->
-> * 64 bit code based on unofficial Adaptec 64 bit driver
-> * removes scsi_module.c dependency, adds module_init / module_exit
->  this is needed because we need to pass the proper device to
->  scsi_add_host(), and the scsi_module.c passes NULL. With NULL,
->  code like arch/x64/kernel/pci-gart_64.c::need_iommu() crashes
->  because the dev pointer it is passed is NULL.
-> * adds sysfs entry for /sys/class/dpt_i2o/dptiX so that udev
->  can create /dev/dptiX dynamically
->
-> Obviously there are more cleanups that can be done to this code,
-> but we need to start somewhere. Patch has been tested heavily on
-> both 32 and 64 bit x86 platforms.
->
-> Signed-off-by: Miquel van Smoorenburg <miquels@cistron.nl>
->
 
+------- Comment #4 from andrej.filipcic@ijs.si  2008-04-21 12:02 -------
+The lun information is correct. The luns are ~23TB in size, the fibre channel
+connection speed is 4Gb/s. But as soon as vgscan is run, there are read errors
+from the device (like /dev/sdc). The device file does not have any successful
+operation. vgscan just tries to read /dev/sdc to scan for possible LVM groups,
+since it is easier to handle them in fstab. 
+
+In short, all external disk are detected/reported correctly. device files of
+disks with 2Gb/s connection can be used (read), while device files wih 4Gb/s
+connection are unsuable (read errors from /dev/sdc)
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
