@@ -1,140 +1,191 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [bug] SCSI/SLUB - latest -git: WARNING: at mm/slub.c:2443
-	kmem_cache_destroy, scsi_put_host_cmd_pool()
-Date: Mon, 21 Apr 2008 10:57:20 -0500
-Message-ID: <1208793440.3640.22.camel@localhost.localdomain>
-References: <20080419085758.GA18612@elte.hu>
-	 <1208611357.3280.5.camel@localhost.localdomain>
-	 <20080421134925.GK9554@elte.hu>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [RFC] results of endianness review of qla2xxx
+Date: Mon, 21 Apr 2008 10:26:46 -0700
+Message-ID: <20080421172646.GC45789@plap4.qlogic.org>
+References: <20080416055458.GC27459@ZenIV.linux.org.uk> <20080418181758.GJ22973@plap4.local> <20080418190658.GI27459@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58668 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762151AbYDUP5Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2008 11:57:24 -0400
-In-Reply-To: <20080421134925.GK9554@elte.hu>
+Received: from avexch1.qlogic.com ([198.70.193.115]:8307 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754656AbYDUR0r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Apr 2008 13:26:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20080418190658.GI27459@ZenIV.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Christoph Lameter <clameter@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-scsi@vger.kernel.org, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Mon, 2008-04-21 at 15:49 +0200, Ingo Molnar wrote:
-> * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > > x86.git allyesconfig bootup test produced the following warning in 
-> > > slub.c (and a stream of similar warnings later on):
-> [...]
-> 
-> > > config and bootlog at:
-> > > 
-> > >  http://redhat.com/~mingo/misc/config-Sat_Apr_19_10_28_28_CEST_2008.bad
-> > >  http://redhat.com/~mingo/misc/log-Sat_Apr_19_10_28_28_CEST_2008.bad
-> > > 
-> > > [a few .config options were turned off: just accept all the defaults 
-> > >  after 'make oldconfig']
+On Fri, 18 Apr 2008, Al Viro wrote:
+
+> On Fri, Apr 18, 2008 at 11:17:58AM -0700, Andrew Vasquez wrote:
+> > > 7) qla2x00_async_event():
+> > > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+> > > 		...
+> > > 		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+> > > 		handles[1] = le32_to_cpu(
+> > > 		    ((uint32_t)(RD_MAILBOX_REG(ha, reg, 7) << 16)) |
+> > > and then those values are passed to qla2x00_process_completed_request() which
+> > > expects a host-endian (and uses it as index in array, among other things).
 > > 
-> > The WARN_ON is caused by kmem_cache_destroy() with apparently 
-> > outstanding objects, isn't it?
+> > THis is correct (though a bit confuscated), each of the two 16bit
+> > mailbox-registers makes-up a 32bit LE value, which is converted to
+> > cpu-endian and passed to qla2x00_process_completed_request().
+> 
+> Um, no.  First of all, other branches in that switch clearly assume
+> that mb[] is already host-endian.  But leaving that aside, what you
+> are doing here will _not_ work even if mb[1] and mb[2] are l-e in
+> this case.
+> 
+> Look what happens:
+> * l-e host:
+> 	handles[0] = (mb[2] << 16) | mb[1], which is equal to
+> (le16_to_cpu(mb[2]) << 16) | le16_to_cpu(mb[1])
+> * on b-e host:
+> 	handles[0] = swab32((mb[2] << 16) | mb[1]), which is equal to
+> (swab16(mb[1]) << 16) | swab16(mb[2]), which is equal to
+> (le16_to_cpu(mb[1]) << 16) | le16_to_cpu(mb[2])
+> 
+> IOW, resulting host-endian value will be different with the same contents
+> in mb[].  Put it another way, suppose you have mb[1] == 0, mb[2] == 0x101.
+> Then on l-e you'll get handles[0] == 0x10100 and on b-e - 0x101.  The latter
+> will pass the check for index being too high, the former will fail...
+> 
+> BTW, RD_MAILBOX_REG() boils down to readw(), which is definitely host-endian.
+> And we have
+>                         mb[0] = MBA_SCSI_COMPLETION;
+>                         mb[1] = MSW(stat);
+>                         mb[2] = RD_MAILBOX_REG(ha, reg, 2);
+>                         qla2x00_async_event(ha, mb);
+> so there's at least one path reaching qla2x00_async_event() with mb[0]
+> equal to MBA_SCSI_COMPLETION and mb[2] containing host-endian...  Looking
+> at the contents of stat and the things we do to it (switch (stat & 0xff) right
+> outside that code), mb[1] is host-endian as well...  AFAICS, the same holds
+> for all codepaths - contents of mb[] is host-endian.
+
+Yes, all mb[] "values" are going to be in host-endian format.
+
+But, what's missing here is an understanding of what mb[2] and mb[1]
+are representing during MBA_SCSI_COMPLETION and MBA_CMPLT_2_32BIT
+handling.  Upon command submission, a 32bit handle (cookie) is
+associated with each IOCB:
+
+	...
+	cmd_pkt = (cmd_entry_t *)ha->request_ring_ptr;
+	cmd_pkt->handle = handle;
+	/* Zero out remaining portion of packet. */
+	clr_ptr = (uint32_t *)cmd_pkt + 2;
+	memset(clr_ptr, 0, REQUEST_ENTRY_SIZE - 8);
+	cmd_pkt->dseg_count = cpu_to_le16(tot_dsds);
+
+	/* Set target ID and LUN number*/
+	SET_TARGET_ID(ha, cmd_pkt->target, sp->fcport->loop_id);
+	cmd_pkt->lun = cpu_to_le16(sp->cmd->device->lun);
+	...
+
+Notice that the 'handle'-value is assigned to the command-IOCB
+structure in host-endian format and *not* the typical little-endian
+form used to fill-in the other non-byte-sized members of the
+structure.  So, for example, start with a hypothetical 'handle' value
+of 0x12345678.  On an BE machine, the layout in memory of the value
+written to the structure will be:
+
+	mem[0]	mem[1]	mem[2]	mem[3]
+	------	------	-----	------
+	12	34	56	78
+
+On an LE machine:
+
+	mem[0]	mem[1]	mem[2]	mem[3]
+	------	------	-----	------
+	78	56	34	12
+
+'handle' sent as a host-endian value is done for a reason, as
+typically, firmware reports IOCB completion via a structure called the
+status-IOCB [2]:
+
+	#define STATUS_TYPE     0x03            /* Status entry. */
+	typedef struct {
+		uint8_t entry_type;             /* Entry type. */
+		uint8_t entry_count;            /* Entry count. */
+		uint8_t sys_define;             /* System defined. */
+		uint8_t entry_status;           /* Entry Status. */
+		uint32_t handle;                /* System handle. */
+		uint16_t scsi_status;           /* SCSI status. */
+		...
+
+where, during creation of the status-IOCB by firmware, the
+'handle'-value (at offset 0x4) is copied from the 'handle' specified
+from the command-IOCB.  Since this 'handle' is a a simple index (in
+host-endian format) into the outstanding_cmds array of the HBA,
+there's really no reason to convert the value to little-endian format
+at submission time, then convert from little-endian to host-endian
+form during status-IOCB handling within the driver [3]:
+
+	...
+	/* Fast path completion. */
+	if (comp_status == CS_COMPLETE && scsi_status == 0) {
+		qla2x00_process_completed_request(ha, sts->handle);
+
+		return;
+	}
+
+So, getting back to MBA_SCSI_COMPLETION and MBA_CMPLT_2_32BIT
+completions, the "value" of the mailbox registers returned by firmware
+are:
+
+	mb[1]: mem[1] << 8 | mem[0]
+	mb[2]: mem[3] << 8 | mem[2]
+
+which on an LE machine result in:
+
+	mb[1]: 0x5678
+	mb[2]: 0x1234
+
+	handle[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+	handle[0] = (0x1234 << 16) | 0x5678)
+	handle[0] = 0x12345678
+
+and on an BE machine the values are:
+
+	mb[1]: 0x3412
+	mb[2]: 0x7856
+
+	handle[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+	handle[0] = swab32((0x7856 << 16) | 0x3412)
+	handle[0] = swab32(0x78563412)
+	handle[0] = 0x12345678
+
+> > > 9) qla2x00_clear_nvram_protection():
+> > >         wprot_old = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
+> > > 	stat = qla2x00_write_nvram_word_tmo(ha, ha->nvram_base,
+> > > 		    __constant_cpu_to_le16(0x1234), 100000);
+> > > 	wprot = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
+> > > 	if (stat != QLA_SUCCESS || wprot != 0x1234) {
+> > > Odd, since qla2x00_get_nvram_word() returns a host-endian and 
+> > > qla2x00_write_nvram_word_tmo() expects one (this stuff is bit-banging
+> > > 16bit values through).
 > > 
-> > The most significant piece of the log seems to be before with all 
-> > those isa SCSI drivers ... I assume you don't actually have any of the 
-> > hardware, you're just randomly inserting the modules?
+> > Odd, yes.  I was never happy with this endianess intermixing, but
+> > after numerous cycles within our qual-testing, this code works in both
+> > big and little-endian systems...
 > 
-> correct. As i mentioned it in the first sentence this is an allyesconfig 
-> bzImage bootup. I.e. this is the bootup log of a "make allyesconfig" 
-> kernel - roughly analogous to (trying to) insert every module in 
-> existence. In the boot log you'll find 4871 initcalls, done by over 3000 
-> drivers that each is attempted to be loaded by the kernel (!).
-> 
-> I do those bootups to "run as much as possible" kernel code and to make 
-> sure that the maximum combination of debug and other features still 
-> produces a working kernel.
-> 
-> I had to work half a year to gradually get the kernel to that stage 
-> (started with it more than a year ago, as part of the -rt kernel) but 
-> these days i'm booting a 32-bit and a 64-bit allyesconfig bzImage kernel 
-> almost daily :) These bootups already caught a healthy amount of bugs in 
-> the kernel, both important and unimportant ones. Recently the size of 
-> the allyesconfig bzImage kernel surpassed 42MB, so it's massive.
-> 
-> Btw., i also boot "allnoconfig" kernels. [with just the minimal set of 
-> features turned on to make the kernel minimally boot up and report back 
-> via networking.]
+> It looks like check that location is writable; what happens if you replace
+> the first instance with 0x1234 and the second (in wprot == ...) with
+> cpu_to_le16(0x1234)?  One "we won't find it there by accident, must've been
+> successful write" value seems to be as good as other, unless something else
+> is going on...
 
-Thanks ... it looks like we may have trouble from devices that alter the
-unchecked isa dma flag after scsi_host_alloc.  The guilty parties appear
-to be gdth, eata, u14-34f, ultrastor, BusLogic and advansys.
+One would hope so, yes...
 
-The trouble is that if you alloc the host with it one way and free it
-with it the other, the wrong freelist is used and the ref counts are
-invalid.
+Anyway, hope that helped...
 
-Try this pseudo fix: it avoids allocating the freelist until add time
-(by which time they should all have fixed the flag).  It still doesn't
-change the fact that the host is allocated in the wrong region, but that
-shouldn't matter too much.
+--
+av
 
-James
+[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/scsi/qla2xxx/qla_iocb.c;h=5489d5024673a326b5345f5545151a7dab37a533;hb=HEAD#l346
 
----
+[2] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/scsi/qla2xxx/qla_def.h;h=094d95f0764c6027cb421e4d3e5da9bf17012dfd;hb=HEAD#l1259
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1592640..75af254 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -199,9 +199,13 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
- 	if (!shost->can_queue) {
- 		printk(KERN_ERR "%s: can_queue = 0 no longer supported\n",
- 				sht->name);
--		goto out;
-+		goto fail;
- 	}
- 
-+	error = scsi_setup_command_freelist(shost);
-+	if (error)
-+		goto fail;
-+
- 	if (!shost->shost_gendev.parent)
- 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
- 
-@@ -255,6 +259,8 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
-  out_del_gendev:
- 	device_del(&shost->shost_gendev);
-  out:
-+	scsi_destroy_command_freelist(shost);
-+ fail:
- 	return error;
- }
- EXPORT_SYMBOL(scsi_add_host);
-@@ -376,10 +382,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	else
- 		shost->dma_boundary = 0xffffffff;
- 
--	rval = scsi_setup_command_freelist(shost);
--	if (rval)
--		goto fail_kfree;
--
- 	device_initialize(&shost->shost_gendev);
- 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
- 		shost->host_no);
-@@ -395,14 +397,12 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 			"scsi_eh_%d", shost->host_no);
- 	if (IS_ERR(shost->ehandler)) {
- 		rval = PTR_ERR(shost->ehandler);
--		goto fail_destroy_freelist;
-+		goto fail_kfree;
- 	}
- 
- 	scsi_proc_hostdir_add(shost->hostt);
- 	return shost;
- 
-- fail_destroy_freelist:
--	scsi_destroy_command_freelist(shost);
-  fail_kfree:
- 	kfree(shost);
- 	return NULL;
-
-
+[3] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/scsi/qla2xxx/qla_isr.c;h=285479b62d8f02084ad0daebc12ab249f16348c0;hb=HEAD#l944
