@@ -1,31 +1,119 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
-Date: Wed, 23 Apr 2008 07:28:45 +1200
-Message-ID: <480E3C6D.5090604@sauce.co.nz>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [patch 02/10] Dell CERC support for megaraid_mbox
+Date: Tue, 22 Apr 2008 13:44:38 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26502130B8E@NAMAIL1.ad.lsil.com>
+References: <200804182057.m3IKvK6K015358@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:60108 "EHLO smtp.sauce.co.nz"
+Received: from mail0.lsil.com ([147.145.40.20]:57054 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757146AbYDVT0M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2008 15:26:12 -0400
+	id S1755990AbYDVTpD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 15:45:03 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <200804182057.m3IKvK6K015358@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sebastian@wasilewski.name
+To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, James.Bottomley@SteelEye.com, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-I received a reply from LSI:
 
-"It seems there is some bad cable or connectivity or bad device in the
-topology. The loginfo 0x31123000 says the I/O is aborted due to a Stuck
-Link. The loginfo 0x31120403 specifies the I/O is aborted due to frame
-transfer errors."
+Hannes,
 
-So far doing large dd reads and writes, I have been unable to generate 
-any of these errors, it is only during the initial md RAID5 sync up, so 
-I guess this is going to be a little tricky to pin down.
+Our FW team give me the feedback said: LSI never release CERC firware
+version >=6.62.  I have asked our DELL contactor to check with DELL if
+DELL know who made this release.  I will update you as soon as I get the
+words from DELL.  Also if you have the information regarding to the CERC
+FW 6.62 release, can you pass them to me?  I need to know the details
+about this release.
 
-Regards,
+Thanks.
 
-Richard
+Bo Yang        
+
+-----Original Message-----
+From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
+Sent: Friday, April 18, 2008 4:57 PM
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; hare@suse.de;
+Yang, Bo; James.Bottomley@SteelEye.com; Patro, Sumant
+Subject: [patch 02/10] Dell CERC support for megaraid_mbox
+
+From: Hannes Reinecke <hare@suse.de>
+
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is
+supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
+and not finding any devices, obviously.
+
+So we disable the random deletion support if the offending firmware is
+found.
+
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
+
+diff -puN
+drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.c
+---
+a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3168,6 +3168,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
+ 
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device ==
+PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random
+deletion\n"));
++		return 0;
++	}
+ 
+ 	mbox = (mbox_t *)raw_mbox;
+ 
+diff -puN
+drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.h
+---
+a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+ 
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
+kernel
+_
