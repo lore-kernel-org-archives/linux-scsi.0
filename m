@@ -1,49 +1,40 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
-Date: Tue, 22 Apr 2008 14:02:52 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229FFED91@NAMAIL2.ad.lsil.com>
-References: <480E3C6D.5090604@sauce.co.nz>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
+Date: Wed, 23 Apr 2008 08:16:02 +1200
+Message-ID: <480E4782.3020109@sauce.co.nz>
+References: <0631C836DBF79F42B5A60C8C8D4E8229FFED91@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58471 "EHLO mail0.lsil.com"
+Received: from smtp.sauce.co.nz ([210.48.49.72]:56476 "EHLO smtp.sauce.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbYDVUC5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 16:02:57 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <480E3C6D.5090604@sauce.co.nz>
+	id S1753524AbYDVUN3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2008 16:13:29 -0400
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229FFED91@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>, linux-scsi@vger.kernel.org
-Cc: sebastian@wasilewski.name
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org, sebastian@wasilewski.name
 
-On Tuesday, April 22, 2008 1:29 PM,  Richard Scobie wrote:
-> I received a reply from LSI:
+Moore, Eric wrote:
+
+> The loginfo bits are defined in a header inside the linux kernel
+> sources.  
 > 
-> "It seems there is some bad cable or connectivity or bad device in the
-> topology. The loginfo 0x31123000 says the I/O is aborted due 
-> to a Stuck
-> Link. The loginfo 0x31120403 specifies the I/O is aborted due to frame
-> transfer errors."
+> Location:  /usr/src/linux/drivers/message/fusion/lsi/mpi_log_sas.h
 > 
-> So far doing large dd reads and writes, I have been unable to 
-> generate 
-> any of these errors, it is only during the initial md RAID5 
-> sync up, so 
-> I guess this is going to be a little tricky to pin down.
+> If you search for 3000, you will find
+> PL_LOGINFO_CODE_WRONG_REL_OFF_OR_FRAME_LENGTH.
 > 
+> There's no match for 403, so I guess this iz a new define not included
+> in my version of the headers.
+> 
+> Eric
 
-The loginfo bits are defined in a header inside the linux kernel
-sources.  
+Thanks Eric. I doubt I can source a new backplane to swap out, so I'll 
+try to find out if there is a more recent firmware for it and try that.
 
-Location:  /usr/src/linux/drivers/message/fusion/lsi/mpi_log_sas.h
+Regards,
 
-If you search for 3000, you will find
-PL_LOGINFO_CODE_WRONG_REL_OFF_OR_FRAME_LENGTH.
-
-There's no match for 403, so I guess this iz a new define not included
-in my version of the headers.
-
-Eric
+Richard
