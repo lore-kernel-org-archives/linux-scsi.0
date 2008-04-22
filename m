@@ -1,121 +1,159 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [patch 05/10] scsi: replace remaining __FUNCTION__ occurrences
-Date: Tue, 22 Apr 2008 17:20:55 -0500
-Message-ID: <480E64C7.9090400@cs.wisc.edu>
-References: <200804182057.m3IKvNTN015375@imap1.linux-foundation.org>
+From: Sebastian Wasilewski <sebastian@wasilewski.name>
+Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
+Date: Wed, 23 Apr 2008 00:21:58 +0100
+Message-ID: <480E7316.10403@wasilewski.name>
+References: <480E3C6D.5090604@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040705010501060402000605"
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms020808090807060508050600"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54989 "EHLO sabe.cs.wisc.edu"
+Received: from hel.fizyka.umk.pl ([158.75.5.90]:47257 "EHLO hel.fizyka.umk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752744AbYDVWVM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2008 18:21:12 -0400
-In-Reply-To: <200804182057.m3IKvNTN015375@imap1.linux-foundation.org>
+	id S1752057AbYDVXZm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2008 19:25:42 -0400
+In-Reply-To: <480E3C6D.5090604@sauce.co.nz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040705010501060402000605
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+This is a cryptographically signed message in MIME format.
+
+--------------ms020808090807060508050600
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
+Richard Scobie wrote:
+> I received a reply from LSI:
 > 
-> __FUNCTION__ is gcc-specific, use __func__
+> "It seems there is some bad cable or connectivity or bad device in the
+> topology. The loginfo 0x31123000 says the I/O is aborted due to a Stuck
+> Link. The loginfo 0x31120403 specifies the I/O is aborted due to frame
+> transfer errors."
 > 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
+> So far doing large dd reads and writes, I have been unable to generate 
+> any of these errors, it is only during the initial md RAID5 sync up, so 
+> I guess this is going to be a little tricky to pin down.
 > 
 
->  drivers/scsi/iscsi_tcp.c              |   12 +++---
+Thanks for the info.
 
-Sorry about this. I forgot to send the updated patch with my update for 
-2.6.26. Attached is the updated patch built over James's scsi-misc tree. 
-If Andrew or James was going to send these for 2.6.26, then take it. If 
-not then I promise I will send it when the 2.6.27 window opens with the 
-iscsi update for that kernel.
+There is still one thing I do not understand. I have made a test -- I 
+have connected three SATA hard drives directly to the controller using 
+cable supplied with the controller. The error still occurred. Then I 
+have changed the cable to the one supplied with other controller, as 
+well as hard drives (but model was still the same) and the error message 
+was still occurring.
 
---------------040705010501060402000605
-Content-Type: text/x-patch;
- name="iscsi-replace-FUNCTION-with-func.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="iscsi-replace-FUNCTION-with-func.patch"
+I have changed controller (I have a few of them) but again, the problem 
+still existed.
 
-Replace __FUNCTION__ with __func__ in iscsi_tcp.
+The only unusual thing I have noticed during the test, was that all 
+ST31000340NS drives  worked at 1.5Gbps, not 3.0Gbps link speed.
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
- 
-__FUNCTION__ is gcc-specific, use __func__
+I have made plenty of the dd tests and all were fine (both with NCQ and 
+without).
 
-(Update diff for scsi-misc by Mike Christie)
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Regards,
+Sebastian
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 72b9b2a..6c4b17f 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -536,7 +536,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 
- 	if (tcp_ctask->exp_datasn != datasn) {
- 		debug_tcp("%s: ctask->exp_datasn(%d) != rhdr->datasn(%d)\n",
--		          __FUNCTION__, tcp_ctask->exp_datasn, datasn);
-+		          __func__, tcp_ctask->exp_datasn, datasn);
- 		return ISCSI_ERR_DATASN;
- 	}
- 
-@@ -545,7 +545,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 	tcp_ctask->data_offset = be32_to_cpu(rhdr->offset);
- 	if (tcp_ctask->data_offset + tcp_conn->in.datalen > total_in_length) {
- 		debug_tcp("%s: data_offset(%d) + data_len(%d) > total_length_in(%d)\n",
--		          __FUNCTION__, tcp_ctask->data_offset,
-+		          __func__, tcp_ctask->data_offset,
- 		          tcp_conn->in.datalen, total_in_length);
- 		return ISCSI_ERR_DATA_OFFSET;
- 	}
-@@ -638,7 +638,7 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 
- 	if (tcp_ctask->exp_datasn != r2tsn){
- 		debug_tcp("%s: ctask->exp_datasn(%d) != rhdr->r2tsn(%d)\n",
--		          __FUNCTION__, tcp_ctask->exp_datasn, r2tsn);
-+		          __func__, tcp_ctask->exp_datasn, r2tsn);
- 		return ISCSI_ERR_R2TSN;
- 	}
- 
-@@ -1176,7 +1176,7 @@ iscsi_tcp_send_hdr_prep(struct iscsi_conn *conn, void *hdr, size_t hdrlen)
- {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 
--	debug_tcp("%s(%p%s)\n", __FUNCTION__, tcp_conn,
-+	debug_tcp("%s(%p%s)\n", __func__, tcp_conn,
- 			conn->hdrdgst_en? ", digest enabled" : "");
- 
- 	/* Clear the data segment - needs to be filled in by the
-@@ -1217,7 +1217,7 @@ iscsi_tcp_send_data_prep(struct iscsi_conn *conn, struct scatterlist *sg,
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __FUNCTION__,
-+	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __func__,
- 			tcp_conn, offset, len,
- 			conn->datadgst_en? ", digest enabled" : "");
- 
-@@ -1242,7 +1242,7 @@ iscsi_tcp_send_linear_data_prepare(struct iscsi_conn *conn, void *data,
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, datalen=%d%s)\n", __FUNCTION__, tcp_conn, len,
-+	debug_tcp("%s(%p, datalen=%d%s)\n", __func__, tcp_conn, len,
- 		  conn->datadgst_en? ", digest enabled" : "");
- 
- 	/* Make sure the datalen matches what the caller
+--------------ms020808090807060508050600
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
---------------040705010501060402000605--
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIPSzCC
+BGQwggNMoAMCAQICAhtMMA0GCSqGSIb3DQEBBAUAMIGDMQswCQYDVQQGEwJQTDExMC8GA1UE
+ChMoVW5pd2Vyc3l0ZXQgTWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMY
+Q2VudHJ1bSBDZXJ0eWZpa2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4u
+cGwwHhcNMDYwNTA1MjAxOTU2WhcNMTEwNTA0MjAxOTU2WjCB0DELMAkGA1UEBhMCUEwxMTAv
+BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxPDA6BgNV
+BAsTM1d5ZHppYWwgRml6eWtpLCBBc3Ryb25vbWlpIGkgSW5mb3JtYXR5a2kgU3Rvc293YW5l
+ajEdMBsGA1UEAxMUU2ViYXN0aWFuIFdhc2lsZXdza2kxMTAvBgkqhkiG9w0BCQEWIlNlYmFz
+dGlhbi5XYXNpbGV3c2tpQGZpenlrYS51bWsucGwwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJ
+AoGBAMrwrPasXgbvrz65NTM4NPohCfBVAUG4JCpcPQi9JIMIjtsX6DfitQReQJfhlVNLvKTj
+8ClfncrAbam76l8H5THkQGv8XomTBJfW4WPTwSNlJaURllTaiyafGaf44mIJhzc/8axHbttz
+XpRgKSo6yDF8eveFo0uQpXZ3JVCcVHDfAgMBAAGjggEVMIIBETARBglghkgBhvhCAQEEBAMC
+BaAwCwYDVR0PBAQDAgWgMB0GA1UdDgQWBBRh4gBvapXgSvzjJc88cQ7E0vXfSzCBsAYDVR0j
+BIGoMIGlgBSAZUHaCDgyd1NzAuti4PrVLpspMKGBiaSBhjCBgzELMAkGA1UEBhMCUEwxMTAv
+BgNVBAoTKFVuaXdlcnN5dGV0IE1pa29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNV
+BAMTGENlbnRydW0gQ2VydHlmaWthY2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRv
+cnVuLnBsggEAMB0GA1UdJQQWMBQGA1UdDgYDVR0jBggrBgEFBQcDAzANBgkqhkiG9w0BAQQF
+AAOCAQEAaxBZz0uEpenGvNLEr5d3sTE4XsQmvzAsUOYAY45SHZRzacCUzmTgHeCW0k27rMx4
+ensJqZ5GuIV06zfNsJue+XQY8HORxBCiSsQGQYeIiyyttgQcy9b10u4dPlU0x7xO/gfGbzD6
+j+BSKXxc7c0YAX2wduIyq1e1JS4rBPlUQLx3wziKLVi/5MoLXwzHsKV+jczj1p0kRpj3snPt
+Q0sQxLW2iYQrGFTEG/x5LkgkYM++dIsx7/F3CIHKmeFss0hD2YY80jIYmW1qJ7zSLwX9MfO8
+rxafbgNrpfmdyvJzO4VWuJQxp8tpVDTZnIQTqkv3U8ulLSk0TAFqEv1A/AhpRjCCBIowggNy
+oAMCAQICECf06hH0eobEbp27bqkXBwcwDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UEBhMCU0Ux
+FDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5hbCBUVFAg
+TmV0d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0wNTA2MDcw
+ODA5MTBaFw0yMDA1MzAxMDQ4MzhaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAV
+BgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsx
+ITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJG
+aXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVNNRm5pELl
+zkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQylbsMTzC9
+mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6
+Dpvq/NonWz1zHyLmSGHGTPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPh
+wvCkxWeM1tZUOt4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws
+6wIDAQABo4HhMIHeMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1QaMB0GA1UdDgQW
+BBSJgmd9xJ0mcABLtFBIfN49rgRufTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB
+/zB7BgNVHR8EdDByMDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA2oDSgMoYwaHR0cDovL2NybC5jb21vZG8ubmV0L0FkZFRydXN0
+RXh0ZXJuYWxDQVJvb3QuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQAZ2IkRbyispgCi54fBm5AD
+236hEv0e8+LwAamUVEJrmgnEoG3XkJIEA2Z5Q3H8+G+v23ZF4jcaPd3kWQR4rBz0g0bzes9b
+hHIt5UbBuhgRKfPLSXmHPLptBZ2kbWhPrXIUNqi5sf2/z3/wpGqUNVCPz4FtVbHdWTBK322g
+nGQfSXzvNrv042n0+DmPWq1LhTq3Du3Tzw1EovsEv+QvcI4l+1pUBrPQxLxtjftzMizpm4Qk
+LdZ/kXpoAlAfDj9N6cz1u2fo3BwuO/xOzf4CjuOoEwqlJkRl6RDyTVKnrtw+ymsyXEFs/vVd
+oOr/0fqbhlhtPZZH5f4ulQTCAMyOofK7MIIGUTCCBTmgAwIBAgIRAIuGSd9lm5YjiBVwEZuS
+ZaowDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UE
+BxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8G
+A1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0
+LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgRW1haWwwHhcNMDcwODI3MDAwMDAwWhcNMDgw
+ODI2MjM1OTU5WjCB6TE1MDMGA1UECxMsQ29tb2RvIFRydXN0IE5ldHdvcmsgLSBQRVJTT05B
+IE5PVCBWQUxJREFURUQxRjBEBgNVBAsTPVRlcm1zIGFuZCBDb25kaXRpb25zIG9mIHVzZTog
+aHR0cDovL3d3dy5jb21vZG8ubmV0L3JlcG9zaXRvcnkxHzAdBgNVBAsTFihjKTIwMDMgQ29t
+b2RvIExpbWl0ZWQxHTAbBgNVBAMTFFNlYmFzdGlhbiBXYXNpbGV3c2tpMSgwJgYJKoZIhvcN
+AQkBFhlzZWJhc3RpYW5Ad2FzaWxld3NraS5uYW1lMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAtNlOUL8oeETIvEOcAwq5lBDq+7TqdtxT4ri+kA/VqN71NuaIbvQKb6zEziE9
+fSuAcdYpo2uLgOx+9K6EJUAjPEzBw25ZKCa05lrdS9K8Xale0fJ6ZVH9JiM80WeBf2UjeDFh
+2WK2EWRl6t+QNxOpYAfFcg58k0w2Lljk0l447q1tacVSpNrA0CtTh9Zve5ho26Gdrh5TPIL1
+RiVWSAHSpA6JLMfgIBxWbZcPthQ7kdFVu414dOchcCjKY9o2tbG0sMYeAzeLaTgccEW7B/o6
+gGSS+BH/v8Kv3QmXtlPFwZh7SFfL/CZlPpYAzoQ4WaVQjMOwTRQLR38YgeXXqvximQIDAQAB
+o4ICKzCCAicwHwYDVR0jBBgwFoAUiYJnfcSdJnAAS7RQSHzePa4Ebn0wHQYDVR0OBBYEFDOg
+M7vsGeGAj200arcExeUQkoKnMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1Ud
+JQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0g
+BD8wPTA7BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29t
+b2RvLm5ldC9DUFMwgaUGA1UdHwSBnTCBmjBMoEqgSIZGaHR0cDovL2NybC5jb21vZG9jYS5j
+b20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRoZW50aWNhdGlvbmFuZEVtYWlsLmNybDBKoEig
+RoZEaHR0cDovL2NybC5jb21vZG8ubmV0L1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGlj
+YXRpb25hbmRFbWFpbC5jcmwwfAYIKwYBBQUHAQEEcDBuMDYGCCsGAQUFBzAChipodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9VVE5BQUFDbGllbnRDQS5jcnQwNAYIKwYBBQUHMAKGKGh0dHA6
+Ly9jcnQuY29tb2RvLm5ldC9VVE5BQUFDbGllbnRDQS5jcnQwJAYDVR0RBB0wG4EZc2ViYXN0
+aWFuQHdhc2lsZXdza2kubmFtZTANBgkqhkiG9w0BAQUFAAOCAQEAMkro/eoHrznPnh3YmoyJ
+8V91GC7SMJ9R2ezqAfDVdjp3qCBqoPlHjcy3tgn0Hc2LyCoLMRUb2OHhRP7umnQVdELtwehS
+jnFohZrAY+WKSq4bcU8oe/jXHOTA1PzgkTeGUjTjA2ChwhUwLZxvinIYVXuI7EqgPVaKTAy4
+2XxDKDB44ussql6pYViEZT7xtZfFxOni2uPQS0Ex9keHxdnTK6kDkpj+gPyxNHgkaKbnhN7/
+PUeX407VMN0+iUKEt+mEbQMjPu2taZkfxrB9+BZYTYo/eSonsa0X1VdxlV2p+CHaVQHVbyRb
+enwKWYaRtC4o+0T2lhgc0uWlwJgqF2XGWTGCA98wggPbAgEBMIHEMIGuMQswCQYDVQQGEwJV
+UzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUg
+VVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2
+MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWls
+AhEAi4ZJ32WbliOIFXARm5JlqjAJBgUrDgMCGgUAoIIB7zAYBgkqhkiG9w0BCQMxCwYJKoZI
+hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MjIyMzIxNThaMCMGCSqGSIb3DQEJBDEWBBQx
+z5zNhtCza87jJqboHoixCc/LhDBSBgkqhkiG9w0BCQ8xRTBDMAoGCCqGSIb3DQMHMA4GCCqG
+SIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCBmwYJ
+KwYBBAGCNxAEMYGNMIGKMIGDMQswCQYDVQQGEwJQTDExMC8GA1UEChMoVW5pd2Vyc3l0ZXQg
+TWlrb2xhamEgS29wZXJuaWthIHcgVG9ydW5pdTEhMB8GA1UEAxMYQ2VudHJ1bSBDZXJ0eWZp
+a2FjamkgVU1LMR4wHAYJKoZIhvcNAQkBFg9jYUB1bmkudG9ydW4ucGwCAhtMMIGdBgsqhkiG
+9w0BCRACCzGBjaCBijCBgzELMAkGA1UEBhMCUEwxMTAvBgNVBAoTKFVuaXdlcnN5dGV0IE1p
+a29sYWphIEtvcGVybmlrYSB3IFRvcnVuaXUxITAfBgNVBAMTGENlbnRydW0gQ2VydHlmaWth
+Y2ppIFVNSzEeMBwGCSqGSIb3DQEJARYPY2FAdW5pLnRvcnVuLnBsAgIbTDANBgkqhkiG9w0B
+AQEFAASCAQA7bCXCbf90ZDTBzEciXto0TB7FA5behdMlGAcvweI0soEvqpZpBzRMxaLCFM2W
+gvLyMhRVGz6fsZu3ZDgMJjMlK+MoF8uSVLOwVmrdgp3vvKU+spjWVoehOjzPMtYJDrPGnWZN
+2K3HtpX55h13phT1BkSP421/wlmNmvg2FBngQtyHCE08gi9cYiG5NZmGHNOZxYrl0hIAc1Lc
+phkfKL2nwbUKF1MECY9hfKYIwg3CvKwapMfuDnYwfSKJbkXCWoBhHzdDq1DM+fzOvztRb4L2
+O52d79VlVfDRu0iAU0wnD8KO4PuN2dN2sW2gycgH0JdOvpHj2F3oHo+PGwtDX0gBAAAAAAAA
+
+--------------ms020808090807060508050600--
