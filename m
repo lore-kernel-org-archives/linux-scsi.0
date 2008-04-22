@@ -1,58 +1,100 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [bug] SCSI/SLUB - latest -git: WARNING: at mm/slub.c:2443
-	kmem_cache_destroy, scsi_put_host_cmd_pool()
-Date: Tue, 22 Apr 2008 08:39:59 -0500
-Message-ID: <1208871600.3105.1.camel@localhost.localdomain>
-References: <20080419085758.GA18612@elte.hu>
-	 <1208611357.3280.5.camel@localhost.localdomain>
-	 <20080421134925.GK9554@elte.hu>
-	 <1208793440.3640.22.camel@localhost.localdomain>
-	 <20080422131020.GB7311@elte.hu>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: MPTSAS: ("activate status led" | "find disc") in external enclosure
+Date: Tue, 22 Apr 2008 09:44:32 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229FFECC9@NAMAIL2.ad.lsil.com>
+References: <20080422091837.12790125.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59997 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754234AbYDVNkG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2008 09:40:06 -0400
-In-Reply-To: <20080422131020.GB7311@elte.hu>
+Received: from mail0.lsil.com ([147.145.40.20]:38409 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756787AbYDVPos convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 11:44:48 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20080422091837.12790125.taeuber@bbaw.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Christoph Lameter <clameter@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: =?iso-8859-1?Q?Lars_T=E4uber?= <taeuber@bbaw.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2008-04-22 at 15:10 +0200, Ingo Molnar wrote:
-> * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > Thanks ... it looks like we may have trouble from devices that alter 
-> > the unchecked isa dma flag after scsi_host_alloc.  The guilty parties 
-> > appear to be gdth, eata, u14-34f, ultrastor, BusLogic and advansys.
-> > 
-> > The trouble is that if you alloc the host with it one way and free it 
-> > with it the other, the wrong freelist is used and the ref counts are 
-> > invalid.
-> > 
-> > Try this pseudo fix: it avoids allocating the freelist until add time 
-> > (by which time they should all have fixed the flag).  It still doesn't 
-> > change the fact that the host is allocated in the wrong region, but 
-> > that shouldn't matter too much.
-> 
-> ok - do you intend to push this pseudo-fix upstream? If yes then please 
-> consider it fixed as far as i'm concerned - i'll re-reply if the warning 
-> resurfaces (it wasnt lethal to the bootup otherwise). Or if you've got 
-> some other approach/fix then i can test that too.
+On Tuesday, April 22, 2008 1:19 AM, Lars T=E4uber wrote: =20
 
-It's certainly the line of least resistance.  The more correct fix would
-be to haul unchecked_isa_dma out of the host and make everything use the
-template, so it becomes immutable (as it should be).  However, that's a
-lot of work and given that Andi's gunning for unchecked_isa_dma anyway,
-probably not worth it.
+> So this will never work for the SATA discs in our enclosure,=20
+> right? Or is there a chance with asking LSI to do something=20
+> in their firmware?
+>=20
+> Seems I have no chance to get to know which slot contains the=20
+> failed drive without a shutdown. Bad luck.
+>=20
 
-So, unless I think of something better in the next few days, this is the
-way I'll fix it.
+If you want to upgrade your controller fw, I need the contents of all t=
+he attributes in /sys/class/scsi_host/host#.  Just yesterday we got War=
+ner Wakko upgraded, and I believe it might of solved his problems.   I'=
+m not sure what problems your experiencing, as this thread has been har=
+d to follow.
 
-James
+I would like to point out there is a firmware request for sending SEP r=
+equest, for instance setting LEDS.   Here is a copy of the structure.  =
+We call this function to set LED when there is SMART errors (for non-ra=
+id devices).  For RAID, the firmware handles it.   Is this what your lo=
+oking for?
 
+=46unction =3D MPI_FUNCTION_SCSI_ENCLOSURE_PROCESSOR:
 
+typedef struct _MSG_SEP_REQUEST
+{
+    U8                      TargetID;           /* 00h */
+    U8                      Bus;                /* 01h */
+    U8                      ChainOffset;        /* 02h */
+    U8                      Function;           /* 03h */
+    U8                      Action;             /* 04h */
+    U8                      Flags;              /* 05h */
+    U8                      Reserved1;          /* 06h */
+    U8                      MsgFlags;           /* 07h */
+    U32                     MsgContext;         /* 08h */
+    U32                     SlotStatus;         /* 0Ch */
+    U32                     Reserved2;          /* 10h */
+    U32                     Reserved3;          /* 14h */
+    U32                     Reserved4;          /* 18h */
+    U16                     Slot;               /* 1Ch */
+    U16                     EnclosureHandle;    /* 1Eh */
+} MSG_SEP_REQUEST, MPI_POINTER PTR_MSG_SEP_REQUEST,
+  SEPRequest_t, MPI_POINTER pSEPRequest_t;
+
+/* Action defines */
+#define MPI_SEP_REQ_ACTION_WRITE_STATUS                 (0x00)
+#define MPI_SEP_REQ_ACTION_READ_STATUS                  (0x01)
+
+/* Flags defines */
+#define MPI_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS        (0x01)
+#define MPI_SEP_REQ_FLAGS_BUS_TARGETID_ADDRESS          (0x00)
+
+/* SlotStatus bits for MSG_SEP_REQUEST */
+#define MPI_SEP_REQ_SLOTSTATUS_NO_ERROR                 (0x00000001)
+#define MPI_SEP_REQ_SLOTSTATUS_DEV_FAULTY               (0x00000002)
+#define MPI_SEP_REQ_SLOTSTATUS_DEV_REBUILDING           (0x00000004)
+#define MPI_SEP_REQ_SLOTSTATUS_IN_FAILED_ARRAY          (0x00000008)
+#define MPI_SEP_REQ_SLOTSTATUS_IN_CRITICAL_ARRAY        (0x00000010)
+#define MPI_SEP_REQ_SLOTSTATUS_PARITY_CHECK             (0x00000020)
+#define MPI_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT          (0x00000040)
+#define MPI_SEP_REQ_SLOTSTATUS_UNCONFIGURED             (0x00000080)
+#define MPI_SEP_REQ_SLOTSTATUS_HOT_SPARE                (0x00000100)
+#define MPI_SEP_REQ_SLOTSTATUS_REBUILD_STOPPED          (0x00000200)
+#define MPI_SEP_REQ_SLOTSTATUS_REQ_CONSISTENCY_CHECK    (0x00001000)
+#define MPI_SEP_REQ_SLOTSTATUS_DISABLE                  (0x00002000)
+#define MPI_SEP_REQ_SLOTSTATUS_REQ_RESERVED_DEVICE      (0x00004000)
+#define MPI_SEP_REQ_SLOTSTATUS_IDENTIFY_REQUEST         (0x00020000)
+#define MPI_SEP_REQ_SLOTSTATUS_REQUEST_REMOVE           (0x00040000)
+#define MPI_SEP_REQ_SLOTSTATUS_REQUEST_INSERT           (0x00080000)
+#define MPI_SEP_REQ_SLOTSTATUS_DO_NOT_MOVE              (0x00400000)
+#define MPI_SEP_REQ_SLOTSTATUS_ACTIVE                   (0x00800000)
+#define MPI_SEP_REQ_SLOTSTATUS_B_ENABLE_BYPASS          (0x04000000)
+#define MPI_SEP_REQ_SLOTSTATUS_A_ENABLE_BYPASS          (0x08000000)
+#define MPI_SEP_REQ_SLOTSTATUS_DEV_OFF                  (0x10000000)
+#define MPI_SEP_REQ_SLOTSTATUS_SWAP_RESET               (0x80000000)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
