@@ -1,98 +1,104 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: MPTSAS: ("activate status led" | "find disc") in external enclosure
-Date: Tue, 22 Apr 2008 09:44:32 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229FFECC9@NAMAIL2.ad.lsil.com>
-References: <20080422091837.12790125.taeuber@bbaw.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: MPTSAS: ("activate status led" | "find disc") in external
+	enclosure
+Date: Tue, 22 Apr 2008 11:12:14 -0500
+Message-ID: <1208880734.3105.24.camel@localhost.localdomain>
+References: <20080418124104.9ca87130.taeuber@bbaw.de>
+	 <1208528945.3063.7.camel@localhost.localdomain>
+	 <20080421110148.1918485e.taeuber@bbaw.de>
+	 <1208791005.3640.10.camel@localhost.localdomain>
+	 <20080422091837.12790125.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:38409 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756787AbYDVPos convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 11:44:48 -0400
-Content-class: urn:content-classes:message
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47139 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752790AbYDVQMT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2008 12:12:19 -0400
 In-Reply-To: <20080422091837.12790125.taeuber@bbaw.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-1?Q?Lars_T=E4uber?= <taeuber@bbaw.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Lars =?ISO-8859-1?Q?T=E4uber?= <taeuber@bbaw.de>
 Cc: linux-scsi@vger.kernel.org
 
-On Tuesday, April 22, 2008 1:19 AM, Lars T=E4uber wrote: =20
-
-> So this will never work for the SATA discs in our enclosure,=20
-> right? Or is there a chance with asking LSI to do something=20
-> in their firmware?
+On Tue, 2008-04-22 at 09:18 +0200, Lars T=C3=A4uber wrote:
+> James Bottomley <James.Bottomley@HansenPartnership.com> schrieb:
+> > On Mon, 2008-04-21 at 11:01 +0200, Lars T=C3=A4uber wrote:
+> > > # ls /sys/class/enclosure/*/
+> > > /sys/class/enclosure/6:0:16:0/:
+> > > 0  10  12  14  2  4  6  8  components  subsystem
+> > > 1  11  13  15  3  5  7  9  device      uevent
+> > >=20
+> > > /sys/class/enclosure/6:0:33:0/:
+> > > 0  10  12  14  2  4  6  8  components  subsystem
+> > > 1  11  13  15  3  5  7  9  device      uevent
+> > >=20
+> > > This is two times the same enclosure.
+> >=20
+> > That's unusual .. to have two devices managing the same enclosure, =
+but
+> > if you only have 16 slots and not 32, I suppose it must be so.
 >=20
-> Seems I have no chance to get to know which slot contains the=20
-> failed drive without a shutdown. Bad luck.
+> I use both external connections to both expanderboards of the enclosu=
+re just for redundancy.
 >=20
+>=20
+> > > monosan:/sys/class/enclosure/6:0:16:0/0 # ls -l
+> > > insgesamt 0
+> > > -rw-r--r-- 1 root root 4096 21. Apr 10:48 active
+> > > -rw-r--r-- 1 root root 4096 21. Apr 10:48 fault
+> > > -rw-r--r-- 1 root root 4096 21. Apr 10:48 locate
+> > > -rw-r--r-- 1 root root 4096 21. Apr 10:48 status
+> > > lrwxrwxrwx 1 root root    0 21. Apr 10:46 subsystem -> ../../../e=
+nclosure_component
+> > > -r--r--r-- 1 root root 4096 21. Apr 10:48 type
+> > > --w------- 1 root root 4096 21. Apr 10:48 uevent
+> > >=20
+> > > There seems to be no device link if I understood you correctly.
+> > > Is the subdirctory numbering somehow in relation to the SCSI ID?
+> >=20
+> > If the slot is populated a device link should appear (this
+> > is the tricky bit because the ses driver uses VPD inquiries to matc=
+h up
+> > the reported disk, assuming the enclosure reports it, to the actual=
+ one.
+> > These work for SAS disks, but not for SATA ones).
+>=20
+> So this will never work for the SATA discs in our enclosure, right? O=
+r is there a chance with asking LSI to do something in their firmware?
 
-If you want to upgrade your controller fw, I need the contents of all t=
-he attributes in /sys/class/scsi_host/host#.  Just yesterday we got War=
-ner Wakko upgraded, and I believe it might of solved his problems.   I'=
-m not sure what problems your experiencing, as this thread has been har=
-d to follow.
+I don't think its an LSI issue.  The enclosure itself collects WWNs fro=
+m
+the inserted drives.  SAS drives have an agreed format which they
+present in a VPD INQUIRY, so they're easy to match up.  SATA drives hav=
+e
+a defined way of manufacturing this information (defined in the SAT
+standard).  I just need to plug one of these in and make sure my
+enclosure does this correctly.  Once that's done, I have to persuade th=
+e
+ATA people to add the correct form of translation for the VPD inquiry t=
+o
+libata's SAT layer ... then it should all "just work".  So it's
+basically just some development work.
 
-I would like to point out there is a firmware request for sending SEP r=
-equest, for instance setting LEDS.   Here is a copy of the structure.  =
-We call this function to set LED when there is SMART errors (for non-ra=
-id devices).  For RAID, the firmware handles it.   Is this what your lo=
-oking for?
+> Seems I have no chance to get to know which slot contains the failed =
+drive without a shutdown. Bad luck.
 
-=46unction =3D MPI_FUNCTION_SCSI_ENCLOSURE_PROCESSOR:
+You could start by asking the sg_ses tools what you have.  You need to
+find the sg device for your enclosure and then do
 
-typedef struct _MSG_SEP_REQUEST
-{
-    U8                      TargetID;           /* 00h */
-    U8                      Bus;                /* 01h */
-    U8                      ChainOffset;        /* 02h */
-    U8                      Function;           /* 03h */
-    U8                      Action;             /* 04h */
-    U8                      Flags;              /* 05h */
-    U8                      Reserved1;          /* 06h */
-    U8                      MsgFlags;           /* 07h */
-    U32                     MsgContext;         /* 08h */
-    U32                     SlotStatus;         /* 0Ch */
-    U32                     Reserved2;          /* 10h */
-    U32                     Reserved3;          /* 14h */
-    U32                     Reserved4;          /* 18h */
-    U16                     Slot;               /* 1Ch */
-    U16                     EnclosureHandle;    /* 1Eh */
-} MSG_SEP_REQUEST, MPI_POINTER PTR_MSG_SEP_REQUEST,
-  SEPRequest_t, MPI_POINTER pSEPRequest_t;
+sg_ses --page=3D10 /dev/sg<n>
 
-/* Action defines */
-#define MPI_SEP_REQ_ACTION_WRITE_STATUS                 (0x00)
-#define MPI_SEP_REQ_ACTION_READ_STATUS                  (0x01)
+It will print out a list of what the enclosure thinks the addresses for
+the devices are.  Then I just need to verify they're SAT format and awa=
+y
+we can go.
 
-/* Flags defines */
-#define MPI_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS        (0x01)
-#define MPI_SEP_REQ_FLAGS_BUS_TARGETID_ADDRESS          (0x00)
+James
 
-/* SlotStatus bits for MSG_SEP_REQUEST */
-#define MPI_SEP_REQ_SLOTSTATUS_NO_ERROR                 (0x00000001)
-#define MPI_SEP_REQ_SLOTSTATUS_DEV_FAULTY               (0x00000002)
-#define MPI_SEP_REQ_SLOTSTATUS_DEV_REBUILDING           (0x00000004)
-#define MPI_SEP_REQ_SLOTSTATUS_IN_FAILED_ARRAY          (0x00000008)
-#define MPI_SEP_REQ_SLOTSTATUS_IN_CRITICAL_ARRAY        (0x00000010)
-#define MPI_SEP_REQ_SLOTSTATUS_PARITY_CHECK             (0x00000020)
-#define MPI_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT          (0x00000040)
-#define MPI_SEP_REQ_SLOTSTATUS_UNCONFIGURED             (0x00000080)
-#define MPI_SEP_REQ_SLOTSTATUS_HOT_SPARE                (0x00000100)
-#define MPI_SEP_REQ_SLOTSTATUS_REBUILD_STOPPED          (0x00000200)
-#define MPI_SEP_REQ_SLOTSTATUS_REQ_CONSISTENCY_CHECK    (0x00001000)
-#define MPI_SEP_REQ_SLOTSTATUS_DISABLE                  (0x00002000)
-#define MPI_SEP_REQ_SLOTSTATUS_REQ_RESERVED_DEVICE      (0x00004000)
-#define MPI_SEP_REQ_SLOTSTATUS_IDENTIFY_REQUEST         (0x00020000)
-#define MPI_SEP_REQ_SLOTSTATUS_REQUEST_REMOVE           (0x00040000)
-#define MPI_SEP_REQ_SLOTSTATUS_REQUEST_INSERT           (0x00080000)
-#define MPI_SEP_REQ_SLOTSTATUS_DO_NOT_MOVE              (0x00400000)
-#define MPI_SEP_REQ_SLOTSTATUS_ACTIVE                   (0x00800000)
-#define MPI_SEP_REQ_SLOTSTATUS_B_ENABLE_BYPASS          (0x04000000)
-#define MPI_SEP_REQ_SLOTSTATUS_A_ENABLE_BYPASS          (0x08000000)
-#define MPI_SEP_REQ_SLOTSTATUS_DEV_OFF                  (0x10000000)
-#define MPI_SEP_REQ_SLOTSTATUS_SWAP_RESET               (0x80000000)
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
