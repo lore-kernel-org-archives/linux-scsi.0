@@ -1,142 +1,229 @@
-From: "Ying Chu" <jasonchu@marvell.com>
-Subject: [PATCH] remove redundant fields in sas_task.
-Date: Mon, 21 Apr 2008 18:45:31 -0700
-Message-ID: <FE3F06125A99254E8D92161AA4569C6F02D9D98A@sc-exch02.marvell.com>
+From: Jason Chu <jasonchu@marvell.com>
+Subject: [PATCH]remove redundant fields in sas_task structure.
+Date: Tue, 22 Apr 2008 10:32:35 +0800
+Message-ID: <1208831555.5741.0.camel@MVRL-SH-5F-5A01>
+Reply-To: jasonchu@marvell.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:50266 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:51980 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933322AbYDVBpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2008 21:45:34 -0400
-Content-class: urn:content-classes:message
+	id S1757121AbYDVCcq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Apr 2008 22:32:46 -0400
+Received: from sc-exch02.marvell.com (sc-exch02.marvell.com [10.68.76.199])
+	by maili.marvell.com (Postfix) with ESMTP id B861F2C020
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2008 19:32:45 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: djwong@us.ibm.com, James.Bottomley@HansenPartnership.com, Michael Wang <qswang@marvell.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-J3RpbWVyJyBhbmQgJ2NvbXBsZXRpb24nIGZpZWxkIGluIHN0cnVjdCBzYXNfdGFzayBhcmUgdXNl
-ZCBmb3IgZGlzY292ZXJ5IHNhdGEgYW5kIGV4cGFuZGVyIGRldmljZXMgYW5kDQphcyBzdWNoIHRo
-ZXkgYXJlIHJlZHVuZGFudCBmb3IgcmVndWxhciB0YXNrcy4gQWNjb3JkaW5nIHRvIHRoZSBwcm9j
-ZXNzIG9mIGRldmljZSBkaXNjb3ZlcnksIHdlIGNhbiB1c2UNCmEgZGVkaWNhdGVkIHRpbWVyIGFu
-ZCBjb21wbGV0aW9uIHBhaXIgZm9yIHdhaXQtZm9yLWNvbXBsZXRpb24gZGlzY292ZXJ5IGV2ZW50
-Lg0KDQpTaWduZWQtb2ZmLWJ5OiBZaW5nIENodSA8amFzb25jaHVAbWFydmVsbC5jb20+DQotLS0N
-CmRyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2F0YS5jICAgICAgIHwgICAyMiArKysrKysrKysrKyst
-LS0tLS0tLS0tDQpkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5jICB8ICAgMTggKysr
-KysrKysrLS0tLS0tLS0tDQpkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19pbml0LmMgICAgICB8ICAg
-IDQgKysrKw0KZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfaW50ZXJuYWwuaCAgfCAgICA1ICsrKysr
-DQpkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19zY3NpX2hvc3QuYyB8ICAgIDcgKysrKystLQ0KaW5j
-bHVkZS9zY3NpL2xpYnNhcy5oICAgICAgICAgICAgICAgfCAgICA2IC0tLS0tLQ0KIDYgZmlsZXMg
-Y2hhbmdlZCwgMzUgaW5zZXJ0aW9ucygrKSwgMjcgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19hdGEuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2Fz
-X2F0YS5jDQppbmRleCA3NDRmMDZkLi4xMjk0YTNhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3Np
-L2xpYnNhcy9zYXNfYXRhLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2F0YS5jDQpA
-QCAtNDIxLDE0ICs0MjEsMTQgQEAgc3RhdGljIHZvaWQgc2FzX3Rhc2tfdGltZWRvdXQodW5zaWdu
-ZWQgbG9uZyBfdGFzaykNCiAJCXRhc2stPnRhc2tfc3RhdGVfZmxhZ3MgfD0gU0FTX1RBU0tfU1RB
-VEVfQUJPUlRFRDsNCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmdGFzay0+dGFza19zdGF0ZV9s
-b2NrLCBmbGFncyk7DQogDQotCWNvbXBsZXRlKCZ0YXNrLT5jb21wbGV0aW9uKTsNCisJY29tcGxl
-dGUoJmRpc2NfdGFza19jb21wbGV0aW9uKTsNCiB9DQogDQogc3RhdGljIHZvaWQgc2FzX2Rpc2Nf
-dGFza19kb25lKHN0cnVjdCBzYXNfdGFzayAqdGFzaykNCiB7DQotCWlmICghZGVsX3RpbWVyKCZ0
-YXNrLT50aW1lcikpDQorCWlmICghZGVsX3RpbWVyKCZkaXNjX3Rhc2tfdGltZXIpKQ0KIAkJcmV0
-dXJuOw0KLQljb21wbGV0ZSgmdGFzay0+Y29tcGxldGlvbik7DQorCWNvbXBsZXRlKCZkaXNjX3Rh
-c2tfY29tcGxldGlvbik7DQogfQ0KIA0KICNkZWZpbmUgU0FTX0RFVl9USU1FT1VUIDEwDQpAQCAt
-NDc2LDIxICs0NzYsMjEgQEAgc3RhdGljIGludCBzYXNfZXhlY3V0ZV90YXNrKHN0cnVjdCBzYXNf
-dGFzayAqdGFzaywgdm9pZCAqYnVmZmVyLCBpbnQgc2l6ZSwNCiANCiAJZm9yIChyZXRyaWVzID0g
-MDsgcmV0cmllcyA8IDU7IHJldHJpZXMrKykgew0KIAkJdGFzay0+dGFza19zdGF0ZV9mbGFncyA9
-IFNBU19UQVNLX1NUQVRFX1BFTkRJTkc7DQotCQlpbml0X2NvbXBsZXRpb24oJnRhc2stPmNvbXBs
-ZXRpb24pOw0KKwkJaW5pdF9jb21wbGV0aW9uKCZkaXNjX3Rhc2tfY29tcGxldGlvbik7DQogDQot
-CQl0YXNrLT50aW1lci5kYXRhID0gKHVuc2lnbmVkIGxvbmcpIHRhc2s7DQotCQl0YXNrLT50aW1l
-ci5mdW5jdGlvbiA9IHNhc190YXNrX3RpbWVkb3V0Ow0KLQkJdGFzay0+dGltZXIuZXhwaXJlcyA9
-IGppZmZpZXMgKyBTQVNfREVWX1RJTUVPVVQqSFo7DQotCQlhZGRfdGltZXIoJnRhc2stPnRpbWVy
-KTsNCisJCWRpc2NfdGFza190aW1lci5kYXRhID0gKHVuc2lnbmVkIGxvbmcpIHRhc2s7DQorCQlk
-aXNjX3Rhc2tfdGltZXIuZnVuY3Rpb24gPSBzYXNfdGFza190aW1lZG91dDsNCisJCWRpc2NfdGFz
-a190aW1lci5leHBpcmVzID0gamlmZmllcyArIFNBU19ERVZfVElNRU9VVCpIWjsNCisJCWFkZF90
-aW1lcigmZGlzY190YXNrX3RpbWVyKTsNCiANCiAJCXJlcyA9IGktPmRmdC0+bGxkZF9leGVjdXRl
-X3Rhc2sodGFzaywgMSwgR0ZQX0tFUk5FTCk7DQogCQlpZiAocmVzKSB7DQotCQkJZGVsX3RpbWVy
-KCZ0YXNrLT50aW1lcik7DQorCQkJZGVsX3RpbWVyKCZkaXNjX3Rhc2tfdGltZXIpOw0KIAkJCVNB
-U19EUFJJTlRLKCJleGVjdXRpbmcgU0FTIGRpc2NvdmVyeSB0YXNrIGZhaWxlZDolZFxuIiwNCiAJ
-CQkJICAgIHJlcyk7DQogCQkJZ290byBleF9lcnI7DQogCQl9DQotCQl3YWl0X2Zvcl9jb21wbGV0
-aW9uKCZ0YXNrLT5jb21wbGV0aW9uKTsNCisJCXdhaXRfZm9yX2NvbXBsZXRpb24oJmRpc2NfdGFz
-a19jb21wbGV0aW9uKTsNCiAJCXJlcyA9IC1FQ09NTTsNCiAJCWlmICh0YXNrLT50YXNrX3N0YXRl
-X2ZsYWdzICYgU0FTX1RBU0tfU1RBVEVfQUJPUlRFRCkgew0KIAkJCWludCByZXMyOw0KQEAgLTc1
-NCw2ICs3NTQsOCBAQCBpbnQgc2FzX2Rpc2NvdmVyX3NhdGEoc3RydWN0IGRvbWFpbl9kZXZpY2Ug
-KmRldikNCiANCiAJc3dpdGNoIChkZXYtPmRldl90eXBlKSB7DQogCWNhc2UgU0FUQV9ERVY6DQor
-CQlpbml0X2NvbXBsZXRpb24oJmRpc2NfdGFza19jb21wbGV0aW9uKTsNCisJCWluaXRfdGltZXIo
-JmRpc2NfdGFza190aW1lcik7DQogCQlyZXMgPSBzYXNfZGlzY292ZXJfc2F0YV9kZXYoZGV2KTsN
-CiAJCWJyZWFrOw0KIAljYXNlIFNBVEFfUE06DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2xp
-YnNhcy9zYXNfZXhwYW5kZXIuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2V4cGFuZGVyLmMN
-CmluZGV4IGFlZmQ4NjUuLmJjNTYyNWMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvbGlic2Fz
-L3Nhc19leHBhbmRlci5jDQorKysgYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5j
-DQpAQCAtNDksMTQgKzQ5LDE0IEBAIHN0YXRpYyB2b2lkIHNtcF90YXNrX3RpbWVkb3V0KHVuc2ln
-bmVkIGxvbmcgX3Rhc2spDQogCQl0YXNrLT50YXNrX3N0YXRlX2ZsYWdzIHw9IFNBU19UQVNLX1NU
-QVRFX0FCT1JURUQ7DQogCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnRhc2stPnRhc2tfc3RhdGVf
-bG9jaywgZmxhZ3MpOw0KIA0KLQljb21wbGV0ZSgmdGFzay0+Y29tcGxldGlvbik7DQorCWNvbXBs
-ZXRlKCZkaXNjX3Rhc2tfY29tcGxldGlvbik7DQogfQ0KIA0KIHN0YXRpYyB2b2lkIHNtcF90YXNr
-X2RvbmUoc3RydWN0IHNhc190YXNrICp0YXNrKQ0KIHsNCi0JaWYgKCFkZWxfdGltZXIoJnRhc2st
-PnRpbWVyKSkNCisJaWYgKCFkZWxfdGltZXIoJmRpc2NfdGFza190aW1lcikpDQogCQlyZXR1cm47
-DQotCWNvbXBsZXRlKCZ0YXNrLT5jb21wbGV0aW9uKTsNCisJY29tcGxldGUoJmRpc2NfdGFza19j
-b21wbGV0aW9uKTsNCiB9DQogDQogLyogR2l2ZSBpdCBzb21lIGxvbmcgZW5vdWdoIHRpbWVvdXQu
-IEluIHNlY29uZHMuICovDQpAQCAtODIsMjAgKzgyLDIwIEBAIHN0YXRpYyBpbnQgc21wX2V4ZWN1
-dGVfdGFzayhzdHJ1Y3QgZG9tYWluX2RldmljZSAqZGV2LCB2b2lkICpyZXEsIGludCByZXFfc2l6
-ZSwNCiANCiAJCXRhc2stPnRhc2tfZG9uZSA9IHNtcF90YXNrX2RvbmU7DQogDQotCQl0YXNrLT50
-aW1lci5kYXRhID0gKHVuc2lnbmVkIGxvbmcpIHRhc2s7DQotCQl0YXNrLT50aW1lci5mdW5jdGlv
-biA9IHNtcF90YXNrX3RpbWVkb3V0Ow0KLQkJdGFzay0+dGltZXIuZXhwaXJlcyA9IGppZmZpZXMg
-KyBTTVBfVElNRU9VVCpIWjsNCi0JCWFkZF90aW1lcigmdGFzay0+dGltZXIpOw0KKwkJZGlzY190
-YXNrX3RpbWVyLmRhdGEgPSAodW5zaWduZWQgbG9uZykgdGFzazsNCisJCWRpc2NfdGFza190aW1l
-ci5mdW5jdGlvbiA9IHNtcF90YXNrX3RpbWVkb3V0Ow0KKwkJZGlzY190YXNrX3RpbWVyLmV4cGly
-ZXMgPSBqaWZmaWVzICsgU01QX1RJTUVPVVQqSFo7DQorCQlhZGRfdGltZXIoJmRpc2NfdGFza190
-aW1lcik7DQogDQogCQlyZXMgPSBpLT5kZnQtPmxsZGRfZXhlY3V0ZV90YXNrKHRhc2ssIDEsIEdG
-UF9LRVJORUwpOw0KIA0KIAkJaWYgKHJlcykgew0KLQkJCWRlbF90aW1lcigmdGFzay0+dGltZXIp
-Ow0KKwkJCWRlbF90aW1lcigmZGlzY190YXNrX3RpbWVyKTsNCiAJCQlTQVNfRFBSSU5USygiZXhl
-Y3V0aW5nIFNNUCB0YXNrIGZhaWxlZDolZFxuIiwgcmVzKTsNCiAJCQlnb3RvIGV4X2VycjsNCiAJ
-CX0NCiANCi0JCXdhaXRfZm9yX2NvbXBsZXRpb24oJnRhc2stPmNvbXBsZXRpb24pOw0KKwkJd2Fp
-dF9mb3JfY29tcGxldGlvbigmZGlzY190YXNrX2NvbXBsZXRpb24pOw0KIAkJcmVzID0gLUVDT01N
-Ow0KIAkJaWYgKCh0YXNrLT50YXNrX3N0YXRlX2ZsYWdzICYgU0FTX1RBU0tfU1RBVEVfQUJPUlRF
-RCkpIHsNCiAJCQlTQVNfRFBSSU5USygic21wIHRhc2sgdGltZWQgb3V0IG9yIGFib3J0ZWRcbiIp
-Ow0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2luaXQuYyBiL2RyaXZlcnMv
-c2NzaS9saWJzYXMvc2FzX2luaXQuYw0KaW5kZXggOWNkNWFiZS4uYmExOTNiMiAxMDA2NDQNCi0t
-LSBhL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2luaXQuYw0KKysrIGIvZHJpdmVycy9zY3NpL2xp
-YnNhcy9zYXNfaW5pdC5jDQpAQCAtMzYsNiArMzYsMTAgQEANCiANCiAjaW5jbHVkZSAiLi4vc2Nz
-aV9zYXNfaW50ZXJuYWwuaCINCiANCisjaWYgZGVmaW5lZChDT05GSUdfU0NTSV9TQVNfQVRBKSB8
-fCBkZWZpbmVkKENPTkZJR19TQ1NJX1NBU19IT1NUX1NNUCkNCitzdHJ1Y3QgY29tcGxldGlvbiBk
-aXNjX3Rhc2tfY29tcGxldGlvbjsNCitzdHJ1Y3QgdGltZXJfbGlzdCBkaXNjX3Rhc2tfdGltZXI7
-DQorI2VuZGlmDQogc3RydWN0IGttZW1fY2FjaGUgKnNhc190YXNrX2NhY2hlOw0KIA0KIC8qLS0t
-LS0tLS0tLS0tIFNBUyBhZGRyIGhhc2ggLS0tLS0tLS0tLS0qLw0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvc2NzaS9saWJzYXMvc2FzX2ludGVybmFsLmggYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19p
-bnRlcm5hbC5oDQppbmRleCBiNGY5MzY4Li43ZDNiMTk1IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9z
-Y3NpL2xpYnNhcy9zYXNfaW50ZXJuYWwuaA0KKysrIGIvZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNf
-aW50ZXJuYWwuaA0KQEAgLTQyLDYgKzQyLDExIEBADQogI2RlZmluZSBUT19TQVNfVEFTSyhfc2Nz
-aV9jbWQpICAoKHZvaWQgKikoX3Njc2lfY21kKS0+aG9zdF9zY3JpYmJsZSkNCiAjZGVmaW5lIEFT
-U0lHTl9TQVNfVEFTSyhfc2MsIF90KSBkbyB7IChfc2MpLT5ob3N0X3NjcmliYmxlID0gKHZvaWQg
-KikgX3Q7IH0gd2hpbGUgKDApDQogDQorI2lmIGRlZmluZWQoQ09ORklHX1NDU0lfU0FTX0FUQSkg
-fHwgZGVmaW5lZChDT05GSUdfU0NTSV9TQVNfSE9TVF9TTVApDQorZXh0ZXJuIHN0cnVjdCBjb21w
-bGV0aW9uIGRpc2NfdGFza19jb21wbGV0aW9uOw0KK2V4dGVybiBzdHJ1Y3QgdGltZXJfbGlzdCBk
-aXNjX3Rhc2tfdGltZXI7DQorI2VuZGlmDQorDQogdm9pZCBzYXNfc2NzaV9yZWNvdmVyX2hvc3Qo
-c3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpOw0KIA0KIGludCBzYXNfc2hvd19jbGFzcyhlbnVtIHNh
-c19jbGFzcyBjbGFzcywgY2hhciAqYnVmKTsNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGli
-c2FzL3Nhc19zY3NpX2hvc3QuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5j
-DQppbmRleCA2MDFlYzViLi44NmNlYzc1IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL2xpYnNh
-cy9zYXNfc2NzaV9ob3N0LmMNCisrKyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9z
-dC5jDQpAQCAtMTAyOCw5ICsxMDI4LDEyIEBAIHZvaWQgc2FzX3Rhc2tfYWJvcnQoc3RydWN0IHNh
-c190YXNrICp0YXNrKQ0KIA0KIAkvKiBFc2NhcGUgZm9yIGxpYnNhcyBpbnRlcm5hbCBjb21tYW5k
-cyAqLw0KIAlpZiAoIXNjKSB7DQotCQlpZiAoIWRlbF90aW1lcigmdGFzay0+dGltZXIpKQ0KKyNp
-ZiBkZWZpbmVkKENPTkZJR19TQ1NJX1NBU19IT1NUX1NNUCkgfHwgZGVmaW5lZChDT05GSUdfU0NT
-SV9TQVNfQVRBKQ0KKw0KKwkJaWYgKCFkZWxfdGltZXIoJmRpc2NfdGFza190aW1lcikpDQogCQkJ
-cmV0dXJuOw0KLQkJdGFzay0+dGltZXIuZnVuY3Rpb24odGFzay0+dGltZXIuZGF0YSk7DQorCQlk
-aXNjX3Rhc2tfdGltZXIuZnVuY3Rpb24oZGlzY190YXNrX3RpbWVyLmRhdGEpOw0KKyNlbmRpZg0K
-IAkJcmV0dXJuOw0KIAl9DQogDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9zY3NpL2xpYnNhcy5oIGIv
-aW5jbHVkZS9zY3NpL2xpYnNhcy5oDQppbmRleCA5ODcyNGJhLi4xNTIwZDE1IDEwMDY0NA0KLS0t
-IGEvaW5jbHVkZS9zY3NpL2xpYnNhcy5oDQorKysgYi9pbmNsdWRlL3Njc2kvbGlic2FzLmgNCkBA
-IC01MzcsMTAgKzUzNyw2IEBAIHN0cnVjdCBzYXNfdGFzayB7DQogDQogCWVudW0gICBzYXNfcHJv
-dG9jb2wgICAgICB0YXNrX3Byb3RvOw0KIA0KLQkvKiBVc2VkIGJ5IHRoZSBkaXNjb3ZlcnkgY29k
-ZS4gKi8NCi0Jc3RydWN0IHRpbWVyX2xpc3QgICAgIHRpbWVyOw0KLQlzdHJ1Y3QgY29tcGxldGlv
-biAgICAgY29tcGxldGlvbjsNCi0NCiAJdW5pb24gew0KIAkJc3RydWN0IHNhc19hdGFfdGFzayBh
-dGFfdGFzazsNCiAJCXN0cnVjdCBzYXNfc21wX3Rhc2sgc21wX3Rhc2s7DQpAQCAtNTc3LDggKzU3
-Myw2IEBAIHN0YXRpYyBpbmxpbmUgc3RydWN0IHNhc190YXNrICpzYXNfYWxsb2NfdGFzayhnZnBf
-dCBmbGFncykNCiAJCUlOSVRfTElTVF9IRUFEKCZ0YXNrLT5saXN0KTsNCiAJCXNwaW5fbG9ja19p
-bml0KCZ0YXNrLT50YXNrX3N0YXRlX2xvY2spOw0KIAkJdGFzay0+dGFza19zdGF0ZV9mbGFncyA9
-IFNBU19UQVNLX1NUQVRFX1BFTkRJTkc7DQotCQlpbml0X3RpbWVyKCZ0YXNrLT50aW1lcik7DQot
-CQlpbml0X2NvbXBsZXRpb24oJnRhc2stPmNvbXBsZXRpb24pOw0KIAl9DQogDQogCXJldHVybiB0
-YXNrOw0K
+'timer' and 'completion' field in struct sas_task are used for discovery
+sata and expander devices and
+as such they are redundant for regular tasks. According to the process
+of device discovery, we can use a dedicated timer and completion pair
+for wait-for-completion discovery event.
+
+Signed-off-by: Ying Chu <jasonchu@marvell.com>
+---
+drivers/scsi/libsas/sas_ata.c       |   22 ++++++++++++----------
+drivers/scsi/libsas/sas_expander.c  |   18 +++++++++---------
+drivers/scsi/libsas/sas_init.c      |    4 ++++
+drivers/scsi/libsas/sas_internal.h  |    5 +++++
+drivers/scsi/libsas/sas_scsi_host.c |    7 +++++--
+include/scsi/libsas.h               |    6 ------
+ 6 files changed, 35 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_ata.c
+b/drivers/scsi/libsas/sas_ata.c
+index 744f06d..1294a3a 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -421,14 +421,14 @@ static void sas_task_timedout(unsigned long _task)
+ 		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	complete(&task->completion);
++	complete(&disc_task_completion);
+ }
+ 
+ static void sas_disc_task_done(struct sas_task *task)
+ {
+-	if (!del_timer(&task->timer))
++	if (!del_timer(&disc_task_timer))
+ 		return;
+-	complete(&task->completion);
++	complete(&disc_task_completion);
+ }
+ 
+ #define SAS_DEV_TIMEOUT 10
+@@ -476,21 +476,21 @@ static int sas_execute_task(struct sas_task *task,
+void *buffer, int size,
+ 
+ 	for (retries = 0; retries < 5; retries++) {
+ 		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_completion(&task->completion);
++		init_completion(&disc_task_completion);
+ 
+-		task->timer.data = (unsigned long) task;
+-		task->timer.function = sas_task_timedout;
+-		task->timer.expires = jiffies + SAS_DEV_TIMEOUT*HZ;
+-		add_timer(&task->timer);
++		disc_task_timer.data = (unsigned long) task;
++		disc_task_timer.function = sas_task_timedout;
++		disc_task_timer.expires = jiffies + SAS_DEV_TIMEOUT*HZ;
++		add_timer(&disc_task_timer);
+ 
+ 		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
+ 		if (res) {
+-			del_timer(&task->timer);
++			del_timer(&disc_task_timer);
+ 			SAS_DPRINTK("executing SAS discovery task failed:%d\n",
+ 				    res);
+ 			goto ex_err;
+ 		}
+-		wait_for_completion(&task->completion);
++		wait_for_completion(&disc_task_completion);
+ 		res = -ECOMM;
+ 		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
+ 			int res2;
+@@ -754,6 +754,8 @@ int sas_discover_sata(struct domain_device *dev)
+ 
+ 	switch (dev->dev_type) {
+ 	case SATA_DEV:
++		init_completion(&disc_task_completion);
++		init_timer(&disc_task_timer);
+ 		res = sas_discover_sata_dev(dev);
+ 		break;
+ 	case SATA_PM:
+diff --git a/drivers/scsi/libsas/sas_expander.c
+b/drivers/scsi/libsas/sas_expander.c
+index aefd865..bc5625c 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -49,14 +49,14 @@ static void smp_task_timedout(unsigned long _task)
+ 		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	complete(&task->completion);
++	complete(&disc_task_completion);
+ }
+ 
+ static void smp_task_done(struct sas_task *task)
+ {
+-	if (!del_timer(&task->timer))
++	if (!del_timer(&disc_task_timer))
+ 		return;
+-	complete(&task->completion);
++	complete(&disc_task_completion);
+ }
+ 
+ /* Give it some long enough timeout. In seconds. */
+@@ -82,20 +82,20 @@ static int smp_execute_task(struct domain_device
+*dev, void *req, int req_size,
+ 
+ 		task->task_done = smp_task_done;
+ 
+-		task->timer.data = (unsigned long) task;
+-		task->timer.function = smp_task_timedout;
+-		task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
+-		add_timer(&task->timer);
++		disc_task_timer.data = (unsigned long) task;
++		disc_task_timer.function = smp_task_timedout;
++		disc_task_timer.expires = jiffies + SMP_TIMEOUT*HZ;
++		add_timer(&disc_task_timer);
+ 
+ 		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
+ 
+ 		if (res) {
+-			del_timer(&task->timer);
++			del_timer(&disc_task_timer);
+ 			SAS_DPRINTK("executing SMP task failed:%d\n", res);
+ 			goto ex_err;
+ 		}
+ 
+-		wait_for_completion(&task->completion);
++		wait_for_completion(&disc_task_completion);
+ 		res = -ECOMM;
+ 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 			SAS_DPRINTK("smp task timed out or aborted\n");
+diff --git a/drivers/scsi/libsas/sas_init.c
+b/drivers/scsi/libsas/sas_init.c
+index 9cd5abe..ba193b2 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -36,6 +36,10 @@
+ 
+ #include "../scsi_sas_internal.h"
+ 
++#if defined(CONFIG_SCSI_SAS_ATA) || defined(CONFIG_SCSI_SAS_HOST_SMP)
++struct completion disc_task_completion;
++struct timer_list disc_task_timer;
++#endif
+ struct kmem_cache *sas_task_cache;
+ 
+ /*------------ SAS addr hash -----------*/
+diff --git a/drivers/scsi/libsas/sas_internal.h
+b/drivers/scsi/libsas/sas_internal.h
+index b4f9368..7d3b195 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -42,6 +42,11 @@
+ #define TO_SAS_TASK(_scsi_cmd)  ((void *)(_scsi_cmd)->host_scribble)
+ #define ASSIGN_SAS_TASK(_sc, _t) do { (_sc)->host_scribble = (void *)
+_t; } while (0)
+ 
++#if defined(CONFIG_SCSI_SAS_ATA) || defined(CONFIG_SCSI_SAS_HOST_SMP)
++extern struct completion disc_task_completion;
++extern struct timer_list disc_task_timer;
++#endif
++
+ void sas_scsi_recover_host(struct Scsi_Host *shost);
+ 
+ int sas_show_class(enum sas_class class, char *buf);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+b/drivers/scsi/libsas/sas_scsi_host.c
+index 601ec5b..86cec75 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1028,9 +1028,12 @@ void sas_task_abort(struct sas_task *task)
+ 
+ 	/* Escape for libsas internal commands */
+ 	if (!sc) {
+-		if (!del_timer(&task->timer))
++#if defined(CONFIG_SCSI_SAS_HOST_SMP) || defined(CONFIG_SCSI_SAS_ATA)
++
++		if (!del_timer(&disc_task_timer))
+ 			return;
+-		task->timer.function(task->timer.data);
++		disc_task_timer.function(disc_task_timer.data);
++#endif
+ 		return;
+ 	}
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 98724ba..1520d15 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -537,10 +537,6 @@ struct sas_task {
+ 
+ 	enum   sas_protocol      task_proto;
+ 
+-	/* Used by the discovery code. */
+-	struct timer_list     timer;
+-	struct completion     completion;
+-
+ 	union {
+ 		struct sas_ata_task ata_task;
+ 		struct sas_smp_task smp_task;
+@@ -577,8 +573,6 @@ static inline struct sas_task *sas_alloc_task(gfp_t
+flags)
+ 		INIT_LIST_HEAD(&task->list);
+ 		spin_lock_init(&task->task_state_lock);
+ 		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_timer(&task->timer);
+-		init_completion(&task->completion);
+ 	}
+ 
+ 	return task;
+
