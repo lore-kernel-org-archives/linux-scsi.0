@@ -1,102 +1,152 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] fc_user_scan correction
-Date: Tue, 22 Apr 2008 17:30:33 -0400
-Message-ID: <480E58F9.7060309@emulex.com>
-References: <1208885319.12659.7.camel@localhost.localdomain> <480E29FC.3090502@cs.wisc.edu> <480E2A6A.4040309@cs.wisc.edu> <480E36DB.1050708@emulex.com> <480E4096.8070201@cs.wisc.edu>
-Reply-To: James.Smart@Emulex.Com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/7] scsi_dh: add EMC Clariion device handler
+Date: Tue, 22 Apr 2008 16:47:52 -0500
+Message-ID: <480E5D08.3000905@cs.wisc.edu>
+References: <20080416011818.19580.41106.sendpatchset@chandra-ubuntu>	
+	<20080416011842.19580.92056.sendpatchset@chandra-ubuntu>	
+	<4806294C.9090703@cs.wisc.edu>
+	<1208390384.1025.40.camel@chandra-ubuntu>	
+	<48078571.9040806@cs.wisc.edu>
+	<1208898559.1025.191.camel@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:37861 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756022AbYDVVar (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 17:30:47 -0400
-In-Reply-To: <480E4096.8070201@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1208898559.1025.191.camel@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: sekharan@us.ibm.com
+Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, device-mapper development <dm-devel@redhat.com>, Benoit_Arthur@emc.com, jens.axboe@oracle.com, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
 
-Mike,
-
-You're right.  The nuance is that user_scan *must* be supported if the
-transport binds the target to a transport-specific device node that is
-not the shost, as user_scan needs to call the scsi_scan_target() with
-the parent node the target structure has to be bound to. It's not just
-a sysfs interface.
-
-I'll rework the patch and update the user_scan comment to make sure this
-is better understood.
-
--- james s
-
-Mike Christie wrote:
-> James Smart wrote:
->>
->>
->> Mike Christie wrote:
->>> Mike Christie wrote:
->>>> Is this is the same as if you did not implement the user_scan 
->>>> callout? scsi_sysfs.c will call
+Chandra Seetharaman wrote:
+> On Thu, 2008-04-17 at 12:14 -0500, Mike Christie wrote:
+>> Chandra Seetharaman wrote:
+>>> On Wed, 2008-04-16 at 11:29 -0500, Mike Christie wrote:
+>>>> Chandra Seetharaman wrote:
+>>>>> +
+>>>>> +static int send_cmd(struct scsi_device *sdev, int cmd)
+>>>>> +{
+>>>>> +	struct request *rq = get_req(sdev, cmd);
+>>>>> +
+>>>>> +	if (!rq)
+>>>>> +		return SCSI_DH_RES_TEMP_UNAVAIL;
+>>>>> +
+>>>>> +	return blk_execute_rq(sdev->request_queue, NULL, rq, 1);
+>>>>> +}
+>>>>> +
+>>>> My only concerns are:
 >>>>
->>>> scsi_scan_host_selected(shost, channel, id, lun, 1);
+>>>> 1. EMC and HP need to send a command to every device to transition them. 
+>>>> Because we do blk_execute_rq from the dm multipath workqueue we can now 
+>>>> only failover/failback for a couple devices at a time.
 >>>>
->>>> I thought we added the user_scan callback because the transport 
->>>> classes had to pass in the device struct between the host and target 
->>>> so we got
->>>>
->>>> .../host/rport/target/scsi_device
->>>>
->>>> instead of
->>>>
->>>> .../host/target/scsi_device
->>>>
->>>> qla4xxx has the same problem. Do not look at it for help :( It added 
->>>> a mutex and does not deadlock because like the FC class it stats the 
->>>> removal of the rport/session then device so the cache sync always 
->>>> fails (the check ready function always returns DID_NO_CONNECT so the 
->>>> cache sync fails). iscsi tcp/iser/bnx2i works because it has 
->>>> userspace helping out with the removal and shutdown and does it in 
->>>> two stages.
->>>>
+>>>> I am not sure if this is a big deal, because this the error handler path 
+>>>> so it is going to be slower than the normal path. But it seems like 
+>>> Yes. But...
 >>>
->>> I think we need some loop + locking + refcounting similar to how the 
->>> shost_for_each_device loops over devices.
+>>> pg_init() due to failover/failback will be sent only when I/O is
+>>> sent/resent to a multipath device, isn't it ? and we don't expect I/Os
+>>> to be sent to all the devices at the same time (all the time), do we ?
 >>>
->>
->> For FC, I don't believe there's any advantage to looping/locking. There's
->> miniscule advantages of not scanning targets that are just returned back
->> by the driver as not being present.
+>> I am not sure what you mean by all the time, because I am talking about 
 > 
-> I was actually just thinking of refcounting. Because we are coming in 
-> from the host the rpot would not have a refcount from the 
-> sysfs/userpscae reference. If there were no scsi_devices/targets on the 
-> rport and the rport ie being removed then I thought the scsi_scan.c code 
-> could be accessing a struct device that was freed or in the middle of 
-> being freed.
+> What I meant was that we do not expect I/Os to be sent to all the
+> devices at all the times (pg_init will be sent only when I/Os fails on a
+> path, right ?).
 > 
+> Sorry for not being clear.
 > 
->>
->> Taking another look at the user_scan sysfs routine, I can only come up 
->> with
->> a few reasons why it exists at all:
->>  - some transports/LLDs, which do target enumeration and auto-scan, can't
->>    handle directed scans to targets that don't exist. I have a hard time
->>    believing this is true.
+
+No problem.
+
+
+>> failover times above. And for failover I think I said yes in the 
+>> previous mail. For EMC we are currently sending failover commands to all 
+>> the devices at the same time, because EMC does not do the controller 
+>> failover RDAC does.
 > 
-> I am not sure what you are saying? Is this the same as my comment about
-> .../host/rport/target/scsi_device
-> vs
-> .../host/target/scsi_device
+> RDAC doesn't do controller failover. It also does per lun failover.
 > 
-> If you go down scsi_scan_host_selected then we go to
-> scsi_scan_host_selected -> scsi_scan_channel -> __scsi_scan_target and 
-> the parent that is passed to __scsi_scan_target is the shost, so we get
-> .../host/target/scsi_device
+
+Oh yeah, I forgot.
+
+
+>>> So, as you pointed, is it a big deal ? :)
+>>>
+>> In the previous mail I specifically said users might care, because they 
+>> are picky about failover times, real    3m39.728s
+> user    0m4.135s
+> sys     0m14.536s
 > 
-> For the transport classes we did scsi_scan_target and pass the rport so 
-> we end up with
-> .../host/rport/target/scsi_device
+>> so the answer is to your question is 
+>> what I said before, maybe :) I said I am not sure, because I do not have 
+>> any numbers for the failover times.
 > 
+> Since RDAC also does the failover per device (as is the case with EMC),
+> I ran tests on about 49 luns. I ran disktest on all the disks at the
+
+Thanks.
+
+> same time and disabled/enabled the port to the preferred path to
+> generate failover and failback.
 > 
+> Let me know what do you think.
+> 
+> Here are the results:
+> Tests run in an idle system. With 49 luns and the following script:
+> ******************************************************
+> for i in `ls -1 /dev/mapper/mpath*`
+> do
+> 	disktest $i -L 4000 -t 100 -P X &
+> 	sleep 1
+> done
+> 
+> wait
+> ******************************************************
+> Simple Run:
+> 
+> with patchset:		2.6.25-mm1:
+> real    3m30.122s	real    3m29.746s
+> user    0m4.069s	user    0m4.099s
+> sys     0m14.876s	sys     0m14.535s
+> -----------------------------------------------
+
+Is this just a boot up test or a test just running IO but no 
+failback/failover?
+
+> 
+> Failover Run:
+> 
+> with patchset:		2.6.25-mm1:
+> real    5m18.875s	real    5m31.741s
+> user    0m4.069s	user    0m3.883s
+> sys     0m14.838s	sys     0m13.822s
+
+Ehh, I have no idea if this is good or bad. Does it mean it is talking 
+13 more seconds to complete?
+
+Have you seen the type of thread on dm-devel or the iscsi list where 
+people are concerned with getting the time the failure is detected to 
+the time IO is running on a new path down from something like 10 to 5 
+seconds. One time the iscsi driver did not implement time2wait correctly 
+and by fixing it we shaved only 2 seconds off and users were very happy 
+with the extra 2 seconds. We added the nop timer stuff so we could get 
+faster failovers. We have the fast io fail tmo so we can speed up the 
+process even more. Shaving off a second here or there is really nitpicky 
+and if I were you I would give me the middle finger :) It just seems 
+like people expect better performance from this type of error.
+
+If my comment is too nitpicky then I am fine with ignoring this for now. 
+We just have to fix the emc short/long tress pass code then. I added 
+another EMC guy to the thread so he can ping the other EMC devs to get 
+going (I had sent them questions on how to handle it and have not got a 
+response).
