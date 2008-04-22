@@ -1,42 +1,42 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: AIC94xx SAS question.
-Date: Mon, 21 Apr 2008 19:19:40 -0400
-Message-ID: <20080421231940.GB5656@animx.eu.org>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: aacraid broken in git
+Date: Mon, 21 Apr 2008 17:42:52 -0700
+Message-ID: <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
+References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com>
+	 <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:47705 "EHLO animx.eu.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754010AbYDUXTq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2008 19:19:46 -0400
-Received: from wakko by animx.eu.org with local
-	(Exim 4.64 #1 (Debian Bug?  What bug /\oo/\))
-	id 1Jo5IS-0001gl-6E
-	for linux-scsi@vger.kernel.org; Mon, 21 Apr 2008 19:19:40 -0400
+Received: from wr-out-0506.google.com ([64.233.184.238]:59070 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759999AbYDVAmy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Apr 2008 20:42:54 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so1008622wra.1
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2008 17:42:53 -0700 (PDT)
+In-Reply-To: <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a general question and probably doesn't matter which kernel
-(although the one in question is 2.6.23 vanilla)
+bisected to:
 
-I know that this device requires firmware to operate which has to be loaded
-when the driver is loaded.
+yhlu@mpk12-office-77-185:~/xx/xx/kernel/linux-2.6> git-bisect good
+e6990c6448ca9359b6d4ad027c0a6efbf4379e64 is first bad commit
+commit e6990c6448ca9359b6d4ad027c0a6efbf4379e64
+Author: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Date:   Mon Apr 14 14:20:16 2008 -0400
 
-I'd like to have this driver compiled into the kernel.  My question is:
+    [SCSI] aacraid: Fix down_interruptible() to check the return value
 
-Can either of these be done:
-1) Embed the firmware into the driver so that it can be used before the
-rootfs id mounted.
-2) Can the firmware be loaded in an initr{d,amfs}?  I personnaly despise
-initr{d,amfs} and if this option is used, I'd prefer it not to be kernel
-specific (as in having the driver for the card in the initr{d,amfs}) this
-way a kernel upgrade wouldn't change the initr{d,amfs}.  I know there are
-tools for this kind of thing, but I find it quite pointless to have the
-driver in 2 places (in the init{r,amfs} and in /lib/modules)  I also realize
-that "disks are cheap" blah blah, but that's not the point.
+    Instead of ignoring the return value in aac_fib_send() return 2 to
+    indicate to the layers above that fib transmission was aborted due to
+    timeout.
 
--- 
- Lab tests show that use of micro$oft causes cancer in lab animals
- Got Gas???
+    Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+:040000 040000 2f23bf33d76d6f37c558251003f88537c6e639fe
+63d59091ca7ac527b5106540eea06d7b6649862d M      drivers
