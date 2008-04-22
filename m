@@ -1,42 +1,44 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: aacraid broken in git
-Date: Mon, 21 Apr 2008 17:42:52 -0700
-Message-ID: <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
-References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com>
-	 <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10486] kernel 2.6.24  4G FC arrays don't work properly with qla2xxx driver
+Date: Mon, 21 Apr 2008 18:35:27 -0700 (PDT)
+Message-ID: <20080422013527.2EA1E10805F@picon.linux-foundation.org>
+References: <bug-10486-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.238]:59070 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759999AbYDVAmy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Apr 2008 20:42:54 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so1008622wra.1
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2008 17:42:53 -0700 (PDT)
-In-Reply-To: <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46615 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756097AbYDVBg1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Apr 2008 21:36:27 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3M1ZRO8010908
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2008 18:35:28 -0700
+In-Reply-To: <bug-10486-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-bisected to:
+http://bugzilla.kernel.org/show_bug.cgi?id=10486
 
-yhlu@mpk12-office-77-185:~/xx/xx/kernel/linux-2.6> git-bisect good
-e6990c6448ca9359b6d4ad027c0a6efbf4379e64 is first bad commit
-commit e6990c6448ca9359b6d4ad027c0a6efbf4379e64
-Author: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Date:   Mon Apr 14 14:20:16 2008 -0400
 
-    [SCSI] aacraid: Fix down_interruptible() to check the return value
 
-    Instead of ignoring the return value in aac_fib_send() return 2 to
-    indicate to the layers above that fib transmission was aborted due to
-    timeout.
 
-    Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-:040000 040000 2f23bf33d76d6f37c558251003f88537c6e639fe
-63d59091ca7ac527b5106540eea06d7b6649862d M      drivers
+------- Comment #7 from andrew.vasquez@qlogic.com  2008-04-21 18:35 -------
+Ok, so in the interim can you provide some datapoints from the 
+FC transport tree:
+
+  $ cat /sys/class/fc_host/host*/*
+  $ cat /sys/class/fc_remote_ports/rport-*
+
+At least then we could take a look and see if there's some issue
+on the FC side (a small glimpse at least).
+
+BTW:  are there any other 'failure' messages in your logs during
+driver load time?  Can you provide the logs without error-logging
+enabled?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
