@@ -1,129 +1,144 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Fix down_interruptible() to check the return value take 2 (was: aacraid broken in git)
-Date: Wed, 23 Apr 2008 08:16:06 -0400
-Message-ID: <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
-References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com> <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com> <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: multipart/mixed; boundary=Apple-Mail-329-865016404
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:59870 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753084AbYDWMQJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Apr 2008 08:16:09 -0400
-In-Reply-To: <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Erez Zilber <erezz@Voltaire.COM>
+Subject: Re: [ofa-general] Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
+Date: Wed, 23 Apr 2008 16:41:24 +0300
+Message-ID: <480F3C84.40606@Voltaire.COM>
+References: <20080212205252.GB13643@osc.edu>
+	<20080212205403.GC13643@osc.edu><1202850645.3137.132.camel@localhost.localdomain><20080212214632.GA14397@osc.edu><1202853468.3137.148.camel@localhost.localdomain><20080213195912.GC7372@osc.edu>
+	<480C9BF8.9050401@Voltaire.COM>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <480C9BF8.9050401@Voltaire.COM>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: Roland Dreier <rolandd@cisco.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, general@lists.openfabrics.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yhlu.kernel@gmail.com>
 
-
---Apple-Mail-329-865016404
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
-
-On Apr 21, 2008, at 8:42 PM, Yinghai Lu wrote:
-
-> bisected to:
+Erez Zilber wrote:
 >
-> yhlu@mpk12-office-77-185:~/xx/xx/kernel/linux-2.6> git-bisect good
-> e6990c6448ca9359b6d4ad027c0a6efbf4379e64 is first bad commit
-> commit e6990c6448ca9359b6d4ad027c0a6efbf4379e64
-> Author: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-> Date:   Mon Apr 14 14:20:16 2008 -0400
->
->    [SCSI] aacraid: Fix down_interruptible() to check the return value
->
->    Instead of ignoring the return value in aac_fib_send() return 2 to
->    indicate to the layers above that fib transmission was aborted  
-> due to
->    timeout.
->
->    Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
->    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com 
+> Pete Wyckoff wrote:
+> > James.Bottomley@HansenPartnership.com wrote on Tue, 12 Feb 2008
+> 15:57 -0600:
+> >  
+> >> On Tue, 2008-02-12 at 16:46 -0500, Pete Wyckoff wrote:
+> >>    
+> >>> James.Bottomley@HansenPartnership.com wrote on Tue, 12 Feb 2008
+> 15:10 -0600:
+> >>>      
+> >>>> On Tue, 2008-02-12 at 15:54 -0500, Pete Wyckoff wrote:
+> >>>>        
+> >>>>> iscsi_iser does not have any hardware DMA restrictions.  Add a
+> >>>>> slave_configure function to remove any DMA alignment restriction,
+> >>>>> allowing the use of direct IO from arbitrary offsets within a page.
+> >>>>> Also disable page bouncing; iser has no restrictions on which
+> pages it
+> >>>>> can address.
+> >>>>>
+> >>>>> Signed-off-by: Pete Wyckoff <pw@osc.edu>
+> >>>>> ---
+> >>>>>  drivers/infiniband/ulp/iser/iscsi_iser.c |    8 ++++++++
+> >>>>>  1 files changed, 8 insertions(+), 0 deletions(-)
+> >>>>>
+> >>>>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c
+> b/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>>>> index be1b9fb..1b272a6 100644
+> >>>>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>>>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>>>> @@ -543,6 +543,13 @@ iscsi_iser_ep_disconnect(__u64 ep_handle)
+> >>>>>   iser_conn_terminate(ib_conn);
+> >>>>>  }
+> >>>>> 
+> >>>>> +static int iscsi_iser_slave_configure(struct scsi_device *sdev)
+> >>>>> +{
+> >>>>> + blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
+> >>>>>          
+> >>>> You really don't want to do this.  That signals to the block
+> layer that
+> >>>> we have an iommu, although it's practically the same thing as a
+> 64 bit
+> >>>> DMA mask ... but I'd just leave it to the DMA mask to set this up
+> >>>> correctly.  Anything else is asking for a subtle bug to turn up years
+> >>>> from now when something causes the mask and the limit to be
+> mismatched.
+> >>>>        
+> >>> Oh.  I decided to add that line for symmetry with TCP, and was
+> >>> convinced by the arguments here:
+> >>>
+> >>>     commit b6d44fe9582b9d90a0b16f508ac08a90d899bf56
+> >>>     Author: Mike Christie <michaelc@cs.wisc.edu>
+> >>>     Date:   Thu Jul 26 12:46:47 2007 -0500
+> >>>
+> >>>     [SCSI] iscsi_tcp: Turn off bounce buffers
+> >>>
+> >>>     It was found by LSI that on setups with large amounts of memory
+> >>>     we were bouncing buffers when we did not need to. If the iscsi tcp
+> >>>     code touches the data buffer (or a helper does),
+> >>>     it will kmap the buffer. iscsi_tcp also does not interact with
+> hardware,
+> >>>     so it does not have any hw dma restrictions. This patch sets
+> the bounce
+> >>>     buffer settings for our device queue so buffers should not be
+> bounced
+> >>>     because of a driver limit.
+> >>>
+> >>> I don't see a convenient place to callback into particular iscsi
+> >>> devices to set the DMA mask per-host.  It has to go on the
+> >>> shost_gendev, right?, but only for TCP and iSER, not qla4xxx, which
+> >>> handles its DMA mask during device probe.
+> >>>      
+> >> You should be taking your mask from the underlying infiniband device as
+> >> part of the setup, shouldn't you?
+> >>    
 > >
+> > I think you're right about this.  All the existing IB HW tries to
+> > set a 64-bit dma mask, but that's no reason to disable the mechanism
+> > entirely in iser.  I'll remove that line that disables bouncing in
+> > my patch.  Perhaps Mike will know if the iscsi_tcp usage is still
+> > appropriate.
+> >
+> >  
 >
-> :040000 040000 2f23bf33d76d6f37c558251003f88537c6e639fe
-> 63d59091ca7ac527b5106540eea06d7b6649862d M      drivers
+> Let me make sure that I understand: you say that the IB HW driver (e.g.
+> ib_mthca) tries to set a 64-bit dma mask:
+>
+>     err = pci_set_dma_mask(pdev, DMA_64BIT_MASK);
+>     if (err) {
+>         dev_warn(&pdev->dev, "Warning: couldn't set 64-bit PCI DMA
+> mask.\n");
+>         err = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+>         if (err) {
+>             dev_err(&pdev->dev, "Can't set PCI DMA mask, aborting.\n");
+>             goto err_free_res;
+>         }
+>     }
+>
+> So, in the example above, the driver will use a 64-bit mask or a 32-bit
+> mask (or fail). According to that, iSER (and SRP) needs to call
+> blk_queue_bounce_limit with the appropriate parameter, right?
+>
 
+Roland, James,
 
-The return value for down_interruptible was incorrectly checked!  
-updated patch enclosed.
+I'm trying to fix this potential problem in iSER, and I have some
+questions about that. How can I get the DMA mask that the HCA driver is
+using (DMA_64BIT_MASK or DMA_32BIT_MASK)? Can I get it somehow from
+struct ib_device? Is it in ib_device->device?
 
-This attached patch is against current scsi-misc-2.6 (minus original  
-down_interruptible patch).
+Another question is - after I get the DMA mask data from the HCA driver,
+I guess that I need to call blk_queue_bounce_limit with the appropriate
+parameter (BLK_BOUNCE_HIGH, BLK_BOUNCE_ANY or BLK_BOUNCE_ISA). Which
+value should iSER use according to the DMA mask info? For example, if
+the HCA driver sets DMA_64BIT_MASK, should iSER use
+BLK_BOUNCE_HIGH/BLK_BOUNCE_ANY/BLK_BOUNCE_ISA ?
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's  
-handling of patch attachments (inline gets damaged, please use  
-attachment).
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
-  drivers/scsi/aacraid/commsup.c |    8 +++++---
-  1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff -ru a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/ 
-commsup.c
---- a/drivers/scsi/aacraid/commsup.c	2008-04-14 14:08:00.737201138 -0400
-+++ b/drivers/scsi/aacraid/commsup.c	2008-04-14 14:09:34.019252960 -0400
-@@ -515,10 +515,12 @@
-  				}
-  				udelay(5);
-  			}
--		} else
--			(void)down_interruptible(&fibptr->event_wait);
-+		} else if (down_interruptible(&fibptr->event_wait)) {
-+			fibptr->done = 2;
-+			up(&fibptr->event_wait);
-+		}
-  		spin_lock_irqsave(&fibptr->event_lock, flags);
--		if (fibptr->done == 0) {
-+		if ((fibptr->done == 0) || (fibptr->done == 2)) {
-  			fibptr->done = 2; /* Tell interrupt we aborted */
-  			spin_unlock_irqrestore(&fibptr->event_lock, flags);
-  			return -EINTR;
-
-Sincerely - Mark Salyzyn
-
-
---Apple-Mail-329-865016404
-Content-Disposition: attachment;
-	filename=aacraid_down_interruptible2.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="aacraid_down_interruptible2.patch"
-Content-Transfer-Encoding: 7bit
-
-diff -ru a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
---- a/drivers/scsi/aacraid/commsup.c	2008-04-14 14:08:00.737201138 -0400
-+++ b/drivers/scsi/aacraid/commsup.c	2008-04-14 14:09:34.019252960 -0400
-@@ -515,10 +515,12 @@
- 				}
- 				udelay(5);
- 			}
--		} else
--			(void)down_interruptible(&fibptr->event_wait);
-+		} else if (down_interruptible(&fibptr->event_wait)) {
-+			fibptr->done = 2;
-+			up(&fibptr->event_wait);
-+		}
- 		spin_lock_irqsave(&fibptr->event_lock, flags);
--		if (fibptr->done == 0) {
-+		if ((fibptr->done == 0) || (fibptr->done == 2)) {
- 			fibptr->done = 2; /* Tell interrupt we aborted */
- 			spin_unlock_irqrestore(&fibptr->event_lock, flags);
- 			return -EINTR;
-
---Apple-Mail-329-865016404
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-
-
-
---Apple-Mail-329-865016404--
+Thanks,
+Erez
