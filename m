@@ -1,91 +1,171 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] aacraid: Fix down_interruptible() to check the return value take 2 (was: aacraid broken in git)
-Date: Wed, 23 Apr 2008 14:47:42 -0700
-Message-ID: <86802c440804231447x4e809c0cl5ca995db79e6075d@mail.gmail.com>
-References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com>
-	 <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
-	 <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
-	 <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] fewer pointer derefs in scsi_error
+Date: Thu, 24 Apr 2008 00:18:48 +0200 (CEST)
+Message-ID: <alpine.LNX.1.00.0804240006450.2438@dragon.funnycrock.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.241]:10338 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751011AbYDWVrn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Apr 2008 17:47:43 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so1626386rvb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2008 14:47:43 -0700 (PDT)
-In-Reply-To: <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754693AbYDWWTH@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eric Youngdale <eric@andante.org>, David Miller <davem@davemloft.net>, Mike Anderson <andmike@us.ibm.com>, Russell King <rmk@arm.linux.org.uk>, Jesper Juhl <jesper.juhl@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Cc: Linux-Scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Wed, Apr 23, 2008 at 5:16 AM, Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
-> On Apr 21, 2008, at 8:42 PM, Yinghai Lu wrote:
->
->
-> > bisected to:
-> >
-> > yhlu@mpk12-office-77-185:~/xx/xx/kernel/linux-2.6> git-bisect good
-> > e6990c6448ca9359b6d4ad027c0a6efbf4379e64 is first bad commit
-> > commit e6990c6448ca9359b6d4ad027c0a6efbf4379e64
-> > Author: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-> > Date:   Mon Apr 14 14:20:16 2008 -0400
-> >
-> >   [SCSI] aacraid: Fix down_interruptible() to check the return value
-> >
-> >   Instead of ignoring the return value in aac_fib_send() return 2 to
-> >   indicate to the layers above that fib transmission was aborted due to
-> >   timeout.
-> >
-> >   Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> >   Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> >
-> > :040000 040000 2f23bf33d76d6f37c558251003f88537c6e639fe
-> > 63d59091ca7ac527b5106540eea06d7b6649862d M      drivers
-> >
->
->
->  The return value for down_interruptible was incorrectly checked! updated
-> patch enclosed.
->
->  This attached patch is against current scsi-misc-2.6 (minus original
-> down_interruptible patch).
->
->  ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-> handling of patch attachments (inline gets damaged, please use attachment).
->
->  Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
->
->   drivers/scsi/aacraid/commsup.c |    8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
->
->  diff -ru a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
->  --- a/drivers/scsi/aacraid/commsup.c    2008-04-14 14:08:00.737201138 -0400
->  +++ b/drivers/scsi/aacraid/commsup.c    2008-04-14 14:09:34.019252960 -0400
->  @@ -515,10 +515,12 @@
->                                 }
->                                 udelay(5);
->                         }
->  -               } else
->  -                       (void)down_interruptible(&fibptr->event_wait);
->  +               } else if (down_interruptible(&fibptr->event_wait)) {
->  +                       fibptr->done = 2;
->  +                       up(&fibptr->event_wait);
->  +               }
->                 spin_lock_irqsave(&fibptr->event_lock, flags);
->  -               if (fibptr->done == 0) {
->  +               if ((fibptr->done == 0) || (fibptr->done == 2)) {
->                         fibptr->done = 2; /* Tell interrupt we aborted */
->                         spin_unlock_irqrestore(&fibptr->event_lock, flags);
->                         return -EINTR;
->
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-it works.
+This patch reduces the number of sequential pointer derefs in scsi_error 
+( drivers/scsi/scsi_error.c ).
 
-Thanks
+The bennefits of this are:
+	- makes the code easier to read. Lots of sequential derefs of the 
+	  same pointers are not easy on the eye.
+	- makes the size of the source file 55 bytes smaller.
+	- makes the size of the object file 48 bytes smaller.
+	- theoretically at least, just dereferencing the pointers once can 
+	  allow the compiler to generally slightly faster code, so in 
+	  theory this could also be a micro speed optimization.
 
-YH
+Please consider applying.
+
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ scsi_error.c |   58 ++++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 32 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 221f31e..94395a7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -185,13 +185,14 @@ int scsi_delete_timer(struct scsi_cmnd *scmd)
+ void scsi_times_out(struct scsi_cmnd *scmd)
+ {
+ 	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
++	struct Scsi_Host *host = scmd->device->host; 
+ 
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
+-	if (scmd->device->host->transportt->eh_timed_out)
+-		eh_timed_out = scmd->device->host->transportt->eh_timed_out;
+-	else if (scmd->device->host->hostt->eh_timed_out)
+-		eh_timed_out = scmd->device->host->hostt->eh_timed_out;
++	if (host->transportt->eh_timed_out)
++		eh_timed_out = host->transportt->eh_timed_out;
++	else if (host->hostt->eh_timed_out)
++		eh_timed_out = host->hostt->eh_timed_out;
+ 	else
+ 		eh_timed_out = NULL;
+ 
+@@ -474,22 +475,22 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
+ {
+ 	unsigned long flags;
+ 	int rtn;
++	struct Scsi_Host *host = scmd->device->host;
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
+ 					  __FUNCTION__));
+ 
+-	if (!scmd->device->host->hostt->eh_host_reset_handler)
++	if (!host->hostt->eh_host_reset_handler)
+ 		return FAILED;
+ 
+-	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
++	rtn = host->hostt->eh_host_reset_handler(scmd);
+ 
+ 	if (rtn == SUCCESS) {
+-		if (!scmd->device->host->hostt->skip_settle_delay)
++		if (!host->hostt->skip_settle_delay)
+ 			ssleep(HOST_RESET_SETTLE_TIME);
+-		spin_lock_irqsave(scmd->device->host->host_lock, flags);
+-		scsi_report_bus_reset(scmd->device->host,
+-				      scmd_channel(scmd));
+-		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++		spin_lock_irqsave(host->host_lock, flags);
++		scsi_report_bus_reset(host, scmd_channel(scmd));
++		spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+ 
+ 	return rtn;
+@@ -503,22 +504,22 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
+ {
+ 	unsigned long flags;
+ 	int rtn;
++	struct Scsi_Host *host = scmd->device->host;
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
+ 					  __FUNCTION__));
+ 
+-	if (!scmd->device->host->hostt->eh_bus_reset_handler)
++	if (!host->hostt->eh_bus_reset_handler)
+ 		return FAILED;
+ 
+-	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
++	rtn = host->hostt->eh_bus_reset_handler(scmd);
+ 
+ 	if (rtn == SUCCESS) {
+-		if (!scmd->device->host->hostt->skip_settle_delay)
++		if (!host->hostt->skip_settle_delay)
+ 			ssleep(BUS_RESET_SETTLE_TIME);
+-		spin_lock_irqsave(scmd->device->host->host_lock, flags);
+-		scsi_report_bus_reset(scmd->device->host,
+-				      scmd_channel(scmd));
+-		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++		spin_lock_irqsave(host->host_lock, flags);
++		scsi_report_bus_reset(host, scmd_channel(scmd));
++		spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+ 
+ 	return rtn;
+@@ -544,16 +545,17 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
+ {
+ 	unsigned long flags;
+ 	int rtn;
++	struct Scsi_Host *host = scmd->device->host;
+ 
+-	if (!scmd->device->host->hostt->eh_target_reset_handler)
++	if (!host->hostt->eh_target_reset_handler)
+ 		return FAILED;
+ 
+-	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
++	rtn = host->hostt->eh_target_reset_handler(scmd);
+ 	if (rtn == SUCCESS) {
+-		spin_lock_irqsave(scmd->device->host->host_lock, flags);
++		spin_lock_irqsave(host->host_lock, flags);
+ 		__starget_for_each_device(scsi_target(scmd->device), NULL,
+ 					  __scsi_report_device_reset);
+-		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++		spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+ 
+ 	return rtn;
+@@ -572,11 +574,12 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
+ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+ {
+ 	int rtn;
++	struct Scsi_Host *host = scmd->device->host;
+ 
+-	if (!scmd->device->host->hostt->eh_device_reset_handler)
++	if (!host->hostt->eh_device_reset_handler)
+ 		return FAILED;
+ 
+-	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
++	rtn = host->hostt->eh_device_reset_handler(scmd);
+ 	if (rtn == SUCCESS)
+ 		__scsi_report_device_reset(scmd->device, NULL);
+ 	return rtn;
+@@ -584,10 +587,13 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+ 
+ static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+ {
+-	if (!scmd->device->host->hostt->eh_abort_handler)
++	int (* eh_abort_handler)(struct scsi_cmnd *)
++		= scmd->device->host->hostt->eh_abort_handler;
++
++	if (!eh_abort_handler)
+ 		return FAILED;
+ 
+-	return scmd->device->host->hostt->eh_abort_handler(scmd);
++	return eh_abort_handler(scmd);
+ }
+ 
+ /**
