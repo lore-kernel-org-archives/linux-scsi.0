@@ -1,79 +1,169 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: MPTSAS: ("activate status led" | "find disc") in external enclosure
-Date: Wed, 23 Apr 2008 09:39:15 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229FFEEF4@NAMAIL2.ad.lsil.com>
-References: <20080423101143.d1fa10d0.taeuber@bbaw.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [ofa-general] Re: [PATCH 1/3] iscsi iser: remove DMA restrictions
+Date: Wed, 23 Apr 2008 11:33:49 -0500
+Message-ID: <480F64ED.7010705@cs.wisc.edu>
+References: <20080212205252.GB13643@osc.edu>
+	<20080212205403.GC13643@osc.edu><1202850645.3137.132.camel@localhost.localdomain><20080212214632.GA14397@osc.edu><1202853468.3137.148.camel@localhost.localdomain><20080213195912.GC7372@osc.edu>
+	<480C9BF8.9050401@Voltaire.COM> <480F3C84.40606@Voltaire.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58853 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755090AbYDWPj2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Apr 2008 11:39:28 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20080423101143.d1fa10d0.taeuber@bbaw.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <480F3C84.40606@Voltaire.COM>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: Erez Zilber <erezz@voltaire.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, general@lists.openfabrics.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-1?Q?Lars_T=E4uber?= <taeuber@bbaw.de>
-Cc: linux-scsi@vger.kernel.org
 
-On  Wednesday, April 23, 2008 2:12 AM, Lars T=E4uber wrote:
-> I hoped I had the newet version of the firmware on the HBA.
-> monosan:~ # cat /sys/class/scsi_host/host6/version_fw=20
-> 01.24.01.00
+Erez Zilber wrote:
+> Erez Zilber wrote:
+>> Pete Wyckoff wrote:
+>>> James.Bottomley@HansenPartnership.com wrote on Tue, 12 Feb 2008
+>> 15:57 -0600:
+>>>  
+>>>> On Tue, 2008-02-12 at 16:46 -0500, Pete Wyckoff wrote:
+>>>>    
+>>>>> James.Bottomley@HansenPartnership.com wrote on Tue, 12 Feb 2008
+>> 15:10 -0600:
+>>>>>      
+>>>>>> On Tue, 2008-02-12 at 15:54 -0500, Pete Wyckoff wrote:
+>>>>>>        
+>>>>>>> iscsi_iser does not have any hardware DMA restrictions.  Add a
+>>>>>>> slave_configure function to remove any DMA alignment restriction,
+>>>>>>> allowing the use of direct IO from arbitrary offsets within a page.
+>>>>>>> Also disable page bouncing; iser has no restrictions on which
+>> pages it
+>>>>>>> can address.
+>>>>>>>
+>>>>>>> Signed-off-by: Pete Wyckoff <pw@osc.edu>
+>>>>>>> ---
+>>>>>>>  drivers/infiniband/ulp/iser/iscsi_iser.c |    8 ++++++++
+>>>>>>>  1 files changed, 8 insertions(+), 0 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c
+>> b/drivers/infiniband/ulp/iser/iscsi_iser.c
+>>>>>>> index be1b9fb..1b272a6 100644
+>>>>>>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
+>>>>>>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+>>>>>>> @@ -543,6 +543,13 @@ iscsi_iser_ep_disconnect(__u64 ep_handle)
+>>>>>>>   iser_conn_terminate(ib_conn);
+>>>>>>>  }
+>>>>>>>
+>>>>>>> +static int iscsi_iser_slave_configure(struct scsi_device *sdev)
+>>>>>>> +{
+>>>>>>> + blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
+>>>>>>>          
+>>>>>> You really don't want to do this.  That signals to the block
+>> layer that
+>>>>>> we have an iommu, although it's practically the same thing as a
+>> 64 bit
+>>>>>> DMA mask ... but I'd just leave it to the DMA mask to set this up
+>>>>>> correctly.  Anything else is asking for a subtle bug to turn up years
+>>>>>> from now when something causes the mask and the limit to be
+>> mismatched.
+>>>>>>        
+>>>>> Oh.  I decided to add that line for symmetry with TCP, and was
+>>>>> convinced by the arguments here:
+>>>>>
+>>>>>     commit b6d44fe9582b9d90a0b16f508ac08a90d899bf56
+>>>>>     Author: Mike Christie <michaelc@cs.wisc.edu>
+>>>>>     Date:   Thu Jul 26 12:46:47 2007 -0500
+>>>>>
+>>>>>     [SCSI] iscsi_tcp: Turn off bounce buffers
+>>>>>
+>>>>>     It was found by LSI that on setups with large amounts of memory
+>>>>>     we were bouncing buffers when we did not need to. If the iscsi tcp
+>>>>>     code touches the data buffer (or a helper does),
+>>>>>     it will kmap the buffer. iscsi_tcp also does not interact with
+>> hardware,
+>>>>>     so it does not have any hw dma restrictions. This patch sets
+>> the bounce
+>>>>>     buffer settings for our device queue so buffers should not be
+>> bounced
+>>>>>     because of a driver limit.
+>>>>>
+>>>>> I don't see a convenient place to callback into particular iscsi
+>>>>> devices to set the DMA mask per-host.  It has to go on the
+>>>>> shost_gendev, right?, but only for TCP and iSER, not qla4xxx, which
+>>>>> handles its DMA mask during device probe.
+>>>>>      
+>>>> You should be taking your mask from the underlying infiniband device as
+>>>> part of the setup, shouldn't you?
+>>>>    
+>>> I think you're right about this.  All the existing IB HW tries to
+>>> set a 64-bit dma mask, but that's no reason to disable the mechanism
+>>> entirely in iser.  I'll remove that line that disables bouncing in
+>>> my patch.  Perhaps Mike will know if the iscsi_tcp usage is still
+>>> appropriate.
+>>>
+>>>  
+>> Let me make sure that I understand: you say that the IB HW driver (e.g.
+>> ib_mthca) tries to set a 64-bit dma mask:
+>>
+>>     err = pci_set_dma_mask(pdev, DMA_64BIT_MASK);
+>>     if (err) {
+>>         dev_warn(&pdev->dev, "Warning: couldn't set 64-bit PCI DMA
+>> mask.\n");
+>>         err = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+>>         if (err) {
+>>             dev_err(&pdev->dev, "Can't set PCI DMA mask, aborting.\n");
+>>             goto err_free_res;
+>>         }
+>>     }
+>>
+>> So, in the example above, the driver will use a 64-bit mask or a 32-bit
+>> mask (or fail). According to that, iSER (and SRP) needs to call
+>> blk_queue_bounce_limit with the appropriate parameter, right?
+>>
+> 
+> Roland, James,
+> 
+> I'm trying to fix this potential problem in iSER, and I have some
+> questions about that. How can I get the DMA mask that the HCA driver is
+> using (DMA_64BIT_MASK or DMA_32BIT_MASK)? Can I get it somehow from
+> struct ib_device? Is it in ib_device->device?
 
-This is code was release back in December, so its fairly new.
+I think what Erez is asking, or maybe it is something I was wondering 
+is, that scsi drivers like lpfc or qla2xxx will do something like:
 
-> > I would like to point out there is a firmware request for=20
-> sending SEP request, for instance setting LEDS.   Here is a=20
-> copy of the structure.  We call this function to set LED when=20
-> there is SMART errors (for non-raid devices).  For RAID, the=20
-> firmware handles it.   Is this what your looking for?
->=20
-> I'm not firm enough with scsi to understand all your words.=20
-> But the problem I have is not that something doesn't work. It=20
-> works with 2.6.25.
-> I can get the LEDs to blink. I can choose which one should=20
-> do. I simply don't know which one it should be.
->=20
-> The problem is, I wanted to simultate a faulty drive without=20
-> being one faulty.
-> Therefore I choosed a (working) disk to be faulty by its=20
-> mutlipath-name: dm-9
-> Then I found out which disk it is in sd? notation. Then I=20
-> read the serial number of this disk with the smartmontools.
-> Now I want this LED of the bay containing the disk with this=20
-> serial number to blink. But I can't find out which LED=20
-> matches which serial number of the containing disk.
->=20
+if (dma_set_mask(&scsi_host->pdev->dev, DMA_64BIT_MASK))
+	dma_set_mask(&scsi_host->pdev->dev, DMA_32BIT_MASK)
 
-The current driver will set the faulty LED when there is sense ASC =3D =
-0x5D, meaning smart error.   This will occurr from the device driver fo=
-r devices not belonging to a RAID volume.  If its in a RAID volume, the=
- firmware will handle setting the LED.    You can verify this by adding=
- a printk inside the source code:  From function mptscsih_copy_sense_da=
-ta(), scroll down to "Log Smart Data", add it here after the check on 0=
-x5D.   Also mptscish_issue_sep_command() is called to send the SEP comm=
-and to set the LED.   This is found in /usr/src/linux/drivers/message/f=
-usion/mptscsih.c.
+And when __scsi_alloc_queue calls scsi_calculate_bounce_limit it checks 
+the host's parent dma_mask and sets the bounce_limit for the driver.
 
-Also, you should be able to figure out which slot your device inside yo=
-ur enclosure.   Each enclousre will have a unique enclosoure logical id=
-, which is simailar to a sas address.  Each device that is in inside th=
-e enclosure is assigned a slot id, which is the same as a bay indentifi=
-er.   If you have a SAS device, it will have the sas_address on the sti=
-cker.  Then with that sas_address, you can search inside /sys/class/sas=
-_device, that will tell you which end device it is.  Within that, you w=
-ill see the bay identifier, which is the slot id.  The slot id I guess =
-is assigned from 0 to the largest number you have of slots in your encl=
-osure, probally from left to right.  If you look inside the expanders, =
-you will see the enslosure logical id.   If you have more than one expa=
-nder in the enclosure, they all have the same enclosure logical id. =20
+Does srp/iser need to call the dma_set_mask functions or does the 
+ib_device's device already have the dma info set up?
 
-Eric
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Another question is - after I get the DMA mask data from the HCA driver,
+> I guess that I need to call blk_queue_bounce_limit with the appropriate
+> parameter (BLK_BOUNCE_HIGH, BLK_BOUNCE_ANY or BLK_BOUNCE_ISA). Which
+> value should iSER use according to the DMA mask info? For example, if
+> the HCA driver sets DMA_64BIT_MASK, should iSER use
+> BLK_BOUNCE_HIGH/BLK_BOUNCE_ANY/BLK_BOUNCE_ISA ?
+
+Have you seen how the scsi layer calls blk_queue_bounce_limit when you 
+have a parent device that is setup?
+
+In the bnx2i branch I modified iser to be more like srp and traditional 
+drivers, because it accesses the ib_device similar to how other drivers 
+like lpfc or qla2xxx access their parent device for dma funtions, and 
+when the underlying device is removed we now remove the sessions like 
+with other hotplug drivers (we remove sessions from the ib_client remove 
+callout like srp). In the branch, iser allocates a scsi_host per 
+ib_device, and the scsi_host's parent is the ib_device ( 
+..../ib_device/scsi_host/iscsi_session/scsi_target/scsi_device), so if 
+the dma_mask is set right then the bounce_limit will be set by 
+scsi_calculate_bounce_limit?
+
+An alternative could be to keep allocating a host per session, but just 
+call blk_queue_bounce_limit in the scsi_host_template->slave_alloc function?
