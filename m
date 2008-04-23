@@ -1,91 +1,333 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: MPTSAS: ("activate status led" | "find disc") in external
- enclosure
-Date: Wed, 23 Apr 2008 10:11:43 +0200
-Message-ID: <20080423101143.d1fa10d0.taeuber@bbaw.de>
-References: <20080422091837.12790125.taeuber@bbaw.de>
-	<0631C836DBF79F42B5A60C8C8D4E8229FFECC9@NAMAIL2.ad.lsil.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Fixup aic7xxx firmware build
+Date: Wed, 23 Apr 2008 11:39:49 +0200
+Message-ID: <480F03E5.9050000@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------020409090004080706080103"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:57129 "EHLO mail.bbaw.de"
+Received: from mx2.suse.de ([195.135.220.15]:42447 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751768AbYDWIKZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Apr 2008 04:10:25 -0400
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229FFECC9@NAMAIL2.ad.lsil.com>
+	id S1750780AbYDWJjv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Apr 2008 05:39:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Denys Vlasenko <vda.linux@googlemail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hallo Eric,
+This is a multi-part message in MIME format.
+--------------020409090004080706080103
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-"Moore, Eric" <Eric.Moore@lsi.com> schrieb:
-> On Tuesday, April 22, 2008 1:19 AM, Lars T=C3=A4uber wrote: =20
->=20
-> > So this will never work for the SATA discs in our enclosure,=20
-> > right? Or is there a chance with asking LSI to do something=20
-> > in their firmware?
-> >=20
-> > Seems I have no chance to get to know which slot contains the=20
-> > failed drive without a shutdown. Bad luck.
-> >=20
->=20
-> If you want to upgrade your controller fw, I need the contents of all=
- the attributes in /sys/class/scsi_host/host#.  Just yesterday we got W=
-arner Wakko upgraded, and I believe it might of solved his problems.   =
-I'm not sure what problems your experiencing, as this thread has been h=
-ard to follow.
+Hi James,
 
-I hoped I had the newet version of the firmware on the HBA.
-monosan:~ # cat /sys/class/scsi_host/host6/version_fw=20
-01.24.01.00
-monosan:~ # cat /sys/class/scsi_host/host6/version_mpi=20
-105
-monosan:~ # cat /sys/class/scsi_host/host6/version_nvdata_default=20
-2d02h
-monosan:~ # cat /sys/class/scsi_host/host6/version_nvdata_persistent=20
-2d02h
-monosan:~ # cat /sys/class/scsi_host/host6/version_product=20
-LSISAS1068 B1
-monosan:~ # cat /sys/class/scsi_host/host6/board_name=20
-SAS3801X
+the last aicasm fix uncovered a flaw in the aicasm code,
+ie the range checking in type_check() was never called
+properly.
+This patch fixes this up and also disables the unused
+16bit instruction.
 
+This is actually a resend of an earlier patch, which
+appearently got lost somehow.
 
-> I would like to point out there is a firmware request for sending SEP=
- request, for instance setting LEDS.   Here is a copy of the structure.=
-  We call this function to set LED when there is SMART errors (for non-=
-raid devices).  For RAID, the firmware handles it.   Is this what your =
-looking for?
+Please apply.
 
-I'm not firm enough with scsi to understand all your words. But the pro=
-blem I have is not that something doesn't work. It works with 2.6.25.
-I can get the LEDs to blink. I can choose which one should do. I simply=
- don't know which one it should be.
+Cheers,
 
-The problem is, I wanted to simultate a faulty drive without being one =
-faulty.
-Therefore I choosed a (working) disk to be faulty by its mutlipath-name=
-: dm-9
-Then I found out which disk it is in sd? notation. Then I read the seri=
-al number of this disk with the smartmontools.
-Now I want this LED of the bay containing the disk with this serial num=
-ber to blink. But I can't find out which LED matches which serial numbe=
-r of the containing disk.
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
 
-I know my english is not the best. Ask and I try to explain again.
+--------------020409090004080706080103
+Content-Type: text/plain;
+ name="aic7xxx-fix-type_check-in-aicasm"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="aic7xxx-fix-type_check-in-aicasm"
 
-Regards
-Lars
+aic7xxx: Update type check in aicasm grammar
+    
+The function type_check() in aicasm grammar code was
+never used properly due to a bug.
+This patch fixes it up and ensures it's only called if appropriate.
 
---=20
-                            Informationstechnologie
-Berlin-Brandenburgische Akademie der Wissenschaften
-J=C3=A4gerstrasse 22-23                     10117 Berlin
-Tel.: +49 30 20370-352           http://www.bbaw.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In addition the unused 16bit instruction are disabled, but left in
+the code for reference.
+    
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+index 702e2db..5a8bfc9 100644
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+@@ -101,11 +101,12 @@ static void format_3_instr(int opcode, symbol_ref_t *src,
+ 			   expression_t *immed, symbol_ref_t *address);
+ static void test_readable_symbol(symbol_t *symbol);
+ static void test_writable_symbol(symbol_t *symbol);
+-static void type_check(symbol_t *symbol, expression_t *expression, int and_op);
++static void type_check(symbol_ref_t *sym, expression_t *expression, int and_op);
+ static void make_expression(expression_t *immed, int value);
+ static void add_conditional(symbol_t *symbol);
+ static void add_version(const char *verstring);
+ static int  is_download_const(expression_t *immed);
++static int  is_location_address(symbol_t *symbol);
+ void yyerror(const char *string);
+ 
+ #define SRAM_SYMNAME "SRAM_BASE"
+@@ -192,10 +193,10 @@ void yyerror(const char *string);
+ 
+ %token <value> T_OR
+ 
+-/* 16 bit extensions */
+-%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
+-%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
+-
++/* 16 bit extensions, not implemented 
++ * %token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
++ * %token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
++ */
+ %token T_RET
+ 
+ %token T_NOP
+@@ -214,7 +215,7 @@ void yyerror(const char *string);
+ 
+ %type <expression> expression immediate immediate_or_a
+ 
+-%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
++%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
+ 
+ %type <value> mode_value mode_list macro_arglist
+ 
+@@ -313,13 +314,13 @@ reg_definition:
+ 				stop("Register multiply defined", EX_DATAERR);
+ 				/* NOTREACHED */
+ 			}
+-			cur_symbol = $1; 
++			cur_symbol = $1;
+ 			cur_symbol->type = cur_symtype;
+ 			initialize_symbol(cur_symbol);
+ 		}
+ 		reg_attribute_list
+ 	'}'
+-		{                    
++		{
+ 			/*
+ 			 * Default to allowing everything in for registers
+ 			 * with no bit or mask definitions.
+@@ -349,7 +350,7 @@ reg_attribute_list:
+ |	reg_attribute_list reg_attribute
+ ;
+ 
+-reg_attribute:		
++reg_attribute:
+ 	reg_address
+ |	size
+ |	access_mode
+@@ -641,14 +642,14 @@ expression:
+ 			       &($1.referenced_syms),
+ 			       &($3.referenced_syms));
+ 	}
+-| 	expression T_EXPR_LSHIFT expression
++|	expression T_EXPR_LSHIFT expression
+ 	{
+ 		$$.value = $1.value << $3.value;
+ 		symlist_merge(&$$.referenced_syms,
+ 			       &$1.referenced_syms,
+ 			       &$3.referenced_syms);
+ 	}
+-| 	expression T_EXPR_RSHIFT expression
++|	expression T_EXPR_RSHIFT expression
+ 	{
+ 		$$.value = $1.value >> $3.value;
+ 		symlist_merge(&$$.referenced_syms,
+@@ -714,7 +715,7 @@ expression:
+ ;
+ 
+ constant:
+-	T_CONST T_SYMBOL expression 
++	T_CONST T_SYMBOL expression
+ 	{
+ 		if ($2->type != UNINITIALIZED) {
+ 			stop("Re-definition of symbol as a constant",
+@@ -1311,14 +1312,18 @@ f2_opcode:
+ |	T_ROR { $$ = AIC_OP_ROR; }
+ ;
+ 
+-f4_opcode:
+-	T_OR16	{ $$ = AIC_OP_OR16; }
+-|	T_AND16 { $$ = AIC_OP_AND16; }
+-|	T_XOR16 { $$ = AIC_OP_XOR16; }
+-|	T_ADD16 { $$ = AIC_OP_ADD16; }
+-|	T_ADC16 { $$ = AIC_OP_ADC16; }
+-|	T_MVI16 { $$ = AIC_OP_MVI16; }
+-;
++/*
++ * 16bit opcodes, not used
++ *
++ *f4_opcode:
++ *	T_OR16	{ $$ = AIC_OP_OR16; }
++ *|	T_AND16 { $$ = AIC_OP_AND16; }
++ *|	T_XOR16 { $$ = AIC_OP_XOR16; }
++ *|	T_ADD16 { $$ = AIC_OP_ADD16; }
++ *|	T_ADC16 { $$ = AIC_OP_ADC16; }
++ *|	T_MVI16 { $$ = AIC_OP_MVI16; }
++ *;
++ */
+ 
+ code:
+ 	f2_opcode destination ',' expression opt_source ret ';'
+@@ -1357,6 +1362,7 @@ code:
+ code:
+ 	T_OR reg_symbol ',' immediate jmp_jc_jnc_call address ';'
+ 	{
++		type_check(&$2, &$4, AIC_OP_OR);
+ 		format_3_instr($5, &$2, &$4, &$6);
+ 	}
+ ;
+@@ -1528,7 +1534,7 @@ initialize_symbol(symbol_t *symbol)
+ 		       sizeof(struct cond_info));
+ 		break;
+ 	case MACRO:
+-		symbol->info.macroinfo = 
++		symbol->info.macroinfo =
+ 		    (struct macro_info *)malloc(sizeof(struct macro_info));
+ 		if (symbol->info.macroinfo == NULL) {
+ 			stop("Can't create macro info", EX_SOFTWARE);
+@@ -1552,7 +1558,6 @@ add_macro_arg(const char *argtext, int argnum)
+ 	struct macro_arg *marg;
+ 	int i;
+ 	int retval;
+-		
+ 
+ 	if (cur_symbol == NULL || cur_symbol->type != MACRO) {
+ 		stop("Invalid current symbol for adding macro arg",
+@@ -1633,8 +1638,10 @@ format_1_instr(int opcode, symbol_ref_t *dest, expression_t *immed,
+ 	test_writable_symbol(dest->symbol);
+ 	test_readable_symbol(src->symbol);
+ 
+-	/* Ensure that immediate makes sense for this destination */
+-	type_check(dest->symbol, immed, opcode);
++	if (!is_location_address(dest->symbol)) {
++		/* Ensure that immediate makes sense for this destination */
++		type_check(dest, immed, opcode);
++	}
+ 
+ 	/* Allocate sequencer space for the instruction and fill it out */
+ 	instr = seq_alloc();
+@@ -1766,9 +1773,6 @@ format_3_instr(int opcode, symbol_ref_t *src,
+ 	/* Test register permissions */
+ 	test_readable_symbol(src->symbol);
+ 
+-	/* Ensure that immediate makes sense for this source */
+-	type_check(src->symbol, immed, opcode);
+-
+ 	/* Allocate sequencer space for the instruction and fill it out */
+ 	instr = seq_alloc();
+ 	f3_instr = &instr->format.format3;
+@@ -1797,7 +1801,6 @@ format_3_instr(int opcode, symbol_ref_t *src,
+ static void
+ test_readable_symbol(symbol_t *symbol)
+ {
+-	
+ 	if ((symbol->info.rinfo->modes & (0x1 << src_mode)) == 0) {
+ 		snprintf(errbuf, sizeof(errbuf),
+ 			"Register %s unavailable in source reg mode %d",
+@@ -1815,7 +1818,6 @@ test_readable_symbol(symbol_t *symbol)
+ static void
+ test_writable_symbol(symbol_t *symbol)
+ {
+-	
+ 	if ((symbol->info.rinfo->modes & (0x1 << dst_mode)) == 0) {
+ 		snprintf(errbuf, sizeof(errbuf),
+ 			"Register %s unavailable in destination reg mode %d",
+@@ -1831,25 +1833,34 @@ test_writable_symbol(symbol_t *symbol)
+ }
+ 
+ static void
+-type_check(symbol_t *symbol, expression_t *expression, int opcode)
++type_check(symbol_ref_t *sym, expression_t *expression, int opcode)
+ {
++	symbol_t *symbol = sym->symbol;
+ 	symbol_node_t *node;
+ 	int and_op;
++	int8_t value, mask;
+ 
+ 	and_op = FALSE;
+-	if (opcode == AIC_OP_AND || opcode == AIC_OP_JNZ || opcode == AIC_OP_JZ)
+-		and_op = TRUE;
+-
+ 	/*
+ 	 * Make sure that we aren't attempting to write something
+ 	 * that hasn't been defined.  If this is an and operation,
+ 	 * this is a mask, so "undefined" bits are okay.
+ 	 */
+-	if (and_op == FALSE
+-	 && (expression->value & ~symbol->info.rinfo->valid_bitmask) != 0) {
++	if (opcode == AIC_OP_AND || opcode == AIC_OP_JNZ ||
++	    opcode == AIC_OP_JZ  || opcode == AIC_OP_JNE ||
++	    opcode == AIC_OP_BMOV)
++		and_op = TRUE;
++
++	/*
++	 * Defaulting to 8 bit logic
++	 */
++	mask = (int8_t)~symbol->info.rinfo->valid_bitmask;
++	value = (int8_t)expression->value;
++
++	if (and_op == FALSE && (mask & value) != 0 ) {
+ 		snprintf(errbuf, sizeof(errbuf),
+ 			 "Invalid bit(s) 0x%x in immediate written to %s",
+-			 expression->value & ~symbol->info.rinfo->valid_bitmask,
++			 (mask & value),
+ 			 symbol->name);
+ 		stop(errbuf, EX_DATAERR);
+ 		/* NOTREACHED */
+@@ -1959,3 +1970,13 @@ is_download_const(expression_t *immed)
+ 
+ 	return (FALSE);
+ }
++
++static int
++is_location_address(symbol_t *sym)
++{
++	if (sym->type == SCBLOC ||
++	    sym->type == SRAMLOC)
++		return (TRUE);
++	return (FALSE);
++}
++
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+index 7c3983f..62b6c1b 100644
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+@@ -228,15 +228,15 @@ ret			{ return T_RET; }
+ nop			{ return T_NOP; }
+ 
+ 	/* ARP2 16bit extensions */
+-or16			{ return T_OR16; }
+-and16			{ return T_AND16; }
+-xor16			{ return T_XOR16; }
+-add16			{ return T_ADD16; }
+-adc16			{ return T_ADC16; }
+-mvi16			{ return T_MVI16; }
+-test16			{ return T_TEST16; }
+-cmp16			{ return T_CMP16; }
+-cmpxchg			{ return T_CMPXCHG; }
++	/* or16			{ return T_OR16; } */
++	/* and16			{ return T_AND16; }*/
++	/* xor16			{ return T_XOR16; }*/
++	/* add16			{ return T_ADD16; }*/
++	/* adc16			{ return T_ADC16; }*/
++	/* mvi16			{ return T_MVI16; }*/
++	/* test16			{ return T_TEST16; }*/
++	/* cmp16			{ return T_CMP16; }*/
++	/* cmpxchg			{ return T_CMPXCHG; }*/
+ 
+ 	/* Allowed Symbols */
+ \<\<			{ return T_EXPR_LSHIFT; }
+
+--------------020409090004080706080103--
