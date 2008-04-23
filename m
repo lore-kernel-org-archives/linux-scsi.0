@@ -1,88 +1,91 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: PATCH: 64 bit support for dpt_i2o driver
-Date: Wed, 23 Apr 2008 23:29:16 +0200
-Message-ID: <200804232329.22140.eike-kernel@sf-tec.de>
-References: <20080418215937.GA15199@xs4all.net>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: [PATCH] aacraid: Fix down_interruptible() to check the return value take 2 (was: aacraid broken in git)
+Date: Wed, 23 Apr 2008 14:47:42 -0700
+Message-ID: <86802c440804231447x4e809c0cl5ca995db79e6075d@mail.gmail.com>
+References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com>
+	 <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com>
+	 <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com>
+	 <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1988683.Hghz9nrACq";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:59109 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751900AbYDWVgJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Apr 2008 17:36:09 -0400
-In-Reply-To: <20080418215937.GA15199@xs4all.net>
+Received: from rv-out-0708.google.com ([209.85.198.241]:10338 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751011AbYDWVrn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Apr 2008 17:47:43 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so1626386rvb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2008 14:47:43 -0700 (PDT)
+In-Reply-To: <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <miquels@cistron.nl>
-Cc: linux-scsi@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: Linux-Scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
---nextPart1988683.Hghz9nrACq
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-Miquel van Smoorenburg wrote:
-> I've been running supermicro hardware with the Adaptec 2005/2010/2015
-> zero channel raid controllers for a long while. The dpt_i2o driver
-> in the kernel doesn't support 64-bit mode, yet I wanted to run
-> a 64-bit system. The i2o_block driver wasn't 64-bit capable either.
-> Mark Salyzyn from Adaptec kindly provided me with a 64-bit version
-> of the dpt_i2o driver, unfortunately it never made its way to
-> the upstream kernel.
+On Wed, Apr 23, 2008 at 5:16 AM, Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
+> On Apr 21, 2008, at 8:42 PM, Yinghai Lu wrote:
 >
-> In my experience, the dpt_i2o driver is rock-stable for the
-> Adaptec ZCR hardware, while the i2o_block driver isn't.
-> Because the dpt_i2o driver is still in the kernel and actively
-> being used, I decided to merge the essential 64 bits parts
-> of the alternative driver into the current kernel dpt_i2o driver.
 >
-> # --------- dpt_i2o-64bit-2.6.25.patch ----------------
+> > bisected to:
+> >
+> > yhlu@mpk12-office-77-185:~/xx/xx/kernel/linux-2.6> git-bisect good
+> > e6990c6448ca9359b6d4ad027c0a6efbf4379e64 is first bad commit
+> > commit e6990c6448ca9359b6d4ad027c0a6efbf4379e64
+> > Author: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+> > Date:   Mon Apr 14 14:20:16 2008 -0400
+> >
+> >   [SCSI] aacraid: Fix down_interruptible() to check the return value
+> >
+> >   Instead of ignoring the return value in aac_fib_send() return 2 to
+> >   indicate to the layers above that fib transmission was aborted due to
+> >   timeout.
+> >
+> >   Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+> >   Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> >
+> > :040000 040000 2f23bf33d76d6f37c558251003f88537c6e639fe
+> > 63d59091ca7ac527b5106540eea06d7b6649862d M      drivers
+> >
 >
-> This patch is an update for drivers/scsi/dpt_i2o.c.
-> It applies to both 2.6.24.4 and 2.6.25
 >
-> It contains the following changes:
+>  The return value for down_interruptible was incorrectly checked! updated
+> patch enclosed.
 >
-> * 64 bit code based on unofficial Adaptec 64 bit driver
-> * removes scsi_module.c dependency, adds module_init / module_exit
->   this is needed because we need to pass the proper device to
->   scsi_add_host(), and the scsi_module.c passes NULL. With NULL,
->   code like arch/x64/kernel/pci-gart_64.c::need_iommu() crashes
->   because the dev pointer it is passed is NULL.
-> * adds sysfs entry for /sys/class/dpt_i2o/dptiX so that udev
->   can create /dev/dptiX dynamically
+>  This attached patch is against current scsi-misc-2.6 (minus original
+> down_interruptible patch).
 >
-> Obviously there are more cleanups that can be done to this code,
-> but we need to start somewhere. Patch has been tested heavily on
-> both 32 and 64 bit x86 platforms.
+>  ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+> handling of patch attachments (inline gets damaged, please use attachment).
+>
+>  Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+>
+>   drivers/scsi/aacraid/commsup.c |    8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
+>
+>  diff -ru a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+>  --- a/drivers/scsi/aacraid/commsup.c    2008-04-14 14:08:00.737201138 -0400
+>  +++ b/drivers/scsi/aacraid/commsup.c    2008-04-14 14:09:34.019252960 -0400
+>  @@ -515,10 +515,12 @@
+>                                 }
+>                                 udelay(5);
+>                         }
+>  -               } else
+>  -                       (void)down_interruptible(&fibptr->event_wait);
+>  +               } else if (down_interruptible(&fibptr->event_wait)) {
+>  +                       fibptr->done = 2;
+>  +                       up(&fibptr->event_wait);
+>  +               }
+>                 spin_lock_irqsave(&fibptr->event_lock, flags);
+>  -               if (fibptr->done == 0) {
+>  +               if ((fibptr->done == 0) || (fibptr->done == 2)) {
+>                         fibptr->done = 2; /* Tell interrupt we aborted */
+>                         spin_unlock_irqrestore(&fibptr->event_lock, flags);
+>                         return -EINTR;
+>
 
-Is there any chance that you could split this into (at least) 2 patches, on=
-e=20
-for the 64 bit stuff and one for the driver model stuff? This patch is huge=
-,=20
-the review (and the chances for this getting merged) will be higher if it i=
-s=20
-in small pieces.
+it works.
 
-Greetings,
+Thanks
 
-Eike
-
---nextPart1988683.Hghz9nrACq
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBID6oyXKSJPmm5/E4RAtQGAJwOPHrQMK7oFSYnkZKYY6zttVLkuQCgmHlm
-U3WdBxCAtp8Yt/KVKZqUgZk=
-=xM7B
------END PGP SIGNATURE-----
-
---nextPart1988683.Hghz9nrACq--
+YH
