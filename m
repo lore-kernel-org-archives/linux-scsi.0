@@ -1,36 +1,73 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make scsi_sysfs.c:dev_attr_hstate static
-Date: Wed, 23 Apr 2008 12:52:24 +0300
-Message-ID: <20080423095224.GI28933@cs181133002.pp.htv.fi>
+Subject: [2.6 patch] drivers/firmware/iscsi_ibft.c: make 3 functions static
+Date: Wed, 23 Apr 2008 12:52:30 +0300
+Message-ID: <20080423095230.GK28933@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:59511 "EHLO smtp6.pp.htv.fi"
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:59518 "EHLO smtp6.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753941AbYDWJxE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Apr 2008 05:53:04 -0400
+	id S1756251AbYDWJxK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Apr 2008 05:53:10 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Jones <tonyj@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Konrad Rzeszutek <ketuzsezr@darnok.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch makes the needlessly global dev_attr_hstate static.
+This patch makes the following needlessly global functions static:
+- ibft_attr_show_initiator()
+- ibft_attr_show_nic()
+- ibft_attr_show_target()
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-3cf42091b042f5cf957b81c4558d2aa0fd3ba741 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 67bb20e..84aad59 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -192,7 +192,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
+
+ drivers/firmware/iscsi_ibft.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+421adc9620a633d461059da9a8a94315d8a767ea diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index 8024e3b..8523811 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -334,9 +334,9 @@ static void ibft_release(struct kobject *kobj)
+ /*
+  *  Routines for parsing the iBFT data to be human readable.
+  */
+-ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
+-				  struct ibft_attribute *attr,
+-				  char *buf)
++static ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
++					struct ibft_attribute *attr,
++					char *buf)
+ {
+ 	struct ibft_initiator *initiator = entry->initiator;
+ 	void *ibft_loc = entry->header;
+@@ -376,9 +376,9 @@ ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
+ 	return str - buf;
  }
  
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
--struct device_attribute dev_attr_hstate =
-+static struct device_attribute dev_attr_hstate =
- 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
+-ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
+-			    struct ibft_attribute *attr,
+-			    char *buf)
++static ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
++				  struct ibft_attribute *attr,
++				  char *buf)
+ {
+ 	struct ibft_nic *nic = entry->nic;
+ 	void *ibft_loc = entry->header;
+@@ -440,9 +440,9 @@ ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
+ 	return str - buf;
+ };
  
- static ssize_t
+-ssize_t ibft_attr_show_target(struct ibft_kobject *entry,
+-			       struct ibft_attribute *attr,
+-			       char *buf)
++static ssize_t ibft_attr_show_target(struct ibft_kobject *entry,
++				     struct ibft_attribute *attr,
++				     char *buf)
+ {
+ 	struct ibft_tgt *tgt = entry->tgt;
+ 	void *ibft_loc = entry->header;
 
