@@ -1,24 +1,24 @@
 From: Yinghai Lu <yhlu.kernel.send@gmail.com>
 Subject: [PATCH] mptsas: add mptsas_shutdown to call pci_disable_msi
-Date: Tue, 22 Apr 2008 19:44:33 -0700
-Message-ID: <200804221944.33775.yhlu.kernel@gmail.com>
+Date: Tue, 22 Apr 2008 19:47:33 -0700
+Message-ID: <200804221947.33524.yhlu.kernel@gmail.com>
 Reply-To: yhlu.kernel@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.240]:63974 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759059AbYDWCpT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 22:45:19 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so1388737rvb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Apr 2008 19:45:17 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.178]:12317 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758416AbYDWCrw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2008 22:47:52 -0400
+Received: by py-out-1112.google.com with SMTP id u52so3888930pyb.10
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Apr 2008 19:47:51 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Prakash@mpk12-office-77-204, Sathya <sathya.prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Prakash, Sathya" <sathya.prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Eric W. Biederman" <ebiederm@xmission.com>
 
 
 this change
