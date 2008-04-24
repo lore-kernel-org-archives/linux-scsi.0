@@ -1,43 +1,43 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: Re: [PATCH 1/2] dpt_i2o: 64 bit support (take 3)
-Date: Thu, 24 Apr 2008 22:24:48 +0200
-Message-ID: <1209068688.6092.3.camel@localhost.localdomain>
-References: <20080424150717.GA21438@xs4all.net>
-	 <1209051593.3121.10.camel@localhost.localdomain>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] new mac_scsi driver
+Date: Thu, 24 Apr 2008 23:08:40 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0804242307370.21224@anakin>
+References: <Pine.LNX.4.64.0804231833210.12067@loopy.telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr9.xs4all.nl ([194.109.24.29]:3789 "EHLO
-	smtp-vbr9.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760464AbYDXUWu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 16:22:50 -0400
-In-Reply-To: <1209051593.3121.10.camel@localhost.localdomain>
+Received: from yergi.telenet-ops.be ([195.130.132.36]:37382 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753445AbYDXVJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 17:09:07 -0400
+Received: from winston.telenet-ops.be (unknown [195.130.137.75])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id 71B725C926F
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2008 23:09:21 +0200 (CEST)
+In-Reply-To: <Pine.LNX.4.64.0804231833210.12067@loopy.telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linux-Scsi <linux-scsi@vger.kernel.org>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: David Miller <davem@davemloft.net>, Roman Zippel <zippel@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-
-On Thu, 2008-04-24 at 10:39 -0500, James Bottomley wrote:
-> Just gave it a cursory glance, and it looks OK, except for things like
-> this:
+On Thu, 24 Apr 2008, Finn Thain wrote:
+> Replace the mac_esp driver with a new one based on the esp_scsi core.
 > 
-> On Thu, 2008-04-24 at 17:07 +0200, Miquel van Smoorenburg wrote:
-> > +#elif defined(__linux__)
-> 
-> Could you get rid it, please?  For inclusion in the kernel, you can take
-> it as read that we're operating in a Linux environment, so the symbol
-> will always be defined (so you can just strip out the code that depends
-> on this symbol not being defined).
+> For esp_scsi: add support for sync transfers for the PIO mode, add a new 
+> esp_driver_ops method to get the maximum dma transfer size (like the old 
+> NCR53C9x driver), and some cleanups.
 
-Ofcourse. I did it this way because I wanted to follow the style of the
-existing code as much as possible, and I did not want to change the
-existing code too much. There's more stuff in there that needs a
-cleanup, but that needs to be done seperately.
+Thanks!
 
-I'll fix the defined(__linux__) stuff, and I'll rip out the unused
-reboot_notifier stuff as well.
+I added this patch to my series, after fixing the few checkpatch.pl issues and
+adding a test for MACH_IS_MAC() to esp_mac_probe().
 
-Mike.
+Gr{oetje,eeting}s,
 
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
