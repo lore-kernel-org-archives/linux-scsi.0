@@ -1,54 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Subject: Re: [PATCH 0/10] qla2xxx: updates for 2.6.26 [8.02.01-k2].
-Date: Thu, 24 Apr 2008 17:51:56 -0500
-Message-ID: <1209077516.3121.31.camel@localhost.localdomain>
-References: <20080424221945.GC4359@n8027av35btxc1.qlogic.org>
-	 <1209076310.3121.26.camel@localhost.localdomain>
-	 <20080424223736.GE4359@n8027av35btxc1.qlogic.org>
+Date: Thu, 24 Apr 2008 15:58:47 -0700
+Message-ID: <20080424225847.GG4359@n8027av35btxc1.qlogic.org>
+References: <20080424221945.GC4359@n8027av35btxc1.qlogic.org> <1209076310.3121.26.camel@localhost.localdomain> <20080424223736.GE4359@n8027av35btxc1.qlogic.org> <1209077516.3121.31.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58060 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754855AbYDXWwA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Apr 2008 18:52:00 -0400
-In-Reply-To: <20080424223736.GE4359@n8027av35btxc1.qlogic.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:26712 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbYDXW6w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 18:58:52 -0400
+Content-Disposition: inline
+In-Reply-To: <1209077516.3121.31.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Thu, 2008-04-24 at 15:37 -0700, Andrew Vasquez wrote:
-> On Thu, 24 Apr 2008, James Bottomley wrote:
-> > On Thu, 2008-04-24 at 15:19 -0700, Andrew Vasquez wrote:
-> > > This patchset contains fixes/updates for 2.6.26.
-[...]
-> > So, since I have to guess, I put my money on:
-> > 
-> > [PATCH 09/10] qla2xxx: Correct regression in relogin code
-> > 
-> > needs backporting to stable to fix the 2.6.24 regression bug 10486.
-> > 
-> > Do I win?
+On Thu, 24 Apr 2008, James Bottomley wrote:
+
+> Unfortunately, that won't quit work.  Stable won't accept a patch until
+> it's upstream.  For that reason, I tag all such patches with
 > 
-> Sure do.  Send me your RTN and I'll wire you 10 million USD...
+> Cc: Stable Tree <stable@kernel.org>
 > 
-> All kidding aside, I've just sent the patch to stable@kernel.org for
-> inclusion.
+> in my git tree.  This triggers an automatic email prod to the stable
+> team when the patch goes upstream, so unless the backport is non
+> trivial, that's all that's all that's needed.
+> 
+> I just needed to know where to put the tag.
 
-Unfortunately, that won't quit work.  Stable won't accept a patch until
-it's upstream.  For that reason, I tag all such patches with
+That's good info, thanks.  I tried to follow the bits in
+Documentation/stable_kernel_rules.txt...
 
-Cc: Stable Tree <stable@kernel.org>
-
-in my git tree.  This triggers an automatic email prod to the stable
-team when the patch goes upstream, so unless the backport is non
-trivial, that's all that's all that's needed.
-
-I just needed to know where to put the tag.
-
-James
-
-
+grazie,
+av
