@@ -1,144 +1,133 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [PATCH]qla4xxx:Add support for Async Message PDUs
-Date: Thu, 24 Apr 2008 09:01:58 -0700
-Message-ID: <1209052918.6212.4.camel@d5102avq18960.qlogic.org>
-References: <1208551487.5159.5.camel@d5102avq18960.qlogic.org>
-	 <480E1063.2060308@cs.wisc.edu>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH][REPOST] fc_user_scan correction
+Date: Thu, 24 Apr 2008 12:12:46 -0400
+Message-ID: <1209053566.4005.5.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:2370 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757545AbYDXQCE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 12:02:04 -0400
-In-Reply-To: <480E1063.2060308@cs.wisc.edu>
+Received: from emulex.emulex.com ([138.239.112.1]:55917 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203AbYDXQMt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 12:12:49 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m3OGChnZ018337
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2008 09:12:48 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2008-04-22 at 11:20 -0500, Mike Christie wrote:
-> David C Somayajulu wrote:
-> > +int qla4xxx_conn_close_sess_logout(struct scsi_qla_host * ha,
-> > +	   uint16_t fw_ddb_index, uint16_t connection_id, uint16_t option)
-> > +{
-> > +	uint32_t mbox_cmd[MBOX_REG_COUNT];
-> > +	uint32_t mbox_sts[MBOX_REG_COUNT];
-> > +
-> > +	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-> > +	memset(&mbox_sts, 0, sizeof(mbox_sts));
-> > +
-> > +	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
-> > +	mbox_cmd[1] = fw_ddb_index;
-> > +	mbox_cmd[2] = connection_id;
-> > +	mbox_cmd[3] = LOGOUT_OPTION_RESET;
-> > +
-> > +	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 2, &mbox_cmd[0],
-> > +		&mbox_sts[0]) != QLA_SUCCESS) {
-> > +		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_CONN_CLOSE_SESS_LOGOUT "
-> > +			      "option %04x failed sts %04X %04X",
-> > +			      ha->host_no, __func__,
-> > +			      option, mbox_sts[0], mbox_sts[1]));
-> > +		if (mbox_sts[0] == 0x4005)
-> > +			DEBUG2(printk("%s reason %04X\n", __func__,
-> > +				      mbox_sts[1]));
-> > +	}
-> > +	return QLA_SUCCESS;
-> 
-> 
-> Does this logout function logout a session and stop it from being logged 
-> back in, or does it logout the session then the firmware tries to log 
-> back in?
-Once the session is logged out, it stays in that state till the user
-initiates a login. The firmware does not automatically try to login
-again.
-> 
-> 
-> > +/*
-> > + * qla4xxx_async_iocbs - processes ASYNC PDU IOCBS, if they are greater in
-> > + * length than 48 bytes (i.e., more than just the iscsi header). Used for
-> > + * unsolicited pdus received from target.
-> > + */
-> > +static void qla4xxx_async_iocbs(struct scsi_qla_host *ha,
-> > +		struct async_msg_pdu_iocb *amsg_pdu_iocb)
-> > +{
-> > +	struct iscsi_hdr *hdr;
-> > +	struct async_pdu_iocb *apdu;
-> > +	uint32_t len;
-> > +	void *buf_addr;
-> > +	dma_addr_t buf_addr_dma;
-> > +	uint32_t offset;
-> > +	struct passthru0 *pthru0_iocb;
-> > +	struct scsi_sense_hdr sshdr;
-> > +	struct ddb_entry *ddb_entry = NULL;
-> > +	uint8_t using_prealloc = 1;
-> > +	uint8_t async_event_type;
-> > +
-> > +	apdu = (struct async_pdu_iocb *)amsg_pdu_iocb->iocb;
-> > +	hdr = (struct iscsi_hdr *)apdu->iscsi_pdu_hdr;
-> > +	len = hdr->hlength + hdr->dlength[2] +
-> > +		(hdr->dlength[1]<<8) + (hdr->dlength[0]<<16);
-> > +
-> > +	offset = sizeof (struct passthru0) + sizeof (struct passthru_status);
-> > +	if (len <= (PAGE_SIZE - offset)) {
-> > +		buf_addr_dma = ha->gen_req_rsp_iocb_dma + offset;
-> > +		buf_addr = (uint8_t *)ha->gen_req_rsp_iocb + offset;
-> > +	} else {
-> > +		using_prealloc = 0;
-> > +		buf_addr = dma_alloc_coherent(&ha->pdev->dev, len,
-> > +                                        &buf_addr_dma, GFP_KERNEL);
-> > +		if (!buf_addr) {
-> > +			dev_info(&ha->pdev->dev,
-> > +				"%s: dma_alloc_coherent failed\n", __func__);
-> > +			return;
-> > +		}
-> > +	}
-> > +	/* Create the pass-thru0 iocb */
-> > +	pthru0_iocb = ha->gen_req_rsp_iocb;
-> > +	memset(pthru0_iocb, 0, offset);
-> > +
-> > +	pthru0_iocb->hdr.entryType = ET_PASSTHRU0;
-> > +	pthru0_iocb->controlFlags =
-> > +		cpu_to_le16(PT_FLAG_ISCSI_PDU | PT_FLAG_WAIT_4_RESPONSE);
-> > +	pthru0_iocb->timeout = cpu_to_le16(PT_DEFAULT_TIMEOUT);
-> > +	pthru0_iocb->inDataSeg64.base.addrHigh =
-> > +		cpu_to_le32(MSDW(buf_addr_dma));
-> > +	pthru0_iocb->inDataSeg64.base.addrLow =
-> > +		cpu_to_le32(LSDW(buf_addr_dma));
-> > +	pthru0_iocb->inDataSeg64.count = cpu_to_le32(len);
-> > +
-> > +	if (qla4xxx_issue_iocb(ha, sizeof(struct passthru0),
-> > +		ha->gen_req_rsp_iocb_dma) != QLA_SUCCESS) {
-> > +		dev_info(&ha->pdev->dev,
-> > +			"%s: qla4xxx_issue_iocb failed\n", __func__);
-> > +		goto exit_async_pdu_iocb;
-> > +	}
-> > + 
-> > +	async_event_type = ((struct iscsi_async *)hdr)->async_event;
-> > +	ddb_entry = ha->fw_ddb_index_map[apdu->target_id];
-> > +
-> > +	if (ddb_entry == NULL)
-> > +		goto exit_async_pdu_iocb;
-> > +
-> > +	switch (async_event_type) {
-> > +	case ISCSI_ASYNC_MSG_SCSI_EVENT:
-> > +		if (!scsi_normalize_sense((uint8_t *)buf_addr, len, &sshdr)) {
-> > +			dev_info(&ha->pdev->dev,
-> > +				"%s: scsi_normalize_sense failed\n", __func__);
-> > +			break;
-> > +		}
-> > +		if (sshdr.asc == 0x3f && sshdr.ascq == 0x0e) {
-> > +			scsi_scan_target(&ddb_entry->sess->dev, 0,
-> > +				ddb_entry->sess->target_id, SCAN_WILD_CARD, 0);
-> >
-> 
-> I do not think you can call scsi_scan_target from your dpc thread. If 
-> there was a problem that the the dpc thread needed to recover the 
-> session or host for it would not be able to because the scsi_scan_target 
-> call would be blocked on the recovery of that host or session.
-> 
-> You need to modify scsi_transport_iscsi.c:session->scan_work related 
-> code to be able to be called from _iscsi_unblock_session and from some 
-> new function that just checks the state and scans the session.
-O.K. Mike I will look into this.
+This should be the correct implementation for FC now...
+
+-----
+
+Way back when, when the fc_user_scan routine was created, it kept some
+of its original logic that walked the rport list and kicked off a scan.
+Unfortunately, it didn't keep any of the locking around the rport list,
+nor did it consider the synchronous nature of the scan invoked. The result,
+there are some scan requests where the rport list changes, thus a subsequent
+scan is called on a bogus rport structure and the system NMI's.
+
+Patch was cut against scsi-misc-2.6
+
+-- james s
+
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ scsi_transport_fc.c |   60 +++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 53 insertions(+), 7 deletions(-)
+
+
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2008-04-24 08:47:38.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2008-04-24 11:38:30.000000000 -0400
+@@ -1961,12 +1961,17 @@ fc_timed_out(struct scsi_cmnd *scmd)
+ }
+ 
+ /*
+- * Must be called with shost->host_lock held
++ * Called by fc_user_scan to locate an rport on the shost that
++ * matches the channel and target id, and invoke scsi_scan_target()
++ * on the rport.
+  */
+-static int fc_user_scan(struct Scsi_Host *shost, uint channel,
+-		uint id, uint lun)
++static void
++fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, uint lun)
+ {
+ 	struct fc_rport *rport;
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
+ 
+ 	list_for_each_entry(rport, &fc_host_rports(shost), peers) {
+ 		if (rport->scsi_target_id == -1)
+@@ -1975,13 +1980,54 @@ static int fc_user_scan(struct Scsi_Host
+ 		if (rport->port_state != FC_PORTSTATE_ONLINE)
+ 			continue;
+ 
+-		if ((channel == SCAN_WILD_CARD || channel == rport->channel) &&
+-		    (id == SCAN_WILD_CARD || id == rport->scsi_target_id)) {
+-			scsi_scan_target(&rport->dev, rport->channel,
+-					 rport->scsi_target_id, lun, 1);
++		if ((channel == rport->channel) &&
++		    (id == rport->scsi_target_id)) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			scsi_scan_target(&rport->dev, channel, id, lun, 1);
++			return;
+ 		}
+ 	}
+ 
++	spin_unlock_irqrestore(shost->host_lock, flags);
++}
++
++/*
++ * Called via sysfs scan routines. Necessary, as the FC transport
++ * wants to place all target objects below the rport object. So this
++ * routine must invoke the scsi_scan_target() routine with the rport
++ * object as the parent.
++ */
++static int
++fc_user_scan(struct Scsi_Host *shost, uint channel, uint id, uint lun)
++{
++	uint chlo, chhi;
++	uint tgtlo, tgthi;
++
++	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
++	    ((id != SCAN_WILD_CARD) && (id >= shost->max_id)) ||
++	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
++		return -EINVAL;
++
++	if (channel == SCAN_WILD_CARD) {
++		chlo = 0;
++		chhi = shost->max_channel + 1;
++	} else {
++		chlo = channel;
++		chhi = channel + 1;
++	}
++
++	if (id == SCAN_WILD_CARD) {
++		tgtlo = 0;
++		tgthi = shost->max_id;
++	} else {
++		tgtlo = id;
++		tgthi = id + 1;
++	}
++
++	for ( ; chlo < chhi; chlo++)
++		for ( ; tgtlo < tgthi; tgtlo++)
++			fc_user_scan_tgt(shost, chlo, tgtlo, lun);
++
+ 	return 0;
+ }
+ 
+
+
