@@ -1,84 +1,173 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: does sym53c8xx_2 hardware support hotplug
-Date: Thu, 24 Apr 2008 11:25:41 +0200
-Message-ID: <48105215.8040109@suse.de>
-References: <480F979E.5060302@cs.wisc.edu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC 0/5] block large commands support continue
+Date: Thu, 24 Apr 2008 12:49:30 +0200
+Message-ID: <20080424104930.GU12774@kernel.dk>
+References: <480F4CC2.7070804@panasas.com> <20080424133118Q.tomof@acm.org> <20080424151925A.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52057 "EHLO mx1.suse.de"
+Received: from brick.kernel.dk ([87.55.233.238]:12719 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbYDXJZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Apr 2008 05:25:43 -0400
-In-Reply-To: <480F979E.5060302@cs.wisc.edu>
+	id S1751876AbYDXKtn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Apr 2008 06:49:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20080424151925A.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, matthew@wil.cx
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: bharrosh@panasas.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Mike,
+On Thu, Apr 24 2008, FUJITA Tomonori wrote:
+> On Thu, 24 Apr 2008 13:31:21 +0900
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> 
+> > On Wed, 23 Apr 2008 17:50:42 +0300
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > 
+> > > 
+> > > The support for large commands was dropped from the for-2.6.26 branch
+> > > and will probably not get accepted into next kernel.
+> > > 
+> > > I have tried to take all comments from Jens and Bart. and incorporate
+> > > it into a new patchset. This is basically Tomo's patchset but with
+> > > proposed changes.
+> > 
+> > Have you seen the patchset to remove request on the stack?
+> > 
+> > http://marc.info/?l=linux-ide&m=120882410712466&w=2
+> > 
+> > 
+> > > They are based on current linux-block/master. They will probably conflict with
+> > > latest patch sent by Tomo for the blk_get_request(). Once those patches
+> > > get accepted at some git tree, (Where will that be?), I will rebase these
+> > > on top of them. Please CC me of any progress.
+> > > 
+> > > [PATCH 1/5] block: no need to initialize rq->cmd
+> > >   This is 2 of Tomo's patches squashed together as they are
+> > >   small and do the same. Tomo is this OK?
+> > > 
+> > > [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
+> > >   Tomos patch rebased to here
+> > > 
+> > > [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+> > > [PATCH 4/5] block: Use new blk_init_rq
+> > >   These patches are basically what Jens and Bart has suggested, that with
+> > >   a small code change to blk-core.c we can memset at rq_init() and only set
+> > >   none zero members. We can also export that initializer and use it all over
+> > >   the ide tree where ever requests don't come from a request queue. (OK also
+> > >   at scsi_error.c)
+> > 
+> > +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
+> > 
+> > Hmm, would it be better to modify the block layer to let rq_init just
+> > memset() the request structure?
+> 
+> I think, if we move rq_init to blk_alloc_request from get_request,
+> rq_init can just memset() the structure.
+> 
+> Then we can export rq_init and rq_init works for everyone.
 
-Mike Christie wrote:
-> Hi,
->=20
-> Does the hardware sym53c8xx_2 works with support removing and adding=20
-> devices?
->=20
-Oh. Hmm. That is tricky and complicated.
+Wont work, see the io scheduler set_request() functions.
 
-> When using sym53c8xx_2 if we find storage, remove the device using th=
-e=20
-> sysfs/proc interface, then physically remove the device, everything g=
-oes=20
-> well. However, if we physically plug the disk back in and try to read=
-d=20
-> it through the sysfs/proc scanning interfaces, it looks like=20
-> scsi_scan.c's inquiry will time out. This causes the sym error handle=
-r=20
-> to run, which works great and we end up doing a BUS RESET (BDR failed=
- so=20
-> we got escalated), and after that the inqiury is retried and we find =
-the=20
-> device and it works fine.
->=20
-Yes.
+> 
+> 
+> diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+> index 55c5f1f..722140a 100644
+> --- a/block/blk-barrier.c
+> +++ b/block/blk-barrier.c
+> @@ -143,10 +143,8 @@ static void queue_flush(struct request_queue *q, unsigned which)
+>  		end_io = post_flush_end_io;
+>  	}
+>  
+> -	rq->cmd_flags = REQ_HARDBARRIER;
+>  	rq_init(q, rq);
+> -	rq->elevator_private = NULL;
+> -	rq->elevator_private2 = NULL;
+> +	rq->cmd_flags = REQ_HARDBARRIER;
+>  	rq->rq_disk = q->bar_rq.rq_disk;
+>  	rq->end_io = end_io;
+>  	q->prepare_flush_fn(q, rq);
+> @@ -167,14 +165,11 @@ static inline struct request *start_ordered(struct request_queue *q,
+>  	blkdev_dequeue_request(rq);
+>  	q->orig_bar_rq = rq;
+>  	rq = &q->bar_rq;
+> -	rq->cmd_flags = 0;
+>  	rq_init(q, rq);
+>  	if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
+>  		rq->cmd_flags |= REQ_RW;
+>  	if (q->ordered & QUEUE_ORDERED_FUA)
+>  		rq->cmd_flags |= REQ_FUA;
+> -	rq->elevator_private = NULL;
+> -	rq->elevator_private2 = NULL;
+>  	init_request_from_bio(rq, q->orig_bar_rq->bio);
+>  	rq->end_io = bar_end_io;
+>  
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 2a438a9..e447799 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -107,40 +107,18 @@ struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev)
+>  }
+>  EXPORT_SYMBOL(blk_get_backing_dev_info);
+>  
+> -/*
+> - * We can't just memset() the structure, since the allocation path
+> - * already stored some information in the request.
+> - */
+>  void rq_init(struct request_queue *q, struct request *rq)
+>  {
+> +	memset(rq, 0, sizeof(*rq));
+> +
+>  	INIT_LIST_HEAD(&rq->queuelist);
+>  	INIT_LIST_HEAD(&rq->donelist);
+>  	rq->q = q;
+>  	rq->sector = rq->hard_sector = (sector_t) -1;
+> -	rq->nr_sectors = rq->hard_nr_sectors = 0;
+> -	rq->current_nr_sectors = rq->hard_cur_sectors = 0;
+> -	rq->bio = rq->biotail = NULL;
+>  	INIT_HLIST_NODE(&rq->hash);
+>  	RB_CLEAR_NODE(&rq->rb_node);
+> -	rq->rq_disk = NULL;
+> -	rq->nr_phys_segments = 0;
+> -	rq->nr_hw_segments = 0;
+> -	rq->ioprio = 0;
+> -	rq->special = NULL;
+> -	rq->buffer = NULL;
+>  	rq->tag = -1;
+> -	rq->errors = 0;
+>  	rq->ref_count = 1;
+> -	rq->cmd_len = 0;
+> -	memset(rq->cmd, 0, sizeof(rq->cmd));
+> -	rq->data_len = 0;
+> -	rq->extra_len = 0;
+> -	rq->sense_len = 0;
+> -	rq->data = NULL;
+> -	rq->sense = NULL;
+> -	rq->end_io = NULL;
+> -	rq->end_io_data = NULL;
+> -	rq->next_rq = NULL;
+>  }
+>  
+>  static void req_bio_endio(struct request *rq, struct bio *bio,
+> @@ -607,6 +585,8 @@ blk_alloc_request(struct request_queue *q, int rw, int priv, gfp_t gfp_mask)
+>  	if (!rq)
+>  		return NULL;
+>  
+> +	rq_init(q, rq);
+> +
+>  	/*
+>  	 * first three bits are identical in rq->cmd_flags and bio->bi_rw,
+>  	 * see bio.h and blkdev.h
+> @@ -789,8 +769,6 @@ rq_starved:
+>  	if (ioc_batching(q, ioc))
+>  		ioc->nr_batch_requests--;
+>  
+> -	rq_init(q, rq);
+> -
+>  	blk_add_trace_generic(q, bio, rw, BLK_TA_GETRQ);
+>  out:
+>  	return rq;
 
-> Is the inquiry timing out expected? Does the hardware even support=20
-> hotplug? Or does it support it partially support it (support it with=20
-> some help), and we are we supposed to be manually resetting the bus,=20
-> with something like a sg_reset, after we have physically plug the dis=
-k=20
-> back in?
->=20
-Hi, join the club.
+-- 
+Jens Axboe
 
-As the saying goes: Radio Yerewan answers: in principle, yes.
-
-The whole matter of SCSI parallel hotplugging depends strongly on
-the backplane. For fun reading have a look at=20
-
-SPI-3 Annex D: Removal and insertion of SCSI devices.
-
-It basically leaves it open to the vendor of the backplane how
-much intelligence he wants to put in there.
-But yes, sending a SCSI reset is listed there. It actually states
-that the RST line should be asserted continuously by the initiator
-during the hotplugging process.
-
-HTH.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
