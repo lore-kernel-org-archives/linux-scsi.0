@@ -1,103 +1,120 @@
-From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting root
-Date: Thu, 24 Apr 2008 16:30:48 -0700
-Message-ID: <20080424233048.GQ16272@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <20080424225604.GA18737@kroah.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH v2] SCSI/aha1542: minor irq handler cleanups
+Date: Thu, 24 Apr 2008 19:45:32 -0400
+Message-ID: <20080424234532.GA29471@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+wSiqF7c0ySQ2tNi"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20080424225604.GA18737-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Cc: Pekka J Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dsd-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vegardno-6miFZF/5cTBuMpJDpNschA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-Id: linux-scsi@vger.kernel.org
-
-
---+wSiqF7c0ySQ2tNi
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:36085 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752540AbYDXXpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Apr 2008 19:45:33 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Apr 24, 2008 at 03:56:04PM -0700, Greg KH wrote:
-> On Fri, Apr 25, 2008 at 12:25:04AM +0300, Pekka J Enberg wrote:
-> > On Thu, 24 Apr 2008, Pekka J Enberg wrote:
-> > > > From: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-> > > >=20
-> > > > Add a new kernel config option CONFIG_LATE_ROOT_MOUNT that makes th=
-e kernel
-> > > > wait until background scanning of USB mass storage devices is compl=
-ete before
-> > > > attempting to mount the root filesystem.
-> > > >=20
-> > > > The config option is an alternative to the root_delay=3D kernel par=
-ameter
-> > > > solution people currently use to boot from USB mass storage devices.
-> >=20
-> > On Thu, 24 Apr 2008, Alan Stern wrote:
-> > > This doesn't take into account what happens when CONFIG_SCSI_SCAN_ASY=
-NC
-> > > is set.
-> >=20
-> > Oh, right. Thanks! So something like the following should take care of =
-it.
-> >=20
-> > 		Pekka
-> >=20
-> > Subject: [RFC/PATCH] usb-storage: wait for device scanning before mount=
-ing root V2
-> > From: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-> >=20
-> > Add a new kernel config option CONFIG_LATE_ROOT_MOUNT that makes the ke=
-rnel
-> > wait until background scanning of USB mass storage devices is complete =
-before
-> > attempting to mount the root filesystem.
->=20
-> What happens if there is no USB device present in the system?  Because
-> of that, there is no way that this option could ever be enabled by any
-> distro or anyone wanting their kernel to run on more than one machine :(
->=20
-> I don't like it.
+- where the 'irq' function argument is known never to be used, rename
+  it to 'dummy' to make this more obvious
+    
+- replace per-irq lookup functions and tables with a direct reference
+  to data object obtained via 'dev_id' function argument, passed from
+  request_irq()
 
-This also has all sorts of races between do_mounts 'waiting' and the actual
-USB device enumeration.  It's entirely possible that the kernel loads via
-BIOS, the USB drivers are loaded, that forces devices to disconnect/reset,
-and they take a while to re-enumerate.  During that delay, the kernel gets
-to do_mount; now, no devices show in this "waiting for scan" count.
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+---
+NOTE: The previous version failed to update free_irq(), which created a
+new bug.
 
-The right way to do this is via initrd and something like devlabel to wait
-for a specific device to appear.  On some systems, you may want to wait for
-several devices to appear.
+ drivers/scsi/aha1542.c |   26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
-I don't like this either.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-What, are you one of those Microsoft-bashing Linux freaks?
-					-- Customer to Greg
-User Friendly, 2/10/1999
-
---+wSiqF7c0ySQ2tNi
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFIERgoHL9iwnUZqnkRAuL0AJ9XygooGDckvDgXr4xHvprARIKumQCeI5B7
-lVaxDlGyRMB1swteRu3A/Og=
-=F74W
------END PGP SIGNATURE-----
-
---+wSiqF7c0ySQ2tNi--
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 5a1471c..8059494 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -153,8 +153,6 @@ struct aha1542_hostdata {
+ 
+ #define HOSTDATA(host) ((struct aha1542_hostdata *) &host->hostdata)
+ 
+-static struct Scsi_Host *aha_host[7];	/* One for each IRQ level (9-15) */
+-
+ static DEFINE_SPINLOCK(aha1542_lock);
+ 
+ 
+@@ -163,8 +161,7 @@ static DEFINE_SPINLOCK(aha1542_lock);
+ 
+ static void setup_mailboxes(int base_io, struct Scsi_Host *shpnt);
+ static int aha1542_restart(struct Scsi_Host *shost);
+-static void aha1542_intr_handle(struct Scsi_Host *shost, void *dev_id);
+-static irqreturn_t do_aha1542_intr_handle(int irq, void *dev_id);
++static void aha1542_intr_handle(struct Scsi_Host *shost);
+ 
+ #define aha1542_intr_reset(base)  outb(IRST, CONTROL(base))
+ 
+@@ -404,23 +401,19 @@ fail:
+ }
+ 
+ /* A quick wrapper for do_aha1542_intr_handle to grab the spin lock */
+-static irqreturn_t do_aha1542_intr_handle(int irq, void *dev_id)
++static irqreturn_t do_aha1542_intr_handle(int dummy, void *dev_id)
+ {
+ 	unsigned long flags;
+-	struct Scsi_Host *shost;
+-
+-	shost = aha_host[irq - 9];
+-	if (!shost)
+-		panic("Splunge!");
++	struct Scsi_Host *shost = dev_id;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	aha1542_intr_handle(shost, dev_id);
++	aha1542_intr_handle(shost);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	return IRQ_HANDLED;
+ }
+ 
+ /* A "high" level interrupt handler */
+-static void aha1542_intr_handle(struct Scsi_Host *shost, void *dev_id)
++static void aha1542_intr_handle(struct Scsi_Host *shost)
+ {
+ 	void (*my_done) (Scsi_Cmnd *) = NULL;
+ 	int errstatus, mbi, mbo, mbistatus;
+@@ -1197,7 +1190,8 @@ fail:
+ 
+ 			DEB(printk("aha1542_detect: enable interrupt channel %d\n", irq_level));
+ 			spin_lock_irqsave(&aha1542_lock, flags);
+-			if (request_irq(irq_level, do_aha1542_intr_handle, 0, "aha1542", NULL)) {
++			if (request_irq(irq_level, do_aha1542_intr_handle, 0,
++					"aha1542", shpnt)) {
+ 				printk(KERN_ERR "Unable to allocate IRQ for adaptec controller.\n");
+ 				spin_unlock_irqrestore(&aha1542_lock, flags);
+ 				goto unregister;
+@@ -1205,7 +1199,7 @@ fail:
+ 			if (dma_chan != 0xFF) {
+ 				if (request_dma(dma_chan, "aha1542")) {
+ 					printk(KERN_ERR "Unable to allocate DMA channel for Adaptec.\n");
+-					free_irq(irq_level, NULL);
++					free_irq(irq_level, shpnt);
+ 					spin_unlock_irqrestore(&aha1542_lock, flags);
+ 					goto unregister;
+ 				}
+@@ -1214,7 +1208,7 @@ fail:
+ 					enable_dma(dma_chan);
+ 				}
+ 			}
+-			aha_host[irq_level - 9] = shpnt;
++
+ 			shpnt->this_id = scsi_id;
+ 			shpnt->unique_id = base_io;
+ 			shpnt->io_port = base_io;
+@@ -1276,7 +1270,7 @@ unregister:
+ static int aha1542_release(struct Scsi_Host *shost)
+ {
+ 	if (shost->irq)
+-		free_irq(shost->irq, NULL);
++		free_irq(shost->irq, shost);
+ 	if (shost->dma_channel != 0xff)
+ 		free_dma(shost->dma_channel);
+ 	if (shost->io_port && shost->n_io_port)
