@@ -1,36 +1,54 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10486] kernel 2.6.24  4G FC arrays don't work properly with qla2xxx driver
-Date: Thu, 24 Apr 2008 15:40:24 -0700 (PDT)
-Message-ID: <20080424224024.A4A0B11D10B@picon.linux-foundation.org>
-References: <bug-10486-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/10] qla2xxx: updates for 2.6.26 [8.02.01-k2].
+Date: Thu, 24 Apr 2008 17:51:56 -0500
+Message-ID: <1209077516.3121.31.camel@localhost.localdomain>
+References: <20080424221945.GC4359@n8027av35btxc1.qlogic.org>
+	 <1209076310.3121.26.camel@localhost.localdomain>
+	 <20080424223736.GE4359@n8027av35btxc1.qlogic.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36333 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754721AbYDXWk7 (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58060 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754855AbYDXWwA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Apr 2008 18:40:59 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3OMeOEb026170
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2008 15:40:25 -0700
-In-Reply-To: <bug-10486-11613@http.bugzilla.kernel.org/>
+	Thu, 24 Apr 2008 18:52:00 -0400
+In-Reply-To: <20080424223736.GE4359@n8027av35btxc1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10486
+On Thu, 2008-04-24 at 15:37 -0700, Andrew Vasquez wrote:
+> On Thu, 24 Apr 2008, James Bottomley wrote:
+> > On Thu, 2008-04-24 at 15:19 -0700, Andrew Vasquez wrote:
+> > > This patchset contains fixes/updates for 2.6.26.
+[...]
+> > So, since I have to guess, I put my money on:
+> > 
+> > [PATCH 09/10] qla2xxx: Correct regression in relogin code
+> > 
+> > needs backporting to stable to fix the 2.6.24 regression bug 10486.
+> > 
+> > Do I win?
+> 
+> Sure do.  Send me your RTN and I'll wire you 10 million USD...
+> 
+> All kidding aside, I've just sent the patch to stable@kernel.org for
+> inclusion.
+
+Unfortunately, that won't quit work.  Stable won't accept a patch until
+it's upstream.  For that reason, I tag all such patches with
+
+Cc: Stable Tree <stable@kernel.org>
+
+in my git tree.  This triggers an automatic email prod to the stable
+team when the patch goes upstream, so unless the backport is non
+trivial, that's all that's all that's needed.
+
+I just needed to know where to put the tag.
+
+James
 
 
-
-
-
-------- Comment #15 from andrew.vasquez@qlogic.com  2008-04-24 15:40 -------
-Patch submitted to stable@kernel.org and linux-scsi for
-upstream inclusion:
-
-http://article.gmane.org/gmane.linux.scsi/41175
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
