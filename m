@@ -1,83 +1,68 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 2/3] zfcp: Print some messages only during ERP
-Date: Thu, 24 Apr 2008 19:35:53 +0200
-Message-ID: <20080424174055.560740000@de.ibm.com>
-References: <20080424173551.821393000@de.ibm.com>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH]qla4xxx:Add support for Async Message PDUs
+Date: Thu, 24 Apr 2008 12:42:43 -0700
+Message-ID: <1209066163.6212.8.camel@d5102avq18960.qlogic.org>
+References: <1208551487.5159.5.camel@d5102avq18960.qlogic.org>
+	 <480E1063.2060308@cs.wisc.edu>
+	 <1209052918.6212.4.camel@d5102avq18960.qlogic.org>
+	 <4810B818.8040301@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:31945 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbYDXRk6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 13:40:58 -0400
-Content-Disposition: inline; filename=zfcp-stat-message.diff
+Received: from avexch1.qlogic.com ([198.70.193.115]:49512 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763398AbYDXTms (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Apr 2008 15:42:48 -0400
+In-Reply-To: <4810B818.8040301@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
-
-When statistics are polled from sysfs, the statistics use the same
-commands as the adapter initialization. Change the messages printed
-here, so they are only printed during initialization and not for each
-poll of adapter data.
-
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/s390/scsi/zfcp_fsf.c |   36 +++++++++++++++++++-----------------
- 1 file changed, 19 insertions(+), 17 deletions(-)
-
---- a/drivers/s390/scsi/zfcp_fsf.c	2008-04-24 15:06:34.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2008-04-24 15:06:38.000000000 +0200
-@@ -2036,21 +2036,21 @@ zfcp_fsf_exchange_config_evaluate(struct
- 		       min(FC_SERIAL_NUMBER_SIZE, 17));
- 	}
- 
--	ZFCP_LOG_NORMAL("The adapter %s reported the following "
--			"characteristics:\n"
--			"WWNN 0x%016Lx, "
--			"WWPN 0x%016Lx, "
--			"S_ID 0x%06x,\n"
--			"adapter version 0x%x, "
--			"LIC version 0x%x, "
--			"FC link speed %d Gb/s\n",
--			zfcp_get_busid_by_adapter(adapter),
--			(wwn_t) fc_host_node_name(shost),
--			(wwn_t) fc_host_port_name(shost),
--			fc_host_port_id(shost),
--			adapter->hydra_version,
--			adapter->fsf_lic_version,
--			fc_host_speed(shost));
-+	if (fsf_req->erp_action)
-+		ZFCP_LOG_NORMAL("The adapter %s reported the following "
-+				"characteristics:\n"
-+				"WWNN 0x%016Lx, WWPN 0x%016Lx, "
-+				"S_ID 0x%06x,\n"
-+				"adapter version 0x%x, "
-+				"LIC version 0x%x, "
-+				"FC link speed %d Gb/s\n",
-+				zfcp_get_busid_by_adapter(adapter),
-+				(wwn_t) fc_host_node_name(shost),
-+				(wwn_t) fc_host_port_name(shost),
-+				fc_host_port_id(shost),
-+				adapter->hydra_version,
-+				adapter->fsf_lic_version,
-+				fc_host_speed(shost));
- 	if (ZFCP_QTCB_VERSION < bottom->low_qtcb_version) {
- 		ZFCP_LOG_NORMAL("error: the adapter %s "
- 				"only supports newer control block "
-@@ -2115,8 +2115,10 @@ zfcp_fsf_exchange_config_data_handler(st
- 			zfcp_erp_adapter_shutdown(adapter, 0, 127, fsf_req);
- 			return -EIO;
- 		case FC_PORTTYPE_NPORT:
--			ZFCP_LOG_NORMAL("Switched fabric fibrechannel "
--					"network detected at adapter %s.\n",
-+			if (fsf_req->erp_action)
-+				ZFCP_LOG_NORMAL("Switched fabric fibrechannel "
-+						"network detected at adapter "
-+						"%s.\n",
- 					zfcp_get_busid_by_adapter(adapter));
- 			break;
- 		default:
-
--- 
+On Thu, 2008-04-24 at 11:40 -0500, Mike Christie wrote:
+> David C Somayajulu wrote:
+> > On Tue, 2008-04-22 at 11:20 -0500, Mike Christie wrote:
+> >> David C Somayajulu wrote:
+> >>> +int qla4xxx_conn_close_sess_logout(struct scsi_qla_host * ha,
+> >>> +	   uint16_t fw_ddb_index, uint16_t connection_id, uint16_t option)
+> >>> +{
+> >>> +	uint32_t mbox_cmd[MBOX_REG_COUNT];
+> >>> +	uint32_t mbox_sts[MBOX_REG_COUNT];
+> >>> +
+> >>> +	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> >>> +	memset(&mbox_sts, 0, sizeof(mbox_sts));
+> >>> +
+> >>> +	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
+> >>> +	mbox_cmd[1] = fw_ddb_index;
+> >>> +	mbox_cmd[2] = connection_id;
+> >>> +	mbox_cmd[3] = LOGOUT_OPTION_RESET;
+> >>> +
+> >>> +	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 2, &mbox_cmd[0],
+> >>> +		&mbox_sts[0]) != QLA_SUCCESS) {
+> >>> +		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_CONN_CLOSE_SESS_LOGOUT "
+> >>> +			      "option %04x failed sts %04X %04X",
+> >>> +			      ha->host_no, __func__,
+> >>> +			      option, mbox_sts[0], mbox_sts[1]));
+> >>> +		if (mbox_sts[0] == 0x4005)
+> >>> +			DEBUG2(printk("%s reason %04X\n", __func__,
+> >>> +				      mbox_sts[1]));
+> >>> +	}
+> >>> +	return QLA_SUCCESS;
+> >>
+> >> Does this logout function logout a session and stop it from being logged 
+> >> back in, or does it logout the session then the firmware tries to log 
+> >> back in?
+> > Once the session is logged out, it stays in that state till the user
+> > initiates a login. The firmware does not automatically try to login
+> > again.
+> 
+> I think we want to login in this case. Did you guys test with this 
+> Equalogic boxes, or what boxes did you try that send a logout request 
+> and always do not want you to relogin?
+> 
+> EQL boxes have that magic target load balancing, where if they detect a 
+> problem the box will send the async logout request. It then expects the 
+> initiator to try a relogin, and at that time it will use the login 
+> redirect feature to send us to a new portal.
+I did not use Equal Logic. Will check it out.
