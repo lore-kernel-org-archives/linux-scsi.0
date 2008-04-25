@@ -1,102 +1,78 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10554] New: scsi_scan doesn't set the queue depth for tape drive
-Date: Fri, 25 Apr 2008 08:29:05 -0700 (PDT)
-Message-ID: <bug-10554-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35814 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754731AbYDYP3k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2008 11:29:40 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3PFT5i1020823
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 08:29:07 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting root
+Date: Fri, 25 Apr 2008 08:35:52 -0700
+Message-ID: <20080425153552.GA20918@one-eyed-alien.net>
+References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <20080424225604.GA18737@kroah.com> <20080424233048.GQ16272@one-eyed-alien.net> <Pine.LNX.4.64.0804250921090.27978@sbz-30.cs.Helsinki.FI> <20080425070439.GA18915@one-eyed-alien.net> <Pine.LNX.4.64.0804251116000.758@sbz-30.cs.Helsinki.FI>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762188AbYDYPgc@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0804251116000.758@sbz-30.cs.Helsinki.FI>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pekka J Enberg <penberg@cs.helsinki.fi>
+Cc: Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, dsd@gentoo.org, linux-usb@vger.kernel.org, vegardno@ifi.uio.no, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=10554
-
-           Summary: scsi_scan doesn't set the queue depth for tape drive
-           Product: SCSI Drivers
-           Version: 2.5
-     KernelVersion: 2.6.16
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: flerat@hi-stor.com
 
 
-Latest working kernel version: 2.6.16
-Distribution: Suse
-Hardware Environment: IA64
-Software Environment: Suse + Backup Software
-Problem Description:
-scsi_scan doesn't set the queue depth for tape drive.
-I'm using an STK 9840B (scsi fiber tape drive) and when I try to acces with 2
-driver on the same device, device report an error.
+--KsGdsel6WgEHnImy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, Apr 25, 2008 at 11:19:02AM +0300, Pekka J Enberg wrote:
+> Hi Matthew,
+>=20
+> On Thu, 24 Apr 2008, Matthew Dharm wrote:
+> > > > This also has all sorts of races between do_mounts 'waiting' and th=
+e actual
+> > > > USB device enumeration.  It's entirely possible that the kernel loa=
+ds via
+> > > > BIOS, the USB drivers are loaded, that forces devices to disconnect=
+/reset,
+> > > > and they take a while to re-enumerate.  During that delay, the kern=
+el gets
+> > > > to do_mount; now, no devices show in this "waiting for scan" count.
+>=20
+> On Fri, Apr 25, 2008 at 09:30:52AM +0300, Pekka J Enberg wrote:
+> > > So how does that happen? ->storage_probe fails and driver core calls =
+it=20
+> > > later at some point?
+>=20
+> On Fri, 25 Apr 2008, Matthew Dharm wrote:
+> > There's no guarantee that storage_probe is going to get called in a tim=
+ely
+> > manner.
+>=20
+> How can we add such a guarantee? Don't we have this problem with any othe=
+r=20
+> storage devices?
 
+I doubt it.  It all depends on exactly when the USB controller initializes,
+all relevant hubs get initialized, and the device finally discovered.
 
-I'm using a software that monitor the tape drive quality. This software use the
-"sg" driver to acces to tape drive. The backup software use "st" to read/ write
-data.
+Matt
 
-When the backup software and my software acces in the same time the data
-transfert failed.
-I'm using a STK 9840B tape drive and when I test with IBM LTO1 it's work.
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-The main difference between the both drive is that STK doesn't support queue
-command (qdepth=1 or 0) and IBM support queue qdepth > 1.
+I don't have a left mouse button.  I only have one mouse and it's on my rig=
+ht.
+					-- Customer
+User Friendly, 2/13/1999
 
-I'm using a qlogic fiber channel, when I'm force the ql2xmaxqdpeth to 1, all is
-working very well. But this paramater is for all devices connected to Qlogic
-Fiber channel. In my configuartion have 1TB a disk and performence is low due
-to qdpeth=1.
+--KsGdsel6WgEHnImy
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-On the scsi_scan.c, we have the method scsi_add_lun who read the CmdQue from
-the inquiry and set the tagged flag:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
-if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
-          !(*bflags & BLIST_NOTQ))
-            sdev->tagged_supported = 1; 
+iD8DBQFIEfpYHL9iwnUZqnkRAtbxAJ97o1foUv6LdPPcqOW8uHG6LTTAcQCfWDhu
+k5eZkJVM2mP0Vr/JCYTFpQI=
+=9eLJ
+-----END PGP SIGNATURE-----
 
----> CmdQue = inq_result[7] & 2 
-
-STK: CmdQue = 0
-IBM: CmdQue = 1
-
-But according to www.t10.org and SPC-2:
-
-"A command queuing (CMDQUE) bit of one indicates that the device supports
-tagged tasks (command queuing) for this logical unit (see SAM-2). A value of
-zero indicates the device server may support tagged tasks for this logical
-unit (see the BQUE bit, above)."
-
-Note the "may support tagged" and in fact if you look the BQUE bit:
-STK:  BQUE=0
-IBM:  BQUE=0
-
-For www.t10.org:
-BQUE=0, CmdQue=0 : No command queuing of any kind supported.
-BQUE=0, CmdQue=1 : Command queuing with all types of task tags supported.
-
-scsi_scan do this:
-STK:  sdev->tagged_supported = 0 and qdepth = ql2xmaxqdepth
-IBM:  sdev->tagged_supported = 1 and qdepth = ql2xmaxqdepth
-
-For me, scsi_scan must read the BQUE bit and set the qdepth to 1 for STK and to
-max for IBM.
-
-Regards
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--KsGdsel6WgEHnImy--
