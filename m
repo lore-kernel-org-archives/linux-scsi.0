@@ -1,82 +1,102 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] new mac_scsi driver
-Date: Fri, 25 Apr 2008 10:03:10 -0500
-Message-ID: <1209135790.3087.8.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0804231833210.12067@loopy.telegraphics.com.au>
-	 <Pine.LNX.4.64.0804242307370.21224@anakin>
-	 <1209072808.3121.22.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0804251054200.2578@loopy.telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10554] New: scsi_scan doesn't set the queue depth for tape drive
+Date: Fri, 25 Apr 2008 08:29:05 -0700 (PDT)
+Message-ID: <bug-10554-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41152 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751220AbYDYPDO (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35814 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754731AbYDYP3k (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2008 11:03:14 -0400
-In-Reply-To: <Pine.LNX.4.64.0804251054200.2578@loopy.telegraphics.com.au>
+	Fri, 25 Apr 2008 11:29:40 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3PFT5i1020823
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 08:29:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, David Miller <davem@davemloft.net>, Roman Zippel <zippel@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2008-04-25 at 11:06 +1000, Finn Thain wrote:
-> 
-> On Thu, 24 Apr 2008, James Bottomley wrote:
-> 
-> > On Thu, 2008-04-24 at 23:08 +0200, Geert Uytterhoeven wrote:
-> > > On Thu, 24 Apr 2008, Finn Thain wrote:
-> > > > Replace the mac_esp driver with a new one based on the esp_scsi 
-> > > > core.
-> > > > 
-> > > > For esp_scsi: add support for sync transfers for the PIO mode, add a 
-> > > > new esp_driver_ops method to get the maximum dma transfer size (like 
-> > > > the old NCR53C9x driver), and some cleanups.
-> > > 
-> > > Thanks!
-> > > 
-> > > I added this patch to my series, after fixing the few checkpatch.pl 
-> > > issues and adding a test for MACH_IS_MAC() to esp_mac_probe().
-> > 
-> > I got the tabs and spaces thing.  I'm not too concerned about the 
-> > assignment in conditional, but I'm happy to go whichever way the author 
-> > does.
-> 
-> FWIW, I happen to disagree with checkpatch about the spaces following tabs 
-> thing but I'm happy to follow convention. It did pick up on some other 
-> things that I overlooked (Geert has fixed them).
-> 
-> > 
-> > Could you repost please because I already have this queued, so I need a 
-> > replacement (assuming everyone agrees).
-> 
-> Geert's version is fine with me:
-> 
-> http://linux-m68k-cvs.ubb.ca/~geert/linux-m68k-patches-2.6/m68k-new-mac_esp-driver.diff
+http://bugzilla.kernel.org/show_bug.cgi?id=10554
 
-It's a lot less easy to review stuff over the web (mainly, I'm afraid,
-because people are lazy).
-
-However, this:
+           Summary: scsi_scan doesn't set the queue depth for tape drive
+           Product: SCSI Drivers
+           Version: 2.5
+     KernelVersion: 2.6.16
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: flerat@hi-stor.com
 
 
-> +static int __devinit esp_mac_probe(struct platform_device *dev)
-> +{
-> +	struct scsi_host_template *tpnt = &scsi_esp_template;
-> +	struct Scsi_Host *host;
-> +	struct esp *esp;
-> +	int err;
-> +	int chips_present;
-> +	struct mac_esp_priv *mep;
-> +
-> +	if (!MACH_IS_MAC)
-> +		return -ENODEV;
-
-Looks strange ... it seems you have to do this because macintosh_config
-which is used later can be uninitialised (i.e. pointing to rubbish) if
-it's not set?
-
-James
+Latest working kernel version: 2.6.16
+Distribution: Suse
+Hardware Environment: IA64
+Software Environment: Suse + Backup Software
+Problem Description:
+scsi_scan doesn't set the queue depth for tape drive.
+I'm using an STK 9840B (scsi fiber tape drive) and when I try to acces with 2
+driver on the same device, device report an error.
 
 
+
+I'm using a software that monitor the tape drive quality. This software use the
+"sg" driver to acces to tape drive. The backup software use "st" to read/ write
+data.
+
+When the backup software and my software acces in the same time the data
+transfert failed.
+I'm using a STK 9840B tape drive and when I test with IBM LTO1 it's work.
+
+The main difference between the both drive is that STK doesn't support queue
+command (qdepth=1 or 0) and IBM support queue qdepth > 1.
+
+I'm using a qlogic fiber channel, when I'm force the ql2xmaxqdpeth to 1, all is
+working very well. But this paramater is for all devices connected to Qlogic
+Fiber channel. In my configuartion have 1TB a disk and performence is low due
+to qdpeth=1.
+
+On the scsi_scan.c, we have the method scsi_add_lun who read the CmdQue from
+the inquiry and set the tagged flag:
+
+if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
+          !(*bflags & BLIST_NOTQ))
+            sdev->tagged_supported = 1; 
+
+---> CmdQue = inq_result[7] & 2 
+
+STK: CmdQue = 0
+IBM: CmdQue = 1
+
+But according to www.t10.org and SPC-2:
+
+"A command queuing (CMDQUE) bit of one indicates that the device supports
+tagged tasks (command queuing) for this logical unit (see SAM-2). A value of
+zero indicates the device server may support tagged tasks for this logical
+unit (see the BQUE bit, above)."
+
+Note the "may support tagged" and in fact if you look the BQUE bit:
+STK:  BQUE=0
+IBM:  BQUE=0
+
+For www.t10.org:
+BQUE=0, CmdQue=0 : No command queuing of any kind supported.
+BQUE=0, CmdQue=1 : Command queuing with all types of task tags supported.
+
+scsi_scan do this:
+STK:  sdev->tagged_supported = 0 and qdepth = ql2xmaxqdepth
+IBM:  sdev->tagged_supported = 1 and qdepth = ql2xmaxqdepth
+
+For me, scsi_scan must read the BQUE bit and set the qdepth to 1 for STK and to
+max for IBM.
+
+Regards
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
