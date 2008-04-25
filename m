@@ -1,41 +1,46 @@
-From: Pekka J Enberg <penberg@cs.helsinki.fi>
-Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting
- root
-Date: Fri, 25 Apr 2008 09:30:52 +0300 (EEST)
-Message-ID: <Pine.LNX.4.64.0804250921090.27978@sbz-30.cs.Helsinki.FI>
-References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org>
- <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <20080424225604.GA18737@kroah.com>
- <20080424233048.GQ16272@one-eyed-alien.net>
+From: Chandru <chandru@in.ibm.com>
+Subject: diskdump and aacraid
+Date: Fri, 25 Apr 2008 12:20:43 +0530
+Message-ID: <48117F43.70000@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:41708 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756317AbYDYGay (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2008 02:30:54 -0400
-In-Reply-To: <20080424233048.GQ16272@one-eyed-alien.net>
+Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:55606 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755626AbYDYGxU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2008 02:53:20 -0400
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [202.81.18.234])
+	by e23smtp03.au.ibm.com (8.13.1/8.13.1) with ESMTP id m3P6qUwt010646
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 16:52:30 +1000
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3P6oekw241806
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 16:50:40 +1000
+Received: from d23av01.au.ibm.com (loopback [127.0.0.1])
+	by d23av01.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3P6okwc012283
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 16:50:46 +1000
+Received: from [9.124.31.71] ([9.124.31.71])
+	by d23av01.au.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m3P6oisA012256
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 16:50:45 +1000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, dsd@gentoo.org, linux-usb@vger.kernel.org, vegardno@ifi.uio.no, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 24 Apr 2008, Matthew Dharm wrote:
-> This also has all sorts of races between do_mounts 'waiting' and the actual
-> USB device enumeration.  It's entirely possible that the kernel loads via
-> BIOS, the USB drivers are loaded, that forces devices to disconnect/reset,
-> and they take a while to re-enumerate.  During that delay, the kernel gets
-> to do_mount; now, no devices show in this "waiting for scan" count.
+Hi,
 
-So how does that happen? ->storage_probe fails and driver core calls it 
-later at some point?
+I am using diskdump feature of Redhat enterprise linux. The system has 
+Adaptec AAC-RAID (Rocket) (rev 02) . 'modinfo aacraid'  gives version as 
+1.1-5[2441].  During  kernel crashes, diskdump starts to dump the memory 
+on to the disk but however fails after sometime with another 'unable to 
+handle null pointer dereference' error.  Before starting the dump 
+process a message like the following appears on the console
 
-On Thu, 24 Apr 2008, Matthew Dharm wrote:
-> The right way to do this is via initrd and something like devlabel to wait
-> for a specific device to appear.  On some systems, you may want to wait for
-> several devices to appear.
+start dumping to sda5
+<3>aacraid: Host adapter reset request. SCSI hang ?
 
-You should be able to boot from an external USB disk without initrd. 
-That's why we have the current root_delay= hack.
 
-		Pekka
+Wanted to check if a message like above can cause the adapter to reset 
+when the dump is still in progress ?.
+
+Thanks,
+Chandru
