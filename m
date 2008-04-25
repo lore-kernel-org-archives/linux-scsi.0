@@ -1,74 +1,84 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] new mac_scsi driver
-Date: Fri, 25 Apr 2008 21:43:57 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0804252141310.9235@anakin>
-References: <Pine.LNX.4.64.0804231833210.12067@loopy.telegraphics.com.au>
- <Pine.LNX.4.64.0804242307370.21224@anakin> <1209072808.3121.22.camel@localhost.localdomain>
- <Pine.LNX.4.64.0804251054200.2578@loopy.telegraphics.com.au>
- <1209135790.3087.8.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ibmvscsi: Handle non SCSI error status
+Date: Fri, 25 Apr 2008 16:58:29 -0500
+Message-ID: <15544.1067101949$1209160797@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from winston.telenet-ops.be ([195.130.137.75]:54457 "EHLO
-	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762848AbYDYToB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2008 15:44:01 -0400
-In-Reply-To: <1209135790.3087.8.camel@localhost.localdomain>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:52858 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751454AbYDYV6w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2008 17:58:52 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m3PLwjDi001643
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 17:58:45 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3PLwjWe291428
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 17:58:45 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m3PLwYnG030636
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2008 17:58:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, David Miller <davem@davemloft.net>, Roman Zippel <zippel@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, santil@us.ibm.com, brking@linux.vnet.ibm.com
 
-On Fri, 25 Apr 2008, James Bottomley wrote:
-> On Fri, 2008-04-25 at 11:06 +1000, Finn Thain wrote:
-> > On Thu, 24 Apr 2008, James Bottomley wrote:
-> > > On Thu, 2008-04-24 at 23:08 +0200, Geert Uytterhoeven wrote:
-> > > > On Thu, 24 Apr 2008, Finn Thain wrote:
-> > > > > Replace the mac_esp driver with a new one based on the esp_scsi 
-> > > > > core.
-> > > > > 
-> > > > > For esp_scsi: add support for sync transfers for the PIO mode, add a 
-> > > > > new esp_driver_ops method to get the maximum dma transfer size (like 
-> > > > > the old NCR53C9x driver), and some cleanups.
-> > > > 
-> > > > Thanks!
-> > > > 
-> > > > I added this patch to my series, after fixing the few checkpatch.pl 
-> > > > issues and adding a test for MACH_IS_MAC() to esp_mac_probe().
 
-> However, this:
-> 
-> 
-> > +static int __devinit esp_mac_probe(struct platform_device *dev)
-> > +{
-> > +	struct scsi_host_template *tpnt = &scsi_esp_template;
-> > +	struct Scsi_Host *host;
-> > +	struct esp *esp;
-> > +	int err;
-> > +	int chips_present;
-> > +	struct mac_esp_priv *mep;
-> > +
-> > +	if (!MACH_IS_MAC)
-> > +		return -ENODEV;
-> 
-> Looks strange ... it seems you have to do this because macintosh_config
-> which is used later can be uninitialised (i.e. pointing to rubbish) if
-> it's not set?
+Adds support to the ibmvscsi driver to handle non SCSI error
+status. This is needed to support some new VIOS enhancements.
 
-Yep. A multi-platform kernel may even not be running on a Mac at all.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Santiago Leon <santil@us.ibm.com>
+---
 
-The proper fix is to add the platform device in the Mac setup code only when
-running on a Mac where the actual SCSI hardware is present, but that's
-currently not done for any of the m68k platform drivers.
-Also cfr. http://lkml.org/lkml/2008/4/24/366.
+ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c |    5 ++++-
+ linux-2.6-bjking1/drivers/scsi/ibmvscsi/viosrp.h   |    9 +++++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_non_scsi_error_status drivers/scsi/ibmvscsi/ibmvscsi.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_non_scsi_error_status	2008-04-25 16:36:21.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2008-04-25 16:36:21.000000000 -0500
+@@ -686,7 +686,7 @@ static void handle_cmd_rsp(struct srp_ev
+ 	}
+ 	
+ 	if (cmnd) {
+-		cmnd->result = rsp->status;
++		cmnd->result |= rsp->status;
+ 		if (((cmnd->result >> 1) & 0x1f) == CHECK_CONDITION)
+ 			memcpy(cmnd->sense_buffer,
+ 			       rsp->data,
+@@ -730,6 +730,7 @@ static int ibmvscsi_queuecommand(struct 
+ 	u16 lun = lun_from_dev(cmnd->device);
+ 	u8 out_fmt, in_fmt;
+ 
++	cmnd->result = (DID_OK << 16);
+ 	evt_struct = get_event_struct(&hostdata->pool);
+ 	if (!evt_struct)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -1347,6 +1348,8 @@ void ibmvscsi_handle_crq(struct viosrp_c
+ 
+ 	del_timer(&evt_struct->timer);
+ 
++	if (crq->status != VIOSRP_OK && evt_struct->cmnd)
++		evt_struct->cmnd->result = DID_ERROR << 16;
+ 	if (evt_struct->done)
+ 		evt_struct->done(evt_struct);
+ 	else
+diff -puN drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_non_scsi_error_status drivers/scsi/ibmvscsi/viosrp.h
+--- linux-2.6/drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_non_scsi_error_status	2008-04-25 16:36:21.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/viosrp.h	2008-04-25 16:36:21.000000000 -0500
+@@ -59,6 +59,15 @@ enum viosrp_crq_formats {
+ 	VIOSRP_INLINE_FORMAT = 0x07
+ };
+ 
++enum viosrp_crq_status {
++	VIOSRP_OK = 0x0,
++	VIOSRP_NONRECOVERABLE_ERR = 0x1,
++	VIOSRP_VIOLATES_MAX_XFER = 0x2,
++	VIOSRP_PARTNER_PANIC = 0x3,
++	VIOSRP_DEVICE_BUSY = 0x8,
++	VIOSRP_ADAPTER_FAIL = 0x10
++};
++
+ struct viosrp_crq {
+ 	u8 valid;		/* used by RPA */
+ 	u8 format;		/* SCSI vs out-of-band */
+_
