@@ -1,143 +1,71 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/6] block: no need to initialize rq->cmd
-	with blk_get_request
-Date: Sat, 26 Apr 2008 03:35:11 +0900
-Message-ID: <20080426033504U.tomof@acm.org>
-References: <1209141901.3087.17.camel@localhost.localdomain>
-	<20080426015440M.tomof@acm.org>
-	<1209142784.3087.25.camel@localhost.localdomain>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH]qla4xxx:Add support for Async Message PDUs
+Date: Fri, 25 Apr 2008 12:23:02 -0700
+Message-ID: <1209151382.6212.21.camel@d5102avq18960.qlogic.org>
+References: <1208551487.5159.5.camel@d5102avq18960.qlogic.org>
+	 <480E1063.2060308@cs.wisc.edu>
+	 <1209052918.6212.4.camel@d5102avq18960.qlogic.org>
+	 <4810B818.8040301@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1209142784.3087.25.camel@localhost.localdomain>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James.Bottomley@HansenPartnership.com, dm-devel@redhat.com
-Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, bharrosh@panasas.com, agk@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:55308 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755224AbYDYTXI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2008 15:23:08 -0400
+In-Reply-To: <4810B818.8040301@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>
 
-On Fri, 25 Apr 2008 11:59:44 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Sat, 2008-04-26 at 01:54 +0900, FUJITA Tomonori wrote:
-> > On Fri, 25 Apr 2008 11:45:01 -0500
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Sat, 2008-04-26 at 01:23 +0900, FUJITA Tomonori wrote:
-> > > > blk_get_request initializes rq->cmd (rq_init does) so the users don't
-> > > > need to do that.
-> > > > 
-> > > > The purpose of this patch is to remove sizeof(rq->cmd) and &rq->cmd,
-> > > > as a preparation for large command support, which changes rq->cmd from
-> > > > the static array to a pointer. sizeof(rq->cmd) will not make sense and
-> > > > &rq->cmd won't work.
-> > > > 
-> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > > Cc: Alasdair G Kergon <agk@redhat.com>
-> > > > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > > ---
-> > > >  block/scsi_ioctl.c          |    3 ---
-> > > >  drivers/block/pktcdvd.c     |    2 --
-> > > >  drivers/cdrom/cdrom.c       |    1 -
-> > > 
-> > > These:
-> > > 
-> > > >  drivers/md/dm-emc.c         |    2 --
-> > > >  drivers/md/dm-mpath-hp-sw.c |    1 -
-> > > >  drivers/md/dm-mpath-rdac.c  |    1 -
-> > > 
-> > > Conflict with this set of patches:
-> > > 
-> > > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-pending-2.6.git;a=summary
-> > > 
-> > > Which move the dm pieces to being request based.  The patch series
-> > > hasn't had an ACK yet from Alasdair, but it would be nice if you could
-> > > look it over and see if it needs the memsets pulling out.
-> > 
-> > Seems that it needs the memsets pulling out. For example,
-> > 
-> > [PATCH 2/7] scsi_dh: add lsi rdac device handler has:
-> > 
-> > +	memset(&rq->cmd, 0, BLK_MAX_CDB);
-> > 
-> > 
-> > Do you want a patch against scsi-pending?
+On Thu, 2008-04-24 at 11:40 -0500, Mike Christie wrote:
+> David C Somayajulu wrote:
+> > On Tue, 2008-04-22 at 11:20 -0500, Mike Christie wrote:
+> >> David C Somayajulu wrote:
+> >>> +int qla4xxx_conn_close_sess_logout(struct scsi_qla_host * ha,
+> >>> +	   uint16_t fw_ddb_index, uint16_t connection_id, uint16_t option)
+> >>> +{
+> >>> +	uint32_t mbox_cmd[MBOX_REG_COUNT];
+> >>> +	uint32_t mbox_sts[MBOX_REG_COUNT];
+> >>> +
+> >>> +	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> >>> +	memset(&mbox_sts, 0, sizeof(mbox_sts));
+> >>> +
+> >>> +	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
+> >>> +	mbox_cmd[1] = fw_ddb_index;
+> >>> +	mbox_cmd[2] = connection_id;
+> >>> +	mbox_cmd[3] = LOGOUT_OPTION_RESET;
+> >>> +
+> >>> +	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 2, &mbox_cmd[0],
+> >>> +		&mbox_sts[0]) != QLA_SUCCESS) {
+> >>> +		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_CONN_CLOSE_SESS_LOGOUT "
+> >>> +			      "option %04x failed sts %04X %04X",
+> >>> +			      ha->host_no, __func__,
+> >>> +			      option, mbox_sts[0], mbox_sts[1]));
+> >>> +		if (mbox_sts[0] == 0x4005)
+> >>> +			DEBUG2(printk("%s reason %04X\n", __func__,
+> >>> +				      mbox_sts[1]));
+> >>> +	}
+> >>> +	return QLA_SUCCESS;
+> >>
+> >> Does this logout function logout a session and stop it from being logged 
+> >> back in, or does it logout the session then the firmware tries to log 
+> >> back in?
+> > Once the session is logged out, it stays in that state till the user
+> > initiates a login. The firmware does not automatically try to login
+> > again.
 > 
-> Yes please ...
-
-You can apply this for scsi-pending now.
-
-scsi_dh will not be merge for 2.6.26, the original patch needs to be
-merged. If scsi_dh will, then we can drop the original patch since we
-can live without the changes to scsi_ioctl.c, pktcdvd.c, and cdrom.c
-(sizeof(rq->cmd) doesn't make sense but it doesn't hurt us).
-
-==
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi_dh: no need to initialize rq->cmd with blk_get_request
-
-blk_get_request initializes rq->cmd (rq_init does) so the users don't
-need to do that.
-
-The purpose of this patch is to remove &rq->cmd, as a preparation for
-large command support, which changes rq->cmd from the static array to
-a pointer. &rq->cmd won't work.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alasdair G Kergon <agk@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/device_handler/scsi_dh_emc.c   |    1 -
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |    1 -
- drivers/scsi/device_handler/scsi_dh_rdac.c  |    1 -
- 3 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 71d20c8..df7992c 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -258,7 +258,6 @@ static struct request *get_req(struct scsi_device *sdev, int cmd)
- 		return NULL;
- 	}
- 
--	memset(&rq->cmd, 0, BLK_MAX_CDB);
- 	rq->cmd[0] = cmd;
- 	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
- 
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index d1b66c3..7abea59 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -91,7 +91,6 @@ static int hp_sw_activate(struct scsi_device *sdev)
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
- 	req->cmd_len = COMMAND_SIZE(START_STOP);
--	memset(req->cmd, 0, MAX_COMMAND_SIZE);
- 	req->cmd[0] = START_STOP;
- 	req->cmd[4] = 1;	/* Start spin cycle */
- 	req->timeout = HP_SW_TIMEOUT;
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 1bf9cf8..3af8fa9 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -214,7 +214,6 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
- 		return NULL;
- 	}
- 
--	memset(&rq->cmd, 0, BLK_MAX_CDB);
- 	rq->sense = h->sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
--- 
-1.5.4.2
+> I think we want to login in this case. Did you guys test with this 
+> Equalogic boxes, or what boxes did you try that send a logout request 
+> and always do not want you to relogin?
+> 
+> EQL boxes have that magic target load balancing, where if they detect a 
+> problem the box will send the async logout request. It then expects the 
+> initiator to try a relogin, and at that time it will use the login 
+> redirect feature to send us to a new portal.
+Mike, you are correct. Async Logout is for recovery (stated in RFC5048).
+I have since confirmed with one of the storage vendors as well. I am
+trying to see if there is a Time2Wait (seconds) type thing the initiator
+needs to honor before it does the re-login. I will repost the patch.
