@@ -1,114 +1,45 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC 0/5] block large commands support continue
-Date: Fri, 25 Apr 2008 19:29:07 +0900
-Message-ID: <20080425192907G.fujita.tomonori@lab.ntt.co.jp>
-References: <20080425093141.GK12774@kernel.dk>
-	<20080425190349I.tomof@acm.org>
-	<20080425102555.GL12774@kernel.dk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/5] aic7xxx: add static
+Date: Fri, 25 Apr 2008 14:46:48 +0200
+Message-ID: <4811D2B8.6000309@suse.de>
+References: <200804250432.16943.vda.linux@googlemail.com> <200804250434.49377.vda.linux@googlemail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080425102555.GL12774@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:41880 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754383AbYDYMqw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2008 08:46:52 -0400
+In-Reply-To: <200804250434.49377.vda.linux@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri, 25 Apr 2008 12:25:56 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+Hi Denys,
 
-> On Fri, Apr 25 2008, FUJITA Tomonori wrote:
-> > On Fri, 25 Apr 2008 11:31:41 +0200
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > On Fri, Apr 25 2008, FUJITA Tomonori wrote:
-> > > > On Fri, 25 Apr 2008 11:22:04 +0200
-> > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > 
-> > > > > On Fri, Apr 25 2008, FUJITA Tomonori wrote:
-> > > > > > On Thu, 24 Apr 2008 12:49:30 +0200
-> > > > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > > > 
-> > > > > > > On Thu, Apr 24 2008, FUJITA Tomonori wrote:
-> > > > > > > > On Thu, 24 Apr 2008 13:31:21 +0900
-> > > > > > > > FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > > > > > > > 
-> > > > > > > > > On Wed, 23 Apr 2008 17:50:42 +0300
-> > > > > > > > > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > > > > > > > > 
-> > > > > > > > > > 
-> > > > > > > > > > The support for large commands was dropped from the for-2.6.26 branch
-> > > > > > > > > > and will probably not get accepted into next kernel.
-> > > > > > > > > > 
-> > > > > > > > > > I have tried to take all comments from Jens and Bart. and incorporate
-> > > > > > > > > > it into a new patchset. This is basically Tomo's patchset but with
-> > > > > > > > > > proposed changes.
-> > > > > > > > > 
-> > > > > > > > > Have you seen the patchset to remove request on the stack?
-> > > > > > > > > 
-> > > > > > > > > http://marc.info/?l=linux-ide&m=120882410712466&w=2
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > > They are based on current linux-block/master. They will probably conflict with
-> > > > > > > > > > latest patch sent by Tomo for the blk_get_request(). Once those patches
-> > > > > > > > > > get accepted at some git tree, (Where will that be?), I will rebase these
-> > > > > > > > > > on top of them. Please CC me of any progress.
-> > > > > > > > > > 
-> > > > > > > > > > [PATCH 1/5] block: no need to initialize rq->cmd
-> > > > > > > > > >   This is 2 of Tomo's patches squashed together as they are
-> > > > > > > > > >   small and do the same. Tomo is this OK?
-> > > > > > > > > > 
-> > > > > > > > > > [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
-> > > > > > > > > >   Tomos patch rebased to here
-> > > > > > > > > > 
-> > > > > > > > > > [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
-> > > > > > > > > > [PATCH 4/5] block: Use new blk_init_rq
-> > > > > > > > > >   These patches are basically what Jens and Bart has suggested, that with
-> > > > > > > > > >   a small code change to blk-core.c we can memset at rq_init() and only set
-> > > > > > > > > >   none zero members. We can also export that initializer and use it all over
-> > > > > > > > > >   the ide tree where ever requests don't come from a request queue. (OK also
-> > > > > > > > > >   at scsi_error.c)
-> > > > > > > > > 
-> > > > > > > > > +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
-> > > > > > > > > 
-> > > > > > > > > Hmm, would it be better to modify the block layer to let rq_init just
-> > > > > > > > > memset() the request structure?
-> > > > > > > > 
-> > > > > > > > I think, if we move rq_init to blk_alloc_request from get_request,
-> > > > > > > > rq_init can just memset() the structure.
-> > > > > > > > 
-> > > > > > > > Then we can export rq_init and rq_init works for everyone.
-> > > > > > > 
-> > > > > > > Wont work, see the io scheduler set_request() functions.
-> > > > > > 
-> > > > > > Sorry, can you be more specific?
-> > > > > > 
-> > > > > > Only cfq uses set_request for now. cfq_set_request uses rq->cmd_flags
-> > > > > > and stores information at rq->elevator_private and
-> > > > > > rq->elevator_private2.
-> > > > > > 
-> > > > > > The patch does memset() the request structure and sets up
-> > > > > > rq->cmd_flags, and then elv_set_request. Doesn't it work?
-> > > > > 
-> > > > > Sorry, with the moved rq_init() it should work, didn't look closely
-> > > > > enough.
-> > > > 
-> > > > No problem.
-> > > > 
-> > > > So are you ok with the patch? If so, I'll re-send it with a proper
-> > > > description and the signed-off.
-> > > 
-> > > Please do - I actually already merged it, but do resend with a full
-> > > description and signed-off etc.
-> > 
-> > I just stole your description and added my signed-off.
-> 
-> OK, will update it.
-> 
-> > Will you merge the large command support for 2.6.26? Or only this
-> > clean-up patch?
-> 
-> It's both, we can merge large command support for 2.6.26.
+Denys Vlasenko wrote:
+> This patch adds static (and sometimes const) keywords where appropria=
+te.
+>=20
+> Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
 
-Great, I'll update and send the previous patchset shortly.
+Looks good.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
