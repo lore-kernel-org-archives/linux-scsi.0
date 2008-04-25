@@ -1,94 +1,70 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] dpt_i2o: 64 bit support (take 4)
-Date: Fri, 25 Apr 2008 11:59:16 -0500
-Message-ID: <1209142756.3087.23.camel@localhost.localdomain>
-References: <20080424213459.GA21698@xs4all.net>
+Subject: Re: [dm-devel] [PATCH 2/6] block: no need to initialize rq->cmd
+	with blk_get_request
+Date: Fri, 25 Apr 2008 11:59:44 -0500
+Message-ID: <1209142784.3087.25.camel@localhost.localdomain>
+References: <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1209141901.3087.17.camel@localhost.localdomain>
+	 <20080426015440M.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43901 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762047AbYDYQ7U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2008 12:59:20 -0400
-In-Reply-To: <20080424213459.GA21698@xs4all.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080426015440M.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, bharrosh@panasas.com, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <miquels@cistron.nl>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2008-04-24 at 23:35 +0200, Miquel van Smoorenburg wrote:
-> sysfs code.
+On Sat, 2008-04-26 at 01:54 +0900, FUJITA Tomonori wrote:
+> On Fri, 25 Apr 2008 11:45:01 -0500
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
-> # -------
+> > On Sat, 2008-04-26 at 01:23 +0900, FUJITA Tomonori wrote:
+> > > blk_get_request initializes rq->cmd (rq_init does) so the users don't
+> > > need to do that.
+> > > 
+> > > The purpose of this patch is to remove sizeof(rq->cmd) and &rq->cmd,
+> > > as a preparation for large command support, which changes rq->cmd from
+> > > the static array to a pointer. sizeof(rq->cmd) will not make sense and
+> > > &rq->cmd won't work.
+> > > 
+> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > Cc: Alasdair G Kergon <agk@redhat.com>
+> > > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > ---
+> > >  block/scsi_ioctl.c          |    3 ---
+> > >  drivers/block/pktcdvd.c     |    2 --
+> > >  drivers/cdrom/cdrom.c       |    1 -
+> > 
+> > These:
+> > 
+> > >  drivers/md/dm-emc.c         |    2 --
+> > >  drivers/md/dm-mpath-hp-sw.c |    1 -
+> > >  drivers/md/dm-mpath-rdac.c  |    1 -
+> > 
+> > Conflict with this set of patches:
+> > 
+> > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-pending-2.6.git;a=summary
+> > 
+> > Which move the dm pieces to being request based.  The patch series
+> > hasn't had an ACK yet from Alasdair, but it would be nice if you could
+> > look it over and see if it needs the memsets pulling out.
 > 
-> This patch is an update for drivers/scsi/dpt_i2o.c.
-> It applies to both 2.6.24.4 and 2.6.25
+> Seems that it needs the memsets pulling out. For example,
 > 
-> It contains the following changes:
+> [PATCH 2/7] scsi_dh: add lsi rdac device handler has:
 > 
-> * 64 bit code based on unofficial Adaptec 64 bit driver
-> * removes scsi_module.c dependency, adds module_init / module_exit
->   this is needed because we need to pass the proper device to
->   scsi_add_host(), and the scsi_module.c passes NULL. With NULL,
->   code like arch/x64/kernel/pci-gart_64.c::need_iommu() crashes
->   because the dev pointer it is passed is NULL.
-> * adds sysfs entry for /sys/class/dpt_i2o/dptiX so that udev
->   can create /dev/dptiX dynamically
-
-The changelog and patch title really needs to reflect only the actual
-changes ... (as in only sysfs).
-
-> Obviously there are more cleanups that can be done to this code,
-> but we need to start somewhere. Patch has been tested heavily on
-> both 32 and 64 bit x86 platforms.
+> +	memset(&rq->cmd, 0, BLK_MAX_CDB);
 > 
-> Signed-off-by: Miquel van Smoorenburg <miquels@cistron.nl>
 > 
-> diff -ruN linux-2.6.25/drivers/scsi/dpt_i2o.c linux-2.6.25-sysfs/drivers/scsi/dpt_i2o.c
-> --- linux-2.6.25/drivers/scsi/dpt_i2o.c	2008-04-24 22:30:29.000000000 +0200
-> +++ linux-2.6.25-sysfs/drivers/scsi/dpt_i2o.c	2008-04-24 23:26:08.000000000 +0200
-> @@ -116,6 +116,8 @@
->  static adpt_hba* hba_chain = NULL;
->  static int hba_count = 0;
->  
-> +static struct class *adpt_sysfs_class;
-> +
->  #ifdef CONFIG_COMPAT
->  static long compat_adpt_ioctl(struct file *, unsigned int, unsigned long);
->  #endif
-> @@ -259,6 +261,10 @@
->  		adpt_inquiry(pHba);
->  	}
->  
-> +	adpt_sysfs_class = class_create(THIS_MODULE, "dpt_i2o");
-> +	if (IS_ERR(adpt_sysfs_class))
-> +		adpt_sysfs_class = NULL;
-> +
->  	for (pHba = hba_chain; pHba; pHba = pHba->next) {
->  		if (adpt_scsi_host_alloc(pHba, sht) < 0){
->  			adpt_i2o_delete_hba(pHba);
-> @@ -266,6 +272,11 @@
->  		}
->  		pHba->initialized = TRUE;
->  		pHba->state &= ~DPTI_STATE_RESET;
-> +		if (adpt_sysfs_class) {
-> +			class_device_create(adpt_sysfs_class,
+> Do you want a patch against scsi-pending?
 
-Unfortunately, Greg and Kay are in the process of nuking the
-class_device and all its associated functions.  Now the way it works is
-that you use an ordinary struct device, with the class pointer set up
-and with the parent pointing to the device that class_device->dev used
-to point to.
+Yes please ...
 
-To see an example of this, you can look at:
-
-commit ee959b00c335d7780136c5abda37809191fe52c3
-Author: Tony Jones <tonyj@suse.de>
-Date:   Fri Feb 22 00:13:36 2008 +0100
-
-    SCSI: convert struct class_device to struct device
+Thanks,
 
 James
 
