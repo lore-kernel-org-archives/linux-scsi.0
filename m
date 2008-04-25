@@ -1,70 +1,111 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting root
-Date: Fri, 25 Apr 2008 00:04:39 -0700
-Message-ID: <20080425070439.GA18915@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <20080424225604.GA18737@kroah.com> <20080424233048.GQ16272@one-eyed-alien.net> <Pine.LNX.4.64.0804250921090.27978@sbz-30.cs.Helsinki.FI>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 2/2] dpt_i2o: 64 bit support (take 4)
+Date: Fri, 25 Apr 2008 09:48:42 +0200
+Message-ID: <200804250948.43190.eike-kernel@sf-tec.de>
+References: <20080424213459.GA21698@xs4all.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
+Content-Type: multipart/signed;
+  boundary="nextPart10517638.uQRhBABDnA";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:36916
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751250AbYDYHE6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2008 03:04:58 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0804250921090.27978@sbz-30.cs.Helsinki.FI>
+Received: from mail.sf-mail.de ([62.27.20.61]:37053 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752347AbYDYHwf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2008 03:52:35 -0400
+In-Reply-To: <20080424213459.GA21698@xs4all.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pekka J Enberg <penberg@cs.helsinki.fi>
-Cc: Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, dsd@gentoo.org, linux-usb@vger.kernel.org, vegardno@ifi.uio.no, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: linux-scsi@vger.kernel.org, Greg KH <gregkh@suse.de>
 
-
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--nextPart10517638.uQRhBABDnA
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-
-On Fri, Apr 25, 2008 at 09:30:52AM +0300, Pekka J Enberg wrote:
-> On Thu, 24 Apr 2008, Matthew Dharm wrote:
-> > This also has all sorts of races between do_mounts 'waiting' and the ac=
-tual
-> > USB device enumeration.  It's entirely possible that the kernel loads v=
-ia
-> > BIOS, the USB drivers are loaded, that forces devices to disconnect/res=
-et,
-> > and they take a while to re-enumerate.  During that delay, the kernel g=
-ets
-> > to do_mount; now, no devices show in this "waiting for scan" count.
->=20
-> So how does that happen? ->storage_probe fails and driver core calls it=
-=20
-> later at some point?
-
-There's no guarantee that storage_probe is going to get called in a timely
-manner.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It was a new hope.
-					-- Dust Puppy
-User Friendly, 12/25/1998
-
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature
 Content-Disposition: inline
+
+Miquel van Smoorenburg wrote:
+> sysfs code.
+>
+> # -------
+>
+> This patch is an update for drivers/scsi/dpt_i2o.c.
+> It applies to both 2.6.24.4 and 2.6.25
+>
+> It contains the following changes:
+>
+> * 64 bit code based on unofficial Adaptec 64 bit driver
+> * removes scsi_module.c dependency, adds module_init / module_exit
+>   this is needed because we need to pass the proper device to
+>   scsi_add_host(), and the scsi_module.c passes NULL. With NULL,
+>   code like arch/x64/kernel/pci-gart_64.c::need_iommu() crashes
+>   because the dev pointer it is passed is NULL.
+> * adds sysfs entry for /sys/class/dpt_i2o/dptiX so that udev
+>   can create /dev/dptiX dynamically
+>
+> Obviously there are more cleanups that can be done to this code,
+> but we need to start somewhere. Patch has been tested heavily on
+> both 32 and 64 bit x86 platforms.
+>
+> Signed-off-by: Miquel van Smoorenburg <miquels@cistron.nl>
+>
+> diff -ruN linux-2.6.25/drivers/scsi/dpt_i2o.c
+> linux-2.6.25-sysfs/drivers/scsi/dpt_i2o.c ---
+> linux-2.6.25/drivers/scsi/dpt_i2o.c	2008-04-24 22:30:29.000000000 +0200 +=
+++
+> linux-2.6.25-sysfs/drivers/scsi/dpt_i2o.c	2008-04-24 23:26:08.000000000
+> +0200 @@ -116,6 +116,8 @@
+>  static adpt_hba* hba_chain =3D NULL;
+>  static int hba_count =3D 0;
+>
+> +static struct class *adpt_sysfs_class;
+> +
+>  #ifdef CONFIG_COMPAT
+>  static long compat_adpt_ioctl(struct file *, unsigned int, unsigned long=
+);
+>  #endif
+> @@ -259,6 +261,10 @@
+>  		adpt_inquiry(pHba);
+>  	}
+>
+> +	adpt_sysfs_class =3D class_create(THIS_MODULE, "dpt_i2o");
+> +	if (IS_ERR(adpt_sysfs_class))
+> +		adpt_sysfs_class =3D NULL;
+> +
+>  	for (pHba =3D hba_chain; pHba; pHba =3D pHba->next) {
+>  		if (adpt_scsi_host_alloc(pHba, sht) < 0){
+>  			adpt_i2o_delete_hba(pHba);
+> @@ -266,6 +272,11 @@
+>  		}
+>  		pHba->initialized =3D TRUE;
+>  		pHba->state &=3D ~DPTI_STATE_RESET;
+> +		if (adpt_sysfs_class) {
+> +			class_device_create(adpt_sysfs_class,
+> +				NULL, MKDEV(DPTI_I2O_MAJOR, pHba->unit),
+> +				NULL, "dpti%d", pHba->unit);
+> +		}
+>  	}
+>
+>  	// Register our control device node
+
+class_device_create() has a return value that should probably be used for=20
+something. Also Greg did many work to get rid of that class_device stuff=20
+AFAIK so it's probably a bad idea to introduce a new one.
+
+Eike
+
+--nextPart10517638.uQRhBABDnA
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-iD8DBQFIEYKHHL9iwnUZqnkRAr4lAJ99ziHd+inhTXYC2kwX0VxN4gvMpwCfWZQC
-pvQdqtMklB7t0FbGBv2dtJQ=
-=WNEb
+iD8DBQBIEYzbXKSJPmm5/E4RApupAJ9YiZj+ioGX3Uf9/efNnu1l4C22PgCfSeYT
+Jczy7ynrwTkluwBGDCum2Sw=
+=yzTn
 -----END PGP SIGNATURE-----
 
---DocE+STaALJfprDB--
+--nextPart10517638.uQRhBABDnA--
