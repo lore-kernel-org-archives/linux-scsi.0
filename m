@@ -1,121 +1,165 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 07 of 16] Rename scsi_bidi_sdb_cache
-Date: Fri, 25 Apr 2008 19:12:09 -0400
-Message-ID: <f37e1616176be729a236.1209165129@sermon.lab.mkp.net>
+Subject: [PATCH 08 of 16] SCSI protection information scatterlist handling
+Date: Fri, 25 Apr 2008 19:12:10 -0400
+Message-ID: <ea489bb64376f4420b4d.1209165130@sermon.lab.mkp.net>
 References: <patchbomb.1209165122@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:44314 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:44315 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759422AbYDYXR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1759197AbYDYXR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 25 Apr 2008 19:17:29 -0400
 In-Reply-To: <patchbomb.1209165122@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-1 file changed, 13 insertions(+), 13 deletions(-)
-drivers/scsi/scsi_lib.c |   26 +++++++++++++-------------
+3 files changed, 86 insertions(+)
+drivers/scsi/Kconfig     |   15 +++++++++++++++
+drivers/scsi/scsi_lib.c  |   42 ++++++++++++++++++++++++++++++++++++++++++
+include/scsi/scsi_cmnd.h |   29 +++++++++++++++++++++++++++++
 
-
-The data integrity changes need to dynamically allocate
-scsi_data_buffers too.  Rename scsi_bidi_sdb_cache for clarity.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
 
-diff -r bfbea544d342 -r f37e1616176b drivers/scsi/scsi_lib.c
+diff -r f37e1616176b -r ea489bb64376 drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig	Fri Apr 25 17:39:29 2008 -0400
++++ b/drivers/scsi/Kconfig	Fri Apr 25 17:39:29 2008 -0400
+@@ -260,6 +260,21 @@
+ 	default m
+ 	depends on SCSI
+ 	depends on MODULES
++
++config SCSI_PROTECTION
++       bool "SCSI Data Integrity Protection"
++       depends on SCSI
++       depends on BLK_DEV_INTEGRITY
++       help 
++	 Some SCSI devices support data protection features above and
++	 beyond those implemented in the transport.  Select this
++	 option to enable protection information to be transferred to
++	 and from a device.  Specifically, this option will enable DIF
++	 (Data Integrity Field) for SCSI disks.
++
++	 The SCSI protection features depend on the block layer data
++	 integrity infrastructure so the latter must be enabled for
++	 this option to work.
+ 
+ menu "SCSI Transports"
+ 	depends on SCSI
+diff -r f37e1616176b -r ea489bb64376 drivers/scsi/scsi_lib.c
 --- a/drivers/scsi/scsi_lib.c	Fri Apr 25 17:39:29 2008 -0400
 +++ b/drivers/scsi/scsi_lib.c	Fri Apr 25 17:39:29 2008 -0400
-@@ -65,7 +65,7 @@
- };
- #undef SP
- 
--static struct kmem_cache *scsi_bidi_sdb_cache;
-+static struct kmem_cache *scsi_sdb_cache;
- 
- static void scsi_run_queue(struct request_queue *q);
- 
-@@ -771,7 +771,7 @@
- 		struct scsi_data_buffer *bidi_sdb =
- 			cmd->request->next_rq->special;
- 		scsi_free_sgtable(bidi_sdb);
--		kmem_cache_free(scsi_bidi_sdb_cache, bidi_sdb);
-+		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+@@ -774,6 +774,13 @@
+ 		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
  		cmd->request->next_rq->special = NULL;
  	}
++
++#if defined(CONFIG_SCSI_PROTECTION)
++	if (scsi_prot_sg_count(cmd)) {
++		scsi_free_sgtable(cmd->prot_sdb);
++		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
++	}
++#endif
  }
-@@ -1046,7 +1046,7 @@
+ EXPORT_SYMBOL(scsi_release_buffers);
  
- 	if (blk_bidi_rq(cmd->request)) {
- 		struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
--			scsi_bidi_sdb_cache, GFP_ATOMIC);
-+			scsi_sdb_cache, GFP_ATOMIC);
- 		if (!bidi_sdb) {
- 			error = BLKPREP_DEFER;
+@@ -1027,6 +1034,32 @@
+ 	return BLKPREP_OK;
+ }
+ 
++#if defined(CONFIG_SCSI_PROTECTION)
++static int scsi_protect_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++{
++	struct request *req = cmd->request;
++	struct scsi_data_buffer *pdb;
++	int ivecs, count;
++
++	pdb = kmem_cache_zalloc(scsi_sdb_cache, gfp_mask);
++	if (unlikely(pdb == NULL))
++		return BLKPREP_DEFER;
++
++	ivecs = blk_rq_count_integrity_sg(req);
++
++	if (unlikely(scsi_alloc_sgtable(pdb, ivecs, gfp_mask)))
++		return BLKPREP_DEFER;
++
++	count = blk_rq_map_integrity_sg(req, pdb->table.sgl);
++	BUG_ON(unlikely(count > ivecs));
++
++	cmd->prot_sdb = pdb;
++	cmd->prot_sdb->table.nents = count;
++
++	return BLKPREP_OK;
++}
++#endif
++
+ /*
+  * Function:    scsi_init_io()
+  *
+@@ -1058,6 +1091,15 @@
+ 		if (error)
  			goto err_exit;
-@@ -1678,11 +1678,11 @@
- 		return -ENOMEM;
  	}
++
++#if defined(CONFIG_SCSI_PROTECTION)
++	if (blk_integrity_rq(cmd->request)) {
++		error = scsi_protect_io(cmd, gfp_mask);
++
++		if (error != BLKPREP_OK)
++			goto err_exit;
++	}
++#endif
  
--	scsi_bidi_sdb_cache = kmem_cache_create("scsi_bidi_sdb",
--					sizeof(struct scsi_data_buffer),
--					0, 0, NULL);
--	if (!scsi_bidi_sdb_cache) {
--		printk(KERN_ERR "SCSI: can't init scsi bidi sdb cache\n");
-+	scsi_sdb_cache = kmem_cache_create("scsi_sdb",
-+					   sizeof(struct scsi_data_buffer),
-+					   0, 0, NULL);
-+	if (!scsi_sdb_cache) {
-+		printk(KERN_ERR "SCSI: can't init scsi sdb cache\n");
- 		goto cleanup_io_context;
- 	}
+ 	return BLKPREP_OK ;
  
-@@ -1695,7 +1695,7 @@
- 		if (!sgp->slab) {
- 			printk(KERN_ERR "SCSI: can't init sg slab %s\n",
- 					sgp->name);
--			goto cleanup_bidi_sdb;
-+			goto cleanup_sdb;
- 		}
+diff -r f37e1616176b -r ea489bb64376 include/scsi/scsi_cmnd.h
+--- a/include/scsi/scsi_cmnd.h	Fri Apr 25 17:39:29 2008 -0400
++++ b/include/scsi/scsi_cmnd.h	Fri Apr 25 17:39:29 2008 -0400
+@@ -71,6 +71,9 @@
  
- 		sgp->pool = mempool_create_slab_pool(SG_MEMPOOL_SIZE,
-@@ -1703,13 +1703,13 @@
- 		if (!sgp->pool) {
- 			printk(KERN_ERR "SCSI: can't init sg mempool %s\n",
- 					sgp->name);
--			goto cleanup_bidi_sdb;
-+			goto cleanup_sdb;
- 		}
- 	}
+ 	/* These elements define the operation we ultimately want to perform */
+ 	struct scsi_data_buffer sdb;
++#if defined(CONFIG_SCSI_PROTECTION)
++	struct scsi_data_buffer *prot_sdb;
++#endif
+ 	unsigned underflow;	/* Return error if less than
+ 				   this amount is transferred */
  
- 	return 0;
+@@ -192,4 +195,30 @@
+ 				 buf, buflen);
+ }
  
--cleanup_bidi_sdb:
-+cleanup_sdb:
- 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
- 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
- 		if (sgp->pool)
-@@ -1717,7 +1717,7 @@
- 		if (sgp->slab)
- 			kmem_cache_destroy(sgp->slab);
- 	}
--	kmem_cache_destroy(scsi_bidi_sdb_cache);
-+	kmem_cache_destroy(scsi_sdb_cache);
- cleanup_io_context:
- 	kmem_cache_destroy(scsi_io_context_cache);
- 
-@@ -1729,7 +1729,7 @@
- 	int i;
- 
- 	kmem_cache_destroy(scsi_io_context_cache);
--	kmem_cache_destroy(scsi_bidi_sdb_cache);
-+	kmem_cache_destroy(scsi_sdb_cache);
- 
- 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
- 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
++#if defined(CONFIG_SCSI_PROTECTION)
++
++static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
++}
++
++static inline struct scatterlist *scsi_prot_sglist(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb ? cmd->prot_sdb->table.sgl : NULL;
++}
++
++static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb;
++}
++
++#define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
++	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
++
++#else /* CONFIG_SCSI_PROTECTION */
++
++#define scsi_prot_sg_count(a)		(0)
++
++#endif /* CONFIG_SCSI_PROTECTION */
++
+ #endif /* _SCSI_SCSI_CMND_H */
 
 
