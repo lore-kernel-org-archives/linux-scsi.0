@@ -1,31 +1,27 @@
-From: Keith Hopkins <vger@hopnet.net>
-Subject: Re: AIC94xx SAS question.
-Date: Sat, 26 Apr 2008 12:58:18 +0800
-Message-ID: <4812B66A.5000105@hopnet.net>
-References: <20080421231940.GB5656@animx.eu.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 11 of 16] Move scsi_disk() accessor function to sd.h
+Date: Sat, 26 Apr 2008 02:23:47 -0400
+Message-ID: <20080426062347.GA1081@infradead.org>
+References: <patchbomb.1209165122@sermon.lab.mkp.net> <b512cd02f8b0de20d093.1209165133@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.221.248.150] ([221.221.248.150]:7410 "EHLO mail.hopnet.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbYDZFJE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Apr 2008 01:09:04 -0400
-In-Reply-To: <20080421231940.GB5656@animx.eu.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:36743 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbYDZGXs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Apr 2008 02:23:48 -0400
+Content-Disposition: inline
+In-Reply-To: <b512cd02f8b0de20d093.1209165133@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 
-On 04/22/2008 07:19 AM, Wakko Warner wrote:
-> Can either of these be done:
-> 1) Embed the firmware into the driver so that it can be used before the
-> rootfs id mounted.
+On Fri, Apr 25, 2008 at 07:12:13PM -0400, Martin K. Petersen wrote:
+> 2 files changed, 5 insertions(+), 5 deletions(-)
+> drivers/scsi/sd.c |    5 -----
+> include/scsi/sd.h |    5 +++++
 
-I think this is generally not done because firmware tends to be closed-source.
+Nack.  Creating of sd.h was a big mistake already and should be reverse.
+No one but sd.c has any business playing with these.
 
-> 2) Can the firmware be loaded in an initr{d,amfs}?
-
-Sure.  openSuSE does it in their mkinitrd.
-
---Keith
