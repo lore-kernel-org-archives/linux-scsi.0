@@ -1,181 +1,114 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC 0/5] block large commands support continue
-Date: Sun, 27 Apr 2008 12:06:01 +0300
-Message-ID: <481441F9.2060904@panasas.com>
-References: <20080425093141.GK12774@kernel.dk>	<20080425190349I.tomof@acm.org>	<481438AC.2080707@panasas.com> <20080427174325C.tomof@acm.org>
+Subject: Re: [PATCH 3/6] block: rename and export rq_init()
+Date: Sun, 27 Apr 2008 14:41:09 +0300
+Message-ID: <48146655.2050806@panasas.com>
+References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7894 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752131AbYD0JHP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Apr 2008 05:07:15 -0400
-In-Reply-To: <20080427174325C.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Apr 27 2008 at 11:42 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Sun, 27 Apr 2008 11:26:20 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Fri, Apr 25 2008 at 19:23 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> This rename rq_init() blk_rq_init() and export it. Any path that hands
+> the request to the block layer needs to call it to initialize the
+> request.
 > 
->> On Fri, Apr 25 2008 at 13:03 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->>> On Fri, 25 Apr 2008 11:31:41 +0200
->>> Jens Axboe <jens.axboe@oracle.com> wrote:
->>>
->>>> On Fri, Apr 25 2008, FUJITA Tomonori wrote:
->>>>> On Fri, 25 Apr 2008 11:22:04 +0200
->>>>> Jens Axboe <jens.axboe@oracle.com> wrote:
->>>>>
->>>>>> On Fri, Apr 25 2008, FUJITA Tomonori wrote:
->>>>>>> On Thu, 24 Apr 2008 12:49:30 +0200
->>>>>>> Jens Axboe <jens.axboe@oracle.com> wrote:
->>>>>>>
->>>>>>>> On Thu, Apr 24 2008, FUJITA Tomonori wrote:
->>>>>>>>> On Thu, 24 Apr 2008 13:31:21 +0900
->>>>>>>>> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->>>>>>>>>
->>>>>>>>>> On Wed, 23 Apr 2008 17:50:42 +0300
->>>>>>>>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
->>>>>>>>>>
->>>>>>>>>>> The support for large commands was dropped from the for-2.6.26 branch
->>>>>>>>>>> and will probably not get accepted into next kernel.
->>>>>>>>>>>
->>>>>>>>>>> I have tried to take all comments from Jens and Bart. and incorporate
->>>>>>>>>>> it into a new patchset. This is basically Tomo's patchset but with
->>>>>>>>>>> proposed changes.
->>>>>>>>>> Have you seen the patchset to remove request on the stack?
->>>>>>>>>>
->>>>>>>>>> http://marc.info/?l=linux-ide&m=120882410712466&w=2
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>> They are based on current linux-block/master. They will probably conflict with
->>>>>>>>>>> latest patch sent by Tomo for the blk_get_request(). Once those patches
->>>>>>>>>>> get accepted at some git tree, (Where will that be?), I will rebase these
->>>>>>>>>>> on top of them. Please CC me of any progress.
->>>>>>>>>>>
->>>>>>>>>>> [PATCH 1/5] block: no need to initialize rq->cmd
->>>>>>>>>>>   This is 2 of Tomo's patches squashed together as they are
->>>>>>>>>>>   small and do the same. Tomo is this OK?
->>>>>>>>>>>
->>>>>>>>>>> [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
->>>>>>>>>>>   Tomos patch rebased to here
->>>>>>>>>>>
->>>>>>>>>>> [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
->>>>>>>>>>> [PATCH 4/5] block: Use new blk_init_rq
->>>>>>>>>>>   These patches are basically what Jens and Bart has suggested, that with
->>>>>>>>>>>   a small code change to blk-core.c we can memset at rq_init() and only set
->>>>>>>>>>>   none zero members. We can also export that initializer and use it all over
->>>>>>>>>>>   the ide tree where ever requests don't come from a request queue. (OK also
->>>>>>>>>>>   at scsi_error.c)
->>>>>>>>>> +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
->>>>>>>>>>
->>>>>>>>>> Hmm, would it be better to modify the block layer to let rq_init just
->>>>>>>>>> memset() the request structure?
->>>>>>>>> I think, if we move rq_init to blk_alloc_request from get_request,
->>>>>>>>> rq_init can just memset() the structure.
->>>>>>>>>
->>>>>>>>> Then we can export rq_init and rq_init works for everyone.
->>>>>>>> Wont work, see the io scheduler set_request() functions.
->>>>>>> Sorry, can you be more specific?
->>>>>>>
->>>>>>> Only cfq uses set_request for now. cfq_set_request uses rq->cmd_flags
->>>>>>> and stores information at rq->elevator_private and
->>>>>>> rq->elevator_private2.
->>>>>>>
->>>>>>> The patch does memset() the request structure and sets up
->>>>>>> rq->cmd_flags, and then elv_set_request. Doesn't it work?
->>>>>> Sorry, with the moved rq_init() it should work, didn't look closely
->>>>>> enough.
->>>>> No problem.
->>>>>
->>>>> So are you ok with the patch? If so, I'll re-send it with a proper
->>>>> description and the signed-off.
->>>> Please do - I actually already merged it, but do resend with a full
->>>> description and signed-off etc.
->>> I just stole your description and added my signed-off.
->>>
->>> Will you merge the large command support for 2.6.26? Or only this
->>> clean-up patch?
->>>
->>> =
->>> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->>> Subject: [PATCH] block: make rq_init() do a full memset()
->>>
->>> This requires moving rq_init() from get_request() to blk_alloc_request().
->>> The upside is that we can now require an rq_init() from any path that
->>> wishes to hand the request to the block layer.
->>>
->>> rq_init() will be exported for the code that uses struct request
->>> without blk_get_request.
->>>
->>> This is a preparation for large command support, which needs to
->>> initialize struct request in a proper way (that is, just doing a
->>> memset() will not work).
->>>
->>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->>> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
->>> ---
->> <snip>
->>
->> Sorry for the late response. Those hebrew holidays on they way of Linux
->> coding ;-).
->>
->> I don't mind as long as these things get accepted. But how is that any
->> different then the patch I sent?
->>   [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
->> It does exactly 100% the same move of rq_init to blk_alloc_request and the memset and
->> all, Have you looked at the patches at all? I feel like a mute person ;-(
+> This is a preparation for large command support, which needs to
+> initialize the request in a proper way (that is, just doing a memset()
+> will not work).
 > 
-> No, it's not same at all. Please look at the patchset again. Your
-> interface is:
-> 
-> +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
-> 
-> I don't like that. It's hacky. You needed that hacky inferface because
-> you didn't fix the root problem, rq_init was not able to do a full
-> memset().
-> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
 
-What are you talking about? I did the full memset and moved the call to
-blk_alloc_request() exactly like you did it. I added the flags param because
-I think it was nice, since all places need set the flags afterwards so it is 
-more elegant with the flags in the function call. Also it tells user that we 
-must set what kind of request it is just like blk_alloc_request() takes rw flags 
-parameter. So I did not do any hacking I did it because it is more stylish.
-But if you don't like it, that's fine, but at least comment on the exact problems 
-so I know what you don't like.
+Please, if not to late, add:
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 
-> I fixed the root problem with this patch:
+> ---
+>  block/blk-barrier.c    |    4 ++--
+>  block/blk-core.c       |    5 +++--
+>  block/blk.h            |    1 -
+>  include/linux/blkdev.h |    1 +
+>  4 files changed, 6 insertions(+), 5 deletions(-)
 > 
-> http://marc.info/?l=linux-scsi&m=120901807514386&w=2
-> 
-> 
-> Then, we have the same interface as before:
-> 
+> diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+> index 722140a..5e2cfe9 100644
+> --- a/block/blk-barrier.c
+> +++ b/block/blk-barrier.c
+> @@ -143,7 +143,7 @@ static void queue_flush(struct request_queue *q, unsigned which)
+>  		end_io = post_flush_end_io;
+>  	}
+>  
+> -	rq_init(q, rq);
+> +	blk_rq_init(q, rq);
+>  	rq->cmd_flags = REQ_HARDBARRIER;
+>  	rq->rq_disk = q->bar_rq.rq_disk;
+>  	rq->end_io = end_io;
+> @@ -165,7 +165,7 @@ static inline struct request *start_ordered(struct request_queue *q,
+>  	blkdev_dequeue_request(rq);
+>  	q->orig_bar_rq = rq;
+>  	rq = &q->bar_rq;
+> -	rq_init(q, rq);
+> +	blk_rq_init(q, rq);
+>  	if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
+>  		rq->cmd_flags |= REQ_RW;
+>  	if (q->ordered & QUEUE_ORDERED_FUA)
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index e7cdabc..a89adcc 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -107,7 +107,7 @@ struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev)
+>  }
+>  EXPORT_SYMBOL(blk_get_backing_dev_info);
+>  
+> -void rq_init(struct request_queue *q, struct request *rq)
 > +void blk_rq_init(struct request_queue *q, struct request *rq)
-> 
+>  {
+>  	memset(rq, 0, sizeof(*rq));
+>  
+> @@ -120,6 +120,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+>  	rq->tag = -1;
+>  	rq->ref_count = 1;
+>  }
+> +EXPORT_SYMBOL(blk_rq_init);
+>  
+>  static void req_bio_endio(struct request *rq, struct bio *bio,
+>  			  unsigned int nbytes, int error)
+> @@ -601,7 +602,7 @@ blk_alloc_request(struct request_queue *q, int rw, int priv, gfp_t gfp_mask)
+>  	if (!rq)
+>  		return NULL;
+>  
+> -	rq_init(q, rq);
+> +	blk_rq_init(q, rq);
+>  
+>  	/*
+>  	 * first three bits are identical in rq->cmd_flags and bio->bi_rw,
+> diff --git a/block/blk.h b/block/blk.h
+> index ec9120f..59776ab 100644
+> --- a/block/blk.h
+> +++ b/block/blk.h
+> @@ -10,7 +10,6 @@
+>  extern struct kmem_cache *blk_requestq_cachep;
+>  extern struct kobj_type blk_queue_ktype;
+>  
+> -void rq_init(struct request_queue *q, struct request *rq);
+>  void init_request_from_bio(struct request *req, struct bio *bio);
+>  void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+>  			struct bio *bio);
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 8ca481c..d17032c 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -607,6 +607,7 @@ extern int blk_register_queue(struct gendisk *disk);
+>  extern void blk_unregister_queue(struct gendisk *disk);
+>  extern void register_disk(struct gendisk *dev);
+>  extern void generic_make_request(struct bio *bio);
+> +extern void blk_rq_init(struct request_queue *q, struct request *rq);
+>  extern void blk_put_request(struct request *);
+>  extern void __blk_put_request(struct request_queue *, struct request *);
+>  extern void blk_end_sync_rq(struct request *rq, int error);
 
-As I said, I did not want same interface as before I wanted the flags
-added so it is easier for users.
-
-> 
->> If you are going to export the rq_init function then I think the name is very
->> wrong. And you have not exported it?
-> 
-> It was renamed blk_rq_init since we have lots of blk_rq_* functions.
-
-Sorry. yes you did that in the next patch. I should read all mail before
-I reply.
-
-Any way it all looks very good to me. I am just now compiling it together 
-with the scsi bits for testing with the OSD stack, but I'm sure it is all
-good.
-
-Thanks Tomo, this looks promising. I hope it will get upstream soon, I
-wish you would have CCed me on all these patches so I get notify of their
-progress into the trees. At the end, I'm the one that needs them the most.
-
-Boaz
