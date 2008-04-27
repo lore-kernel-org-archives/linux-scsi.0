@@ -1,60 +1,128 @@
-From: Keith Hopkins <lnxgnome@hopnet.net>
-Subject: Re: AIC94xx SAS question.
-Date: Sun, 27 Apr 2008 13:31:11 +0800
-Message-ID: <48140F9F.1070109@hopnet.net>
-References: <20080421231940.GB5656@animx.eu.org>	<4812B66A.5000105@hopnet.net> <20080426145649.GA8848@animx.eu.org>
-Reply-To: lnxgnome@hopnet.net
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC 0/5] block large commands support continue
+Date: Sun, 27 Apr 2008 11:26:20 +0300
+Message-ID: <481438AC.2080707@panasas.com>
+References: <20080425092204.GJ12774@kernel.dk>	<20080425182700H.fujita.tomonori@lab.ntt.co.jp>	<20080425093141.GK12774@kernel.dk> <20080425190349I.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:26915 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbYD0FbS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Apr 2008 01:31:18 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so7053861waf.23
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Apr 2008 22:31:17 -0700 (PDT)
-In-Reply-To: <20080426145649.GA8848@animx.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080425190349I.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-scsi@vger.kernel.org
 
-On 04/26/2008 10:56 PM, Wakko Warner wrote:
-> Keith Hopkins wrote:
->> On 04/22/2008 07:19 AM, Wakko Warner wrote:
->>> Can either of these be done:
->>> 1) Embed the firmware into the driver so that it can be used before the
->>> rootfs id mounted.
->> I think this is generally not done because firmware tends to be 
->> closed-source.
+On Fri, Apr 25 2008 at 13:03 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Fri, 25 Apr 2008 11:31:41 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
 > 
-> I can understand this from the point of the distrobution of the linux
-> kernel, but it still can be done.  If there were a patch or something that
-> would convert the file, that's all I care.  This for me would be preferred.
-
-Sorry, no idea if it can actually be done.
-
+>> On Fri, Apr 25 2008, FUJITA Tomonori wrote:
+>>> On Fri, 25 Apr 2008 11:22:04 +0200
+>>> Jens Axboe <jens.axboe@oracle.com> wrote:
+>>>
+>>>> On Fri, Apr 25 2008, FUJITA Tomonori wrote:
+>>>>> On Thu, 24 Apr 2008 12:49:30 +0200
+>>>>> Jens Axboe <jens.axboe@oracle.com> wrote:
+>>>>>
+>>>>>> On Thu, Apr 24 2008, FUJITA Tomonori wrote:
+>>>>>>> On Thu, 24 Apr 2008 13:31:21 +0900
+>>>>>>> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+>>>>>>>
+>>>>>>>> On Wed, 23 Apr 2008 17:50:42 +0300
+>>>>>>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>>>>>>>
+>>>>>>>>> The support for large commands was dropped from the for-2.6.26 branch
+>>>>>>>>> and will probably not get accepted into next kernel.
+>>>>>>>>>
+>>>>>>>>> I have tried to take all comments from Jens and Bart. and incorporate
+>>>>>>>>> it into a new patchset. This is basically Tomo's patchset but with
+>>>>>>>>> proposed changes.
+>>>>>>>> Have you seen the patchset to remove request on the stack?
+>>>>>>>>
+>>>>>>>> http://marc.info/?l=linux-ide&m=120882410712466&w=2
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>> They are based on current linux-block/master. They will probably conflict with
+>>>>>>>>> latest patch sent by Tomo for the blk_get_request(). Once those patches
+>>>>>>>>> get accepted at some git tree, (Where will that be?), I will rebase these
+>>>>>>>>> on top of them. Please CC me of any progress.
+>>>>>>>>>
+>>>>>>>>> [PATCH 1/5] block: no need to initialize rq->cmd
+>>>>>>>>>   This is 2 of Tomo's patches squashed together as they are
+>>>>>>>>>   small and do the same. Tomo is this OK?
+>>>>>>>>>
+>>>>>>>>> [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
+>>>>>>>>>   Tomos patch rebased to here
+>>>>>>>>>
+>>>>>>>>> [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+>>>>>>>>> [PATCH 4/5] block: Use new blk_init_rq
+>>>>>>>>>   These patches are basically what Jens and Bart has suggested, that with
+>>>>>>>>>   a small code change to blk-core.c we can memset at rq_init() and only set
+>>>>>>>>>   none zero members. We can also export that initializer and use it all over
+>>>>>>>>>   the ide tree where ever requests don't come from a request queue. (OK also
+>>>>>>>>>   at scsi_error.c)
+>>>>>>>> +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
+>>>>>>>>
+>>>>>>>> Hmm, would it be better to modify the block layer to let rq_init just
+>>>>>>>> memset() the request structure?
+>>>>>>> I think, if we move rq_init to blk_alloc_request from get_request,
+>>>>>>> rq_init can just memset() the structure.
+>>>>>>>
+>>>>>>> Then we can export rq_init and rq_init works for everyone.
+>>>>>> Wont work, see the io scheduler set_request() functions.
+>>>>> Sorry, can you be more specific?
+>>>>>
+>>>>> Only cfq uses set_request for now. cfq_set_request uses rq->cmd_flags
+>>>>> and stores information at rq->elevator_private and
+>>>>> rq->elevator_private2.
+>>>>>
+>>>>> The patch does memset() the request structure and sets up
+>>>>> rq->cmd_flags, and then elv_set_request. Doesn't it work?
+>>>> Sorry, with the moved rq_init() it should work, didn't look closely
+>>>> enough.
+>>> No problem.
+>>>
+>>> So are you ok with the patch? If so, I'll re-send it with a proper
+>>> description and the signed-off.
+>> Please do - I actually already merged it, but do resend with a full
+>> description and signed-off etc.
 > 
->>> 2) Can the firmware be loaded in an initr{d,amfs}?
->> Sure.  openSuSE does it in their mkinitrd.
+> I just stole your description and added my signed-off.
 > 
-> I'm not sure if you got the point of #2 or not.  I do *NOT* want the driver
-> as a module, I want it compiled into the kernel and then load the firmware
-> from an initramfs.
+> Will you merge the large command support for 2.6.26? Or only this
+> clean-up patch?
+> 
+> =
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] block: make rq_init() do a full memset()
+> 
+> This requires moving rq_init() from get_request() to blk_alloc_request().
+> The upside is that we can now require an rq_init() from any path that
+> wishes to hand the request to the block layer.
+> 
+> rq_init() will be exported for the code that uses struct request
+> without blk_get_request.
+> 
+> This is a preparation for large command support, which needs to
+> initialize struct request in a proper way (that is, just doing a
+> memset() will not work).
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+<snip>
 
-I think I got you all right.  My answers were just too short :)
+Sorry for the late response. Those hebrew holidays on they way of Linux
+coding ;-).
 
-SuSE loads the driver as a module and the firmware in initrd.  I haven't tried initramfs, nor compiling it into the kernel.
+I don't mind as long as these things get accepted. But how is that any
+different then the patch I sent?
+  [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+It does exactly 100% the same move of rq_init to blk_alloc_request and the memset and
+all, Have you looked at the patches at all? I feel like a mute person ;-(
 
-I unpacked my current initrd, and in it I found:
+If you are going to export the rq_init function then I think the name is very
+wrong. And you have not exported it?
 
-lib/firmware/aic94xx-seq.fw
-+ some ql firmware that I don't need.
-
-I'm not sure if the driver compiled for SuSE "just knows" to look in /lib/firmware, or how it finds the file.  It might have something to do with the firmware_class module in SuSE.
-I do remember that I needed to load 'edd' before 94xx, or it would not init the firmware.
-
-As for compiling the driver in the kernel, and putting the firmware in initrd/initramfs, you would have to force the init of the 94xx module to be after the initrd/initramfs was initialized, loaded and mounted.  I have not checked to see if that is currently possible.
-
---Keith
+Boaz
