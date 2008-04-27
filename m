@@ -1,104 +1,67 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 5/6] ide: use blk_rq_init() to initialize the request
-Date: Sun, 27 Apr 2008 14:42:23 +0300
-Message-ID: <4814669F.3040001@panasas.com>
-References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 6/6] block: add large command support
+Date: Sun, 27 Apr 2008 14:43:05 +0300
+Message-ID: <481466C9.70603@panasas.com>
+References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-6-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33814 "EHLO
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33813 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754382AbYD0Ln2 (ORCPT
+	with ESMTP id S1753825AbYD0Ln2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Apr 2008 07:43:28 -0400
-In-Reply-To: <1209140607-28654-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1209140607-28654-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
 On Fri, Apr 25 2008 at 19:23 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> This converts ide to use blk_rq_init to initialize the request.
+> This patch changes rq->cmd from the static array to a pointer to
+> support large commands.
 > 
-> This is a preparation for large command support, which needs to
-> initialize the request in a proper way (that is, just doing a memset()
-> will not work).
+> We rarely handle large commands. So for optimization, a struct request
+> still has a static array for a command. rq_init sets rq->cmd pointer
+> to the static array.
 > 
 > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > Cc: Jens Axboe <jens.axboe@oracle.com>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Please, if not to late, add:
 Cc: Boaz Harrosh <bharrosh@panasas.com>
 
 > ---
->  drivers/ide/ide-io.c       |    3 +--
->  drivers/ide/ide-tape.c     |    2 +-
->  drivers/ide/ide-taskfile.c |    3 +--
->  drivers/ide/ide.c          |    4 ++--
->  4 files changed, 5 insertions(+), 7 deletions(-)
+>  block/blk-core.c       |    1 +
+>  include/linux/blkdev.h |    5 +++--
+>  2 files changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> index 31e5afa..7a3d605 100644
-> --- a/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -1601,8 +1601,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
->  
->  void ide_init_drive_cmd (struct request *rq)
->  {
-> -	memset(rq, 0, sizeof(*rq));
-> -	rq->ref_count = 1;
-> +	blk_rq_init(NULL, rq);
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index a89adcc..35ae1c0 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -117,6 +117,7 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
+>  	rq->sector = rq->hard_sector = (sector_t) -1;
+>  	INIT_HLIST_NODE(&rq->hash);
+>  	RB_CLEAR_NODE(&rq->rb_node);
+> +	rq->cmd = rq->__cmd;
+>  	rq->tag = -1;
+>  	rq->ref_count = 1;
 >  }
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index d17032c..08df1ea 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -215,8 +215,9 @@ struct request {
+>  	/*
+>  	 * when request is used as a packet command carrier
+>  	 */
+> -	unsigned int cmd_len;
+> -	unsigned char cmd[BLK_MAX_CDB];
+> +	unsigned short cmd_len;
+> +	unsigned char __cmd[BLK_MAX_CDB];
+> +	unsigned char *cmd;
 >  
->  EXPORT_SYMBOL(ide_init_drive_cmd);
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index f43fd07..f1227e5 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -899,7 +899,7 @@ static void idetape_create_request_sense_cmd(struct ide_atapi_pc *pc)
->  
->  static void idetape_init_rq(struct request *rq, u8 cmd)
->  {
-> -	memset(rq, 0, sizeof(*rq));
-> +	blk_rq_init(NULL, rq);
->  	rq->cmd_type = REQ_TYPE_SPECIAL;
->  	rq->cmd[0] = cmd;
->  }
-> diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-> index 155cc90..997b99c 100644
-> --- a/drivers/ide/ide-taskfile.c
-> +++ b/drivers/ide/ide-taskfile.c
-> @@ -532,8 +532,7 @@ int ide_raw_taskfile(ide_drive_t *drive, ide_task_t *task, u8 *buf, u16 nsect)
->  {
->  	struct request rq;
->  
-> -	memset(&rq, 0, sizeof(rq));
-> -	rq.ref_count = 1;
-> +	blk_rq_init(NULL, &rq);
->  	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
->  	rq.buffer = buf;
->  
-> diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-> index 917c72d..dfe3ba5 100644
-> --- a/drivers/ide/ide.c
-> +++ b/drivers/ide/ide.c
-> @@ -689,7 +689,7 @@ static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
->  	if (!(drive->dn % 2))
->  		ide_acpi_get_timing(hwif);
->  
-> -	memset(&rq, 0, sizeof(rq));
-> +	blk_rq_init(NULL, &rq);
->  	memset(&rqpm, 0, sizeof(rqpm));
->  	memset(&args, 0, sizeof(args));
->  	rq.cmd_type = REQ_TYPE_PM_SUSPEND;
-> @@ -727,7 +727,7 @@ static int generic_ide_resume(struct device *dev)
->  
->  	ide_acpi_exec_tfs(drive);
->  
-> -	memset(&rq, 0, sizeof(rq));
-> +	blk_rq_init(NULL, &rq);
->  	memset(&rqpm, 0, sizeof(rqpm));
->  	memset(&args, 0, sizeof(args));
->  	rq.cmd_type = REQ_TYPE_PM_RESUME;
+>  	unsigned int data_len;
+>  	unsigned int extra_len;	/* length of alignment and padding */
 
