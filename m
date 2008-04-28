@@ -1,49 +1,62 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] qla2xxx: firmware semaphore to mutex
-Date: Mon, 28 Apr 2008 12:08:46 -0600
-Message-ID: <20080428180846.GX14990@parisc-linux.org>
-References: <20080428174742.163523860@mvista.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PATCH] another tranche of SCSI updates for 2.6.26
+Date: Mon, 28 Apr 2008 14:25:33 -0400
+Message-ID: <1209407133.3367.37.camel@localhost.localdomain>
+References: <1209320076.3801.26.camel@localhost.localdomain>
+	 <20080428013400.GA6245@elte.hu>
+	 <1209351113.3801.107.camel@localhost.localdomain>
+	 <alpine.LFD.1.10.0804280903230.3119@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:34944 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965020AbYD1SIr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2008 14:08:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20080428174742.163523860@mvista.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:53362 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S936320AbYD1SZi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Apr 2008 14:25:38 -0400
+In-Reply-To: <alpine.LFD.1.10.0804280903230.3119@woody.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Walker <dwalker@mvista.com>
-Cc: James.Bottomley@HansenPartnership.com, mingo@elte.hu, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Apr 28, 2008 at 10:47:42AM -0700, Daniel Walker wrote:
-> Signed-off-by: Daniel Walker <dwalker@mvista.com>
+On Mon, 2008-04-28 at 09:05 -0700, Linus Torvalds wrote:
+> 
+> On Sun, 27 Apr 2008, James Bottomley wrote:
+> > 
+> > Try this; the signature for an uninitialised free list is easy (both
+> > list pointers NULL), so the patch detects that and doesn't try to run
+> > over the uninitialised list head.
+> 
+> Why aren't these things initialized?
 
-I did this one too ... my version had a nice little twist.
+They are, but not until we begin the freelist allocation.  That way we
+can keep the list head being NULL as the signal for the freelist not
+being initialised.
 
-> @@ -2813,7 +2814,7 @@ qla2x00_request_firmware(scsi_qla_host_t
->  		blob = &qla_fw_blobs[FW_ISP25XX];
->  	}
->  
-> -	down(&qla_fw_lock);
-> +	mutex_lock(&qla_fw_lock);
->  	if (blob->fw)
->  		goto out;
->  
+> You say that the signature of an uninitialised free list is trivial, but 
+> that's not at all true in general. It depends intimately on how the memory 
+> was allocated, and is thus very subtle indeed - some change to allocations 
+> can break something simple like this, by initializing it with random old 
+> memory contents.
 
-This one we can do as:
+No, no; for us it's guaranteed to be NULL ... they're allocated in the
+host memory area with kzalloc. (and before kzalloc, we were using
+kmalloc/memset because the host area has an API guarantee of being zero
+initialised).
 
--       down(&qla_fw_lock);
-+       if (mutex_lock_killable(&qla_fw_lock))
-+               return NULL;
-+
+> So why not just initialize lists like this so early (ie at allocation 
+> time) that problems like this cannot happen? Instead of adding ugly and 
+> fragile cases to the freeing?
+
+Because then I'd need another flag to know whether or not the free list
+has actually been set up.  In theory, if we initialise the list,
+list_empty() would do because when you're freeing you should always have
+the reserve command on the free list ... but that would have prevented
+us from seeing the bug Ingo reported recently (where we were freeing
+with active commands), so I'm a bit reluctant to do that.
+
+James
 
 
-Otherwise, I think our patches are bit-for-bit identical.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
