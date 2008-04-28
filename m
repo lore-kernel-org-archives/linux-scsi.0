@@ -1,62 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] another tranche of SCSI updates for 2.6.26
-Date: Mon, 28 Apr 2008 14:25:33 -0400
-Message-ID: <1209407133.3367.37.camel@localhost.localdomain>
-References: <1209320076.3801.26.camel@localhost.localdomain>
-	 <20080428013400.GA6245@elte.hu>
-	 <1209351113.3801.107.camel@localhost.localdomain>
-	 <alpine.LFD.1.10.0804280903230.3119@woody.linux-foundation.org>
+From: Daniel Walker <dwalker@mvista.com>
+Subject: Re: [PATCH] qla2xxx: firmware semaphore to mutex
+Date: Mon, 28 Apr 2008 11:57:13 -0700
+Message-ID: <1209409033.12461.64.camel@localhost.localdomain>
+References: <20080428174742.163523860@mvista.com>
+	 <20080428180846.GX14990@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53362 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936320AbYD1SZi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Apr 2008 14:25:38 -0400
-In-Reply-To: <alpine.LFD.1.10.0804280903230.3119@woody.linux-foundation.org>
+Received: from gateway-1237.mvista.com ([63.81.120.158]:26349 "EHLO
+	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933717AbYD1S5R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2008 14:57:17 -0400
+In-Reply-To: <20080428180846.GX14990@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James.Bottomley@HansenPartnership.com, mingo@elte.hu, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-On Mon, 2008-04-28 at 09:05 -0700, Linus Torvalds wrote:
+
+On Mon, 2008-04-28 at 12:08 -0600, Matthew Wilcox wrote:
+> On Mon, Apr 28, 2008 at 10:47:42AM -0700, Daniel Walker wrote:
+> > Signed-off-by: Daniel Walker <dwalker@mvista.com>
 > 
-> On Sun, 27 Apr 2008, James Bottomley wrote:
-> > 
-> > Try this; the signature for an uninitialised free list is easy (both
-> > list pointers NULL), so the patch detects that and doesn't try to run
-> > over the uninitialised list head.
+> I did this one too ... my version had a nice little twist.
 > 
-> Why aren't these things initialized?
+> > @@ -2813,7 +2814,7 @@ qla2x00_request_firmware(scsi_qla_host_t
+> >  		blob = &qla_fw_blobs[FW_ISP25XX];
+> >  	}
+> >  
+> > -	down(&qla_fw_lock);
+> > +	mutex_lock(&qla_fw_lock);
+> >  	if (blob->fw)
+> >  		goto out;
+> >  
+> 
+> This one we can do as:
+> 
+> -       down(&qla_fw_lock);
+> +       if (mutex_lock_killable(&qla_fw_lock))
+> +               return NULL;
 
-They are, but not until we begin the freelist allocation.  That way we
-can keep the list head being NULL as the signal for the freelist not
-being initialised.
+I'm not sure what mutex_lock_killable() does, so I would imagine that
+should be in it's own patch .. I don't like doubling up on changes
+because I feel it's harder to review, and harder on git bisect once it's
+in mainline.. That's why I was saying "one lock per patch." ..
 
-> You say that the signature of an uninitialised free list is trivial, but 
-> that's not at all true in general. It depends intimately on how the memory 
-> was allocated, and is thus very subtle indeed - some change to allocations 
-> can break something simple like this, by initializing it with random old 
-> memory contents.
-
-No, no; for us it's guaranteed to be NULL ... they're allocated in the
-host memory area with kzalloc. (and before kzalloc, we were using
-kmalloc/memset because the host area has an API guarantee of being zero
-initialised).
-
-> So why not just initialize lists like this so early (ie at allocation 
-> time) that problems like this cannot happen? Instead of adding ugly and 
-> fragile cases to the freeing?
-
-Because then I'd need another flag to know whether or not the free list
-has actually been set up.  In theory, if we initialise the list,
-list_empty() would do because when you're freeing you should always have
-the reserve command on the free list ... but that would have prevented
-us from seeing the bug Ingo reported recently (where we were freeing
-with active commands), so I'm a bit reluctant to do that.
-
-James
-
+Daniel
 
