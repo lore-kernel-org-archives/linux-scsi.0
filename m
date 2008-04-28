@@ -1,17 +1,17 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
 Subject: RE: [patch 02/10] Dell CERC support for megaraid_mbox
-Date: Mon, 28 Apr 2008 16:11:32 -0600
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26502179408@NAMAIL1.ad.lsil.com>
+Date: Mon, 28 Apr 2008 16:11:34 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26502179409@NAMAIL1.ad.lsil.com>
 References: <1209320066.3801.24.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58717 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:58725 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965901AbYD1WM0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2008 18:12:26 -0400
+	id S965939AbYD1WM1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2008 18:12:27 -0400
 Content-class: urn:content-classes:message
 In-Reply-To: <1209320066.3801.24.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,10 +19,11 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, hare@suse.de, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-
 James,
 
-Agree with you (ACK).
+Agree with you --ACK.
+
+Thanks.
 
 Bo Yang 
 
