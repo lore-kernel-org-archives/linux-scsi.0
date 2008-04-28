@@ -1,32 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.25
-Date: Mon, 28 Apr 2008 15:01:13 -0600
-Message-ID: <20080428210112.GC14990@parisc-linux.org>
-References: <1208540517.3063.18.camel@localhost.localdomain> <20080419151934.GA17089@elte.hu> <1208620484.3280.23.camel@localhost.localdomain> <20080419170530.GD1595@cs181133002.pp.htv.fi> <1208626496.3280.40.camel@localhost.localdomain> <alpine.LFD.1.10.0804191305360.2779@woody.linux-foundation.org> <20080419204511.GP20637@parisc-linux.org> <20080428210034.GE18248@uranus.ravnborg.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [patch 02/10] Dell CERC support for megaraid_mbox
+Date: Mon, 28 Apr 2008 16:11:32 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26502179408@NAMAIL1.ad.lsil.com>
+References: <1209320066.3801.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S966774AbYD1VBg@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080428210034.GE18248@uranus.ravnborg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Adrian Bunk <bunk@kernel.org>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:58717 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965901AbYD1WM0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2008 18:12:26 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1209320066.3801.24.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, hare@suse.de, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-On Mon, Apr 28, 2008 at 11:00:34PM +0200, Sam Ravnborg wrote:
-> On Sat, Apr 19, 2008 at 02:45:11PM -0600, Matthew Wilcox wrote:
-> > On Sat, Apr 19, 2008 at 01:14:23PM -0700, Linus Torvalds wrote:
-> > > So people: stop this total *idiocy* with "select is bad". It's not. The 
-> > > lack of select is *much* worse.
-> > 
-> > Could we consider applying this patch then?
+
+James,
+
+Agree with you (ACK).
+
+Bo Yang 
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Sunday, April 27, 2008 2:14 PM
+To: Yang, Bo
+Cc: akpm@linux-foundation.org; linux-scsi@vger.kernel.org; hare@suse.de;
+Patro, Sumant
+Subject: RE: [patch 02/10] Dell CERC support for megaraid_mbox
+
+On Tue, 2008-04-22 at 13:44 -0600, Yang, Bo wrote:
+> Hannes,
 > 
-> I applied the following.
+> Our FW team give me the feedback said: LSI never release CERC firware 
+> version >=6.62.  I have asked our DELL contactor to check with DELL if
 
-Reads much better.  Thanks!
+> DELL know who made this release.  I will update you as soon as I get 
+> the words from DELL.  Also if you have the information regarding to 
+> the CERC FW 6.62 release, can you pass them to me?  I need to know the
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> details about this release.
+
+So, the fact that it shouldn't have been released doesn't really fix the
+problem that it seems to be out in the field and causing problems.  Can
+I take it that the proposed patch is an acceptable fix?  Especially if
+LSI hasn't officially released it, the proposed patch shouldn't affect
+any LSI sanctioned drivers.
+
+James
+
+
