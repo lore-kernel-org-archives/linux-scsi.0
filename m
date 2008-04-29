@@ -1,44 +1,119 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/2] qla4xxx: return SCSI_MLQUEUE_TARGET_BUSY when driver has detected session error
-Date: Mon, 28 Apr 2008 23:22:17 -0500
-Message-ID: <1209442937-15130-3-git-send-email-michaelc@cs.wisc.edu>
-References: <1209442937-15130-1-git-send-email-michaelc@cs.wisc.edu>
- <1209442937-15130-2-git-send-email-michaelc@cs.wisc.edu>
+From: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
+Subject: Re: AIC94xx SAS question.
+Date: Tue, 29 Apr 2008 09:41:59 +0200
+Message-ID: <4816D147.9090703@ipax.at>
+References: <20080421231940.GB5656@animx.eu.org> <4812B66A.5000105@hopnet.net> <20080426145649.GA8848@animx.eu.org> <48140F9F.1070109@hopnet.net> <48159A75.6020400@ipax.at> <20080429020417.GC17521@animx.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40667 "EHLO mx1.redhat.com"
+Received: from mail.ipax.at ([80.64.143.40]:55026 "EHLO mail.ipax.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751556AbYD2EW1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2008 00:22:27 -0400
-In-Reply-To: <1209442937-15130-2-git-send-email-michaelc@cs.wisc.edu>
+	id S1751232AbYD2HmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2008 03:42:03 -0400
+In-Reply-To: <20080429020417.GC17521@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Wakko Warner wrote:
+>>> lib/firmware/aic94xx-seq.fw
+...
+>>> I'm not sure if the driver compiled for SuSE "just knows" to look in
+>>> /lib/firmware, or how it finds the file.  It might have something to do
+>>> with the firmware_class module in SuSE.
+>>> I do remember that I needed to load 'edd' before 94xx, or it would not
+>>> init the firmware.
+>> this is a default behaviour of this and many other drivers.
+>
+> Which part are you refering to as being default?  Requiring edd or
+something
+> else?
 
-When qla4xxx begins recovery and the iscsi class is firing up to handle
-it, we need to retrn SCSI_MLQUEUE_TARGET_BUSY from the driver instead
-of host busy, because the session recovery only affects the one target.
+the driver finding the firmware by itself. in my hurry, i missed the
+"edd" part ;)
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/qla4xxx/ql4_os.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>>> As for compiling the driver in the kernel, and putting the firmware in
+>>> initrd/initramfs, you would have to force the init of the 94xx module to
+>>> be after the initrd/initramfs was initialized, loaded and mounted.  I
+>>> have not checked to see if that is currently possible.
+>> in the end, there is no big deal in putting the firmware into the
+>> initramfs. some distributions may work out of the box, some might
+>> require a little tuning of an initramfs hook.
+>
+> I compile kernels specifically for each machine that I have (which is not
+> that often and not that many).  Some mount NFS root, others have different
+> drivers required to mount / and other CPU options as well.  Thus I do not
+> need the extra overhead and complexity of an initramfs.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0c78694..873dc6b 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -439,7 +439,7 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 			cmd->result = DID_NO_CONNECT << 16;
- 			goto qc_fail_command;
- 		}
--		goto qc_host_busy;
-+		return SCSI_MLQUEUE_TARGET_BUSY;
- 	}
- 
- 	if (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags))
+i used to do this too. and on special systems, i still am in favor of
+compiling my very specific kernel - maybe even without module loading
+support.
+
+but for 99% of the servers i am taking care of, i abandoned this in
+favour of simply having to use apt to upgrade these systems.
+
+given my available time vs the time the compilation for the different
+systems would need (ok, i know that you can set up some build
+environment which compiles a kernel for every type of configuration you
+want) i happily accept the loss in performance, etc. that comes with
+it ;)
+
+>> which leads me to my question: why are you absolutly against an
+>> initramfs image? properly configured - and that is not a big deal
+>> in current versions of mkinitramfs and current distributions - there
+>> are few possibilities to break the setup.
+>
+> I've always hated the idea that one would require this just to get their /
+> mounted.  Granted there are some setups out there that absolutely require
+> it.  I have one such setup at work, but that system was designed to
+run out
+> of ram anyway.
+>
+> See comment about initramfs above.  Now if I were attempting to mount
+> NFSroot over wireless, I would have to use an initramfs.  I see no
+point in
+> using initramfs for something that can simply be compiled into the
+kernel.
+> I am aware of possible hardware changes (IE going from ata, scsi, etc to
+> sata or sas) that would require a recompile and I prefer this again over
+> initramfs.
+
+i used to think the same. plus i thought about the extra performance of
+disabling module support/interfaces plus the additional security which
+you gain when there is no module-support compiled into the kernel.
+
+see above for my conclusion.
+
+> As for the reason for this thread, the AIC94xx chip requires non-free
+> firmware.  Right now, my / is on SCSI and is compiled in.  I had
+considered
+> re-doing my system and doing away with the SCSI hard drives.  That'd mean
+> that I'd need the driver in the kernel (Key word is "I").  So how do I go
+> about getting the firmware to the driver.  My 2 options, if doable, is to
+> somehow build the firmware into the kernel myself or build an
+initramfs with
+> just enough tools to load the firmware into the driver and mount my /.
+
+i know the problem with aic94xx - we initially struggled too because the
+aic94xx was the first driver we needed the firmware for to mount /. i'm
+still in favour of initramfs as this, imho, made testing easier too ;)
+
+> I still like the "There's more than 1 way to do it" and I'll probably do a
+> different way for anything =)
+
+good - feel free to post your patches/changes/etc. ;)
+
+cheers,
+raoul
 -- 
-1.5.4.1
+____________________________________________________________________
+DI (FH) Raoul Bhatia M.Sc.          email.          r.bhatia@ipax.at
+Technischer Leiter
 
+IPAX - Aloy Bhatia Hava OEG         web.          http://www.ipax.at
+Barawitzkagasse 10/2/2/11           email.            office@ipax.at
+1190 Wien                           tel.               +43 1 3670030
+FN 277995t HG Wien                  fax.            +43 1 3670030 15
+____________________________________________________________________
