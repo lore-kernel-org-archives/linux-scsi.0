@@ -1,50 +1,79 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Recurring qla2xxx crashes (maybe APIC related)
-Date: Tue, 29 Apr 2008 14:16:55 -0700
-Message-ID: <20080429211655.GA72811@plap4.qlogic.org>
-References: <4811ACAC.7060808@linpro.no> <20080425155018.GG8849@plap4> <48120F8B.7060005@linpro.no> <20080425171821.GK8849@plap4> <4815709C.3060502@linpro.no>
+Subject: Re: Issue with qla2xxx_probe_one
+Date: Tue, 29 Apr 2008 14:26:39 -0700
+Message-ID: <20080429212639.GC72811@plap4.qlogic.org>
+References: <48175C3F.3000002@hp.com> <20080429174447.GL67096@plap4.qlogic.org> <48178143.2000308@hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:6419 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:8522 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbYD2VQ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2008 17:16:56 -0400
+	with ESMTP id S1751448AbYD2V0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2008 17:26:40 -0400
 Content-Disposition: inline
-In-Reply-To: <4815709C.3060502@linpro.no>
+In-Reply-To: <48178143.2000308@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tore Anderson <tore@linpro.no>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Mon, 28 Apr 2008, Tore Anderson wrote:
+On Tue, 29 Apr 2008, Alan D. Brunelle wrote:
 
-> * Andrew Vasquez
+> Andrew Vasquez wrote:
+> > On Tue, 29 Apr 2008, Alan D. Brunelle wrote:
+> >
+> >> I /think/ that there is an issue with this routine /if/ the firmware
+> >> images are not loaded properly - on a 16-way ia64 box I am starting to
+> >> see this with an up-stream kernel (Jens Axboe's origin/io-cpu-affinity
+> >> branch). In any event, it looks to me that :
+> >>
+> >>         if (qla2x00_initialize_adapter(ha)) {
+> >>                 qla_printk(KERN_WARNING, ha,
+> >>                     "Failed to initialize adapter\n");
+> >>
+> >>                 DEBUG2(printk("scsi(%ld): Failed to initialize
+> adapter - "
+> >>                     "Adapter flags %x.\n",
+> >>                     ha->host_no, ha->device_flags));
+> >>
+> >>                 ret = -ENODEV;
+> >>                 goto probe_failed;
+> >>         }
+> >>
+> >> skips around:
+> >>
+> >>         ret = scsi_add_host(host, &pdev->dev);
+> >>
+> >> which is needed to properly initialize the freelist (via:
+> >> scsi_setup_command_freelist).
+> >
+> > Wasn't something like this posted recently to linux-scsi:
+> >
+> > http://lkml.org/lkml/2008/4/27/333
+> >
+> > this is sitting in scsi-misc-2.6.git:
+> >
+> > [SCSI] bug fix for free list handling
+> >
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=a79cbe1aa5dd695f0ee012ecde1ff88b1192e326
+> >
+> > which I gather will be pushed soon...
 > 
-> > Hmm, MSI is enabled:
+> My apologies for not having seeing that.
 > 
-> Indeed - seems to be the default behaviour.
+> But after looking at it, doesn't it still have a hole?
 > 
-> > could you try disabling MSI via 'pci=nomsi' (I believe), we've dealt 
-> > with a large number of problem reports where customers reported 'odd'
-> > behaviours (no interrupt routining) with several motherboard
-> > chipsets. At least it could be another useful datapoint...
+> o  scsi_setup_command_freelist initializes the free_list list.
 > 
-> The system has now been up for 58 hours straight with MSI disabled per
-> your suggestion.  This is almost a new record, usually it has crashed
-> once per day or more.  I won't open the champagne before a week more has
-> passed, but this looks _very_ promising!
+> o  It then invokes scsi_get_host_cmd_pool, if this fails there is no
+> need to invoke scsi_put_host_cmd_pool (it wasn't gotten).
+> 
+> o  If scsi_get_host_cmd_pool succeeds but scsi_pool_alloc_command fails,
+> it will (correctly) invoke scsi_put_host_cmd_pool.
+...
+<snip>
 
-That's good news...
+Hmm, I'll defer to James B. on that...
 
-> Thank you very much for your help in tracking this down!  Be sure to let
-> me know if you want any more information and I'll see what I can do.
-> The system isn't yet back in full production, so I have a small window
-> of opportunity to reproduce the problem, test patches, and so on.
-
-In general, most MSI/MSI-X machine/chipset quirks (global/bus-level
-disabling) are handled by the PCI layer.  I'd be curious to see if any
-of the 30+ updates to drivers/pci/quirk.c since 2.6.22 have addressed
-this issue via DECLARE_PCI_FIXUP_FINAL()???
-
-Could you send the output of 'lspci -vvx'?
+--
+av
