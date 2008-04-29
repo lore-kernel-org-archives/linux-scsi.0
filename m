@@ -1,55 +1,97 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Recurring qla2xxx crashes (maybe APIC related)
-Date: Tue, 29 Apr 2008 15:29:47 -0700
-Message-ID: <20080429222947.GE72811@plap4.qlogic.org>
-References: <4811ACAC.7060808@linpro.no> <20080425155018.GG8849@plap4> <48120F8B.7060005@linpro.no> <20080425171821.GK8849@plap4> <4815709C.3060502@linpro.no> <20080429211655.GA72811@plap4.qlogic.org> <4817970A.4030807@linpro.no>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Issue with qla2xxx_probe_one
+Date: Wed, 30 Apr 2008 07:57:04 +0900
+Message-ID: <20080430075704M.fujita.tomonori@lab.ntt.co.jp>
+References: <48175C3F.3000002@hp.com>
+	<20080429174447.GL67096@plap4.qlogic.org>
+	<48178143.2000308@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:20713 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754478AbYD2W3s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2008 18:29:48 -0400
-Content-Disposition: inline
-In-Reply-To: <4817970A.4030807@linpro.no>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:35423 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582AbYD2XFL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2008 19:05:11 -0400
+In-Reply-To: <48178143.2000308@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tore Anderson <tore@linpro.no>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan.Brunelle@hp.com
+Cc: andrew.vasquez@qlogic.com, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Tue, 29 Apr 2008, Tore Anderson wrote:
+On Tue, 29 Apr 2008 16:12:51 -0400
+"Alan D. Brunelle" <Alan.Brunelle@hp.com> wrote:
 
-> > That's good news...
+> This is a multi-part message in MIME format.
+> --------------050404010600090601000605
+> Content-Type: text/plain; charset=ISO-8859-1
+> Content-Transfer-Encoding: 7bit
 > 
-> Very good news indeed - it's still up.
+> Andrew Vasquez wrote:
+> > On Tue, 29 Apr 2008, Alan D. Brunelle wrote:
+> >
+> >> I /think/ that there is an issue with this routine /if/ the firmware
+> >> images are not loaded properly - on a 16-way ia64 box I am starting to
+> >> see this with an up-stream kernel (Jens Axboe's origin/io-cpu-affinity
+> >> branch). In any event, it looks to me that :
+> >>
+> >>         if (qla2x00_initialize_adapter(ha)) {
+> >>                 qla_printk(KERN_WARNING, ha,
+> >>                     "Failed to initialize adapter\n");
+> >>
+> >>                 DEBUG2(printk("scsi(%ld): Failed to initialize
+> adapter - "
+> >>                     "Adapter flags %x.\n",
+> >>                     ha->host_no, ha->device_flags));
+> >>
+> >>                 ret = -ENODEV;
+> >>                 goto probe_failed;
+> >>         }
+> >>
+> >> skips around:
+> >>
+> >>         ret = scsi_add_host(host, &pdev->dev);
+> >>
+> >> which is needed to properly initialize the freelist (via:
+> >> scsi_setup_command_freelist).
+> >
+> > Wasn't something like this posted recently to linux-scsi:
+> >
+> > http://lkml.org/lkml/2008/4/27/333
+> >
+> > this is sitting in scsi-misc-2.6.git:
+> >
+> > [SCSI] bug fix for free list handling
+> >
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=a79cbe1aa5dd695f0ee012ecde1ff88b1192e326
+> >
+> > which I gather will be pushed soon...
 > 
-> > In general, most MSI/MSI-X machine/chipset quirks (global/bus-level
-> > disabling) are handled by the PCI layer.  I'd be curious to see if any
-> > of the 30+ updates to drivers/pci/quirk.c since 2.6.22 have addressed
-> > this issue via DECLARE_PCI_FIXUP_FINAL()???
-> > 
-> > Could you send the output of 'lspci -vvx'?
+> My apologies for not having seeing that.
 > 
-> Certainly!  Attached.
+> But after looking at it, doesn't it still have a hole?
+> 
+> o  scsi_setup_command_freelist initializes the free_list list.
+> 
+> o  It then invokes scsi_get_host_cmd_pool, if this fails there is no
+> need to invoke scsi_put_host_cmd_pool (it wasn't gotten).
+> 
+> o  If scsi_get_host_cmd_pool succeeds but scsi_pool_alloc_command fails,
+> it will (correctly) invoke scsi_put_host_cmd_pool.
+> 
+> However, if either of scsi_get_host_cmd_pool or scsi_put_host_cmd_pool
+> happens to fail, we'll end up in scsi_destroy_command_freelist - and
+> since the free_list was initialized, the while loop will be bypassed,
+> but scsi_put_host_cmd_pool will be invoked an extra time. And this is
+> badness, right?
 
-Hmm, nothing really stands out on the quirks-front.  I know there's
-several HS21s locally here, I'll try to get some cycles on the box to
-see if there's something deeper going on...
+scsi_put_host_cmd_pool doesn't fail but I think that you are right. If
+scsi_get_host_cmd_pool or scsi_pool_alloc_command in
+scsi_setup_command_freelist fails, we hit the problem.
 
-We did notice that the RISC firmware being loaded is quite dated (15
-months):
 
-	QLogic Fibre Channel HBA Driver: 8.01.07-k7-debug
-	QLogic QMC2462S - IBM eServer BC 4Gb FC Expansion Card SFF
-	ISP2422: PCI-X Mode 1 (133 MHz) @ 0000:08:01.0 hdma+, host#=1, fw=4.00.27 [IP] 
+> Wouldn't the attached patch [boot tested on my previously failing
+> system] be correct (and perhaps cleaner - you're not looking at the
+> innards of the list data structure to determine things)?
 
-At a minimum, our FW folks suggested 4.01.00 should be used to address
-any known residual MSI issues at the RISC-side.  You can download the
-latest 24xx firmware (4.04.00) here:
-
-	ftp://ftp.qlogic.com/outgoing/linux/firmware/ql2400_fw.bin
-
-I'll do what I can to try to reproduce this locally with our HW.
-
-Thanks,
-AV
+Looks correct to me.
