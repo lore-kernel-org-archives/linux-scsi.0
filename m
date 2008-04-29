@@ -1,119 +1,68 @@
-From: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
-Subject: Re: AIC94xx SAS question.
-Date: Tue, 29 Apr 2008 09:41:59 +0200
-Message-ID: <4816D147.9090703@ipax.at>
-References: <20080421231940.GB5656@animx.eu.org> <4812B66A.5000105@hopnet.net> <20080426145649.GA8848@animx.eu.org> <48140F9F.1070109@hopnet.net> <48159A75.6020400@ipax.at> <20080429020417.GC17521@animx.eu.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/6] add large command support to the block layer
+Date: Tue, 29 Apr 2008 09:54:24 +0200
+Message-ID: <20080429075424.GF12774@kernel.dk>
+References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ipax.at ([80.64.143.40]:55026 "EHLO mail.ipax.at"
+Received: from brick.kernel.dk ([87.55.233.238]:2438 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232AbYD2HmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2008 03:42:03 -0400
-In-Reply-To: <20080429020417.GC17521@animx.eu.org>
+	id S1753636AbYD2Hy1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2008 03:54:27 -0400
+Content-Disposition: inline
+In-Reply-To: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, bharrosh@panasas.com, James.Bottomley@HansenPartnership.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
 
-Wakko Warner wrote:
->>> lib/firmware/aic94xx-seq.fw
-...
->>> I'm not sure if the driver compiled for SuSE "just knows" to look in
->>> /lib/firmware, or how it finds the file.  It might have something to do
->>> with the firmware_class module in SuSE.
->>> I do remember that I needed to load 'edd' before 94xx, or it would not
->>> init the firmware.
->> this is a default behaviour of this and many other drivers.
->
-> Which part are you refering to as being default?  Requiring edd or
-something
-> else?
+On Sat, Apr 26 2008, FUJITA Tomonori wrote:
+> This is an updated patchset for large command support to the block
+> layer:
+> 
+> http://marc.info/?l=linux-scsi&m=120817127118449&w=2
+> 
+> We rarely handle large commands. So for optimization, a struct request
+> still has a static array for a command. rq_init sets rq->cmd pointer
+> to the static array. In short, rq_init() does
+> 
+> rq->cmd = rq->__cmd;
+> 
+> So we can access to rq->cmd and rq->cmd_len as before.
+> 
+> This change requires everyone to initialize the request in a proper
+> way (that is, just doing a memset() will not work). Now we have
+> rq_init() that works for any path so this patchset can cleanly convert
+> users of requests on the stack or kmalloced requests to use it (the
+> previous patchset does it in a hacky way):
+> 
+> http://marc.info/?l=linux-scsi&m=120911792725876&w=2
+> 
+> This patchset is against Jens' for-linus branch.
+> 
+> #1-#4 patches can be applied via Jens' tree now. #5 patch is for
+> IDE. It cleanly can be applied to both Bart's latest quilt tree and
+> Jens' tree though Bart's quilt tree has some pending IDE patches. #4
+> patch depends on #4. #6 patch depends on #1-#5.
+> 
+> I guess that the easiest way to apply this patchset would be:
+> 
+> 1. Pushing Bart's quilt tree to mainline.
+> 2. Rebasing Jens' tree to mainline.
+> 3. Pushing this patchset via Jens' tree.
+> 
+> Jens and Bart, let me know if I can do something to make the process
+> easier.
+> 
+> Bart, I will try to push the patchset to remove the requests on the
+> stack for 2.6.27:
+> 
+> http://marc.info/?l=linux-ide&m=120882410712466&w=2
 
-the driver finding the firmware by itself. in my hurry, i missed the
-"edd" part ;)
+I've applied all patches to the for-linus branch, it should go up
+soonish. If anyone has problems with this, please holler SOON.
 
->>> As for compiling the driver in the kernel, and putting the firmware in
->>> initrd/initramfs, you would have to force the init of the 94xx module to
->>> be after the initrd/initramfs was initialized, loaded and mounted.  I
->>> have not checked to see if that is currently possible.
->> in the end, there is no big deal in putting the firmware into the
->> initramfs. some distributions may work out of the box, some might
->> require a little tuning of an initramfs hook.
->
-> I compile kernels specifically for each machine that I have (which is not
-> that often and not that many).  Some mount NFS root, others have different
-> drivers required to mount / and other CPU options as well.  Thus I do not
-> need the extra overhead and complexity of an initramfs.
-
-i used to do this too. and on special systems, i still am in favor of
-compiling my very specific kernel - maybe even without module loading
-support.
-
-but for 99% of the servers i am taking care of, i abandoned this in
-favour of simply having to use apt to upgrade these systems.
-
-given my available time vs the time the compilation for the different
-systems would need (ok, i know that you can set up some build
-environment which compiles a kernel for every type of configuration you
-want) i happily accept the loss in performance, etc. that comes with
-it ;)
-
->> which leads me to my question: why are you absolutly against an
->> initramfs image? properly configured - and that is not a big deal
->> in current versions of mkinitramfs and current distributions - there
->> are few possibilities to break the setup.
->
-> I've always hated the idea that one would require this just to get their /
-> mounted.  Granted there are some setups out there that absolutely require
-> it.  I have one such setup at work, but that system was designed to
-run out
-> of ram anyway.
->
-> See comment about initramfs above.  Now if I were attempting to mount
-> NFSroot over wireless, I would have to use an initramfs.  I see no
-point in
-> using initramfs for something that can simply be compiled into the
-kernel.
-> I am aware of possible hardware changes (IE going from ata, scsi, etc to
-> sata or sas) that would require a recompile and I prefer this again over
-> initramfs.
-
-i used to think the same. plus i thought about the extra performance of
-disabling module support/interfaces plus the additional security which
-you gain when there is no module-support compiled into the kernel.
-
-see above for my conclusion.
-
-> As for the reason for this thread, the AIC94xx chip requires non-free
-> firmware.  Right now, my / is on SCSI and is compiled in.  I had
-considered
-> re-doing my system and doing away with the SCSI hard drives.  That'd mean
-> that I'd need the driver in the kernel (Key word is "I").  So how do I go
-> about getting the firmware to the driver.  My 2 options, if doable, is to
-> somehow build the firmware into the kernel myself or build an
-initramfs with
-> just enough tools to load the firmware into the driver and mount my /.
-
-i know the problem with aic94xx - we initially struggled too because the
-aic94xx was the first driver we needed the firmware for to mount /. i'm
-still in favour of initramfs as this, imho, made testing easier too ;)
-
-> I still like the "There's more than 1 way to do it" and I'll probably do a
-> different way for anything =)
-
-good - feel free to post your patches/changes/etc. ;)
-
-cheers,
-raoul
 -- 
-____________________________________________________________________
-DI (FH) Raoul Bhatia M.Sc.          email.          r.bhatia@ipax.at
-Technischer Leiter
+Jens Axboe
 
-IPAX - Aloy Bhatia Hava OEG         web.          http://www.ipax.at
-Barawitzkagasse 10/2/2/11           email.            office@ipax.at
-1190 Wien                           tel.               +43 1 3670030
-FN 277995t HG Wien                  fax.            +43 1 3670030 15
-____________________________________________________________________
