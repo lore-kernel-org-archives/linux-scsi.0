@@ -1,92 +1,44 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Fix warning about macro side-effects
-Date: Wed, 30 Apr 2008 15:28:32 -0400
-Message-ID: <1E278B55-6C77-42FA-8B15-16A0939203FB@adaptec.com>
-References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com> <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com> <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com> <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: multipart/mixed; boundary=Apple-Mail-33--651721118
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH]qla4xxx:Add support for Async Message PDUs [REPOST with
+ fixes]
+Date: Wed, 30 Apr 2008 14:36:45 -0500
+Message-ID: <4818CA4D.3040204@cs.wisc.edu>
+References: <1208551487.5159.5.camel@d5102avq18960.qlogic.org>	 <480E1063.2060308@cs.wisc.edu>	 <1209052918.6212.4.camel@d5102avq18960.qlogic.org>	 <4810B818.8040301@cs.wisc.edu>	 <1209151382.6212.21.camel@d5102avq18960.qlogic.org>	 <48135B59.9080103@cs.wisc.edu> <1209580554.18057.15.camel@d5102avq18960> <4818C721.9090701@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:48328 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763685AbYD3T2e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Apr 2008 15:28:34 -0400
-Received: from Macintosh.adaptec.com (unknown [10.5.3.1])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 927AD24C8A3
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2008 12:28:33 -0700 (PDT)
-In-Reply-To: <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:46442 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932242AbYD3Tgw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2008 15:36:52 -0400
+In-Reply-To: <4818C721.9090701@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Scsi <linux-scsi@vger.kernel.org>
+To: David C Somayajulu <david.somayajulu@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
 
+Mike Christie wrote:
+> David C Somayajulu wrote:
+>> +        }
+>> +        if (sshdr.asc == 0x3f && sshdr.ascq == 0x0e) {
+>> +            /* induce rescan */
+>> +            iscsi_block_session(ddb_entry->sess);
+>> +            iscsi_unblock_session(ddb_entry->sess);
+>> +        }
+> 
+> I think I was wrong off list. We could actually just call 
+> iscsi_unblock_session, but we do not know the state of the session do 
+> we? If we got a event that indicated the session was failed could we 
+> have a block queued up and this would reverse it by accident?
+> 
+> I was thinking that because qla4xxx_process_aen is called before this we 
+> could just check the ddb state, but we can call iscsi_block_session from 
+> the interrupt handler to queue up a block so I think that could race 
+> with the unblock call here.
 
---Apple-Mail-33--651721118
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
+Maybe to handle the race we do not want to call qla4xxx_mark_device_busy 
+when we get SCS_TIMEOUT. If we get a ddb aen then could we just wait for 
+that and all those events would be serialized through the dpc thread?
 
-On some compile environments, warnings are produced regarding the  
-usage of aac_logical_to_phys macro.
-
-This attached patch is against current scsi-misc-2.6.
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's  
-handling of patch attachments (inline gets damaged, please use  
-attachment).
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
-  drivers/scsi/aacraid/aacraid.h |    4 ++--
-  1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -ru a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/ 
-aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h	2008-04-30 15:17:53.770782679 -0400
-+++ b/drivers/scsi/aacraid/aacraid.h	2008-04-30 15:22:14.338590856 -0400
-@@ -34,8 +34,8 @@
-  #define CONTAINER_TO_ID(cont)		(cont)
-  #define CONTAINER_TO_LUN(cont)		(0)
-
--#define aac_phys_to_logical(x)  (x+1)
--#define aac_logical_to_phys(x)  (x?x-1:0)
-+#define aac_phys_to_logical(x)  ((x)+1)
-+#define aac_logical_to_phys(x)  ((x)?(x)-1:0)
-
-  /* #define AAC_DETAILED_STATUS_INFO */
-
-
-Sincerely - Mark Salyzyn
-
---Apple-Mail-33--651721118
-Content-Disposition: attachment;
-	filename=aacraid_side_effects.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="aacraid_side_effects.patch"
-Content-Transfer-Encoding: 7bit
-
-diff -ru a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h	2008-04-30 15:17:53.770782679 -0400
-+++ b/drivers/scsi/aacraid/aacraid.h	2008-04-30 15:22:14.338590856 -0400
-@@ -34,8 +34,8 @@
- #define CONTAINER_TO_ID(cont)		(cont)
- #define CONTAINER_TO_LUN(cont)		(0)
- 
--#define aac_phys_to_logical(x)  (x+1)
--#define aac_logical_to_phys(x)  (x?x-1:0)
-+#define aac_phys_to_logical(x)  ((x)+1)
-+#define aac_logical_to_phys(x)  ((x)?(x)-1:0)
- 
- /* #define AAC_DETAILED_STATUS_INFO */
- 
-
---Apple-Mail-33--651721118
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-
---Apple-Mail-33--651721118--
+What does SCS_TIMEOUT mean?
