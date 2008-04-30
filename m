@@ -1,69 +1,212 @@
-From: AlphaGJohn <jc-mailinglist@alphagconsulting.com>
-Subject: LSI SAS 1068e RAID driver for Debian won't load
-Date: Wed, 30 Apr 2008 14:39:42 -0700 (PDT)
-Message-ID: <16992119.post@talk.nabble.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 02/10] scsi: fix integer as NULL pointer warnings
+Date: Wed, 30 Apr 2008 17:29:11 -0500
+Message-ID: <1209594551.3774.37.camel@localhost.localdomain>
+References: <1209593020.24729.112.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:51752 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757855AbYD3Vjn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Apr 2008 17:39:43 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1JrK1e-0002Lu-No
-	for linux-scsi@vger.kernel.org; Wed, 30 Apr 2008 14:39:42 -0700
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:50088 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964780AbYD3W3V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2008 18:29:21 -0400
+In-Reply-To: <1209593020.24729.112.camel@brick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+On Wed, 2008-04-30 at 15:03 -0700, Harvey Harrison wrote:
+> drivers/scsi/FlashPoint.c:906:9: warning: Using plain integer as NULL pointer
+> drivers/scsi/FlashPoint.c:907:53: warning: Using plain integer as NULL pointer
+> drivers/scsi/FlashPoint.c:922:1: warning: Using plain integer as NULL pointer
+> drivers/scsi/aha152x.c:3585:60: warning: Using plain integer as NULL pointer
+> drivers/scsi/aha152x.c:3845:56: warning: Using plain integer as NULL pointer
+> drivers/scsi/qla1280.c:2814:37: warning: Using plain integer as NULL pointer
+> drivers/scsi/atp870u.c:750:47: warning: Using plain integer as NULL pointer
+> drivers/scsi/3w-9xxx.c:1281:36: warning: Using plain integer as NULL pointer
+> drivers/scsi/3w-9xxx.c:1293:36: warning: Using plain integer as NULL pointer
+> drivers/scsi/3w-9xxx.c:1301:35: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:447:10: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:457:10: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:479:24: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:483:22: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:1213:23: warning: Using plain integer as NULL pointer
+> drivers/scsi/hptiop.c:1214:23: warning: Using plain integer as NULL pointer
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+> James, please look at the FlashPoint.c changes in particular.
+
+Could you please Cc linux-scsi?  That way interested parties get to
+check their drivers.
+
+The flashpoint initialiser changes look wrong:  {0} is a conventional
+notation for zero initialise this structure.  Sparse should probably be
+taught to recognise that.
+
+James
 
 
-Hi Folks,
-
-Any suggestions on this one?
-
-2.6.18-6-amd64 #1 SMP Sun Feb 10 17:50:19 UTC 2008 x86_64 GNU/Linux
-
-Running on a Supermicro *H8DM3-2 motherboard (with on-board *LSI SAS1068E
-Controller)
-
-lspci reports the controller as:
-02:00.0 SCSI storage controller: LSI Logic / Symbios Logic Unknown device
-0059 (rev 04)
-
-LSI provides a source tar ball (good for them!) and although the driver
-source apparently compiled successfully, it would not load.
-
-/var/log/kern.log says:
-mptbase: no version for "struct_module" found: kernel tainted.
-Fusion MPT base driver 4.00.21.00
-Copyright (c) 1999-2007 LSI Corporation
-mptsas: Unknown symbol scsi_is_sas_phy_local
-mptsas: Unknown symbol scsi_is_sas_phy_local
-Fusion MPT SPI Host driver 4.00.21.00
-Fusion MPT misc device (ioctl) driver 4.00.21.00
-mptctl: Registered with Fusion MPT base driver
-mptctl: /dev/mptctl @ (major,minor=10,220)
-mptsas: Unknown symbol scsi_is_sas_phy_local
-mptctl: Deregistered /dev/mptctl @ (major,minor=10,220)
-
-Any suggestions most appreciated.
-
-(A side note: The mptsas driver supplied with the etch release loads fine,
-but, apparently doesn't support the controller:
-modinfo mptsas
-suggests it does not support the model 0059. It lists 0050, 0054, 0056,
-0058, & 0062. 
-I have limited experience with this kind of thing, so I don't know what the
-different "names" for the controller signifies--if anything.)
-
-Thanks!
-
-John
-
--- 
-View this message in context: http://www.nabble.com/LSI-SAS-1068e-RAID-driver-for-Debian-won%27t-load-tp16992119p16992119.html
-Sent from the linux-scsi mailing list archive at Nabble.com.
+>  drivers/scsi/3w-9xxx.c    |    6 +++---
+>  drivers/scsi/FlashPoint.c |    7 +++----
+>  drivers/scsi/aha152x.c    |    4 ++--
+>  drivers/scsi/atp870u.c    |    2 +-
+>  drivers/scsi/hptiop.c     |   12 ++++++------
+>  drivers/scsi/qla1280.c    |    2 +-
+>  6 files changed, 16 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index b31faec..626d6e1 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -1278,7 +1278,7 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+>  			error = 0;
+>  			/* Check for command packet errors */
+>  			if (full_command_packet->command.newcommand.status != 0) {
+> -				if (tw_dev->srb[request_id] != 0) {
+> +				if (tw_dev->srb[request_id]) {
+>  					error = twa_fill_sense(tw_dev, request_id, 1, 1);
+>  				} else {
+>  					/* Skip ioctl error prints */
+> @@ -1290,7 +1290,7 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+>  
+>  			/* Check for correct state */
+>  			if (tw_dev->state[request_id] != TW_S_POSTED) {
+> -				if (tw_dev->srb[request_id] != 0) {
+> +				if (tw_dev->srb[request_id]) {
+>  					TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1a, "Received a request id that wasn't posted");
+>  					TW_CLEAR_ALL_INTERRUPTS(tw_dev);
+>  					goto twa_interrupt_bail;
+> @@ -1298,7 +1298,7 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+>  			}
+>  
+>  			/* Check for internal command completion */
+> -			if (tw_dev->srb[request_id] == 0) {
+> +			if (tw_dev->srb[request_id]) {
+>  				if (request_id != tw_dev->chrdev_request_id) {
+>  					if (twa_aen_complete(tw_dev, request_id))
+>  						TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1b, "Error completing AEN during attention interrupt");
+> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+> index b898d38..b252ac5 100644
+> --- a/drivers/scsi/FlashPoint.c
+> +++ b/drivers/scsi/FlashPoint.c
+> @@ -903,8 +903,8 @@ static void FPT_autoCmdCmplt(unsigned long p_port, unsigned char p_card);
+>  static void FPT_autoLoadDefaultMap(unsigned long p_port);
+>  
+>  static struct sccb_mgr_tar_info FPT_sccbMgrTbl[MAX_CARDS][MAX_SCSI_TAR] =
+> -    { {{0}} };
+> -static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {0} };
+> +    { {{NULL}} };
+> +static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {NULL} };
+>  static SCCBSCAM_INFO FPT_scamInfo[MAX_SCSI_TAR] = { {{0}} };
+>  static struct nvram_info FPT_nvRamInfo[MAX_MB_CARDS] = { {0} };
+>  
+> @@ -918,8 +918,7 @@ static unsigned char FPT_scamHAString[] =
+>  
+>  static unsigned short FPT_default_intena = 0;
+>  
+> -static void (*FPT_s_PhaseTbl[8]) (unsigned long, unsigned char) = {
+> -0};
+> +static void (*FPT_s_PhaseTbl[8]) (unsigned long, unsigned char) = {NULL};
+>  
+>  /*---------------------------------------------------------------------
+>   *
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index f5215fd..0c93a49 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -3582,7 +3582,7 @@ static int checksetup(struct aha152x_setup *setup)
+>  	if (i == ARRAY_SIZE(ports))
+>  		return 0;
+>  
+> -	if ( request_region(setup->io_port, IO_RANGE, "aha152x")==0 ) {
+> +	if (!request_region(setup->io_port, IO_RANGE, "aha152x")) {
+>  		printk(KERN_ERR "aha152x: io port 0x%x busy.\n", setup->io_port);
+>  		return 0;
+>  	}
+> @@ -3842,7 +3842,7 @@ static int __init aha152x_init(void)
+>  			if ((setup_count == 1) && (setup[0].io_port == ports[i]))
+>  				continue;
+>  
+> -			if ( request_region(ports[i], IO_RANGE, "aha152x")==0 ) {
+> +			if (!request_region(ports[i], IO_RANGE, "aha152x")) {
+>  				printk(KERN_ERR "aha152x: io port 0x%x busy.\n", ports[i]);
+>  				continue;
+>  			}
+> diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+> index db6de5e..571b43b 100644
+> --- a/drivers/scsi/atp870u.c
+> +++ b/drivers/scsi/atp870u.c
+> @@ -747,7 +747,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+>  		dev->quhd[c] = 0;
+>  	}
+>  	workreq = dev->quereq[c][dev->quhd[c]];
+> -	if (dev->id[c][scmd_id(workreq)].curr_req == 0) {	
+> +	if (!dev->id[c][scmd_id(workreq)].curr_req) {	
+>  		dev->id[c][scmd_id(workreq)].curr_req = workreq;
+>  		dev->last_cmd[c] = scmd_id(workreq);
+>  		goto cmd_subp;
+> diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+> index 5b7be1e..bc5fb5c 100644
+> --- a/drivers/scsi/hptiop.c
+> +++ b/drivers/scsi/hptiop.c
+> @@ -444,7 +444,7 @@ static void __iomem *hptiop_map_pci_bar(struct hptiop_hba *hba, int index)
+>  	if (!(pci_resource_flags(pcidev, index) & IORESOURCE_MEM)) {
+>  		printk(KERN_ERR "scsi%d: pci resource invalid\n",
+>  				hba->host->host_no);
+> -		return 0;
+> +		return NULL;
+>  	}
+>  
+>  	mem_base_phy = pci_resource_start(pcidev, index);
+> @@ -454,7 +454,7 @@ static void __iomem *hptiop_map_pci_bar(struct hptiop_hba *hba, int index)
+>  	if (!mem_base_virt) {
+>  		printk(KERN_ERR "scsi%d: Fail to ioremap memory space\n",
+>  				hba->host->host_no);
+> -		return 0;
+> +		return NULL;
+>  	}
+>  	return mem_base_virt;
+>  }
+> @@ -476,11 +476,11 @@ static void hptiop_unmap_pci_bar_itl(struct hptiop_hba *hba)
+>  static int hptiop_map_pci_bar_mv(struct hptiop_hba *hba)
+>  {
+>  	hba->u.mv.regs = hptiop_map_pci_bar(hba, 0);
+> -	if (hba->u.mv.regs == 0)
+> +	if (!hba->u.mv.regs)
+>  		return -1;
+>  
+>  	hba->u.mv.mu = hptiop_map_pci_bar(hba, 2);
+> -	if (hba->u.mv.mu == 0) {
+> +	if (!hba->u.mv.mu) {
+>  		iounmap(hba->u.mv.regs);
+>  		return -1;
+>  	}
+> @@ -1210,8 +1210,8 @@ static void hptiop_remove(struct pci_dev *pcidev)
+>  
+>  static struct hptiop_adapter_ops hptiop_itl_ops = {
+>  	.iop_wait_ready    = iop_wait_ready_itl,
+> -	.internal_memalloc = 0,
+> -	.internal_memfree  = 0,
+> +	.internal_memalloc = NULL,
+> +	.internal_memfree  = NULL,
+>  	.map_pci_bar       = hptiop_map_pci_bar_itl,
+>  	.unmap_pci_bar     = hptiop_unmap_pci_bar_itl,
+>  	.enable_intr       = hptiop_enable_intr_itl,
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index 09ab3ea..d2bc60a 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -2811,7 +2811,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
+>  
+>  	/* Check for room in outstanding command list. */
+>  	for (cnt = 0; cnt < MAX_OUTSTANDING_COMMANDS &&
+> -		     ha->outstanding_cmds[cnt] != 0; cnt++);
+> +		     ha->outstanding_cmds[cnt] != NULL; cnt++);
+>  
+>  	if (cnt >= MAX_OUTSTANDING_COMMANDS) {
+>  		status = 1;
 
