@@ -1,67 +1,48 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Hack to fix not working spindown over Firewire
-Date: Wed, 30 Apr 2008 15:36:36 +0200
-Message-ID: <481875E4.6040606@s5r6.in-berlin.de>
-References: <20080429232606.GA14261@dose.home.local> <481874BD.5010807@s5r6.in-berlin.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] bsg: add large command support
+Date: Wed, 30 Apr 2008 15:40:15 +0200
+Message-ID: <20080430134015.GE12774@kernel.dk>
+References: <20080430131616O.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:33617 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756185AbYD3Nhm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Apr 2008 09:37:42 -0400
-In-Reply-To: <481874BD.5010807@s5r6.in-berlin.de>
+Received: from brick.kernel.dk ([87.55.233.238]:15383 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757090AbYD3NkU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2008 09:40:20 -0400
+Content-Disposition: inline
+In-Reply-To: <20080430131616O.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, pw@osc.edu
 
-I wrote:
-> Tino Keitel wrote:
->> @@ -1788,8 +1788,16 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
->>  	struct scsi_device *sdp = sdkp->device;
->>  	int res;
->>  
->> -	if (start)
->> +	if (start) {
->>  		cmd[4] |= 1;	/* START */
->> +		if(!strncmp(sdp->vendor, "WDC WD32", 8)) {
->> +			cmd[4] |= (1 << 4); /* power condition */
->> +		}
->> +	} else {
->> +		if(!strncmp(sdp->vendor, "WDC WD32", 8)) {
->> +			cmd[4] |= (2 << 4); /* power condition */
->> +		}
->> +	}
->>  
->>  	if (!scsi_device_online(sdp))
->>  		return -ENODEV;
+On Wed, Apr 30 2008, FUJITA Tomonori wrote:
+> This is against Linus' tree since this depends on the large command
+> support of the block layer, which was merged few hours ago.
 > 
-[...]
-> The traditional way to handle things like this is:
+> This can be applied now since it doesn't depend on Boaz's variable
+> length CDB support though this is useful only for the variable length
+> CDB.
 > 
->    - Implement this as a workaround in sd.
+> =
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] bsg: add large command support
 > 
->    - Make this workaround conditional on a quirks flag in
->      struct scsi_device.
+> This enables bsg to handle the request length larger than BLK_MAX_CDB
+> (mainly for the variable length CDB format).
 > 
->    - Switch this flag on in a place where it can be reliably
->      detected that this device needs it.  There is an interface
->      to do this in userspace.  But in this particular case, the
->      best place is the sbp2 driver (ond firewire-sbp2 driver),
->      because it can detect PL-3507 firmwares by means of firmware
->      identifiers.
-[...]
-> On the other hand, perhaps we can enable the workaround unconditional
-> for all firewire disks (switch in the flag in sbp2 and firewire-sbp2
-> without looking at the device) or for all RBC disks (switch on the flag
-> in sd.c if sdev->type == TYPE_RBC).
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: Pete Wyckoff <pw@osc.edu>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  block/bsg.c |   12 +++++++++---
+>  1 files changed, 9 insertions(+), 3 deletions(-)
 
-PS:
-If it works for all RBC devices (it should according to the spec...) &&
-your ICY Box exposes itself as RBC device (it should do so), then we
-don't need any changes to struct scsi_device and to sbp2/ firewire-sbp2.
+Acked-by: Jens Axboe <jens.axboe@oracle.com>
+
 -- 
-Stefan Richter
--=====-==--- -=-- ====-
-http://arcgraph.de/sr/
+Jens Axboe
+
