@@ -1,93 +1,87 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Issue with qla2xxx_probe_one
-Date: Tue, 29 Apr 2008 19:39:54 -0500
-Message-ID: <1209515994.4448.25.camel@localhost.localdomain>
-References: <48175C3F.3000002@hp.com>
-	 <20080429174447.GL67096@plap4.qlogic.org>  <48178143.2000308@hp.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: add large command support
+Date: Wed, 30 Apr 2008 13:16:21 +0900
+Message-ID: <20080430131616O.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:33230 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753132AbYD3D0w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2008 23:26:52 -0400
-In-Reply-To: <48178143.2000308@hp.com>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:50597 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752512AbYD3EQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2008 00:16:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, pw@osc.edu, jens.axboe@oracle.com
 
-On Tue, 2008-04-29 at 16:12 -0400, Alan D. Brunelle wrote:
-> Andrew Vasquez wrote:
-> > On Tue, 29 Apr 2008, Alan D. Brunelle wrote:
-> >
-> >> I /think/ that there is an issue with this routine /if/ the firmware
-> >> images are not loaded properly - on a 16-way ia64 box I am starting to
-> >> see this with an up-stream kernel (Jens Axboe's origin/io-cpu-affinity
-> >> branch). In any event, it looks to me that :
-> >>
-> >>         if (qla2x00_initialize_adapter(ha)) {
-> >>                 qla_printk(KERN_WARNING, ha,
-> >>                     "Failed to initialize adapter\n");
-> >>
-> >>                 DEBUG2(printk("scsi(%ld): Failed to initialize
-> adapter - "
-> >>                     "Adapter flags %x.\n",
-> >>                     ha->host_no, ha->device_flags));
-> >>
-> >>                 ret = -ENODEV;
-> >>                 goto probe_failed;
-> >>         }
-> >>
-> >> skips around:
-> >>
-> >>         ret = scsi_add_host(host, &pdev->dev);
-> >>
-> >> which is needed to properly initialize the freelist (via:
-> >> scsi_setup_command_freelist).
-> >
-> > Wasn't something like this posted recently to linux-scsi:
-> >
-> > http://lkml.org/lkml/2008/4/27/333
-> >
-> > this is sitting in scsi-misc-2.6.git:
-> >
-> > [SCSI] bug fix for free list handling
-> >
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=a79cbe1aa5dd695f0ee012ecde1ff88b1192e326
-> >
-> > which I gather will be pushed soon...
-> 
-> My apologies for not having seeing that.
-> 
-> But after looking at it, doesn't it still have a hole?
-> 
-> o  scsi_setup_command_freelist initializes the free_list list.
-> 
-> o  It then invokes scsi_get_host_cmd_pool, if this fails there is no
-> need to invoke scsi_put_host_cmd_pool (it wasn't gotten).
-> 
-> o  If scsi_get_host_cmd_pool succeeds but scsi_pool_alloc_command fails,
-> it will (correctly) invoke scsi_put_host_cmd_pool.
-> 
-> However, if either of scsi_get_host_cmd_pool or scsi_put_host_cmd_pool
-> happens to fail, we'll end up in scsi_destroy_command_freelist - and
-> since the free_list was initialized, the while loop will be bypassed,
-> but scsi_put_host_cmd_pool will be invoked an extra time. And this is
-> badness, right?
-> 
-> Wouldn't the attached patch [boot tested on my previously failing
-> system] be correct (and perhaps cleaner - you're not looking at the
-> innards of the list data structure to determine things)?
+This is against Linus' tree since this depends on the large command
+support of the block layer, which was merged few hours ago.
 
-Yes, that looks like a better fix.  I tidied up your change log, because
-it's helpful to identify the original problem commit, but otherwise
-applied it unchanged.
+This can be applied now since it doesn't depend on Boaz's variable
+length CDB support though this is useful only for the variable length
+CDB.
 
-Thanks,
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: add large command support
 
-James
+This enables bsg to handle the request length larger than BLK_MAX_CDB
+(mainly for the variable length CDB format).
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Pete Wyckoff <pw@osc.edu>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ block/bsg.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 23ea4fd..d8b889d 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -174,7 +174,11 @@ unlock:
+ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 				struct sg_io_v4 *hdr, int has_write_perm)
+ {
+-	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
++	if (hdr->request_len > BLK_MAX_CDB) {
++		rq->cmd = kzalloc(hdr->request_len, GFP_KERNEL);
++		if (!rq->cmd)
++			return -ENOMEM;
++	}
+ 
+ 	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
+ 			   hdr->request_len))
+@@ -211,8 +215,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+ 
+ 	if (hdr->guard != 'Q')
+ 		return -EINVAL;
+-	if (hdr->request_len > BLK_MAX_CDB)
+-		return -EINVAL;
+ 	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
+ 	    hdr->din_xfer_len > (q->max_sectors << 9))
+ 		return -EIO;
+@@ -302,6 +304,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
+ 	}
+ 	return rq;
+ out:
++	if (rq->cmd != rq->__cmd)
++		kfree(rq->cmd);
+ 	blk_put_request(rq);
+ 	if (next_rq) {
+ 		blk_rq_unmap_user(next_rq->bio);
+@@ -455,6 +459,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 		ret = rq->errors;
+ 
+ 	blk_rq_unmap_user(bio);
++	if (rq->cmd != rq->__cmd)
++		kfree(rq->cmd);
+ 	blk_put_request(rq);
+ 
+ 	return ret;
+-- 
+1.5.4.2
 
