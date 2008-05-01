@@ -1,99 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/4] Use of new scsi_allocate_command
-Date: Thu, 01 May 2008 15:32:59 -0500
-Message-ID: <1209673979.14864.23.camel@localhost.localdomain>
-References: <4819C9DB.60104@panasas.com>
-	 <1209651854.3067.8.camel@localhost.localdomain>
-	 <4819DA39.70505@panasas.com>
-	 <1209655360.3067.14.camel@localhost.localdomain>
-	 <4819E371.2040403@panasas.com>
-	 <1209656838.3067.16.camel@localhost.localdomain>
-	 <4819E8C7.3040808@panasas.com>
-	 <1209657731.3067.19.camel@localhost.localdomain>
-	 <4819EEEE.5030205@panasas.com>
-	 <1209659881.14864.4.camel@localhost.localdomain>
-	 <4819F894.6020009@panasas.com>
-	 <1209663229.14864.18.camel@localhost.localdomain>
-	 <481A087D.10707@panasas.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: SCSI state model, and "soft" host removal
+Date: Thu, 1 May 2008 16:52:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0805011615430.2186-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42725 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756290AbYEAUdF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 16:33:05 -0400
-In-Reply-To: <481A087D.10707@panasas.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42759 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759059AbYEAUw3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 16:52:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB list <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Andi Kleen <andi@firstfloor.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2008-05-01 at 21:14 +0300, Boaz Harrosh wrote:
-> On Thu, May 01 2008 at 20:33 +0300, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > On Thu, 2008-05-01 at 20:06 +0300, Boaz Harrosh wrote:
-> >> On Thu, May 01 2008 at 19:38 +0300, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >> <snip> 
-> >>> Er, but
-> >>>
-> >>>      1. struct cmdinfo is stack allocated; you can't dma to stack
-> >>>      2. even if you fix this, the structure is packed and will have the
-> >>>         original ppc coherence issues
-> >>>      3. Finally, even on the stack, it's not necessarily reachable with
-> >>>         the DMA mask
-> >>>
-> >> Ho, thanks for the catch. I really goofed here.
-> >>
-> >>> The whole point of managing sense buffer allocations centrally is to
-> >>> prevent driver writers from falling into all these traps.  I really
-> >>> don't think going back to hand rolled bounce buffering imporves the
-> >>> situation.
-> >>>
-> >> We don't have a choice Andi is removing all this. ISA is becoming
-> >> ISA's driver private problem.
-> > 
-> > No he's not .. not if it's going to cause this type of grief.
-> > 
-> > But I think you misread his patch set.  He still has a flag equivalent
-> > of unchecked_isa_dma  it's just called sense_buffer_isa instead.  The
-> > shift in his patch set is 
-> > 
-> >      1. it removes the need to allocate commands in dma'able memory
-> >      2. it removes the need for the ULD request path to allocate in
-> >         dma'able memory (it uses the block bounce path instead)
-> >      3. it *can't* remove the need to dma to the sense buffer, hence the
-> >         flag.
-> > 
-> > So it looks like the re-rolled patch set (when Andi gets around to
-> > posting it) will use one pool for the cmd buffer, but separate isa and
-> > non-isa pools for the sense buffer.  Thus it should just work for gdth
-> > with scsi_allocate_command predicated on sense_buffer_isa.
-> > 
-> > James
-> > 
-> 
-> I know all about Andi's patches, since I offered to help him as I
-> have some experience with scsi drivers. And it will be me that will
-> post the next round of ISA patches.
-> 
-> I have the complete body of work here:
-> http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=boaz_sense_effort
-> 
-> I planed to first submit up to the Remove-ISA-dma tag and only then RFC and try
-> to push the rest of the work.
+James, Mike, or anyone else:
 
-But most of what you're doing in that patch set doesn't work.  The whole
-reason for separating the sense buffer from the scsi command is the DMA
-problem of cache line interference caused by doing DMA to an area
-embedded in a structure that has host accessed variables in it.  With
-what you're doing embedding the sense buffer in the internal control
-areas, you're re-introducing that bug.
+I've got a few questions regarding the state model and "soft" (i.e., 
+notified) host removals.
 
-Additionally, it really doesn't make sense for every driver to do a roll
-your own allocator.  It makes far more sense for them to be allocated
-centrally (and correctly) so there's only one place it needs fixing if
-there's yet another problem discovered.
+First, concerning the SHOST_STATE_* values...  Although there is an
+elaborate state machine which allows only selected transitions, and
+although the value can be viewed and changed via sysfs -- nevertheless, 
+the value is actually _used_ in only two places:
 
-James
+	scsi_host_get() fails if the state is SHOST_STATE_DEL,
 
+	and ditto for scsi_dispatch_cmd().
+
+Did I miss something?  This suggests that the state machinery may be a 
+lot more complicated than truly necessary.  Should it be simplified?
+
+(Side note: Back near the end of 2004 (?), there was an extended
+discussion on the state model, eventually leading to the creation of
+the SHOST_DEL_RECOVERY state.  I'm unable to locate that thread in an
+email archive, which is a shame because it included some very nice
+descriptions of the meaning of the various states and the allowed
+transitions.  There isn't anything in Documentation/scsi with a
+comparable explanation -- and there certainly ought to be.  Can you
+locate those old email messages?)
+
+
+Second, concerning soft host removal...  I have in mind a situation
+where a user wants to unbind usb-storage from a device in a clean, safe
+manner, without unplugging anything.  Existing commands should be
+allowed to complete, caches should be flushed, and so on.  Is there any
+way to do this?
+
+It used to be that scsi_remove_host() would cancel all outstanding
+commands.  Isn't that still true?  If so, is there any way to
+accomplish what I want?
+
+Thanks,
+
+Alan Stern
 
