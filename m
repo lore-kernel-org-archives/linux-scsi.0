@@ -1,66 +1,49 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] gdth: Use scsi_allocate_command for private command allocation
-Date: Thu, 01 May 2008 17:06:14 +0300
-Message-ID: <4819CE56.9010906__41876.4975540855$1209650843$gmane$org@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/4] Use of new scsi_allocate_command
+Date: Thu, 01 May 2008 09:24:14 -0500
+Message-ID: <1209651854.3067.8.camel@localhost.localdomain>
 References: <4819C9DB.60104@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7587 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751006AbYEAOGX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 10:06:23 -0400
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60501 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751968AbYEAOYS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 10:24:18 -0400
 In-Reply-To: <4819C9DB.60104@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB list <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Andi Kleen <andi@firstfloor.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB list <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Andi Kleen <andi@firstfloor.org>
 
+On Thu, 2008-05-01 at 16:47 +0300, Boaz Harrosh wrote:
+> [PATCH 1/4] scsi_free_command API change - Don't support GFP_DMA
+>   ISA support is going away and is not needed by any potential clients
+>   of this code. So change the API now before it has any users.
 
-In gdth_execute() use scsi_allocate_command for allocation of
-a command. To be insulated from future scsi_cmnd construction
-considerations.
+What makes you think this?  We still have lots of ISA installations out
+there (and some broken PCI ones requiring ISA DMA masks) that we have to
+support.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/gdth.c |   12 +++---------
- 1 files changed, 3 insertions(+), 9 deletions(-)
+For gdth you have an ISA board that *you* need to support, so the isa
+board has to have this flag.  The reason no-one's run into a bug here is
+that the problematic allocation is the sense buffer not the command.
+Unfortunately, when the fix was added to the gdth driver for the sense
+buffer separation:
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 35ad3bf..7778373 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -447,16 +447,10 @@ int gdth_execute(gdth_ha_str *ha, gdth_cmd_str *gdtcmd, char *cmnd,
-     DECLARE_COMPLETION_ONSTACK(wait);
-     int rval;
- 
--    scp = kzalloc(sizeof(*scp), GFP_KERNEL);
-+    scp = scsi_allocate_command(GFP_KERNEL);
-     if (!scp)
-         return -ENOMEM;
- 
--    scp->sense_buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
--    if (!scp->sense_buffer) {
--	kfree(scp);
--	return -ENOMEM;
--    }
--
-     scp->device = ha->sdev;
-     memset(&cmndinfo, 0, sizeof(cmndinfo));
- 
-@@ -477,8 +471,8 @@ int gdth_execute(gdth_ha_str *ha, gdth_cmd_str *gdtcmd, char *cmnd,
-     rval = cmndinfo.status;
-     if (info)
-         *info = cmndinfo.info;
--    kfree(scp->sense_buffer);
--    kfree(scp);
-+
-+    scsi_free_command(scp);
-     return rval;
- }
- 
--- 
-1.5.3.3
+commit 1b96f8955aaeeb05f7fb7ff548aa12415fbf3904
+Author: Sven Schnelle <svens@bitebene.org>
+Date:   Mon Mar 10 22:50:04 2008 +0100
+
+    [SCSI] gdth: Allocate sense_buffer to prevent NULL pointer dereference
+
+We actually forgot about this case.  Right at the moment, any ioctl that
+uses gdth_execute on an ISA device will probably fail if the executed
+command resturns sense and there look to be paths down gdth_execute even
+for special commands where the OpCode flips to a regular command (-1)
+and so DMAs into the sense buffer.
+
+James
 
 
