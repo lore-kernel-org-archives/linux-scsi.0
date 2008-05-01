@@ -1,72 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH #repost] SCSI: megaraid, fix suspend/resume sections
-Date: Thu, 1 May 2008 15:30:48 -0700
-Message-ID: <20080501153048.2a8d356f.akpm@linux-foundation.org>
-References: <1209657362-20300-1-git-send-email-jirislaby@gmail.com>
-	<20080501142305.77433e50.akpm@linux-foundation.org>
-	<481A3781.8080100@gmail.com>
-	<1209679559.14864.33.camel@localhost.localdomain>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH 2/2] qla4xxx: return SCSI_MLQUEUE_TARGET_BUSY when
+	driver has detected session error
+Date: Thu, 01 May 2008 15:41:45 -0700
+Message-ID: <1209681705.22126.8.camel@d5102avq18960>
+References: <1209442937-15130-1-git-send-email-michaelc@cs.wisc.edu>
+	 <1209442937-15130-2-git-send-email-michaelc@cs.wisc.edu>
+	 <1209442937-15130-3-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59023 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754460AbYEAWa7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 18:30:59 -0400
-In-Reply-To: <1209679559.14864.33.camel@localhost.localdomain>
+Received: from avexch1.qlogic.com ([198.70.193.115]:7424 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754704AbYEAWlw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 May 2008 18:41:52 -0400
+In-Reply-To: <1209442937-15130-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: jirislaby@gmail.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 01 May 2008 17:05:59 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Thu, 2008-05-01 at 23:34 +0200, Jiri Slaby wrote:
-> > On 05/01/2008 11:23 PM, Andrew Morton wrote:
-> > > On Thu,  1 May 2008 17:56:02 +0200
-> > > Jiri Slaby <jirislaby@gmail.com> wrote:
-> > > 
-> > >> megaraid_sas suspend and resume are inappropriatelly placed in
-> > >> __devinit section.
-> > > 
-> > > That's a box-killer, isn't it?
-> > 
-> > I think so -- the non-CONFIG_HOTPLUG ones.
+On Mon, 2008-04-28 at 23:22 -0500, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
 > 
-> CONFIG_HOTPLUG is only settable to 'n' if you're CONFIG_EMBEDDED which
-> has a zero set intersection with the users of megaraid, so in practical
-> terms, there's no actual box it could kill.
-
-who suspends and resumes servers?
-
-> this whole 
+> When qla4xxx begins recovery and the iscsi class is firing up to handle
+> it, we need to retrn SCSI_MLQUEUE_TARGET_BUSY from the driver instead
+> of host busy, because the session recovery only affects the one target.
 > 
-> #if CONFIG_PM
-> define suspend resume
-> #else
-> set suspend resume methods to null
-> #endif
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  drivers/scsi/qla4xxx/ql4_os.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> Is completely analagous to what we used to do with CONFIG_HOTPLUG before
-> we had the __dev.* sectional annotations.  Since the expanding
-> bureacracy is determined to keep the _dev.* sections 
-
-ooh, that makes us sound really bad!  ("since the server-obsessed
-embedded-hating bloatmonkeys..."?)
-
-> in spite of the pain,
-
-What pain?  Other people write the dang patches for you!  Their main
-problem is getting them merged.
-
-> could we not at least make the machinery do something vaguely
-> useful and expand it to confine the pm routines to sections which can be
-> discarded if CONFIG_PM is n?
-
-a) it would need to be discarded at link-time, ideally.
-
-b) worth investigating.  It might lead to lengthy chains of compilation
-   warnings though.
-
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 0c78694..873dc6b 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -439,7 +439,7 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+>  			cmd->result = DID_NO_CONNECT << 16;
+>  			goto qc_fail_command;
+>  		}
+> -		goto qc_host_busy;
+> +		return SCSI_MLQUEUE_TARGET_BUSY;
+>  	}
+>  
+>  	if (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags))
+Acked-by: David C Somayajulu <david.somayajulu@qlogic.com>
