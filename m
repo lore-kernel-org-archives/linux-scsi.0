@@ -1,48 +1,75 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH 0/4] Use of new scsi_allocate_command
-Date: Thu, 01 May 2008 10:47:18 -0500
-Message-ID: <1209656838.3067.16.camel@localhost.localdomain>
-References: <4819C9DB.60104@panasas.com>
-	 <1209651854.3067.8.camel@localhost.localdomain>
-	 <4819DA39.70505@panasas.com>
-	 <1209655360.3067.14.camel@localhost.localdomain>
-	 <4819E371.2040403@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4819E371.2040403-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Cc: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH #repost] SCSI: megaraid, fix suspend/resume sections
+Date: Thu,  1 May 2008 17:56:02 +0200
+Message-ID: <1209657362-20300-1-git-send-email-jirislaby@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.wellnetcz.com ([212.24.148.102]:59293 "EHLO WNmonitoring"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758071AbYEAP4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 May 2008 11:56:31 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: megaraidlinux@lsi.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
 
-On Thu, 2008-05-01 at 18:36 +0300, Boaz Harrosh wrote:
-> On Thu, May 01 2008 at 18:22 +0300, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
-> > On Thu, 2008-05-01 at 17:56 +0300, Boaz Harrosh wrote:
-> >> The call to pci_map_page() on an ISA case will it not bounce the
-> >> buffer?
-> > 
-> > Only if the system isn't a PCI_DMA_BUS_IS_PHYS one.
-> > 
-> > That means basically either has an iommu/gart or has some silly swiotlb
-> > to emulate one.
-> > 
-> > That means for standard x86 isa systems the answer is no: the buffer has
-> > to be allocated within the isa region because pci_map is simply a
-> > virt_to_phys.
-> > 
-> > James
-> > 
-> OK Thanks, so the second patch then. That will solve it.
+megaraid_sas suspend and resume are inappropriatelly placed in
+__devinit section. Remove those placements and make the stuff
+dependent on CONFIG_PM.
 
-Um, your second patch is only changing isd200; it's hard to see how that
-can fix a gdth problem ...
+While at it, mark remove function as __devexit.
 
-James
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index b937e9c..a90944c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -2650,12 +2650,13 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	return;
+ }
+ 
++#ifdef CONFIG_PM
+ /**
+  * megasas_suspend -	driver suspend entry point
+  * @pdev:		PCI device structure
+  * @state:		PCI power state to suspend routine
+  */
+-static int __devinit
++static int
+ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct Scsi_Host *host;
+@@ -2687,7 +2688,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+  * megasas_resume-      driver resume entry point
+  * @pdev:               PCI device structure
+  */
+-static int __devinit
++static int
+ megasas_resume(struct pci_dev *pdev)
+ {
+ 	int rval;
+@@ -2782,12 +2783,16 @@ fail_ready_state:
+ 
+ 	return -ENODEV;
+ }
++#else
++#define megasas_suspend	NULL
++#define megasas_resume	NULL
++#endif
+ 
+ /**
+  * megasas_detach_one -	PCI hot"un"plug entry point
+  * @pdev:		PCI device structure
+  */
+-static void megasas_detach_one(struct pci_dev *pdev)
++static void __devexit megasas_detach_one(struct pci_dev *pdev)
+ {
+ 	int i;
+ 	struct Scsi_Host *host;
+-- 
+1.5.4.5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
