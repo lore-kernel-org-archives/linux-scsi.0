@@ -1,37 +1,53 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [2.6.25] lpfc driver problem
-Date: Thu, 1 May 2008 21:16:59 -0700
-Message-ID: <20080501211659.8a2e0686.akpm@linux-foundation.org>
-References: <alpine.DEB.1.10.0804291625330.31652@mtl.rackplans.net>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
+Date: Fri, 02 May 2008 16:26:21 +1200
+Message-ID: <481A97ED.5050905@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757375AbYEBETk@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0804291625330.31652@mtl.rackplans.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gerhard Mack <gmack@innerfire.net>
-Cc: linux-kernel@vger.kernel.org, James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:39863 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750700AbYEBEWI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 May 2008 00:22:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 29 Apr 2008 16:28:03 -0400 (EDT) Gerhard Mack <gmack@innerfire.net> wrote:
+Sebastian Wasilewski said:
 
-> hello
-> 
-> I'm getting the following error when trying to load the lpfc driver.  This 
-> is a new install so I have no idea if this is a regression or not.
-> 
-> dmesg output:
-> Emulex LightPulse Fibre Channel SCSI driver 8.2.5
-> Copyright(c) 2004-2008 Emulex.  All rights reserved.
-> scsi2 :  on PCI bus 02 device 50 irq 24
-> lpfc 0000:02:0a.0: 0:0436 Adapter failed to init, timeout, status reg 
-> x400000, FW Data: A8 x0 AC x0
-> lpfc 0000:02:0a.0: 0:0436 Adapter failed to init, timeout, status reg 
-> x400000, FW Data: A8 x0 AC x0
-> 
-> Card is:
-> 02:0a.0 Fibre Channel: Emulex Corporation LP8000 Fibre Channel Host 
-> Adapter (rev 02)
-> 02:0a.0 0c04: 10df:f800 (rev 02)
+There is still one thing I do not understand. I have made a test -- I
+have connected three SATA hard drives directly to the controller using
+cable supplied with the controller. The error still occurred. Then I
+have changed the cable to the one supplied with other controller, as
+well as hard drives (but model was still the same) and the error message
+was still occurring.
 
-(Cc's added)
+I have changed controller (I have a few of them) but again, the problem
+still existed.
+
+------------------------------
+
+If anyone else can replicate these errors using Sebastian's setup above 
+I would interested in hearing.
+
+I have a case open with LSI but apparently my HBA is a "prototype" board 
+and this is complicating things. I have had no indication whether they 
+can replicate this issue or not.
+
+If anyone else from LSI is on this list and can wade through SR# 
+2-209998499  I'd be interested in any suggestions. Time is running out 
+for me and I will probably have to go with someone elses HBA.
+
+Apologies for this mail not threading correctly, as I am not subscribed. 
+The start of it can be found here:
+
+http://marc.info/?l=linux-scsi&m=120805128416791&w=2
+
+and carries on here:
+
+http://marc.info/?l=linux-scsi&m=120869748422095&w=2
+
+Regards,
+
+Richard
