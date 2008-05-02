@@ -1,38 +1,44 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: mptbase Code={Abort} (LSI SAS1068 PCI-X Fusion-MPT)
-Date: Sat, 03 May 2008 10:49:52 +1200
-Message-ID: <481B9A90.7090606@sauce.co.nz>
-References: <0631C836DBF79F42B5A60C8C8D4E822901047B2C@NAMAIL2.ad.lsil.com>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [PATCH 06/10] scsi_dh: Do not allow arguments for
+	hardware handlers
+Date: Fri, 2 May 2008 23:47:31 +0100
+Message-ID: <20080502224731.GH18935@agk.fab.redhat.com>
+References: <20080501214941.27759.95121.sendpatchset@chandra-ubuntu>
+	<20080501215017.27759.37314.sendpatchset@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:44396 "EHLO smtp.sauce.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759772AbYEBWpb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 May 2008 18:45:31 -0400
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E822901047B2C@NAMAIL2.ad.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20080501215017.27759.37314.sendpatchset@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org
 
-Moore, Eric wrote:
+On Thu, May 01, 2008 at 02:50:17PM -0700, Chandra Seetharaman wrote:
+> Subject: [PATCH 06/10] scsi_dh: Do not allow arguments for hardware handlers
+> From: Chandra Seetharaman <sekharan@us.ibm.com>
+> The new implementation does not use the arguments provided with the
+> hardware handler. This patch makes the change visible to the user by
+> failing table load when arguments are provided with the hardware handler.
+ 
+But then someone supplying such an arg may need to update their
+userspace multipath config file before they can use this new kernel.
 
-> Richard, those SR issues are not accessable by developers at LSI.
-> Those are created by the tech support group, used internally within the
-> support group.    The developers is what your going to find on the
-> linux-scsi@ forum, like me and Sathya.  We are using clear case, which
-> is a different database.    If you give me the contact name whom
-> assigned you that SR number, I will see what I can do.
-> 
-> Eric
+Past experience suggests that changes like that usually come back
+and bite us.  Let's instead just have the kernel log a message noting
+that the args have been ignored and allow people to deal with it at
+their leisure.
 
-Hi Eric,
-
-Many thanks. Ken Stewart is the man to talk to, otherwise I can forward 
-you some long, back and forth emails.
-
-Regards,
-
-Richard
+Alasdair
+-- 
+agk@redhat.com
