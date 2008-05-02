@@ -1,35 +1,66 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Fri, 2 May 2008 11:02:44 -0600
-Message-ID: <20080502170244.GI14976@parisc-linux.org>
-References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com> <20080502161629.GF14976@parisc-linux.org> <e2e108260805020923wc7a9e0bl539eaa386d8410bb@mail.gmail.com> <20080502164905.GH14976@parisc-linux.org> <e2e108260805020957k2390b151t7fe6beacc9fe8b34@mail.gmail.com>
+From: Zan Lynx <zlynx@acm.org>
+Subject: Re: [PATCH #repost] SCSI: megaraid, fix suspend/resume sections
+Date: Fri, 02 May 2008 11:15:33 -0600
+Message-ID: <1209748533.239501.10.camel@localhost>
+References: <1209657362-20300-1-git-send-email-jirislaby@gmail.com>
+	 <20080501142305.77433e50.akpm@linux-foundation.org>
+	 <481A3781.8080100@gmail.com>
+	 <1209679559.14864.33.camel@localhost.localdomain>
+	 <20080501153048.2a8d356f.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/8A+6Yta2xd3JkPmWYma"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:45007 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbYEBRCq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 13:02:46 -0400
-Content-Disposition: inline
-In-Reply-To: <e2e108260805020957k2390b151t7fe6beacc9fe8b34@mail.gmail.com>
+Received: from threatwall.zlynx.org ([199.45.143.218]:34082 "EHLO zlynx.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750988AbYEBRPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 May 2008 13:15:45 -0400
+In-Reply-To: <20080501153048.2a8d356f.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <tomof@acm.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, jirislaby@gmail.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 02, 2008 at 06:57:10PM +0200, Bart Van Assche wrote:
-> Thanks for looking this up. Would it be an acceptable approach if the
-> SCST code is modified such that it calls the code inside
-> drivers/scsi/scsi_tgt_lib.c whenever this is appropriate ?
 
-You need to talk to Mike and Tomo.
+--=-/8A+6Yta2xd3JkPmWYma
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->From my point of view, the most important bit is the target layer <->
-driver API.  ie the transfer_response() method in the host template.
-I'm sure other people have their own preferences though.
+On Thu, 2008-05-01 at 15:30 -0700, Andrew Morton wrote:
+[cut]=20
+> > CONFIG_HOTPLUG is only settable to 'n' if you're CONFIG_EMBEDDED which
+> > has a zero set intersection with the users of megaraid, so in practical
+> > terms, there's no actual box it could kill.
+>=20
+> who suspends and resumes servers?
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+I read an article not long ago about a guy running an AMD renderfarm.
+He was working on power management techniques, including suspending
+systems that weren't in use.  It made a huge difference in power costs,
+apparently.
+
+I believe suspend is also used in some virtual server farms where
+physical systems are resumed and virtuals are migrated to satisfy higher
+CPU demands.
+
+I could also see using it combined with a load balancer or proxy to
+bring up backup web or database servers.
+
+Compared to using networked/USB power bars or management controllers to
+bring systems up and down, suspend/resume provides a faster response.
+--=20
+Zan Lynx <zlynx@acm.org>
+
+--=-/8A+6Yta2xd3JkPmWYma
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkgbTDUACgkQolqWs/Y4NLwaEACfWnrTZ3AybWOj/gfBkSje0+uJ
+ah4AoKKomNwEs/DB7TOcDFenIccDTcd2
+=Q2ui
+-----END PGP SIGNATURE-----
+
+--=-/8A+6Yta2xd3JkPmWYma--
+
