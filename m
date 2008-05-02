@@ -1,62 +1,66 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 3/4] dpt_i2o: 64 bit support
-Date: Fri, 2 May 2008 13:32:12 +0200
-Message-ID: <200805021332.13252.eike-kernel@sf-tec.de>
-References: <20080501230724.GA19844@xs4all.net>
+Subject: Re: [PATCH 2/4] dpt_i2o: move from virt_to_bus/bus_to_virt to dma_alloc_coherent
+Date: Fri, 2 May 2008 13:25:29 +0200
+Message-ID: <200805021325.30504.eike-kernel@sf-tec.de>
+References: <20080501230632.GA19832@xs4all.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart2219090.ghy0T9c5S4";
+  boundary="nextPart1825350.UfI1Kgzp8m";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:39888 "EHLO mail.sf-mail.de"
+Received: from mail.sf-mail.de ([62.27.20.61]:36780 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758003AbYEBLeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758438AbYEBLeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 2 May 2008 07:34:37 -0400
-In-Reply-To: <20080501230724.GA19844@xs4all.net>
+In-Reply-To: <20080501230632.GA19832@xs4all.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Miquel van Smoorenburg <miquels@cistron.nl>
 Cc: linux-scsi@vger.kernel.org
 
---nextPart2219090.ghy0T9c5S4
+--nextPart1825350.UfI1Kgzp8m
 Content-Type: text/plain;
   charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
 Miquel van Smoorenburg wrote:
-> [PATCH 3/4] dpt_i2o: 64 bit support
+> [PATCH 2/4] dpt_i2o: move from virt_to_bus/bus_to_virt to
+> dma_alloc_coherent
 >
-> This is the code to actually support 64 bit platforms. 64 bit
-> DMA is enabled on both x86_32 PAE and 64 bit platforms.
+> Remove virt_to_bus/bus_to_virt code from dpt_i2o, and use
+> dma_alloc_coherent() / dma_free_coherent().
 >
-> This code is based in part on the unofficial adaptec 64-bit
-> dpt_i2o driver update that I got from Mark Salyzyn at Adaptec.
-
-> +static inline int dpt_dma64(adpt_hba *pHba)
+> *==========================================================================
+>== */
+>
+> +static inline u32 dma_high(dma_addr_t addr)
 > +{
-> +	return (sizeof(dma_addr_t) > 4 && (pHba)->dma64);
+> +	return upper_32_bits(addr);
+> +}
+> +
+> +static inline u32 dma_low(dma_addr_t addr)
+> +{
+> +	return (u32)addr;
 > +}
 > +
 
-Just a note: you never set dma64 if sizeof(dma_addr_t) =3D=3D 4. Doing it t=
-his way=20
-has the advantage that the compiler can optimize that away completely.
+Just use these instructions directly, no need to introduce functions for that.
 
 Eike
 
---nextPart2219090.ghy0T9c5S4
+--nextPart1825350.UfI1Kgzp8m
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-iD8DBQBIGvu9XKSJPmm5/E4RAkFxAJ4kO3rG2wCVC6Y8a/GB4E0zEIoGLACfai8D
-uyyGr63PvyGx7WkDZTqRJpU=
-=TJbL
+iD8DBQBIGvoqXKSJPmm5/E4RApYAAJ4utHk4RbBL3Hx8aRq4vAblRg5/kQCeJVfv
+bdhboeEi40hd4JFJxRynwKo=
+=8a/T
 -----END PGP SIGNATURE-----
 
---nextPart2219090.ghy0T9c5S4--
+--nextPart1825350.UfI1Kgzp8m--
