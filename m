@@ -1,61 +1,79 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Fri, 02 May 2008 11:18:04 -0500
-Message-ID: <1209745084.3121.39.camel@localhost.localdomain>
-References: <200805021638.42972.bart.vanassche@gmail.com>
-	 <20080502153306.GB7376@infradead.org>
-	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
-	 <20080502155525.GA16353@infradead.org>
-	 <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: SCSI state model, and "soft" host removal
+Date: Fri, 02 May 2008 18:19:00 +0200
+Message-ID: <481B3EF4.9070605@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0805011615430.2186-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56127 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935165AbYEBQSI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:18:08 -0400
-In-Reply-To: <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:44209 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759082AbYEBQTl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:19:41 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0805011615430.2186-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 2008-05-02 at 18:06 +0200, Bart Van Assche wrote:
-> On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
-> >> Regarding out-of-tree modules: this is just a preparatory step before
-> >> submitting SCST for inclusion in the mainstream kernel.
-> >
-> > And what crackpipe did you smoke to thing we'd put duplicated target
-> > framework in?
-> 
-> Why are you so aggressive ? I didn't insult you in any way.
-> 
-> Regarding inclusion of SCSI target code in the mainline, this subject
-> has already been discussed extensively in the past
-> (http://lkml.org/lkml/2008/1/23/134). The conclusion was clear: SCST
-> is faster than any other existing iSCSI target for Linux (IET, STGT,
-> LIO), stable, well maintained and the most standards compliant target.
-> Why do you want to reopen this discussion ?
+Alan Stern wrote:
+> Second, concerning soft host removal...  I have in mind a situation
+> where a user wants to unbind usb-storage from a device in a clean, safe
+> manner, without unplugging anything.  Existing commands should be
+> allowed to complete, caches should be flushed, and so on.  Is there any
+> way to do this?
 
-That's an interesting rewrite of history.  The evidence you presented
-showed fairly identical results apart from on one contrived IB benchmark
-that couldn't directly compare the two.
+I haven't tried it with usb-storage, or any other SCSI low-level driver, 
+but here is something which works with sbp2 or firewire-sbp2:
 
-I'm also on record in the thread saying that was insufficient proof for
-me to justify throwing STGT out and replacing it with SCST.
+# readlink /sys/bus/scsi/devices/2\:0\:0\:0
+../../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:02.0/fw2/fw2.0/host2/target2:0:0/2:0:0:0
 
-> James Bottomley clearly expressed in that thread that he doesn't want
-> to maintain two SCSI target frameworks. So what I propose is that SCST
-> is included in the mainline and afterwards that it is evaluated
-> whether or not it is desirable to keep other target code in the
-> mainline kernel.
+# readlink \
+/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:02.0/fw2/fw2.0/driver
+../../../../../../../bus/firewire/drivers/sbp2
 
-That's hardly sufficient.  STGT is already in use.  Their either has to
-be a migration path or, the preferred option, take the pieces of SCST
-that are actual improvements and embed them in STGT.
+# echo -n fw2.0 > /sys/bus/firewire/drivers/sbp2/unbind
 
-James
+This results in:
+May  2 17:43:54 stein sd 2:0:0:0: [sdd] Synchronizing SCSI cache
+May  2 17:43:54 stein firewire_sbp2: released fw2.0, target 2:0:0
 
+The code which does this is is of course the struct driver.remove 
+callback of fw-sbp2.c.  This or another place in fw-sbp2.c drops the 
+last reference on the SBP-2 target representation, and 
+sbp2_release_target() is called.  This looks up all struct scsi_device 
+instances which belong to the target and performs
+	scsi_remove_device(sdev);
+	scsi_device_put(sdev);
+on them.  This causes, among else, calls to the .shutdown() method of 
+the SCSI highlevel driver which is bound to the device, e.g. 
+sd_shutdown() which among else sends a SYNCHRONIZE CACHE command if 
+applicable.
 
+After that, the Scsi_Host is being removed because we (currently) 
+instantiate one Scsi_Host per target, not one per initiator port.
+
+Almost the same happens in drivers/ieee1394/sbp2.c, except that this one 
+has simply one Scsi_Host per logical unit (i.e. per scsi_device) rather 
+than per target.
+
+> It used to be that scsi_remove_host() would cancel all outstanding
+> commands.  Isn't that still true?  If so, is there any way to
+> accomplish what I want?
+
+Previous iterations of sbp2 and firewire-sbp2 had, independently of each 
+other, also simply calls to scsi_remove_host() without previous 
+scsi_remove_device().  I believe the semantics of scsi_remove_host() 
+changed though over the time... and I gather this is why you are asking 
+in the first place.
+
+I don't remember how scsi_remove_host() behaved when.  I only see in the 
+git history that I added the scsi_remove_device() in sbp2.c between 
+2.6.14-rc2 and -rc3.  I did this with the explicit goal to support "soft 
+removal" like you are asking for for usb-storage.
+-- 
+Stefan Richter
+-=====-==--- -=-= ---=-
+http://arcgraph.de/sr/
