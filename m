@@ -1,51 +1,62 @@
-From: Gerhard Mack <gmack@innerfire.net>
-Subject: Re: [2.6.25] lpfc driver problem
-Date: Fri, 2 May 2008 07:16:03 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0805020714500.21142@mtl.rackplans.net>
-References: <alpine.DEB.1.10.0804291625330.31652@mtl.rackplans.net> <20080501211659.8a2e0686.akpm@linux-foundation.org>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 3/4] dpt_i2o: 64 bit support
+Date: Fri, 2 May 2008 13:32:12 +0200
+Message-ID: <200805021332.13252.eike-kernel@sf-tec.de>
+References: <20080501230724.GA19844@xs4all.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934407AbYEBLQV@vger.kernel.org>
-In-Reply-To: <20080501211659.8a2e0686.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart2219090.ghy0T9c5S4";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:39888 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758003AbYEBLeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 May 2008 07:34:37 -0400
+In-Reply-To: <20080501230724.GA19844@xs4all.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: linux-scsi@vger.kernel.org
 
+--nextPart2219090.ghy0T9c5S4
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+Miquel van Smoorenburg wrote:
+> [PATCH 3/4] dpt_i2o: 64 bit support
+>
+> This is the code to actually support 64 bit platforms. 64 bit
+> DMA is enabled on both x86_32 PAE and 64 bit platforms.
+>
+> This code is based in part on the unofficial adaptec 64-bit
+> dpt_i2o driver update that I got from Mark Salyzyn at Adaptec.
 
-> On Tue, 29 Apr 2008 16:28:03 -0400 (EDT) Gerhard Mack <gmack@innerfire.net> wrote:
-> 
-> > hello
-> > 
-> > I'm getting the following error when trying to load the lpfc driver.  This 
-> > is a new install so I have no idea if this is a regression or not.
-> > 
-> > dmesg output:
-> > Emulex LightPulse Fibre Channel SCSI driver 8.2.5
-> > Copyright(c) 2004-2008 Emulex.  All rights reserved.
-> > scsi2 :  on PCI bus 02 device 50 irq 24
-> > lpfc 0000:02:0a.0: 0:0436 Adapter failed to init, timeout, status reg 
-> > x400000, FW Data: A8 x0 AC x0
-> > lpfc 0000:02:0a.0: 0:0436 Adapter failed to init, timeout, status reg 
-> > x400000, FW Data: A8 x0 AC x0
-> > 
-> > Card is:
-> > 02:0a.0 Fibre Channel: Emulex Corporation LP8000 Fibre Channel Host 
-> > Adapter (rev 02)
-> > 02:0a.0 0c04: 10df:f800 (rev 02)
-> 
-> (Cc's added)
+> +static inline int dpt_dma64(adpt_hba *pHba)
+> +{
+> +	return (sizeof(dma_addr_t) > 4 && (pHba)->dma64);
+> +}
+> +
 
-I am no longer able to debug this.  My client took the card back and 
-traded it for a Qlogic.
+Just a note: you never set dma64 if sizeof(dma_addr_t) =3D=3D 4. Doing it t=
+his way=20
+has the advantage that the compiler can optimize that away completely.
 
-	Gerhard
- 
+Eike
 
---
-Gerhard Mack
+--nextPart2219090.ghy0T9c5S4
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-gmack@innerfire.net
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-<>< As a computer I find your faith in technology amusing.
+iD8DBQBIGvu9XKSJPmm5/E4RAkFxAJ4kO3rG2wCVC6Y8a/GB4E0zEIoGLACfai8D
+uyyGr63PvyGx7WkDZTqRJpU=
+=TJbL
+-----END PGP SIGNATURE-----
+
+--nextPart2219090.ghy0T9c5S4--
