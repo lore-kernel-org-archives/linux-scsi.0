@@ -1,60 +1,128 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Fri, 02 May 2008 11:30:09 -0500
-Message-ID: <1209745809.3121.43.camel@localhost.localdomain>
-References: <200805021638.42972.bart.vanassche@gmail.com>
-	 <20080502153306.GB7376@infradead.org>
-	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
-	 <20080502155525.GA16353@infradead.org>
-	 <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
-	 <20080502161629.GF14976@parisc-linux.org>
-	 <e2e108260805020923wc7a9e0bl539eaa386d8410bb@mail.gmail.com>
+From: "Roland" <devzero@web.de>
+Subject: [PATCH] mpt fusion: Improve fusion mpt drivers description
+Date: Fri, 2 May 2008 18:32:26 +0200
+Message-ID: <00c901c8ac72$2198cb50$6400a8c0@bui.materna.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36275 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762480AbYEBQaP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:30:15 -0400
-In-Reply-To: <e2e108260805020923wc7a9e0bl539eaa386d8410bb@mail.gmail.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:56468 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757231AbYEBQci (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:32:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
+Cc: nadejdalevitsky@gmail.com, "Moore, Eric" <Eric.Moore@lsi.com>, samuel.thibault@ens-lyon.org
 
-On Fri, 2008-05-02 at 18:23 +0200, Bart Van Assche wrote:
-> On Fri, May 2, 2008 at 6:16 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> > On Fri, May 02, 2008 at 06:06:59PM +0200, Bart Van Assche wrote:
-> >> James Bottomley clearly expressed in that thread that he doesn't want
-> >> to maintain two SCSI target frameworks. So what I propose is that SCST
-> >> is included in the mainline and afterwards that it is evaluated
-> >> whether or not it is desirable to keep other target code in the
-> >> mainline kernel.
-> >
-> > That's not the way it works, sorry.
-> >
-> > The way to get SCST in is to work with the people who care about target
-> > frameworks (which doesn't include me, fwiw).  You come to a consensus
-> > about the way to proceed.  Normally this will be a gradual migration of
-> > the good bits from SCST into the kernel.  In *exceptional* circumstances,
-> > we've replaced one piece of infrastructure with another (eg wireless
-> > midlayers), but those are by no means the preferred ways to go.
-> >
-> > Let me just re-emphasise this bit.  You HAVE to work with the existing
-> > people.  If you can't come to a common understanding, your code won't
-> > get in.  Even if it's better.
-> 
-> Which target code is already in the mainline kernel, and who are the
-> maintainers for this code ? I checked the MAINTAINERS file in the
-> 2.6.25 tarball, but in this file I could not find the information I
-> was looking for.
+Since end-users may have difficulties finding the right configuration option 
+for some popular LSI controllers,
+this patch adds some information to drivers/message/fusion/Kconfig.
 
-Um, you claimed to be running benchmarks against it in the thread you
-just quoted to push for SCST inclusion.  If you genuinely don't know
-which code is actually in the kernel, what exactly were the benchmarks
-against?
+Also see http://marc.info/?l=linux-kernel&m=120967940402791&w=2
 
-James
+This attached patch is agaings current git.
 
+Signed-off-by: Roland Kletzing <devzero@web.de>
+
+--- drivers/message/fusion/Kconfig.orig 2008-05-02 02:38:44.000000000 +0200
++++ drivers/message/fusion/Kconfig      2008-05-02 20:16:19.000000000 +0200
+@@ -1,18 +1,21 @@
+
+ menuconfig FUSION
+-       bool "Fusion MPT device support"
++       bool "LSI Fusion MPT device support"
+        depends on PCI
+        ---help---
+-       Say Y here to get to see options for Fusion Message
++       Say Y here to get to see options for LSI Fusion Message
+        Passing Technology (MPT) drivers.
+-       This option alone does not add any kernel code.
++       This option alone does not add any kernel code, but enables
++       selection of ScsiHost drivers for parallel SCSI, Fiber Channel
++       and SAS host adapters.
++
+
+        If you say N, all options in this submenu will be skipped and 
+disabled.
+
+ if FUSION
+
+ config FUSION_SPI
+-       tristate "Fusion MPT ScsiHost drivers for SPI"
++       tristate "LSI Fusion MPT ScsiHost drivers for SPI"
+        depends on PCI && SCSI
+        select SCSI_SPI_ATTRS
+        ---help---
+@@ -27,7 +30,7 @@
+          ATTO UL4D
+
+ config FUSION_FC
+-       tristate "Fusion MPT ScsiHost drivers for FC"
++       tristate "LSI Fusion MPT ScsiHost drivers for FC"
+        depends on PCI && SCSI
+        select SCSI_FC_ATTRS
+        ---help---
+@@ -46,7 +49,7 @@
+          Brocade FC 410/420
+
+ config FUSION_SAS
+-       tristate "Fusion MPT ScsiHost drivers for SAS"
++       tristate "LSI Fusion MPT ScsiHost drivers for SAS"
+        depends on PCI && SCSI
+        select SCSI_SAS_ATTRS
+        ---help---
+@@ -72,10 +75,10 @@
+          on a per controller instance.
+
+ config FUSION_CTL
+-       tristate "Fusion MPT misc device (ioctl) driver"
++       tristate "LSI Fusion MPT misc device (ioctl) driver"
+        depends on FUSION_SPI || FUSION_FC || FUSION_SAS
+        ---help---
+-         The Fusion MPT misc device driver provides specialized control
++         The LSI Fusion MPT misc device driver provides specialized control
+          of MPT adapters via system ioctl calls.  Use of ioctl calls to
+          the MPT driver requires that you create and use a misc device
+          node ala:
+@@ -83,7 +86,7 @@
+
+          One use of this ioctl interface is to perform an upgrade (reflash)
+          of the MPT adapter firmware.  Refer to readme file(s) distributed
+-         with the Fusion MPT linux driver for additional details.
++         with the LSI Fusion MPT linux driver for additional details.
+
+          If enabled by saying M to this, a driver named: mptctl
+          will be compiled.
+@@ -91,11 +94,11 @@
+          If unsure whether you really want or need this, say N.
+
+ config FUSION_LAN
+-       tristate "Fusion MPT LAN driver"
++       tristate "LSI Fusion MPT LAN driver"
+        depends on FUSION_FC && NET_FC
+        ---help---
+          This module supports LAN IP traffic over Fibre Channel port(s)
+-         on Fusion MPT compatible hardware (LSIFC9xx chips).
++         on LSI Fusion MPT compatible hardware (LSIFC9xx chips).
+          The physical interface used is defined in RFC 2625.
+          Please refer to that document for details.
+
+@@ -108,10 +111,10 @@
+          If unsure whether you really want or need this, say N.
+
+ config FUSION_LOGGING
+-       bool "Fusion MPT logging facility"
++       bool "LSI Fusion MPT logging facility"
+        ---help---
+          This turns on a logging facility that can be used to debug a 
+number
+-         of Fusion MPT related problems.
++         of LSI Fusion MPT related problems.
+
+          The debug level can be programmed on the fly via SysFS (hex 
+values)
 
