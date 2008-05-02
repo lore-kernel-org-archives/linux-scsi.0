@@ -1,44 +1,61 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Fri, 2 May 2008 10:16:29 -0600
-Message-ID: <20080502161629.GF14976@parisc-linux.org>
-References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
+Date: Fri, 02 May 2008 11:18:04 -0500
+Message-ID: <1209745084.3121.39.camel@localhost.localdomain>
+References: <200805021638.42972.bart.vanassche@gmail.com>
+	 <20080502153306.GB7376@infradead.org>
+	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
+	 <20080502155525.GA16353@infradead.org>
+	 <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56591 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759822AbYEBQQp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:16:45 -0400
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56127 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935165AbYEBQSI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 12:18:08 -0400
 In-Reply-To: <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
 
-On Fri, May 02, 2008 at 06:06:59PM +0200, Bart Van Assche wrote:
+On Fri, 2008-05-02 at 18:06 +0200, Bart Van Assche wrote:
+> On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
+> >> Regarding out-of-tree modules: this is just a preparatory step before
+> >> submitting SCST for inclusion in the mainstream kernel.
+> >
+> > And what crackpipe did you smoke to thing we'd put duplicated target
+> > framework in?
+> 
+> Why are you so aggressive ? I didn't insult you in any way.
+> 
+> Regarding inclusion of SCSI target code in the mainline, this subject
+> has already been discussed extensively in the past
+> (http://lkml.org/lkml/2008/1/23/134). The conclusion was clear: SCST
+> is faster than any other existing iSCSI target for Linux (IET, STGT,
+> LIO), stable, well maintained and the most standards compliant target.
+> Why do you want to reopen this discussion ?
+
+That's an interesting rewrite of history.  The evidence you presented
+showed fairly identical results apart from on one contrived IB benchmark
+that couldn't directly compare the two.
+
+I'm also on record in the thread saying that was insufficient proof for
+me to justify throwing STGT out and replacing it with SCST.
+
 > James Bottomley clearly expressed in that thread that he doesn't want
 > to maintain two SCSI target frameworks. So what I propose is that SCST
 > is included in the mainline and afterwards that it is evaluated
 > whether or not it is desirable to keep other target code in the
 > mainline kernel.
 
-That's not the way it works, sorry.
+That's hardly sufficient.  STGT is already in use.  Their either has to
+be a migration path or, the preferred option, take the pieces of SCST
+that are actual improvements and embed them in STGT.
 
-The way to get SCST in is to work with the people who care about target
-frameworks (which doesn't include me, fwiw).  You come to a consensus
-about the way to proceed.  Normally this will be a gradual migration of
-the good bits from SCST into the kernel.  In *exceptional* circumstances,
-we've replaced one piece of infrastructure with another (eg wireless
-midlayers), but those are by no means the preferred ways to go.
+James
 
-Let me just re-emphasise this bit.  You HAVE to work with the existing
-people.  If you can't come to a common understanding, your code won't
-get in.  Even if it's better.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
