@@ -1,50 +1,94 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: SCSI target subsystem
-Date: Sat, 3 May 2008 12:39:19 +0200
-Message-ID: <e2e108260805030339q4fcaedf7t34e737c14801e788@mail.gmail.com>
-References: <200805021638.42972.bart.vanassche@gmail.com>
-	 <20080502153306.GB7376@infradead.org>
-	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
-	 <20080502155525.GA16353@infradead.org>
-	 <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com>
-	 <1209745084.3121.39.camel@localhost.localdomain>
-	 <481B5AB8.5030108@vlnb.net>
-	 <e2e108260805030241w216363dbt4b5f6b2105ad267b@mail.gmail.com>
-	 <20080503095314.GX14976@parisc-linux.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Stop using num_physpages in aacraid
+Date: Sat, 3 May 2008 04:51:35 -0600
+Message-ID: <20080503105135.GY14976@parisc-linux.org>
+References: <20080502185227.GN14976@parisc-linux.org> <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:7135 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760554AbYECKjU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 06:39:20 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1266939fgg.17
-        for <linux-scsi@vger.kernel.org>; Sat, 03 May 2008 03:39:19 -0700 (PDT)
-In-Reply-To: <20080503095314.GX14976@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:51182 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752147AbYECKvw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 06:51:52 -0400
 Content-Disposition: inline
+In-Reply-To: <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: FUJITA Tomonori <tomof@acm.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, May 3, 2008 at 11:53 AM, Matthew Wilcox <matthew@wil.cx> wrote:
-> Bart, what is your role in the SCST project?  You don't seem to have
-> contributed any code to it (going by the SVN logs on sourceforge), and
-> your questions and suggestions seem to be those of someone not familiar
-> with the code.  If you're not a developer, it might be more helpful for
-> you to step back and let Vladislav handle this.
+On Fri, May 02, 2008 at 03:06:42PM -0400, Mark Salyzyn wrote:
+> The num_physpages variable works as needed for the PERC controllers  
+> that are installed in vanilla x86 machines is it not? The PERC card  
+> would not be installed in any other arch.
+> 
+> AAC_QUIRK_SCSI_32 means the card can not send 64bit format commands to  
+> the SCSI devices (non DASD) but can send 64bit format commands to the  
+> logical (Array) devices. This is for a select set of old PERC cards.
+> 
+> AAC_OPT_SGMAP_HOST64 means this card 'can' do DAC (send 64 bit format  
+> commands to both SCSI and to Array devices), but sadly some that  
+> report this are borken (hence the Quirk AAC_QUIRK_SCSI_32).
+> 
+> Dropping the cards is not an option, that is the whole reason this  
+> workaround was put in place.
 
-I'd like to see this discussion focus on the technical issues. Why are
-people constantly throwing up political arguments in this discussion ?
+Thanks for the explanation of the quirks and options.  I don't want to
+drop support for any cards, I just want to make aacraid not rely on
+the meaning of num_physpages.
 
-To answer your question: as you noticed, I did not yet contribute any
-code to the SCST project. I'm an iSCSI/iSER/SRP user. I'd like to have
-a SCSI target framework available on Linux that is as fast as
-possible, as reliable as possible, as standards compliant as possible,
-well maintained and for which all kernel code is integrated in the
-mainstream Linux kernel. I'm probably sharing this desire with all
-STGT, IET, SCST and LIO users. Do you consider the opinion of SCSI
-target framework users irrelevant in this discussion ?
+The question aacraid wants to ask is "Does this device have to
+do DAC to access memory?"  The answer can be affected by an IOMMU or
+by memory layout.  It's far from clear what question num_physpages is
+intended to answer; there are different bits of the kernel using it in
+interesting ways.  But we do have a function designed to answer the
+question you want to ask: dma_get_required_mask().  This may be an
+expensive question to ask, so in the below patch I cache the answer in
+the aac_dev.
 
-Bart.
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 460d402..cd0865d 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1201,9 +1201,8 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
+ 
+ static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
+ {
+-	if ((sizeof(dma_addr_t) > 4) &&
+-	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
+-	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
++	if ((sizeof(dma_addr_t) > 4) && fib->dev->needs_dac &&
++	    (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
+ 		return FAILED;
+ 	return aac_scsi_32(fib, cmd);
+ }
+@@ -1394,6 +1393,9 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 			rcode = -ENOMEM;
+ 		}
+ 	}
++	if (dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK)
++		dev->needs_dac = 1;
++
+ 	/*
+ 	 * Deal with configuring for the individualized limits of each packet
+ 	 * interface.
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 113ca9c..a06c817 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1016,6 +1016,7 @@ struct aac_dev
+ 	u8			jbod;
+ 	u8			cache_protected;
+ 	u8			dac_support;
++	u8			needs_dac;
+ 	u8			raid_scsi_mode;
+ 	u8			comm_interface;
+ #	define AAC_COMM_PRODUCER 0
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
