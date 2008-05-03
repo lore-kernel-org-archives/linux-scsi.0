@@ -1,91 +1,102 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Stop using num_physpages in aacraid
-Date: Sat, 3 May 2008 04:51:35 -0600
-Message-ID: <20080503105135.GY14976@parisc-linux.org>
-References: <20080502185227.GN14976@parisc-linux.org> <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
+Subject: Re: blk request timeout handler against 2.6.26
+Date: Sat, 3 May 2008 07:20:58 -0600
+Message-ID: <20080503132058.GZ14976@parisc-linux.org>
+References: <20080503020000.GU14976@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:51182 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:36424 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbYECKvw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 06:51:52 -0400
+	with ESMTP id S1750873AbYECNVO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 09:21:14 -0400
 Content-Disposition: inline
-In-Reply-To: <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
+In-Reply-To: <20080503020000.GU14976@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>
 
-On Fri, May 02, 2008 at 03:06:42PM -0400, Mark Salyzyn wrote:
-> The num_physpages variable works as needed for the PERC controllers  
-> that are installed in vanilla x86 machines is it not? The PERC card  
-> would not be installed in any other arch.
-> 
-> AAC_QUIRK_SCSI_32 means the card can not send 64bit format commands to  
-> the SCSI devices (non DASD) but can send 64bit format commands to the  
-> logical (Array) devices. This is for a select set of old PERC cards.
-> 
-> AAC_OPT_SGMAP_HOST64 means this card 'can' do DAC (send 64 bit format  
-> commands to both SCSI and to Array devices), but sadly some that  
-> report this are borken (hence the Quirk AAC_QUIRK_SCSI_32).
-> 
-> Dropping the cards is not an option, that is the whole reason this  
-> workaround was put in place.
 
-Thanks for the explanation of the quirks and options.  I don't want to
-drop support for any cards, I just want to make aacraid not rely on
-the meaning of num_physpages.
+Hm.  That'll teach me to work on two things in the same tree.  Ignore
+these three hunks.
 
-The question aacraid wants to ask is "Does this device have to
-do DAC to access memory?"  The answer can be affected by an IOMMU or
-by memory layout.  It's far from clear what question num_physpages is
-intended to answer; there are different bits of the kernel using it in
-interesting ways.  But we do have a function designed to answer the
-question you want to ask: dma_get_required_mask().  This may be an
-expensive question to ask, so in the below patch I cache the answer in
-the aac_dev.
-
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 460d402..cd0865d 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1201,9 +1201,8 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
- 
- static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
- {
--	if ((sizeof(dma_addr_t) > 4) &&
--	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
--	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-+	if ((sizeof(dma_addr_t) > 4) && fib->dev->needs_dac &&
-+	    (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
- 		return FAILED;
- 	return aac_scsi_32(fib, cmd);
- }
-@@ -1394,6 +1393,9 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 			rcode = -ENOMEM;
- 		}
- 	}
-+	if (dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK)
-+		dev->needs_dac = 1;
-+
- 	/*
- 	 * Deal with configuring for the individualized limits of each packet
- 	 * interface.
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 113ca9c..a06c817 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1016,6 +1016,7 @@ struct aac_dev
- 	u8			jbod;
- 	u8			cache_protected;
- 	u8			dac_support;
-+	u8			needs_dac;
- 	u8			raid_scsi_mode;
- 	u8			comm_interface;
- #	define AAC_COMM_PRODUCER 0
+On Fri, May 02, 2008 at 08:00:00PM -0600, Matthew Wilcox wrote:
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+> index 460d402..00bd514 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -1199,15 +1199,6 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
+>  				  (fib_callback) aac_srb_callback, (void *) cmd);
+>  }
+>  
+> -static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
+> -{
+> -	if ((sizeof(dma_addr_t) > 4) &&
+> -	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
+> -	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
+> -		return FAILED;
+> -	return aac_scsi_32(fib, cmd);
+> -}
+> -
+>  int aac_get_adapter_info(struct aac_dev* dev)
+>  {
+>  	struct fib* fibptr;
+> @@ -1367,26 +1358,36 @@ int aac_get_adapter_info(struct aac_dev* dev)
+>  		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
+>  
+>  	dev->dac_support = 0;
+> -	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
+> +	if ((sizeof(dma_addr_t) > 4) &&
+> +	    (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)) {
+>  		if (!dev->in_reset)
+>  			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
+>  				dev->name, dev->id);
+>  		dev->dac_support = 1;
+>  	}
+>  
+> -	if(dacmode != -1) {
+> +	if (dacmode != -1) {
+>  		dev->dac_support = (dacmode!=0);
+>  	}
+> -	if(dev->dac_support != 0) {
+> +	if (dev->dac_support &&
+> +	    !(aac_get_driver_ident(dev->cardtype)->quirks &
+> +							AAC_QUIRK_SCSI_32)) {
+>  		if (!pci_set_dma_mask(dev->pdev, DMA_64BIT_MASK) &&
+> -			!pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
+> +		    !pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
+>  			if (!dev->in_reset)
+>  				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
+>  					dev->name, dev->id);
+>  		} else if (!pci_set_dma_mask(dev->pdev, DMA_32BIT_MASK) &&
+> -			!pci_set_consistent_dma_mask(dev->pdev, DMA_32BIT_MASK)) {
+> +			   !pci_set_consistent_dma_mask(dev->pdev,
+> +							DMA_32BIT_MASK)) {
+>  			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
+>  				dev->name, dev->id);
+> +	 		if (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64) {
+> +				printk(KERN_INFO "%s%d: 64-bit DAC required "
+> +					"for this host, bailing out\n",
+> +					dev->name, dev->id);
+> +				rcode = -ENOMEM;
+> +			}
+>  			dev->dac_support = 0;
+>  		} else {
+>  			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
+> @@ -1398,11 +1399,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
+>  	 * Deal with configuring for the individualized limits of each packet
+>  	 * interface.
+>  	 */
+> -	dev->a_ops.adapter_scsi = (dev->dac_support)
+> -	  ? ((aac_get_driver_ident(dev->cardtype)->quirks & AAC_QUIRK_SCSI_32)
+> -				? aac_scsi_32_64
+> -				: aac_scsi_64)
+> -				: aac_scsi_32;
+> +	dev->a_ops.adapter_scsi = dev->dac_support ? aac_scsi_64 : aac_scsi_32;
+>  	if (dev->raw_io_interface) {
+>  		dev->a_ops.adapter_bounds = (dev->raw_io_64)
+>  					? aac_bounds_64
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
