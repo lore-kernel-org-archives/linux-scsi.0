@@ -1,102 +1,196 @@
-From: devzero@web.de
-Subject: Re: modprobe aha1542 oops with git17
-Date: Sat, 03 May 2008 22:29:16 +0200
-Message-ID: <263898027@web.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Discussion: soft unbinding
+Date: Sat, 3 May 2008 16:42:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0805031556360.20050-100000@netrider.rowland.org>
+References: <481C9F43.9040406@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmmailgate05.web.de ([217.72.192.243]:45728 "EHLO
-	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759AbYECU3S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 16:29:18 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:4389 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751707AbYECUml (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 16:42:41 -0400
+In-Reply-To: <481C9F43.9040406@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, jgarzik@redhat.com, rjw@sisk.pl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-this also happens on real hardware with latest git - no aha1542 attache=
-d
+On Sat, 3 May 2008, Stefan Richter wrote:
 
-didn`t happen before - looks like a regression to me
+> Alan Stern wrote:
+> > When talking about "soft" unbinding, the main question seems to be: How 
+> > soft?
+> > 
+> > It would be easy, for instance, to change usb-storage so that unbinding
+> > would wait until the current command was finished.  But clearly one
+> > wants to do more: Give the upper-level SCSI drivers a chance to
+> > shutdown cleanly and issue their FLUSH CACHE commands, wait for all
+> > pending commands to complete, and so on.
+> 
+> scsi_remove_host is potentially able to do this, and unless my memory 
+> betrays me, did so in the past.
+> 
+> > It's the "wait for pending commands to complete" part that is hard.  
+> > Some commands have relatively long timeouts.
+> 
+> Is there reason to be less patient during soft unbinding?
+> 
+> If so, the decision which commands can be aborted should IMO be made by 
+> the application layer.
+> 
+> > Error handler operations have no timeouts.  Commands submitted through
+> > sg can have effectively infinite timeouts.
+> 
+> Hmm, I can't comment on these two.
+> 
+> > So how long should we wait?
+> 
+> I presume if a user launches a "remove safely" command, he means it.  Or 
+> if he doesn't mean it, he still can hot-unplug before completion of the 
+> shutdown procedures.  The only exception is a locked drive door or a 
+> similar ejection mechanism which forces the user to wait for software 
+> coming to terms.
+
+That's probably true.  With USB at least, a hot unplug causes all 
+outstanding I/O to fail immediately.
+
+On the other hand, since unbinding involves acquiring the host 
+adapter's device semaphore, it will block things like suspend.  So it 
+would not be a bad idea to have a hard upper limit on how long it can 
+wait.
+
+> > Should there be a scsi_soft_remove_host() routine that accepts a
+> > timeout value?  It would remove the devices under the host and wait
+> > until the timeout expires (if necessary) before aborting all pending
+> > commands.  Unlike scsi_remove_host(), it would really abort these
+> > commands as though they had timed out, instead of simply cancelling
+> > them.  It would guarantee that when it returned, no commands were still
+> > running on the host and no more commands would be submitted.
+> 
+> It would be an API with more guarantees/ clearer semantics than 
+> scsi_remove_host() and even also...
+> 
+> > This would essentially be a standardized version of the special code 
+> > Stefan has put into the sbp2 and firewire-sbp2 drivers.
+> 
+> ...with more guarantees/ clearer semantics than the scsi_remove_device() 
+> API which the SBP-2 drivers happen to use.  They use them merely because 
+> this has been found to work more satisfyingly at some point, and they 
+> don't have difficulties to use this API (i.e. look up the logical units 
+> to feed to scsi_remove_device()).
+
+Deciding on the timeout value to use is the hard part.  Or even whether 
+there should be a timeout at all.
+
+> Curious; scsi_mid_low_api.txt says in the context of scsi_remove_host:
+> 
+>      When an HBA is being removed it could be as part of an orderly
+>      shutdown associated with the LLD module being unloaded (e.g. with
+>      the "rmmod" command) or in response to a "hot unplug" indicated by
+>      sysfs()'s remove() callback being invoked. In either case, the
+>      sequence is the same [...]
+
+Yeah, well, it also says in the description of scsi_remove_host:
+
+	Returns value: 0 on success, 1 on failure (e.g. LLD busy ??)
+
+So you can't rely on the documentation being up-to-date.
+
+> while it says in the context of scsi_remove_device:
+> 
+>      In a similar fashion, an LLD may become aware that a SCSI device has
+>      been removed (unplugged) or the connection to it has been
+>      interrupted. [...] An LLD that detects the removal of a SCSI device
+>      can instigate its removal from upper layers with this sequence [...]
+> 
+> AFAIR scsi_remove_host once simply worked just as if the LLD itself 
+> called scsi_remove_device() for each device on that host beforehand. 
+> Eventually there was a change in the SCSI core internal state model 
+> which reduced what scsi_remove_device(), when called internally from 
+> within scsi_remove_host(), was able to do.  This is contrary to the text 
+> quoted above.  I haven't tested for some time now how the SCSI core 
+> behaves right nowadays.
+> 
+> Back to scsi_soft_remove_host():
+> 
+> Does the SCSI core actually need separate APIs for soft unbinding 
+> (a.k.a. orderly shutdown) and hot removal?  We surely have different 
+> requirements in both cases:  Give pending commands some time to finish 
+> and send some finalizing commands (e.g. synchronize cache, unlock door) 
+> in the shutdown case, fail all commands and stop any error retries in 
+> the hot unplug case.
+> 
+> But isn't hot unplug just a special case of orderly shutdown --- 
+> basically a case where the transport driver's responsibility is to fail 
+> commands (pending ones and new ones) quickly?  In addition, fail them 
+> with failure indicators which tell upper layers that it is no use to 
+> retry them.
+
+That's right.
+
+> Actually, quick failure and suppression of retries in the hot unplug 
+> case is IMO not even as critical as the proper execution of pending and 
+> finalizing commands in the soft unbinding case.  The only critical 
+> aspect of hot unplug is that IO terminates eventually, i.e. applications 
+> don't hang.
+> 
+> So, rather than adding a scsi_soft_remove_host API, wouldn't it be 
+> appropriate and possible to make sure that
+> 
+>    - scsi_remove_host is able to initiate and perform soft unbinding,
+> 
+>    - LLDs return proper failure codes in the hot unplug case, and SCSI
+>      core and upper layers properly interpret them i.e. don't initiate
+>      futile retries.
+
+These ideas have not escaped me.  There's really no reason to have a 
+separate API for hot unplug at all; the soft unbind sequence would work 
+perfectly well (assuming that I/O fails immediately, as it does with 
+USB).
+
+No, the reason I suggested a separate new API is because of the bizarre 
+way scsi_remove_host() handles -- or used to handle -- outstanding 
+commands.  The midlayer would cancel them all by itself, without 
+telling the LLD or doing anything else.  There's special code in 
+usb-storage to work around this, possibly in other LLDs as well.  I'm 
+afraid that changing the midlayer's behavior would cause some LLDs to 
+malfunction in this regard.
 
 
+The last time I looked at this stuff was back in 2004.  This email 
+thread may be interesting:
 
-List:       linux-kernel
-Subject:    modprobe aha1542 oops with git17
-=46rom:       "Roland" <devzero () web ! de>
-Date:       2008-05-01 23:49:54
+	http://marc.info/?t=109644432800002&r=1&w=2
 
-2.6.25-git17-default on vmware - i`m getting oops when modprobe aha1542=
- (ok,=20
-makes no sense in vmware, but i think this is a regression because it n=
-ever=20
-happend before. i did the same test with older kernels)
+Of course the midlayer has changed since then (scsi_host_cancel no 
+longer exists), so it may not be relevant any more.
 
+Of even more interest and relevance is this thread:
 
-BUG: unable to handle kernel NULL pointer dereference at 00000004
-IP: [<d0820766>] :scsi_mod:scsi_destroy_command_freelist+0xd/0x4f
-*pde =3D 00000000
-Oops: 0000 [#1] SMP
-Modules linked in: aha1542(+) iptable_filter ip_tables ip6table_filter=20
-ip6_tables x_tables ipv6 af_packet microcode firmware_class fuse loop d=
-m_mod=20
-ide_cd_mod cdrom pata_acpi ata_piix ahci ata_generic libata dock=20
-ide_pci_generic rtc_cmos shpchp rtc_core intel_agp piix parport_pc pcne=
-t32=20
-rtc_lib i2c_piix4 parport mii container agpgart ac pci_hotplug button=20
-ide_core i2c_core uhci_hcd usbcore edd ext3 mbcache jbd fan mptsas=20
-scsi_transport_sas mptfc scsi_transport_fc scsi_tgt mptspi mptscsih mpt=
-base=20
-scsi_transport_spi sd_mod sg scsi_mod thermal processor [last unloaded:=
-=20
-speedstep_lib]
+	http://marc.info/?t=109630920600005&r=1&w=2
 
-Pid: 2543, comm: modprobe Not tainted (2.6.25-git17-default #1)
-EIP: 0060:[<d0820766>] EFLAGS: 00010217 CPU: 0
-EIP is at scsi_destroy_command_freelist+0xd/0x4f [scsi_mod]
-EAX: c0c08800 EBX: 00000000 ECX: 00000000 EDX: fffffffc
-ESI: c0c08800 EDI: c0c08818 EBP: d0b4469c ESP: cf3c7e44
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process modprobe (pid: 2543, ti=3Dcf3c6000 task=3Dce8e94a0 task.ti=3Dcf=
-3c6000)
-Stack: c0c08800 00000000 00000000 d0820e05 c0c08960 c037a7cc c0231479=20
-c01cc33b
-       c0c08964 c01cc2fe 00000330 c01ccd5a ce1a5b40 d0a7a980 d08dd8ca=20
-cda0d4e0
-       c01106a6 d0a7a8b8 00000000 c01106bc 00000000 c0c08800 00000000=20
-c036c380
-Call Trace:
- [<d0820e05>] scsi_host_dev_release+0x68/0x93 [scsi_mod]
- [<c0231479>] device_release+0x34/0x56
- [<c01cc33b>] kobject_release+0x3d/0x4f
- [<c01cc2fe>] kobject_release+0x0/0x4f
- [<c01ccd5a>] kref_put+0x36/0x40
- [<d08dd8ca>] aha1542_detect+0x790/0x7b8 [aha1542]
- [<c01106a6>] do_flush_tlb_all+0x0/0x3c
- [<c01106bc>] do_flush_tlb_all+0x16/0x3c
- [<d08dd0cc>] init_this_scsi_driver+0x56/0xc4 [aha1542]
- [<c013db4c>] sys_init_module+0x1694/0x17a7
- [<c0125fe7>] __request_region+0x0/0x74
- [<c01079de>] sys_mmap2+0x62/0x77
- [<c010491f>] sysenter_past_esp+0x78/0xb9
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Code: 08 75 0f 8b 06 e8 10 b2 94 ef 8b 46 04 e8 08 b2 94 ef 5b b8 90 1b=
- 84=20
-d0 5e e9 c1 13 aa ef 57 56 89 c6 53 8d 78 18 eb 1c 8d 53 fc <8b> 42 08 =
-8b 4a=20
-04 89 41 04 89 08 89 5a 08 89 5a 04 8b 46 10 e8
-EIP: [<d0820766>] scsi_destroy_command_freelist+0xd/0x4f [scsi_mod] SS:=
-ESP=20
-0068:cf3c7e44
----[ end trace 3406cf5eaefbd6bf ]---
-_______________________________________________________________________
-Jetzt neu! Sch=FCtzen Sie Ihren PC mit McAfee und WEB.DE. 30 Tage
-kostenlos testen. http://www.pc-sicherheit.web.de/startseite/?mc=3D0222=
-20
+In one of the messages in that thread, James Bottomley wrote:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+------------------------------------------------------------------------
+Right.  scsi_remove_host tells the mid-layer that it's OK to trash all
+inflight commands because you removed all their users before calling
+it.  It also tells us that you won't accept any future commands for this
+host (because you'll error any attempt in queuecommand).
+------------------------------------------------------------------------
+
+Later on Mike Anderson asked:
+
+------------------------------------------------------------------------
+Clarification. James, are you indicating that there needs to be a new
+scsi mid api that performs similar function to scsi_remove_host expect
+does not cancel commands?
+------------------------------------------------------------------------
+
+There was no real answer and things were left hanging.
+
+So I guess part of what I'm asking is whether the situation is now 
+significantly different.
+
+Alan Stern
+
