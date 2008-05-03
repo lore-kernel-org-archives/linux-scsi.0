@@ -1,102 +1,44 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: blk request timeout handler against 2.6.26
-Date: Sat, 3 May 2008 07:20:58 -0600
-Message-ID: <20080503132058.GZ14976@parisc-linux.org>
-References: <20080503020000.GU14976@parisc-linux.org>
+Subject: Re: SCSI target subsystem
+Date: Sat, 3 May 2008 07:28:46 -0600
+Message-ID: <20080503132846.GA14976@parisc-linux.org>
+References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <e2e108260805020906w7f5e92bev46b8d0f96aa7b4d6@mail.gmail.com> <1209745084.3121.39.camel@localhost.localdomain> <481B5AB8.5030108@vlnb.net> <e2e108260805030241w216363dbt4b5f6b2105ad267b@mail.gmail.com> <20080503095314.GX14976@parisc-linux.org> <e2e108260805030339q4fcaedf7t34e737c14801e788@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:36424 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:50158 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbYECNVO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 09:21:14 -0400
+	with ESMTP id S1752638AbYECN2r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2008 09:28:47 -0400
 Content-Disposition: inline
-In-Reply-To: <20080503020000.GU14976@parisc-linux.org>
+In-Reply-To: <e2e108260805030339q4fcaedf7t34e737c14801e788@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: FUJITA Tomonori <tomof@acm.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>
 
+On Sat, May 03, 2008 at 12:39:19PM +0200, Bart Van Assche wrote:
+> To answer your question: as you noticed, I did not yet contribute any
+> code to the SCST project. I'm an iSCSI/iSER/SRP user. I'd like to have
+> a SCSI target framework available on Linux that is as fast as
+> possible, as reliable as possible, as standards compliant as possible,
+> well maintained and for which all kernel code is integrated in the
+> mainstream Linux kernel. I'm probably sharing this desire with all
+> STGT, IET, SCST and LIO users. Do you consider the opinion of SCSI
+> target framework users irrelevant in this discussion ?
 
-Hm.  That'll teach me to work on two things in the same tree.  Ignore
-these three hunks.
+Yes.
 
-On Fri, May 02, 2008 at 08:00:00PM -0600, Matthew Wilcox wrote:
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> index 460d402..00bd514 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -1199,15 +1199,6 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
->  				  (fib_callback) aac_srb_callback, (void *) cmd);
->  }
->  
-> -static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
-> -{
-> -	if ((sizeof(dma_addr_t) > 4) &&
-> -	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
-> -	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-> -		return FAILED;
-> -	return aac_scsi_32(fib, cmd);
-> -}
-> -
->  int aac_get_adapter_info(struct aac_dev* dev)
->  {
->  	struct fib* fibptr;
-> @@ -1367,26 +1358,36 @@ int aac_get_adapter_info(struct aac_dev* dev)
->  		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
->  
->  	dev->dac_support = 0;
-> -	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
-> +	if ((sizeof(dma_addr_t) > 4) &&
-> +	    (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)) {
->  		if (!dev->in_reset)
->  			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
->  				dev->name, dev->id);
->  		dev->dac_support = 1;
->  	}
->  
-> -	if(dacmode != -1) {
-> +	if (dacmode != -1) {
->  		dev->dac_support = (dacmode!=0);
->  	}
-> -	if(dev->dac_support != 0) {
-> +	if (dev->dac_support &&
-> +	    !(aac_get_driver_ident(dev->cardtype)->quirks &
-> +							AAC_QUIRK_SCSI_32)) {
->  		if (!pci_set_dma_mask(dev->pdev, DMA_64BIT_MASK) &&
-> -			!pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
-> +		    !pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
->  			if (!dev->in_reset)
->  				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
->  					dev->name, dev->id);
->  		} else if (!pci_set_dma_mask(dev->pdev, DMA_32BIT_MASK) &&
-> -			!pci_set_consistent_dma_mask(dev->pdev, DMA_32BIT_MASK)) {
-> +			   !pci_set_consistent_dma_mask(dev->pdev,
-> +							DMA_32BIT_MASK)) {
->  			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
->  				dev->name, dev->id);
-> +	 		if (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64) {
-> +				printk(KERN_INFO "%s%d: 64-bit DAC required "
-> +					"for this host, bailing out\n",
-> +					dev->name, dev->id);
-> +				rcode = -ENOMEM;
-> +			}
->  			dev->dac_support = 0;
->  		} else {
->  			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
-> @@ -1398,11 +1399,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
->  	 * Deal with configuring for the individualized limits of each packet
->  	 * interface.
->  	 */
-> -	dev->a_ops.adapter_scsi = (dev->dac_support)
-> -	  ? ((aac_get_driver_ident(dev->cardtype)->quirks & AAC_QUIRK_SCSI_32)
-> -				? aac_scsi_32_64
-> -				: aac_scsi_64)
-> -				: aac_scsi_32;
-> +	dev->a_ops.adapter_scsi = dev->dac_support ? aac_scsi_64 : aac_scsi_32;
->  	if (dev->raw_io_interface) {
->  		dev->a_ops.adapter_bounds = (dev->raw_io_64)
->  					? aac_bounds_64
+Once Vladislav is ready for his project to be merged, let him approach
+us and ask.  I don't know if he considers his project ready for merging.
+Did he ask you for his help?  It's generally considered rather rude to
+merge someone else's code without their consent.  The way you tried to
+get it merged was unhelpful and, if Vladislav were less skillful a
+communicator, could have actively hindered getting it merged.
+
+The correct way to have done this would have been to start a thread on
+the scst mailing list asking whether the developers felt it ready to
+merge.  Then *leave it to them*.
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
