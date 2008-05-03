@@ -1,85 +1,1503 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [dm-devel] [PATCH 06/10] scsi_dh: Do not allow arguments for
-	hardware handlers
-Date: Fri, 02 May 2008 17:01:07 -0700
-Message-ID: <1209772867.21974.90.camel@chandra-ubuntu>
-References: <20080501214941.27759.95121.sendpatchset@chandra-ubuntu>
-	 <20080501215017.27759.37314.sendpatchset@chandra-ubuntu>
-	 <20080502224731.GH18935@agk.fab.redhat.com>
-Reply-To: sekharan@us.ibm.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: blk request timeout handler against 2.6.26
+Date: Fri, 2 May 2008 20:00:00 -0600
+Message-ID: <20080503020000.GU14976@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:58598 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964915AbYECAAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 20:00:07 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m43004Tv011520
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2008 20:00:04 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m43003Rn183048
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2008 18:00:03 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m43002Xj028887
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2008 18:00:03 -0600
-In-Reply-To: <20080502224731.GH18935@agk.fab.redhat.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:35917 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757523AbYECCAS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2008 22:00:18 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alasdair G Kergon <agk@redhat.com>
-Cc: linux-scsi@vger.kernel.org, andmike@us.ibm.com, michaelc@cs.wisc.edu, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, Benoit_Arthur@emc.com, jens.axboe@oracle.com
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>
 
 
-On Fri, 2008-05-02 at 23:47 +0100, Alasdair G Kergon wrote:
-> On Thu, May 01, 2008 at 02:50:17PM -0700, Chandra Seetharaman wrote:
-> > Subject: [PATCH 06/10] scsi_dh: Do not allow arguments for hardware handlers
-> > From: Chandra Seetharaman <sekharan@us.ibm.com>
-> > The new implementation does not use the arguments provided with the
-> > hardware handler. This patch makes the change visible to the user by
-> > failing table load when arguments are provided with the hardware handler.
-> 
-> But then someone supplying such an arg may need to update their
-> userspace multipath config file before they can use this new kernel.
-> 
-> Past experience suggests that changes like that usually come back
-> and bite us.  Let's instead just have the kernel log a message noting
-> that the args have been ignored and allow people to deal with it at
-> their leisure.
+This patch is a forward-port of the patch Jens posted last October.
+gdth_proc needs some loving, I just #if 0'd it out for the moment.
 
-Understand.
-
-How does the following patch look ?
---------------------
-Subject: [PATCH 06/10] scsi_dh: Print warning when arguments were provided for hardware handlers
-
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-
-The new implementation does not use the arguments provided with the
-hardware handler. This patch makes the change visible to the user by
-printing a warning to the kernel log.
-
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
-Index: linux-2.6.25/drivers/md/dm-mpath.c
-===================================================================
---- linux-2.6.25.orig/drivers/md/dm-mpath.c
-+++ linux-2.6.25/drivers/md/dm-mpath.c
-@@ -656,8 +656,11 @@ static int parse_hw_handler(struct arg_s
- 		{0, 1024, "invalid number of hardware handler args"},
- 	};
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b754a4a..cb4d301 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -113,6 +113,8 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
  
--	if (read_param(_params, shift(as), &hw_argc, &ti->error))
--		return -EINVAL;
-+	if (read_param(_params, shift(as), &hw_argc, &ti->error)) {
-+		if (hw_argc > 1)
-+			printk(KERN_WARN "Additional arguments provided to "
-+				"hardware handler were ignored\n");
+ 	INIT_LIST_HEAD(&rq->queuelist);
+ 	INIT_LIST_HEAD(&rq->donelist);
++	INIT_LIST_HEAD(&rq->timeout_list);
++	rq->timeout = 0;
+ 	rq->q = q;
+ 	rq->sector = rq->hard_sector = (sector_t) -1;
+ 	INIT_HLIST_NODE(&rq->hash);
+@@ -456,6 +458,8 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
+ }
+ EXPORT_SYMBOL(blk_alloc_queue);
+ 
++static void blk_rq_timed_out_timer(unsigned long data);
++
+ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ {
+ 	struct request_queue *q;
+@@ -475,6 +479,8 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ 	}
+ 
+ 	init_timer(&q->unplug_timer);
++	setup_timer(&q->timeout, blk_rq_timed_out_timer, (unsigned long) q);
++	INIT_LIST_HEAD(&q->timeout_list);
+ 
+ 	kobject_init(&q->kobj, &blk_queue_ktype);
+ 
+@@ -888,6 +894,7 @@ EXPORT_SYMBOL(blk_start_queueing);
+  */
+ void blk_requeue_request(struct request_queue *q, struct request *rq)
+ {
++	blk_delete_timer(rq);
+ 	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
+ 
+ 	if (blk_rq_tagged(rq))
+@@ -1665,24 +1672,145 @@ static int __cpuinit blk_cpu_notify(struct notifier_block *self,
+ 	return NOTIFY_OK;
+ }
+ 
+-
+ static struct notifier_block blk_cpu_notifier __cpuinitdata = {
+ 	.notifier_call	= blk_cpu_notify,
+ };
+ 
+ /**
+- * blk_complete_request - end I/O on a request
+- * @req:      the request being processed
++ * blk_delete_timer - Delete/cancel timer for a given function.
++ * @req:	request that we are canceling timer for
+  *
+- * Description:
+- *     Ends all I/O on a request. It does not handle partial completions,
+- *     unless the driver actually implements this in its completion callback
+- *     through requeueing. The actual completion happens out-of-order,
+- *     through a softirq handler. The user must have registered a completion
+- *     callback through blk_queue_softirq_done().
+- **/
++ * Return value:
++ *	1 if we were able to detach the timer.  0 if we blew it, and the
++ *	timer function has already started to run. Caller must hold queue lock.
++ */
++int blk_delete_timer(struct request *req)
++{
++	struct request_queue *q = req->q;
+ 
+-void blk_complete_request(struct request *req)
++	/*
++	 * Nothing to detach
++	 */
++	if (!q->rq_timed_out_fn)
++		return 1;
++
++	/*
++	 * Not on the list, must have already been scheduled (or never added)
++	 */
++	if (list_empty(&req->timeout_list))
++		return 0;
++
++	list_del_init(&req->timeout_list);
++
++	if (list_empty(&q->timeout_list))
++		del_timer(&q->timeout);
++
++	return 1;
++}
++EXPORT_SYMBOL_GPL(blk_delete_timer);
++
++static void blk_rq_timed_out(struct request *req)
++{
++	struct request_queue *q = req->q;
++	enum blk_eh_timer_return ret;
++
++	ret = q->rq_timed_out_fn(req);
++	switch (ret) {
++	case BLK_EH_HANDLED:
++		__blk_complete_request(req);
++		break;
++	case BLK_EH_RESET_TIMER:
++		blk_add_timer(req);
++		break;
++	case BLK_EH_NOT_HANDLED:
++		/*
++		 * LLD handles this for now but in the future
++		 * we can send a request msg to abort the command
++		 * and we can move more of the generic scsi eh code to
++		 * the blk layer.
++		 */
++		break;
++	default:
++		printk(KERN_ERR "block: bad eh return: %d\n", ret);
++		break;
 +	}
++}
++
++static void blk_rq_timed_out_timer(unsigned long data)
++{
++	struct request_queue *q = (struct request_queue *) data;
++	unsigned long flags, next = 0;
++	struct request *rq, *tmp;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++
++	list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_list) {
++		if (!next || time_before(next, rq->timeout))
++			next = rq->timeout;
++		if (time_after_eq(jiffies, rq->timeout)) {
++			list_del_init(&rq->timeout_list);
++			blk_rq_timed_out(rq);
++		}
++	}
++
++	if (next)
++		mod_timer(&q->timeout, round_jiffies(next));
++
++	spin_unlock_irqrestore(q->queue_lock, flags);
++}
++
++/**
++ * blk_abort_request -- Request request recovery for the specified command
++ * @req:       pointer to the request of interest
++ *
++ * This function requests that the block layer start recovery for the
++ * request by deleting the timer and calling the q's timeout function.
++ * LLDDs who implement their own error recovery MAY ignore the timeout
++ * event if they generated blk_abort_req. Must hold queue lock.
++ */
++void blk_abort_request(struct request *req)
++{
++	if (!blk_delete_timer(req))
++		return;
++	blk_rq_timed_out(req);
++}
++EXPORT_SYMBOL_GPL(blk_abort_request);
++
++/**
++ * blk_add_timer - Start timeout timer for a single request
++ * @req:	request that is about to start running.
++ *
++ * Notes:
++ *    Each request has its own timer, and as it is added to the queue, we
++ *    set up the timer. When the request completes, we cancel the timer.
++ */
++void blk_add_timer(struct request *req)
++{
++	struct request_queue *q = req->q;
++	unsigned long expiry;
++
++	BUG_ON(!list_empty(&req->timeout_list));
++
++	if (req->timeout)
++		req->timeout += jiffies;
++	else
++		req->timeout = jiffies + q->rq_timeout;
++
++	list_add_tail(&req->timeout_list, &q->timeout_list);
++
++	/*
++	 * If the timer isn't already pending or this timeout is earlier
++	 * than an existing one, modify the timer. Round to next nearest
++	 * second.
++	 */
++	expiry = round_jiffies(req->timeout);
++	if (!timer_pending(&q->timeout) ||
++	    time_before(expiry, q->timeout.expires))
++		mod_timer(&q->timeout, expiry);
++}
++EXPORT_SYMBOL_GPL(blk_add_timer);
++
++void __blk_complete_request(struct request *req)
+ {
+ 	struct list_head *cpu_list;
+ 	unsigned long flags;
+@@ -1697,6 +1825,34 @@ void blk_complete_request(struct request *req)
  
- 	if (!hw_argc)
- 		return 0;
-------------------------
-> 
-> Alasdair
+ 	local_irq_restore(flags);
+ }
++EXPORT_SYMBOL(__blk_complete_request);
++
++/**
++ * blk_complete_request - end I/O on a request
++ * @req:	the request being processed
++ *
++ * Description:
++ *	Ends all I/O on a request. It does not handle partial completions,
++ *	unless the driver actually implements this in its completion callback
++ *	through requeueing. Theh actual completion happens out-of-order,
++ *	through a softirq handler. The user must have registered a completion
++ *	callback through blk_queue_softirq_done().
++ */
++void blk_complete_request(struct request *req)
++{
++	/*
++	 * We don't have to worry about this one timing out any more.
++	 * If we are unable to remove the timer, then the command
++	 * has already timed out.  In which case, we have no choice but to
++	 * let the timeout function run, as we have no idea where in fact
++	 * that function could really be.  It might be on another processor,
++	 * etc, etc.
++	 */
++	if (!blk_delete_timer(req))
++		return;
++
++	__blk_complete_request(req);
++}
+ EXPORT_SYMBOL(blk_complete_request);
+ 
+ /*
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index bb93d4c..14c02b9 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -60,6 +60,18 @@ void blk_queue_softirq_done(struct request_queue *q, softirq_done_fn *fn)
+ }
+ EXPORT_SYMBOL(blk_queue_softirq_done);
+ 
++void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
++{
++	q->rq_timeout = timeout;
++}
++EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
++
++void blk_queue_rq_timed_out(struct request_queue *q, rq_timed_out_fn *fn)
++{
++	q->rq_timed_out_fn = fn;
++}
++EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
++
+ /**
+  * blk_queue_make_request - define an alternate make_request function for a device
+  * @q:  the request queue for the device to be affected
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 61dcd00..d9570d6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -33,6 +33,7 @@
+  */
+ 
+ #include <linux/kernel.h>
++#include <linux/blkdev.h>
+ #include <linux/pci.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -339,29 +340,29 @@ static void ata_eh_clear_action(struct ata_link *link, struct ata_device *dev,
+  *	RETURNS:
+  *	EH_HANDLED or EH_NOT_HANDLED
+  */
+-enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
++enum blk_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct ata_port *ap = ata_shost_to_port(host);
+ 	unsigned long flags;
+ 	struct ata_queued_cmd *qc;
+-	enum scsi_eh_timer_return ret;
++	enum blk_eh_timer_return ret;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+ 	if (ap->ops->error_handler) {
+-		ret = EH_NOT_HANDLED;
++		ret = BLK_EH_NOT_HANDLED;
+ 		goto out;
+ 	}
+ 
+-	ret = EH_HANDLED;
++	ret = BLK_EH_HANDLED;
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	qc = ata_qc_from_tag(ap, ap->link.active_tag);
+ 	if (qc) {
+ 		WARN_ON(qc->scsicmd != cmd);
+ 		qc->flags |= ATA_QCFLAG_EH_SCHEDULED;
+ 		qc->err_mask |= AC_ERR_TIMEOUT;
+-		ret = EH_NOT_HANDLED;
++		ret = BLK_EH_NOT_HANDLED;
+ 	}
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+@@ -709,7 +710,7 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
+ 	 * Note that ATA_QCFLAG_FAILED is unconditionally set after
+ 	 * this function completes.
+ 	 */
+-	scsi_req_abort_cmd(qc->scsicmd);
++	blk_abort_request(qc->scsicmd->request);
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 4514283..829cad5 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -151,7 +151,7 @@ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
+ 
+ /* libata-eh.c */
+-extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
++extern enum blk_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
+ extern void ata_scsi_error(struct Scsi_Host *host);
+ extern void ata_port_wait_eh(struct ata_port *ap);
+ extern void ata_eh_fastdrain_timerfn(unsigned long arg);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 460d402..00bd514 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1134,7 +1134,7 @@ static struct aac_srb * aac_scsi_common(struct fib * fib, struct scsi_cmnd * cmd
+ 	srbcmd->id       = cpu_to_le32(scmd_id(cmd));
+ 	srbcmd->lun      = cpu_to_le32(cmd->device->lun);
+ 	srbcmd->flags    = cpu_to_le32(flag);
+-	timeout = cmd->timeout_per_command/HZ;
++	timeout = cmd->request->timeout/HZ;
+ 	if (timeout == 0)
+ 		timeout = 1;
+ 	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
+@@ -1199,15 +1199,6 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
+ 				  (fib_callback) aac_srb_callback, (void *) cmd);
+ }
+ 
+-static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
+-{
+-	if ((sizeof(dma_addr_t) > 4) &&
+-	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
+-	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
+-		return FAILED;
+-	return aac_scsi_32(fib, cmd);
+-}
+-
+ int aac_get_adapter_info(struct aac_dev* dev)
+ {
+ 	struct fib* fibptr;
+@@ -1367,26 +1358,36 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
+ 
+ 	dev->dac_support = 0;
+-	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
++	if ((sizeof(dma_addr_t) > 4) &&
++	    (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)) {
+ 		if (!dev->in_reset)
+ 			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
+ 				dev->name, dev->id);
+ 		dev->dac_support = 1;
+ 	}
+ 
+-	if(dacmode != -1) {
++	if (dacmode != -1) {
+ 		dev->dac_support = (dacmode!=0);
+ 	}
+-	if(dev->dac_support != 0) {
++	if (dev->dac_support &&
++	    !(aac_get_driver_ident(dev->cardtype)->quirks &
++							AAC_QUIRK_SCSI_32)) {
+ 		if (!pci_set_dma_mask(dev->pdev, DMA_64BIT_MASK) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
++		    !pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
+ 			if (!dev->in_reset)
+ 				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
+ 					dev->name, dev->id);
+ 		} else if (!pci_set_dma_mask(dev->pdev, DMA_32BIT_MASK) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_32BIT_MASK)) {
++			   !pci_set_consistent_dma_mask(dev->pdev,
++							DMA_32BIT_MASK)) {
+ 			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
+ 				dev->name, dev->id);
++	 		if (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64) {
++				printk(KERN_INFO "%s%d: 64-bit DAC required "
++					"for this host, bailing out\n",
++					dev->name, dev->id);
++				rcode = -ENOMEM;
++			}
+ 			dev->dac_support = 0;
+ 		} else {
+ 			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
+@@ -1398,11 +1399,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 	 * Deal with configuring for the individualized limits of each packet
+ 	 * interface.
+ 	 */
+-	dev->a_ops.adapter_scsi = (dev->dac_support)
+-	  ? ((aac_get_driver_ident(dev->cardtype)->quirks & AAC_QUIRK_SCSI_32)
+-				? aac_scsi_32_64
+-				: aac_scsi_64)
+-				: aac_scsi_32;
++	dev->a_ops.adapter_scsi = dev->dac_support ? aac_scsi_64 : aac_scsi_32;
+ 	if (dev->raw_io_interface) {
+ 		dev->a_ops.adapter_bounds = (dev->raw_io_64)
+ 					? aac_bounds_64
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index c6d6e7c..c31ce71 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -463,7 +463,6 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+ 
+     /* use request field to save the ptr. to completion struct. */
+     scp->request = (struct request *)&wait;
+-    scp->timeout_per_command = timeout*HZ;
+     scp->cmd_len = 12;
+     memcpy(scp->cmnd, cmnd, 12);
+     cmndinfo.priority = IOCTL_PRI;
+@@ -3971,7 +3970,7 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
+     BUG_ON(!cmndinfo);
+ 
+     scp->scsi_done = done;
+-    gdth_update_timeout(scp, scp->timeout_per_command * 6);
++    gdth_update_timeout(scp, scp->request->timeout * 6);
+     cmndinfo->priority = DEFAULT_PRI;
+ 
+     return __gdth_queuecommand(ha, scp, cmndinfo);
+diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
+index ce0228e..02dc6a5 100644
+--- a/drivers/scsi/gdth_proc.c
++++ b/drivers/scsi/gdth_proc.c
+@@ -797,20 +797,22 @@ static int gdth_update_timeout(Scsi_Cmnd *scp, int timeout)
+ {
+     int oldto;
+ 
+-    oldto = scp->timeout_per_command;
+-    scp->timeout_per_command = timeout;
++    oldto = scp->request->timeout;
++    scp->request->timeout = timeout;
+ 
++#if 0
+     if (timeout == 0) {
+-        del_timer(&scp->eh_timeout);
+-        scp->eh_timeout.data = (unsigned long) NULL;
+-        scp->eh_timeout.expires = 0;
++        del_timer(&scp->request->timer);
++        scp->request->timer.data = (unsigned long) NULL;
++        scp->request->timer.expires = 0;
+     } else {
+-        if (scp->eh_timeout.data != (unsigned long) NULL) 
+-            del_timer(&scp->eh_timeout);
+-        scp->eh_timeout.data = (unsigned long) scp;
+-        scp->eh_timeout.expires = jiffies + timeout;
+-        add_timer(&scp->eh_timeout);
++        if (scp->request->timer.data != (unsigned long) NULL) 
++            del_timer(&scp->request->timer);
++        scp->request->timer.data = (unsigned long) scp;
++        scp->request->timer.expires = jiffies + timeout;
++        add_timer(&scp->request->timer);
+     }
++#endif
+ 
+     return oldto;
+ }
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 4a922c5..e2c4e0a 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -750,7 +750,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
+ 	init_event_struct(evt_struct,
+ 			  handle_cmd_rsp,
+ 			  VIOSRP_SRP_FORMAT,
+-			  cmnd->timeout_per_command/HZ);
++			  cmnd->request->timeout/HZ);
+ 
+ 	evt_struct->cmnd = cmnd;
+ 	evt_struct->cmnd_done = done;
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index 44d8d51..dde8b72 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -774,7 +774,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
+ 	pc->req_xfer = pc->buf_size = scsi_bufflen(cmd);
+ 	pc->scsi_cmd = cmd;
+ 	pc->done = done;
+-	pc->timeout = jiffies + cmd->timeout_per_command;
++	pc->timeout = jiffies + cmd->request->timeout;
+ 
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
+ 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index de5ae6a..839e100 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3669,7 +3669,8 @@ static int ipr_slave_configure(struct scsi_device *sdev)
+ 			sdev->no_uld_attach = 1;
+ 		}
+ 		if (ipr_is_vset_device(res)) {
+-			sdev->timeout = IPR_VSET_RW_TIMEOUT;
++			blk_queue_rq_timeout(sdev->request_queue,
++					     IPR_VSET_RW_TIMEOUT);
+ 			blk_queue_max_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
+ 		}
+ 		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 7c615c7..08700b3 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3819,7 +3819,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
+ 		scb->cmd.dcdb.segment_4G = 0;
+ 		scb->cmd.dcdb.enhanced_sg = 0;
+ 
+-		TimeOut = scb->scsi_cmd->timeout_per_command;
++		TimeOut = scb->scsi_cmd->request->timeout;
+ 
+ 		if (ha->subsys->param[4] & 0x00100000) {	/* If NEW Tape DCDB is Supported */
+ 			if (!scb->sg_len) {
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 010c1b9..e4192e5 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1395,12 +1395,12 @@ static void iscsi_start_tx(struct iscsi_conn *conn)
+ 	scsi_queue_work(conn->session->host, &conn->xmitwork);
+ }
+ 
+-static enum scsi_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *scmd)
++static enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *scmd)
+ {
+ 	struct iscsi_cls_session *cls_session;
+ 	struct iscsi_session *session;
+ 	struct iscsi_conn *conn;
+-	enum scsi_eh_timer_return rc = EH_NOT_HANDLED;
++	enum blk_eh_timer_return rc = BLK_EH_NOT_HANDLED;
+ 
+ 	cls_session = starget_to_session(scsi_target(scmd->device));
+ 	session = class_to_transport_session(cls_session);
+@@ -1413,14 +1413,14 @@ static enum scsi_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *scmd)
+ 		 * We are probably in the middle of iscsi recovery so let
+ 		 * that complete and handle the error.
+ 		 */
+-		rc = EH_RESET_TIMER;
++		rc = BLK_EH_RESET_TIMER;
+ 		goto done;
+ 	}
+ 
+ 	conn = session->leadconn;
+ 	if (!conn) {
+ 		/* In the middle of shuting down */
+-		rc = EH_RESET_TIMER;
++		rc = BLK_EH_RESET_TIMER;
+ 		goto done;
+ 	}
+ 
+@@ -1432,20 +1432,20 @@ static enum scsi_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *scmd)
+ 	 */
+ 	if (time_before_eq(conn->last_recv + (conn->recv_timeout * HZ) +
+ 			    (conn->ping_timeout * HZ), jiffies))
+-		rc = EH_RESET_TIMER;
++		rc = BLK_EH_RESET_TIMER;
+ 	/*
+ 	 * if we are about to check the transport then give the command
+ 	 * more time
+ 	 */
+ 	if (time_before_eq(conn->last_recv + (conn->recv_timeout * HZ),
+ 			   jiffies))
+-		rc = EH_RESET_TIMER;
++		rc = BLK_EH_RESET_TIMER;
+ 	/* if in the middle of checking the transport then give us more time */
+ 	if (conn->ping_mtask)
+-		rc = EH_RESET_TIMER;
++		rc = BLK_EH_RESET_TIMER;
+ done:
+ 	spin_unlock(&session->lock);
+-	debug_scsi("return %s\n", rc == EH_RESET_TIMER ? "timer reset" : "nh");
++	debug_scsi("return %s\n", rc == BLK_EH_RESET_TIMER ? "timer reset" : "nh");
+ 	return rc;
+ }
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 744f06d..c06ae3c 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -398,7 +398,7 @@ void sas_ata_task_abort(struct sas_task *task)
+ 
+ 	/* Bounce SCSI-initiated commands to the SCSI EH */
+ 	if (qc->scsicmd) {
+-		scsi_req_abort_cmd(qc->scsicmd);
++		blk_abort_request(qc->scsicmd->request);
+ 		scsi_schedule_eh(qc->scsicmd->device->host);
+ 		return;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index b4f9368..0001374 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -55,7 +55,7 @@ void sas_unregister_phys(struct sas_ha_struct *sas_ha);
+ int  sas_register_ports(struct sas_ha_struct *sas_ha);
+ void sas_unregister_ports(struct sas_ha_struct *sas_ha);
+ 
+-enum scsi_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *);
++enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *);
+ 
+ int  sas_init_queue(struct sas_ha_struct *sas_ha);
+ int  sas_init_events(struct sas_ha_struct *sas_ha);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 601ec5b..b73e39c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -673,43 +673,43 @@ out:
+ 	return;
+ }
+ 
+-enum scsi_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
++enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
+ {
+ 	struct sas_task *task = TO_SAS_TASK(cmd);
+ 	unsigned long flags;
+ 
+ 	if (!task) {
+-		cmd->timeout_per_command /= 2;
++		cmd->request->timeout /= 2;
+ 		SAS_DPRINTK("command 0x%p, task 0x%p, gone: %s\n",
+-			    cmd, task, (cmd->timeout_per_command ?
+-			    "EH_RESET_TIMER" : "EH_NOT_HANDLED"));
+-		if (!cmd->timeout_per_command)
+-			return EH_NOT_HANDLED;
+-		return EH_RESET_TIMER;
++			    cmd, task, (cmd->request->timeout ?
++			    "BLK_EH_RESET_TIMER" : "BLK_EH_NOT_HANDLED"));
++		if (!cmd->request->timeout)
++			return BLK_EH_NOT_HANDLED;
++		return BLK_EH_RESET_TIMER;
+ 	}
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	BUG_ON(task->task_state_flags & SAS_TASK_STATE_ABORTED);
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+-		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
+-			    cmd, task);
+-		return EH_HANDLED;
++		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: "
++			    "BLK_EH_HANDLED\n", cmd, task);
++		return BLK_EH_HANDLED;
+ 	}
+ 	if (!(task->task_state_flags & SAS_TASK_AT_INITIATOR)) {
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 		SAS_DPRINTK("command 0x%p, task 0x%p, not at initiator: "
+-			    "EH_RESET_TIMER\n",
++			    "BLK_EH_RESET_TIMER\n",
+ 			    cmd, task);
+-		return EH_RESET_TIMER;
++		return BLK_EH_RESET_TIMER;
+ 	}
+ 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_NOT_HANDLED\n",
++	SAS_DPRINTK("command 0x%p, task 0x%p, timed out: BLK_EH_NOT_HANDLED\n",
+ 		    cmd, task);
+ 
+-	return EH_NOT_HANDLED;
++	return BLK_EH_NOT_HANDLED;
+ }
+ 
+ int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+@@ -1039,7 +1039,7 @@ void sas_task_abort(struct sas_task *task)
+ 		return;
+ 	}
+ 
+-	scsi_req_abort_cmd(sc);
++	blk_abort_request(sc->request);
+ 	scsi_schedule_eh(sc->device->host);
+ }
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index b937e9c..247dddb 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1063,7 +1063,7 @@ static int megasas_generic_reset(struct scsi_cmnd *scmd)
+  * cmd has not been completed within the timeout period.
+  */
+ static enum
+-scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
++blk_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
+ {
+ 	struct megasas_cmd *cmd = (struct megasas_cmd *)scmd->SCp.ptr;
+ 	struct megasas_instance *instance;
+@@ -1071,7 +1071,7 @@ scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
+ 
+ 	if (time_after(jiffies, scmd->jiffies_at_alloc +
+ 				(MEGASAS_DEFAULT_CMD_TIMEOUT * 2) * HZ)) {
+-		return EH_NOT_HANDLED;
++		return BLK_EH_NOT_HANDLED;
+ 	}
+ 
+ 	instance = cmd->instance;
+@@ -1085,7 +1085,7 @@ scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
+ 
+ 		spin_unlock_irqrestore(instance->host->host_lock, flags);
+ 	}
+-	return EH_RESET_TIMER;
++	return BLK_EH_RESET_TIMER;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index c57c94c..3b7240e 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -4170,8 +4170,8 @@ static int ncr_queue_command (struct ncb *np, struct scsi_cmnd *cmd)
+ 	**
+ 	**----------------------------------------------------
+ 	*/
+-	if (np->settle_time && cmd->timeout_per_command >= HZ) {
+-		u_long tlimit = jiffies + cmd->timeout_per_command - HZ;
++	if (np->settle_time && cmd->request->timeout >= HZ) {
++		u_long tlimit = jiffies + cmd->request->timeout - HZ;
+ 		if (time_after(np->settle_time, tlimit))
+ 			np->settle_time = tlimit;
+ 	}
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 09ab3ea..341fd0f 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -2845,7 +2845,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
+ 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
+ 
+ 	/* Set ISP command timeout. */
+-	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
++	pkt->timeout = cpu_to_le16(cmd->request->timeout/HZ);
+ 
+ 	/* Set device target ID and LUN */
+ 	pkt->lun = SCSI_LUN_32(cmd);
+@@ -3114,7 +3114,7 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
+ 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
+ 
+ 	/* Set ISP command timeout. */
+-	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
++	pkt->timeout = cpu_to_le16(cmd->request->timeout/HZ);
+ 
+ 	/* Set device target ID and LUN */
+ 	pkt->lun = SCSI_LUN_32(cmd);
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0c78694..0ad1d59 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1542,7 +1542,7 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ 	DEBUG2(printk(KERN_INFO
+ 		      "scsi%ld: DEVICE_RESET cmd=%p jiffies = 0x%lx, to=%x,"
+ 		      "dpc_flags=%lx, status=%x allowed=%d\n", ha->host_no,
+-		      cmd, jiffies, cmd->timeout_per_command / HZ,
++		      cmd, jiffies, cmd->request->timeout / HZ,
+ 		      ha->dpc_flags, cmd->result, cmd->allowed));
+ 
+ 	/* FIXME: wait for hba to go online */
+@@ -1597,8 +1597,8 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	DEBUG2(printk(KERN_INFO
+ 		      "scsi%ld: TARGET_DEVICE_RESET cmd=%p jiffies = 0x%lx, "
+-		      "to=%x,dpc_flags=%lx, status=%x allowed=%d\n",
+-		      ha->host_no, cmd, jiffies, cmd->timeout_per_command / HZ,
++		      "dpc_flags=%lx, status=%x allowed=%d\n",
++		      ha->host_no, cmd, jiffies,
+ 		      ha->dpc_flags, cmd->result, cmd->allowed));
+ 
+ 	stat = qla4xxx_reset_target(ha, ddb_entry);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 12d69d7..0d508d5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -268,7 +268,6 @@ struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, gfp_t gfp_mask)
+ 		unsigned long flags;
+ 
+ 		cmd->device = dev;
+-		init_timer(&cmd->eh_timeout);
+ 		INIT_LIST_HEAD(&cmd->list);
+ 		spin_lock_irqsave(&dev->list_lock, flags);
+ 		list_add_tail(&cmd->list, &dev->cmd_list);
+@@ -621,14 +620,19 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	unsigned long timeout;
+ 	int rtn = 0;
+ 
++	/*
++	 * We will use a queued command if possible, otherwise we will
++	 * emulate the queuing and calling of completion function ourselves.
++	 */
++	atomic_inc(&cmd->device->iorequest_cnt);
++
+ 	/* check if the device is still usable */
+ 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
+ 		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
+ 		 * returns an immediate error upwards, and signals
+ 		 * that the device is no longer present */
+ 		cmd->result = DID_NO_CONNECT << 16;
+-		atomic_inc(&cmd->device->iorequest_cnt);
+-		__scsi_done(cmd);
++		scsi_done(cmd);
+ 		/* return 0 (because the command has been processed) */
+ 		goto out;
+ 	}
+@@ -641,7 +645,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		 * future requests should not occur until the device 
+ 		 * transitions out of the suspend state.
+ 		 */
+-		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
++
++		scsi_queue_retry(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+ 
+ 		SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked \n"));
+ 
+@@ -683,21 +688,9 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		host->resetting = 0;
+ 	}
+ 
+-	/* 
+-	 * AK: unlikely race here: for some reason the timer could
+-	 * expire before the serial number is set up below.
+-	 */
+-	scsi_add_timer(cmd, cmd->timeout_per_command, scsi_times_out);
+-
+ 	scsi_log_send(cmd);
+ 
+ 	/*
+-	 * We will use a queued command if possible, otherwise we will
+-	 * emulate the queuing and calling of completion function ourselves.
+-	 */
+-	atomic_inc(&cmd->device->iorequest_cnt);
+-
+-	/*
+ 	 * Before we queue this command, check if the command
+ 	 * length exceeds what the host adapter can handle.
+ 	 */
+@@ -711,6 +704,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	}
+ 
+ 	spin_lock_irqsave(host->host_lock, flags);
++	/* 
++	 * AK: unlikely race here: for some reason the timer could
++	 * expire before the serial number is set up below.
++	 *
++	 * TODO: kill serial or move to blk layer
++	 */
+ 	scsi_cmd_get_serial(host, cmd); 
+ 
+ 	if (unlikely(host->shost_state == SHOST_DEL)) {
+@@ -721,12 +720,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	}
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 	if (rtn) {
+-		if (scsi_delete_timer(cmd)) {
+-			atomic_inc(&cmd->device->iodone_cnt);
+-			scsi_queue_insert(cmd,
+-					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
+-					  rtn : SCSI_MLQUEUE_HOST_BUSY);
+-		}
++		scsi_queue_retry(cmd, (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
++						rtn : SCSI_MLQUEUE_HOST_BUSY);
+ 		SCSI_LOG_MLQUEUE(3,
+ 		    printk("queuecommand : request rejected\n"));
+ 	}
+@@ -737,24 +732,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ }
+ 
+ /**
+- * scsi_req_abort_cmd -- Request command recovery for the specified command
+- * @cmd: pointer to the SCSI command of interest
+- *
+- * This function requests that SCSI Core start recovery for the
+- * command by deleting the timer and adding the command to the eh
+- * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+- * implement their own error recovery MAY ignore the timeout event if
+- * they generated scsi_req_abort_cmd.
+- */
+-void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
+-{
+-	if (!scsi_delete_timer(cmd))
+-		return;
+-	scsi_times_out(cmd);
+-}
+-EXPORT_SYMBOL(scsi_req_abort_cmd);
+-
+-/**
+  * scsi_done - Enqueue the finished SCSI command into the done queue.
+  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+@@ -769,42 +746,7 @@ EXPORT_SYMBOL(scsi_req_abort_cmd);
+  */
+ static void scsi_done(struct scsi_cmnd *cmd)
+ {
+-	/*
+-	 * We don't have to worry about this one timing out anymore.
+-	 * If we are unable to remove the timer, then the command
+-	 * has already timed out.  In which case, we have no choice but to
+-	 * let the timeout function run, as we have no idea where in fact
+-	 * that function could really be.  It might be on another processor,
+-	 * etc, etc.
+-	 */
+-	if (!scsi_delete_timer(cmd))
+-		return;
+-	__scsi_done(cmd);
+-}
+-
+-/* Private entry to scsi_done() to complete a command when the timer
+- * isn't running --- used by scsi_times_out */
+-void __scsi_done(struct scsi_cmnd *cmd)
+-{
+-	struct request *rq = cmd->request;
+-
+-	/*
+-	 * Set the serial numbers back to zero
+-	 */
+-	cmd->serial_number = 0;
+-
+-	atomic_inc(&cmd->device->iodone_cnt);
+-	if (cmd->result)
+-		atomic_inc(&cmd->device->ioerr_cnt);
+-
+-	BUG_ON(!rq);
+-
+-	/*
+-	 * The uptodate/nbytes values don't matter, as we allow partial
+-	 * completes and thus will check this in the softirq callback
+-	 */
+-	rq->completion_data = cmd;
+-	blk_complete_request(rq);
++	blk_complete_request(cmd->request);
+ }
+ 
+ /* Move this to a header if it becomes more generally useful */
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1eaba6c..5e10d18 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -112,69 +112,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+ }
+ 
+ /**
+- * scsi_add_timer - Start timeout timer for a single scsi command.
+- * @scmd:	scsi command that is about to start running.
+- * @timeout:	amount of time to allow this command to run.
+- * @complete:	timeout function to call if timer isn't canceled.
+- *
+- * Notes:
+- *    This should be turned into an inline function.  Each scsi command
+- *    has its own timer, and as it is added to the queue, we set up the
+- *    timer.  When the command completes, we cancel the timer.
+- */
+-void scsi_add_timer(struct scsi_cmnd *scmd, int timeout,
+-		    void (*complete)(struct scsi_cmnd *))
+-{
+-
+-	/*
+-	 * If the clock was already running for this command, then
+-	 * first delete the timer.  The timer handling code gets rather
+-	 * confused if we don't do this.
+-	 */
+-	if (scmd->eh_timeout.function)
+-		del_timer(&scmd->eh_timeout);
+-
+-	scmd->eh_timeout.data = (unsigned long)scmd;
+-	scmd->eh_timeout.expires = jiffies + timeout;
+-	scmd->eh_timeout.function = (void (*)(unsigned long)) complete;
+-
+-	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p, time:"
+-					  " %d, (%p)\n", __FUNCTION__,
+-					  scmd, timeout, complete));
+-
+-	add_timer(&scmd->eh_timeout);
+-}
+-
+-/**
+- * scsi_delete_timer - Delete/cancel timer for a given function.
+- * @scmd:	Cmd that we are canceling timer for
+- *
+- * Notes:
+- *     This should be turned into an inline function.
+- *
+- * Return value:
+- *     1 if we were able to detach the timer.  0 if we blew it, and the
+- *     timer function has already started to run.
+- */
+-int scsi_delete_timer(struct scsi_cmnd *scmd)
+-{
+-	int rtn;
+-
+-	rtn = del_timer(&scmd->eh_timeout);
+-
+-	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p,"
+-					 " rtn: %d\n", __FUNCTION__,
+-					 scmd, rtn));
+-
+-	scmd->eh_timeout.data = (unsigned long)NULL;
+-	scmd->eh_timeout.function = NULL;
+-
+-	return rtn;
+-}
+-
+-/**
+  * scsi_times_out - Timeout function for normal scsi commands.
+- * @scmd:	Cmd that is timing out.
++ * @req:	request that is timing out.
+  *
+  * Notes:
+  *     We do not need to lock this.  There is the potential for a race
+@@ -182,9 +121,11 @@ int scsi_delete_timer(struct scsi_cmnd *scmd)
+  *     normal completion function determines that the timer has already
+  *     fired, then it mustn't do anything.
+  */
+-void scsi_times_out(struct scsi_cmnd *scmd)
++enum blk_eh_timer_return scsi_times_out(struct request *req)
+ {
+-	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
++	struct scsi_cmnd *scmd = req->special;
++	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
++	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
+ 
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
+@@ -196,22 +137,20 @@ void scsi_times_out(struct scsi_cmnd *scmd)
+ 		eh_timed_out = NULL;
+ 
+ 	if (eh_timed_out)
+-		switch (eh_timed_out(scmd)) {
+-		case EH_HANDLED:
+-			__scsi_done(scmd);
+-			return;
+-		case EH_RESET_TIMER:
+-			scsi_add_timer(scmd, scmd->timeout_per_command,
+-				       scsi_times_out);
+-			return;
+-		case EH_NOT_HANDLED:
++		rtn = eh_timed_out(scmd);
++		switch (rtn) {
++		case BLK_EH_NOT_HANDLED:
+ 			break;
++		default:
++			return rtn;
+ 		}
+ 
+ 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
+ 		scmd->result |= DID_TIME_OUT << 16;
+-		__scsi_done(scmd);
++		return BLK_EH_HANDLED;
+ 	}
++
++	return BLK_EH_NOT_HANDLED;
+ }
+ 
+ /**
+@@ -1773,7 +1712,6 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+ 
+ 	blk_rq_init(NULL, &req);
+ 	scmd->request = &req;
+-	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
+ 
+ 	memset(&scmd->cmnd, '\0', sizeof(scmd->cmnd));
+     
+@@ -1784,8 +1722,6 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+ 
+ 	scmd->sc_data_direction		= DMA_BIDIRECTIONAL;
+ 
+-	init_timer(&scmd->eh_timeout);
+-
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->tmf_in_progress = 1;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d545ad1..a10c817 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -165,6 +165,29 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ }
+ 
+ /**
++ * scsi_queue_retry - Try inserting a command in the midlevel queue.
++ *
++ * @cmd:	command that we are adding to queue.
++ * @reason:	why we are inserting command to queue.
++ *
++ * Notes:       This is very similar to scsi_queue_insert except that we
++ *              call this function when we don't know if the blk layer timer
++ *              is active or not. We could implement this either by calling
++ *              blk_delete_timer and inserting in the midlevel queue if we
++ *              successfully delete the timer OR setting appropriate result
++ *              field in the cmd and letting it go through the normal done
++ *              routines which will retry the command. For now, We call
++ *              blk_delete_timer!
++ */
++void scsi_queue_retry(struct scsi_cmnd *cmd, int reason)
++{
++	if (blk_delete_timer(cmd->request)) {
++		atomic_inc(&cmd->device->iodone_cnt);
++		scsi_queue_insert(cmd, reason);
++	}
++}
++
++/**
+  * scsi_execute - insert request and wait for the result
+  * @sdev:	scsi device
+  * @cmd:	scsi command
+@@ -1143,7 +1166,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ 	
+ 	cmd->transfersize = req->data_len;
+ 	cmd->allowed = req->retries;
+-	cmd->timeout_per_command = req->timeout;
+ 	return BLKPREP_OK;
+ }
+ EXPORT_SYMBOL(scsi_setup_blk_pc_cmnd);
+@@ -1370,17 +1392,26 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	spin_unlock(shost->host_lock);
+ 	spin_lock(sdev->request_queue->queue_lock);
+ 
+-	__scsi_done(cmd);
++	__blk_complete_request(req);
+ }
+ 
+ static void scsi_softirq_done(struct request *rq)
+ {
+-	struct scsi_cmnd *cmd = rq->completion_data;
+-	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
++	struct scsi_cmnd *cmd = rq->special;
++	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
+ 	int disposition;
+ 
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
+ 
++	/*
++	 * Set the serial numbers back to zero
++	 */
++	cmd->serial_number = 0;
++	
++	atomic_inc(&cmd->device->iodone_cnt);
++	if (cmd->result)
++		atomic_inc(&cmd->device->ioerr_cnt);
++
+ 	disposition = scsi_decide_disposition(cmd);
+ 	if (disposition != SUCCESS &&
+ 	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
+@@ -1614,6 +1645,7 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+ 
+ 	blk_queue_prep_rq(q, scsi_prep_fn);
+ 	blk_queue_softirq_done(q, scsi_softirq_done);
++	blk_queue_rq_timed_out(q, scsi_times_out);
+ 	return q;
+ }
+ 
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index b33e725..718dc1f 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -4,6 +4,7 @@
+ #include <linux/device.h>
+ 
+ struct request_queue;
++struct request;
+ struct scsi_cmnd;
+ struct scsi_device;
+ struct scsi_host_template;
+@@ -27,7 +28,6 @@ extern void scsi_exit_hosts(void);
+ extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+-extern void __scsi_done(struct scsi_cmnd *cmd);
+ #ifdef CONFIG_SCSI_LOGGING
+ void scsi_log_send(struct scsi_cmnd *cmd);
+ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
+@@ -49,10 +49,7 @@ extern int __init scsi_init_devinfo(void);
+ extern void scsi_exit_devinfo(void);
+ 
+ /* scsi_error.c */
+-extern void scsi_add_timer(struct scsi_cmnd *, int,
+-		void (*)(struct scsi_cmnd *));
+-extern int scsi_delete_timer(struct scsi_cmnd *);
+-extern void scsi_times_out(struct scsi_cmnd *cmd);
++extern enum blk_eh_timer_return scsi_times_out(struct request *req);
+ extern int scsi_error_handler(void *host);
+ extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
+ extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+@@ -67,6 +64,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ extern void scsi_device_unbusy(struct scsi_device *sdev);
+ extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
++extern void scsi_queue_retry(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_next_command(struct scsi_cmnd *cmd);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 049103f..a506499 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -550,12 +550,15 @@ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
+ 
++/*
++ * TODO: can we make these symlinks to the block layer ones?
++ */
+ static ssize_t
+ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct scsi_device *sdev;
+ 	sdev = to_scsi_device(dev);
+-	return snprintf (buf, 20, "%d\n", sdev->timeout / HZ);
++	return snprintf (buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
+ }
+ 
+ static ssize_t
+@@ -566,7 +569,7 @@ sdev_store_timeout (struct device *dev, struct device_attribute *attr,
+ 	int timeout;
+ 	sdev = to_scsi_device(dev);
+ 	sscanf (buf, "%d\n", &timeout);
+-	sdev->timeout = timeout * HZ;
++	blk_queue_rq_timeout(sdev->request_queue, timeout * HZ);
+ 	return count;
+ }
+ static DEVICE_ATTR(timeout, S_IRUGO | S_IWUSR, sdev_show_timeout, sdev_store_timeout);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 5fd64e7..2b73f15 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1949,15 +1949,15 @@ static int fc_vport_match(struct attribute_container *cont,
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  */
+-static enum scsi_eh_timer_return
++static enum blk_eh_timer_return
+ fc_timed_out(struct scsi_cmnd *scmd)
+ {
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
+ 
+ 	if (rport->port_state == FC_PORTSTATE_BLOCKED)
+-		return EH_RESET_TIMER;
++		return BLK_EH_RESET_TIMER;
+ 
+-	return EH_NOT_HANDLED;
++	return BLK_EH_NOT_HANDLED;
+ }
+ 
+ /*
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 01cefbb..3f5a5e2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -361,7 +361,6 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	struct gendisk *disk = rq->rq_disk;
+ 	sector_t block = rq->sector;
+ 	unsigned int this_count = rq->nr_sectors;
+-	unsigned int timeout = sdp->timeout;
+ 	int ret;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+@@ -539,7 +538,6 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	SCpnt->transfersize = sdp->sector_size;
+ 	SCpnt->underflow = this_count << 9;
+ 	SCpnt->allowed = SD_MAX_RETRIES;
+-	SCpnt->timeout_per_command = timeout;
+ 
+ 	/*
+ 	 * This indicates that the command is ready from our end to be
+@@ -1665,11 +1663,12 @@ static int sd_probe(struct device *dev)
+ 	sdkp->openers = 0;
+ 	sdkp->previous_state = 1;
+ 
+-	if (!sdp->timeout) {
++	if (!sdp->request_queue->rq_timeout) {
+ 		if (sdp->type != TYPE_MOD)
+-			sdp->timeout = SD_TIMEOUT;
++			blk_queue_rq_timeout(sdp->request_queue, SD_TIMEOUT);
+ 		else
+-			sdp->timeout = SD_MOD_TIMEOUT;
++			blk_queue_rq_timeout(sdp->request_queue,
++					     SD_MOD_TIMEOUT);
+ 	}
+ 
+ 	device_initialize(&sdkp->dev);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7ee86d4..f31d93a 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -328,7 +328,7 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+ 
+ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ {
+-	int block=0, this_count, s_size, timeout = SR_TIMEOUT;
++	int block=0, this_count, s_size;
+ 	struct scsi_cd *cd;
+ 	struct scsi_cmnd *SCpnt;
+ 	struct scsi_device *sdp = q->queuedata;
+@@ -458,7 +458,6 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ 	SCpnt->transfersize = cd->device->sector_size;
+ 	SCpnt->underflow = this_count << 9;
+ 	SCpnt->allowed = MAX_RETRIES;
+-	SCpnt->timeout_per_command = timeout;
+ 
+ 	/*
+ 	 * This indicates that the command is ready from our end to be
+@@ -617,6 +616,8 @@ static int sr_probe(struct device *dev)
+ 	disk->fops = &sr_bdops;
+ 	disk->flags = GENHD_FL_CD;
+ 
++	blk_queue_rq_timeout(sdev->request_queue, SR_TIMEOUT);
++
+ 	cd->device = sdev;
+ 	cd->disk = disk;
+ 	cd->driver = &sr_template;
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d39107b..f4e6cde 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -519,8 +519,8 @@ static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
+ 	 *  Shorten our settle_time if needed for 
+ 	 *  this command not to time out.
+ 	 */
+-	if (np->s.settle_time_valid && cmd->timeout_per_command) {
+-		unsigned long tlimit = jiffies + cmd->timeout_per_command;
++	if (np->s.settle_time_valid && cmd->request->timeout) {
++		unsigned long tlimit = jiffies + cmd->request->timeout;
+ 		tlimit -= SYM_CONF_TIMER_INTERVAL*2;
+ 		if (time_after(np->s.settle_time, tlimit)) {
+ 			np->s.settle_time = tlimit;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d2a1b71..253a8ae 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -225,7 +225,8 @@ struct request {
+ 	void *data;
+ 	void *sense;
+ 
+-	unsigned int timeout;
++	unsigned long timeout;
++	struct list_head timeout_list;
+ 	int retries;
+ 
+ 	/*
+@@ -264,6 +265,14 @@ typedef void (prepare_flush_fn) (struct request_queue *, struct request *);
+ typedef void (softirq_done_fn)(struct request *);
+ typedef int (dma_drain_needed_fn)(struct request *);
+ 
++enum blk_eh_timer_return {
++	BLK_EH_NOT_HANDLED,
++	BLK_EH_HANDLED,
++	BLK_EH_RESET_TIMER,
++};
++
++typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
++
+ enum blk_queue_state {
+ 	Queue_down,
+ 	Queue_up,
+@@ -299,6 +308,7 @@ struct request_queue
+ 	merge_bvec_fn		*merge_bvec_fn;
+ 	prepare_flush_fn	*prepare_flush_fn;
+ 	softirq_done_fn		*softirq_done_fn;
++	rq_timed_out_fn		*rq_timed_out_fn;
+ 	dma_drain_needed_fn	*dma_drain_needed;
+ 
+ 	/*
+@@ -374,6 +384,10 @@ struct request_queue
+ 	unsigned int		nr_sorted;
+ 	unsigned int		in_flight;
+ 
++	unsigned int		rq_timeout;
++	struct			timer_list timeout;
++	struct list_head	timeout_list;
++
+ 	/*
+ 	 * sg stuff
+ 	 */
+@@ -719,6 +733,10 @@ extern int blk_end_request_callback(struct request *rq, int error,
+ 				unsigned int nr_bytes,
+ 				int (drv_callback)(struct request *));
+ extern void blk_complete_request(struct request *);
++extern void __blk_complete_request(struct request *);
++extern void blk_abort_request(struct request *);
++extern int blk_delete_timer(struct request *);
++extern void blk_add_timer(struct request *);
+ 
+ /*
+  * blk_end_request() takes bytes instead of sectors as a complete size.
+@@ -730,6 +748,8 @@ extern unsigned int blk_rq_cur_bytes(struct request *rq);
+ 
+ static inline void blkdev_dequeue_request(struct request *req)
+ {
++	if (req->q->rq_timed_out_fn)
++		blk_add_timer(req);
+ 	elv_dequeue_request(req->q, req);
+ }
+ 
+@@ -758,6 +778,8 @@ extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
+ extern void blk_queue_dma_alignment(struct request_queue *, int);
+ extern void blk_queue_update_dma_alignment(struct request_queue *, int);
+ extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
++extern void blk_queue_rq_timed_out(struct request_queue *, rq_timed_out_fn *);
++extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
+ extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
+ extern int blk_queue_ordered(struct request_queue *, unsigned, prepare_flush_fn *);
+ extern int blk_do_ordered(struct request_queue *, struct request **);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 8d20e60..3d1101a 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -58,7 +58,6 @@ struct scsi_cmnd {
+ 
+ 	int retries;
+ 	int allowed;
+-	int timeout_per_command;
+ 
+ 	unsigned char cmd_len;
+ 	enum dma_data_direction sc_data_direction;
+@@ -67,8 +66,6 @@ struct scsi_cmnd {
+ #define MAX_COMMAND_SIZE	16
+ 	unsigned char cmnd[MAX_COMMAND_SIZE];
+ 
+-	struct timer_list eh_timeout;	/* Used to time out the command. */
+-
+ 	/* These elements define the operation we ultimately want to perform */
+ 	struct scsi_data_buffer sdb;
+ 	unsigned underflow;	/* Return error if less than
+@@ -118,7 +115,6 @@ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
+ 			       struct device *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+-extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
+ 
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+ 				 size_t *offset, size_t *len);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index d967d6d..0667d97 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -43,13 +43,6 @@ struct blk_queue_tags;
+ #define DISABLE_CLUSTERING 0
+ #define ENABLE_CLUSTERING 1
+ 
+-enum scsi_eh_timer_return {
+-	EH_NOT_HANDLED,
+-	EH_HANDLED,
+-	EH_RESET_TIMER,
+-};
+-
+-
+ struct scsi_host_template {
+ 	struct module *module;
+ 	const char *name;
+@@ -347,7 +340,7 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
++	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
+ 	 * Name of proc directory
+diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
+index 490bd13..6a2bc2a 100644
+--- a/include/scsi/scsi_transport.h
++++ b/include/scsi/scsi_transport.h
+@@ -21,6 +21,7 @@
+ #define SCSI_TRANSPORT_H
+ 
+ #include <linux/transport_class.h>
++#include <linux/blkdev.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ 
+@@ -64,7 +65,7 @@ struct scsi_transport_template {
+ 	 *			begin counting again
+ 	 * EH_NOT_HANDLED	Begin normal error recovery
+ 	 */
+-	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
++	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
+ 	 * Used as callback for the completion of i_t_nexus request
 
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
