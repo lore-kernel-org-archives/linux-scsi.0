@@ -1,47 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 9872] Driver 'sd' needs updating - please use bus_type
-	methods
-Date: Sun, 04 May 2008 09:34:21 -0500
-Message-ID: <1209911661.16283.16.camel@localhost.localdomain>
-References: <20080504002244.D924910805F@picon.linux-foundation.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: On patch "Let scsi_cmnd->cmnd use request->cmd buffer"
+Date: Sun, 04 May 2008 16:50:24 +0200
+Message-ID: <481DCD30.5060709@s5r6.in-berlin.de>
+References: <tkrat.5db1d90bfe8d480e@s5r6.in-berlin.de>
+	<481DA8EF.3010405@panasas.com>
+	<tkrat.46744b15c43493a1@s5r6.in-berlin.de>
+	<tkrat.4814bd8a1738df8c@s5r6.in-berlin.de>
+	<481DBBE7.3060602@panasas.com> <481DBE1C.90701@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40153 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751029AbYEDOe2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 10:34:28 -0400
-In-Reply-To: <20080504002244.D924910805F@picon.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <481DBE1C.90701@panasas.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Sat, 2008-05-03 at 17:22 -0700, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=9872
+Boaz Harrosh wrote:
+> its fine not to set .max_cmd_len. If not set the midlayer will
+> assume 12. So the code you sent is fine as is.
 
-This isn't a bug.  There have been numerous discussions about fixing it.
+Ah right, it's explained in scsi_host.h.  Thanks.
+-- 
+Stefan Richter
+-=====-==--- -=-= --=--
+http://arcgraph.de/sr/
 
-The warning comes out of here in drivers/base/driver.c:
-
-	if ((drv->bus->probe && drv->probe) ||
-	    (drv->bus->remove && drv->remove) ||
-	    (drv->bus->shutdown && drv->shutdown))
-		printk(KERN_WARNING "Driver '%s' needs updating - please use "
-			"bus_type methods\n", drv->name);
-
-The problem is that SCSI drivers have both: SCSI uses the bus methods to
-trigger the probe and remove (as it must having a bus method) but it
-also uses the individual struct driver probe and remove methods to
-rethrow the events to the ULDs.
-
-According to Kay and Greg, this is a legitimate way of operating, and
-they're not going to remove the driver methods (otherwise we'd just take
-them into struct scsi_driver), so we're stuck trying to find a way to
-prevent the base warning about this.
-
-James
-
-
+-------------------------------------------------------------------------
+This SF.net email is sponsored by the 2008 JavaOne(SM) Conference 
+Don't miss this year's exciting event. There's still time to save $100. 
+Use priority code J8TL2D2. 
+http://ad.doubleclick.net/clk;198757673;13503038;p?http://java.sun.com/javaone
