@@ -1,51 +1,136 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Sun, 04 May 2008 20:53:38 +0300
-Message-ID: <481DF822.7090905@panasas.com>
-References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <481DA2A4.10607@vlnb.net>
+From: Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [PATCH] Fusion MPT: Convert inactive_list_mutex in a mutex
+Date: Sun, 4 May 2008 20:05:44 +0200
+Message-ID: <20080504180544.GN20036@traven>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22801 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752563AbYEDRyX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 13:54:23 -0400
-In-Reply-To: <481DA2A4.10607@vlnb.net>
+Received: from mx1.riseup.net ([204.13.164.18]:57228 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753854AbYEDSYB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 May 2008 14:24:01 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-Vladislav Bolkhovitin wrote:
-> Christoph Hellwig wrote:
->> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
->>> Regarding scsi_execute_async(): I didn't know that this API is on its
->>> way out. What will it be replaced by, and when ?
->>
->> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
->> ontop to build requests.
-> 
-> scsi_execute_async() is already a nice and simple helper function on top 
-> blk_execute_rq_nowait(). What's the point then to remove it? Do you 
-> consider that exposing scsi_execute_async() internals to its users is 
-> better?
-> 
+MPT Fusion: The semaphore inactive_list_mutex is used as a
+mutex. Convert it to the mutex API
 
-The problem with it is the use of sg list to *hack* in bio's. Which totally 
-ignores/duplicates block layer mechanisms. There is pending a large patchset
-that removes the use of scsi_execute_async from sg/sr and friends to use blk_map_*
-members and directly call blk_execute_*. The original patchset was written by
-Mike Christie but is now brought up to date by Tomo. It should be submitted soon I think.
-If you need good example of usage check out bsg.c it maps user-space data in all kind
-of combinations. If you have kernel space memory it is even simpler.
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
->>> Bart.
->> ---end quoted text---
->>
-> 
+--
 
-If you need any help, please feel free to ask.
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 0c303c8..06557f2 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -2136,7 +2136,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		/*
+ 		 * Initalize link list for inactive raid volumes.
+ 		 */
+-		init_MUTEX(&ioc->raid_data.inactive_list_mutex);
++		mutex_init(&ioc->raid_data.inactive_list_mutex);
+ 		INIT_LIST_HEAD(&ioc->raid_data.inactive_list);
+ 
+ 		if (ioc->bus_type == SAS) {
+@@ -5122,13 +5122,13 @@ mpt_inactive_raid_list_free(MPT_ADAPTER *ioc)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		return;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry_safe(component_info, pNext,
+ 	    &ioc->raid_data.inactive_list, list) {
+ 		list_del(&component_info->list);
+ 		kfree(component_info);
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ }
+ 
+ /**
+@@ -5187,7 +5187,7 @@ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (!handle_inactive_volumes)
+ 		goto out;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	for (i = 0; i < buffer->NumPhysDisks; i++) {
+ 		if(mpt_raid_phys_disk_pg0(ioc,
+ 		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+@@ -5207,7 +5207,7 @@ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 		list_add_tail(&component_info->list,
+ 		    &ioc->raid_data.inactive_list);
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ 
+  out:
+ 	if (buffer)
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index caadc68..4190e88 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -531,7 +531,7 @@ struct inactive_raid_component_info {
+ typedef	struct _RaidCfgData {
+ 	IOCPage2_t	*pIocPg2;		/* table of Raid Volumes */
+ 	IOCPage3_t	*pIocPg3;		/* table of physical disks */
+-	struct semaphore	inactive_list_mutex;
++	struct mutex	inactive_list_mutex;
+ 	struct list_head	inactive_list; /* link list for physical
+ 						disk that belong in
+ 						inactive volumes */
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index af1de0c..4e70ef4 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -2295,14 +2295,14 @@ mptscsih_is_phys_disk(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		goto out;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry(component_info, &ioc->raid_data.inactive_list,
+ 	    list) {
+ 		if ((component_info->d.PhysDiskID == id) &&
+ 		    (component_info->d.PhysDiskBus == channel))
+ 			rc = 1;
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ 
+  out:
+ 	return rc;
+@@ -2332,14 +2332,14 @@ mptscsih_raid_id_to_num(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 	if (list_empty(&ioc->raid_data.inactive_list))
+ 		goto out;
+ 
+-	down(&ioc->raid_data.inactive_list_mutex);
++	mutex_lock(&ioc->raid_data.inactive_list_mutex);
+ 	list_for_each_entry(component_info, &ioc->raid_data.inactive_list,
+ 	    list) {
+ 		if ((component_info->d.PhysDiskID == id) &&
+ 		    (component_info->d.PhysDiskBus == channel))
+ 			rc = component_info->d.PhysDiskNum;
+ 	}
+-	up(&ioc->raid_data.inactive_list_mutex);
++	mutex_unlock(&ioc->raid_data.inactive_list_mutex);
+ 
+  out:
+ 	return rc;
 
-Boaz
+-- 
+Matthias Kaehlcke
+Embedded Linux Engineer
+Barcelona
 
+
+   Usually when people are sad, they don't do anything. They just cry over
+     their condition. But when they get angry, they bring about a change
+                              (Malcolm X)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
