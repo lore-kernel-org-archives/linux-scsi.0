@@ -1,36 +1,45 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Sun, 04 May 2008 15:48:52 +0400
-Message-ID: <481DA2A4.10607@vlnb.net>
-References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: On patch "Let scsi_cmnd->cmnd use request->cmd buffer"
+Date: Sun, 04 May 2008 15:15:43 +0300
+Message-ID: <481DA8EF.3010405@panasas.com>
+References: <tkrat.5db1d90bfe8d480e@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:54240 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755093AbYEDLsZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 07:48:25 -0400
-In-Reply-To: <20080502155525.GA16353@infradead.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22998 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751806AbYEDMQa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 08:16:30 -0400
+In-Reply-To: <tkrat.5db1d90bfe8d480e@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
->> Regarding scsi_execute_async(): I didn't know that this API is on its
->> way out. What will it be replaced by, and when ?
-> 
-> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
-> ontop to build requests.
+Stefan Richter wrote:
+> Commit 64a87b244b9297667ca80264aab849a36f494884 contains:
+> -------------------------- drivers/firewire/fw-sbp2.c --------------------------
+> index 2a99937..dda82f3 100644
+> @@ -1487,7 +1487,7 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
+>  	if (scsi_sg_count(cmd) && sbp2_map_scatterlist(orb, device, lu) < 0)
+>  		goto out;
+>  
+> -	memcpy(orb->request.command_block, cmd->cmnd, COMMAND_SIZE(*cmd->cmnd));
+> +	memcpy(orb->request.command_block, cmd->cmnd, cmd->cmd_len);
+>  
+>  	orb->base.callback = complete_command_orb;
+>  	orb->base.request_bus =
+>
+>
+> Should drivers/ieee1394/sbp2.c::sbp2_create_command_orb() be changed in
+> the same way?
+>   
+Sorry to have missed it. Yes it is best if it is changed. cmd->cmd_len 
+is now guarantied to be set
+properly at all cases. And some commands you want to support will not be 
+set correctly by
+COMMAND_SIZE(). do you want me to do it?
 
-scsi_execute_async() is already a nice and simple helper function on top 
-blk_execute_rq_nowait(). What's the point then to remove it? Do you 
-consider that exposing scsi_execute_async() internals to its users is 
-better?
-
->> Bart.
-> ---end quoted text---
-> 
+Boaz
 
