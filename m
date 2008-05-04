@@ -1,47 +1,42 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Sun, 4 May 2008 17:30:29 +0200
-Message-ID: <e2e108260805040830i7d797c53o9757bae7243d6e27@mail.gmail.com>
-References: <200805021638.42972.bart.vanassche@gmail.com>
-	 <20080502153306.GB7376@infradead.org>
-	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
-	 <20080502155525.GA16353@infradead.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in sr_probe()
+Date: Sun, 4 May 2008 09:38:15 -0600
+Message-ID: <20080504153814.GC14976@parisc-linux.org>
+References: <481D9C69.8080902@garzik.org> <1209914732.16283.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:55587 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755573AbYEDPab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 11:30:31 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1611894fgg.17
-        for <linux-scsi@vger.kernel.org>; Sun, 04 May 2008 08:30:30 -0700 (PDT)
-In-Reply-To: <20080502155525.GA16353@infradead.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:54030 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbYEDPiQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 11:38:16 -0400
 Content-Disposition: inline
+In-Reply-To: <1209914732.16283.27.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
->> Regarding scsi_execute_async(): I didn't know that this API is on its
->> way out. What will it be replaced by, and when ?
->
-> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
-> ontop to build requests.
+On Sun, May 04, 2008 at 10:25:31AM -0500, James Bottomley wrote:
+> On Sun, 2008-05-04 at 07:22 -0400, Jeff Garzik wrote:
+> > See attached files for additional config detail.
+> > 
+> > Platform summary:  AMD64 2x2 (== 4 cores), Fedora 8/x86-64
+> > 
+> > Driver 'sr' needs updating - please use bus_type methods
+> > BUG: unable to handle kernel NULL pointer dereference at 00000000000005d8
+> > IP: [<ffffffff8025e10c>] get_page_from_freelist+0x43/0x573
+> > PGD 7e90f067 PUD 7edbc067 PMD 0
+> > Oops: 0000 [1] SMP
+> 
+> Is this with CONFIG_SLAB or CONFIG_SLUB?
+> 
+> I don't see it in my test systems, but they're CONFIG_SLAB
 
-Source reading learned me that the function scsi_execute_async() calls
-blk_execute_rq_nowait() with 1 as fourth argument, which means that
-the request is inserted at the head of the queue. This means that
-requests queued with scsi_execute_async() are executed before other
-queued requests, and that this function has LIFO (last in first out)
-semantics.
+He posted his .config and it's SLAB.
 
-All non-SCSI calls to blk_execute_rq() / blk_execute_rq_nowait() add
-requests at the end of the queue (except those calls for terminating
-I/O).
-
-What is the background of this special behavior of the SCSI subsystem ?
-
-Bart.
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
