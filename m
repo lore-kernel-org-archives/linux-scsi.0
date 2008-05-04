@@ -1,37 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in sr_probe()
-Date: Sun, 04 May 2008 10:25:31 -0500
-Message-ID: <1209914732.16283.27.camel@localhost.localdomain>
-References: <481D9C69.8080902@garzik.org>
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
+Date: Sun, 4 May 2008 17:30:29 +0200
+Message-ID: <e2e108260805040830i7d797c53o9757bae7243d6e27@mail.gmail.com>
+References: <200805021638.42972.bart.vanassche@gmail.com>
+	 <20080502153306.GB7376@infradead.org>
+	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
+	 <20080502155525.GA16353@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46560 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbYEDPZj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 11:25:39 -0400
-In-Reply-To: <481D9C69.8080902@garzik.org>
+Received: from fg-out-1718.google.com ([72.14.220.152]:55587 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755573AbYEDPab (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 11:30:31 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1611894fgg.17
+        for <linux-scsi@vger.kernel.org>; Sun, 04 May 2008 08:30:30 -0700 (PDT)
+In-Reply-To: <20080502155525.GA16353@infradead.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
 
-On Sun, 2008-05-04 at 07:22 -0400, Jeff Garzik wrote:
-> See attached files for additional config detail.
-> 
-> Platform summary:  AMD64 2x2 (== 4 cores), Fedora 8/x86-64
-> 
-> Driver 'sr' needs updating - please use bus_type methods
-> BUG: unable to handle kernel NULL pointer dereference at 00000000000005d8
-> IP: [<ffffffff8025e10c>] get_page_from_freelist+0x43/0x573
-> PGD 7e90f067 PUD 7edbc067 PMD 0
-> Oops: 0000 [1] SMP
+On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
+>> Regarding scsi_execute_async(): I didn't know that this API is on its
+>> way out. What will it be replaced by, and when ?
+>
+> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
+> ontop to build requests.
 
-Is this with CONFIG_SLAB or CONFIG_SLUB?
+Source reading learned me that the function scsi_execute_async() calls
+blk_execute_rq_nowait() with 1 as fourth argument, which means that
+the request is inserted at the head of the queue. This means that
+requests queued with scsi_execute_async() are executed before other
+queued requests, and that this function has LIFO (last in first out)
+semantics.
 
-I don't see it in my test systems, but they're CONFIG_SLAB
+All non-SCSI calls to blk_execute_rq() / blk_execute_rq_nowait() add
+requests at the end of the queue (except those calls for terminating
+I/O).
 
-James
+What is the background of this special behavior of the SCSI subsystem ?
 
-
+Bart.
