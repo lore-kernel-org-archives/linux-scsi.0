@@ -1,67 +1,77 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: On patch "Let scsi_cmnd->cmnd use request->cmd buffer"
-Date: Sun, 04 May 2008 16:46:04 +0300
-Message-ID: <481DBE1C.90701@panasas.com>
-References: <tkrat.5db1d90bfe8d480e@s5r6.in-berlin.de> <481DA8EF.3010405@panasas.com> <tkrat.46744b15c43493a1@s5r6.in-berlin.de> <tkrat.4814bd8a1738df8c@s5r6.in-berlin.de> <481DBBE7.3060602@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Discussion: soft unbinding
+Date: Sun, 04 May 2008 09:15:46 -0500
+Message-ID: <1209910547.16283.10.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0805032219160.24318-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4238 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752729AbYEDNqj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 09:46:39 -0400
-In-Reply-To: <481DBBE7.3060602@panasas.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43446 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752765AbYEDOPw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2008 10:15:52 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0805032219160.24318-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Boaz Harrosh wrote:
-> Stefan Richter wrote:
->> On  4 May, Stefan Richter wrote:
->>> Boaz Harrosh wrote:
->>>> cmd->cmd_len is now guarantied to be set properly at all cases.
->>>> And some commands you want to support will not be set correctly
->>>> by COMMAND_SIZE().
->> ...
->>> --- linux.orig/drivers/ieee1394/sbp2.c
->>> +++ linux/drivers/ieee1394/sbp2.c
->> ...
->>>      memset(orb->cdb, 0, 12);
+On Sat, 2008-05-03 at 22:28 -0400, Alan Stern wrote:
+> > > So I guess part of what I'm asking is whether the situation is now 
+> > > significantly different.
+> > 
+> > Not really ... there's never been cause to make it so.  At the beginning
+> > of the hotplug debate it was thought there was value in a wait for
+> > unplug event ... some PCI busses have a little button you push and then
+> > a light lights up to tell you everything's OK and you can remove the
+> > card.
+> > 
+> > After a lot of back and forth, it was decided that the best thing for
+> > the latter was for userland to quiesce and unmount the filesystem,
+> > application or whatever and then tell the kernel it was gone, so in that
+> > scenario, the two paths were identical.  I don't think anything's really
+> > changed in that regard.
 > 
-> if you are at it?
-> -     memset(orb->cdb, 0, 12);
-> +     memset(orb->cdb, 0, sizeof(orb->cdb));
-> 
->>> -    memcpy(orb->cdb, scsi_cmd, COMMAND_SIZE(*scsi_cmd));
->>> +    memcpy(orb->cdb, SCpnt->cmnd, SCpnt->cmd_len);
->> ...
->>
->> Wait a minute...
->>
->> drivers/ieee1394/sbp2.[ch] and drivers/firewire/fw-sbp2.c hardwire the
->> maximum size of the command descriptor block (command_block field in the
->> command block ORB as per SBP-2 clause 5.1.2) to 12 bytes.
->>
->> We need to use BLK_MAX_CDB there, don't we?
->>
->> (Besides, we should keep an eye on unit_characteristics.ORB_size as per
->> SBP-2 clause 7.4.8, but that's another story.)
-> 
-> I'm not sure what you mean. But orb->cdb is 12 bytes, and setting 
-> max_cmd_len in
-> host template insures midlayer will never send a command bigger then 
-> that. So
-> ->cmd_len will never be bigger then host->max_cmd_len. BLK_MAX_CDB 
-> should not
-> be used here.
-> 
-> But I don't see .max_cmd_len set in this file, is it set elsewhere?
-> 
-> Boaz
+> I still don't understand.  Let's say the user does unmount the
+> filesystem and tell the kernel it is gone.  So the LLD calls
+> scsi_unregister_host() and from that point on fails every call to
+> queuecommand.  Then how does sd transmit its final FLUSH CACHE command
+> to the device?  Are you saying that it doesn't need to, since
+> unmounting the filesystem will cause a FLUSH CACHE to be sent anyway?
 
-Oops sorry its fine not to set .max_cmd_len. If not set the midlayer will
-assume 12. So the code you sent is fine as is.
+This is the sequence of events scsi_remove_host causes:
 
-Boaz
+     1. Host goes into CANCEL state.  This has no real meaning to the
+        mid-layer command processor really: it only checks device state
+        for commands.
+     2. it calls scsi_forget_host() which loops over all the hosts
+        devices calling __scsi_remove_device().
+     3. __scsi_remove_device puts the device into cancel mode (now only
+        special commands get through).
+     4. it unbinds bsg and calls device_unregister triggering the
+        ->remove method of the driver
+     5. the ->remove method of sd sends the flush cache as a special
+        command (which still gets through).
+     6. it removes the transport
+     7. it calls device_del and sets the device state to DEL; now no
+        commands will be permitted
+     8. finally it calls transport destroy and slave destroy
+     9. after this is done for every device the host goes into DEL
+
+> Or let's put it the other way around.  Suppose the LLD doesn't start
+> failing calls to queuecommand until after scsi_unregister_host() 
+> returns.  Then what about the commands that were in flight when 
+> scsi_unregister_host() was called?  The LLD thinks it owns them, and 
+> the midlayer thinks that _it_ owns them and can unilaterally cancel 
+> them.  They can't both be right.
+
+This is a misunderstanding: there's no active cancellation (although
+there was a long discussion about that too).  All it does is start
+saying "no" to commands as they come down.  In flight commands are up to
+the HBA driver to deal with (or the error handler will activate on
+timeout if it doesn't).
+
+James
+
+
