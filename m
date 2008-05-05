@@ -1,65 +1,45 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make struct mpt_proc_root_dir static
-Date: Mon, 5 May 2008 21:26:04 +0300
-Message-ID: <20080505182604.GW17139@cs181133002.pp.htv.fi>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/8] scsi: use get_unaligned_* helpers
+Date: Mon, 05 May 2008 13:46:16 -0500
+Message-ID: <481F55F8.1040606@cs.wisc.edu>
+References: <1209700376.22362.19.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:44773 "EHLO smtp6.pp.htv.fi"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:33415 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760700AbYEES1M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2008 14:27:12 -0400
-Content-Disposition: inline
+	id S1755875AbYEESql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2008 14:46:41 -0400
+In-Reply-To: <1209700376.22362.19.camel@brick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch makes the needlessly global struct mpt_proc_root_dir static.
+Harvey Harrison wrote:
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  drivers/scsi/libiscsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 010c1b9..7646e86 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -508,7 +508,7 @@ invalid_datalen:
+>  			goto out;
+>  		}
+>  
+> -		senselen = be16_to_cpu(get_unaligned((__be16 *) data));
+> +		senselen = get_unaligned_be16(data);
+>  		if (datalen < senselen)
+>  			goto invalid_datalen;
+>  
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+This looks ok. Thanks.
 
----
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch has been sent on:
-- 22 Apr 2008
-- 13 Apr 2008
-
- drivers/message/fusion/mptbase.c |    3 +--
- drivers/message/fusion/mptbase.h |    1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
-
-0206a6da1d1b4ca0e1eb7f6e34ced21c79d58c7b diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index c6be6eb..7e4e69e 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -103,7 +103,7 @@ static int mfcounter = 0;
-  *  Public data...
-  */
- 
--struct proc_dir_entry *mpt_proc_root_dir;
-+static struct proc_dir_entry *mpt_proc_root_dir;
- 
- #define WHOINIT_UNKNOWN		0xAA
- 
-@@ -7444,7 +7444,6 @@ EXPORT_SYMBOL(mpt_resume);
- EXPORT_SYMBOL(mpt_suspend);
- #endif
- EXPORT_SYMBOL(ioc_list);
--EXPORT_SYMBOL(mpt_proc_root_dir);
- EXPORT_SYMBOL(mpt_register);
- EXPORT_SYMBOL(mpt_deregister);
- EXPORT_SYMBOL(mpt_event_register);
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index caadc68..7630031 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -918,7 +918,6 @@ extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhys
-  *  Public data decl's...
-  */
- extern struct list_head	  ioc_list;
--extern struct proc_dir_entry	*mpt_proc_root_dir;
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #endif		/* } __KERNEL__ */
-
+If It does not get picked up by Andrew then I will send it with the 
+other iscsi updates when the next feature window opens.
