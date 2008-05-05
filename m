@@ -1,132 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Fixes to EMC scsi device handler
-Date: Mon, 05 May 2008 13:55:22 +0200
-Message-ID: <481EF5AA.7090304@suse.de>
+From: Erez Zilber <erezz@Voltaire.COM>
+Subject: Re: [PATCH 1/3 v2] iscsi iser: remove DMA alignment restriction
+Date: Mon, 05 May 2008 16:19:02 +0300
+Message-ID: <481F0946.4020505@Voltaire.COM>
+References: <20080214211029.GA21073@osc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090404060106050404020001"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43124 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751311AbYEELzZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2008 07:55:25 -0400
+Received: from fwil.voltaire.com ([193.47.165.2]:43341 "EHLO exil.voltaire.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754973AbYEENST (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2008 09:18:19 -0400
+In-Reply-To: <20080214211029.GA21073@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Pete Wyckoff <pw@osc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Roland Dreier <rolandd@cisco.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090404060106050404020001
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Pete Wyckoff wrote:
+> Thanks to James pointing out the problems with the BLK_BOUNCE_ANY
+> for IB devices, this revised patch contains only the DMA alignment
+> fix for iSER.
+>
+> Mike, can you take care of this and the other two patches in the
+> series:
+>
+>     [PATCH 2/3] iscsi iser: increase max_sectors
+>     [PATCH 3/3] iscsi iser: increase sg_tablesize
+>
+> 		-- Pete
+>
+>
+> From 255e73b67ec1458af18395981fddebdc958e8fe9 Mon Sep 17 00:00:00 2001
+> From: Pete Wyckoff <pw@osc.edu>
+> Date: Thu, 14 Feb 2008 16:09:27 -0500
+> Subject: [PATCH] iscsi iser: remove DMA alignment restriction
+>
+> iscsi_iser does not require any particular DMA aligement
+> requirement.  Add a slave_configure function to set the alignment
+> to zero, allowing the use of direct IO from arbitrary offsets
+> within a page.
+>   
 
-Hi Chandra,
+We had a long discussion about it, and I'm ok with this patch. However,
+I would change the description:
 
-based on your latest patchset there are some issues which
-should be fixed:
+iSER has DMA alignment requirements that are too complex to express with
+q->dma_alignment. Therefore, if necessary, bouncing should be done by
+the iSER driver. Add a slave_configure function to set the alignment to
+zero, allowing the use of direct IO from arbitrary offsets within a page.
 
-- When SYSFS_DEPRECATED is not set also scsi_target and
-  scsi_host devices will be attached to the scsi bus.
-  So we have to check with 'scsi_is_sdev_device' before
-  processing the notifier call
-- Newer EMC flarecode also provide for a 'VRAID' device
-  model; this should be added to the device map
-- The name should be 'emc', not 'emc_clariion', for
-  integration with existing multipath-tools
-- It's spelled 'detached' :-)
-
-Patch attached.
-
-Some issues which I'd like to see eventually:
-
-- We should have a way of adding/modifying the internal
-  device map. Currently we have to recompile the module
-  every time a new device definition is found.
-- The ->activate function should be able to be triggered
-  manually via sysfs.
-
-James, seeing that the scsi_dh pointer is already present
-in the sdev structure, would you accept a patch which adds
-scsi_dh attributes to drivers/scsi/scsi_sysfs.c?
-Having them encapsulated into drivers/scsi/device_handler
-somewhere is really painful due to the asynchronous nature
-of this whole thing ...
-
-Apart from this: Great work!
-I'll check the other device handlers, too; already noticed
-that the device map for HP is wrong :-)
-
-Cheers,
-
-hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------090404060106050404020001
-Content-Type: text/plain;
- name="scsi-dh-emc-fixes"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-dh-emc-fixes"
-
-Fixes to EMC scsi device handler
-
-Several fixes to the EMC scsi device handler:
-- The name should be 'emc' for seamless integration with multipathing
-- Newer EMC flarecode also has a 'VRAID' type
-- Check if this is really a sdev before processing the notifier call
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 1b18989..0aded96 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -25,7 +25,7 @@
- #include <scsi/scsi_dh.h>
- #include <scsi/scsi_device.h>
- 
--#define CLARIION_NAME			"emc_clariion"
-+#define CLARIION_NAME			"emc"
- 
- #define CLARIION_TRESPASS_PAGE		0x22
- #define CLARIION_BUFFER_SIZE		0x80
-@@ -390,12 +390,13 @@ static int clariion_check_sense(struct scsi_device *sdev,
- 	return SUCCESS;
- }
- 
--static const struct {
-+static const struct clariion_dev_list_t {
- 	char *vendor;
- 	char *model;
- } clariion_dev_list[] = {
- 	{"DGC", "RAID"},
- 	{"DGC", "DISK"},
-+	{"DGC", "VRAID"},
- 	{NULL, NULL},
- };
- 
-@@ -422,6 +423,9 @@ static int clariion_bus_notify(struct notifier_block *nb,
- 	int i, found = 0;
- 	unsigned long flags;
- 
-+	if (!scsi_is_sdev_device(dev))
-+		return 0;
-+
- 	if (action == BUS_NOTIFY_ADD_DEVICE) {
- 		for (i = 0; clariion_dev_list[i].vendor; i++) {
- 			if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-@@ -465,7 +469,7 @@ static int clariion_bus_notify(struct notifier_block *nb,
- 		sdev->scsi_dh_data = NULL;
- 		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- 
--		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
-+		sdev_printk(KERN_NOTICE, sdev, "Detached %s.\n",
- 			    CLARIION_NAME);
- 
- 		kfree(scsi_dh_data);
-
---------------090404060106050404020001--
+Erez
