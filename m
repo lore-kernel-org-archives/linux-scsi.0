@@ -1,45 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/8] scsi: use get_unaligned_* helpers
-Date: Mon, 05 May 2008 13:46:16 -0500
-Message-ID: <481F55F8.1040606@cs.wisc.edu>
-References: <1209700376.22362.19.camel@brick>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 3/3] CONFIG_SCSI_MAC_ESP needs CONFIG_SCSI_SPI_ATTRS
+Date: Mon, 5 May 2008 21:27:21 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0805052126200.28495@anakin>
+References: <Pine.LNX.4.64.0805052118050.24098@anakin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33415 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755875AbYEESql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2008 14:46:41 -0400
-In-Reply-To: <1209700376.22362.19.camel@brick>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761047AbYEET1k@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0805052118050.24098@anakin>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux/m68k <linux-m68k@vger.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Harvey Harrison wrote:
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
->  drivers/scsi/libiscsi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 010c1b9..7646e86 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -508,7 +508,7 @@ invalid_datalen:
->  			goto out;
->  		}
->  
-> -		senselen = be16_to_cpu(get_unaligned((__be16 *) data));
-> +		senselen = get_unaligned_be16(data);
->  		if (datalen < senselen)
->  			goto invalid_datalen;
->  
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 
-This looks ok. Thanks.
+The new mac_esp scsi driver needs CONFIG_SCSI_SPI_ATTRS, just like all other
+drivers using the new esp_scsi core.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/scsi/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-If It does not get picked up by Andrew then I will send it with the 
-other iscsi updates when the next feature window opens.
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1679,6 +1679,7 @@ config MAC_SCSI
+ config SCSI_MAC_ESP
+ 	tristate "Macintosh NCR53c9[46] SCSI"
+ 	depends on MAC && SCSI
++	select SCSI_SPI_ATTRS
+ 	help
+ 	  This is the NCR 53c9x SCSI controller found on most of the 68040
+ 	  based Macintoshes.
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
