@@ -1,61 +1,46 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [2.6.25.1] qla2xxx can't see more than 4 drives
-Date: Tue, 6 May 2008 06:51:18 -0700
-Message-ID: <20080506135118.GA46493@plap4.qlogic.org>
-References: <alpine.DEB.1.10.0805031458050.2330@mtl.rackplans.net>
+Subject: Re: Recurring qla2xxx crashes (maybe APIC related)
+Date: Tue, 6 May 2008 07:02:05 -0700
+Message-ID: <20080506140205.GB46493@plap4.qlogic.org>
+References: <48120F8B.7060005@linpro.no> <20080425171821.GK8849@plap4> <4815709C.3060502@linpro.no> <20080429211655.GA72811@plap4.qlogic.org> <4817970A.4030807@linpro.no> <20080429222947.GE72811@plap4.qlogic.org> <48182E8F.6000009@linpro.no> <20080430171810.GC80852@n6016av4ptjbf1.qlogic.org> <481EBBE4.5000005@linpro.no> <481F6748.80306@linpro.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:9216 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:10480 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754588AbYEFNvT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 09:51:19 -0400
+	with ESMTP id S1754595AbYEFOCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 10:02:05 -0400
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0805031458050.2330@mtl.rackplans.net>
+In-Reply-To: <481F6748.80306@linpro.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerhard Mack <gmack@innerfire.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tore Anderson <tore@linpro.no>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 03 May 2008, Gerhard Mack wrote:
+On Mon, 05 May 2008, Tore Anderson wrote:
 
-> I have an array witjh 6 drives in it and if use the card's utilities on 
-> boot it sees all of them but for some reason Linux only sees 4 drives.
+> * Tore Anderson
 > 
-> Am I running into a limit?  I can see both drives if I remove other drives 
-> from the array.
+> > Anyway.  The problematic box has now been running with FW 4.04.00 and
+> > MSI active for 60 hours now, so it looks like the old FW was the
+> > cause of the instability.  I'll leave it running and will let you
+> > know if any problems occur, though.
 > 
-> [0:0:0:0]    disk    MAXTOR   ATLAS10K4_36SCA  DFM0  /dev/sda
-> [0:0:1:0]    disk    MAXTOR   ATLAS10K4_36SCA  DFM0  /dev/sdb
-> [0:0:2:0]    disk    MAXTOR   ATLAS10K4_36SCA  DFM0  /dev/sdc
-> [0:0:6:0]    process PE/PV    1x3 SCSI BP      0.28  -
-> fiber channel drives:
-> [2:0:0:0]    disk    SEAGATE  ST314680 CLAR146 7A0A  /dev/sdd
-> [2:0:1:0]    disk    SEAGATE  ST314680 CLAR146 7A04  /dev/sde
-> [2:0:2:0]    disk    SEAGATE  ST314680 CLAR146 7A0A  /dev/sdf
-> [2:0:3:0]    disk    SEAGATE  ST314680 CLAR146 7A04  /dev/sdg
+> It lasted 72 hours and 25 minutes with the new firmware.  More than what
+> the average was with the old one, but still not very impressive.
 > 
-> QLogic Fibre Channel HBA Driver
-> qla2xxx 0000:02:0a.0: Found an ISP2312, irq 24, iobase 0xf88cc000
-> qla2xxx 0000:02:0a.0: Configuring PCI space...
-> qla2xxx 0000:02:0a.0: Configure NVRAM parameters...
-> qla2xxx 0000:02:0a.0: Verifying loaded RISC code...
-> qla2xxx 0000:02:0a.0: Allocated (412 KB) for firmware dump...
-> scsi3 : qla2xxx
-> qla2xxx 0000:02:0a.0: LIP reset occured (f8f7).
-> qla2xxx 0000:02:0a.0: LIP occured (f8f7).
-> qla2xxx 0000:02:0a.0: LOOP UP detected (1 Gbps).
+> I'm attaching the kernel log from the entire period.
 
-Could you load the driver with the ql2xextended_error_logging module
-parameter set to 1 and send the resultant driver logs?  Also, it would
-could you also send the output of the following after the driver is
-loaded:
+I managed to get an HS21 configuration (with 2422 mezz card) running
+within the lab (with latest linux-2.6.git tree) against some IBM
+storage.  It's been running now for 12+ hours with MSI enabled.  I'll
+let it run for several days (if no failures), then restart with
+2.6.22.19 for a weekend run...
 
-$ cat /sys/class/fc_host/host<host_no>
-$ cat /sys/class/scsi_host/host<host_no>/*
-$ cat /sys/class/fc_remote_ports/*
+> Now I'm running with the new FW and pci=nomsi.  I expect this to work
+> just as fine as with the old FW - I will let you know if not.
 
-where host_no corresponds to the SCSI host-number assigned to the HBA.
+Hrrm...  still haven't discounted some potential hardware problems...
 
-Regards,
+Thanks for the update,
 Andrew Vasquez
