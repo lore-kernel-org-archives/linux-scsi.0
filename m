@@ -1,135 +1,99 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH] Fixes to EMC scsi device handler
-Date: Mon, 05 May 2008 18:34:18 -0700
-Message-ID: <1210037658.21974.125.camel@chandra-ubuntu>
-References: <481EF5AA.7090304@suse.de>
-Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
+From: malahal@us.ibm.com
+Subject: Re: blk request timeout handler against 2.6.26
+Date: Mon, 5 May 2008 18:47:32 -0700
+Message-ID: <20080506014732.GA6249@us.ibm.com>
+References: <20080503020000.GU14976@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <481EF5AA.7090304@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, dm-devel <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:60948 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751497AbYEFBre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2008 21:47:34 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m461ngE3012140
+	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:49:42 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m461lXeG300514
+	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m461lXPF021483
+	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
+Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.130])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m461lXaq021474
+	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20080503020000.GU14976@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Matthew Wilcox [matthew@wil.cx] wrote:
+> 
+> This patch is a forward-port of the patch Jens posted last October.
+> gdth_proc needs some loving, I just #if 0'd it out for the moment.
 
-On Mon, 2008-05-05 at 13:55 +0200, Hannes Reinecke wrote:
-> Hi Chandra,
-> 
-> based on your latest patchset there are some issues which
-> should be fixed:
-> 
-> - When SYSFS_DEPRECATED is not set also scsi_target and
->   scsi_host devices will be attached to the scsi bus.
->   So we have to check with 'scsi_is_sdev_device' before
->   processing the notifier call
+I posted a patch for gdth driver.  Here is a link:
+http://article.gmane.org/gmane.linux.scsi/36024
+The patch is taken into 'timeout' branch of Jen's block git tree.
 
-This need to be done for all the handlers, right ?
->  
-> - Newer EMC flarecode also provide for a 'VRAID' device
->   model; this should be added to the device map
-> - The name should be 'emc', not 'emc_clariion', for
->   integration with existing multipath-tools
-> - It's spelled 'detached' :-)
-> 
-> Patch attached.
-
-Looks good to me.
-> 
-> Some issues which I'd like to see eventually:
-> 
-> - We should have a way of adding/modifying the internal
->   device map. Currently we have to recompile the module
->   every time a new device definition is found.
-
-Yeah, very true. it will become an annoyance. Is this the reason why
-you were asking for the sysfs interface (below) ?
-
-> - The ->activate function should be able to be triggered
->   manually via sysfs.
-
-Why would you need this ? 
-> 
-> James, seeing that the scsi_dh pointer is already present
-> in the sdev structure, would you accept a patch which adds
-> scsi_dh attributes to drivers/scsi/scsi_sysfs.c?
-> Having them encapsulated into drivers/scsi/device_handler
-> somewhere is really painful due to the asynchronous nature
-> of this whole thing ...
-> 
-> Apart from this: Great work!
-> I'll check the other device handlers, too; already noticed
-> that the device map for HP is wrong :-)
-
-Can you please help fix it. 
-> 
-> Cheers,
-> 
-> hannes
-> plain text document attachment (scsi-dh-emc-fixes)
-> Fixes to EMC scsi device handler
-> 
-> Several fixes to the EMC scsi device handler:
-> - The name should be 'emc' for seamless integration with multipathing
-> - Newer EMC flarecode also has a 'VRAID' type
-> - Check if this is really a sdev before processing the notifier call
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-> index 1b18989..0aded96 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_emc.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-> @@ -25,7 +25,7 @@
->  #include <scsi/scsi_dh.h>
->  #include <scsi/scsi_device.h>
-> 
-> -#define CLARIION_NAME			"emc_clariion"
-> +#define CLARIION_NAME			"emc"
-> 
->  #define CLARIION_TRESPASS_PAGE		0x22
->  #define CLARIION_BUFFER_SIZE		0x80
-> @@ -390,12 +390,13 @@ static int clariion_check_sense(struct scsi_device *sdev,
->  	return SUCCESS;
->  }
-> 
-> -static const struct {
-> +static const struct clariion_dev_list_t {
->  	char *vendor;
->  	char *model;
->  } clariion_dev_list[] = {
->  	{"DGC", "RAID"},
->  	{"DGC", "DISK"},
-> +	{"DGC", "VRAID"},
->  	{NULL, NULL},
->  };
-> 
-> @@ -422,6 +423,9 @@ static int clariion_bus_notify(struct notifier_block *nb,
->  	int i, found = 0;
->  	unsigned long flags;
-> 
-> +	if (!scsi_is_sdev_device(dev))
-> +		return 0;
+> +static void blk_rq_timed_out_timer(unsigned long data)
+> +{
+> +	struct request_queue *q = (struct request_queue *) data;
+> +	unsigned long flags, next = 0;
+> +	struct request *rq, *tmp;
 > +
->  	if (action == BUS_NOTIFY_ADD_DEVICE) {
->  		for (i = 0; clariion_dev_list[i].vendor; i++) {
->  			if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-> @@ -465,7 +469,7 @@ static int clariion_bus_notify(struct notifier_block *nb,
->  		sdev->scsi_dh_data = NULL;
->  		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> 
-> -		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
-> +		sdev_printk(KERN_NOTICE, sdev, "Detached %s.\n",
->  			    CLARIION_NAME);
-> 
->  		kfree(scsi_dh_data);
+> +	spin_lock_irqsave(q->queue_lock, flags);
+> +
+> +	list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_list) {
+> +		if (!next || time_before(next, rq->timeout))
+   
+Above should be time_after() rather than time_before, I think.  I posted
+a patch for it here, http://article.gmane.org/gmane.linux.scsi/36528.
+
+> +void blk_complete_request(struct request *req)
+> +{
+> +	/*
+> +	 * We don't have to worry about this one timing out any more.
+> +	 * If we are unable to remove the timer, then the command
+> +	 * has already timed out.  In which case, we have no choice but to
+> +	 * let the timeout function run, as we have no idea where in fact
+> +	 * that function could really be.  It might be on another processor,
+> +	 * etc, etc.
+> +	 */
+> +	if (!blk_delete_timer(req))
+> +		return;
+
+blk_delete_timer() requires that the queue lock must be held.
+blk_complete_request() is called without holding the lock (e.g. from
+scsi_done). Maybe, blk_complete_request() should hold the lock while
+calling blk_delete_timer()?
+
+I tested with the following code and it seems to work fine.
+
+diff -r 9239c54db9f0 block/blk-core.c
+--- a/block/blk-core.c	Thu May 01 14:23:05 2008 -0700
++++ b/block/blk-core.c	Mon May 05 18:46:07 2008 -0700
+@@ -1864,6 +1864,10 @@
+  */
+ void blk_complete_request(struct request *req)
+ {
++	unsigned long flags;
++	struct request_queue *q = req->q;
++	int rc;
++
+ 	/*
+ 	 * We don't have to worry about this one timing out any more.
+ 	 * If we are unable to remove the timer, then the command
+@@ -1872,7 +1876,10 @@
+ 	 * that function could really be.  It might be on another processor,
+ 	 * etc, etc.
+ 	 */
+-	if (!blk_delete_timer(req))
++	spin_lock_irqsave(q->queue_lock, flags);
++	rc = blk_delete_timer(req);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++	if (!rc)
+ 		return;
+ 
+ 	__blk_complete_request(req);
