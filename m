@@ -1,77 +1,84 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: lockdep warning in qla2xxx
-Date: Tue, 6 May 2008 14:37:29 -0700
-Message-ID: <20080506213729.GH57975@plap4.qlogic.org>
-References: <20080506182341.GN19219@parisc-linux.org>
+Subject: Re: [2.6.25.1] qla2xxx can't see more than 4 drives
+Date: Tue, 6 May 2008 15:08:26 -0700
+Message-ID: <20080506220826.GI57975@plap4.qlogic.org>
+References: <alpine.DEB.1.10.0805031458050.2330@mtl.rackplans.net> <20080506135118.GA46493@plap4.qlogic.org> <alpine.DEB.1.10.0805061022120.5741@mtl.rackplans.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:35232 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:40656 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbYEFVha (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 17:37:30 -0400
+	with ESMTP id S1758025AbYEFWI1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 18:08:27 -0400
 Content-Disposition: inline
-In-Reply-To: <20080506182341.GN19219@parisc-linux.org>
+In-Reply-To: <alpine.DEB.1.10.0805061022120.5741@mtl.rackplans.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Gerhard Mack <gmack@innerfire.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 06 May 2008, Matthew Wilcox wrote:
+On Tue, 06 May 2008, Gerhard Mack wrote:
 
-> I'm in the middle of chasing something else right now, so I don't want
-> to spend any time on this:
+> On Tue, 6 May 2008, Andrew Vasquez wrote:
+> > Could you load the driver with the ql2xextended_error_logging module
+> > parameter set to 1 and send the resultant driver logs?  Also, it would
+> > could you also send the output of the following after the driver is
+> > loaded:
+> > 
+> > $ cat /sys/class/fc_host/host<host_no>
+> > $ cat /sys/class/scsi_host/host<host_no>/*
+> > $ cat /sys/class/fc_remote_ports/*
+> > 
+> > where host_no corresponds to the SCSI host-number assigned to the HBA.
+> > 
+> Of course.. 
 > 
-> =================================
-> [ INFO: inconsistent lock state ]
-> 2.6.26-rc1-00115-g0340eda-dirty #60
-> ---------------------------------
-> inconsistent {hardirq-on-W} -> {in-hardirq-W} usage.
-> swapper/1 [HC1[1]:SC0[0]:HE0:SE1] takes:
->  (&ha->hardware_lock){+-..}, at: [<c035495d>] qla2300_intr_handler+0x35/0x1f5
-> {hardirq-on-W} state was registered at:
->   [<c0139a16>] __lock_acquire+0x459/0xb1d
->   [<c013a091>] __lock_acquire+0xad4/0xb1d
->   [<c013a142>] lock_acquire+0x68/0x82
->   [<c035495d>] qla2300_intr_handler+0x35/0x1f5
->   [<c0506da5>] _spin_lock+0x24/0x4d
+> QLogic Fibre Channel HBA Driver
+> qla2xxx 0000:02:0a.0: Found an ISP2312, irq 24, iobase 0xf88cc000
+> qla2xxx 0000:02:0a.0: Configuring PCI space...
+> qla2xxx 0000:02:0a.0: Configure NVRAM parameters...
+> qla2xxx 0000:02:0a.0: Verifying loaded RISC code...
+> scsi(4): **** Load RISC code ****
+...
+> cat /sys/class/fc_host/host4/* :
+> 0x200000e08b127d20
+> 0
+> 0x200000e08b127d20
+> 0
+> 0x000001
+> 0x210000e08b127d20
+> Online
+> LPort (private loop)
+
+Hmm, qla2xxx has a 'split' port-discovery model based on topology.
+Switched fabric (P2P) discovery and logins are managed by the driver.
+FC_AL topology discovery and logins are managed by firmware.  The
+driver (qla2xxx) simply asks the firmware for a list of recognized
+ports, as you've noted the driver (and indirectly, firmware), only
+recognized 4 ports during LIPA/LIHA/LISA address negotiation:
+
+> cat /sys/class/fc_remote_ports/rport-4\:0-0/*  :
+> 0x2200000c507ce546
+...
+> cat /sys/class/fc_remote_ports/rport-4\:0-1/*
+> 0x22000004cf69c688
+...
+> cat /sys/class/fc_remote_ports/rport-4\:0-2/* | log
+> 0x2200000c507ce809
+...
+> cat /sys/class/fc_remote_ports/rport-4\:0-3/* :
+> 0x22000004cf69b98f
+...
 
 
-Ok, admitently, my parsing of lockdep warnings is pretty weak, but I
-guess what's happening here is that lockdep is detecting the
-interrupt-handler is run in both process and interrupt context with
-irqs-enabled in the former case.
+You mentioned that the 'BIOS' configuration program recognizes 6
+devices, have there been any changes made via the BIOS utility to
 
-During init-time and error-recovery (after a RISC reset), the driver
-disables interrupts and 'polls' for completions by calling
-qla2x00_poll():
+* assign a hard-loop id?
+* acquire a loop-id during LIPA?
 
-	static inline void
-	qla2x00_poll(scsi_qla_host_t *ha)
-	{
-		ha->isp_ops->intr_handler(0, ha);
-	}
+or any changes above and beyond 'default' settings?  If so, could you
+'retrore' default settings within BIOS utility?
 
-which in-turn calls the ISP registered interrupt handler.  One
-possible solution to silence lockdep is to disable local interrupts
-while the handler is polled...  This though seems fairly heavy handed.
-Does something like the following make sense???
-
----
-
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index e9bae27..92fafbd 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -34,7 +34,11 @@ qla2x00_debounce_register(volatile uint16_t __iomem *addr)
- static inline void
- qla2x00_poll(scsi_qla_host_t *ha)
- {
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
- 	ha->isp_ops->intr_handler(0, ha);
-+	local_irq_restore(flags);
- }
- 
- static __inline__ scsi_qla_host_t *
+--
+Andrew Vasquez
