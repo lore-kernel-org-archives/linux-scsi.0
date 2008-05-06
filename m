@@ -1,86 +1,135 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 1/2] Added flush_disk to factor out common buffer cache
-	flushing code.
-Date: Mon, 05 May 2008 17:04:19 -0600
-Message-ID: <20080505230419.12905.36939.stgit@bluto.andrew>
-References: <20080505230414.12905.15331.stgit@bluto.andrew>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH] Fixes to EMC scsi device handler
+Date: Mon, 05 May 2008 18:34:18 -0700
+Message-ID: <1210037658.21974.125.camel@chandra-ubuntu>
+References: <481EF5AA.7090304@suse.de>
+Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763241AbYEEXEt@vger.kernel.org>
-In-Reply-To: <20080505230414.12905.15331.stgit@bluto.andrew>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, Andrew Patterson <andrew.patterson@hp.com>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <481EF5AA.7090304@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, dm-devel <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Added flush_disk to factor out common buffer cache flushing code.
 
-We need to be able to flush the buffer cache for more than just when a
-disk is changed, so we factor out common cache flush code in
-check_disk_change() to an internal flush_disk() routine.  This routine
-will then be used for both disk changes and disk resizes (in a later
-patch).
+On Mon, 2008-05-05 at 13:55 +0200, Hannes Reinecke wrote:
+> Hi Chandra,
+> 
+> based on your latest patchset there are some issues which
+> should be fixed:
+> 
+> - When SYSFS_DEPRECATED is not set also scsi_target and
+>   scsi_host devices will be attached to the scsi bus.
+>   So we have to check with 'scsi_is_sdev_device' before
+>   processing the notifier call
 
-Include the disk name in the text indicating that there are busy
-inodes on the device and increase the KERN severity of the message.
+This need to be done for all the handlers, right ?
+>  
+> - Newer EMC flarecode also provide for a 'VRAID' device
+>   model; this should be added to the device map
+> - The name should be 'emc', not 'emc_clariion', for
+>   integration with existing multipath-tools
+> - It's spelled 'detached' :-)
+> 
+> Patch attached.
 
-Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
----
+Looks good to me.
+> 
+> Some issues which I'd like to see eventually:
+> 
+> - We should have a way of adding/modifying the internal
+>   device map. Currently we have to recompile the module
+>   every time a new device definition is found.
 
- fs/block_dev.c |   33 ++++++++++++++++++++++++++++-----
- 1 files changed, 28 insertions(+), 5 deletions(-)
+Yeah, very true. it will become an annoyance. Is this the reason why
+you were asking for the sysfs interface (below) ?
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 7d822fa..fcd0398 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -867,6 +867,33 @@ struct block_device *open_by_devnum(dev_t dev, unsigned mode)
- 
- EXPORT_SYMBOL(open_by_devnum);
- 
-+
-+/**
-+ * flush_disk - invalidates all buffer-cache entries on a disk
-+ *
-+ * @bdev:	struct block device to be flushed
-+ *
-+ * Invalidates all buffer-cache entries on a disk. It should be called
-+ * when a disk has been changed -- either by a media change or online
-+ * resize.
-+ */
-+static void flush_disk(struct block_device *bdev)
-+{
-+	if (__invalidate_device(bdev)) {
-+		char name[BDEVNAME_SIZE] = "";
-+
-+		if (bdev->bd_disk)
-+			disk_name(bdev->bd_disk, 0, name);
-+		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
-+		       name);
-+	}
-+
-+	if (!bdev->bd_disk)
-+		return;
-+	if (bdev->bd_disk->minors > 1)
-+		bdev->bd_invalidated = 1;
-+}
-+
- /*
-  * This routine checks whether a removable media has been changed,
-  * and invalidates all buffer-cache-entries in that case. This
-@@ -886,13 +913,9 @@ int check_disk_change(struct block_device *bdev)
- 	if (!bdops->media_changed(bdev->bd_disk))
- 		return 0;
- 
--	if (__invalidate_device(bdev))
--		printk("VFS: busy inodes on changed media.\n");
--
-+	flush_disk(bdev);
- 	if (bdops->revalidate_disk)
- 		bdops->revalidate_disk(bdev->bd_disk);
--	if (bdev->bd_disk->minors > 1)
--		bdev->bd_invalidated = 1;
- 	return 1;
- }
- 
+> - The ->activate function should be able to be triggered
+>   manually via sysfs.
+
+Why would you need this ? 
+> 
+> James, seeing that the scsi_dh pointer is already present
+> in the sdev structure, would you accept a patch which adds
+> scsi_dh attributes to drivers/scsi/scsi_sysfs.c?
+> Having them encapsulated into drivers/scsi/device_handler
+> somewhere is really painful due to the asynchronous nature
+> of this whole thing ...
+> 
+> Apart from this: Great work!
+> I'll check the other device handlers, too; already noticed
+> that the device map for HP is wrong :-)
+
+Can you please help fix it. 
+> 
+> Cheers,
+> 
+> hannes
+> plain text document attachment (scsi-dh-emc-fixes)
+> Fixes to EMC scsi device handler
+> 
+> Several fixes to the EMC scsi device handler:
+> - The name should be 'emc' for seamless integration with multipathing
+> - Newer EMC flarecode also has a 'VRAID' type
+> - Check if this is really a sdev before processing the notifier call
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+> index 1b18989..0aded96 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_emc.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+> @@ -25,7 +25,7 @@
+>  #include <scsi/scsi_dh.h>
+>  #include <scsi/scsi_device.h>
+> 
+> -#define CLARIION_NAME			"emc_clariion"
+> +#define CLARIION_NAME			"emc"
+> 
+>  #define CLARIION_TRESPASS_PAGE		0x22
+>  #define CLARIION_BUFFER_SIZE		0x80
+> @@ -390,12 +390,13 @@ static int clariion_check_sense(struct scsi_device *sdev,
+>  	return SUCCESS;
+>  }
+> 
+> -static const struct {
+> +static const struct clariion_dev_list_t {
+>  	char *vendor;
+>  	char *model;
+>  } clariion_dev_list[] = {
+>  	{"DGC", "RAID"},
+>  	{"DGC", "DISK"},
+> +	{"DGC", "VRAID"},
+>  	{NULL, NULL},
+>  };
+> 
+> @@ -422,6 +423,9 @@ static int clariion_bus_notify(struct notifier_block *nb,
+>  	int i, found = 0;
+>  	unsigned long flags;
+> 
+> +	if (!scsi_is_sdev_device(dev))
+> +		return 0;
+> +
+>  	if (action == BUS_NOTIFY_ADD_DEVICE) {
+>  		for (i = 0; clariion_dev_list[i].vendor; i++) {
+>  			if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
+> @@ -465,7 +469,7 @@ static int clariion_bus_notify(struct notifier_block *nb,
+>  		sdev->scsi_dh_data = NULL;
+>  		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+> 
+> -		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
+> +		sdev_printk(KERN_NOTICE, sdev, "Detached %s.\n",
+>  			    CLARIION_NAME);
+> 
+>  		kfree(scsi_dh_data);
