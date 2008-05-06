@@ -1,99 +1,78 @@
-From: malahal@us.ibm.com
-Subject: Re: blk request timeout handler against 2.6.26
-Date: Mon, 5 May 2008 18:47:32 -0700
-Message-ID: <20080506014732.GA6249@us.ibm.com>
-References: <20080503020000.GU14976@parisc-linux.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_dh: remove &rq->cmd access
+Date: Tue, 6 May 2008 15:54:11 +0900
+Message-ID: <20080506155347T.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:60948 "EHLO e6.ny.us.ibm.com"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:47898 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbYEFBre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2008 21:47:34 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m461ngE3012140
-	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:49:42 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m461lXeG300514
-	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m461lXPF021483
-	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
-Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.130])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m461lXaq021474
-	for <linux-scsi@vger.kernel.org>; Mon, 5 May 2008 21:47:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20080503020000.GU14976@parisc-linux.org>
+	id S1752814AbYEFGzE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 May 2008 02:55:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: sekharan@us.ibm.com, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox [matthew@wil.cx] wrote:
-> 
-> This patch is a forward-port of the patch Jens posted last October.
-> gdth_proc needs some loving, I just #if 0'd it out for the moment.
+This is against scsi-misc, a resend of
 
-I posted a patch for gdth driver.  Here is a link:
-http://article.gmane.org/gmane.linux.scsi/36024
-The patch is taken into 'timeout' branch of Jen's block git tree.
+http://www.spinics.net/lists/linux-ide/msg22659.html
 
-> +static void blk_rq_timed_out_timer(unsigned long data)
-> +{
-> +	struct request_queue *q = (struct request_queue *) data;
-> +	unsigned long flags, next = 0;
-> +	struct request *rq, *tmp;
-> +
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +
-> +	list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_list) {
-> +		if (!next || time_before(next, rq->timeout))
-   
-Above should be time_after() rather than time_before, I think.  I posted
-a patch for it here, http://article.gmane.org/gmane.linux.scsi/36528.
 
-> +void blk_complete_request(struct request *req)
-> +{
-> +	/*
-> +	 * We don't have to worry about this one timing out any more.
-> +	 * If we are unable to remove the timer, then the command
-> +	 * has already timed out.  In which case, we have no choice but to
-> +	 * let the timeout function run, as we have no idea where in fact
-> +	 * that function could really be.  It might be on another processor,
-> +	 * etc, etc.
-> +	 */
-> +	if (!blk_delete_timer(req))
-> +		return;
+===
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_dh: remove &rq->cmd access
 
-blk_delete_timer() requires that the queue lock must be held.
-blk_complete_request() is called without holding the lock (e.g. from
-scsi_done). Maybe, blk_complete_request() should hold the lock while
-calling blk_delete_timer()?
+req->cmd was changed from a static array to a pointer. It breaks
+&rq->cmd access. scsi_dh acessess to &rq->cmd to initiazlize it but
+blk_get_request does so we can remove such.
 
-I tested with the following code and it seems to work fine.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    1 -
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    1 -
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
-diff -r 9239c54db9f0 block/blk-core.c
---- a/block/blk-core.c	Thu May 01 14:23:05 2008 -0700
-+++ b/block/blk-core.c	Mon May 05 18:46:07 2008 -0700
-@@ -1864,6 +1864,10 @@
-  */
- void blk_complete_request(struct request *req)
- {
-+	unsigned long flags;
-+	struct request_queue *q = req->q;
-+	int rc;
-+
- 	/*
- 	 * We don't have to worry about this one timing out any more.
- 	 * If we are unable to remove the timer, then the command
-@@ -1872,7 +1876,10 @@
- 	 * that function could really be.  It might be on another processor,
- 	 * etc, etc.
- 	 */
--	if (!blk_delete_timer(req))
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	rc = blk_delete_timer(req);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+	if (!rc)
- 		return;
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index ed53f14..644e24a 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -258,7 +258,6 @@ static struct request *get_req(struct scsi_device *sdev, int cmd)
+ 		return NULL;
+ 	}
  
- 	__blk_complete_request(req);
+-	memset(&rq->cmd, 0, BLK_MAX_CDB);
+ 	rq->cmd[0] = cmd;
+ 	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
+ 
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 12ceab7..531564f 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -91,7 +91,6 @@ static int hp_sw_activate(struct scsi_device *sdev)
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	req->cmd_flags |= REQ_FAILFAST;
+ 	req->cmd_len = COMMAND_SIZE(START_STOP);
+-	memset(req->cmd, 0, MAX_COMMAND_SIZE);
+ 	req->cmd[0] = START_STOP;
+ 	req->cmd[4] = 1;	/* Start spin cycle */
+ 	req->timeout = HP_SW_TIMEOUT;
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 6fff077..9f94942 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -214,7 +214,6 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
+ 		return NULL;
+ 	}
+ 
+-	memset(&rq->cmd, 0, BLK_MAX_CDB);
+ 	rq->sense = h->sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+-- 
+1.5.4.2
+
