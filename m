@@ -1,51 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/3] Update scsi_dh infrastructure
-Date: Wed, 07 May 2008 17:03:29 +0200
-Message-ID: <4821C4C1.2010602@suse.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC] Remove of ISA pools, and Lazy sense allocation.
+Date: Thu, 8 May 2008 00:43:30 +0900
+Message-ID: <20080508004308U.tomof@acm.org>
+References: <48218B24.4000507@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50260 "EHLO mx2.suse.de"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:35917 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762242AbYEGPDc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 May 2008 11:03:32 -0400
+	id S1752660AbYEGPru (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 May 2008 11:47:50 -0400
+In-Reply-To: <48218B24.4000507@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: bharrosh@panasas.com
+Cc: andi@firstfloor.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com
 
-Hi Chandra,
+On Wed, 07 May 2008 13:57:40 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-this patchset updates the scsi_dh infrastructure as laid out
-in my previous mail. In particular it does
+> Let me please explain a bit on my sense_buffer patchset and where I was going 
+> with these:
+> 
+> Currently every ULD/Initiator that pushes request to block devices puts a sense
+> buffer of SCSI_SENSE_BUFFERSIZE size onto request->sense pointer. scsi-midlayer
+> shadows that buffer, for what it thought as a DMAable buffer for drivers, and at
+> completion of request copies the shadow buffer back into ULD's buffer.
+> 
+> I have observed three uses of sense_buffer handling in scsi drivers:
 
-- update the scsi_dh infrastructure to implement a generic
-  device table handling; the static device tables from the
-  individual handlers are copied into a generic list.
-  This allows us to do the checking in the main scsi_dh
-  module instead of having to implement it for every handler.
-  And we can then modify this list dynamically
-- Implements a 'dh_state' attribute for the sdev, which
-  allows for manipulating of the device handler itself.
-  So we can now attach, detach, and activate any device
-  handler manually.
-- And finally I've updated my SPC-3 alua handler for the
-  new infrastructure. Please include it in your patchset, too.
+I just had a quick look at only some of patches, but where do you
+allocate rq->sense for fs requests?
 
-Patches are relative to your latest patchset.
 
-Cheers,
+Here are some comments:
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+scsi_eh: Define API for driver private sense allocation
+
++struct scsi_sense_elem {
++       union {
++               struct scsi_sense_elem *next;
++               u8 sense_data[SCSI_SENSE_BUFFERSIZE] ____cacheline_aligned;
++       };
++} ____cacheline_aligned;
+
+
+I think that this is wrong since all the architecutures don't have
+such dma restriction. ARCH_KMALLOC_MINALIGN?
+
+There is the same code in The libata patch at least. I guess there are
+more.
