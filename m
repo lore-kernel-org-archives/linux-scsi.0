@@ -1,88 +1,183 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi_scan: WARNING: at include/linux/blkdev.h:431
-	blk_queue_init_tags+0x107/0x120()
-Date: Wed, 07 May 2008 17:40:26 -0500
-Message-ID: <1210200026.3067.25.camel@localhost.localdomain>
-References: <alpine.LNX.1.00.0805020043130.1489@dragon.funnycrock.com>
-	 <20080502111652T.tomof@acm.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] mptsas: add mptsas_shutdown to call pci_disable_msi
+Date: Wed, 7 May 2008 16:31:55 -0700
+Message-ID: <20080507163155.1217515f.akpm@linux-foundation.org>
+References: <200804221947.33524.yhlu.kernel@gmail.com>
+	<86802c440804222012w1536b0a7y14a5c2f9dc333624@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53801 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757314AbYEGWke (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2008 18:40:34 -0400
-In-Reply-To: <20080502111652T.tomof@acm.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42134 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754120AbYEGXcE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2008 19:32:04 -0400
+In-Reply-To: <86802c440804222012w1536b0a7y14a5c2f9dc333624@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jesper.juhl@gmail.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: yhlu.kernel@gmail.com, James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sathya.prakash@lsi.com, Eric.Moore@lsi.com, ebiederm@xmission.com
 
-On Fri, 2008-05-02 at 11:17 +0900, FUJITA Tomonori wrote:
-> On Fri, 2 May 2008 00:43:30 +0200 (CEST)
-> Jesper Juhl <jesper.juhl@gmail.com> wrote:
+On Tue, 22 Apr 2008 20:12:08 -0700
+"Yinghai Lu" <yhlu.kernel@gmail.com> wrote:
+
+> On Tue, Apr 22, 2008 at 7:47 PM, Yinghai Lu <yhlu.kernel.send@gmail.com> wrote:
+> >
+> >
+> >  this change
+> >
+> >  | commit 23a274c8a5adafc74a66f16988776fc7dd6f6e51
+> >  | Author: Prakash, Sathya <sathya.prakash@lsi.com>
+> >  | Date:   Fri Mar 7 15:53:21 2008 +0530
+> >  |
+> >  |     [SCSI] mpt fusion: Enable MSI by default for SAS controllers
+> >  |
+> >  |     This patch modifies the driver to enable MSI by default for all SAS chips.
+> >  |
+> >  cause kexec RHEL 5.1 kernel fail.
+> >
+> >  root casue: the rhel 5.1 kernel still use INTx emulation.
+> >  and mptscsih_shutdown doesn't call pci_disable_msi to reenable INTx on kexec path
+> >
+> >  so try to call mptsas_remove in mptsas_shutdown.
+> >  then pci_disable_msi will be called via mptsas_remove==>mptscih_remove==>
+> >  mpt_detach.
+> >
+> >  Signed-off-by: Yinghai Lu <yhlu.kernel@gmail.com>
+> >  CC: Prakash, Sathya <sathya.prakash@lsi.com>
+> >  CC: "Moore, Eric" <Eric.Moore@lsi.com>
+> >
+> >  Index: linux-2.6/drivers/message/fusion/mptsas.c
+> >  ===================================================================
+> >  --- linux-2.6.orig/drivers/message/fusion/mptsas.c
+> >  +++ linux-2.6/drivers/message/fusion/mptsas.c
+> >  @@ -3327,6 +3327,11 @@ static void __devexit mptsas_remove(stru
+> >         mptscsih_remove(pdev);
+> >   }
+> >
+> >  +static void mptsas_shutdown(struct pci_dev *pdev)
+> >  +{
+> >  +       mptsas_remove(pdev);
+> >  +}
+> >  +
+> >   static struct pci_device_id mptsas_pci_table[] = {
+> >         { PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064,
+> >                 PCI_ANY_ID, PCI_ANY_ID },
+> >  @@ -3348,7 +3353,7 @@ static struct pci_driver mptsas_driver =
+> >         .id_table       = mptsas_pci_table,
+> >         .probe          = mptsas_probe,
+> >         .remove         = __devexit_p(mptsas_remove),
+> >  -       .shutdown       = mptscsih_shutdown,
+> >  +       .shutdown       = mptsas_shutdown,
+> >   #ifdef CONFIG_PM
+> >         .suspend        = mptscsih_suspend,
+> >         .resume         = mptscsih_resume,
+> >  --
 > 
-> > Hi,
-> > 
-> > For your information;
-> > 
-> > I just build and booted the tip of Linus' git tree (HEAD at 
-> > 886c35fbcf6fb2eee15687efc2d64d99b6ad9a4a) and got this in dmesg during 
-> > bootup : 
-> > 
-> > ------------[ cut here ]------------
-> > WARNING: at include/linux/blkdev.h:431 blk_queue_init_tags+0x107/0x120()
-> > Modules linked in:
-> > Pid: 432, comm: scsi_scan_0 Not tainted 2.6.25-07351-g886c35f #1
-> >  [<c0129684>] warn_on_slowpath+0x54/0x70
-> >  [<c017a7c3>] ? check_object+0xe3/0x1f0
-> >  [<c0200ae9>] ? init_tag_map+0x59/0xb0
-> >  [<c014b1e7>] ? mark_held_locks+0x47/0x80
-> >  [<c017cbeb>] ? __kmalloc+0x6b/0x100
-> >  [<c014b379>] ? trace_hardirqs_on+0xb9/0x150
-> >  [<c0200ae9>] ? init_tag_map+0x59/0xb0
-> >  [<c0200ae9>] ? init_tag_map+0x59/0xb0
-> >  [<c0200ae9>] ? init_tag_map+0x59/0xb0
-> >  [<c0200c34>] ? __blk_queue_init_tags+0x24/0x70
-> >  [<c0200c45>] ? __blk_queue_init_tags+0x35/0x70
-> >  [<c0200e57>] blk_queue_init_tags+0x107/0x120
-> >  [<c02b5a91>] ahc_platform_set_tags+0x191/0x1d0
-> >  [<c02b5bd3>] ahc_linux_slave_configure+0x103/0x170
-> >  [<c02a1f65>] scsi_probe_and_add_lun+0x6e5/0x920
-> >  [<c02a2468>] __scsi_scan_target+0xe8/0x5d0
-> >  [<c0108e17>] ? native_sched_clock+0x87/0xd0
-> >  [<c0148c89>] ? get_lock_stats+0x29/0x50
-> >  [<c0148cbd>] ? put_lock_stats+0xd/0x30
-> >  [<c014b1e7>] ? mark_held_locks+0x47/0x80
-> >  [<c035e247>] ? mutex_lock_nested+0x1b7/0x2a0
-> >  [<c014b379>] ? trace_hardirqs_on+0xb9/0x150
-> >  [<c035e23a>] ? mutex_lock_nested+0x1aa/0x2a0
-> >  [<c02a2a1a>] ? scsi_scan_host_selected+0x3a/0xf0
-> >  [<c02a29c0>] scsi_scan_channel+0x70/0x90
-> >  [<c02a2a9d>] scsi_scan_host_selected+0xbd/0xf0
-> >  [<c02a2b50>] ? do_scan_async+0x0/0x140
-> >  [<c02a2b48>] do_scsi_scan_host+0x78/0x80
-> >  [<c02a2b64>] do_scan_async+0x14/0x140
-> >  [<c011f6e8>] ? complete+0x48/0x60
-> >  [<c02a2b50>] ? do_scan_async+0x0/0x140
-> >  [<c013c8d2>] kthread+0x42/0x70
-> >  [<c013c890>] ? kthread+0x0/0x70
-> >  [<c0103ceb>] kernel_thread_helper+0x7/0x1c
+> fail on one system with big sas expander...
 > 
-> The problem is that the commit 75ad23b expects that we hold the queue
-> lock for __blk_queue_free_tags, blk_queue_free_tags and
-> blk_queue_init_tags but we haven't.
+> LBSuse:~ # mkdir /xx
+> LBSuse:~ # mount /dev/sdl1 /xx
+> LBSuse:~ # cd /xx
+> LBSuse:/xx # sh kk_rh_5.1
+> LBSuse:/xx # ./kexec -e
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000028
+> IP: [<ffffffff80337af4>] sysfs_find_dirent+0x1f/0x5f
+> PGD 41f137067 PUD 424482067 PMD 0
+> Oops: 0000 [1] SMP
+> CPU 7
+> Modules linked in:
+> Pid: 7534, comm: kexec Not tainted
+
+I don't understand your email.
+
+Are you saying that this oops is the thing which your patch fixes?
+
+Or are you saying that this oops occurs even after your patch is applied? 
+That we have a second regression?
+
+> 2.6.25-sched-devel.git-x86-latest.git-03823-g1508ed0-dirty #135
+> RIP: 0010:[<ffffffff80337af4>]  [<ffffffff80337af4>] sysfs_find_dirent+0x1f/0x5f
+> RSP: 0018:ffff8104238f7708  EFLAGS: 00010246
+> RAX: 0000000000000000 RBX: ffffffff80cd36a5 RCX: 000000008c0f362e
+> RDX: ffffffff80e20ab0 RSI: ffffffff80cd36a5 RDI: 0000000000000000
+> RBP: ffff8104238f7728 R08: 0000000000000000 R09: 000000008c0f362e
+> R10: ffff8104238f77f8 R11: 000000008c0f362e R12: 0000000000000000
+> R13: ffff810223190358 R14: 0000000000000000 R15: 0000000000000000
+> FS:  00007fde8859d6f0(0000) GS:ffff810427039f00(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: 0000000000000028 CR3: 00000004238b8000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process kexec (pid: 7534, threadinfo ffff8104238f6000, task ffff8104238e0000)
+> Stack:  0000000000000000 000000008c0f362e ffffffff80cd36a5 0000000000000000
+>  ffff8104238f7758 ffffffff80337b70 000000008c0f362e 000000008c0f362e
+>  ffff810223190268 ffffffff80e1fb20 ffff8104238f7798 ffffffff8033966e
+> Call Trace:
+>  [<ffffffff80337b70>] sysfs_get_dirent+0x3c/0x72
+>  [<ffffffff8033966e>] sysfs_remove_group+0x38/0xb4
+>  [<ffffffff80633007>] dpm_sysfs_remove+0x2f/0x45
+>  [<ffffffff806336d3>] device_pm_remove+0x34/0x85
+>  [<ffffffff8062b283>] device_del+0x30/0x1b0
+>  [<ffffffff8062b428>] device_unregister+0x25/0x48
+>  [<ffffffff80639e73>] enclosure_unregister+0x85/0xcb
+>  [<ffffffff807dad42>] ses_intf_remove+0x8b/0xa8
+>  [<ffffffff8062b2fb>] device_del+0xa8/0x1b0
+>  [<ffffffff8062b428>] device_unregister+0x25/0x48
+>  [<ffffffff80700bb4>] __scsi_remove_device+0x4c/0xaf
+>  [<ffffffff80700c50>] scsi_remove_device+0x39/0x5c
+>  [<ffffffff80700d15>] __scsi_remove_target+0xa2/0xf6
+>  [<ffffffff80700de0>] ? __remove_child+0x0/0x4f
+>  [<ffffffff80700e12>] __remove_child+0x32/0x4f
+>  [<ffffffff8062ab27>] ? next_device+0x21/0x45
+>  [<ffffffff8062ac23>] device_for_each_child+0x40/0x84
+>  [<ffffffff80713d8e>] ? do_sas_phy_delete+0x0/0x66
+>  [<ffffffff80700dbc>] scsi_remove_target+0x53/0x77
+>  [<ffffffff807134b0>] sas_rphy_remove+0x42/0x81
+>  [<ffffffff80713514>] sas_rphy_delete+0x25/0x48
+>  [<ffffffff80713570>] sas_port_delete+0x39/0x147
+>  [<ffffffff802259e0>] ? mcount_call+0x5/0x35
+>  [<ffffffff80713d8e>] ? do_sas_phy_delete+0x0/0x66
+>  [<ffffffff80713dc2>] do_sas_phy_delete+0x34/0x66
+>  [<ffffffff8062ac23>] device_for_each_child+0x40/0x84
+>  [<ffffffff80713d8e>] ? do_sas_phy_delete+0x0/0x66
+>  [<ffffffff8071343f>] sas_remove_children+0x2e/0x5d
+>  [<ffffffff807134b7>] sas_rphy_remove+0x49/0x81
+>  [<ffffffff80713514>] sas_rphy_delete+0x25/0x48
+>  [<ffffffff80713570>] sas_port_delete+0x39/0x147
+>  [<ffffffff802259e0>] ? mcount_call+0x5/0x35
+>  [<ffffffff80713d8e>] ? do_sas_phy_delete+0x0/0x66
+>  [<ffffffff80713dc2>] do_sas_phy_delete+0x34/0x66
+>  [<ffffffff8062ac23>] device_for_each_child+0x40/0x84
+>  [<ffffffff8071343f>] sas_remove_children+0x2e/0x5d
+>  [<ffffffff807136a6>] sas_remove_host+0x28/0x3e
+>  [<ffffffff80ab22ab>] mptsas_remove+0x46/0x107
+>  [<ffffffff802259e0>] ? mcount_call+0x5/0x35
+>  [<ffffffff8080ef6d>] mptsas_shutdown+0x21/0x37
+>  [<ffffffff805a6815>] pci_device_shutdown+0x37/0x4d
+>  [<ffffffff8062a2ad>] device_shutdown+0x64/0xa0
+>  [<ffffffff8027e57f>] ? blocking_notifier_call_chain+0x27/0x3d
+>  [<ffffffff8027131e>] kernel_restart_prepare+0x3f/0x5a
+>  [<ffffffff802716f7>] sys_reboot+0x172/0x1cb
+>  [<ffffffff802e2ac0>] ? __fput+0x158/0x17b
+>  [<ffffffff802efc4e>] ? vfs_ioctl+0x3e/0xa2
+>  [<ffffffff802e2ef0>] ? fput+0x2c/0x42
+>  [<ffffffff802df2d2>] ? filp_close+0x78/0x9a
+>  [<ffffffff802df0b4>] ? __put_unused_fd+0x33/0x60
+>  [<ffffffff802e0bed>] ? sys_close+0x8c/0xdf
+>  [<ffffffff80225b9b>] system_call_after_swapgs+0x7b/0x80
 > 
-> The simple fix is using queue_flag_set/clear_unlocked for them, then
-> it should work as before. However, it would be better to hold the
-> queue lock for blk_queue_free_tags and blk_queue_init_tags (we can
-> hold the queue lock in scsi_activate_tcq and scsi_deactivate_tcq).
+> 
+> Code: e8 37 85 f2 ff 48 83 c4 18 5b c9 c3 55 48 89 e5 41 54 53 48 83
+> ec 10 66 66 90 66 90 65 48 8b 04 25 28 00 00 00 48 89 45 e8 31 c0 <48>
+> 8b 5f 28 49 89 f4 eb 14 48 8b 7b 18 4c 89 e6 e8 25 e8 25 00
+> RIP  [<ffffffff80337af4>] sysfs_find_dirent+0x1f/0x5f
+>  RSP <ffff8104238f7708>
+> CR2: 0000000000000028
+> ---[ end trace 4ca22418d73866ec ]---
+> 
+> may need create mptsas that only call pci_disable_msi
+> 
 
-So is this the fix that everyone agrees on?  And if so, whose tree is it
-going through (I tend to think block, since the original breakage came
-from the block tree).
-
-James
-
+It would be strange for an interrupt-disabling problem to cause sysfs to go
+oops?
 
