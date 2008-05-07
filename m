@@ -1,84 +1,57 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [2.6.25.1] qla2xxx can't see more than 4 drives
-Date: Tue, 6 May 2008 15:08:26 -0700
-Message-ID: <20080506220826.GI57975@plap4.qlogic.org>
-References: <alpine.DEB.1.10.0805031458050.2330@mtl.rackplans.net> <20080506135118.GA46493@plap4.qlogic.org> <alpine.DEB.1.10.0805061022120.5741@mtl.rackplans.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 05 of 16] Block layer data integrity
+Date: Tue, 06 May 2008 21:56:43 -0400
+Message-ID: <yq1d4nyyizo.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1209165122@sermon.lab.mkp.net>
+	<26ccaf2ccdc5548c4c9f.1209165127@sermon.lab.mkp.net>
+	<20080506202909.GA25904@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:40656 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758025AbYEFWI1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 18:08:27 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0805061022120.5741@mtl.rackplans.net>
+Received: from rgminet01.oracle.com ([148.87.113.118]:15634 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbYEGB4y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2008 21:56:54 -0400
+Received: from agmgw1.us.oracle.com (agmgw1.us.oracle.com [152.68.180.212])
+	by rgminet01.oracle.com (Switch-3.2.4/Switch-3.1.6) with ESMTP id m471uq7v000510
+	for <linux-scsi@vger.kernel.org>; Tue, 6 May 2008 19:56:52 -0600
+Received: from acsmt355.oracle.com (acsmt355.oracle.com [141.146.40.155])
+	by agmgw1.us.oracle.com (Switch-3.2.0/Switch-3.2.0) with ESMTP id m46NElpJ029308
+	for <linux-scsi@vger.kernel.org>; Tue, 6 May 2008 19:56:52 -0600
+In-Reply-To: <20080506202909.GA25904@us.ibm.com> (malahal@us.ibm.com's message of "Tue\, 6 May 2008 13\:29\:09 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerhard Mack <gmack@innerfire.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 06 May 2008, Gerhard Mack wrote:
+>>>>> "Malahal" == malahal  <malahal@us.ibm.com> writes:
 
-> On Tue, 6 May 2008, Andrew Vasquez wrote:
-> > Could you load the driver with the ql2xextended_error_logging module
-> > parameter set to 1 and send the resultant driver logs?  Also, it would
-> > could you also send the output of the following after the driver is
-> > loaded:
-> > 
-> > $ cat /sys/class/fc_host/host<host_no>
-> > $ cat /sys/class/scsi_host/host<host_no>/*
-> > $ cat /sys/class/fc_remote_ports/*
-> > 
-> > where host_no corresponds to the SCSI host-number assigned to the HBA.
-> > 
-> Of course.. 
-> 
-> QLogic Fibre Channel HBA Driver
-> qla2xxx 0000:02:0a.0: Found an ISP2312, irq 24, iobase 0xf88cc000
-> qla2xxx 0000:02:0a.0: Configuring PCI space...
-> qla2xxx 0000:02:0a.0: Configure NVRAM parameters...
-> qla2xxx 0000:02:0a.0: Verifying loaded RISC code...
-> scsi(4): **** Load RISC code ****
-...
-> cat /sys/class/fc_host/host4/* :
-> 0x200000e08b127d20
-> 0
-> 0x200000e08b127d20
-> 0
-> 0x000001
-> 0x210000e08b127d20
-> Online
-> LPort (private loop)
+Malahal> Martin K. Petersen [martin.petersen@oracle.com] wrote:
+>> */ blk_partition_remap(bio);
+>> 
+>> + if (bio_integrity_enabled(bio) && bio_integrity_prep(bio)) + goto
+>> end_io;
+>> +
+>> if (old_sector != -1) blk_add_trace_remap(q, bio, old_dev,
+>> bio->bi_sector, old_sector);
 
-Hmm, qla2xxx has a 'split' port-discovery model based on topology.
-Switched fabric (P2P) discovery and logins are managed by the driver.
-FC_AL topology discovery and logins are managed by firmware.  The
-driver (qla2xxx) simply asks the firmware for a list of recognized
-ports, as you've noted the driver (and indirectly, firmware), only
-recognized 4 ports during LIPA/LIHA/LISA address negotiation:
+Malahal> It is expected that the bio's data should NOT be changed
+Malahal> until this I/O is sent out to the HBA for WRITES. How do you
+Malahal> ensure that applications or file systems don't modify the
+Malahal> data of a bio that is in progress?
 
-> cat /sys/class/fc_remote_ports/rport-4\:0-0/*  :
-> 0x2200000c507ce546
-...
-> cat /sys/class/fc_remote_ports/rport-4\:0-1/*
-> 0x22000004cf69c688
-...
-> cat /sys/class/fc_remote_ports/rport-4\:0-2/* | log
-> 0x2200000c507ce809
-...
-> cat /sys/class/fc_remote_ports/rport-4\:0-3/* :
-> 0x22000004cf69b98f
-...
+As I mentioned on dm-devel a few weeks ago it's a big problem for ext2
+in particular due to lack of locking the page down while I/O is in
+flight.  So ext2 fails spectacularly.
 
+I have been unable to trip XFS and btrfs.  I had one mismatch with
+ext3 but that might have been something else.  In any case I have not
+been able to reproduce it.  Even with artificially induced delays in
+queuecommand.
 
-You mentioned that the 'BIOS' configuration program recognizes 6
-devices, have there been any changes made via the BIOS utility to
+But generally, yes.  It is up to the submitter to guarantee that the
+page isn't being modified during I/O.  This requirement will trickle
+all the way to the top of the stack for things like direct I/O.
 
-* assign a hard-loop id?
-* acquire a loop-id during LIPA?
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
-or any changes above and beyond 'default' settings?  If so, could you
-'retrore' default settings within BIOS utility?
-
---
-Andrew Vasquez
