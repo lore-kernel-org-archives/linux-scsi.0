@@ -1,88 +1,93 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH 2/3] iscsi iser: increase max_sectors
-Date: Wed, 7 May 2008 11:53:08 -0400
-Message-ID: <20080507155308.GE9975@osc.edu>
-References: <20080212205252.GB13643@osc.edu> <20080212205420.GD13643@osc.edu> <481F48A4.3060701@cs.wisc.edu>
+From: Gerhard Mack <gmack@innerfire.net>
+Subject: Re: [2.6.25.1] qla2xxx can't see more than 4 drives
+Date: Wed, 7 May 2008 12:05:09 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0805071204000.31448@mtl.rackplans.net>
+References: <alpine.DEB.1.10.0805031458050.2330@mtl.rackplans.net> <20080506135118.GA46493@plap4.qlogic.org> <alpine.DEB.1.10.0805061022120.5741@mtl.rackplans.net> <20080506220826.GI57975@plap4.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:50043 "EHLO quasar.osc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755913AbYEGPxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 May 2008 11:53:09 -0400
-Content-Disposition: inline
-In-Reply-To: <481F48A4.3060701@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760903AbYEGQFp@vger.kernel.org>
+In-Reply-To: <20080506220826.GI57975@plap4.qlogic.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Erez Zilber <erezz@voltaire.com>, Roland Dreier <rolandd@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-michaelc@cs.wisc.edu wrote on Mon, 05 May 2008 12:49 -0500:
-> Pete Wyckoff wrote:
->> iser has no limit on max sectors.  This lets iscsi iser support
->> large pass through commands just like iscsi TCP.
->>
->> Signed-off-by: Pete Wyckoff <pw@osc.edu>
->> ---
->>  drivers/infiniband/ulp/iser/iscsi_iser.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
->> index 1b272a6..78f3242 100644
->> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
->> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
->> @@ -557,7 +557,7 @@ static struct scsi_host_template iscsi_iser_sht = {
->>  	.change_queue_depth	= iscsi_change_queue_depth,
->>  	.can_queue		= ISCSI_DEF_XMIT_CMDS_MAX - 1,
->>  	.sg_tablesize           = ISCSI_ISER_SG_TABLESIZE,
->> -	.max_sectors		= 1024,
->> +	.max_sectors		= 0xffff,
->>  	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
->>  	.eh_abort_handler       = iscsi_eh_abort,
->>  	.eh_device_reset_handler= iscsi_eh_device_reset,
->
-> Do we need to modify sg_tablesize and the related preallocations to take 
-> advantage of this? iser sets the sg_tablesize to ISCSI_ISER_SG_TABLESIZE 
-> and disables clustering, scsi-ml/block will only send commands up to 
-> ISCSI_ISER_SG_TABLESIZE * PAGE_SIZE.
-
-Yes.  I run with another patch to change ISCSI_ISER_SG_TABLESIZE to
-1 MB / 4kB + 1, allowing up to 1 MB transfers.  (I think that was
-3/3 way back when.)  That's because iser limits the fmr code like
-this:
-
-        params.max_pages_per_fmr = ISCSI_ISER_SG_TABLESIZE;
-
-The plus 1 handles the case that the 1 MB transfer doesn't start on
-a page boundary.
-
-But you point out that this sg_tablesize setting is also used to
-limit the maximum number of pages when building bios to send to the
-device.  So these numbers should all agree.
-
-rdreier@cisco.com wrote on Mon, 05 May 2008 13:43 -0700:
->  > This could be problematic because, AFAIK, some HCAs (memfree, I think)
->  > don't support FMRs of more than 2MB. Roland, am I right?
+On Tue, 6 May 2008, Andrew Vasquez wrote:
+> On Tue, 06 May 2008, Gerhard Mack wrote:
 > 
-> Mem-free HCAs don't support FMRs where the list of pages is bigger than
-> a page itself.  So yes, with 4 KB pages, you get 512 * 4 KB that way.
+> > On Tue, 6 May 2008, Andrew Vasquez wrote:
+> > > Could you load the driver with the ql2xextended_error_logging module
+> > > parameter set to 1 and send the resultant driver logs?  Also, it would
+> > > could you also send the output of the following after the driver is
+> > > loaded:
+> > > 
+> > > $ cat /sys/class/fc_host/host<host_no>
+> > > $ cat /sys/class/scsi_host/host<host_no>/*
+> > > $ cat /sys/class/fc_remote_ports/*
+> > > 
+> > > where host_no corresponds to the SCSI host-number assigned to the HBA.
+> > > 
+> > Of course.. 
+> > 
+> > QLogic Fibre Channel HBA Driver
+> > qla2xxx 0000:02:0a.0: Found an ISP2312, irq 24, iobase 0xf88cc000
+> > qla2xxx 0000:02:0a.0: Configuring PCI space...
+> > qla2xxx 0000:02:0a.0: Configure NVRAM parameters...
+> > qla2xxx 0000:02:0a.0: Verifying loaded RISC code...
+> > scsi(4): **** Load RISC code ****
+> ...
+> > cat /sys/class/fc_host/host4/* :
+> > 0x200000e08b127d20
+> > 0
+> > 0x200000e08b127d20
+> > 0
+> > 0x000001
+> > 0x210000e08b127d20
+> > Online
+> > LPort (private loop)
 > 
-> Of course the current iSER driver has much bigger FMR problems, since
-> some adapters don't support FMRs at all...
+> Hmm, qla2xxx has a 'split' port-discovery model based on topology.
+> Switched fabric (P2P) discovery and logins are managed by the driver.
+> FC_AL topology discovery and logins are managed by firmware.  The
+> driver (qla2xxx) simply asks the firmware for a list of recognized
+> ports, as you've noted the driver (and indirectly, firmware), only
+> recognized 4 ports during LIPA/LIHA/LISA address negotiation:
+> 
+> > cat /sys/class/fc_remote_ports/rport-4\:0-0/*  :
+> > 0x2200000c507ce546
+> ...
+> > cat /sys/class/fc_remote_ports/rport-4\:0-1/*
+> > 0x22000004cf69c688
+> ...
+> > cat /sys/class/fc_remote_ports/rport-4\:0-2/* | log
+> > 0x2200000c507ce809
+> ...
+> > cat /sys/class/fc_remote_ports/rport-4\:0-3/* :
+> > 0x22000004cf69b98f
+> ...
+> 
+> 
+> You mentioned that the 'BIOS' configuration program recognizes 6
+> devices, have there been any changes made via the BIOS utility to
+> 
+> * assign a hard-loop id?
+> * acquire a loop-id during LIPA?
+> 
+> or any changes above and beyond 'default' settings?  If so, could you
+> 'retrore' default settings within BIOS utility?
 
-And certain current hardware is 2 MB tops anyway, but not all.  Iser
-cannot place a limit on the SCSI queue until it knows on which
-device it will use to communicate.
+Hmm your right.. it's only showing 4 drives in the BIOS utility.  Don't 
+know why I recall seeing more ealier.
 
-The goal with these patches is to increase througphut for big
-transfers.
+It's back to default and only showing 4 drives.
 
-What's the right thing to do then?  Maybe punt to the user.  How
-about a module parameter like SRP, then we calculate the right
-limits for each of these three related settigns:  max_sectors,
-sg_tablesize, max_pages_per_fmr.
+	Gerhard
 
-Erez, is this something you're interested in figuring out?  I'll be
-offline for a couple of weeks at least.
 
-		-- Pete
+
+--
+Gerhard Mack
+
+gmack@innerfire.net
+
+<>< As a computer I find your faith in technology amusing.
