@@ -1,104 +1,57 @@
 From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 2/3] scsi: aic79xx_core fix shadowed variables, add statics
+Subject: [PATCH 3/3] scsi: aic79xx aic79xx_pci.c fix shadowed variables
 Date: Thu, 08 May 2008 12:08:54 -0700
-Message-ID: <1210273734.19279.55.camel@brick>
+Message-ID: <1210273734.19279.56.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:47244 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756479AbYEHTI7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 15:08:59 -0400
-Received: by rn-out-0910.google.com with SMTP id e11so326638rng.17
-        for <linux-scsi@vger.kernel.org>; Thu, 08 May 2008 12:08:57 -0700 (PDT)
+Received: from wf-out-1314.google.com ([209.85.200.168]:8221 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754183AbYEHTI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 15:08:58 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so830040wfd.4
+        for <linux-scsi@vger.kernel.org>; Thu, 08 May 2008 12:08:58 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Redeclared within different if/else blocks, safe to reuse the
-original from beginning of function.
-drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
+OK to just reuse the outer declaration as it is never used again.
+drivers/scsi/aic7xxx/aic79xx_pci.c:340:12: warning: symbol 'devconfig' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_pci.c:299:12: originally declared here
 
-Use caminfo for the outer declaration, the redeclared version is
-iterating over all initiator/target pairs (devices) which.
-drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
-
-Forward declaration was already marked static, make the definition match.
-drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
+targpcistat is always assigned just before use, remove the inner declaration.
+drivers/scsi/aic7xxx/aic79xx_pci.c:486:9: warning: symbol 'targpcistat' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_pci.c:429:9: originally declared here
 
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
- 1 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_pci.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 55508b0..99048d3 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat)
- 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
- 			ahd_outb(ahd, CLRLQOINT1, 0);
- 	} else if ((status & SELTO) != 0) {
--		u_int  scbid;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index c25b6ad..9471caf 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -337,8 +337,6 @@ ahd_pci_config(struct ahd_softc *ahd, const struct ahd_pci_identity *entry)
+ 	 * 64bit bus (PCI64BIT set in devconfig).
+ 	 */
+ 	if ((ahd->flags & (AHD_39BIT_ADDRESSING|AHD_64BIT_ADDRESSING)) != 0) {
+-		uint32_t devconfig;
 -
- 		/* Stop the selection */
- 		ahd_outb(ahd, SCSISEQ0, 0);
+ 		if (bootverbose)
+ 			printf("%s: Enabling 39Bit Addressing\n",
+ 			       ahd_name(ahd));
+@@ -483,8 +481,6 @@ ahd_pci_test_register_access(struct ahd_softc *ahd)
+ 		goto fail;
  
-@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat)
- 		case BUSFREE_DFF0:
- 		case BUSFREE_DFF1:
- 		{
--			u_int	scbid;
--			struct	scb *scb;
+ 	if ((ahd_inb(ahd, INTSTAT) & PCIINT) != 0) {
+-		u_int targpcistat;
 -
- 			mode = busfreetime == BUSFREE_DFF0
- 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
- 			ahd_set_modes(ahd, mode, mode);
-@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id, char channel, int force)
-  * by the capabilities of the bus connectivity of and sync settings for
-  * the target.
-  */
--void
-+static void
- ahd_devlimited_syncrate(struct ahd_softc *ahd,
- 			struct ahd_initiator_tinfo *tinfo,
- 			u_int *period, u_int *ppr_options, role_t role)
-@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *ahd)
- int
- ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- {
--	struct	ahd_devinfo devinfo;
-+	struct	ahd_devinfo caminfo;
- 	u_int	initiator;
- 	u_int	target;
- 	u_int	max_scsiid;
-@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- 
- 	ahd->pending_device = NULL;
- 
--	ahd_compile_devinfo(&devinfo,
-+	ahd_compile_devinfo(&caminfo,
- 			    CAM_TARGET_WILDCARD,
- 			    CAM_TARGET_WILDCARD,
- 			    CAM_LUN_WILDCARD,
-@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- 	}
- 
- 	/* Notify the XPT that a bus reset occurred */
--	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
-+	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
- 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
- 
- 	ahd_restart(ahd);
+ 		ahd_set_modes(ahd, AHD_MODE_CFG, AHD_MODE_CFG);
+ 		targpcistat = ahd_inb(ahd, TARGPCISTAT);
+ 		if ((targpcistat & STA) != 0)
 -- 
 1.5.5.1.404.g981f6
-
 
