@@ -1,118 +1,162 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Stop using num_physpages in aacraid
-Date: Thu, 08 May 2008 16:18:31 -0500
-Message-ID: <1210281511.3114.72.camel@localhost.localdomain>
-References: <20080502185227.GN14976@parisc-linux.org>
-	 <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
-	 <20080503105135.GY14976@parisc-linux.org>
+From: berthiaume_wayne@emc.com
+Subject: RE: Re: [PATCH] Fixes to EMC scsi device handler
+Date: Thu, 8 May 2008 18:43:44 -0400
+Message-ID: <218DC19ED27F8842B837598EC6D59D0E0145150E@CORPUSMX40A.corp.emc.com>
+References: <481EF5AA.7090304@suse.de>
+	<1210037658.21974.125.camel@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35421 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758074AbYEHVSf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 17:18:35 -0400
-In-Reply-To: <20080503105135.GY14976@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1210037658.21974.125.camel@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: sekharan@us.ibm.com, dm-devel@redhat.com, hare@suse.de
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, 2008-05-03 at 04:51 -0600, Matthew Wilcox wrote:
-> On Fri, May 02, 2008 at 03:06:42PM -0400, Mark Salyzyn wrote:
-> > The num_physpages variable works as needed for the PERC controllers  
-> > that are installed in vanilla x86 machines is it not? The PERC card  
-> > would not be installed in any other arch.
-> > 
-> > AAC_QUIRK_SCSI_32 means the card can not send 64bit format commands to  
-> > the SCSI devices (non DASD) but can send 64bit format commands to the  
-> > logical (Array) devices. This is for a select set of old PERC cards.
-> > 
-> > AAC_OPT_SGMAP_HOST64 means this card 'can' do DAC (send 64 bit format  
-> > commands to both SCSI and to Array devices), but sadly some that  
-> > report this are borken (hence the Quirk AAC_QUIRK_SCSI_32).
-> > 
-> > Dropping the cards is not an option, that is the whole reason this  
-> > workaround was put in place.
-> 
-> Thanks for the explanation of the quirks and options.  I don't want to
-> drop support for any cards, I just want to make aacraid not rely on
-> the meaning of num_physpages.
-> 
-> The question aacraid wants to ask is "Does this device have to
-> do DAC to access memory?"  The answer can be affected by an IOMMU or
-> by memory layout.  It's far from clear what question num_physpages is
-> intended to answer; there are different bits of the kernel using it in
-> interesting ways.  But we do have a function designed to answer the
-> question you want to ask: dma_get_required_mask().  This may be an
-> expensive question to ask, so in the below patch I cache the answer in
-> the aac_dev.
+FYI: The VRAID type is for the CLARiiON implementation of RAID6.=20
 
-Actually, I think we can do a bit better than this.  We really only want
-to enable 64 bit fibs if they're actually needed, so we should be
-checking the dma_get_required_mask at all places the driver currently
-looks for sizeof(dma_addr_t) > 4.
+Regards,
+Wayne.
 
-The attached, I think is cleaner (it also explains what this quirk is
-for and calls the variable something more consonant with its function).
-
-James
+-----Original Message-----
+From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
+On Behalf Of Chandra Seetharaman
+Sent: Monday, May 05, 2008 9:34 PM
+To: Hannes Reinecke
+Cc: James Bottomley; dm-devel; SCSI Mailing List
+Subject: [dm-devel] Re: [PATCH] Fixes to EMC scsi device handler
 
 
----
+On Mon, 2008-05-05 at 13:55 +0200, Hannes Reinecke wrote:
+> Hi Chandra,
+>=20
+> based on your latest patchset there are some issues which
+> should be fixed:
+>=20
+> - When SYSFS_DEPRECATED is not set also scsi_target and
+>   scsi_host devices will be attached to the scsi bus.
+>   So we have to check with 'scsi_is_sdev_device' before
+>   processing the notifier call
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index aa4e77c..15e60cb 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1206,9 +1206,7 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
- 
- static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
- {
--	if ((sizeof(dma_addr_t) > 4) &&
--	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
--	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-+	if (fib->dev->no_scsi_64)
- 		return FAILED;
- 	return aac_scsi_32(fib, cmd);
- }
-@@ -1372,11 +1370,23 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
- 
- 	dev->dac_support = 0;
--	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
-+	if (dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK
-+	    && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
- 		if (!dev->in_reset)
- 			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
- 				dev->name, dev->id);
- 		dev->dac_support = 1;
-+
-+		/*
-+		 * Adapters with AAC_QUIRK_SCSI_32 can only send pass
-+		 * through commands as 32 bit fibs (although they can
-+		 * send RAID commands as 64 bit fibs) flag these here
-+		 * so we fail direct SCSI commands in the special
-+		 * aac_scsi_32_64 routine
-+		 */
-+		if (aac_get_driver_ident(dev->cardtype)->quirks
-+		    & AAC_QUIRK_SCSI_32)
-+			dev->no_scsi_64 = 1;
- 	}
- 
- 	if(dacmode != -1) {
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 73916ad..39070c5 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1020,6 +1020,7 @@ struct aac_dev
- 	u8			jbod;
- 	u8			cache_protected;
- 	u8			dac_support;
-+	u8			no_scsi_64;
- 	u8			raid_scsi_mode;
- 	u8			comm_interface;
- #	define AAC_COMM_PRODUCER 0
+This need to be done for all the handlers, right ?
+> =20
+> - Newer EMC flarecode also provide for a 'VRAID' device
+>   model; this should be added to the device map
+> - The name should be 'emc', not 'emc_clariion', for
+>   integration with existing multipath-tools
+> - It's spelled 'detached' :-)
+>=20
+> Patch attached.
 
+Looks good to me.
+>=20
+> Some issues which I'd like to see eventually:
+>=20
+> - We should have a way of adding/modifying the internal
+>   device map. Currently we have to recompile the module
+>   every time a new device definition is found.
 
+Yeah, very true. it will become an annoyance. Is this the reason why
+you were asking for the sysfs interface (below) ?
+
+> - The ->activate function should be able to be triggered
+>   manually via sysfs.
+
+Why would you need this ?=20
+>=20
+> James, seeing that the scsi_dh pointer is already present
+> in the sdev structure, would you accept a patch which adds
+> scsi_dh attributes to drivers/scsi/scsi_sysfs.c?
+> Having them encapsulated into drivers/scsi/device_handler
+> somewhere is really painful due to the asynchronous nature
+> of this whole thing ...
+>=20
+> Apart from this: Great work!
+> I'll check the other device handlers, too; already noticed
+> that the device map for HP is wrong :-)
+
+Can you please help fix it.=20
+>=20
+> Cheers,
+>=20
+> hannes
+> plain text document attachment (scsi-dh-emc-fixes)
+> Fixes to EMC scsi device handler
+>=20
+> Several fixes to the EMC scsi device handler:
+> - The name should be 'emc' for seamless integration with multipathing
+> - Newer EMC flarecode also has a 'VRAID' type
+> - Check if this is really a sdev before processing the notifier call
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>=20
+> diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c
+b/drivers/scsi/device_handler/scsi_dh_emc.c
+> index 1b18989..0aded96 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_emc.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+> @@ -25,7 +25,7 @@
+>  #include <scsi/scsi_dh.h>
+>  #include <scsi/scsi_device.h>
+>=20
+> -#define CLARIION_NAME			"emc_clariion"
+> +#define CLARIION_NAME			"emc"
+>=20
+>  #define CLARIION_TRESPASS_PAGE		0x22
+>  #define CLARIION_BUFFER_SIZE		0x80
+> @@ -390,12 +390,13 @@ static int clariion_check_sense(struct
+scsi_device *sdev,
+>  	return SUCCESS;
+>  }
+>=20
+> -static const struct {
+> +static const struct clariion_dev_list_t {
+>  	char *vendor;
+>  	char *model;
+>  } clariion_dev_list[] =3D {
+>  	{"DGC", "RAID"},
+>  	{"DGC", "DISK"},
+> +	{"DGC", "VRAID"},
+>  	{NULL, NULL},
+>  };
+>=20
+> @@ -422,6 +423,9 @@ static int clariion_bus_notify(struct
+notifier_block *nb,
+>  	int i, found =3D 0;
+>  	unsigned long flags;
+>=20
+> +	if (!scsi_is_sdev_device(dev))
+> +		return 0;
+> +
+>  	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
+>  		for (i =3D 0; clariion_dev_list[i].vendor; i++) {
+>  			if (!strncmp(sdev->vendor,
+clariion_dev_list[i].vendor,
+> @@ -465,7 +469,7 @@ static int clariion_bus_notify(struct
+notifier_block *nb,
+>  		sdev->scsi_dh_data =3D NULL;
+>  		spin_unlock_irqrestore(sdev->request_queue->queue_lock,
+flags);
+>=20
+> -		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
+> +		sdev_printk(KERN_NOTICE, sdev, "Detached %s.\n",
+>  			    CLARIION_NAME);
+>=20
+>  		kfree(scsi_dh_data);
+
+--
+dm-devel mailing list
+dm-devel@redhat.com
+https://www.redhat.com/mailman/listinfo/dm-devel
