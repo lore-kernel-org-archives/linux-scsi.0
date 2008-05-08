@@ -1,58 +1,51 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Linux specific scsi CDBs vs REQ_TYPE_LINUX_BLOCK requests
-Date: Thu, 08 May 2008 19:43:18 +0200
-Message-ID: <87r6ccadzd.fsf@denkblock.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10622] New: [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in sr_probe()
+Date: Thu,  8 May 2008 11:59:03 -0700 (PDT)
+Message-ID: <bug-10622-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:43599 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbYEHRmx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 May 2008 13:42:53 -0400
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43773 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765585AbYEHS7g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 14:59:36 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m48Ix38C009552
+	for <linux-scsi@vger.kernel.org>; Thu, 8 May 2008 11:59:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Jens,
+http://bugzilla.kernel.org/show_bug.cgi?id=10622
 
-way back you introduced REQ_TYPE_LINUX_BLOCK requests as some sort of
-generic block layer messages. As it turns out, it is not quite obvious
-how to add support for this type of requests in the scsi subsystem
-properly. On the other hand, Boaz Harrosh has recently added support for
-variable length and in particular vendor specific CDBs to the scsi mid
-layer. My question to you and James is this: Would it make sense, in
-your opinion, to (ab)use BLOCK_PC requests carrying linux specific CDBs
-for those purposes you had in mind when introducing LINUX_BLOCK
-requests? This would make things much easier as far as scsi is concerned
-and it would still be possible to add suport for this kind of requests
-to non scsi drivers. On the other hand, this might constitute too
-serious a violation of the layers and subsystems involved as I'm
-not quite sure, for instance, where to keep the list of those linux
-specific opcodes -- include/linux/blkdev.h and include/scsi/scsi.h both
-don't seem quite right.
+           Summary: [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in
+                    sr_probe()
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.26-rc1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: rjw@sisk.pl
+OtherBugsDependingO 10492
+             nThis:
+        Regression: 1
 
-The reason why I'm bothering you with all this is that I'm trying to get
-disk shock protection merged into mainline eventually; see the subthread
-starting at [1] for a preliminary patch series. Since I want to make
-this feature available to both, libata as well as ide, it is appealing
-to put the common bits (the timer and the user interface) into the block
-layer, thus avoiding code duplication. However, given the difficulties
-to realise this approach sanely, it might be better to leave the block
-layer out of it as far as possible. After all, it's the ATA specific
-feature (immediate disk head unloading) I really care for and by means
-of ioctls we could still provide an interface to userspace which doesn't
-depend on whether the device is managed by libata or ide.
 
-In fact, unless you are definitely in favour of the block layer approach
-(as realised in [2]) and can give me a hint as to how I could solve the
-problems described above, I will probably prepare a patch series using
-ioctls and post it on linux-ide. The reason is that this approach might
-even solve another problem I see further down the road.
+Subject    : [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in sr_probe()
+Submitter  : Jeff Garzik <jeff@garzik.org>
+Date       : 2008-05-04 07:22
+References : http://lkml.org/lkml/2008/5/4/76
+Handled-By : James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Thank you for your advice,
+This entry is being used for tracking a regression from 2.6.25.  Please don't
+close it until the problem is fixed in the mainline.
 
-Elias
 
-[1] <http://permalink.gmane.org/gmane.linux.ide/29519>
-[2] <http://permalink.gmane.org/gmane.linux.ide/29523>
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
