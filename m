@@ -1,343 +1,53 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 5/3] scsi_dh: Update hp_sw hardware handler
-Date: Thu, 08 May 2008 16:30:16 +0200
-Message-ID: <20080508143016.9EFC710B5DF@craiglockhart-ipmi.suse.de>
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
+Date: Thu, 8 May 2008 17:02:50 +0200
+Message-ID: <e2e108260805080802r1ad75926idc8654e2acfe014f@mail.gmail.com>
+References: <200805021638.42972.bart.vanassche@gmail.com>
+	 <20080502153306.GB7376@infradead.org>
+	 <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>
+	 <20080502155525.GA16353@infradead.org>
+	 <e2e108260805040830i7d797c53o9757bae7243d6e27@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49917 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753802AbYEHOaU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 May 2008 10:30:20 -0400
+Received: from fg-out-1718.google.com ([72.14.220.159]:47359 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764668AbYEHPCw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 11:02:52 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so542377fgg.17
+        for <linux-scsi@vger.kernel.org>; Thu, 08 May 2008 08:02:50 -0700 (PDT)
+In-Reply-To: <e2e108260805040830i7d797c53o9757bae7243d6e27@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharman <sekharan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel@lists.sourceforge.net
 
+On Sun, May 4, 2008 at 5:30 PM, Bart Van Assche
+<bart.vanassche@gmail.com> wrote:
+> On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
+>>> Regarding scsi_execute_async(): I didn't know that this API is on its
+>>> way out. What will it be replaced by, and when ?
+>>
+>> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
+>> ontop to build requests.
+>
+> Source reading learned me that the function scsi_execute_async() calls
+> blk_execute_rq_nowait() with 1 as fourth argument, which means that
+> the request is inserted at the head of the queue. This means that
+> requests queued with scsi_execute_async() are executed before other
+> queued requests, and that this function has LIFO (last in first out)
+> semantics.
+>
+> All non-SCSI calls to blk_execute_rq() / blk_execute_rq_nowait() add
+> requests at the end of the queue (except those calls for terminating
+> I/O).
+>
+> What is the background of this special behavior of the SCSI subsystem ?
 
-This patch updates the hp_sw device handler to properly
-check the return codes etc.
-And we now even free up the request ...
+Is the linux-scsi mailing list the appropriate mailing list to post
+questions like the above ?
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |  212 +++++++++++++++++++++++---
- 1 files changed, 187 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index d5d7906..a44b319 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -25,13 +25,18 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
- 
--#define HP_SW_NAME	"hp_sw"
-+#define HP_SW_NAME			"hp_sw"
- 
--#define HP_SW_TIMEOUT (60 * HZ)
--#define HP_SW_RETRIES 3
-+#define HP_SW_TIMEOUT			(60 * HZ)
-+#define HP_SW_RETRIES			3
-+
-+#define HP_SW_PATH_UNINITIALIZED	-1
-+#define HP_SW_PATH_ACTIVE		0
-+#define HP_SW_PATH_PASSIVE		1
- 
- struct hp_sw_dh_data {
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-+	int path_state;
- 	int retries;
- };
- 
-@@ -42,41 +47,137 @@ static inline struct hp_sw_dh_data *get_hp_sw_data(struct scsi_device *sdev)
- 	return ((struct hp_sw_dh_data *) scsi_dh_data->buf);
- }
- 
--static int hp_sw_done(struct scsi_device *sdev)
-+static int tur_done(struct scsi_device *sdev, int errors)
-+{
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+	struct scsi_sense_hdr sshdr;
-+	int ret;
-+
-+	if (status_byte(errors) != CHECK_CONDITION) {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "%s: sending tur failed with %x\n",
-+			    HP_SW_NAME, errors);
-+		ret = SCSI_DH_IO;
-+		goto done;
-+	}
-+	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sshdr);
-+	if (!ret) {
-+		ret = SCSI_DH_IO;
-+		goto done;
-+	}
-+	switch (sshdr.sense_key) {
-+	case UNIT_ATTENTION:
-+		ret = SCSI_DH_IMM_RETRY;
-+		break;
-+	case NOT_READY:
-+		if ((sshdr.asc == 0x04) && (sshdr.ascq == 2)) {
-+			/*
-+			 * LUN not ready - Initialization command required
-+			 *
-+			 * This is the passive path
-+			 */
-+			h->path_state = HP_SW_PATH_PASSIVE;
-+			ret = SCSI_DH_OK;
-+			break;
-+		}
-+		/* Fallthrough */
-+	default:
-+		sdev_printk(KERN_WARNING, sdev,
-+			   "%s: sending tur failed, sense %x/%x/%x\n",
-+			   HP_SW_NAME, sshdr.sense_key, sshdr.asc,
-+			   sshdr.ascq);
-+		break;
-+	}
-+
-+done:
-+	return ret;
-+}
-+
-+static int hp_sw_tur(struct scsi_device *sdev)
-+{
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+	struct request *req;
-+	int ret = SCSI_DH_RES_TEMP_UNAVAIL;
-+
-+	req = blk_get_request(sdev->request_queue, WRITE, GFP_ATOMIC);
-+	if (!req)
-+		goto done;
-+
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_FAILFAST;
-+	req->cmd_len = COMMAND_SIZE(TEST_UNIT_READY);
-+	memset(req->cmd, 0, MAX_COMMAND_SIZE);
-+	req->cmd[0] = TEST_UNIT_READY;
-+	req->timeout = HP_SW_TIMEOUT;
-+	req->sense = h->sense;
-+	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
-+	req->sense_len = 0;
-+
-+retry:
-+	ret = blk_execute_rq(req->q, NULL, req, 1);
-+	if (ret == -EIO) {
-+		ret = tur_done(sdev, req->errors);
-+	} else {
-+		h->path_state = HP_SW_PATH_ACTIVE;
-+		ret = SCSI_DH_OK;
-+	}
-+	if (ret == SCSI_DH_IMM_RETRY)
-+		goto retry;
-+
-+	blk_put_request(req);
-+
-+done:
-+	return ret;
-+}
-+
-+static int start_done(struct scsi_device *sdev, int errors)
- {
- 	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
- 	struct scsi_sense_hdr sshdr;
- 	int rc;
- 
--	sdev_printk(KERN_INFO, sdev, "hp_sw_done\n");
-+	if (status_byte(errors) != CHECK_CONDITION) {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "%s: sending start_stop_unit failed with %x\n",
-+			    HP_SW_NAME, errors);
-+		rc = SCSI_DH_IO;
-+		goto done;
-+	}
- 
- 	rc = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sshdr);
--	if (!rc)
-+	if (!rc) {
-+		rc = SCSI_DH_IO;
- 		goto done;
-+	}
- 	switch (sshdr.sense_key) {
- 	case NOT_READY:
--		if ((sshdr.asc == 0x04) && (sshdr.ascq == 3)) {
-+		if ((sshdr.asc == 0x04) && (sshdr.ascq == 2)) {
-+			/*
-+			 * LUN not ready - initialization command required
-+			 *
-+			 * Switch-over in progress, retry.
-+			 */
- 			rc = SCSI_DH_RETRY;
--			h->retries++;
-+			h->retries--;
- 			break;
- 		}
- 		/* fall through */
- 	default:
--		h->retries++;
--		rc = SCSI_DH_IMM_RETRY;
-+		sdev_printk(KERN_WARNING, sdev,
-+			   "%s: sending start_stop_unit failed, sense %x/%x/%x\n",
-+			   HP_SW_NAME, sshdr.sense_key, sshdr.asc,
-+			   sshdr.ascq);
-+		h->retries--;
-+		rc = SCSI_DH_RETRY;
- 	}
-+	if (rc == SCSI_DH_RETRY && !h->retries)
-+		rc = SCSI_DH_IO;
- 
- done:
--	if (rc == SCSI_DH_OK || rc == SCSI_DH_IO)
--		h->retries = 0;
--	else if (h->retries > HP_SW_RETRIES) {
--		h->retries = 0;
--		rc = SCSI_DH_IO;
--	}
- 	return rc;
- }
- 
--static int hp_sw_activate(struct scsi_device *sdev)
-+static int hp_sw_start_stop(struct scsi_device *sdev)
- {
- 	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
- 	struct request *req;
-@@ -86,8 +187,6 @@ static int hp_sw_activate(struct scsi_device *sdev)
- 	if (!req)
- 		goto done;
- 
--	sdev_printk(KERN_INFO, sdev, "sending START_STOP.");
--
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
- 	req->cmd_len = COMMAND_SIZE(START_STOP);
-@@ -99,17 +198,55 @@ static int hp_sw_activate(struct scsi_device *sdev)
- 	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	req->sense_len = 0;
- 
-+retry:
- 	ret = blk_execute_rq(req->q, NULL, req, 1);
--	if (!ret) /* SUCCESS */
--		ret = hp_sw_done(sdev);
-+	if (ret == -EIO)
-+		ret = start_done(sdev, req->errors);
- 	else
- 		ret = SCSI_DH_IO;
-+
-+	if (ret == SCSI_DH_RETRY)
-+		goto retry;
-+
-+	blk_put_request(req);
- done:
- 	return ret;
- }
- 
-+static int hp_sw_prep_fn(struct scsi_device *sdev, struct request *req)
-+{
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+	int ret = BLKPREP_OK;
-+
-+	if (h->path_state != HP_SW_PATH_ACTIVE) {
-+		ret = BLKPREP_KILL;
-+		req->cmd_flags |= REQ_QUIET;
-+	}
-+	return ret;
-+
-+}
-+
-+static int hp_sw_activate(struct scsi_device *sdev)
-+{
-+	int ret = SCSI_DH_OK;
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+
-+	ret = hp_sw_tur(sdev);
-+
-+	if (ret == SCSI_DH_OK && h->path_state == HP_SW_PATH_PASSIVE) {
-+		ret = hp_sw_start_stop(sdev);
-+		if (ret == SCSI_DH_OK)
-+			sdev_printk(KERN_INFO, sdev,
-+				    "%s: activated path\n",
-+				    HP_SW_NAME);
-+	}
-+
-+	return ret;
-+}
-+
- const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
--	{"COMPAQ", "MSA"},
-+	{"COMPAQ", "MSA1000"},
-+	{"COMPAQ", "HSV110"},
- 	{"HP", "HSV100"},
- 	{"DEC", "HSG80"},
- 	{NULL, NULL},
-@@ -125,30 +262,55 @@ static struct scsi_device_handler hp_sw_dh = {
- 	.attach		= hp_sw_bus_attach,
- 	.detach		= hp_sw_bus_detach,
- 	.activate	= hp_sw_activate,
-+	.prep_fn	= hp_sw_prep_fn,
- };
- 
- static int hp_sw_bus_attach(struct scsi_device *sdev)
- {
- 	struct scsi_dh_data *scsi_dh_data;
-+	struct hp_sw_dh_data *h;
- 	unsigned long flags;
-+	int ret;
- 
- 	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
- 			       + sizeof(struct hp_sw_dh_data) , GFP_KERNEL);
- 	if (!scsi_dh_data) {
--		sdev_printk(KERN_ERR, sdev, "Attach Failed %s.\n",
-+		sdev_printk(KERN_ERR, sdev, "%s: Attach Failed\n",
- 			    HP_SW_NAME);
- 		return 0;
- 	}
- 
-+	h = (struct hp_sw_dh_data *) scsi_dh_data->buf;
-+	h->path_state = HP_SW_PATH_UNINITIALIZED;
-+	h->retries = HP_SW_RETRIES;
-+
- 	scsi_dh_data->scsi_dh = &hp_sw_dh;
- 	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->scsi_dh_data = scsi_dh_data;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+
-+	ret = hp_sw_tur(sdev);
-+	if (ret != SCSI_DH_OK || h->path_state == HP_SW_PATH_UNINITIALIZED)
-+		goto failed;
-+
-+	sdev_printk(KERN_INFO, sdev, "%s: %s path\n",
-+		    HP_SW_NAME, h->path_state == HP_SW_PATH_ACTIVE?
-+		    "active":"passive");
-+
- 	try_module_get(THIS_MODULE);
- 
--	sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", HP_SW_NAME);
-+	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", HP_SW_NAME);
- 
- 	return 0;
-+
-+failed:
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-+	sdev->scsi_dh_data = NULL;
-+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+	kfree(scsi_dh_data);
-+	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
-+		    HP_SW_NAME);
-+	return -EINVAL;
- }
- 
- static void hp_sw_bus_detach( struct scsi_device *sdev )
-@@ -166,7 +328,7 @@ static void hp_sw_bus_detach( struct scsi_device *sdev )
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- 	module_put(THIS_MODULE);
- 
--	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", HP_SW_NAME);
-+	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", HP_SW_NAME);
- 
- 	kfree(scsi_dh_data);
- }
--- 
-1.5.2.4
-
+Bart.
