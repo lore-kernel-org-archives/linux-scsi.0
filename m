@@ -1,40 +1,104 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10622] [BUG 2.6.26-rc1] scsi (or sysfs or vm?) oops in sr_probe()
-Date: Thu,  8 May 2008 12:06:31 -0700 (PDT)
-Message-ID: <20080508190631.45CD9108094@picon.linux-foundation.org>
-References: <bug-10622-11613@http.bugzilla.kernel.org/>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH 2/3] scsi: aic79xx_core fix shadowed variables, add statics
+Date: Thu, 08 May 2008 12:08:54 -0700
+Message-ID: <1210273734.19279.55.camel@brick>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51404 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932411AbYEHTHb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 15:07:31 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m48J70iS010423
-	for <linux-scsi@vger.kernel.org>; Thu, 8 May 2008 12:07:02 -0700
-In-Reply-To: <bug-10622-11613@http.bugzilla.kernel.org/>
+Received: from rn-out-0910.google.com ([64.233.170.185]:47244 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756479AbYEHTI7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2008 15:08:59 -0400
+Received: by rn-out-0910.google.com with SMTP id e11so326638rng.17
+        for <linux-scsi@vger.kernel.org>; Thu, 08 May 2008 12:08:57 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10622
+Redeclared within different if/else blocks, safe to reuse the
+original from beginning of function.
+drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
 
+Use caminfo for the outer declaration, the redeclared version is
+iterating over all initiator/target pairs (devices) which.
+drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
 
-rjw@sisk.pl changed:
+Forward declaration was already marked static, make the definition match.
+drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |dan.j.williams@gmail.com
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
+ 1 files changed, 4 insertions(+), 9 deletions(-)
 
-
-
-
-------- Comment #1 from rjw@sisk.pl  2008-05-08 12:06 -------
-Regressions list annotation:
-Handled-By : Dan Williams <dan.j.williams@intel.com>
-Patch : http://marc.info/?l=linux-raid&m=121001065404056&w=2
-
-
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 55508b0..99048d3 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat)
+ 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
+ 			ahd_outb(ahd, CLRLQOINT1, 0);
+ 	} else if ((status & SELTO) != 0) {
+-		u_int  scbid;
+-
+ 		/* Stop the selection */
+ 		ahd_outb(ahd, SCSISEQ0, 0);
+ 
+@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat)
+ 		case BUSFREE_DFF0:
+ 		case BUSFREE_DFF1:
+ 		{
+-			u_int	scbid;
+-			struct	scb *scb;
+-
+ 			mode = busfreetime == BUSFREE_DFF0
+ 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
+ 			ahd_set_modes(ahd, mode, mode);
+@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id, char channel, int force)
+  * by the capabilities of the bus connectivity of and sync settings for
+  * the target.
+  */
+-void
++static void
+ ahd_devlimited_syncrate(struct ahd_softc *ahd,
+ 			struct ahd_initiator_tinfo *tinfo,
+ 			u_int *period, u_int *ppr_options, role_t role)
+@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *ahd)
+ int
+ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ {
+-	struct	ahd_devinfo devinfo;
++	struct	ahd_devinfo caminfo;
+ 	u_int	initiator;
+ 	u_int	target;
+ 	u_int	max_scsiid;
+@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ 
+ 	ahd->pending_device = NULL;
+ 
+-	ahd_compile_devinfo(&devinfo,
++	ahd_compile_devinfo(&caminfo,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_LUN_WILDCARD,
+@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ 	}
+ 
+ 	/* Notify the XPT that a bus reset occurred */
+-	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
++	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
+ 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
+ 
+ 	ahd_restart(ahd);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.5.1.404.g981f6
+
+
