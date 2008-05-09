@@ -1,65 +1,143 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] libiscsi regression in 2.6.25: fix setting of recv timer
-Date: Thu,  8 May 2008 20:15:34 -0500
-Message-ID: <1210295734-6278-2-git-send-email-michaelc@cs.wisc.edu>
-References: <1210295734-6278-1-git-send-email-michaelc@cs.wisc.edu>
+From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Subject: Re: [PATCH] Stop using num_physpages in aacraid
+Date: Fri, 9 May 2008 02:39:54 -0400
+Message-ID: <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
+References: <20080502185227.GN14976@parisc-linux.org> <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com> <20080503105135.GY14976@parisc-linux.org> <1210281511.3114.72.camel@localhost.localdomain>
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36534 "EHLO mx1.redhat.com"
+Received: from ts.adaptec.com ([162.62.93.58]:51263 "EHLO mail-gw3.adaptec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753905AbYEIBPi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 May 2008 21:15:38 -0400
-In-Reply-To: <1210295734-6278-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1750755AbYEIGkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 May 2008 02:40:04 -0400
+In-Reply-To: <1210281511.3114.72.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+ACK
 
-If the ping tmo is longer than the recv tmo then we could miss a window
-where we were supposed to check the recv tmo. This happens because
-the ping code will set the next timeout for the ping timeout, and if the
-ping executes quickly there will be a long chunk of time before the
-timer wakes up again.
+with comment, I had chosen to perform the sizeof check as it optimized  
+out the code on the 32 bit platforms and could have merged the  
+aac_scsi_32_64 and aac_scsi_32 functions (such considerations are my  
+penance for writing peephole optimizers and BIOS code in C/C++). Never  
+sacrifice clarity/maintainability for optimization if you can afford it.
 
-This patch has the ping processing code kick off a recv
-tmo check when getting a nop in response to our ping.
+Sincerely -- Mark Salyzyn
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+On May 8, 2008, at 5:18 PM, James Bottomley wrote:
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 98164f3..b43bf1d 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -730,7 +730,9 @@ static int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 				if (iscsi_recv_pdu(conn->cls_conn, hdr, data,
- 						   datalen))
- 					rc = ISCSI_ERR_CONN_FAILED;
--			}
-+			} else
-+				mod_timer(&conn->transport_timer,
-+					  jiffies + conn->recv_timeout);
- 			iscsi_free_mgmt_task(conn, mtask);
- 			break;
- 		default:
-@@ -1478,11 +1480,9 @@ static void iscsi_check_transport_timeouts(unsigned long data)
- 	}
- 
- 	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
--		if (time_before_eq(conn->last_ping, last_recv)) {
--			/* send a ping to try to provoke some traffic */
--			debug_scsi("Sending nopout as ping on conn %p\n", conn);
--			iscsi_send_nopout(conn, NULL);
--		}
-+		/* send a ping to try to provoke some traffic */
-+		debug_scsi("Sending nopout as ping on conn %p\n", conn);
-+		iscsi_send_nopout(conn, NULL);
- 		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
- 	} else
- 		next_timeout = last_recv + recv_timeout;
--- 
-1.5.4.1
+> On Sat, 2008-05-03 at 04:51 -0600, Matthew Wilcox wrote:
+>> On Fri, May 02, 2008 at 03:06:42PM -0400, Mark Salyzyn wrote:
+>>> The num_physpages variable works as needed for the PERC controllers
+>>> that are installed in vanilla x86 machines is it not? The PERC card
+>>> would not be installed in any other arch.
+>>>
+>>> AAC_QUIRK_SCSI_32 means the card can not send 64bit format  
+>>> commands to
+>>> the SCSI devices (non DASD) but can send 64bit format commands to  
+>>> the
+>>> logical (Array) devices. This is for a select set of old PERC cards.
+>>>
+>>> AAC_OPT_SGMAP_HOST64 means this card 'can' do DAC (send 64 bit  
+>>> format
+>>> commands to both SCSI and to Array devices), but sadly some that
+>>> report this are borken (hence the Quirk AAC_QUIRK_SCSI_32).
+>>>
+>>> Dropping the cards is not an option, that is the whole reason this
+>>> workaround was put in place.
+>>
+>> Thanks for the explanation of the quirks and options.  I don't want  
+>> to
+>> drop support for any cards, I just want to make aacraid not rely on
+>> the meaning of num_physpages.
+>>
+>> The question aacraid wants to ask is "Does this device have to
+>> do DAC to access memory?"  The answer can be affected by an IOMMU or
+>> by memory layout.  It's far from clear what question num_physpages is
+>> intended to answer; there are different bits of the kernel using it  
+>> in
+>> interesting ways.  But we do have a function designed to answer the
+>> question you want to ask: dma_get_required_mask().  This may be an
+>> expensive question to ask, so in the below patch I cache the answer  
+>> in
+>> the aac_dev.
+>
+> Actually, I think we can do a bit better than this.  We really only  
+> want
+> to enable 64 bit fibs if they're actually needed, so we should be
+> checking the dma_get_required_mask at all places the driver currently
+> looks for sizeof(dma_addr_t) > 4.
+>
+> The attached, I think is cleaner (it also explains what this quirk is
+> for and calls the variable something more consonant with its  
+> function).
+>
+> James
+>
+>
+> ---
+>
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/ 
+> aachba.c
+> index aa4e77c..15e60cb 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -1206,9 +1206,7 @@ static int aac_scsi_32(struct fib * fib,  
+> struct scsi_cmnd * cmd)
+>
+> static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
+> {
+> -       if ((sizeof(dma_addr_t) > 4) &&
+> -        (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
+> -        (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
+> +       if (fib->dev->no_scsi_64)
+>                return FAILED;
+>        return aac_scsi_32(fib, cmd);
+> }
+> @@ -1372,11 +1370,23 @@ int aac_get_adapter_info(struct aac_dev* dev)
+>                printk(KERN_INFO "%s%d: Non-DASD support enabled. 
+> \n",dev->name, dev->id);
+>
+>        dev->dac_support = 0;
+> -       if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options &  
+> AAC_OPT_SGMAP_HOST64)){
+> +       if (dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK
+> +           && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
+>                if (!dev->in_reset)
+>                        printk(KERN_INFO "%s%d: 64bit support enabled. 
+> \n",
+>                                dev->name, dev->id);
+>                dev->dac_support = 1;
+> +
+> +               /*
+> +                * Adapters with AAC_QUIRK_SCSI_32 can only send pass
+> +                * through commands as 32 bit fibs (although they can
+> +                * send RAID commands as 64 bit fibs) flag these here
+> +                * so we fail direct SCSI commands in the special
+> +                * aac_scsi_32_64 routine
+> +                */
+> +               if (aac_get_driver_ident(dev->cardtype)->quirks
+> +                   & AAC_QUIRK_SCSI_32)
+> +                       dev->no_scsi_64 = 1;
+>        }
+>
+>        if(dacmode != -1) {
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/ 
+> aacraid.h
+> index 73916ad..39070c5 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -1020,6 +1020,7 @@ struct aac_dev
+>        u8                      jbod;
+>        u8                      cache_protected;
+>        u8                      dac_support;
+> +       u8                      no_scsi_64;
+>        u8                      raid_scsi_mode;
+>        u8                      comm_interface;
+> #      define AAC_COMM_PRODUCER 0
+>
+>
 
