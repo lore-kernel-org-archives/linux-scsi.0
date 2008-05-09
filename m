@@ -1,65 +1,129 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Port control interface (was Re: [PATCH] ata: ahci: power off unused
- ports)
-Date: Fri, 09 May 2008 11:28:35 -0400
-Message-ID: <48246DA3.9080307@garzik.org>
-References: <20080508161008.59361de5@appleyard> <48246872.8000502@rtr.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Stop using num_physpages in aacraid
+Date: Fri, 09 May 2008 11:49:41 -0500
+Message-ID: <1210351781.3069.41.camel@localhost.localdomain>
+References: <20080502185227.GN14976@parisc-linux.org>
+	 <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
+	 <20080503105135.GY14976@parisc-linux.org>
+	 <1210281511.3114.72.camel@localhost.localdomain>
+	 <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <48246872.8000502@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59660 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753380AbYEIQtp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2008 12:49:45 -0400
+In-Reply-To: <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Mark Lord wrote:
-> And a more general note:  I still believe we should have a follow-up
-> feature to this one, to enable polling for newly inserted drives.
-> 
-> That would allow powering down idle ports to save money/planet/whatever,
-> but still with hotplug capability.  The polling interval should be
-> tunable in /sys, with a default of, say, once every couple of seconds.
-> 
-> Thanks for working on this stuff.
+On Fri, 2008-05-09 at 02:39 -0400, Mark Salyzyn wrote:
+> with comment, I had chosen to perform the sizeof check as it optimized  
+> out the code on the 32 bit platforms and could have merged the  
+> aac_scsi_32_64 and aac_scsi_32 functions (such considerations are my  
+> penance for writing peephole optimizers and BIOS code in C/C++). Never  
+> sacrifice clarity/maintainability for optimization if you can afford it.
 
+Actually, point taken on the queuecommand check and the lesson in
+optimisation.  This should actually be a better optimised version,
+getting rid of the check altogether.
 
-In the grand open source tradition of "pass the buck", I've long been 
-hoping that someone would take a few days, sit down, and hammer out the 
-policy side of this.
+James
 
-We -don't- want to do hotplug-active all the time -- the current default 
-in all drivers that support device hotplug -- because it needlessly 
-keeps parts active that are unused 99.9% of the time [when they are empty].
+---
 
-Admins need a generic way to control SATA ports and links from 
-userspace.  Within that, admins need to be able to set a link's hotplug 
-state among three choices:  hotplug-active [when supported], 
-hotplug-poll, and hotplug-never.  And of course, hotplug-poll's interval 
-should be tunable.
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [SCSI] aacraid: don't use num_physpages
 
-And of course this control interface needs to be usable on SAS/SATA 
-cards that will be common in the future (broadsas, mvsas are early 
-examples).
+aacraid uses num_physpages as a check to see if it needs to fail
+commands to physical drives which can only be sent as 32 bit fibs for
+certain cards (those with AAC_QUIRK_SCSI_32 set).  The correct API for
+this is dma_get_required_mask(), so make it use that.  Also tidy up
+the 64 bit fib enabling code so we only enable it if the kernel is 64
+bit and the dma mask goes over 32 bits (i.e. it has memory above 4GB).
 
+Acked-by: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/aacraid/aachba.c |   37 +++++++++++++++++++++++--------------
+ 1 files changed, 23 insertions(+), 14 deletions(-)
 
-This is why I look askance at an AHCI BIOS flag.  That's merely a hint, 
-and potentially unreliable one at that.  It could just be describing 
-what the BIOS writer felt were the ports that _should_ be hotpluggable 
--- i.e. not even describing what is _possible_ but someone's definition 
-of "reasonable."  The BIOS flag might even be filled with fuzz (AHCI's 
-BIOS-written registers have occasionally been shipped into the field 
-uninitialized).
-
-A better solution involves taking the BIOS flag and using that to set a 
-default policy that an admin can easily override using the 
-above-mentioned control interface.
-
-Because in some cases, that BIOS flag might do the wrong thing, and we 
-need to give the admin an ability to undo the damage.
-
-	Jeff
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index aa4e77c..2cc2c09 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1204,13 +1204,14 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
+ 				  (fib_callback) aac_srb_callback, (void *) cmd);
+ }
+ 
++/*
++ * This routine is only used if we have memory > 4GB and the adapter
++ * is one of the quirky ones that can't do dma above 4GB to physical
++ * disks
++ */
+ static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
+ {
+-	if ((sizeof(dma_addr_t) > 4) &&
+-	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
+-	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
+-		return FAILED;
+-	return aac_scsi_32(fib, cmd);
++	return FAILED;
+ }
+ 
+ int aac_get_adapter_info(struct aac_dev* dev)
+@@ -1372,16 +1373,29 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
+ 
+ 	dev->dac_support = 0;
+-	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
++	dev->a_ops.adapter_scsi = aac_scsi_32;
++	if ((dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK
++	     && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)
++	     && dacmode == -1) ||
++	    dacmode == 1) {
+ 		if (!dev->in_reset)
+ 			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
+ 				dev->name, dev->id);
+ 		dev->dac_support = 1;
+-	}
++		dev->a_ops.adapter_scsi = aac_scsi_64;
+ 
+-	if(dacmode != -1) {
+-		dev->dac_support = (dacmode!=0);
++		/*
++		 * Adapters with AAC_QUIRK_SCSI_32 can only send pass
++		 * through commands as 32 bit fibs (although they can
++		 * send RAID commands as 64 bit fibs) flag these here
++		 * so we fail direct SCSI commands in the special
++		 * aac_scsi_32_64 routine
++		 */
++		if (aac_get_driver_ident(dev->cardtype)->quirks
++		    & AAC_QUIRK_SCSI_32)
++			dev->a_ops.adapter_scsi = aac_scsi_32_64;
+ 	}
++
+ 	if(dev->dac_support != 0) {
+ 		if (!pci_set_dma_mask(dev->pdev, DMA_64BIT_MASK) &&
+ 			!pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
+@@ -1403,11 +1417,6 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 	 * Deal with configuring for the individualized limits of each packet
+ 	 * interface.
+ 	 */
+-	dev->a_ops.adapter_scsi = (dev->dac_support)
+-	  ? ((aac_get_driver_ident(dev->cardtype)->quirks & AAC_QUIRK_SCSI_32)
+-				? aac_scsi_32_64
+-				: aac_scsi_64)
+-				: aac_scsi_32;
+ 	if (dev->raw_io_interface) {
+ 		dev->a_ops.adapter_bounds = (dev->raw_io_64)
+ 					? aac_bounds_64
+-- 
+1.5.4.1
 
 
 
