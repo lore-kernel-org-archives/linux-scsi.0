@@ -1,143 +1,68 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: Re: [PATCH] Stop using num_physpages in aacraid
-Date: Fri, 9 May 2008 02:39:54 -0400
-Message-ID: <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
-References: <20080502185227.GN14976@parisc-linux.org> <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com> <20080503105135.GY14976@parisc-linux.org> <1210281511.3114.72.camel@localhost.localdomain>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [RESEND] [PATCH 0/5] scsi_dh framework update
+Date: Fri, 9 May 2008 11:38:49 +0200
+Message-ID: <20080509093848.GC24546@pentland.suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:51263 "EHLO mail-gw3.adaptec.com"
+Received: from cantor2.suse.de ([195.135.220.15]:54179 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbYEIGkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 May 2008 02:40:04 -0400
-In-Reply-To: <1210281511.3114.72.camel@localhost.localdomain>
+	id S1752847AbYEIJiv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 May 2008 05:38:51 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-ACK
+Hi James,
 
-with comment, I had chosen to perform the sizeof check as it optimized  
-out the code on the 32 bit platforms and could have merged the  
-aac_scsi_32_64 and aac_scsi_32 functions (such considerations are my  
-penance for writing peephole optimizers and BIOS code in C/C++). Never  
-sacrifice clarity/maintainability for optimization if you can afford it.
+this is a repost of my patchset to update the scsi_dh infrastructure.
 
-Sincerely -- Mark Salyzyn
+It's now based on the current scsi-misc tree and includes some
+bugfixes:
+- A typo in the ALUA prep_fn function
+- Fixed a request leak; none of the scsi_dh handler do a
+  blk_put_request() currently.
+- Made the comments kernel-doc compliant.
+- Added two new return codes SCSI_DH_DEV_NOTSUPP and
+  SCSI_DH_SENSE_AVAIL.
 
-On May 8, 2008, at 5:18 PM, James Bottomley wrote:
+Main features of the updates are:
+- Use a single callback for the notifier chain
+- Merge all device maps into a single list,
+  which will be scanned by a generic function
+- Add a sysfs attribute 'dh_state' for each sdev
+- Add a generic SPC-3 ALUA handler
+- Update device handlers to check if the
+  device actually supports this handler.
+  When attaching manually we are able to attach
+  to basically any device, so we have to make sure
+  that the device handler is actually supported.
 
-> On Sat, 2008-05-03 at 04:51 -0600, Matthew Wilcox wrote:
->> On Fri, May 02, 2008 at 03:06:42PM -0400, Mark Salyzyn wrote:
->>> The num_physpages variable works as needed for the PERC controllers
->>> that are installed in vanilla x86 machines is it not? The PERC card
->>> would not be installed in any other arch.
->>>
->>> AAC_QUIRK_SCSI_32 means the card can not send 64bit format  
->>> commands to
->>> the SCSI devices (non DASD) but can send 64bit format commands to  
->>> the
->>> logical (Array) devices. This is for a select set of old PERC cards.
->>>
->>> AAC_OPT_SGMAP_HOST64 means this card 'can' do DAC (send 64 bit  
->>> format
->>> commands to both SCSI and to Array devices), but sadly some that
->>> report this are borken (hence the Quirk AAC_QUIRK_SCSI_32).
->>>
->>> Dropping the cards is not an option, that is the whole reason this
->>> workaround was put in place.
->>
->> Thanks for the explanation of the quirks and options.  I don't want  
->> to
->> drop support for any cards, I just want to make aacraid not rely on
->> the meaning of num_physpages.
->>
->> The question aacraid wants to ask is "Does this device have to
->> do DAC to access memory?"  The answer can be affected by an IOMMU or
->> by memory layout.  It's far from clear what question num_physpages is
->> intended to answer; there are different bits of the kernel using it  
->> in
->> interesting ways.  But we do have a function designed to answer the
->> question you want to ask: dma_get_required_mask().  This may be an
->> expensive question to ask, so in the below patch I cache the answer  
->> in
->> the aac_dev.
->
-> Actually, I think we can do a bit better than this.  We really only  
-> want
-> to enable 64 bit fibs if they're actually needed, so we should be
-> checking the dma_get_required_mask at all places the driver currently
-> looks for sizeof(dma_addr_t) > 4.
->
-> The attached, I think is cleaner (it also explains what this quirk is
-> for and calls the variable something more consonant with its  
-> function).
->
-> James
->
->
-> ---
->
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/ 
-> aachba.c
-> index aa4e77c..15e60cb 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -1206,9 +1206,7 @@ static int aac_scsi_32(struct fib * fib,  
-> struct scsi_cmnd * cmd)
->
-> static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
-> {
-> -       if ((sizeof(dma_addr_t) > 4) &&
-> -        (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
-> -        (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-> +       if (fib->dev->no_scsi_64)
->                return FAILED;
->        return aac_scsi_32(fib, cmd);
-> }
-> @@ -1372,11 +1370,23 @@ int aac_get_adapter_info(struct aac_dev* dev)
->                printk(KERN_INFO "%s%d: Non-DASD support enabled. 
-> \n",dev->name, dev->id);
->
->        dev->dac_support = 0;
-> -       if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options &  
-> AAC_OPT_SGMAP_HOST64)){
-> +       if (dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK
-> +           && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
->                if (!dev->in_reset)
->                        printk(KERN_INFO "%s%d: 64bit support enabled. 
-> \n",
->                                dev->name, dev->id);
->                dev->dac_support = 1;
-> +
-> +               /*
-> +                * Adapters with AAC_QUIRK_SCSI_32 can only send pass
-> +                * through commands as 32 bit fibs (although they can
-> +                * send RAID commands as 64 bit fibs) flag these here
-> +                * so we fail direct SCSI commands in the special
-> +                * aac_scsi_32_64 routine
-> +                */
-> +               if (aac_get_driver_ident(dev->cardtype)->quirks
-> +                   & AAC_QUIRK_SCSI_32)
-> +                       dev->no_scsi_64 = 1;
->        }
->
->        if(dacmode != -1) {
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/ 
-> aacraid.h
-> index 73916ad..39070c5 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -1020,6 +1020,7 @@ struct aac_dev
->        u8                      jbod;
->        u8                      cache_protected;
->        u8                      dac_support;
-> +       u8                      no_scsi_64;
->        u8                      raid_scsi_mode;
->        u8                      comm_interface;
-> #      define AAC_COMM_PRODUCER 0
->
->
+Two issues are still outstanding:
+- Argument passing to the device handler:
+  Some device handler have options which cannot
+  be determined automatically. We need to be
+  able to pass these argument down from the
+  device-mapper layer.
+- Update the RDAC device handler to attach
+  only to devices supporting RDAC.
+  Chandra, your call :-)
 
+As per usual, comment etc are welcome.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
