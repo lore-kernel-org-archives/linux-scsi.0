@@ -1,129 +1,139 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Stop using num_physpages in aacraid
-Date: Fri, 09 May 2008 11:49:41 -0500
-Message-ID: <1210351781.3069.41.camel@localhost.localdomain>
-References: <20080502185227.GN14976@parisc-linux.org>
-	 <CA69411A-909E-4161-A4E3-FC86246CDA22@adaptec.com>
-	 <20080503105135.GY14976@parisc-linux.org>
-	 <1210281511.3114.72.camel@localhost.localdomain>
-	 <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Hack to fix not working spindown over Firewire
+Date: Fri, 9 May 2008 20:32:27 +0200 (CEST)
+Message-ID: <tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
+References: <20080429232606.GA14261@dose.home.local>
+ <481874BD.5010807@s5r6.in-berlin.de>
+ <20080507180042.GA32629@dose.home.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59660 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753380AbYEIQtp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2008 12:49:45 -0400
-In-Reply-To: <FD415073-DC5F-426F-8ADD-09CF96C6917D@adaptec.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51546 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbYEIScj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2008 14:32:39 -0400
+In-Reply-To: <20080507180042.GA32629@dose.home.local>
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Tino Keitel <tino.keitel@gmx.de>
 
-On Fri, 2008-05-09 at 02:39 -0400, Mark Salyzyn wrote:
-> with comment, I had chosen to perform the sizeof check as it optimized  
-> out the code on the 32 bit platforms and could have merged the  
-> aac_scsi_32_64 and aac_scsi_32 functions (such considerations are my  
-> penance for writing peephole optimizers and BIOS code in C/C++). Never  
-> sacrifice clarity/maintainability for optimization if you can afford it.
+On  7 May, Tino Keitel wrote at LKML and LSML:
 
-Actually, point taken on the queuecommand check and the lesson in
-optimisation.  This should actually be a better optimised version,
-getting rid of the check altogether.
+[PL-3507 in Raidsonic Icy Box needs power condition 2 or 3 in the START
+STOP UNIT command in order to spin down]
 
-James
+> On Wed, Apr 30, 2008 at 15:31:41 +0200, Stefan Richter wrote:
+>> According to the description of Active,
+>> Idle, Standby, Sleep in RBC, we do most certainly want code 1 on resume,
+>> and rather 3 than 2 on suspend. 5 instead of 3 or 2 might even be better
+> 
+> FYI, sg_start --pc=3 also spins down the drive here.
+> 
+>> from the POV of energy consumption but a "device reset may be required
+>> before access to the device is allowed" which I'd rather not deal with.
+>> 
+>> Tino, does the scsi stack log the device as "Direct-Access-RBC" after it
+>> was plugged in?
+> 
+> Yes:
+> 
+> scsi 7:0:0:0: Direct-Access-RBC WDC WD32 00JB-00KFA0           PQ: 0 ANSI: 4
 
----
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [SCSI] aacraid: don't use num_physpages
+I tested a few FireWire disks now.
 
-aacraid uses num_physpages as a check to see if it needs to fail
-commands to physical drives which can only be sent as 32 bit fibs for
-certain cards (those with AAC_QUIRK_SCSI_32 set).  The correct API for
-this is dma_get_required_mask(), so make it use that.  Also tidy up
-the 64 bit fib enabling code so we only enable it if the kernel is 64
-bit and the dma mask goes over 32 bits (i.e. it has memory above 4GB).
+1) FireWire to IDE or to SATA chipset
+2) start bit is honored:
+   "sg_start --stop" stops the motor and "sg_start" restarts it
+3) power condition field is honored:
+   "sg_start --pc=3" stops the motor and "sg_start --pc=1 restarts it
+4) peripheral device type claimed by the firmware
+5) vendor and model of the enclosure
 
-Acked-by: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/aacraid/aachba.c |   37 +++++++++++++++++++++++--------------
- 1 files changed, 23 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index aa4e77c..2cc2c09 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1204,13 +1204,14 @@ static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
- 				  (fib_callback) aac_srb_callback, (void *) cmd);
- }
- 
-+/*
-+ * This routine is only used if we have memory > 4GB and the adapter
-+ * is one of the quirky ones that can't do dma above 4GB to physical
-+ * disks
-+ */
- static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
- {
--	if ((sizeof(dma_addr_t) > 4) &&
--	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
--	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
--		return FAILED;
--	return aac_scsi_32(fib, cmd);
-+	return FAILED;
- }
- 
- int aac_get_adapter_info(struct aac_dev* dev)
-@@ -1372,16 +1373,29 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		printk(KERN_INFO "%s%d: Non-DASD support enabled.\n",dev->name, dev->id);
- 
- 	dev->dac_support = 0;
--	if( (sizeof(dma_addr_t) > 4) && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)){
-+	dev->a_ops.adapter_scsi = aac_scsi_32;
-+	if ((dma_get_required_mask(&dev->pdev->dev) > DMA_32BIT_MASK
-+	     && (dev->adapter_info.options & AAC_OPT_SGMAP_HOST64)
-+	     && dacmode == -1) ||
-+	    dacmode == 1) {
- 		if (!dev->in_reset)
- 			printk(KERN_INFO "%s%d: 64bit support enabled.\n",
- 				dev->name, dev->id);
- 		dev->dac_support = 1;
--	}
-+		dev->a_ops.adapter_scsi = aac_scsi_64;
- 
--	if(dacmode != -1) {
--		dev->dac_support = (dacmode!=0);
-+		/*
-+		 * Adapters with AAC_QUIRK_SCSI_32 can only send pass
-+		 * through commands as 32 bit fibs (although they can
-+		 * send RAID commands as 64 bit fibs) flag these here
-+		 * so we fail direct SCSI commands in the special
-+		 * aac_scsi_32_64 routine
-+		 */
-+		if (aac_get_driver_ident(dev->cardtype)->quirks
-+		    & AAC_QUIRK_SCSI_32)
-+			dev->a_ops.adapter_scsi = aac_scsi_32_64;
- 	}
-+
- 	if(dev->dac_support != 0) {
- 		if (!pci_set_dma_mask(dev->pdev, DMA_64BIT_MASK) &&
- 			!pci_set_consistent_dma_mask(dev->pdev, DMA_64BIT_MASK)) {
-@@ -1403,11 +1417,6 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 	 * Deal with configuring for the individualized limits of each packet
- 	 * interface.
- 	 */
--	dev->a_ops.adapter_scsi = (dev->dac_support)
--	  ? ((aac_get_driver_ident(dev->cardtype)->quirks & AAC_QUIRK_SCSI_32)
--				? aac_scsi_32_64
--				: aac_scsi_64)
--				: aac_scsi_32;
- 	if (dev->raw_io_interface) {
- 		dev->a_ops.adapter_bounds = (dev->raw_io_64)
- 					? aac_bounds_64
+1)           2)     3)     4)    5)
+bridge       start  pc     PDT   enclosure
+--------------------------------------------------------------
+INIC-2430    yes    yes    SBC   AVLAB 2.5" Drive Kit
+INIC-2430    yes    yes    SBC   IOI FWB-IDE01AB, 1 HDD
+INIC-2430    yes    yes    SBC   IOI FWB-IDE01AB, 2 HDDs, JBOD
+
+OXFW911      yes    yes    RBC   MacPower Icecube
+OXUF922      yes    yes    RBC   MacPower Icecube 800+
+OXFW912      yes    yes    RBC   MacPower Igloo
+OXFW912      yes    yes    RBC   VulcanTech DualDrive 2nd gen.
+OXUF924DSB   yes    yes    SBC   MacPower Taurus, 1 HDD
+OXUF924DSB   no     no     SBC   MacPower Taurus, 2 HDDs, JBOD
+
+PL-3507      no     no     RBC   MacPower Prefect II
+
+TSB42AA9     no     yes    SBC   DViCO MomoBay CX-1
+TSB42AA9A    yes    yes    RBC   DViCO MomoBay FX-3A
+
+
+General remarks:
+
+Several disks don't require an "sg_start" or "sg_start --pc=1" to spin
+up again; they do so on next access.  Some even ignore "sg_start --pc=1"
+and do not start the motor until the next access (e.g. read access).  I
+did not test systematically whether "sg_start" or "sg_start --pc=1" are
+required at all.  (Proper support of "sg_start --pc=1" is beneficial in
+so far as the high-latency operation which spin-up is happens when it is
+expected, not sometime later.)
+
+The firmwares of CX-1, FX-3A, AVLAB, and Prefect II implement
+auto-spin-down after some time of inactivity (different from firmware to
+firmware) and auto-spin-up on subsequent access.
+
+Remarks on individual enclosures/ firmwares:
+
+MacPower Taurus
+---------------
+I could not test RAID0 and RAID1 due to lack of spare disks.
+
+MacPower Prefect II
+-------------------
+This is a 5.25" enclosure, i.e. primarily meant for CD/DVD-ROM/R/W.  I
+tested it with a HDD here.  The firmware is from MacPower, not from
+Prolific.  Power conditions 2 or 5 don't spin the disk down either.
+
+MomoBay CX-1
+------------
+"sg_start --stop" stops the motor, but "sg_start" fails with unit
+attention.  Subsequent read commands after "sg_start --stop" time out.
+I.e. "sg_start --stop" causes CX-1 to go offline.  It needs to be
+power-cycled after that.
+
+MomoBay FX-3A
+-------------
+"sg_start --stop" works.  "sg_start" ends with unit attention, but
+starts the motor.  Subsequent read commands succeed.
+
+
+Conclusions so far:
+
+  - Some PL-3507 based devices, notably those with a later firmware from
+    Prolific, spin down if power condition 2 or 3 is set.  Others don't.
+
+  - The old and in several ways quirky DViCO CX-1 must not be exposed to
+    START STOP UNIT with start flag off.
+
+  - There is alas no correlation between the PDT and support for either
+    variant of spin down/ spin up.
+
+I hope to test another PL-3507 device and an Apple Mac in target mode
+soon.  I will then post a patch for the sbp2/scsi/sd stack based on
+Tino's patch and the current findings which switches all SBP-2 HDDs to
+using the power condition field in sd_start_stop_device().
+
+I also have two devices which probably contain old SYM13FWxxx bridges.
+Alas I can't test them with HDDs because they are sealed CD-RW
+enclosures which cannot be opened without damage.
 -- 
-1.5.4.1
-
+Stefan Richter
+-=====-==--- -=-= -=--=
+http://arcgraph.de/sr/
 
 
