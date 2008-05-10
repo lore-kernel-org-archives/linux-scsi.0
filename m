@@ -1,35 +1,69 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: lsscsi is broken
-Date: Sat, 10 May 2008 16:36:43 -0600
-Message-ID: <20080510223643.GO19219@parisc-linux.org>
-References: <86802c440805091638q59031edbifa439344acf0c971@mail.gmail.com> <4825EAA0.5030305@torque.net> <86802c440805101306w64b5c72dn4dbfea74a6557c2f@mail.gmail.com> <20080510211904.GN19219@parisc-linux.org> <86802c440805101522l3cec5089he5d077fdee698cea@mail.gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH 5/5] ieee1394: sbp2: spin disks down on suspend and shutdown
+Date: Sun, 11 May 2008 00:37:14 +0200 (CEST)
+Message-ID: <tkrat.e552004d557b31e2@s5r6.in-berlin.de>
+References: <20080429232606.GA14261@dose.home.local>
+	<481874BD.5010807@s5r6.in-berlin.de>
+	<20080507180042.GA32629@dose.home.local>
+	<tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
+	<tkrat.635f52f7035be2bc@s5r6.in-berlin.de>
+	<tkrat.5cf7605228f0006a@s5r6.in-berlin.de>
+	<tkrat.939c665f57d83cd4@s5r6.in-berlin.de>
+	<tkrat.9874e625d2b0a007@s5r6.in-berlin.de>
+	<tkrat.fbd2e673d8db52fc@s5r6.in-berlin.de>
+	<tkrat.68352f1ac714c0c1@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35348 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756303AbYEJWhA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 May 2008 18:37:00 -0400
-Content-Disposition: inline
-In-Reply-To: <86802c440805101522l3cec5089he5d077fdee698cea@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <tkrat.68352f1ac714c0c1@s5r6.in-berlin.de>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tino Keitel <tino.keitel@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yinghai Lu <yhlu.kernel@gmail.com>
-Cc: dougg@torque.net, James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, kernel list <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-On Sat, May 10, 2008 at 03:22:31PM -0700, Yinghai Lu wrote:
-> will look at it monday or later.
-> 
-> don't want to keep on booting my laptop.
-> 
-> or my .config has some setting problem? it could be duplicated on all
-> my test servers
+This instructs sd_mod to send START STOP UNIT on suspend and resume,
+and on driver unbinding or unloading (including when the system is shut
+down).
 
-Could be "# CONFIG_SYSFS_DEPRECATED is not set".  I have no idea what
-that controls, but /sys/bus/scsi/devices could be one thing.
+We don't do this though if multiple initiators may log in to the target.
+
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+ drivers/ieee1394/sbp2.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: linux/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.c
++++ linux/drivers/ieee1394/sbp2.c
+@@ -2009,6 +2009,8 @@ static int sbp2scsi_slave_configure(stru
+ 
+ 	sdev->use_10_for_rw = 1;
+ 
++	if (sbp2_exclusive_login)
++		sdev->manage_start_stop = 1;
+ 	if (sdev->type == TYPE_ROM)
+ 		sdev->use_10_for_ms = 1;
+ 	if (sdev->type == TYPE_DISK &&
 
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Stefan Richter
+-=====-==--- -=-= -=-==
+http://arcgraph.de/sr/
+
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by the 2008 JavaOne(SM) Conference 
+Don't miss this year's exciting event. There's still time to save $100. 
+Use priority code J8TL2D2. 
+http://ad.doubleclick.net/clk;198757673;13503038;p?http://java.sun.com/javaone
