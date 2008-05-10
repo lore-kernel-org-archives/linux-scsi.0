@@ -1,101 +1,129 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Hack to fix not working spindown over Firewire
-Date: Sat, 10 May 2008 17:31:53 +0200 (CEST)
-Message-ID: <tkrat.635f52f7035be2bc@s5r6.in-berlin.de>
-References: <20080429232606.GA14261@dose.home.local>
-	<481874BD.5010807@s5r6.in-berlin.de>
-	<20080507180042.GA32629@dose.home.local>
-	<tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
+From: Frank de Jong <frapex@xs4all.nl>
+Subject: Re: PROBLEM: linux-2.6.25.3, aha152x'->init suspiciously
+  returned 1, it should follow 0/-E convention
+Date: Sat, 10 May 2008 19:54:49 +0200
+Message-ID: <20080510175450.B1F521D27F4D@mx.drokz.nl>
+References: <20080510103040.C7E891D652BF@mx.drokz.nl>
+ <1210426438.4002.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: Tino Keitel <tino.keitel@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from drokz.nl ([80.101.76.176]:38541 "EHLO mx.drokz.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799AbYEJRzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 May 2008 13:55:10 -0400
+In-Reply-To: <1210426438.4002.1.camel@localhost.localdomain>
+References: <20080510103040.C7E891D652BF@mx.drokz.nl>
+ <1210426438.4002.1.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Juergen Fischer <fischer@norbit.de>
 
-I wrote:
-> 1) FireWire to IDE or to SATA chipset
-> 2) start bit is honored:
->    "sg_start --stop" stops the motor and "sg_start" restarts it
-> 3) power condition field is honored:
->    "sg_start --pc=3D3" stops the motor and "sg_start --pc=3D1 restarts it
-> 4) peripheral device type claimed by the firmware
-> 5) vendor and model of the enclosure
-> =
+Hello James,
 
-> =
+Thank you for your quick solution. I implemented the solution and the 
+driver loads fine. Unloading the module gives me a kernel Oops.
+dmesg after loading the module:
 
-> 1)           2)     3)     4)    5)
-> bridge       start  pc     PDT   enclosure
-> --------------------------------------------------------------
-> INIC-2430    yes    yes    SBC   AVLAB 2.5" Drive Kit
-> INIC-2430    yes    yes    SBC   IOI FWB-IDE01AB, 1 HDD
-> INIC-2430    yes    yes    SBC   IOI FWB-IDE01AB, 2 HDDs, JBOD
-> =
+aha152x: BIOS test: passed, 1 controller(s) configured
+aha152x: resetting bus...
+aha152x2: vital data: rev=1, io=0x340 (0x340/0x340), irq=9, scsiid=7, 
+reconnect=enabled, parity=enabled, synchronous=enabled, delay=1000, 
+extended translation=disabled
+aha152x2: trying software interrupt, ok.
+scsi2 : Adaptec 152x SCSI driver; $Revision: 2.7 $
+(scsi2:6:0) message sent incompletely (2/6)
+(scsi2:6:0) Synchronous Data Transfer Request was rejected
+(scsi2:6:0) inbound message (MESSAGE REJECT)
+scsi 2:0:6:0: Direct-Access     IOMEGA   ZIP 100          J.02 PQ: 0 ANSI: 2
+sd 2:0:6:0: [sde] Attached SCSI removable disk
+sd 2:0:6:0: Attached scsi generic sg4 type 0
 
-> OXFW911      yes    yes    RBC   MacPower Icecube
-> OXUF922      yes    yes    RBC   MacPower Icecube 800+
-> OXFW912      yes    yes    RBC   MacPower Igloo
-> OXFW912      yes    yes    RBC   VulcanTech DualDrive 2nd gen.
-> OXUF924DSB   yes    yes    SBC   MacPower Taurus, 1 HDD
-> OXUF924DSB   no     no     SBC   MacPower Taurus, 2 HDDs, JBOD
-> =
+after trying to unload the module:
+BUG: unable to handle kernel paging request at 00100100
+IP: [<fb9ff667>] :aha152x:aha152x_exit+0x47/0x6a
+*pde = 00000000
+Oops: 0000 [#1] PREEMPT SMP
+Modules linked in: aha152x(-) w83781d hwmon_vid tun ne 8390 bonding 
+usb_storage snd_usb_audio snd_usb_lib snd_rawmidi pwc snd_seq_device 
+compat_ioctl32 snd_hwdep videodev v4l1_compat 3c59x mii intel_agp 
+agpgart snd_pcm_oss snd_pcm snd_timer snd_page_alloc snd_mixer_oss snd
 
-> PL-3507      no     no     RBC   MacPower Prefect II =B9
+Pid: 2837, comm: rmmod Not tainted (2.6.25.3 #1)
+EIP: 0060:[<fb9ff667>] EFLAGS: 00210212 CPU: 0
+EIP is at aha152x_exit+0x47/0x6a [aha152x]
+EAX: 00000001 EBX: 000ffdc4 ECX: f7c517a8 EDX: 00000001
+ESI: 00000000 EDI: 00000003 EBP: e7880000 ESP: e7881f58
+  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process rmmod (pid: 2837, ti=e7880000 task=f27eb580 task.ti=e7880000)
+Stack: fba03700 c01419d2 31616861 00783235 e795ee70 c0157709 b7f24000 e79ae000
+        c0158271 ffffffff b7f25000 e79ae004 e795e370 b7f25000 e795e37c e795e370
+        009ae000 fba03700 00000880 e7881fa8 00000000 bf93ec20 bf93ec20 c0102faa
+Call Trace:
+  [<c01419d2>] sys_delete_module+0x112/0x1a0
+  [<c0157709>] remove_vma+0x39/0x50
+  [<c0158271>] do_munmap+0x181/0x1f0
+  [<c0102faa>] sysenter_past_esp+0x5f/0x85
+  [<c0490000>] rsc_parse+0x0/0x3c0
+  =======================
+Code: fb 08 36 a0 fb 74 36 8d b6 00 00 00 00 8d bc 27 00 00 00 00 8d 
+83 88 fd ff ff e8 a5 b2 ff ff 8b 9b 3c 03 00 00 81 eb 3c 03 00 00 
+<8b> 83 3c 03 00 00 0f 1f 40 00 81 fb cc 32 a0 fb 75 d7 5b c3 0f
+EIP: [<fb9ff667>] aha152x_exit+0x47/0x6a [aha152x] SS:ESP 0068:e7881f58
+---[ end trace 97ac3c588c837e59 ]---
 
-  PL-3507      no     yes    RBC   Mapower MAP-KC21C1 =B2
+Apparantly the driver still needs some fixing to support module 
+unloading. I can NOT confirm that this problem does not exist with 
+linux-2.4.24, as this is pretty much the first time I tried to unload 
+the driver.
 
-> TSB42AA9     no     yes    SBC   DViCO MomoBay CX-1
-> TSB42AA9A    yes    yes    RBC   DViCO MomoBay FX-3A
+The "aha152x'->init suspiciously returned 1, it should follow 0/-E 
+convention" problem is solved though.
 
-  EFI firmware no     no     RBC   Apple Mac mini x86 in target mode =B3
+Regards,
+Frank de Jong
+The Netherlands
 
+At 15:33 10-5-2008, you wrote:
 
-=B9) As mentioned, with firmware from MacPower.
+>On Sat, 2008-05-10 at 12:30 +0200, Frank de Jong wrote:
+> > Hello,
+> >
+> > Bug report follows.
+> >
+> > [1.] One line summary of the problem:
+> > linux-2.6.25.3, aha152x'->init suspiciously returned 1, it should
+> > follow 0/-E convention. The module / driver works okay. Unloading the
+> > module is impossible.
+>
+>The driver is apparently returning 0 on failure and 1 on success.
+>That's a bit unfortunate.  This should fix it.
+>
+>James
+>
+>---
+>
+>diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+>index f5215fd..f0c4ffc 100644
+>--- a/drivers/scsi/aha152x.c
+>+++ b/drivers/scsi/aha152x.c
+>@@ -3830,7 +3830,7 @@ static int __init aha152x_init(void)
+>                         iounmap(p);
+>                 }
+>                 if (!ok && setup_count == 0)
+>-                       return 0;
+>+                       return -ENODEV;
+>
+>                 printk(KERN_INFO "aha152x: BIOS test: passed, ");
+>  #else
+>@@ -3909,7 +3909,7 @@ static int __init aha152x_init(void)
+>  #endif
+>         }
+>
+>-       return 1;
+>+       return 0;
+>  }
+>
+>  static void __exit aha152x_exit(void)
 
-=B2) Same firmware_revision as with Tino's disk, i.e. apparently firmware
-   from Prolific.  Same findings as Tino's:
-   "sg_start --stop" is accepted but does not stop the motor.
-   "sg_start --pc=3D3" or "=3D2" stop the motor.
-   "sg_start --pc=3D1" or a read command restarts the motor.
-   "sg_start" does not restart the motor.
-
-=B3) "sg_start --stop" is accepted but does not stop the motor.
-   "sg_start --pc=3D3" or "=3D1" fails with "invalid field in cdb".
-   This is of course against the spec, because RBC includes power
-   condition.
-
-Moreover, when OS X shuts down, it apparently sends START STOP UNIT
-without power condition to FireWire disks.  Therefore we also should
-rather _not_ use power condition per default.
-
-I will send a patch which uses the power condition field only for
-PL-3507 and DViCO CX-1.
--- =
-
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D=3D--- -=3D-=3D -=3D-=3D-
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by the 2008 JavaOne(SM) Conference =
-
-Don't miss this year's exciting event. There's still time to save $100. =
-
-Use priority code J8TL2D2. =
-
-http://ad.doubleclick.net/clk;198757673;13503038;p?http://java.sun.com/java=
-one
