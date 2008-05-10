@@ -1,60 +1,43 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Hack to fix not working spindown over Firewire
-Date: Sun, 11 May 2008 00:53:05 +0200 (CEST)
-Message-ID: <tkrat.8f92142276ccb4e5@s5r6.in-berlin.de>
-References: <20080429232606.GA14261@dose.home.local>
-	<481874BD.5010807@s5r6.in-berlin.de>
-	<20080507180042.GA32629@dose.home.local>
-	<tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: lsscsi is broken
+Date: Sat, 10 May 2008 16:01:57 -0700
+Message-ID: <86802c440805101601h8591418t3d728e61ea4a1332@mail.gmail.com>
+References: <86802c440805091638q59031edbifa439344acf0c971@mail.gmail.com>
+	 <4825EAA0.5030305@torque.net>
+	 <86802c440805101306w64b5c72dn4dbfea74a6557c2f@mail.gmail.com>
+	 <20080510211904.GN19219@parisc-linux.org>
+	 <86802c440805101522l3cec5089he5d077fdee698cea@mail.gmail.com>
+	 <20080510223643.GO19219@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: Tino Keitel <tino.keitel@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.232]:47796 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754928AbYEJXB6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 May 2008 19:01:58 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so2113805rvb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 10 May 2008 16:01:58 -0700 (PDT)
+In-Reply-To: <20080510223643.GO19219@parisc-linux.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: dougg@torque.net, James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, kernel list <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-I wrote:
-> 1) FireWire to IDE or to SATA chipset
-> 2) start bit is honored:
->    "sg_start --stop" stops the motor and "sg_start" restarts it
-> 3) power condition field is honored:
->    "sg_start --pc=3" stops the motor and "sg_start --pc=1 restarts it
-> 4) peripheral device type claimed by the firmware
-> 5) vendor and model of the enclosure
-> 
-> 
-> 1)           2)     3)     4)    5)
-> bridge       start  pc     PDT   enclosure
-> --------------------------------------------------------------
-...
-> TSB42AA9     no     yes    SBC   DViCO MomoBay CX-1
-> TSB42AA9A    yes    yes    RBC   DViCO MomoBay FX-3A
+On Sat, May 10, 2008 at 3:36 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Sat, May 10, 2008 at 03:22:31PM -0700, Yinghai Lu wrote:
+>> will look at it monday or later.
+>>
+>> don't want to keep on booting my laptop.
+>>
+>> or my .config has some setting problem? it could be duplicated on all
+>> my test servers
+>
+> Could be "# CONFIG_SYSFS_DEPRECATED is not set".  I have no idea what
+> that controls, but /sys/bus/scsi/devices could be one thing.
+>
+looked at last config for 2.6.25, the SYSFS setting in CONFIG is the
+same as the one for current git.
 
-Correction:  While the FX-3A stops the motor if START STOP UNIT with an
-equivalent to "sg_start --stop", it does not work correctly anymore
-after it.  Certain commands after that will hang the firmware up;
-notably those sent when sd_mod is probing the disk.  I.e. FX-3A fails
-not exactly as CX-1, but similarly.
--- 
-Stefan Richter
--=====-==--- -=-= -=-==
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by the 2008 JavaOne(SM) Conference 
-Don't miss this year's exciting event. There's still time to save $100. 
-Use priority code J8TL2D2. 
-http://ad.doubleclick.net/clk;198757673;13503038;p?http://java.sun.com/javaone
+YH
