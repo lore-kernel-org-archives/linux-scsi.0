@@ -1,71 +1,27 @@
-From: Ingo Saitz <Ingo.Saitz@stud.uni-hannover.de>
-Subject: Re: PROBLEM: 2.6.25: sr0 cdrom does not change medium size on
-	medium change
-Date: Mon, 12 May 2008 22:34:22 +0200
-Message-ID: <20080512203422.GA2641@schwan.zoo>
-References: <20080508112108.GA2744@schwan.zoo>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 01/12] lib: create common ascii hex array
+Date: Tue, 13 May 2008 05:41:01 +0900
+Message-ID: <20080512204101.GA17005@linux-sh.org>
+References: <1210619134.24092.51.camel@brick>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758698AbYELUem@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080508112108.GA2744@schwan.zoo>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <1210619134.24092.51.camel@brick>
+Sender: linux-ide-owner@vger.kernel.org
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide <linux-ide@vger.kernel.org>, linux-netdev <netdev@vger.kernel.org>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, Ingo Molnar <mingo@elte.hu>, Jason Wessel <jason.wessel@windriver.com>, David Howells <dhowells@redhat.com>, "ralf@linux-mips.org" <ralf@linux-mips.org>, Paul Mackerras <paulus@samba.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, May 12, 2008 at 12:05:34PM -0700, Harvey Harrison wrote:
+> Add a common hex array in hexdump.c so everyone can use it.
+> 
+> Add a common hi/lo helper to avoid the shifting masking that is
+> done to get the upper and lower nibbles of a byte value.
+> 
+> Pull the pack_hex_byte helper from kgdb as it is opencoded many
+> places in the tree that will be consolidated.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
---HcAYCG3uE/tztfnV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-I did some git bisecting during which I found it does matte wether you
-let the drive settle before mounting or not during the 2.6.25 devcycle.
-So after being struck at some random position I redid the bisection.
-
-This commit applies to: changing the medium (cd/dvd), waiting until the
-drive settles and mounting it. The kernel no longer changes the size of
-the medium in /sys/block/sr0/size, giving read errors for bigger mediae.
-
------8<-----8<-----
-210ba1d1724f5c4ed87a2ab1a21ca861a915f734 is first bad commit
-commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Sat Jan 5 10:39:51 2008 -0600
-
-    [SCSI] sr: update to follow tray status correctly
-
-    Based on an original patch from: David Martin <tasio@tasio.net>
-
-    When trying to get the drive status via ioctl CDROM_DRIVE_STATUS, with
-    no disk it gives CDS_TRAY_OPEN even if the tray is closed.
-
-    ioctl works as expected with ide-cd driver.
-
-    Gentoo bug report: http://bugs.gentoo.org/show_bug.cgi?id=196879
-
-    Cc: Maarten Bressers <mbres@gentoo.org>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-:040000 040000 704d23cdc9b3e5d596d879b4705586966b76e74d 9f1f71802ee45e734758d2c89d0b90102b549bdb M      drivers
------>8----->8-----
-
-I'm forwarding this to the linux-scsi list, too.
-
-    Ingo
-
---HcAYCG3uE/tztfnV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFIKKnO4XrXtQkN2NURAuE8AJ9VFuMjXXq37zk8RHnhiYfavNXq1QCgpYe+
-jiJz5S3sBk+D0KJ4F4WsLFs=
-=Nkum
------END PGP SIGNATURE-----
-
---HcAYCG3uE/tztfnV--
+Acked-by: Paul Mundt <lethal@linux-sh.org>
