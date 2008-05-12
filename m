@@ -1,64 +1,104 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] drivers/scsi/qla1280.c; was Re: Buffered I/O to block device very slow and other SCSI issues...
-Date: Mon, 12 May 2008 21:43:25 +1000
-Message-ID: <20080512114325.GI155679365@sgi.com>
-References: <20080319231654.GA103321673@sgi.com> <20080320010807.GA27620@sgi.com> <20080320032010.e640c52a.akpm@linux-foundation.org> <20080512061703.GC41683@sgi.com>
+From: Thorsten Kranzkowski <dl8bcu@dl8bcu.de>
+Subject: Re: Build error: `.exit.text' referenced in section `.rodata'
+Date: Mon, 12 May 2008 11:52:55 +0000
+Message-ID: <20080512115255.GA16942@ds20.borg.net>
+References: <20080511151902.GA733@ds20.borg.net> <1210524907.3199.6.camel@localhost.localdomain> <20080511192007.GB724@ds20.borg.net>
+Reply-To: dl8bcu@dl8bcu.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.171.29]:59176 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751460AbYELLnn (ORCPT
-	<rfc822;@relay.sgi.com:linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2008 07:43:43 -0400
+Return-path: <linux-alpha-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080512061703.GC41683@sgi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20080511192007.GB724@ds20.borg.net>
+Sender: linux-alpha-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Chinner <dgc@sgi.com>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, jes@sgi.com
 
-On Sun, May 11, 2008 at 11:17:03PM -0700, Jeremy Higdon wrote:
-> On Thu, Mar 20, 2008 at 03:20:10AM -0700, Andrew Morton wrote:
-> > > > I also suspect that CTQ has not been set up correctly on this
-> > > > kernel, because:
-> > > > 
-> > > > $ cat /sys/block/sdb/device/queue_depth
-> > > > 3
-> > > > $ ls -l /sys/block/sdb/device/queue_depth
-> > > > -r--r--r-- 1 root root 0 Mar 20 09:59 /sys/block/sdb/device/queue_depth
-> > > > $
-> > > > 
-> > > > It appears to be hard coded to 3 and can't be changed....
+On Sun, May 11, 2008 at 07:20:07PM +0000, Thorsten Kranzkowski wrote:
+> On Sun, May 11, 2008 at 11:55:07AM -0500, James Bottomley wrote:
+> > On Sun, 2008-05-11 at 15:19 +0000, Thorsten Kranzkowski wrote:
+> > > Hello,
 > > > 
-> > > That's a bug in the qla1280 driver.  I thought that had gotten fixed.
-> > > It's looking at the wrong mailbox register after setting device parameters.
+> > > compiling 2.6.26-rc1 (latest git) on an Alpha DS20 (ev6, everything built in,
+> > > gcc version 4.1.2) fails with the following link errors:
+> > > 
+> > >   CC      init/version.o
+> > >   LD      init/built-in.o
+> > >   LD      .tmp_vmlinux1
+> > > `.exit.text' referenced in section `.rodata' of drivers/built-in.o: defined in discarded section `.exit.text' of drivers/built-in.o
+> 
+> 
+> > > I believe the problem is static int sd_major(int major_idx) being inlined
+> > > into exit_sd(). IIUC the switch statement therein uses sort of a jump table.
+> > > And the targets of this jump table can not be resolved because the section
+> > > they live in is just discarded.
 > > 
-> > Was there a patch anywhere?
+> > It's plausible.  However, my version of gcc (4.2.3) doesn't actually
+> > inline this; even when I force it to by adding the inline directive to
+> > sd_major() I don't see the problem.  I suspect it might be a gcc bug
+> > 
+> > > 
+> > > applying this patch makes the problem go away:
+> > > 
+> > > Signed-off-by: Thorsten Kranzkowski <dl8bcu@dl8bcu.de>
+> > > 
+> > > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > > index 01cefbb..adf79ad 100644
+> > > --- a/drivers/scsi/sd.c
+> > > +++ b/drivers/scsi/sd.c
+> > > @@ -1913,7 +1913,7 @@ err_out:
+> > >   *
+> > >   *	Note: this function unregisters this driver from the scsi mid-level.
+> > >   **/
+> > > -static void __exit exit_sd(void)
+> > > +static void exit_sd(void)
+> > 
+> > We can't really do this because that text genuinely does belong in the
+> > exit section.  We might be able to fix it up on the alpha by just adding
+> > the noinline directive to sd_major.  Does this work?
 > 
-> Promised patch...
-....
-> After the fix, I found that my disks were getting a queue depth of
-> 255, which is far too many.  Most SCSI disks are limited to 32 or
-> 64.  In any case, there's no point, queueing up a bunch of commands
-> to the adapter that will just result in queue full or starve other
-> targets from being issued commands due to running out of internal
-> memory.  So I dropped default queue depth to 32 (from which 1 is
-> subtracted elsewhere, giving net of 31).
+> Yes, this works as well! Thanks!
 > 
-> I tested with a Seagate ST336753LC, and results look good, so
-> I'm satisfied with this patch.
+>    text    data     bss     dec     hex filename
+> 6834571  504320  397508 7736399  760c4f vmlinux
+> 6835267  504056  397508 7736831  760dff vmlinux-exit_sd-not-in-.exit.text
 > 
-> Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+> Tested-by: Thorsten Kranzkowski <dl8bcu@dl8bcu.de>
+>  
+> Now I'll update gcc and try again with gcc 4.2.3.
 
-Works fine here.
 
-Tested-by: Dave Chinner <dgc@sgi.com>
+With gcc 4.2.3 I get the same error. The noinline patch fixes it again.
 
-Cheers,
+   text    data     bss     dec     hex filename
+6721720  624416  397508 7743644  76289c vmlinux-gcc-4.2.3
 
-Dave.
+
+bye,
+Thorsten
+ 
+> > James
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index 01cefbb..060ba18 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -280,7 +280,7 @@ static struct scsi_driver sd_template = {
+> >   * As we stay compatible with our numbering scheme, we can reuse 
+> >   * the well-know SCSI majors 8, 65--71, 136--143.
+> >   */
+> > -static int sd_major(int major_idx)
+> > +static noinline int sd_major(int major_idx)
+> >  {
+> >  	switch (major_idx) {
+> >  	case 0:
+> > 
+> > 
+> 
+
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+| Thorsten Kranzkowski        Internet: dl8bcu@dl8bcu.de                      |
+| Mobile: ++49 170 1876134       Snail: Kiebitzstr. 14, 49324 Melle, Germany  |
+| Ampr: dl8bcu@db0lj.#rpl.deu.eu, dl8bcu@marvin.dl8bcu.ampr.org [44.130.8.19] |
