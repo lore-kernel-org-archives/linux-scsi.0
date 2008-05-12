@@ -1,200 +1,71 @@
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: [PATCH][Resend] fewer pointer derefs in scsi_error
-Date: Mon, 12 May 2008 22:32:39 +0200
-Message-ID: <9a8748490805121332j58090a75x470e97b07010dcee@mail.gmail.com>
-References: <alpine.LNX.1.00.0804272211080.2352@dragon.funnycrock.com>
+From: Ingo Saitz <Ingo.Saitz@stud.uni-hannover.de>
+Subject: Re: PROBLEM: 2.6.25: sr0 cdrom does not change medium size on
+	medium change
+Date: Mon, 12 May 2008 22:34:22 +0200
+Message-ID: <20080512203422.GA2641@schwan.zoo>
+References: <20080508112108.GA2744@schwan.zoo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:39267 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754636AbYELUco (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 May 2008 16:32:44 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so323004gvc.37
-        for <linux-scsi@vger.kernel.org>; Mon, 12 May 2008 13:32:40 -0700 (PDT)
-In-Reply-To: <alpine.LNX.1.00.0804272211080.2352@dragon.funnycrock.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758698AbYELUem@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20080508112108.GA2744@schwan.zoo>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eric Youngdale <eric@andante.org>, David Miller <davem@davemloft.net>, Mike Anderson <andmike@us.ibm.com>, Russell King <rmk@arm.linux.org.uk>, Jesper Juhl <jesper.juhl@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
-
-2008/4/27 Jesper Juhl <jesper.juhl@gmail.com>:
-> From: Jesper Juhl <jesper.juhl@gmail.com>
->
->  [This patch previously submitted on  24 April 2008 00:18]
->
-
-Hmmm, no feedback at all on this one. Could someone please ACK or NACK it?
-I've more stuff like this in the pipeline, but I'm holding it back
-until I see if this one takes root or not ;)
-
-/Jesper
-
->
->  This patch reduces the number of sequential pointer derefs in scsi_error
->  ( drivers/scsi/scsi_error.c ).
->
->  The bennefits are:
->         - makes the code easier to read. Lots of sequential derefs of the
->           same pointers are not easy on the eye.
->         - makes the size of the source file 55 bytes smaller.
->         - makes the size of the object file 48 bytes smaller.
->         - theoretically at least, just dereferencing the pointers once can
->           allow the compiler to generally slightly faster code, so in
->           theory this could also be a micro speed optimization.
->
->  Please consider applying.
->
->
->  Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
->  ---
->
->   scsi_error.c |   58 ++++++++++++++++++++++++++++++++--------------------------
->   1 file changed, 32 insertions(+), 26 deletions(-)
->
->  diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->  index 221f31e..94395a7 100644
->  --- a/drivers/scsi/scsi_error.c
->  +++ b/drivers/scsi/scsi_error.c
->  @@ -185,13 +185,14 @@ int scsi_delete_timer(struct scsi_cmnd *scmd)
->   void scsi_times_out(struct scsi_cmnd *scmd)
->   {
->         enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
->  +       struct Scsi_Host *host = scmd->device->host;
->
->         scsi_log_completion(scmd, TIMEOUT_ERROR);
->
->  -       if (scmd->device->host->transportt->eh_timed_out)
->  -               eh_timed_out = scmd->device->host->transportt->eh_timed_out;
->  -       else if (scmd->device->host->hostt->eh_timed_out)
->  -               eh_timed_out = scmd->device->host->hostt->eh_timed_out;
->  +       if (host->transportt->eh_timed_out)
->  +               eh_timed_out = host->transportt->eh_timed_out;
->  +       else if (host->hostt->eh_timed_out)
->  +               eh_timed_out = host->hostt->eh_timed_out;
->         else
->                 eh_timed_out = NULL;
->
->  @@ -474,22 +475,22 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
->   {
->         unsigned long flags;
->         int rtn;
->  +       struct Scsi_Host *host = scmd->device->host;
->
->         SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
->                                           __FUNCTION__));
->
->  -       if (!scmd->device->host->hostt->eh_host_reset_handler)
->  +       if (!host->hostt->eh_host_reset_handler)
->                 return FAILED;
->
->  -       rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
->  +       rtn = host->hostt->eh_host_reset_handler(scmd);
->
->         if (rtn == SUCCESS) {
->  -               if (!scmd->device->host->hostt->skip_settle_delay)
->  +               if (!host->hostt->skip_settle_delay)
->                         ssleep(HOST_RESET_SETTLE_TIME);
->  -               spin_lock_irqsave(scmd->device->host->host_lock, flags);
->  -               scsi_report_bus_reset(scmd->device->host,
->  -                                     scmd_channel(scmd));
->  -               spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
->  +               spin_lock_irqsave(host->host_lock, flags);
->  +               scsi_report_bus_reset(host, scmd_channel(scmd));
->  +               spin_unlock_irqrestore(host->host_lock, flags);
->         }
->
->         return rtn;
->  @@ -503,22 +504,22 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
->   {
->         unsigned long flags;
->         int rtn;
->  +       struct Scsi_Host *host = scmd->device->host;
->
->         SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
->                                           __FUNCTION__));
->
->  -       if (!scmd->device->host->hostt->eh_bus_reset_handler)
->  +       if (!host->hostt->eh_bus_reset_handler)
->                 return FAILED;
->
->  -       rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
->  +       rtn = host->hostt->eh_bus_reset_handler(scmd);
->
->         if (rtn == SUCCESS) {
->  -               if (!scmd->device->host->hostt->skip_settle_delay)
->  +               if (!host->hostt->skip_settle_delay)
->                         ssleep(BUS_RESET_SETTLE_TIME);
->  -               spin_lock_irqsave(scmd->device->host->host_lock, flags);
->  -               scsi_report_bus_reset(scmd->device->host,
->  -                                     scmd_channel(scmd));
->  -               spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
->  +               spin_lock_irqsave(host->host_lock, flags);
->  +               scsi_report_bus_reset(host, scmd_channel(scmd));
->  +               spin_unlock_irqrestore(host->host_lock, flags);
->         }
->
->         return rtn;
->  @@ -544,16 +545,17 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
->   {
->         unsigned long flags;
->         int rtn;
->  +       struct Scsi_Host *host = scmd->device->host;
->
->  -       if (!scmd->device->host->hostt->eh_target_reset_handler)
->  +       if (!host->hostt->eh_target_reset_handler)
->                 return FAILED;
->
->  -       rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
->  +       rtn = host->hostt->eh_target_reset_handler(scmd);
->         if (rtn == SUCCESS) {
->  -               spin_lock_irqsave(scmd->device->host->host_lock, flags);
->  +               spin_lock_irqsave(host->host_lock, flags);
->                 __starget_for_each_device(scsi_target(scmd->device), NULL,
->                                           __scsi_report_device_reset);
->  -               spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
->  +               spin_unlock_irqrestore(host->host_lock, flags);
->         }
->
->         return rtn;
->  @@ -572,11 +574,12 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
->   static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
->   {
->         int rtn;
->  +       struct Scsi_Host *host = scmd->device->host;
->
->  -       if (!scmd->device->host->hostt->eh_device_reset_handler)
->  +       if (!host->hostt->eh_device_reset_handler)
->                 return FAILED;
->
->  -       rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
->  +       rtn = host->hostt->eh_device_reset_handler(scmd);
->         if (rtn == SUCCESS)
->                 __scsi_report_device_reset(scmd->device, NULL);
->         return rtn;
->  @@ -584,10 +587,13 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
->
->   static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
->   {
->  -       if (!scmd->device->host->hostt->eh_abort_handler)
->  +       int (* eh_abort_handler)(struct scsi_cmnd *)
->  +               = scmd->device->host->hostt->eh_abort_handler;
->  +
->  +       if (!eh_abort_handler)
->                 return FAILED;
->
->  -       return scmd->device->host->hostt->eh_abort_handler(scmd);
->  +       return eh_abort_handler(scmd);
->   }
->
->   /**
->
->
 
 
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please http://www.expita.com/nomime.html
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+I did some git bisecting during which I found it does matte wether you
+let the drive settle before mounting or not during the 2.6.25 devcycle.
+So after being struck at some random position I redid the bisection.
+
+This commit applies to: changing the medium (cd/dvd), waiting until the
+drive settles and mounting it. The kernel no longer changes the size of
+the medium in /sys/block/sr0/size, giving read errors for bigger mediae.
+
+-----8<-----8<-----
+210ba1d1724f5c4ed87a2ab1a21ca861a915f734 is first bad commit
+commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734
+Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date:   Sat Jan 5 10:39:51 2008 -0600
+
+    [SCSI] sr: update to follow tray status correctly
+
+    Based on an original patch from: David Martin <tasio@tasio.net>
+
+    When trying to get the drive status via ioctl CDROM_DRIVE_STATUS, with
+    no disk it gives CDS_TRAY_OPEN even if the tray is closed.
+
+    ioctl works as expected with ide-cd driver.
+
+    Gentoo bug report: http://bugs.gentoo.org/show_bug.cgi?id=196879
+
+    Cc: Maarten Bressers <mbres@gentoo.org>
+    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+:040000 040000 704d23cdc9b3e5d596d879b4705586966b76e74d 9f1f71802ee45e734758d2c89d0b90102b549bdb M      drivers
+----->8----->8-----
+
+I'm forwarding this to the linux-scsi list, too.
+
+    Ingo
+
+--HcAYCG3uE/tztfnV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFIKKnO4XrXtQkN2NURAuE8AJ9VFuMjXXq37zk8RHnhiYfavNXq1QCgpYe+
+jiJz5S3sBk+D0KJ4F4WsLFs=
+=Nkum
+-----END PGP SIGNATURE-----
+
+--HcAYCG3uE/tztfnV--
