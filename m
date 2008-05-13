@@ -1,101 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/3] iscsi_tcp: Enable any size command
-Date: Tue, 13 May 2008 19:01:29 +0300
-Message-ID: <4829BB59.4050306@panasas.com>
-References: <48182A1B.2060102@panasas.com>  <48182E1C.6020905@panasas.com>	 <1210607224.3078.10.camel@localhost.localdomain>	 <482956C1.2030909@panasas.com> <1210688641.3077.6.camel@localhost.localdomain>
+From: Ingo Saitz <Ingo.Saitz@stud.uni-hannover.de>
+Subject: Re: PROBLEM: 2.6.25: sr0 cdrom does not change medium size on
+	medium change
+Date: Tue, 13 May 2008 18:09:10 +0200
+Message-ID: <20080513160910.GA2554@schwan.zoo>
+References: <20080508112108.GA2744@schwan.zoo> <20080512203422.GA2641@schwan.zoo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25221 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755380AbYEMQHJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 May 2008 12:07:09 -0400
-In-Reply-To: <1210688641.3077.6.camel@localhost.localdomain>
+Received: from mx.stud.uni-hannover.de ([130.75.176.3]:43888 "EHLO
+	studserv.stud.uni-hannover.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756568AbYEMQJT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 May 2008 12:09:19 -0400
+Received: from schwan.zoo (ingo@localhost [127.0.0.1])
+	by studserv.stud.uni-hannover.de (8.13.8/8.13.8) with ESMTP id m4DG9CgM019041
+	for <linux-scsi@vger.kernel.org>; Tue, 13 May 2008 18:09:13 +0200 (MEST)
+Received: from ingo by schwan.zoo with local (Exim 4.69)
+	(envelope-from <ingo@schwan.zoo>)
+	id 1Jvx3u-0000h3-ND
+	for linux-scsi@vger.kernel.org; Tue, 13 May 2008 18:09:10 +0200
+Content-Disposition: inline
+In-Reply-To: <20080512203422.GA2641@schwan.zoo>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Tue, 2008-05-13 at 11:52 +0300, Boaz Harrosh wrote:
->> James Bottomley wrote:
->>> On Wed, 2008-04-30 at 11:30 +0300, Boaz Harrosh wrote:
->>>> Let through upto the largest command of 260 defined by the scsi standard.
->>>> iscsi core supports this already. Now that the scsi-ml supports it we can
->>>> start using large commands.
->>>>
->>>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->>>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->>>> ---
->>>>  drivers/scsi/iscsi_tcp.c |    2 +-
->>>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
->>>> index 72b9b2a..826c97c 100644
->>>> --- a/drivers/scsi/iscsi_tcp.c
->>>> +++ b/drivers/scsi/iscsi_tcp.c
->>>> @@ -1978,7 +1978,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
->>>>  	.host_template		= &iscsi_sht,
->>>>  	.conndata_size		= sizeof(struct iscsi_conn),
->>>>  	.max_conn		= 1,
->>>> -	.max_cmd_len		= 16,
->>>> +	.max_cmd_len		= SCSI_MAX_VARLEN_CDB_SIZE,
->>>>  	/* session management */
->>>>  	.create_session		= iscsi_tcp_session_create,
->>>>  	.destroy_session	= iscsi_tcp_session_destroy,
->>> OK, this isn't quite right.  The escb definition in iscsi.h is:
->>> struct iscsi_ecdb_ahdr {
->>> 	__be16 ahslength;	/* CDB length - 15, including reserved byte */
->>> 	uint8_t ahstype;
->>> 	uint8_t reserved;
->>> 	/* 4-byte aligned extended CDB spillover */
->>> 	uint8_t ecdb[260 - ISCSI_CDB_SIZE];
->>> };
->>>
->>> Either that 260 needs to become SCSI_MAX_VARLEN_CDB_SIZE or we need to
->>> hard code 260 in the max_cmd_len.
->>>
->> Yes that 260 needs to become SCSI_MAX_VARLEN_CDB_SIZE. The reason it
->> is not is because that code is much older than the definition of 
->> SCSI_MAX_VARLEN_CDB_SIZE.
->>
->>> Since SCSI_MAX_VARLEN_CDB_SIZE is really a useless constant (nothing
->>> depends on it), and internal packets in iscsi depend on this, it
->>> probably makes the most sense for this to be an iscsi local constant.
->>>
->> As you said below, this is not an iscsi limitation it is a scsi 
->> limitation. Logically it belongs to scsi.h near the varlen definitions.
->> If you prefer hard coded constants I don't mind, just that from the school
->> I came from they would fail me if I did that, even for a single user.
->>
->>> The value (260) also looks a bit bogus, isn't 262 the maximum possible
->>> size for a 0x7f variable length command?  The iSCSI maxiumum is far
->>> higher than this (but no protocol sends anything above the 0x7f maximum
->>> currently).
->>>
->> 260 comes from the scsi standard. The 8th byte of a scsi varlen header
->> is a one byte length specifier. (see struct scsi_varlen_cdb_hdr in scsi.h)
->> Now the standard says that the header must be 4 bytes aligned so the 
->> maximum that can be written in that byte is 252, plus the constant 8.
-> 
-> I don't think it can be alignment issues otherwise six byte commands
-> like READ_6/WRITE_6 would be illegal.  I don't think there are any
-> alignment requirements per se.  However, it does look like the
-> definition section of SAM-3:3.1.15 does say "... or a variable length of
-> between 12 and 260 bytes" with no reason given, so that will do.
-> 
 
-It's only for varlen. 
->From SCSI_Primary_Commands-3-spc3r23
-section 4.3.3 The variable length CDB formats:
+--AqsLC8rIMeq19msA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-"The ADDITIONAL CDB LENGTH field specifies the number of additional CDB bytes. 
-This value in the ADDITIONAL CDB LENGTH field shall be a multiple of 4"
+Maybe this is related to a change in the logic of CDROM_DRIVE_STATUS.
+Using test.c from http://marc.info/?l=linux-scsi&m=120231922209420&w=2
+there is a big difference in the responses from 2.6.24 (working) and
+2.6.25 (broken):
 
-> James
-> 
+		2.6.25		2.6.24
+empty drive	CDS_NO_DISC	CDS_TRAY_OPEN
+opening tray	CDS_TRAY_OPEN	CDS_TRAY_OPEN
+inserting disc	CDS_NO_DISC	waits for drive to settle, then CDS_DISK_OK
+drive setteled	CDS_DISK_OK	CDS_DISK_OK
 
-Thanks
-Boaz
+Please tell me if you need more data...
 
+    Ingo
+
+--AqsLC8rIMeq19msA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFIKb0m4XrXtQkN2NURAlD0AJ0ZlOkgnYzMEyJwWQvY6Ve7f0jznwCeM4+0
+rqsvrdYErrSZRpHUNogdXig=
+=9IoF
+-----END PGP SIGNATURE-----
+
+--AqsLC8rIMeq19msA--
