@@ -1,54 +1,55 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] drivers/scsi/qla1280.c; was Re: Buffered I/O to block device very slow and other SCSI issues...
-Date: Tue, 13 May 2008 01:58:04 -0700
-Message-ID: <20080513085804.GL41683@sgi.com>
-References: <20080319231654.GA103321673@sgi.com> <20080320010807.GA27620@sgi.com> <20080320032010.e640c52a.akpm@linux-foundation.org> <20080512061703.GC41683@sgi.com> <20080512171849.21d3508f.akpm@linux-foundation.org> <48294022.2070002@sgi.com>
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+Subject: Re: [PATCH 01/12] lib: create common ascii hex array
+Date: Tue, 13 May 2008 12:55:05 +0300 (EEST)
+Message-ID: <Pine.LNX.4.64.0805122218240.14152@wrl-59.cs.helsinki.fi>
+References: <1210619134.24092.51.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:32983 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756369AbYEMI6G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 May 2008 04:58:06 -0400
-Content-Disposition: inline
-In-Reply-To: <48294022.2070002@sgi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1210619134.24092.51.camel@brick>
+Sender: linux-ide-owner@vger.kernel.org
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide <linux-ide@vger.kernel.org>, linux-netdev <netdev@vger.kernel.org>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, Ingo Molnar <mingo@elte.hu>, Jason Wessel <jason.wessel@windriver.com>, David Howells <dhowells@redhat.com>, "ralf@linux-mips.org" <ralf@linux-mips.org>, Paul Mundt <lethal@linux-sh.org>, Paul Mackerras <paulus@samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jes Sorensen <jes@sgi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, dgc@sgi.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, stable@kernel.org
 
-On Tue, May 13, 2008 at 09:15:46AM +0200, Jes Sorensen wrote:
-> Andrew Morton wrote:
-> >>--- a/drivers/scsi/qla1280.c	2008-05-03 11:59:44.000000000 -0700
-> >>+++ b/drivers/scsi/qla1280.c	2008-05-10 21:32:23.451341969 -0700
-> >>@@ -2007,7 +2007,7 @@ qla1280_set_defaults(struct scsi_qla_hos
-> >> 		nv->bus[bus].config_2.req_ack_active_negation = 1;
-> >> 		nv->bus[bus].config_2.data_line_active_negation = 1;
-> >> 		nv->bus[bus].selection_timeout = 250;
-> >>-		nv->bus[bus].max_queue_depth = 256;
-> >>+		nv->bus[bus].max_queue_depth = 32;
-> >> 
-> >> 		if (IS_ISP1040(ha)) {
-> >> 			nv->bus[bus].bus_reset_delay = 3;
-> >>@@ -2051,7 +2051,7 @@ qla1280_config_target(struct scsi_qla_ho
-> >> 	status = qla1280_mailbox_command(ha, 0x0f, mb);
-> >> 
-> >> 	/* Save Tag queuing enable flag. */
-> >>-	flag = (BIT_0 << target) & mb[0];
-> >>+	flag = (BIT_0 << target);
-> >> 	if (nv->bus[bus].target[target].parameter.tag_queuing)
-> >> 		ha->bus_settings[bus].qtag_enables |= flag;
-> >
-> >Thanks.  I tagged this for a -stable backport (assuming that is
-> >appropriate?)
-> >
+On Mon, 12 May 2008, Harvey Harrison wrote:
+
+> Add a common hex array in hexdump.c so everyone can use it.
 > 
-> Sounds good, given the nature of this it should go into stable as well
-> as current.
+> Add a common hi/lo helper to avoid the shifting masking that is
+> done to get the upper and lower nibbles of a byte value.
+> 
+> Pull the pack_hex_byte helper from kgdb as it is opencoded many
+> places in the tree that will be consolidated.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  
+> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+> index 4d46e29..792bf0a 100644
+> --- a/include/linux/kernel.h
+> +++ b/include/linux/kernel.h
+> @@ -276,7 +276,17 @@ extern void print_hex_dump(const char *level, const char *prefix_str,
+>  				const void *buf, size_t len, bool ascii);
+>  extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+>  			const void *buf, size_t len);
+> -#define hex_asc(x)	"0123456789abcdef"[x]
+> +
+> +extern const char hex_asc[];
+> +#define hex_asc_lo(x)	hex_asc[((x) & 0x0f)]
+> +#define hex_asc_hi(x)	hex_asc[((x) & 0xf0) >> 4]
+> +
+> +static inline char *pack_hex_byte(char *buf, u8 byte)
+> +{
+> +	*buf++ = hex_asc_hi(byte);
+> +	*buf++ = hex_asc_lo(byte);
+> +	return buf;
+> +}
 
-I agree.
+Any idea how much this will bloat kernel once it has, lets say 100 
+users? 5k, 10k?
 
-> Acked-by: Jes Sorensen <jes@sgi.com>
 
-
-jeremy
+-- 
+ i.
