@@ -1,30 +1,32 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 0/4] dpt_i2o: 64 bit support (take 5)
-Date: Mon, 12 May 2008 22:42:20 -0700
-Message-ID: <20080512224220.5a87a119.akpm@linux-foundation.org>
-References: <20080501230211.GA19796@xs4all.net>
-	<20080506201055.12bf16c4.akpm@linux-foundation.org>
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Re: Open-FCoE Re-architecture Status
+Date: Tue, 13 May 2008 07:58:53 +0200
+Message-ID: <e2e108260805122258t7f284f27p11bad38eb1efa848@mail.gmail.com>
+References: <10A7D0016239E24092DEF05CCC582E43039F5DA0@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57308 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755352AbYEMFnI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2008 01:43:08 -0400
-In-Reply-To: <20080506201055.12bf16c4.akpm@linux-foundation.org>
+Received: from fg-out-1718.google.com ([72.14.220.153]:43470 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755635AbYEMF6y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 May 2008 01:58:54 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2036757fgg.17
+        for <linux-scsi@vger.kernel.org>; Mon, 12 May 2008 22:58:53 -0700 (PDT)
+In-Reply-To: <10A7D0016239E24092DEF05CCC582E43039F5DA0@fmsmsx411.amr.corp.intel.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <mikevs@xs4all.net>, linux-scsi@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>, miquels@cistron.nl, Rolf Eike Beer <eike-kernel@sf-tec.de>, James
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Robert W. Love" <robert.w.love@intel.com>
+Cc: linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Tue, 6 May 2008 20:10:55 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+On Tue, May 13, 2008 at 2:47 AM, Love, Robert W <robert.w.love@intel.com> wrote:
+> After a lot of planning and designing we've started to
+> reorganize the Open-FCoE kernel code.
 
-> I'll let someone else ponder ia64:
-> 
-> drivers/scsi/dpt_i2o.c:83: error: `PROC_IA64' undeclared here (not in a function)
-> drivers/scsi/dpt_i2o.c:83: error: initializer element is not constant
-> drivers/scsi/dpt_i2o.c:83: error: (near initialization for `DPTI_sig.dsProcessor')
+Hello Robert,
 
-fyi, this is still happening.
+Sorry if I'm asking something trivial, but does this apply to the FCoE
+initiator implementation or to the FCoE target implementation ?
+
+Bart.
