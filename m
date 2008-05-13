@@ -1,67 +1,57 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Tue, 13 May 2008 20:47:47 +0400
-Message-ID: <4829C633.2090301@vlnb.net>
-References: <200805021638.42972.bart.vanassche@gmail.com>	<20080502153306.GB7376@infradead.org>	<e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com>	<20080502155525.GA16353@infradead.org>	<e2e108260805040830i7d797c53o9757bae7243d6e27@mail.gmail.com>	<e2e108260805080802r1ad75926idc8654e2acfe014f@mail.gmail.com> <1210262043.12678.9.camel@blackadder>
+Date: Tue, 13 May 2008 20:48:19 +0400
+Message-ID: <4829C653.9050205@vlnb.net>
+References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <481DA2A4.10607@vlnb.net> <481DF822.7090905@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:47195 "EHLO
+Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:47216 "EHLO
 	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753176AbYEMQrs (ORCPT
+	by vger.kernel.org with ESMTP id S1755405AbYEMQsU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2008 12:47:48 -0400
-In-Reply-To: <1210262043.12678.9.camel@blackadder>
+	Tue, 13 May 2008 12:48:20 -0400
+In-Reply-To: <481DF822.7090905@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arne Redlich <agr@powerkom-dd.de>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Arne Redlich wrote:
-> Am Donnerstag, den 08.05.2008, 17:02 +0200 schrieb Bart Van Assche:
->> On Sun, May 4, 2008 at 5:30 PM, Bart Van Assche
->> <bart.vanassche@gmail.com> wrote:
->>> On Fri, May 2, 2008 at 5:55 PM, Christoph Hellwig <hch@infradead.org> wrote:
->>>> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
->>>>> Regarding scsi_execute_async(): I didn't know that this API is on its
->>>>> way out. What will it be replaced by, and when ?
->>>> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
->>>> ontop to build requests.
->>> Source reading learned me that the function scsi_execute_async() calls
->>> blk_execute_rq_nowait() with 1 as fourth argument, which means that
->>> the request is inserted at the head of the queue. This means that
->>> requests queued with scsi_execute_async() are executed before other
->>> queued requests, and that this function has LIFO (last in first out)
->>> semantics.
->>>
->>> All non-SCSI calls to blk_execute_rq() / blk_execute_rq_nowait() add
->>> requests at the end of the queue (except those calls for terminating
->>> I/O).
->>>
->>> What is the background of this special behavior of the SCSI subsystem ?
->> Is the linux-scsi mailing list the appropriate mailing list to post
->> questions like the above ?
+Boaz Harrosh wrote:
+> Vladislav Bolkhovitin wrote:
+>> Christoph Hellwig wrote:
+>>> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
+>>>> Regarding scsi_execute_async(): I didn't know that this API is on its
+>>>> way out. What will it be replaced by, and when ?
+>>> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
+>>> ontop to build requests.
+>> scsi_execute_async() is already a nice and simple helper function on top 
+>> blk_execute_rq_nowait(). What's the point then to remove it? Do you 
+>> consider that exposing scsi_execute_async() internals to its users is 
+>> better?
+>>
 > 
-> I guess this should
->  http://marc.info/?l=linux-scsi&m=116668527804801&w=2
-> answer your question.
+> The problem with it is the use of sg list to *hack* in bio's. Which totally 
+> ignores/duplicates block layer mechanisms. There is pending a large patchset
+> that removes the use of scsi_execute_async from sg/sr and friends to use blk_map_*
+> members and directly call blk_execute_*. The original patchset was written by
+> Mike Christie but is now brought up to date by Tomo. It should be submitted soon I think.
+> If you need good example of usage check out bsg.c it maps user-space data in all kind
+> of combinations. If you have kernel space memory it is even simpler.
 
-Thanks for pointing on it. There were another threads about that, e.g. 
-http://thread.gmane.org/gmane.linux.scsi/16498/focus=16784. So, there 
-was an agreement that the current LIFO requests submission behavior is 
-inappropriate and a good solution will be to add to scsi_execute_async() 
-one more argument to specify where to insert the request, in the tail or 
-in the head of the queue. The patch Bart sent basically implements 
-exactly that, with the only difference that the new argument passed 
-explicitly via new function scsi_execute_async_fifo(). There only thing 
-left is to update via another patch other users of scsi_execute_async() 
-to use new function, where necessary. Correct?
+Thanks for pointing on it. But it still remained unclear for me what's 
+the point in the scsi_execute_async() removal. Function 
+scsi_req_map_sg() looks pretty simple and straightforward, so I don't 
+see how the overall code can be simplified.
 
-I wouldn't mind if that will be done after the pending patchset removing 
-scsi_execute_async() will be applied for new scsi_execute_async() 
-substitute function. But it seems this patchset is pending for pretty 
-long time (a half a year? Or even more?). So, what does prevent it from 
-being applied? How long more are we going to wait for it?
+>>>> Bart.
+>>> ---end quoted text---
+>>>
+> 
+> If you need any help, please feel free to ask.
+> 
+> Boaz
+> 
+> 
 
-Vlad
