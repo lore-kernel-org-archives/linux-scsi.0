@@ -1,57 +1,68 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 2.6.25.1] Add scsi_execute_async_fifo()
-Date: Tue, 13 May 2008 20:48:19 +0400
-Message-ID: <4829C653.9050205@vlnb.net>
-References: <200805021638.42972.bart.vanassche@gmail.com> <20080502153306.GB7376@infradead.org> <e2e108260805020853r4c21fb98y3d4434a7fc95989c@mail.gmail.com> <20080502155525.GA16353@infradead.org> <481DA2A4.10607@vlnb.net> <481DF822.7090905@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/4] dpt_i2o: 64 bit support (take 5)
+Date: Tue, 13 May 2008 11:51:34 -0500
+Message-ID: <1210697494.3077.33.camel@localhost.localdomain>
+References: <20080501230211.GA19796@xs4all.net>
+	 <20080506201055.12bf16c4.akpm@linux-foundation.org>
+	 <20080512224220.5a87a119.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:47216 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755405AbYEMQsU (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:54235 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755141AbYEMQvi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2008 12:48:20 -0400
-In-Reply-To: <481DF822.7090905@panasas.com>
+	Tue, 13 May 2008 12:51:38 -0400
+In-Reply-To: <20080512224220.5a87a119.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Miquel van Smoorenburg <mikevs@xs4all.net>, linux-scsi@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>, miquels@cistron.nl, Rolf Eike Beer <eike-kernel@sf-tec.de>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Boaz Harrosh wrote:
-> Vladislav Bolkhovitin wrote:
->> Christoph Hellwig wrote:
->>> On Fri, May 02, 2008 at 05:53:22PM +0200, Bart Van Assche wrote:
->>>> Regarding scsi_execute_async(): I didn't know that this API is on its
->>>> way out. What will it be replaced by, and when ?
->>> blk_execute_rq/blk_execute_rq_nowait plus the block level helpers built
->>> ontop to build requests.
->> scsi_execute_async() is already a nice and simple helper function on top 
->> blk_execute_rq_nowait(). What's the point then to remove it? Do you 
->> consider that exposing scsi_execute_async() internals to its users is 
->> better?
->>
+On Mon, 2008-05-12 at 22:42 -0700, Andrew Morton wrote:
+> On Tue, 6 May 2008 20:10:55 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
 > 
-> The problem with it is the use of sg list to *hack* in bio's. Which totally 
-> ignores/duplicates block layer mechanisms. There is pending a large patchset
-> that removes the use of scsi_execute_async from sg/sr and friends to use blk_map_*
-> members and directly call blk_execute_*. The original patchset was written by
-> Mike Christie but is now brought up to date by Tomo. It should be submitted soon I think.
-> If you need good example of usage check out bsg.c it maps user-space data in all kind
-> of combinations. If you have kernel space memory it is even simpler.
+> > I'll let someone else ponder ia64:
+> > 
+> > drivers/scsi/dpt_i2o.c:83: error: `PROC_IA64' undeclared here (not in a function)
+> > drivers/scsi/dpt_i2o.c:83: error: initializer element is not constant
+> > drivers/scsi/dpt_i2o.c:83: error: (near initialization for `DPTI_sig.dsProcessor')
+> 
+> fyi, this is still happening.
 
-Thanks for pointing on it. But it still remained unclear for me what's 
-the point in the scsi_execute_async() removal. Function 
-scsi_req_map_sg() looks pretty simple and straightforward, so I don't 
-see how the overall code can be simplified.
+OK, this fixes it on my ia64.
 
->>>> Bart.
->>> ---end quoted text---
->>>
-> 
-> If you need any help, please feel free to ask.
-> 
-> Boaz
-> 
-> 
+I think this fix is the best approach, since -1 and 0xff mean unknown
+processor type to the management tool.  The correct fix is obviously to
+add the definition of PROC_IA64 to dpt/dptsig.h, but I have no idea what
+the value should be.
+
+James
+
+---
+
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 8508816..bfa9f09 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -80,7 +80,7 @@ static dpt_sig_S DPTI_sig = {
+ #ifdef __i386__
+ 	PROC_INTEL, PROC_386 | PROC_486 | PROC_PENTIUM | PROC_SEXIUM,
+ #elif defined(__ia64__)
+-	PROC_INTEL, PROC_IA64,
++	PROC_INTEL, -1,
+ #elif defined(__sparc__)
+ 	PROC_ULTRASPARC, PROC_ULTRASPARC,
+ #elif defined(__alpha__)
+@@ -1973,7 +1973,7 @@ static void adpt_ia64_info(sysInfo_S* si)
+ 	// This is all the info we need for now
+ 	// We will add more info as our new
+ 	// managmenent utility requires it
+-	si->processorType = PROC_IA64;
++	si->processorType = 0xff;
+ }
+ #endif
+ 
+
 
