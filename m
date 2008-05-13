@@ -1,54 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Build error: `.exit.text' referenced in section `.rodata'
-Date: Tue, 13 May 2008 09:59:17 -0500
-Message-ID: <1210690758.3077.23.camel@localhost.localdomain>
-References: <20080511151902.GA733@ds20.borg.net>
-	 <1210524907.3199.6.camel@localhost.localdomain>
-	 <20080511192007.GB724@ds20.borg.net> <20080512115255.GA16942@ds20.borg.net>
-	 <1210600904.3078.1.camel@localhost.localdomain>
-	 <20080513143112.GA21274@jurassic.park.msu.ru>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: Open-FCoE Re-architecture Status
+Date: Tue, 13 May 2008 08:39:03 -0700
+Message-ID: <10A7D0016239E24092DEF05CCC582E43039F5FE1__22346.6189265766$1210693527$gmane$org@fmsmsx411.amr.corp.intel.com>
+References: <10A7D0016239E24092DEF05CCC582E43039F5DA0@fmsmsx411.amr.corp.intel.com> <e2e108260805122258t7f284f27p11bad38eb1efa848@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-alpha-owner@vger.kernel.org>
-In-Reply-To: <20080513143112.GA21274@jurassic.park.msu.ru>
-Sender: linux-alpha-owner@vger.kernel.org
-To: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: dl8bcu@dl8bcu.de, rth@twiddle.net, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:51218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756020AbYEMPjj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 May 2008 11:39:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <e2e108260805122258t7f284f27p11bad38eb1efa848@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Tue, 2008-05-13 at 18:31 +0400, Ivan Kokshaysky wrote:
-> On Mon, May 12, 2008 at 09:01:44AM -0500, James Bottomley wrote:
-> > > With gcc 4.2.3 I get the same error. The noinline patch fixes it again.
-> > > 
-> > >    text    data     bss     dec     hex filename
-> > > 6721720  624416  397508 7743644  76289c vmlinux-gcc-4.2.3
-> > 
-> > OK, so it's an unfixed bug in gcc, and it looks to be specific to the
-> > alpha backend.
-> 
-> No, other architectures are just lucky that the compiler decides
-> a) not to generate a jump table for switch statement in sd_major() and/or
-> b) not to inline this function.
-> 
-> I have a similar test case that fails on x86 as well.
+>On Tue, May 13, 2008 at 2:47 AM, Love, Robert W
+<robert.w.love@intel.com>
+>wrote:
+>> After a lot of planning and designing we've started to
+>> reorganize the Open-FCoE kernel code.
+>
+>Hello Robert,
+>
+>Sorry if I'm asking something trivial, but does this apply to the FCoE
+>initiator implementation or to the FCoE target implementation ?
 
-But if that's true then the whole basis for our section based discards
-is bogus, because the statement generating the jump table could be
-inside the actual function body instead of being inlined, so if it's
-failing on x86 as well, we likely need it fixed there too.
+The focus is on the initiator, but it may have some impact on the
+target. My plan is to get the initiator an acceptable architecture and
+then see if we can fit the target in. 
 
-> > if the compiler chooses to inline a function, it has to
-> > respect the sectional (and other constraints) of the outer function.
-> > Can someone file a bug report with the relevant compiler people?
-> 
-> It would be good, but in the meantime the 'noinline' fix seems to be
-> a most sensible option...
+If you're unaware, we have a target implementation that is based on a
+2.6.23 tree on our website. Unfortunately, it's not getting any
+attention right now. Tomo also ported some of our code to userspace, but
+I believe that effort is relatively untested. So, after the initiator
+work is done, and time permitting, I'd like to revisit the target and
+see if we can either get the userspace port going or add some hooks into
+the initiator for an out-of-kernel target.
 
-We can certainly add it as a short term option.  However, given the push
-in certain quarters to make even more use of sections as a means of
-discarding code, we're going to have to ask someone to fix the compiler.
-
-James
-
-
+If anyone has good ideas I'm all ears, we're just dedicated to the
+initiator for the time being.
