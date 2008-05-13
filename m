@@ -1,59 +1,46 @@
-From: malahal@us.ibm.com
-Subject: Re: blk request timeout handler against 2.6.26
-Date: Mon, 12 May 2008 20:20:12 -0700
-Message-ID: <20080513032012.GC9511@us.ibm.com>
-References: <20080503020000.GU14976@parisc-linux.org> <20080507074357.GP329@kernel.dk>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/10] qla2xxx: updates for 2.6.26 [8.02.01-k3].
+Date: Mon, 12 May 2008 22:19:48 -0700
+Message-ID: <20080513051948.GN22377@plap4.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:51981 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754994AbYEMDUO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 May 2008 23:20:14 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4D3KDG5018438
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2008 23:20:13 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4D3KDsk171454
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2008 21:20:13 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4D3KDtH010173
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2008 21:20:13 -0600
+Received: from avexch1.qlogic.com ([198.70.193.115]:52191 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754651AbYEMFTt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 May 2008 01:19:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20080507074357.GP329@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Add missing queue lock in blk_complete_request(). Ran disktest for few
-hours and it works fine with this patch.
+This patchset contains another round of fixes/updates for 2.6.26.
 
-Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+ drivers/scsi/qla2xxx/qla_attr.c    |   13 ++++++++++---
+ drivers/scsi/qla2xxx/qla_def.h     |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    3 +++
+ drivers/scsi/qla2xxx/qla_inline.h  |    4 ++++
+ drivers/scsi/qla2xxx/qla_isr.c     |   27 ++++-----------------------
+ drivers/scsi/qla2xxx/qla_mbx.c     |   12 ++++--------
+ drivers/scsi/qla2xxx/qla_mid.c     |   18 +++++++++---------
+ drivers/scsi/qla2xxx/qla_os.c      |   16 +++++++++-------
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 9 files changed, 45 insertions(+), 52 deletions(-)
 
-diff -r c06b3eb1f516 block/blk-core.c
---- a/block/blk-core.c	Wed May 07 20:07:12 2008 -0700
-+++ b/block/blk-core.c	Wed May 07 20:17:03 2008 -0700
-@@ -1856,6 +1856,10 @@
-  */
- void blk_complete_request(struct request *req)
- {
-+	unsigned long flags;
-+	struct request_queue *q = req->q;
-+	int rc;
-+
- 	/*
- 	 * We don't have to worry about this one timing out any more.
- 	 * If we are unable to remove the timer, then the command
-@@ -1864,7 +1868,10 @@
- 	 * that function could really be.  It might be on another processor,
- 	 * etc, etc.
- 	 */
--	if (!blk_delete_timer(req))
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	rc = blk_delete_timer(req);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+	if (!rc)
- 		return;
- 
- 	__blk_complete_request(req);
+here's the commits:
+
+- Return correct port_type to FC-transport for Vports.
+- Display driver version at module init-time.
+- Correct locking within MSI-X interrupt handlers.
+- firmware semaphore to mutex
+- Convert vport_sem to a mutex
+- Don't depend on mailbox return values while enabling FCE tracing.
+- Extend the 'fw_dump' SYSFS node the ability to initiate a firmware dump.
+- Disable local-interrupts while polling for RISC status.
+- Revert "qla2xxx: Validate mid-layer 'underflow' during check-condition handling."
+- Update version number to 8.02.01-k3.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
