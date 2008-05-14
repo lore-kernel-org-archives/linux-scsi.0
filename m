@@ -1,73 +1,58 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: lockdep whine in 2.6.26-rc2-mm1
-Date: Wed, 14 May 2008 00:09:33 -0700
-Message-ID: <20080514000933.56adc131.akpm@linux-foundation.org>
+From: Takuya Yoshikawa <yoshikawa.takuya@oss.ntt.co.jp>
+Subject: Re: PROBLEM: <AACRAID SCSI RAID DRIVER> in 2.6.25.3 -- reply to your
+ suggestions
+Date: Wed, 14 May 2008 17:13:29 +0900
+Message-ID: <482A9F29.3040805@oss.ntt.co.jp>
+References: <4828E995.3080509@oss.ntt.co.jp> <2EB68762-7B3A-4E0E-A1AB-4581C6011E10@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52355 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751066AbYENHKK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 May 2008 03:10:10 -0400
+Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:35571 "EHLO
+	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761635AbYENINZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 04:13:25 -0400
+In-Reply-To: <2EB68762-7B3A-4E0E-A1AB-4581C6011E10@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, =?ISO-8859-1?Q?Fernando_Luis_V=E1zquez_Cao?= <fernando@oss.ntt.co.jp>
+
+Reply to your suggestions,
+
+1. with the kernel parameters, **aacraid.expose_physicals=0, 
+aacraid.dacmode=0**:
+I tried both parameters, but failed.
+
+2. about "[PATCH] Stop using num_physpages in aacraid":
+I am not using this patch: I saw drivers/scsi/aacraid/aachba.c 
+(kernel-2.6.25.3)
+
+3. about other kernels
+Our machine normally runs with kernel-2.6.24 and
+this failure occurs only with kernel-2.6.25 and later, including 2.6.26-rc1
+
+Sincerely,
+-------------------------------------------------------------
+Takuya Yoshikawa @ NTT Open Source Software Center
+e-mail: yoshikawa.takuya@oss.ntt.co.jp
+-------------------------------------------------------------
 
 
-=============================================
-[ INFO: possible recursive locking detected ]
-2.6.26-rc2-mm1 #15
----------------------------------------------
-modprobe/942 is trying to acquire lock:
- (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
-
-but task is already holding lock:
- (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
-
-other info that might help us debug this:
-1 lock held by modprobe/942:
- #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
-
-stack backtrace:
-Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
-
-Call Trace:
- [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
- [<ffffffff8100c50f>] ? restore_args+0x0/0x30
- [<ffffffff811b431e>] ? device_add+0x43d/0x57a
- [<ffffffff81057276>] lock_acquire+0x91/0xb7
- [<ffffffff811b431e>] ? device_add+0x43d/0x57a
- [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
- [<ffffffff811b431e>] ? device_add+0x43d/0x57a
- [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
- [<ffffffff811b431e>] device_add+0x43d/0x57a
- [<ffffffff811b4471>] device_register+0x16/0x1b
- [<ffffffff811b4555>] device_create+0xdf/0x112
- [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
- [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
- [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
- [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
- [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
- [<ffffffff810abd09>] ? exact_match+0x0/0x9
- [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
- [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
- [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
- [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
- [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
- [<ffffffff810c45bc>] ? seq_release+0x0/0x56
- [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
-
-Driver 'sr' needs updating - please use bus_type methods
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 3:0:0:0: Attached scsi CD-ROM sr0
-sr 3:0:0:0: Attached scsi generic sg1 type 5
-
-
-Full dmesg: http://userweb.kernel.org/~akpm/dmesg-t61p.txt
-Config: http://userweb.kernel.org/~akpm/config-t61p.txt
-
-
+> Not a panic, merely a problem probing the physical devices. It may 
+> seem 'forever' but that is what happens when it must issue commands to 
+> every target and lun on two physical busses. You may be able to 
+> mitigate this with the kernel parameter aacraid.expose_physicals=0, or 
+> aacraid.dacmode=0
+>
+> Status 8193 (0x2003) is not a known valid response code from the 
+> Firmware, it is a result of the Firmware not processing the command in 
+> the first place.
+>
+> Could be a result of 'Subject: Re: [PATCH] Stop using num_physpages in 
+> aacraid '? Could you revert that one out to see? Could you instrument 
+> the return value to the new referenced function 
+> dma_get_required_mask(&dev->pdev->dev) that is incorporated in that 
+> patch?
+>
+> Sincerely -- Mark Salyzyn
