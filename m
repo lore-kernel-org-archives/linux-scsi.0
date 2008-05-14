@@ -1,58 +1,29 @@
-From: Takuya Yoshikawa <yoshikawa.takuya@oss.ntt.co.jp>
-Subject: Re: PROBLEM: <AACRAID SCSI RAID DRIVER> in 2.6.25.3 -- reply to your
- suggestions
-Date: Wed, 14 May 2008 17:13:29 +0900
-Message-ID: <482A9F29.3040805@oss.ntt.co.jp>
-References: <4828E995.3080509@oss.ntt.co.jp> <2EB68762-7B3A-4E0E-A1AB-4581C6011E10@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 01/12] lib: create common ascii hex array
+Date: Wed, 14 May 2008 12:26:10 +0100
+Message-ID: <1507.1210764370@redhat.com>
+References: <1210619134.24092.51.camel@brick>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:35571 "EHLO
-	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761635AbYENINZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 04:13:25 -0400
-In-Reply-To: <2EB68762-7B3A-4E0E-A1AB-4581C6011E10@adaptec.com>
+Received: from mx1.redhat.com ([66.187.233.31]:53460 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755821AbYENL0t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 May 2008 07:26:49 -0400
+In-Reply-To: <1210619134.24092.51.camel@brick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, =?ISO-8859-1?Q?Fernando_Luis_V=E1zquez_Cao?= <fernando@oss.ntt.co.jp>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: dhowells@redhat.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide <linux-ide@vger.kernel.org>, linux-netdev <netdev@vger.kernel.org>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, Ingo Molnar <mingo@elte.hu>, Jason Wessel <jason.wessel@windriver.com>, "ralf@linux-mips.org" <ralf@linux-mips.org>, Paul Mundt <lethal@linux-sh.org>, Paul Mackerras <paulus@samba.org>
 
-Reply to your suggestions,
+Harvey Harrison <harvey.harrison@gmail.com> wrote:
 
-1. with the kernel parameters, **aacraid.expose_physicals=0, 
-aacraid.dacmode=0**:
-I tried both parameters, but failed.
+> Add a common hex array in hexdump.c so everyone can use it.
+> 
+> Add a common hi/lo helper to avoid the shifting masking that is
+> done to get the upper and lower nibbles of a byte value.
+> 
+> Pull the pack_hex_byte helper from kgdb as it is opencoded many
+> places in the tree that will be consolidated.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-2. about "[PATCH] Stop using num_physpages in aacraid":
-I am not using this patch: I saw drivers/scsi/aacraid/aachba.c 
-(kernel-2.6.25.3)
-
-3. about other kernels
-Our machine normally runs with kernel-2.6.24 and
-this failure occurs only with kernel-2.6.25 and later, including 2.6.26-rc1
-
-Sincerely,
--------------------------------------------------------------
-Takuya Yoshikawa @ NTT Open Source Software Center
-e-mail: yoshikawa.takuya@oss.ntt.co.jp
--------------------------------------------------------------
-
-
-> Not a panic, merely a problem probing the physical devices. It may 
-> seem 'forever' but that is what happens when it must issue commands to 
-> every target and lun on two physical busses. You may be able to 
-> mitigate this with the kernel parameter aacraid.expose_physicals=0, or 
-> aacraid.dacmode=0
->
-> Status 8193 (0x2003) is not a known valid response code from the 
-> Firmware, it is a result of the Firmware not processing the command in 
-> the first place.
->
-> Could be a result of 'Subject: Re: [PATCH] Stop using num_physpages in 
-> aacraid '? Could you revert that one out to see? Could you instrument 
-> the return value to the new referenced function 
-> dma_get_required_mask(&dev->pdev->dev) that is incorporated in that 
-> patch?
->
-> Sincerely -- Mark Salyzyn
+Acked-by: David Howells <dhowells@redhat.com>
