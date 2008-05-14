@@ -1,117 +1,78 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Wed, 14 May 2008 17:01:57 +0200
-Message-ID: <482AFEE5.2090300@suse.de>
-References: <1210700704.16304.1.camel@localhost.localdomain> <482A87EF.4010002@suse.de> <482AF9B0.7090307@emulex.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: lockdep whine in 2.6.26-rc2-mm1
+Date: Wed, 14 May 2008 08:56:39 -0700
+Message-ID: <20080514155639.GB28594@kroah.com>
+References: <20080514000933.56adc131.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50668 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756718AbYENPB6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 May 2008 11:01:58 -0400
-In-Reply-To: <482AF9B0.7090307@emulex.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:42373 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758720AbYENP6H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 11:58:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20080514000933.56adc131.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Dave Young <hidave.darkstar@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-Hi James,
+On Wed, May 14, 2008 at 12:09:33AM -0700, Andrew Morton wrote:
+> 
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.26-rc2-mm1 #15
+> ---------------------------------------------
+> modprobe/942 is trying to acquire lock:
+>  (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
+> 
+> but task is already holding lock:
+>  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+> 
+> other info that might help us debug this:
+> 1 lock held by modprobe/942:
+>  #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+> 
+> stack backtrace:
+> Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
+> 
+> Call Trace:
+>  [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
+>  [<ffffffff8100c50f>] ? restore_args+0x0/0x30
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff81057276>] lock_acquire+0x91/0xb7
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
+>  [<ffffffff811b431e>] device_add+0x43d/0x57a
+>  [<ffffffff811b4471>] device_register+0x16/0x1b
+>  [<ffffffff811b4555>] device_create+0xdf/0x112
+>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>  [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
+>  [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
+>  [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
+>  [<ffffffff810abd09>] ? exact_match+0x0/0x9
+>  [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
+>  [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
+>  [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
+>  [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
+>  [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
+>  [<ffffffff810c45bc>] ? seq_release+0x0/0x56
+>  [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
 
-James Smart wrote:
->=20
->=20
-> Hannes Reinecke wrote:
->>> This patch was cut against scsi-misc-2.6, and depends on Mike=20
->>> Christies patches contained in the original thread.
->>>
->> Hmph.
->>
->> I don't quite agree with this one.
->> For once, /proc/scsi/scsi has been marked as 'obsolete' for quite so=
-me=20
->> time now,
->> so adding other usages to this is of questionable value.
->=20
-> Um... I didn't think I added a new use for it.  The existing data had=
- to
-> be extended by an additional argument.
->=20
-Well, extending the existing structure comes quite close to adding anot=
-her
-usage ...
+I'm guessing that this is due to David's "change the semaphore to a
+mutex" patch that you have in your tree, but I refused to take as I was
+worried about just this issue :)
 
->>
->> And we've actually have a similar issue when developing the SCSI=20
->> device_handler stuff where we also have a device list to maintain.
->>
->> Seeing there is quite some overlap between those two cases I think w=
-e=20
->> should come up with a way of handling these things properly, ie tied
->> into sysfs.
->=20
-> Ok - but I see it as a two part process. I am not signing up for repl=
-acing
-> the device list infrastructure.  But, now that there is target queue =
-depth
-> management in the midlayer, I believe we should be taking advantage o=
-f it.
-> I'd rather see the additional field go in, then see a separate effort=
- to
-> replace/collapse the device lists...
->=20
-Ok, agreed. It makes sense to have it now and update the infrastructure
-later.
+David, any thoughts?
 
->> So, what we should do here is
->> a) add a 'can_queue' sysfs attribute to the starget (which we can=20
->> nowadays, as the starget is a proper sysfs object)
->=20
-> Um, it exists under the /sys/devices tree (the base object) but there=
- is no
-> class representation. Are you requesting this goes on the base object=
- ?
-> I thought we avoided this.
-Yes. Although I can't figure out _why_.
-We nowadays have perfectly valid scsi_target kobj, which can (and will =
-if
-CONFIG_SYSFS_DEPRECATED is not set) be displayed in sysfs.
+> Driver 'sr' needs updating - please use bus_type methods
 
-> I guess it can, but as it's scsi-ish, I would
-> think it more appropriate to formally create a scsi_target class and =
-put
-> scsi attributes there.  (but I was avoiding that too)
->=20
-We don't have to. It's just the once upon a time a class object was
-used to access the underlying object. But nowadays the destinction
-between class_objects and 'normal' objects is gone so there's hardly
-any point in creating one.
+This is not the same issue, last I looked Kay and James were working on
+resolving this.
 
-I personally don't have a problem with putting the 'generic' SCSI
-sysfs attributes into the kobj itself and getting rid of the class
-devices for it (or rather, make it a link).
-And, actually, plan to do some patches for it :-)
+thanks,
 
-But that's slightly off-topic here.
-And as we don't have a consensus about the future sysfs layout
-yet it hardly makes any sense to discuss the placement of target
-specific attributes.
-
-So:
-Acked-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+greg k-h
