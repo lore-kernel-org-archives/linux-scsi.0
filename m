@@ -1,48 +1,73 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: 2.6.26-rc2-mm1 (SCSI_DH build errors)
-Date: Wed, 14 May 2008 14:13:48 -0700
-Message-ID: <20080514141348.e71feed6.randy.dunlap@oracle.com>
-References: <20080514010129.4f672378.akpm@linux-foundation.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
+Date: Wed, 14 May 2008 17:50:58 -0400
+Message-ID: <482B5EC2.7010302@emulex.com>
+References: <1210700704.16304.1.camel@localhost.localdomain> <1210793893.3075.6.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:54332 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbYENVPU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 17:15:20 -0400
-In-Reply-To: <20080514010129.4f672378.akpm@linux-foundation.org>
+Received: from emulex.emulex.com ([138.239.112.1]:52777 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbYENVvJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 17:51:09 -0400
+In-Reply-To: <1210793893.3075.6.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, hare@suse.de, scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 14 May 2008 01:01:29 -0700 Andrew Morton wrote:
+James Bottomley wrote:
+> Just from a point of first principles, what makes you think the target
+> port queue depth of an array is anything like constant?  All the
+> information I've got back from array vendors over the years leads me to
+> conclude that it's dynamically determined based on resources available
+> at the time the array services the request.  Additionally, I've been
+> told that even a heuristic rule of thumb value varies with the array
+> cache size (which is a quantity not reflected in the inquiry strings).
 
-> 
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.26-rc2/2.6.26-rc2-mm1/
+Well, I know there are fixed limits based on the context limits in their
+interface chips. Tachyons are a good example of this, especially some of
+the older ones. There are also a lot of arrays that are sold in fixed
+configurations so they don't have the variability you mention.
 
-SCSI_DH has some problems when CONFIG_SCSI=n:
+But, I agree with you. There are a number of arrays where it does vary
+based on the configuration of the array that isn't reflected by the
+Inquiry strings. And, there are others that melt down based on how busy
+they are internally. I've also seen others melt down because the cmd
+storm they are receiving overwhelms them so badly they can't generate
+the TASK_SET_FULL responses. What I saw work in many of these cases was
+the introduction of a tgt limit, especially as manipulating it as an
+aggregate of all the lun queue depths never worked right.
 
-drivers/built-in.o: In function `activate_path':
-dm-mpath.c:(.text+0x18a292): undefined reference to `scsi_dh_activate'
-drivers/built-in.o: In function `multipath_ctr':
-dm-mpath.c:(.text+0x18a6f0): undefined reference to `scsi_dh_handler_exist'
-make[1]: *** [.tmp_vmlinux1] Error 1
+So - you're right, it isn't always the case they are static. But, static
+is a good starting point. And if there's a sysfs tunable on top of it,
+to tailor for the configuration, you solve much of this variability
+argument.
 
+> My best guess for the way of handling this is that we should be using
+> the Doug Leaford track_queue_full infrastructure but on a per target
+> bases.
 
-#
-# SCSI device support
-#
-CONFIG_RAID_ATTRS=y
-# CONFIG_SCSI is not set
-# CONFIG_SCSI_DMA is not set
-# CONFIG_SCSI_NETLINK is not set
-CONFIG_SCSI_DH=y
-CONFIG_SCSI_DH_RDAC=y
-CONFIG_SCSI_DH_HP_SW=y
-CONFIG_SCSI_DH_EMC=y
+I don't fully agree, as it really depends on whether the queue fulls,
+reported on a lun level, really apply to a target level resource.
+Additionally, the queue_full handling has issues due to: a) the target
+has to generate the queue_fulls, and your storm may have overwhelmed
+it by several degrees. You've killed the array performance while you
+are hoping to level out the load; b) there's always questions on how/when you
+ramp up and at what rate, which is confused again if the queue full
+wasn't because of target-level resources. We also have to be careful
+that there aren't two queue full handlers working at the same time - one
+at the target level, and another at the lun level (which is in the LLDs
+currently).
 
+Many times, having a target limit was the simplest knob with the best
+bang for the buck. It was also the easiest to explain to admins on
+its effect on array load  (try explaining those cyclical ramp ups/downs
+to an admin and why they can't set a knob and start to get consistent
+behavior).
 
----
-~Randy
+There is merit in both, but I'm sticking with the most bang for the buck.
+
+-- james s
