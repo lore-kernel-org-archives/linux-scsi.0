@@ -1,86 +1,73 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Wed, 14 May 2008 08:34:23 +0200
-Message-ID: <482A87EF.4010002@suse.de>
-References: <1210700704.16304.1.camel@localhost.localdomain>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: lockdep whine in 2.6.26-rc2-mm1
+Date: Wed, 14 May 2008 00:09:33 -0700
+Message-ID: <20080514000933.56adc131.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:35428 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750866AbYENGeY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 May 2008 02:34:24 -0400
-In-Reply-To: <1210700704.16304.1.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52355 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751066AbYENHKK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 May 2008 03:10:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-Hi James,
 
-James Smart wrote:
-> This patch, discussed in the initial thread on target can_queue limit=
-s
-> (see  http://marc.info/?l=3Dlinux-scsi&m=3D120944296225094&w=3D2 )
-> allows the target can_queue limit to be obtained from the device list=
- based on
-> Inquiry data obtained during scan.
->=20
-> I have pinged several of the array vendors to supply target-port leve=
-l values
-> for their arrays. Hopefully, we will see them populate the device lis=
-t with some
-> real values shortly.
->=20
-I know :-)
+=============================================
+[ INFO: possible recursive locking detected ]
+2.6.26-rc2-mm1 #15
+---------------------------------------------
+modprobe/942 is trying to acquire lock:
+ (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
 
-> This patch was cut against scsi-misc-2.6, and depends on Mike Christi=
-es patches
-> contained in the original thread.
->=20
-Hmph.
+but task is already holding lock:
+ (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
 
-I don't quite agree with this one.
-=46or once, /proc/scsi/scsi has been marked as 'obsolete' for quite som=
-e time now,
-so adding other usages to this is of questionable value.
+other info that might help us debug this:
+1 lock held by modprobe/942:
+ #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
 
-And we've actually have a similar issue when developing the SCSI device=
-_handler
-stuff where we also have a device list to maintain.
+stack backtrace:
+Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
 
-Seeing there is quite some overlap between those two cases I think we s=
-hould
-come up with a way of handling these things properly, ie tied into sysf=
-s.
+Call Trace:
+ [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
+ [<ffffffff8100c50f>] ? restore_args+0x0/0x30
+ [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+ [<ffffffff81057276>] lock_acquire+0x91/0xb7
+ [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+ [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
+ [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+ [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
+ [<ffffffff811b431e>] device_add+0x43d/0x57a
+ [<ffffffff811b4471>] device_register+0x16/0x1b
+ [<ffffffff811b4555>] device_create+0xdf/0x112
+ [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+ [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+ [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
+ [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
+ [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
+ [<ffffffff810abd09>] ? exact_match+0x0/0x9
+ [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
+ [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
+ [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
+ [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
+ [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
+ [<ffffffff810c45bc>] ? seq_release+0x0/0x56
+ [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
 
-So, what we should do here is
-a) add a 'can_queue' sysfs attribute to the starget (which we can nowad=
-ays, as
-   the starget is a proper sysfs object)
-b) define a 'modalias' style definition for matching SCSI vendor/model/=
-rev
-   and create a scsi_devinfo module from which all these special cases
-   can be invoked from.
+Driver 'sr' needs updating - please use bus_type methods
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 3:0:0:0: Attached scsi CD-ROM sr0
+sr 3:0:0:0: Attached scsi generic sg1 type 5
 
-That would also allow us to get rid of the device tables in the device_=
-handler
-modules which I never really liked.
 
-What do you think?
+Full dmesg: http://userweb.kernel.org/~akpm/dmesg-t61p.txt
+Config: http://userweb.kernel.org/~akpm/config-t61p.txt
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
