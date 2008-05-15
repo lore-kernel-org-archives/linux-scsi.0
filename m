@@ -1,78 +1,215 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG: unable to handle kernel paging request - scsi_bus_uevent
-Date: Wed, 14 May 2008 19:48:05 -0700
-Message-ID: <20080514194805.7ff54c79.akpm@linux-foundation.org>
-References: <c4e36d110805140223w640a4e1erf613ce27284e78ff@mail.gmail.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 6/7] scsi_dh: Update RDAC device handler
+Date: Wed, 14 May 2008 19:50:30 -0700
+Message-ID: <1210819830.21974.268.camel@chandra-ubuntu>
+References: <20080514144334.09AA610B5DF@craiglockhart-ipmi.suse.de>
+Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35990 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750720AbYEOCsc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 May 2008 22:48:32 -0400
-In-Reply-To: <c4e36d110805140223w640a4e1erf613ce27284e78ff@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20080514144334.09AA610B5DF@craiglockhart-ipmi.suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Wed, 2008-05-14 at 16:43 +0200, Hannes Reinecke wrote:
+> This patch updates the RDAC device handler to
+> refuse to attach to devices not supporting the
+> RDAC vpd pages.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_rdac.c |   84 +++++++++++++++++----------
+>  1 files changed, 53 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+> index e61cde6..dd9f515 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+> @@ -173,6 +173,11 @@ struct rdac_dh_data {
+>  #define RDAC_STATE_ACTIVE	0
+>  #define RDAC_STATE_PASSIVE	1
+>  	unsigned char		state;
+> +
+> +#define RDAC_LUN_UNOWNED	0
+> +#define RDAC_LUN_OWNED		1
+> +#define RDAC_LUN_AVT		2
+> +	char			lun_state;
+>  	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+>  	union			{
+>  		struct c2_inquiry c2;
+> @@ -214,7 +219,7 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
+>  		return NULL;
+>  	}
+> 
+> -	memset(&rq->cmd, 0, BLK_MAX_CDB);
+> +	memset(rq->cmd, 0, BLK_MAX_CDB);
+>  	rq->sense = h->sense;
+>  	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+>  	rq->sense_len = 0;
+> @@ -354,14 +359,16 @@ static int get_lun(struct scsi_device *sdev)
+>  	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
+>  	if (err == SCSI_DH_OK) {
+>  		inqp = &h->inq.c8;
+> -		h->lun = inqp->lun[7]; /* currently it uses only one byte */
+> +		if (inqp->page_code != 0xc8)
+> +			return SCSI_DH_NOSYS;
+> +		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
+> +		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
+> +			return SCSI_DH_NOSYS;
+> +		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
+>  	}
+>  	return err;
+>  }
+> 
+> -#define RDAC_OWNED	0
+> -#define RDAC_UNOWNED	1
+> -#define RDAC_FAILED	2
+>  static int check_ownership(struct scsi_device *sdev)
+>  {
+>  	int err;
+> @@ -370,17 +377,23 @@ static int check_ownership(struct scsi_device *sdev)
+> 
+>  	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
+>  	if (err == SCSI_DH_OK) {
+> -		err = RDAC_UNOWNED;
+>  		inqp = &h->inq.c9;
+>  		/*
+>  		 * If in AVT mode or if the path already owns the LUN,
+>  		 * return RDAC_OWNED;
+>  		 */
 
-(cc linux-scsi)
+With the code change below the comment above is incorrect, please
+remove.
+> -		if (((inqp->avte_cvp >> 7) == 0x1) ||
+> -				 ((inqp->avte_cvp & 0x1) != 0))
+> -			err = RDAC_OWNED;
+> -	} else
+> -		err = RDAC_FAILED;
+> +		if ((inqp->avte_cvp >> 7) == 0x1) {
+> +			/* LUN in AVT mode */
+> +			sdev_printk(KERN_NOTICE, sdev,
+> +				    "%s: AVT mode detected\n",
+> +				    RDAC_NAME);
+> +			h->lun_state = RDAC_LUN_AVT;
+> +		} else if ((inqp->avte_cvp & 0x1) != 0) {
+> +			/* LUN was owned by the controller */
+> +			h->lun_state = RDAC_LUN_OWNED;
+> +		}
+> +	}
+> +
+>  	return err;
+>  }
+> 
+> @@ -478,24 +491,9 @@ static int rdac_activate(struct scsi_device *sdev)
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  	int err = SCSI_DH_OK;
+> 
+> -	if (h->lun == UNINITIALIZED_LUN) {
+> -		err = get_lun(sdev);
+> -		if (err != SCSI_DH_OK)
+> -			goto done;
+> -	}
+> -
+>  	err = check_ownership(sdev);
+> -	switch (err) {
+> -	case RDAC_UNOWNED:
+> -		break;
+> -	case RDAC_OWNED:
+> -		err = SCSI_DH_OK;
+> -		goto done;
+> -	case RDAC_FAILED:
+> -	default:
+> -		err = SCSI_DH_IO;
 
-On Wed, 14 May 2008 11:23:02 +0200 "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
+What does this change yield ? (under check_ownership)
 
-> Hello
+> +	if (err != SCSI_DH_OK)
+>  		goto done;
+> -	}
 > 
-> 
-> With kernel 2.6.26-rc2 - commit 093e2bb3cb5fcc37e3d02a193a3435ba64e9eb7b
-> (2 days old) I've got oops during boot (my setup T61, C2D, 2GB)
-> 
-> Zdenek
-> 
-> This oops is not deterministic
-> 
-> BUG: unable to handle kernel paging request at ffff81007ca27f78
-> IP: [<ffffffff81218497>] scsi_bus_uevent+0x7/0x30
-> PGD 8063 PUD a063 PMD 7ceb8163 PTE 800000007ca27160
-> Oops: 0000 [1] PREEMPT SMP DEBUG_PAGEALLOC
-> CPU 0
-> Modules linked in: uhci_hcd ohci_hcd ehci_hcd usbcore
-> Pid: 612, comm: udevtrigger Not tainted 2.6.26-rc2 #1
-> RIP: 0010:[<ffffffff81218497>]  [<ffffffff81218497>] scsi_bus_uevent+0x7/0x30
-> RSP: 0018:ffff81007c9ffdb8  EFLAGS: 00010286
-> RAX: ffff81007e152090 RBX: ffff81007ca28028 RCX: 0000000000000003
-> RDX: ffff81007e1521e9 RSI: ffff81007e152090 RDI: ffff81007ca28028
-> RBP: ffff81007c9ffdb8 R08: 00000000fffffffe R09: 000000000000000b
-> R10: ffffffff8140d3d1 R11: ffff81007c9ffcd8 R12: ffff81007e152090
-> R13: 0000000000000000 R14: ffffffff8147c8e0 R15: 0000000000000000
-> FS:  00007f57ce88a780(0000) GS:ffffffff81493000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: ffff81007ca27f78 CR3: 000000007cefb000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process udevtrigger (pid: 612, threadinfo ffff81007c9fe000, task
-> ffff81007c910000)
-> Stack:  ffff81007c9ffdd8 ffffffff81202bf4 ffff81007e02d738 ffff81007ca281d8
->  ffff81007c9ffe68 ffffffff81177cd5 ffffffff813e5dff 0000000000000000
->  ffff81007ca88cc0 ffff81007e152090 ffffffff8142831e 0000000000000000
-> Call Trace:
->  [<ffffffff81202bf4>] dev_uevent+0x84/0x120
->  [<ffffffff81177cd5>] kobject_uevent_env+0x1d5/0x3f0
->  [<ffffffff81177efb>] kobject_uevent+0xb/0x10
->  [<ffffffff81202eb8>] store_uevent+0x38/0xa0
->  [<ffffffff8120244e>] dev_attr_store+0x1e/0x20
->  [<ffffffff8111032a>] sysfs_write_file+0xca/0x140
->  [<ffffffff810b98eb>] vfs_write+0xcb/0x170
->  [<ffffffff810b9a80>] sys_write+0x50/0x90
->  [<ffffffff8100c50b>] system_call_after_swapgs+0x7b/0x80
-> 
-> 
-> Code: f5 ff 4d 85 e4 74 0f 49 8b 44 24 28 48 85 c0 74 05 48 89 df ff
-> d0 31 c0 48 8b 1c 24 4c 8b 64 24 08 c9 c3 90 55 48 89 f0 48 89 e5 <0f>
-> be 97 50 ff ff ff 48 c7 c6 43 d4 40 81 48 89 c7 31 c0 e8 21
-> RIP  [<ffffffff81218497>] scsi_bus_uevent+0x7/0x30
->  RSP <ffff81007c9ffdb8>
-> CR2: ffff81007ca27f78
+>  	if (!h->ctlr) {
+>  		err = initialize_controller(sdev);
+> @@ -508,8 +506,9 @@ static int rdac_activate(struct scsi_device *sdev)
+>  		if (err != SCSI_DH_OK)
+>  			goto done;
+>  	}
+> -
+> -	err = send_mode_select(sdev);
+> +	if (h->lun_state != RDAC_LUN_AVT &&
+> +	    !(h->lun_state & RDAC_LUN_OWNED))
 
+This can be simplified by (h->lun_state == RDAC_LUN_UNOWNED) ?
+> +		err = send_mode_select(sdev);
+>  done:
+>  	return err;
+>  }
+> @@ -606,6 +605,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
+>  	struct scsi_dh_data *scsi_dh_data;
+>  	struct rdac_dh_data *h;
+>  	unsigned long flags;
+> +	int err;
+> 
+>  	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
+>  			       + sizeof(*h) , GFP_KERNEL);
+> @@ -622,11 +622,33 @@ static int rdac_bus_attach(struct scsi_device *sdev)
+>  	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+>  	sdev->scsi_dh_data = scsi_dh_data;
+>  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+
+need an initialization for lun_state.
+
+> +
+> +	err = get_lun(sdev);
+> +	if (err != SCSI_DH_OK)
+> +		goto failed;
+> +
+> +	err = check_ownership(sdev);
+> +	if (err != SCSI_DH_OK)
+> +		goto failed;
+> +
+> +	sdev_printk(KERN_NOTICE, sdev,
+> +		    "%s: LUN %d (state %d)\n",
+> +		    RDAC_NAME, h->lun, h->lun_state);
+
+instead of printing lun_state as %d it would be more readable it is a
+string.
+
+> +
+>  	try_module_get(THIS_MODULE);
+> 
+> -	sdev_printk(KERN_NOTICE, sdev, "Attached %s\n", RDAC_NAME);
+> +	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", RDAC_NAME);
+> 
+>  	return 0;
+> +
+> +failed:
+> +	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+> +	sdev->scsi_dh_data = NULL;
+> +	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+> +	kfree(scsi_dh_data);
+> +	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
+> +		    RDAC_NAME);
+> +	return -EINVAL;
+>  }
+> 
+>  static void rdac_bus_detach( struct scsi_device *sdev )
+> @@ -645,7 +667,7 @@ static void rdac_bus_detach( struct scsi_device *sdev )
+>  		kref_put(&h->ctlr->kref, release_controller);
+>  	kfree(scsi_dh_data);
+>  	module_put(THIS_MODULE);
+> -	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", RDAC_NAME);
+> +	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", RDAC_NAME);
+>  }
+> 
+>  static int __init rdac_init(void)
