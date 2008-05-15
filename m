@@ -1,81 +1,178 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: lockdep whine in 2.6.26-rc2-mm1
-Date: Thu, 15 May 2008 13:50:30 +0800
-Message-ID: <a8e1da0805142250o72049dc4o3cd4ceff7fe3e01b@mail.gmail.com>
-References: <20080514000933.56adc131.akpm@linux-foundation.org>
-	 <20080514155639.GB28594@kroah.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/7] scsi_dh: Implement generic device table handling
+Date: Thu, 15 May 2008 09:16:56 +0200
+Message-ID: <482BE368.3070506@suse.de>
+References: <20080514144310.1EDBC10B5DF@craiglockhart-ipmi.suse.de> <1210819551.21974.252.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:36186 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbYEOFuc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 May 2008 01:50:32 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so165988tic.23
-        for <linux-scsi@vger.kernel.org>; Wed, 14 May 2008 22:50:31 -0700 (PDT)
-In-Reply-To: <20080514155639.GB28594@kroah.com>
-Content-Disposition: inline
+Received: from cantor.suse.de ([195.135.220.2]:45974 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752558AbYEOHRB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 May 2008 03:17:01 -0400
+In-Reply-To: <1210819551.21974.252.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+To: sekharan@us.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, dm-devel <dm-devel@redhat.com>
 
-On Wed, May 14, 2008 at 11:56 PM, Greg KH <greg@kroah.com> wrote:
-> On Wed, May 14, 2008 at 12:09:33AM -0700, Andrew Morton wrote:
->>
->> =============================================
->> [ INFO: possible recursive locking detected ]
->> 2.6.26-rc2-mm1 #15
->> ---------------------------------------------
->> modprobe/942 is trying to acquire lock:
->>  (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
->>
->> but task is already holding lock:
->>  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
->>
->> other info that might help us debug this:
->> 1 lock held by modprobe/942:
->>  #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
->>
->> stack backtrace:
->> Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
->>
->> Call Trace:
->>  [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
->>  [<ffffffff8100c50f>] ? restore_args+0x0/0x30
->>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
->>  [<ffffffff81057276>] lock_acquire+0x91/0xb7
->>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
->>  [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
->>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
->>  [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
->>  [<ffffffff811b431e>] device_add+0x43d/0x57a
->>  [<ffffffff811b4471>] device_register+0x16/0x1b
->>  [<ffffffff811b4555>] device_create+0xdf/0x112
->>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
->>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
->>  [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
->>  [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
->>  [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
->>  [<ffffffff810abd09>] ? exact_match+0x0/0x9
->>  [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
->>  [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
->>  [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
->>  [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
->>  [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
->>  [<ffffffff810c45bc>] ? seq_release+0x0/0x56
->>  [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
+Chandra Seetharaman wrote:
+> On Wed, 2008-05-14 at 16:43 +0200, Hannes Reinecke wrote:
+> <snip>
+>=20
+>> +
+>> +struct scsi_dh_devinfo_list {
+>> +	struct list_head node;
+>> +	char vendor[9];
+>> +	char model[17];
+>> +	struct scsi_device_handler *handler;
+>> +};
+>=20
+> I do not see why we should be duplicating the information that
+> is already present in scsi_dh and is available here thru scsi_dh_list=
+=2E
+> Instead of walking thru the scsi_dh_dev_list we could walk thru
+> scsi_dh_list and get the same result.
 >
-> I'm guessing that this is due to David's "change the semaphore to a
-> mutex" patch that you have in your tree, but I refused to take as I was
-> worried about just this issue :)
+Indeed we can. I originally did this as it would allow us to dynamicall=
+y
+add and remove entries from that list, which isn't possible with the
+static arrays provided by the individual device handler.
+But seeing that we can now manually attach any device I guess we can
+remove it.
+=20
+> On the other hand, if we could create a cache of the list of devices
+> (vendor-product-scsi_dh triplet) that has been attached, and walk
+> thru that list first before others during attach, it would help
+> (as we would guess there to be multiple of the same device).
+> =20
+Yes, but we can achieve that very same thing by walking the scsi_dh_lis=
+t.
+I'll fix it up.
+
+>> +
+>> +int scsi_dh_handler_attach(struct scsi_device *sdev,
+>> +			   struct scsi_device_handler *scsi_dh);
+>> +int scsi_dh_handler_detach(struct scsi_device *sdev);
+>=20
+> Why is the prototype needed ?
+>=20
+> Can this be static ?
+>=20
+Probably a left over from earlier attempts. Will be removing them.
+
+>>  static struct scsi_device_handler *get_device_handler(const char *n=
+ame)
+>>  {
+>> @@ -33,7 +45,7 @@ static struct scsi_device_handler *get_device_hand=
+ler(const char *name)
+>>
+>=20
+> <snip>
+>=20
+>> +/*
+>> + * scsi_dh_handler_attach - Attach a device handler to a device
+>> + * @sdev - SCSI device the device handler should attach to
+>> + * @scsi_dh - The device handler to attach
+>> + */
+>> +int scsi_dh_handler_attach(struct scsi_device *sdev,
+>> +			   struct scsi_device_handler *scsi_dh)
+>> +{
+>> +	int err =3D -EBUSY;
+>> +
+>> +	if (sdev->scsi_dh_data)
+>> +		return err;
+>=20
+> One of the later patch check for scsi_dh to be same as
+> sdev->scsi_dh_data->scsi_dh. We can check for that here.
+>=20
+> One more thing: there are multiple places (in this file and
+> in the hardware handlers) the same check appear. Can we just
+> do it only here and remove all the others ?
 >
-> David, any thoughts?
+Yes. Will do.
+=20
+>> +
+>> +	err =3D scsi_dh->attach(sdev);
+>=20
+> This assumes attach is available, but there is no assertion in
+> scsi_register_device_handler().  Same is the case with detach(). Eith=
+er
+> assert or check for the function availability here.
+Ok.
 
-Yes, put them into -mm is right.
-As matthew said, the class_interface_register call add_dev, then
-device_add cause the issue.
+>> +
+>> +	return err;
+>> +}
+>> +
+>> +/*
+>> + * scsi_dh_handler_detach - Detach a device handler to a device
+>> + * @sdev - SCSI device the device handler should be detached from
+>> + */
+>> +int scsi_dh_handler_detach(struct scsi_device *sdev)
+>> +{
+>> +	struct scsi_device_handler *scsi_dh;
+>=20
+> can avoid the variable and call detach directly ?
+>> +
+>> +	if (!sdev->scsi_dh_data)
+>> +		return -ENODEV;
+>=20
+> Can't we just return 0 ?
+>=20
+Well, seeing that the actual detach callback is
+of type 'void', we should be using the same type here.
 
-Regards
-dave
+>> +
+>> +	scsi_dh =3D sdev->scsi_dh_data->scsi_dh;
+>> +
+>> +	scsi_dh->detach(sdev);
+>> +
+>> +	return 0;
+>> +}
+>=20
+> <snip>
+>=20
+>>  	list_add(&scsi_dh->list, &scsi_dh_list);
+>>  	spin_unlock(&list_lock);
+>> +	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh, scsi_dh_notifier_a=
+dd);
+>> +	printk(KERN_INFO "%s: registered\n", scsi_dh->name);
+>=20
+> We can be more descriptive. Like "Hardware handler %s registered" or =
+some such.
+>=20
+Ok.
+
+>> +	ret =3D SCSI_DH_OK;
+>>
+>>  done:
+>>  	return ret;
+> <snip>
+>=20
+>> +	}
+>>  	list_del(&scsi_dh->list);
+>>  	spin_unlock(&list_lock);
+>> +	printk(KERN_INFO "%s: unregistered\n", scsi_dh->name);
+>=20
+> Same here.
+>=20
+OK.
+
+Thanks for the review. I'll post an update soon.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
