@@ -1,56 +1,67 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Wed, 14 May 2008 21:21:00 -0400
-Message-ID: <482B8FFC.6070701@emulex.com>
-References: <1210700704.16304.1.camel@localhost.localdomain> <1210793893.3075.6.camel@localhost.localdomain> <482B5EC2.7010302@emulex.com>
-Reply-To: James.Smart@Emulex.Com
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 0/7] scsi_dh framework update
+Date: Wed, 14 May 2008 19:45:40 -0700
+Message-ID: <1210819540.21974.250.camel@chandra-ubuntu>
+References: <482AFA62.2000506@suse.de>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:36755 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbYEOBVJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2008 21:21:09 -0400
-In-Reply-To: <482B5EC2.7010302@emulex.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:41500 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755742AbYEOCoB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 May 2008 22:44:01 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4F2hwaL016132
+	for <linux-scsi@vger.kernel.org>; Wed, 14 May 2008 22:43:58 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4F2hwBD146358
+	for <linux-scsi@vger.kernel.org>; Wed, 14 May 2008 22:43:58 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4F2hvmf027406
+	for <linux-scsi@vger.kernel.org>; Wed, 14 May 2008 22:43:58 -0400
+In-Reply-To: <482AFA62.2000506@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
 
+Hi Hannes,
 
+Thanks for the clean up and the new features. I have reviewed the code
+but hasn't tested it. Comments follow.
 
-James Smart wrote:
-> Well, I know there are fixed limits based on the context limits in their
-> interface chips. Tachyons are a good example of this, especially some of
-> the older ones. There are also a lot of arrays that are sold in fixed
-> configurations so they don't have the variability you mention.
+BTW, checkpatch.pl generates warnings for patches 1 thru 5.
 
-forgot one more - firmware algorithms that cap the limits...
+regards,
 
-now the real reason for the reply...
+chandra
+On Wed, 2008-05-14 at 16:42 +0200, Hannes Reinecke wrote:
+> Hi James,
+> 
+> this is a repost of my patchset to update the scsi_dh infrastructure.
+> 
+> It's based on the current scsi-misc tree.
+> 
+> Main features of the patchset are:
+> - Use a single callback for the notifier chain
+> - Merge all device maps into a single list,
+>   which will be scanned by a generic function
+> - Add a sysfs attribute 'dh_state' for each sdev
+> - Add a generic SPC-3 ALUA device handler
+> - Update device handlers to check if the
+>   device actually supports this handler.
+>   When attaching manually we are able to attach
+>   to basically any device, so we have to make sure
+>   that the device handler is actually supported.
+> - Manually attach a device when a hardware handler
+>   is specified; this allows multipath to override
+>   the built-in hardware table.
+> 
+> As per usual, comment etc are welcome.
+> 
+> Cheers,
+> 
+> Hannes
 
-> ... b) there's always questions on how/when you
-> ramp up and at what rate, which is confused again if the queue full
-> wasn't because of target-level resources. We also have to be careful
-
-I realized after I wrote this, that I was implicitly assuming that you are
-part of a multi-initiator (which can include multiple path) environment.
-If you are the only initiator to the target, the algorithms can work fairly
-well to detect the max, and you can pin it - with a short performance
-reduction in the beginning.
-
-But, if part of a multi-initiator environment, you can get wild swings on
-what the ramp down moves to, which makes the ramp up more critical. It
-also leads to biasing toward initiators that have high loads oustanding.
-Any time your are waiting to ramp up, you are potentially at a lower
-performance.   Granted, the fixed target limit doesn't work well in this
-case either, but admins are more agreeable to partition the physical
-target limit between the servers and let the luns share the server's
-target limit.
-
-Just a couple more reasons why, although the queue full seems a good
-approach, it's far harder to make it work well, and may need a couple of
-different algorithms.
-
--- james s
