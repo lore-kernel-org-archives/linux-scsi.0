@@ -1,66 +1,120 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 2.6.26-rc2-mm1 (SCSI_DH build errors)
-Date: Thu, 15 May 2008 15:46:19 +0100
-Message-ID: <1210862779.15852.4.camel@localhost.localdomain>
-References: <20080514010129.4f672378.akpm@linux-foundation.org>
-	 <20080514141348.e71feed6.randy.dunlap@oracle.com>
+From: Cameron Harr <charr@fusionio.com>
+Subject: Re: [ofa-general] iSer and Direct IO
+Date: Thu, 15 May 2008 09:11:15 -0600
+Message-ID: <482C5293.5090005@fusionio.com>
+References: <482B7FE4.9070502@fusionio.com>
+	<694d48600805150423n1a8b0efwf6d6596f8e7891ef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932273AbYEOOqk@vger.kernel.org>
-In-Reply-To: <20080514141348.e71feed6.randy.dunlap@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, hare@suse.de, scsi <linux-scsi@vger.kernel.org>, Chandra Seetharaman <sekharan@us.ibm.com>
+Content-Type: multipart/mixed; boundary="===============1696313988=="
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <694d48600805150423n1a8b0efwf6d6596f8e7891ef@mail.gmail.com>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Mime-version: 1.0
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: general@lists.openfabrics.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2008-05-14 at 14:13 -0700, Randy Dunlap wrote:
-> On Wed, 14 May 2008 01:01:29 -0700 Andrew Morton wrote:
-> 
-> > 
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.26-rc2/2.6.26-rc2-mm1/
-> 
-> SCSI_DH has some problems when CONFIG_SCSI=n:
-> 
-> drivers/built-in.o: In function `activate_path':
-> dm-mpath.c:(.text+0x18a292): undefined reference to `scsi_dh_activate'
-> drivers/built-in.o: In function `multipath_ctr':
-> dm-mpath.c:(.text+0x18a6f0): undefined reference to `scsi_dh_handler_exist'
-> make[1]: *** [.tmp_vmlinux1] Error 1
-> 
-> 
-> #
-> # SCSI device support
-> #
-> CONFIG_RAID_ATTRS=y
-> # CONFIG_SCSI is not set
-> # CONFIG_SCSI_DMA is not set
-> # CONFIG_SCSI_NETLINK is not set
-> CONFIG_SCSI_DH=y
-> CONFIG_SCSI_DH_RDAC=y
-> CONFIG_SCSI_DH_HP_SW=y
-> CONFIG_SCSI_DH_EMC=y
+--===============1696313988==
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-This is one more of those annoying selects.  The SCSI_DH Kconfig file is
-correctly dependent on SCSI:
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content=3D"text/html;charset=3DUTF-8" http-equiv=3D"Content-Type"=
+>
+</head>
+<body bgcolor=3D"#ffffff" text=3D"#000000">
+<br>
+<br>
+Eli Dorfman wrote:
+<blockquote
+ cite=3D"mid:694d48600805150423n1a8b0efwf6d6596f8e7891ef@mail.gmail.com"
+ type=3D"cite">
+  <pre wrap=3D"">On Thu, May 15, 2008 at 3:12 AM, Cameron Harr <a class=3D=
+"moz-txt-link-rfc2396E" href=3D"mailto:charr@fusionio.com">&lt;charr@fusi=
+onio.com&gt;</a> wrote:
+  </pre>
+  <blockquote type=3D"cite">
+    <pre wrap=3D"">My problem though is that I'm a
+little suspicious of some of the iSer numbers and whether they are
+really using Direct IO. For example, you'll see below in some of my FIO
+results that I'm getting a write B/W of 799.1 MB/s at one point. That's
+way above what I can get natively on the device (~650 MB/s DIO) and is
+more along the lines of buffered IO. If the IOP numbers are also using
+some kind of caching, that could possibly taint them also. Does anyone
+know if specifying DIO will really bypass all buffers or if something is
+getting cached in the agents (iscsi, tgtd)?
 
-menuconfig SCSI_DH
-	tristate "SCSI Device Handlers"
-	depends on SCSI
-	default n
-	help
+    </pre>
+  </blockquote>
+  <pre wrap=3D""><!---->
+Your question should be posted on linux-scsi.
+See the following link that explains about DIO
+<a class=3D"moz-txt-link-freetext" href=3D"http://tldp.org/HOWTO/SCSI-Gen=
+eric-HOWTO/dio.html">http://tldp.org/HOWTO/SCSI-Generic-HOWTO/dio.html</a=
+>
 
-but we've also got a select in md/Kconfig:
+Please check with sgp_dd to avoid any caching.
+  </pre>
+</blockquote>
+<br>
+Well, I posted here because I was looking more at iSer characteristics
+than DIO. Things seemed to behave differently on iSer than what I'd
+expect and what srpt shows. Also, I have trust issues with sg*_dd. On
+the local box, they give me impossible numbers, whereas dd is where I'd
+expect it:<br>
+----<br>
+[root@test05 ~]# sgp_dd dio=3D1 if=3D/dev/zero of=3D/dev/fioa bs=3D512 bp=
+t=3D2048
+count=3D16777216 time=3D1<br>
+time to transfer data was 5.556115 secs, 1546.03 MB/sec<br>
+[root@test05 ~]# sg_dd dio=3D1 if=3D/dev/zero of=3D/dev/fioa bs=3D512 bpt=
+=3D2048
+count=3D16777216 time=3D1<br>
+time to transfer data: 5.565360 secs at 1543.46 MB/sec<br>
+[root@test05 ~]# dd oflag=3Ddirect if=3D/dev/zero of=3D/dev/fioa bs=3D1M
+count=3D8192<br>
+8589934592 bytes (8.6 GB) copied, 12.7761 seconds, 672 MB/s<br>
+----<br>
+Using iSer, with the small transfer chunks, sgp_dd has numbers that are
+in line with what I'd expect for DIO while sg_dd doesn't:<br>
+---------<br>
+sgp_dd:=C2=A0 200.64 MB/s <br>
+sg_dd:=C2=A0=C2=A0 735.42 MB/s<br>
+dd:=C2=A0=C2=A0=C2=A0=C2=A0 62.3 MB/s<br>
+--------<br>
+But for larger transfers (with 1M block transfers), both sgp_dd and
+sg_dd show well above what I think I can be getting:<br>
+-------<br>
+sgp_dd: 882.43 <br>
+sg_dd:=C2=A0=C2=A0 819.89<br>
+dd:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 731 MB/s #Which is still high, and whic=
+h makes me suspect iSer<br>
+-------<br>
+<br>
+The page Eli linked states "Direct IO support is
+designed in such a way that if it is requested and cannot be performed
+then the command will still be performed using indirect IO." So I'm
+wondering if for some reason here DIO can't be used with iSer? (BTW,
+/proc/scsi/sg/allow_dio is 1)<br>
+Cameron<br>
+</body>
+</html>
 
-config DM_MULTIPATH
-	tristate "Multipath target"
-	depends on BLK_DEV_DM
-	select SCSI_DH
+--===============1696313988==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Which ignores the dependency.
 
-My best guess for fixing this is either to make the select a depends or
-just drop it altogether (after all, it's possible to have multipath on
-non-SCSI devices).
-
-James
+--===============1696313988==--
