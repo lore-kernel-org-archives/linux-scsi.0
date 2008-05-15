@@ -1,215 +1,90 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 6/7] scsi_dh: Update RDAC device handler
-Date: Wed, 14 May 2008 19:50:30 -0700
-Message-ID: <1210819830.21974.268.camel@chandra-ubuntu>
-References: <20080514144334.09AA610B5DF@craiglockhart-ipmi.suse.de>
-Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
+From: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: lockdep whine in 2.6.26-rc2-mm1
+Date: Thu, 15 May 2008 13:47:02 +0800
+Message-ID: <a8e1da0805142247k2456234evb5ea2be59da135cb@mail.gmail.com>
+References: <20080514000933.56adc131.akpm@linux-foundation.org>
+	 <20080514155639.GB28594@kroah.com>
+	 <20080514162442.GO9324@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20080514144334.09AA610B5DF@craiglockhart-ipmi.suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ti-out-0910.google.com ([209.85.142.184]:35801 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735AbYEOFrE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 May 2008 01:47:04 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so165533tic.23
+        for <linux-scsi@vger.kernel.org>; Wed, 14 May 2008 22:47:02 -0700 (PDT)
+In-Reply-To: <20080514162442.GO9324@parisc-linux.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-On Wed, 2008-05-14 at 16:43 +0200, Hannes Reinecke wrote:
-> This patch updates the RDAC device handler to
-> refuse to attach to devices not supporting the
-> RDAC vpd pages.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/device_handler/scsi_dh_rdac.c |   84 +++++++++++++++++----------
->  1 files changed, 53 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index e61cde6..dd9f515 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -173,6 +173,11 @@ struct rdac_dh_data {
->  #define RDAC_STATE_ACTIVE	0
->  #define RDAC_STATE_PASSIVE	1
->  	unsigned char		state;
-> +
-> +#define RDAC_LUN_UNOWNED	0
-> +#define RDAC_LUN_OWNED		1
-> +#define RDAC_LUN_AVT		2
-> +	char			lun_state;
->  	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
->  	union			{
->  		struct c2_inquiry c2;
-> @@ -214,7 +219,7 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
->  		return NULL;
->  	}
-> 
-> -	memset(&rq->cmd, 0, BLK_MAX_CDB);
-> +	memset(rq->cmd, 0, BLK_MAX_CDB);
->  	rq->sense = h->sense;
->  	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
->  	rq->sense_len = 0;
-> @@ -354,14 +359,16 @@ static int get_lun(struct scsi_device *sdev)
->  	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
->  	if (err == SCSI_DH_OK) {
->  		inqp = &h->inq.c8;
-> -		h->lun = inqp->lun[7]; /* currently it uses only one byte */
-> +		if (inqp->page_code != 0xc8)
-> +			return SCSI_DH_NOSYS;
-> +		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
-> +		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
-> +			return SCSI_DH_NOSYS;
-> +		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
->  	}
->  	return err;
->  }
-> 
-> -#define RDAC_OWNED	0
-> -#define RDAC_UNOWNED	1
-> -#define RDAC_FAILED	2
->  static int check_ownership(struct scsi_device *sdev)
->  {
->  	int err;
-> @@ -370,17 +377,23 @@ static int check_ownership(struct scsi_device *sdev)
-> 
->  	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
->  	if (err == SCSI_DH_OK) {
-> -		err = RDAC_UNOWNED;
->  		inqp = &h->inq.c9;
->  		/*
->  		 * If in AVT mode or if the path already owns the LUN,
->  		 * return RDAC_OWNED;
->  		 */
+On Thu, May 15, 2008 at 12:24 AM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, May 14, 2008 at 08:56:39AM -0700, Greg KH wrote:
+>> On Wed, May 14, 2008 at 12:09:33AM -0700, Andrew Morton wrote:
+>> >
+>> > =============================================
+>> > [ INFO: possible recursive locking detected ]
+>> > 2.6.26-rc2-mm1 #15
+>> > ---------------------------------------------
+>> > modprobe/942 is trying to acquire lock:
+>> >  (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
+>> >
+>> > but task is already holding lock:
+>> >  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+>> >
+>> > other info that might help us debug this:
+>> > 1 lock held by modprobe/942:
+>> >  #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+>> >
+>> > stack backtrace:
+>> > Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
+>> >
+>> > Call Trace:
+>> >  [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
+>> >  [<ffffffff8100c50f>] ? restore_args+0x0/0x30
+>> >  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>> >  [<ffffffff81057276>] lock_acquire+0x91/0xb7
+>> >  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>> >  [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
+>> >  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>> >  [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
+>> >  [<ffffffff811b431e>] device_add+0x43d/0x57a
+>> >  [<ffffffff811b4471>] device_register+0x16/0x1b
+>> >  [<ffffffff811b4555>] device_create+0xdf/0x112
+>> >  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>> >  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>> >  [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
+>> >  [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
+>> >  [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
+>> >  [<ffffffff810abd09>] ? exact_match+0x0/0x9
+>> >  [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
+>> >  [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
+>> >  [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
+>> >  [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
+>> >  [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
+>> >  [<ffffffff810c45bc>] ? seq_release+0x0/0x56
+>> >  [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
+>>
+>> I'm guessing that this is due to David's "change the semaphore to a
+>> mutex" patch that you have in your tree, but I refused to take as I was
+>> worried about just this issue :)
+>
+> Hm, I thought I saw the same patch from Arjan months ago ... anyway.
+>
+> class_interface_register() (at least in -rc2) holds &parent->sem (ie the
+> result of calling class_get() on the class) around calling ->add_dev.
+> The class in this case is the sg_sysfs_class, so it's calling sg_add().
+> sg_add() calls device_create() which calls device_add() which acquires
+> the &dev->class->sem.  The class in this case would _also_ seem to be
+> sg_sysfs_class.
+>
+> So why doesn't this deadlock today?
 
-With the code change below the comment above is incorrect, please
-remove.
-> -		if (((inqp->avte_cvp >> 7) == 0x1) ||
-> -				 ((inqp->avte_cvp & 0x1) != 0))
-> -			err = RDAC_OWNED;
-> -	} else
-> -		err = RDAC_FAILED;
-> +		if ((inqp->avte_cvp >> 7) == 0x1) {
-> +			/* LUN in AVT mode */
-> +			sdev_printk(KERN_NOTICE, sdev,
-> +				    "%s: AVT mode detected\n",
-> +				    RDAC_NAME);
-> +			h->lun_state = RDAC_LUN_AVT;
-> +		} else if ((inqp->avte_cvp & 0x1) != 0) {
-> +			/* LUN was owned by the controller */
-> +			h->lun_state = RDAC_LUN_OWNED;
-> +		}
-> +	}
-> +
->  	return err;
->  }
-> 
-> @@ -478,24 +491,9 @@ static int rdac_activate(struct scsi_device *sdev)
->  	struct rdac_dh_data *h = get_rdac_data(sdev);
->  	int err = SCSI_DH_OK;
-> 
-> -	if (h->lun == UNINITIALIZED_LUN) {
-> -		err = get_lun(sdev);
-> -		if (err != SCSI_DH_OK)
-> -			goto done;
-> -	}
-> -
->  	err = check_ownership(sdev);
-> -	switch (err) {
-> -	case RDAC_UNOWNED:
-> -		break;
-> -	case RDAC_OWNED:
-> -		err = SCSI_DH_OK;
-> -		goto done;
-> -	case RDAC_FAILED:
-> -	default:
-> -		err = SCSI_DH_IO;
+The classes are different here, first sdev_class, then sg_sysfs_class
 
-What does this change yield ? (under check_ownership)
-
-> +	if (err != SCSI_DH_OK)
->  		goto done;
-> -	}
-> 
->  	if (!h->ctlr) {
->  		err = initialize_controller(sdev);
-> @@ -508,8 +506,9 @@ static int rdac_activate(struct scsi_device *sdev)
->  		if (err != SCSI_DH_OK)
->  			goto done;
->  	}
-> -
-> -	err = send_mode_select(sdev);
-> +	if (h->lun_state != RDAC_LUN_AVT &&
-> +	    !(h->lun_state & RDAC_LUN_OWNED))
-
-This can be simplified by (h->lun_state == RDAC_LUN_UNOWNED) ?
-> +		err = send_mode_select(sdev);
->  done:
->  	return err;
->  }
-> @@ -606,6 +605,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->  	struct scsi_dh_data *scsi_dh_data;
->  	struct rdac_dh_data *h;
->  	unsigned long flags;
-> +	int err;
-> 
->  	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
->  			       + sizeof(*h) , GFP_KERNEL);
-> @@ -622,11 +622,33 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->  	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
->  	sdev->scsi_dh_data = scsi_dh_data;
->  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-
-need an initialization for lun_state.
-
-> +
-> +	err = get_lun(sdev);
-> +	if (err != SCSI_DH_OK)
-> +		goto failed;
-> +
-> +	err = check_ownership(sdev);
-> +	if (err != SCSI_DH_OK)
-> +		goto failed;
-> +
-> +	sdev_printk(KERN_NOTICE, sdev,
-> +		    "%s: LUN %d (state %d)\n",
-> +		    RDAC_NAME, h->lun, h->lun_state);
-
-instead of printing lun_state as %d it would be more readable it is a
-string.
-
-> +
->  	try_module_get(THIS_MODULE);
-> 
-> -	sdev_printk(KERN_NOTICE, sdev, "Attached %s\n", RDAC_NAME);
-> +	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", RDAC_NAME);
-> 
->  	return 0;
-> +
-> +failed:
-> +	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-> +	sdev->scsi_dh_data = NULL;
-> +	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> +	kfree(scsi_dh_data);
-> +	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
-> +		    RDAC_NAME);
-> +	return -EINVAL;
->  }
-> 
->  static void rdac_bus_detach( struct scsi_device *sdev )
-> @@ -645,7 +667,7 @@ static void rdac_bus_detach( struct scsi_device *sdev )
->  		kref_put(&h->ctlr->kref, release_controller);
->  	kfree(scsi_dh_data);
->  	module_put(THIS_MODULE);
-> -	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", RDAC_NAME);
-> +	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", RDAC_NAME);
->  }
-> 
->  static int __init rdac_init(void)
+Regards
+dave
