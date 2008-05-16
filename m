@@ -1,62 +1,89 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 7/7] scsi_dh: attach to hardware handler from dm-mpath
-Date: Fri, 16 May 2008 11:53:21 -0700
-Message-ID: <1210964001.21974.351.camel@chandra-ubuntu>
-References: <20080514144338.714F910B5DF@craiglockhart-ipmi.suse.de>
-	 <1210819801.21974.266.camel@chandra-ubuntu>  <482C0676.9070004@suse.de>
-Reply-To: sekharan@us.ibm.com
+From: Christophe Varoqui <christophe.varoqui@free.fr>
+Subject: Read-Only devices, multipath and more
+Date: Fri, 16 May 2008 21:35:44 +0200
+Message-ID: <1210966544.12901.51.camel@plop>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:53985 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762808AbYEPSvi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2008 14:51:38 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4GIpaJQ015964
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:51:36 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4GIpX0x150620
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:51:33 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4GIpWQx017482
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:51:33 -0400
-In-Reply-To: <482C0676.9070004@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+Cc: Christophe Varoqui <christophe.varoqui@free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
 
+Hi,
 
-On Thu, 2008-05-15 at 11:46 +0200, Hannes Reinecke wrote:
-> Hi Chandra,
-> 
-> Chandra Seetharaman wrote:
-> > What is the purpose of this feature ?
-> > 
-> > With dh_state functionality, one could associate a handler to a new
-> > device and then if one does "multipath", the hardware handler would be
-> > associated with the multipath device. What are we achieving by this ?
-> > 
-> This allows multipath to override the device tables build into
-> the device handler. Reason here is that multipath has a configuration
-> file which allows the user to override the build-in defaults.
-> And this includes the hardware handler, so we need to make sure that
-> the hardware handler is indeed attached.
+I'll try to summarize the facts about how linux kernel (scsi and
+device-mapper) and userspace (multipath-tools) handles devices
+RO->RW->RO changes.
 
-Hardware handler's existence is currently been verified during parsing
-(by doing a request_module() followed by scsi_dh_handler_exist() in
-parse_hw_handler()).
+The sample setup is 2 x EMC Symmetrix systems, with a pair of logical
+unit configured for synchronous inter-system replication (SRDF). In a
+normal situation, the LU receiving the data updates (the R2) is RO,
+while the LU emitting the data updates (the R1) is RW. Let's take this
+state as a starting point.
 
-Hardware handler module is attached to the device itself (thru
-try_module_get() in attach), so, the module will exist as long as the
-device exists.
+Server S1 sees R1. Server S2 sees R2
 
-Hence, there is no need to attach it again from the multipath layer.
+---
 
-Or, I am missing something totally :)
+t0)
+storage state: R1 (RW) <- sync -> R2 (RO)=20
+action: Linux system on S2 freshly rebooted.
+fact: scsi paths to R2 are reported read-only by "hdparm -r"
+fact: device-mapper refuse to load a RW multipath table on these paths
+(ie without libdevmapper:set_task_set_ro())
 
-<snip>
+question: should change this behaviour to allow to load a RW multipath
+table on these paths and let the IO be failed by the storage hardware ?
 
+t1)
+=EF=BB=BFstorage state: R1 (RW) <- split -> R2 (RW)=20
+action: none
+fact: scsi paths to R2 are still reported read-only by "hdparm -r"
+fact: device-mapper still refuse to load a RW multipath table on these
+paths
+=EF=BB=BFfact: if a RO multipath table was loaded at t0, it is still RO a=
+t t1
 
+question: shouldn't the write protection change be detected by the scsi
+kernel subsystem, or should we implement a userspace device polling ?
+question: how do we detect from userspace the device write protection
+change ? (trying to load a multipath devmap is not a good test).
+sg-utils maybe ? in multipathd or in a separe daemon, as the issue
+extends beyond multipathing ?
+
+action: echo 1>/sys/block/sd{a,b}/device/rescan
+fact: the write protection flags are updated to the correct RW state and
+multipath then works as expected
+
+question: is there a softer way to update the write proctection flags ?
+
+t2)
+=EF=BB=BFstorage state: R1 (RW) <- resync -> R2 (RO)=20
+action: none
+fact: the RW multipath devmap is still loaded
+
+question: so why not permit to load it in the first place ?
+
+---
+
+This scenario shows there is an annoying lack of consistency and
+symmetry in the Linux behaviour. I'm willing to implement whatever is
+expected from the multipath-tools. But can we define what is expected ?
+
+Alasdair proposed to add more explicit table loading ioctl return code
+when the failure is due to this ready-only paths issue (E_ROFS for
+example). Which comes short of solving the RO->RW devmap promotion=20
+
+Please advise.
+Christophe Varoqui (keep me on cc:)
