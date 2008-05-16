@@ -1,43 +1,47 @@
-From: Tino Keitel <tino.keitel@gmx.de>
-Subject: Re: [PATCH 0/5] SCSI and FireWire: fix/add START STOP UNIT for
-	SBP-2 disks
-Date: Fri, 16 May 2008 08:23:15 +0200
-Message-ID: <20080516062315.GA4350@dose.home.local>
-References: <20080429232606.GA14261@dose.home.local>
-	<481874BD.5010807@s5r6.in-berlin.de>
-	<20080507180042.GA32629@dose.home.local>
-	<tkrat.327b59f1366f8ea0@s5r6.in-berlin.de>
-	<tkrat.635f52f7035be2bc@s5r6.in-berlin.de>
-	<tkrat.5cf7605228f0006a@s5r6.in-berlin.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ->proc_info in host template
+Date: Fri, 16 May 2008 11:54:48 -0400
+Message-ID: <20080516155448.GA29279@infradead.org>
+References: <20080429210154.GA28259@martell.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:42438 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756638AbYEPPyt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2008 11:54:49 -0400
 Content-Disposition: inline
-In-Reply-To: <tkrat.5cf7605228f0006a@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20080429210154.GA28259@martell.zuzino.mipt.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, Apr 30, 2008 at 01:01:55AM +0400, Alexey Dobriyan wrote:
+> I plan to remove ->read_proc from proc code and this will involve
+> ->proc_info hook in host templates. It's marked "OBSOLETE". Is it
+> obsoleted as in "will be removed" or obsoleted as in "no new such
+> hooks"? Should I convert them to ->proc_fops or just remove?
+> I suspect the former, in this case it will look like
+> 
+> 	#ifdef CONFIG_PROC_FS
+> 		const struct file_operations *proc_fops;
+> 	#endif
+> 
+> OK with that?
 
-I applied all patches, and tried it on my system with a SATA, USB and
-Firewire disk. All disks spun down at suspend, and spun up again at
-resume.
+Back about five years ago when we did a bigger revamp of the scsi layer
+we decided that having the unstructed proc files were a bad idea and
+planned to remove them eventually.  And then for a long time nothing
+happened.  So either we bite the bullet and remove them all or we need
+to invest a lot of time into converting them.  In the latter case
+I'd prefer to just add a ->show method and limit them to a single page
+instead of adding boilerplate for the full file operations all over
+the legacy scsi drivers.
 
-Regards,
-Tino
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft 
-Defy all challenges. Microsoft(R) Visual Studio 2008. 
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
