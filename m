@@ -1,50 +1,46 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 3/7] scsi_dh: add generic SPC-3 alua handler
-Date: Fri, 16 May 2008 22:18:31 +0200
-Message-ID: <20080516201830.GB16538@kernel.dk>
-References: <20080514144319.543D910B5DF@craiglockhart-ipmi.suse.de> <1210819780.21974.264.camel@chandra-ubuntu> <482BF09E.2070905@suse.de> <1210963077.21974.334.camel@chandra-ubuntu>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined reference to `request_firmware'
+Date: Fri, 16 May 2008 22:30:40 +0200
+Message-ID: <200805162230.41350.rjw@sisk.pl>
+References: <200805161906.19321.toralf.foerster@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:23423 "EHLO kernel.dk"
+Received: from ogre.sisk.pl ([217.79.144.158]:48593 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753990AbYEPUSj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2008 16:18:39 -0400
+	id S1756390AbYEPUah convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2008 16:30:37 -0400
+In-Reply-To: <200805161906.19321.toralf.foerster@gmx.de>
 Content-Disposition: inline
-In-Reply-To: <1210963077.21974.334.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+To: Toralf =?iso-8859-15?q?F=F6rster?= <toralf.foerster@gmx.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, May 16 2008, Chandra Seetharaman wrote:
-> It is a question to Jens :) 
-> 
-> On Thu, 2008-05-15 at 10:13 +0200, Hannes Reinecke wrote:
-> > Chandra Seetharaman wrote:
-> > > I do not know the functionality of this module. So, my comments are only
-> > > related to code.
-> > > 
-> > > blk_request_rq() frees up the request before it returns (in
-> > > blk_end_sync_rq()). So, there is no need for blk_put_request().
-> > > 
-> > Indeed. But this opens up another question:
-> > 
-> > By the time blk_execute_rq() returns, the request is already
-> > put back onto the queue.
-> > That means that I shouldn't access rq->errors any more, as
-> > the request might have been reused already.
-> > But blk_execute_rq() returns -EIO for any error, making it
-> > impossible to signal a proper error here.
-> > So how do I get the contents of rq->errors safely?
-> > 
-> > Cheers,
-> > 
-> > Hannes
+On Friday, 16 of May 2008, Toralf F=F6rster wrote:
+> Hello,
+>=20
+> the build (.config attached) failed, make ends with :
+> ...
+>   UPD     include/linux/compile.h
+>   CC      init/version.o
+>   LD      init/built-in.o
+>   LD      vmlinux
+> drivers/built-in.o: In function `sas_request_addr':
+> (.text+0x33bab): undefined reference to `request_firmware'
+> drivers/built-in.o: In function `sas_request_addr':
+> (.text+0x33c3f): undefined reference to `release_firmware'
+> make: *** [vmlinux] Error 1
+>=20
+> The build was made with :
+> $>make randconfig; make clean; make
 
-blk_get_request() and blk_put_request() when done. See how
-block/scsi_ioctl.c:sg_io() does just that.
+Is it the same as http://bugzilla.kernel.org/show_bug.cgi?id=3D10707 ?
 
--- 
-Jens Axboe
-
+Rafael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
