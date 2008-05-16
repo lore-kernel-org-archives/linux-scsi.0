@@ -1,52 +1,54 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 3/7] scsi_dh: add generic SPC-3 alua handler
-Date: Fri, 16 May 2008 11:37:57 -0700
-Message-ID: <1210963077.21974.334.camel@chandra-ubuntu>
-References: <20080514144319.543D910B5DF@craiglockhart-ipmi.suse.de>
-	 <1210819780.21974.264.camel@chandra-ubuntu>  <482BF09E.2070905@suse.de>
+Subject: Re: [PATCH 4/7] scsi_dh: Update EMC handler
+Date: Fri, 16 May 2008 11:38:40 -0700
+Message-ID: <1210963120.21974.336.camel@chandra-ubuntu>
+References: <20080514144324.3000410B5DF@craiglockhart-ipmi.suse.de>
+	 <1210819629.21974.255.camel@chandra-ubuntu>  <482BEFAC.7030400@suse.de>
 Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:44109 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755004AbYEPSgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2008 14:36:13 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4GIaAVW026234
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:36:10 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4GIaAFr134962
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:36:10 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4GIa9Et010406
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:36:10 -0400
-In-Reply-To: <482BF09E.2070905@suse.de>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:60993 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755849AbYEPSgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2008 14:36:54 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4GIaslF012532
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 14:36:54 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4GIar5L101908
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 12:36:53 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4GIapUP005982
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2008 12:36:53 -0600
+In-Reply-To: <482BEFAC.7030400@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "jens.axboe" <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, dm-devel <dm-devel@redhat.com>
 
-It is a question to Jens :) 
 
-On Thu, 2008-05-15 at 10:13 +0200, Hannes Reinecke wrote:
-> Chandra Seetharaman wrote:
-> > I do not know the functionality of this module. So, my comments are only
-> > related to code.
-> > 
-> > blk_request_rq() frees up the request before it returns (in
-> > blk_end_sync_rq()). So, there is no need for blk_put_request().
-> > 
-> Indeed. But this opens up another question:
+On Thu, 2008-05-15 at 10:09 +0200, Hannes Reinecke wrote:
+> Hi Chandra,
 > 
-> By the time blk_execute_rq() returns, the request is already
-> put back onto the queue.
-> That means that I shouldn't access rq->errors any more, as
-> the request might have been reused already.
-> But blk_execute_rq() returns -EIO for any error, making it
-> impossible to signal a proper error here.
-> So how do I get the contents of rq->errors safely?
+> Chandra Seetharaman wrote:
+> > On Wed, 2008-05-14 at 16:43 +0200, Hannes Reinecke wrote:
+> > <snip>
+> > 
+> >> @@ -438,10 +604,32 @@ static int clariion_bus_attach(struct scsi_device *sdev)
+> >>  	sdev->scsi_dh_data = scsi_dh_data;
+> >>  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+> >>
+> > Can move the block above to be just before try_module_get() and avoid
+> > undoing it in the failed path.
+> > 
+> Hmm. Yes, we could. But that means I have to pass the scsi_dh_data structure
+> to basically every function.
+> Let me check how this pans out.
+
+Yeah, it is a catch-22 problem. I will think about it too.
+
 > 
 > Cheers,
 > 
