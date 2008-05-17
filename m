@@ -1,59 +1,47 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: lockdep whine in 2.6.26-rc2-mm1
-Date: Sat, 17 May 2008 18:14:36 +0800
-Message-ID: <a8e1da0805170314v4253d01agc0d6f77438e27989@mail.gmail.com>
-References: <20080514000933.56adc131.akpm@linux-foundation.org>
-	 <20080514155639.GB28594@kroah.com>
-	 <20080514162442.GO9324@parisc-linux.org>
-	 <a8e1da0805142247k2456234evb5ea2be59da135cb@mail.gmail.com>
-	 <20080515090101.GA2915@darkstar.te-china.tietoenator.com>
-	 <20080515115203.GH9921@parisc-linux.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Sat, 17 May 2008 09:49:03 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0805170933530.22979-100000@netrider.rowland.org>
+References: <8db1092f0805162359k2def1738s91cc78d48bea2581@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:49749 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694AbYEQKOm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 May 2008 06:14:42 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so522683tic.23
-        for <linux-scsi@vger.kernel.org>; Sat, 17 May 2008 03:14:36 -0700 (PDT)
-In-Reply-To: <20080515115203.GH9921@parisc-linux.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <8db1092f0805162359k2def1738s91cc78d48bea2581-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-On 5/15/08, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Thu, May 15, 2008 at 05:01:01PM +0800, Dave Young wrote:
->> > The classes are different here, first sdev_class, then sg_sysfs_class
->
-> Oh ... right.  I misread scsi_register_interface as
-> class_register_interface.
->
->> Greg, what about using mutex_lock_nested to silence lockdep? They are
->> the only usage of class->mutex out of class.c
->
-> I don't see how we prove that, for example, you can never take the
-> sg_sysfs_class mutex and then take the sdev_class mutex.
+Summary: 2.6.26-rc2 doesn't detect a USB drive's write-protect setting 
+correctly.
 
-Sorry for my delay. AFAIK, there's no this kind of use.
->
-> There aren't /that/ many classes in the kernel (my laptop has 33 in
-> /sys/class).  How about we make each (sysfs) class its own (lockdep)
-> class?  That way we let lockdep do its job rather than telling it "nah,
-> you're all right, this is good".
->
-> I don't have a copy of the sem->mutex conversion to hand, but I imagine
-> you want to do something like:
->
->  - Add a struct lock_class_key to struct class
->  - In drivers/base/class.c use __mutex_init instead of mutex_init
->
-> I think that should be enough ...
+On Sat, 17 May 2008, Maciej Rutecki wrote:
 
-Yes, it's safer than mutex_lock_nested.  If you all have no objection
-I can do the fix like this.
+> 2.6.25.4 (works fine):
+> http://unixy.pl/maciek/download/kernel/2.6.25.4/syslog_debug.txt
+> http://unixy.pl/maciek/download/kernel/2.6.25.4/usbmon.txt
+> 
+> 2.6.26-rc2 ("write protect is on" problem; can't mount device):
+> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/syslog_debug.txt
+> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/usbmon.txt
 
-Thanks.
+I'm not sure exactly what changed to cause this regression, but the 
+problem lies in the SCSI layer, not the USB layer.
+
+The logs show that in response to the 192-byte MODE SENSE command (used
+to read the write-protect status), the device sends back no data, good
+status, and Residue = 192.  The SCSI core ignores the Residue and
+thinks that the old left-over data in the buffer (in this case left
+over from the READ CAPACITY command) actually indicates the
+write-protect status -- which it obviously doesn't.
+
+Boaz, is scsi_mode_sense() the right place to check for this sort of 
+thing?  It probably should be treated the same as an Illegal Request 
+error.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
