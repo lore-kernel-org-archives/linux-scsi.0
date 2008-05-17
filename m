@@ -1,65 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
-	reference to `request_firmware'
-Date: Sat, 17 May 2008 11:04:31 +0100
-Message-ID: <1211018673.3603.7.camel@localhost.localdomain>
-References: <200805161906.19321.toralf.foerster@gmx.de>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10730] New: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined reference to `request_firmware'
+Date: Sat, 17 May 2008 03:06:12 -0700 (PDT)
+Message-ID: <bug-10730-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60111 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751574AbYEQKEo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2008 06:04:44 -0400
-In-Reply-To: <200805161906.19321.toralf.foerster@gmx.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45880 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752215AbYEQKGp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 May 2008 06:06:45 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4HA6Cnb024252
+	for <linux-scsi@vger.kernel.org>; Sat, 17 May 2008 03:06:13 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2008-05-16 at 19:06 +0200, Toralf F=C3=B6rster wrote:
-> Hello,
->=20
-> the build (.config attached) failed, make ends with :
-> ...
->   UPD     include/linux/compile.h
->   CC      init/version.o
->   LD      init/built-in.o
->   LD      vmlinux
-> drivers/built-in.o: In function `sas_request_addr':
-> (.text+0x33bab): undefined reference to `request_firmware'
-> drivers/built-in.o: In function `sas_request_addr':
-> (.text+0x33c3f): undefined reference to `release_firmware'
-> make: *** [vmlinux] Error 1
+http://bugzilla.kernel.org/show_bug.cgi?id=3D10730
 
-There's a slight fault in the stub logic.  It fails for FW_LOADER=3Dm a=
-nd
-the user =3Dy.
-
-This should fix it.
-
-James
-
----
-
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index 4d10c73..6c7eff2 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -13,7 +13,7 @@ struct firmware {
-=20
- struct device;
-=20
--#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
-+#if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && =
-defined(MODULE))
- int request_firmware(const struct firmware **fw, const char *name,
- 		     struct device *device);
- int request_firmware_nowait(
+           Summary: build issue #503 for v2.6.26-rc2-433-gf26a398 :
+                    undefined reference to `request_firmware'
+           Product: SCSI Drivers
+           Version: 2.5
+     KernelVersion: 2.6.26-rc2-433-gf26a398
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+OtherBugsDependingO 10492
+             nThis:
+        Regression: 1
 
 
+Subject    : build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
+reference to `request_firmware'
+Submitter  : Toralf F=C3=B6rster <toralf.foerster@gmx.de>
+Date       : 2008-05-16 17:06
+References : http://marc.info/?l=3Dlinux-kernel&m=3D121095777616792&w=3D=
+4
+
+This entry is being used for tracking a regression from 2.6.25.  Please=
+ don't
+close it until the problem is fixed in the mainline.
+
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
