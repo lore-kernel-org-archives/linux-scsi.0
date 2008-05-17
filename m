@@ -1,47 +1,88 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Sat, 17 May 2008 09:49:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0805170933530.22979-100000@netrider.rowland.org>
-References: <8db1092f0805162359k2def1738s91cc78d48bea2581@mail.gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
+	reference to `request_firmware'
+Date: Sat, 17 May 2008 17:17:49 +0300
+Message-ID: <20080517141749.GD3284@cs181133002.pp.htv.fi>
+References: <200805161906.19321.toralf.foerster@gmx.de> <1211018673.3603.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <8db1092f0805162359k2def1738s91cc78d48bea2581-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:53676 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754158AbYEQOTn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 May 2008 10:19:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1211018673.3603.7.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Toralf =?utf-8?Q?F=C3=B6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Summary: 2.6.26-rc2 doesn't detect a USB drive's write-protect setting 
-correctly.
+On Sat, May 17, 2008 at 11:04:31AM +0100, James Bottomley wrote:
+> On Fri, 2008-05-16 at 19:06 +0200, Toralf F=C3=B6rster wrote:
+> > Hello,
+> >=20
+> > the build (.config attached) failed, make ends with :
+> > ...
+> >   UPD     include/linux/compile.h
+> >   CC      init/version.o
+> >   LD      init/built-in.o
+> >   LD      vmlinux
+> > drivers/built-in.o: In function `sas_request_addr':
+> > (.text+0x33bab): undefined reference to `request_firmware'
+> > drivers/built-in.o: In function `sas_request_addr':
+> > (.text+0x33c3f): undefined reference to `release_firmware'
+> > make: *** [vmlinux] Error 1
+>=20
+> There's a slight fault in the stub logic.  It fails for FW_LOADER=3Dm=
+ and
+> the user =3Dy.
+>=20
+> This should fix it.
 
-On Sat, 17 May 2008, Maciej Rutecki wrote:
+An interesting question is whether we actually want to have the stub at=
+=20
+all - the compile errors catched cases where someone forgot to select=20
+=46W_LOADER at compile time instead of turning them into possible runti=
+me=20
+problems as will happen after your patch.
 
-> 2.6.25.4 (works fine):
-> http://unixy.pl/maciek/download/kernel/2.6.25.4/syslog_debug.txt
-> http://unixy.pl/maciek/download/kernel/2.6.25.4/usbmon.txt
-> 
-> 2.6.26-rc2 ("write protect is on" problem; can't mount device):
-> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/syslog_debug.txt
-> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/usbmon.txt
+Are there any serious use cases where SCSI_SAS_LIBSAS is used in very=20
+space limited environments and without any other drivers that select=20
+=46W_LOADER in the kernel?
 
-I'm not sure exactly what changed to cause this regression, but the 
-problem lies in the SCSI layer, not the USB layer.
+> James
+>=20
+> ---
+>=20
+> diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+> index 4d10c73..6c7eff2 100644
+> --- a/include/linux/firmware.h
+> +++ b/include/linux/firmware.h
+> @@ -13,7 +13,7 @@ struct firmware {
+> =20
+>  struct device;
+> =20
+> -#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
+> +#if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) &=
+& defined(MODULE))
+>  int request_firmware(const struct firmware **fw, const char *name,
+>  		     struct device *device);
+>  int request_firmware_nowait(
 
-The logs show that in response to the 192-byte MODE SENSE command (used
-to read the write-protect status), the device sends back no data, good
-status, and Residue = 192.  The SCSI core ignores the Residue and
-thinks that the old left-over data in the buffer (in this case left
-over from the READ CAPACITY command) actually indicates the
-write-protect status -- which it obviously doesn't.
+cu
+Adrian
 
-Boaz, is scsi_mode_sense() the right place to check for this sort of 
-thing?  It probably should be treated the same as an Illegal Request 
-error.
+--=20
 
-Alan Stern
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
