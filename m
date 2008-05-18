@@ -1,93 +1,100 @@
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: Re: [BUG] unable to handle kernel paging request in next-20080516
-Date: Sun, 18 May 2008 17:00:30 +0100
-Message-ID: <g0pk8d$ig3$1@ger.gmane.org>
-References: <g0mkaf$i1r$1@ger.gmane.org> <20080518021423.3dcf0ddd.akpm@linux-foundation.org>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Sun, 18 May 2008 19:27:29 +0300
+Message-ID: <483058F1.4020601@panasas.com>
+References: <Pine.LNX.4.44L0.0805170933530.22979-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758382AbYERQIM@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0805170933530.22979-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-
-> (cc's added)
+Alan Stern wrote:
+> Summary: 2.6.26-rc2 doesn't detect a USB drive's write-protect setting 
+> correctly.
 > 
-> On Sat, 17 May 2008 12:50:24 +0000 (UTC) Sitsofe Wheeler
-> <sitsofe@yahoo.com> wrote:
+> On Sat, 17 May 2008, Maciej Rutecki wrote:
 > 
->> Sometimes when booting next-20080516 on Ubuntu Gutsy an oops then a panic
->> will occur. At first I thought it might be provoked by vga=0x164 but this
->> does not appear to be the case and the issue is seemingly random. I've
->> hand transcribed the oops so there may be errors in it but hopefully it
->> will still help:
->> 
->> BUG: unable to handle kernel paging request at e6f17fac
->> IP: [<c02604d6>] scsi_bus_uevent+0x1/0x17
->> *pde = 2714b163 *pte = 26f17160
->> Oops: 0000 [#1] DEBUG_PAGEALLOC
->> last sysfs file:
->> 
+>> 2.6.25.4 (works fine):
+>> http://unixy.pl/maciek/download/kernel/2.6.25.4/syslog_debug.txt
+>> http://unixy.pl/maciek/download/kernel/2.6.25.4/usbmon.txt
+>>
+>> 2.6.26-rc2 ("write protect is on" problem; can't mount device):
+>> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/syslog_debug.txt
+>> http://unixy.pl/maciek/download/kernel/2.6.26-rc2/usbmon.txt
 > 
-> I thought we'd already fixed this?
+> I'm not sure exactly what changed to cause this regression, but the 
+> problem lies in the SCSI layer, not the USB layer.
+> 
+> The logs show that in response to the 192-byte MODE SENSE command (used
+> to read the write-protect status), the device sends back no data, good
+> status, and Residue = 192.  The SCSI core ignores the Residue and
+> thinks that the old left-over data in the buffer (in this case left
+> over from the READ CAPACITY command) actually indicates the
+> write-protect status -- which it obviously doesn't.
+> 
+> Boaz, is scsi_mode_sense() the right place to check for this sort of 
+> thing?  It probably should be treated the same as an Illegal Request 
+> error.
+> 
+> Alan Stern
+> 
 
-If it hasn't yet been fixed I think it can be narrowed down to 
-[dc16f5f2ede8cc2acf8ac22857a7fecf3a4296c2] PNP: make generic pnp_add_dma_resource() .
-Be aware that the problem also seems to go away if an initrd file is present. I
-struggled to revert this commit against the latest linux-next due to conflicts.
+Do you mean this diff below:
 
-Here's the commit message:
+@@ -796,133 +789,133 @@ kernel: usb-storage: *** thread awakened
+ kernel: usb-storage: Command MODE_SENSE (6 bytes)
+ kernel: usb-storage:  1a 00 3f 00 c0 00
+ kernel: usb-storage: Bulk Command S 0x43425355 T 0x4 L 192 F 128 Trg 0 LUN 0 CL 6
+ kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+ kernel: usb-storage: Status code 0; transferred 31/31
+ kernel: usb-storage: -- transfer complete
+ kernel: usb-storage: Bulk command transfer result=0
+ kernel: usb-storage: usb_stor_bulk_transfer_sglist: xfer 192 bytes, 1 entries
+ kernel: usb-storage: Status code -32; transferred 0/192
+ kernel: usb-storage: clearing endpoint halt for pipe 0xc0008480
+ kernel: usb-storage: usb_stor_control_msg: rq=01 rqtype=02 value=0000 index=81 len=0
+ kernel: usb-storage: usb_stor_clear_halt: result = 0
+ kernel: usb-storage: Bulk data transfer result 0x2
+ kernel: usb-storage: Attempting to get CSW...
+ kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+ kernel: usb-storage: Status code 0; transferred 13/13
+ kernel: usb-storage: -- transfer complete
+ kernel: usb-storage: Bulk status result = 0
+ kernel: usb-storage: Bulk Status S 0x53425355 T 0x4 R 192 Stat 0x0
+ kernel: usb-storage: scsi cmd done, result=0x0
+ kernel: usb-storage: *** thread sleeping.
+-kernel: sd 2:0:0:0: [sda] Write Protect is off
+-kernel: sd 2:0:0:0: [sda] Mode Sense: 00 00 00 00
++kernel: sd 2:0:0:0: [sda] Write Protect is on
++kernel: sd 2:0:0:0: [sda] Mode Sense: 09 50 f8 af
+ kernel: sd 2:0:0:0: [sda] Assuming drive cache: write through
+ kernel: usb-storage: queuecommand called
 
-Author: Bjorn Helgaas <bjorn.helgaas@hp.com>  2008-04-28 23:34:35
-Committer: Len Brown <len.brown@intel.com>  2008-04-29 08:22:28
-Child:  cc8c2e308194f0997c718c7c735550ff06754d20 (PNP: make generic pnp_add_io_resource())
-Branches: v2.6.26rc1, remotes/origin/master, remotes/linux-next/stable, remotes/linux-next/master, remotes/linux-next/history, master, linux-next, bisect
-Follows: v2.6.25
-Precedes: v2.6.26-rc1, next-20080502, next-20080501, next-20080430
+("+" is the new kernel and "-" the older one)
 
-    PNP: make generic pnp_add_dma_resource()
-    
-    Add a pnp_add_dma_resource() that can be used by all the PNP
-    backends.  This consolidates a little more pnp_resource_table
-    knowledge into one place.
-    
-    Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
-    Signed-off-by: Len Brown <len.brown@intel.com>
+It looks like it used to be the same exact return and everything only that at
+old kernel the 4 bytes used to be zero and now they are not.
 
-Here's the git-bisect log:
+So It looks to me that it never used to work (Data was never actually read
+from device) but by luck, the garbage data used to be a better default 
+"Write Protect is off"
 
-# bad: [2ddcca36c8bcfa251724fe342c8327451988be0d] Linux 2.6.26-rc1
-# good: [4b119e21d0c66c22e8ca03df05d9de623d0eb50f] Linux 2.6.25
-git-bisect start 'v2.6.26-rc1' 'v2.6.25'
-# good: [7ae44cfa7ab29b277691327e8de790d7b880722f] [ALSA] snd-powermac: style awacs.s and awacs.h
-git-bisect good 7ae44cfa7ab29b277691327e8de790d7b880722f
-# good: [c60264c494a119cd3a716a22edc0137b11de6d1e] smack: fix integer as NULL pointer warning in smack_lsm.c
-git-bisect good c60264c494a119cd3a716a22edc0137b11de6d1e
-# good: [3977c965ec35ce1a7eac988ad313f0fc9aee9660] ext4: zero out small extents when writing to prealloc area.
-git-bisect good 3977c965ec35ce1a7eac988ad313f0fc9aee9660
-# good: [ccf2779544eecfcc5447e2028d1029b6d4ff7bb6] Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound-2.6
-git-bisect good ccf2779544eecfcc5447e2028d1029b6d4ff7bb6
-# bad: [55e462b05b5df4fd113c4a304c4f487d44b0898e] memcg: simple stats for memory resource controller
-git-bisect bad 55e462b05b5df4fd113c4a304c4f487d44b0898e
-# good: [96916090f488986a4ebb8e9ffa6a3b50881d5ccd] Merge branches 'release', 'acpica', 'bugzilla-10224', 'bugzilla-9772', 'bugzilla-9916', 'ec', 'eeepc', 'idle', 'misc', 'pm-legacy', 'sysfs-links-2.6.26', 'thermal', 'thinkpad' and 'video' into release
-git-bisect good 96916090f488986a4ebb8e9ffa6a3b50881d5ccd
-# bad: [6de3d58dcfbab516dbe9aff36ea9542f40cd1bf2] Merge git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-2.6
-git-bisect bad 6de3d58dcfbab516dbe9aff36ea9542f40cd1bf2
-# good: [f5d94ff014cb7e6212f40fc6644f3fd68507df33] PNP: pass resources, not indexes, to pnp_check_port(), et al
-git-bisect good f5d94ff014cb7e6212f40fc6644f3fd68507df33
-# bad: [d152cf5d0c3325979e71ee53b425fdd51a1a285a] PNPACPI: move _CRS/_PRS warnings closer to the action
-git-bisect bad d152cf5d0c3325979e71ee53b425fdd51a1a285a
-# good: [784f01d5bdeae7d7005ede17305306b042ba2617] PNP: add struct pnp_resource
-git-bisect good 784f01d5bdeae7d7005ede17305306b042ba2617
-# good: [dbddd0383c59d588f8db5e773b062756e39117ec] PNP: make generic pnp_add_irq_resource()
-git-bisect good dbddd0383c59d588f8db5e773b062756e39117ec
-# bad: [cc8c2e308194f0997c718c7c735550ff06754d20] PNP: make generic pnp_add_io_resource()
-git-bisect bad cc8c2e308194f0997c718c7c735550ff06754d20
-# bad: [dc16f5f2ede8cc2acf8ac22857a7fecf3a4296c2] PNP: make generic pnp_add_dma_resource()
-git-bisect bad dc16f5f2ede8cc2acf8ac22857a7fecf3a4296c2
+I do not think it is legal in scsi to return "Nothing was read" with no
+error condition. You are probably right that we do not at all check resid
+if status is 0, even though short reads are allowed with out error status
+in some cases, as per command. But this is not the case here here nothing
+was read at all, status must be returned. Or even worse if this command 
+is mandatory by scsi but not supported by some USB devices then it will
+have to be emulated by usb_storage.
 
--- 
-Sitsofe | http://sucs.org/~sits/
+My $0.017
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
