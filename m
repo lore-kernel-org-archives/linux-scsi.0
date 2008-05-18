@@ -1,94 +1,36 @@
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: Re: [BUG] unable to handle kernel paging request in next-20080516
-Date: Sun, 18 May 2008 21:22:51 +0100
-Message-ID: <g0q3lc$5oa$1@ger.gmane.org>
-References: <g0mkaf$i1r$1@ger.gmane.org> <20080518021423.3dcf0ddd.akpm@linux-foundation.org> <20080518174749.GA22939@kroah.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 0/5] SCSI and FireWire: fix/add START STOP UNIT for	SBP-2
+ disks
+Date: Sun, 18 May 2008 22:32:27 +0200
+Message-ID: <4830925B.5010802@s5r6.in-berlin.de>
+References: <20080429232606.GA14261@dose.home.local> <481874BD.5010807@s5r6.in-berlin.de> <20080507180042.GA32629@dose.home.local> <tkrat.327b59f1366f8ea0@s5r6.in-berlin.de> <tkrat.635f52f7035be2bc@s5r6.in-berlin.de> <tkrat.5cf7605228f0006a@s5r6.in-berlin.de> <20080516062315.GA4350@dose.home.local> <tkrat.ad2cb91dd8644559@s5r6.in-berlin.de> <20080518173511.GA14742@dose.home.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755461AbYERUbP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:32855 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881AbYERUck (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 May 2008 16:32:40 -0400
+In-Reply-To: <20080518173511.GA14742@dose.home.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux1394-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
 
-<posted & mailed>
+Tino Keitel wrote:
+> Now I need to figure out how to get the Firewire disk to spin down
+> using HAL. It looks like HAL just uses /usr/bin/eject, which just sends
+> a START STOP UNIT command without power conditions set, so the kernel
+> can't do anything here.
 
-(I've dropped akpm because the mail server doesn't like where I'm sending
-from with this address)
+What if you teach hal to unbind sd from the respective scsi_device?
+"echo -n 123:0:0:0 > /sys/bus/scsi/drivers/sd/unbind" is a manual way to 
+do it.  And the "bind" file does the reverse.
 
-Greg KH wrote:
-
-> On Sun, May 18, 2008 at 02:14:23AM -0700, Andrew Morton wrote:
->> 
->> (cc's added)
->> 
->> On Sat, 17 May 2008 12:50:24 +0000 (UTC) Sitsofe Wheeler
->> <sitsofe@yahoo.com> wrote:
->> 
->> > BUG: unable to handle kernel paging request at e6f17fac
->> > IP: [<c02604d6>] scsi_bus_uevent+0x1/0x17
->> > *pde = 2714b163 *pte = 26f17160
->> > Oops: 0000 [#1] DEBUG_PAGEALLOC
->> > last sysfs file:
->> 
->> I thought we'd already fixed this?
->
-> If you want to test them out yourself, the patches are this one first:
->  
-http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-01-driver-core.current/driver-core-add-device_create_vargs-and-device_create_drvdata.patch
-> and then add any one of the rest of the patches in the directory at:
->  
-http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-01-driver-core.current/
-> depending on the subsystem you are having problems with.  There are 12
-> different ones in there.
-> 
-> hope this helps,
-
-Bad news - the patches all applied to 2.6.26-rc2 / current HEAD but the
-problem remained.
-
-The trace at the end seems slightly different though (alas I have to
-transcribe):
-
-BUG: unable to handle kernel paging request at e725ffac
-IP: [<c025fdb6>] scsi_bus_uevent+0x1/0x17
-*pde = 27845163 *pte = 2725f160
-Oops: 0000 [#1] DEBUG_PAGEALLOC
-
-[...]
-
-dev_uevent
-dev_uevent
-kobject_uevent_env
-mutex_unlock
-kobject_uevent
-device_add
-mutex_unlock
-scsi_sys_add_sdev
-scsi_probe_and_add_lun
-mark_held_locks
-__scsi_add_device
-ata_scsi_scan_host
-ata_host_register
-ata_pci_sff_activate_host
-ata_sff_interrupt
-ata_pci_sff_init_one
-pci_device_probe
-driver_probe_device
-__driver_attach
-bus_for_each_dev
-driver_attach
-__driver_attach
-bus_add_driver
-driver_register
-__pci_register_driver
-kernel_init
-via_init
-kernel_init
-kernel_init
-kernel_init
-krenel_thread_helper
-
+Or replace /usr/bin/eject by a shell script of yours which calls 
+sg_start when you need it to...
 -- 
-Sitsofe | http://sucs.org/~sits/
+Stefan Richter
+-=====-==--- -=-= =--=-
+http://arcgraph.de/sr/
