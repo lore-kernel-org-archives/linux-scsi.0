@@ -1,41 +1,49 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [dm-devel] Re: [PATCH 7/7] scsi_dh: attach to hardware handler fromdm-mpath
-Date: Tue, 20 May 2008 00:41:24 +0530
-Message-ID: <46A00B48CC54E4468EF6911F877AC4CA01618D5D@blrx3m10.blr.amer.dell.com>
-References: <20080514144338.714F910B5DF@craiglockhart-ipmi.suse.de>	<1210819801.21974.266.camel@chandra-ubuntu><482C0676.9070004@suse.de><1210964001.21974.351.camel@chandra-ubuntu> <483154B0.7020500@suse.de>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Mon, 19 May 2008 15:17:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0805191514300.2111-100000@iolanthe.rowland.org>
+References: <4831B2E2.8030700@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:22011 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430AbYESTLj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2008 15:11:39 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <483154B0.7020500@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4831B2E2.8030700-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, sekharan@us.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
->Chandra Seetharaman wrote:
->> Hence, there is no need to attach it again from the multipath layer.
+On Mon, 19 May 2008, Boaz Harrosh wrote:
 
- Hannes Reinecke wrote:
->Yes, you do. The user might have it's own custom configuration file,
-covering new/unknown/unhandled/testing devices, which out of necessity
-are _not_
->hardcoded in the device table of the device handler.
->So multipath has to have a way of attaching device handler to those
-devices, too. 
+> Sure, inspecting other places that emulate MODE_SENSE, (And inspecting the scsi
+> spec) all zeros is a very good scsi response. Alan do you want to send a fix for all
+> places that initiate a MODE_SENSE command, specifically at
+> scsi_scan.c::scsi_unlock_floptical() ? (Some other places do)
 
-Quite agree. There are a lot of OEM vendors that may use for example the
-LSI RDAC conrtoller but the SCSI inquiry for these devices return the
-OEM device names. 
-The DELL MD3000 is an example of such a box. Instead of hardcoding
-device tables of the handler if they could be configured using a custom
-configuration file enabling new hardware becomes such a bliss.
+I can't send such a fix because at these places the residue information 
+has already been lost.  The fix needs to be made lower down.
 
--Shyam Iyer
 
+Besides, everybody seems to be missing an important point.
+
+MODE SENSE is just one example of a command for which a device might
+return less data than the host expected.  In principle the same thing
+could happen with _any_ command.  The host should be prepared for this
+and should be able to handle it correctly.  And the host shouldn't
+blindly assume that devices will slavishly follow the letter of the
+SCSI spec.
+
+We need something much more thorough than just fiddling with
+scsi_mode_sense().  One possibility would be to pass a
+minimum-response-length argument to scsi_execute_req().  But even that
+wouldn't catch all the code paths where this sort of thing could  
+happen (although it probably would catch most of them).
+
+This needs someone who is more familiar than I am with the operation of
+the SCSI core.
+  
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
