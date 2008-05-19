@@ -1,57 +1,36 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: RE: Re: [PATCH 7/7] scsi_dh: attach to hardware handler
-	fromdm-mpath
-Date: Mon, 19 May 2008 13:01:43 -0700
-Message-ID: <1211227303.21974.384.camel@chandra-ubuntu>
-References: <20080514144338.714F910B5DF@craiglockhart-ipmi.suse.de>
-	<1210819801.21974.266.camel@chandra-ubuntu><482C0676.9070004@suse.de>
-	<1210964001.21974.351.camel@chandra-ubuntu> <483154B0.7020500@suse.de>
-	<46A00B48CC54E4468EF6911F877AC4CA01618D5D@blrx3m10.blr.amer.dell.com>
-Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/3] qla2xxx: fixes for 2.6.26 [8.02.01-k4].
+Date: Mon, 19 May 2008 14:24:18 -0700
+Message-ID: <20080519212418.GH42403@plap4.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <46A00B48CC54E4468EF6911F877AC4CA01618D5D@blrx3m10.blr.amer.dell.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Shyam_Iyer@Dell.com
-Cc: James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:52142 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759610AbYESVYT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2008 17:24:19 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Shyam,
+James,
 
-Yes, the usefulness is understood. Hannes made that available thru the
-dh_state parameter (2/7 of this series). 
+Further testing has found some regressions in the NPIV code.  Please
+add the following to your rc-fixes tree.
 
-Just an FYI.
+ drivers/scsi/qla2xxx/qla_isr.c     |   36 ++++++++++--------------------------
+ drivers/scsi/qla2xxx/qla_mid.c     |    1 +
+ drivers/scsi/qla2xxx/qla_os.c      |   14 ++++++++------
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 4 files changed, 20 insertions(+), 33 deletions(-)
 
-chandra
-On Tue, 2008-05-20 at 00:41 +0530, Shyam_Iyer@Dell.com wrote:
-> >Chandra Seetharaman wrote:
-> >> Hence, there is no need to attach it again from the multipath layer.
-> 
->  Hannes Reinecke wrote:
-> >Yes, you do. The user might have it's own custom configuration file,
-> covering new/unknown/unhandled/testing devices, which out of necessity
-> are _not_
-> >hardcoded in the device table of the device handler.
-> >So multipath has to have a way of attaching device handler to those
-> devices, too. 
-> 
-> Quite agree. There are a lot of OEM vendors that may use for example the
-> LSI RDAC conrtoller but the SCSI inquiry for these devices return the
-> OEM device names. 
-> The DELL MD3000 is an example of such a box. Instead of hardcoding
-> device tables of the handler if they could be configured using a custom
-> configuration file enabling new hardware becomes such a bliss.
-> 
-> -Shyam Iyer
-> 
+commits:
+
+- Revert "qla2xxx: Use proper HA during asynchrounous event handling."
+- Correct handling of AENs postings for vports.
+- Update version number to 8.02.01-k4.
+
+Regards,
+Andrew Vasquez
