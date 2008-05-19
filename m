@@ -1,25 +1,23 @@
 From: Brian King <brking@linux.vnet.ibm.com>
 Subject: [PATCH 1/1] ibmvscsi: Non SCSI error status fixup
 Date: Mon, 19 May 2008 10:27:56 -0500
-Message-ID: <46948.4546840706$1211210961@news.gmane.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:57656 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760038AbYESP2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 May 2008 11:28:00 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4JFRwGl005208
-	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2008 11:27:58 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4JFRwJk147894
-	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2008 11:27:58 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4JFRvcY021146
-	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2008 11:27:58 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Message-ID: <20247.8345869624$1211211044@news.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: James.Bottomley@HansenPartnership.com
-Cc: santil@linux.vnet.ibm.com, rcjenn@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, sfr@canb.auug.org.au, anton@samba.org, brking@linux.vnet.ibm.com
+Cc: sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, anton@samba.org, brking@linux.vnet.ibm.com, rcjenn@linux.vnet.ibm.com, santil@linux.vnet.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
 Some versions of the Virtual I/O Server on Power
