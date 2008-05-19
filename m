@@ -1,36 +1,70 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 0/5] SCSI and FireWire: fix/add START STOP UNIT for	SBP-2
- disks
-Date: Sun, 18 May 2008 22:32:27 +0200
-Message-ID: <4830925B.5010802@s5r6.in-berlin.de>
-References: <20080429232606.GA14261@dose.home.local> <481874BD.5010807@s5r6.in-berlin.de> <20080507180042.GA32629@dose.home.local> <tkrat.327b59f1366f8ea0@s5r6.in-berlin.de> <tkrat.635f52f7035be2bc@s5r6.in-berlin.de> <tkrat.5cf7605228f0006a@s5r6.in-berlin.de> <20080516062315.GA4350@dose.home.local> <tkrat.ad2cb91dd8644559@s5r6.in-berlin.de> <20080518173511.GA14742@dose.home.local>
+From: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: lockdep whine in 2.6.26-rc2-mm1
+Date: Mon, 19 May 2008 13:20:33 +0800
+Message-ID: <a8e1da0805182220y23412047g4969e3906a4c5aca@mail.gmail.com>
+References: <20080514000933.56adc131.akpm@linux-foundation.org>
+	 <20080514155639.GB28594@kroah.com>
+	 <20080514162442.GO9324@parisc-linux.org>
+	 <a8e1da0805142247k2456234evb5ea2be59da135cb@mail.gmail.com>
+	 <20080515090101.GA2915@darkstar.te-china.tietoenator.com>
+	 <20080515115203.GH9921@parisc-linux.org>
+	 <a8e1da0805170314v4253d01agc0d6f77438e27989@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:32855 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbYERUck (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 May 2008 16:32:40 -0400
-In-Reply-To: <20080518173511.GA14742@dose.home.local>
+Received: from ti-out-0910.google.com ([209.85.142.189]:45857 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbYESFUm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2008 01:20:42 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so731454tic.23
+        for <linux-scsi@vger.kernel.org>; Sun, 18 May 2008 22:20:36 -0700 (PDT)
+In-Reply-To: <a8e1da0805170314v4253d01agc0d6f77438e27989@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux1394-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-Tino Keitel wrote:
-> Now I need to figure out how to get the Firewire disk to spin down
-> using HAL. It looks like HAL just uses /usr/bin/eject, which just sends
-> a START STOP UNIT command without power conditions set, so the kernel
-> can't do anything here.
+On Sat, May 17, 2008 at 6:14 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> On 5/15/08, Matthew Wilcox <matthew@wil.cx> wrote:
+>> On Thu, May 15, 2008 at 05:01:01PM +0800, Dave Young wrote:
+>>> > The classes are different here, first sdev_class, then sg_sysfs_class
+>>
+>> Oh ... right.  I misread scsi_register_interface as
+>> class_register_interface.
+>>
+>>> Greg, what about using mutex_lock_nested to silence lockdep? They are
+>>> the only usage of class->mutex out of class.c
+>>
+>> I don't see how we prove that, for example, you can never take the
+>> sg_sysfs_class mutex and then take the sdev_class mutex.
+>
+> Sorry for my delay. AFAIK, there's no this kind of use.
+>>
+>> There aren't /that/ many classes in the kernel (my laptop has 33 in
+>> /sys/class).  How about we make each (sysfs) class its own (lockdep)
+>> class?  That way we let lockdep do its job rather than telling it "nah,
+>> you're all right, this is good".
+>>
+>> I don't have a copy of the sem->mutex conversion to hand, but I imagine
+>> you want to do something like:
+>>
+>>  - Add a struct lock_class_key to struct class
+>>  - In drivers/base/class.c use __mutex_init instead of mutex_init
+>>
+>> I think that should be enough ...
+>
+> Yes, it's safer than mutex_lock_nested.  If you all have no objection
+> I can do the fix like this.
+>
 
-What if you teach hal to unbind sd from the respective scsi_device?
-"echo -n 123:0:0:0 > /sys/bus/scsi/drivers/sd/unbind" is a manual way to 
-do it.  And the "bind" file does the reverse.
+I rechecked the class_interface use, the users are scsi and pcmcia.
 
-Or replace /usr/bin/eject by a shell script of yours which calls 
-sg_start when you need it to...
--- 
-Stefan Richter
--=====-==--- -=-= =--=-
-http://arcgraph.de/sr/
+The two classes could call device_add/del while doing
+class_interface_register/unregister is :
+sg_sysfs_class
+pcmcia_socket_class
+
+So is it possible to reset their lock_class instead of do __mutex_init
+for all classes?
