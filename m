@@ -1,37 +1,31 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] Read-Only devices, multipath and more
-Date: Tue, 20 May 2008 15:48:07 +0100
-Message-ID: <20080520144807.GC10723@agk.fab.redhat.com>
-References: <1210966544.12901.51.camel@plop>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
+Date: Tue, 20 May 2008 23:34:24 +0800
+Message-ID: <20080520153424.GA11687@gondor.apana.org.au>
+References: <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080520023129.2f921f24.akpm@linux-foundation.org> <20080520093819.GA9147@gondor.apana.org.au> <20080520222531H.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43416 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754452AbYETOsO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 May 2008 10:48:14 -0400
+Received: from rhun.apana.org.au ([64.62.148.172]:41575 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758048AbYETPet (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 11:34:49 -0400
 Content-Disposition: inline
-In-Reply-To: <1210966544.12901.51.camel@plop>
+In-Reply-To: <20080520222531H.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, Christophe Varoqui <christophe.varoqui@free.fr>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
-On Fri, May 16, 2008 at 09:35:44PM +0200, christophe varoqui wrote:
-> fact: device-mapper refuse to load a RW multipath table on these paths
-> (ie without libdevmapper:set_task_set_ro())
-> question: should change this behaviour to allow to load a RW multipath
-> table on these paths and let the IO be failed by the storage hardware ?
+On Tue, May 20, 2008 at 10:25:25PM +0900, FUJITA Tomonori wrote:
+>
+> Does someone do DMA from/to __ctx?
 
-Yes.  But relax this *only* for multipath targets, where the whole idea
-is to "hide" path problems from the layer above.  It would not make sense 
-in my view to do this for other DM targets.
- 
-> Alasdair proposed to add more explicit table loading ioctl return code
-> when the failure is due to this ready-only paths issue (E_ROFS for
-> example).
+Nobody.
 
-I think this should be done too (for non-multipath and other errors).
-
-Alasdair
+Cheers,
 -- 
-agk@redhat.com
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
