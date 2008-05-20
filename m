@@ -1,45 +1,49 @@
-From: Dave Young <hidave.darkstar@gmail.com>
-Subject: [PATCH 1/3][-mm] add class_reclassify macro
-Date: Tue, 20 May 2008 17:55:54 +0800
-Message-ID: <20080520095553.GA3201@darkstar.te-china.tietoenator.com>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
+Date: Tue, 20 May 2008 18:55:12 +0900
+Message-ID: <20080520095512.GA18633@linux-sh.org>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080520023129.2f921f24.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:24713 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764953AbYETJyr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 05:54:47 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so650533ugf.16
-        for <linux-scsi@vger.kernel.org>; Tue, 20 May 2008 02:54:45 -0700 (PDT)
+Received: from mta23.gyao.ne.jp ([125.63.38.249]:38876 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1765349AbYETJ5M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2008 05:57:12 -0400
 Content-Disposition: inline
+In-Reply-To: <20080520023129.2f921f24.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: greg@kroah.com, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org, Herbert Xu <herbert@gondor.apana.org.au>
 
-Converting class semaphore to mutex cause lockdep warnings due to
-class_interface_register/unregister will possible call device_add/del
+On Tue, May 20, 2008 at 02:31:29AM -0700, Andrew Morton wrote:
+> Why does ARCH_KMALLOC_MINALIGN even exist?  What is its mandate?  Sigh.
+> 
+> It's not really related to your patch (although your patch compounds
+> the problem a little).  But we should sit down and work out what we
+> actually want to do here.  Something like:
+> 
+> In each architecture's arch/foo/Kconfig, define
+> 
+> 	CONFIG_ARCH_DMA_ALIGN
+> 
+> and
+> 
+> 	CONFIG_ARCH_64BIT_POINTER_ALIGN
+> 
+> and then use them.  Note that these have nothing to do with each other,
+> as far as I can tell.
+> 
+> Which leaves the question: "what should slab use"?  Maybe
+> CONFIG_ARCH_DMA_ALIGN?  But that depends what ARCH_KMALLOC_MINALIGN is
+> supposed to exist for.
+> 
+> ick.
+> 
+The only platforms that set ARCH_KMALLOC_MINALIGN appear to do so for DMA
+alignment reasons, so your Kconfig option there seems reasonable.
 
-For the class_interface users here add a class_reclassify macro to
-reclassify the lock class of their struct class.
+The ARCH_SLAB_MINALIGN you can blame me for:
 
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
-
----
-include/linux/device.h |    7 +++++++
-1 file changed, 7 insertions(+)
-
---- linux/include/linux/device.h	2008-05-19 12:29:54.000000000 +0800
-+++ linux.new/include/linux/device.h	2008-05-19 14:42:25.000000000 +0800
-@@ -529,4 +529,11 @@ extern const char *dev_driver_string(str
- 	MODULE_ALIAS("char-major-" __stringify(major) "-" __stringify(minor))
- #define MODULE_ALIAS_CHARDEV_MAJOR(major) \
- 	MODULE_ALIAS("char-major-" __stringify(major) "-*")
-+
-+#define class_reclassify(class)						\
-+do {									\
-+	static struct lock_class_key	class_key;			\
-+	lockdep_set_class_and_name(&(class)->mutex, &class_key,		\
-+				 (class)->name);			\
-+} while (0)
- #endif /* _DEVICE_H_ */
+	http://marc.info/?l=linux-kernel&m=110227138116749&w=2
