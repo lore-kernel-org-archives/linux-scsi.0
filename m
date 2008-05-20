@@ -1,34 +1,45 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 2/3][-mm] reclassify the sg_sysfs_class mutex
-Date: Tue, 20 May 2008 10:22:59 -0700
-Message-ID: <20080520172259.GB11666@kroah.com>
-References: <20080520095851.GB3201@darkstar.te-china.tietoenator.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/3][-mm] add class_reclassify macro
+Date: Tue, 20 May 2008 10:30:45 -0700
+Message-ID: <20080520103045.2bb0a033.akpm@linux-foundation.org>
+References: <20080520095553.GA3201@darkstar.te-china.tietoenator.com>
+	<20080520030232.fc91b64e.akpm@linux-foundation.org>
+	<a8e1da0805200405t10fae448w589449e75a5abec6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37788 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765233AbYETRZ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 13:25:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20080520095851.GB3201@darkstar.te-china.tietoenator.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41933 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756780AbYETRat (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2008 13:30:49 -0400
+In-Reply-To: <a8e1da0805200405t10fae448w589449e75a5abec6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dave Young <hidave.darkstar@gmail.com>
-Cc: akpm@linux-foundation.org, matthew@wil.cx, kay.sievers@vrfy.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: greg@kroah.com, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, May 20, 2008 at 05:58:51PM +0800, Dave Young wrote:
-> [Please first apply the patch 1/3 before this]
+On Tue, 20 May 2008 19:05:21 +0800 "Dave Young" <hidave.darkstar@gmail.com> wrote:
+
+> On Tue, May 20, 2008 at 6:02 PM, Andrew Morton
+> <akpm@linux-foundation.org> wrote:
+> > On Tue, 20 May 2008 17:55:54 +0800 Dave Young <hidave.darkstar@gmail.com> wrote:
+> >
+> >> Converting class semaphore to mutex cause lockdep warnings due to
+> >> class_interface_register/unregister will possible call device_add/del
+> >
+> > Shouldn't we just fix that?
 > 
-> To please lockdep here we use class_reclassify to change
-> the lock class of sg_sysfs_class
+> Andrew, could you tell more?
 
-Are you suggesting we do this for every struct class in the kernel?  If
-so, why not just do it in the class core, instead of having to modify
-every single caller?
+Well what are these lockdep warnings?  Normally such a warning means that
+we have a locking bug. I _assume_ that you've determined that the warnings
+are false-positives?
 
-I don't think the overall idea of this patch set is acceptable anyway :(
+The warning which Mariusz Kozlowski discovered ("Subject: Re:
+2.6.26-rc2-mm1: possible circular locking dependency detected") was
+triggered by the "class semaphore to mutex" conversion and it looks
+like a real bug to me.  Would your patch prevent warnings such as that
+one from being available to us?
 
-thanks,
-
-greg k-h
