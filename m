@@ -1,59 +1,188 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/7] scsi_dh framework update take #2
-Date: Tue, 20 May 2008 16:04:27 +0200
-Message-ID: <4832DA6B.3050702@suse.de>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH 2/7] scsi_dh: Add 'dh_state' sysfs attribute
+Date: Tue, 20 May 2008 16:05:30 +0200
+Message-ID: <20080520140530.936DC10B5DF@craiglockhart-ipmi.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:33640 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33780 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169AbYETOE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 May 2008 10:04:29 -0400
+	id S1756592AbYETOFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2008 10:05:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Hi James,
 
-this is the second repost of my patchset to update the scsi_dh
-infrastructure. It includes the comments by Chandra.
+Implement a 'dh_state' sdev attribute for dynamic device handler
+manipulation. A read on the attribute will return the name of
+the currently attached device handler or 'detached' if no handler
+is attached.
+The attribute allows the following strings to be written:
+- The name of the device handler to be attached if the state is
+  'detached'.
+- 'activate' to trigger path activation if a device handler
+  is attached.
+- 'detach' to detach the currently attached device handler.
 
-It's based on the current scsi-misc tree.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh.c |  107 ++++++++++++++++++++++++++++++++-
+ 1 files changed, 105 insertions(+), 2 deletions(-)
 
-Main features of the patchset are:
-- Use a single callback for the notifier chain
-- Merge all device maps into a single list,
- which will be scanned by a generic function
-- Add a sysfs attribute 'dh_state' for each sdev
-- Add a generic SPC-3 ALUA device handler
-- Update device handlers to check if the
- device actually supports this handler.
- When attaching manually we are able to attach
- to basically any device, so we have to make sure
- that the device handler is actually supported.
-- Manually attach a device when a hardware handler
- is specified; this allows multipath to override
- the built-in hardware table.
-- Update dm-multipath to explicitly attach to
- the specified device handler. This allows
- overriding of the built-in table by the
- multipath values.
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index 0b5c457..b80fae7 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -79,6 +79,98 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
+ }
+ 
+ /*
++ * Functions for sysfs attribute 'dh_state'
++ */
++static ssize_t
++store_dh_state(struct device *dev, struct device_attribute *attr,
++	       const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct scsi_device_handler *scsi_dh;
++	int err = -EINVAL;
++
++	if (!sdev->scsi_dh_data) {
++		/*
++		 * Attach to a device handler
++		 */
++		if (!(scsi_dh = get_device_handler(buf)))
++			return err;
++		err = scsi_dh_handler_attach(sdev, scsi_dh);
++	} else {
++		if (!strncmp(buf, "detach", 6)) {
++			/*
++			 * Detach from a device handler
++			 */
++			scsi_dh_handler_detach(sdev);
++			err = 0;
++		} else if (!strncmp(buf, "activate", 8)) {
++			/*
++			 * Activate a device handler
++			 */
++			scsi_dh = sdev->scsi_dh_data->scsi_dh;
++			if (scsi_dh->activate)
++				err = scsi_dh->activate(sdev);
++			else
++				err = 0;
++		}
++	}
++
++	return err<0?err:count;
++}
++
++static ssize_t
++show_dh_state(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->scsi_dh_data)
++		return snprintf(buf, 20, "detached\n");
++
++	return snprintf(buf, 20, "%s\n", sdev->scsi_dh_data->scsi_dh->name);
++}
++
++static struct device_attribute scsi_dh_state_attr =
++	__ATTR(dh_state, S_IRUGO | S_IWUSR, show_dh_state,
++	       store_dh_state);
++
++/*
++ * scsi_dh_sysfs_attr_add - Callback for scsi_init_dh
++ */
++static int scsi_dh_sysfs_attr_add(struct device *dev, void *data)
++{
++	struct scsi_device *sdev;
++	int err;
++
++	if (!scsi_is_sdev_device(dev))
++		return 0;
++
++	sdev = to_scsi_device(dev);
++
++	err = device_create_file(&sdev->sdev_gendev,
++				 &scsi_dh_state_attr);
++
++	return 0;
++}
++
++/*
++ * scsi_dh_sysfs_attr_remove - Callback for scsi_exit_dh
++ */
++static int scsi_dh_sysfs_attr_remove(struct device *dev, void *data)
++{
++	struct scsi_device *sdev;
++
++	if (!scsi_is_sdev_device(dev))
++		return 0;
++
++	sdev = to_scsi_device(dev);
++
++	device_remove_file(&sdev->sdev_gendev,
++			   &scsi_dh_state_attr);
++
++	return 0;
++}
++
++/*
+  * scsi_dh_notifier - notifier chain callback
+  */
+ static int scsi_dh_notifier(struct notifier_block *nb,
+@@ -86,7 +178,7 @@ static int scsi_dh_notifier(struct notifier_block *nb,
+ {
+ 	struct device *dev = data;
+ 	struct scsi_device *sdev;
+-	int i, err = 0;
++	int i;
+ 	struct scsi_device_handler *tmp, *devinfo = NULL;
+ 
+ 	if (!scsi_is_sdev_device(dev))
+@@ -114,14 +206,19 @@ static int scsi_dh_notifier(struct notifier_block *nb,
+ 		goto out;
+ 
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		int err;
++
+ 		err = scsi_dh_handler_attach(sdev, devinfo);
++		if (!err)
++			err = device_create_file(dev, &scsi_dh_state_attr);
+ 	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
+ 		if (sdev->scsi_dh_data == NULL)
+ 			goto out;
++		device_remove_file(dev, &scsi_dh_state_attr);
+ 		scsi_dh_handler_detach(sdev);
+ 	}
+ out:
+-	return err;
++	return 0;
+ }
+ 
+ /*
+@@ -275,11 +372,17 @@ static int __init scsi_dh_init(void)
+ 
+ 	r = bus_register_notifier(&scsi_bus_type, &scsi_dh_nb);
+ 
++	if (!r)
++		bus_for_each_dev(&scsi_bus_type, NULL, NULL,
++				 scsi_dh_sysfs_attr_add);
++
+ 	return r;
+ }
+ 
+ static void __exit scsi_dh_exit(void)
+ {
++	bus_for_each_dev(&scsi_bus_type, NULL, NULL,
++			 scsi_dh_sysfs_attr_remove);
+ 	bus_unregister_notifier(&scsi_bus_type, &scsi_dh_nb);
+ }
+ 
+-- 
+1.5.2.4
 
-As per usual, comment etc are welcome.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
