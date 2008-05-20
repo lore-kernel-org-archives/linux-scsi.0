@@ -1,43 +1,52 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 1/3][-mm] add class_reclassify macro
-Date: Tue, 20 May 2008 11:36:41 -0600
-Message-ID: <20080520173640.GP2638@parisc-linux.org>
-References: <20080520095553.GA3201@darkstar.te-china.tietoenator.com> <20080520030232.fc91b64e.akpm@linux-foundation.org> <a8e1da0805200405t10fae448w589449e75a5abec6@mail.gmail.com> <20080520103045.2bb0a033.akpm@linux-foundation.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: lockdep whine in 2.6.26-rc2-mm1
+Date: Tue, 20 May 2008 11:07:04 -0700
+Message-ID: <20080520180704.GA19817@kroah.com>
+References: <20080514000933.56adc131.akpm@linux-foundation.org> <20080514155639.GB28594@kroah.com> <20080514162442.GO9324@parisc-linux.org> <a8e1da0805142247k2456234evb5ea2be59da135cb@mail.gmail.com> <20080515090101.GA2915@darkstar.te-china.tietoenator.com> <20080515115203.GH9921@parisc-linux.org> <a8e1da0805170314v4253d01agc0d6f77438e27989@mail.gmail.com> <a8e1da0805182220y23412047g4969e3906a4c5aca@mail.gmail.com> <20080519102343.GB2638@parisc-linux.org> <a8e1da0805191827s6222ec65k8521359b188e6345@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:45432 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756296AbYETRgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 13:36:42 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:56931 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932912AbYETSIP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 14:08:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20080520103045.2bb0a033.akpm@linux-foundation.org>
+In-Reply-To: <a8e1da0805191827s6222ec65k8521359b188e6345@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dave Young <hidave.darkstar@gmail.com>, greg@kroah.com, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Dave Young <hidave.darkstar@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-On Tue, May 20, 2008 at 10:30:45AM -0700, Andrew Morton wrote:
-> Well what are these lockdep warnings?  Normally such a warning means that
-> we have a locking bug. I _assume_ that you've determined that the warnings
-> are false-positives?
+On Tue, May 20, 2008 at 09:27:59AM +0800, Dave Young wrote:
+> On Mon, May 19, 2008 at 6:23 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> > On Mon, May 19, 2008 at 01:20:33PM +0800, Dave Young wrote:
+> >> On Sat, May 17, 2008 at 6:14 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> >> > On 5/15/08, Matthew Wilcox <matthew@wil.cx> wrote:
+> >> >> On Thu, May 15, 2008 at 05:01:01PM +0800, Dave Young wrote:
+> >> >>> > The classes are different here, first sdev_class, then sg_sysfs_class
+> >> >>
+> >> >> Oh ... right.  I misread scsi_register_interface as
+> >> >> class_register_interface.
+> >> >>
+> >> >>> Greg, what about using mutex_lock_nested to silence lockdep? They are
+> >> >>> the only usage of class->mutex out of class.c
+> >> >>
+> >> >> I don't see how we prove that, for example, you can never take the
+> >> >> sg_sysfs_class mutex and then take the sdev_class mutex.
+> >> >
+> >> > Sorry for my delay. AFAIK, there's no this kind of use.
+> >
+> > The question isn't whether there is or isn't this kind of use right now.
+> > The question is whether there might be this kind of use in the future,
+> > and if there is, whether we'd like lockdep to warn us.
+> 
+> In the future, IMHO, the class_interface should go away just as
+> class_device. If that happened this problem would going away as well.
 
-Andrew, we already discussed this on the thread you started that you
-then ignored ...
+Patches gladly accepted to do this, but what you will end up with is
+something just called a different name, yet doing the same
+functionality, so you are back at square one :(
 
-> The warning which Mariusz Kozlowski discovered ("Subject: Re:
-> 2.6.26-rc2-mm1: possible circular locking dependency detected") was
-> triggered by the "class semaphore to mutex" conversion and it looks
-> like a real bug to me.  Would your patch prevent warnings such as that
-> one from being available to us?
+thanks,
 
-The problem is that you add one type of class which then adds devices
-that are of another class.  This is not a bug.  My proposal is to give
-each sysfs class its own lock class; Dave's is to only do it for the
-two classes he knows about that do this.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+greg k-h
