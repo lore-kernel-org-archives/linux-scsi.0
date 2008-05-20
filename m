@@ -1,31 +1,25 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
-Date: Tue, 20 May 2008 23:34:24 +0800
-Message-ID: <20080520153424.GA11687@gondor.apana.org.au>
-References: <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080520023129.2f921f24.akpm@linux-foundation.org> <20080520093819.GA9147@gondor.apana.org.au> <20080520222531H.tomof@acm.org>
+From: "Marushak, Nathan" <nathan.marushak@intel.com>
+Subject: Plans for libsas and SAS-2?
+Date: Tue, 20 May 2008 08:53:48 -0700
+Message-ID: <2AE9BE418DCA1145B63F5EB19596756B05031047@azsmsx416.amr.corp.intel.com>
+References: <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080520023129.2f921f24.akpm@linux-foundation.org> <20080520093819.GA9147@gondor.apana.org.au> <20080520222531H.tomof@acm.org> <20080520153424.GA11687@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:41575 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758048AbYETPet (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 11:34:49 -0400
-Content-Disposition: inline
-In-Reply-To: <20080520222531H.tomof@acm.org>
+Received: from mga02.intel.com ([134.134.136.20]:39575 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755505AbYETPxt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 11:53:49 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20080520153424.GA11687@gondor.apana.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, May 20, 2008 at 10:25:25PM +0900, FUJITA Tomonori wrote:
->
-> Does someone do DMA from/to __ctx?
+Are there plans to add SAS-2 support (e.g. zoning, new broadcast
+primitives, etc.) to libsas?
 
-Nobody.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Thanks,
+Nate
