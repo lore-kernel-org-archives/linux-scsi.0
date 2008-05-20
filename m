@@ -1,53 +1,59 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ibmvscsi: Non SCSI error status fixup
-Date: Tue, 20 May 2008 08:52:36 -0500
-Message-ID: <4832D7A4.1070609@linux.vnet.ibm.com>
-References: <12112108763801-patch-mail.ibm.com> <18481.41759.969242.972595@gargle.gargle.HOWL> <1211245688.12970.0.camel@localhost>
-Reply-To: brking@linux.vnet.ibm.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/7] scsi_dh framework update take #2
+Date: Tue, 20 May 2008 16:04:27 +0200
+Message-ID: <4832DA6B.3050702@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:53612 "EHLO e2.ny.us.ibm.com"
+Received: from ns2.suse.de ([195.135.220.15]:33640 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754354AbYETNwj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 May 2008 09:52:39 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4KDqcOG023521
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2008 09:52:38 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4KDqcne163710
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2008 09:52:38 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4KDqb8N020388
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2008 09:52:38 -0400
-In-Reply-To: <1211245688.12970.0.camel@localhost>
+	id S1753169AbYETOE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2008 10:04:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michael@ellerman.id.au
-Cc: Dave Boutcher <boutcher@cs.umn.edu>, linuxppc-dev@ozlabs.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-Michael Ellerman wrote:
-> On Mon, 2008-05-19 at 10:56 -0500, Dave Boutcher wrote:
->> On Mon, 19 May 2008 10:27:56 -0500, Brian King <brking@linux.vnet.ibm.com> said:
->>> Some versions of the Virtual I/O Server on Power
->>> return 0x99 in the non-SCSI error status field as success,
->>> rather than 0. This fixes the ibmvscsi driver to treat this
->>> response as success.
->> Yeah....0x99...that's an intuitive value for success.
-> 
-> Hopefully there are no versions that return 0x99 for an error? :)
+Hi James,
 
-There shouldn't be. 0x99 is actually not defined as a valid value for
-that field, but it is what the ibmvscsis VIOS that is included in
-SLES 9 and SLES 10 return on success, due to a bug in that driver.
-We plan to fix the ibmvscsis driver as well, but it will take a while
-for that fix to propagate. Until very recently, the status field was not
-checked, which is why we are only recently running into this problem.
+this is the second repost of my patchset to update the scsi_dh
+infrastructure. It includes the comments by Chandra.
 
--Brian
+It's based on the current scsi-misc tree.
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Main features of the patchset are:
+- Use a single callback for the notifier chain
+- Merge all device maps into a single list,
+ which will be scanned by a generic function
+- Add a sysfs attribute 'dh_state' for each sdev
+- Add a generic SPC-3 ALUA device handler
+- Update device handlers to check if the
+ device actually supports this handler.
+ When attaching manually we are able to attach
+ to basically any device, so we have to make sure
+ that the device handler is actually supported.
+- Manually attach a device when a hardware handler
+ is specified; this allows multipath to override
+ the built-in hardware table.
+- Update dm-multipath to explicitly attach to
+ the specified device handler. This allows
+ overriding of the built-in table by the
+ multipath values.
+
+As per usual, comment etc are welcome.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
