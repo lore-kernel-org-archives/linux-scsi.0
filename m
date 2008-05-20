@@ -1,175 +1,102 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 7/7] scsi_dh: attach to hardware handler from
-	dm-mpath
-Date: Tue, 20 May 2008 16:05:53 +0200
-Message-ID: <20080520140553.A393810B5DF@craiglockhart-ipmi.suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Tue, 20 May 2008 10:23:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0805201005120.2494-100000@iolanthe.rowland.org>
+References: <48328E81.2080504@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:45715 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1765519AbYETOX0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 10:23:26 -0400
+In-Reply-To: <48328E81.2080504@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Tue, 20 May 2008, Boaz Harrosh wrote:
 
-multipath keeps a separate device table which may be
-more current than the built-in one.
-So we should make sure to always call ->attach whenever
-a multipath map with hardware handler is instantiated.
-And we should call ->detach on removal, too.
+> Alan Stern wrote:
+> > On Mon, 19 May 2008, Boaz Harrosh wrote:
+> > 
+> >> Sure, inspecting other places that emulate MODE_SENSE, (And inspecting the scsi
+> >> spec) all zeros is a very good scsi response. Alan do you want to send a fix for all
+> >> places that initiate a MODE_SENSE command, specifically at
+> >> scsi_scan.c::scsi_unlock_floptical() ? (Some other places do)
+> > 
+> > I can't send such a fix because at these places the residue information 
+> > has already been lost.  The fix needs to be made lower down.
+> > 
+> 
+> I was talking about zero-set the data buffer before issue of the 
+> MODE_SENSE command. (As it accidentally happen to be before)
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/md/dm-mpath.c                 |   13 ++++++
- drivers/scsi/device_handler/scsi_dh.c |   74 +++++++++++++++++++++++++++++++++
- include/scsi/scsi_dh.h                |    2 +
- 3 files changed, 89 insertions(+), 0 deletions(-)
+The data buffer _is_ set to zero bufore the MODE SENSE command is
+issued.  It doesn't help, because the device sends garbage data along
+with a Residue value saying that none of the data it sent was valid.
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index e8f704a..bd2bcf4 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -147,9 +147,12 @@ static struct priority_group *alloc_priority_group(void)
- static void free_pgpaths(struct list_head *pgpaths, struct dm_target *ti)
- {
- 	struct pgpath *pgpath, *tmp;
-+	struct multipath *m = (struct multipath *) ti->private;
- 
- 	list_for_each_entry_safe(pgpath, tmp, pgpaths, list) {
- 		list_del(&pgpath->list);
-+		if (m->hw_handler_name)
-+			scsi_dh_detach(bdev_get_queue(pgpath->path.dev->bdev));
- 		dm_put_device(ti, pgpath->path.dev);
- 		free_pgpath(pgpath);
- 	}
-@@ -546,6 +549,7 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- {
- 	int r;
- 	struct pgpath *p;
-+	struct multipath *m = (struct multipath *) ti->private;
- 
- 	/* we need at least a path arg */
- 	if (as->argc < 1) {
-@@ -564,6 +568,15 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- 		goto bad;
- 	}
- 
-+	if (m->hw_handler_name) {
-+		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
-+				   m->hw_handler_name);
-+		if (r < 0) {
-+			dm_put_device(ti, p->path.dev);
-+			goto bad;
-+		}
-+	}
-+
- 	r = ps->type->add_path(ps, &p->path, as->argc, as->argv, &ti->error);
- 	if (r) {
- 		dm_put_device(ti, p->path.dev);
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index b80fae7..a9404b5 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -362,6 +362,80 @@ int scsi_dh_handler_exist(const char *name)
- }
- EXPORT_SYMBOL_GPL(scsi_dh_handler_exist);
- 
-+/*
-+ * scsi_dh_handler_attach - Attach device handler
-+ * @sdev - sdev the handler should be attached to
-+ * @name - name of the handler to attach
-+ */
-+int scsi_dh_attach(struct request_queue *q, const char *name)
-+{
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+	struct scsi_device_handler *scsi_dh;
-+	int err = 0;
-+
-+	scsi_dh = get_device_handler(name);
-+	if (!scsi_dh)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		err = -ENODEV;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	if (!err) {
-+		err = scsi_dh_handler_attach(sdev, scsi_dh);
-+
-+		put_device(&sdev->sdev_gendev);
-+	}
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(scsi_dh_attach);
-+
-+/*
-+ * scsi_dh_handler_detach - Detach device handler
-+ * @sdev - sdev the handler should be detached from
-+ *
-+ * This function will detach the device handler only
-+ * if the sdev is not part of the internal list, ie
-+ * if it has been attached manually.
-+ */
-+void scsi_dh_detach(struct request_queue *q)
-+{
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+	struct scsi_device_handler *scsi_dh = NULL;
-+	int i, found = 0;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		sdev = NULL;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	if (!sdev)
-+		return;
-+
-+	if (sdev->scsi_dh_data) {
-+		scsi_dh = sdev->scsi_dh_data->scsi_dh;
-+		for(i = 0; scsi_dh->devlist[i].vendor; i++) {
-+			if (!strncmp(sdev->vendor, scsi_dh->devlist[i].vendor,
-+				     strlen(scsi_dh->devlist[i].vendor)) &&
-+			    !strncmp(sdev->model, scsi_dh->devlist[i].model,
-+				     strlen(scsi_dh->devlist[i].model))) {
-+				found = 1;
-+				break;
-+			}
-+		}
-+		/* sdev not on internal list, detach */
-+		if (!found)
-+			scsi_dh_handler_detach(sdev);
-+	}
-+	put_device(&sdev->sdev_gendev);
-+}
-+EXPORT_SYMBOL_GPL(scsi_dh_detach);
-+
- static struct notifier_block scsi_dh_nb = {
- 	.notifier_call = scsi_dh_notifier
- };
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 5d05ac0..8032e51 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -59,3 +59,5 @@ enum {
- 
- extern int scsi_dh_activate(struct request_queue *);
- extern int scsi_dh_handler_exist(const char *);
-+extern int scsi_dh_attach(struct request_queue *, const char *);
-+extern void scsi_dh_detach(struct request_queue *q);
--- 
-1.5.2.4
+> > Besides, everybody seems to be missing an important point.
+> > 
+> 
+> No, you are missing the point.
+> 
+> > MODE SENSE is just one example of a command for which a device might
+> > return less data than the host expected.  In principle the same thing
+> > could happen with _any_ command.  The host should be prepared for this
+> > and should be able to handle it correctly.  And the host shouldn't
+> > blindly assume that devices will slavishly follow the letter of the
+> > SCSI spec.
+> > 
+> 
+> LLD's do a good job upto now. If *NO* data was written to a target they
+> return some error status.
+
+We are talking about data being _read_ from a device, not _written_ to 
+a device.  MODE SENSE does a read, not a write.
+
+> You keep returning to, "what if we wrote less and the target
+> did not signal an error status". Well, up to now we did not see such 
+> thing, let's cross that when we see it with black lists or something.
+
+Why use a blacklist?  This sort of thing is allowed by the USB mass 
+storage spec, and probably also by the SCSI spec.  The core should be 
+able to handle it.
+
+> > We need something much more thorough than just fiddling with
+> > scsi_mode_sense().  One possibility would be to pass a
+> > minimum-response-length argument to scsi_execute_req().  But even that
+> > wouldn't catch all the code paths where this sort of thing could  
+> > happen (although it probably would catch most of them).
+> > 
+> It never happens! LLD's set proper status when something gone wrong.
+
+What do you mean by "gone wrong"?  The device didn't send an error 
+status, so in that sense nothing is wrong.
+
+It also didn't send the data we want.  But how is the LLD supposed to 
+know how much data is truly needed?  The only mechanism for that is 
+scmd->underflow.  usb-storage does indeed test that, as it should.
+
+Apparently the SCSI core should start setting scmd->underflow in cases
+where it currently doesn't.
+
+> > This needs someone who is more familiar than I am with the operation of
+> > the SCSI core.
+> >
+> 
+> The SCSI core assumes the LLD will return some status condition. 
+> If an LLD trusts it's device it will blindly return what the device returned,
+> if not it will do some checks of it's own. You can see examples of both in 
+> the source tree.
+
+Your description bears no relation to what usb-storage does.  It does 
+_not_ blindly trust the device; it _does_ check status conditions, and 
+it _does_ do checks of its own.
+
+It's not usb-storage's fault that the SCSI core failed to tell it how
+much data was required to be transferred.
+
+Alan Stern
+
