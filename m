@@ -1,47 +1,72 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: lockdep whine in 2.6.26-rc2-mm1
-Date: Mon, 19 May 2008 19:51:43 -0600
-Message-ID: <20080520015142.GJ2638@parisc-linux.org>
-References: <20080514000933.56adc131.akpm@linux-foundation.org> <20080514155639.GB28594@kroah.com> <20080514162442.GO9324@parisc-linux.org> <a8e1da0805142247k2456234evb5ea2be59da135cb@mail.gmail.com> <20080515090101.GA2915@darkstar.te-china.tietoenator.com> <20080515115203.GH9921@parisc-linux.org> <a8e1da0805170314v4253d01agc0d6f77438e27989@mail.gmail.com> <a8e1da0805182220y23412047g4969e3906a4c5aca@mail.gmail.com> <20080519102343.GB2638@parisc-linux.org> <a8e1da0805191827s6222ec65k8521359b188e6345@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37958 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbYETBv7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2008 21:51:59 -0400
-Content-Disposition: inline
-In-Reply-To: <a8e1da0805191827s6222ec65k8521359b188e6345@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/4] ide: use the dma safe check for REQ_TYPE_ATA_PC
+Date: Tue, 20 May 2008 13:58:33 +0900
+Message-ID: <1211259514-9131-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1211259514-9131-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1211259514-9131-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, akpm@linux-foundation.org, davem@davemloft.net, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Young <hidave.darkstar@gmail.com>
-Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-On Tue, May 20, 2008 at 09:27:59AM +0800, Dave Young wrote:
-> > The question isn't whether there is or isn't this kind of use right now.
-> > The question is whether there might be this kind of use in the future,
-> > and if there is, whether we'd like lockdep to warn us.
-> 
-> In the future, IMHO, the class_interface should go away just as
-> class_device. If that happened this problem would going away as well.
+This uses the dma safe check for REQ_TYPE_ATA_PC. The dma safe check
+is used for only sg requests but it should be used for other non fs
+commands.
 
-Go away ... and be replaced by something else, right?  I mean, it's not
-like we don't have a need to bind two kinds of driver to the same
-device.  So we're going to continue to have the situation where you can
-register a new kind of driver and want to create new devices, so we'll
-still have a nesting of some kind.
+This uses blk_queue_update_dma_pad to make the intention clear though
+ide don't use the blk APIs so it doesn't change anything.
 
-> Your idea is good. But as I said above, for current situation there's
-> no potential problems except class_interface usage, and the
-> class_interface will go away
->  in the future.
-> 
-> So IMO It's not necessary to do this for all classes.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-cd.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-Assuming your analysis is correct, of course.
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 68e7f19..1d8d510 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1178,10 +1178,15 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 	info->dma = 0;
+ 
+ 	/* sg request */
+-	if (rq->bio) {
+-		int mask = drive->queue->dma_alignment;
+-		unsigned long addr =
+-			(unsigned long)page_address(bio_page(rq->bio));
++	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
++		struct request_queue *q = drive->queue;
++		unsigned int alignment;
++		unsigned long addr;
++
++		if (rq->bio)
++			addr = (unsigned long)bio_data(rq->bio);
++		else
++			addr = (unsigned long)rq->data;
+ 
+ 		info->dma = drive->using_dma;
+ 
+@@ -1191,7 +1196,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 * NOTE! The "len" and "addr" checks should possibly have
+ 		 * separate masks.
+ 		 */
+-		if ((rq->data_len & 15) || (addr & mask))
++		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
++		if (addr & alignment || rq->data_len & alignment)
+ 			info->dma = 0;
+ 	}
+ 
+@@ -1869,6 +1875,7 @@ static int ide_cdrom_setup(ide_drive_t *drive)
+ 
+ 	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
+ 	blk_queue_dma_alignment(drive->queue, 31);
++	blk_queue_update_dma_pad(drive->queue, 15);
+ 	drive->queue->unplug_delay = (1 * HZ) / 1000;
+ 	if (!drive->queue->unplug_delay)
+ 		drive->queue->unplug_delay = 1;
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.4.2
+
