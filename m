@@ -1,83 +1,51 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: max_hw_sectors
-Date: Tue, 20 May 2008 15:29:09 -0700
-Message-ID: <1211322549.14731.46.camel@haakon2.linux-iscsi.org>
-References: <1211286814.4057.8.camel@localhost.localdomain>
+Subject: LIO-Target Core v3.0.0 imported in k.o git
+Date: Tue, 20 May 2008 15:48:17 -0700
+Message-ID: <1211323697.14731.68.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1211286814.4057.8.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: blackmagic02881@gmail.com
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, Christoph Hellwig <hch@lst.de>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp109.sbc.mail.mud.yahoo.com ([68.142.198.208]:47304 "HELO
+	smtp109.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S935049AbYETWs0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2008 18:48:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Open iSCSI <open-iscsi@googlegr>
+Cc: nab@kernel.org, Ming Zhang <blackmagic02881@gmail.com>, "Ross S. W. Walker" <rwalker@medallion.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vladislav Bolkhovitin <vst@vlnb.net>, Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Grant Grundler <grundler@google.com>, Mike Mazarick <mazarick@bellsouth.net>, Bryan Black <bdblinux@gmail.com>, Sig Lange <sig.lange@gmail.com>, Hannes Reinecke <hare@suse.de>
 
-Greetings Ming!
+Greetings all,
 
-On Tue, 2008-05-20 at 08:33 -0400, Ming Zhang wrote:
-> Hi
-> 
-> See if you can shed a light on this.
-> 
-> When use the target for exporting a local scsi device to iscsi
-> initiator, there is a issue here. linux has a max_hw_sector for each
-> device and iscsi ini side have another number. if ini thought this
-> device can handle large request, it will send a large request size, then
-> how target deal with it?
+The LIO-Target Core v3.0.0 tree has been imported from v2.9-STABLE from
+Linux-iSCSI.org source tree repositories into kernel.org git, and is
+building w/ v2.6.26-rc3.  It can be found at:
 
-The target mode engine really has to handle this IMHO.  This ended up
-being a requirement for me personally around LIO-Target v1.8 with
-megaraid SATA using max_sectors == 128 * 512 Byte sectors (for handling
-smaller HW RAID stripe sizes) and Host OS SCSI subsystems on the iSCSI
-Initiator side assuming max_sectors == 256 * 512 Byte sectors as default
-(and some OSes not having an easy way to change that..)
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-The method in which LIO-Target Core achieves this for
-ICF_SCSI_DATA_SG_IO_CDB is by the se_mem_t linked list memory allocation
-logic (used in iscsi_target_transport.c) and Received Initiator CDB
-(single CMD) vs. CDB(s) going into LIO Subsystem API (N number of
-TASKs).  This design allows for:
+I will be continuing the cleanup activies for upstream, which so far has
+included the removal of legacy unused engine level mirroring/replication
+bits (as we are using LIO-DRBD or LIO-NR1 w/ MD for this now), and a few
+LINUX_VERSION_CODE removals.  
 
-1) Any combination of the received CMD's CDB count, and max_hw_sectors a
-+ sector_size (if the latter is not legacy 512 Byte sectors) up to the
-allowed CmdSN Window depth for a given Initiator Port <-> Target Port
-iSCSI Nexus.
+[nab@hera lio-core]$ wc -l *.c *.h | tail -n 1
+  57879 total
 
-2) That said LIO se_mem_t memory, which has been using se_mem_t->page in
-v2.9, (no changes to v3.0 just yet for this to become completely >= k.o
-v2.6.24 struct scatterlist->page_link modern :) can be either
+The goal now will be to seperate out the LIO-Target / LIO-Core pieces
+for moving the latter upstream initially (eg a working passthrough, and
+then v3.0 LIO-Target using traditional iSCSI, then iWARP and iSER.  This
+will all be going into the roadmap on Linux-iSCSI.org for reference.
 
-	a) Allocated as the engine receives traditional iSCSI 
-	   PDUs during traditional socket level I/O.
+I invite interested parties to have a look, and please contact me on the
+LIO-Target devel list, or privately if you would like to get involved
+looking at some code that are in line with your
+knowledge/interests/projects.
 
-	b) Allocated during LIO target engine passthrough by caller.
-
-	c) That incoming memory into LIO-Core can be preregistered 
-           beforehand and ready direct data placement memory buffers 
-           (using HW or SW RNICs drivers) can be mapped with all of the
-           above requirements.
-
-This model allows for multiple types of SCSI device types, both physical
-and virtual from different storage subsystems, and obviously you still
-need to emulate the control bits, which are going to be emulated per
-SCSI transport specific, yes..?
+Many thanks for your most valuable of time,
 
 --nab
 
-> 
-> 	
 
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft 
-Defy all challenges. Microsoft(R) Visual Studio 2008. 
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+
