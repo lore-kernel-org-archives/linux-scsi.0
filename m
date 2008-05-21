@@ -1,41 +1,97 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
-Date: Wed, 21 May 2008 18:05:29 +0800
-Message-ID: <20080521100529.GA19077@gondor.apana.org.au>
-References: <20080521031646.GA16565@gondor.apana.org.au> <20080521155414D.fujita.tomonori@lab.ntt.co.jp> <20080521084700.GA18644@gondor.apana.org.au> <20080521183429O.tomof@acm.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default
+ dma pad mask
+Date: Wed, 21 May 2008 20:01:12 +0900
+Message-ID: <20080521200104C.tomof@acm.org>
+References: <20080521084700.GA18644@gondor.apana.org.au>
+	<20080521183429O.tomof@acm.org>
+	<20080521100529.GA19077@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:55045 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759688AbYEUKFq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2008 06:05:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20080521183429O.tomof@acm.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:42010 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754195AbYEULCD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 May 2008 07:02:03 -0400
+In-Reply-To: <20080521100529.GA19077@gondor.apana.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
+To: herbert@gondor.apana.org.au
+Cc: fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
-On Wed, May 21, 2008 at 06:34:45PM +0900, FUJITA Tomonori wrote:
->
-> Why do crypto need to know exactly the minimum alignment guaranteed by
-> kmalloc? Can you tell me an example how the alignment breaks crypto?
+On Wed, 21 May 2008 18:05:29 +0800
+Herbert Xu <herbert@gondor.apana.org.au> wrote:
 
-It's used to make the context aligned so that for most algorithms
-we can get to the context without going through ALIGN_PTR.  Only
-algorithms requiring alignments bigger than that offered by kmalloc
-would have to use ALIGN_PTR.  This is important because the context
-is used on the fast path, i.e., for AES every block has to access
-the context.
+> On Wed, May 21, 2008 at 06:34:45PM +0900, FUJITA Tomonori wrote:
+> >
+> > Why do crypto need to know exactly the minimum alignment guaranteed by
+> > kmalloc? Can you tell me an example how the alignment breaks crypto?
+> 
+> It's used to make the context aligned so that for most algorithms
+> we can get to the context without going through ALIGN_PTR.  Only
 
-If we used an alignment value is bigger than that guaranteed by
-kmalloc then this would break because the context may end up
-unaligned.
+How many bytes does the context need to be aligned?
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+I'm still not sure what you mean. You referred to aes, so let me use
+aes as an example.
+
+I think 'we can get to the context' means that accessing to
+crypto_aes_ctx from struct crypto_tfm like this:
+
+struct crypto_aes_ctx *ctx = crypto_tfm_ctx(tfm);
+
+
+struct crypto_tfm and crypto_tfm_ctx are defined as:
+
+struct crypto_tfm {
+
+	u32 crt_flags;
+
+	union {
+		struct ablkcipher_tfm ablkcipher;
+		struct aead_tfm aead;
+		struct blkcipher_tfm blkcipher;
+		struct cipher_tfm cipher;
+		struct hash_tfm hash;
+		struct compress_tfm compress;
+	} crt_u;
+
+	struct crypto_alg *__crt_alg;
+
+	void *__crt_ctx[] CRYPTO_MINALIGN_ATTR;
+};
+
+static inline void *crypto_tfm_ctx(struct crypto_tfm *tfm)
+{
+	return tfm->__crt_ctx;
+}
+
+struct crypto_aes_ctx is placed right after struct crypto_tfm.
+
+My question is why __crt_ctx needs ARCH_KMALLOC_MINALIGN alignment,
+e.g., could be 128 bytes.
+
+
+> algorithms requiring alignments bigger than that offered by kmalloc
+> would have to use ALIGN_PTR.  This is important because the context
+> is used on the fast path, i.e., for AES every block has to access
+> the context.
+
+Why do algorithms require alignments bigger than ARCH_KMALLOC_MINALIGN?
+
+
+> If we used an alignment value is bigger than that guaranteed by
+> kmalloc then this would break because the context may end up
+> unaligned.
+> 
+> Cheers,
+> -- 
+> Visit Openswan at http://www.openswan.org/
+> Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+> Home Page: http://gondor.apana.org.au/~herbert/
+> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
