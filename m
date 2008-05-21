@@ -1,37 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: iscsi update for 2.6.27
-Date: Wed, 21 May 2008 16:06:08 -0500
-Message-ID: <48348EC0.5080905@cs.wisc.edu>
-References: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu>
+From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
+Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced buffers instead of buffers on stack)
+Date: Thu, 22 May 2008 00:11:13 +0200
+Message-ID: <20080521221113.GA12695@alpha.franken.de>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53942 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759039AbYEUVGN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2008 17:06:13 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m4LL6CjD022202
-	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2008 17:06:12 -0400
-Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m4LL6AWd024995
-	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2008 17:06:11 -0400
-Received: from [10.11.14.6] (vpn-14-6.rdu.redhat.com [10.11.14.6])
-	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m4LL69Xk015759
-	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2008 17:06:10 -0400
-In-Reply-To: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, akpm@linux-foundation.org, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-michaelc@cs.wisc.edu wrote:
-> This also includes from cleanup patches from Harvey Harrison. It does
-> include the patch from Boaz since I goofed and forgot that we were
+On Tue, May 20, 2008 at 01:58:30PM +0900, FUJITA Tomonori wrote:
+> The goal of this patchset is reverting the commit
+> 22a9189fd073db3d03a4cf8b8c098aa207602de1 (cdrom: use kmalloced buffers
+> instead of buffers on stack).
+> 
+> http://lkml.org/lkml/2008/4/21/634
+> 
+> The commit is using kmalloced buffers for cdrom packet commands to
+> avoid stack corruption on non coherent platforms. But allocating a
+> small buffer like this is not nice (unnecessary complicity):
+> 
+> +	buffer = kmalloc(8, GFP_KERNEL);
 
-This should say it does _not_ include the patch from boaz.
+If I read the bio code correctly with your patch non coherent system will
+be punished a lot more. bio_copy_kern will allocate a whole page for this
+8 bytes. Please correct me, if I'm wrong otherwise I tend to NAK that 
+approach.
 
+> If some architectures can't do DMA on stack, we also need to a new
+> queue_flag like QUEUE_FLAG_NO_DMA_ON_STACK in addtion of this
+> patchset.
 
-> going to cleanup the iscsi_ecdb_ahdr 260 hardcoding usage and Boaz and James
-> are discussing where to define that. That can go in later when Boaz is
-> ready and those issues are resolved.
+DMA-mapping.txt tells that DMA on stack is forbidden. IMHO we either need
+to revoke that first or deal with it. 
+
+Thomas.
+
+-- 
+Crap can work. Given enough thrust pigs will fly, but it's not necessary a
+good idea.                                                [ RFC1925, 2.3 ]
