@@ -1,47 +1,57 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [2.6 patch] scsi/advansys.c: fix compile errors
-Date: Wed, 21 May 2008 23:07:43 +0300
-Message-ID: <20080521200743.GK15355@cs181133002.pp.htv.fi>
-References: <20080521174152.GF15355@cs181133002.pp.htv.fi> <20080521195332.GV2638@parisc-linux.org>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] Fusion: SAS: don't set queue depth to 1 when sdev->id
+ is greater than sh->max_id
+Date: Wed, 21 May 2008 15:21:28 -0500
+Message-ID: <48348448.4020508@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:52338 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937125AbYEUUJ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2008 16:09:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20080521195332.GV2638@parisc-linux.org>
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:57601 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763168AbYEUUVd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2008 16:21:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Wed, May 21, 2008 at 01:53:33PM -0600, Matthew Wilcox wrote:
-> On Wed, May 21, 2008 at 08:41:52PM +0300, Adrian Bunk wrote:
-> > This patch fixes the following compile error on architectures not 
-> > providing free_dma():
-> 
-> Last time this came up, I think the consensus was that those
-> architectures should be providing a stub free_dma().
+This patch was originally part of a patch posted March 13, 2008.
+I'm breaking this out into a separate patch as it's only somewhat related.
+Applies cleanly against Sathya's latest patch and will apply correctly
+(offset +29) to 2.6.26-rc3-git3.
 
-I tried building as many modules as possible on frv, and this was the 
-only driver that failed this way.
+--
 
-Another possibility would be to let this driver depend on ISA_DMA_API
-(similar to e.g. SCSI_EATA).
+Change mptscsih_slave_configure so it doesn't set the queue depth to 1 for SAS
+protocol when sdev->id is greater than sh->max_id.   The sas transport
+layer assigns the target ids, incrementing with each hotplug add.  With
+large topologies, it doesn't take long to hit this threshold.
 
-Sorry for being lazy, but touching X architectures for fixing the 
-compiliation of a driver whose hardware will anyway most likely never
-be used on this architecture is IMHO not worth the effort...
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
-cu
-Adrian
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+--- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptscsih.c	2008-05-21 15:06:59.212691745 -0500
++++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptscsih.c	2008-05-21 15:08:04.323836957 -0500
+@@ -2422,12 +2422,6 @@ mptscsih_slave_configure(struct scsi_dev
+ 		    ioc->name, sdev->sdtr, sdev->wdtr,
+ 		    sdev->ppr, sdev->inquiry_len));
+ 
+-	if (sdev->id > sh->max_id) {
+-		/* error case, should never happen */
+-		scsi_adjust_queue_depth(sdev, 0, 1);
+-		goto slave_configure_exit;
+-	}
+-
+ 	vdevice->configured_lun = 1;
+ 	mptscsih_change_queue_depth(sdev, MPT_SCSI_CMD_PER_DEV_HIGH);
+ 
+@@ -2441,8 +2435,6 @@ mptscsih_slave_configure(struct scsi_dev
+ 		    ioc->name, vtarget->negoFlags, vtarget->maxOffset,
+ 		    vtarget->minSyncFactor));
+ 
+-slave_configure_exit:
+-
+ 	dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+ 		"tagged %d, simple %d, ordered %d\n",
+ 		ioc->name,sdev->tagged_supported, sdev->simple_tags,
