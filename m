@@ -1,46 +1,31 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 2/3][-mm] reclassify the sg_sysfs_class mutex
-Date: Wed, 21 May 2008 09:25:58 +0800
-Message-ID: <a8e1da0805201825w4c8e35d7o55db8af9e04981df@mail.gmail.com>
-References: <20080520095851.GB3201@darkstar.te-china.tietoenator.com>
-	 <20080520172259.GB11666@kroah.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
+Date: Wed, 21 May 2008 09:26:22 +0800
+Message-ID: <20080521012622.GA15850@gondor.apana.org.au>
+References: <20080520093819.GA9147@gondor.apana.org.au> <20080520222531H.tomof@acm.org> <20080520153424.GA11687@gondor.apana.org.au> <20080521010942W.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:28021 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756463AbYEUB0C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2008 21:26:02 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1276566tic.23
-        for <linux-scsi@vger.kernel.org>; Tue, 20 May 2008 18:25:58 -0700 (PDT)
-In-Reply-To: <20080520172259.GB11666@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20080521010942W.tomof@acm.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: akpm@linux-foundation.org, matthew@wil.cx, kay.sievers@vrfy.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, May 21, 2008 at 1:22 AM, Greg KH <greg@kroah.com> wrote:
-> On Tue, May 20, 2008 at 05:58:51PM +0800, Dave Young wrote:
->> [Please first apply the patch 1/3 before this]
->>
->> To please lockdep here we use class_reclassify to change
->> the lock class of sg_sysfs_class
+On Wed, May 21, 2008 at 01:09:41AM +0900, FUJITA Tomonori wrote:
 >
-> Are you suggesting we do this for every struct class in the kernel?  If
-> so, why not just do it in the class core, instead of having to modify
-> every single caller?
+> Then, you don't need to use ARCH_KMALLOC_MINALIGN. 8 bytes align works
+> for you on all the architectures.
 
-I don't think it necessary to do this for every class, because only
-class_interface_* calls could cause the issue, and the
-class_interface_* are only used by pcmcia & scsi, do you think there
-will be other users of them?
+DMA isn't the only thing that requires alignment.  The CPU needs
+it too.  Also using a constant like 8 is broken because if we used
+a value larger than the alignment guaranteed by kmalloc then the
+context may end up unaligned.
 
->
-> I don't think the overall idea of this patch set is acceptable anyway :(
->
-> thanks,
->
-> greg k-h
->
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
