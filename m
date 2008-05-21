@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 19/25] iser: Modify iser to take a iscsi_endpoint struct in ep callouts and session setup
-Date: Wed, 21 May 2008 15:54:14 -0500
-Message-ID: <1211403260-5487-20-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 23/25] libiscsi, iser, tcp: remove recv_lock
+Date: Wed, 21 May 2008 15:54:18 -0500
+Message-ID: <1211403260-5487-24-git-send-email-michaelc@cs.wisc.edu>
 References: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu>
  <1211403260-5487-2-git-send-email-michaelc@cs.wisc.edu>
  <1211403260-5487-3-git-send-email-michaelc@cs.wisc.edu>
@@ -21,12 +21,16 @@ References: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu>
  <1211403260-5487-17-git-send-email-michaelc@cs.wisc.edu>
  <1211403260-5487-18-git-send-email-michaelc@cs.wisc.edu>
  <1211403260-5487-19-git-send-email-michaelc@cs.wisc.edu>
+ <1211403260-5487-20-git-send-email-michaelc@cs.wisc.edu>
+ <1211403260-5487-21-git-send-email-michaelc@cs.wisc.edu>
+ <1211403260-5487-22-git-send-email-michaelc@cs.wisc.edu>
+ <1211403260-5487-23-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45323 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:45361 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937119AbYEUUyg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2008 16:54:36 -0400
-In-Reply-To: <1211403260-5487-19-git-send-email-michaelc@cs.wisc.edu>
+	id S1756708AbYEUUyj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 May 2008 16:54:39 -0400
+In-Reply-To: <1211403260-5487-23-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -34,255 +38,568 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This hooks iser into the iscsi endpoint code. Previously it handled the
-lookup and allocation. This has been made generic so bnx2i and iser can
-share it. It also allows us to pass iser the leading conn's ep, so we
-know the ib_deivce being used and can set it as the scsi_host's parent.
-And that allows scsi-ml to set the dma_mask based on those values.
+The recv lock was defined so the iscsi layer could block
+the recv path from processing IO during recovery. It
+turns out iser just set a lock to that pointer which was pointless.
+
+We now disconnect the transport connection before doing recovery
+so we do not need the recv lock. For iscsi_tcp we still stop
+the recv path incase older tools are being used.
+
+This patch also has iscsi_itt_to_ctask user grab the session lock
+and has the caller access the task with the lock or get a ref
+to it in case the target is broken and sends a tmf success response
+then sends data or a response for the command that was supposed to
+be affected bty the tmf.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |   87 +++++++++++++-----------------
- drivers/infiniband/ulp/iser/iscsi_iser.h |    4 +-
- drivers/infiniband/ulp/iser/iser_verbs.c |   14 +----
- 3 files changed, 43 insertions(+), 62 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c     |   20 ++--
+ drivers/infiniband/ulp/iser/iscsi_iser.h     |    2 -
+ drivers/infiniband/ulp/iser/iser_initiator.c |    6 +
+ drivers/scsi/iscsi_tcp.c                     |   73 +++++++------
+ drivers/scsi/libiscsi.c                      |  152 +++++++++++++++-----------
+ include/scsi/libiscsi.h                      |    8 +-
+ 6 files changed, 144 insertions(+), 117 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 3a89039..42e95b8 100644
+index 08edbaf..c02eabd 100644
 --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
 +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -262,24 +262,6 @@ iscsi_iser_cleanup_task(struct iscsi_conn *conn, struct iscsi_task *task)
- 	}
+@@ -281,9 +281,6 @@ iscsi_iser_conn_create(struct iscsi_cls_session *cls_session, uint32_t conn_idx)
+ 	conn->max_recv_dlength = 128;
+ 
+ 	iser_conn = conn->dd_data;
+-	/* currently this is the only field which need to be initiated */
+-	rwlock_init(&iser_conn->lock);
+-
+ 	conn->dd_data = iser_conn;
+ 	iser_conn->iscsi_conn = conn;
+ 
+@@ -342,9 +339,6 @@ iscsi_iser_conn_bind(struct iscsi_cls_session *cls_session,
+ 	ib_conn->iser_conn = iser_conn;
+ 	iser_conn->ib_conn  = ib_conn;
+ 	iser_conn_get(ib_conn);
+-
+-	conn->recv_lock = &iser_conn->lock;
+-
+ 	return 0;
  }
  
--static struct iser_conn *
--iscsi_iser_ib_conn_lookup(__u64 ep_handle)
--{
--	struct iser_conn *ib_conn;
--	struct iser_conn *uib_conn = (struct iser_conn *)(unsigned long)ep_handle;
--
--	mutex_lock(&ig.connlist_mutex);
--	list_for_each_entry(ib_conn, &ig.connlist, conn_list) {
--		if (ib_conn == uib_conn) {
--			mutex_unlock(&ig.connlist_mutex);
--			return ib_conn;
--		}
--	}
--	mutex_unlock(&ig.connlist_mutex);
--	iser_err("no conn exists for eph %llx\n",(unsigned long long)ep_handle);
--	return NULL;
--}
--
- static struct iscsi_cls_conn *
- iscsi_iser_conn_create(struct iscsi_cls_session *cls_session, uint32_t conn_idx)
- {
-@@ -335,6 +317,7 @@ iscsi_iser_conn_bind(struct iscsi_cls_session *cls_session,
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_iser_conn *iser_conn;
- 	struct iser_conn *ib_conn;
-+	struct iscsi_endpoint *ep;
- 	int error;
+@@ -355,12 +349,18 @@ iscsi_iser_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ 	struct iscsi_iser_conn *iser_conn = conn->dd_data;
+ 	struct iser_conn *ib_conn = iser_conn->ib_conn;
  
- 	error = iscsi_conn_bind(cls_session, cls_conn, is_leading);
-@@ -343,12 +326,14 @@ iscsi_iser_conn_bind(struct iscsi_cls_session *cls_session,
- 
- 	/* the transport ep handle comes from user space so it must be
- 	 * verified against the global ib connections list */
--	ib_conn = iscsi_iser_ib_conn_lookup(transport_eph);
--	if (!ib_conn) {
-+	ep = iscsi_lookup_endpoint(transport_eph);
-+	if (!ep) {
- 		iser_err("can't bind eph %llx\n",
- 			 (unsigned long long)transport_eph);
- 		return -EINVAL;
- 	}
-+	ib_conn = ep->dd_data;
-+
- 	/* binds the iSER connection retrieved from the previously
- 	 * connected ep_handle to the iSCSI layer connection. exchanges
- 	 * connection pointers */
-@@ -401,21 +386,17 @@ static void iscsi_iser_session_destroy(struct iscsi_cls_session *cls_session)
- }
- 
- static struct iscsi_cls_session *
--iscsi_iser_session_create(struct Scsi_Host *shost,
-+iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 			  uint16_t cmds_max, uint16_t qdepth,
- 			  uint32_t initial_cmdsn, uint32_t *hostno)
- {
- 	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
-+	struct Scsi_Host *shost;
- 	int i;
- 	struct iscsi_task *task;
- 	struct iscsi_iser_task *iser_task;
--
--	if (shost) {
--		printk(KERN_ERR "iscsi_tcp: invalid shost %d.\n",
--		       shost->host_no);
--		return NULL;
--	}
-+	struct iser_conn *ib_conn;
- 
- 	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, ISCSI_MAX_CMD_PER_LUN);
- 	if (!shost)
-@@ -426,7 +407,15 @@ iscsi_iser_session_create(struct Scsi_Host *shost,
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = 16;
- 
--	if (iscsi_host_add(shost, NULL))
-+	/*
-+	 * older userspace tools (before 2.0-870) did not pass us
-+	 * the leading conn's ep so this will be NULL;
-+	 */
-+	if (ep)
-+		ib_conn = ep->dd_data;
-+
-+	if (iscsi_host_add(shost,
-+			   ep ? ib_conn->device->ib_device->dma_device : NULL))
- 		goto free_host;
- 	*hostno = shost->host_no;
- 
-@@ -529,34 +518,37 @@ iscsi_iser_conn_get_stats(struct iscsi_cls_conn *cls_conn, struct iscsi_stats *s
- 	stats->custom[3].value = conn->fmr_unalign_cnt;
- }
- 
--static int
--iscsi_iser_ep_connect(struct sockaddr *dst_addr, int non_blocking,
--		      __u64 *ep_handle)
-+static struct iscsi_endpoint *
-+iscsi_iser_ep_connect(struct sockaddr *dst_addr, int non_blocking)
- {
- 	int err;
- 	struct iser_conn *ib_conn;
-+	struct iscsi_endpoint *ep;
- 
--	err = iser_conn_init(&ib_conn);
--	if (err)
--		goto out;
-+	ep = iscsi_create_endpoint(sizeof(*ib_conn));
-+	if (!ep)
-+		return ERR_PTR(-ENOMEM);
- 
--	err = iser_connect(ib_conn, NULL, (struct sockaddr_in *)dst_addr, non_blocking);
--	if (!err)
--		*ep_handle = (__u64)(unsigned long)ib_conn;
-+	ib_conn = ep->dd_data;
-+	ib_conn->ep = ep;
-+	iser_conn_init(ib_conn);
- 
--out:
--	return err;
-+	err = iser_connect(ib_conn, NULL, (struct sockaddr_in *)dst_addr,
-+			   non_blocking);
-+	if (err) {
-+		iscsi_destroy_endpoint(ep);
-+		return ERR_PTR(err);
+-	iscsi_conn_stop(cls_conn, flag);
+ 	/*
+-	 * There is no unbind event so the stop callback
+-	 * must release the ref from the bind.
++	 * Userspace may have goofed up and not bound the connection or
++	 * might have only partially setup the connection.
+ 	 */
+-	iser_conn_put(ib_conn);
++	if (ib_conn) {
++		iscsi_conn_stop(cls_conn, flag);
++		/*
++		 * There is no unbind event so the stop callback
++		 * must release the ref from the bind.
++		 */
++		iser_conn_put(ib_conn);
 +	}
-+	return ep;
+ 	iser_conn->ib_conn = NULL;
  }
  
- static int
--iscsi_iser_ep_poll(__u64 ep_handle, int timeout_ms)
-+iscsi_iser_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
- {
--	struct iser_conn *ib_conn = iscsi_iser_ib_conn_lookup(ep_handle);
-+	struct iser_conn *ib_conn;
- 	int rc;
- 
--	if (!ib_conn)
--		return -EINVAL;
--
-+	ib_conn = ep->dd_data;
- 	rc = wait_event_interruptible_timeout(ib_conn->wait,
- 			     ib_conn->state == ISER_CONN_UP,
- 			     msecs_to_jiffies(timeout_ms));
-@@ -578,14 +570,11 @@ iscsi_iser_ep_poll(__u64 ep_handle, int timeout_ms)
- }
- 
- static void
--iscsi_iser_ep_disconnect(__u64 ep_handle)
-+iscsi_iser_ep_disconnect(struct iscsi_endpoint *ep)
- {
- 	struct iser_conn *ib_conn;
- 
--	ib_conn = iscsi_iser_ib_conn_lookup(ep_handle);
--	if (!ib_conn)
--		return;
--
-+	ib_conn = ep->dd_data;
- 	if (ib_conn->iser_conn)
- 		/*
- 		 * Must suspend xmit path if the ep is bound to the
 diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index 05431f2..cdf4876 100644
+index cdf4876..a547ede 100644
 --- a/drivers/infiniband/ulp/iser/iscsi_iser.h
 +++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -174,6 +174,7 @@ struct iser_data_buf {
- struct iser_device;
- struct iscsi_iser_conn;
- struct iscsi_iser_task;
-+struct iscsi_endpoint;
+@@ -263,8 +263,6 @@ struct iser_conn {
+ struct iscsi_iser_conn {
+ 	struct iscsi_conn            *iscsi_conn;/* ptr to iscsi conn */
+ 	struct iser_conn             *ib_conn;   /* iSER IB conn      */
+-
+-	rwlock_t		     lock;
+ };
  
- struct iser_mem_reg {
- 	u32  lkey;
-@@ -241,6 +242,7 @@ struct iser_device {
+ struct iscsi_iser_task {
+diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+index 35af60a..c360839 100644
+--- a/drivers/infiniband/ulp/iser/iser_initiator.c
++++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+@@ -558,7 +558,12 @@ void iser_rcv_completion(struct iser_desc *rx_desc,
+ 	opcode = hdr->opcode & ISCSI_OPCODE_MASK;
  
- struct iser_conn {
- 	struct iscsi_iser_conn       *iser_conn; /* iser conn for upcalls  */
-+	struct iscsi_endpoint	     *ep;
- 	enum iser_ib_conn_state	     state;	    /* rdma connection state   */
- 	atomic_t		     refcount;
- 	spinlock_t		     lock;	    /* used for state changes  */
-@@ -313,7 +315,7 @@ void iscsi_iser_recv(struct iscsi_conn *conn,
- 		     char                   *rx_data,
- 		     int                    rx_data_len);
- 
--int  iser_conn_init(struct iser_conn **ib_conn);
-+void iser_conn_init(struct iser_conn *ib_conn);
- 
- void iser_conn_get(struct iser_conn *ib_conn);
- 
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 5daed2b..81b45d4 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -325,7 +325,7 @@ static void iser_conn_release(struct iser_conn *ib_conn)
- 		iser_device_try_release(device);
- 	if (ib_conn->iser_conn)
- 		ib_conn->iser_conn->ib_conn = NULL;
--	kfree(ib_conn);
-+	iscsi_destroy_endpoint(ib_conn->ep);
- }
- 
- void iser_conn_get(struct iser_conn *ib_conn)
-@@ -494,15 +494,8 @@ static int iser_cma_handler(struct rdma_cm_id *cma_id, struct rdma_cm_event *eve
- 	return ret;
- }
- 
--int iser_conn_init(struct iser_conn **ibconn)
-+void iser_conn_init(struct iser_conn *ib_conn)
+ 	if (opcode == ISCSI_OP_SCSI_CMD_RSP) {
++		spin_lock(&conn->iscsi_conn->session->lock);
+ 		task = iscsi_itt_to_ctask(conn->iscsi_conn, hdr->itt);
++		if (task)
++			__iscsi_get_task(task);
++		spin_unlock(&conn->iscsi_conn->session->lock);
++
+ 		if (!task)
+ 			iser_err("itt can't be matched to task!!! "
+ 				 "conn %p opcode %d itt %d\n",
+@@ -568,6 +573,7 @@ void iser_rcv_completion(struct iser_desc *rx_desc,
+ 			iser_dbg("itt %d task %p\n",hdr->itt, task);
+ 			iser_task->status = ISER_TASK_STATUS_COMPLETED;
+ 			iser_task_rdma_finalize(iser_task);
++			iscsi_put_task(task);
+ 		}
+ 	}
+ 	iser_dto_buffs_release(dto);
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 7552dd8..af7ee45 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -741,7 +741,6 @@ static int
+ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
  {
--	struct iser_conn *ib_conn;
+ 	int rc = 0, opcode, ahslen;
+-	struct iscsi_session *session = conn->session;
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+ 	struct iscsi_task *task;
+ 
+@@ -770,17 +769,17 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 
+ 	switch(opcode) {
+ 	case ISCSI_OP_SCSI_DATA_IN:
++		spin_lock(&conn->session->lock);
+ 		task = iscsi_itt_to_ctask(conn, hdr->itt);
+ 		if (!task)
+-			return ISCSI_ERR_BAD_ITT;
+-		if (!task->sc)
+-			return ISCSI_ERR_NO_SCSI_CMD;
++			rc = ISCSI_ERR_BAD_ITT;
++		else
++			rc = iscsi_data_rsp(conn, task);
++		if (rc) {
++			spin_unlock(&conn->session->lock);
++			break;
++		}
+ 
+-		spin_lock(&conn->session->lock);
+-		rc = iscsi_data_rsp(conn, task);
+-		spin_unlock(&conn->session->lock);
+-		if (rc)
+-			return rc;
+ 		if (tcp_conn->in.datalen) {
+ 			struct iscsi_tcp_task *tcp_task = task->dd_data;
+ 			struct hash_desc *rx_hash = NULL;
+@@ -801,15 +800,19 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 				  "datalen=%d)\n", tcp_conn,
+ 				  tcp_task->data_offset,
+ 				  tcp_conn->in.datalen);
+-			return iscsi_segment_seek_sg(&tcp_conn->in.segment,
+-						     sdb->table.sgl,
+-						     sdb->table.nents,
+-						     tcp_task->data_offset,
+-						     tcp_conn->in.datalen,
+-						     iscsi_tcp_process_data_in,
+-						     rx_hash);
++			rc = iscsi_segment_seek_sg(&tcp_conn->in.segment,
++						   sdb->table.sgl,
++						   sdb->table.nents,
++						   tcp_task->data_offset,
++						   tcp_conn->in.datalen,
++						   iscsi_tcp_process_data_in,
++						   rx_hash);
++			spin_unlock(&conn->session->lock);
++			return rc;
+ 		}
+-		/* fall through */
++		rc = __iscsi_complete_pdu(conn, hdr, NULL, 0);
++		spin_unlock(&conn->session->lock);
++		break;
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+ 		if (tcp_conn->in.datalen) {
+ 			iscsi_tcp_data_recv_prep(tcp_conn);
+@@ -818,20 +821,17 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 		rc = iscsi_complete_pdu(conn, hdr, NULL, 0);
+ 		break;
+ 	case ISCSI_OP_R2T:
++		spin_lock(&conn->session->lock);
+ 		task = iscsi_itt_to_ctask(conn, hdr->itt);
+ 		if (!task)
+-			return ISCSI_ERR_BAD_ITT;
+-		if (!task->sc)
+-			return ISCSI_ERR_NO_SCSI_CMD;
 -
--	ib_conn = kzalloc(sizeof *ib_conn, GFP_KERNEL);
--	if (!ib_conn) {
--		iser_err("can't alloc memory for struct iser_conn\n");
--		return -ENOMEM;
--	}
- 	ib_conn->state = ISER_CONN_INIT;
- 	init_waitqueue_head(&ib_conn->wait);
- 	atomic_set(&ib_conn->post_recv_buf_count, 0);
-@@ -510,9 +503,6 @@ int iser_conn_init(struct iser_conn **ibconn)
- 	atomic_set(&ib_conn->refcount, 1);
- 	INIT_LIST_HEAD(&ib_conn->conn_list);
- 	spin_lock_init(&ib_conn->lock);
+-		if (ahslen)
++			rc = ISCSI_ERR_BAD_ITT;
++		else if (ahslen)
+ 			rc = ISCSI_ERR_AHSLEN;
+-		else if (task->sc->sc_data_direction == DMA_TO_DEVICE) {
+-			spin_lock(&session->lock);
++		else if (task->sc->sc_data_direction == DMA_TO_DEVICE)
+ 			rc = iscsi_r2t_rsp(conn, task);
+-			spin_unlock(&session->lock);
+-		} else
++		else
+ 			rc = ISCSI_ERR_PROTO;
++		spin_unlock(&conn->session->lock);
+ 		break;
+ 	case ISCSI_OP_LOGIN_RSP:
+ 	case ISCSI_OP_TEXT_RSP:
+@@ -1553,7 +1553,6 @@ iscsi_tcp_release_conn(struct iscsi_conn *conn)
+ 
+ 	spin_lock_bh(&session->lock);
+ 	tcp_conn->sock = NULL;
+-	conn->recv_lock = NULL;
+ 	spin_unlock_bh(&session->lock);
+ 	sockfd_put(sock);
+ }
+@@ -1578,6 +1577,19 @@ static void
+ iscsi_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ {
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
++	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
++
++	/* userspace may have goofed up and not bound us */
++	if (!tcp_conn->sock)
++		return;
++	/*
++	 * Make sure our recv side is stopped.
++	 * Older tools called conn stop before ep_disconnect
++	 * so IO could still be coming in.
++	 */
++	write_lock_bh(&tcp_conn->sock->sk->sk_callback_lock);
++	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
++	write_unlock_bh(&tcp_conn->sock->sk->sk_callback_lock);
+ 
+ 	iscsi_conn_stop(cls_conn, flag);
+ 	iscsi_tcp_release_conn(conn);
+@@ -1671,13 +1683,6 @@ iscsi_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 	sk->sk_sndtimeo = 15 * HZ; /* FIXME: make it configurable */
+ 	sk->sk_allocation = GFP_ATOMIC;
+ 
+-	/* FIXME: disable Nagle's algorithm */
 -
--	*ibconn = ib_conn;
--	return 0;
+-	/*
+-	 * Intercept TCP callbacks for sendfile like receive
+-	 * processing.
+-	 */
+-	conn->recv_lock = &sk->sk_callback_lock;
+ 	iscsi_conn_set_callbacks(conn);
+ 	tcp_conn->sendpage = tcp_conn->sock->ops->sendpage;
+ 	/*
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index c723e60..9c267b4 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -362,10 +362,11 @@ static void iscsi_complete_command(struct iscsi_task *task)
+ 	}
  }
  
-  /**
+-static void __iscsi_get_task(struct iscsi_task *task)
++void __iscsi_get_task(struct iscsi_task *task)
+ {
+ 	atomic_inc(&task->refcount);
+ }
++EXPORT_SYMBOL_GPL(__iscsi_get_task);
+ 
+ static void __iscsi_put_task(struct iscsi_task *task)
+ {
+@@ -403,9 +404,13 @@ static void fail_command(struct iscsi_conn *conn, struct iscsi_task *task,
+ 		conn->session->queued_cmdsn--;
+ 	else
+ 		conn->session->tt->cleanup_task(conn, task);
++	/*
++	 * Check if cleanup_task dropped the lock and the command completed,
++	 */
++	if (!task->sc)
++		return;
+ 
+ 	sc->result = err;
+-
+ 	if (!scsi_bidi_cmnd(sc))
+ 		scsi_set_resid(sc, scsi_bufflen(sc));
+ 	else {
+@@ -697,6 +702,31 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ }
+ 
+ /**
++ * iscsi_itt_to_task - look up task by itt
++ * @conn: iscsi connection
++ * @itt: itt
++ *
++ * This should be used for mgmt tasks like login and nops, or if
++ * the LDD's itt space does not include the session age.
++ *
++ * The session lock must be held.
++ */
++static struct iscsi_task *iscsi_itt_to_task(struct iscsi_conn *conn, itt_t itt)
++{
++	struct iscsi_session *session = conn->session;
++	uint32_t i;
++
++	if (itt == RESERVED_ITT)
++		return NULL;
++
++	i = get_itt(itt);
++	if (i >= session->cmds_max)
++		return NULL;
++
++	return session->cmds[i];
++}
++
++/**
+  * __iscsi_complete_pdu - complete pdu
+  * @conn: iscsi conn
+  * @hdr: iscsi header
+@@ -707,8 +737,8 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+  * queuecommand or send generic. session lock must be held and verify
+  * itt must have been called.
+  */
+-static int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+-				char *data, int datalen)
++int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
++			 char *data, int datalen)
+ {
+ 	struct iscsi_session *session = conn->session;
+ 	int opcode = hdr->opcode & ISCSI_OPCODE_MASK, rc = 0;
+@@ -758,22 +788,36 @@ static int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		goto out;
+ 	}
+ 
+-	task = session->cmds[itt];
+ 	switch(opcode) {
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+-		if (!task->sc) {
+-			rc = ISCSI_ERR_NO_SCSI_CMD;
+-			break;
+-		}
+-		BUG_ON((void*)task != task->sc->SCp.ptr);
++	case ISCSI_OP_SCSI_DATA_IN:
++		task = iscsi_itt_to_ctask(conn, hdr->itt);
++		if (!task)
++			return ISCSI_ERR_BAD_ITT;
++		break;
++	case ISCSI_OP_R2T:
++		/*
++		 * LLD handles R2Ts if they need to.
++		 */
++		return 0;
++	case ISCSI_OP_LOGOUT_RSP:
++	case ISCSI_OP_LOGIN_RSP:
++	case ISCSI_OP_TEXT_RSP:
++	case ISCSI_OP_SCSI_TMFUNC_RSP:
++	case ISCSI_OP_NOOP_IN:
++		task = iscsi_itt_to_task(conn, hdr->itt);
++		if (!task)
++			return ISCSI_ERR_BAD_ITT;
++		break;
++	default:
++		return ISCSI_ERR_BAD_OPCODE;
++	}
++
++	switch(opcode) {
++	case ISCSI_OP_SCSI_CMD_RSP:
+ 		iscsi_scsi_cmd_rsp(conn, hdr, task, data, datalen);
+ 		break;
+ 	case ISCSI_OP_SCSI_DATA_IN:
+-		if (!task->sc) {
+-			rc = ISCSI_ERR_NO_SCSI_CMD;
+-			break;
+-		}
+-		BUG_ON((void*)task != task->sc->SCp.ptr);
+ 		if (hdr->flags & ISCSI_FLAG_DATA_STATUS) {
+ 			conn->scsirsp_pdus_cnt++;
+ 			iscsi_update_cmdsn(session,
+@@ -781,9 +825,6 @@ static int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			__iscsi_put_task(task);
+ 		}
+ 		break;
+-	case ISCSI_OP_R2T:
+-		/* LLD handles this for now */
+-		break;
+ 	case ISCSI_OP_LOGOUT_RSP:
+ 		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
+ 		if (datalen) {
+@@ -841,6 +882,7 @@ recv_pdu:
+ 	__iscsi_put_task(task);
+ 	return rc;
+ }
++EXPORT_SYMBOL_GPL(__iscsi_complete_pdu);
+ 
+ int iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		       char *data, int datalen)
+@@ -857,7 +899,6 @@ EXPORT_SYMBOL_GPL(iscsi_complete_pdu);
+ int iscsi_verify_itt(struct iscsi_conn *conn, itt_t itt)
+ {
+ 	struct iscsi_session *session = conn->session;
+-	struct iscsi_task *task;
+ 	uint32_t i;
+ 
+ 	if (itt == RESERVED_ITT)
+@@ -867,8 +908,7 @@ int iscsi_verify_itt(struct iscsi_conn *conn, itt_t itt)
+ 	    (session->age << ISCSI_AGE_SHIFT)) {
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "received itt %x expected session age (%x)\n",
+-				  (__force u32)itt,
+-				  session->age & ISCSI_AGE_MASK);
++				  (__force u32)itt, session->age);
+ 		return ISCSI_ERR_BAD_ITT;
+ 	}
+ 
+@@ -879,42 +919,36 @@ int iscsi_verify_itt(struct iscsi_conn *conn, itt_t itt)
+ 				   "%u.\n", i, session->cmds_max);
+ 		return ISCSI_ERR_BAD_ITT;
+ 	}
+-
+-	task = session->cmds[i];
+-	if (task->sc && task->sc->SCp.phase != session->age) {
+-		iscsi_conn_printk(KERN_ERR, conn,
+-				  "iscsi: task's session age %d, "
+-				  "expected %d\n", task->sc->SCp.phase,
+-				  session->age);
+-		return ISCSI_ERR_SESSION_FAILED;
+-	}
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_verify_itt);
+ 
+-struct iscsi_task *
+-iscsi_itt_to_ctask(struct iscsi_conn *conn, itt_t itt)
++/**
++ * iscsi_itt_to_ctask - look up ctask by itt
++ * @conn: iscsi connection
++ * @itt: itt
++ *
++ * This should be used for cmd tasks.
++ *
++ * The session lock must be held.
++ */
++struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *conn, itt_t itt)
+ {
+-	struct iscsi_session *session = conn->session;
+ 	struct iscsi_task *task;
+-	uint32_t i;
+ 
+ 	if (iscsi_verify_itt(conn, itt))
+ 		return NULL;
+ 
+-	if (itt == RESERVED_ITT)
++	task = iscsi_itt_to_task(conn, itt);
++	if (!task || !task->sc)
+ 		return NULL;
+ 
+-	i = get_itt(itt);
+-	if (i >= session->cmds_max)
+-		return NULL;
+-
+-	task = session->cmds[i];
+-	if (!task->sc)
+-		return NULL;
+-
+-	if (task->sc->SCp.phase != session->age)
++	if (task->sc->SCp.phase != conn->session->age) {
++		iscsi_session_printk(KERN_ERR, conn->session,
++				  "task's session age %d, expected %d\n",
++				  task->sc->SCp.phase, conn->session->age);
+ 		return NULL;
++	}
+ 
+ 	return task;
+ }
+@@ -1620,16 +1654,20 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 	switch (conn->tmf_state) {
+ 	case TMF_SUCCESS:
+ 		spin_unlock_bh(&session->lock);
++		/*
++		 * stop tx side incase the target had sent a abort rsp but
++		 * the initiator was still writing out data.
++		 */
+ 		iscsi_suspend_tx(conn);
+ 		/*
+-		 * clean up task if aborted. grab the recv lock as a writer
++		 * we do not stop the recv side because targets have been
++		 * good and have never sent us a successful tmf response
++		 * then sent more data for the cmd.
+ 		 */
+-		write_lock_bh(conn->recv_lock);
+ 		spin_lock(&session->lock);
+ 		fail_command(conn, task, DID_ABORT << 16);
+ 		conn->tmf_state = TMF_INITIAL;
+ 		spin_unlock(&session->lock);
+-		write_unlock_bh(conn->recv_lock);
+ 		iscsi_start_tx(conn);
+ 		goto success_unlocked;
+ 	case TMF_TIMEDOUT:
+@@ -1729,13 +1767,11 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 	spin_unlock_bh(&session->lock);
+ 
+ 	iscsi_suspend_tx(conn);
+-	/* need to grab the recv lock then session lock */
+-	write_lock_bh(conn->recv_lock);
++
+ 	spin_lock(&session->lock);
+ 	fail_all_commands(conn, sc->device->lun, DID_ERROR);
+ 	conn->tmf_state = TMF_INITIAL;
+ 	spin_unlock(&session->lock);
+-	write_unlock_bh(conn->recv_lock);
+ 
+ 	iscsi_start_tx(conn);
+ 	goto done;
+@@ -2257,17 +2293,6 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
+ 	}
+ 
+ 	/*
+-	 * The LLD either freed/unset the lock on us, or userspace called
+-	 * stop but did not create a proper connection (connection was never
+-	 * bound or it was unbound then stop was called).
+-	 */
+-	if (!conn->recv_lock) {
+-		spin_unlock_bh(&session->lock);
+-		mutex_unlock(&session->eh_mutex);
+-		return;
+-	}
+-
+-	/*
+ 	 * When this is called for the in_login state, we only want to clean
+ 	 * up the login task and connection. We do not need to block and set
+ 	 * the recovery state again
+@@ -2283,11 +2308,6 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
+ 	spin_unlock_bh(&session->lock);
+ 
+ 	iscsi_suspend_tx(conn);
+-
+-	write_lock_bh(conn->recv_lock);
+-	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+-	write_unlock_bh(conn->recv_lock);
+-
+ 	/*
+ 	 * for connection level recovery we should not calculate
+ 	 * header digest. conn->hdr_size used for optimization
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 5bf0187..5e75bb7 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -139,11 +139,6 @@ struct iscsi_conn {
+ 	void			*dd_data;	/* iscsi_transport data */
+ 	struct iscsi_session	*session;	/* parent session */
+ 	/*
+-	 * LLDs should set this lock. It protects the transport recv
+-	 * code
+-	 */
+-	rwlock_t		*recv_lock;
+-	/*
+ 	 * conn_stop() flag: stop to recover, stop to terminate
+ 	 */
+         int			stop_stage;
+@@ -374,10 +369,13 @@ extern int iscsi_conn_send_pdu(struct iscsi_cls_conn *, struct iscsi_hdr *,
+ 				char *, uint32_t);
+ extern int iscsi_complete_pdu(struct iscsi_conn *, struct iscsi_hdr *,
+ 			      char *, int);
++extern int __iscsi_complete_pdu(struct iscsi_conn *, struct iscsi_hdr *,
++				char *, int);
+ extern int iscsi_verify_itt(struct iscsi_conn *, itt_t);
+ extern struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *, itt_t);
+ extern void iscsi_requeue_task(struct iscsi_task *task);
+ extern void iscsi_put_task(struct iscsi_task *task);
++extern void __iscsi_get_task(struct iscsi_task *task);
+ 
+ /*
+  * generic helpers
 -- 
 1.5.4.1
 
