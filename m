@@ -1,50 +1,75 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
-	buffers instead of buffers on stack)
-Date: Thu, 22 May 2008 09:43:12 +0100
-Message-ID: <1211445792.3956.14.camel@localhost.localdomain>
-References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <20080521221113.GA12695@alpha.franken.de> <20080522095506E.tomof@acm.org>
-	 <20080521.181847.157652663.davem@davemloft.net>
+Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
+	reference to `request_firmware'
+Date: Thu, 22 May 2008 11:52:24 +0100
+Message-ID: <1211453544.3956.33.camel@localhost.localdomain>
+References: <200805161906.19321.toralf.foerster@gmx.de>
+	 <1211018673.3603.7.camel@localhost.localdomain>
+	 <20080517141749.GD3284@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080521.181847.157652663.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51128 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755272AbYEVXow (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2008 19:44:52 -0400
+In-Reply-To: <20080517141749.GD3284@cs181133002.pp.htv.fi>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date: Thu, 22 May 2008 10:13:31 +0900
-> 
-> > DMA on stack is forbidden because of non coherent architecutes and
-> > architectures can't uses stack addresses for DMA? What architectures
-> > can't uses stack addresses for DMA? Would it be better to just forbid
-> > using stack addresses for DMA on all the architectures at all times?
-> 
-> Rather, the real problem is that some architectures map the kernel
-> stack virtually, and as a result virt_to_page() and things like that
-> will not work.
-> 
-> It really is fully not working to put DMA buffers on the stack
-> in these cases.
+On Sat, 2008-05-17 at 17:17 +0300, Adrian Bunk wrote:
+> On Sat, May 17, 2008 at 11:04:31AM +0100, James Bottomley wrote:
+> > On Fri, 2008-05-16 at 19:06 +0200, Toralf F=C3=B6rster wrote:
+> > > Hello,
+> > >=20
+> > > the build (.config attached) failed, make ends with :
+> > > ...
+> > >   UPD     include/linux/compile.h
+> > >   CC      init/version.o
+> > >   LD      init/built-in.o
+> > >   LD      vmlinux
+> > > drivers/built-in.o: In function `sas_request_addr':
+> > > (.text+0x33bab): undefined reference to `request_firmware'
+> > > drivers/built-in.o: In function `sas_request_addr':
+> > > (.text+0x33c3f): undefined reference to `release_firmware'
+> > > make: *** [vmlinux] Error 1
+> >=20
+> > There's a slight fault in the stub logic.  It fails for FW_LOADER=3D=
+m and
+> > the user =3Dy.
+> >=20
+> > This should fix it.
+>=20
+> An interesting question is whether we actually want to have the stub =
+at=20
+> all - the compile errors catched cases where someone forgot to select=
+=20
+> FW_LOADER at compile time instead of turning them into possible runti=
+me=20
+> problems as will happen after your patch.
 
-Actually, for SCSI only, that problem is fixed.  Our decision to
-re-route all I/O, including kernel internal I/O through the block
-mapping algorithms (really so we don't have to worry about GFP_DMA any
-more since we can now use the block bounce buffers) means that all SCSI
-submission routines will accept vmalloc'd and even stack buffers
-perfectly correctly.
+Well, the original intent of the stubs was to have the loader nop if it
+wasn't available.  There was simply one case forgotten (the fact that a
+modular loader isn't usable from built in components).
 
-However (before anyone gets any ideas), the stack is incredibly
-dangerous to do DMA on because it's packed with current data.  If you
-don't get the alignment requirements right on a non-coherent platform,
-you'll end up corrupting data because of cache line interference issues.
-For this reason, DMA to stack is still technically illegal.
+> Are there any serious use cases where SCSI_SAS_LIBSAS is used in very=
+=20
+> space limited environments and without any other drivers that select=20
+> FW_LOADER in the kernel?
+
+Probably in the future, certainly on embedded OSs used for storage
+devices.  Given the convergence of SAS/SATA chips, it's possible for
+other handhelds, but I'm not convinced of that.
 
 James
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
