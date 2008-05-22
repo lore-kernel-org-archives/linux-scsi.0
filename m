@@ -1,31 +1,41 @@
-From: Konrad Rzeszutek <konrad-/HHyZTb1IPUUqSzUVP1SBw@public.gmane.org>
-Subject: Re: [PATCH 1/3] bnx2: Add support for CNIC driver.
-Date: Thu, 22 May 2008 11:18:22 -0400
-Message-ID: <20080522151822.GB27897@mars.virtualiron.com>
-References: <1211418386-18203-1-git-send-email-mchan@broadcom.com> <1211418386-18203-2-git-send-email-mchan@broadcom.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH 3/3] bnx2i: Add bnx2i iSCSI driver.
+Date: Thu, 22 May 2008 16:52:36 +0100
+Message-ID: <20080522155234.GX28241@solarflare.com>
+References: <1211418386-18203-1-git-send-email-mchan@broadcom.com> <1211418386-18203-4-git-send-email-mchan@broadcom.com> <20080522151540.GA27897@mars.virtualiron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1211418386-18203-2-git-send-email-mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi-help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi-unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080522151540.GA27897@mars.virtualiron.com>
+Sender: netdev-owner@vger.kernel.org
+To: Konrad Rzeszutek <konrad@virtualiron.com>
+Cc: open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, anilgv@broadcom.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Michael Chan <mchan@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Konrad Rzeszutek wrote:
+> > + * bnx2i_iscsi_license_error - displays iscsi license related error message
+> 
+> Doesn't look very license related. Just says 'not supported'.
 
-> +static void
-> +bnx2_cnic_stop(struct bnx2 *bp)
+Could be that some hardware strap pin is being used as a dongle.  This
+doesn't seem entirely in the spirit of GPL, and would be rather easy to
+remove...
 
-The preceding functions follow this format:
-static void <fnc name>(<args)
+> > + * @hba:		adapter instance pointer
+> > + * @error_code:		error classification
+> > + *
+> > + * Puts out an error log when driver is unable to offload iscsi connection
+> > + *	due to license restrictions
+> 
+> Maybe adding in some extra information to the error, such as: "Due to
+> GPL restrictions, etc.." .. What does 'LOM' stand for?
 
-While this and some below follow the
-static void
-<fnc name>(<args>)
+LOM is a common abbreviation for "LAN on motherboard" as opposed to an
+expansion card.
 
-You probably want to follow one style.
+Ben.
+
+-- 
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
