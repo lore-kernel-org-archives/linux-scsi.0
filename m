@@ -1,85 +1,138 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: [2.6 patch] make struct mpt_proc_root_dir static
-Date: Fri, 23 May 2008 01:51:21 +0800
-Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DF@pamail.ad.lsil.com>
+From: "Michael Chan" <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 1/3] bnx2: Add support for CNIC driver.
+Date: Thu, 22 May 2008 12:23:28 -0700
+Message-ID: <1211484208.18326.25.camel@dell>
+References: <1211418386-18203-1-git-send-email-mchan@broadcom.com> <1211418386-18203-2-git-send-email-mchan@broadcom.com> <20080522064541.GA11933@linux.vnet.ibm.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:44443 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752864AbYEVSQG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 14:16:06 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20080522064541.GA11933-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi-help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi-unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-ACK 
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
-Sent: Monday, May 05, 2008 11:56 PM
-To: Moore, Eric
-Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Andrew
-Morton
-Subject: [2.6 patch] make struct mpt_proc_root_dir static
+On Wed, 2008-05-21 at 23:45 -0700, Paul E. McKenney wrote:
 
-This patch makes the needlessly global struct mpt_proc_root_dir static.
+> Some RCU-related questions interspersed below, for example, how are
+> updates protected?
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Only one CNIC driver will ever register with the BNX2 driver.  The main
+purpose of using RCU is so that the fast path can avoid locking when
+handling interrupt events from the hardware.
 
----
+> > +
+> > +static void bnx2_setup_cnic_irq_info(struct bnx2 *bp)
+> > +{
+> > +	struct cnic_ops *c_ops;
+> > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > +	struct bnx2_napi *bnapi = &bp->bnx2_napi[0];
+> > +	int sb_id;
+> > +
+> > +	rcu_read_lock();
+> > +	c_ops = rcu_dereference(bp->cnic_ops);
+> > +	if (!c_ops)
+> > +		goto done;
+> 
+> Given that c_ops is unused below, what is happening here?  What prevents
+> bp->cnic_ops from becoming NULL immediately after we test it?  And if
+> it is OK for bp->cnic_ops to become NULL immediately after we test it,
+> why are we bothering to test it?
 
-This patch has been sent on:
-- 22 Apr 2008
-- 13 Apr 2008
+You are right.  We should just unconditionally set up the IRQ
+information without checking for c_ops.  The data structures we set up
+below are owned by us.
 
- drivers/message/fusion/mptbase.c |    3 +--
- drivers/message/fusion/mptbase.h |    1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+> 
+> > +
+> > +	if (bp->flags & BNX2_FLAG_USING_MSIX) {
+> > +		cp->drv_state |= CNIC_DRV_STATE_USING_MSIX;
+> > +		bnapi->cnic_present = 0;
+> > +		sb_id = BNX2_CNIC_VEC;
+> > +		cp->irq_arr[0].irq_flags |= CNIC_IRQ_FL_MSIX;
+> > +	} else {
+> > +		cp->drv_state &= ~CNIC_DRV_STATE_USING_MSIX;
+> > +		bnapi->cnic_tag = bnapi->last_status_idx;
+> > +		bnapi->cnic_present = 1;
+> > +		sb_id = 0;
+> > +		cp->irq_arr[0].irq_flags &= !CNIC_IRQ_FL_MSIX;
+> > +	}
+> > +
+> > +	cp->irq_arr[0].vector = bp->irq_tbl[sb_id].vector;
+> > +	cp->irq_arr[0].status_blk = (void *) ((unsigned long) bp->status_blk +
+> > +		(BNX2_SBLK_MSIX_ALIGN_SIZE * sb_id));
+> > +	cp->irq_arr[0].status_blk_num = sb_id;
+> > +	cp->num_irq = 1;
+> > +
+> > +done:
+> > +	rcu_read_unlock();
+> > +}
+> > +
+> > +static int bnx2_register_cnic(struct net_device *dev, struct cnic_ops *ops,
+> > +			      void *data)
+> > +{
+> > +	struct bnx2 *bp = netdev_priv(dev);
+> > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > +
+> > +	if (ops == NULL)
+> > +		return -EINVAL;
+> > +
+> > +	if (!try_module_get(ops->cnic_owner))
+> > +		return -EBUSY;
+> > +
+> > +	bp->cnic_data = data;
+> > +	rcu_assign_pointer(bp->cnic_ops, ops);
+> 
+> What prevents multiple tasks from doing this assignment concurrently?
 
-0206a6da1d1b4ca0e1eb7f6e34ced21c79d58c7b diff --git
-a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index c6be6eb..7e4e69e 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -103,7 +103,7 @@ static int mfcounter = 0;
-  *  Public data...
-  */
- 
--struct proc_dir_entry *mpt_proc_root_dir;
-+static struct proc_dir_entry *mpt_proc_root_dir;
- 
- #define WHOINIT_UNKNOWN		0xAA
- 
-@@ -7444,7 +7444,6 @@ EXPORT_SYMBOL(mpt_resume);
-EXPORT_SYMBOL(mpt_suspend);  #endif  EXPORT_SYMBOL(ioc_list);
--EXPORT_SYMBOL(mpt_proc_root_dir);
- EXPORT_SYMBOL(mpt_register);
- EXPORT_SYMBOL(mpt_deregister);
- EXPORT_SYMBOL(mpt_event_register);
-diff --git a/drivers/message/fusion/mptbase.h
-b/drivers/message/fusion/mptbase.h
-index caadc68..7630031 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -918,7 +918,6 @@ extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER
-*ioc, u8 phys_disk_num, pRaidPhys
-  *  Public data decl's...
-  */
- extern struct list_head	  ioc_list;
--extern struct proc_dir_entry	*mpt_proc_root_dir;
- 
- 
-/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-=-=-=*/
- #endif		/* } __KERNEL__ */
+As I said above, only one CNIC driver will ever register.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+> 
+> > +
+> > +	cp->num_irq = 0;
+> > +	cp->drv_state = CNIC_DRV_STATE_REGD;
+> > +
+> > +	bnx2_setup_cnic_irq_info(bp);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int bnx2_unregister_cnic(struct net_device *dev)
+> > +{
+> > +	struct bnx2 *bp = netdev_priv(dev);
+> > +	struct bnx2_napi *bnapi = &bp->bnx2_napi[0];
+> > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > +
+> > +	cp->drv_state = 0;
+> > +	module_put(bp->cnic_ops->cnic_owner);
+> > +	bnapi->cnic_present = 0;
+> > +	rcu_assign_pointer(bp->cnic_ops, NULL);
+> 
+> What prevents this from running concurrently with bnx2_register_cnic()?
+
+We expect the CNIC driver to be well behaved and will only unregister
+after successfully registered.
+
+> 
+> > +	synchronize_rcu();
+> 
+> The caller is responsible for freeing up the old bp->cnic_ops structure?
+> Or is this structure statically allocated?
+> 
+> If so, is the idea to delay return until all prior calls through the
+> old ops structure have completed?
+
+The cnic_ops contain call back function pointers to the CNIC driver.  We
+want to make sure that those calls have completed (in the fast path)
+before continuing.
+
+> 
+> > +	return 0;
+> > +}
+> > +
