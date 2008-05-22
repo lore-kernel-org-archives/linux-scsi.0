@@ -1,347 +1,300 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [PATCH 2/3] cnic: Add CNIC driver.
-Date: Thu, 22 May 2008 12:46:11 -0700
-Message-ID: <1211485571.18326.41.camel@dell>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: Re: [PATCH 3/3] bnx2i: Add bnx2i iSCSI driver.
+Date: Thu, 22 May 2008 12:06:14 -0700
+Message-ID: <1211483174.16180.72.camel@dhcp-10-13-110-217.broadcom.com>
 References: <1211418386-18203-1-git-send-email-mchan@broadcom.com>
- <1211418386-18203-3-git-send-email-mchan@broadcom.com>
- <20080522074422.GB11933@linux.vnet.ibm.com>
+ <1211418386-18203-4-git-send-email-mchan@broadcom.com>
+ <20080522151540.GA27897@mars.virtualiron.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4731 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4306 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753585AbYEVSmE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2008 14:42:04 -0400
-In-Reply-To: <20080522074422.GB11933@linux.vnet.ibm.com>
+	id S1756800AbYEVTNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2008 15:13:20 -0400
+In-Reply-To: <20080522151540.GA27897@mars.virtualiron.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: David Miller <davem@davemloft.net>, michaelc@cs.wisc.edu, anilgv@broadcom.com, netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: Konrad Rzeszutek <konrad@virtualiron.com>
+Cc: open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Michael Chan <mchan@broadcom.com>
 
-On Thu, 2008-05-22 at 00:44 -0700, Paul E. McKenney wrote:
+On Thu, 2008-05-22 at 11:15 -0400, Konrad Rzeszutek wrote:
+> A cursory glance..
+> 
+> .. snip..
+> > +struct bnx2i_cleanup_request {
+> > +#if defined(__BIG_ENDIAN)
+> > +	u8 op_code;
+> > +	u8 reserved1;
+> > +	u16 reserved0;
+> > +#elif defined(__LITTLE_ENDIAN)
+> > +	u16 reserved0;
+> > +	u8 reserved1;
+> > +	u8 op_code;
+> > +#endif
+> > +	u32 reserved2[3];
+> > +#if defined(__BIG_ENDIAN)
+> > +	u16 reserved3;
+> > +	u16 itt;
+> > +#define ISCSI_CLEANUP_REQUEST_INDEX (0x3FFF<<0)
+> > +#define ISCSI_CLEANUP_REQUEST_INDEX_SHIFT 0
+> > +#define ISCSI_CLEANUP_REQUEST_TYPE (0x3<<14)
+> > +#define ISCSI_CLEANUP_REQUEST_TYPE_SHIFT 14
+> > +#elif defined(__LITTLE_ENDIAN)
+> > +	u16 itt;
+> > +#define ISCSI_CLEANUP_REQUEST_INDEX (0x3FFF<<0)
+> > +#define ISCSI_CLEANUP_REQUEST_INDEX_SHIFT 0
+> > +#define ISCSI_CLEANUP_REQUEST_TYPE (0x3<<14)
+> > +#define ISCSI_CLEANUP_REQUEST_TYPE_SHIFT 14
+> > +	u16 reserved3;
+> > +#endif
+> 
+> 
+> Why the duplication of the #define values? They look the same.
+> 
+Sure we can take care of that by moving macros outside of #ifdef
 
-> > +
-> > +int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops)
+> 
+> .. snip ..
+> > +/*
+> > + * mnc - lookup Jeff Garzack's rule about defining this
+> 
+> Has this TODO been completed?
+> 
+> > + * type of junk. Base on enum and make it less error prone.
+> > + *	Anil - these are bit masks, won't enum be little ugly?
+> > + */
+> .. snip ..
+> 
+> > + * bnx2i_iscsi_license_error - displays iscsi license related error message
+> 
+> Doesn't look very license related. Just says 'not supported'.
+> 
+> > + * @hba:		adapter instance pointer
+> > + * @error_code:		error classification
+> > + *
+> > + * Puts out an error log when driver is unable to offload iscsi connection
+> > + *	due to license restrictions
+> 
+> Maybe adding in some extra information to the error, such as: "Due to
+> GPL restrictions, etc.." .. What does 'LOM' stand for?
+
+This has nothing to do with code licensing but related to whether iSCSI
+functionality is enabled on the device or not. iSCSI feature can be
+controlled through NVRAM configuration and some OEM's do not enable
+iscsi
+ 
+
+> 
+> > + */
+> > +static void bnx2i_iscsi_license_error(struct bnx2i_hba *hba, u32 error_code)
 > > +{
-> > +	struct cnic_dev *dev;
-> > +
-> > +	if (ulp_type >= MAX_CNIC_ULP_TYPE) {
-> > +		printk(KERN_ERR PFX "cnic_register_driver: Bad type %d\n",
-> > +		       ulp_type);
-> > +		return -EINVAL;
-> > +	}
-> > +	mutex_lock(&cnic_lock);
-> > +	if (cnic_ulp_tbl[ulp_type]) {
-> > +		printk(KERN_ERR PFX "cnic_register_driver: Type %d has already "
-> > +				    "been registered\n", ulp_type);
-> > +		mutex_unlock(&cnic_lock);
-> > +		return -EBUSY;
-> > +	}
-> > +
-> > +	read_lock(&cnic_dev_lock);
-> > +	list_for_each_entry(dev, &cnic_dev_list, list) {
-> > +		struct cnic_local *cp = dev->cnic_priv;
-> > +
-> > +		clear_bit(ULP_F_INIT, &cp->ulp_flags[ulp_type]);
-> > +	}
-> > +	read_unlock(&cnic_dev_lock);
-> > +
-> > +	rcu_assign_pointer(cnic_ulp_tbl[ulp_type], ulp_ops);
-> 
-> OK, protected by cnic_lock.
-> 
-> > +	mutex_unlock(&cnic_lock);
-> > +
-> > +	/* Prevent race conditions with netdev_event */
-> > +	rtnl_lock();
-> > +	read_lock(&cnic_dev_lock);
-> > +	list_for_each_entry(dev, &cnic_dev_list, list) {
-> > +		struct cnic_local *cp = dev->cnic_priv;
-> > +
-> > +		if (!test_and_set_bit(ULP_F_INIT, &cp->ulp_flags[ulp_type]))
-> > +			ulp_ops->cnic_init(dev);
-> > +	}
-> > +	read_unlock(&cnic_dev_lock);
-> > +	rtnl_unlock();
-> > +
-> > +	return 0;
+> > +	if (error_code == ISCSI_KCQE_COMPLETION_STATUS_ISCSI_NOT_SUPPORTED)
+> > +		/* iSCSI offload not supported on this device */
+> > +		printk(KERN_ERR "bnx2i: iSCSI not supported, dev=%s\n",
+> > +				hba->netdev->name);
+> > +	if (error_code == ISCSI_KCQE_COMPLETION_STATUS_LOM_ISCSI_NOT_ENABLED)
+> > +		/* iSCSI offload not supported on this LOM device */
+> > +		printk(KERN_ERR "bnx2i: LOM is not enable to "
+>                                             ^^^^-enabled.
+> > +				"offload iSCSI connections, dev=%s\n",
+> > +				hba->netdev->name);
+> > +	set_bit(ADAPTER_STATE_INIT_FAILED, &hba->adapter_state);
 > > +}
 > > +
-> > +int cnic_unregister_driver(int ulp_type)
+> > +#ifdef _EVENT_COALESCE_
+> > +#define CNIC_ARM_CQE			1
+> > +#define CNIC_DISARM_CQE			0
+> > +extern unsigned int event_coal_div;
+> > +
+> > +/**
+> > + * bnx2i_arm_cq_event_coalescing - arms CQ to enable EQ notification
+> > + * @ep:		endpoint (transport indentifier) structure
+> > + * @action:	action, ARM or DISARM. For now only ARM_CQE is used
+> > + *
+> > + * Arm'ing CQ will enable chip to generate global EQ events inorder to interrupt
+> > + *	the driver. EQ event is generated CQ index is hit or at least 1 CQ is
+> > + *	outstanding and on chip timer expires
+> > + */
+> > +static void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action)
 > > +{
-> > +	struct cnic_dev *dev;
-> > +
-> > +	if (ulp_type >= MAX_CNIC_ULP_TYPE) {
-> > +		printk(KERN_ERR PFX "cnic_unregister_driver: Bad type %d\n",
-> > +		       ulp_type);
-> > +		return -EINVAL;
+> > +	u16 cq_index;
+> > +	if ((action == CNIC_ARM_CQE) && ep->sess) {
+> > +		cq_index = ep->qp.cqe_exp_seq_sn +
+> > +			   ep->sess->num_active_cmds / event_coal_div;
+> > +		cq_index %= (ep->qp.cqe_size * 2 + 1);
+> > +		if (!cq_index)
+> > +			cq_index = 1;
+> > +		writew(cq_index, ep->qp.ctx_base + CNIC_EVENT_COAL_INDEX);
 > > +	}
-> > +	mutex_lock(&cnic_lock);
-> > +	if (!cnic_ulp_tbl[ulp_type]) {
-> > +		printk(KERN_ERR PFX "cnic_unregister_driver: Type %d has not "
-> > +				    "been registered\n", ulp_type);
-> > +		goto out_unlock;
-> > +	}
-> > +	read_lock(&cnic_dev_lock);
-> > +	list_for_each_entry(dev, &cnic_dev_list, list) {
-> > +		struct cnic_local *cp = dev->cnic_priv;
-> > +		
-> > +		if (rcu_dereference(cp->ulp_ops[ulp_type])) {
+> > +	writeb(action, ep->qp.ctx_base + CNIC_EVENT_CQ_ARM);
 > 
-> The rcu_dereference() is redundant because we hold cnic_lock.
-> (Which is OK, just wanting to make sure I understand the code.)
+> This code looks to be outside the function. Did you try to compile with the
+> _EVENT_COALESCE_ define?
 
-Yes, I wanted to access these RCU protected pointers in a uniform way.
+function construction is ok, may be an additional blank line after
+writeb() the reason for confusion
+ 
+> 
+> .. snip ..
+> > +int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+> > +			 struct iscsi_task *mtask)
+> .. snip
+> > +	tmfabort_wqe->op_attr = 0;
+> > +	tmfabort_wqe->op_attr =
+> > +		ISCSI_TMF_REQUEST_ALWAYS_ONE | ISCSI_TM_FUNC_ABORT_TASK;
+> 
+> Is the first assigment neccessary?
+> 
+> .. snip ..
+> > +static int bnx2i_power_of2(u32 val)
+> 
+> There are no macros for this?
 
-> 
-> > +			printk(KERN_ERR PFX "cnic_unregister_driver: Type %d "
-> > +			       "still has devices registered\n", ulp_type);
-> > +			read_unlock(&cnic_dev_lock);
-> > +			goto out_unlock;
-> > +		}
-> > +	}
-> > +	read_unlock(&cnic_dev_lock);
-> > +
-> > +	rcu_assign_pointer(cnic_ulp_tbl[ulp_type], NULL);
-> 
-> OK, protected by cnic_lock.
-> 
-> > +
-> > +	mutex_unlock(&cnic_lock);
-> > +	synchronize_rcu();
-> 
-> The caller is responsible for freeing up cnic_ulp_tbl[ulp_type]?  If so,
-> the caller had better have kept a pointer to it...
-> 
-> But the caller would need to snapshot the pointer before the cnic_lock
-> was acquired, which means that some other pointer might in fact be
-> in place by the time this function returns.
-> 
-> So, is this data element statically allocated?  Or is there some other
-> trick being used?
-> 
-> Or is the whole point of this code simply to ensure that any calls to
-> the old cnic_ulp_tbl[ulp_type] functions have completed before this
-> function returns?  If so, please add a comment to this effect.
-
-Yes, once again to ensure that any calls have completed before
-continuing.  I will document the use of RCU more in the next version.
+Did not find one. But there is is_power_of_2() to check if the given
+integer is an exact power of 2
 
 > 
-> > +	return 0;
-> > +
-> > +out_unlock:
-> > +	mutex_unlock(&cnic_lock);
-> > +	return -EINVAL;
-> > +}
-> > +
-> > +EXPORT_SYMBOL(cnic_register_driver);
-> > +EXPORT_SYMBOL(cnic_unregister_driver);
-> > +
-> > +static int cnic_start_hw(struct cnic_dev *);
-> > +static void cnic_stop_hw(struct cnic_dev *);
-> > +
-> > +static int cnic_register_device(struct cnic_dev *dev, int ulp_type,
-> > +				void *ulp_ctx)
+> .. snip ..
+> > +static void bnx2i_process_async_mesg(struct iscsi_session *session,
+> > +				     struct bnx2i_conn *bnx2i_conn,
+> > +				     struct cqe *cqe)
 > > +{
-> > +	struct cnic_local *cp = dev->cnic_priv;
-> > +	struct cnic_ulp_ops *ulp_ops;
+> > +	struct bnx2i_async_msg *async_cqe;
+> > +	struct iscsi_async *resp_hdr;
+> > +	u8 async_event;
 > > +
-> > +	if (ulp_type >= MAX_CNIC_ULP_TYPE) {
-> > +		printk(KERN_ERR PFX "cnic_register_device: Bad type %d\n",
-> > +		       ulp_type);
-> > +		return -EINVAL;
-> > +	}
-> > +	mutex_lock(&cnic_lock);
-> > +	if (cnic_ulp_tbl[ulp_type] == NULL) {
-> > +		printk(KERN_ERR PFX "cnic_register_device: Driver with type %d "
-> > +				    "has not been registered\n", ulp_type);
-> > +		mutex_unlock(&cnic_lock);
-> > +		return -EAGAIN;
-> > +	}
-> > +	if (rcu_dereference(cp->ulp_ops[ulp_type])) {
+> > +	bnx2i_unsol_pdu_adjust_rq(bnx2i_conn);
+> > +
+> > +	async_cqe = (struct bnx2i_async_msg *)cqe;
+> > +	async_event = async_cqe->async_event;
+> > +
+> > +	if (async_event == ISCSI_ASYNC_MSG_SCSI_EVENT) {
+> > +		/* TODO mnc - can't we just copy the scsi sense buffer
+> > +		 * to the conn->data buffer
+> > +		 * Anil - currently there is no interface to push this
+> > +		 * 	  up to SCSI layer. So far we have not seen any
+> > +		 *	  target generating one. So could be one those
+> > +		 *	  fancy unused feature
+> > +		 *
+> > +		 * For iser/tcp we pass this to libiscsi which does
+> > +		 * iscsi_recv_pdu to send it to userspace.
+> > +		 *
+> > +		 * This event is used by Cisco to signal that a lun
+> > +		 * has been added or removed. It is also used by
+> > +		 * EMC celerra or centerra boxes, and EMC will ping
+> > +		 * you one day :), so we have to do something.
 > 
-> Again, the rcu_dereference() is redundant due to the cnic_lock being
-> held, and again, this is OK, just checking to make sure I understand it.
+> Yes. This would be really nice if it was passed to the
+> userspace.  Especially since the iscsi daemon re-scans
+> the SCSI blk device when this is triggered.
+
+yes, we will include this in later revision
+
+
 > 
-> > +		printk(KERN_ERR PFX "cnic_register_device: Type %d has already "
-> > +		       "been registered to this device\n", ulp_type);
-> > +		mutex_unlock(&cnic_lock);
-> > +		return -EBUSY;
-> > +	}
-> > +	if (!try_module_get(cnic_ulp_tbl[ulp_type]->owner)) {
-> > +		mutex_unlock(&cnic_lock);
-> > +		return -EBUSY;
-> > +	}
-> > +
-> > +	clear_bit(ULP_F_START, &cp->ulp_flags[ulp_type]);
-> > +	cp->ulp_handle[ulp_type] = ulp_ctx;
-> > +	ulp_ops = cnic_ulp_tbl[ulp_type];
-> > +	rcu_assign_pointer(cp->ulp_ops[ulp_type], ulp_ops);
+> > +		 */
+> > +		iscsi_conn_printk(KERN_ALERT, bnx2i_conn->cls_conn->dd_data,
+> > +				  "async: scsi events not supported\n");
 > 
-> Good, protected by cnic_lock.
+> You might want to include the SCSI sense buffer as well in the
+> printk.
 > 
-> > +	cnic_hold(dev);
-> > +	if (!dev->use_count) {
-> > +		if (!test_bit(CNIC_F_IF_GOING_DOWN, &dev->flags)) {
-> > +			if (dev->netdev->flags & IFF_UP)
-> > +				set_bit(CNIC_F_IF_UP, &dev->flags);
-> > +		}
-> > +	}
-> > +	dev->use_count++;
-> > +
-> > +	if (dev->use_count == 1) {
-> > +		if (test_bit(CNIC_F_IF_UP, &dev->flags))
-> > +			cnic_start_hw(dev);
-> > +	}
-> > +
-> > +	if (test_bit(CNIC_F_CNIC_UP, &dev->flags))
-> > +		if (!test_and_set_bit(ULP_F_START, &cp->ulp_flags[ulp_type]))
-> > +			ulp_ops->cnic_start(cp->ulp_handle[ulp_type]);
-> > +
-> > +	mutex_unlock(&cnic_lock);
-> > +
-> > +	return 0;
-> > +
-> > +}
-> > +
-> > +static int cnic_unregister_device(struct cnic_dev *dev, int ulp_type)
+> .. snip ..
+> > +static void bnx2i_process_iscsi_error(struct bnx2i_hba *hba,
+> > +				      struct iscsi_kcqe *iscsi_err)
 > > +{
-> > +	struct cnic_local *cp = dev->cnic_priv;
+> .. snip ..
+> > +	char additional_notice[64];
+> .. snip ..
+> > +	switch (iscsi_err->completion_status) {
+> > +	case ISCSI_KCQE_COMPLETION_STATUS_HDR_DIG_ERR:
+> > +		strcpy(additional_notice, "hdr digest err");
+> 
+> You don't want to memset the 'additional_notice' so that you are
+> guaranteed to have the \0 at the end?
+> .. snip ..
+> 
 > > +
-> > +	if (ulp_type >= MAX_CNIC_ULP_TYPE) {
-> > +		printk(KERN_ERR PFX "cnic_unregister_device: Bad type %d\n",
-> > +		       ulp_type);
-> > +		return -EINVAL;
-> > +	}
-> > +	mutex_lock(&cnic_lock);
-> > +	if (rcu_dereference(cp->ulp_ops[ulp_type])) {
+> > +unsigned int event_coal_div = 1;
+> > +module_param(event_coal_div, int, 0664);
+> > +MODULE_PARM_DESC(event_coal_div, "Event Coalescing Divide Factor");
 > 
-> Ditto...
-> 
-> > +		dev->use_count--;
-> > +		module_put(cp->ulp_ops[ulp_type]->owner);
-> > +		rcu_assign_pointer(cp->ulp_ops[ulp_type], NULL);
-> 
-> OK, cnic_lock held...
-> 
-> > +		if (dev->use_count == 0)
-> > +			cnic_stop_hw(dev);
-> > +		cnic_put(dev);
-> > +	} else {
-> > +		printk(KERN_ERR PFX "cnic_unregister_device: device not "
-> > +		       "registered to this ulp type %d\n", ulp_type);
-> > +		mutex_unlock(&cnic_lock);
-> > +		return -EINVAL;
-> > +	}
-> > +	mutex_unlock(&cnic_lock);
-> > +
-> > +	synchronize_rcu();
-> 
-> Caller is again responsible for freeing up cp->ulp_ops[ulp_type]?
-> If so, the caller had better have obtained a reference to it beforehand.
-> But it might have changed in the meantime.  So, how is this freed?
-> 
-> Or is this statically allocated with the only purpose of the
-> synchronize_rcu() being to ensure that calls though the old ops vector
-> have completed before this function returns?  If so, please add a
-> comment to this effect.
+> Should that have an #ifdef around it? You are not using it except
+> in the code that has the #ifdef _EVENT_COALESCE_
+> .. snip..
 
-Yes same as above.
+Thanks. Will make this change in the next revision
 
-> > +
-> > +static int cnic_cm_open(struct cnic_dev *dev)
+> > +static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
 > > +{
-> > +	struct cnic_local *cp = dev->cnic_priv;
-> > +	int err;
-> > +
-> > +	err = cnic_cm_alloc_mem(dev);
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	err = cp->start_cm(dev);
-> > +
-> > +	if (err)
-> > +		goto err_out;
-> > +
-> > +	spin_lock_init(&cp->wr_lock);
-> > +
-> > +	tasklet_init(&cp->cnic_task, &cnic_task, (unsigned long) cp);
-> > +
-> > +	cp->cm_nb.notifier_call = cnic_net_callback;
-> > +	register_netevent_notifier(&cp->cm_nb);
-> > +
-> > +	dev->cm_create = cnic_cm_create;
-> > +	dev->cm_destroy = cnic_cm_destroy;
-> > +	dev->cm_connect = cnic_cm_connect;
-> > +	dev->cm_abort = cnic_cm_abort;
-> > +	dev->cm_close = cnic_cm_close;
-> > +	dev->cm_select_dev = cnic_cm_select_dev;
-> > +
-> > +	cp->ulp_handle[CNIC_ULP_L4] = dev;
-> > +	rcu_assign_pointer(cp->ulp_ops[CNIC_ULP_L4], &cm_ulp_ops);
+> .. snip ..
+> > +	tcp_port = bnx2i_alloc_tcp_port();
+> > +	if (!tcp_port) {
+> > +		printk(KERN_ERR "bnx2i: run 'bnx2id' to alloc tcp ports\n");
 > 
-> The cnic_lock is not held due to this being initialization time, and
-> that no one else can be messing with this until initialization is
-> complete?
-
-Yes, this is actually the CNIC driver registering with itself.  Only the
-CNIC driver will be using the CNIC_ULP_L4 ID.
-
+> Is that correct? Or will this be handled by iscsid?
 > 
-> > +	return 0;
-> > +
-> > +err_out:
-> > +	cnic_cm_free_mem(dev);
-> > +	return err;
-> > +}
-> > +
 
-> > +static void cnic_stop_bnx2_hw(struct cnic_dev *dev)
+This will be handled by a separate user daemon, bnx2id
+ 
+
+> .. snip ..
+> > +static void bnx2i_cleanup_task(struct iscsi_conn *conn,
+> > +			       struct iscsi_task *task)
 > > +{
-> > +	struct cnic_local *cp = dev->cnic_priv;
-> > +	struct cnic_eth_dev *ethdev = cp->ethdev;
+> > +	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
+> > +	struct bnx2i_hba *hba = bnx2i_conn->hba;
 > > +
-> > +	cnic_disable_bnx2_int_sync(dev);
-> > +
-> > +	cnic_bnx2_reg_wr_ind(dev, BNX2_CP_SCRATCH + 0x20, 0);
-> > +	cnic_bnx2_reg_wr_ind(dev, BNX2_COM_SCRATCH + 0x20, 0);
-> > +
-> > +	cnic_init_context(dev, KWQ_CID);
-> > +	cnic_init_context(dev, KCQ_CID);
-> > +
-> > +	cnic_setup_5709_context(dev, 0);
-> > +	cnic_free_irq(dev);
-> > +
-> > +	ethdev->drv_unregister_cnic(dev->netdev);
-> > +
-> > +	cnic_free_resc(dev);
-> > +}
-> > +
-> > +static void cnic_stop_hw(struct cnic_dev *dev)
-> > +{
-> > +	if (test_bit(CNIC_F_CNIC_UP, &dev->flags)) {
-> > +		struct cnic_local *cp = dev->cnic_priv;
-> > +
-> > +		clear_bit(CNIC_F_CNIC_UP, &dev->flags);
-> > +		rcu_assign_pointer(cp->ulp_ops[CNIC_ULP_L4], NULL);
+> > +	/*
+> > +	 * mgmt task or cmd completed while tmf in progress.
+> > +	 */
+> > +	if (!task->sc)
+> > +		return;
+> > +	/*
+> > +	 * ANIL
+> > +	 * do we have to do this for other tmfs?
+> > +	 */
 > 
-> Given that the cnic_lock does not appear to be held, what prevents
-> other CPUs from manipulating cp->ulp_ops[CNIC_ULP_L4] concurrently
-> with this function?
+> Not finished TODO?
+> .. snip ..
+
+We just forgot to remove the comments
+
+
+> 
+> > + */
+> > +static struct scsi_host_template bnx2i_host_template = {
+> > +	.module			= THIS_MODULE,
+> > +	.name			= "Broadcom Offload iSCSI Initiator",
+> > +	.proc_name		= "bnx2i",
+> > +	.queuecommand		= iscsi_queuecommand,
+> > +	.slave_alloc		= iscsi_slave_alloc,
+> > +	.eh_abort_handler	= iscsi_eh_abort,
+> > +/*
+> > + * Anil
+> > + * uncomment this when we know if we need to do a
+> > + * ISCSI_OPCODE_CLEANUP_REQUEST on tasks that are affected by
+> > + * the lu reset.
+> 
+> What is the verdict?
+
+Will remove these old notes between Mike & myself. This has to do with
+reclaiming task resources which got affected by lun reset and it
+correctly handled by the driver set
+
+
+> > +	.eh_device_reset_handler = iscsi_eh_device_reset,
+> > +*/
+> > +	.eh_target_reset_handler = iscsi_eh_target_reset,
+> > +	/* TODO - just make this the max sessions * max_cmds_per_session */
+> 
+> And is 1024 the right value?
 > 
 
-This is again the CNIC driver unregistering with itself.  Only the CNIC
-driver will be using the CNIC_ULP_L4 ID.
-
-> > +		synchronize_rcu();
-> > +		cnic_cm_shutdown(dev);
-> > +		cp->stop_hw(dev);
-> > +		pci_dev_put(dev->pcidev);
-> > +	}
-> > +}
-> > +
-
-
+Because the same driver handles multiple devices with different hardware
+capabilities, we recently changed the driver to assign 'can_queue' value
+based on the device type. This change got missed out in this revision as
+Mike Christie merged this change a couple of days back. 
 
