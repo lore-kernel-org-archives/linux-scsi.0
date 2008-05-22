@@ -1,72 +1,85 @@
 From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: [PATCH 1/1] Fusion: SAS: don't set queue depth to 1 when sdev->id is greater than sh->max_id
-Date: Fri, 23 May 2008 01:49:26 +0800
-Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DD@pamail.ad.lsil.com>
+Subject: RE: [2.6 patch] make struct mpt_proc_root_dir static
+Date: Fri, 23 May 2008 01:51:21 +0800
+Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DF@pamail.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43332 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:44443 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755413AbYEVRvg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 13:51:36 -0400
+	id S1752864AbYEVSQG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 14:16:06 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Adrian Bunk <bunk@kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
 ACK 
 
 -----Original Message-----
-From: Michael Reed [mailto:mdr@sgi.com] 
-Sent: Thursday, May 22, 2008 1:51 AM
-To: linux-scsi; Moore, Eric; Prakash, Sathya
-Cc: James Bottomley
-Subject: [PATCH 1/1] Fusion: SAS: don't set queue depth to 1 when
-sdev->id is greater than sh->max_id
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
+Sent: Monday, May 05, 2008 11:56 PM
+To: Moore, Eric
+Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Andrew
+Morton
+Subject: [2.6 patch] make struct mpt_proc_root_dir static
 
-This patch was originally part of a patch posted March 13, 2008.
-I'm breaking this out into a separate patch as it's only somewhat
-related.
-Applies cleanly against Sathya's latest patch and will apply correctly
-(offset +29) to 2.6.26-rc3-git3.
+This patch makes the needlessly global struct mpt_proc_root_dir static.
+
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+---
+
+This patch has been sent on:
+- 22 Apr 2008
+- 13 Apr 2008
+
+ drivers/message/fusion/mptbase.c |    3 +--
+ drivers/message/fusion/mptbase.h |    1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+0206a6da1d1b4ca0e1eb7f6e34ced21c79d58c7b diff --git
+a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index c6be6eb..7e4e69e 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -103,7 +103,7 @@ static int mfcounter = 0;
+  *  Public data...
+  */
+ 
+-struct proc_dir_entry *mpt_proc_root_dir;
++static struct proc_dir_entry *mpt_proc_root_dir;
+ 
+ #define WHOINIT_UNKNOWN		0xAA
+ 
+@@ -7444,7 +7444,6 @@ EXPORT_SYMBOL(mpt_resume);
+EXPORT_SYMBOL(mpt_suspend);  #endif  EXPORT_SYMBOL(ioc_list);
+-EXPORT_SYMBOL(mpt_proc_root_dir);
+ EXPORT_SYMBOL(mpt_register);
+ EXPORT_SYMBOL(mpt_deregister);
+ EXPORT_SYMBOL(mpt_event_register);
+diff --git a/drivers/message/fusion/mptbase.h
+b/drivers/message/fusion/mptbase.h
+index caadc68..7630031 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -918,7 +918,6 @@ extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER
+*ioc, u8 phys_disk_num, pRaidPhys
+  *  Public data decl's...
+  */
+ extern struct list_head	  ioc_list;
+-extern struct proc_dir_entry	*mpt_proc_root_dir;
+ 
+ 
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=*/
+ #endif		/* } __KERNEL__ */
 
 --
-
-Change mptscsih_slave_configure so it doesn't set the queue depth to 1
-for SAS
-protocol when sdev->id is greater than sh->max_id.   The sas transport
-layer assigns the target ids, incrementing with each hotplug add.  With
-large topologies, it doesn't take long to hit this threshold.
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
-
---- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptscsih.c
-2008-05-21 15:06:59.212691745 -0500
-+++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptscsih.c
-2008-05-21 15:08:04.323836957 -0500
-@@ -2422,12 +2422,6 @@ mptscsih_slave_configure(struct scsi_dev
- 		    ioc->name, sdev->sdtr, sdev->wdtr,
- 		    sdev->ppr, sdev->inquiry_len));
- 
--	if (sdev->id > sh->max_id) {
--		/* error case, should never happen */
--		scsi_adjust_queue_depth(sdev, 0, 1);
--		goto slave_configure_exit;
--	}
--
- 	vdevice->configured_lun = 1;
- 	mptscsih_change_queue_depth(sdev, MPT_SCSI_CMD_PER_DEV_HIGH);
- 
-@@ -2441,8 +2435,6 @@ mptscsih_slave_configure(struct scsi_dev
- 		    ioc->name, vtarget->negoFlags, vtarget->maxOffset,
- 		    vtarget->minSyncFactor));
- 
--slave_configure_exit:
--
- 	dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
- 		"tagged %d, simple %d, ordered %d\n",
- 		ioc->name,sdev->tagged_supported, sdev->simple_tags,
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
