@@ -1,15 +1,15 @@
 From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: REPOST: [PATCH 1/1] Fusion SAS and Fibre Channel: target missing after resetting external raid
-Date: Fri, 23 May 2008 01:49:44 +0800
-Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DE@pamail.ad.lsil.com>
+Subject: RE: [PATCH 1/1] Fusion: SAS: don't set queue depth to 1 when sdev->id is greater than sh->max_id
+Date: Fri, 23 May 2008 01:49:26 +0800
+Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DD@pamail.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43334 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:43332 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755426AbYEVRvg convert rfc822-to-8bit (ORCPT
+	id S1755413AbYEVRvg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 13:51:36 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
@@ -21,86 +21,52 @@ ACK
 
 -----Original Message-----
 From: Michael Reed [mailto:mdr@sgi.com] 
-Sent: Thursday, May 22, 2008 1:36 AM
+Sent: Thursday, May 22, 2008 1:51 AM
 To: linux-scsi; Moore, Eric; Prakash, Sathya
 Cc: James Bottomley
-Subject: REPOST: [PATCH 1/1] Fusion SAS and Fibre Channel: target
-missing after resetting external raid
+Subject: [PATCH 1/1] Fusion: SAS: don't set queue depth to 1 when
+sdev->id is greater than sh->max_id
 
-Repost of original version of a patch posted on March 04, 2008.
-Patch has been adjusted to apply to 2.6.26-rc3-git3.  The final version
-of the patch (March 13, 2008) modified mptscsih.c with a somewhat
-related mod which I'm separating into a new patch.
-
-This patch will also apply on top of Sathya's recent patch set.
+This patch was originally part of a patch posted March 13, 2008.
+I'm breaking this out into a separate patch as it's only somewhat
+related.
+Applies cleanly against Sathya's latest patch and will apply correctly
+(offset +29) to 2.6.26-rc3-git3.
 
 --
 
-Following a hard reset of a SAS raid, one of the raid targets is
-occasionally missing.  I tracked this down to a pretty obscure little
-bug.
-
-The LSI fusion drivers for SAS and Fibre Channel both use their
-respective transport layers.  Those transport layers increment the
-target number assigned to new targets.
-
-The routine __scsi_scan_target uses the "this_id" element of the
-Scsi_Host structure to avoid scanning the scsi host adapter.  Both
-fusion drivers set "this_id" from a value returned in a firmware
-PortFacts response.  For my particular test case (SAS) the firmware id
-assigned to the initiator was 173.  After enough raid resets to cause
-the raid targets to go and come a sufficient number of times, the id
-assigned by the transport to a raid target would match the id assigned
-by the host adapter to the "this_id"
-field, resulting in that target not being scanned.
-
-static void __scsi_scan_target(struct device *parent, unsigned int
-channel,
-                unsigned int id, unsigned int lun, int rescan) {
-        struct Scsi_Host *shost = dev_to_shost(parent);
-        int bflags = 0;
-        int res;
-        struct scsi_target *starget;
-
-        if (shost->this_id == id)
-                /*
-                 * Don't scan the host adapter
-                 */
-                return;
-
-
-The fix is simple.  Fusion SAS and Fibre Channel should just leave
-"this_id"
-initialized to "-1".
-
-Applies to 2.6.26-rc3-git3
+Change mptscsih_slave_configure so it doesn't set the queue depth to 1
+for SAS
+protocol when sdev->id is greater than sh->max_id.   The sas transport
+layer assigns the target ids, incrementing with each hotplug add.  With
+large topologies, it doesn't take long to hit this threshold.
 
 Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
---- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptfc.c
-2008-05-21 14:28:31.116809458 -0500
-+++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptfc.c
-2008-05-21 14:28:48.408577749 -0500
-@@ -1238,8 +1238,6 @@ mptfc_probe(struct pci_dev *pdev, const 
- 	sh->max_id = ioc->pfacts->MaxDevices;
- 	sh->max_lun = max_lun;
+--- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptscsih.c
+2008-05-21 15:06:59.212691745 -0500
++++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptscsih.c
+2008-05-21 15:08:04.323836957 -0500
+@@ -2422,12 +2422,6 @@ mptscsih_slave_configure(struct scsi_dev
+ 		    ioc->name, sdev->sdtr, sdev->wdtr,
+ 		    sdev->ppr, sdev->inquiry_len));
  
--	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-	if (sdev->id > sh->max_id) {
+-		/* error case, should never happen */
+-		scsi_adjust_queue_depth(sdev, 0, 1);
+-		goto slave_configure_exit;
+-	}
 -
- 	/* Required entry.
- 	 */
- 	sh->unique_id = ioc->id;
---- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptsas.c
-2008-05-21 14:28:31.116809458 -0500
-+++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptsas.c
-2008-05-21 14:28:48.432577428 -0500
-@@ -3193,8 +3193,6 @@ mptsas_probe(struct pci_dev *pdev, const
+ 	vdevice->configured_lun = 1;
+ 	mptscsih_change_queue_depth(sdev, MPT_SCSI_CMD_PER_DEV_HIGH);
  
- 	sh->transportt = mptsas_transport_template;
+@@ -2441,8 +2435,6 @@ mptscsih_slave_configure(struct scsi_dev
+ 		    ioc->name, vtarget->negoFlags, vtarget->maxOffset,
+ 		    vtarget->minSyncFactor));
  
--	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-slave_configure_exit:
 -
- 	/* Required entry.
- 	 */
- 	sh->unique_id = ioc->id;
+ 	dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+ 		"tagged %d, simple %d, ordered %d\n",
+ 		ioc->name,sdev->tagged_supported, sdev->simple_tags,
