@@ -1,45 +1,49 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Thu, 22 May 2008 09:23:21 +0100
-Message-ID: <1211444601.3956.8.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0805191106270.15266-100000@iolanthe.rowland.org>
-	 <4831A60A.5010308@panasas.com>
-	 <alpine.LFD.1.10.0805190929170.32253@woody.linux-foundation.org>
-	 <4831B2E2.8030700@panasas.com>
-	 <alpine.LFD.1.10.0805191026120.32253@woody.linux-foundation.org>
+Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
+	buffers instead of buffers on stack)
+Date: Thu, 22 May 2008 09:43:12 +0100
+Message-ID: <1211445792.3956.14.camel@localhost.localdomain>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <20080521221113.GA12695@alpha.franken.de> <20080522095506E.tomof@acm.org>
+	 <20080521.181847.157652663.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51071 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758916AbYEVXn3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2008 19:43:29 -0400
-In-Reply-To: <alpine.LFD.1.10.0805191026120.32253@woody.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080521.181847.157652663.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Alan Stern <stern@rowland.harvard.edu>, Maciej Rutecki <maciej.rutecki@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-05-19 at 10:27 -0700, Linus Torvalds wrote:
+On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Thu, 22 May 2008 10:13:31 +0900
 > 
-> On Mon, 19 May 2008, Boaz Harrosh wrote:
-> > 
-> > Sure, inspecting other places that emulate MODE_SENSE, (And inspecting the scsi
-> > spec) all zeros is a very good scsi response. Alan do you want to send a fix for all
-> > places that initiate a MODE_SENSE command, specifically at
-> > scsi_scan.c::scsi_unlock_floptical() ? (Some other places do)
+> > DMA on stack is forbidden because of non coherent architecutes and
+> > architectures can't uses stack addresses for DMA? What architectures
+> > can't uses stack addresses for DMA? Would it be better to just forbid
+> > using stack addresses for DMA on all the architectures at all times?
 > 
-> I was actualyl more thinking that the safest thing to do would be to just 
-> pre-clear the sense buffer. Then, if some driver doesn't fill it 
-> correctly, big deal..
+> Rather, the real problem is that some architectures map the kernel
+> stack virtually, and as a result virt_to_page() and things like that
+> will not work.
 > 
-> It's not like pre-clearing the bugger is a performance issue.
+> It really is fully not working to put DMA buffers on the stack
+> in these cases.
 
-It already is pre cleared, for precisely the reason that some devices
-lie about returning sense, so we use the zero return to mean no sense
-was collected.
+Actually, for SCSI only, that problem is fixed.  Our decision to
+re-route all I/O, including kernel internal I/O through the block
+mapping algorithms (really so we don't have to worry about GFP_DMA any
+more since we can now use the block bounce buffers) means that all SCSI
+submission routines will accept vmalloc'd and even stack buffers
+perfectly correctly.
+
+However (before anyone gets any ideas), the stack is incredibly
+dangerous to do DMA on because it's packed with current data.  If you
+don't get the alignment requirements right on a non-coherent platform,
+you'll end up corrupting data because of cache line interference issues.
+For this reason, DMA to stack is still technically illegal.
 
 James
 
