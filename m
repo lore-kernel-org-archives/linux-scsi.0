@@ -1,37 +1,94 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] bnx2i: Add bnx2i iSCSI driver.
-Date: Thu, 22 May 2008 17:15:59 -0400
-Message-ID: <20080522211559.GA29851@infradead.org>
-References: <1211418386-18203-1-git-send-email-mchan@broadcom.com> <1211418386-18203-4-git-send-email-mchan@broadcom.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] 3ware: BKL elimination
+Date: Thu, 22 May 2008 22:38:53 +0100
+Message-ID: <20080522223853.1762065a@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43950 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764361AbYEVVQE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 17:16:04 -0400
-Content-Disposition: inline
-In-Reply-To: <1211418386-18203-4-git-send-email-mchan@broadcom.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58150 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755562AbYEVVvV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 17:51:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: davem@davemloft.net, michaelc@cs.wisc.edu, anilgv@broadcom.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> +struct bnx2i_async_msg {
-> +#if defined(__BIG_ENDIAN)
-> +	u8 op_code;
-> +	u8 reserved1;
-> +	u16 reserved0;
-> +#elif defined(__LITTLE_ENDIAN)
-> +	u16 reserved0;
-> +	u8 reserved1;
-> +	u8 op_code;
-> +#endif
-> +	u32 reserved2;
-> +	u32 exp_cmd_sn;
-> +	u32 max_cmd_sn;
-> +	u32 reserved3[2];
+The 3ware driver internal locking appears complete so we just stop taking
+the BKL on ioctls from the management handle
 
-Please don't do the ifdef big endian mess.  Just read the whole
-32bit word and do mask and shift operations to extract the actual value.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index b31faec..5e6b47f 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -111,7 +111,7 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
+ static int twa_aen_read_queue(TW_Device_Extension *tw_dev, int request_id);
+ static char *twa_aen_severity_lookup(unsigned char severity_code);
+ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id);
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+ static int twa_chrdev_open(struct inode *inode, struct file *file);
+ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_sense, int print_host);
+ static void twa_free_request_id(TW_Device_Extension *tw_dev,int request_id);
+@@ -202,7 +202,7 @@ static struct device_attribute *twa_host_attrs[] = {
+ /* File operations struct for character device */
+ static const struct file_operations twa_fops = {
+ 	.owner		= THIS_MODULE,
+-	.ioctl		= twa_chrdev_ioctl,
++	.unlocked_ioctl	= twa_chrdev_ioctl,
+ 	.open		= twa_chrdev_open,
+ 	.release	= NULL
+ };
+@@ -619,7 +619,7 @@ out:
+ } /* End twa_check_srl() */
+ 
+ /* This function handles ioctl for the character device */
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ {
+ 	long timeout;
+ 	unsigned long *cpu_addr, data_buffer_length_adjusted = 0, flags = 0;
+@@ -635,7 +635,8 @@ static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int
+ 	TW_Event *event;
+ 	struct timeval current_time;
+ 	u32 current_time_ms;
+-	TW_Device_Extension *tw_dev = twa_device_extension_list[iminor(inode)];
++	unsigned int minor = iminor(file->f_path.dentry->d_inode);
++	TW_Device_Extension *tw_dev = twa_device_extension_list[minor];
+ 	int retval = TW_IOCTL_ERROR_OS_EFAULT;
+ 	void __user *argp = (void __user *)arg;
+ 
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 8c22329..33a6a2e 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -874,7 +874,7 @@ static int tw_allocate_memory(TW_Device_Extension *tw_dev, int size, int which)
+ } /* End tw_allocate_memory() */
+ 
+ /* This function handles ioctl for the character device */
+-static int tw_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
++static long tw_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ {
+ 	int request_id;
+ 	dma_addr_t dma_handle;
+@@ -886,7 +886,8 @@ static int tw_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int
+ 	long timeout;
+ 	TW_New_Ioctl *tw_ioctl;
+ 	TW_Passthru *passthru;
+-	TW_Device_Extension *tw_dev = tw_device_extension_list[iminor(inode)];
++	unsigned int minor = iminor(file->f_path.dentry->d_inode);
++	TW_Device_Extension *tw_dev = tw_device_extension_list[minor];
+ 	int retval = -EFAULT;
+ 	void __user *argp = (void __user *)arg;
+ 
+@@ -1043,7 +1044,7 @@ static int tw_chrdev_open(struct inode *inode, struct file *file)
+ /* File operations struct for character device */
+ static const struct file_operations tw_fops = {
+ 	.owner		= THIS_MODULE,
+-	.ioctl		= tw_chrdev_ioctl,
++	.unlocked_ioctl	= tw_chrdev_ioctl,
+ 	.open		= tw_chrdev_open,
+ 	.release	= NULL
+ };
