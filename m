@@ -1,21 +1,17 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] 3ware: BKL elimination
-Date: Thu, 22 May 2008 22:38:53 +0100
-Message-ID: <20080522223853.1762065a@core>
+Subject: [PATCH] aacraid: BKL push down
+Date: Thu, 22 May 2008 22:39:57 +0100
+Message-ID: <20080522223957.6c079b33@core>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58150 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755562AbYEVVvV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 17:51:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934872AbYEVVws@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The 3ware driver internal locking appears complete so we just stop taking
-the BKL on ioctls from the management handle
+The aacraid definitely needs the BKL internally right now so push the
+lock take down into the driver but go no further
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
