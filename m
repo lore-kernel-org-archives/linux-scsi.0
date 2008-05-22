@@ -1,53 +1,106 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH] sym53c8xx_2: free luntbl in sym_hcb_free
-Date: Thu, 22 May 2008 09:42:52 -0700
-Message-ID: <20080522164252.4256.35795.stgit@desktop-andmike.beaverton.ibm.com>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: REPOST: [PATCH 1/1] Fusion SAS and Fibre Channel: target missing after resetting external raid
+Date: Fri, 23 May 2008 01:49:44 +0800
+Message-ID: <5AE055B67BB5764693E2900C7E3699BE011105DE@pamail.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:36861 "EHLO e6.ny.us.ibm.com"
+Received: from mail0.lsil.com ([147.145.40.20]:43334 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754555AbYEVQnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2008 12:43:21 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4MGjH6a015303
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 12:45:17 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4MGgsq7157772
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 12:42:54 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4MGgs3s008357
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 12:42:54 -0400
+	id S1755426AbYEVRvg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 13:51:36 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>
+To: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-This patch frees the luntbl dma area in sym_hcb_free if allocated.
-Since the luntbl is part of a larger dma coherent area not freeing the
-luntbl kept a 64k dma coherent area previous allocated through
-dma_alloc_coherent allocated. This prevented a DLPAR remove IO
-operation from completing sucessfully.
+ACK 
 
-Cc: Matthew Wilcox <matthew@wil.cx>
-Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
----
+-----Original Message-----
+From: Michael Reed [mailto:mdr@sgi.com] 
+Sent: Thursday, May 22, 2008 1:36 AM
+To: linux-scsi; Moore, Eric; Prakash, Sathya
+Cc: James Bottomley
+Subject: REPOST: [PATCH 1/1] Fusion SAS and Fibre Channel: target
+missing after resetting external raid
 
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Repost of original version of a patch posted on March 04, 2008.
+Patch has been adjusted to apply to 2.6.26-rc3-git3.  The final version
+of the patch (March 13, 2008) modified mptscsih.c with a somewhat
+related mod which I'm separating into a new patch.
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index 22a6aae..98df165 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -5741,6 +5741,8 @@ void sym_hcb_free(struct sym_hcb *np)
+This patch will also apply on top of Sathya's recent patch set.
+
+--
+
+Following a hard reset of a SAS raid, one of the raid targets is
+occasionally missing.  I tracked this down to a pretty obscure little
+bug.
+
+The LSI fusion drivers for SAS and Fibre Channel both use their
+respective transport layers.  Those transport layers increment the
+target number assigned to new targets.
+
+The routine __scsi_scan_target uses the "this_id" element of the
+Scsi_Host structure to avoid scanning the scsi host adapter.  Both
+fusion drivers set "this_id" from a value returned in a firmware
+PortFacts response.  For my particular test case (SAS) the firmware id
+assigned to the initiator was 173.  After enough raid resets to cause
+the raid targets to go and come a sufficient number of times, the id
+assigned by the transport to a raid target would match the id assigned
+by the host adapter to the "this_id"
+field, resulting in that target not being scanned.
+
+static void __scsi_scan_target(struct device *parent, unsigned int
+channel,
+                unsigned int id, unsigned int lun, int rescan) {
+        struct Scsi_Host *shost = dev_to_shost(parent);
+        int bflags = 0;
+        int res;
+        struct scsi_target *starget;
+
+        if (shost->this_id == id)
+                /*
+                 * Don't scan the host adapter
+                 */
+                return;
+
+
+The fix is simple.  Fusion SAS and Fibre Channel should just leave
+"this_id"
+initialized to "-1".
+
+Applies to 2.6.26-rc3-git3
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+
+--- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptfc.c
+2008-05-21 14:28:31.116809458 -0500
++++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptfc.c
+2008-05-21 14:28:48.408577749 -0500
+@@ -1238,8 +1238,6 @@ mptfc_probe(struct pci_dev *pdev, const 
+ 	sh->max_id = ioc->pfacts->MaxDevices;
+ 	sh->max_lun = max_lun;
  
- 	for (target = 0; target < SYM_CONF_MAX_TARGET ; target++) {
- 		tp = &np->target[target];
-+		if (tp->luntbl)
-+			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
- #if SYM_CONF_MAX_LUN > 1
- 		kfree(tp->lunmp);
- #endif 
-
+-	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-
+ 	/* Required entry.
+ 	 */
+ 	sh->unique_id = ioc->id;
+--- linux-2.6.26-rc3-git3.orig/drivers/message/fusion/mptsas.c
+2008-05-21 14:28:31.116809458 -0500
++++ linux-2.6.26-rc3-git3/drivers/message/fusion/mptsas.c
+2008-05-21 14:28:48.432577428 -0500
+@@ -3193,8 +3193,6 @@ mptsas_probe(struct pci_dev *pdev, const
+ 
+ 	sh->transportt = mptsas_transport_template;
+ 
+-	sh->this_id = ioc->pfacts[0].PortSCSIID;
+-
+ 	/* Required entry.
+ 	 */
+ 	sh->unique_id = ioc->id;
