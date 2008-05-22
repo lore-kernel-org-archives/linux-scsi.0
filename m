@@ -1,24 +1,46 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
-Date: Thu, 22 May 2008 09:21:43 +0800
-Message-ID: <20080522012143.GA27975@gondor.apana.org.au>
-References: <20080521214624Y.fujita.tomonori@lab.ntt.co.jp> <20080521131811.GA20212@gondor.apana.org.au> <20080522100712S.tomof@acm.org> <20080521.181945.27326326.davem@davemloft.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default
+ dma pad mask
+Date: Thu, 22 May 2008 10:32:21 +0900
+Message-ID: <20080522103221C.fujita.tomonori@lab.ntt.co.jp>
+References: <20080521131811.GA20212@gondor.apana.org.au>
+	<20080522100712S.tomof@acm.org>
+	<20080521.181945.27326326.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:45121 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762362AbYEVBWA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2008 21:22:00 -0400
-Content-Disposition: inline
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:48847 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759037AbYEVBgw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2008 21:36:52 -0400
 In-Reply-To: <20080521.181945.27326326.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, linux-mm@kvack.org
+To: davem@davemloft.net
+Cc: fujita.tomonori@lab.ntt.co.jp, herbert@gondor.apana.org.au, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, linux-mm@kvack.org
 
-On Wed, May 21, 2008 at 06:19:45PM -0700, David Miller wrote:
->
+On Wed, 21 May 2008 18:19:45 -0700 (PDT)
+David Miller <davem@davemloft.net> wrote:
+
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Thu, 22 May 2008 10:14:12 +0900
+> 
+> > On Wed, 21 May 2008 21:18:11 +0800
+> > Herbert Xu <herbert@gondor.apana.org.au> wrote:
+> > 
+> > > On Wed, May 21, 2008 at 09:46:24PM +0900, FUJITA Tomonori wrote:
+> > > >
+> > > > No, you misunderstand my question. I meant, software algorithms don't
+> > > > need ARCH_KMALLOC_MINALIGN alignment for __crt_ctx and if we are fine
+> > > > with using the ALIGN hack for crypto hardware every time (like
+> > > > aes_ctx_common), crypto doesn't need ARCH_KMALLOC_MINALIGN alignment
+> > > > for __crt_ctx. Is this right?
+> > > 
+> > > The padlock isn't the only hardware device that will require
+> > > such alignment.  Now that we have the async interface there will
+> > > be more.
+> > 
 > > Ok, so it's all about crypto hardware requirement. In other words, if
 > > we accept for potential performance drop of crypto hardware, crypto
 > > can drop this alignment.
@@ -27,12 +49,29 @@ On Wed, May 21, 2008 at 06:19:45PM -0700, David Miller wrote:
 > will malfunction if not given an aligned address, rather than simply
 > go more slowly.
 
-Yes, in general hardware crypto that needs alignment requires it.
-In VIA's case it will generate a GPF.
+I understand that.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+VIA crypto driver has the following code to get proper alignment:
+
+static inline struct aes_ctx *aes_ctx_common(void *ctx)
+{
+	unsigned long addr = (unsigned long)ctx;
+	unsigned long align = PADLOCK_ALIGNMENT;
+
+	if (align <= crypto_tfm_ctx_alignment())
+		align = 1;
+	return (struct aes_ctx *)ALIGN(addr, align);
+}
+
+What he insists is:
+
+When crypto hardware alignment is smaller than the minimum alignment
+guaranteed by kmalloc, the above function is faster since ALIGN is
+nullified. That's why crypto uses the minimum alignment guaranteed by
+kmalloc.
+
+
+What I asking is:
+
+On most architectures, the minimum alignment guaranteed by kmalloc is
+too small (8 bytes). This ideal story doesn't happen to most of us.
