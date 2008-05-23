@@ -1,176 +1,134 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/7] scsi_dh: Implement common device table handling
-Date: Fri, 23 May 2008 13:14:56 +0200
-Message-ID: <20080523111456.GD380@pentland.suse.de>
-References: <20080520140524.EDE3010B5DF@craiglockhart-ipmi.suse.de> <1211508493.21974.502.camel@chandra-ubuntu>
+Subject: Re: [dm-devel] [PATCH 2/7] scsi_dh: Add 'dh_state' sysfs attribute
+Date: Fri, 23 May 2008 13:23:58 +0200
+Message-ID: <20080523112358.GE380@pentland.suse.de>
+References: <20080520140530.936DC10B5DF@craiglockhart-ipmi.suse.de> <1211508500.21974.503.camel@chandra-ubuntu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56696 "EHLO mx2.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:57622 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973AbYEWLO7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2008 07:14:59 -0400
+	id S1751740AbYEWLYB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2008 07:24:01 -0400
 Content-Disposition: inline
-In-Reply-To: <1211508493.21974.502.camel@chandra-ubuntu>
+In-Reply-To: <1211508500.21974.503.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: device-mapper development <dm-devel@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Hi Chandra,
-
-On Thu, May 22, 2008 at 07:08:13PM -0700, Chandra Seetharaman wrote:
-> Hi Hannes,
->=20
-> One of my comments (regarding creating a cache of vendor-product-scsi=
-_dh
-> trio of already found device type). I will code it and send it.
->=20
-> Looks good except for the minor comments as noted below.
+On Thu, May 22, 2008 at 07:08:20PM -0700, Chandra Seetharaman wrote:
 >=20
 > On Tue, 2008-05-20 at 16:05 +0200, Hannes Reinecke wrote:
->=20
-> <snip>
->=20
-> > +	spin_lock(&list_lock);
-> > +	list_for_each_entry(tmp, &scsi_dh_list, list) {
-> > +		for(i =3D 0; tmp->devlist[i].vendor; i++) {
-> > +			if (!strncmp(sdev->vendor, tmp->devlist[i].vendor,
-> > +				     strlen(tmp->devlist[i].vendor)) &&
-> > +			    !strncmp(sdev->model, tmp->devlist[i].model,
-> > +				     strlen(tmp->devlist[i].model))) {
-> > +				devinfo =3D tmp;
-> > +				break;
-> > +			}
-> > +		}
-> > +		if (devinfo)
-> > +			break;
-> > +	}
-> > +	spin_unlock(&list_lock);
->=20
-> The above block of code can be made into a function (as there are mor=
-e
-> than one usage).
->=20
-Ok, will do.
-
-> > +
-> > +	if (!devinfo)
-> > +		goto out;
-> > +
-> > +	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
-> > +		err =3D scsi_dh_handler_attach(sdev, devinfo);
-> > +	} else if (action =3D=3D BUS_NOTIFY_DEL_DEVICE) {
-> > +		if (sdev->scsi_dh_data =3D=3D NULL)
-> > +			goto out;
->=20
-> Check above is done in scsi_dh_handler_detach. Do you think it is nee=
-ded
-> here ?
->=20
-No, not really. Just forgot to take it out.
-
-[ .. ]
-> > +{
-> > +	struct scsi_device_handler *scsi_dh =3D data;
-> > +	struct scsi_device *sdev;
-> > +
-> > +	if (!scsi_is_sdev_device(dev))
-> > +		return 0;
-> > +
-> > +	sdev =3D to_scsi_device(dev);
-> > +
-> > +	if (!sdev->scsi_dh_data || sdev->scsi_dh_data->scsi_dh !=3D scsi_=
-dh)
-> > +		return 0;
-> > +
-> > +	scsi_dh_handler_detach(sdev);
+> > Implement a 'dh_state' sdev attribute for dynamic device handler
+> > manipulation. A read on the attribute will return the name of
+> > the currently attached device handler or 'detached' if no handler
+> > is attached.
+> > The attribute allows the following strings to be written:
+> > - The name of the device handler to be attached if the state is
+> >   'detached'.
+> > - 'activate' to trigger path activation if a device handler
+> >   is attached.
+> > - 'detach' to detach the currently attached device handler.
 > >=20
-> > -	scsi_dh->nb.notifier_call(&scsi_dh->nb, BUS_NOTIFY_ADD_DEVICE, de=
-v);
-> >  	return 0;
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/scsi/device_handler/scsi_dh.c |  107 +++++++++++++++++++++=
++++++++++++-
+> >  1 files changed, 105 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/d=
+evice_handler/scsi_dh.c
+> > index 0b5c457..b80fae7 100644
+> > --- a/drivers/scsi/device_handler/scsi_dh.c
+> > +++ b/drivers/scsi/device_handler/scsi_dh.c
+> > @@ -79,6 +79,98 @@ static void scsi_dh_handler_detach(struct scsi_d=
+evice *sdev)
 > >  }
-> notifier_add above does get_device() and put_device(). We don't need =
-it
-> in notifier_remove ?
-Oops. Yes, we do.
+> >=20
+> >  /*
+> > + * Functions for sysfs attribute 'dh_state'
+> > + */
+> > +static ssize_t
+> > +store_dh_state(struct device *dev, struct device_attribute *attr,
+> > +	       const char *buf, size_t count)
+> > +{
+> > +	struct scsi_device *sdev =3D to_scsi_device(dev);
+> > +	struct scsi_device_handler *scsi_dh;
+> > +	int err =3D -EINVAL;
+> > +
+> > +	if (!sdev->scsi_dh_data) {
+> > +		/*
+> > +		 * Attach to a device handler
+> > +		 */
+> > +		if (!(scsi_dh =3D get_device_handler(buf)))
+> > +			return err;
+> > +		err =3D scsi_dh_handler_attach(sdev, scsi_dh);
+> > +	} else {
+> > +		if (!strncmp(buf, "detach", 6)) {
+> > +			/*
+> > +			 * Detach from a device handler
+> > +			 */
+> > +			scsi_dh_handler_detach(sdev);
+> > +			err =3D 0;
+> > +		} else if (!strncmp(buf, "activate", 8)) {
+> > +			/*
+> > +			 * Activate a device handler
+> > +			 */
+> > +			scsi_dh =3D sdev->scsi_dh_data->scsi_dh;
+> > +			if (scsi_dh->activate)
+> > +				err =3D scsi_dh->activate(sdev);
+> > +			else
+> > +				err =3D 0;
+>=20
+> Sorry for the late comment. Why do we want to give the user to be abl=
+e
+> to activate a path ? (I am assuming user as we do not want to be call=
+ing
+> this from multipath tools).
+>=20
+This is quite a handy feature if you want to test failover manually (ie
+if the commands are being sent correctly and the array reacts properly)=
+=2E
+And, of course, there might be scenarios where you'd want to trigger
+a failover manually.
 
 [ .. ]
-> > -				     strlen(clariion_dev_list[i].model))) {
-> > -				found =3D 1;
-> > -				break;
-> > -			}
-> > -		}
-> > -		if (!found)
-> > -			goto out;
-> > -
-> > -		scsi_dh_data =3D kzalloc(sizeof(struct scsi_device_handler *)
-> > -				+ sizeof(*h) , GFP_KERNEL);
-> > -		if (!scsi_dh_data) {
-> > -			sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
-> > -				    CLARIION_NAME);
-> > -			goto out;
-> > -		}
-> > +	if (sdev->scsi_dh_data)
-> > +		return -EBUSY;
->=20
-> This check has already been done at scsi_dh level. Do we still need i=
-t
-> here ?
->=20
-No, we don't.
-
+> > @@ -114,14 +206,19 @@ static int scsi_dh_notifier(struct notifier_b=
+lock *nb,
+> >  		goto out;
 > >=20
-> > -		sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
-> > -			    CLARIION_NAME);
-> > +static void clariion_bus_detach(struct scsi_device *sdev)
-> > +{
-> > +	struct scsi_dh_data *scsi_dh_data;
-> > +	unsigned long flags;
-> >=20
-> > -		kfree(scsi_dh_data);
-> > -		module_put(THIS_MODULE);
-> > -	}
-> > +	if (sdev->scsi_dh_data =3D=3D NULL ||
-> > +	    sdev->scsi_dh_data->scsi_dh !=3D &clariion_dh)
-> > +		return;
+> >  	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
+> > +		int err;
+> > +
+> >  		err =3D scsi_dh_handler_attach(sdev, devinfo);
+> > +		if (!err)
+> > +			err =3D device_create_file(dev, &scsi_dh_state_attr);
 >=20
-> first check is already done in scsi_dh level.
+> we don't want to detach when we fail creating the file ? I am ok with
+> it, but just wanted to make sure that is what you intended.
 >=20
-=46ixed.
+The 'dh_state' attribute is just an add-on and not necessary for proper
+functionality. So I thought we could just ignore this error.
+But seeing that this indicates some general error condition it's probab=
+ly
+better to at least return this error.
 
-[ .. ]
-> > +static void hp_sw_bus_detach( struct scsi_device *sdev )
-> > +{
-> > +	struct scsi_dh_data *scsi_dh_data;
-> > +	unsigned long flags;
-> >=20
-> > -		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-> > -		scsi_dh_data =3D sdev->scsi_dh_data;
-> > -		sdev->scsi_dh_data =3D NULL;
-> > -		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> > -		module_put(THIS_MODULE);
-> > +	if (sdev->scsi_dh_data =3D=3D NULL ||
-> > +	    sdev->scsi_dh_data->scsi_dh !=3D &hp_sw_dh)
-> > +		return;
-> first check is already done in scsi_dh level.
+> >  	} else if (action =3D=3D BUS_NOTIFY_DEL_DEVICE) {
+> >  		if (sdev->scsi_dh_data =3D=3D NULL)
+> >  			goto out;
+> > +		device_remove_file(dev, &scsi_dh_state_attr);
+> >  		scsi_dh_handler_detach(sdev);
+> >  	}
+> >  out:
+> > -	return err;
+> > +	return 0;
 >=20
-=46ixed.
+> why are we not returning err ?
+See above.=20
 
-Seeing that this will become quite a lengthy process I've put up my scs=
-i_dh
-patchset at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-ml.git
-branch: scsi_dh
-
-We should be using this as a starting point and continue this discussio=
-n
-(and the patches) offline.
-
-Once we've agreed on a status we should be sending the patchset to the
-mailinglist. Otherwise we'll be clogging up bandwidth unnecessarily.
+=46ixed in the scsi_dh branch.
 
 Cheers,
 
