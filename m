@@ -1,58 +1,105 @@
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: Re: [BUG] unable to handle kernel paging request in next-20080516
-Date: Fri, 23 May 2008 20:34:25 +0100
-Message-ID: <g176e5$6fb$1@ger.gmane.org>
-References: <g0mkaf$i1r$1@ger.gmane.org> <20080518021423.3dcf0ddd.akpm@linux-foundation.org> <1211456081.3956.39.camel@localhost.localdomain>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: 2.6.26-rc2-mm1 (SCSI_DH build errors)
+Date: Fri, 23 May 2008 12:39:20 -0700
+Message-ID: <1211571560.10532.7.camel@chandra-ubuntu>
+References: <20080514010129.4f672378.akpm@linux-foundation.org>
+	 <20080514141348.e71feed6.randy.dunlap@oracle.com>
+	 <1210862779.15852.4.camel@localhost.localdomain>
+	 <1210881374.21974.285.camel@chandra-ubuntu>
+	 <20080522202543.d15e8c3b.akpm@linux-foundation.org>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42942 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757262AbYEWTh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2008 15:37:59 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Jzd5P-0002CR-Hk
-	for linux-scsi@vger.kernel.org; Fri, 23 May 2008 19:37:55 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 19:37:55 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 19:37:55 +0000
+Received: from e35.co.us.ibm.com ([32.97.110.153]:60397 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754837AbYEWTjd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2008 15:39:33 -0400
+In-Reply-To: <20080522202543.d15e8c3b.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-kernel@vger.kernel.org, hare@suse.de, scsi <linux-scsi@vger.kernel.org>
 
-<posted & mailed>
+Yikes.... Sorry again... Hopefully this attached patch work properly.
 
-James Bottomley wrote:
-
-> Actually, I think this is a very subtle bug; what I think is happening
-> is that after Hannes sysfs changes, we now add scsi_bus_type to the
-> target device.  However, scsi_bus_uevent() unconditionally casts from
-> dev to a struct scsi_device and then looks at the type entry.  My theory
-> is that in this particular config going from struct scsi_target to
-> struct device and back to struct scsi_device actually tips us over into
-> unmapped space for the -> type deref.
+chandra
+On Thu, 2008-05-22 at 20:25 -0700, Andrew Morton wrote:
+> On Thu, 15 May 2008 12:56:14 -0700 Chandra Seetharaman <sekharan@us.ibm.com> wrote:
 > 
-> Hopefully this should fix it by checking the device type before doing
-> the deref.
+> > Hi James, Andrew,
+> > 
+> > Here is a patch to remove the automatic "select" of scsi_dh for
+> > dm-multipath.
+> > 
+> > Sorry about the mishap.
+> >
+> >
+> 
+> This is busted.
+> 
+-------------------------
+Do not automatically "select" SCSI_DH for dm-multipath. If SCSI_DH
+doesn't exist,just do not allow  hardware handlers to be used.
 
-This fixed the problem for me (it was horribly intermittant but I've done
-10+ consecutive reboots without seeing an oopos). I changed the patch to
-printk everytime the condition was hit and it seems to happen twice per
-PATA device - once after each scsi?: pata_via message and then again after
-each scsi 0:0:0:0: Direct-Accesss ATA DISKID etc : 0 ANSI: 5 .
+Handle SCSI_DH being a module also.
 
-The thing I don't understand about your explanation is that it sounds like
-the device struct is being round-tripped (but is just being cast to
-different things along the way). If this is the case why would this problem
-ever arise? Surely if it is really a struct scsi_device underneath there
-should be no problem?
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Reported-by: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alasdair G Kergon <agk@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>
+---
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Index: scsi-misc-2.6/drivers/md/Kconfig
+===================================================================
+--- scsi-misc-2.6.orig/drivers/md/Kconfig
++++ scsi-misc-2.6/drivers/md/Kconfig
+@@ -252,7 +252,6 @@ config DM_ZERO
+ config DM_MULTIPATH
+ 	tristate "Multipath target"
+ 	depends on BLK_DEV_DM
+-	select SCSI_DH
+ 	---help---
+ 	  Allow volume managers to support multipath hardware.
+ 
+Index: scsi-misc-2.6/drivers/md/dm-mpath.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/md/dm-mpath.c
++++ scsi-misc-2.6/drivers/md/dm-mpath.c
+@@ -664,6 +664,8 @@ static int parse_hw_handler(struct arg_s
+ 	request_module("scsi_dh_%s", m->hw_handler_name);
+ 	if (scsi_dh_handler_exist(m->hw_handler_name) == 0) {
+ 		ti->error = "unknown hardware handler type";
++		kfree(m->hw_handler_name);
++		m->hw_handler_name = NULL;
+ 		return -EINVAL;
+ 	}
+ 	consume(as, hw_argc - 1);
+Index: scsi-misc-2.6/include/scsi/scsi_dh.h
+===================================================================
+--- scsi-misc-2.6.orig/include/scsi/scsi_dh.h
++++ scsi-misc-2.6/include/scsi/scsi_dh.h
+@@ -54,6 +54,16 @@ enum {
+ 	SCSI_DH_NOSYS,
+ 	SCSI_DH_DRIVER_MAX,
+ };
+-
++#if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
+ extern int scsi_dh_activate(struct request_queue *);
+ extern int scsi_dh_handler_exist(const char *);
++#else
++static inline int scsi_dh_activate(struct request_queue *req)
++{
++	return 0;
++}
++static inline int scsi_dh_handler_exist(const char *name)
++{
++	return 0;
++}
++#endif
+
 
