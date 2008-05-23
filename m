@@ -1,389 +1,93 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 6/7] scsi_dh: Update RDAC device handler
-Date: Thu, 22 May 2008 19:08:25 -0700
-Message-ID: <1211508505.21974.504.camel@chandra-ubuntu>
-References: <20080520140549.0760610B5DF@craiglockhart-ipmi.suse.de>
-Reply-To: sekharan@us.ibm.com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.26-rc2-mm1 (SCSI_DH build errors)
+Date: Thu, 22 May 2008 20:25:43 -0700
+Message-ID: <20080522202543.d15e8c3b.akpm@linux-foundation.org>
+References: <20080514010129.4f672378.akpm@linux-foundation.org>
+	<20080514141348.e71feed6.randy.dunlap@oracle.com>
+	<1210862779.15852.4.camel@localhost.localdomain>
+	<1210881374.21974.285.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:49130 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757140AbYEWCG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2008 22:06:26 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4N26HN5030310
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 22:06:17 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4N26H7j152894
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 22:06:17 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4N26HcP022182
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2008 22:06:17 -0400
-In-Reply-To: <20080520140549.0760610B5DF@craiglockhart-ipmi.suse.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49192 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751004AbYEWD0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2008 23:26:06 -0400
+In-Reply-To: <1210881374.21974.285.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: sekharan@us.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-kernel@vger.kernel.org, hare@suse.de, scsi <linux-scsi@vger.kernel.org>
 
-Looks good to me.
+On Thu, 15 May 2008 12:56:14 -0700 Chandra Seetharaman <sekharan@us.ibm.com> wrote:
 
-On Tue, 2008-05-20 at 16:05 +0200, Hannes Reinecke wrote:
-> This patch updates the RDAC device handler to
-> refuse to attach to devices not supporting the
-> RDAC vpd pages.
+> Hi James, Andrew,
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Here is a patch to remove the automatic "select" of scsi_dh for
+> dm-multipath.
+> 
+> Sorry about the mishap.
+>
+>
+
+This is busted.
+
+> Do not automatically "select" SCSI_DH for dm-multipath. If SCSI_DH
+> doesn't exist,just do not allow  hardware handlers to be used.
+> 
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 > ---
->  drivers/scsi/device_handler/scsi_dh_rdac.c |  158 ++++++++++++++++------------
->  1 files changed, 91 insertions(+), 67 deletions(-)
 > 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index e61cde6..e11e522 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -173,6 +173,11 @@ struct rdac_dh_data {
->  #define RDAC_STATE_ACTIVE	0
->  #define RDAC_STATE_PASSIVE	1
->  	unsigned char		state;
-> +
-> +#define RDAC_LUN_UNOWNED	0
-> +#define RDAC_LUN_OWNED		1
-> +#define RDAC_LUN_AVT		2
-> +	char			lun_state;
->  	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
->  	union			{
->  		struct c2_inquiry c2;
-> @@ -182,6 +187,13 @@ struct rdac_dh_data {
->  	} inq;
+> Index: scsi-misc-2.6/drivers/md/Kconfig
+> ===================================================================
+> --- scsi-misc-2.6.orig/drivers/md/Kconfig
+> +++ scsi-misc-2.6/drivers/md/Kconfig
+> @@ -252,7 +252,6 @@ config DM_ZERO
+>  config DM_MULTIPATH
+>  	tristate "Multipath target"
+>  	depends on BLK_DEV_DM
+> -	select SCSI_DH
+>  	---help---
+>  	  Allow volume managers to support multipath hardware.
+>  
+> Index: scsi-misc-2.6/drivers/md/dm-mpath.c
+> ===================================================================
+> --- scsi-misc-2.6.orig/drivers/md/dm-mpath.c
+> +++ scsi-misc-2.6/drivers/md/dm-mpath.c
+> @@ -664,6 +664,8 @@ static int parse_hw_handler(struct arg_s
+>  	request_module("scsi_dh_%s", m->hw_handler_name);
+>  	if (scsi_dh_handler_exist(m->hw_handler_name) == 0) {
+>  		ti->error = "unknown hardware handler type";
+> +		kfree(m->hw_handler_name);
+> +		m->hw_handler_name = NULL;
+>  		return -EINVAL;
+>  	}
+>  	consume(as, hw_argc - 1);
+> Index: scsi-misc-2.6/include/scsi/scsi_dh.h
+> ===================================================================
+> --- scsi-misc-2.6.orig/include/scsi/scsi_dh.h
+> +++ scsi-misc-2.6/include/scsi/scsi_dh.h
+> @@ -54,6 +54,16 @@ enum {
+>  	SCSI_DH_NOSYS,
+>  	SCSI_DH_DRIVER_MAX,
 >  };
-> 
-> +static const char *lun_state[] =
+> -
+> +#ifdef CONFIG_SCSI_DH
+>  extern int scsi_dh_activate(struct request_queue *);
+>  extern int scsi_dh_handler_exist(const char *);
+> +#else
+> +inline int scsi_dh_activate(struct request_queue *req)
 > +{
-> +	"unowned",
-> +	"owned",
-> +	"owned (AVT mode)",
-> +};
-> +
->  static LIST_HEAD(ctlr_list);
->  static DEFINE_SPINLOCK(list_lock);
-> 
-> @@ -197,7 +209,6 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
->  {
->  	struct request *rq;
->  	struct request_queue *q = sdev->request_queue;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
->  	rq = blk_get_request(q, rw, GFP_KERNEL);
-> 
-> @@ -214,10 +225,7 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
->  		return NULL;
->  	}
-> 
-> -	memset(&rq->cmd, 0, BLK_MAX_CDB);
-> -	rq->sense = h->sense;
-> -	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-> -	rq->sense_len = 0;
-> +	memset(rq->cmd, 0, BLK_MAX_CDB);
-> 
->  	rq->cmd_type = REQ_TYPE_BLOCK_PC;
->  	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
-> @@ -227,12 +235,12 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
->  	return rq;
->  }
-> 
-> -static struct request *rdac_failover_get(struct scsi_device *sdev)
-> +static struct request *rdac_failover_get(struct scsi_device *sdev,
-> +					 struct rdac_dh_data *h)
->  {
->  	struct request *rq;
->  	struct rdac_mode_common *common;
->  	unsigned data_size;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
->  	if (h->ctlr->use_ms10) {
->  		struct rdac_pg_expanded *rdac_pg;
-> @@ -277,6 +285,10 @@ static struct request *rdac_failover_get(struct scsi_device *sdev)
->  	}
->  	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
-> 
-> +	rq->sense = h->sense;
-> +	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-> +	rq->sense_len = 0;
-> +
->  	return rq;
->  }
-> 
-> @@ -321,11 +333,10 @@ done:
->  }
-> 
->  static int submit_inquiry(struct scsi_device *sdev, int page_code,
-> -		unsigned int len)
-> +			  unsigned int len, struct rdac_dh_data *h)
->  {
->  	struct request *rq;
->  	struct request_queue *q = sdev->request_queue;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
->  	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-> 
->  	rq = get_rdac_req(sdev, &h->inq, len, READ);
-> @@ -338,59 +349,68 @@ static int submit_inquiry(struct scsi_device *sdev, int page_code,
->  	rq->cmd[2] = page_code;
->  	rq->cmd[4] = len;
->  	rq->cmd_len = COMMAND_SIZE(INQUIRY);
-> +
-> +	rq->sense = h->sense;
-> +	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-> +	rq->sense_len = 0;
-> +
->  	err = blk_execute_rq(q, NULL, rq, 1);
->  	if (err == -EIO)
->  		err = SCSI_DH_IO;
-> +
-> +	blk_put_request(rq);
->  done:
->  	return err;
->  }
-> 
-> -static int get_lun(struct scsi_device *sdev)
-> +static int get_lun(struct scsi_device *sdev, struct rdac_dh_data *h)
->  {
->  	int err;
->  	struct c8_inquiry *inqp;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
-> -	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
-> +	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
->  	if (err == SCSI_DH_OK) {
->  		inqp = &h->inq.c8;
-> -		h->lun = inqp->lun[7]; /* currently it uses only one byte */
-> +		if (inqp->page_code != 0xc8)
-> +			return SCSI_DH_NOSYS;
-> +		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
-> +		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
-> +			return SCSI_DH_NOSYS;
-> +		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
->  	}
->  	return err;
->  }
-> 
-> -#define RDAC_OWNED	0
-> -#define RDAC_UNOWNED	1
-> -#define RDAC_FAILED	2
-> -static int check_ownership(struct scsi_device *sdev)
-> +static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
->  {
->  	int err;
->  	struct c9_inquiry *inqp;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
-> -	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
-> +	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry), h);
->  	if (err == SCSI_DH_OK) {
-> -		err = RDAC_UNOWNED;
->  		inqp = &h->inq.c9;
-> -		/*
-> -		 * If in AVT mode or if the path already owns the LUN,
-> -		 * return RDAC_OWNED;
-> -		 */
-> -		if (((inqp->avte_cvp >> 7) == 0x1) ||
-> -				 ((inqp->avte_cvp & 0x1) != 0))
-> -			err = RDAC_OWNED;
-> -	} else
-> -		err = RDAC_FAILED;
-> +		if ((inqp->avte_cvp >> 7) == 0x1) {
-> +			/* LUN in AVT mode */
-> +			sdev_printk(KERN_NOTICE, sdev,
-> +				    "%s: AVT mode detected\n",
-> +				    RDAC_NAME);
-> +			h->lun_state = RDAC_LUN_AVT;
-> +		} else if ((inqp->avte_cvp & 0x1) != 0) {
-> +			/* LUN was owned by the controller */
-> +			h->lun_state = RDAC_LUN_OWNED;
-> +		}
-> +	}
-> +
->  	return err;
->  }
-> 
-> -static int initialize_controller(struct scsi_device *sdev)
-> +static int initialize_controller(struct scsi_device *sdev,
-> +				 struct rdac_dh_data *h)
->  {
->  	int err;
->  	struct c4_inquiry *inqp;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
-> -	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry));
-> +	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry), h);
->  	if (err == SCSI_DH_OK) {
->  		inqp = &h->inq.c4;
->  		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
-> @@ -400,13 +420,12 @@ static int initialize_controller(struct scsi_device *sdev)
->  	return err;
->  }
-> 
-> -static int set_mode_select(struct scsi_device *sdev)
-> +static int set_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
->  {
->  	int err;
->  	struct c2_inquiry *inqp;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
-> 
-> -	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry));
-> +	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry), h);
->  	if (err == SCSI_DH_OK) {
->  		inqp = &h->inq.c2;
->  		/*
-> @@ -421,13 +440,13 @@ static int set_mode_select(struct scsi_device *sdev)
->  	return err;
->  }
-> 
-> -static int mode_select_handle_sense(struct scsi_device *sdev)
-> +static int mode_select_handle_sense(struct scsi_device *sdev,
-> +				    unsigned char *sensebuf)
->  {
->  	struct scsi_sense_hdr sense_hdr;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
->  	int sense, err = SCSI_DH_IO, ret;
-> 
-> -	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
-> +	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
->  	if (!ret)
->  		goto done;
-> 
-> @@ -451,14 +470,13 @@ done:
->  	return err;
->  }
-> 
-> -static int send_mode_select(struct scsi_device *sdev)
-> +static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
->  {
->  	struct request *rq;
->  	struct request_queue *q = sdev->request_queue;
-> -	struct rdac_dh_data *h = get_rdac_data(sdev);
->  	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-> 
-> -	rq = rdac_failover_get(sdev);
-> +	rq = rdac_failover_get(sdev, h);
->  	if (!rq)
->  		goto done;
-> 
-> @@ -466,9 +484,11 @@ static int send_mode_select(struct scsi_device *sdev)
-> 
->  	err = blk_execute_rq(q, NULL, rq, 1);
->  	if (err != SCSI_DH_OK)
-> -		err = mode_select_handle_sense(sdev);
-> +		err = mode_select_handle_sense(sdev, h->sense);
->  	if (err == SCSI_DH_OK)
->  		h->state = RDAC_STATE_ACTIVE;
-> +
-> +	blk_put_request(rq);
->  done:
->  	return err;
->  }
-> @@ -478,38 +498,23 @@ static int rdac_activate(struct scsi_device *sdev)
->  	struct rdac_dh_data *h = get_rdac_data(sdev);
->  	int err = SCSI_DH_OK;
-> 
-> -	if (h->lun == UNINITIALIZED_LUN) {
-> -		err = get_lun(sdev);
-> -		if (err != SCSI_DH_OK)
-> -			goto done;
-> -	}
-> -
-> -	err = check_ownership(sdev);
-> -	switch (err) {
-> -	case RDAC_UNOWNED:
-> -		break;
-> -	case RDAC_OWNED:
-> -		err = SCSI_DH_OK;
-> -		goto done;
-> -	case RDAC_FAILED:
-> -	default:
-> -		err = SCSI_DH_IO;
-> +	err = check_ownership(sdev, h);
-> +	if (err != SCSI_DH_OK)
->  		goto done;
-> -	}
-> 
->  	if (!h->ctlr) {
-> -		err = initialize_controller(sdev);
-> +		err = initialize_controller(sdev, h);
->  		if (err != SCSI_DH_OK)
->  			goto done;
->  	}
-> 
->  	if (h->ctlr->use_ms10 == -1) {
-> -		err = set_mode_select(sdev);
-> +		err = set_mode_select(sdev, h);
->  		if (err != SCSI_DH_OK)
->  			goto done;
->  	}
-> -
-> -	err = send_mode_select(sdev);
-> +	if (h->lun_state == RDAC_LUN_UNOWNED)
-> +		err = send_mode_select(sdev, h);
->  done:
->  	return err;
->  }
-> @@ -606,11 +611,12 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->  	struct scsi_dh_data *scsi_dh_data;
->  	struct rdac_dh_data *h;
->  	unsigned long flags;
-> +	int err;
-> 
->  	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
->  			       + sizeof(*h) , GFP_KERNEL);
->  	if (!scsi_dh_data) {
-> -		sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
-> +		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
->  			    RDAC_NAME);
->  		return 0;
->  	}
-> @@ -619,14 +625,32 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->  	h = (struct rdac_dh_data *) scsi_dh_data->buf;
->  	h->lun = UNINITIALIZED_LUN;
->  	h->state = RDAC_STATE_ACTIVE;
-> +
-> +	err = get_lun(sdev, h);
-> +	if (err != SCSI_DH_OK)
-> +		goto failed;
-> +
-> +	err = check_ownership(sdev, h);
-> +	if (err != SCSI_DH_OK)
-> +		goto failed;
-> +
->  	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
->  	sdev->scsi_dh_data = scsi_dh_data;
->  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> -	try_module_get(THIS_MODULE);
-> 
-> -	sdev_printk(KERN_NOTICE, sdev, "Attached %s\n", RDAC_NAME);
-> +	sdev_printk(KERN_NOTICE, sdev,
-> +		    "%s: LUN %d (%s)\n",
-> +		    RDAC_NAME, h->lun, lun_state[(int)h->lun_state]);
-> +
-> +	try_module_get(THIS_MODULE);
-> 
->  	return 0;
-> +
-> +failed:
-> +	kfree(scsi_dh_data);
-> +	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
-> +		    RDAC_NAME);
-> +	return -EINVAL;
->  }
-> 
->  static void rdac_bus_detach( struct scsi_device *sdev )
-> @@ -645,7 +669,7 @@ static void rdac_bus_detach( struct scsi_device *sdev )
->  		kref_put(&h->ctlr->kref, release_controller);
->  	kfree(scsi_dh_data);
->  	module_put(THIS_MODULE);
-> -	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", RDAC_NAME);
-> +	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", RDAC_NAME);
->  }
-> 
->  static int __init rdac_init(void)
+> +	return 0;
+> +}
+> +inline int scsi_dh_handler_exist(const char *name)
+> +{
+> +	return 0;
+> +}
+> +#endif
+
+You obviously wanted `static inline' there, but it still fails i386
+allmodconfig compilation.
 
