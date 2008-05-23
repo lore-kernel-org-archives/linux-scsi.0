@@ -1,25 +1,35 @@
-From: Adrian Bunk <bunk@kernel.org>
+From: Randy Dunlap <rdunlap@xenotime.net>
 Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
-	reference to `request_firmware'
-Date: Sat, 24 May 2008 01:06:09 +0300
-Message-ID: <20080523220609.GC4886@cs181133002.pp.htv.fi>
-References: <200805161906.19321.toralf.foerster@gmx.de> <1211018673.3603.7.camel@localhost.localdomain> <20080517141749.GD3284@cs181133002.pp.htv.fi> <1211453544.3956.33.camel@localhost.localdomain> <20080523105412.cc13647d.rdunlap@xenotime.net> <1211565551.11477.26.camel@localhost.localdomain> <20080523110457.de353625.rdunlap@xenotime.net> <1211574780.11477.44.camel@localhost.localdomain> <20080523144849.3773cac3.rdunlap@xenotime.net> <1211580030.11477.50.camel@localhost.localdomain>
+ reference to `request_firmware'
+Date: Fri, 23 May 2008 15:39:24 -0700
+Message-ID: <20080523153924.af48e95e.rdunlap@xenotime.net>
+References: <200805161906.19321.toralf.foerster@gmx.de>
+	<1211018673.3603.7.camel@localhost.localdomain>
+	<20080517141749.GD3284@cs181133002.pp.htv.fi>
+	<1211453544.3956.33.camel@localhost.localdomain>
+	<20080523105412.cc13647d.rdunlap@xenotime.net>
+	<1211565551.11477.26.camel@localhost.localdomain>
+	<20080523110457.de353625.rdunlap@xenotime.net>
+	<1211574780.11477.44.camel@localhost.localdomain>
+	<20080523144849.3773cac3.rdunlap@xenotime.net>
+	<1211580030.11477.50.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:59244 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760168AbYEWWIg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2008 18:08:36 -0400
-Content-Disposition: inline
+Received: from xenotime.net ([66.160.160.81]:52935 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751014AbYEWWj0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2008 18:39:26 -0400
+Received: from midway.site ([72.90.125.186]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 15:39:25 -0700
 In-Reply-To: <1211580030.11477.50.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Toralf =?utf-8?Q?F=C3=B6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Adrian Bunk <bunk@kernel.org>, Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, May 23, 2008 at 05:00:30PM -0500, James Bottomley wrote:
+On Fri, 23 May 2008 17:00:30 -0500 James Bottomley wrote:
+
 > On Fri, 2008-05-23 at 14:48 -0700, Randy Dunlap wrote:
 > > On Fri, 23 May 2008 15:33:00 -0500 James Bottomley wrote:
 > >=20
@@ -32,8 +42,8 @@ On Fri, May 23, 2008 at 05:00:30PM -0500, James Bottomley wrote:
 > > > > > > > On Sat, 2008-05-17 at 17:17 +0300, Adrian Bunk wrote:
 > > > > > > > > On Sat, May 17, 2008 at 11:04:31AM +0100, James Bottoml=
 ey wrote:
-> > > > > > > > > On Fri, 2008-05-16 at 19:06 +0200, Toralf F=C3=B6rste=
-r wrote:
+> > > > > > > > > On Fri, 2008-05-16 at 19:06 +0200, Toralf F=F6rster w=
+rote:
 > > > > > > > > > > Hello,
 > > > > > > > > > >=20
 > > > > > > > > > > the build (.config attached) failed, make ends with=
@@ -110,7 +120,9 @@ nly
 > > request_firmware().  Is that what we want/expect for these CONFIGs?
 >=20
 > Actually, I disagree.  There are two choices here
->=20
+
+Disagree with which part(s)?
+
 >      1. No stubs and simply select FW_LOADER for everything
 >      2. Stubs that actually work in all situations.
 >=20
@@ -118,30 +130,14 @@ nly
 > stubs, making them work in all cases seems like the smaller change to
 > functionality.
 
-We could do:
-1. stubs that actually work in all situations and
-2. enable FW_LOADER uncondictionally unless EMBEDDED=3Dy and
-3. remove all "select FW_LOADER"'s
+Oh, I'm for the stubs approach.
 
-This would:
-- remove all problems we currently have in this area and
-- make some kconfig stuff easier while
-- giving people who really need small kernels more choices than today.
+So with SCSI_SAS_LIBSAS=3Dy and FW_LOADER=3Dm, you would want/expect
+request_firmware() to return -EINVAL all of the time?
+Hm, I suppose that it has to either do that or select FW_LOADER. ?
 
-Your patch would be step 1.
-
-> James
-
-cu
-Adrian
-
---=20
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+---
+~Randy
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
