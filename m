@@ -1,33 +1,35 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: pci_set_mwi and 3ware controllers
-Date: Fri, 23 May 2008 12:39:21 -0700
-Message-ID: <b1bc6a000805231239i34731c79h3b29fad00b1e8eb1@mail.gmail.com>
-References: <fc593b510805230533lf28171fp24459bf09321500e@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10711] BUG: unable to handle kernel paging request - scsi_bus_uevent
+Date: Fri, 23 May 2008 12:45:22 -0700 (PDT)
+Message-ID: <20080523194522.8C1D411D109@picon.linux-foundation.org>
+References: <bug-10711-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:16712 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754808AbYEWTj0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2008 15:39:26 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so481155ywe.1
-        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 12:39:21 -0700 (PDT)
-In-Reply-To: <fc593b510805230533lf28171fp24459bf09321500e@mail.gmail.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43752 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754837AbYEWTpx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2008 15:45:53 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4NJjMEL030650
+	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 12:45:23 -0700
+In-Reply-To: <bug-10711-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurent Wandrebeck <l.wandrebeck@gmail.com>
-Cc: Tony Battersby <tonyb@cybernetics.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 23, 2008 at 5:33 AM, Laurent Wandrebeck
-<l.wandrebeck@gmail.com> wrote:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1e6c38cec08f88b0df88a34e80f15492cace74e9
-> patch.
-> I have at work a mobo (with 3ware 9650) that doesn't enable mwi by
-> default, and running CentOS 5.1 x86_64 (2.6.18 based).
-> I can confirm that putting pci_set_mwi just after pci_set_master gives
+http://bugzilla.kernel.org/show_bug.cgi?id=10711
 
-The 3w-9xxx driver in 2.6.25 already calls 'pci_try_set_mwi(pdev)'.
 
--Adam
+
+
+
+------- Comment #3 from sitsofe@yahoo.com  2008-05-23 12:45 -------
+This seems to have been resolved by James's patch in
+http://groups.google.com/group/fa.linux.kernel/browse_frm/thread/b64dbe94dea882cb/c60bafa089f89c6b?#c60bafa089f89c6b
+for me...
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
