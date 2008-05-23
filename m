@@ -1,97 +1,58 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
- reference to `request_firmware'
-Date: Fri, 23 May 2008 11:04:57 -0700
-Message-ID: <20080523110457.de353625.rdunlap@xenotime.net>
-References: <200805161906.19321.toralf.foerster@gmx.de>
-	<1211018673.3603.7.camel@localhost.localdomain>
-	<20080517141749.GD3284@cs181133002.pp.htv.fi>
-	<1211453544.3956.33.camel@localhost.localdomain>
-	<20080523105412.cc13647d.rdunlap@xenotime.net>
-	<1211565551.11477.26.camel@localhost.localdomain>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: [BUG] unable to handle kernel paging request in next-20080516
+Date: Fri, 23 May 2008 20:34:25 +0100
+Message-ID: <g176e5$6fb$1@ger.gmane.org>
+References: <g0mkaf$i1r$1@ger.gmane.org> <20080518021423.3dcf0ddd.akpm@linux-foundation.org> <1211456081.3956.39.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:44102 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753510AbYEWSFC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2008 14:05:02 -0400
-Received: from midway.site ([72.90.125.186]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 11:04:57 -0700
-In-Reply-To: <1211565551.11477.26.camel@localhost.localdomain>
+Received: from main.gmane.org ([80.91.229.2]:42942 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757262AbYEWTh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2008 15:37:59 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Jzd5P-0002CR-Hk
+	for linux-scsi@vger.kernel.org; Fri, 23 May 2008 19:37:55 +0000
+Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 19:37:55 +0000
+Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2008 19:37:55 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Adrian Bunk <bunk@kernel.org>, Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Fri, 23 May 2008 12:59:11 -0500 James Bottomley wrote:
+<posted & mailed>
 
-> On Fri, 2008-05-23 at 10:54 -0700, Randy Dunlap wrote:
-> > On Thu, 22 May 2008 11:52:24 +0100 James Bottomley wrote:
-> >=20
-> > > On Sat, 2008-05-17 at 17:17 +0300, Adrian Bunk wrote:
-> > > > On Sat, May 17, 2008 at 11:04:31AM +0100, James Bottomley wrote=
-:
-> > > > > On Fri, 2008-05-16 at 19:06 +0200, Toralf F=F6rster wrote:
-> > > > > > Hello,
-> > > > > >=20
-> > > > > > the build (.config attached) failed, make ends with :
-> > > > > > ...
-> > > > > >   UPD     include/linux/compile.h
-> > > > > >   CC      init/version.o
-> > > > > >   LD      init/built-in.o
-> > > > > >   LD      vmlinux
-> > > > > > drivers/built-in.o: In function `sas_request_addr':
-> > > > > > (.text+0x33bab): undefined reference to `request_firmware'
-> > > > > > drivers/built-in.o: In function `sas_request_addr':
-> > > > > > (.text+0x33c3f): undefined reference to `release_firmware'
-> > > > > > make: *** [vmlinux] Error 1
-> > > > >=20
-> > > > > There's a slight fault in the stub logic.  It fails for FW_LO=
-ADER=3Dm and
-> > > > > the user =3Dy.
-> > > > >=20
-> > > > > This should fix it.
-> > > >=20
-> > > > An interesting question is whether we actually want to have the=
- stub at=20
-> > > > all - the compile errors catched cases where someone forgot to =
-select=20
-> > > > FW_LOADER at compile time instead of turning them into possible=
- runtime=20
-> > > > problems as will happen after your patch.
-> > >=20
-> > > Well, the original intent of the stubs was to have the loader nop=
- if it
-> > > wasn't available.  There was simply one case forgotten (the fact =
-that a
-> > > modular loader isn't usable from built in components).
-> > >=20
-> > > > Are there any serious use cases where SCSI_SAS_LIBSAS is used i=
-n very=20
-> > > > space limited environments and without any other drivers that s=
-elect=20
-> > > > FW_LOADER in the kernel?
-> > >=20
-> > > Probably in the future, certainly on embedded OSs used for storag=
-e
-> > > devices.  Given the convergence of SAS/SATA chips, it's possible =
-for
-> > > other handhelds, but I'm not convinced of that.
-> >=20
-> > Has there been any resolution to this build issue?
-> >=20
-> > Do we know what we want?  then maybe a patch can be done...
->=20
-> As long as the patch works, that's what I propose.
+James Bottomley wrote:
 
-Sorry, I am not understanding what you are saying.
-Please explain.
+> Actually, I think this is a very subtle bug; what I think is happening
+> is that after Hannes sysfs changes, we now add scsi_bus_type to the
+> target device.  However, scsi_bus_uevent() unconditionally casts from
+> dev to a struct scsi_device and then looks at the type entry.  My theory
+> is that in this particular config going from struct scsi_target to
+> struct device and back to struct scsi_device actually tips us over into
+> unmapped space for the -> type deref.
+> 
+> Hopefully this should fix it by checking the device type before doing
+> the deref.
 
----
-~Randy
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This fixed the problem for me (it was horribly intermittant but I've done
+10+ consecutive reboots without seeing an oopos). I changed the patch to
+printk everytime the condition was hit and it seems to happen twice per
+PATA device - once after each scsi?: pata_via message and then again after
+each scsi 0:0:0:0: Direct-Accesss ATA DISKID etc : 0 ANSI: 5 .
+
+The thing I don't understand about your explanation is that it sounds like
+the device struct is being round-tripped (but is just being cast to
+different things along the way). If this is the case why would this problem
+ever arise? Surely if it is really a struct scsi_device underneath there
+should be no problem?
+
+-- 
+Sitsofe | http://sucs.org/~sits/
+
