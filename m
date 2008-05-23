@@ -1,93 +1,151 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.26-rc2-mm1 (SCSI_DH build errors)
-Date: Thu, 22 May 2008 20:25:43 -0700
-Message-ID: <20080522202543.d15e8c3b.akpm@linux-foundation.org>
-References: <20080514010129.4f672378.akpm@linux-foundation.org>
-	<20080514141348.e71feed6.randy.dunlap@oracle.com>
-	<1210862779.15852.4.camel@localhost.localdomain>
-	<1210881374.21974.285.camel@chandra-ubuntu>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] bnx2: Add support for CNIC driver.
+Date: Thu, 22 May 2008 20:45:22 -0700
+Message-ID: <20080523034522.GA8612@linux.vnet.ibm.com>
+References: <1211418386-18203-1-git-send-email-mchan@broadcom.com> <1211418386-18203-2-git-send-email-mchan@broadcom.com> <20080522064541.GA11933@linux.vnet.ibm.com> <1211484208.18326.25.camel@dell>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49192 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751004AbYEWD0G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2008 23:26:06 -0400
-In-Reply-To: <1210881374.21974.285.camel@chandra-ubuntu>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:36510 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472AbYEWDpv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2008 23:45:51 -0400
+Content-Disposition: inline
+In-Reply-To: <1211484208.18326.25.camel@dell>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@us.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-kernel@vger.kernel.org, hare@suse.de, scsi <linux-scsi@vger.kernel.org>
+To: Michael Chan <mchan@broadcom.com>
+Cc: David Miller <davem@davemloft.net>, michaelc@cs.wisc.edu, anilgv@broadcom.com, netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-On Thu, 15 May 2008 12:56:14 -0700 Chandra Seetharaman <sekharan@us.ibm.com> wrote:
-
-> Hi James, Andrew,
+On Thu, May 22, 2008 at 12:23:28PM -0700, Michael Chan wrote:
+> On Wed, 2008-05-21 at 23:45 -0700, Paul E. McKenney wrote:
 > 
-> Here is a patch to remove the automatic "select" of scsi_dh for
-> dm-multipath.
+> > Some RCU-related questions interspersed below, for example, how are
+> > updates protected?
 > 
-> Sorry about the mishap.
->
->
+> Only one CNIC driver will ever register with the BNX2 driver.  The main
+> purpose of using RCU is so that the fast path can avoid locking when
+> handling interrupt events from the hardware.
 
-This is busted.
+So if a second CNIC driver attempts to register, it gets -EBUSY or
+something, right?
 
-> Do not automatically "select" SCSI_DH for dm-multipath. If SCSI_DH
-> doesn't exist,just do not allow  hardware handlers to be used.
+> > > +
+> > > +static void bnx2_setup_cnic_irq_info(struct bnx2 *bp)
+> > > +{
+> > > +	struct cnic_ops *c_ops;
+> > > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > > +	struct bnx2_napi *bnapi = &bp->bnx2_napi[0];
+> > > +	int sb_id;
+> > > +
+> > > +	rcu_read_lock();
+> > > +	c_ops = rcu_dereference(bp->cnic_ops);
+> > > +	if (!c_ops)
+> > > +		goto done;
+> > 
+> > Given that c_ops is unused below, what is happening here?  What prevents
+> > bp->cnic_ops from becoming NULL immediately after we test it?  And if
+> > it is OK for bp->cnic_ops to become NULL immediately after we test it,
+> > why are we bothering to test it?
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
+> You are right.  We should just unconditionally set up the IRQ
+> information without checking for c_ops.  The data structures we set up
+> below are owned by us.
+
+OK.  Hmmm....  You cannot even get away with sarcasm these days!  ;-)
+
+> > > +
+> > > +	if (bp->flags & BNX2_FLAG_USING_MSIX) {
+> > > +		cp->drv_state |= CNIC_DRV_STATE_USING_MSIX;
+> > > +		bnapi->cnic_present = 0;
+> > > +		sb_id = BNX2_CNIC_VEC;
+> > > +		cp->irq_arr[0].irq_flags |= CNIC_IRQ_FL_MSIX;
+> > > +	} else {
+> > > +		cp->drv_state &= ~CNIC_DRV_STATE_USING_MSIX;
+> > > +		bnapi->cnic_tag = bnapi->last_status_idx;
+> > > +		bnapi->cnic_present = 1;
+> > > +		sb_id = 0;
+> > > +		cp->irq_arr[0].irq_flags &= !CNIC_IRQ_FL_MSIX;
+> > > +	}
+> > > +
+> > > +	cp->irq_arr[0].vector = bp->irq_tbl[sb_id].vector;
+> > > +	cp->irq_arr[0].status_blk = (void *) ((unsigned long) bp->status_blk +
+> > > +		(BNX2_SBLK_MSIX_ALIGN_SIZE * sb_id));
+> > > +	cp->irq_arr[0].status_blk_num = sb_id;
+> > > +	cp->num_irq = 1;
+> > > +
+> > > +done:
+> > > +	rcu_read_unlock();
+> > > +}
+> > > +
+> > > +static int bnx2_register_cnic(struct net_device *dev, struct cnic_ops *ops,
+> > > +			      void *data)
+> > > +{
+> > > +	struct bnx2 *bp = netdev_priv(dev);
+> > > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > > +
+> > > +	if (ops == NULL)
+> > > +		return -EINVAL;
+> > > +
+> > > +	if (!try_module_get(ops->cnic_owner))
+> > > +		return -EBUSY;
+> > > +
+> > > +	bp->cnic_data = data;
+> > > +	rcu_assign_pointer(bp->cnic_ops, ops);
+> > 
+> > What prevents multiple tasks from doing this assignment concurrently?
 > 
-> Index: scsi-misc-2.6/drivers/md/Kconfig
-> ===================================================================
-> --- scsi-misc-2.6.orig/drivers/md/Kconfig
-> +++ scsi-misc-2.6/drivers/md/Kconfig
-> @@ -252,7 +252,6 @@ config DM_ZERO
->  config DM_MULTIPATH
->  	tristate "Multipath target"
->  	depends on BLK_DEV_DM
-> -	select SCSI_DH
->  	---help---
->  	  Allow volume managers to support multipath hardware.
->  
-> Index: scsi-misc-2.6/drivers/md/dm-mpath.c
-> ===================================================================
-> --- scsi-misc-2.6.orig/drivers/md/dm-mpath.c
-> +++ scsi-misc-2.6/drivers/md/dm-mpath.c
-> @@ -664,6 +664,8 @@ static int parse_hw_handler(struct arg_s
->  	request_module("scsi_dh_%s", m->hw_handler_name);
->  	if (scsi_dh_handler_exist(m->hw_handler_name) == 0) {
->  		ti->error = "unknown hardware handler type";
-> +		kfree(m->hw_handler_name);
-> +		m->hw_handler_name = NULL;
->  		return -EINVAL;
->  	}
->  	consume(as, hw_argc - 1);
-> Index: scsi-misc-2.6/include/scsi/scsi_dh.h
-> ===================================================================
-> --- scsi-misc-2.6.orig/include/scsi/scsi_dh.h
-> +++ scsi-misc-2.6/include/scsi/scsi_dh.h
-> @@ -54,6 +54,16 @@ enum {
->  	SCSI_DH_NOSYS,
->  	SCSI_DH_DRIVER_MAX,
->  };
-> -
-> +#ifdef CONFIG_SCSI_DH
->  extern int scsi_dh_activate(struct request_queue *);
->  extern int scsi_dh_handler_exist(const char *);
-> +#else
-> +inline int scsi_dh_activate(struct request_queue *req)
-> +{
-> +	return 0;
-> +}
-> +inline int scsi_dh_handler_exist(const char *name)
-> +{
-> +	return 0;
-> +}
-> +#endif
+> As I said above, only one CNIC driver will ever register.
 
-You obviously wanted `static inline' there, but it still fails i386
-allmodconfig compilation.
+OK.
 
+> > > +
+> > > +	cp->num_irq = 0;
+> > > +	cp->drv_state = CNIC_DRV_STATE_REGD;
+> > > +
+> > > +	bnx2_setup_cnic_irq_info(bp);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +static int bnx2_unregister_cnic(struct net_device *dev)
+> > > +{
+> > > +	struct bnx2 *bp = netdev_priv(dev);
+> > > +	struct bnx2_napi *bnapi = &bp->bnx2_napi[0];
+> > > +	struct cnic_eth_dev *cp = &bp->cnic_eth_dev;
+> > > +
+> > > +	cp->drv_state = 0;
+> > > +	module_put(bp->cnic_ops->cnic_owner);
+> > > +	bnapi->cnic_present = 0;
+> > > +	rcu_assign_pointer(bp->cnic_ops, NULL);
+> > 
+> > What prevents this from running concurrently with bnx2_register_cnic()?
+> 
+> We expect the CNIC driver to be well behaved and will only unregister
+> after successfully registered.
+
+Trusting, but fair enough.  ;-)
+
+> > > +	synchronize_rcu();
+> > 
+> > The caller is responsible for freeing up the old bp->cnic_ops structure?
+> > Or is this structure statically allocated?
+> > 
+> > If so, is the idea to delay return until all prior calls through the
+> > old ops structure have completed?
+> 
+> The cnic_ops contain call back function pointers to the CNIC driver.  We
+> want to make sure that those calls have completed (in the fast path)
+> before continuing.
+
+Very good.  Could you please add a comment to that effect?  Otherwise
+people search for what data structure is being freed up.
+
+							Thanx, Paul
+
+> > > +	return 0;
+> > > +}
+> > > +
+> 
+> 
