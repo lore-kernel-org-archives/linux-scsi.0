@@ -1,69 +1,68 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] iscsi_tcp: Enable any size command
-Date: Mon, 26 May 2008 11:31:19 +0300
-Message-ID: <483A7557.3080907@panasas.com>
-References: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu> <48348EC0.5080905@cs.wisc.edu> <48353D58.2080109@panasas.com> <4835A150.2000306@cs.wisc.edu> <4835A25E.6050203@cs.wisc.edu>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
+	buffers instead of buffers on stack)
+Date: Mon, 26 May 2008 18:17:34 +0900
+Message-ID: <20080526181723X.tomof@acm.org>
+References: <20080522095506E.tomof@acm.org>
+	<20080521.181847.157652663.davem@davemloft.net>
+	<1211445792.3956.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28877 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752592AbYEZIcF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2008 04:32:05 -0400
-In-Reply-To: <4835A25E.6050203@cs.wisc.edu>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:37654 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752540AbYEZJSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 May 2008 05:18:09 -0400
+In-Reply-To: <1211445792.3956.14.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: davem@davemloft.net, fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
+
+On Thu, 22 May 2008 09:43:12 +0100
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
+> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Date: Thu, 22 May 2008 10:13:31 +0900
+> > 
+> > > DMA on stack is forbidden because of non coherent architecutes and
+> > > architectures can't uses stack addresses for DMA? What architectures
+> > > can't uses stack addresses for DMA? Would it be better to just forbid
+> > > using stack addresses for DMA on all the architectures at all times?
+> > 
+> > Rather, the real problem is that some architectures map the kernel
+> > stack virtually, and as a result virt_to_page() and things like that
+> > will not work.
+> > 
+> > It really is fully not working to put DMA buffers on the stack
+> > in these cases.
+> 
+> Actually, for SCSI only, that problem is fixed.  Our decision to
+> re-route all I/O, including kernel internal I/O through the block
+> mapping algorithms (really so we don't have to worry about GFP_DMA any
+> more since we can now use the block bounce buffers) means that all SCSI
+> submission routines will accept vmalloc'd and even stack buffers
+> perfectly correctly.
+
+Yeah, post 2.6.24, blk_rq_map_kern was fixed to use the bounce
+buffers. But the block layer doesn't take care of stack buffers or non
+coherent architectures wrt the bounce buffers. If we fix that, all
+SCSI submission routines are fine. That's the issue that this patchset
+tries to fix.
 
 
-Let through upto the largest command of 260 defined by the scsi standard.
-iscsi core supports this already. Now that the scsi-ml supports it we can
-start using large commands.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c   |    2 +-
- include/scsi/iscsi_proto.h |    3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 72b9b2a..826c97c 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1978,7 +1978,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
- 	.host_template		= &iscsi_sht,
- 	.conndata_size		= sizeof(struct iscsi_conn),
- 	.max_conn		= 1,
--	.max_cmd_len		= 16,
-+	.max_cmd_len		= SCSI_MAX_VARLEN_CDB_SIZE,
- 	/* session management */
- 	.create_session		= iscsi_tcp_session_create,
- 	.destroy_session	= iscsi_tcp_session_destroy,
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index e0593bf..f2a2c11 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -22,6 +22,7 @@
- #define ISCSI_PROTO_H
- 
- #include <linux/types.h>
-+#include <scsi/scsi.h>
- 
- #define ISCSI_DRAFT20_VERSION	0x00
- 
-@@ -156,7 +157,7 @@ struct iscsi_ecdb_ahdr {
- 	uint8_t ahstype;
- 	uint8_t reserved;
- 	/* 4-byte aligned extended CDB spillover */
--	uint8_t ecdb[260 - ISCSI_CDB_SIZE];
-+	uint8_t ecdb[SCSI_MAX_VARLEN_CDB_SIZE - ISCSI_CDB_SIZE];
- };
- 
- /* SCSI Response Header */
--- 
-1.5.3.3
-
-
+> However (before anyone gets any ideas), the stack is incredibly
+> dangerous to do DMA on because it's packed with current data.  If you
+> don't get the alignment requirements right on a non-coherent platform,
+> you'll end up corrupting data because of cache line interference issues.
+> For this reason, DMA to stack is still technically illegal.
+> 
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
