@@ -1,200 +1,124 @@
-From: Maarten Vanraes <maarten@ba.be>
-Subject: Re: megaraid_sata vs megasr
-Date: Tue, 27 May 2008 11:55:57 +0200
-Message-ID: <200805271155.57577.maarten@ba.be>
-References: <200805261005.31015.maarten@ba.be> <483AEF3E.5010309@garzik.org>
+From: Dave Young <hidave.darkstar@gmail.com>
+Subject: [PATCH][-mm] reclassify sg_sysfs_class for lockdep
+Date: Tue, 27 May 2008 18:10:09 +0800
+Message-ID: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_tq9OItTZTn+VaGU"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757153AbYE0J4S@vger.kernel.org>
-In-Reply-To: <483AEF3E.5010309@garzik.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.170]:62267 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756065AbYE0KJY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2008 06:09:24 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so658135ugf.16
+        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2008 03:09:22 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: greg@kroah.com, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
---Boundary-00=_tq9OItTZTn+VaGU
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+As register sg_interface, the sg_add will be called, which then will
+add device to sg_sysfs_class. This will cause lockdep warning,
+please see following email
+
+In this case the locks are from diffrent classi, one is sdev_class,
+another is sg_sysfs_class 
+
+Here reclassify the sg_sysfs_class for lockdep
+
+Date: Wed, 14 May 2008 08:56:39 -0700
+From: Greg KH <greg@kroah.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Dave Young <hidave.darkstar@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: lockdep whine in 2.6.26-rc2-mm1
+Message-ID: <20080514155639.GB28594@kroah.com>
+References: <20080514000933.56adc131.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20080514000933.56adc131.akpm@linux-foundation.org>
+User-Agent: Mutt/1.5.16 (2007-06-09)
 
-Hi,
 
-link where i downloaded the driver:
+On Wed, May 14, 2008 at 12:09:33AM -0700, Andrew Morton wrote:
+> 
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.26-rc2-mm1 #15
+> ---------------------------------------------
+> modprobe/942 is trying to acquire lock:
+>  (&cls->mutex){--..}, at: [<ffffffff811b431e>] device_add+0x43d/0x57a
+> 
+> but task is already holding lock:
+>  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+> 
+> other info that might help us debug this:
+> 1 lock held by modprobe/942:
+>  #0:  (&cls->mutex){--..}, at: [<ffffffff811b6787>] class_interface_register+0x48/0xbd
+> 
+> stack backtrace:
+> Pid: 942, comm: modprobe Not tainted 2.6.26-rc2-mm1 #15
+> 
+> Call Trace:
+>  [<ffffffff81056be1>] __lock_acquire+0x90d/0xc50
+>  [<ffffffff8100c50f>] ? restore_args+0x0/0x30
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff81057276>] lock_acquire+0x91/0xb7
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff812b23ab>] mutex_lock_nested+0xf2/0x278
+>  [<ffffffff811b431e>] ? device_add+0x43d/0x57a
+>  [<ffffffff812b3acd>] ? _spin_unlock+0x23/0x28
+>  [<ffffffff811b431e>] device_add+0x43d/0x57a
+>  [<ffffffff811b4471>] device_register+0x16/0x1b
+>  [<ffffffff811b4555>] device_create+0xdf/0x112
+>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>  [<ffffffff81055fdc>] ? trace_hardirqs_on+0xd/0xf
+>  [<ffffffff812b1fe1>] ? mutex_unlock+0x9/0xb
+>  [<ffffffff811b79b7>] ? kobj_map+0x113/0x124
+>  [<ffffffff810ac0f5>] ? exact_lock+0x0/0x14
+>  [<ffffffff810abd09>] ? exact_match+0x0/0x9
+>  [<ffffffffa00ec448>] :sg:sg_add+0x2a3/0x3bd
+>  [<ffffffff811b67b6>] class_interface_register+0x77/0xbd
+>  [<ffffffffa005d869>] :scsi_mod:scsi_register_interface+0x11/0x13
+>  [<ffffffffa00d50a3>] :sg:init_sg+0xa3/0x155
+>  [<ffffffff8105ea8f>] sys_init_module+0x1823/0x197a
+>  [<ffffffff810c45bc>] ? seq_release+0x0/0x56
+>  [<ffffffff8100bebb>] system_call_after_swapgs+0x7b/0x80
 
-http://www.lsi.com/storage_home/products_home/internal_raid/megaraid_sas/megaraid_sas_8204elp/index.html?locale=EN&remote=1
+Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
 
-i downloaded the 09.32_RedHat5.zip , there are, next to the binaries, also an 
-open_source directory, where you can compile the driver. however, this driver 
-doesn't work on recent kernels. I made a patch to let it work on 2.6.21 (it 
-may not be clean).
+---
+drivers/scsi/sg.c |    6 ++++++
+1 file changed, 6 insertions(+)
 
-there is a CPU soft lockup warning at boot time, when the module is used, (but 
-that was there even on RH5 with the old kernel and binary driver. so, i doubt 
-it was my doing.)
-
-In the megaraid_sata (i've looked at it), there's 2 versions: xscale and ppc 
-or something; which should i use?
-
-and lastly: mpt fusion? that sounds like a totally different driver, any 
-reason as why to use that one?
-
-We have 2 identical machines to be used as xen hosts, which both have the same 
-card. the first one is already in production, since we saw the iowait problem 
-much later, the second one is empty for now, and i keep it that way for now, 
-so i can test out on it. Of course, time is ticking away, since there are 
-virtual machines being sold :-/ . You know how management works...
-
-Sincerely,
-
-Maarten Vanraes
-PS: i just saw that there is a newer driver, but i suspect the source didn't 
-change, it's probably a recompile for the new RH5 kernel. However, i'll see 
-if there are any diff in it, and if so, i'll test it out this week.
-
-Op maandag 26 mei 2008 19:11, schreef Jeff Garzik:
-> Maarten Vanraes wrote:
-> > Hello, (can you CC me? i'm not on the list)
-> >
-> > I have a LSI MegaRAID SAS 8204ELP card, and since it wasn't recognized by
-> > any driver, i tried using the megasr driver supplied by LSI (it also
-> > supplies open_source code with it), i had to modify the code a bit to get
-> > it to boot with kernel-2.6.21 . but there's a very high iowait on it. i'm
-> > wondering if the megaraid_sas driver is meant to be the driver for the
-> > same hardware as megasr? would it help if i just added another PCI ID to
-> > the module and try that one?
-> >
-> > Sincerely,
-> >
-> > Maarten Vanraes
-> >
-> > [] # lspci -s 08:00.0 -vvvn
-> > 08:00.0 0100: 1000:0059 (rev 08)
-> >         Subsystem: 1000:3002
-> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> > ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> > <TAbort- <MAbort- >SERR+ <PERR- INTx-
-> >         Latency: 0, Cache Line Size: 32 bytes
-> >         Interrupt: pin A routed to IRQ 18
-> >         Region 0: I/O ports at 3000 [size=256]
-> >         Region 1: Memory at d8410000 (64-bit, non-prefetchable)
-> > [size=16K] Region 3: Memory at d8400000 (64-bit, non-prefetchable)
-> > [size=64K] [virtual] Expansion ROM at d8000000 [disabled] [size=2M]
-> > Capabilities: [50] Power Management version 2
-> >         Capabilities: [68] Express (v1) Endpoint, MSI 00
-> >         Capabilities: [98] Message Signalled Interrupts: Mask- 64bit+
-> >         Capabilities: [b0] MSI-X: Enable- Mask- TabSize=1
-> >         Capabilities: [100] Advanced Error Reporting <?>
->
-> Yeah you can try drivers/scsi/megaraid/megaraid_sas.c or
-> drivers/message/fusion/mptsas.c.
->
-> A URL to the megasr driver would be nice.
->
-> Also, please keep linux-scsi in CC (I added it), that's where this sort
-> of things is usually discussed.
->
-> 	Jeff
-
--- 
-Maarten Vanraes
-BA NV: IT & Security
-
---Boundary-00=_tq9OItTZTn+VaGU
-Content-Type: text/x-diff;
-  charset="iso-8859-1";
-  name="kernel_2.6.20.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="kernel_2.6.20.patch"
-
---- open_source/osl/lin/linux_osl.c	2008-02-07 17:23:36.000000000 +0000
-+++ open_source/osl/lin/linux_osl.c	2008-04-10 14:13:10.000000000 +0000
-@@ -66,7 +66,7 @@
+diff -upr linux/drivers/scsi/sg.c linux.new/drivers/scsi/sg.c
+--- linux/drivers/scsi/sg.c	2008-05-27 17:09:42.000000000 +0800
++++ linux.new/drivers/scsi/sg.c	2008-05-27 17:09:51.000000000 +0800
+@@ -49,6 +49,7 @@ static int sg_version_num = 30534;	/* 2 
+ #include <linux/delay.h>
+ #include <linux/scatterlist.h>
+ #include <linux/blktrace_api.h>
++#include <linux/lockdep.h>
  
- 
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-- module_param(dbglvl_g, uint, DRIVER_DBG_LEVEL);
-+ module_param(dbglvl_g, uint, 0);
- #else 
- #ifdef MODULE
-  MODULE_PARM			(dbglvl_g, "i");
-@@ -90,7 +90,7 @@
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -67,6 +68,8 @@ static int sg_proc_init(void);
+ static void sg_proc_cleanup(void);
  #endif
  
- /* Function Prototypes */
--static LSI_RAID_IRQRETURN_T lsraid_isr(int irq, void *devp, struct pt_regs *regs);
-+static LSI_RAID_IRQRETURN_T lsraid_isr(int irq, void *devp);
- 
- /* helper functions */
- static int __devinit lsraid_probe_one(struct pci_dev*, 
-@@ -556,9 +556,10 @@
-  * This is a tasklet, Linux guarantees, we are not running on more than one CPU at the
-  * same time.
-  **/
--static void megasr_linux_build_io(void *devp)
++static struct lock_class_key sg_class_key;
 +
-+static void megasr_linux_build_io(struct work_struct *work)
- {
--	linux_adp_t				*linux_adp = (linux_adp_t *) devp;
-+	linux_adp_t				*linux_adp = container_of(work, linux_adp_t, work_build_io_in);
- 	rcl_packet_public_t			*rclp;
- 	rcl_packet_public_t			*rclp_tmp;
- 	struct scsi_cmnd		*scp;
-@@ -634,9 +635,9 @@
-  * counterpart for the "sleepy" build IO routine. We complete the scsi commands to the mid-layer
-  * These commands are those for which virtual mapping, using kmap(), was obtained.
-  **/
--static void megasr_linux_dpc_complete_cmd(void *devp)
-+static void megasr_linux_dpc_complete_cmd(struct work_struct *work)
- {
--	linux_adp_t				*linux_adp = (linux_adp_t *)devp;
-+	linux_adp_t				*linux_adp = container_of(work, linux_adp_t, work_build_io_out);
- 	rcl_packet_public_t			*rclp;
- 	rcl_packet_public_t			*rclp_tmp;
- 	struct scsi_cmnd		*scp;
-@@ -961,8 +962,7 @@
-  *@remarks
-  * This is a driver entry function 
-  */
--static LSI_RAID_IRQRETURN_T lsraid_isr(int irq, void* os_cxt, 
--		struct pt_regs* regs)
-+static LSI_RAID_IRQRETURN_T lsraid_isr(int irq, void* os_cxt)
- {
- 	int				ret_val = LSI_FALSE;
- 	unsigned long	flags;
-@@ -1073,9 +1073,8 @@
- 	// setup work queues for DPC
- 	megasr_clist_setup(&lxadp->build_io_list_in);
- 	megasr_clist_setup(&lxadp->build_io_list_out);
--	INIT_WORK(&lxadp->work_build_io_in, megasr_linux_build_io, lxadp);
--	INIT_WORK(&lxadp->work_build_io_out, megasr_linux_dpc_complete_cmd,
--	lxadp);
-+	INIT_WORK(&lxadp->work_build_io_in, megasr_linux_build_io);
-+	INIT_WORK(&lxadp->work_build_io_out, megasr_linux_dpc_complete_cmd);
- #endif
+ #define SG_ALLOW_DIO_DEF 0
+ #define SG_ALLOW_DIO_CODE /* compile out by commenting this define */
  
- #ifdef __LP64__
---- open_source/osl/lin/linux_osl.h	2008-02-07 17:23:36.000000000 +0000
-+++ open_source/osl/lin/linux_osl.h	2008-04-10 12:47:36.000000000 +0000
-@@ -111,7 +111,8 @@
- #define LSI_RAID_SCP2_LUN(scp)		(scp)->device->lun		/* LUN */
- #define LSI_RAID_IRQRETURN_T 		irqreturn_t
- 
--#define LSI_RAID_HOST_SET_LOCK(host, lock) scsi_assign_lock(host, lock)
-+//#define LSI_RAID_HOST_SET_LOCK(host, lock) scsi_assign_lock(host, lock)
-+#define LSI_RAID_HOST_SET_LOCK(host, lock) host->host_lock = lock;
- #define LSI_RAID_CURRENT_TIME_IN_SEC (CURRENT_TIME.tv_sec)
- 
- #else
-Alleen in test/open_source/osl/lin: linux_osl.o
-Alleen in test/open_source/osl/lin: .linux_osl.o.cmd
-Alleen in test/open_source/osl/lin: osl_char.o
-Alleen in test/open_source/osl/lin: .osl_char.o.cmd
-Alleen in test/open_source/oss/lin: lin_oss.o
-Alleen in test/open_source/oss/lin: .lin_oss.o.cmd
-
---Boundary-00=_tq9OItTZTn+VaGU--
+@@ -1579,6 +1582,9 @@ init_sg(void)
+ 		rc = PTR_ERR(sg_sysfs_class);
+ 		goto err_out;
+         }
++
++	lockdep_set_class_and_name(&sg_sysfs_class->mutex, &sg_class_key,
++						sg_sysfs_class->name);
+ 	sg_sysfs_valid = 1;
+ 	rc = scsi_register_interface(&sg_interface);
+ 	if (0 == rc) {
