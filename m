@@ -1,80 +1,39 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 1/3][-mm] add class_reclassify macro
-Date: Tue, 27 May 2008 15:31:38 +0800
-Message-ID: <a8e1da0805270031i20b472d3k1d6af806115f10aa@mail.gmail.com>
-References: <20080520095553.GA3201@darkstar.te-china.tietoenator.com>
-	 <20080520030232.fc91b64e.akpm@linux-foundation.org>
-	 <20080520172139.GA11666@kroah.com>
-	 <a8e1da0805262342g2dec037eqfdf376e66459e758@mail.gmail.com>
-	 <20080526235934.8a28bfba.akpm@linux-foundation.org>
+From: Li Zefan <lizf@cn.fujitsu.com>
+Subject: [PATCH] scsi/libiscsi.c: return -errno rather than errno
+Date: Tue, 27 May 2008 15:58:46 +0800
+Message-ID: <483BBF36.80500@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:12671 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756184AbYE0Hbk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2008 03:31:40 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1646339tic.23
-        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2008 00:31:39 -0700 (PDT)
-In-Reply-To: <20080526235934.8a28bfba.akpm@linux-foundation.org>
-Content-Disposition: inline
+Received: from cn.fujitsu.com ([222.73.24.84]:59918 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754055AbYE0IAL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2008 04:00:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Greg KH <greg@kroah.com>, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: michaelc@cs.wisc.edu, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tue, May 27, 2008 at 2:59 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> On Tue, 27 May 2008 14:42:51 +0800 "Dave Young" <hidave.darkstar@gmail.com> wrote:
->
->> On Wed, May 21, 2008 at 1:21 AM, Greg KH <greg@kroah.com> wrote:
->> > On Tue, May 20, 2008 at 03:02:32AM -0700, Andrew Morton wrote:
->> >> On Tue, 20 May 2008 17:55:54 +0800 Dave Young <hidave.darkstar@gmail.com> wrote:
->> >>
->> >> > Converting class semaphore to mutex cause lockdep warnings due to
->> >> > class_interface_register/unregister will possible call device_add/del
->> >>
->> >> Shouldn't we just fix that?
->> >
->> > Um, no, that's a "feature" that some types of hardware and interfaces
->> > require.
->> >
->> > This is one reason I really don't like this type of conversion, it's
->> > causing lots of problems for no known gain.
->> >
->> > So I would just recommend dropping this patch set, the current "convert
->> > class semaphore to a mutex" patch in the -mm tree is already causing
->> > lockdep warnings, and trying to do something like this isn't really
->> > going to solve the root problem here.
->>
->> At last, I decide to give up.
->>
->> Andrew, I could not do more for this issue now, you can drop the
->> conversion patch if there's no suitable fix from others.
->>
->
-> If that semaphore is being used as a mutex then we should convert it to
-> a mutex (dammit).
->
-> Leaving it implemented as a semphore is not the proper way of
-> suppressing the lockdep warnings.  It would be better to convert it to
-> a mutex then add suitable (and suitably commented) open-coded lockdep
-> annotations to suppress the runtime warnings.
+iscsi_prep_scsi_cmd_pdu() returns EIO in a failing path,
+but returns -errno in other paths.
 
-I agree.
-
->
-> And afaik that's pretty much what your patch did, except you added that
-> unpopular macro.  If instead of the macro we were to convert that patch
-> to add open-coded lockdep annotation, what problems remain?
->
->
-Actually I want a best fix which could be accepted by all of you, and
-by me. It's not so easy.
-
-I can give another try without the macro. Thanks.
-
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
 ---
-Regards
-dave
+ drivers/scsi/libiscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index b43bf1d..d380f46 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -307,7 +307,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
+ 	hdr->hlength = hdrlength & 0xFF;
+ 
+ 	if (conn->session->tt->init_cmd_task(conn->ctask))
+-		return EIO;
++		return -EIO;
+ 
+ 	conn->scsicmd_pdus_cnt++;
+ 	debug_scsi("iscsi prep [%s cid %d sc %p cdb 0x%x itt 0x%x "
+-- 1.5.4.rc3
