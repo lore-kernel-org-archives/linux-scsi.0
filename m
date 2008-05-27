@@ -1,37 +1,26 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: megaraid_sata vs megasr
-Date: Tue, 27 May 2008 14:32:55 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229010EF0FD@NAMAIL2.ad.lsil.com>
-References: <200805271155.57577.maarten@ba.be>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi/libiscsi.c: return -errno rather than errno
+Date: Tue, 27 May 2008 17:06:42 -0500
+Message-ID: <483C85F2.6040103@cs.wisc.edu>
+References: <483BBF36.80500@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:50507 "EHLO mail0.lsil.com"
+Received: from mx1.redhat.com ([66.187.233.31]:34746 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758167AbYE0Unl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2008 16:43:41 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200805271155.57577.maarten@ba.be>
+	id S1759997AbYE0WHC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2008 18:07:02 -0400
+In-Reply-To: <483BBF36.80500@cn.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maarten Vanraes <maarten@ba.be>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Li Zefan <lizf@cn.fujitsu.com>
+Cc: James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tuesday, May 27, 2008 3:56 AM,  Maarten Vanraes wrote:
-> and lastly: mpt fusion? that sounds like a totally different 
-> driver, any 
-> reason as why to use that one?
+Li Zefan wrote:
+> iscsi_prep_scsi_cmd_pdu() returns EIO in a failing path,
+> but returns -errno in other paths.
+> 
 
-No, mpt fusion is not for megaraid controllers.    The megasr driver is
-the "software raid" driver stack over mpt fusion controller,  which is
-closed source, you should contact the megaraid team to get the entire
-driver.   The megaraid team also have their own bios to be used with
-these controllers, this bios will create a default raid volume when no
-one is present, thus corrupting the data,  hense you don't want to use
-the mpt fusion drivers for that megaraid controller.  The megasas driver
-is full hardware raid solution, like raid levels 0, 1, 5, 6, 10, 50, and
-60.
-
-Eric
+Thanks for the patch. I fixed this in the patches I sent to James for 
+2.6.27 already.
