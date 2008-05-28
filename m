@@ -1,146 +1,227 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [Bugme-new] [Bug 10810] New: Performance regression on DAC960  and kernel 2.6.24+
-Date: Wed, 28 May 2008 20:37:26 +0200
-Message-ID: <20080528183725.GD25504@kernel.dk>
-References: <bug-10810-10286@http.bugzilla.kernel.org/> <20080528105810.3912c2a1.akpm@linux-foundation.org> <1211999681.3445.67.camel@localhost.localdomain>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH][-mm] reclassify sg_sysfs_class for lockdep
+Date: Wed, 28 May 2008 12:18:06 -0700
+Message-ID: <20080528121806.a0207130.akpm@linux-foundation.org>
+References: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
+	<20080528144943.GI22636@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:1534 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752278AbYE1Sh3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2008 14:37:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1211999681.3445.67.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53443 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752436AbYE1TSJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2008 15:18:09 -0400
+In-Reply-To: <20080528144943.GI22636@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, alex@nibbles.it, bugme-daemon@bugzilla.kernel.org, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: hidave.darkstar@gmail.com, greg@kroah.com, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, May 28 2008, James Bottomley wrote:
-> On Wed, 2008-05-28 at 10:58 -0700, Andrew Morton wrote:
-> > On Wed, 28 May 2008 03:52:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Wed, 28 May 2008 08:49:43 -0600
+Matthew Wilcox <matthew@wil.cx> wrote:
+
+> On Tue, May 27, 2008 at 06:10:09PM +0800, Dave Young wrote:
+> > As register sg_interface, the sg_add will be called, which then will
+> > add device to sg_sysfs_class. This will cause lockdep warning,
+> > please see following email
 > > 
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=10810
-> > > 
-> > >            Summary: Performance regression on DAC960 and kernel 2.6.24+
-> > >            Product: IO/Storage
-> > >            Version: 2.5
-> > >      KernelVersion: 2.6.24, 2.6.25
-> > >           Platform: All
-> > >         OS/Version: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: high
-> > >           Priority: P1
-> > >          Component: Block Layer
-> > >         AssignedTo: axboe@kernel.dk
-> > >         ReportedBy: alex@nibbles.it
-> > > 
-> > > 
-> > > Latest working kernel version:
-> > > 2.6.23
-> > > 
-> > > Earliest failing kernel version:
-> > > 2.6.24
-> > > 
-> > > Distribution:
-> > > Debian
-> > > 
-> > > Hardware Environment:
-> > > 00:00.0 RAM memory: nVidia Corporation C51 Host Bridge (rev a2)
-> > > 00:00.1 RAM memory: nVidia Corporation C51 Memory Controller 0 (rev a2)
-> > > 00:00.2 RAM memory: nVidia Corporation C51 Memory Controller 1 (rev a2)
-> > > 00:00.3 RAM memory: nVidia Corporation C51 Memory Controller 5 (rev a2)
-> > > 00:00.4 RAM memory: nVidia Corporation C51 Memory Controller 4 (rev a2)
-> > > 00:00.5 RAM memory: nVidia Corporation C51 Host Bridge (rev a2)
-> > > 00:00.6 RAM memory: nVidia Corporation C51 Memory Controller 3 (rev a2)
-> > > 00:00.7 RAM memory: nVidia Corporation C51 Memory Controller 2 (rev a2)
-> > > 00:02.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
-> > > 00:03.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
-> > > 00:04.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
-> > > 00:05.0 VGA compatible controller: nVidia Corporation C51G [GeForce 6100] (rev
-> > > a2)
-> > > 00:09.0 RAM memory: nVidia Corporation MCP51 Host Bridge (rev a2)
-> > > 00:0a.0 ISA bridge: nVidia Corporation MCP51 LPC Bridge (rev a2)
-> > > 00:0a.1 SMBus: nVidia Corporation MCP51 SMBus (rev a2)
-> > > 00:0b.0 USB Controller: nVidia Corporation MCP51 USB Controller (rev a2)
-> > > 00:0b.1 USB Controller: nVidia Corporation MCP51 USB Controller (rev a2)
-> > > 00:0d.0 IDE interface: nVidia Corporation MCP51 IDE (rev a1)
-> > > 00:0e.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller (rev a1)
-> > > 00:10.0 PCI bridge: nVidia Corporation MCP51 PCI Bridge (rev a2)
-> > > 00:14.0 Bridge: nVidia Corporation MCP51 Ethernet Controller (rev a1)
-> > > 00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > > HyperTransport Technology Configuration
-> > > 00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address
-> > > Map
-> > > 00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM
-> > > Controller
-> > > 00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > > Miscellaneous Control
-> > > 04:08.0 RAID bus controller: Mylex Corporation AcceleRAID 352/170/160 support
-> > > Device (rev 02)
-> > > 
-> > > Software Environment:
-> > > Debian Lenny 64bit
-> > > 
-> > > Problem Description:
-> > > I/O Access is very slow on some condition, for example samba users can't write
-> > > more than a few KB/sec on the shares.
-> > > Also tomcat is veeeery slow to startup (at least 3 times the normal time).
-> > > 
-> > > Steps to reproduce:
-> > > Simply boot with the new kernel
+> > In this case the locks are from diffrent classi, one is sdev_class,
+> > another is sg_sysfs_class 
 > > 
-> > Oh dear.
-> > 
-> > There's been only one change to DAC960.c in that timeframe:
-> > 
-> > commit 0156c2547e92df559d5592aad9535838ef459615
-> > Author: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> > Date:   Tue Dec 11 17:43:15 2007 -0500
-> > 
-> >     blk_end_request: changing DAC960 (take 4)
-> >     
-> >     This patch converts DAC960 to use blk_end_request interfaces.
-> >     Related 'UpToDate' arguments are converted to 'Error'.
-> >     
-> >     Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> >     Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> >     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> > 
-> > :100644 100644 9030c37... cd03473... M  drivers/block/DAC960.c
-> > 
-> > commit 117636092a87a28a013a4acb5de5492645ed620f
-> > Author: Ralf Baechle <ralf@linux-mips.org>
-> > Date:   Tue Oct 23 20:42:11 2007 +0200
-> > 
-> >     [PATCH] Fix breakage after SG cleanups
-> > 
-> > and I don't see how it could cause this.  The breakage is probably
-> > external to the driver.
-> > 
-> > I don't know what it could be and I don't know anyone who can be asked
-> > to look into it.
-> > 
-> > If you have time, the only way I can think of getting to the bottom of
-> > this is if you were to run a git bisection search as per
-> > http://www.kernel.org/doc/local/git-quick.html.  Sorry.  
+> > Here reclassify the sg_sysfs_class for lockdep
 > 
-> Well, the DAC960 is very old.  It has a trick we escaped from in SCSI
-> where if it gets an error in the request it resubmits it a sector at a
-> time.  It sounds very much like it's doing that for every request if the
-> I/O speed is down to a few k/s.
-> 
-> So, could you try this patch?  It won't fix anything, but if the message
-> spews all over the console, we know the 1 sector at a time retry is
-> causing the problems.  If not we'll try to think of something else ...
+> Look, you've been told how to do this properly.  Send me the patch that
+> does the mutex conversion and I'll do a patch on top of that.
 
-A bit unlikely, me thinks...
+Below.
 
-Anyway, a blktrace dump of some IO would show what is going on. I'm
-assuming the problem is persistent across IO schedulers?
+>  I have no
+> inclination to go wading in the cesspool of patches that is mm trying to
+> find yours.
 
--- 
-Jens Axboe
+Feel free to identify the cessful patches so they can be fixed or dropped.
+
+
+From: Dave Young <hidave.darkstar@gmail.com>
+
+The class_device is already removed, so do the class->sem to mutex conversion.
+
+Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+Cc: Greg KH <greg@kroah.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/base/class.c   |   22 +++++++++++-----------
+ drivers/base/core.c    |    9 ++++-----
+ include/linux/device.h |    3 ++-
+ 3 files changed, 17 insertions(+), 17 deletions(-)
+
+diff -puN drivers/base/class.c~struct-class-sem-to-mutex-converting drivers/base/class.c
+--- a/drivers/base/class.c~struct-class-sem-to-mutex-converting
++++ a/drivers/base/class.c
+@@ -143,7 +143,7 @@ int class_register(struct class *cls)
+ 	INIT_LIST_HEAD(&cls->devices);
+ 	INIT_LIST_HEAD(&cls->interfaces);
+ 	kset_init(&cls->class_dirs);
+-	init_MUTEX(&cls->sem);
++	mutex_init(&cls->mutex);
+ 	error = kobject_set_name(&cls->subsys.kobj, "%s", cls->name);
+ 	if (error)
+ 		return error;
+@@ -268,7 +268,7 @@ char *make_class_name(const char *name, 
+  * We check the return of @fn each time. If it returns anything
+  * other than 0, we break out and return that value.
+  *
+- * Note, we hold class->sem in this function, so it can not be
++ * Note, we hold class->mutex in this function, so it can not be
+  * re-acquired in @fn, otherwise it will self-deadlocking. For
+  * example, calls to add or remove class members would be verboten.
+  */
+@@ -280,7 +280,7 @@ int class_for_each_device(struct class *
+ 
+ 	if (!class)
+ 		return -EINVAL;
+-	down(&class->sem);
++	mutex_lock(&class->mutex);
+ 	list_for_each_entry(dev, &class->devices, node) {
+ 		if (start) {
+ 			if (start == dev)
+@@ -293,7 +293,7 @@ int class_for_each_device(struct class *
+ 		if (error)
+ 			break;
+ 	}
+-	up(&class->sem);
++	mutex_unlock(&class->mutex);
+ 
+ 	return error;
+ }
+@@ -316,7 +316,7 @@ EXPORT_SYMBOL_GPL(class_for_each_device)
+  *
+  * Note, you will need to drop the reference with put_device() after use.
+  *
+- * We hold class->sem in this function, so it can not be
++ * We hold class->mutex in this function, so it can not be
+  * re-acquired in @match, otherwise it will self-deadlocking. For
+  * example, calls to add or remove class members would be verboten.
+  */
+@@ -330,7 +330,7 @@ struct device *class_find_device(struct 
+ 	if (!class)
+ 		return NULL;
+ 
+-	down(&class->sem);
++	mutex_lock(&class->mutex);
+ 	list_for_each_entry(dev, &class->devices, node) {
+ 		if (start) {
+ 			if (start == dev)
+@@ -344,7 +344,7 @@ struct device *class_find_device(struct 
+ 		} else
+ 			put_device(dev);
+ 	}
+-	up(&class->sem);
++	mutex_unlock(&class->mutex);
+ 
+ 	return found ? dev : NULL;
+ }
+@@ -362,13 +362,13 @@ int class_interface_register(struct clas
+ 	if (!parent)
+ 		return -EINVAL;
+ 
+-	down(&parent->sem);
++	mutex_lock(&parent->mutex);
+ 	list_add_tail(&class_intf->node, &parent->interfaces);
+ 	if (class_intf->add_dev) {
+ 		list_for_each_entry(dev, &parent->devices, node)
+ 			class_intf->add_dev(dev, class_intf);
+ 	}
+-	up(&parent->sem);
++	mutex_unlock(&parent->mutex);
+ 
+ 	return 0;
+ }
+@@ -381,13 +381,13 @@ void class_interface_unregister(struct c
+ 	if (!parent)
+ 		return;
+ 
+-	down(&parent->sem);
++	mutex_lock(&parent->mutex);
+ 	list_del_init(&class_intf->node);
+ 	if (class_intf->remove_dev) {
+ 		list_for_each_entry(dev, &parent->devices, node)
+ 			class_intf->remove_dev(dev, class_intf);
+ 	}
+-	up(&parent->sem);
++	mutex_unlock(&parent->mutex);
+ 
+ 	class_put(parent);
+ }
+diff -puN drivers/base/core.c~struct-class-sem-to-mutex-converting drivers/base/core.c
+--- a/drivers/base/core.c~struct-class-sem-to-mutex-converting
++++ a/drivers/base/core.c
+@@ -20,7 +20,6 @@
+ #include <linux/notifier.h>
+ #include <linux/genhd.h>
+ #include <linux/kallsyms.h>
+-#include <linux/semaphore.h>
+ 
+ #include "base.h"
+ #include "power/power.h"
+@@ -889,7 +888,7 @@ int device_add(struct device *dev)
+ 		klist_add_tail(&dev->knode_parent, &parent->klist_children);
+ 
+ 	if (dev->class) {
+-		down(&dev->class->sem);
++		mutex_lock(&dev->class->mutex);
+ 		/* tie the class to the device */
+ 		list_add_tail(&dev->node, &dev->class->devices);
+ 
+@@ -897,7 +896,7 @@ int device_add(struct device *dev)
+ 		list_for_each_entry(class_intf, &dev->class->interfaces, node)
+ 			if (class_intf->add_dev)
+ 				class_intf->add_dev(dev, class_intf);
+-		up(&dev->class->sem);
++		mutex_unlock(&dev->class->mutex);
+ 	}
+  Done:
+ 	put_device(dev);
+@@ -998,14 +997,14 @@ void device_del(struct device *dev)
+ 	if (dev->class) {
+ 		device_remove_class_symlinks(dev);
+ 
+-		down(&dev->class->sem);
++		mutex_lock(&dev->class->mutex);
+ 		/* notify any interfaces that the device is now gone */
+ 		list_for_each_entry(class_intf, &dev->class->interfaces, node)
+ 			if (class_intf->remove_dev)
+ 				class_intf->remove_dev(dev, class_intf);
+ 		/* remove the device from the class list */
+ 		list_del_init(&dev->node);
+-		up(&dev->class->sem);
++		mutex_unlock(&dev->class->mutex);
+ 	}
+ 	device_remove_file(dev, &uevent_attr);
+ 	device_remove_attrs(dev);
+diff -puN include/linux/device.h~struct-class-sem-to-mutex-converting include/linux/device.h
+--- a/include/linux/device.h~struct-class-sem-to-mutex-converting
++++ a/include/linux/device.h
+@@ -20,6 +20,7 @@
+ #include <linux/types.h>
+ #include <linux/module.h>
+ #include <linux/pm.h>
++#include <linux/mutex.h>
+ #include <linux/semaphore.h>
+ #include <asm/atomic.h>
+ #include <asm/device.h>
+@@ -185,7 +186,7 @@ struct class {
+ 	struct list_head	devices;
+ 	struct list_head	interfaces;
+ 	struct kset		class_dirs;
+-	struct semaphore	sem; /* locks children, devices, interfaces */
++	struct mutex		mutex; /* locks devices, interfaces */
+ 	struct class_attribute		*class_attrs;
+ 	struct device_attribute		*dev_attrs;
+ 	struct kobject			*dev_kobj;
+_
 
