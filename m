@@ -1,49 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 10810] New: Performance regression on DAC960
-	and kernel 2.6.24+
-Date: Wed, 28 May 2008 14:56:51 -0500
-Message-ID: <1212004611.3445.70.camel@localhost.localdomain>
-References: <bug-10810-10286@http.bugzilla.kernel.org/>
-	 <20080528105810.3912c2a1.akpm@linux-foundation.org>
-	 <1211999681.3445.67.camel@localhost.localdomain>
-	 <20080528183725.GD25504@kernel.dk>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: fix bsg_mutex hang with device removal
+Date: Thu, 29 May 2008 07:56:55 +0900
+Message-ID: <20080529075655X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41661 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752960AbYE1T4z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2008 15:56:55 -0400
-In-Reply-To: <20080528183725.GD25504@kernel.dk>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:50657 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753322AbYE1XAM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 19:00:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, alex@nibbles.it, bugme-daemon@bugzilla.kernel.org, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, pw@osc.edu
 
-On Wed, 2008-05-28 at 20:37 +0200, Jens Axboe wrote:
-> On Wed, May 28 2008, James Bottomley wrote:
-> > Well, the DAC960 is very old.  It has a trick we escaped from in SCSI
-> > where if it gets an error in the request it resubmits it a sector at a
-> > time.  It sounds very much like it's doing that for every request if the
-> > I/O speed is down to a few k/s.
-> > 
-> > So, could you try this patch?  It won't fix anything, but if the message
-> > spews all over the console, we know the 1 sector at a time retry is
-> > causing the problems.  If not we'll try to think of something else ...
-> 
-> A bit unlikely, me thinks...
+This is a patch to fix the bsg hang bug reported by Pete:
 
-I can't really see any other way of getting such a massive slowdown ...
-but give us your straws, we can grasp at them too ...
+http://marc.info/?t=121182152200003&r=1&w=2
 
-> Anyway, a blktrace dump of some IO would show what is going on. I'm
-> assuming the problem is persistent across IO schedulers?
+==
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: fix bsg_mutex hang with device removal
 
-Yes, that might help.  If it's not the one sector chunk problem it would
-have to be either some strange wait issue or massive retries.
+We don't need to hold bsg_mutex during bsg_complete_all_commands(). It
+leads to a problem that we block bsg_unregister_queue during
+bsg_complete_all_commands (untill all the outstanding commands
+complete).
 
-James
+Thanks to Pete Wyckoff for finding the bug and testing the patch.
 
+The detailed bug report is:
+
+http://marc.info/?l=linux-scsi&m=121182137132145&w=2
+
+Tested-by: Pete Wyckoff <pw@osc.edu>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index f0b7cd3..7cdec32 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -724,8 +724,13 @@ static int bsg_put_device(struct bsg_device *bd)
+ 	mutex_lock(&bsg_mutex);
+ 
+ 	do_free = atomic_dec_and_test(&bd->ref_count);
+-	if (!do_free)
++	if (!do_free) {
++		mutex_unlock(&bsg_mutex);
+ 		goto out;
++	}
++
++	hlist_del(&bd->dev_list);
++	mutex_unlock(&bsg_mutex);
+ 
+ 	dprintk("%s: tearing down\n", bd->name);
+ 
+@@ -741,10 +746,8 @@ static int bsg_put_device(struct bsg_device *bd)
+ 	 */
+ 	ret = bsg_complete_all_commands(bd);
+ 
+-	hlist_del(&bd->dev_list);
+ 	kfree(bd);
+ out:
+-	mutex_unlock(&bsg_mutex);
+ 	kref_put(&q->bsg_dev.ref, bsg_kref_release_function);
+ 	if (do_free)
+ 		blk_put_queue(q);
+-- 
+1.5.3.6
 
