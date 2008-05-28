@@ -1,49 +1,132 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/3] qla2xxx: fixes for 2.6.26 [8.02.01-k4].
-Date: Wed, 28 May 2008 12:22:20 -0500
-Message-ID: <1211995340.3445.53.camel@localhost.localdomain>
-References: <20080519212418.GH42403@plap4.local>
-	 <20080528161952.GM47641@plap4.local>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 10810] New: Performance regression on DAC960
+ and kernel 2.6.24+
+Date: Wed, 28 May 2008 10:58:10 -0700
+Message-ID: <20080528105810.3912c2a1.akpm@linux-foundation.org>
+References: <bug-10810-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39275 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751644AbYE1RWX (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40421 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751985AbYE1R6V (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2008 13:22:23 -0400
-In-Reply-To: <20080528161952.GM47641@plap4.local>
+	Wed, 28 May 2008 13:58:21 -0400
+In-Reply-To: <bug-10810-10286@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: alex@nibbles.it
+Cc: bugme-daemon@bugzilla.kernel.org, Jens Axboe <axboe@kernel.dk>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2008-05-28 at 09:19 -0700, Andrew Vasquez wrote:
-> On Mon, 19 May 2008, Andrew Vasquez wrote:
+
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
+
+On Wed, 28 May 2008 03:52:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=10810
 > 
-> > James,
-> > 
-> > Further testing has found some regressions in the NPIV code.  Please
-> > add the following to your rc-fixes tree.
-> > 
-> >  drivers/scsi/qla2xxx/qla_isr.c     |   36 ++++++++++--------------------------
-> >  drivers/scsi/qla2xxx/qla_mid.c     |    1 +
-> >  drivers/scsi/qla2xxx/qla_os.c      |   14 ++++++++------
-> >  drivers/scsi/qla2xxx/qla_version.h |    2 +-
-> >  4 files changed, 20 insertions(+), 33 deletions(-)
-> > 
-> > commits:
-> > 
-> > - Revert "qla2xxx: Use proper HA during asynchrounous event handling."
-> > - Correct handling of AENs postings for vports.
-> > - Update version number to 8.02.01-k4.
+>            Summary: Performance regression on DAC960 and kernel 2.6.24+
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.24, 2.6.25
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: Block Layer
+>         AssignedTo: axboe@kernel.dk
+>         ReportedBy: alex@nibbles.it
 > 
-> Ack/Nack?  These fixes should really be in 2.6.26.
+> 
+> Latest working kernel version:
+> 2.6.23
+> 
+> Earliest failing kernel version:
+> 2.6.24
+> 
+> Distribution:
+> Debian
+> 
+> Hardware Environment:
+> 00:00.0 RAM memory: nVidia Corporation C51 Host Bridge (rev a2)
+> 00:00.1 RAM memory: nVidia Corporation C51 Memory Controller 0 (rev a2)
+> 00:00.2 RAM memory: nVidia Corporation C51 Memory Controller 1 (rev a2)
+> 00:00.3 RAM memory: nVidia Corporation C51 Memory Controller 5 (rev a2)
+> 00:00.4 RAM memory: nVidia Corporation C51 Memory Controller 4 (rev a2)
+> 00:00.5 RAM memory: nVidia Corporation C51 Host Bridge (rev a2)
+> 00:00.6 RAM memory: nVidia Corporation C51 Memory Controller 3 (rev a2)
+> 00:00.7 RAM memory: nVidia Corporation C51 Memory Controller 2 (rev a2)
+> 00:02.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
+> 00:03.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
+> 00:04.0 PCI bridge: nVidia Corporation C51 PCI Express Bridge (rev a1)
+> 00:05.0 VGA compatible controller: nVidia Corporation C51G [GeForce 6100] (rev
+> a2)
+> 00:09.0 RAM memory: nVidia Corporation MCP51 Host Bridge (rev a2)
+> 00:0a.0 ISA bridge: nVidia Corporation MCP51 LPC Bridge (rev a2)
+> 00:0a.1 SMBus: nVidia Corporation MCP51 SMBus (rev a2)
+> 00:0b.0 USB Controller: nVidia Corporation MCP51 USB Controller (rev a2)
+> 00:0b.1 USB Controller: nVidia Corporation MCP51 USB Controller (rev a2)
+> 00:0d.0 IDE interface: nVidia Corporation MCP51 IDE (rev a1)
+> 00:0e.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller (rev a1)
+> 00:10.0 PCI bridge: nVidia Corporation MCP51 PCI Bridge (rev a2)
+> 00:14.0 Bridge: nVidia Corporation MCP51 Ethernet Controller (rev a1)
+> 00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> HyperTransport Technology Configuration
+> 00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address
+> Map
+> 00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM
+> Controller
+> 00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> Miscellaneous Control
+> 04:08.0 RAID bus controller: Mylex Corporation AcceleRAID 352/170/160 support
+> Device (rev 02)
+> 
+> Software Environment:
+> Debian Lenny 64bit
+> 
+> Problem Description:
+> I/O Access is very slow on some condition, for example samba users can't write
+> more than a few KB/sec on the shares.
+> Also tomcat is veeeery slow to startup (at least 3 times the normal time).
+> 
+> Steps to reproduce:
+> Simply boot with the new kernel
 
-Next on the list to look at, honest!  I've been away for a week, so I'm
-in catch up mode.
+Oh dear.
 
-James
+There's been only one change to DAC960.c in that timeframe:
 
+commit 0156c2547e92df559d5592aad9535838ef459615
+Author: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Date:   Tue Dec 11 17:43:15 2007 -0500
 
+    blk_end_request: changing DAC960 (take 4)
+    
+    This patch converts DAC960 to use blk_end_request interfaces.
+    Related 'UpToDate' arguments are converted to 'Error'.
+    
+    Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+    Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+
+:100644 100644 9030c37... cd03473... M  drivers/block/DAC960.c
+
+commit 117636092a87a28a013a4acb5de5492645ed620f
+Author: Ralf Baechle <ralf@linux-mips.org>
+Date:   Tue Oct 23 20:42:11 2007 +0200
+
+    [PATCH] Fix breakage after SG cleanups
+
+and I don't see how it could cause this.  The breakage is probably
+external to the driver.
+
+I don't know what it could be and I don't know anyone who can be asked
+to look into it.
+
+If you have time, the only way I can think of getting to the bottom of
+this is if you were to run a git bisection search as per
+http://www.kernel.org/doc/local/git-quick.html.  Sorry.  
