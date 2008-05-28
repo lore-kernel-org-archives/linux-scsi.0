@@ -1,227 +1,203 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH][-mm] reclassify sg_sysfs_class for lockdep
-Date: Wed, 28 May 2008 12:18:06 -0700
-Message-ID: <20080528121806.a0207130.akpm@linux-foundation.org>
-References: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
-	<20080528144943.GI22636@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Subject: [PATCH] aacraid: prevent copy_from_user() BUG!
+Date: Wed, 28 May 2008 15:32:55 -0400
+Message-ID: <DF06F352-4C27-47D3-983A-FB2414C8D88E@adaptec.com>
+References: <86802c440804181855t615a5616g62d083695ca8ea08@mail.gmail.com> <3AC1542A-0338-4796-9218-502C4AAD64D2@adaptec.com> <86802c440804211742g1fe25aadjeaffce49722e7c46@mail.gmail.com> <BCC76E6D-9A0F-4DC1-822A-50EE44A52890@adaptec.com> <1E278B55-6C77-42FA-8B15-16A0939203FB@adaptec.com> <1FB85EE8-0F95-4CF8-AD36-9E0E6542BB59@adaptec.com> <7D06DAD1-983B-457F-8A9B-76C4FA95D57B@adaptec.com> <D25ECCDE-1A2B-4E11-BEF9-CAC0A9ABA0FE@adaptec.com>
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: multipart/mixed; boundary=Apple-Mail-106--379742220
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53443 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752436AbYE1TSJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2008 15:18:09 -0400
-In-Reply-To: <20080528144943.GI22636@parisc-linux.org>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:53360 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbYE1TdP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 15:33:15 -0400
+In-Reply-To: <D25ECCDE-1A2B-4E11-BEF9-CAC0A9ABA0FE@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: hidave.darkstar@gmail.com, greg@kroah.com, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On Wed, 28 May 2008 08:49:43 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
-
-> On Tue, May 27, 2008 at 06:10:09PM +0800, Dave Young wrote:
-> > As register sg_interface, the sg_add will be called, which then will
-> > add device to sg_sysfs_class. This will cause lockdep warning,
-> > please see following email
-> > 
-> > In this case the locks are from diffrent classi, one is sdev_class,
-> > another is sg_sysfs_class 
-> > 
-> > Here reclassify the sg_sysfs_class for lockdep
-> 
-> Look, you've been told how to do this properly.  Send me the patch that
-> does the mutex conversion and I'll do a patch on top of that.
-
-Below.
-
->  I have no
-> inclination to go wading in the cesspool of patches that is mm trying to
-> find yours.
-
-Feel free to identify the cessful patches so they can be fixed or dropped.
+To: Linux-Scsi <linux-scsi@vger.kernel.org>
 
 
-From: Dave Young <hidave.darkstar@gmail.com>
+--Apple-Mail-106--379742220
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed;
+	delsp=yes
+Content-Transfer-Encoding: 7bit
 
-The class_device is already removed, so do the class->sem to mutex conversion.
+Seen:
 
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
-Cc: Greg KH <greg@kroah.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+	kernel BUG at arch/i386/lib/usercopy.c:872
 
- drivers/base/class.c   |   22 +++++++++++-----------
- drivers/base/core.c    |    9 ++++-----
- include/linux/device.h |    3 ++-
- 3 files changed, 17 insertions(+), 17 deletions(-)
+under a 2.6.18-8.el5 kernel. Traced it to a garbage-in/garbage-out  
+ioctl condition in the aacraid driver.
 
-diff -puN drivers/base/class.c~struct-class-sem-to-mutex-converting drivers/base/class.c
---- a/drivers/base/class.c~struct-class-sem-to-mutex-converting
-+++ a/drivers/base/class.c
-@@ -143,7 +143,7 @@ int class_register(struct class *cls)
- 	INIT_LIST_HEAD(&cls->devices);
- 	INIT_LIST_HEAD(&cls->interfaces);
- 	kset_init(&cls->class_dirs);
--	init_MUTEX(&cls->sem);
-+	mutex_init(&cls->mutex);
- 	error = kobject_set_name(&cls->subsys.kobj, "%s", cls->name);
- 	if (error)
- 		return error;
-@@ -268,7 +268,7 @@ char *make_class_name(const char *name, 
-  * We check the return of @fn each time. If it returns anything
-  * other than 0, we break out and return that value.
-  *
-- * Note, we hold class->sem in this function, so it can not be
-+ * Note, we hold class->mutex in this function, so it can not be
-  * re-acquired in @fn, otherwise it will self-deadlocking. For
-  * example, calls to add or remove class members would be verboten.
-  */
-@@ -280,7 +280,7 @@ int class_for_each_device(struct class *
- 
- 	if (!class)
- 		return -EINVAL;
--	down(&class->sem);
-+	mutex_lock(&class->mutex);
- 	list_for_each_entry(dev, &class->devices, node) {
- 		if (start) {
- 			if (start == dev)
-@@ -293,7 +293,7 @@ int class_for_each_device(struct class *
- 		if (error)
- 			break;
- 	}
--	up(&class->sem);
-+	mutex_unlock(&class->mutex);
- 
- 	return error;
- }
-@@ -316,7 +316,7 @@ EXPORT_SYMBOL_GPL(class_for_each_device)
-  *
-  * Note, you will need to drop the reference with put_device() after use.
-  *
-- * We hold class->sem in this function, so it can not be
-+ * We hold class->mutex in this function, so it can not be
-  * re-acquired in @match, otherwise it will self-deadlocking. For
-  * example, calls to add or remove class members would be verboten.
-  */
-@@ -330,7 +330,7 @@ struct device *class_find_device(struct 
- 	if (!class)
- 		return NULL;
- 
--	down(&class->sem);
-+	mutex_lock(&class->mutex);
- 	list_for_each_entry(dev, &class->devices, node) {
- 		if (start) {
- 			if (start == dev)
-@@ -344,7 +344,7 @@ struct device *class_find_device(struct 
- 		} else
- 			put_device(dev);
- 	}
--	up(&class->sem);
-+	mutex_unlock(&class->mutex);
- 
- 	return found ? dev : NULL;
- }
-@@ -362,13 +362,13 @@ int class_interface_register(struct clas
- 	if (!parent)
- 		return -EINVAL;
- 
--	down(&parent->sem);
-+	mutex_lock(&parent->mutex);
- 	list_add_tail(&class_intf->node, &parent->interfaces);
- 	if (class_intf->add_dev) {
- 		list_for_each_entry(dev, &parent->devices, node)
- 			class_intf->add_dev(dev, class_intf);
- 	}
--	up(&parent->sem);
-+	mutex_unlock(&parent->mutex);
- 
- 	return 0;
- }
-@@ -381,13 +381,13 @@ void class_interface_unregister(struct c
- 	if (!parent)
- 		return;
- 
--	down(&parent->sem);
-+	mutex_lock(&parent->mutex);
- 	list_del_init(&class_intf->node);
- 	if (class_intf->remove_dev) {
- 		list_for_each_entry(dev, &parent->devices, node)
- 			class_intf->remove_dev(dev, class_intf);
- 	}
--	up(&parent->sem);
-+	mutex_unlock(&parent->mutex);
- 
- 	class_put(parent);
- }
-diff -puN drivers/base/core.c~struct-class-sem-to-mutex-converting drivers/base/core.c
---- a/drivers/base/core.c~struct-class-sem-to-mutex-converting
-+++ a/drivers/base/core.c
-@@ -20,7 +20,6 @@
- #include <linux/notifier.h>
- #include <linux/genhd.h>
- #include <linux/kallsyms.h>
--#include <linux/semaphore.h>
- 
- #include "base.h"
- #include "power/power.h"
-@@ -889,7 +888,7 @@ int device_add(struct device *dev)
- 		klist_add_tail(&dev->knode_parent, &parent->klist_children);
- 
- 	if (dev->class) {
--		down(&dev->class->sem);
-+		mutex_lock(&dev->class->mutex);
- 		/* tie the class to the device */
- 		list_add_tail(&dev->node, &dev->class->devices);
- 
-@@ -897,7 +896,7 @@ int device_add(struct device *dev)
- 		list_for_each_entry(class_intf, &dev->class->interfaces, node)
- 			if (class_intf->add_dev)
- 				class_intf->add_dev(dev, class_intf);
--		up(&dev->class->sem);
-+		mutex_unlock(&dev->class->mutex);
- 	}
-  Done:
- 	put_device(dev);
-@@ -998,14 +997,14 @@ void device_del(struct device *dev)
- 	if (dev->class) {
- 		device_remove_class_symlinks(dev);
- 
--		down(&dev->class->sem);
-+		mutex_lock(&dev->class->mutex);
- 		/* notify any interfaces that the device is now gone */
- 		list_for_each_entry(class_intf, &dev->class->interfaces, node)
- 			if (class_intf->remove_dev)
- 				class_intf->remove_dev(dev, class_intf);
- 		/* remove the device from the class list */
- 		list_del_init(&dev->node);
--		up(&dev->class->sem);
-+		mutex_unlock(&dev->class->mutex);
- 	}
- 	device_remove_file(dev, &uevent_attr);
- 	device_remove_attrs(dev);
-diff -puN include/linux/device.h~struct-class-sem-to-mutex-converting include/linux/device.h
---- a/include/linux/device.h~struct-class-sem-to-mutex-converting
-+++ a/include/linux/device.h
-@@ -20,6 +20,7 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/pm.h>
-+#include <linux/mutex.h>
- #include <linux/semaphore.h>
- #include <asm/atomic.h>
- #include <asm/device.h>
-@@ -185,7 +186,7 @@ struct class {
- 	struct list_head	devices;
- 	struct list_head	interfaces;
- 	struct kset		class_dirs;
--	struct semaphore	sem; /* locks children, devices, interfaces */
-+	struct mutex		mutex; /* locks devices, interfaces */
- 	struct class_attribute		*class_attrs;
- 	struct device_attribute		*dev_attrs;
- 	struct kobject			*dev_kobj;
-_
+Adaptec's special ioctl scb passthrough needs to check the validity of  
+the individual scatter gather count fields to the maximum the adapter  
+supports. Doing so will have the side effect of preventing  
+copy_from_user() from bugging out while populating the dma buffers.  
+This is a hardening effort, issue was triggered by an errant version  
+of the management tools and thus the BUG should not be seen in the  
+field.
 
+This attached patch is against current scsi-misc-2.6.
+
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's  
+handling of patch attachments (inline gets damaged, please use  
+attachment).
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+  drivers/scsi/aacraid/commctrl.c |   32 ++++++++++++++++++++++++++++++ 
+++
+  1 file changed, 32 insertions(+)
+
+diff -ru a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/ 
+commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c	2008-05-28 15:13:39.505105412  
+-0400
++++ b/drivers/scsi/aacraid/commctrl.c	2008-05-28 15:16:53.619280840  
+-0400
+@@ -581,6 +581,14 @@
+  			for (i = 0; i < upsg->count; i++) {
+  				u64 addr;
+  				void* p;
++				if (upsg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+  				/* Does this really need to be GFP_DMA? */
+  				p = kmalloc(upsg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+  				if(!p) {
+@@ -625,6 +633,14 @@
+  			for (i = 0; i < usg->count; i++) {
+  				u64 addr;
+  				void* p;
++				if (usg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+  				/* Does this really need to be GFP_DMA? */
+  				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+  				if(!p) {
+@@ -667,6 +683,14 @@
+  			for (i = 0; i < upsg->count; i++) {
+  				uintptr_t addr;
+  				void* p;
++				if (usg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+  				/* Does this really need to be GFP_DMA? */
+  				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+  				if(!p) {
+@@ -698,6 +722,14 @@
+  			for (i = 0; i < upsg->count; i++) {
+  				dma_addr_t addr;
+  				void* p;
++				if (upsg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+  				p = kmalloc(upsg->sg[i].count, GFP_KERNEL);
+  				if (!p) {
+  					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer -  
+size = %d buffer number %d of %d\n",
+
+Sincerely - Mark Salyzyn
+
+--Apple-Mail-106--379742220
+Content-Disposition: attachment;
+	filename=aacraid_copy_from_user_BUG.patch
+Content-Type: application/octet-stream;
+	x-unix-mode=0644;
+	name="aacraid_copy_from_user_BUG.patch"
+Content-Transfer-Encoding: 7bit
+
+diff -ru a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c	2008-05-28 15:13:39.505105412 -0400
++++ b/drivers/scsi/aacraid/commctrl.c	2008-05-28 15:16:53.619280840 -0400
+@@ -581,6 +581,14 @@
+ 			for (i = 0; i < upsg->count; i++) {
+ 				u64 addr;
+ 				void* p;
++				if (upsg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+ 				/* Does this really need to be GFP_DMA? */
+ 				p = kmalloc(upsg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+ 				if(!p) {
+@@ -625,6 +633,14 @@
+ 			for (i = 0; i < usg->count; i++) {
+ 				u64 addr;
+ 				void* p;
++				if (usg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+ 				/* Does this really need to be GFP_DMA? */
+ 				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+ 				if(!p) {
+@@ -667,6 +683,14 @@
+ 			for (i = 0; i < upsg->count; i++) {
+ 				uintptr_t addr;
+ 				void* p;
++				if (usg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+ 				/* Does this really need to be GFP_DMA? */
+ 				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+ 				if(!p) {
+@@ -698,6 +722,14 @@
+ 			for (i = 0; i < upsg->count; i++) {
+ 				dma_addr_t addr;
+ 				void* p;
++				if (upsg->sg[i].count >
++				    (dev->adapter_info.options &
++				     AAC_OPT_NEW_COMM) ?
++				      (dev->scsi_host_ptr->max_sectors << 9) :
++				      65536) {
++					rcode = -EINVAL;
++					goto cleanup;
++				}
+ 				p = kmalloc(upsg->sg[i].count, GFP_KERNEL);
+ 				if (!p) {
+ 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+
+--Apple-Mail-106--379742220
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+
+--Apple-Mail-106--379742220--
