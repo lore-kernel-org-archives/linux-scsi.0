@@ -1,69 +1,44 @@
-From: Ilya Yanok <ilya.yanok@gmail.com>
-Subject: MPT Fusion SAS dma alignment problem
-Date: Wed, 28 May 2008 12:14:34 +0400
-Message-ID: <483D146A.10301@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/3] bnx2i: Add bnx2i iSCSI driver.
+Date: Wed, 28 May 2008 10:47:01 +0200
+Message-ID: <483D1C05.70101@suse.de>
+References: <ada8wy07osq.fsf@cisco.com> <1211578969.26900.5.camel@dhcp-10-13-110-217.broadcom.com> <adave0z24o4.fsf@cisco.com> <20080527.125247.73979652.davem@davemloft.net> <1211935729.18326.185.camel@dell> <483CD3F3.6070308@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:51794 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbYE1IOk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 04:14:40 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so66706ugf.16
-        for <linux-scsi@vger.kernel.org>; Wed, 28 May 2008 01:14:39 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <483CD3F3.6070308@garzik.org>
+Sender: netdev-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Michael Chan <mchan@broadcom.com>, David Miller <davem@davemloft.net>, rdreier@cisco.com, anilgv@broadcom.com, michaelc@cs.wisc.edu, netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-Hello, All.
+Hi all,
 
-We've experienced problem with MPT Fusion SAS driver: running smartctl
-program from smartmontools package resulted in memory corruption after
-ioctl(SG_IO) call. My investigation showed that problem was introduced by
+Jeff Garzik wrote:
+> Michael Chan wrote:
+>> If we change the implementation to use a separate IP address and
+>> separate MAC address for iSCSI, will it be acceptable?  The iSCSI IP=
+/MAC
+>> addresses will be unknown to the Linux TCP stack and so no sharing o=
+f
+>> the 4-tuple space will be needed.
+>>
+>> The patches will be very similar, except that all inet calls and
+>> notifiers will be removed.
+>=20
+>=20
+> IMO a totally separate MAC and IP would definitely be preferred...
+>=20
+And as it happens, the machines I have here claim to use a different
+MAC address for iSCSI anyway. So we should be using them.
 
-Commit: 465ff3185e0cb76d46137335a4d21d0d9d3ac8a2
-Author: James Bottomley <James.Bottomley@HansenPartnership.com> Tue, 01
-Jan 2008
+Cheers,
 
-    [SCSI] relax scsi dma alignment
-
-    This patch relaxes the default SCSI DMA alignment from 512 bytes to 4
-    bytes.  I remember from previous discussions that usb and firewire have
-    sector size alignment requirements, so I upped their alignments in the
-    respective slave allocs.
-
-    The reason for doing this is so that we don't get such a huge amount of
-    copy overhead in bio_copy_user() for udev.  (basically all inquiries it
-    issues can now be directly mapped).
-
-    Acked-by: Alan Stern <stern@rowland.harvard.edu>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-so I've just added call to blk_queue_update_dma_alignment() (see patch
-below) but I'm not sure that it'a right (or full) solution. Maybe
-someone more familiar with this driver can comment?
-
---
-Ilya
-
----
- drivers/message/fusion/mptsas.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c
-b/drivers/message/fusion/mptsas.c
-index 4684807..bbb6186 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1000,6 +1000,7 @@ mptsas_slave_alloc(struct scsi_device *sdev)
-     return -ENXIO;
- 
-  out:
-+    blk_queue_update_dma_alignment(sdev->request_queue, 511);
-     vdevice->vtarget->num_luns++;
-     sdev->hostdata = vdevice;
-     return 0;
--- 
-1.5.5.1
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
