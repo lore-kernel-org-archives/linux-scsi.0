@@ -1,36 +1,42 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH][-mm] reclassify sg_sysfs_class for lockdep
-Date: Wed, 28 May 2008 09:40:00 -0500
-Message-ID: <1211985600.3445.14.camel@localhost.localdomain>
-References: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
+Subject: Re: MPTSAS problems in 2.6.26-rc2-mm1
+Date: Wed, 28 May 2008 09:47:43 -0500
+Message-ID: <1211986063.3445.18.camel@localhost.localdomain>
+References: <483D28C5.4060406@linux.vnet.ibm.com>
+	 <1211967958.12349.65.camel@twins>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751772AbYE1OkX@vger.kernel.org>
-In-Reply-To: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dave Young <hidave.darkstar@gmail.com>
-Cc: akpm@linux-foundation.org, greg@kroah.com, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34134 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750909AbYE1Orr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2008 10:47:47 -0400
+In-Reply-To: <1211967958.12349.65.camel@twins>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: balbir@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux kernel mailing list <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Tue, 2008-05-27 at 18:10 +0800, Dave Young wrote:
-> As register sg_interface, the sg_add will be called, which then will
-> add device to sg_sysfs_class. This will cause lockdep warning,
-> please see following email
+On Wed, 2008-05-28 at 11:45 +0200, Peter Zijlstra wrote:
+> On Wed, 2008-05-28 at 15:11 +0530, Balbir Singh wrote:
+> > I have 2.6.26-rc2-mm1 with Rik's splitvm patches. While booting the kernel, I
+> > ran into the following. I searched my email quickly to see that no one else has
+> > reported this problem. Lockdep seems to be complaining about the same lock being
+> > held at the same location (the message is a bit confusing to me).
 > 
-> In this case the locks are from diffrent classi, one is sdev_class,
-> another is sg_sysfs_class 
-> 
-> Here reclassify the sg_sysfs_class for lockdep
+> looks like device_add() recursing - most likely with a different device
+> though.
 
-This isn't really a generic solution, is it?  It only works because we
-currently only have two users of the interface functions, so if we
-reclassify one they look separate to lockdep.  It will fall over again
-if we ever get another one.
+This is another instance of a problem being caused by semaphore to mutex
+conversion in struct class;
 
-Surely the correct fix is to initialise lockdep for the mutex the same
-way we did for the semaphore in class_register() (which does exactly the
-same locking without triggering lockdep)?  That way we'll also fix the
-problem for other conversions of semaphore->mutex.
+There's another thread on this here:
+
+http://marc.info/?t=121074904600001
 
 James
+
+
+
