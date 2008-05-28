@@ -1,59 +1,79 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/3][-mm] add class_reclassify macro
-Date: Wed, 28 May 2008 09:28:39 -0700
-Message-ID: <20080528162839.GA12366@kroah.com>
-References: <20080520095553.GA3201@darkstar.te-china.tietoenator.com> <20080520030232.fc91b64e.akpm@linux-foundation.org> <20080520172139.GA11666@kroah.com> <a8e1da0805262342g2dec037eqfdf376e66459e758@mail.gmail.com> <20080526235934.8a28bfba.akpm@linux-foundation.org> <20080528154840.GJ22636@parisc-linux.org> <20080528160637.GB3851@kroah.com>
+From: Maarten Vanraes <maarten@ba.be>
+Subject: Re: megaraid_sata vs megasr
+Date: Wed, 28 May 2008 18:31:25 +0200
+Message-ID: <200805281831.26066.maarten@ba.be>
+References: <0631C836DBF79F42B5A60C8C8D4E8229010EF1F5@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52030 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbYE1Qdc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 12:33:32 -0400
+Received: from powered.by.e-leven.be ([88.82.32.98]:37301 "EHLO
+	queen.hive.selfip.org" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbYE1QlW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 12:41:22 -0400
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229010EF1F5@NAMAIL2.ad.lsil.com>
 Content-Disposition: inline
-In-Reply-To: <20080528160637.GB3851@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Young <hidave.darkstar@gmail.com>, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, May 28, 2008 at 09:06:37AM -0700, Greg KH wrote:
-> On Wed, May 28, 2008 at 09:48:40AM -0600, Matthew Wilcox wrote:
-> > On Mon, May 26, 2008 at 11:59:34PM -0700, Andrew Morton wrote:
-> > > If that semaphore is being used as a mutex then we should convert it to
-> > > a mutex (dammit).
-> > 
-> > Right.
-> > 
-> > > Leaving it implemented as a semphore is not the proper way of
-> > > suppressing the lockdep warnings.  It would be better to convert it to
-> > > a mutex then add suitable (and suitably commented) open-coded lockdep
-> > > annotations to suppress the runtime warnings.
-> > 
-> > We don't even have to go that far.  Here's all that's needed:
-> > 
-> > diff -u a/drivers/base/class.c b/drivers/base/class.c
-> > --- a/drivers/base/class.c
-> > +++ b/drivers/base/class.c
-> > @@ -134,7 +134,7 @@
-> >  	}
-> >  }
-> >  
-> > -int class_register(struct class *cls)
-> > +int __class_register(struct class *cls, struct lock_class_key *key)
-> 
-> Sorry, this will not work properly, as class_create() is now more
-> commonly called, and it calls class_register() from within the driver
-> core.  So there would be a lot of classes with the same "key" because of
-> this.
-> 
-> So try changing class_create also.
+Op Wednesday 28 May 2008 17:44:50 schreef Moore, Eric:
+> On Wednesday, May 28, 2008 8:18 AM, Maarten Vanraes wrote:
+> > So in effect, you are telling me that we bought fakeraid
+> > cards... since this
+> > is the "recommended driver"? is the card a hardware raid? or software.
+> >
+> > We had specifically asked for hardware raid... :-(
+>
+> I worked on megaraid team some five years ago, now I work on mpt fusion.
+> I can't tell you what the recommended megaraid cards, as they have
+> changed since then from U320.   The mpt fusion cards come with Raid
+> levels 0, 1, and 1 enhanced, which is implemented in hardware/firmware.
+>
+>
+> You could try looking here:
+> http://www.lsi.com/storage_home/products_home/internal_raid/index.html
 
-Oh forget it, I'm messing around in this area anyway, so all of these
-changes are not going to apply to tomorrow's -next tree at all.
+i think it's this one: 
+http://www.lsi.com/storage_home/products_home/internal_raid/megaraid_sas/megaraid_sas_8208elp/index.html
 
-I'll take this and get it working, give me a bit...
+in any case: LSI support site directs me to the megasr driver for my card. But 
+there is something wrong in either case:
 
-thanks,
+on machine 2: i did an rsync from machine A array 2 to machine B array 2 (SATA 
+disks of 1T in raid 1): speed is around 20MB/s probably due to load on 
+machine A, or whatever (machine B has nothing running whatsoever.)
 
-greg k-h
+hdparm -tT /dev/sdb shows between 50 and 80MB/s
+
+the moment i do an scp or rsync from something else, the first rsync drops 
+immediately to around 5MB/s, while the second doesn't do more than 5MB/s 
+(often one would show around 2MB/s.)
+
+at that time, the iowait (dual quad core) is above 90% ...
+
+Since both identical machines behave in the same matter, i believe there is 
+something seriously wrong with the megasr driver in the first place, and 
+tried to get support, but they request me to supply a serial number of the 
+card. (Both machines are already running in a colocation room).
+
+I had to patch it to work with 2.6.21, i'm wondering if i did anything stupid 
+in the patch. can you check that maybe? (it's a small patch)
+
+on the other hand, if there is an driver that works well, but just needs a 
+little work, i'll be happy to test this out.
+
+I'm just not a kernel devel, and don't really know how to solve this.
+
+the problem is just that i want to be helped one way or another.
+
+IF in your opinion the cards are not the best solution and i would have to 
+upgrade it, i can do that; but i suspect the megasr driver.
+
+am i wrong in my thinking?
+
+Sincerely,
+
+Maarten
