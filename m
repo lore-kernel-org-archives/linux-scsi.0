@@ -1,75 +1,46 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: fix bsg_mutex hang with device removal
-Date: Thu, 29 May 2008 07:56:55 +0900
-Message-ID: <20080529075655X.fujita.tomonori@lab.ntt.co.jp>
+From: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: [PATCH][-mm] reclassify sg_sysfs_class for lockdep
+Date: Thu, 29 May 2008 08:45:43 +0800
+Message-ID: <a8e1da0805281745g31c8217fk860dfe17cc674be5@mail.gmail.com>
+References: <20080527101009.GA3015@darkstar.te-china.tietoenator.com>
+	 <1211985600.3445.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:50657 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753322AbYE1XAM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2008 19:00:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755224AbYE2AqM@vger.kernel.org>
+In-Reply-To: <1211985600.3445.14.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: akpm@linux-foundation.org, greg@kroah.com, matthew@wil.cx, kay.sievers@vrfy.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, pw@osc.edu
 
-This is a patch to fix the bsg hang bug reported by Pete:
+On Wed, May 28, 2008 at 10:40 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Tue, 2008-05-27 at 18:10 +0800, Dave Young wrote:
+>> As register sg_interface, the sg_add will be called, which then will
+>> add device to sg_sysfs_class. This will cause lockdep warning,
+>> please see following email
+>>
+>> In this case the locks are from diffrent classi, one is sdev_class,
+>> another is sg_sysfs_class
+>>
+>> Here reclassify the sg_sysfs_class for lockdep
+>
+> This isn't really a generic solution, is it?  It only works because we
+> currently only have two users of the interface functions, so if we
+> reclassify one they look separate to lockdep.  It will fall over again
+> if we ever get another one.
+>
+> Surely the correct fix is to initialise lockdep for the mutex the same
+> way we did for the semaphore in class_register() (which does exactly the
+> same locking without triggering lockdep)?  That way we'll also fix the
+> problem for other conversions of semaphore->mutex.
 
-http://marc.info/?t=121182152200003&r=1&w=2
+Matthew & greg did the work already.
 
-==
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: fix bsg_mutex hang with device removal
+>From my original idea I don't want to do this for all classes, and I
+would think it as a rare case.
 
-We don't need to hold bsg_mutex during bsg_complete_all_commands(). It
-leads to a problem that we block bsg_unregister_queue during
-bsg_complete_all_commands (untill all the outstanding commands
-complete).
-
-Thanks to Pete Wyckoff for finding the bug and testing the patch.
-
-The detailed bug report is:
-
-http://marc.info/?l=linux-scsi&m=121182137132145&w=2
-
-Tested-by: Pete Wyckoff <pw@osc.edu>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index f0b7cd3..7cdec32 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -724,8 +724,13 @@ static int bsg_put_device(struct bsg_device *bd)
- 	mutex_lock(&bsg_mutex);
- 
- 	do_free = atomic_dec_and_test(&bd->ref_count);
--	if (!do_free)
-+	if (!do_free) {
-+		mutex_unlock(&bsg_mutex);
- 		goto out;
-+	}
-+
-+	hlist_del(&bd->dev_list);
-+	mutex_unlock(&bsg_mutex);
- 
- 	dprintk("%s: tearing down\n", bd->name);
- 
-@@ -741,10 +746,8 @@ static int bsg_put_device(struct bsg_device *bd)
- 	 */
- 	ret = bsg_complete_all_commands(bd);
- 
--	hlist_del(&bd->dev_list);
- 	kfree(bd);
- out:
--	mutex_unlock(&bsg_mutex);
- 	kref_put(&q->bsg_dev.ref, bsg_kref_release_function);
- 	if (do_free)
- 		blk_put_queue(q);
--- 
-1.5.3.6
-
+Regards
+dave
