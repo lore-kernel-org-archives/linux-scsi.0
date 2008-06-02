@@ -1,125 +1,80 @@
-From: akinobu.mita@gmail.com
-Subject: [patch -v2 23/23] qla2xxx: use memory_read_from_buffer
-Date: Mon, 02 Jun 2008 08:13:52 +0900
-Message-ID: <20080601231653.012518474@gmail.com>
-References: <20080601231329.223608711@gmail.com>
+From: "Gerb Stralko" <gerb.stralko@gmail.com>
+Subject: Re: [PATCH] scsi: remove CDROM not ready printk
+Date: Sun, 1 Jun 2008 20:45:38 -0400
+Message-ID: <75b57c110806011745t1af46305mddaf01f8c321857f@mail.gmail.com>
+References: <alpine.LFD.1.10.0805271502370.3985@localhost.localdomain>
+	 <20080529004154.bbc7b1d4.akpm@linux-foundation.org>
+	 <1212069932.3428.1.camel@localhost.localdomain>
+	 <75b57c110805290735i493eca0fp882f4a38901a416c@mail.gmail.com>
+	 <1212072912.3428.28.camel@localhost.localdomain>
+	 <75b57c110805290804p2280a6ffwf68174754db59e9c@mail.gmail.com>
+	 <1212074573.3428.32.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:2864 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756135AbYFAX3H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jun 2008 19:29:07 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so394806waf.23
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Jun 2008 16:29:07 -0700 (PDT)
-Content-Disposition: inline; filename=scsi-qla2xxx-use-memory-read-from-buffer.patch
+Received: from wx-out-0506.google.com ([66.249.82.234]:60537 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbYFBApk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jun 2008 20:45:40 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so515702wxd.4
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Jun 2008 17:45:38 -0700 (PDT)
+In-Reply-To: <1212074573.3428.32.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Andrew Vasquez <linux-driver@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Andrew Vasquez <linux-driver@qlogic.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/qla2xxx/qla_attr.c |   45 ++++++++--------------------------------
- 1 file changed, 10 insertions(+), 35 deletions(-)
+On Thu, May 29, 2008 at 11:22 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Thu, 2008-05-29 at 11:04 -0400, Gerb Stralko wrote:
+>> On Thu, May 29, 2008 at 10:55 AM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
+>> > On Thu, 2008-05-29 at 10:35 -0400, Gerb Stralko wrote:
+>> >> So is that printk really needed?  Should the kernel even need to print
+>> >> a message like that, esp. if user-space is handling state updates and
+>> >> notifications.  Or do i need to configure hald to be quietier?   FWIW
+>> >> I'm using fedora core 9 and hald version:
+>> >> -bash-3.2$ /usr/sbin/hald --version
+>> >> HAL package version: 0.5.11
+>> >
+>> > Actually, I misspoke; it's set internally via sets of ioctls.  However,
+>> > it's designed only to show on ioctls that do medium requiring things.
+>> >
+>> > I'm also using FC9 and I see no such messages (and for noisy cgc,
+>> > they're printed out for every action on the CD).  You have some
+>> > application that's poking the CD wrongly (probably not hal), so you
+>> > really need to find out what it is.  It may be pointing to some other
+>> > error in the kernel that needs fixing, but simply removing the message
+>> > is covering up the issue.
+>> >
+>> > To help track the application, you could update the printk to print out
+>> > current->comm and current->pid.  That would tell you who is responsible
+>> >
+>> > James
+>> >
+>> >
+>> >
+>> Okay, i'll do some investigation and see if I can track this down,
+>> I'll let you know.   Thanks for the info.
+>>
+>> Are you using GNOME or KDE?  I'm currently using KDE.
+>
+> I'm using gnome ... there are intermittent reports of kde problems
+> mainly with k3b though (the burner program), but if you put the printk
+> in it should identify the application.
+>
+> James
+>
+>
+>
+I download the fedora updates and I rebooted and the messages went
+away from my dmesg.   I left my computer on for a few hours and no
+message. So I guess I problem was fixed in one of the updates.
 
-Index: 2.6-git/drivers/scsi/qla2xxx/qla_attr.c
-===================================================================
---- 2.6-git.orig/drivers/scsi/qla2xxx/qla_attr.c
-+++ 2.6-git/drivers/scsi/qla2xxx/qla_attr.c
-@@ -8,6 +8,7 @@
- 
- #include <linux/kthread.h>
- #include <linux/vmalloc.h>
-+#include <linux/fs.h>
- 
- static int qla24xx_vport_disable(struct fc_vport *, bool);
- 
-@@ -20,18 +21,12 @@ qla2x00_sysfs_read_fw_dump(struct kobjec
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	char *rbuf = (char *)ha->fw_dump;
- 
- 	if (ha->fw_dump_reading == 0)
- 		return 0;
--	if (off > ha->fw_dump_len)
--                return 0;
--	if (off + count > ha->fw_dump_len)
--		count = ha->fw_dump_len - off;
- 
--	memcpy(buf, &rbuf[off], count);
--
--	return (count);
-+	return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
-+					ha->fw_dump_len);
- }
- 
- static ssize_t
-@@ -91,20 +86,13 @@ qla2x00_sysfs_read_nvram(struct kobject 
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int		size = ha->nvram_size;
--	char		*nvram_cache = ha->nvram;
- 
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &nvram_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->nvram,
-+					ha->nvram_size);
- }
- 
- static ssize_t
-@@ -172,14 +160,9 @@ qla2x00_sysfs_read_optrom(struct kobject
- 
- 	if (ha->optrom_state != QLA_SREADING)
- 		return 0;
--	if (off > ha->optrom_region_size)
--		return 0;
--	if (off + count > ha->optrom_region_size)
--		count = ha->optrom_region_size - off;
- 
--	memcpy(buf, &ha->optrom_buffer[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
-+					ha->optrom_region_size);
- }
- 
- static ssize_t
-@@ -371,20 +354,12 @@ qla2x00_sysfs_read_vpd(struct kobject *k
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int           size = ha->vpd_size;
--	char          *vpd_cache = ha->vpd;
- 
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &vpd_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_size);
- }
- 
- static ssize_t
+Thanks for you help.  Sorry for the noise.
 
--- 
+thanks again,
+
+Jerry
