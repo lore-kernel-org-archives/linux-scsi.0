@@ -1,42 +1,79 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 02 Jun 2008 14:54:30 -0400
-Message-ID: <484441E6.8020501@garzik.org>
-References: <12124164141515-patch-mail.ibm.com>	 <48441AEE.6050605@garzik.org> <48441F82.6060706@linux.vnet.ibm.com>	 <1212425124.3369.20.camel@localhost.localdomain>	 <4844312C.7010403@garzik.org> <1212429428.3369.45.camel@localhost.localdomain> <484437C3.8020306@garzik.org> <48444126.8050107@linux.vnet.ibm.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
+	REQ_TYPE_ATA_PC
+Date: Mon, 2 Jun 2008 21:14:10 +0200
+Message-ID: <20080602191410.GA15555@gollum.tnic>
+References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <48444126.8050107@linux.vnet.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@linux.vnet.ibm.com, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>
-Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.155]:55829 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbYFBTOM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2008 15:14:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so812212fgg.17
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2008 12:14:09 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org
 
-Brian King wrote:
-> One thing that having a per-port SCSI host buys us is that it isolates
-> EH to the port rather than the entire SCSI host. The way that the new
-> libata EH is designed, it can end up spending a fair amount of time
-> in EH and may even sleep for seconds at a time, waiting for the device
-> to come ready. Quiescing all devices on a SAS host due to a single
-> SATA device gets *very* painful. The new libata EH does much more than
-> just EH. It wakes up for every ATAPI check condition...
-> 
-> Before we can move to a single SCSI host model, we will
-> have to make some changes regarding how EH is done in libata...
+On Mon, Jun 02, 2008 at 03:57:30PM +0900, FUJITA Tomonori wrote:
+> Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
+> leads to memory corruption on a non-coherent platform.
+>=20
+> With regard to alignment and padding, ide-cd has the the dma safe
+> check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
+> check to that check.
+>=20
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Borislav Petkov <petkovbb@gmail.com>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-cd.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index e3f085c..e12d602 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_dr=
+ive_t *drive, struct request *rq)
+>  		struct request_queue *q =3D drive->queue;
+>  		unsigned int alignment;
+>  		unsigned long addr;
+> +		unsigned long stack_mask =3D ~(THREAD_SIZE - 1);
+> =20
+>  		if (rq->bio)
+>  			addr =3D (unsigned long)bio_data(rq->bio);
+> @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_d=
+rive_t *drive, struct request *rq)
+>  		alignment =3D queue_dma_alignment(q) | q->dma_pad_mask;
+>  		if (addr & alignment || rq->data_len & alignment)
+>  			info->dma =3D 0;
+> +
+> +		if (!((addr & stack_mask) ^
+> +		      ((unsigned long)current->stack & stack_mask)))
+> +			info->dma =3D 0;
+>  	}
+> =20
+>  	/* start sending the command to the drive */
+> --=20
+> 1.5.4.2
 
+Looks good, thanks.
 
-Good points.  There definitely needs to be a discussion about how to 
-integrate libata EH with libsas model and ipr model (which are distinct, 
-if similar).
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
-libata EH was coded to largely be "in the driver's seat", which isn't 
-true in a world where it is a peer to SAS devices.  Also libata EH 
-duplicates some of the link EH stuff that SAS deals with, and must 
-subsume (since libsas knows about both SAS and SATA phys, and an ideal 
-world doesn't have the two as separate as they are now).
-
-	Jeff
-
-
-
+--=20
+Regards/Gru=DF,
+    Boris.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
