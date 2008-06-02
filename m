@@ -1,86 +1,63 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 02 Jun 2008 14:35:08 -0500
-Message-ID: <1212435308.3369.58.camel@localhost.localdomain>
+Date: Mon, 02 Jun 2008 14:39:12 -0500
+Message-ID: <1212435552.3369.62.camel@localhost.localdomain>
 References: <12124164141515-patch-mail.ibm.com>
-	 <48441AEE.6050605@garzik.org>  <48441F82.6060706@linux.vnet.ibm.com>
+	 <48441AEE.6050605@garzik.org> <48441F82.6060706@linux.vnet.ibm.com>
 	 <1212425124.3369.20.camel@localhost.localdomain>
 	 <4844312C.7010403@garzik.org>
 	 <1212429428.3369.45.camel@localhost.localdomain>
-	 <484437C3.8020306@garzik.org>
+	 <484437C3.8020306@garzik.org> <48444126.8050107@linux.vnet.ibm.com>
+	 <484441E6.8020501@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <484437C3.8020306@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40151 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752896AbYFBTjU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2008 15:39:20 -0400
+In-Reply-To: <484441E6.8020501@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: brking@linux.vnet.ibm.com, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com
 
-On Mon, 2008-06-02 at 14:11 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > The quickest way seems to be to break the scsi_host <-> ata_port link by
-> > mapping scsi_host <-> ata_host instead.
+On Mon, 2008-06-02 at 14:54 -0400, Jeff Garzik wrote:
+> Brian King wrote:
+> > One thing that having a per-port SCSI host buys us is that it isolates
+> > EH to the port rather than the entire SCSI host. The way that the new
+> > libata EH is designed, it can end up spending a fair amount of time
+> > in EH and may even sleep for seconds at a time, waiting for the device
+> > to come ready. Quiescing all devices on a SAS host due to a single
+> > SATA device gets *very* painful. The new libata EH does much more than
+> > just EH. It wakes up for every ATAPI check condition...
+> > 
+> > Before we can move to a single SCSI host model, we will
+> > have to make some changes regarding how EH is done in libata...
 > 
-> Correct for newer controllers... not desirable for older master/slave
 > 
-> 
-> > Legacy controllers with only a
-> > single port can keep the apparent 1:1 mapping (we can even keep the
-> > hostdata stuff).
-> 
-> Not sure what you mean by this
+> Good points.  There definitely needs to be a discussion about how to 
+> integrate libata EH with libsas model and ipr model (which are distinct, 
+> if similar).
 
-I think it's possible to do the shift while still making it look to
-single port hosts that nothing has changed
+Actually, libsas completely hijacks the strategy handler (as I believe
+libata does), so it really no longer has a host dependency, except for
+the one thread per host thing.  Most of what it does (unless it thinks
+the actual host chip is wedged) is port (as in SAS port, not phy) based,
+so I think we have the capability for doing this already.
 
-> > Unfortunately, the standard way of doing this is via
-> > the transport classes, but as long as you have a pointer from the port
-> > to the host and from the device to the port (which you do) it should be
-> > possible.
-> 
-> I've always been open to an ATA transport class and thought that was the 
-> best way to go long term.  But I confess to not knowing the best way to 
-> implement that goal in concrete terms.
+> libata EH was coded to largely be "in the driver's seat", which isn't 
+> true in a world where it is a peer to SAS devices.  Also libata EH 
+> duplicates some of the link EH stuff that SAS deals with, and must 
+> subsume (since libsas knows about both SAS and SATA phys, and an ideal 
+> world doesn't have the two as separate as they are now).
 
-Perhaps it is best to approach it from what libsas needs, that way the
-structures can be made to map to each other.
-
-> > The downside I can see is that qc_defer handling changes non trivially
-> > because of this, but there don't seem to be many other issues.
-> 
-> There are a lot of little details that are easily fixable.
-> 
-> The main detail is not breaking queueing for master/slave. 
-> Master/slave, if you recall, _requires_ one-shost-per-port because it 
-> relies on scsi queueing to handle the balancing between master/slave. 
-> We set can_queue to 1, and for the 2-device case -- master and slave 
-> present -- SCSI does the heavy lifting to ensure proper arbitration.
-
-Well, we can be elastic on this.  The common case is a two port
-master/slave, isn't it.  This particular one could just be treated as
-two separate interfaces and hence two hosts (it's reasonably analagous
-to the 53c896---which is a single chip that presents two SCSI channels
-as two PCI functions).
-
-> Adding support for NCQ and qc_defer made it a bit easier to change the 
-> master/slave setup, though.
-> 
-> The other reason why we use one-short-per-port on master/slave is that, 
-> in many respects, each legacy IDE port really can behave like a 
-> completely separate controller, each port with its own interrupts and 
-> independent reset logic.
-> 
-> Thus ATA really has two models:  1-port-1-host and N-ports-1-host.
-> 
-> [meta:  I'm not disagreeing with you here, just explaining how all this 
-> came about...]
-
-OK ... so how bad would it be to maintain two attachment models for the
-two cases?  The architect in me says yuk because special casing like
-this always leads to complexity, but I can't see a simpler way of doing
-it.
+Yes ... there's even nastier scenarios.  If we're in a STP (SATA Tunnel
+Protocol) situation, the device at the end is SATA, but the pathway to
+get to it through the port is SAS via expanders.  In that situation the
+two have to co-operate on the recovery ... of course, this isn't
+incredibly dissimilar from port multipliers now.
 
 James
 
