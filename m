@@ -1,57 +1,78 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 -mm 3/6] block: blk_rq_map_kern uses the bounce buffers for stack buffers
-Date: Mon,  2 Jun 2008 15:57:29 +0900
-Message-ID: <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 -mm 5/6] scsi: sr avoids useless buffer allocation
+Date: Mon,  2 Jun 2008 15:57:31 +0900
+Message-ID: <1212389852-1277-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46907 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752456AbYFBHlI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2008 03:41:08 -0400
-In-Reply-To: <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+ <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
+List-Id: linux-scsi@vger.kernel.org
 
-blk_rq_map_kern is used for kernel internal I/Os. Some callers use
-this function with stack buffers but DMA to/from the stack buffers
-leads to memory corruption on a non-coherent platform.
-
-This patch make blk_rq_map_kern uses the bounce buffers if a caller
-passes a stack buffer (on the all platforms for simplicity).
+blk_rq_map_kern can handle the stack buffers correctly (avoid DMA
+from/to the stack buffers by using the bounce buffer) so we don't need
+to complicate the code by allocating just 8 bytes.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- block/blk-map.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/sr.c |   20 +++++---------------
+ 1 files changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 0b1af5a..6b0142b 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -268,6 +268,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	int reading = rq_data_dir(rq) == READ;
- 	int do_copy = 0;
- 	struct bio *bio;
-+	unsigned long stack_mask = ~(THREAD_SIZE - 1);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7ee86d4..c53701e 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -670,24 +670,20 @@ fail:
+ static void get_sectorsize(struct scsi_cd *cd)
+ {
+ 	unsigned char cmd[10];
+-	unsigned char *buffer;
++	unsigned char buffer[8];
+ 	int the_result, retries = 3;
+ 	int sector_size;
+ 	struct request_queue *queue;
  
- 	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
-@@ -278,6 +279,10 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
- 	do_copy = ((kaddr & alignment) || (len & alignment));
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+-	if (!buffer)
+-		goto Enomem;
+-
+ 	do {
+ 		cmd[0] = READ_CAPACITY;
+ 		memset((void *) &cmd[1], 0, 9);
+-		memset(buffer, 0, 8);
++		memset(buffer, 0, sizeof(buffer));
  
-+	if (!((kaddr & stack_mask) ^
-+	      ((unsigned long)current->stack & stack_mask)))
-+		do_copy = 1;
-+
- 	if (do_copy)
- 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
- 	else
+ 		/* Do the command and wait.. */
+ 		the_result = scsi_execute_req(cd->device, cmd, DMA_FROM_DEVICE,
+-					      buffer, 8, NULL, SR_TIMEOUT,
+-					      MAX_RETRIES);
++					      buffer, sizeof(buffer), NULL,
++					      SR_TIMEOUT, MAX_RETRIES);
+ 
+ 		retries--;
+ 
+@@ -742,14 +738,8 @@ static void get_sectorsize(struct scsi_cd *cd)
+ 
+ 	queue = cd->device->request_queue;
+ 	blk_queue_hardsect_size(queue, sector_size);
+-out:
+-	kfree(buffer);
+-	return;
+ 
+-Enomem:
+-	cd->capacity = 0x1fffff;
+-	cd->device->sector_size = 2048;	/* A guess, just in case */
+-	goto out;
++	return;
+ }
+ 
+ static void get_capabilities(struct scsi_cd *cd)
 -- 
 1.5.4.2
 
