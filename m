@@ -1,79 +1,87 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
-	REQ_TYPE_ATA_PC
-Date: Mon, 2 Jun 2008 21:14:10 +0200
-Message-ID: <20080602191410.GA15555@gollum.tnic>
-References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Reply-To: petkovbb@gmail.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
+Date: Mon, 02 Jun 2008 14:35:08 -0500
+Message-ID: <1212435308.3369.58.camel@localhost.localdomain>
+References: <12124164141515-patch-mail.ibm.com>
+	 <48441AEE.6050605@garzik.org>  <48441F82.6060706@linux.vnet.ibm.com>
+	 <1212425124.3369.20.camel@localhost.localdomain>
+	 <4844312C.7010403@garzik.org>
+	 <1212429428.3369.45.camel@localhost.localdomain>
+	 <484437C3.8020306@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:55829 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbYFBTOM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2008 15:14:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so812212fgg.17
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2008 12:14:09 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <484437C3.8020306@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org
 
-On Mon, Jun 02, 2008 at 03:57:30PM +0900, FUJITA Tomonori wrote:
-> Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
-> leads to memory corruption on a non-coherent platform.
->=20
-> With regard to alignment and padding, ide-cd has the the dma safe
-> check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
-> check to that check.
->=20
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-cd.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index e3f085c..e12d602 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_dr=
-ive_t *drive, struct request *rq)
->  		struct request_queue *q =3D drive->queue;
->  		unsigned int alignment;
->  		unsigned long addr;
-> +		unsigned long stack_mask =3D ~(THREAD_SIZE - 1);
-> =20
->  		if (rq->bio)
->  			addr =3D (unsigned long)bio_data(rq->bio);
-> @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_d=
-rive_t *drive, struct request *rq)
->  		alignment =3D queue_dma_alignment(q) | q->dma_pad_mask;
->  		if (addr & alignment || rq->data_len & alignment)
->  			info->dma =3D 0;
-> +
-> +		if (!((addr & stack_mask) ^
-> +		      ((unsigned long)current->stack & stack_mask)))
-> +			info->dma =3D 0;
->  	}
-> =20
->  	/* start sending the command to the drive */
-> --=20
-> 1.5.4.2
+On Mon, 2008-06-02 at 14:11 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > The quickest way seems to be to break the scsi_host <-> ata_port link by
+> > mapping scsi_host <-> ata_host instead.
+> 
+> Correct for newer controllers... not desirable for older master/slave
+> 
+> 
+> > Legacy controllers with only a
+> > single port can keep the apparent 1:1 mapping (we can even keep the
+> > hostdata stuff).
+> 
+> Not sure what you mean by this
 
-Looks good, thanks.
+I think it's possible to do the shift while still making it look to
+single port hosts that nothing has changed
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
+> > Unfortunately, the standard way of doing this is via
+> > the transport classes, but as long as you have a pointer from the port
+> > to the host and from the device to the port (which you do) it should be
+> > possible.
+> 
+> I've always been open to an ATA transport class and thought that was the 
+> best way to go long term.  But I confess to not knowing the best way to 
+> implement that goal in concrete terms.
 
---=20
-Regards/Gru=DF,
-    Boris.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Perhaps it is best to approach it from what libsas needs, that way the
+structures can be made to map to each other.
+
+> > The downside I can see is that qc_defer handling changes non trivially
+> > because of this, but there don't seem to be many other issues.
+> 
+> There are a lot of little details that are easily fixable.
+> 
+> The main detail is not breaking queueing for master/slave. 
+> Master/slave, if you recall, _requires_ one-shost-per-port because it 
+> relies on scsi queueing to handle the balancing between master/slave. 
+> We set can_queue to 1, and for the 2-device case -- master and slave 
+> present -- SCSI does the heavy lifting to ensure proper arbitration.
+
+Well, we can be elastic on this.  The common case is a two port
+master/slave, isn't it.  This particular one could just be treated as
+two separate interfaces and hence two hosts (it's reasonably analagous
+to the 53c896---which is a single chip that presents two SCSI channels
+as two PCI functions).
+
+> Adding support for NCQ and qc_defer made it a bit easier to change the 
+> master/slave setup, though.
+> 
+> The other reason why we use one-short-per-port on master/slave is that, 
+> in many respects, each legacy IDE port really can behave like a 
+> completely separate controller, each port with its own interrupts and 
+> independent reset logic.
+> 
+> Thus ATA really has two models:  1-port-1-host and N-ports-1-host.
+> 
+> [meta:  I'm not disagreeing with you here, just explaining how all this 
+> came about...]
+
+OK ... so how bad would it be to maintain two attachment models for the
+two cases?  The architect in me says yuk because special casing like
+this always leads to complexity, but I can't see a simpler way of doing
+it.
+
+James
+
+
