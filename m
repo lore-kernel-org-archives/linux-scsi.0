@@ -1,22 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 10846] New: Slow write on LSISAS1068E (SAS6/iR) on kernel
-	>= 2.6.22
-Date: Mon, 02 Jun 2008 10:11:03 -0500
-Message-ID: <1212419463.3369.10.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10846] Slow write on LSISAS1068E (SAS6/iR) on kernel >= 2.6.22
+Date: Mon,  2 Jun 2008 08:11:46 -0700 (PDT)
+Message-ID: <20080602151146.6F0CB11D108@picon.linux-foundation.org>
 References: <bug-10846-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:33680 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751244AbYFBPLI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2008 11:11:08 -0400
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40815 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750900AbYFBPMQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jun 2008 11:12:16 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m52FBkRG025915
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Jun 2008 08:11:47 -0700
 In-Reply-To: <bug-10846-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D10846
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-06-02 08:1=
+1 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Mon, 2008-06-02 at 07:57 -0700, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -49,6 +61,10 @@ your drive gives 55-89MB/s, so I'd say 81.8 is well within the range.
 James
 
 
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
