@@ -1,55 +1,57 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
-Date: Mon,  2 Jun 2008 15:57:30 +0900
-Message-ID: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 -mm 3/6] block: blk_rq_map_kern uses the bounce buffers for stack buffers
+Date: Mon,  2 Jun 2008 15:57:29 +0900
+Message-ID: <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:46907 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752456AbYFBHlI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jun 2008 03:41:08 -0400
+In-Reply-To: <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
-List-Id: linux-scsi@vger.kernel.org
 
-Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
+blk_rq_map_kern is used for kernel internal I/Os. Some callers use
+this function with stack buffers but DMA to/from the stack buffers
 leads to memory corruption on a non-coherent platform.
 
-With regard to alignment and padding, ide-cd has the the dma safe
-check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
-check to that check.
+This patch make blk_rq_map_kern uses the bounce buffers if a caller
+passes a stack buffer (on the all platforms for simplicity).
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ide/ide-cd.c |    5 +++++
+ block/blk-map.c |    5 +++++
  1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index e3f085c..e12d602 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		struct request_queue *q = drive->queue;
- 		unsigned int alignment;
- 		unsigned long addr;
-+		unsigned long stack_mask = ~(THREAD_SIZE - 1);
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 0b1af5a..6b0142b 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -268,6 +268,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	int reading = rq_data_dir(rq) == READ;
+ 	int do_copy = 0;
+ 	struct bio *bio;
++	unsigned long stack_mask = ~(THREAD_SIZE - 1);
  
- 		if (rq->bio)
- 			addr = (unsigned long)bio_data(rq->bio);
-@@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
- 		if (addr & alignment || rq->data_len & alignment)
- 			info->dma = 0;
+ 	if (len > (q->max_hw_sectors << 9))
+ 		return -EINVAL;
+@@ -278,6 +279,10 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+ 	do_copy = ((kaddr & alignment) || (len & alignment));
+ 
++	if (!((kaddr & stack_mask) ^
++	      ((unsigned long)current->stack & stack_mask)))
++		do_copy = 1;
 +
-+		if (!((addr & stack_mask) ^
-+		      ((unsigned long)current->stack & stack_mask)))
-+			info->dma = 0;
- 	}
- 
- 	/* start sending the command to the drive */
+ 	if (do_copy)
+ 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
+ 	else
 -- 
 1.5.4.2
 
