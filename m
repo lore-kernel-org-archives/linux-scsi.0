@@ -1,100 +1,72 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 -mm 1/6] block: add blk_queue_update_dma_pad
-Date: Mon,  2 Jun 2008 15:57:27 +0900
-Message-ID: <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 -mm 2/6] ide: use the dma safe check for REQ_TYPE_ATA_PC
+Date: Mon,  2 Jun 2008 15:57:28 +0900
+Message-ID: <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp, Tejun Heo <htejun@gmail.com>
+Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
 
-This adds blk_queue_update_dma_pad to prevent LLDs from overwriting
-the dma pad mask wrongly (we added blk_queue_update_dma_alignment due
-to the same reason).
+This uses the dma safe check for REQ_TYPE_ATA_PC. The dma safe check
+is used for only sg requests but it should be used for other non fs
+commands.
 
-This also converts libata to use blk_queue_update_dma_pad instead of
-blk_queue_dma_pad.
+This uses blk_queue_update_dma_pad to make the intention clear though
+ide don't use the blk APIs so it doesn't change anything.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- block/blk-settings.c      |   24 ++++++++++++++++++++----
- drivers/ata/libata-scsi.c |    3 ++-
- include/linux/blkdev.h    |    1 +
- 3 files changed, 23 insertions(+), 5 deletions(-)
+ drivers/ide/ide-cd.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 8dd8641..dfc7701 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -302,11 +302,10 @@ EXPORT_SYMBOL(blk_queue_stack_limits);
-  * @q:     the request queue for the device
-  * @mask:  pad mask
-  *
-- * Set pad mask.  Direct IO requests are padded to the mask specified.
-+ * Set dma pad mask.
-  *
-- * Appending pad buffer to a request modifies ->data_len such that it
-- * includes the pad buffer.  The original requested data length can be
-- * obtained using blk_rq_raw_data_len().
-+ * Appending pad buffer to a request modifies the last entry of a
-+ * scatter list such that it includes the pad buffer.
-  **/
- void blk_queue_dma_pad(struct request_queue *q, unsigned int mask)
- {
-@@ -315,6 +314,23 @@ void blk_queue_dma_pad(struct request_queue *q, unsigned int mask)
- EXPORT_SYMBOL(blk_queue_dma_pad);
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index d998471..e3f085c 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1191,10 +1191,15 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 	info->dma = 0;
  
- /**
-+ * blk_queue_update_dma_pad - update pad mask
-+ * @q:     the request queue for the device
-+ * @mask:  pad mask
-+ *
-+ * Update dma pad mask.
-+ *
-+ * Appending pad buffer to a request modifies the last entry of a
-+ * scatter list such that it includes the pad buffer.
-+ **/
-+void blk_queue_update_dma_pad(struct request_queue *q, unsigned int mask)
-+{
-+	if (mask > q->dma_pad_mask)
-+		q->dma_pad_mask = mask;
-+}
-+EXPORT_SYMBOL(blk_queue_update_dma_pad);
+ 	/* sg request */
+-	if (rq->bio) {
+-		int mask = drive->queue->dma_alignment;
+-		unsigned long addr =
+-			(unsigned long)page_address(bio_page(rq->bio));
++	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
++		struct request_queue *q = drive->queue;
++		unsigned int alignment;
++		unsigned long addr;
 +
-+/**
-  * blk_queue_dma_drain - Set up a drain buffer for excess dma.
-  * @q:  the request queue for the device
-  * @dma_drain_needed: fn which returns non-zero if drain is necessary
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index aeb6e01..60c0e28 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -885,7 +885,8 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 		/* set the min alignment and padding */
- 		blk_queue_update_dma_alignment(sdev->request_queue,
- 					       ATA_DMA_PAD_SZ - 1);
--		blk_queue_dma_pad(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
-+		blk_queue_update_dma_pad(sdev->request_queue,
-+					 ATA_DMA_PAD_SZ - 1);
++		if (rq->bio)
++			addr = (unsigned long)bio_data(rq->bio);
++		else
++			addr = (unsigned long)rq->data;
  
- 		/* configure draining */
- 		buf = kmalloc(ATAPI_MAX_DRAIN, q->bounce_gfp | GFP_KERNEL);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1171abd..5d8c339 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -748,6 +748,7 @@ extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
- extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
- extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
-+extern void blk_queue_update_dma_pad(struct request_queue *, unsigned int);
- extern int blk_queue_dma_drain(struct request_queue *q,
- 			       dma_drain_needed_fn *dma_drain_needed,
- 			       void *buf, unsigned int size);
+ 		info->dma = drive->using_dma;
+ 
+@@ -1204,7 +1209,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 * NOTE! The "len" and "addr" checks should possibly have
+ 		 * separate masks.
+ 		 */
+-		if ((rq->data_len & 15) || (addr & mask))
++		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
++		if (addr & alignment || rq->data_len & alignment)
+ 			info->dma = 0;
+ 	}
+ 
+@@ -1872,6 +1878,7 @@ static int ide_cdrom_setup(ide_drive_t *drive)
+ 
+ 	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
+ 	blk_queue_dma_alignment(drive->queue, 31);
++	blk_queue_update_dma_pad(drive->queue, 15);
+ 	drive->queue->unplug_delay = (1 * HZ) / 1000;
+ 	if (!drive->queue->unplug_delay)
+ 		drive->queue->unplug_delay = 1;
 -- 
 1.5.4.2
 
