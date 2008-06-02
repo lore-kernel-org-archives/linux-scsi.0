@@ -1,16 +1,12 @@
 From: Brian King <brking@linux.vnet.ibm.com>
 Subject: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
 Date: Mon, 02 Jun 2008 09:20:15 -0500
-Message-ID: <16639.3097061247$1212416524@news.gmane.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:36995 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857AbYFBOUf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2008 10:20:35 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Message-ID: <19148.2176109732$1212416534@news.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, brking@linux.vnet.ibm.com, miltonm@bga.com
+List-Id: linux-scsi@vger.kernel.org
 
 
 Currently, ipr does not support HDIO_GET_IDENTITY to SATA devices.
