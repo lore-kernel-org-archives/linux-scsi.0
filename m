@@ -1,50 +1,55 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 -mm 0/6] revert the commit 22a9189f (cdrom: use kmalloced buffers instead of buffers on stack)
-Date: Mon,  2 Jun 2008 15:57:26 +0900
-Message-ID: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46904 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751531AbYFBHlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2008 03:41:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
+Date: Mon,  2 Jun 2008 15:57:30 +0900
+Message-ID: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
+List-Id: linux-scsi@vger.kernel.org
 
-This is an updated version of the patchset to revert the commit
-22a9189fd073db3d03a4cf8b8c098aa207602de1 (cdrom: use kmalloced buffers
-instead of buffers on stack):
+Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
+leads to memory corruption on a non-coherent platform.
 
-http://marc.info/?l=linux-scsi&m=121125981930673&w=2
+With regard to alignment and padding, ide-cd has the the dma safe
+check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
+check to that check.
 
-The major change is that this version avoids DMA on the stack on all
-the platforms (for simplicity) while the previous version uses the
-dma_pad_mask on a non-coherent platform (in a bit hacky way).
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Borislav Petkov <petkovbb@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-cd.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-With thic patchset, blk_rq_map_kern() always uses the bounce buffers
-if a caller passes a stack buffer.
-
-ide-cd has a mechanism to handle DMA alignment and padding for
-SG_IO. This patchset extends the mechanism with regard to a stack
-buffer.
-
-This patchset is against -mm, replaces the following patches in -mm:
-
-cdrom-revert-commit-22a9189-cdrom-use-kmalloced-buffers-instead-of-buffers-on-stack.patch
-ide-use-the-dma-safe-check-for-req_type_ata_pc.patch 
-block-add-blk_queue_update_dma_pad.patch 
-block-use-arch_kmalloc_minalign-as-the-default-dma-pad-mask.patch
-
-The diffstat is:
-
- block/blk-map.c           |    5 +
- block/blk-settings.c      |   24 ++++-
- drivers/ata/libata-scsi.c |    3 +-
- drivers/cdrom/cdrom.c     |  274 +++++++++++++++------------------------------
- drivers/ide/ide-cd.c      |   22 +++-
- drivers/scsi/sr.c         |   20 +---
- include/linux/blkdev.h    |    1 +
- 7 files changed, 143 insertions(+), 206 deletions(-)
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index e3f085c..e12d602 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		struct request_queue *q = drive->queue;
+ 		unsigned int alignment;
+ 		unsigned long addr;
++		unsigned long stack_mask = ~(THREAD_SIZE - 1);
+ 
+ 		if (rq->bio)
+ 			addr = (unsigned long)bio_data(rq->bio);
+@@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+ 		if (addr & alignment || rq->data_len & alignment)
+ 			info->dma = 0;
++
++		if (!((addr & stack_mask) ^
++		      ((unsigned long)current->stack & stack_mask)))
++			info->dma = 0;
+ 	}
+ 
+ 	/* start sending the command to the drive */
+-- 
+1.5.4.2
 
