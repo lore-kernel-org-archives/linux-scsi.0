@@ -1,72 +1,40 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10846] Slow write on LSISAS1068E (SAS6/iR) on kernel >= 2.6.22
-Date: Mon,  2 Jun 2008 08:11:46 -0700 (PDT)
-Message-ID: <20080602151146.6F0CB11D108@picon.linux-foundation.org>
-References: <bug-10846-11613@http.bugzilla.kernel.org/>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
+Date: Mon, 02 Jun 2008 12:08:14 -0400
+Message-ID: <48441AEE.6050605@garzik.org>
+References: <12124164141515-patch-mail.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40815 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750900AbYFBPMQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2008 11:12:16 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m52FBkRG025915
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Jun 2008 08:11:47 -0700
-In-Reply-To: <bug-10846-11613@http.bugzilla.kernel.org/>
+Received: from srv5.dvmed.net ([207.36.208.214]:43905 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752595AbYFBQIU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jun 2008 12:08:20 -0400
+In-Reply-To: <12124164141515-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D10846
+Brian King wrote:
+> Currently, ipr does not support HDIO_GET_IDENTITY to SATA devices.
+> An oops occurs if userspace attempts to send the command. Since hald
+> issues the command, ensure we fail the ioctl in ipr. This is a
+> temporary solution to the oops. Once the ipr libata EH conversion
+> is upstream, ipr will fully support HDIO_GET_IDENTITY.
+> 
+> Tested-by: Milton Miller <miltonm@bga.com>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+> 
+>  linux-2.6-bjking1/drivers/scsi/ipr.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 
+I was pretty happy with the rough draft of your EH conversion...  where 
+does that stand now?
 
-
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-06-02 08:1=
-1 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Mon, 2008-06-02 at 07:57 -0700, bugme-daemon@bugzilla.kernel.org
-wrote:
-> Very easy: We also check for an untar of the kernel (5x slower)
-> debian-test:~# dd if=3D/dev/zero of=3D/root/test.cdrom bs=3D10k count=
-=3D60000
-> 60000+0 enregistrements lus
-> 60000+0 enregistrements =C3=A9crits
-> 614400000 octets (614 MB) copi=C3=A9s, 1,17602 seconde, 522 MB/s
-> debian-test:~# uname -a
-> Linux debian-test.pr.univmed.fr 2.6.19.7 #1 SMP Fri May 30 15:55:50
-> CEST 2008
-> i686 GNU/Linux
->=20
-> debian:~# dd if=3D/dev/zero of=3Dtest.cdrom  bs=3D10k count=3D60000
-> 60000+0 records in
-> 60000+0 records out
-> 614400000 bytes (614 MB) copied, 7.51225 seconds, 81.8 MB/s
-> debian:~# uname -a
-> Linux debian 2.6.22-4-vserver-686 #1 SMP Tue Feb 12 22:02:04 UTC 2008
-> i686
-> GNU/Linux
-
-What exactly is test.cdrom on?  A single disk?  If so, then your first
-result is definitely bogus.  The maximum bandwidth of a single SAS link
-is 300 MB/s, so it looks like the kernel is either caching the write or
-has timing issues.  For a direct to platter speed, the data sheet for
-your drive gives 55-89MB/s, so I'd say 81.8 is well within the range.
-
-James
+	Jeff
 
 
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
