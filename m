@@ -1,62 +1,72 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10846] Slow write on LSISAS1068E (SAS6/iR) on kernel >= 2.6.22
-Date: Tue,  3 Jun 2008 13:15:34 -0700 (PDT)
-Message-ID: <20080603201534.BE46411D109@picon.linux-foundation.org>
-References: <bug-10846-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SG_IO problem on tape devices
+Date: Tue, 03 Jun 2008 15:15:59 -0500
+Message-ID: <1212524159.3329.18.camel@localhost.localdomain>
+References: <1212479982.5079.58.camel@pcitfio23.cern.ch>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53995 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755506AbYFCUQH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2008 16:16:07 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m53KFYN5009501
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Jun 2008 13:15:35 -0700
-In-Reply-To: <bug-10846-11613@http.bugzilla.kernel.org/>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33371 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752712AbYFCUQE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2008 16:16:04 -0400
+In-Reply-To: <1212479982.5079.58.camel@pcitfio23.cern.ch>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arne Wiebalck <arne.wiebalck@cern.ch>
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10846
-
-
-
-
-
-------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-06-03 13:15 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Tue, 2008-06-03 at 09:09 -0700, bugme-daemon@bugzilla.kernel.org
-wrote: 
-> Should we consider, that such a difference is normal. You suggest that before
-> the kernel was dangerous at writing data?
-
-It's caching too much streaming data, yes.  The danger is largely the
-amount of data you lose on a crash and mismanagement of the cache
-starving other applications. It's not that much of a problem.  At an
-estimated write speed of ~70MB/s your 1GB of data is only around 15s to
-effect a full writeout.
-
-> So unpacking linux kernel (for example) is 5x times slower and it is not a
-> problem. That's just new way of caching data? We seldom see crashes (thanks to
-> linux) and we have power supply.
-
-There are many factors that could account for that.
-
-> I'd like testing on same hardware windows to see its behaviour and speed.
-> Anyway thanks for the clarifying of cache: write through. As you say, it was
-> not evident. 
+On Tue, 2008-06-03 at 09:59 +0200, Arne Wiebalck wrote: 
+> Hi all,
 > 
-> So, now, what can we do to keep 2.6.21 behaviour? That's for a mail system
-> writing lots of little files and performance matters too.
+> I got a problem using the SG_IO ioctl with our tape drives. 
+> In order to examine errors on our drives in more detail, I 
+> would like to make the sense bytes available to the 
+> application using the REQUEST_SENSE command.
+> 
+> However, there's a discrepancy between the kernel output in
+> /var/log/messages and what I see using SG_IO within my 
+> application: while the kernel sees
+> 
+> kernel: st0: Error with sense data: scsi1 : destination target 0, lun 0
+> kernel:         command = Space 01 00 0d d5 00
+> kernel: Info fld=0x1, Current st0: sense key Medium Error
+> kernel: Additional sense: Read retries exhausted
+> kernel: Raw sense data:0xf0 0x00 0x03 0x00 0x00 0x00 0x01 0x12 0x00 0x00
+> 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00 0x37 0xf7 0x10 0x01 0x00 0x00
+> 0xf7 0x37
+> 
+> (which is realistic) the ioctl reports something like
+> 
+> 70 00 00 00 00 00 00 12  00 00 00 00 00 00 00 00
+> 00 00 00 00 00 00 00 00  10 02
+> 
+> (since the first bit is not set, the sense bytes are not even valid,
+> as far as I understand).
+> 
+> So, could it be that the sense bytes are already cleared when I request
+> them? They cleared/set by the next SCSI cmd, I assume? But shouldn't
+> they be valid even then?
+> 
+> I also tried the sg3-utils to query the drive's sense bytes, and they
+> report (almost) the same sense bytes as SG_IO inside my application
+> does. Sending an INQUIRY cmd using sg3_utils works fine, btw.
+> 
+> Maybe that's all a plain usage error, so please find the code I use
+> below.
+> 
+> Anything obvious I am doing wrong here? All comments appreciated. 
 
-Well, initially, I'd try a benchmark that simulates the actual problem,
-like postmark.  A streaming write tells you very little about the entire
-system performance under a mail server type load.
+Yes: SCSI automatically requests sense in response to a check condition.
+So, the sense should be attached to the SG_IO command that receives the
+error.  You can't do an additional request sense for it because the
+sense has already been cleared by the automatic request sense the
+mid-layer did.
+
+Does the sense data really not get returned by the SG_IO command that
+actually encounters the check condition return?
 
 James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
