@@ -1,78 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Tue, 3 Jun 2008 11:02:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0806031047380.2363-100000@iolanthe.rowland.org>
-References: <48328E81.2080504@panasas.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10846] Slow write on LSISAS1068E (SAS6/iR) on kernel >= 2.6.22
+Date: Tue,  3 Jun 2008 09:09:02 -0700 (PDT)
+Message-ID: <20080603160902.B120A10805D@picon.linux-foundation.org>
+References: <bug-10846-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60946 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752263AbYFCPCH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2008 11:02:07 -0400
-In-Reply-To: <48328E81.2080504@panasas.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39638 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752352AbYFCQJd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2008 12:09:33 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m53G928i023167
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Jun 2008 09:09:03 -0700
+In-Reply-To: <bug-10846-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 20 May 2008, Boaz Harrosh wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=10846
 
-> Alan Stern wrote:
-> 
-> > MODE SENSE is just one example of a command for which a device might
-> > return less data than the host expected.  In principle the same thing
-> > could happen with _any_ command.  The host should be prepared for this
-> > and should be able to handle it correctly.  And the host shouldn't
-> > blindly assume that devices will slavishly follow the letter of the
-> > SCSI spec.
 
-...
 
-> > We need something much more thorough than just fiddling with
-> > scsi_mode_sense().  One possibility would be to pass a
-> > minimum-response-length argument to scsi_execute_req().  But even that
-> > wouldn't catch all the code paths where this sort of thing could  
-> > happen (although it probably would catch most of them).
 
-What do you think of a patch like this?
 
-Index: usb-2.6/include/linux/blkdev.h
-===================================================================
---- usb-2.6.orig/include/linux/blkdev.h
-+++ usb-2.6/include/linux/blkdev.h
-@@ -221,6 +221,7 @@ struct request {
- 
- 	unsigned int data_len;
- 	unsigned int extra_len;	/* length of alignment and padding */
-+	unsigned int min_data_len;
- 	unsigned int sense_len;
- 	void *data;
- 	void *sense;
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -1125,6 +1125,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
- 		ret = scsi_init_io(cmd, GFP_ATOMIC);
- 		if (unlikely(ret))
- 			return ret;
-+		cmd->underflow = req->min_data_len;
- 	} else {
- 		BUG_ON(req->data_len);
- 		BUG_ON(req->data);
+------- Comment #5 from dom.lalot@gmail.com  2008-06-03 09:09 -------
+James,
 
-Combined with an extra minimum-data-length argument to scsi_execute()
-and scsi_execute_req(), this ought to solve the problem.
+Should we consider, that such a difference is normal. You suggest that before
+the kernel was dangerous at writing data?
+So unpacking linux kernel (for example) is 5x times slower and it is not a
+problem. That's just new way of caching data? We seldom see crashes (thanks to
+linux) and we have power supply.
 
-(To refresh your memory: The problem is that a weird device responds to 
-MODE SENSE with Residue equal to the data length -- so none of the 
-returned data is valid -- and Okay status.)
+I'd like testing on same hardware windows to see its behaviour and speed.
+Anyway thanks for the clarifying of cache: write through. As you say, it was
+not evident. 
 
-Alan Stern
+So, now, what can we do to keep 2.6.21 behaviour? That's for a mail system
+writing lots of little files and performance matters too.
 
-P.S.: Maybe a safer approach would be to add a new flag bit in struct
-request.  Normally the flag would be clear, indicating that for
-BLOCK_PC requests, scmd->underflow should be set to 0.  But when the
-flag is set, scmd->underflow would be set to req->data_len.
+Dom
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
