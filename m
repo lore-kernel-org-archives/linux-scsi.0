@@ -1,104 +1,101 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 7/7] scsi: Support fail fast bits
-Date: Wed,  4 Jun 2008 20:41:46 -0500
-Message-ID: <1212630106-13413-8-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/7] iscsi class, libiscsi and qla4xxx: convert to new transport host byte values
+Date: Wed,  4 Jun 2008 20:41:41 -0500
+Message-ID: <1212630106-13413-3-git-send-email-michaelc@cs.wisc.edu>
 References: <1212630106-13413-1-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-2-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-3-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-4-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-5-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-6-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-7-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1212630106-13413-7-git-send-email-michaelc@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+ <1212630106-13413-2-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:49881 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755861AbYFEBlz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jun 2008 21:41:55 -0400
+In-Reply-To: <1212630106-13413-2-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 Cc: Mike Christie <michaelc@cs.wisc.edu>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This converts scsi decide disposition to handle to the different
-types of failfast that can be requested.
-
-I was not sure if some of these were device or driver or transport
-errors. For example I made DID_PARITY a device error, but I thought
-maybe this could be a device or transport error. Also DID_ERROR seems
-to be used for lots of different errors, so I was not sure how
-to classify it.
+This patch converts the iscsi drivers to the new host byte values.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi_error.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/libiscsi.c             |    6 +++---
+ drivers/scsi/qla4xxx/ql4_isr.c      |    4 ++--
+ drivers/scsi/scsi_transport_iscsi.c |    4 ++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d257210..555085a 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1288,6 +1288,7 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
- int scsi_decide_disposition(struct scsi_cmnd *scmd)
- {
- 	int rtn;
-+	int retry_flag = 0;
- 
- 	/*
- 	 * if the device is offline, then we clearly just pass the result back
-@@ -1337,6 +1338,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * and not get stuck in a loop.
- 		 */
- 	case DID_SOFT_ERROR:
-+		retry_flag = REQ_FAILFAST_DRIVER;
- 		goto maybe_retry;
- 	case DID_IMM_RETRY:
- 		return NEEDS_RETRY;
-@@ -1368,10 +1370,13 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 			 * lower down
- 			 */
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 010c1b9..055c196 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1132,7 +1132,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 		switch (session->state) {
+ 		case ISCSI_STATE_IN_RECOVERY:
+ 			reason = FAILURE_SESSION_IN_RECOVERY;
+-			sc->result = DID_IMM_RETRY << 16;
++			sc->result = DID_TRANSPORT_DISRUPTED << 16;
  			break;
--		/* fallthrough */
--
-+		retry_flag = REQ_FAILFAST_DRIVER;
-+		goto maybe_retry;
- 	case DID_BUS_BUSY:
-+		retry_flag = REQ_FAILFAST_TRANSPORT;
-+		goto maybe_retry;
- 	case DID_PARITY:
-+		retry_flag = REQ_FAILFAST_DEV;
- 		goto maybe_retry;
- 	case DID_TIME_OUT:
+ 		case ISCSI_STATE_LOGGING_OUT:
+ 			reason = FAILURE_SESSION_LOGGING_OUT;
+@@ -1140,7 +1140,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 			break;
+ 		case ISCSI_STATE_RECOVERY_FAILED:
+ 			reason = FAILURE_SESSION_RECOVERY_TIMEOUT;
+-			sc->result = DID_NO_CONNECT << 16;
++			sc->result = DID_TRANSPORT_FAILFAST << 16;
+ 			break;
+ 		case ISCSI_STATE_TERMINATE:
+ 			reason = FAILURE_SESSION_TERMINATE;
+@@ -2233,7 +2233,7 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
+ 	 */
+ 	spin_lock_bh(&session->lock);
+ 	fail_all_commands(conn, -1,
+-			STOP_CONN_RECOVER ? DID_BUS_BUSY : DID_ERROR);
++			STOP_CONN_RECOVER ? DID_TRANSPORT_DISRUPTED : DID_ERROR);
+ 	flush_control_queues(session, conn);
+ 	spin_unlock_bh(&session->lock);
+ 	mutex_unlock(&session->eh_mutex);
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index a91a57c..799120f 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -139,7 +139,7 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
+ 			      ha->host_no, cmd->device->channel,
+ 			      cmd->device->id, cmd->device->lun));
+ 
+-		cmd->result = DID_BUS_BUSY << 16;
++		cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 
  		/*
-@@ -1420,8 +1425,10 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		return SUCCESS;
- 	case CHECK_CONDITION:
- 		rtn = scsi_check_sense(scmd);
--		if (rtn == NEEDS_RETRY)
-+		if (rtn == NEEDS_RETRY) {
-+			retry_flag = REQ_FAILFAST_DEV;
- 			goto maybe_retry;
-+		}
- 		/* if rtn == FAILED, we have no sense information;
- 		 * returning FAILED will wake the error handler thread
- 		 * to collect the sense and redo the decide
-@@ -1451,8 +1458,8 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 * the request was not marked fast fail.  Note that above,
- 	 * even if the request is marked fast fail, we still requeue
- 	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
--	if ((++scmd->retries) <= scmd->allowed
--	    && !blk_noretry_request(scmd->request)) {
-+	if ((++scmd->retries) <= scmd->allowed &&
-+	    !(scmd->request->cmd_flags & retry_flag)) {
- 		return NEEDS_RETRY;
- 	} else {
- 		/*
+ 		 * Mark device missing so that we won't continue to send
+@@ -243,7 +243,7 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
+ 		if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
+ 			qla4xxx_mark_device_missing(ha, ddb_entry);
+ 
+-		cmd->result = DID_BUS_BUSY << 16;
++		cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 		break;
+ 
+ 	case SCS_QUEUE_FULL:
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 65d1737..b5a529c 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -258,10 +258,10 @@ int iscsi_session_chkready(struct iscsi_cls_session *session)
+ 		err = 0;
+ 		break;
+ 	case ISCSI_SESSION_FAILED:
+-		err = DID_IMM_RETRY << 16;
++		err = DID_TRANSPORT_DISRUPTED << 16;
+ 		break;
+ 	case ISCSI_SESSION_FREE:
+-		err = DID_NO_CONNECT << 16;
++		err = DID_TRANSPORT_FAILFAST << 16;
+ 		break;
+ 	default:
+ 		err = DID_NO_CONNECT << 16;
 -- 
 1.5.4.1
+
