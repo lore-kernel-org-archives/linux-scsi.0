@@ -1,79 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
-	REQ_TYPE_ATA_PC
-Date: Thu, 05 Jun 2008 11:10:48 -0500
-Message-ID: <1212682248.13549.48.camel@localhost.localdomain>
-References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Thu, 5 Jun 2008 10:02:34 -0700
+Message-ID: <e9c3a7c20806051002u2d26f24eqcffed98de02ffa60@mail.gmail.com>
+References: <patchbomb.1212643369@sermon.lab.mkp.net>
+	 <20080605062754.GQ2961@webber.adilger.int>
+	 <20080605123515.GM3549@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-arch-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org, Roman Zippel <zippel@linux-m68k.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ti-out-0910.google.com ([209.85.142.186]:44411 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756701AbYFERCh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 13:02:37 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so222852tic.23
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Jun 2008 10:02:35 -0700 (PDT)
+In-Reply-To: <20080605123515.GM3549@parisc-linux.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andreas Dilger <adilger@sun.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, 2008-06-02 at 15:57 +0900, FUJITA Tomonori wrote:
-> Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
-> leads to memory corruption on a non-coherent platform.
-> 
-> With regard to alignment and padding, ide-cd has the the dma safe
-> check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
-> check to that check.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-cd.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index e3f085c..e12d602 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
->  		struct request_queue *q = drive->queue;
->  		unsigned int alignment;
->  		unsigned long addr;
-> +		unsigned long stack_mask = ~(THREAD_SIZE - 1);
->  
->  		if (rq->bio)
->  			addr = (unsigned long)bio_data(rq->bio);
-> @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
->  		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
->  		if (addr & alignment || rq->data_len & alignment)
->  			info->dma = 0;
-> +
-> +		if (!((addr & stack_mask) ^
-> +		      ((unsigned long)current->stack & stack_mask)))
+On Thu, Jun 5, 2008 at 5:35 AM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Thu, Jun 05, 2008 at 12:27:54AM -0600, Andreas Dilger wrote:
+>> To be honest, however, having the information exported only via sysfs
+>> is a bit ugly IMHO.  I've had all sorts of grief with settings there
+>> because there isn't always a match between the device that is being
+>> specified by the user and what appears in sysfs (e.g. /dev/disk/by-id/foo
+>> doesn't match /sys/block/sda) and hoops have to be jumped through to
+>> find this mapping, before parsing a text value in C.
+>
+> readlink() is too hard?
+>
+> $ readlink /dev/disk/by-id/ata-FUJITSU_MHV2080AH_NT61T6325UGM
+> ../../hda
+>
+>> Having an ioctl() that can be called on the block device (getting
+>> the right device regardless of its name) seems a lot more useful to
+>> applications in my experience, unless you are using a script.
+>
+> It's certainly easier.
+>
 
-That can basically become
+We've had this discussion before:
 
-if ((addr & stack_mask)  == ((unsigned long)current->stack & stack_mask))
+http://marc.info/?t=120641785300005&r=6&w=2
 
-to be a bit clearer, can't it?
+...and it resulted in this patch that is pending is Greg's tree:
 
-I'm also not keen on the use of current->stack.  It looks like this
-commit:
+http://git.kernel.org/?p=linux/kernel/git/gregkh/patches.git;a=blob;f=driver-core/sysfs-add-sys-dev-char-block-to-lookup-sysfs-path-by-major-minor.patch;h=ed9a41a564f73db74f7260f24552352ab86bc893;hb=HEAD
 
-commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
-Author: Roman Zippel <zippel@linux-m68k.org>
-Date:   Wed May 9 02:35:17 2007 -0700
-
-    rename thread_info to stack
-
-Introduced a task_stack_page() accessor to get this instead, so perhaps
-we should use it (I've cc'd Roman and linux-arch for opinions).
-
-> +			info->dma = 0;
->  	}
->  
->  	/* start sending the command to the drive */
-
-James
+Regards,
+Dan
