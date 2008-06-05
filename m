@@ -1,51 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1 of 3] block: Export I/O hints for block devices and
-	partitions
-Date: Thu, 05 Jun 2008 09:42:37 -0500
-Message-ID: <1212676957.13549.23.camel@localhost.localdomain>
-References: <3e5d8520d247223a236e.1212643370@sermon.lab.mkp.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
+Date: Thu, 5 Jun 2008 23:49:11 +0900
+Message-ID: <20080605231914Z.fujita.tomonori@lab.ntt.co.jp>
+References: <20080604235053K.fujita.tomonori@lab.ntt.co.jp>
+	<873antuojg.fsf@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <3e5d8520d247223a236e.1212643370@sermon.lab.mkp.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:32908 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753928AbYFEOtY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jun 2008 10:49:24 -0400
+In-Reply-To: <873antuojg.fsf@basil.nowhere.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: andi@firstfloor.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, mgross@linux.intel.com, linux-scsi@vger.kernel.org
 
-On Thu, 2008-06-05 at 01:22 -0400, Martin K. Petersen wrote:
-> 3 files changed, 74 insertions(+)
-> block/genhd.c         |   39 +++++++++++++++++++++++++++++++++++++++
-> fs/partitions/check.c |   11 +++++++++++
-> include/linux/genhd.h |   24 ++++++++++++++++++++++++
+On Wed, 04 Jun 2008 18:56:35 +0200
+Andi Kleen <andi@firstfloor.org> wrote:
 
-This looks good.  However, the first observation I would have is that
-the hints should be extensible without disrupting existing code.
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> writes:
+> >
+> > I'm just interested in other people's opinions on IOMMU
+> > implementations, performances, possible future changes for performance
+> > improvement, etc.
+> 
+> I think using the bitmap is an excellent idea and your numbers look good. 
+> Do you have numbers on the memory consumption too?
+> Trading some memory for performance is ok for something as performance critical 
+> as the IOMMU. 
 
-Something like
+If we use 4GB virtual DMA address space (as the patch does), we need
+128 KB for the bitmap for one domain.
 
-enum disk_hint {
-	DISK_HINT_OFFSET,
-	DISK_HINT_BLOCK,
-	DISK_HINT_LEN,
-};
-
-void disk_set_io_hints(struct gendisk *disk, enum disk_hint hint, u64 value) {
-	switch (hint) {
-	case DISK_HINT_OFFSET:
-		disk->phys_offset = (sector_t)val;
-		break;
-...
-etc.
-
-Because I can just bet we will find other hints that people want adding.
-
-I'm also not entirely sure that zero should be the no-hint value, but I
-could be persuaded on that because I can't see a case where setting zero
-to mean I'm telling you I definitely don't care should be different from
-not setting it.
-
-James
-
-
+With the RB tree, the memory consumption depends on how many addresses
+are mapped (it needs one entry for one address though we could merge
+multiple addresses).
