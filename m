@@ -1,71 +1,90 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
-Date: Thu, 05 Jun 2008 14:01:28 -0500
-Message-ID: <1212692488.4241.8.camel@localhost.localdomain>
-References: <20080604235053K.fujita.tomonori@lab.ntt.co.jp>
-	 <da824cf30806041106p1de2355fg38594fcb9dcbf203@mail.gmail.com>
-	 <20080605235322L.fujita.tomonori@lab.ntt.co.jp>
-	 <da824cf30806051134u4fb8d419p2ba2dafcb1ba33a7@mail.gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
+	REQ_TYPE_ATA_PC
+Date: Thu, 5 Jun 2008 21:14:37 +0200
+Message-ID: <20080605191437.GA7479@gollum.tnic>
+References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212682248.13549.48.camel@localhost.localdomain>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762987AbYFETBo@vger.kernel.org>
-In-Reply-To: <da824cf30806051134u4fb8d419p2ba2dafcb1ba33a7@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mgross@linux.intel.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arch-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1212682248.13549.48.camel@localhost.localdomain>
+Sender: linux-arch-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org, Roman Zippel <zippel@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2008-06-05 at 11:34 -0700, Grant Grundler wrote:
-> On Thu, Jun 5, 2008 at 7:49 AM, FUJITA Tomonori
-> <fujita.tomonori@lab.ntt.co.jp> wrote:
-> ...
-> >> You can easily emulate SSD drives by doing sequential 4K reads
-> >> from a normal SATA HD. That should result in ~7-8K IOPS since the disk
-> >> will recognize the sequential stream and read ahead. SAS/SCSI/FC will
-> >> probably work the same way with different IOP rates.
-> >
-> > Yeah, probabaly right. I thought that 10GbE give the IOMMU more
-> > workloads than SSD does and tried to emulate something like that.
-> 
-> 10GbE might exercise a different code path. NICs typically use map_single
+On Thu, Jun 05, 2008 at 11:10:48AM -0500, James Bottomley wrote:
+> On Mon, 2008-06-02 at 15:57 +0900, FUJITA Tomonori wrote:
+> > Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
+> > leads to memory corruption on a non-coherent platform.
+> >=20
+> > With regard to alignment and padding, ide-cd has the the dma safe
+> > check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buff=
+er
+> > check to that check.
+> >=20
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/ide/ide-cd.c |    5 +++++
+> >  1 files changed, 5 insertions(+), 0 deletions(-)
+> >=20
+> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > index e3f085c..e12d602 100644
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_=
+drive_t *drive, struct request *rq)
+> >  		struct request_queue *q =3D drive->queue;
+> >  		unsigned int alignment;
+> >  		unsigned long addr;
+> > +		unsigned long stack_mask =3D ~(THREAD_SIZE - 1);
+> > =20
+> >  		if (rq->bio)
+> >  			addr =3D (unsigned long)bio_data(rq->bio);
+> > @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide=
+_drive_t *drive, struct request *rq)
+> >  		alignment =3D queue_dma_alignment(q) | q->dma_pad_mask;
+> >  		if (addr & alignment || rq->data_len & alignment)
+> >  			info->dma =3D 0;
+> > +
+> > +		if (!((addr & stack_mask) ^
+> > +		      ((unsigned long)current->stack & stack_mask)))
+>=20
+> That can basically become
+>=20
+> if ((addr & stack_mask)  =3D=3D ((unsigned long)current->stack & stac=
+k_mask))
+>=20
+> to be a bit clearer, can't it?
 
-map_page, actually, but effectively the same thing.  However, all
-they're really doing is their own implementation of sg list mapping.
+yep, yep. Clearer it is :).
+>=20
+> I'm also not keen on the use of current->stack.  It looks like this
+> commit:
+>=20
+> commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
+> Author: Roman Zippel <zippel@linux-m68k.org>
+> Date:   Wed May 9 02:35:17 2007 -0700
+>=20
+>     rename thread_info to stack
+>=20
+> Introduced a task_stack_page() accessor to get this instead, so perha=
+ps
+> we should use it (I've cc'd Roman and linux-arch for opinions).
+>=20
+> > +			info->dma =3D 0;
+> >  	}
+> > =20
+> >  	/* start sending the command to the drive */
+>=20
+> James
+>=20
 
-> and storage devices typically use map_sg.  But they both exercise the same
-> underlying resource management code since it's the same IOMMU they poke at.
-> 
-> ...
-> >> Sorry, I didn't see a replacement for the deferred_flush_tables.
-> >> Mark Gross and I agree this substantially helps with unmap performance.
-> >> See http://lkml.org/lkml/2008/3/3/373
-> >
-> > Yeah, I can add a nice trick in parisc sba_iommu uses. I'll try next
-> > time.
-> >
-> > But it probably gives the bitmap method less gain than the RB tree
-> > since clear the bitmap takes less time than changing the tree.
-> >
-> > The deferred_flush_tables also batches flushing TLB. The patch flushes
-> > TLB only when it reaches the end of the bitmap (it's a trick that some
-> > IOMMUs like SPARC does).
-> 
-> The batching of the TLB flushes is the key thing. I was being paranoid
-> by not marking the resource free until after the TLB was flushed. If we
-> know the allocation is going to be circular through the bitmap, flushing
-> the TLB once per iteration through the bitmap should be sufficient since
-> we can guarantee the IO Pdir resource won't get re-used until a full
-> cycle through the bitmap has been completed.
-
-Not necessarily ... there's a safety vs performance issue here.  As long
-as the iotlb mapping persists, the device can use it to write to the
-memory.  If you fail to flush, you lose the ability to detect device dma
-after free (because the iotlb may still be valid).  On standard systems,
-this happens so infrequently as to be worth the tradeoff.  However, in
-virtualised systems, which is what the intel iommu is aimed at, stale
-iotlb entries can be used by malicious VMs to gain access to memory
-outside of their VM, so the intel people at least need to say whether
-they're willing to accept this speed for safety tradeoff.
-
-James
+--=20
+Regards/Gru=DF,
+    Boris.
