@@ -1,46 +1,49 @@
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 05 Jun 2008 13:19:35 -0600
-Message-ID: <20080605191935.GZ2961@webber.adilger.int>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
- <20080605104042.GB20308@shareable.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10861] New: 2.6.26-rc4-git2 - long pause during boot
+Date: Thu,  5 Jun 2008 14:25:43 -0700 (PDT)
+Message-ID: <bug-10861-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sca-es-mail-1.Sun.COM ([192.18.43.132]:41869 "EHLO
-	sca-es-mail-1.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbYFETTh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 15:19:37 -0400
-In-reply-to: <20080605104042.GB20308@shareable.org>
-Content-disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43520 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751073AbYFEV0N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 17:26:13 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m55LPhc4017563
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jun 2008 14:25:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Jun 05, 2008  11:40 +0100, Jamie Lokier wrote:
-> >From a database perspective, I'm thinking it would be very useful to
-> provide similar information for large files.  Database engines have
-> the same requirement to know stripe width etc., and filesystems
-> allocate large contiguous extents so it it makes sense to pass the
-> device characteristics up to the app, with appropriate offset.
-> 
-> (Same for loopback devices.)
-> 
-> This is an extreme example of different properties in different offset
-> ranges - it depends on file allocation.
-> 
-> Is there scope to extend FIEMAP to pass this sort of information?
+http://bugzilla.kernel.org/show_bug.cgi?id=10861
 
-I have ideas in that direction, but have been gun-shy about presenting
-them until the existing controversy dies down...  I think it is actually
-fairly straight forward to enhance FIEMAP to allow arbitrary file layouts
-to be returned to an application.
+           Summary: 2.6.26-rc4-git2 - long pause during boot
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.26-rc4-git2
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: rjw@sisk.pl
+OtherBugsDependingO 10492
+             nThis:
+        Regression: 1
 
-Cheers, Andreas
---
-Andreas Dilger
-Sr. Staff Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
 
+Subject    : 2.6.26-rc4-git2 - long pause during boot
+Submitter  : Chris Clayton <chris2553@googlemail.com>
+Date       : 2008-06-01 4:15
+References : http://marc.info/?l=linux-kernel&m=121229382917834&w=4
+
+This entry is being used for tracking a regression from 2.6.25.  Please don't
+close it until the problem is fixed in the mainline.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
