@@ -1,55 +1,64 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 5 Jun 2008 10:02:34 -0700
-Message-ID: <e9c3a7c20806051002u2d26f24eqcffed98de02ffa60@mail.gmail.com>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
-	 <20080605062754.GQ2961@webber.adilger.int>
-	 <20080605123515.GM3549@parisc-linux.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: mpath: don't fail paths on first error
+Date: Thu, 05 Jun 2008 12:25:31 -0500
+Message-ID: <4848218B.3090404@cs.wisc.edu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:44411 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701AbYFERCh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 13:02:37 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so222852tic.23
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Jun 2008 10:02:35 -0700 (PDT)
-In-Reply-To: <20080605123515.GM3549@parisc-linux.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="------------070800010905090700030600"
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andreas Dilger <adilger@sun.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Jun 5, 2008 at 5:35 AM, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Thu, Jun 05, 2008 at 12:27:54AM -0600, Andreas Dilger wrote:
->> To be honest, however, having the information exported only via sysfs
->> is a bit ugly IMHO.  I've had all sorts of grief with settings there
->> because there isn't always a match between the device that is being
->> specified by the user and what appears in sysfs (e.g. /dev/disk/by-id/foo
->> doesn't match /sys/block/sda) and hoops have to be jumped through to
->> find this mapping, before parsing a text value in C.
->
-> readlink() is too hard?
->
-> $ readlink /dev/disk/by-id/ata-FUJITSU_MHV2080AH_NT61T6325UGM
-> ../../hda
->
->> Having an ioctl() that can be called on the block device (getting
->> the right device regardless of its name) seems a lot more useful to
->> applications in my experience, unless you are using a script.
->
-> It's certainly easier.
->
+This is a multi-part message in MIME format.
+--------------070800010905090700030600
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-We've had this discussion before:
+The problem we see a lot at Red Hat is that if drivers fail a command 
+with DID_BUS_BUSY or DID_ERROR for something like underrun or even for 
+transient path problems, we can normally recover from this pretty 
+quickly and we do not need to switch path groups.
 
-http://marc.info/?t=120641785300005&r=6&w=2
+queue_if_no_path/no_path_retry will prevent IO from being fail upwards, 
+but just switching paths can cause a lot of strain on the target, so we 
+might want to prevent path switching when we do not need to. If we are 
+using a box that requires manual failover or a box that does not use 
+manual failover but still has to shift resources between storage 
+controllers when switching paths, we most likely do not want to mark 
+paths failed for these transient errors.
 
-...and it resulted in this patch that is pending is Greg's tree:
+The attached patch allows us to wait X seconds before marking a path as 
+failed. If within X seconds from seeing the first IO error, we do not 
+see a IO complete successfully then we mark a path as failed. This patch 
+work best with the fail fast enhancements ones where for a lot of path 
+problems the fast io fail / recovery timeout will fail io quickly to us 
+and the test IOs do not get stuck, and where some errors like DID_ERROR 
+are not even failed fast.
 
-http://git.kernel.org/?p=linux/kernel/git/gregkh/patches.git;a=blob;f=driver-core/sysfs-add-sys-dev-char-block-to-lookup-sysfs-path-by-major-minor.patch;h=ed9a41a564f73db74f7260f24552352ab86bc893;hb=HEAD
+The patch should apply over linus's tree or scsi-misc.
 
-Regards,
-Dan
+--------------070800010905090700030600
+Content-Type: text/x-patch;
+	name="0001-dm-mpath-don-t-fail-paths-on-first-error.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+	filename="0001-dm-mpath-don-t-fail-paths-on-first-error.patch"
+
+
+--------------070800010905090700030600
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--------------070800010905090700030600--
