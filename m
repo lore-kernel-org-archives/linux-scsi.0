@@ -1,112 +1,69 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3 of 3] sd: Export preferred I/O sizes
-Date: Thu, 05 Jun 2008 01:22:52 -0400
-Message-ID: <dba6ce5d97b8aa7d0e1c.1212643372@sermon.lab.mkp.net>
+From: Andreas Dilger <adilger@sun.com>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Thu, 05 Jun 2008 00:27:54 -0600
+Message-ID: <20080605062754.GQ2961@webber.adilger.int>
 References: <patchbomb.1212643369@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <patchbomb.1212643369@sermon.lab.mkp.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sca-es-mail-1.Sun.COM ([192.18.43.132]:50089 "EHLO
+	sca-es-mail-1.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbYFEG15 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 02:27:57 -0400
+In-reply-to: <patchbomb.1212643369@sermon.lab.mkp.net>
+Content-disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-1 file changed, 67 insertions(+)
-drivers/scsi/sd.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+On Jun 05, 2008  01:22 -0400, Martin K. Petersen wrote:
+> This is just a proof of concept set of patches.  I'd like some
+> feedback before I spend more time on them.
+> 
+> At the Filesystem & Storage Workshop there was lots of discussion
+> about how to communicate I/O alignment, stripe width, etc. to the
+> filesystems so they could lay out things properly.
 
+Thanks for looking into this Martin.  We could use this pretty
+immediately in ext4 for helping the block allocator make good
+decisions.
 
-Make storage devices that support the Block Limits VPD export the
-optimal transfer length granularity and the optimal transfer length to
-the block layer.
+> An addition to the up-and-coming version of the SCSI block protocol
+> features an inquiry page that hardware RAIDs can use to indicate
+> preferred I/O sizes for a given LUN.
+> 
+> This patch kit implements support for exporting those values in
+> /sys/block/.  I have implemented support for it in sd.c using the
+> Block Limits VPD and in MD using chunk size and stripe width.
+> 
+> The physical sector offset for the start of the "virtual" block device
+> is also exported.  This includes partitions so you can get the actual
+> physical start sector offset for - say - an MD device sitting on a
+> partitioned set of drives.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+The kernel part of the code seems pretty reasonable (nicely stackable,
+as your MD examples show) and useful for filesystems.  Having this
+information available in the kernel removes much of the need to find
+this information in userspace, but unfortunately not all of it (e.g.
+some mkfs-time layout decisions need to be done before the filesystem
+is mounted, even if the allocator can use the kernel-supplied hits).
 
----
+To be honest, however, having the information exported only via sysfs
+is a bit ugly IMHO.  I've had all sorts of grief with settings there
+because there isn't always a match between the device that is being
+specified by the user and what appears in sysfs (e.g. /dev/disk/by-id/foo
+doesn't match /sys/block/sda) and hoops have to be jumped through to
+find this mapping, before parsing a text value in C.
 
-diff -r c7132bad88f3 -r dba6ce5d97b8 drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Thu Jun 05 01:07:51 2008 -0400
-+++ b/drivers/scsi/sd.c	Thu Jun 05 01:07:51 2008 -0400
-@@ -1534,6 +1534,72 @@
- 	sdkp->DPOFUA = 0;
- }
- 
-+static int sd_vpd_inquiry(struct scsi_disk *sdkp, unsigned char *buffer, u8 page, u8 len)
-+{
-+	int result;
-+	unsigned char cmd[16];
-+	struct scsi_sense_hdr sshdr;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = INQUIRY;
-+	cmd[1] = 1;		/* EVPD */
-+	cmd[2] = page;		/* VPD page */
-+	cmd[3] = len;
-+	
-+	result = scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer,
-+				  len, &sshdr, SD_TIMEOUT, SD_MAX_RETRIES);
-+
-+	if (media_not_present(sdkp, &sshdr))
-+		return -EIO;
-+
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp, "EVPD Inquiry failed\n");
-+		return -EIO;
-+	}
-+
-+	if (buffer[1] != page) {
-+		sd_printk(KERN_ERR, sdkp, "Page code not %2x (%2x)\n", page,
-+			  buffer[1]);
-+		return -EIO;
-+	}
-+
-+	return buffer[3];
-+}
-+
-+/**
-+ * sd_block_limits - Query disk device for preferred I/O sizes.
-+ * @disk: disk to query
-+ * @buffer: temporary buffer to store inquiry response in
-+ */
-+static void sd_block_limits(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	int result, i, bl_found;
-+
-+	bl_found = 0;
-+	result = sd_vpd_inquiry(sdkp, buffer, 0x0, 32); /* Supported Pages list */
-+
-+	if (result < 0 || buffer[4] != 0)
-+		return;
-+
-+	for (i = 0 ; i < buffer[3] ; i++)
-+		if (buffer[4+i] == 0xb0)
-+			bl_found = 1;
-+
-+	if (bl_found == 0)
-+		return;
-+
-+	result = sd_vpd_inquiry(sdkp, buffer, 0xb0, 16); /* Block Limits VPD */
-+
-+	if (result < 0 || buffer[3] != 12)
-+		return;
-+
-+	disk_set_io_hints(sdkp->disk, 0, ((buffer[6] << 8) | buffer[7])
-+			  * sdkp->device->sector_size,
-+			  ((buffer[12] << 24) | (buffer[13] << 16)
-+			   | (buffer[14] << 8) | buffer[15])
-+			  * sdkp->device->sector_size);
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -1579,6 +1645,7 @@
- 	 */
- 	if (sdkp->media_present) {
- 		sd_read_capacity(sdkp, buffer);
-+		sd_block_limits(sdkp, buffer);
- 		sd_read_write_protect_flag(sdkp, buffer);
- 		sd_read_cache_type(sdkp, buffer);
- 	}
+Having an ioctl() that can be called on the block device (getting
+the right device regardless of its name) seems a lot more useful to
+applications in my experience, unless you are using a script.
 
+Cheers, Andreas
+--
+Andreas Dilger
+Sr. Staff Engineer, Lustre Group
+Sun Microsystems of Canada, Inc.
 
