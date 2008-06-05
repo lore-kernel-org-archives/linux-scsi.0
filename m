@@ -1,69 +1,114 @@
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 05 Jun 2008 00:27:54 -0600
-Message-ID: <20080605062754.GQ2961@webber.adilger.int>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC PATCH] fs code: Push the BKL down into the file system ioctl handlers
+Date: Thu, 5 Jun 2008 10:59:49 +0200
+Message-ID: <200806051059.49952.arnd@arndb.de>
+References: <20080522231524.52e21eb8@core> <200806041843.20965.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sca-es-mail-1.Sun.COM ([192.18.43.132]:50089 "EHLO
-	sca-es-mail-1.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752716AbYFEG15 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 02:27:57 -0400
-In-reply-to: <patchbomb.1212643369@sermon.lab.mkp.net>
-Content-disposition: inline
+Received: from moutng.kundenserver.de ([212.227.126.179]:59859 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708AbYFEJGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 05:06:19 -0400
+In-Reply-To: <200806041843.20965.arnd@arndb.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org
 
-On Jun 05, 2008  01:22 -0400, Martin K. Petersen wrote:
-> This is just a proof of concept set of patches.  I'd like some
-> feedback before I spend more time on them.
-> 
-> At the Filesystem & Storage Workshop there was lots of discussion
-> about how to communicate I/O alignment, stripe width, etc. to the
-> filesystems so they could lay out things properly.
+On Wednesday 04 June 2008, Arnd Bergmann wrote:
+> I suppose the right fix for this will be to make the blkdev
+> unlocked_ioctl and compat_ioctl take a bdev argument instead
+> of file and inode.
 
-Thanks for looking into this Martin.  We could use this pretty
-immediately in ext4 for helping the block allocator make good
-decisions.
+Ok, I tried that, and it mostly worked fine. I have a patch
+now that converts all block drivers to use unlocked_ioctl,
+and, where appropriate, compat_ioctl.
 
-> An addition to the up-and-coming version of the SCSI block protocol
-> features an inquiry page that hardware RAIDs can use to indicate
-> preferred I/O sizes for a given LUN.
-> 
-> This patch kit implements support for exporting those values in
-> /sys/block/.  I have implemented support for it in sd.c using the
-> Block Limits VPD and in MD using chunk size and stripe width.
-> 
-> The physical sector offset for the start of the "virtual" block device
-> is also exported.  This includes partitions so you can get the actual
-> physical start sector offset for - say - an MD device sitting on a
-> partitioned set of drives.
+I tried changing the prototype from 
 
-The kernel part of the code seems pretty reasonable (nicely stackable,
-as your MD examples show) and useful for filesystems.  Having this
-information available in the kernel removes much of the need to find
-this information in userspace, but unfortunately not all of it (e.g.
-some mkfs-time layout decisions need to be done before the filesystem
-is mounted, even if the allocator can use the kernel-supplied hits).
+long (*unlocked_ioctl) (struct file *file, unsigned, unsigned long);
 
-To be honest, however, having the information exported only via sysfs
-is a bit ugly IMHO.  I've had all sorts of grief with settings there
-because there isn't always a match between the device that is being
-specified by the user and what appears in sysfs (e.g. /dev/disk/by-id/foo
-doesn't match /sys/block/sda) and hoops have to be jumped through to
-find this mapping, before parsing a text value in C.
+to
 
-Having an ioctl() that can be called on the block device (getting
-the right device regardless of its name) seems a lot more useful to
-applications in my experience, unless you are using a script.
+int (*unlocked_ioctl) (block_device *bdev, unsigned, unsigned long);
 
-Cheers, Andreas
---
-Andreas Dilger
-Sr. Staff Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
+There are two problems with removing the file argument:
 
+* A handful of drivers use file->f_mode to check for permissions.
+Obviously, this needs to keep working, so we must pass either
+the whole struct file or the mode argument down to each ioctl
+function.
+I'd prefer the mode argument, because there are a number of
+places where we pass a NULL file, or the file does not actually
+represent the inode/bdev, e.g. in pktcdvd, ide-scsi or raw.
+Currently, it's easy to introduce bugs in device drivers because
+of this.
+
+* There is exactly one place in the code, which uses another
+member of struct file: 
+SG_SCSI_RESET in scsi_nonblockable_ioctl() checks the O_NONBLOCK
+open flag. Does it even make sense for this driver to support
+both blocking and nonblocking operation? I'd say if we need both,
+it's better to pass both bdev and file to each ioctl handler:
+
+int (*unlocked_ioctl) (block_device *bdev, struct file *file,
+			unsigned, unsigned long);
+
+otherwise, we can simply pass the mode, as in
+
+int (*unlocked_ioctl) (block_device *bdev, mode_t mode,
+			unsigned, unsigned long);
+
+in order to reduce the potential amount of confusion.
+
+	Arnd <><
+
+ Documentation/filesystems/Locking      |    4 ++
+ arch/um/drivers/ubd_kern.c             |   22 +++++++--
+ block/scsi_ioctl.c                     |   40 +++++++--------
+ drivers/block/amiflop.c                |   23 +++++++--
+ drivers/block/ataflop.c                |   22 ++++++--
+ drivers/block/brd.c                    |    9 ++-
+ drivers/block/cciss.c                  |   58 +++++++++++----------
+ drivers/block/cpqarray.c               |   35 +++++++++++--
+ drivers/block/floppy.c                 |   15 +++++-
+ drivers/block/loop.c                   |   40 ++++++++-------
+ drivers/block/nbd.c                    |   42 ++++++++++-----
+ drivers/block/paride/pcd.c             |   16 +++++--
+ drivers/block/paride/pd.c              |   11 +++-
+ drivers/block/paride/pf.c              |   12 +++--
+ drivers/block/pktcdvd.c                |   50 ++++++++++++++++--
+ drivers/block/swim3.c                  |   21 ++++++--
+ drivers/block/ub.c                     |    6 +-
+ drivers/block/virtio_blk.c             |   20 +++++--
+ drivers/block/xd.c                     |   16 +++++-
+ drivers/cdrom/cdrom.c                  |   10 ++--
+ drivers/cdrom/gdrom.c                  |   16 +++++--
+ drivers/cdrom/viocd.c                  |   16 +++++--
+ drivers/ide/ide-cd.c                   |   20 ++++++--
+ drivers/ide/ide-disk.c                 |   20 ++++++--
+ drivers/ide/ide-floppy.c               |   26 ++++++++--
+ drivers/ide/ide-tape.c                 |   33 +++++++++++--
+ drivers/ide/ide.c                      |    2 +-
+ drivers/md/dm-linear.c                 |    3 +-
+ drivers/md/dm-mpath.c                  |    3 +-
+ drivers/md/dm.c                        |   10 ++--
+ drivers/md/md.c                        |   10 +++-
+ drivers/message/i2o/i2o_block.c        |   20 ++++++-
+ drivers/mtd/mtd_blkdevs.c              |   16 ++++--
+ drivers/s390/block/dasd.c              |    2 +-
+ drivers/s390/block/dasd_int.h          |    4 +-
+ drivers/s390/block/dasd_ioctl.c        |   24 ++++++---
+ drivers/s390/char/tape_block.c         |   13 ++---
+ drivers/scsi/ide-scsi.c                |    7 +--
+ drivers/scsi/sd.c                      |   11 ++--
+ drivers/scsi/sr.c                      |   24 ++++++++--
+ include/linux/blkdev.h                 |    8 ++--
+ include/linux/device-mapper.h          |    3 +-
+ include/linux/fs.h                     |    5 +-
+ include/linux/ide.h                    |    2 +-
+ 44 files changed, 540 insertions(+), 232 deletions(-)
