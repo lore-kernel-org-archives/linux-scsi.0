@@ -1,35 +1,55 @@
 From: Jamie Lokier <jamie@shareable.org>
 Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 5 Jun 2008 11:32:24 +0100
-Message-ID: <20080605103224.GA20308@shareable.org>
-References: <patchbomb.1212643369@sermon.lab.mkp.net> <20080605062754.GQ2961@webber.adilger.int>
+Date: Thu, 5 Jun 2008 11:40:42 +0100
+Message-ID: <20080605104042.GB20308@shareable.org>
+References: <patchbomb.1212643369@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail2.shareable.org ([80.68.89.115]:58788 "EHLO
+	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbYFEKko (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 06:40:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20080605062754.GQ2961@webber.adilger.int>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Andreas Dilger <adilger@sun.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+In-Reply-To: <patchbomb.1212643369@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Andreas Dilger wrote:
-> Having an ioctl() that can be called on the block device (getting
-> the right device regardless of its name) seems a lot more useful to
-> applications in my experience, unless you are using a script.
+Martin K. Petersen wrote:
+> At the Filesystem & Storage Workshop there was lots of discussion
+> about how to communicate I/O alignment, stripe width, etc. to the
+> filesystems so they could lay out things properly.
 
-I agree with this - ioctl() on actual block devices is more direct,
-and the quirks needed to get the right sysfs dir awkward.
+That's really nice, thanks.
 
-It would be good to use the same ioctl() as other OSes if there are
-any exporting the same information.
+Does it handle devices with different properties in differeng offset
+ranges?  E.g. a RAID setup where the first 100GB have one stripe
+width, but the next 100GB have a different stripe width - as you can
+get if you join two different hardware RAIDs with LVM, for example.
 
-However, sysfs, being text based, is easier to extend with new values
-that can be used without recompiling programs, e.g. from scripts, so
-it's useful to have the same information there.
+> The physical sector offset for the start of the "virtual" block device
+> is also exported.  This includes partitions so you can get the actual
+> physical start sector offset for - say - an MD device sitting on a
+> partitioned set of drives.
 
-To link them, an ioctl() which returns an unambiguous reference to the
-appropriate sysfs entry would be good too.  E.g. perhaps returning a
-file descriptor of the appropriate directory.
+If it's a set of drives, doesn't it need to return multiple offsets,
+and drive identities?
+
+> Comments and suggestions are welcome.
+
+>From a database perspective, I'm thinking it would be very useful to
+provide similar information for large files.  Database engines have
+the same requirement to know stripe width etc., and filesystems
+allocate large contiguous extents so it it makes sense to pass the
+device characteristics up to the app, with appropriate offset.
+
+(Same for loopback devices.)
+
+This is an extreme example of different properties in different offset
+ranges - it depends on file allocation.
+
+Is there scope to extend FIEMAP to pass this sort of information?
 
 -- Jamie
