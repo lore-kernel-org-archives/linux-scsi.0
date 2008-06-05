@@ -1,41 +1,35 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] iscsi_tcp: Enable any size command
-Date: Thu, 05 Jun 2008 10:16:00 -0500
-Message-ID: <1212678960.13549.30.camel@localhost.localdomain>
-References: <1211403260-5487-1-git-send-email-michaelc@cs.wisc.edu>
-	 <48348EC0.5080905@cs.wisc.edu> <48353D58.2080109@panasas.com>
-	 <4835A150.2000306@cs.wisc.edu> <4835A25E.6050203@cs.wisc.edu>
-	 <483A7557.3080907@panasas.com>
+Subject: Re: [PATCH] scsi_debug: Runtime-configurable sector size
+Date: Thu, 05 Jun 2008 10:28:55 -0500
+Message-ID: <1212679735.13549.35.camel@localhost.localdomain>
+References: <yq18wxko6yc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56719 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:55494 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752673AbYFEPQF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 11:16:05 -0400
-In-Reply-To: <483A7557.3080907@panasas.com>
+	by vger.kernel.org with ESMTP id S1753028AbYFEP3B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 11:29:01 -0400
+In-Reply-To: <yq18wxko6yc.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
 
-On Mon, 2008-05-26 at 11:31 +0300, Boaz Harrosh wrote:
-> Let through upto the largest command of 260 defined by the scsi standard.
-> iscsi core supports this already. Now that the scsi-ml supports it we can
-> start using large commands.
+On Thu, 2008-06-05 at 00:12 -0400, Martin K. Petersen wrote:
+> Make scsi_debug sector size configurable at load time instead of being
+> a #define.  Handy for testing 4KB sectors.
 > 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-This Should Be Acked-by not Signed-off-by.  Signed-off-by means you got
-a patch from this person and the order of patch transmission is the
-signed off by order.   For Mike to have a signed off by at the bottom, I
-have to have got the patch from him, not from you.
+This could have used some checkpatch love:
 
-Also, this doesn't apply against the latest, but I fixed up the
-rejections (iscsi has moved from template based to setting variables in
-the shost-> initialisation).
+total: 9 errors, 2 warnings, 181 lines checked
+
+About 8 of the errors are spaces before tab (one is the fact that
+checkpatch doesn't like struct * foo, but that's the style of the file,
+so I left it in).
 
 James
 
