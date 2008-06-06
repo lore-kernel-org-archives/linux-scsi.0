@@ -1,92 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Fri, 06 Jun 2008 09:11:25 -0500
-Message-ID: <1212761485.3466.6.camel@localhost.localdomain>
-References: <200806010415.05290.chris2553@googlemail.com>
-	 <20080605221709.f248eb90.akpm@linux-foundation.org>
-	 <200806060607.29460.chris2553@googlemail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: mpath: don't fail paths on first error
+Date: Fri, 06 Jun 2008 16:18:05 +0200
+Message-ID: <4849471D.4060104@suse.de>
+References: <4848218B.3090404@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55808 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753973AbYFFOLb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 10:11:31 -0400
-In-Reply-To: <200806060607.29460.chris2553@googlemail.com>
+Received: from mx1.suse.de ([195.135.220.2]:33777 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753653AbYFFOSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2008 10:18:07 -0400
+In-Reply-To: <4848218B.3090404@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: chris2553@googlemail.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2008-06-06 at 06:07 +0000, Chris Clayton wrote:
-> On Friday 06 June 2008, Andrew Morton wrote:
-> > On Sun, 1 Jun 2008 04:15:05 +0000 Chris Clayton <chris2553@googlemail.com> 
-> wrote:
-> > > Hi,
-> > >
-> > > I've just started testing 2.6.26 on my desktop machine and have found
-> > > that I get a long pause (20 seconds or so) as the system boots. By pause
-> > > I mean that the boot messages that normally scroll by stop doing so for,
-> > > as I say, about 20 seconds.
-> > >
-> > > I've done a bisect and arrived at:
-> > >
-> > > b0ed43360fdca227048d88a08290365cb681c1a8 is first bad commit
-> > > commit b0ed43360fdca227048d88a08290365cb681c1a8
-> > > Author: Hannes Reinecke <hare@suse.de>
-> > > Date:   Tue Mar 18 14:32:28 2008 +0100
-> > >
-> > >     [SCSI] add scsi_host and scsi_target to scsi_bus
-> > >
-> > >     This patch implements scsi_host and scsi_target device types
-> > >     and adds both to the scsi_bus.
-> > >
-> > >     Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > >     Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
-> > >     Signed-off-by: James Bottomley
-> > > <James.Bottomley@HansenPartnership.com>
-> > >
-> > > :040000 040000 4e3140909966b4c9aa987d34ee4078d283fe0351
-> > >
-> > > 46e4fd28cc537ba700eb4f5652abf043fed4d76d M      drivers
-> > >
-> > > The config file for that kernel is attached as are the kernel log for
-> > > booting that kernel and the bisect log.
-> > >
-> > > I've also noticed that it takes much longer for icons to appear on my
-> > > desktop when I plug a usb storage device in. (The icons are shown/hidden
-> > > by a simple sctript that is run via udev when the device is
-> > > attached/detached.)
-> >
-> > Do you believe that this is the same period?  20 seconds?
-> >
-> 
-> Thanks for the reply, Andrew. I was beginning to think that I'd committed an 
-> LKML sin :-)
-> 
-> Yes, it is about the same. On 2.6.25.4 (and earlier), the icons appear within a 
-> second or two, but with 2.6.26-rc2 or later, it takes about 20 seconds. I've 
-> now built and installed -rc5 and am seeing the same behaviour.
-> 
-> I've also built -rc5 on my laptop. On that my kernel uses the older IDE drivers 
-> rather than libata. The boot proceeds with no pause, but I do see the same 
-> delay in the desktop icons appearing when I attach a usb-storage device.
-> 
-> > > Let me know of any way I can help solve this.
-> > >
-> > > Please cc me to any reply as I'm not subscribed.
-> >
-> > cc's added.
-> >
-> > Rafael, we might need to track this as a post-2.6.26 regression.
+Hi Mike,
 
-It already is ... as I asked in the actual bug (but no-one seems to have
-noticed, so I assume the bug entry isn't set up correctly).  Does this
-still persist with 2.6.26-rc5?  The reason for asking is that it looks
-very much like a silent manifestation of our scsi_bus_uevent() problem
-that got fixed in 2.6.26-rc5.
+Mike Christie wrote:
+> The problem we see a lot at Red Hat is that if drivers fail a command=
+=20
+> with DID_BUS_BUSY or DID_ERROR for something like underrun or even fo=
+r=20
+> transient path problems, we can normally recover from this pretty=20
+> quickly and we do not need to switch path groups.
+>=20
+Yeah, I thought about this, too.
+> queue_if_no_path/no_path_retry will prevent IO from being fail upward=
+s,=20
+> but just switching paths can cause a lot of strain on the target, so =
+we=20
+> might want to prevent path switching when we do not need to. If we ar=
+e=20
+> using a box that requires manual failover or a box that does not use=20
+> manual failover but still has to shift resources between storage=20
+> controllers when switching paths, we most likely do not want to mark=20
+> paths failed for these transient errors.
+>=20
+Well, the original design idea was that it always will be quicker or
+less error-prone to just move the I/O to the next path.
+Seeing that this is not always the case this approach is probably
+better.
 
-James
+> The attached patch allows us to wait X seconds before marking a path =
+as=20
+> failed. If within X seconds from seeing the first IO error, we do not=
+=20
+> see a IO complete successfully then we mark a path as failed. This pa=
+tch=20
+> work best with the fail fast enhancements ones where for a lot of pat=
+h=20
+> problems the fast io fail / recovery timeout will fail io quickly to =
+us=20
+> and the test IOs do not get stuck, and where some errors like DID_ERR=
+OR=20
+> are not even failed fast.
+>=20
+> The patch should apply over linus's tree or scsi-misc.
+>=20
+Thanks for this, Mike.
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
