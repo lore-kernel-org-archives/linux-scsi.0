@@ -1,117 +1,89 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
-Date: Fri, 6 Jun 2008 13:44:30 +0900
-Message-ID: <20080606134839Z.fujita.tomonori@lab.ntt.co.jp>
-References: <20080604235053K.fujita.tomonori@lab.ntt.co.jp>
-	<20080605220216.GA12927@linux.intel.com>
+Date: Fri, 6 Jun 2008 13:44:29 +0900
+Message-ID: <20080606133955B.fujita.tomonori@lab.ntt.co.jp>
+References: <20080605235322L.fujita.tomonori@lab.ntt.co.jp>
+	<da824cf30806051134u4fb8d419p2ba2dafcb1ba33a7@mail.gmail.com>
+	<1212692488.4241.8.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:52770 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:52777 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750908AbYFFEod (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2008 00:44:33 -0400
-In-Reply-To: <20080605220216.GA12927@linux.intel.com>
+	id S1753648AbYFFEop (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2008 00:44:45 -0400
+In-Reply-To: <1212692488.4241.8.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mgross@linux.intel.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: grundler@google.com, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, mgross@linux.intel.com, linux-scsi@vger.kernel.org
 
-On Thu, 5 Jun 2008 15:02:16 -0700
-mark gross <mgross@linux.intel.com> wrote:
+On Thu, 05 Jun 2008 14:01:28 -0500
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-> On Wed, Jun 04, 2008 at 11:47:01PM +0900, FUJITA Tomonori wrote:
-> > I resumed the work to make the IOMMU respect drivers' DMA alignment
-> > (since I got a desktop box having VT-d). In short, some IOMMUs
-> > allocate memory areas spanning driver's segment boundary limit (DMA
-> > alignment). It forces drivers to have a workaround to split up scatter
-> > entries into smaller chunks again. To remove such work around in
-> > drivers, I modified several IOMMUs, X86_64 (Calgary and Gart), Alpha,
-> > POWER, PARISC, IA64, SPARC64, and swiotlb.
+> On Thu, 2008-06-05 at 11:34 -0700, Grant Grundler wrote:
+> > On Thu, Jun 5, 2008 at 7:49 AM, FUJITA Tomonori
+> > <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > ...
+> > >> You can easily emulate SSD drives by doing sequential 4K reads
+> > >> from a normal SATA HD. That should result in ~7-8K IOPS since the disk
+> > >> will recognize the sequential stream and read ahead. SAS/SCSI/FC will
+> > >> probably work the same way with different IOP rates.
+> > >
+> > > Yeah, probabaly right. I thought that 10GbE give the IOMMU more
+> > > workloads than SSD does and tried to emulate something like that.
 > > 
-> > Now I try to fix Intel IOMMU code, the free space management
-> > algorithm.
-> > 
-> > The major difference between Intel IOMMU code and the others is Intel
-> > IOMMU code uses Red Black tree to manage free space while the others
-> > use bitmap (swiotlb is the only exception).
-> > 
-> > The Red Black tree method consumes less memory than the bitmap method,
-> > but it incurs more overheads (the RB tree method needs to walk through
-> > the tree, allocates a new item, and insert it every time it maps an
-> > I/O address). Intel IOMMU (and IOMMUs for virtualization) needs
-> > multiple IOMMU address spaces. That's why the Red Black tree method is
-> > chosen, I guess.
-> > 
-> > Half a year ago, I tried to convert POWER IOMMU code to use the Red
-> > Black method and saw performance drop:
-> > 
-> > http://linux.derkeiler.com/Mailing-Lists/Kernel/2007-11/msg00650.html
-> > 
-> > So I tried to convert Intel IOMMU code to use the bitmap method to see
-> > how much I can get.
-> > 
-> > I didn't see noticable performance differences with 1GbE. So I tried
-> > the modified driver of a SCSI HBA that just does memory accesses to
-> > emulate the performances of SSD disk drives, 10GbE, Infiniband, etc.
-> > 
-> > I got the following results with one thread issuing 1KB I/Os:
-> > 
-> >                     IOPS (I/O per second)
-> > IOMMU disabled         145253.1 (1.000)
-> > RB tree (mainline)     118313.0 (0.814)
-> > Bitmap                 128954.1 (0.887)
-> >
+> > 10GbE might exercise a different code path. NICs typically use map_single
 > 
-> FWIW: You'll see bigger deltas if you boot with intel_iommu=strict, but
-> those will be because of waiting on IOMMU hardware to flush caches and
-> may further hide effects of gong with a bitmap as opposed to a RB tree.
+> map_page, actually, but effectively the same thing.  However, all
+> they're really doing is their own implementation of sg list mapping.
 
-Yeah, I know. I'll test 'intel_iommu=strict' option next time.
+Yeah, they are nearly same. map_single allocates only one DMA address
+while sg_map does allocates a DMA address again and again.
 
-The patch also has 'intel_iommu=strict' option. Wiht it enabled, it
-flushes TLB cache every time dma_unmap_* is called as the original
+
+> > and storage devices typically use map_sg.  But they both exercise the same
+> > underlying resource management code since it's the same IOMMU they poke at.
+> > 
+> > ...
+> > >> Sorry, I didn't see a replacement for the deferred_flush_tables.
+> > >> Mark Gross and I agree this substantially helps with unmap performance.
+> > >> See http://lkml.org/lkml/2008/3/3/373
+> > >
+> > > Yeah, I can add a nice trick in parisc sba_iommu uses. I'll try next
+> > > time.
+> > >
+> > > But it probably gives the bitmap method less gain than the RB tree
+> > > since clear the bitmap takes less time than changing the tree.
+> > >
+> > > The deferred_flush_tables also batches flushing TLB. The patch flushes
+> > > TLB only when it reaches the end of the bitmap (it's a trick that some
+> > > IOMMUs like SPARC does).
+> > 
+> > The batching of the TLB flushes is the key thing. I was being paranoid
+> > by not marking the resource free until after the TLB was flushed. If we
+> > know the allocation is going to be circular through the bitmap, flushing
+> > the TLB once per iteration through the bitmap should be sufficient since
+> > we can guarantee the IO Pdir resource won't get re-used until a full
+> > cycle through the bitmap has been completed.
+> 
+> Not necessarily ... there's a safety vs performance issue here.  As long
+> as the iotlb mapping persists, the device can use it to write to the
+> memory.  If you fail to flush, you lose the ability to detect device dma
+> after free (because the iotlb may still be valid).  On standard systems,
+> this happens so infrequently as to be worth the tradeoff.  However, in
+> virtualised systems, which is what the intel iommu is aimed at, stale
+> iotlb entries can be used by malicious VMs to gain access to memory
+> outside of their VM, so the intel people at least need to say whether
+> they're willing to accept this speed for safety tradeoff.
+
+Agreed.
+
+The current Intel IOMMU scheme is a bit unbalanced. It invalidates the
+translation table every time dma_unmap_* is called, but it does the
+batching of the TLB flushes. But it's what the most of Linux's IOMMU
 code does.
 
-
-> > I've attached the patch to modify Intel IOMMU code to use the bitmap
-> > method but I have no intention of arguing that Intel IOMMU code
-> > consumes more memory for better performance. :) I want to do more
-> > performance tests with 10GbE (probably, I have to wait for a server
-> > box having VT-d, which is not available on the market now).
-> > 
-> > As I said, what I want to do now is to make Intel IOMMU code respect
-> > drivers' DMA alignment. Well, it's easier to do that if Intel IOMMU
-> > uses the bitmap method since I can simply convert the IOMMU code to
-> > use lib/iommu-helper but I can modify the RB tree method too.
-> >
-> 
-> I'm going to be out of contact for a few weeks but this work sounds
-> interesting.  
-
-Why did you choose the RB tree instead of a traditional bitmap scheme
-to manage free space?
-
-
-> > I'm just interested in other people's opinions on IOMMU
-> > implementations, performances, possible future changes for performance
-> > improvement, etc.
-> > 
-> > For further information:
-> > 
-> > LSF'08 "Storage Track" summary by Grant Grundler:
-> > http://iou.parisc-linux.org/lsf2008/SUMMARY-Storage.txt
-> > 
-> > My LSF'08 slides:
-> > http://iou.parisc-linux.org/lsf2008/IO-DMA_Representations-fujita_tomonori.pdf
-> > 
-> > 
-> > Tis patch is against the latst git tree (note that it just converts
-> > Intel IOMMU code to use the bitmap. It doesn't make it respect
-> > drivers' DMA alignment yet).
-> > 
-> 
-> I'll look closely at your patch later.
-
-Thanks a lot!
+I think that only PARISC (and IA64, of course) IOMMUs do the batching
+of invalidating the translation table entries.
