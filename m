@@ -1,34 +1,46 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: [PATCH] scsi_debug: Runtime-configurable sector size
-Date: Thu, 05 Jun 2008 20:53:28 -0400
-Message-ID: <yq1skvrmliv.fsf@sermon.lab.mkp.net>
-References: <yq18wxko6yc.fsf@sermon.lab.mkp.net>
-	<1212679735.13549.35.camel@localhost.localdomain>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Thu, 05 Jun 2008 21:03:09 -0400
+Message-ID: <yq1od6fml2q.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1212643369@sermon.lab.mkp.net>
+	<20080605062754.GQ2961@webber.adilger.int>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:51670 "EHLO jaguar.mkp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751654AbYFFAx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jun 2008 20:53:29 -0400
-In-Reply-To: <1212679735.13549.35.camel@localhost.localdomain> (James Bottomley's message of "Thu\, 05 Jun 2008 10\:28\:55 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20080605062754.GQ2961@webber.adilger.int> (Andreas Dilger's message of "Thu\, 05 Jun 2008 00\:27\:54 -0600")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Andreas Dilger <adilger@sun.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+>>>>> "Andreas" == Andreas Dilger <adilger@sun.com> writes:
 
-James> This could have used some checkpatch love:
+Andreas> Having an ioctl() that can be called on the block device
+Andreas> (getting the right device regardless of its name) seems a lot
+Andreas> more useful to applications in my experience, unless you are
+Andreas> using a script.
 
-James> total: 9 errors, 2 warnings, 181 lines checked
+The reason I didn't do it that way is that I only exported the bare
+bones required for userland to deal with the layout intelligently.
 
-James> About 8 of the errors are spaces before tab (one is the fact
-James> that checkpatch doesn't like struct * foo, but that's the style
-James> of the file, so I left it in).
+The problem of the ioctl is that you lose information about the
+subdevices and in particular about their physical alignment.  The
+phys_off value I export for the MD device is the offset for the first
+device.  But that does not imply that the other devices in the stripe
+have the same alignment.
 
-Ugh, sorry about that.  I did a search and replace on the old macro so
-I didn't notice the extraneous spaces in the original.
+I considered taking an approach similar to blk_queue_stack_limits()
+where you clamp using the existing values as you add more devices.
+The downside to that is that you really want to let the user know that
+there's a potential problem.  And requiring the user to scrounge
+through syslog to look for complaints isn't so happening.  I'd much
+rather do that in libdisk where it's easy to print a message about
+"Suboptimal layout, proceed with caution".
+
+IOW, the idea is (for better and for worse) to let libdisk traverse
+sysfs to ensure that all things line up nicely before mkfs actually
+starts writing.
 
 -- 
-Martin K. Petersen      http://mkp.net/
+Martin K. Petersen	Oracle Linux Engineering
+
