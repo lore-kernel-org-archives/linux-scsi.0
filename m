@@ -1,78 +1,37 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [regression/bisected] corrupt CD data after media change and
-	delay
-Date: Fri, 06 Jun 2008 10:13:22 -0500
-Message-ID: <1212765202.16182.5.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Fri, 06 Jun 2008 10:22:22 -0500
+Message-ID: <1212765742.16182.8.camel@localhost.localdomain>
+References: <200806010415.05290.chris2553@googlemail.com>
+	 <20080605221709.f248eb90.akpm@linux-foundation.org>
+	 <200806060607.29460.chris2553@googlemail.com>
+	 <20080605232145.cdae753f.akpm@linux-foundation.org>
+	 <20080605232538.fb85021e.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42195 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52863 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757736AbYFFPN3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 11:13:29 -0400
-In-Reply-To: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
+	by vger.kernel.org with ESMTP id S1761434AbYFFPW2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 11:22:28 -0400
+In-Reply-To: <20080605232538.fb85021e.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: David Martin <tasio@tasio.net>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: chris2553@googlemail.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Fri, 2008-06-06 at 16:06 +0200, Geert Uytterhoeven wrote:
-> 	Hi all,
+On Thu, 2008-06-05 at 23:25 -0700, Andrew Morton wrote:
+> On Thu, 5 Jun 2008 23:21:45 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
 > 
-> When mounting a CD/DVD more than 30 seconds after inserting it, and reading
-> from it, we get:
+> > <watches wodim wibble for five minutes then report "CD/DVD-Recorder
+> > not ready."  Pretends not to have noticed.>
 > 
->     attempt to access beyond end of device
->     sr0: rw=0, want=371932, limit=371928
->     Buffer I/O error on device sr0, logical block 92982
->     attempt to access beyond end of device
->     sr0: rw=0, want=371936, limit=371928
->     Buffer I/O error on device sr0, logical block 92983
->     attempt to access beyond end of device
->     sr0: rw=0, want=371940, limit=371928
->     Buffer I/O error on device sr0, logical block 92984
->     attempt to access beyond end of device
->     sr0: rw=0, want=371944, limit=371928
->     Buffer I/O error on device sr0, logical block 92985
->     attempt to access beyond end of device
->     sr0: rw=0, want=371948, limit=371928
->     Buffer I/O error on device sr0, logical block 92986
->     ...
-> 
-> It can be reproduced on a PS3 with busybox userland using:
-> 
->     # Insert first CD
->     $ mount /dev/sr0 /mnt
->     $ ls -R /mnt
->     $ umount /mnt
->     $ eject
->     # Remove first CD
-> 
->     # Insert second CD
->     # Wait at least 30 seconds
->     $ mount /dev/sr0 /mnt
->     $ tar cf /dev/null /mnt
-> 
-> It does not happen when mounting the second CD within 30 seconds after
-> inserting it, which is consistent with
-> 
->     #define SR_TIMEOUT     (30 * HZ)
-> 
-> I can't seem to reproduce it with a Debian or Fedora Core 6 userland.
-> 
-> The problem is present in 2.6.25.
-> 2.6.24 is OK.
+> It goes much better when the CD is inserted upside up.
 
-Hmm ... how are you preventing HAL from automatically mounting the CD?
-
-Also, in the two different situations, what does
-
-cat /sys/block/sr0/size
-
-(assuming your cd is sr0) give you?  My first theory is an incorrect
-size propagating from something.
+So I can close this regression if I send you a pack of CD ring labels
+with "other way up" on them for you to affix to the underside of your
+CDs ... ?
 
 James
 
