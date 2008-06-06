@@ -1,33 +1,36 @@
 From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [PATCH 1 of 3] block: Export I/O hints for block devices and partitions
-Date: Fri, 6 Jun 2008 15:21:03 +0100
-Message-ID: <20080606142103.GA22158@shareable.org>
-References: <patchbomb.1212643369@sermon.lab.mkp.net> <3e5d8520d247223a236e.1212643370@sermon.lab.mkp.net>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Fri, 6 Jun 2008 15:26:13 +0100
+Message-ID: <20080606142613.GA22495@shareable.org>
+References: <patchbomb.1212643369@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3e5d8520d247223a236e.1212643370@sermon.lab.mkp.net>
+In-Reply-To: <patchbomb.1212643369@sermon.lab.mkp.net>
 Sender: linux-fsdevel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Martin K. Petersen wrote:
-> +	sector_t phys_offset;
-> +	unsigned int optimal_io_block;
-> +	unsigned int optimal_io_length;
+> Comments and suggestions are welcome.
 
-Wouldn't off_t or sector_t be more appropriate?
+Flash devices and SSDs (solid-state storage) in general are becoming
+more common.
 
-I can (vaguely) imagine devices with stripe sizes >= 2GiB in the not
-too distant future.  Especially clusters with high speed interconnect
-and RAM-backed devices.
+Also, backing a disk with flash.  And increasingly people will stripe,
+parity, mirror or concatenate disks and flash just because it's
+convenient.
 
-There's no harm in an application doing smaller I/O.  It should always
-choose appropriate values itself anyway.
+--> So it would be nice if some of the flash alignment characteristics
+could be reported.
 
-But it seems cleaner to report the numbers derived from actual drive
-topology.
+Some aspects of flash don't fit into block devices - e.g. erase block
+and write order requirements.  That's MTD stuff, not appropriate here.
+
+But SSDs present a block device interface, and they still have
+alignment characteristics for performance.  Even more important, when
+combining multiple SSDs into a RAID.
 
 -- Jamie
