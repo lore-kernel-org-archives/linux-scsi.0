@@ -1,36 +1,34 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9872] Driver 'sd' needs updating - please use bus_type methods
-Date: Thu,  5 Jun 2008 16:52:36 -0700 (PDT)
-Message-ID: <20080605235236.BA76810805D@picon.linux-foundation.org>
-References: <bug-9872-11613@http.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: [PATCH] scsi_debug: Runtime-configurable sector size
+Date: Thu, 05 Jun 2008 20:53:28 -0400
+Message-ID: <yq1skvrmliv.fsf@sermon.lab.mkp.net>
+References: <yq18wxko6yc.fsf@sermon.lab.mkp.net>
+	<1212679735.13549.35.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33615 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751713AbYFEXwj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 19:52:39 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m55NqalS029007
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jun 2008 16:52:37 -0700
-In-Reply-To: <bug-9872-11613@http.bugzilla.kernel.org/>
+Received: from jaguar.mkp.net ([192.139.46.146]:51670 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751654AbYFFAx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jun 2008 20:53:29 -0400
+In-Reply-To: <1212679735.13549.35.camel@localhost.localdomain> (James Bottomley's message of "Thu\, 05 Jun 2008 10\:28\:55 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9872
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
+James> This could have used some checkpatch love:
 
+James> total: 9 errors, 2 warnings, 181 lines checked
 
+James> About 8 of the errors are spaces before tab (one is the fact
+James> that checkpatch doesn't like struct * foo, but that's the style
+James> of the file, so I left it in).
 
-
-------- Comment #4 from russell@rickstewart.com  2008-06-05 16:52 -------
-(In reply to comment #3)
-> Russel, did you get chance to test Kay's patch in #2?
-
-    I did.  It worked.  I had to patch the files by hand because 
-of some difference in version, I guess.
-
+Ugh, sorry about that.  I did a search and replace on the old macro so
+I didn't notice the extraneous spaces in the original.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Martin K. Petersen      http://mkp.net/
