@@ -1,27 +1,32 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Thu, 5 Jun 2008 23:25:38 -0700
-Message-ID: <20080605232538.fb85021e.akpm@linux-foundation.org>
-References: <200806010415.05290.chris2553@googlemail.com>
-	<20080605221709.f248eb90.akpm@linux-foundation.org>
-	<200806060607.29460.chris2553@googlemail.com>
-	<20080605232145.cdae753f.akpm@linux-foundation.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: blk_queue_hardsect_size 520-byte sector
+Date: Fri, 6 Jun 2008 09:54:33 +0200
+Message-ID: <20080606075432.GH5757@kernel.dk>
+References: <339116.28290.qm@web32404.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36977 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753182AbYFFGZp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 02:25:45 -0400
-In-Reply-To: <20080605232145.cdae753f.akpm@linux-foundation.org>
+Received: from brick.kernel.dk ([87.55.233.238]:4953 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758660AbYFFHyg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2008 03:54:36 -0400
+Content-Disposition: inline
+In-Reply-To: <339116.28290.qm@web32404.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: chris2553@googlemail.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Anil kumar <anils_r@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 5 Jun 2008 23:21:45 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+On Thu, Jun 05 2008, Anil kumar wrote:
+> Hi,
+> 
+> Can I call blk_queue_hardsect_size in a driver and set it to 520-byte
+> as hardware sector size.  How does the kernel and block layers take
+> the request, will it be in multiples of 520-bytes aligned or 512 bytes
+> aligned?
 
-> <watches wodim wibble for five minutes then report "CD/DVD-Recorder
-> not ready."  Pretends not to have noticed.>
+No, Linux only supports power-of-2 hardware block sizes I'm afraid.
 
-It goes much better when the CD is inserted upside up.
+-- 
+Jens Axboe
+
