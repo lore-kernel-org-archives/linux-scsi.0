@@ -1,32 +1,28 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Fri, 06 Jun 2008 12:56:30 -0400
-Message-ID: <yq1ve0mlcxt.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
-	<20080606142613.GA22495@shareable.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch -v3 22/22] qla2xxx: use memory_read_from_buffer
+Date: Fri, 6 Jun 2008 10:06:53 -0700
+Message-ID: <20080606170653.GC388@plap4-2.local>
+References: <20080604115633.116832712@gmail.com> <20080604115859.351267641@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:28431 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbYFFRBx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 13:01:53 -0400
-In-Reply-To: <20080606142613.GA22495@shareable.org> (Jamie Lokier's message of "Fri\, 6 Jun 2008 15\:26\:13 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762247AbYFFRHJ@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080604115859.351267641@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Andrew Vasquez <linux-driver@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
->>>>> "Jamie" == Jamie Lokier <jamie@shareable.org> writes:
+On Wed, 04 Jun 2008, Akinobu Mita wrote:
 
-Jamie> But SSDs present a block device interface, and they still have
-Jamie> alignment characteristics for performance.  Even more
-Jamie> important, when combining multiple SSDs into a RAID.
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Cc: Andrew Vasquez <linux-driver@qlogic.com>
+> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/qla2xxx/qla_attr.c |   45 ++++++++--------------------------------
+>  1 file changed, 10 insertions(+), 35 deletions(-)
 
-I'm not sure whether ATA has a way to get this information like SCSI
-dues.  But nothing prevents the SATA driver from setting the
-parameters accordingly.
+Basic testing looks good.  Thanks.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
