@@ -1,40 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Fri, 06 Jun 2008 12:48:19 -0400
-Message-ID: <yq14p86mrvw.fsf@sermon.lab.mkp.net>
+Date: Fri, 06 Jun 2008 12:53:39 -0400
+Message-ID: <yq1zlpyld2k.fsf@sermon.lab.mkp.net>
 References: <patchbomb.1212643369@sermon.lab.mkp.net>
-	<20080605062754.GQ2961@webber.adilger.int>
-	<yq1od6fml2q.fsf@sermon.lab.mkp.net>
-	<20080606140205.GF19246@shareable.org>
+	<20080605104042.GB20308@shareable.org>
+	<yq1hcc7mkgn.fsf@sermon.lab.mkp.net>
+	<20080606045150.GL10720@disturbed>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20080606140205.GF19246@shareable.org> (Jamie Lokier's message of "Fri\, 6 Jun 2008 15\:02\:05 +0100")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Andreas Dilger <adilger@sun.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from agminet01.oracle.com ([141.146.126.228]:60550 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754746AbYFFQyD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 12:54:03 -0400
+In-Reply-To: <20080606045150.GL10720@disturbed> (Dave Chinner's message of "Fri\, 6 Jun 2008 14\:51\:50 +1000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
->>>>> "Jamie" == Jamie Lokier <jamie@shareable.org> writes:
+>>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
 
-Jamie> Where it is due to specific values being not exactly right -
-Jamie> like the subdevice offset (or modulo-offset) in MD because it
-Jamie> doesn't represent all subdevices - it would be good for the
-Jamie> info to have flags saying which _specific_ values are not
-Jamie> exactly right.
+Dave> So is there going to be any obvious kernel API to access all
+Dave> this info? i.e. if you do an online modification of a volume
+Dave> (e.g.  add new storage of a different geometry to the volume)
+Dave> and then do an online grow of the filesystem, how does the
+Dave> filesystem get that new geometry information for the expanded
+Dave> area?
 
-You get that traversing the sysfs tree.
-
-
-Jamie> So that programs can choose their heuristics appropriately.
-Jamie> After all, users will use suboptimal layouts, and still want
-Jamie> the best performance it can do.
-
-I'd like to keep a clear distinction between normal applications and
-programs like mkfs.  I'm targeting the latter.
-
-Given that filesystems can lay out files at will, I/O characteristics
-for normal applications is really FIEMAP territory.
+xfs_growfs would call libdisk to see whether the topology had changed
+since the fs was created.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
