@@ -1,71 +1,66 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Fri, 6 Jun 2008 12:45:12 +0200
-Message-ID: <200806061245.13164.rjw@sisk.pl>
-References: <200806010415.05290.chris2553@googlemail.com> <20080605221709.f248eb90.akpm@linux-foundation.org>
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Fri, 6 Jun 2008 13:52:05 +0100
+Message-ID: <20080606125205.GA19246@shareable.org>
+References: <patchbomb.1212643369@sermon.lab.mkp.net> <20080605104042.GB20308@shareable.org> <yq1hcc7mkgn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59394 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753313AbYFFKoy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2008 06:44:54 -0400
-In-Reply-To: <20080605221709.f248eb90.akpm@linux-foundation.org>
+Received: from mail2.shareable.org ([80.68.89.115]:45567 "EHLO
+	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513AbYFFMwJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2008 08:52:09 -0400
 Content-Disposition: inline
+In-Reply-To: <yq1hcc7mkgn.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: chris2553@googlemail.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Friday, 6 of June 2008, Andrew Morton wrote:
-> On Sun, 1 Jun 2008 04:15:05 +0000 Chris Clayton <chris2553@googlemail.com> wrote:
-> 
-> > Hi,
-> > 
-> > I've just started testing 2.6.26 on my desktop machine and have found that I get 
-> > a long pause (20 seconds or so) as the system boots. By pause I mean that the 
-> > boot messages that normally scroll by stop doing so for, as I say, about 20 
-> > seconds.
-> > 
-> > I've done a bisect and arrived at:
-> > 
-> > b0ed43360fdca227048d88a08290365cb681c1a8 is first bad commit
-> > commit b0ed43360fdca227048d88a08290365cb681c1a8
-> > Author: Hannes Reinecke <hare@suse.de>
-> > Date:   Tue Mar 18 14:32:28 2008 +0100
-> > 
-> >     [SCSI] add scsi_host and scsi_target to scsi_bus
-> > 
-> >     This patch implements scsi_host and scsi_target device types
-> >     and adds both to the scsi_bus.
-> > 
-> >     Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >     Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
-> >     Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > 
-> > :040000 040000 4e3140909966b4c9aa987d34ee4078d283fe0351 
-> > 46e4fd28cc537ba700eb4f5652abf043fed4d76d M      drivers
-> > 
-> > The config file for that kernel is attached as are the kernel log for booting 
-> > that kernel and the bisect log.
-> > 
-> > I've also noticed that it takes much longer for icons to appear on my desktop 
-> > when I plug a usb storage device in. (The icons are shown/hidden by a simple 
-> > sctript that is run via udev when the device is attached/detached.)
-> 
-> Do you believe that this is the same period?  20 seconds?
-> 
-> > Let me know of any way I can help solve this.
-> > 
-> > Please cc me to any reply as I'm not subscribed.
-> 
-> cc's added.
-> 
-> Rafael, we might need to track this as a post-2.6.26 regression.
+Martin K. Petersen wrote:
+> I touched on this in my reply to Andreas.  The values exported in
+> sysfs are only part of the solution.  We'll still need some
+> intelligence (in libdisk or elsewhere) to traverse the stacked device.
+> And that's better done in user land where it's easier to notify the
+> operator or ask for confirmation.
 
-We're tracking it as http://bugzilla.kernel.org/show_bug.cgi?id=10861 .
+Agree, except for one thing.  It would be good to able to get a
+consistent atomic snapshot of the whole stack in one kernel call.  I
+guess that's not feasible where network devices are involved, though,
+without a rather complicated interface.
 
-Thanks,
-Rafael
+> Jamie> If it's a set of drives, doesn't it need to return multiple
+> Jamie> offsets, and drive identities?
+> 
+> Given the almost infinite amount of stacking and concatenation options
+> I think we'll quickly get into FIEMAP territory.  Add snapshots to the
+> mix and mapping out the characteristics quickly becomes unmanageable.
+
+Well, not unmanagable, but large and unsuitable for many programs.
+
+> If we present the mkfs writers with a list of 200 regions with
+> different alignment criteria and stripe sizes I'm sure they'll get
+> very unhappy.
+
+Probably right.  But as a database writer, I'd like the information if
+I can get it.  Sometimes I'll do timing measurements, because they are
+more "real" than the kernel's estimate.  But I can't measure storage
+stability levels, that really needs data from the kernel (if the
+kernel even has it).
+
+> So instead of publishing all this information I'd much rather have
+> libdisk do a rudimentary check and make it a binary "looks good"
+> vs. "may have performance problems".
+
+Sensible, I agree.
+
+> If some poor mkfs souls wantsto traverse the entire stack and actually
+> make the filesystem layout completely heterogeneous, my patch also
+> allows them to do that...
+
+Good, being possible is the main thing :-)
+
+And preferably without a different interface for different kinds of
+device.  So as long as there's a way to traverse the stack generically.
+
+-- Jamie
