@@ -1,52 +1,121 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 05 Jun 2008 21:16:24 -0400
-Message-ID: <yq1hcc7mkgn.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
-	<20080605104042.GB20308@shareable.org>
+Subject: [PATCH] scsi: Rename scsi_bidi_sdb_cache
+Date: Thu, 05 Jun 2008 23:30:03 -0400
+Message-ID: <yq18wxjme9w.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20080605104042.GB20308@shareable.org> (Jamie Lokier's message of "Thu\, 5 Jun 2008 11\:40\:42 +0100")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:35362 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbYFFDaU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2008 23:30:20 -0400
+Received: from agmgw1.us.oracle.com (agmgw1.us.oracle.com [152.68.180.212])
+	by rgminet01.oracle.com (Switch-3.2.4/Switch-3.1.6) with ESMTP id m563UHJ9029095
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jun 2008 21:30:18 -0600
+Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
+	by agmgw1.us.oracle.com (Switch-3.2.0/Switch-3.2.0) with ESMTP id m55KnJEh009001
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jun 2008 21:30:17 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
->>>>> "Jamie" == Jamie Lokier <jamie@shareable.org> writes:
-
-Jamie> Does it handle devices with different properties in differeng
-Jamie> offset ranges?  E.g. a RAID setup where the first 100GB have
-Jamie> one stripe width, but the next 100GB have a different stripe
-Jamie> width - as you can get if you join two different hardware RAIDs
-Jamie> with LVM, for example.
-
-I touched on this in my reply to Andreas.  The values exported in
-sysfs are only part of the solution.  We'll still need some
-intelligence (in libdisk or elsewhere) to traverse the stacked device.
-And that's better done in user land where it's easier to notify the
-operator or ask for confirmation.
+To: linux-scsi@vger.kernel.org
 
 
-Jamie> If it's a set of drives, doesn't it need to return multiple
-Jamie> offsets, and drive identities?
+The data integrity changes need to dynamically allocate
+scsi_data_buffers too.  Rename scsi_bidi_sdb_cache for clarity.
 
-Given the almost infinite amount of stacking and concatenation options
-I think we'll quickly get into FIEMAP territory.  Add snapshots to the
-mix and mapping out the characteristics quickly becomes unmanageable.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-If we present the mkfs writers with a list of 200 regions with
-different alignment criteria and stripe sizes I'm sure they'll get
-very unhappy.
+---
 
-So instead of publishing all this information I'd much rather have
-libdisk do a rudimentary check and make it a binary "looks good"
-vs. "may have performance problems".
+diff -r c972c82ff7c6 drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Mon Feb 04 02:42:39 2008 -0500
++++ b/drivers/scsi/scsi_lib.c	Mon Feb 04 02:57:32 2008 -0500
+@@ -65,7 +65,7 @@ static struct scsi_host_sg_pool scsi_sg_
+ };
+ #undef SP
+ 
+-static struct kmem_cache *scsi_bidi_sdb_cache;
++static struct kmem_cache *scsi_sdb_cache;
+ 
+ static void scsi_run_queue(struct request_queue *q);
+ 
+@@ -772,7 +772,7 @@ void scsi_release_buffers(struct scsi_cm
+ 		struct scsi_data_buffer *bidi_sdb =
+ 			cmd->request->next_rq->special;
+ 		scsi_free_sgtable(bidi_sdb);
+-		kmem_cache_free(scsi_bidi_sdb_cache, bidi_sdb);
++		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+ 		cmd->request->next_rq->special = NULL;
+ 	}
+ }
+@@ -1049,7 +1049,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, 
+ 
+ 	if (blk_bidi_rq(cmd->request)) {
+ 		struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
+-			scsi_bidi_sdb_cache, GFP_ATOMIC);
++			scsi_sdb_cache, GFP_ATOMIC);
+ 		if (!bidi_sdb) {
+ 			error = BLKPREP_DEFER;
+ 			goto err_exit;
+@@ -1677,11 +1677,11 @@ int __init scsi_init_queue(void)
+ 		return -ENOMEM;
+ 	}
+ 
+-	scsi_bidi_sdb_cache = kmem_cache_create("scsi_bidi_sdb",
+-					sizeof(struct scsi_data_buffer),
+-					0, 0, NULL);
+-	if (!scsi_bidi_sdb_cache) {
+-		printk(KERN_ERR "SCSI: can't init scsi bidi sdb cache\n");
++	scsi_sdb_cache = kmem_cache_create("scsi_data_buffer",
++					   sizeof(struct scsi_data_buffer),
++					   0, 0, NULL);
++	if (!scsi_sdb_cache) {
++		printk(KERN_ERR "SCSI: can't init scsi sdb cache\n");
+ 		goto cleanup_io_context;
+ 	}
+ 
+@@ -1694,7 +1694,7 @@ int __init scsi_init_queue(void)
+ 		if (!sgp->slab) {
+ 			printk(KERN_ERR "SCSI: can't init sg slab %s\n",
+ 					sgp->name);
+-			goto cleanup_bidi_sdb;
++			goto cleanup_sdb;
+ 		}
+ 
+ 		sgp->pool = mempool_create_slab_pool(SG_MEMPOOL_SIZE,
+@@ -1702,13 +1702,13 @@ int __init scsi_init_queue(void)
+ 		if (!sgp->pool) {
+ 			printk(KERN_ERR "SCSI: can't init sg mempool %s\n",
+ 					sgp->name);
+-			goto cleanup_bidi_sdb;
++			goto cleanup_sdb;
+ 		}
+ 	}
+ 
+ 	return 0;
+ 
+-cleanup_bidi_sdb:
++cleanup_sdb:
+ 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
+ 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
+ 		if (sgp->pool)
+@@ -1716,7 +1716,7 @@ cleanup_bidi_sdb:
+ 		if (sgp->slab)
+ 			kmem_cache_destroy(sgp->slab);
+ 	}
+-	kmem_cache_destroy(scsi_bidi_sdb_cache);
++	kmem_cache_destroy(scsi_sdb_cache);
+ cleanup_io_context:
+ 	kmem_cache_destroy(scsi_io_context_cache);
+ 
+@@ -1728,7 +1728,7 @@ void scsi_exit_queue(void)
+ 	int i;
+ 
+ 	kmem_cache_destroy(scsi_io_context_cache);
+-	kmem_cache_destroy(scsi_bidi_sdb_cache);
++	kmem_cache_destroy(scsi_sdb_cache);
+ 
+ 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
+ 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
 
-If some poor mkfs souls wantsto traverse the entire stack and actually
-make the filesystem layout completely heterogeneous, my patch also
-allows them to do that...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
 
