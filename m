@@ -1,45 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Thu, 05 Jun 2008 21:03:09 -0400
-Message-ID: <yq1od6fml2q.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1212643369@sermon.lab.mkp.net>
-	<20080605062754.GQ2961@webber.adilger.int>
+Subject: Re: [PATCH 1 of 3] block: Export I/O hints for block devices and partitions
+Date: Thu, 05 Jun 2008 21:18:10 -0400
+Message-ID: <yq1d4mvmkdp.fsf@sermon.lab.mkp.net>
+References: <3e5d8520d247223a236e.1212643370@sermon.lab.mkp.net>
+	<1212676957.13549.23.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20080605062754.GQ2961@webber.adilger.int> (Andreas Dilger's message of "Thu\, 05 Jun 2008 00\:27\:54 -0600")
+In-Reply-To: <1212676957.13549.23.camel@localhost.localdomain> (James Bottomley's message of "Thu\, 05 Jun 2008 09\:42\:37 -0500")
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Andreas Dilger <adilger@sun.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Andreas" == Andreas Dilger <adilger@sun.com> writes:
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Andreas> Having an ioctl() that can be called on the block device
-Andreas> (getting the right device regardless of its name) seems a lot
-Andreas> more useful to applications in my experience, unless you are
-Andreas> using a script.
+James> Something like
 
-The reason I didn't do it that way is that I only exported the bare
-bones required for userland to deal with the layout intelligently.
+James> enum disk_hint { DISK_HINT_OFFSET, DISK_HINT_BLOCK,
+James> DISK_HINT_LEN, };
 
-The problem of the ioctl is that you lose information about the
-subdevices and in particular about their physical alignment.  The
-phys_off value I export for the MD device is the offset for the first
-device.  But that does not imply that the other devices in the stripe
-have the same alignment.
+Fine by me.  I'll look into that.
 
-I considered taking an approach similar to blk_queue_stack_limits()
-where you clamp using the existing values as you add more devices.
-The downside to that is that you really want to let the user know that
-there's a potential problem.  And requiring the user to scrounge
-through syslog to look for complaints isn't so happening.  I'd much
-rather do that in libdisk where it's easy to print a message about
-"Suboptimal layout, proceed with caution".
 
-IOW, the idea is (for better and for worse) to let libdisk traverse
-sysfs to ensure that all things line up nicely before mkfs actually
-starts writing.
+James> I'm also not entirely sure that zero should be the no-hint
+James> value, but I could be persuaded on that because I can't see a
+James> case where setting zero to mean I'm telling you I definitely
+James> don't care should be different from not setting it.
+
+Yeah, I couldn't come up with a valid reason for any of these values
+to be 0.  That's why I made them unsigned.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
