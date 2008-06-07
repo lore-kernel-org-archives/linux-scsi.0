@@ -1,132 +1,142 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2 of 7] block: Globalize bio_set and bio_vec_slab
-Date: Sat, 07 Jun 2008 00:55:35 -0400
-Message-ID: <550d61001baa70aebab7.1212814535@sermon.lab.mkp.net>
+Subject: [PATCH 1 of 7] lib: Add support for the T10 Data Integrity Field CRC
+Date: Sat, 07 Jun 2008 00:55:34 -0400
+Message-ID: <fb6f53e13ff318cf9d1c.1212814534@sermon.lab.mkp.net>
 References: <patchbomb.1212814533@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:38416 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:38417 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751590AbYFGE5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751709AbYFGE5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 7 Jun 2008 00:57:43 -0400
 In-Reply-To: <patchbomb.1212814533@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-2 files changed, 38 insertions(+), 28 deletions(-)
-fs/bio.c            |   36 ++++++++----------------------------
-include/linux/bio.h |   30 ++++++++++++++++++++++++++++++
+4 files changed, 83 insertions(+)
+include/linux/crc-t10dif.h |    8 +++++
+lib/Kconfig                |    7 ++++
+lib/Makefile               |    1 
+lib/crc-t10dif.c           |   67 ++++++++++++++++++++++++++++++++++++++++++++
 
-
-Move struct bio_set and biovec_slab definitions to bio.h so they can
-be used outside of bio.c.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
 
-diff -r fb6f53e13ff3 -r 550d61001baa fs/bio.c
---- a/fs/bio.c	Sat Jun 07 00:45:14 2008 -0400
-+++ b/fs/bio.c	Sat Jun 07 00:45:14 2008 -0400
-@@ -28,24 +28,9 @@
- #include <linux/blktrace_api.h>
- #include <scsi/sg.h>		/* for struct sg_iovec */
+diff -r b76a6f493f0c -r fb6f53e13ff3 include/linux/crc-t10dif.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/include/linux/crc-t10dif.h	Sat Jun 07 00:45:14 2008 -0400
+@@ -0,0 +1,8 @@
++#ifndef _LINUX_CRC_T10DIF_H
++#define _LINUX_CRC_T10DIF_H
++
++#include <linux/types.h>
++
++__u16 crc_t10dif(unsigned char const *, size_t);
++
++#endif
+diff -r b76a6f493f0c -r fb6f53e13ff3 lib/Kconfig
+--- a/lib/Kconfig	Sat Jun 07 00:45:14 2008 -0400
++++ b/lib/Kconfig	Sat Jun 07 00:45:14 2008 -0400
+@@ -28,6 +28,13 @@
+ 	  modules require CRC16 functions, but a module built outside
+ 	  the kernel tree does. Such modules that use library CRC16
+ 	  functions require M here.
++
++config CRC_T10DIF
++	tristate "CRC calculation for the T10 Data Integrity Field"
++	help
++	  This option is only needed if a module that's not in the
++	  kernel tree needs to calculate CRC checks for use with the
++	  SCSI data integrity subsystem.
  
--#define BIO_POOL_SIZE 2
--
- static struct kmem_cache *bio_slab __read_mostly;
- 
--#define BIOVEC_NR_POOLS 6
--
--/*
-- * a small number of entries is fine, not going to be performance critical.
-- * basically we just need to survive
-- */
--#define BIO_SPLIT_ENTRIES 2
- mempool_t *bio_split_pool __read_mostly;
--
--struct biovec_slab {
--	int nr_vecs;
--	char *name; 
--	struct kmem_cache *slab;
--};
- 
- /*
-  * if you change this list, also change bvec_alloc or things will
-@@ -60,23 +45,18 @@
- #undef BV
- 
- /*
-- * bio_set is used to allow other portions of the IO system to
-- * allocate their own private memory pools for bio and iovec structures.
-- * These memory pools in turn all allocate from the bio_slab
-- * and the bvec_slabs[].
-- */
--struct bio_set {
--	mempool_t *bio_pool;
--	mempool_t *bvec_pools[BIOVEC_NR_POOLS];
--};
--
--/*
-  * fs_bio_set is the bio_set containing bio and iovec memory pools used by
-  * IO code that does not need private memory pools.
-  */
--static struct bio_set *fs_bio_set;
-+struct bio_set *fs_bio_set;
- 
--static inline struct bio_vec *bvec_alloc_bs(gfp_t gfp_mask, int nr, unsigned long *idx, struct bio_set *bs)
-+inline int bvec_nr_vecs(int idx)
+ config CRC_ITU_T
+ 	tristate "CRC ITU-T V.41 functions"
+diff -r b76a6f493f0c -r fb6f53e13ff3 lib/Makefile
+--- a/lib/Makefile	Sat Jun 07 00:45:14 2008 -0400
++++ b/lib/Makefile	Sat Jun 07 00:45:14 2008 -0400
+@@ -45,6 +45,7 @@
+ obj-$(CONFIG_BITREVERSE) += bitrev.o
+ obj-$(CONFIG_CRC_CCITT)	+= crc-ccitt.o
+ obj-$(CONFIG_CRC16)	+= crc16.o
++obj-$(CONFIG_CRC_T10DIF)+= crc-t10dif.o
+ obj-$(CONFIG_CRC_ITU_T)	+= crc-itu-t.o
+ obj-$(CONFIG_CRC32)	+= crc32.o
+ obj-$(CONFIG_CRC7)	+= crc7.o
+diff -r b76a6f493f0c -r fb6f53e13ff3 lib/crc-t10dif.c
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/lib/crc-t10dif.c	Sat Jun 07 00:45:14 2008 -0400
+@@ -0,0 +1,67 @@
++/*
++ * T10 Data Integrity Field CRC16 calculation
++ *
++ * Copyright (c) 2007 Oracle Corporation.  All rights reserved.
++ * Written by Martin K. Petersen <martin.petersen@oracle.com>
++ *
++ * This source code is licensed under the GNU General Public License,
++ * Version 2. See the file COPYING for more details.
++ */
++
++#include <linux/types.h>
++#include <linux/module.h>
++#include <linux/crc-t10dif.h>
++
++/* Table generated using the following polynomium:
++ * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
++ * gt: 0x8bb7
++ */
++static const __u16 t10_dif_crc_table[256] = {
++	0x0000, 0x8BB7, 0x9CD9, 0x176E, 0xB205, 0x39B2, 0x2EDC, 0xA56B,
++	0xEFBD, 0x640A, 0x7364, 0xF8D3, 0x5DB8, 0xD60F, 0xC161, 0x4AD6,
++	0x54CD, 0xDF7A, 0xC814, 0x43A3, 0xE6C8, 0x6D7F, 0x7A11, 0xF1A6,
++	0xBB70, 0x30C7, 0x27A9, 0xAC1E, 0x0975, 0x82C2, 0x95AC, 0x1E1B,
++	0xA99A, 0x222D, 0x3543, 0xBEF4, 0x1B9F, 0x9028, 0x8746, 0x0CF1,
++	0x4627, 0xCD90, 0xDAFE, 0x5149, 0xF422, 0x7F95, 0x68FB, 0xE34C,
++	0xFD57, 0x76E0, 0x618E, 0xEA39, 0x4F52, 0xC4E5, 0xD38B, 0x583C,
++	0x12EA, 0x995D, 0x8E33, 0x0584, 0xA0EF, 0x2B58, 0x3C36, 0xB781,
++	0xD883, 0x5334, 0x445A, 0xCFED, 0x6A86, 0xE131, 0xF65F, 0x7DE8,
++	0x373E, 0xBC89, 0xABE7, 0x2050, 0x853B, 0x0E8C, 0x19E2, 0x9255,
++	0x8C4E, 0x07F9, 0x1097, 0x9B20, 0x3E4B, 0xB5FC, 0xA292, 0x2925,
++	0x63F3, 0xE844, 0xFF2A, 0x749D, 0xD1F6, 0x5A41, 0x4D2F, 0xC698,
++	0x7119, 0xFAAE, 0xEDC0, 0x6677, 0xC31C, 0x48AB, 0x5FC5, 0xD472,
++	0x9EA4, 0x1513, 0x027D, 0x89CA, 0x2CA1, 0xA716, 0xB078, 0x3BCF,
++	0x25D4, 0xAE63, 0xB90D, 0x32BA, 0x97D1, 0x1C66, 0x0B08, 0x80BF,
++	0xCA69, 0x41DE, 0x56B0, 0xDD07, 0x786C, 0xF3DB, 0xE4B5, 0x6F02,
++	0x3AB1, 0xB106, 0xA668, 0x2DDF, 0x88B4, 0x0303, 0x146D, 0x9FDA,
++	0xD50C, 0x5EBB, 0x49D5, 0xC262, 0x6709, 0xECBE, 0xFBD0, 0x7067,
++	0x6E7C, 0xE5CB, 0xF2A5, 0x7912, 0xDC79, 0x57CE, 0x40A0, 0xCB17,
++	0x81C1, 0x0A76, 0x1D18, 0x96AF, 0x33C4, 0xB873, 0xAF1D, 0x24AA,
++	0x932B, 0x189C, 0x0FF2, 0x8445, 0x212E, 0xAA99, 0xBDF7, 0x3640,
++	0x7C96, 0xF721, 0xE04F, 0x6BF8, 0xCE93, 0x4524, 0x524A, 0xD9FD,
++	0xC7E6, 0x4C51, 0x5B3F, 0xD088, 0x75E3, 0xFE54, 0xE93A, 0x628D,
++	0x285B, 0xA3EC, 0xB482, 0x3F35, 0x9A5E, 0x11E9, 0x0687, 0x8D30,
++	0xE232, 0x6985, 0x7EEB, 0xF55C, 0x5037, 0xDB80, 0xCCEE, 0x4759,
++	0x0D8F, 0x8638, 0x9156, 0x1AE1, 0xBF8A, 0x343D, 0x2353, 0xA8E4,
++	0xB6FF, 0x3D48, 0x2A26, 0xA191, 0x04FA, 0x8F4D, 0x9823, 0x1394,
++	0x5942, 0xD2F5, 0xC59B, 0x4E2C, 0xEB47, 0x60F0, 0x779E, 0xFC29,
++	0x4BA8, 0xC01F, 0xD771, 0x5CC6, 0xF9AD, 0x721A, 0x6574, 0xEEC3,
++	0xA415, 0x2FA2, 0x38CC, 0xB37B, 0x1610, 0x9DA7, 0x8AC9, 0x017E,
++	0x1F65, 0x94D2, 0x83BC, 0x080B, 0xAD60, 0x26D7, 0x31B9, 0xBA0E,
++	0xF0D8, 0x7B6F, 0x6C01, 0xE7B6, 0x42DD, 0xC96A, 0xDE04, 0x55B3
++};
++
++__u16 crc_t10dif(const unsigned char *buffer, size_t len)
 +{
-+	return bvec_slabs[idx].nr_vecs;
++	__u16 crc = 0;
++	unsigned int i;
++
++	for (i = 0 ; i < len ; i++)
++		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
++
++	return crc;
 +}
-+EXPORT_SYMBOL(bvec_nr_vecs);
++EXPORT_SYMBOL(crc_t10dif);
 +
-+struct bio_vec *bvec_alloc_bs(gfp_t gfp_mask, int nr, unsigned long *idx, struct bio_set *bs)
- {
- 	struct bio_vec *bvl;
- 
-diff -r fb6f53e13ff3 -r 550d61001baa include/linux/bio.h
---- a/include/linux/bio.h	Sat Jun 07 00:45:14 2008 -0400
-+++ b/include/linux/bio.h	Sat Jun 07 00:45:14 2008 -0400
-@@ -333,6 +333,36 @@
- 				     int, int);
- extern int bio_uncopy_user(struct bio *);
- void zero_fill_bio(struct bio *bio);
-+extern struct bio_vec *bvec_alloc_bs(gfp_t, int, unsigned long *, struct bio_set *);
-+extern inline int bvec_nr_vecs(int idx);
-+
-+/*
-+ * bio_set is used to allow other portions of the IO system to
-+ * allocate their own private memory pools for bio and iovec structures.
-+ * These memory pools in turn all allocate from the bio_slab
-+ * and the bvec_slabs[].
-+ */
-+#define BIO_POOL_SIZE 2
-+#define BIOVEC_NR_POOLS 6
-+
-+struct bio_set {
-+	mempool_t *bio_pool;
-+	mempool_t *bvec_pools[BIOVEC_NR_POOLS];
-+};
-+
-+struct biovec_slab {
-+	int nr_vecs;
-+	char *name;
-+	struct kmem_cache *slab;
-+};
-+
-+extern struct bio_set *fs_bio_set;
-+
-+/*
-+ * a small number of entries is fine, not going to be performance critical.
-+ * basically we just need to survive
-+ */
-+#define BIO_SPLIT_ENTRIES 2
- 
- #ifdef CONFIG_HIGHMEM
- /*
++MODULE_DESCRIPTION("T10 DIF CRC calculation");
++MODULE_LICENSE("GPL");
 
 
