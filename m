@@ -1,51 +1,402 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4 of 7] block: bio data integrity support
-Date: Sat, 07 Jun 2008 00:55:37 -0400
-Message-ID: <f2ae9d5bce4c33e12083.1212814537@sermon.lab.mkp.net>
+Subject: [PATCH 7 of 7] Support for SCSI disk (SBC) Data Integrity Field
+Date: Sat, 07 Jun 2008 00:55:40 -0400
+Message-ID: <8bc1728dc75a3e55e1f9.1212814540@sermon.lab.mkp.net>
 References: <patchbomb.1212814533@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:38419 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:38422 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751811AbYFGE5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Jun 2008 00:57:43 -0400
+	id S1751809AbYFGE5p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Jun 2008 00:57:45 -0400
 In-Reply-To: <patchbomb.1212814533@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-4 files changed, 825 insertions(+), 3 deletions(-)
-fs/Makefile         |    1 
-fs/bio-integrity.c  |  715 +++++++++++++++++++++++++++++++++++++++++++++++++++
-fs/bio.c            |   27 +
-include/linux/bio.h |   85 ++++++
+12 files changed, 935 insertions(+), 7 deletions(-)
+Documentation/scsi/data-integrity.txt |   57 ++
+drivers/scsi/Kconfig                  |    1 
+drivers/scsi/Makefile                 |    2 
+drivers/scsi/scsi_error.c             |    3 
+drivers/scsi/scsi_lib.c               |    4 
+drivers/scsi/scsi_sysfs.c             |    4 
+drivers/scsi/sd.c                     |   58 ++
+drivers/scsi/sd.h                     |   22 +
+drivers/scsi/sd_dif.c                 |  644 +++++++++++++++++++++++++++++++++
+include/scsi/scsi_cmnd.h              |    3 
+include/scsi/scsi_dif.h               |  140 +++++++
+include/scsi/scsi_host.h              |    4 
 
 
-Allows integrity metadata to be attached to a bio.
+Configure DMA of protection information and issue READ/WRITE commands
+with RDPROTECT/WRPROTECT set accordingly.
+
+Force READ CAPACITY(16) if the target has the PROTECT bit set and grab
+an extra byte of response (P_TYPE and PROT_EN are in byte 12).
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
 
-diff -r 318fa71e735d -r f2ae9d5bce4c fs/Makefile
---- a/fs/Makefile	Sat Jun 07 00:45:14 2008 -0400
-+++ b/fs/Makefile	Sat Jun 07 00:45:15 2008 -0400
-@@ -19,6 +19,7 @@
- obj-y +=	no-block.o
- endif
- 
-+obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o
- obj-$(CONFIG_INOTIFY)		+= inotify.o
- obj-$(CONFIG_INOTIFY_USER)	+= inotify_user.o
- obj-$(CONFIG_EPOLL)		+= eventpoll.o
-diff -r 318fa71e735d -r f2ae9d5bce4c fs/bio-integrity.c
+diff -r ad65bfde4e05 -r 8bc1728dc75a Documentation/scsi/data-integrity.txt
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/fs/bio-integrity.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -0,0 +1,715 @@
++++ b/Documentation/scsi/data-integrity.txt	Sat Jun 07 00:45:15 2008 -0400
+@@ -0,0 +1,57 @@
++----------------------------------------------------------------------
++1.0 INTRODUCTION
++
++For a general overview of the data integrity framework please consult
++Documentation/block/data-integrity.txt.
++
++----------------------------------------------------------------------
++2.0 SCSI LAYER IMPLEMENTATION DETAILS
++
++The scsi_command has been extended with a scatterlist for the
++integrity metadata.  Note that all SCSI mid layer changes refer to
++this using the term "protection information" which is what it is
++called in the T10 spec.
++
++The term DIF (Data Integrity Field) is specific to SCSI disks (SBC).
++The SCSI midlayer doesn't know, or care, about the contents of the
++protection scatterlist, except it calls blk_rq_map_integrity_sg()
++during command initialization.
++
++
++2.1 SCSI DEVICE SCANNING
++
++A SCSI device has the PROTECT bit set in the standard INQUIRY page if
++it supports protection information.  The state of this bit is saved in
++the scsi_device struct.
++
++
++2.2 SCSI DISK SETUP
++
++In the case of a SCSI disk the actual DIF protection format is
++contained in in result of READ CAPACITY(16).  Consequently we have to
++use the 16-byte READ CAPACITY variant if the device is
++protection-capable.
++
++If the device has DIF-enabled we'll negotiate capabilities with the
++HBA.  And if the HBA is capable of protection DMA, the blk_integrity
++profile will be registered.
++
++Currently we only support Type 1 and Type 3.  Type 2 is only defined
++for 32-byte CDBs and is awaiting varlen CDB support.
++
++The controller may support checksum conversion as an optimization.
++Initial benchmarks showed that calculating a 16-bit CRC for each 512
++bytes of an I/O was expensive.  Emulex' hardware had the capability to
++convert an IP checksum to the T10 CRC on the wire.  So as part of the
++negotiation process the checksum algorithm will be selected and the
++blk_integrity profile set accordingly.
++
++----------------------------------------------------------------------
++3.0 HBA INTERFACE
++
++See the following doc:
++
++http://oss.oracle.com/projects/data-integrity/dist/documentation/linux-hba.pdf
++
++----------------------------------------------------------------------
++2007-12-24 Martin K. Petersen <martin.petersen@oracle.com>
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/Kconfig	Sat Jun 07 00:45:15 2008 -0400
+@@ -265,6 +265,7 @@
+        bool "SCSI Data Integrity Protection"
+        depends on SCSI
+        depends on BLK_DEV_INTEGRITY
++       select CRC_T10DIF
+        help 
+ 	 Some SCSI devices support data protection features above and
+ 	 beyond those implemented in the transport.  Select this
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/Makefile
+--- a/drivers/scsi/Makefile	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/Makefile	Sat Jun 07 00:45:15 2008 -0400
+@@ -149,6 +149,8 @@
+ scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
+ 
+ sd_mod-objs	:= sd.o
++sd_mod-$(CONFIG_SCSI_PROTECTION) += sd_dif.o
++
+ sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
+ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+ 		:= -DCONFIG_NCR53C8XX_PREFETCH -DSCSI_NCR_BIG_ENDIAN \
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/scsi_error.c	Sat Jun 07 00:45:15 2008 -0400
+@@ -333,6 +333,9 @@
+ 		return /* soft_error */ SUCCESS;
+ 
+ 	case ABORTED_COMMAND:
++		if (sshdr.asc == 0x10) /* DIF */
++			return SUCCESS;
++
+ 		return NEEDS_RETRY;
+ 	case NOT_READY:
+ 	case UNIT_ATTENTION:
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/scsi_lib.c	Sat Jun 07 00:45:15 2008 -0400
+@@ -947,6 +947,10 @@
+ 				scsi_requeue_command(q, cmd);
+ 				return;
+ 			} else {
++				if (sshdr.asc == 0x10) { /* DIF */
++					scsi_print_result(cmd);
++					scsi_print_sense("", cmd);
++				}
+ 				scsi_end_request(cmd, -EIO, this_count, 1);
+ 				return;
+ 			}
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/scsi_sysfs.c	Sat Jun 07 00:45:15 2008 -0400
+@@ -249,6 +249,8 @@
+ shost_rd_attr(can_queue, "%hd\n");
+ shost_rd_attr(sg_tablesize, "%hu\n");
+ shost_rd_attr(unchecked_isa_dma, "%d\n");
++shost_rd_attr(dif_capabilities, "%hd\n");
++shost_rd_attr(dif_guard_type, "%hd\n");
+ shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
+ 
+ static struct attribute *scsi_sysfs_shost_attrs[] = {
+@@ -263,6 +265,8 @@
+ 	&dev_attr_hstate.attr,
+ 	&dev_attr_supported_mode.attr,
+ 	&dev_attr_active_mode.attr,
++	&dev_attr_dif_capabilities.attr,
++	&dev_attr_dif_guard_type.attr,
+ 	NULL
+ };
+ 
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/sd.c	Sat Jun 07 00:45:15 2008 -0400
+@@ -58,6 +58,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsicam.h>
++#include <scsi/scsi_dif.h>
+ 
+ #include "sd.h"
+ #include "scsi_logging.h"
+@@ -233,6 +234,24 @@
+ 	return snprintf(buf, 40, "%d\n", sdkp->device->allow_restart);
+ }
+ 
++static ssize_t
++sd_show_protection_type(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->protection_type);
++}
++
++static ssize_t
++sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
++		    char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->ATO);
++}
++
+ static struct device_attribute sd_disk_attrs[] = {
+ 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
+ 	       sd_store_cache_type),
+@@ -241,6 +260,8 @@
+ 	       sd_store_allow_restart),
+ 	__ATTR(manage_start_stop, S_IRUGO|S_IWUSR, sd_show_manage_start_stop,
+ 	       sd_store_manage_start_stop),
++	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
++	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
+ 	__ATTR_NULL,
+ };
+ 
+@@ -353,6 +374,7 @@
+ 	struct scsi_cmnd *SCpnt;
+ 	struct scsi_device *sdp = q->queuedata;
+ 	struct gendisk *disk = rq->rq_disk;
++	struct scsi_disk *sdkp;
+ 	sector_t block = rq->sector;
+ 	unsigned int this_count = rq->nr_sectors;
+ 	unsigned int timeout = sdp->timeout;
+@@ -369,6 +391,7 @@
+ 	if (ret != BLKPREP_OK)
+ 		goto out;
+ 	SCpnt = rq->special;
++	sdkp = scsi_disk(disk);
+ 
+ 	/* from here on until we're complete, any goto out
+ 	 * is used for a killable error condition */
+@@ -458,6 +481,11 @@
+ 		}
+ 		SCpnt->cmnd[0] = WRITE_6;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
++
++		if (blk_integrity_rq(rq) &&
++		    sd_dif_prepare(rq, block, sdp->sector_size) == -EIO)
++			goto out;
++
+ 	} else if (rq_data_dir(rq) == READ) {
+ 		SCpnt->cmnd[0] = READ_6;
+ 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+@@ -472,8 +500,13 @@
+ 					"writing" : "reading", this_count,
+ 					rq->nr_sectors));
+ 
+-	SCpnt->cmnd[1] = 0;
+-	
++	sd_dif_op(SCpnt);
++
++	if (scsi_host_dif_type(sdp->host, sdkp->protection_type))
++		SCpnt->cmnd[1] = 1 << 5;
++	else
++		SCpnt->cmnd[1] = 0;
++
+ 	if (block > 0xffffffff) {
+ 		SCpnt->cmnd[0] += READ_16 - READ_6;
+ 		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+@@ -491,6 +524,7 @@
+ 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
+ 		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
+ 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
++		   SCpnt->device->protection ||
+ 		   SCpnt->device->use_10_for_rw) {
+ 		if (this_count > 0xffff)
+ 			this_count = 0xffff;
+@@ -1004,7 +1038,8 @@
+ 		good_bytes = xfer_size;
+ 		break;
+ 	case ILLEGAL_REQUEST:
+-		if (SCpnt->device->use_10_for_rw &&
++		if (SCpnt->device->protection == 0 &&
++		    SCpnt->device->use_10_for_rw &&
+ 		    (SCpnt->cmnd[0] == READ_10 ||
+ 		     SCpnt->cmnd[0] == WRITE_10))
+ 			SCpnt->device->use_10_for_rw = 0;
+@@ -1017,6 +1052,9 @@
+ 		break;
+ 	}
+  out:
++	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
++		sd_dif_complete(SCpnt, good_bytes);
++
+ 	return good_bytes;
+ }
+ 
+@@ -1171,7 +1209,8 @@
+ 	unsigned char cmd[16];
+ 	int the_result, retries;
+ 	int sector_size = 0;
+-	int longrc = 0;
++	/* Force READ CAPACITY(16) when PROTECT=1 */
++	int longrc = sdkp->device->protection ? 1 : 0;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+ 	struct scsi_device *sdp = sdkp->device;
+@@ -1183,8 +1222,8 @@
+ 			memset((void *) cmd, 0, 16);
+ 			cmd[0] = SERVICE_ACTION_IN;
+ 			cmd[1] = SAI_READ_CAPACITY_16;
+-			cmd[13] = 12;
+-			memset((void *) buffer, 0, 12);
++			cmd[13] = 13;
++			memset((void *) buffer, 0, 13);
+ 		} else {
+ 			cmd[0] = READ_CAPACITY;
+ 			memset((void *) &cmd[1], 0, 9);
+@@ -1192,7 +1231,7 @@
+ 		}
+ 		
+ 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
+-					      buffer, longrc ? 12 : 8, &sshdr,
++					      buffer, longrc ? 13 : 8, &sshdr,
+ 					      SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+ 		if (media_not_present(sdkp, &sshdr))
+@@ -1267,6 +1306,8 @@
+ 			
+ 		sector_size = (buffer[8] << 24) |
+ 			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
++
++		sd_dif_config_disk(sdkp, buffer);
+ 	}	
+ 
+ 	/* Some devices return the total number of sectors, not the
+@@ -1564,6 +1605,7 @@
+ 	sdkp->write_prot = 0;
+ 	sdkp->WCE = 0;
+ 	sdkp->RCD = 0;
++	sdkp->ATO = 0;
+ 
+ 	sd_spinup_disk(sdkp);
+ 
+@@ -1575,6 +1617,7 @@
+ 		sd_read_capacity(sdkp, buffer);
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
++		sd_dif_app_tag_own(sdkp, buffer);
+ 	}
+ 
+ 	/*
+@@ -1708,6 +1751,7 @@
+ 
+ 	dev_set_drvdata(dev, sdkp);
+ 	add_disk(gd);
++	sd_dif_config_host(sdkp);
+ 
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd.h
+--- a/drivers/scsi/sd.h	Sat Jun 07 00:45:15 2008 -0400
++++ b/drivers/scsi/sd.h	Sat Jun 07 00:45:15 2008 -0400
+@@ -41,7 +41,9 @@
+ 	u32		index;
+ 	u8		media_present;
+ 	u8		write_prot;
++	u8		protection_type;/* Data Integrity Field */
+ 	unsigned	previous_state : 1;
++	unsigned	ATO : 1;	/* state of disk ATO bit */
+ 	unsigned	WCE : 1;	/* state of disk WCE bit */
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+@@ -61,4 +63,24 @@
+ 		    (sdsk)->disk->disk_name, ##a) :			\
+ 	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
+ 
++#if defined(CONFIG_SCSI_PROTECTION)
++
++extern unsigned char sd_dif_op(struct scsi_cmnd *);
++extern void sd_dif_app_tag_own(struct scsi_disk *, unsigned char *);
++extern void sd_dif_config_disk(struct scsi_disk *, unsigned char *);
++extern void sd_dif_config_host(struct scsi_disk *);
++extern int sd_dif_prepare(struct request *rq, sector_t, unsigned int);
++extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
++
++#else /* CONFIG_SCSI_PROTECTION */
++
++#define sd_dif_op(a)				(0)
++#define sd_dif_app_tag_own(a, b)		do { } while (0)
++#define sd_dif_config_disk(a, b)		do { } while (0)
++#define sd_dif_config_host(a)			do { } while (0)
++#define sd_dif_prepare(a, b, c)			(0)
++#define sd_dif_complete(a, b)			(0)
++
++#endif /* CONFIG_SCSI_PROTECTION */
++
+ #endif /* _SCSI_DISK_H */
+diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd_dif.c
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/drivers/scsi/sd_dif.c	Sat Jun 07 00:45:15 2008 -0400
+@@ -0,0 +1,644 @@
 +/*
-+ * bio-integrity.c - bio data integrity extensions
++ * sd_dif.c - SCSI Data Integrity Field
 + *
 + * Copyright (C) 2007, 2008 Oracle Corporation
 + * Written by: Martin K. Petersen <martin.petersen@oracle.com>
@@ -67,898 +418,797 @@ diff -r 318fa71e735d -r f2ae9d5bce4c fs/bio-integrity.c
 + */
 +
 +#include <linux/blkdev.h>
-+#include <linux/mempool.h>
-+#include <linux/bio.h>
-+#include <linux/workqueue.h>
++#include <linux/crc-t10dif.h>
 +
-+static struct kmem_cache *bio_integrity_slab __read_mostly;
-+static struct workqueue_struct *kintegrityd_wq;
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_dbg.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_driver.h>
++#include <scsi/scsi_eh.h>
++#include <scsi/scsi_ioctl.h>
++#include <scsi/scsicam.h>
++#include <scsi/scsi_dif.h>
 +
-+/**
-+ * bio_integrity_alloc_bioset - Allocate integrity payload and attach it to bio
-+ * @bio:	bio to attach integrity metadata to
-+ * @gfp_mask:	Memory allocation mask
-+ * @nr_vecs:	Number of integrity metadata scatter-gather elements
-+ * @bs:		bio_set to allocate from
-+ *
-+ * Description: This function prepares a bio for attaching integrity
-+ * metadata.  nr_vecs specifies the maximum number of pages containing
-+ * integrity metadata that can be attached.
-+ */
-+struct bip *bio_integrity_alloc_bioset(struct bio *bio, gfp_t gfp_mask, unsigned int nr_vecs, struct bio_set *bs)
++#include <net/checksum.h>
++
++#include "sd.h"
++
++typedef __u16 (csum_fn) (void *, unsigned int);
++
++static __u16 sd_dif_crc_fn(void *data, unsigned int len)
 +{
-+	struct bip *bip;
-+	struct bio_vec *bv;
-+	unsigned long idx;
-+
-+	BUG_ON(bio == NULL);
-+
-+	bip = mempool_alloc(bs->bio_integrity_pool, gfp_mask);
-+	if (unlikely(bip == NULL)) {
-+		printk(KERN_ERR "%s: could not alloc bip\n", __func__);
-+		return NULL;
-+	}
-+
-+	memset(bip, 0, sizeof(*bip));
-+	idx = 0;
-+
-+	bv = bvec_alloc_bs(gfp_mask, nr_vecs, &idx, bs);
-+	if (unlikely(bv == NULL)) {
-+		printk(KERN_ERR "%s: could not alloc bip_vec\n", __func__);
-+		mempool_free(bip, bs->bio_integrity_pool);
-+		return NULL;
-+	}
-+
-+	bip->bip_pool = idx;
-+	bip->bip_vec = bv;
-+	bip->bip_bio = bio;
-+	bio->bi_integrity = bip;
-+
-+	return bip;
++	return cpu_to_be16(crc_t10dif(data, len));
 +}
-+EXPORT_SYMBOL(bio_integrity_alloc_bioset);
 +
-+/**
-+ * bio_integrity_alloc - Allocate integrity payload and attach it to bio
-+ * @bio:	bio to attach integrity metadata to
-+ * @gfp_mask:	Memory allocation mask
-+ * @nr_vecs:	Number of integrity metadata scatter-gather elements
-+ *
-+ * Description: This function prepares a bio for attaching integrity
-+ * metadata.  nr_vecs specifies the maximum number of pages containing
-+ * integrity metadata that can be attached.
-+ */
-+struct bip *bio_integrity_alloc(struct bio *bio, gfp_t gfp_mask,
-+				unsigned int nr_vecs)
++static __u16 sd_dif_ip_fn(void *data, unsigned int len)
 +{
-+	return bio_integrity_alloc_bioset(bio, gfp_mask, nr_vecs, fs_bio_set);
++	return ip_compute_csum(data, len);
 +}
-+EXPORT_SYMBOL(bio_integrity_alloc);
 +
-+/**
-+ * bio_integrity_free - Free bio integrity payload
-+ * @bio:	bio containing bip to be freed
-+ * @bs:		bio_set this bio was allocated from
-+ *
-+ * Description: Used to free the integrity portion of a bio. Usually
-+ * called from bio_free().
++/*
++ * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
++ * 16 bit app tag, 32 bit reference tag.
 + */
-+void bio_integrity_free(struct bio *bio, struct bio_set *bs)
++static void sd_dif_type1_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
 +{
-+	struct bip *bip = bio->bi_integrity;
++	void *buf = bix->data_buf;
++	struct sd_dif_tuple *sdt = bix->prot_buf;
++	sector_t sector = bix->sector;
++	unsigned int i;
 +
-+	BUG_ON(bip == NULL);
++	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++		sdt->guard_tag = fn(buf, bix->sector_size);
++		sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
++		sdt->app_tag = 0;
 +
-+	/* A cloned bio doesn't own the integrity metadata */
-+	if (!bio_flagged(bio, BIO_CLONED) && bip->bip_buf != NULL)
-+		kfree(bip->bip_buf);
-+
-+	mempool_free(bip->bip_vec, bs->bvec_pools[bip->bip_pool]);
-+	mempool_free(bip, bs->bio_integrity_pool);
-+
-+	bio->bi_integrity = NULL;
-+}
-+EXPORT_SYMBOL(bio_integrity_free);
-+
-+/**
-+ * bio_integrity_add_page - Attach integrity metadata
-+ * @bio:	bio to update
-+ * @page:	page containing integrity metadata
-+ * @len:	number of bytes of integrity metadata in page
-+ * @offset:	start offset within page
-+ *
-+ * Description: Attach a page containing integrity metadata to bio.
-+ */
-+int bio_integrity_add_page(struct bio *bio, struct page *page,
-+			   unsigned int len, unsigned int offset)
-+{
-+	struct bip *bip;
-+	struct bio_vec *iv;
-+
-+	bip = bio->bi_integrity;
-+
-+	if (bip->bip_vcnt >= bvec_nr_vecs(bip->bip_pool)) {
-+		printk(KERN_ERR "%s: bip_vec full\n", __func__);
-+		return 0;
-+	}
-+
-+	iv = bip_vec_idx(bip, bip->bip_vcnt);
-+	BUG_ON(iv == NULL);
-+	BUG_ON(iv->bv_page != NULL);
-+
-+	iv->bv_page = page;
-+	iv->bv_len = len;
-+	iv->bv_offset = offset;
-+	bip->bip_vcnt++;
-+
-+	return len;
-+}
-+EXPORT_SYMBOL(bio_integrity_add_page);
-+
-+/**
-+ * bio_integrity_enabled - Check whether integrity can be passed
-+ * @bio:	bio to check
-+ *
-+ * Description: Determines whether bio_integrity_prep() can be called
-+ * on this bio or not.	bio data direction and target device must be
-+ * set prior to calling.  The functions honors the write_generate and
-+ * read_verify flags in sysfs.
-+ */
-+inline int bio_integrity_enabled(struct bio *bio)
-+{
-+	/* Already protected? */
-+	if (bio_integrity(bio))
-+		return 0;
-+
-+	return bdev_integrity_enabled(bio->bi_bdev, bio_data_dir(bio));
-+}
-+EXPORT_SYMBOL(bio_integrity_enabled);
-+
-+/**
-+ * bio_integrity_tag_size - Retrieve integrity tag space
-+ * @bio:	bio to inspect
-+ *
-+ * Description: Returns the maximum number of tag bytes that can be
-+ * attached to this bio. Filesystems can use this to determine how
-+ * much metadata to attach to an I/O.
-+ */
-+unsigned int bio_integrity_tag_size(struct bio *bio)
-+{
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+
-+	BUG_ON(bio->bi_size == 0);
-+
-+	return bi->tag_size * (bio->bi_size / bi->sector_size);
-+}
-+EXPORT_SYMBOL(bio_integrity_tag_size);
-+
-+/**
-+ * bio_integrity_set_tag - Attach a tag buffer to a bio
-+ * @bio:	bio to attach buffer to
-+ * @tag_buf:	Pointer to a buffer containing tag data
-+ * @len:	Length of the included buffer
-+ *
-+ * Description: Use this function to tag a bio by leveraging the extra
-+ * space provided by devices formatted with integrity protection.  The
-+ * size of the integrity buffer must be <= to the size reported by
-+ * bio_integrity_tag_size().
-+ */
-+int bio_integrity_set_tag(struct bio *bio, void *tag_buf, unsigned int len)
-+{
-+	struct bip *bip = bio->bi_integrity;
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	unsigned int nr_sectors;
-+
-+	BUG_ON(bip->bip_buf == NULL);
-+	BUG_ON(bio_data_dir(bio) != WRITE);
-+
-+	if (bi->tag_size == 0)
-+		return -1;
-+
-+	nr_sectors = len / bi->tag_size;
-+
-+	if (len % 2)
-+		nr_sectors++;
-+
-+	if (bi->sector_size == 4096)
-+		nr_sectors >>= 3;
-+
-+	if (nr_sectors * bi->tuple_size > bip->bip_size) {
-+		printk(KERN_ERR "%s: tag too big for bio: %u > %u\n",
-+		       __func__, nr_sectors * bi->tuple_size, bip->bip_size);
-+		return -1;
-+	}
-+
-+	bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bio_integrity_set_tag);
-+
-+/**
-+ * bio_integrity_get_tag - Retrieve a tag buffer from a bio
-+ * @bio:	bio to retrieve buffer from
-+ * @tag_buf:	Pointer to a buffer for the tag data
-+ * @len:	Length of the target buffer
-+ *
-+ * Description: Use this function to retrieve the tag buffer from a
-+ * completed I/O. The size of the integrity buffer must be <= to the
-+ * size reported by bio_integrity_tag_size().
-+ */
-+int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
-+{
-+	struct bip *bip = bio->bi_integrity;
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	unsigned int nr_sectors;
-+
-+	BUG_ON(bip->bip_buf == NULL);
-+	BUG_ON(bio_data_dir(bio) != READ);
-+
-+	if (bi->tag_size == 0)
-+		return -1;
-+
-+	nr_sectors = len / bi->tag_size;
-+
-+	if (len % 2)
-+		nr_sectors++;
-+
-+	if (bi->sector_size == 4096)
-+		nr_sectors >>= 3;
-+
-+	if (nr_sectors * bi->tuple_size > bip->bip_size) {
-+		printk(KERN_ERR "%s: tag too big for bio: %u > %u\n",
-+		       __func__, nr_sectors * bi->tuple_size, bip->bip_size);
-+		return -1;
-+	}
-+
-+	bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bio_integrity_get_tag);
-+
-+/**
-+ * bio_integrity_generate - Generate integrity metadata for a bio
-+ * @bio:	bio to generate integrity metadata for
-+ *
-+ * Description: Generates integrity metadata for a bio by calling the
-+ * block device's generation callback function.	 The bio must have a
-+ * bip attached with enough room to accomodate the generated integrity
-+ * metadata.
-+ */
-+static void bio_integrity_generate(struct bio *bio)
-+{
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	struct blk_integrity_exchg bix;
-+	struct bio_vec *bv;
-+	sector_t sector = bio->bi_sector;
-+	unsigned int i, sectors, total;
-+	void *prot_buf = bio->bi_integrity->bip_buf;
-+
-+	total = 0;
-+	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
-+	bix.sector_size = bi->sector_size;
-+
-+	bio_for_each_segment(bv, bio, i) {
-+		bix.data_buf = kmap_atomic(bv->bv_page, KM_USER0)
-+			+ bv->bv_offset;
-+		bix.data_size = bv->bv_len;
-+		bix.prot_buf = prot_buf;
-+		bix.sector = sector;
-+
-+		bi->generate_fn(&bix);
-+
-+		sectors = bv->bv_len / bi->sector_size;
-+		sector += sectors;
-+		prot_buf += sectors * bi->tuple_size;
-+		total += sectors * bi->tuple_size;
-+		BUG_ON(total > bio->bi_integrity->bip_size);
-+
-+		kunmap_atomic(bv->bv_page, KM_USER0);
++		buf += bix->sector_size;
++		sector++;
 +	}
 +}
 +
-+/**
-+ * bio_integrity_prep - Prepare bio for integrity I/O
-+ * @bio:	bio to prepare
-+ *
-+ * Description: Allocates a buffer for integrity metadata, maps the
-+ * pages and attaches them to a bio.  The bio must have data
-+ * direction, target device and start sector set priot to calling.  In
-+ * the WRITE case, integrity metadata will be generated using the
-+ * block device's integrity function.  In the READ case, the buffer
-+ * will be prepared for DMA and a suitable end_io handler set up.
-+ */
-+int bio_integrity_prep(struct bio *bio)
++static void sd_dif_type1_generate_crc(struct blk_integrity_exchg *bix)
 +{
-+	struct bip *bip;
-+	struct blk_integrity *bi;
-+	struct request_queue *q;
-+	void *buf;
-+	unsigned long start, end;
-+	unsigned int len, nr_pages;
-+	unsigned int bytes, offset, i;
-+	unsigned int sectors = bio_sectors(bio);
++	sd_dif_type1_generate(bix, sd_dif_crc_fn);
++}
 +
-+	bi = bdev_get_integrity(bio->bi_bdev);
-+	q = bdev_get_queue(bio->bi_bdev);
-+	BUG_ON(bi == NULL);
-+	BUG_ON(bio_integrity(bio));
++static void sd_dif_type1_generate_ip(struct blk_integrity_exchg *bix)
++{
++	sd_dif_type1_generate(bix, sd_dif_ip_fn);
++}
 +
-+	if (bi->sector_size == 4096)
-+		sectors >>= 3;
++static int sd_dif_type1_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
++{
++	void *buf = bix->data_buf;
++	struct sd_dif_tuple *sdt = bix->prot_buf;
++	sector_t sector = bix->sector;
++	unsigned int i;
++	__u16 csum;
 +
-+	/* Allocate kernel buffer for protection data */
-+	len = sectors * blk_integrity_tuple_size(bi);
-+	buf = kzalloc(len, GFP_NOIO | q->bounce_gfp);
-+	if (unlikely(buf == NULL)) {
-+		printk(KERN_ERR "could not allocate integrity buffer\n");
-+		return -EIO;
-+	}
-+
-+	end = (((unsigned long) buf) + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	start = ((unsigned long) buf) >> PAGE_SHIFT;
-+	nr_pages = end - start;
-+
-+	/* Allocate bio integrity payload and integrity vectors */
-+	bip = bio_integrity_alloc(bio, GFP_NOIO, nr_pages);
-+	if (unlikely(bip == NULL)) {
-+		printk(KERN_ERR "could not allocate data integrity bioset\n");
-+		kfree(buf);
-+		return -EIO;
-+	}
-+
-+	bip->bip_buf = buf;
-+	bip->bip_size = len;
-+	bip->bip_sector = bio->bi_sector;
-+
-+	/* Map it */
-+	offset = offset_in_page(buf);
-+	for (i = 0 ; i < nr_pages ; i++) {
-+		int ret;
-+		bytes = PAGE_SIZE - offset;
-+
-+		if (len <= 0)
-+			break;
-+
-+		if (bytes > len)
-+			bytes = len;
-+
-+		ret = bio_integrity_add_page(bio, virt_to_page(buf),
-+					     bytes, offset);
-+
-+		if (ret == 0)
++	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++		/* Unwritten sectors */
++		if (sdt->app_tag == 0xffff)
 +			return 0;
 +
-+		if (ret < bytes)
-+			break;
-+
-+		buf += bytes;
-+		len -= bytes;
-+		offset = 0;
-+	}
-+
-+	/* Install custom I/O completion handler if read verify is enabled */
-+	if (bio_data_dir(bio) == READ) {
-+		bip->bip_end_io = bio->bi_end_io;
-+		bio->bi_end_io = bio_integrity_endio;
-+	}
-+
-+	/* Auto-generate integrity metadata if this is a write */
-+	if (bio_data_dir(bio) == WRITE)
-+		bio_integrity_generate(bio);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bio_integrity_prep);
-+
-+/**
-+ * bio_integrity_verify - Verify integrity metadata for a bio
-+ * @bio:	bio to verify
-+ *
-+ * Description: This function is called to verify the integrity of a
-+ * bio.	 The data in the bio io_vec is compared to the integrity
-+ * metadata returned by the HBA.
-+ */
-+static int bio_integrity_verify(struct bio *bio)
-+{
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	struct blk_integrity_exchg bix;
-+	struct bio_vec *bv;
-+	sector_t sector = bio->bi_integrity->bip_sector;
-+	unsigned int i, sectors, total, ret;
-+	void *prot_buf = bio->bi_integrity->bip_buf;
-+
-+	total = 0;
-+	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
-+	bix.sector_size = bi->sector_size;
-+
-+	bio_for_each_segment(bv, bio, i) {
-+		bix.data_buf = kmap_atomic(bv->bv_page, KM_USER0)
-+			+ bv->bv_offset;
-+		bix.data_size = bv->bv_len;
-+		bix.prot_buf = prot_buf;
-+		bix.sector = sector;
-+
-+		ret = bi->verify_fn(&bix);
-+
-+		if (ret) {
-+			kunmap_atomic(bv->bv_page, KM_USER0);
-+			return ret;
++		/* Bad ref tag received from disk */
++		if (sdt->ref_tag == 0xffffffff) {
++			printk(KERN_ERR
++			       "%s: bad phys ref tag on sector %lu\n",
++			       bix->disk_name, sector);
++			return -EIO;
 +		}
 +
-+		sectors = bv->bv_len / bi->sector_size;
-+		sector += sectors;
-+		prot_buf += sectors * bi->tuple_size;
-+		total += sectors * bi->tuple_size;
-+		BUG_ON(total > bio->bi_integrity->bip_size);
++		if (be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
++			printk(KERN_ERR
++			       "%s: ref tag error on sector %lu (rcvd %u)\n",
++			       bix->disk_name, sector,
++			       be32_to_cpu(sdt->ref_tag));
++			return -EIO;
++		}
 +
-+		kunmap_atomic(bv->bv_page, KM_USER0);
++		csum = fn(buf, bix->sector_size);
++
++		if (sdt->guard_tag != csum) {
++			printk(KERN_ERR "%s: guard tag error on sector %lu " \
++			       "(rcvd %04x, data %04x)\n", bix->disk_name,
++			       sector, be16_to_cpu(sdt->guard_tag),
++			       be16_to_cpu(csum));
++			return -EIO;
++		}
++
++		buf += bix->sector_size;
++		sector++;
 +	}
 +
 +	return 0;
 +}
 +
-+/**
-+ * bio_integrity_verify_fn - Integrity I/O completion worker
-+ * @work:	Work struct stored in bio to be verified
-+ *
-+ * Description: This workqueue function is called to complete a READ
-+ * request.  The function verifies the transferred integrity metadata
-+ * and then calls the original bio end_io function.
-+ */
-+static void bio_integrity_verify_fn(struct work_struct *work)
++static int sd_dif_type1_verify_crc(struct blk_integrity_exchg *bix)
 +{
-+	struct bip *bip = container_of(work, struct bip, bip_work);
-+	struct bio *bio = bip->bip_bio;
-+	int error = bip->bip_error;
++	return sd_dif_type1_verify(bix, sd_dif_crc_fn);
++}
 +
-+	if (bio_integrity_verify(bio)) {
-+		clear_bit(BIO_UPTODATE, &bio->bi_flags);
-+		error = -EIO;
++static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
++{
++	return sd_dif_type1_verify(bix, sd_dif_ip_fn);
++}
++
++/*
++ * Functions for interleaving and deinterleaving application tags
++ */
++static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
++{
++	struct sd_dif_tuple *sdt = prot;
++	char *tag = tag_buf;
++	unsigned int i, j;
++
++	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
++		sdt->app_tag = tag[j] << 8 | tag[j+1];
++		BUG_ON(sdt->app_tag == 0xffff);
 +	}
-+
-+	/* Restore original bio completion handler */
-+	bio->bi_end_io = bip->bip_end_io;
-+
-+	if (bio->bi_end_io)
-+		bio->bi_end_io(bio, error);
 +}
 +
-+/**
-+ * bio_integrity_endio - Integrity I/O completion function
-+ * @bio:	Protected bio
-+ * @error:	Pointer to errno
-+ *
-+ * Description: Completion for integrity I/O
-+ *
-+ * Normally I/O completion is done in interrupt context.  However,
-+ * verifying I/O integrity is a time-consuming task which must be run
-+ * in process context.	This function postpones completion
-+ * accordingly.
-+ */
-+void bio_integrity_endio(struct bio *bio, int error)
++static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
 +{
-+	struct bip *bip = bio->bi_integrity;
++	struct sd_dif_tuple *sdt = prot;
++	char *tag = tag_buf;
++	unsigned int i, j;
 +
-+	BUG_ON(bip->bip_bio != bio);
-+
-+	bip->bip_error = error;
-+	INIT_WORK(&bip->bip_work, bio_integrity_verify_fn);
-+	queue_work(kintegrityd_wq, &bip->bip_work);
++	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
++		tag[j] = (sdt->app_tag & 0xff00) >> 8;
++		tag[j+1] = sdt->app_tag & 0xff;
++	}
 +}
-+EXPORT_SYMBOL(bio_integrity_endio);
 +
-+/**
-+ * bio_integrity_advance - Advance integrity vector
-+ * @bio:	bio whose integrity vector to update
-+ * @bytes_done:	number of data bytes that have been completed
-+ *
-+ * Description: This function calculates how many integrity bytes the
-+ * number of completed data bytes correspond to and advances the
-+ * integrity vector accordingly.
++static struct blk_integrity dif_type1_integrity_crc = {
++	.name			= "T10-DIF-TYPE1-CRC",
++	.generate_fn		= sd_dif_type1_generate_crc,
++	.verify_fn		= sd_dif_type1_verify_crc,
++	.get_tag_fn		= sd_dif_type1_get_tag,
++	.set_tag_fn		= sd_dif_type1_set_tag,
++	.tuple_size		= sizeof(struct sd_dif_tuple),
++	.tag_size		= 0,
++};
++
++static struct blk_integrity dif_type1_integrity_ip = {
++	.name			= "T10-DIF-TYPE1-IP",
++	.generate_fn		= sd_dif_type1_generate_ip,
++	.verify_fn		= sd_dif_type1_verify_ip,
++	.get_tag_fn		= sd_dif_type1_get_tag,
++	.set_tag_fn		= sd_dif_type1_set_tag,
++	.tuple_size		= sizeof(struct sd_dif_tuple),
++	.tag_size		= 0,
++};
++
++
++/*
++ * Type 3 protection has a 16-bit guard tag and 16 + 32 bits of opaque tag space.
 + */
-+void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
++static void sd_dif_type3_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
 +{
-+	struct bip *bip = bio->bi_integrity;
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	struct bio_vec *iv;
-+	unsigned int i, skip, nr_sectors;
++	void *buf = bix->data_buf;
++	struct sd_dif_tuple *sdt = bix->prot_buf;
++	unsigned int i;
 +
-+	BUG_ON(bip == NULL);
-+	BUG_ON(bi == NULL);
++	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++		sdt->guard_tag = fn(buf, bix->sector_size);
++		sdt->ref_tag = 0;
++		sdt->app_tag = 0;
 +
-+	nr_sectors = bytes_done >> 9;
++		buf += bix->sector_size;
++	}
++}
 +
-+	if (bi->sector_size == 4096)
-+		nr_sectors >>= 3;
++static void sd_dif_type3_generate_crc(struct blk_integrity_exchg *bix)
++{
++	sd_dif_type3_generate(bix, sd_dif_crc_fn);
++}
 +
-+	skip = nr_sectors * bi->tuple_size;
++static void sd_dif_type3_generate_ip(struct blk_integrity_exchg *bix)
++{
++	sd_dif_type3_generate(bix, sd_dif_ip_fn);
++}
 +
-+	bip_for_each_vec(iv, bip, i) {
-+		if (skip == 0) {
-+			bip->bip_idx = i;
-+			return;
-+		} else if (skip >= iv->bv_len) {
-+			skip -= iv->bv_len;
-+		} else { /* skip < iv->bv_len) */
-+			iv->bv_offset += skip;
-+			iv->bv_len -= skip;
-+			bip->bip_idx = i;
-+			return;
++static int sd_dif_type3_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
++{
++	void *buf = bix->data_buf;
++	struct sd_dif_tuple *sdt = bix->prot_buf;
++	sector_t sector = bix->sector;
++	unsigned int i;
++	__u16 csum;
++
++	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++		/* Unwritten sectors */
++		if (sdt->app_tag == 0xffff && sdt->ref_tag == 0xffffffff)
++			return 0;
++
++		csum = fn(buf, bix->sector_size);
++
++		if (sdt->guard_tag != csum) {
++			printk(KERN_ERR "%s: guard tag error on sector %lu " \
++			       "(rcvd %04x, data %04x)\n", bix->disk_name,
++			       sector, be16_to_cpu(sdt->guard_tag),
++			       be16_to_cpu(csum));
++			return -EIO;
 +		}
++
++		buf += bix->sector_size;
++		sector++;
++	}
++
++	return 0;
++}
++
++static int sd_dif_type3_verify_crc(struct blk_integrity_exchg *bix)
++{
++	return sd_dif_type3_verify(bix, sd_dif_crc_fn);
++}
++
++static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
++{
++	return sd_dif_type3_verify(bix, sd_dif_ip_fn);
++}
++
++static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
++{
++	struct sd_dif_tuple *sdt = prot;
++	char *tag = tag_buf;
++	unsigned int i, j;
++
++	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
++		sdt->app_tag = tag[j] << 8 | tag[j+1];
++		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
++			tag[j+4] << 8 | tag[j+5];
 +	}
 +}
-+EXPORT_SYMBOL(bio_integrity_advance);
 +
-+/**
-+ * bio_integrity_trim - Trim integrity vector
-+ * @bio:	bio whose integrity vector to update
-+ * @offset:	offset to first data sector
-+ * @sectors:	number of data sectors
-+ *
-+ * Description: Used to trim the integrity vector in a cloned bio.
-+ * The ivec will be advanced corresponding to 'offset' data sectors
-+ * and the length will be truncated corresponding to 'len' data
-+ * sectors.
-+ */
-+void bio_integrity_trim(struct bio *bio, unsigned int offset, unsigned int sectors)
++static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
 +{
-+	struct bip *bip = bio->bi_integrity;
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	struct bio_vec *iv;
-+	unsigned int i, skip, nr_bytes;
++	struct sd_dif_tuple *sdt = prot;
++	char *tag = tag_buf;
++	unsigned int i, j;
 +
-+	BUG_ON(bip == NULL);
-+	BUG_ON(bi == NULL);
-+	BUG_ON(!bio_flagged(bio, BIO_CLONED));
-+
-+	if (bi->sector_size == 4096)
-+		sectors >>= 3;
-+
-+	bip->bip_sector = bip->bip_sector + offset;
-+	skip = offset * bi->tuple_size;
-+	nr_bytes = sectors * bi->tuple_size;
-+
-+	/* Mark head */
-+	bip_for_each_vec(iv, bip, i) {
-+		if (skip == 0) {
-+			bip->bip_idx = i;
-+			break;
-+		} else if (skip >= iv->bv_len) {
-+			skip -= iv->bv_len;
-+		} else { /* skip < iv->bv_len) */
-+			iv->bv_offset += skip;
-+			iv->bv_len -= skip;
-+			bip->bip_idx = i;
-+			break;
-+		}
-+	}
-+
-+	/* Mark tail */
-+	bip_for_each_vec(iv, bip, i) {
-+		if (nr_bytes == 0) {
-+			bip->bip_vcnt = i;
-+			break;
-+		} else if (nr_bytes >= iv->bv_len) {
-+			nr_bytes -= iv->bv_len;
-+		} else { /* nr_bytes < iv->bv_len) */
-+			iv->bv_len = nr_bytes;
-+			nr_bytes = 0;
-+		}
++	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
++		tag[j] = (sdt->app_tag & 0xff00) >> 8;
++		tag[j+1] = sdt->app_tag & 0xff;
++		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
++		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
++		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
++		tag[j+5] = sdt->ref_tag & 0xff;
++		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
 +	}
 +}
-+EXPORT_SYMBOL(bio_integrity_trim);
 +
-+/**
-+ * bio_integrity_split - Split integrity metadata
-+ * @bio:	Protected bio
-+ * @bp:		Resulting bio_pair
-+ * @sectors:	Offset
-+ *
-+ * Description: Splits an integrity page into a bio_pair.
++static struct blk_integrity dif_type3_integrity_crc = {
++	.name			= "T10-DIF-TYPE3-CRC",
++	.generate_fn		= sd_dif_type3_generate_crc,
++	.verify_fn		= sd_dif_type3_verify_crc,
++	.get_tag_fn		= sd_dif_type3_get_tag,
++	.set_tag_fn		= sd_dif_type3_set_tag,
++	.tuple_size		= sizeof(struct sd_dif_tuple),
++	.tag_size		= 0,
++};
++
++static struct blk_integrity dif_type3_integrity_ip = {
++	.name			= "T10-DIF-TYPE3-IP",
++	.generate_fn		= sd_dif_type3_generate_ip,
++	.verify_fn		= sd_dif_type3_verify_ip,
++	.get_tag_fn		= sd_dif_type3_get_tag,
++	.set_tag_fn		= sd_dif_type3_set_tag,
++	.tuple_size		= sizeof(struct sd_dif_tuple),
++	.tag_size		= 0,
++};
++
++
++/*
++ * The ATO bit indicates whether the application tag is available for
++ * use by the operating system.
 + */
-+void bio_integrity_split(struct bio *bio, struct bio_pair *bp, int sectors)
++void sd_dif_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
 +{
-+	struct blk_integrity *bi;
-+	struct bip *bip = bio->bi_integrity;
++	int res, offset;
++	struct scsi_device *sdp = sdkp->device;
++	struct scsi_mode_data data;
++	struct scsi_sense_hdr sshdr;
 +
-+	if (bio_integrity(bio) == 0)
++	if (sdp->type != TYPE_DISK)
 +		return;
 +
-+	bi = bdev_get_integrity(bio->bi_bdev);
-+	BUG_ON(bi == NULL);
-+	BUG_ON(bip->bip_vcnt != 1);
++	if (sdkp->protection_type == 0)
++		return;
 +
-+	if (bi->sector_size == 4096)
-+		sectors >>= 3;
++	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
++			      SD_MAX_RETRIES, &data, &sshdr);
 +
-+	bp->bio1.bi_integrity = &bp->bip1;
-+	bp->bio2.bi_integrity = &bp->bip2;
++	if (!scsi_status_is_good(res) || !data.header_length ||
++	    data.length < 6) {
++		sd_printk(KERN_WARNING, sdkp,
++			  "getting Control mode page failed, assume no ATO\n");
 +
-+	bp->iv1 = bip->bip_vec[0];
-+	bp->iv2 = bip->bip_vec[0];
++		if (scsi_sense_valid(&sshdr))
++			sd_print_sense_hdr(sdkp, &sshdr);
 +
-+	bp->bip1.bip_vec = &bp->iv1;
-+	bp->bip2.bip_vec = &bp->iv2;
++		goto no_ato;
++	}
 +
-+	bp->iv1.bv_len = sectors * bi->tuple_size;
-+	bp->iv2.bv_offset += sectors * bi->tuple_size;
-+	bp->iv2.bv_len -= sectors * bi->tuple_size;
++	offset = data.header_length + data.block_descriptor_length;
 +
-+	bp->bip1.bip_sector = bio->bi_integrity->bip_sector;
-+	bp->bip2.bip_sector = bio->bi_integrity->bip_sector + sectors;
++	if ((buffer[offset] & 0x3f) != 0x0a) {
++		sd_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
++		goto no_ato;
++	}
 +
-+	bp->bip1.bip_vcnt = bp->bip2.bip_vcnt = 1;
-+	bp->bip1.bip_idx = bp->bip2.bip_idx = 0;
++	if ((buffer[offset + 5] & 0x80) == 0)
++		goto no_ato;
++
++	sdkp->ATO = 1;
++	sd_printk(KERN_NOTICE, sdkp, "ATO Enabled\n");
++
++	return;
++
++no_ato:
++	sd_printk(KERN_NOTICE, sdkp, "ATO Disabled\n");
 +}
-+EXPORT_SYMBOL(bio_integrity_split);
 +
-+/**
-+ * bio_integrity_clone - Callback for cloning bios with integrity metadata
-+ * @bio:	New bio
-+ * @bio_src:	Original bio
-+ * @bs:		bio_set to allocate bip from
-+ *
-+ * Description:	Called to allocate a bip when cloning a bio
-+ */
-+int bio_integrity_clone(struct bio *bio, struct bio *bio_src, struct bio_set *bs)
-+{
-+	struct bip *bip_src = bio_src->bi_integrity;
-+	struct bip *bip;
-+
-+	BUG_ON(bip_src == NULL);
-+
-+	bip = bio_integrity_alloc_bioset(bio, GFP_NOIO, bip_src->bip_vcnt, bs);
-+
-+	if (bip == NULL)
-+		return -EIO;
-+
-+	memcpy(bip->bip_vec, bip_src->bip_vec,
-+	       bip_src->bip_vcnt * sizeof(struct bio_vec));
-+
-+	bip->bip_sector = bip_src->bip_sector;
-+	bip->bip_vcnt = bip_src->bip_vcnt;
-+	bip->bip_idx = bip_src->bip_idx;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bio_integrity_clone);
-+
-+int bioset_integrity_create(struct bio_set *bs, int pool_size)
-+{
-+	bs->bio_integrity_pool = mempool_create_slab_pool(pool_size,
-+							  bio_integrity_slab);
-+	if (!bs->bio_integrity_pool)
-+		return -1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bioset_integrity_create);
-+
-+void bioset_integrity_free(struct bio_set *bs)
-+{
-+	if (bs->bio_integrity_pool)
-+		mempool_destroy(bs->bio_integrity_pool);
-+}
-+EXPORT_SYMBOL(bioset_integrity_free);
-+
-+void __init bio_integrity_init_slab(void)
-+{
-+	bio_integrity_slab = KMEM_CACHE(bip, SLAB_HWCACHE_ALIGN|SLAB_PANIC);
-+}
-+EXPORT_SYMBOL(bio_integrity_init_slab);
-+
-+static int __init integrity_init(void)
-+{
-+	kintegrityd_wq = create_workqueue("kintegrityd");
-+
-+	if (!kintegrityd_wq)
-+		panic("Failed to create kintegrityd\n");
-+
-+	return 0;
-+}
-+subsys_initcall(integrity_init);
-diff -r 318fa71e735d -r f2ae9d5bce4c fs/bio.c
---- a/fs/bio.c	Sat Jun 07 00:45:14 2008 -0400
-+++ b/fs/bio.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -96,6 +96,9 @@
- 
- 		mempool_free(bio->bi_io_vec, bio_set->bvec_pools[pool_idx]);
- 	}
-+
-+	if (bio_integrity(bio))
-+		bio_integrity_free(bio, bio_set);
- 
- 	mempool_free(bio, bio_set->bio_pool);
- }
-@@ -255,9 +258,19 @@
- {
- 	struct bio *b = bio_alloc_bioset(gfp_mask, bio->bi_max_vecs, fs_bio_set);
- 
--	if (b) {
--		b->bi_destructor = bio_fs_destructor;
--		__bio_clone(b, bio);
-+	if (!b)
-+		return NULL;
-+
-+	b->bi_destructor = bio_fs_destructor;
-+	__bio_clone(b, bio);
-+
-+	if (bio_integrity(bio)) {
-+		int ret;
-+
-+		ret = bio_integrity_clone(b, bio, fs_bio_set);
-+
-+		if (ret < 0)
-+			return NULL;
- 	}
- 
- 	return b;
-@@ -1229,6 +1242,9 @@
- 	bp->bio1.bi_private = bi;
- 	bp->bio2.bi_private = pool;
- 
-+	if (bio_integrity(bi))
-+		bio_integrity_split(bi, bp, first_sectors);
-+
- 	return bp;
- }
- 
-@@ -1294,6 +1310,7 @@
- 	if (bs->bio_pool)
- 		mempool_destroy(bs->bio_pool);
- 
-+	bioset_integrity_free(bs);
- 	biovec_free_pools(bs);
- 
- 	kfree(bs);
-@@ -1308,6 +1325,9 @@
- 
- 	bs->bio_pool = mempool_create_slab_pool(bio_pool_size, bio_slab);
- 	if (!bs->bio_pool)
-+		goto bad;
-+
-+	if (bioset_integrity_create(bs, bio_pool_size))
- 		goto bad;
- 
- 	if (!biovec_create_pools(bs, bvec_pool_size))
-@@ -1336,6 +1356,7 @@
- {
- 	bio_slab = KMEM_CACHE(bio, SLAB_HWCACHE_ALIGN|SLAB_PANIC);
- 
-+	bio_integrity_init_slab();
- 	biovec_init_slabs();
- 
- 	fs_bio_set = bioset_create(BIO_POOL_SIZE, 2);
-diff -r 318fa71e735d -r f2ae9d5bce4c include/linux/bio.h
---- a/include/linux/bio.h	Sat Jun 07 00:45:14 2008 -0400
-+++ b/include/linux/bio.h	Sat Jun 07 00:45:15 2008 -0400
-@@ -64,6 +64,7 @@
- 
- struct bio_set;
- struct bio;
-+struct bip;
- typedef void (bio_end_io_t) (struct bio *, int);
- typedef void (bio_destructor_t) (struct bio *);
- 
-@@ -112,6 +113,9 @@
- 	atomic_t		bi_cnt;		/* pin count */
- 
- 	void			*bi_private;
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
-+	struct bip		*bi_integrity;  /* data integrity */
-+#endif
- 
- 	bio_destructor_t	*bi_destructor;	/* destructor */
- };
-@@ -271,6 +275,29 @@
-  */
- #define bio_get(bio)	atomic_inc(&(bio)->bi_cnt)
- 
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
 +/*
-+ * bio integrity payload
++ * Determine whether disk supports Data Integrity Field.
 + */
-+struct bip {
-+	struct bio		*bip_bio;	/* parent bio */
-+	struct bio_vec		*bip_vec;	/* integrity data vector */
++void sd_dif_config_disk(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	struct scsi_device *sdp = sdkp->device;
++	u8 type;
 +
-+	sector_t		bip_sector;	/* virtual start sector */
++	if (sdp->protection == 0 || (buffer[12] & 1) == 0)
++		type = 0;
++	else
++		type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
 +
-+	void			*bip_buf;	/* generated integrity data */
-+	bio_end_io_t		*bip_end_io;	/* saved I/O completion fn */
++	switch (type) {
++	case SCSI_DIF_TYPE0_PROTECTION:
++		sd_printk(KERN_NOTICE, sdkp, "formatted without data " \
++			  "integrity protection\n");
++		sdkp->protection_type = 0;
++		break;
 +
-+	int			bip_error;	/* saved I/O error */
-+	unsigned int		bip_size;
++	case SCSI_DIF_TYPE1_PROTECTION:
++	case SCSI_DIF_TYPE3_PROTECTION:
++		sd_printk(KERN_NOTICE, sdkp, "formatted with DIF Type %d " \
++			  "protection\n", type);
++		sdkp->protection_type = type;
++		break;
 +
-+	unsigned short		bip_pool;	/* pool the ivec came from */
-+	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
-+	unsigned short		bip_idx;	/* current bip_vec index */
++	case SCSI_DIF_TYPE2_PROTECTION:
++		sd_printk(KERN_ERR, sdkp, "formatted with DIF Type 2 "	\
++			  "protection which is currently unsupported. "	\
++			  "Disabling disk!\n");
++		goto disable;
 +
-+	struct work_struct	bip_work;	/* I/O completion */
++	default:
++		sd_printk(KERN_ERR, sdkp, "formatted with unknown "	\
++			  "protection type %d. Disabling disk!\n", type);
++		goto disable;
++	}
++
++	return;
++
++disable:
++	sdkp->protection_type = 0;
++	sdkp->capacity = 0;
++}
++
++/*
++ * Configure exchange of protection information between OS and HBA.
++ */
++void sd_dif_config_host(struct scsi_disk *sdkp)
++{
++	struct scsi_device *sdp = sdkp->device;
++	struct gendisk *disk = sdkp->disk;
++	u8 type = sdkp->protection_type;
++
++	/* Does HBA support protection DMA? */
++	if (scsi_host_dif_dma(sdp->host) == 0) {
++
++		if (type) {
++			sd_printk(KERN_NOTICE, sdkp, "Type %d protection " \
++				  "unsupported by HBA. No protection DMA!\n",
++				  type);
++			sdkp->protection_type = 0;
++		}
++
++		return;
++	}
++
++	/* Does HBA support this type? */
++	if (scsi_host_dif_type(sdp->host, type) == 0) {
++		sd_printk(KERN_NOTICE, sdkp, "Type %d protection "	\
++			  "unsupported by HBA. Disabling DIF!\n", type);
++		sdkp->protection_type = 0;
++		return;
++	}
++
++	if (scsi_host_guard_type(sdkp->device->host) & SCSI_DIF_GUARD_IP)
++		if (type == SCSI_DIF_TYPE3_PROTECTION)
++			blk_integrity_register(disk, &dif_type3_integrity_ip);
++		else
++			blk_integrity_register(disk, &dif_type1_integrity_ip);
++	else
++		if (type == SCSI_DIF_TYPE3_PROTECTION)
++			blk_integrity_register(disk, &dif_type3_integrity_crc);
++		else
++			blk_integrity_register(disk, &dif_type1_integrity_crc);
++
++	sd_printk(KERN_INFO, sdkp,
++		  "Enabling %s integrity protection between OS and HBA\n",
++		  disk->integrity->name);
++
++	/* Signal to block layer that we support sector tagging */
++	if (type && sdkp->ATO) {
++		if (type == SCSI_DIF_TYPE3_PROTECTION)
++			disk->integrity->tag_size = sizeof(u16) + sizeof(u32);
++		else
++			disk->integrity->tag_size = sizeof(u16);
++
++		sd_printk(KERN_INFO, sdkp, "DIF application tag size %u\n",
++			  disk->integrity->tag_size);
++	}
++}
++
++/*
++ * DIF DMA operation magic decoder ring.  DIF-capable HBA drivers
++ * should call this function in their queuecommand to determine how to
++ * handle the I/O.
++ */
++unsigned char sd_dif_op(struct scsi_cmnd *scmd)
++{
++	struct request *rq = scmd->request;
++	struct scsi_disk *sdkp;
++	int hba_to_disk, os_to_hba, csum_convert;
++
++	if (rq->cmd_type != REQ_TYPE_FS)
++		return SCSI_DIF_NORMAL;
++
++	/* Protection information passed between OS and HBA */
++	sdkp = scsi_disk(rq->rq_disk);
++	hba_to_disk = sdkp->protection_type;
++
++	/* Protection information between HBA and storage device */
++	os_to_hba = scsi_prot_sg_count(scmd);
++
++	/* Convert checksum? */
++	if (scsi_host_guard_type(scmd->device->host) == SCSI_DIF_GUARD_IP)
++		csum_convert = 1;
++	else
++		csum_convert = 0;
++
++	switch (scmd->cmnd[0]) {
++	case READ_10:
++	case READ_12:
++	case READ_16:
++		if (hba_to_disk && os_to_hba)
++			return csum_convert ?
++				SCSI_DIF_READ_CONVERT :
++				SCSI_DIF_READ_PASS;
++
++		else if (hba_to_disk && !os_to_hba)
++			return SCSI_DIF_READ_STRIP;
++
++		else if (!hba_to_disk && os_to_hba)
++			return SCSI_DIF_READ_INSERT;
++
++		break;
++
++	case WRITE_10:
++	case WRITE_12:
++	case WRITE_16:
++		if (hba_to_disk && os_to_hba)
++			return csum_convert ?
++				SCSI_DIF_WRITE_CONVERT :
++				SCSI_DIF_WRITE_PASS;
++
++		else if (hba_to_disk && !os_to_hba)
++			return SCSI_DIF_WRITE_INSERT;
++
++		else if (!hba_to_disk && os_to_hba)
++			return SCSI_DIF_WRITE_STRIP;
++
++		break;
++	}
++
++	return SCSI_DIF_NORMAL;
++}
++
++/*
++ * The virtual start sector is the one that was originally submitted
++ * by the block layer.	Due to partitioning, MD/DM cloning, etc. the
++ * actual physical start sector is likely to be different.  Remap
++ * protection information to match the physical LBA.
++ *
++ * From a protocol perspective there's a slight difference between
++ * Type 1 and 2.  The latter uses 32-byte CDBs exclusively, and the
++ * reference tag is seeded in the CDB.  This gives us the potential to
++ * avoid virt->phys remapping during write.  However, at read time we
++ * don't know whether the virt sector is the same as when we wrote it
++ * (we could be reading from real disk as opposed to MD/DM device.  So
++ * we always remap Type 2 making it identical to Type 1.
++ *
++ * Type 3 does not have a reference tag so no remapping is required.
++ */
++int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_sz)
++{
++	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	struct bio *bio;
++	struct scsi_disk *sdkp;
++	struct sd_dif_tuple *sdt;
++	unsigned int i, j;
++	u32 phys, virt;
++
++	/* Already remapped? */
++	if (rq->cmd_flags & REQ_INTEGRITY)
++		return 0;
++
++	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
++
++	if (sdkp->protection_type == SCSI_DIF_TYPE3_PROTECTION)
++		return 0;
++
++	rq->cmd_flags |= REQ_INTEGRITY;
++	phys = hw_sector & 0xffffffff;
++
++	__rq_for_each_bio(bio, rq) {
++		struct bio_vec *iv;
++
++		virt = bio->bi_integrity->bip_sector & 0xffffffff;
++
++		bip_for_each_vec(iv, bio->bi_integrity, i) {
++			sdt = kmap_atomic(iv->bv_page, KM_USER0) + iv->bv_offset;
++
++			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
++
++				if (be32_to_cpu(sdt->ref_tag) != virt)
++					goto error;
++
++				sdt->ref_tag = cpu_to_be32(phys);
++				virt++;
++				phys++;
++			}
++
++			kunmap_atomic(iv->bv_page, KM_USER0);
++		}
++	}
++
++	return 0;
++
++error:
++	sd_printk(KERN_ERR, sdkp, "%s: virt %u, phys %u, ref %u\n",
++		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag));
++
++	return -EIO;
++}
++
++/*
++ * Remap physical sector values in the reference tag to the virtual
++ * values expected by the block layer.
++ */
++void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
++{
++	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	struct scsi_disk *sdkp;
++	struct bio *bio;
++	struct sd_dif_tuple *sdt;
++	unsigned int i, j, sectors, sector_sz;
++	u32 phys, virt;
++
++	sdkp = scsi_disk(scmd->request->rq_disk);
++
++	if (sdkp->protection_type == SCSI_DIF_TYPE3_PROTECTION)
++		return;
++
++	sector_sz = scmd->device->sector_size;
++	sectors = good_bytes / sector_sz;
++
++	phys = scmd->request->sector & 0xffffffff;
++	if (sector_sz == 4096)
++		phys >>= 3;
++
++	__rq_for_each_bio(bio, scmd->request) {
++		struct bio_vec *iv;
++
++		virt = bio->bi_integrity->bip_sector & 0xffffffff;
++
++		bip_for_each_vec(iv, bio->bi_integrity, i) {
++			sdt = kmap_atomic(iv->bv_page, KM_USER0) + iv->bv_offset;
++
++			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
++
++				if (sectors == 0)
++					return;
++
++				if (be32_to_cpu(sdt->ref_tag) != phys &&
++				    sdt->app_tag != 0xffff)
++					sdt->ref_tag = 0xffffffff; /* Bad ref */
++				else
++					sdt->ref_tag = cpu_to_be32(virt);
++
++				virt++;
++				phys++;
++				sectors--;
++			}
++
++			kunmap_atomic(iv->bv_page, KM_USER0);
++		}
++	}
++}
++
+diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_cmnd.h
+--- a/include/scsi/scsi_cmnd.h	Sat Jun 07 00:45:15 2008 -0400
++++ b/include/scsi/scsi_cmnd.h	Sat Jun 07 00:45:15 2008 -0400
+@@ -78,6 +78,9 @@
+ 	int allowed;
+ 	int timeout_per_command;
+ 
++#if defined(CONFIG_SCSI_PROTECTION)
++	char prot_op;
++#endif
+ 	unsigned short cmd_len;
+ 	enum dma_data_direction sc_data_direction;
+ 
+diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_dif.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/include/scsi/scsi_dif.h	Sat Jun 07 00:45:15 2008 -0400
+@@ -0,0 +1,140 @@
++/*
++ * scsi_dif.h - SCSI Data Integrity Field
++ *
++ * Copyright (C) 2007, 2008 Oracle Corporation
++ * Written by: Martin K. Petersen <martin.petersen@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
++ * USA.
++ *
++ */
++
++#ifndef _SCSI_SCSI_DIF_H
++#define _SCSI_SCSI_DIF_H
++
++#include <scsi/scsi_host.h>
++
++/*
++ * Type 1 through 3 indicate the DIF format. Type H is for protection
++ * between OS and HBA only.  The DMA flag indicates that the initiator
++ * is capable of transferring protection data to and from host memory.
++ */
++
++enum scsi_host_dif_capabilities {
++	SHOST_DIF_TYPE1_PROTECTION = 1 << 0,
++	SHOST_DIF_TYPE2_PROTECTION = 1 << 1,
++	SHOST_DIF_TYPE3_PROTECTION = 1 << 2,
++	SHOST_DIF_TYPEH_PROTECTION = 1 << 6,
++	SHOST_DIF_PROTECTION_DMA   = 1 << 7,
 +};
-+#endif /* CONFIG_BLK_DEV_INTEGRITY */
++
++static inline void scsi_host_set_dif_caps(struct Scsi_Host *shost, unsigned char mask)
++{
++	shost->dif_capabilities = mask;
++}
++
++static inline unsigned char scsi_host_dif_dma(struct Scsi_Host *shost)
++{
++	return shost->dif_capabilities & SHOST_DIF_PROTECTION_DMA;
++}
++
++static inline unsigned char scsi_host_dif_type(struct Scsi_Host *shost, unsigned int target_type)
++{
++	if (target_type == 0)
++		return shost->dif_capabilities & SHOST_DIF_TYPEH_PROTECTION;
++
++	return shost->dif_capabilities & (1 << (target_type - 1));
++}
++
++/*
++ * All DIF-capable initiators must support the T10-mandated CRC
++ * checksum.  Controllers can optionally implement the IP checksum
++ * scheme which has much lower impact on system performance.  Note
++ * that the main rationale for the checksum is to match integrity
++ * metadata with data.  Detecting bit errors are a job for ECC memory
++ * and buses.
++ */
++
++enum scsi_host_guard_types {
++	SCSI_DIF_GUARD_CRC = 1 << 0,
++	SCSI_DIF_GUARD_IP  = 1 << 1,
++};
++
++static inline void scsi_host_set_guard_type(struct Scsi_Host *shost, unsigned char type)
++{
++	shost->dif_guard_type = type;
++}
++
++static inline unsigned char scsi_host_guard_type(struct Scsi_Host *shost)
++{
++	return shost->dif_guard_type;
++}
++
++/*
++ * Depending on the protection scheme implemented by initiator and
++ * target device, the request needs to be routed accordingly.  The
++ * host operations below are hints that tell the controller driver how
++ * to handle the I/O.
++ */
++
++enum scsi_host_dif_operations {
++	/* Normal I/O */
++	SCSI_DIF_NORMAL = 0,
++
++	/* OS-HBA: Protected, HBA-Target: Unprotected */
++	SCSI_DIF_READ_INSERT,
++	SCSI_DIF_WRITE_STRIP,
++
++	/* OS-HBA: Unprotected, HBA-Target: Protected */
++	SCSI_DIF_READ_STRIP,
++	SCSI_DIF_WRITE_INSERT,
++
++	/* OS-HBA: Protected, HBA-Target: Protected */
++	SCSI_DIF_READ_PASS,
++	SCSI_DIF_WRITE_PASS,
++
++	/* OS-HBA: Protected, HBA-Target: Protected, checksum conversion */
++	SCSI_DIF_READ_CONVERT,
++	SCSI_DIF_WRITE_CONVERT,
++};
++
++
++/* A DIF-capable target device can be formatted with different
++ * protection schemes.  Currently 0 through 3 are defined:
++ *
++ * Type 0 is regular (unprotected I/O)
++ *
++ * Type 1 defines the contents of the guard and reference tags
++ *
++ * Type 2 defines the contents of the guard and reference tags and
++ * uses 32-byte commands to seed the latter
++ *
++ * Type 3 defines the contents of the guard tag only
++ */
++
++enum sd_dif_target_protection_types {
++	SCSI_DIF_TYPE0_PROTECTION = 0x0,
++	SCSI_DIF_TYPE1_PROTECTION = 0x1,
++	SCSI_DIF_TYPE2_PROTECTION = 0x2,
++	SCSI_DIF_TYPE3_PROTECTION = 0x3,
++};
++
++/* DIF contents are considered data and consequently host-endian */
++struct sd_dif_tuple {
++       __u16 guard_tag;
++       __u16 app_tag;
++       __u32 ref_tag;
++};
++
++#endif /* _SCSI_SCSI_DIF_H */
+diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h	Sat Jun 07 00:45:15 2008 -0400
++++ b/include/scsi/scsi_host.h	Sat Jun 07 00:45:15 2008 -0400
+@@ -636,6 +636,10 @@
+ 	 */
+ 	unsigned int max_host_blocked;
  
- /*
-  * A bio_pair is used when we need to split a bio.
-@@ -285,6 +312,10 @@
- struct bio_pair {
- 	struct bio	bio1, bio2;
- 	struct bio_vec	bv1, bv2;
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
-+	struct bip	bip1, bip2;
-+	struct bio_vec	iv1, iv2;
-+#endif
- 	atomic_t	cnt;
- 	int		error;
- };
-@@ -349,6 +380,9 @@
- 
- struct bio_set {
- 	mempool_t *bio_pool;
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
-+	mempool_t *bio_integrity_pool;
-+#endif
- 	mempool_t *bvec_pools[BIOVEC_NR_POOLS];
- };
- 
-@@ -413,5 +447,56 @@
- 	__bio_kmap_irq((bio), (bio)->bi_idx, (flags))
- #define bio_kunmap_irq(buf,flags)	__bio_kunmap_irq(buf, flags)
- 
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
++	/* Data Integrity Field */
++	unsigned char dif_capabilities;
++	unsigned char dif_guard_type;
 +
-+#define bip_vec_idx(bip, idx)	(&(bip->bip_vec[(idx)]))
-+#define bip_vec(bip)		bip_vec_idx(bip, 0)
-+
-+#define __bip_for_each_vec(bvl, bip, i, start_idx)			\
-+	for (bvl = bip_vec_idx((bip), (start_idx)), i = (start_idx);	\
-+	     i < (bip)->bip_vcnt;					\
-+	     bvl++, i++)
-+
-+#define bip_for_each_vec(bvl, bip, i)					\
-+	__bip_for_each_vec(bvl, bip, i, (bip)->bip_idx)
-+
-+#define bio_integrity(bio)	((bio)->bi_integrity ? 1 : 0)
-+
-+extern struct bip *bio_integrity_alloc_bioset(struct bio *, gfp_t, unsigned int, struct bio_set *);
-+extern struct bip *bio_integrity_alloc(struct bio *, gfp_t, unsigned int);
-+extern void bio_integrity_free(struct bio *, struct bio_set *);
-+extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
-+extern inline int bio_integrity_enabled(struct bio *bio);
-+extern int bio_integrity_set_tag(struct bio *, void *, unsigned int);
-+extern int bio_integrity_get_tag(struct bio *, void *, unsigned int);
-+extern int bio_integrity_prep(struct bio *);
-+extern void bio_integrity_endio(struct bio *, int);
-+extern void bio_integrity_advance(struct bio *, unsigned int);
-+extern void bio_integrity_trim(struct bio *, unsigned int, unsigned int);
-+extern void bio_integrity_split(struct bio *, struct bio_pair *, int);
-+extern int bio_integrity_clone(struct bio *, struct bio *, struct bio_set *);
-+extern int bioset_integrity_create(struct bio_set *, int);
-+extern void bioset_integrity_free(struct bio_set *);
-+extern void bio_integrity_init_slab(void);
-+
-+#else /* CONFIG_BLK_DEV_INTEGRITY */
-+
-+#define bio_integrity(a)		(0)
-+#define bioset_integrity_create(a, b)	(0)
-+#define bio_integrity_prep(a)		(0)
-+#define bio_integrity_enabled(a)	(0)
-+#define bio_integrity_clone(a, b, c)	(0)
-+#define bioset_integrity_free(a)	do { } while (0)
-+#define bio_integrity_free(a, b)	do { } while (0)
-+#define bio_integrity_endio(a, b)	do { } while (0)
-+#define bio_integrity_advance(a, b)	do { } while (0)
-+#define bio_integrity_trim(a, b, c)	do { } while (0)
-+#define bio_integrity_split(a, b, c)	do { } while (0)
-+#define bio_integrity_set_tag(a, b, c)	do { } while (0)
-+#define bio_integrity_get_tag(a, b, c)	do { } while (0)
-+#define bio_integrity_init_slab(a)	do { } while (0)
-+
-+#endif /* CONFIG_BLK_DEV_INTEGRITY */
-+
- #endif /* CONFIG_BLOCK */
- #endif /* __LINUX_BIO_H */
+ 	/*
+ 	 * q used for scsi_tgt msgs, async events or any other requests that
+ 	 * need to be processed in userspace
 
 
