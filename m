@@ -1,1214 +1,1364 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 7 of 7] Support for SCSI disk (SBC) Data Integrity Field
-Date: Sat, 07 Jun 2008 00:55:40 -0400
-Message-ID: <8bc1728dc75a3e55e1f9.1212814540@sermon.lab.mkp.net>
-References: <patchbomb.1212814533@sermon.lab.mkp.net>
+From: Chris Clayton <chris2553@googlemail.com>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Sat, 7 Jun 2008 05:16:44 +0000
+Message-ID: <200806070516.44291.chris2553@googlemail.com>
+References: <200806010415.05290.chris2553@googlemail.com> <20080606110345.581fdc77.akpm@linux-foundation.org> <1212777612.16182.21.camel@localhost.localdomain>
+Reply-To: chris2553@googlemail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_8mhSILcXFhxThCy"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:38422 "EHLO jaguar.mkp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751809AbYFGE5p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Jun 2008 00:57:45 -0400
-In-Reply-To: <patchbomb.1212814533@sermon.lab.mkp.net>
+Received: from ik-out-1112.google.com ([66.249.90.180]:62100 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbYFGFTX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jun 2008 01:19:23 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so737603ika.5
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Jun 2008 22:19:20 -0700 (PDT)
+In-Reply-To: <1212777612.16182.21.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-12 files changed, 935 insertions(+), 7 deletions(-)
-Documentation/scsi/data-integrity.txt |   57 ++
-drivers/scsi/Kconfig                  |    1 
-drivers/scsi/Makefile                 |    2 
-drivers/scsi/scsi_error.c             |    3 
-drivers/scsi/scsi_lib.c               |    4 
-drivers/scsi/scsi_sysfs.c             |    4 
-drivers/scsi/sd.c                     |   58 ++
-drivers/scsi/sd.h                     |   22 +
-drivers/scsi/sd_dif.c                 |  644 +++++++++++++++++++++++++++++++++
-include/scsi/scsi_cmnd.h              |    3 
-include/scsi/scsi_dif.h               |  140 +++++++
-include/scsi/scsi_host.h              |    4 
+--Boundary-00=_8mhSILcXFhxThCy
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Friday 06 June 2008, James Bottomley wrote:
+> On Fri, 2008-06-06 at 11:03 -0700, Andrew Morton wrote:
+> > On Fri, 06 Jun 2008 10:22:22 -0500 James Bottomley=20
+<James.Bottomley@HansenPartnership.com> wrote:
+> > > On Thu, 2008-06-05 at 23:25 -0700, Andrew Morton wrote:
+> > > > On Thu, 5 Jun 2008 23:21:45 -0700 Andrew Morton=20
+<akpm@linux-foundation.org> wrote:
+> > > > > <watches wodim wibble for five minutes then report "CD/DVD-Record=
+er
+> > > > > not ready."  Pretends not to have noticed.>
+> > > >
+> > > > It goes much better when the CD is inserted upside up.
+> > >
+> > > So I can close this regression if I send you a pack of CD ring labels
+> > > with "other way up" on them for you to affix to the underside of your
+> > > CDs ... ?
+> >
+> > Would prefer double-sided CDs.
+>
+> I just discovered my budget only runs to a permanent marker for you to
+> write the instructions on the rim yourself ...
+>
+> > Is this 20-second-delay thing known-about/expected/etc?
+>
+> If it's not the scsi_bus_uevent problem, then no, it isn't.
+>
+> The odd thing is that it occurs in the middle of USB initialisation from
+>
+> the log:
+> > =EF=BB=BFJun  6 17:25:19 upstairs kernel: uhci_hcd 0000:00:1d.0: UHCI H=
+ost
+> > Controller Jun  6 17:25:19 upstairs kernel: uhci_hcd 0000:00:1d.0: new
+> > USB bus registered, assigned bus number 1 Jun  6 17:25:19 upstairs
+> > kernel: uhci_hcd 0000:00:1d.0: irq 16, io base 0x0000a800 Jun  6 17:25:=
+19
+> > upstairs kernel: usb usb1: configuration #1 chosen from 1 choice Jun  6
+> > 17:25:19 upstairs kernel: hub 1-0:1.0: USB hub found
+> > Jun  6 17:25:19 upstairs kernel: hub 1-0:1.0: 2 ports detected
+> > Jun  6 17:25:44 upstairs kernel: ohci_hcd: 2006 August 04 USB 1.1 'Open'
+> > Host Controller (OHCI) Driver Jun  6 17:25:44 upstairs kernel: usb usb1:
+> > New USB device found, idVendor=3D1d6b, idProduct=3D0001 Jun  6 17:25:44
+> > upstairs kernel: usb usb1: New USB device strings: Mfr=3D3, Product=3D2,
+> > SerialNumber=3D1 Jun  6 17:25:44 upstairs kernel: usb usb1: Product: UH=
+CI
+> > Host Controller Jun  6 17:25:44 upstairs kernel: usb usb1: Manufacturer:
+> > Linux 2.6.26-rc5 uhci_hcd
+>
+> Note the jump from 19 to 44 seconds.
+>
+> There's another one here:
+> > =EF=BB=BFJun  6 17:25:44 upstairs kernel: EXT3-fs: mounted filesystem w=
+ith
+> > ordered data mode. Jun  6 17:25:44 upstairs kernel: Adding 4096532k swap
+> > on /dev/sda5.  Priority:-1 extents:1 across:4096532k Jun  6 17:25:44
+> > upstairs kernel: eth0: link up, 100Mbps, full-duplex, lpa 0x45E1 Jun  6
+> > 17:25:44 upstairs kernel: ip_tables: (C) 2000-2006 Netfilter Core Team
+> > Jun  6 17:25:44 upstairs kernel: nf_conntrack version 0.5.0 (16384
+> > buckets, 65536 max) Jun  6 17:25:44 upstairs kernel: parport_pc 00:06:
+> > disabled
+> > Jun  6 17:25:44 upstairs kernel: pnp: the driver 'parport_pc' has been
+> > unregistered Jun  6 17:25:44 upstairs kernel: ieee1394: Node removed:
+> > ID:BUS[0-00:1023]  GUID[00110666000013cc] Jun  6 17:26:31 upstairs
+> > kernel: usb 11-2: new high speed USB device using ehci_hcd and address 3
+> > Jun  6 17:26:31 upstairs kernel: usb 11-2: configuration #1 chosen from=
+ 1
+> > choice Jun  6 17:26:31 upstairs kernel: usb 11-2: New USB device found,
+> > idVendor=3D0930, idProduct=3D6545 Jun  6 17:26:31 upstairs kernel: usb =
+11-2:
+> > New USB device strings: Mfr=3D0, Product=3D2, SerialNumber=3D3 Jun  6 1=
+7:26:31
+> > upstairs kernel: usb 11-2: Product: USB Flash Memory Jun  6 17:26:31
+> > upstairs kernel: usb 11-2: SerialNumber: 0EC065712361A91E
+>
+> I'm a bit baffled as to how that could be SCSI related, but I suppose it
+> could be udev related somehow.  Perhaps turning on driver core debugging
+> might help (that's CONFIG_DEBUG DRIVER ... it depends on
+> CONFIG_DEBUG_KERNEL for activation).  Hopefully the verbose kernel logs
+> from here might tell us what's going on in the lacunae.
+>
 
-Configure DMA of protection information and issue READ/WRITE commands
-with RDPROTECT/WRPROTECT set accordingly.
+OK, here's a boot log with driver core debugging turned on. Hope it helps!
 
-Force READ CAPACITY(16) if the target has the PROTECT bit set and grab
-an extra byte of response (P_TYPE and PROT_EN are in byte 12).
+(Oh, and thanks for adding the word lacunae to my vocabulary. I'd never com=
+e=20
+across it before.)
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Chris
 
----
-
-diff -r ad65bfde4e05 -r 8bc1728dc75a Documentation/scsi/data-integrity.txt
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/Documentation/scsi/data-integrity.txt	Sat Jun 07 00:45:15 2008 -0400
-@@ -0,0 +1,57 @@
-+----------------------------------------------------------------------
-+1.0 INTRODUCTION
-+
-+For a general overview of the data integrity framework please consult
-+Documentation/block/data-integrity.txt.
-+
-+----------------------------------------------------------------------
-+2.0 SCSI LAYER IMPLEMENTATION DETAILS
-+
-+The scsi_command has been extended with a scatterlist for the
-+integrity metadata.  Note that all SCSI mid layer changes refer to
-+this using the term "protection information" which is what it is
-+called in the T10 spec.
-+
-+The term DIF (Data Integrity Field) is specific to SCSI disks (SBC).
-+The SCSI midlayer doesn't know, or care, about the contents of the
-+protection scatterlist, except it calls blk_rq_map_integrity_sg()
-+during command initialization.
-+
-+
-+2.1 SCSI DEVICE SCANNING
-+
-+A SCSI device has the PROTECT bit set in the standard INQUIRY page if
-+it supports protection information.  The state of this bit is saved in
-+the scsi_device struct.
-+
-+
-+2.2 SCSI DISK SETUP
-+
-+In the case of a SCSI disk the actual DIF protection format is
-+contained in in result of READ CAPACITY(16).  Consequently we have to
-+use the 16-byte READ CAPACITY variant if the device is
-+protection-capable.
-+
-+If the device has DIF-enabled we'll negotiate capabilities with the
-+HBA.  And if the HBA is capable of protection DMA, the blk_integrity
-+profile will be registered.
-+
-+Currently we only support Type 1 and Type 3.  Type 2 is only defined
-+for 32-byte CDBs and is awaiting varlen CDB support.
-+
-+The controller may support checksum conversion as an optimization.
-+Initial benchmarks showed that calculating a 16-bit CRC for each 512
-+bytes of an I/O was expensive.  Emulex' hardware had the capability to
-+convert an IP checksum to the T10 CRC on the wire.  So as part of the
-+negotiation process the checksum algorithm will be selected and the
-+blk_integrity profile set accordingly.
-+
-+----------------------------------------------------------------------
-+3.0 HBA INTERFACE
-+
-+See the following doc:
-+
-+http://oss.oracle.com/projects/data-integrity/dist/documentation/linux-hba.pdf
-+
-+----------------------------------------------------------------------
-+2007-12-24 Martin K. Petersen <martin.petersen@oracle.com>
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/Kconfig	Sat Jun 07 00:45:15 2008 -0400
-@@ -265,6 +265,7 @@
-        bool "SCSI Data Integrity Protection"
-        depends on SCSI
-        depends on BLK_DEV_INTEGRITY
-+       select CRC_T10DIF
-        help 
- 	 Some SCSI devices support data protection features above and
- 	 beyond those implemented in the transport.  Select this
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/Makefile
---- a/drivers/scsi/Makefile	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/Makefile	Sat Jun 07 00:45:15 2008 -0400
-@@ -149,6 +149,8 @@
- scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
- 
- sd_mod-objs	:= sd.o
-+sd_mod-$(CONFIG_SCSI_PROTECTION) += sd_dif.o
-+
- sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
- ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
- 		:= -DCONFIG_NCR53C8XX_PREFETCH -DSCSI_NCR_BIG_ENDIAN \
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/scsi_error.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -333,6 +333,9 @@
- 		return /* soft_error */ SUCCESS;
- 
- 	case ABORTED_COMMAND:
-+		if (sshdr.asc == 0x10) /* DIF */
-+			return SUCCESS;
-+
- 		return NEEDS_RETRY;
- 	case NOT_READY:
- 	case UNIT_ATTENTION:
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/scsi_lib.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -947,6 +947,10 @@
- 				scsi_requeue_command(q, cmd);
- 				return;
- 			} else {
-+				if (sshdr.asc == 0x10) { /* DIF */
-+					scsi_print_result(cmd);
-+					scsi_print_sense("", cmd);
-+				}
- 				scsi_end_request(cmd, -EIO, this_count, 1);
- 				return;
- 			}
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/scsi_sysfs.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -249,6 +249,8 @@
- shost_rd_attr(can_queue, "%hd\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
- shost_rd_attr(unchecked_isa_dma, "%d\n");
-+shost_rd_attr(dif_capabilities, "%hd\n");
-+shost_rd_attr(dif_guard_type, "%hd\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
- 
- static struct attribute *scsi_sysfs_shost_attrs[] = {
-@@ -263,6 +265,8 @@
- 	&dev_attr_hstate.attr,
- 	&dev_attr_supported_mode.attr,
- 	&dev_attr_active_mode.attr,
-+	&dev_attr_dif_capabilities.attr,
-+	&dev_attr_dif_guard_type.attr,
- 	NULL
- };
- 
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/sd.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -58,6 +58,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsicam.h>
-+#include <scsi/scsi_dif.h>
- 
- #include "sd.h"
- #include "scsi_logging.h"
-@@ -233,6 +234,24 @@
- 	return snprintf(buf, 40, "%d\n", sdkp->device->allow_restart);
- }
- 
-+static ssize_t
-+sd_show_protection_type(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+
-+	return snprintf(buf, 20, "%u\n", sdkp->protection_type);
-+}
-+
-+static ssize_t
-+sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
-+		    char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+
-+	return snprintf(buf, 20, "%u\n", sdkp->ATO);
-+}
-+
- static struct device_attribute sd_disk_attrs[] = {
- 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
- 	       sd_store_cache_type),
-@@ -241,6 +260,8 @@
- 	       sd_store_allow_restart),
- 	__ATTR(manage_start_stop, S_IRUGO|S_IWUSR, sd_show_manage_start_stop,
- 	       sd_store_manage_start_stop),
-+	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
-+	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
- 	__ATTR_NULL,
- };
- 
-@@ -353,6 +374,7 @@
- 	struct scsi_cmnd *SCpnt;
- 	struct scsi_device *sdp = q->queuedata;
- 	struct gendisk *disk = rq->rq_disk;
-+	struct scsi_disk *sdkp;
- 	sector_t block = rq->sector;
- 	unsigned int this_count = rq->nr_sectors;
- 	unsigned int timeout = sdp->timeout;
-@@ -369,6 +391,7 @@
- 	if (ret != BLKPREP_OK)
- 		goto out;
- 	SCpnt = rq->special;
-+	sdkp = scsi_disk(disk);
- 
- 	/* from here on until we're complete, any goto out
- 	 * is used for a killable error condition */
-@@ -458,6 +481,11 @@
- 		}
- 		SCpnt->cmnd[0] = WRITE_6;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
-+
-+		if (blk_integrity_rq(rq) &&
-+		    sd_dif_prepare(rq, block, sdp->sector_size) == -EIO)
-+			goto out;
-+
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
-@@ -472,8 +500,13 @@
- 					"writing" : "reading", this_count,
- 					rq->nr_sectors));
- 
--	SCpnt->cmnd[1] = 0;
--	
-+	sd_dif_op(SCpnt);
-+
-+	if (scsi_host_dif_type(sdp->host, sdkp->protection_type))
-+		SCpnt->cmnd[1] = 1 << 5;
-+	else
-+		SCpnt->cmnd[1] = 0;
-+
- 	if (block > 0xffffffff) {
- 		SCpnt->cmnd[0] += READ_16 - READ_6;
- 		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-@@ -491,6 +524,7 @@
- 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
- 		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
- 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
-+		   SCpnt->device->protection ||
- 		   SCpnt->device->use_10_for_rw) {
- 		if (this_count > 0xffff)
- 			this_count = 0xffff;
-@@ -1004,7 +1038,8 @@
- 		good_bytes = xfer_size;
- 		break;
- 	case ILLEGAL_REQUEST:
--		if (SCpnt->device->use_10_for_rw &&
-+		if (SCpnt->device->protection == 0 &&
-+		    SCpnt->device->use_10_for_rw &&
- 		    (SCpnt->cmnd[0] == READ_10 ||
- 		     SCpnt->cmnd[0] == WRITE_10))
- 			SCpnt->device->use_10_for_rw = 0;
-@@ -1017,6 +1052,9 @@
- 		break;
- 	}
-  out:
-+	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
-+		sd_dif_complete(SCpnt, good_bytes);
-+
- 	return good_bytes;
- }
- 
-@@ -1171,7 +1209,8 @@
- 	unsigned char cmd[16];
- 	int the_result, retries;
- 	int sector_size = 0;
--	int longrc = 0;
-+	/* Force READ CAPACITY(16) when PROTECT=1 */
-+	int longrc = sdkp->device->protection ? 1 : 0;
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
- 	struct scsi_device *sdp = sdkp->device;
-@@ -1183,8 +1222,8 @@
- 			memset((void *) cmd, 0, 16);
- 			cmd[0] = SERVICE_ACTION_IN;
- 			cmd[1] = SAI_READ_CAPACITY_16;
--			cmd[13] = 12;
--			memset((void *) buffer, 0, 12);
-+			cmd[13] = 13;
-+			memset((void *) buffer, 0, 13);
- 		} else {
- 			cmd[0] = READ_CAPACITY;
- 			memset((void *) &cmd[1], 0, 9);
-@@ -1192,7 +1231,7 @@
- 		}
- 		
- 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
--					      buffer, longrc ? 12 : 8, &sshdr,
-+					      buffer, longrc ? 13 : 8, &sshdr,
- 					      SD_TIMEOUT, SD_MAX_RETRIES);
- 
- 		if (media_not_present(sdkp, &sshdr))
-@@ -1267,6 +1306,8 @@
- 			
- 		sector_size = (buffer[8] << 24) |
- 			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
-+
-+		sd_dif_config_disk(sdkp, buffer);
- 	}	
- 
- 	/* Some devices return the total number of sectors, not the
-@@ -1564,6 +1605,7 @@
- 	sdkp->write_prot = 0;
- 	sdkp->WCE = 0;
- 	sdkp->RCD = 0;
-+	sdkp->ATO = 0;
- 
- 	sd_spinup_disk(sdkp);
- 
-@@ -1575,6 +1617,7 @@
- 		sd_read_capacity(sdkp, buffer);
- 		sd_read_write_protect_flag(sdkp, buffer);
- 		sd_read_cache_type(sdkp, buffer);
-+		sd_dif_app_tag_own(sdkp, buffer);
- 	}
- 
- 	/*
-@@ -1708,6 +1751,7 @@
- 
- 	dev_set_drvdata(dev, sdkp);
- 	add_disk(gd);
-+	sd_dif_config_host(sdkp);
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd.h
---- a/drivers/scsi/sd.h	Sat Jun 07 00:45:15 2008 -0400
-+++ b/drivers/scsi/sd.h	Sat Jun 07 00:45:15 2008 -0400
-@@ -41,7 +41,9 @@
- 	u32		index;
- 	u8		media_present;
- 	u8		write_prot;
-+	u8		protection_type;/* Data Integrity Field */
- 	unsigned	previous_state : 1;
-+	unsigned	ATO : 1;	/* state of disk ATO bit */
- 	unsigned	WCE : 1;	/* state of disk WCE bit */
- 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
- 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
-@@ -61,4 +63,24 @@
- 		    (sdsk)->disk->disk_name, ##a) :			\
- 	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
- 
-+#if defined(CONFIG_SCSI_PROTECTION)
-+
-+extern unsigned char sd_dif_op(struct scsi_cmnd *);
-+extern void sd_dif_app_tag_own(struct scsi_disk *, unsigned char *);
-+extern void sd_dif_config_disk(struct scsi_disk *, unsigned char *);
-+extern void sd_dif_config_host(struct scsi_disk *);
-+extern int sd_dif_prepare(struct request *rq, sector_t, unsigned int);
-+extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
-+
-+#else /* CONFIG_SCSI_PROTECTION */
-+
-+#define sd_dif_op(a)				(0)
-+#define sd_dif_app_tag_own(a, b)		do { } while (0)
-+#define sd_dif_config_disk(a, b)		do { } while (0)
-+#define sd_dif_config_host(a)			do { } while (0)
-+#define sd_dif_prepare(a, b, c)			(0)
-+#define sd_dif_complete(a, b)			(0)
-+
-+#endif /* CONFIG_SCSI_PROTECTION */
-+
- #endif /* _SCSI_DISK_H */
-diff -r ad65bfde4e05 -r 8bc1728dc75a drivers/scsi/sd_dif.c
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/drivers/scsi/sd_dif.c	Sat Jun 07 00:45:15 2008 -0400
-@@ -0,0 +1,644 @@
-+/*
-+ * sd_dif.c - SCSI Data Integrity Field
-+ *
-+ * Copyright (C) 2007, 2008 Oracle Corporation
-+ * Written by: Martin K. Petersen <martin.petersen@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License version
-+ * 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-+ * USA.
-+ *
-+ */
-+
-+#include <linux/blkdev.h>
-+#include <linux/crc-t10dif.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_ioctl.h>
-+#include <scsi/scsicam.h>
-+#include <scsi/scsi_dif.h>
-+
-+#include <net/checksum.h>
-+
-+#include "sd.h"
-+
-+typedef __u16 (csum_fn) (void *, unsigned int);
-+
-+static __u16 sd_dif_crc_fn(void *data, unsigned int len)
-+{
-+	return cpu_to_be16(crc_t10dif(data, len));
-+}
-+
-+static __u16 sd_dif_ip_fn(void *data, unsigned int len)
-+{
-+	return ip_compute_csum(data, len);
-+}
-+
-+/*
-+ * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
-+ * 16 bit app tag, 32 bit reference tag.
-+ */
-+static void sd_dif_type1_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
-+{
-+	void *buf = bix->data_buf;
-+	struct sd_dif_tuple *sdt = bix->prot_buf;
-+	sector_t sector = bix->sector;
-+	unsigned int i;
-+
-+	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
-+		sdt->guard_tag = fn(buf, bix->sector_size);
-+		sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
-+		sdt->app_tag = 0;
-+
-+		buf += bix->sector_size;
-+		sector++;
-+	}
-+}
-+
-+static void sd_dif_type1_generate_crc(struct blk_integrity_exchg *bix)
-+{
-+	sd_dif_type1_generate(bix, sd_dif_crc_fn);
-+}
-+
-+static void sd_dif_type1_generate_ip(struct blk_integrity_exchg *bix)
-+{
-+	sd_dif_type1_generate(bix, sd_dif_ip_fn);
-+}
-+
-+static int sd_dif_type1_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
-+{
-+	void *buf = bix->data_buf;
-+	struct sd_dif_tuple *sdt = bix->prot_buf;
-+	sector_t sector = bix->sector;
-+	unsigned int i;
-+	__u16 csum;
-+
-+	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
-+		/* Unwritten sectors */
-+		if (sdt->app_tag == 0xffff)
-+			return 0;
-+
-+		/* Bad ref tag received from disk */
-+		if (sdt->ref_tag == 0xffffffff) {
-+			printk(KERN_ERR
-+			       "%s: bad phys ref tag on sector %lu\n",
-+			       bix->disk_name, sector);
-+			return -EIO;
-+		}
-+
-+		if (be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
-+			printk(KERN_ERR
-+			       "%s: ref tag error on sector %lu (rcvd %u)\n",
-+			       bix->disk_name, sector,
-+			       be32_to_cpu(sdt->ref_tag));
-+			return -EIO;
-+		}
-+
-+		csum = fn(buf, bix->sector_size);
-+
-+		if (sdt->guard_tag != csum) {
-+			printk(KERN_ERR "%s: guard tag error on sector %lu " \
-+			       "(rcvd %04x, data %04x)\n", bix->disk_name,
-+			       sector, be16_to_cpu(sdt->guard_tag),
-+			       be16_to_cpu(csum));
-+			return -EIO;
-+		}
-+
-+		buf += bix->sector_size;
-+		sector++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_dif_type1_verify_crc(struct blk_integrity_exchg *bix)
-+{
-+	return sd_dif_type1_verify(bix, sd_dif_crc_fn);
-+}
-+
-+static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
-+{
-+	return sd_dif_type1_verify(bix, sd_dif_ip_fn);
-+}
-+
-+/*
-+ * Functions for interleaving and deinterleaving application tags
-+ */
-+static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
-+{
-+	struct sd_dif_tuple *sdt = prot;
-+	char *tag = tag_buf;
-+	unsigned int i, j;
-+
-+	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-+		sdt->app_tag = tag[j] << 8 | tag[j+1];
-+		BUG_ON(sdt->app_tag == 0xffff);
-+	}
-+}
-+
-+static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
-+{
-+	struct sd_dif_tuple *sdt = prot;
-+	char *tag = tag_buf;
-+	unsigned int i, j;
-+
-+	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-+		tag[j] = (sdt->app_tag & 0xff00) >> 8;
-+		tag[j+1] = sdt->app_tag & 0xff;
-+	}
-+}
-+
-+static struct blk_integrity dif_type1_integrity_crc = {
-+	.name			= "T10-DIF-TYPE1-CRC",
-+	.generate_fn		= sd_dif_type1_generate_crc,
-+	.verify_fn		= sd_dif_type1_verify_crc,
-+	.get_tag_fn		= sd_dif_type1_get_tag,
-+	.set_tag_fn		= sd_dif_type1_set_tag,
-+	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.tag_size		= 0,
-+};
-+
-+static struct blk_integrity dif_type1_integrity_ip = {
-+	.name			= "T10-DIF-TYPE1-IP",
-+	.generate_fn		= sd_dif_type1_generate_ip,
-+	.verify_fn		= sd_dif_type1_verify_ip,
-+	.get_tag_fn		= sd_dif_type1_get_tag,
-+	.set_tag_fn		= sd_dif_type1_set_tag,
-+	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.tag_size		= 0,
-+};
-+
-+
-+/*
-+ * Type 3 protection has a 16-bit guard tag and 16 + 32 bits of opaque tag space.
-+ */
-+static void sd_dif_type3_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
-+{
-+	void *buf = bix->data_buf;
-+	struct sd_dif_tuple *sdt = bix->prot_buf;
-+	unsigned int i;
-+
-+	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
-+		sdt->guard_tag = fn(buf, bix->sector_size);
-+		sdt->ref_tag = 0;
-+		sdt->app_tag = 0;
-+
-+		buf += bix->sector_size;
-+	}
-+}
-+
-+static void sd_dif_type3_generate_crc(struct blk_integrity_exchg *bix)
-+{
-+	sd_dif_type3_generate(bix, sd_dif_crc_fn);
-+}
-+
-+static void sd_dif_type3_generate_ip(struct blk_integrity_exchg *bix)
-+{
-+	sd_dif_type3_generate(bix, sd_dif_ip_fn);
-+}
-+
-+static int sd_dif_type3_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
-+{
-+	void *buf = bix->data_buf;
-+	struct sd_dif_tuple *sdt = bix->prot_buf;
-+	sector_t sector = bix->sector;
-+	unsigned int i;
-+	__u16 csum;
-+
-+	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
-+		/* Unwritten sectors */
-+		if (sdt->app_tag == 0xffff && sdt->ref_tag == 0xffffffff)
-+			return 0;
-+
-+		csum = fn(buf, bix->sector_size);
-+
-+		if (sdt->guard_tag != csum) {
-+			printk(KERN_ERR "%s: guard tag error on sector %lu " \
-+			       "(rcvd %04x, data %04x)\n", bix->disk_name,
-+			       sector, be16_to_cpu(sdt->guard_tag),
-+			       be16_to_cpu(csum));
-+			return -EIO;
-+		}
-+
-+		buf += bix->sector_size;
-+		sector++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_dif_type3_verify_crc(struct blk_integrity_exchg *bix)
-+{
-+	return sd_dif_type3_verify(bix, sd_dif_crc_fn);
-+}
-+
-+static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
-+{
-+	return sd_dif_type3_verify(bix, sd_dif_ip_fn);
-+}
-+
-+static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
-+{
-+	struct sd_dif_tuple *sdt = prot;
-+	char *tag = tag_buf;
-+	unsigned int i, j;
-+
-+	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
-+		sdt->app_tag = tag[j] << 8 | tag[j+1];
-+		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
-+			tag[j+4] << 8 | tag[j+5];
-+	}
-+}
-+
-+static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
-+{
-+	struct sd_dif_tuple *sdt = prot;
-+	char *tag = tag_buf;
-+	unsigned int i, j;
-+
-+	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-+		tag[j] = (sdt->app_tag & 0xff00) >> 8;
-+		tag[j+1] = sdt->app_tag & 0xff;
-+		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
-+		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
-+		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
-+		tag[j+5] = sdt->ref_tag & 0xff;
-+		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
-+	}
-+}
-+
-+static struct blk_integrity dif_type3_integrity_crc = {
-+	.name			= "T10-DIF-TYPE3-CRC",
-+	.generate_fn		= sd_dif_type3_generate_crc,
-+	.verify_fn		= sd_dif_type3_verify_crc,
-+	.get_tag_fn		= sd_dif_type3_get_tag,
-+	.set_tag_fn		= sd_dif_type3_set_tag,
-+	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.tag_size		= 0,
-+};
-+
-+static struct blk_integrity dif_type3_integrity_ip = {
-+	.name			= "T10-DIF-TYPE3-IP",
-+	.generate_fn		= sd_dif_type3_generate_ip,
-+	.verify_fn		= sd_dif_type3_verify_ip,
-+	.get_tag_fn		= sd_dif_type3_get_tag,
-+	.set_tag_fn		= sd_dif_type3_set_tag,
-+	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.tag_size		= 0,
-+};
-+
-+
-+/*
-+ * The ATO bit indicates whether the application tag is available for
-+ * use by the operating system.
-+ */
-+void sd_dif_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	int res, offset;
-+	struct scsi_device *sdp = sdkp->device;
-+	struct scsi_mode_data data;
-+	struct scsi_sense_hdr sshdr;
-+
-+	if (sdp->type != TYPE_DISK)
-+		return;
-+
-+	if (sdkp->protection_type == 0)
-+		return;
-+
-+	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-+			      SD_MAX_RETRIES, &data, &sshdr);
-+
-+	if (!scsi_status_is_good(res) || !data.header_length ||
-+	    data.length < 6) {
-+		sd_printk(KERN_WARNING, sdkp,
-+			  "getting Control mode page failed, assume no ATO\n");
-+
-+		if (scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+
-+		goto no_ato;
-+	}
-+
-+	offset = data.header_length + data.block_descriptor_length;
-+
-+	if ((buffer[offset] & 0x3f) != 0x0a) {
-+		sd_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
-+		goto no_ato;
-+	}
-+
-+	if ((buffer[offset + 5] & 0x80) == 0)
-+		goto no_ato;
-+
-+	sdkp->ATO = 1;
-+	sd_printk(KERN_NOTICE, sdkp, "ATO Enabled\n");
-+
-+	return;
-+
-+no_ato:
-+	sd_printk(KERN_NOTICE, sdkp, "ATO Disabled\n");
-+}
-+
-+/*
-+ * Determine whether disk supports Data Integrity Field.
-+ */
-+void sd_dif_config_disk(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	u8 type;
-+
-+	if (sdp->protection == 0 || (buffer[12] & 1) == 0)
-+		type = 0;
-+	else
-+		type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
-+
-+	switch (type) {
-+	case SCSI_DIF_TYPE0_PROTECTION:
-+		sd_printk(KERN_NOTICE, sdkp, "formatted without data " \
-+			  "integrity protection\n");
-+		sdkp->protection_type = 0;
-+		break;
-+
-+	case SCSI_DIF_TYPE1_PROTECTION:
-+	case SCSI_DIF_TYPE3_PROTECTION:
-+		sd_printk(KERN_NOTICE, sdkp, "formatted with DIF Type %d " \
-+			  "protection\n", type);
-+		sdkp->protection_type = type;
-+		break;
-+
-+	case SCSI_DIF_TYPE2_PROTECTION:
-+		sd_printk(KERN_ERR, sdkp, "formatted with DIF Type 2 "	\
-+			  "protection which is currently unsupported. "	\
-+			  "Disabling disk!\n");
-+		goto disable;
-+
-+	default:
-+		sd_printk(KERN_ERR, sdkp, "formatted with unknown "	\
-+			  "protection type %d. Disabling disk!\n", type);
-+		goto disable;
-+	}
-+
-+	return;
-+
-+disable:
-+	sdkp->protection_type = 0;
-+	sdkp->capacity = 0;
-+}
-+
-+/*
-+ * Configure exchange of protection information between OS and HBA.
-+ */
-+void sd_dif_config_host(struct scsi_disk *sdkp)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	struct gendisk *disk = sdkp->disk;
-+	u8 type = sdkp->protection_type;
-+
-+	/* Does HBA support protection DMA? */
-+	if (scsi_host_dif_dma(sdp->host) == 0) {
-+
-+		if (type) {
-+			sd_printk(KERN_NOTICE, sdkp, "Type %d protection " \
-+				  "unsupported by HBA. No protection DMA!\n",
-+				  type);
-+			sdkp->protection_type = 0;
-+		}
-+
-+		return;
-+	}
-+
-+	/* Does HBA support this type? */
-+	if (scsi_host_dif_type(sdp->host, type) == 0) {
-+		sd_printk(KERN_NOTICE, sdkp, "Type %d protection "	\
-+			  "unsupported by HBA. Disabling DIF!\n", type);
-+		sdkp->protection_type = 0;
-+		return;
-+	}
-+
-+	if (scsi_host_guard_type(sdkp->device->host) & SCSI_DIF_GUARD_IP)
-+		if (type == SCSI_DIF_TYPE3_PROTECTION)
-+			blk_integrity_register(disk, &dif_type3_integrity_ip);
-+		else
-+			blk_integrity_register(disk, &dif_type1_integrity_ip);
-+	else
-+		if (type == SCSI_DIF_TYPE3_PROTECTION)
-+			blk_integrity_register(disk, &dif_type3_integrity_crc);
-+		else
-+			blk_integrity_register(disk, &dif_type1_integrity_crc);
-+
-+	sd_printk(KERN_INFO, sdkp,
-+		  "Enabling %s integrity protection between OS and HBA\n",
-+		  disk->integrity->name);
-+
-+	/* Signal to block layer that we support sector tagging */
-+	if (type && sdkp->ATO) {
-+		if (type == SCSI_DIF_TYPE3_PROTECTION)
-+			disk->integrity->tag_size = sizeof(u16) + sizeof(u32);
-+		else
-+			disk->integrity->tag_size = sizeof(u16);
-+
-+		sd_printk(KERN_INFO, sdkp, "DIF application tag size %u\n",
-+			  disk->integrity->tag_size);
-+	}
-+}
-+
-+/*
-+ * DIF DMA operation magic decoder ring.  DIF-capable HBA drivers
-+ * should call this function in their queuecommand to determine how to
-+ * handle the I/O.
-+ */
-+unsigned char sd_dif_op(struct scsi_cmnd *scmd)
-+{
-+	struct request *rq = scmd->request;
-+	struct scsi_disk *sdkp;
-+	int hba_to_disk, os_to_hba, csum_convert;
-+
-+	if (rq->cmd_type != REQ_TYPE_FS)
-+		return SCSI_DIF_NORMAL;
-+
-+	/* Protection information passed between OS and HBA */
-+	sdkp = scsi_disk(rq->rq_disk);
-+	hba_to_disk = sdkp->protection_type;
-+
-+	/* Protection information between HBA and storage device */
-+	os_to_hba = scsi_prot_sg_count(scmd);
-+
-+	/* Convert checksum? */
-+	if (scsi_host_guard_type(scmd->device->host) == SCSI_DIF_GUARD_IP)
-+		csum_convert = 1;
-+	else
-+		csum_convert = 0;
-+
-+	switch (scmd->cmnd[0]) {
-+	case READ_10:
-+	case READ_12:
-+	case READ_16:
-+		if (hba_to_disk && os_to_hba)
-+			return csum_convert ?
-+				SCSI_DIF_READ_CONVERT :
-+				SCSI_DIF_READ_PASS;
-+
-+		else if (hba_to_disk && !os_to_hba)
-+			return SCSI_DIF_READ_STRIP;
-+
-+		else if (!hba_to_disk && os_to_hba)
-+			return SCSI_DIF_READ_INSERT;
-+
-+		break;
-+
-+	case WRITE_10:
-+	case WRITE_12:
-+	case WRITE_16:
-+		if (hba_to_disk && os_to_hba)
-+			return csum_convert ?
-+				SCSI_DIF_WRITE_CONVERT :
-+				SCSI_DIF_WRITE_PASS;
-+
-+		else if (hba_to_disk && !os_to_hba)
-+			return SCSI_DIF_WRITE_INSERT;
-+
-+		else if (!hba_to_disk && os_to_hba)
-+			return SCSI_DIF_WRITE_STRIP;
-+
-+		break;
-+	}
-+
-+	return SCSI_DIF_NORMAL;
-+}
-+
-+/*
-+ * The virtual start sector is the one that was originally submitted
-+ * by the block layer.	Due to partitioning, MD/DM cloning, etc. the
-+ * actual physical start sector is likely to be different.  Remap
-+ * protection information to match the physical LBA.
-+ *
-+ * From a protocol perspective there's a slight difference between
-+ * Type 1 and 2.  The latter uses 32-byte CDBs exclusively, and the
-+ * reference tag is seeded in the CDB.  This gives us the potential to
-+ * avoid virt->phys remapping during write.  However, at read time we
-+ * don't know whether the virt sector is the same as when we wrote it
-+ * (we could be reading from real disk as opposed to MD/DM device.  So
-+ * we always remap Type 2 making it identical to Type 1.
-+ *
-+ * Type 3 does not have a reference tag so no remapping is required.
-+ */
-+int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_sz)
-+{
-+	const int tuple_sz = sizeof(struct sd_dif_tuple);
-+	struct bio *bio;
-+	struct scsi_disk *sdkp;
-+	struct sd_dif_tuple *sdt;
-+	unsigned int i, j;
-+	u32 phys, virt;
-+
-+	/* Already remapped? */
-+	if (rq->cmd_flags & REQ_INTEGRITY)
-+		return 0;
-+
-+	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
-+
-+	if (sdkp->protection_type == SCSI_DIF_TYPE3_PROTECTION)
-+		return 0;
-+
-+	rq->cmd_flags |= REQ_INTEGRITY;
-+	phys = hw_sector & 0xffffffff;
-+
-+	__rq_for_each_bio(bio, rq) {
-+		struct bio_vec *iv;
-+
-+		virt = bio->bi_integrity->bip_sector & 0xffffffff;
-+
-+		bip_for_each_vec(iv, bio->bi_integrity, i) {
-+			sdt = kmap_atomic(iv->bv_page, KM_USER0) + iv->bv_offset;
-+
-+			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
-+
-+				if (be32_to_cpu(sdt->ref_tag) != virt)
-+					goto error;
-+
-+				sdt->ref_tag = cpu_to_be32(phys);
-+				virt++;
-+				phys++;
-+			}
-+
-+			kunmap_atomic(iv->bv_page, KM_USER0);
-+		}
-+	}
-+
-+	return 0;
-+
-+error:
-+	sd_printk(KERN_ERR, sdkp, "%s: virt %u, phys %u, ref %u\n",
-+		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag));
-+
-+	return -EIO;
-+}
-+
-+/*
-+ * Remap physical sector values in the reference tag to the virtual
-+ * values expected by the block layer.
-+ */
-+void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
-+{
-+	const int tuple_sz = sizeof(struct sd_dif_tuple);
-+	struct scsi_disk *sdkp;
-+	struct bio *bio;
-+	struct sd_dif_tuple *sdt;
-+	unsigned int i, j, sectors, sector_sz;
-+	u32 phys, virt;
-+
-+	sdkp = scsi_disk(scmd->request->rq_disk);
-+
-+	if (sdkp->protection_type == SCSI_DIF_TYPE3_PROTECTION)
-+		return;
-+
-+	sector_sz = scmd->device->sector_size;
-+	sectors = good_bytes / sector_sz;
-+
-+	phys = scmd->request->sector & 0xffffffff;
-+	if (sector_sz == 4096)
-+		phys >>= 3;
-+
-+	__rq_for_each_bio(bio, scmd->request) {
-+		struct bio_vec *iv;
-+
-+		virt = bio->bi_integrity->bip_sector & 0xffffffff;
-+
-+		bip_for_each_vec(iv, bio->bi_integrity, i) {
-+			sdt = kmap_atomic(iv->bv_page, KM_USER0) + iv->bv_offset;
-+
-+			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
-+
-+				if (sectors == 0)
-+					return;
-+
-+				if (be32_to_cpu(sdt->ref_tag) != phys &&
-+				    sdt->app_tag != 0xffff)
-+					sdt->ref_tag = 0xffffffff; /* Bad ref */
-+				else
-+					sdt->ref_tag = cpu_to_be32(virt);
-+
-+				virt++;
-+				phys++;
-+				sectors--;
-+			}
-+
-+			kunmap_atomic(iv->bv_page, KM_USER0);
-+		}
-+	}
-+}
-+
-diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h	Sat Jun 07 00:45:15 2008 -0400
-+++ b/include/scsi/scsi_cmnd.h	Sat Jun 07 00:45:15 2008 -0400
-@@ -78,6 +78,9 @@
- 	int allowed;
- 	int timeout_per_command;
- 
-+#if defined(CONFIG_SCSI_PROTECTION)
-+	char prot_op;
-+#endif
- 	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
- 
-diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_dif.h
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/include/scsi/scsi_dif.h	Sat Jun 07 00:45:15 2008 -0400
-@@ -0,0 +1,140 @@
-+/*
-+ * scsi_dif.h - SCSI Data Integrity Field
-+ *
-+ * Copyright (C) 2007, 2008 Oracle Corporation
-+ * Written by: Martin K. Petersen <martin.petersen@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License version
-+ * 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-+ * USA.
-+ *
-+ */
-+
-+#ifndef _SCSI_SCSI_DIF_H
-+#define _SCSI_SCSI_DIF_H
-+
-+#include <scsi/scsi_host.h>
-+
-+/*
-+ * Type 1 through 3 indicate the DIF format. Type H is for protection
-+ * between OS and HBA only.  The DMA flag indicates that the initiator
-+ * is capable of transferring protection data to and from host memory.
-+ */
-+
-+enum scsi_host_dif_capabilities {
-+	SHOST_DIF_TYPE1_PROTECTION = 1 << 0,
-+	SHOST_DIF_TYPE2_PROTECTION = 1 << 1,
-+	SHOST_DIF_TYPE3_PROTECTION = 1 << 2,
-+	SHOST_DIF_TYPEH_PROTECTION = 1 << 6,
-+	SHOST_DIF_PROTECTION_DMA   = 1 << 7,
-+};
-+
-+static inline void scsi_host_set_dif_caps(struct Scsi_Host *shost, unsigned char mask)
-+{
-+	shost->dif_capabilities = mask;
-+}
-+
-+static inline unsigned char scsi_host_dif_dma(struct Scsi_Host *shost)
-+{
-+	return shost->dif_capabilities & SHOST_DIF_PROTECTION_DMA;
-+}
-+
-+static inline unsigned char scsi_host_dif_type(struct Scsi_Host *shost, unsigned int target_type)
-+{
-+	if (target_type == 0)
-+		return shost->dif_capabilities & SHOST_DIF_TYPEH_PROTECTION;
-+
-+	return shost->dif_capabilities & (1 << (target_type - 1));
-+}
-+
-+/*
-+ * All DIF-capable initiators must support the T10-mandated CRC
-+ * checksum.  Controllers can optionally implement the IP checksum
-+ * scheme which has much lower impact on system performance.  Note
-+ * that the main rationale for the checksum is to match integrity
-+ * metadata with data.  Detecting bit errors are a job for ECC memory
-+ * and buses.
-+ */
-+
-+enum scsi_host_guard_types {
-+	SCSI_DIF_GUARD_CRC = 1 << 0,
-+	SCSI_DIF_GUARD_IP  = 1 << 1,
-+};
-+
-+static inline void scsi_host_set_guard_type(struct Scsi_Host *shost, unsigned char type)
-+{
-+	shost->dif_guard_type = type;
-+}
-+
-+static inline unsigned char scsi_host_guard_type(struct Scsi_Host *shost)
-+{
-+	return shost->dif_guard_type;
-+}
-+
-+/*
-+ * Depending on the protection scheme implemented by initiator and
-+ * target device, the request needs to be routed accordingly.  The
-+ * host operations below are hints that tell the controller driver how
-+ * to handle the I/O.
-+ */
-+
-+enum scsi_host_dif_operations {
-+	/* Normal I/O */
-+	SCSI_DIF_NORMAL = 0,
-+
-+	/* OS-HBA: Protected, HBA-Target: Unprotected */
-+	SCSI_DIF_READ_INSERT,
-+	SCSI_DIF_WRITE_STRIP,
-+
-+	/* OS-HBA: Unprotected, HBA-Target: Protected */
-+	SCSI_DIF_READ_STRIP,
-+	SCSI_DIF_WRITE_INSERT,
-+
-+	/* OS-HBA: Protected, HBA-Target: Protected */
-+	SCSI_DIF_READ_PASS,
-+	SCSI_DIF_WRITE_PASS,
-+
-+	/* OS-HBA: Protected, HBA-Target: Protected, checksum conversion */
-+	SCSI_DIF_READ_CONVERT,
-+	SCSI_DIF_WRITE_CONVERT,
-+};
-+
-+
-+/* A DIF-capable target device can be formatted with different
-+ * protection schemes.  Currently 0 through 3 are defined:
-+ *
-+ * Type 0 is regular (unprotected I/O)
-+ *
-+ * Type 1 defines the contents of the guard and reference tags
-+ *
-+ * Type 2 defines the contents of the guard and reference tags and
-+ * uses 32-byte commands to seed the latter
-+ *
-+ * Type 3 defines the contents of the guard tag only
-+ */
-+
-+enum sd_dif_target_protection_types {
-+	SCSI_DIF_TYPE0_PROTECTION = 0x0,
-+	SCSI_DIF_TYPE1_PROTECTION = 0x1,
-+	SCSI_DIF_TYPE2_PROTECTION = 0x2,
-+	SCSI_DIF_TYPE3_PROTECTION = 0x3,
-+};
-+
-+/* DIF contents are considered data and consequently host-endian */
-+struct sd_dif_tuple {
-+       __u16 guard_tag;
-+       __u16 app_tag;
-+       __u32 ref_tag;
-+};
-+
-+#endif /* _SCSI_SCSI_DIF_H */
-diff -r ad65bfde4e05 -r 8bc1728dc75a include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	Sat Jun 07 00:45:15 2008 -0400
-+++ b/include/scsi/scsi_host.h	Sat Jun 07 00:45:15 2008 -0400
-@@ -636,6 +636,10 @@
- 	 */
- 	unsigned int max_host_blocked;
- 
-+	/* Data Integrity Field */
-+	unsigned char dif_capabilities;
-+	unsigned char dif_guard_type;
-+
- 	/*
- 	 * q used for scsi_tgt msgs, async events or any other requests that
- 	 * need to be processed in userspace
+> James
 
 
+
+=2D-=20
+Beauty is in the eye of the beerholder.
+
+--Boundary-00=_8mhSILcXFhxThCy
+Content-Type: text/x-log;
+  charset="utf-8";
+  name="driverdebug.log"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="driverdebug.log"
+
+Jun  7 04:51:03 upstairs kernel: klogd 1.3-3, log source = /proc/kmsg started.
+Jun  7 04:51:03 upstairs kernel: Inspecting /boot/System.map-2.6.26-rc5
+Jun  7 04:51:04 upstairs kernel: Loaded 26357 symbols from /boot/System.map-2.6.26-rc5.
+Jun  7 04:51:04 upstairs kernel: Symbols match kernel version 2.6.26.
+Jun  7 04:51:04 upstairs kernel: No module symbols loaded - kernel modules not enabled. 
+Jun  7 04:51:04 upstairs kernel: evice, IDs PNP0c04 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   add irq 6 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   add dma 2 flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   add io  0x3f0-0x3f5 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   add io  0x3f7-0x3f7 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: parse resource options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: new independent option 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: new dependent option (priority 0x0) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000040 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   dma bitmask 0x4 flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x3f0 max 0x3f0 align 1 size 6 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x3f7 max 0x3f7 align 1 size 1 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   dma bitmask 0xe flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x3f0 max 0x3f0 align 1 size 6 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x3f7 max 0x3f7 align 1 size 1 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   dma bitmask 0xe flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x370 max 0x370 align 1 size 6 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05:   io  min 0x377 max 0x377 align 1 size 1 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: end dependent options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:05: Plug and Play ACPI device, IDs PNP0700 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   add io  0x378-0x37f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   add io  0x778-0x77b flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   add irq 7 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   add dma 3 flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: parse resource options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: new independent option 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: new dependent option (priority 0x0) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x378 max 0x378 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x778 max 0x778 align 1 size 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000080 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   dma bitmask 0x8 flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x378 max 0x378 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x778 max 0x778 align 1 size 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   dma bitmask 0xb flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x278 max 0x278 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x678 max 0x678 align 1 size 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   dma bitmask 0xb flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x3bc max 0x3bc align 1 size 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   io  min 0x7bc max 0x7bc align 1 size 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06:   dma bitmask 0xb flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: end dependent options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:06: Plug and Play ACPI device, IDs PNP0401 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07:   add io  0x0-0xffffffff flags 0x10000001 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07:   add io  0x0-0xffffffff flags 0x10000001 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07:   add io  0x290-0x297 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07: PNP0c02: calling quirk_system_pci_resources+0x0/0x1c1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:07: Plug and Play ACPI device, IDs PNP0c02 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x10-0x1f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x22-0x3f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x44-0x5f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x62-0x63 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x65-0x6f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x72-0x7f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x80-0x80 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x84-0x86 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x88-0x88 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x8c-0x8e flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x90-0x9f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0xa2-0xbf flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0xe0-0xef flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x4d0-0x4d1 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x800-0x87f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x400-0x41f flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add io  0x480-0x4bf flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add mem 0xfed20000-0xfed8ffff flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08:   add mem 0xffb00000-0xffbfffff flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08: PNP0c02: calling quirk_system_pci_resources+0x0/0x1c1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:08: Plug and Play ACPI device, IDs PNP0c02 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:09: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:09:   add mem 0xfec00000-0xfec00fff flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:09:   add mem 0xfee00000-0xfee00fff flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:09: PNP0c02: calling quirk_system_pci_resources+0x0/0x1c1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:09: Plug and Play ACPI device, IDs PNP0c02 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0a: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0a:   add io  0x60-0x60 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0a:   add io  0x64-0x64 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0a:   add irq 1 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0a: Plug and Play ACPI device, IDs PNP0303 PNP030b (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   add io  0x3f8-0x3ff flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   add irq 4 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: parse resource options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new independent option 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new dependent option (priority 0x0) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   io  min 0x3f8 max 0x3f8 align 4 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000010 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   io  min 0x3f8 max 0x3f8 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   io  min 0x2f8 max 0x2f8 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   io  min 0x3e8 max 0x3e8 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: new dependent option (priority 0x1) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   io  min 0x2e8 max 0x2e8 align 1 size 8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b:   irq bitmask 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001cf8 flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: end dependent options 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0b: Plug and Play ACPI device, IDs PNP0501 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c: parse allocated resources 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c:   add mem 0x0-0x9ffff flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c:   add mem 0xc0000-0xdffff flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c:   add mem 0xe0000-0xfffff flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c:   add mem 0x100000-0x7ffeffff flags 0x1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c:   add mem 0xfff00000-0xffffffff flags 0x0 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c: PNP0c01: calling quirk_system_pci_resources+0x0/0x1c1 
+Jun  7 04:51:04 upstairs kernel: pnp 00:0c: Plug and Play ACPI device, IDs PNP0c01 (active) 
+Jun  7 04:51:04 upstairs kernel: pnp: PnP ACPI: found 13 devices 
+Jun  7 04:51:04 upstairs kernel: ACPI: ACPI bus type pnp unregistered 
+Jun  7 04:51:04 upstairs kernel: SCSI subsystem initialized 
+Jun  7 04:51:04 upstairs kernel: libata version 3.00 loaded. 
+Jun  7 04:51:04 upstairs kernel: usbcore: registered new interface driver usbfs 
+Jun  7 04:51:04 upstairs kernel: usbcore: registered new interface driver hub 
+Jun  7 04:51:04 upstairs kernel: usbcore: registered new device driver usb 
+Jun  7 04:51:04 upstairs kernel: PCI: Using ACPI for IRQ routing 
+Jun  7 04:51:04 upstairs kernel: pnp: the driver 'system' has been registered 
+Jun  7 04:51:04 upstairs kernel: system 00:07: ioport range 0x290-0x297 has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:07: iomem range 0x0-0x0 could not be reserved 
+Jun  7 04:51:04 upstairs last message repeated 23 times
+Jun  7 04:51:04 upstairs kernel: system 00:07: driver attached 
+Jun  7 04:51:04 upstairs kernel: system 00:08: ioport range 0x4d0-0x4d1 has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: ioport range 0x800-0x87f has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: ioport range 0x400-0x41f has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: ioport range 0x480-0x4bf has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: iomem range 0xfed20000-0xfed8ffff has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: iomem range 0xffb00000-0xffbfffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:08: iomem range 0x0-0x0 could not be reserved 
+Jun  7 04:51:04 upstairs last message repeated 21 times
+Jun  7 04:51:04 upstairs kernel: system 00:08: driver attached 
+Jun  7 04:51:04 upstairs kernel: system 00:09: iomem range 0xfec00000-0xfec00fff has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:09: iomem range 0xfee00000-0xfee00fff has been reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:09: iomem range 0x0-0x0 could not be reserved 
+Jun  7 04:51:04 upstairs last message repeated 21 times
+Jun  7 04:51:04 upstairs kernel: system 00:09: driver attached 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0x0-0x9ffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0xc0000-0xdffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0xe0000-0xfffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0x100000-0x7ffeffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0xfff00000-0xffffffff could not be reserved 
+Jun  7 04:51:04 upstairs kernel: system 00:0c: iomem range 0x0-0x0 could not be reserved 
+Jun  7 04:51:04 upstairs last message repeated 18 times
+Jun  7 04:51:04 upstairs kernel: system 00:0c: driver attached 
+Jun  7 04:51:04 upstairs kernel: PCI: Bridge: 0000:00:01.0 
+Jun  7 04:51:04 upstairs kernel:   IO window: c000-cfff 
+Jun  7 04:51:04 upstairs kernel:   MEM window: 0xfa000000-0xfbefffff 
+Jun  7 04:51:04 upstairs kernel:   PREFETCH window: 0x00000000f0000000-0x00000000f8ffffff 
+Jun  7 04:51:04 upstairs kernel: PCI: Bridge: 0000:00:1e.0 
+Jun  7 04:51:04 upstairs kernel:   IO window: d000-efff 
+Jun  7 04:51:04 upstairs kernel:   MEM window: 0xfbf00000-0xfbffffff 
+Jun  7 04:51:04 upstairs kernel:   PREFETCH window: disabled. 
+Jun  7 04:51:04 upstairs kernel: PCI: Setting latency timer of device 0000:00:1e.0 to 64 
+Jun  7 04:51:04 upstairs kernel: NET: Registered protocol family 2 
+Jun  7 04:51:04 upstairs kernel: IP route cache hash table entries: 32768 (order: 5, 131072 bytes) 
+Jun  7 04:51:04 upstairs kernel: TCP established hash table entries: 131072 (order: 8, 1048576 bytes) 
+Jun  7 04:51:04 upstairs kernel: TCP bind hash table entries: 65536 (order: 7, 524288 bytes) 
+Jun  7 04:51:04 upstairs kernel: TCP: Hash tables configured (established 131072 bind 65536) 
+Jun  7 04:51:04 upstairs kernel: TCP reno registered 
+Jun  7 04:51:04 upstairs kernel: NET: Registered protocol family 1 
+Jun  7 04:51:04 upstairs kernel: highmem bounce pool size: 64 pages 
+Jun  7 04:51:04 upstairs kernel: msgmni has been set to 1750 for ipc namespace c03dea00 
+Jun  7 04:51:04 upstairs kernel: io scheduler noop registered 
+Jun  7 04:51:04 upstairs kernel: io scheduler cfq registered (default) 
+Jun  7 04:51:04 upstairs kernel: pci 0000:01:00.0: Boot video device 
+Jun  7 04:51:04 upstairs kernel: input: Power Button (FF) as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input0 
+Jun  7 04:51:04 upstairs kernel: ACPI: Power Button (FF) [PWRF] 
+Jun  7 04:51:04 upstairs kernel: input: Power Button (CM) as /devices/LNXSYSTM:00/device:00/PNP0C0C:00/input/input1 
+Jun  7 04:51:04 upstairs kernel: ACPI: Power Button (CM) [PWRB] 
+Jun  7 04:51:04 upstairs kernel: ACPI: ACPI0007:00 is registered as cooling_device0 
+Jun  7 04:51:04 upstairs kernel: ACPI: Processor [CPU1] (supports 8 throttling states) 
+Jun  7 04:51:04 upstairs kernel: ACPI: ACPI0007:01 is registered as cooling_device1 
+Jun  7 04:51:04 upstairs kernel: Real Time Clock Driver v1.12ac 
+Jun  7 04:51:04 upstairs kernel: Linux agpgart interface v0.103 
+Jun  7 04:51:04 upstairs kernel: agpgart: Detected an Intel 865 Chipset. 
+Jun  7 04:51:04 upstairs kernel: agpgart: AGP aperture is 64M @ 0xec000000 
+Jun  7 04:51:04 upstairs kernel: Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing disabled 
+Jun  7 04:51:04 upstairs kernel: serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A 
+Jun  7 04:51:04 upstairs kernel: pnp: the driver 'serial' has been registered 
+Jun  7 04:51:04 upstairs kernel: 00:0b: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A 
+Jun  7 04:51:04 upstairs kernel: serial 00:0b: driver attached 
+Jun  7 04:51:04 upstairs kernel: 8139too Fast Ethernet driver 0.9.28 
+Jun  7 04:51:04 upstairs kernel: ACPI: PCI Interrupt 0000:02:0d.0[A] -> GSI 23 (level, low) -> IRQ 23 
+Jun  7 04:51:04 upstairs kernel: eth0: RealTek RTL8139 at 0xf8816c00, 00:17:31:a9:1d:48, IRQ 23 
+Jun  7 04:51:04 upstairs kernel: eth0:  Identified 8139 chip type 'RTL-8100B/8139D' 
+Jun  7 04:51:04 upstairs kernel: Driver 'sd' needs updating - please use bus_type methods 
+Jun  7 04:51:04 upstairs kernel: Driver 'sr' needs updating - please use bus_type methods 
+Jun  7 04:51:04 upstairs kernel: ata_piix 0000:00:1f.1: version 2.12 
+Jun  7 04:51:04 upstairs kernel: ata_piix 0000:00:1f.1: enabling device (0005 -> 0007) 
+Jun  7 04:51:04 upstairs kernel: ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 04:51:04 upstairs kernel: PCI: Setting latency timer of device 0000:00:1f.1 to 64 
+Jun  7 04:51:04 upstairs kernel: scsi0 : ata_piix 
+Jun  7 04:51:04 upstairs kernel: scsi1 : ata_piix 
+Jun  7 04:51:04 upstairs kernel: ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14 
+Jun  7 04:51:04 upstairs kernel: ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15 
+Jun  7 04:51:04 upstairs kernel: ata1.00: ATA-7: MAXTOR STM3250820A, 3.AAE, max UDMA/100 
+Jun  7 04:51:04 upstairs kernel: ata1.00: 488397168 sectors, multi 16: LBA48  
+Jun  7 04:51:04 upstairs kernel: ata1.01: ATA-7: Maxtor 6L160P0, BAJ41G20, max UDMA/133 
+Jun  7 04:51:04 upstairs kernel: ata1.01: 320173056 sectors, multi 16: LBA48  
+Jun  7 04:51:04 upstairs kernel: ata1.00: configured for UDMA/100 
+Jun  7 04:51:04 upstairs kernel: ata1.01: configured for UDMA/100 
+Jun  7 04:51:04 upstairs kernel: ata2.00: ATAPI: SONY    DVD RW DW-G120A, MYS2, max UDMA/66 
+Jun  7 04:51:04 upstairs kernel: ata2.01: ATAPI: PHILIPS DVDR1628P1, Q2.2, max UDMA/33 
+Jun  7 04:51:04 upstairs kernel: Switched to NOHz mode on CPU #1 
+Jun  7 04:51:04 upstairs kernel: Switched to NOHz mode on CPU #0 
+Jun  7 04:51:04 upstairs kernel: ata2.00: configured for UDMA/66 
+Jun  7 04:51:04 upstairs kernel: ata2.01: configured for UDMA/33 
+Jun  7 04:51:04 upstairs kernel: scsi 0:0:0:0: Direct-Access     ATA      MAXTOR STM325082 3.AA PQ: 0 ANSI: 5 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel:  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 > 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:0:0: [sda] Attached SCSI disk 
+Jun  7 04:51:04 upstairs kernel: scsi 0:0:1:0: Direct-Access     ATA      Maxtor 6L160P0   BAJ4 PQ: 0 ANSI: 5 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] 320173056 512-byte hardware sectors (163929 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] 320173056 512-byte hardware sectors (163929 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel:  sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 sdb8 > 
+Jun  7 04:51:04 upstairs kernel:  sdb2: <bsd: sdb9 sdb10 sdb11 sdb12 sdb13 > 
+Jun  7 04:51:04 upstairs kernel: sd 0:0:1:0: [sdb] Attached SCSI disk 
+Jun  7 04:51:04 upstairs kernel: scsi 1:0:0:0: CD-ROM            SONY     DVD RW DW-G120A  MYS2 PQ: 0 ANSI: 5 
+Jun  7 04:51:04 upstairs kernel: sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray 
+Jun  7 04:51:04 upstairs kernel: Uniform CD-ROM driver Revision: 3.20 
+Jun  7 04:51:04 upstairs kernel: sr 1:0:0:0: Attached scsi CD-ROM sr0 
+Jun  7 04:51:04 upstairs kernel: scsi 1:0:1:0: CD-ROM            PHILIPS  DVDR1628P1       Q2.2 PQ: 0 ANSI: 5 
+Jun  7 04:51:04 upstairs kernel: sr1: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda tray 
+Jun  7 04:51:04 upstairs kernel: sr 1:0:1:0: Attached scsi CD-ROM sr1 
+Jun  7 04:51:04 upstairs kernel: ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 04:51:04 upstairs kernel: ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ] 
+Jun  7 04:51:04 upstairs kernel: PCI: Setting latency timer of device 0000:00:1f.2 to 64 
+Jun  7 04:51:04 upstairs kernel: scsi2 : ata_piix 
+Jun  7 04:51:04 upstairs kernel: scsi3 : ata_piix 
+Jun  7 04:51:04 upstairs kernel: ata3: SATA max UDMA/133 cmd 0x9800 ctl 0x9400 bmdma 0x8400 irq 18 
+Jun  7 04:51:04 upstairs kernel: ata4: SATA max UDMA/133 cmd 0x9000 ctl 0x8800 bmdma 0x8408 irq 18 
+Jun  7 04:51:04 upstairs kernel: ata3.00: ATA-7: Hitachi HDS721616PLA380, P22OA70A, max UDMA/133 
+Jun  7 04:51:04 upstairs kernel: ata3.00: 321672960 sectors, multi 16: LBA48 NCQ (depth 0/32) 
+Jun  7 04:51:04 upstairs kernel: ata3.00: configured for UDMA/133 
+Jun  7 04:51:04 upstairs kernel: scsi 2:0:0:0: Direct-Access     ATA      Hitachi HDS72161 P22O PQ: 0 ANSI: 5 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] 321672960 512-byte hardware sectors (164697 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] 321672960 512-byte hardware sectors (164697 MB) 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Write Protect is off 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA 
+Jun  7 04:51:04 upstairs kernel:  sdc: sdc1 sdc2 
+Jun  7 04:51:04 upstairs kernel: sd 2:0:0:0: [sdc] Attached SCSI disk 
+Jun  7 04:51:04 upstairs kernel: pnp: the driver 'i8042 kbd' has been registered 
+Jun  7 04:51:04 upstairs kernel: i8042 kbd 00:0a: driver attached 
+Jun  7 04:51:04 upstairs kernel: pnp: the driver 'i8042 aux' has been registered 
+Jun  7 04:51:04 upstairs kernel: PNP: PS/2 Controller [PNP0303:PS2K] at 0x60,0x64 irq 1 
+Jun  7 04:51:04 upstairs kernel: PNP: PS/2 appears to have AUX port disabled, if this is incorrect please boot with i8042.nopnp 
+Jun  7 04:51:04 upstairs kernel: serio: i8042 KBD port at 0x60,0x64 irq 1 
+Jun  7 04:51:04 upstairs kernel: mice: PS/2 mouse device common for all mice 
+Jun  7 04:51:04 upstairs kernel: Advanced Linux Sound Architecture Driver Version 1.0.16. 
+Jun  7 04:51:04 upstairs kernel: ACPI: PCI Interrupt 0000:00:1f.5[B] -> GSI 17 (level, low) -> IRQ 17 
+Jun  7 04:51:04 upstairs kernel: PCI: Setting latency timer of device 0000:00:1f.5 to 64 
+Jun  7 04:51:34 upstairs kernel: intel8x0_measure_ac97_clock: measured 50842 usecs 
+Jun  7 04:51:34 upstairs kernel: intel8x0: clocking to 48000 
+Jun  7 04:51:34 upstairs kernel: ALSA device list: 
+Jun  7 04:51:34 upstairs kernel:   #0: Intel ICH5 with ALC655 at irq 17 
+Jun  7 04:51:34 upstairs kernel: TCP cubic registered 
+Jun  7 04:51:34 upstairs kernel: NET: Registered protocol family 15 
+Jun  7 04:51:34 upstairs kernel: p4-clockmod: P4/Xeon(TM) CPU On-Demand Clock Modulation available 
+Jun  7 04:51:34 upstairs kernel: Starting balanced_irq 
+Jun  7 04:51:34 upstairs kernel: Using IPI No-Shortcut mode 
+Jun  7 04:51:34 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 04:51:34 upstairs kernel: VFS: Mounted root (ext3 filesystem) readonly. 
+Jun  7 04:51:34 upstairs kernel: Freeing unused kernel memory: 200k freed 
+Jun  7 04:51:34 upstairs kernel: EXT3 FS on sdc1, internal journal 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.7[D] -> GSI 23 (level, low) -> IRQ 23 
+Jun  7 04:51:34 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.7 to 64 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:00:1d.7: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 1 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:00:1d.7: debug port 1 
+Jun  7 04:51:34 upstairs kernel: PCI: cache line size of 128 is not supported by device 0000:00:1d.7 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:00:1d.7: irq 23, io mem 0xf9fffc00 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004 
+Jun  7 04:51:34 upstairs kernel: usb usb1: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 1-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 1-0:1.0: 8 ports detected 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver 
+Jun  7 04:51:34 upstairs kernel: USB Universal Host Controller Interface driver v3.0 
+Jun  7 04:51:34 upstairs kernel: pnp: the driver 'parport_pc' has been registered 
+Jun  7 04:51:34 upstairs kernel: parport_pc 00:06: reported by Plug and Play ACPI 
+Jun  7 04:51:34 upstairs kernel: parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP(,...)] 
+Jun  7 04:51:34 upstairs kernel: parport_pc 00:06: driver attached 
+Jun  7 04:51:34 upstairs kernel: usb usb1: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 04:51:34 upstairs kernel: usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb1: Product: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb1: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb1: SerialNumber: 0000:00:1d.7 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.0[A] -> GSI 16 (level, low) -> IRQ 16 
+Jun  7 04:51:34 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.0 to 64 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.0: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 2 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.0: irq 16, io base 0x0000a800 
+Jun  7 04:51:34 upstairs kernel: usb usb2: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 2-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 2-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb2: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb2: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb2: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb2: SerialNumber: 0000:00:1d.0 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.1[B] -> GSI 19 (level, low) -> IRQ 19 
+Jun  7 04:51:34 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.1 to 64 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.1: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 3 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.1: irq 19, io base 0x0000b000 
+Jun  7 04:51:34 upstairs kernel: usb usb3: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 3-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 3-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb3: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb3: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb3: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb3: SerialNumber: 0000:00:1d.1 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.2[C] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 04:51:34 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.2 to 64 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.2: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 4 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.2: irq 18, io base 0x0000b400 
+Jun  7 04:51:34 upstairs kernel: usb usb4: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 4-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 4-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb4: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb4: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb4: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb4: SerialNumber: 0000:00:1d.2 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.2[C] -> GSI 19 (level, low) -> IRQ 19 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:09.2: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:09.2: new USB bus registered, assigned bus number 5 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:09.2: irq 19, io mem 0xfbfffc00 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.3[A] -> GSI 16 (level, low) -> IRQ 16 
+Jun  7 04:51:34 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.3 to 64 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.3: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.3: new USB bus registered, assigned bus number 6 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:00:1d.3: irq 16, io base 0x0000b800 
+Jun  7 04:51:34 upstairs kernel: usb usb6: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 6-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 6-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:09.2: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004 
+Jun  7 04:51:34 upstairs kernel: usb usb6: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb6: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb6: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb6: SerialNumber: 0000:00:1d.3 
+Jun  7 04:51:34 upstairs kernel: usb usb5: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 5-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 5-0:1.0: 4 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb5: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 04:51:34 upstairs kernel: usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb5: Product: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb5: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb5: SerialNumber: 0000:02:09.2 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.2[C] -> GSI 23 (level, low) -> IRQ 23 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:0a.2: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:0a.2: new USB bus registered, assigned bus number 7 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:0a.2: irq 23, io mem 0xfbfff800 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: new full speed USB device using uhci_hcd and address 2 
+Jun  7 04:51:34 upstairs kernel: ehci_hcd 0000:02:0a.2: USB 2.0 started, EHCI 0.95, driver 10 Dec 2004 
+Jun  7 04:51:34 upstairs kernel: usb usb7: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 7-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 7-0:1.0: 5 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: New USB device found, idVendor=06bd, idProduct=2061 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: Product: SNAPSCAN 
+Jun  7 04:51:34 upstairs kernel: usb 2-2: Manufacturer: AGFA  
+Jun  7 04:51:34 upstairs kernel: usb usb7: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 04:51:34 upstairs kernel: usb usb7: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb7: Product: EHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb7: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb7: SerialNumber: 0000:02:0a.2 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.0[A] -> GSI 17 (level, low) -> IRQ 17 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.0: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.0: new USB bus registered, assigned bus number 8 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.0: irq 17, io base 0x0000e400 
+Jun  7 04:51:34 upstairs kernel: usb usb8: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 8-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 8-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb8: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb8: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb8: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb8: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb8: SerialNumber: 0000:02:09.0 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.1[B] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.1: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.1: new USB bus registered, assigned bus number 9 
+Jun  7 04:51:34 upstairs kernel: uhci_hcd 0000:02:09.1: irq 18, io base 0x0000e800 
+Jun  7 04:51:34 upstairs kernel: usb usb9: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 9-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 9-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: new low speed USB device using uhci_hcd and address 2 
+Jun  7 04:51:34 upstairs kernel: usb usb9: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb9: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb9: Product: UHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb9: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb9: SerialNumber: 0000:02:09.1 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 21 (level, low) -> IRQ 21 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.0: OHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.0: new USB bus registered, assigned bus number 10 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.0: irq 21, io mem 0xfbffd000 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: New USB device found, idVendor=045e, idProduct=00f1 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: Product: Microsoft Wireless Desktop Receiver 3.1A 
+Jun  7 04:51:34 upstairs kernel: usb 3-2: Manufacturer: Microsft 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: new high speed USB device using ehci_hcd and address 2 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: New USB device found, idVendor=2040, idProduct=9950 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: Product: WinTV Nova-DT 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: Manufacturer: Hauppauge 
+Jun  7 04:51:34 upstairs kernel: usb 5-1: SerialNumber: 4030248054 
+Jun  7 04:51:34 upstairs kernel: dib0700: loaded with support for 7 different device-types 
+Jun  7 04:51:34 upstairs kernel: usb 7-3: new high speed USB device using ehci_hcd and address 2 
+Jun  7 04:51:34 upstairs kernel: usb 7-3: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 7-3:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 7-3:1.0: 4 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb usb10: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 10-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 10-0:1.0: 3 ports detected 
+Jun  7 04:51:34 upstairs kernel: usb 7-3: New USB device found, idVendor=0409, idProduct=0059 
+Jun  7 04:51:34 upstairs kernel: usb 7-3: New USB device strings: Mfr=0, Product=0, SerialNumber=0 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: found a 'Hauppauge Nova-T 500 Dual DVB-T' in cold state, will try to load a firmware 
+Jun  7 04:51:34 upstairs kernel: firmware: requesting dvb-usb-dib0700-1.10.fw 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: downloading firmware from file 'dvb-usb-dib0700-1.10.fw' 
+Jun  7 04:51:34 upstairs kernel: usb usb10: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb10: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb10: Product: OHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb10: Manufacturer: Linux 2.6.26-rc5 ohci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb10: SerialNumber: 0000:02:0a.0 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:0b.0[A] -> GSI 22 (level, low) -> IRQ 22 
+Jun  7 04:51:34 upstairs kernel: ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[22]  MMIO=[fbfff000-fbfff7ff]  Max Packet=[2048]  IR/IT contexts=[4/8] 
+Jun  7 04:51:34 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.1[B] -> GSI 22 (level, low) -> IRQ 22 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.1: OHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.1: new USB bus registered, assigned bus number 11 
+Jun  7 04:51:34 upstairs kernel: ohci_hcd 0000:02:0a.1: irq 22, io mem 0xfbffe000 
+Jun  7 04:51:34 upstairs kernel: input: Microsft Microsoft Wireless Desktop Receiver 3.1A as /devices/pci0000:00/0000:00:1d.1/usb3/3-2/3-2:1.0/input/input2 
+Jun  7 04:51:34 upstairs kernel: dib0700: firmware started successfully. 
+Jun  7 04:51:34 upstairs kernel: input: USB HID v1.11 Keyboard [Microsft Microsoft Wireless Desktop Receiver 3.1A] on usb-0000:00:1d.1-2 
+Jun  7 04:51:34 upstairs kernel: input: Microsft Microsoft Wireless Desktop Receiver 3.1A as /devices/pci0000:00/0000:00:1d.1/usb3/3-2/3-2:1.1/input/input3 
+Jun  7 04:51:34 upstairs kernel: input: USB HID v1.11 Mouse [Microsft Microsoft Wireless Desktop Receiver 3.1A] on usb-0000:00:1d.1-2 
+Jun  7 04:51:34 upstairs kernel: usb usb11: configuration #1 chosen from 1 choice 
+Jun  7 04:51:34 upstairs kernel: hub 11-0:1.0: USB hub found 
+Jun  7 04:51:34 upstairs kernel: hub 11-0:1.0: 2 ports detected 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: found a 'Hauppauge Nova-T 500 Dual DVB-T' in warm state. 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: will pass the complete MPEG2 transport stream to the software demuxer. 
+Jun  7 04:51:34 upstairs kernel: DVB: registering new adapter (Hauppauge Nova-T 500 Dual DVB-T) 
+Jun  7 04:51:34 upstairs kernel: DVB: registering frontend 0 (DiBcom 3000MC/P)... 
+Jun  7 04:51:34 upstairs kernel: MT2060: successfully identified (IF1 = 1230) 
+Jun  7 04:51:34 upstairs kernel: usb usb11: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 04:51:34 upstairs kernel: usb usb11: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 04:51:34 upstairs kernel: usb usb11: Product: OHCI Host Controller 
+Jun  7 04:51:34 upstairs kernel: usb usb11: Manufacturer: Linux 2.6.26-rc5 ohci_hcd 
+Jun  7 04:51:34 upstairs kernel: usb usb11: SerialNumber: 0000:02:0a.1 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: will pass the complete MPEG2 transport stream to the software demuxer. 
+Jun  7 04:51:34 upstairs kernel: DVB: registering new adapter (Hauppauge Nova-T 500 Dual DVB-T) 
+Jun  7 04:51:34 upstairs kernel: DVB: registering frontend 1 (DiBcom 3000MC/P)... 
+Jun  7 04:51:34 upstairs kernel: ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00110666000013cc] 
+Jun  7 04:51:34 upstairs kernel: MT2060: successfully identified (IF1 = 1234) 
+Jun  7 04:51:34 upstairs kernel: input: IR-receiver inside an USB DVB receiver as /devices/pci0000:00/0000:00:1e.0/0000:02:09.2/usb5/5-1/input/input4 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: schedule remote query interval to 150 msecs. 
+Jun  7 04:51:34 upstairs kernel: dvb-usb: Hauppauge Nova-T 500 Dual DVB-T successfully initialized and connected. 
+Jun  7 04:51:34 upstairs kernel: usbcore: registered new interface driver usbhid 
+Jun  7 04:51:34 upstairs kernel: usbhid: v2.6:USB HID core driver 
+Jun  7 04:51:34 upstairs kernel: usbcore: registered new interface driver dvb_usb_dib0700 
+Jun  7 04:51:34 upstairs kernel: fuse init (API version 7.9) 
+Jun  7 04:51:34 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 04:51:34 upstairs kernel: EXT3 FS on sdb6, internal journal 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 04:51:34 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 04:51:34 upstairs kernel: EXT3 FS on sda6, internal journal 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 04:51:34 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 04:51:34 upstairs kernel: EXT3 FS on sda7, internal journal 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 04:51:34 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 04:51:34 upstairs kernel: EXT3 FS on sdc2, internal journal 
+Jun  7 04:51:34 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 04:51:34 upstairs kernel: Adding 4096532k swap on /dev/sda5.  Priority:-1 extents:1 across:4096532k 
+Jun  7 04:51:34 upstairs kernel: eth0: link up, 100Mbps, full-duplex, lpa 0x45E1 
+Jun  7 04:51:34 upstairs kernel: ip_tables: (C) 2000-2006 Netfilter Core Team 
+Jun  7 04:51:34 upstairs kernel: nf_conntrack version 0.5.0 (16384 buckets, 65536 max) 
+Jun  7 04:51:34 upstairs kernel: parport_pc 00:06: disabled 
+Jun  7 04:51:34 upstairs kernel: pnp: the driver 'parport_pc' has been unregistered 
+Jun  7 04:51:34 upstairs kernel: ieee1394: Node removed: ID:BUS[0-00:1023]  GUID[00110666000013cc] 
+Jun  7 05:04:29 upstairs kernel: klogd 1.3-3, log source = /proc/kmsg started.
+Jun  7 05:04:29 upstairs kernel: Inspecting /boot/System.map-2.6.26-rc5
+Jun  7 05:04:30 upstairs kernel: Loaded 26367 symbols from /boot/System.map-2.6.26-rc5.
+Jun  7 05:04:30 upstairs kernel: Symbols match kernel version 2.6.26.
+Jun  7 05:04:30 upstairs kernel: No module symbols loaded - kernel modules not enabled. 
+Jun  7 05:04:30 upstairs kernel: _add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 2-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:2-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 2-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 2-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 2-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 2-0:1.0: 2 ports detected 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': add driver ohci1394 
+Jun  7 05:04:30 upstairs kernel: driver: '2-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 2-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev2.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev2.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb2': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb2 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev2.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev2.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb2: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb2: Product: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb2: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb2: SerialNumber: 0000:00:1d.1 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:00:1d.1': driver_bound: bound to device 'uhci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:00:1d.1 to driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:00:1d.2 with driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver uhci_hcd with device 0000:00:1d.2 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.2[C] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 05:04:30 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.2 to 64 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.2: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host3': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host3 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 3 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.2: irq 18, io base 0x0000b400 
+Jun  7 05:04:30 upstairs kernel: device: 'usb3': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb3 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb3 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb3 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb3 
+Jun  7 05:04:30 upstairs kernel: usb usb3: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '3-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 3-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:3-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 3-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 3-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 3-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 3-0:1.0: 2 ports detected 
+Jun  7 05:04:30 upstairs kernel: driver: '3-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 3-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev3.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev3.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb3': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb3 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev3.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev3.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb3: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb3: Product: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb3: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb3: SerialNumber: 0000:00:1d.2 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:00:1d.2': driver_bound: bound to device 'uhci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:00:1d.2 to driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:00:1d.3 with driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver uhci_hcd with device 0000:00:1d.3 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.3[A] -> GSI 16 (level, low) -> IRQ 16 
+Jun  7 05:04:30 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.3 to 64 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.3: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host4': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host4 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.3: new USB bus registered, assigned bus number 4 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:00:1d.3: irq 16, io base 0x0000b800 
+Jun  7 05:04:30 upstairs kernel: device: 'usb4': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb4 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb4 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb4 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb4 
+Jun  7 05:04:30 upstairs kernel: usb usb4: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '4-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 4-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:4-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 4-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 4-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 4-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 4-0:1.0: 2 ports detected 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: new full speed USB device using uhci_hcd and address 2 
+Jun  7 05:04:30 upstairs kernel: device: '1-2': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 1-2 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:1-2 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 1-2 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device 1-2 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '1-2:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.2_ep81 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep02': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.2_ep02 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep83': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.2_ep83 
+Jun  7 05:04:30 upstairs kernel: driver: '1-2': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 1-2 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.2_ep00 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: New USB device found, idVendor=06bd, idProduct=2061 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: Product: SNAPSCAN 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: Manufacturer: AGFA  
+Jun  7 05:04:30 upstairs kernel: driver: '4-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 4-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev4.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev4.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb4': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb4 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev4.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev4.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb4: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb4: Product: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb4: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb4: SerialNumber: 0000:00:1d.3 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:00:1d.3': driver_bound: bound to device 'uhci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:00:1d.3 to driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:00:1d.7 with driver ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver ehci_hcd with device 0000:00:1d.7 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:00:1d.7[D] -> GSI 23 (level, low) -> IRQ 23 
+Jun  7 05:04:30 upstairs kernel: PCI: Setting latency timer of device 0000:00:1d.7 to 64 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:00:1d.7: EHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host5': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host5 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 5 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:00:1d.7: debug port 1 
+Jun  7 05:04:30 upstairs kernel: PCI: cache line size of 128 is not supported by device 0000:00:1d.7 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:00:1d.7: irq 23, io mem 0xf9fffc00 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004 
+Jun  7 05:04:30 upstairs kernel: device: 'usb5': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb5 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb5 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb5 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb5 
+Jun  7 05:04:30 upstairs kernel: usb usb5: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '5-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 5-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:5-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 5-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 5-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 5-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 5-0:1.0: 8 ports detected 
+Jun  7 05:04:30 upstairs kernel: driver: '5-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 5-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev5.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev5.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb5': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb5 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev5.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev5.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb5: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 05:04:30 upstairs kernel: usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb5: Product: EHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb5: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb5: SerialNumber: 0000:00:1d.7 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:00:1d.7': driver_bound: bound to device 'ehci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:00:1d.7 to driver ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:09.0 with driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver uhci_hcd with device 0000:02:09.0 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.0[A] -> GSI 17 (level, low) -> IRQ 17 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.0: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host6': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host6 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.0: new USB bus registered, assigned bus number 6 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.0: irq 17, io base 0x0000e400 
+Jun  7 05:04:30 upstairs kernel: device: 'usb6': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb6 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb6 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb6 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb6 
+Jun  7 05:04:30 upstairs kernel: usb usb6: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '6-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 6-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:6-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 6-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 6-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 6-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 6-0:1.0: 2 ports detected 
+Jun  7 05:04:30 upstairs kernel: driver: '6-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 6-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev6.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev6.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb6': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb6 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev6.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev6.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb6: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb6: Product: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb6: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb6: SerialNumber: 0000:02:09.0 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:02:09.0': driver_bound: bound to device 'uhci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:09.0 to driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:09.1 with driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver uhci_hcd with device 0000:02:09.1 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.1[B] -> GSI 18 (level, low) -> IRQ 18 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.1: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host7': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host7 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.1: new USB bus registered, assigned bus number 7 
+Jun  7 05:04:30 upstairs kernel: uhci_hcd 0000:02:09.1: irq 18, io base 0x0000e800 
+Jun  7 05:04:30 upstairs kernel: device: 'usb7': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb7 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb7 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb7 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb7 
+Jun  7 05:04:30 upstairs kernel: usb usb7: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '7-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 7-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:7-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 7-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 7-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 7-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 7-0:1.0: 2 ports detected 
+Jun  7 05:04:30 upstairs kernel: driver: '7-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 7-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev7.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev7.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb7': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb7 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev7.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev7.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb7: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb7: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb7: Product: UHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb7: Manufacturer: Linux 2.6.26-rc5 uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb7: SerialNumber: 0000:02:09.1 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:02:09.1': driver_bound: bound to device 'uhci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:09.1 to driver uhci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:09.2 with driver ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver ehci_hcd with device 0000:02:09.2 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:02:09.2[C] -> GSI 19 (level, low) -> IRQ 19 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:09.2: EHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host8': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host8 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:09.2: new USB bus registered, assigned bus number 8 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:09.2: irq 19, io mem 0xfbfffc00 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:09.2: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004 
+Jun  7 05:04:30 upstairs kernel: device: 'usb8': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb8 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb8 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb8 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb8 
+Jun  7 05:04:30 upstairs kernel: usb usb8: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '8-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 8-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:8-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 8-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 8-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 8-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 8-0:1.0: 4 ports detected 
+Jun  7 05:04:30 upstairs kernel: driver: '8-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 8-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb8': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb8 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb8: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 05:04:30 upstairs kernel: usb usb8: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb8: Product: EHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb8: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb8: SerialNumber: 0000:02:09.2 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:02:09.2': driver_bound: bound to device 'ehci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:09.2 to driver ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:0a.0 with driver ohci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver ohci_hcd with device 0000:02:0a.0 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 21 (level, low) -> IRQ 21 
+Jun  7 05:04:30 upstairs kernel: ohci_hcd 0000:02:0a.0: OHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host9': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host9 
+Jun  7 05:04:30 upstairs kernel: ohci_hcd 0000:02:0a.0: new USB bus registered, assigned bus number 9 
+Jun  7 05:04:30 upstairs kernel: ohci_hcd 0000:02:0a.0: irq 21, io mem 0xfbffd000 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: USB disconnect, address 2 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for usb:1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': remove device 1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep81': device_unregister 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for No Bus:usbdev1.2_ep81 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep02': device_unregister 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for No Bus:usbdev1.2_ep02 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep83': device_unregister 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for No Bus:usbdev1.2_ep83 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.2_ep00': device_unregister 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for No Bus:usbdev1.2_ep00 
+Jun  7 05:04:30 upstairs kernel: PM: Removing info for usb:1-2 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': remove device 1-2 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: new full speed USB device using uhci_hcd and address 3 
+Jun  7 05:04:30 upstairs kernel: device: '1-2': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 1-2 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:1-2 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 1-2 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device 1-2 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '1-2:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:1-2:1.0 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.3_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.3_ep81 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.3_ep02': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.3_ep02 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.3_ep83': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.3_ep83 
+Jun  7 05:04:30 upstairs kernel: driver: '1-2': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 1-2 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev1.3_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev1.3_ep00 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: New USB device found, idVendor=06bd, idProduct=2061 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: Product: SNAPSCAN 
+Jun  7 05:04:30 upstairs kernel: usb 1-2: Manufacturer: AGFA  
+Jun  7 05:04:30 upstairs kernel: device: 'usb9': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device usb9 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:usb9 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb9 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb9 
+Jun  7 05:04:30 upstairs kernel: usb usb9: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '9-0:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 9-0:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:9-0:1.0 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 9-0:1.0 with driver hub 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 9-0:1.0 
+Jun  7 05:04:30 upstairs kernel: hub 9-0:1.0: USB hub found 
+Jun  7 05:04:30 upstairs kernel: hub 9-0:1.0: 3 ports detected 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: new high speed USB device using ehci_hcd and address 2 
+Jun  7 05:04:30 upstairs kernel: device: '8-1': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 8-1 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:8-1 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': driver_probe_device: matched device 8-1 with driver usb 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device 8-1 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: configuration #1 chosen from 1 choice 
+Jun  7 05:04:30 upstairs kernel: device: '8-1:1.0': device_add 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': add device 8-1:1.0 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for usb:8-1:1.0 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.2_ep01': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.2_ep01 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.2_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.2_ep81 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.2_ep82': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.2_ep82 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.2_ep83': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.2_ep83 
+Jun  7 05:04:30 upstairs kernel: driver: '8-1': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 8-1 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev8.2_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev8.2_ep00 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: New USB device found, idVendor=2040, idProduct=9950 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: Product: WinTV Nova-DT 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: Manufacturer: Hauppauge 
+Jun  7 05:04:30 upstairs kernel: usb 8-1: SerialNumber: 4030248054 
+Jun  7 05:04:30 upstairs kernel: driver: '9-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device 9-0:1.0 to driver hub 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev9.1_ep81': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev9.1_ep81 
+Jun  7 05:04:30 upstairs kernel: driver: 'usb9': driver_bound: bound to device 'usb' 
+Jun  7 05:04:30 upstairs kernel: bus: 'usb': really_probe: bound device usb9 to driver usb 
+Jun  7 05:04:30 upstairs kernel: device: 'usbdev9.1_ep00': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usbdev9.1_ep00 
+Jun  7 05:04:30 upstairs kernel: usb usb9: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:04:30 upstairs kernel: usb usb9: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:04:30 upstairs kernel: usb usb9: Product: OHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: usb usb9: Manufacturer: Linux 2.6.26-rc5 ohci_hcd 
+Jun  7 05:04:30 upstairs kernel: usb usb9: SerialNumber: 0000:02:0a.0 
+Jun  7 05:04:30 upstairs kernel: driver: '0000:02:0a.0': driver_bound: bound to device 'ohci_hcd' 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:0a.0 to driver ohci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:0a.2 with driver ehci_hcd 
+Jun  7 05:04:30 upstairs kernel: bus: 'pci': really_probe: probing driver ehci_hcd with device 0000:02:0a.2 
+Jun  7 05:04:30 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.2[C] -> GSI 23 (level, low) -> IRQ 23 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:0a.2: EHCI Host Controller 
+Jun  7 05:04:30 upstairs kernel: device: 'usb_host10': device_add 
+Jun  7 05:04:30 upstairs kernel: PM: Adding info for No Bus:usb_host10 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:0a.2: new USB bus registered, assigned bus number 10 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:0a.2: irq 23, io mem 0xfbfff800 
+Jun  7 05:04:30 upstairs kernel: usb 2-2: new low speed USB device using uhci_hcd and address 2 
+Jun  7 05:04:30 upstairs kernel: ehci_hcd 0000:02:0a.2: USB 2.0 started, EHCI 0.95, driver 10 Dec 2004 
+Jun  7 05:05:03 upstairs kernel: device: 'usb10': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device usb10 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:usb10 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb10 with driver usb 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb10 
+Jun  7 05:05:03 upstairs kernel: usb usb10: configuration #1 chosen from 1 choice 
+Jun  7 05:05:03 upstairs kernel: device: '10-0:1.0': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 10-0:1.0 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:10-0:1.0 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 10-0:1.0 with driver hub 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 10-0:1.0 
+Jun  7 05:05:03 upstairs kernel: hub 10-0:1.0: USB hub found 
+Jun  7 05:05:03 upstairs kernel: hub 10-0:1.0: 5 ports detected 
+Jun  7 05:05:03 upstairs kernel: device: '2-2': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 2-2 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:2-2 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 2-2 with driver usb 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device 2-2 
+Jun  7 05:05:03 upstairs kernel: usb 2-2: configuration #1 chosen from 1 choice 
+Jun  7 05:05:03 upstairs kernel: device: '2-2:1.0': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 2-2:1.0 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:2-2:1.0 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev2.2_ep81': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev2.2_ep81 
+Jun  7 05:05:03 upstairs kernel: device: '2-2:1.1': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 2-2:1.1 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:2-2:1.1 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev2.2_ep82': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev2.2_ep82 
+Jun  7 05:05:03 upstairs kernel: driver: '2-2': driver_bound: bound to device 'usb' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 2-2 to driver usb 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev2.2_ep00': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev2.2_ep00 
+Jun  7 05:05:03 upstairs kernel: usb 2-2: New USB device found, idVendor=045e, idProduct=00f1 
+Jun  7 05:05:03 upstairs kernel: usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0 
+Jun  7 05:05:03 upstairs kernel: usb 2-2: Product: Microsoft Wireless Desktop Receiver 3.1A 
+Jun  7 05:05:03 upstairs kernel: usb 2-2: Manufacturer: Microsft 
+Jun  7 05:05:03 upstairs kernel: driver: '10-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 10-0:1.0 to driver hub 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev10.1_ep81': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev10.1_ep81 
+Jun  7 05:05:03 upstairs kernel: driver: 'usb10': driver_bound: bound to device 'usb' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device usb10 to driver usb 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev10.1_ep00': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev10.1_ep00 
+Jun  7 05:05:03 upstairs kernel: usb usb10: New USB device found, idVendor=1d6b, idProduct=0002 
+Jun  7 05:05:03 upstairs kernel: usb usb10: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:05:03 upstairs kernel: usb usb10: Product: EHCI Host Controller 
+Jun  7 05:05:03 upstairs kernel: usb usb10: Manufacturer: Linux 2.6.26-rc5 ehci_hcd 
+Jun  7 05:05:03 upstairs kernel: usb usb10: SerialNumber: 0000:02:0a.2 
+Jun  7 05:05:03 upstairs kernel: driver: '0000:02:0a.2': driver_bound: bound to device 'ehci_hcd' 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:0a.2 to driver ehci_hcd 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:0a.1 with driver ohci_hcd 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': really_probe: probing driver ohci_hcd with device 0000:02:0a.1 
+Jun  7 05:05:03 upstairs kernel: ACPI: PCI Interrupt 0000:02:0a.1[B] -> GSI 22 (level, low) -> IRQ 22 
+Jun  7 05:05:03 upstairs kernel: ohci_hcd 0000:02:0a.1: OHCI Host Controller 
+Jun  7 05:05:03 upstairs kernel: device: 'usb_host11': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usb_host11 
+Jun  7 05:05:03 upstairs kernel: ohci_hcd 0000:02:0a.1: new USB bus registered, assigned bus number 11 
+Jun  7 05:05:03 upstairs kernel: ohci_hcd 0000:02:0a.1: irq 22, io mem 0xfbffe000 
+Jun  7 05:05:03 upstairs kernel: usb 10-3: new high speed USB device using ehci_hcd and address 2 
+Jun  7 05:05:03 upstairs kernel: device: '10-3': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 10-3 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:10-3 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 10-3 with driver usb 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device 10-3 
+Jun  7 05:05:03 upstairs kernel: usb 10-3: configuration #1 chosen from 1 choice 
+Jun  7 05:05:03 upstairs kernel: device: '10-3:1.0': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 10-3:1.0 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:10-3:1.0 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 10-3:1.0 with driver hub 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 10-3:1.0 
+Jun  7 05:05:03 upstairs kernel: hub 10-3:1.0: USB hub found 
+Jun  7 05:05:03 upstairs kernel: hub 10-3:1.0: 4 ports detected 
+Jun  7 05:05:03 upstairs kernel: driver: '10-3:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 10-3:1.0 to driver hub 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev10.2_ep81': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev10.2_ep81 
+Jun  7 05:05:03 upstairs kernel: driver: '10-3': driver_bound: bound to device 'usb' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 10-3 to driver usb 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev10.2_ep00': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev10.2_ep00 
+Jun  7 05:05:03 upstairs kernel: usb 10-3: New USB device found, idVendor=0409, idProduct=0059 
+Jun  7 05:05:03 upstairs kernel: usb 10-3: New USB device strings: Mfr=0, Product=0, SerialNumber=0 
+Jun  7 05:05:03 upstairs kernel: device: 'usb11': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device usb11 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:usb11 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device usb11 with driver usb 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usb with device usb11 
+Jun  7 05:05:03 upstairs kernel: usb usb11: configuration #1 chosen from 1 choice 
+Jun  7 05:05:03 upstairs kernel: device: '11-0:1.0': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add device 11-0:1.0 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for usb:11-0:1.0 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 11-0:1.0 with driver hub 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver hub with device 11-0:1.0 
+Jun  7 05:05:03 upstairs kernel: hub 11-0:1.0: USB hub found 
+Jun  7 05:05:03 upstairs kernel: hub 11-0:1.0: 2 ports detected 
+Jun  7 05:05:03 upstairs kernel: driver: '11-0:1.0': driver_bound: bound to device 'hub' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 11-0:1.0 to driver hub 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev11.1_ep81': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev11.1_ep81 
+Jun  7 05:05:03 upstairs kernel: driver: 'usb11': driver_bound: bound to device 'usb' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device usb11 to driver usb 
+Jun  7 05:05:03 upstairs kernel: device: 'usbdev11.1_ep00': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:usbdev11.1_ep00 
+Jun  7 05:05:03 upstairs kernel: usb usb11: New USB device found, idVendor=1d6b, idProduct=0001 
+Jun  7 05:05:03 upstairs kernel: usb usb11: New USB device strings: Mfr=3, Product=2, SerialNumber=1 
+Jun  7 05:05:03 upstairs kernel: usb usb11: Product: OHCI Host Controller 
+Jun  7 05:05:03 upstairs kernel: usb usb11: Manufacturer: Linux 2.6.26-rc5 ohci_hcd 
+Jun  7 05:05:03 upstairs kernel: usb usb11: SerialNumber: 0000:02:0a.1 
+Jun  7 05:05:03 upstairs kernel: driver: '0000:02:0a.1': driver_bound: bound to device 'ohci_hcd' 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:0a.1 to driver ohci_hcd 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': driver_probe_device: matched device 0000:02:0b.0 with driver ohci1394 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': really_probe: probing driver ohci1394 with device 0000:02:0b.0 
+Jun  7 05:05:03 upstairs kernel: ACPI: PCI Interrupt 0000:02:0b.0[A] -> GSI 22 (level, low) -> IRQ 22 
+Jun  7 05:05:03 upstairs kernel: device: 'fw-host0': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'ieee1394': add device fw-host0 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for ieee1394:fw-host0 
+Jun  7 05:05:03 upstairs kernel: driver: 'fw-host0': driver_bound: bound to device 'nodemgr' 
+Jun  7 05:05:03 upstairs kernel: device: 'fw-host0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:fw-host0 
+Jun  7 05:05:03 upstairs kernel: ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[22]  MMIO=[fbfff000-fbfff7ff]  Max Packet=[2048]  IR/IT contexts=[4/8] 
+Jun  7 05:05:03 upstairs kernel: driver: '0000:02:0b.0': driver_bound: bound to device 'ohci1394' 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': really_probe: bound device 0000:02:0b.0 to driver ohci1394 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add driver usbhid 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 2-2:1.0 with driver usbhid 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usbhid with device 2-2:1.0 
+Jun  7 05:05:03 upstairs kernel: bus: 'i2c': registered 
+Jun  7 05:05:03 upstairs kernel: device class 'i2c-adapter': registering 
+Jun  7 05:05:03 upstairs kernel: bus: 'i2c': add driver dummy 
+Jun  7 05:05:03 upstairs kernel: device: 'input2': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:input2 
+Jun  7 05:05:03 upstairs kernel: input: Microsft Microsoft Wireless Desktop Receiver 3.1A as /devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.0/input/input2 
+Jun  7 05:05:03 upstairs kernel: device: 'event2': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:event2 
+Jun  7 05:05:03 upstairs kernel: input: USB HID v1.11 Keyboard [Microsft Microsoft Wireless Desktop Receiver 3.1A] on usb-0000:00:1d.1-2 
+Jun  7 05:05:03 upstairs kernel: driver: '2-2:1.0': driver_bound: bound to device 'usbhid' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 2-2:1.0 to driver usbhid 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 2-2:1.1 with driver usbhid 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver usbhid with device 2-2:1.1 
+Jun  7 05:05:03 upstairs kernel: device class 'firmware': registering 
+Jun  7 05:05:03 upstairs kernel: device class 'dvb': registering 
+Jun  7 05:05:03 upstairs kernel: dib0700: loaded with support for 7 different device-types 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': add driver dvb_usb_dib0700 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': driver_probe_device: matched device 8-1:1.0 with driver dvb_usb_dib0700 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: probing driver dvb_usb_dib0700 with device 8-1:1.0 
+Jun  7 05:05:03 upstairs kernel: dvb-usb: found a 'Hauppauge Nova-T 500 Dual DVB-T' in warm state. 
+Jun  7 05:05:03 upstairs kernel: device: 'i2c-0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:i2c-0 
+Jun  7 05:05:03 upstairs kernel: dvb-usb: will pass the complete MPEG2 transport stream to the software demuxer. 
+Jun  7 05:05:03 upstairs kernel: DVB: registering new adapter (Hauppauge Nova-T 500 Dual DVB-T) 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb0.demux0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb0.demux0 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb0.dvr0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb0.dvr0 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb0.net0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb0.net0 
+Jun  7 05:05:03 upstairs kernel: device: 'input3': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:input3 
+Jun  7 05:05:03 upstairs kernel: input: Microsft Microsoft Wireless Desktop Receiver 3.1A as /devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.1/input/input3 
+Jun  7 05:05:03 upstairs kernel: device: 'mouse0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:mouse0 
+Jun  7 05:05:03 upstairs kernel: device: 'event3': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:event3 
+Jun  7 05:05:03 upstairs kernel: input: USB HID v1.11 Mouse [Microsft Microsoft Wireless Desktop Receiver 3.1A] on usb-0000:00:1d.1-2 
+Jun  7 05:05:03 upstairs kernel: driver: '2-2:1.1': driver_bound: bound to device 'usbhid' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 2-2:1.1 to driver usbhid 
+Jun  7 05:05:03 upstairs kernel: usbcore: registered new interface driver usbhid 
+Jun  7 05:05:03 upstairs kernel: usbhid: v2.6:USB HID core driver 
+Jun  7 05:05:03 upstairs kernel: device: 'i2c-1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:i2c-1 
+Jun  7 05:05:03 upstairs kernel: DVB: registering frontend 0 (DiBcom 3000MC/P)... 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb0.frontend0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb0.frontend0 
+Jun  7 05:05:03 upstairs kernel: MT2060: successfully identified (IF1 = 1230) 
+Jun  7 05:05:03 upstairs kernel: dvb-usb: will pass the complete MPEG2 transport stream to the software demuxer. 
+Jun  7 05:05:03 upstairs kernel: DVB: registering new adapter (Hauppauge Nova-T 500 Dual DVB-T) 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb1.demux0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb1.demux0 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb1.dvr0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb1.dvr0 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb1.net0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb1.net0 
+Jun  7 05:05:03 upstairs kernel: device: 'i2c-2': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:i2c-2 
+Jun  7 05:05:03 upstairs kernel: DVB: registering frontend 1 (DiBcom 3000MC/P)... 
+Jun  7 05:05:03 upstairs kernel: device: 'dvb1.frontend0': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:dvb1.frontend0 
+Jun  7 05:05:03 upstairs kernel: MT2060: successfully identified (IF1 = 1234) 
+Jun  7 05:05:03 upstairs kernel: device: '00110666000013cc': device_add 
+Jun  7 05:05:03 upstairs kernel: bus: 'ieee1394': add device 00110666000013cc 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for ieee1394:00110666000013cc 
+Jun  7 05:05:03 upstairs kernel: device: '00110666000013cc': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:00110666000013cc 
+Jun  7 05:05:03 upstairs kernel: ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00110666000013cc] 
+Jun  7 05:05:03 upstairs kernel: device: 'input4': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:input4 
+Jun  7 05:05:03 upstairs kernel: input: IR-receiver inside an USB DVB receiver as /devices/pci0000:00/0000:00:1e.0/0000:02:09.2/usb8/8-1/input/input4 
+Jun  7 05:05:03 upstairs kernel: device: 'event4': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:event4 
+Jun  7 05:05:03 upstairs kernel: dvb-usb: schedule remote query interval to 150 msecs. 
+Jun  7 05:05:03 upstairs kernel: dvb-usb: Hauppauge Nova-T 500 Dual DVB-T successfully initialized and connected. 
+Jun  7 05:05:03 upstairs kernel: driver: '8-1:1.0': driver_bound: bound to device 'dvb_usb_dib0700' 
+Jun  7 05:05:03 upstairs kernel: bus: 'usb': really_probe: bound device 8-1:1.0 to driver dvb_usb_dib0700 
+Jun  7 05:05:03 upstairs kernel: usbcore: registered new interface driver dvb_usb_dib0700 
+Jun  7 05:05:03 upstairs kernel: fuse init (API version 7.9) 
+Jun  7 05:05:03 upstairs kernel: device: 'fuse': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:fuse 
+Jun  7 05:05:03 upstairs kernel: device: '8:1-fuseblk': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:8:1-fuseblk 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 05:05:03 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 05:05:03 upstairs kernel: EXT3 FS on sdb6, internal journal 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 05:05:03 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 05:05:03 upstairs kernel: EXT3 FS on sda6, internal journal 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 05:05:03 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 05:05:03 upstairs kernel: EXT3 FS on sda7, internal journal 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 05:05:03 upstairs kernel: kjournald starting.  Commit interval 5 seconds 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs warning: maximal mount count reached, running e2fsck is recommended 
+Jun  7 05:05:03 upstairs kernel: EXT3 FS on sdc2, internal journal 
+Jun  7 05:05:03 upstairs kernel: EXT3-fs: mounted filesystem with ordered data mode. 
+Jun  7 05:05:03 upstairs kernel: Adding 4096532k swap on /dev/sda5.  Priority:-1 extents:1 across:4096532k 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_unregister 
+Jun  7 05:05:03 upstairs kernel: PM: Removing info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_create_release 
+Jun  7 05:05:03 upstairs kernel: device: 'vcs1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcs1 
+Jun  7 05:05:03 upstairs kernel: device: 'vcsa1': device_add 
+Jun  7 05:05:03 upstairs kernel: PM: Adding info for No Bus:vcsa1 
+Jun  7 05:05:03 upstairs kernel: eth0: link up, 100Mbps, full-duplex, lpa 0x45E1 
+Jun  7 05:05:03 upstairs kernel: ip_tables: (C) 2000-2006 Netfilter Core Team 
+Jun  7 05:05:03 upstairs kernel: nf_conntrack version 0.5.0 (16384 buckets, 65536 max) 
+Jun  7 05:05:03 upstairs kernel: bus: 'pci': remove driver parport_pc 
+Jun  7 05:05:03 upstairs kernel: driver: 'parport_pc': driver_release 
+Jun  7 05:05:03 upstairs kernel: bus: 'pnp': remove driver parport_pc 
+Jun  7 05:05:03 upstairs kernel: parport_pc 00:06: disabled 
+Jun  7 05:05:03 upstairs kernel: driver: 'parport_pc': driver_release 
+Jun  7 05:05:06 upstairs kernel: pnp: the driver 'parport_pc' has been unregistered 
+Jun  7 05:05:06 upstairs kernel: bus: 'platform': remove driver parport_pc 
+Jun  7 05:05:06 upstairs kernel: driver: 'parport_pc': driver_release 
+Jun  7 05:05:06 upstairs kernel: bus: 'pci': remove driver ohci1394 
+Jun  7 05:05:06 upstairs kernel: ieee1394: Node removed: ID:BUS[0-00:1023]  GUID[00110666000013cc] 
+Jun  7 05:05:06 upstairs kernel: device: '00110666000013cc': device_unregister 
+Jun  7 05:05:06 upstairs kernel: PM: Removing info for No Bus:00110666000013cc 
+Jun  7 05:05:06 upstairs kernel: device: '00110666000013cc': device_unregister 
+Jun  7 05:05:06 upstairs kernel: PM: Removing info for ieee1394:00110666000013cc 
+Jun  7 05:05:06 upstairs kernel: bus: 'ieee1394': remove device 00110666000013cc 
+Jun  7 05:05:06 upstairs kernel: device: 'fw-host0': device_unregister 
+Jun  7 05:05:06 upstairs kernel: PM: Removing info for No Bus:fw-host0 
+Jun  7 05:05:06 upstairs kernel: device: 'fw-host0': device_unregister 
+Jun  7 05:05:06 upstairs kernel: PM: Removing info for ieee1394:fw-host0 
+Jun  7 05:05:06 upstairs kernel: bus: 'ieee1394': remove device fw-host0 
+Jun  7 05:05:06 upstairs kernel: driver: 'ohci1394': driver_release 
+Jun  7 05:05:06 upstairs kernel: bus: 'ieee1394': remove driver nodemgr 
+Jun  7 05:05:06 upstairs kernel: driver: 'nodemgr': driver_release 
+Jun  7 05:05:06 upstairs kernel: device class 'ieee1394': unregistering 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394': release. 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394' does not have a release() function, be careful 
+Jun  7 05:05:06 upstairs kernel: device class 'ieee1394_node': unregistering 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394_node': release. 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394_node' does not have a release() function, be careful 
+Jun  7 05:05:06 upstairs kernel: device class 'ieee1394_protocol': unregistering 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394_protocol': release. 
+Jun  7 05:05:06 upstairs kernel: class_create_release called for ieee1394_protocol 
+Jun  7 05:05:06 upstairs kernel: device class 'ieee1394_host': unregistering 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394_host': release. 
+Jun  7 05:05:06 upstairs kernel: class 'ieee1394_host' does not have a release() function, be careful 
+Jun  7 05:05:06 upstairs kernel: bus: 'ieee1394': unregistering 
+Jun  7 05:05:06 upstairs kernel: device: 'vcs3': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcs3 
+Jun  7 05:05:06 upstairs kernel: device: 'vcsa3': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcsa3 
+Jun  7 05:05:06 upstairs kernel: device: 'vcs2': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcs2 
+Jun  7 05:05:06 upstairs kernel: device: 'vcsa2': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcsa2 
+Jun  7 05:05:06 upstairs kernel: device: 'vcs4': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcs4 
+Jun  7 05:05:06 upstairs kernel: device: 'vcsa4': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcsa4 
+Jun  7 05:05:06 upstairs kernel: device: 'vcs5': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcs5 
+Jun  7 05:05:06 upstairs kernel: device: 'vcsa5': device_add 
+Jun  7 05:05:06 upstairs kernel: PM: Adding info for No Bus:vcsa5 
+
+--Boundary-00=_8mhSILcXFhxThCy--
