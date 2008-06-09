@@ -1,25 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] sd: Allow sd_print_sense_hdr to be called outside
-	of sd.c
-Date: Mon, 9 Jun 2008 03:06:50 -0400
-Message-ID: <20080609070650.GA4770@infradead.org>
-References: <yq1iqwml61r.fsf@sermon.lab.mkp.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: add bounce support to blk_rq_map_user_iov
+Date: Mon, 9 Jun 2008 16:13:52 +0900
+Message-ID: <20080609161728C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34041 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbYFIHGv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 03:06:51 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1iqwml61r.fsf@sermon.lab.mkp.net>
+Received: from sh.osrg.net ([192.16.179.4]:39242 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751952AbYFIHO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jun 2008 03:14:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Fri, Jun 06, 2008 at 03:25:20PM -0400, Martin K. Petersen wrote:
-> +EXPORT_SYMBOL(sd_print_sense_hdr);
+blk_rq_map_user_iov can't handle the bounce buffer (it means that the
+bio_map_user_iov path doesn't work with a LLD that needs GFP_DMA).
 
-no need to export it, it should only be called from sd_mod.ko
+This patch fixes blk_rq_map_user_iov to support the bounce buffer.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/blk-map.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 0b1af5a..813011e 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -210,6 +210,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 	if (!bio_flagged(bio, BIO_USER_MAPPED))
+ 		rq->cmd_flags |= REQ_COPY_USER;
+ 
++	blk_queue_bounce(q, &bio);
+ 	bio_get(bio);
+ 	blk_rq_bio_prep(q, rq, bio);
+ 	rq->buffer = rq->data = NULL;
+-- 
+1.5.5.GIT
 
