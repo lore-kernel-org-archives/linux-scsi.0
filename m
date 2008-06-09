@@ -1,73 +1,45 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] drivers/scsi/a3000.c: make 2 functions static
-Date: Tue, 10 Jun 2008 01:24:07 +0300
-Message-ID: <20080609222407.GT1987@cs181133002.pp.htv.fi>
+Subject: [2.6 patch] scsi/dpt_i2o.c: fix compilation on ia64
+Date: Tue, 10 Jun 2008 01:26:31 +0300
+Message-ID: <20080609222631.GX1987@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:41049 "EHLO smtp6.pp.htv.fi"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:54212 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758352AbYFIWZB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jun 2008 18:25:01 -0400
+	id S1761682AbYFIW10 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jun 2008 18:27:26 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-a3000_{detect,release}() can become static.
+This patch fixes the following compile error:
 
+<--  snip  -->
+
+...
+  CC      drivers/scsi/dpt_i2o.o
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not in a function)
+make[3]: *** [drivers/scsi/dpt_i2o.o] Error 1
+
+<--  snip  -->
+
+Reported-by: Adrian Bunk <bunk@kernel.org>
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-
- drivers/scsi/a3000.c |    6 ++++--
- drivers/scsi/a3000.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
-
-85a02587af2fff4f03fcecf3bb0f61fbe1cfadc3 diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
-index 8b449d8..6970ce8 100644
---- a/drivers/scsi/a3000.c
-+++ b/drivers/scsi/a3000.c
-@@ -25,6 +25,8 @@
+631dedfbf9e2a9720dd6ecd382c0568372c3e436 diff --git a/drivers/scsi/dpt/dptsig.h b/drivers/scsi/dpt/dptsig.h
+index 72c8992..01cd528 100644
+--- a/drivers/scsi/dpt/dptsig.h
++++ b/drivers/scsi/dpt/dptsig.h
+@@ -92,6 +92,7 @@ typedef unsigned int sigINT;
+ #define PROC_POWERPC    0x04    /* IBM Power PC */
+ #define PROC_i960       0x05    /* Intel i960 */
+ #define PROC_ULTRASPARC 0x06    /* SPARC processor */
++#define PROC_IA64       0x07    /* ia64 processor */
  
- static struct Scsi_Host *a3000_host = NULL;
- 
-+static int a3000_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a3000_intr (int irq, void *dummy)
- {
- 	unsigned long flags;
-@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
-     }
- }
- 
--int __init a3000_detect(struct scsi_host_template *tpnt)
-+static int __init a3000_detect(struct scsi_host_template *tpnt)
- {
-     wd33c93_regs regs;
- 
-@@ -232,7 +234,7 @@ static struct scsi_host_template driver_template = {
- 
- #include "scsi_module.c"
- 
--int a3000_release(struct Scsi_Host *instance)
-+static int a3000_release(struct Scsi_Host *instance)
- {
-     wd33c93_release();
-     DMA(instance)->CNTR = 0;
-diff --git a/drivers/scsi/a3000.h b/drivers/scsi/a3000.h
-index 44a4ec7..c7afe16 100644
---- a/drivers/scsi/a3000.h
-+++ b/drivers/scsi/a3000.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a3000_detect(struct scsi_host_template *);
--int a3000_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ /* Specific Minimim Processor - sigBYTE dsProcessor;    FLAG BITS */
+ /* ------------------------------------------------------------------ */
 
