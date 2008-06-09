@@ -1,44 +1,58 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
-Date: Mon, 9 Jun 2008 12:20:25 +0200
-Message-ID: <20080609102025.GB21661@one.firstfloor.org>
-References: <20080606213659.GC15085@il.ibm.com> <da824cf30806061451p4005a4ecoa9af8687e3ec51e5@mail.gmail.com> <87lk1fqayg.fsf@basil.nowhere.org> <20080609184052Z.fujita.tomonori@lab.ntt.co.jp>
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
+Date: Mon, 9 Jun 2008 11:47:58 +0100
+Message-ID: <20080609104758.GB25541@shareable.org>
+References: <patchbomb.1212643369@sermon.lab.mkp.net> <20080605062754.GQ2961@webber.adilger.int> <yq1od6fml2q.fsf@sermon.lab.mkp.net> <20080606140205.GF19246@shareable.org> <yq14p86mrvw.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:41331 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760106AbYFIKKc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 06:10:32 -0400
+Received: from mail2.shareable.org ([80.68.89.115]:40593 "EHLO
+	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759260AbYFIKsP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 06:48:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20080609184052Z.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <yq14p86mrvw.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: andi@firstfloor.org, grundler@google.com, muli@il.ibm.com, linux-kernel@vger.kernel.org, mgross@linux.intel.com, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Andreas Dilger <adilger@sun.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 09, 2008 at 06:36:29PM +0900, FUJITA Tomonori wrote:
-> On Mon, 09 Jun 2008 10:17:11 +0200
-> Andi Kleen <andi@firstfloor.org> wrote:
+Martin K. Petersen wrote:
+> Jamie> Where it is due to specific values being not exactly right -
+> Jamie> like the subdevice offset (or modulo-offset) in MD because it
+> Jamie> doesn't represent all subdevices - it would be good for the
+> Jamie> info to have flags saying which _specific_ values are not
+> Jamie> exactly right.
 > 
-> > "Grant Grundler" <grundler@google.com> writes:
-> > >
-> > > The historical DMA mapping "failure mode" is a kernel panic.  Resizing or
-> > 
-> > Hasn't been for a long time, except in some extreme cases.  All drivers
-> > are expected to check return values for a long time now.
+> You get that traversing the sysfs tree.
+
+Ok.  So I should always traverse the sysfs tree, and only use the leaf
+values, combining them at MD nodes as I see fit, and ignoring the
+values you provide at MD nodes?
+
+Is there enough information in sysfs for me to combine the values?
+I.e. offsets of all child disks, etc.?
+
+What about future compound disk types that my app doesn't know about?
+Use your values, I guess.
+
+> Jamie> So that programs can choose their heuristics appropriately.
+> Jamie> After all, users will use suboptimal layouts, and still want
+> Jamie> the best performance it can do.
 > 
-> Agreed, but I think that lots of network drivers still assume that DMA
-> mapping always succeeds (they don't check return values).
+> I'd like to keep a clear distinction between normal applications and
+> programs like mkfs.  I'm targeting the latter.
+>
+> Given that filesystems can lay out files at will, I/O characteristics
+> for normal applications is really FIEMAP territory.
 
-Those should be just fixed. 
+I'm thinking of database type applications directly on block devices.
+They need similar performance guides as filesystems.
 
-You're right. I reviewed some new drivers and was surprised that they
-even got that wrong (code reviewers were supposed to flag this in the
-first place)
+You're right that most apps are FIEMAP territory.
 
-I would guess in practice the main offender would be tg3.c/bnx2.c.
-On the other hand Intel IOMMU systems should usually use e1000e which
-checks.
+Vice versa: Filesystems on LVM may be FIEMAP territory, if there are
+many non-contiguous LVM strips, spanning multiple devices, LVM
+snapshots, etc.
 
--Andi
+-- Jamie
