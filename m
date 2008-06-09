@@ -1,71 +1,71 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] drivers/scsi/a2091.c: make 2 functions static
-Date: Tue, 10 Jun 2008 01:24:00 +0300
-Message-ID: <20080609222359.GS1987@cs181133002.pp.htv.fi>
+Subject: [2.6 patch] drivers/scsi/a3000.c: make 2 functions static
+Date: Tue, 10 Jun 2008 01:24:07 +0300
+Message-ID: <20080609222407.GT1987@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:54015 "EHLO smtp4.pp.htv.fi"
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:41049 "EHLO smtp6.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758993AbYFIWYy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jun 2008 18:24:54 -0400
+	id S1758352AbYFIWZB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jun 2008 18:25:01 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-a2091_{detect,release}() can become static.
+a3000_{detect,release}() can become static.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
+ drivers/scsi/a3000.c |    6 ++++--
+ drivers/scsi/a3000.h |    3 ---
  2 files changed, 4 insertions(+), 5 deletions(-)
 
-22558d3b8c3dcf29bb54d76256a64db89017dedc diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
-index 07d572f..f36029c 100644
---- a/drivers/scsi/a2091.c
-+++ b/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+85a02587af2fff4f03fcecf3bb0f61fbe1cfadc3 diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
+index 8b449d8..6970ce8 100644
+--- a/drivers/scsi/a3000.c
++++ b/drivers/scsi/a3000.c
+@@ -25,6 +25,8 @@
  
-+static int a2091_release(struct Scsi_Host *instance);
+ static struct Scsi_Host *a3000_host = NULL;
+ 
++static int a3000_release(struct Scsi_Host *instance);
 +
- static irqreturn_t a2091_intr (int irq, void *_instance)
+ static irqreturn_t a3000_intr (int irq, void *dummy)
  {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 	unsigned long flags;
+@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
      }
  }
  
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
+-int __init a3000_detect(struct scsi_host_template *tpnt)
++static int __init a3000_detect(struct scsi_host_template *tpnt)
  {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -227,7 +229,7 @@ static struct scsi_host_template driver_template = {
+     wd33c93_regs regs;
+ 
+@@ -232,7 +234,7 @@ static struct scsi_host_template driver_template = {
  
  #include "scsi_module.c"
  
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
+-int a3000_release(struct Scsi_Host *instance)
++static int a3000_release(struct Scsi_Host *instance)
  {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff --git a/drivers/scsi/a2091.h b/drivers/scsi/a2091.h
-index fe809bc..252528f 100644
---- a/drivers/scsi/a2091.h
-+++ b/drivers/scsi/a2091.h
+     wd33c93_release();
+     DMA(instance)->CNTR = 0;
+diff --git a/drivers/scsi/a3000.h b/drivers/scsi/a3000.h
+index 44a4ec7..c7afe16 100644
+--- a/drivers/scsi/a3000.h
++++ b/drivers/scsi/a3000.h
 @@ -11,9 +11,6 @@
  
  #include <linux/types.h>
  
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
+-int a3000_detect(struct scsi_host_template *);
+-int a3000_release(struct Scsi_Host *);
 -
  #ifndef CMD_PER_LUN
  #define CMD_PER_LUN 2
