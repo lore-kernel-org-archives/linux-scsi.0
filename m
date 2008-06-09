@@ -1,70 +1,59 @@
-From: "Chris Clayton" <chris2553@googlemail.com>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Mon, 9 Jun 2008 22:35:32 +0100
-Message-ID: <c6b1100b0806091435w1b151bb8lb6dd13f4ac8e705a@mail.gmail.com>
-References: <484D8019.3090900@s5r6.in-berlin.de>
-	<Pine.LNX.4.44L0.0806091533160.14688-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: How to directly pass a dma physical address and length from
+	SCSI upper layer to LLD without mapping the dma memory to kernel pages
+Date: Mon, 09 Jun 2008 16:43:57 -0500
+Message-ID: <1213047837.3508.85.camel@localhost.localdomain>
+References: <6B24EEDBA38D764293B27C04FE414CC64E40604DE0@G1W0491.americas.hpqcorp.net>
+	 <1213045577.3508.79.camel@localhost.localdomain>
+	 <6B24EEDBA38D764293B27C04FE414CC64E40604E33@G1W0491.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44L0.0806091533160.14688-100000@iolanthe.rowland.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40386 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752366AbYFIVoA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 17:44:00 -0400
+In-Reply-To: <6B24EEDBA38D764293B27C04FE414CC64E40604E33@G1W0491.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Pan, Weimin" <weimin.pan@hp.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-2008/6/9 Alan Stern <stern@rowland.harvard.edu>:
-> On Mon, 9 Jun 2008, Stefan Richter wrote:
->
+[please don't drop the mailing list from the cc because others might be
+interested]
 
-Sorry folks, I'm unexpectedly away from the computers that these
-"problems" occur on.
+On Mon, 2008-06-09 at 21:19 +0000, Pan, Weimin wrote:
+> One simple example is a router. If I want to router data from one
+> interface (front-end) to another (back-end), I only need to know where
+> the data is (physical memory address DMAed in). I can pass this
+> address to another interface driver to move the data out (DMAed out).
 
-I should be back at home tomorrow and will answer you all as quickly
-as possible then.
+There's not really such thing as a "router" use for the SCSI mid-layer.
+The closest we come is the target infrastructure.  For user space
+implementations like STGT there's no choice, the vma is what you have to
+hang the implementation on.  For kernel implementations like SCST you
+can get away without having any mappings.
 
-Thanks,
+> But I like to put the command process in user space. So I only need to
+> know where the data is (from ioctl) and pass this to sg driver (for
+> example). Right now, I can pass a S/G list to sg but sg driver assumes
+> it is a virtual memory address list. I don't mind to write a new upper
+> layer driver to handle physical address S/G instead of user space
+> virtual address S/G. But I don't want to change middle layer and LLD
+> interface. I saw middler layer passes scatterlist to LLD. But LLD
+> always assumes the scatterlist's page_link is set and dma_address is
+> not set. Is it possible that I set up dma_address=phy memory address
+> and page_link=0? I just don't understand why SCSI subsystem doesn't
+> clearly define this usage model.
 
-Chris
+Then you want to look at how STGT does it (in fact, you probably want to
+be using STGT because that's the way it was designed).  However, there's
+no getting away from the need for a user space mapping for the data in
+that case.  On the flip side, there's not a huge performance overhead
+having the mapping set up.  If you don't have a mapping somewhere, the
+pages aren't pinned in the page cache and may be reused.
 
->> The log at http://lkml.org/lkml/2008/6/6/317 shows two pauses.  One in
->> the middle of USB related messages with no FireWire stuff around
->> (17:25:19 to 17:25:44).  The other with parport, ieee1394, USB messages
->> around it (17:25:44 to 17:26:31).
->>
->>  From there, the last 17:25:44 message is strange:  The device
->> 00110666000013cc which is the controller is reported as being removed.
->> Chris, did you do something at this point?
->
-> It's also worth noting that the first 17:25:44 message is highly
-> suspicious.  It is the initial output of the ohci-hcd driver,
-> indicating that the udev/hotplug system had just loaded that driver.
-> This doesn't seem to have anything to do with the SCSI stack.
->
-> Whatever caused the delay, it also managed to pause the other hotplug
-> task which was in the midst of loading uhci-hcd.
->
-> Alan Stern
->
->
-
+James
 
 
--- 
-Beauty is in the eye of the beerholder.
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://sourceforge.net/services/buy/index.php
