@@ -1,59 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: How to directly pass a dma physical address and length from
-	SCSI upper layer to LLD without mapping the dma memory to kernel pages
-Date: Mon, 09 Jun 2008 16:06:17 -0500
-Message-ID: <1213045577.3508.79.camel@localhost.localdomain>
-References: <6B24EEDBA38D764293B27C04FE414CC64E40604DE0@G1W0491.americas.hpqcorp.net>
+From: "Chris Clayton" <chris2553@googlemail.com>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Mon, 9 Jun 2008 22:35:32 +0100
+Message-ID: <c6b1100b0806091435w1b151bb8lb6dd13f4ac8e705a@mail.gmail.com>
+References: <484D8019.3090900@s5r6.in-berlin.de>
+	<Pine.LNX.4.44L0.0806091533160.14688-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34153 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751529AbYFIVGV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 17:06:21 -0400
-In-Reply-To: <6B24EEDBA38D764293B27C04FE414CC64E40604DE0@G1W0491.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0806091533160.14688-100000@iolanthe.rowland.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: "Pan, Weimin" <weimin.pan@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-06-09 at 20:52 +0000, Pan, Weimin wrote:
-> SCSI upper layer can pass a scatterlist to middle layer and LLD.
-> Normally the page_link, length, and offset is set in the scatterlist.
-> LLD will convert to dma_address from pages by itself. That means the
-> dma physical memory has to map to kernel memory space before it can be
-> passed to LLD for data transfer.
+2008/6/9 Alan Stern <stern@rowland.harvard.edu>:
+> On Mon, 9 Jun 2008, Stefan Richter wrote:
+>
 
-Actually, it's for exactly the reason that we *don't* want to map the
-data into kernel space that we use scatterlists.  A scatterlist has the
-struct page (what you call the page link) which can be used to convert
-to dma_address independently of any virtual mapping.
+Sorry folks, I'm unexpectedly away from the computers that these
+"problems" occur on.
 
-If you're saying that the submission path from user space has to have a
-mapping, then yes ... for the reason that the user presumably had
-something to do with the data they're requesting ...
+I should be back at home tomorrow and will answer you all as quickly
+as possible then.
 
->  If I have a large dma memroy and it doesn't need to be touched by
-> kernel or user mode Apps, it is a performance penalty to force to do
-> that.
+Thanks,
 
-I don't quite see how a user application needs to do disk I/O on data it
-doesn't touch.  If you're writing out, what are you writing out and if
-you're reading in, you're not likely to throw the data away are you?
-Somewhere, somehow, the data has to be made visible to the user
-application ... and via memory mappings are pretty standard ways of
-doing it.
+Chris
 
-> Is there a way to directly pass a dma physical address from upper
-> layer to LLD (like use dma_address in a scatterlist)?
-> I looked at a couple of LLD drivers and none of them handle this kind
-> of situation.
-
-Tell us where the data comes from if it's not in the application address
-space and we might be better placed to answer a question like this ...
-is this something to do with I2O?
-
-James
+>> The log at http://lkml.org/lkml/2008/6/6/317 shows two pauses.  One in
+>> the middle of USB related messages with no FireWire stuff around
+>> (17:25:19 to 17:25:44).  The other with parport, ieee1394, USB messages
+>> around it (17:25:44 to 17:26:31).
+>>
+>>  From there, the last 17:25:44 message is strange:  The device
+>> 00110666000013cc which is the controller is reported as being removed.
+>> Chris, did you do something at this point?
+>
+> It's also worth noting that the first 17:25:44 message is highly
+> suspicious.  It is the initial output of the ohci-hcd driver,
+> indicating that the udev/hotplug system had just loaded that driver.
+> This doesn't seem to have anything to do with the SCSI stack.
+>
+> Whatever caused the delay, it also managed to pause the other hotplug
+> task which was in the midst of loading uhci-hcd.
+>
+> Alan Stern
+>
+>
 
 
+
+-- 
+Beauty is in the eye of the beerholder.
+
+-------------------------------------------------------------------------
+Check out the new SourceForge.net Marketplace.
+It's the best place to buy or sell services for
+just about anything Open Source.
+http://sourceforge.net/services/buy/index.php
