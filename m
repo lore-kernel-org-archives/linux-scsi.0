@@ -1,45 +1,39 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] scsi/dpt_i2o.c: fix compilation on ia64
-Date: Tue, 10 Jun 2008 01:26:31 +0300
-Message-ID: <20080609222631.GX1987@cs181133002.pp.htv.fi>
+From: Greg KH <greg@kroah.com>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Mon, 9 Jun 2008 16:07:47 -0700
+Message-ID: <20080609230747.GD23391@kroah.com>
+References: <200806010415.05290.chris2553@googlemail.com> <20080606110345.581fdc77.akpm@linux-foundation.org> <1212777612.16182.21.camel@localhost.localdomain> <200806080619.17531.chris2553@googlemail.com> <1212950276.3574.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:54212 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761682AbYFIW10 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jun 2008 18:27:26 -0400
+Received: from bombadil.infradead.org ([18.85.46.34]:36401 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759592AbYFIXJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 19:09:20 -0400
 Content-Disposition: inline
+In-Reply-To: <1212950276.3574.7.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: chris2553@googlemail.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-usb@vger.kernel.org
 
-This patch fixes the following compile error:
+On Sun, Jun 08, 2008 at 01:37:56PM -0500, James Bottomley wrote:
+> > Because of this oddity, I've also built 2.6.26-rc5-git2 with verbose USB 
+> > debugging on. A boot log from that kernel is attached. You will see lots of 
+> > ETIME errors from usb. A log from a similarly verbose 2.6.25.5 kernel does not 
+> > show these errors. usb-devel added to cc list.
+> 
+> I'm starting to think this might be a distribution problem.  I tried
+> booting my laptop on your config (only system I have with ata_piix)
+> without an initrd (bit painful for fedora 9) and I didn't see any slow
+> downs (in fact it was a lot faster than previously; makes note to file
+> bug with redhat about their initramfs).
 
-<--  snip  -->
+What distro is this being seen on?  I know that openSUSE 11.0 betas did
+have a bug in their init scripts that was causing a long delay, much
+like this one.  But it has been fixed in the later releases
+(hopefully...)
 
-...
-  CC      drivers/scsi/dpt_i2o.o
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not in a function)
-make[3]: *** [drivers/scsi/dpt_i2o.o] Error 1
+thanks,
 
-<--  snip  -->
-
-Reported-by: Adrian Bunk <bunk@kernel.org>
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
----
-631dedfbf9e2a9720dd6ecd382c0568372c3e436 diff --git a/drivers/scsi/dpt/dptsig.h b/drivers/scsi/dpt/dptsig.h
-index 72c8992..01cd528 100644
---- a/drivers/scsi/dpt/dptsig.h
-+++ b/drivers/scsi/dpt/dptsig.h
-@@ -92,6 +92,7 @@ typedef unsigned int sigINT;
- #define PROC_POWERPC    0x04    /* IBM Power PC */
- #define PROC_i960       0x05    /* Intel i960 */
- #define PROC_ULTRASPARC 0x06    /* SPARC processor */
-+#define PROC_IA64       0x07    /* ia64 processor */
- 
- /* Specific Minimim Processor - sigBYTE dsProcessor;    FLAG BITS */
- /* ------------------------------------------------------------------ */
-
+greg k-h
