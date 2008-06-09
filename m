@@ -1,44 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] block: add bounce support to blk_rq_map_user_iov
-Date: Mon, 9 Jun 2008 16:13:52 +0900
-Message-ID: <20080609161728C.fujita.tomonori@lab.ntt.co.jp>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
+Date: Mon, 09 Jun 2008 10:17:11 +0200
+Message-ID: <87lk1fqayg.fsf@basil.nowhere.org>
+References: <20080604235053K.fujita.tomonori@lab.ntt.co.jp>
+	<da824cf30806041106p1de2355fg38594fcb9dcbf203@mail.gmail.com>
+	<20080606202119.GQ15085@il.ibm.com>
+	<da824cf30806061428t4b7ed816i74d961946d77c88b@mail.gmail.com>
+	<20080606213659.GC15085@il.ibm.com>
+	<da824cf30806061451p4005a4ecoa9af8687e3ec51e5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39242 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751952AbYFIHO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jun 2008 03:14:56 -0400
+Received: from smtp-out04.alice-dsl.net ([88.44.63.6]:17723 "EHLO
+	smtp-out04.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675AbYFIISv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 04:18:51 -0400
+In-Reply-To: <da824cf30806061451p4005a4ecoa9af8687e3ec51e5@mail.gmail.com> (Grant Grundler's message of "Fri, 6 Jun 2008 14:51:17 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: Grant Grundler <grundler@google.com>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mgross@linux.intel.com, linux-scsi@vger.kernel.org
 
-blk_rq_map_user_iov can't handle the bounce buffer (it means that the
-bio_map_user_iov path doesn't work with a LLD that needs GFP_DMA).
+"Grant Grundler" <grundler@google.com> writes:
+>
+> The historical DMA mapping "failure mode" is a kernel panic.  Resizing or
 
-This patch fixes blk_rq_map_user_iov to support the bounce buffer.
+Hasn't been for a long time, except in some extreme cases.  All drivers
+are expected to check return values for a long time now.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <jens.axboe@oracle.com>
----
- block/blk-map.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 0b1af5a..813011e 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -210,6 +210,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
- 	if (!bio_flagged(bio, BIO_USER_MAPPED))
- 		rq->cmd_flags |= REQ_COPY_USER;
- 
-+	blk_queue_bounce(q, &bio);
- 	bio_get(bio);
- 	blk_rq_bio_prep(q, rq, bio);
- 	rq->buffer = rq->data = NULL;
--- 
-1.5.5.GIT
-
+-Andi
