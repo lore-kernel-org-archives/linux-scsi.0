@@ -1,58 +1,117 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [PATCH 0 of 3] [RFC] I/O Hints
-Date: Mon, 9 Jun 2008 11:47:58 +0100
-Message-ID: <20080609104758.GB25541@shareable.org>
-References: <patchbomb.1212643369@sermon.lab.mkp.net> <20080605062754.GQ2961@webber.adilger.int> <yq1od6fml2q.fsf@sermon.lab.mkp.net> <20080606140205.GF19246@shareable.org> <yq14p86mrvw.fsf@sermon.lab.mkp.net>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [regression/bisected] corrupt CD data after media change and
+ delay
+Date: Mon, 9 Jun 2008 14:54:56 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0806091443000.17741@vixen.sonytel.be>
+References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
+ <1212765202.16182.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1080947316-1213016096=:17741"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.shareable.org ([80.68.89.115]:40593 "EHLO
-	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759260AbYFIKsP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 06:48:15 -0400
-Content-Disposition: inline
-In-Reply-To: <yq14p86mrvw.fsf@sermon.lab.mkp.net>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:55285 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759962AbYFIMy7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 08:54:59 -0400
+In-Reply-To: <1212765202.16182.5.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Andreas Dilger <adilger@sun.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: David Martin <tasio@tasio.net>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
 
-Martin K. Petersen wrote:
-> Jamie> Where it is due to specific values being not exactly right -
-> Jamie> like the subdevice offset (or modulo-offset) in MD because it
-> Jamie> doesn't represent all subdevices - it would be good for the
-> Jamie> info to have flags saying which _specific_ values are not
-> Jamie> exactly right.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---584349381-1080947316-1213016096=:17741
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Fri, 6 Jun 2008, James Bottomley wrote:
+> On Fri, 2008-06-06 at 16:06 +0200, Geert Uytterhoeven wrote:
+> > When mounting a CD/DVD more than 30 seconds after inserting it, and reading
+> > from it, we get:
+> > 
+> >     attempt to access beyond end of device
+> >     sr0: rw=0, want=371932, limit=371928
+> >     Buffer I/O error on device sr0, logical block 92982
+> >     attempt to access beyond end of device
+> >     sr0: rw=0, want=371936, limit=371928
+> >     Buffer I/O error on device sr0, logical block 92983
+> >     attempt to access beyond end of device
+> >     sr0: rw=0, want=371940, limit=371928
+> >     Buffer I/O error on device sr0, logical block 92984
+> >     attempt to access beyond end of device
+> >     sr0: rw=0, want=371944, limit=371928
+> >     Buffer I/O error on device sr0, logical block 92985
+> >     attempt to access beyond end of device
+> >     sr0: rw=0, want=371948, limit=371928
+> >     Buffer I/O error on device sr0, logical block 92986
+> >     ...
+> > 
+> > It can be reproduced on a PS3 with busybox userland using:
+> > 
+> >     # Insert first CD
+> >     $ mount /dev/sr0 /mnt
+> >     $ ls -R /mnt
+> >     $ umount /mnt
+> >     $ eject
+> >     # Remove first CD
+> > 
+> >     # Insert second CD
+> >     # Wait at least 30 seconds
+> >     $ mount /dev/sr0 /mnt
+> >     $ tar cf /dev/null /mnt
+> > 
+> > It does not happen when mounting the second CD within 30 seconds after
+> > inserting it, which is consistent with
+> > 
+> >     #define SR_TIMEOUT     (30 * HZ)
+> > 
+> > I can't seem to reproduce it with a Debian or Fedora Core 6 userland.
+> > 
+> > The problem is present in 2.6.25.
+> > 2.6.24 is OK.
 > 
-> You get that traversing the sysfs tree.
-
-Ok.  So I should always traverse the sysfs tree, and only use the leaf
-values, combining them at MD nodes as I see fit, and ignoring the
-values you provide at MD nodes?
-
-Is there enough information in sysfs for me to combine the values?
-I.e. offsets of all child disks, etc.?
-
-What about future compound disk types that my app doesn't know about?
-Use your values, I guess.
-
-> Jamie> So that programs can choose their heuristics appropriately.
-> Jamie> After all, users will use suboptimal layouts, and still want
-> Jamie> the best performance it can do.
+> Also, in the two different situations, what does
 > 
-> I'd like to keep a clear distinction between normal applications and
-> programs like mkfs.  I'm targeting the latter.
->
-> Given that filesystems can lay out files at will, I/O characteristics
-> for normal applications is really FIEMAP territory.
+> cat /sys/block/sr0/size
+> 
+> (assuming your cd is sr0) give you?  My first theory is an incorrect
+> size propagating from something.
 
-I'm thinking of database type applications directly on block devices.
-They need similar performance guides as filesystems.
+Nice first theory!
 
-You're right that most apps are FIEMAP territory.
+Initially /sys/block/sr0/size is 2097151.
 
-Vice versa: Filesystems on LVM may be FIEMAP territory, if there are
-many non-contiguous LVM strips, spanning multiple devices, LVM
-snapshots, etc.
+After inserting the first CD, and mounting it, /sys/block/sr0/size is changed
+to the size of the first CD (in 512 byte blocks).
 
--- Jamie
+After ejecting the first CD and inserting the second CD, the behavior is like
+this:
+  1. when immediately mounting the CD, /sys/block/sr0/size is updated to the
+     size of the second CD,
+  2. when waiting more than 30 seconds before mounting the CD,
+     /sys/block/sr0/size is not updated, and keeps the old value.
+
+Surprisingly, it doesn't behave like this when inserting the first CD.
+/sys/block/sr0/size is always updated, whether I wait 30 seconds before
+mounting it or not.
+
+With kind regards,
+
+Geert Uytterhoeven
+Software Architect
+
+Sony Techsoft Centre
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Technology and Software Centre Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis 293-0376800-10 GEBA-BE-BB
+---584349381-1080947316-1213016096=:17741--
