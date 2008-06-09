@@ -1,37 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3 of 7] block: Find bio sector offset given idx and offset
-Date: Mon, 09 Jun 2008 12:15:35 -0400
-Message-ID: <yq1fxrmk2jc.fsf@sermon.lab.mkp.net>
-References: <318fa71e735d25003f9c.1212814536@sermon.lab.mkp.net>
-	<x498wxebnhc.fsf@segfault.boston.devel.redhat.com>
+From: Roman Zippel <zippel@linux-m68k.org>
+Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
+Date: Mon, 9 Jun 2008 19:44:56 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0806091937580.6791@localhost.localdomain>
+References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+  <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1212682248.13549.48.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:38055 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752565AbYFIQQo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2008 12:16:44 -0400
-In-Reply-To: <x498wxebnhc.fsf@segfault.boston.devel.redhat.com> (Jeff Moyer's message of "Mon\, 09 Jun 2008 12\:07\:59 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <1212682248.13549.48.camel@localhost.localdomain>
+Sender: linux-arch-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
->>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
+Hi,
 
-Jeff> Unless I've missed something, this helper isn't used anywhere in
-Jeff> your patchset.
+On Thu, 5 Jun 2008, James Bottomley wrote:
 
-You are right.
+> I'm also not keen on the use of current->stack.  It looks like this
+> commit:
+> 
+> commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
+> Author: Roman Zippel <zippel@linux-m68k.org>
+> Date:   Wed May 9 02:35:17 2007 -0700
+> 
+>     rename thread_info to stack
+> 
+> Introduced a task_stack_page() accessor to get this instead, so perhaps
+> we should use it (I've cc'd Roman and linux-arch for opinions).
 
-bio_sector_offset() is used in the patch that adds integrity support
-to DM.  I didn't post the MD/DM patches this time around in an attempt
-to limit the number of patches and focus on the core code.
+This helper was mainly introduced to help with the transition from direct 
+thread_info access. I don't see this field go away or change somehow in 
+the near future, so direct access of stack is IMO ok, but we already have 
+the helper, so using it to improve readability is fine too.
 
-You can see the DM patch here:
-
-http://oss.oracle.com/mercurial/mkp/linux-2.6-di/rev/6b79173c501a
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+bye, Roman
