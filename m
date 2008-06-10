@@ -1,41 +1,48 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data	after	media
- change and delay
-Date: Tue, 10 Jun 2008 19:12:03 +0300
-Message-ID: <484EA7D3.1060606@panasas.com>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>	 <1212765202.16182.5.camel@localhost.localdomain>	 <Pine.LNX.4.64.0806091443000.17741@vixen.sonytel.be>	 <Pine.LNX.4.64.0806091546260.22138@vixen.sonytel.be>	 <1213023916.3508.23.camel@localhost.localdomain>	 <Pine.LNX.4.64.0806091721040.22138@vixen.sonytel.be>	 <1213111253.3440.5.camel@localhost.localdomain>	 <484EA274.2060308@panasas.com> <1213113379.3440.23.camel@localhost.localdomain>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 2/2] cciss: bump version to .20 to reflect new HW support
+Date: Tue, 10 Jun 2008 11:14:04 -0500
+Message-ID: <20080610161404.GB6808@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:9751 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751014AbYFJQMa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 12:12:30 -0400
-In-Reply-To: <1213113379.3440.23.camel@localhost.localdomain>
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:17782 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbYFJQOF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 12:14:05 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, justin.chen@hp.com
 
-James Bottomley wrote:
-> On Tue, 2008-06-10 at 18:49 +0300, Boaz Harrosh wrote:
->> I think, I recall that, any issued command, not only unit_ready, might be appended
->> with UNIT_ATTENTION sense. So maybe as a deeper fix (with lots of testing) we want 
->> to add this logic into the scsi_check_sense() processing. But I'm not sure either way.
-> 
-> We do .. it's in scsi_io_completion().  The problem is that by design
-> internally issued commands bypass this, so the problem was that the
-> internally issued command wasn't doing the correct update.
-> 
-> James
-> 
-> 
+PATCH 2/2
+This patch bumps the driver version to 3.6.20 to reflect the new hardware
+support from patch 1 of this set. Please consider this for inclusion.
 
-Yes, I was just staring at that code. It looks like this hunk could be move up
-to before the completion, since with BLOCK_PC commands we always complete the
-all command length, hence the code will never get there.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-Should I attempt a fix, or could you do it?
-
-Boaz
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index ced904d..c21a5a9 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -53,16 +53,16 @@
+ #include <linux/scatterlist.h>
+ 
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+-#define DRIVER_NAME "HP CISS Driver (v 3.6.14)"
+-#define DRIVER_VERSION CCISS_DRIVER_VERSION(3,6,14)
++#define DRIVER_NAME "HP CISS Driver (v 3.6.20)"
++#define DRIVER_VERSION CCISS_DRIVER_VERSION(3, 6, 20)
+ 
+ /* Embedded module documentation macros - see modules.h */
+ MODULE_AUTHOR("Hewlett-Packard Company");
+-MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 3.6.14");
++MODULE_DESCRIPTION("Driver for HP Smart Array Controllers");
+ MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+ 			" SA6i P600 P800 P400 P400i E200 E200i E500 P700m"
+ 			" Smart Array G2 Series SAS/SATA Controllers");
+-MODULE_VERSION("3.6.14");
++MODULE_VERSION("3.6.20");
+ MODULE_LICENSE("GPL");
+ 
+ #include "cciss_cmd.h"
