@@ -1,53 +1,91 @@
-From: "Janne Karhunen" <janne.karhunen@gmail.com>
-Subject: INQUIRY failing after hotswap
-Date: Tue, 10 Jun 2008 10:43:17 -0400
-Message-ID: <24c1515f0806100743g3fea3abclf79511476d812a35@mail.gmail.com>
+From: Owen Williams <williams@dmu.ac.uk>
+Subject: LSI 1068e megasr propreitary driver and options
+Date: Tue, 10 Jun 2008 15:26:35 +0100
+Message-ID: <1213107996.28779.45.camel@ocean.blue.dmu.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:34697 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757180AbYFJOnT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 10:43:19 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1224938pyb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2008 07:43:18 -0700 (PDT)
-Content-Disposition: inline
+Received: from ocean.blue.dmu.ac.uk ([146.227.8.41]:44230 "EHLO
+	ocean.blue.dmu.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbYFJOsM (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 10:48:12 -0400
+Received: from [127.0.0.1] (localhost.localdomain [127.0.0.1])
+	by ocean.blue.dmu.ac.uk (8.14.1/8.14.1) with ESMTP id m5AEQal8017970
+	for <Linux-scsi@vger.kernel.org>; Tue, 10 Jun 2008 15:26:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
+  I have a SuperMicro 7045A-T with a 4 SAS drives connected to an on
+board LSI 1068e.  The only way I have found to install linux to see
+these drives is to use either RHEL or SLES and LSI's proprietary mesgasr
+driver.  Apparently the driver will only work with 2.6.19 and below.
 
-I'm looking at a blade that occasionally refuses to re-add disk after
-hotswap. Reason seems to be that when I do:
-echo "scsi add-single-device 1 0 0 0" > /proc/scsi/scsi
+The driver:
 
-This symbios scsi controller comes back telling us:
-scsi_scan_host_selected: <1:0:0:0>
-scsi scan: INQUIRY to host 1 channel 0 id 0 lun 0
-scsi scan: 1st INQUIRY failed with code 0x100ff
+ftp://ftp.supermicro.com/driver/SAS/LSI/Driver/1068/SR/Linux/09.32_RedHat5.zip
 
-Now if I read this right, it's basically telling me that there is no
-device here:
+Is this still the case?
 
-status_byte = 0xff // What's this??
-msg_byte = 0x0     // ok
-host_byte = 0x1    // DID_NO_CONNECT
-driver_byte = 0x0  // ok
+I see mention of 1068e in fusion drivers mptbase and mptsas but the/my
+usual distros don't pick up the drives.  Is it possible that because the
+chip is labelled: 'Subsystem: Super Micro Computer Inc Unknown device
+a480' that installers can't cope?
 
-Occurrence seems random. Any insight? State seems
-permanent, it's not able to re-add the disk ever if this
-happens (reboot is required).
+Thanks for any help,
 
-Controller is
-03:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1010
-66MHz  Ultra3 SCSI Adapter (rev 01)
-03:01.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1010
-66MHz  Ultra3 SCSI Adapter (rev 01)
+Owen.
 
-Driver is latest sym53c8xx (_2).
+This is the relevant lspci -vv for the chip:
 
+02:00.0 SCSI storage controller: LSI Logic / Symbios Logic MegaRAID SAS
+8208ELP/8208ELP (rev 08)
+        Subsystem: Super Micro Computer Inc Unknown device a480
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR+ <PERR- INTx-
+        Latency: 0, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 5
+        Region 0: I/O ports at 2000 [size=256]
+        Region 1: Memory at d3310000 (64-bit, non-prefetchable)
+[size=16K]
+        Region 3: Memory at d3300000 (64-bit, non-prefetchable)
+[size=64K]
+        Capabilities: [50] Power Management version 2
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [68] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s
+<64ns, L1 <1us
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr-
+TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x8, ASPM L0s L1,
+Latency L0 <64ns, L1 <1us
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain-
+CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk-
+DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [98] Message Signalled Interrupts: Mask- 64bit+
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [b0] MSI-X: Enable- Mask- TabSize=1
+                Vector table: BAR=1 offset=00002000
+                PBA: BAR=1 offset=00003000
+        Capabilities: [100] Advanced Error Reporting <?>
 
 -- 
-// Janne
+Owen Williams
+williams@dmu.ac.uk
+
+
