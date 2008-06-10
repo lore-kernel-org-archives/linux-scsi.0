@@ -1,93 +1,66 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/2] cciss: resubmit add new hardware support
-Date: Tue, 10 Jun 2008 13:50:46 -0500
-Message-ID: <20080610185046.GA6449@roadking.ldev.net>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 0 of 7] Block/SCSI Data Integrity Support
+Date: Tue, 10 Jun 2008 14:49:48 -0400
+Message-ID: <x49mylt9lbn.fsf@segfault.boston.devel.redhat.com>
+References: <patchbomb.1212814533@sermon.lab.mkp.net>
+	<x491w35bbdi.fsf@segfault.boston.devel.redhat.com>
+	<yq1iqwhia2m.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:43742 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754157AbYFJSus (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 14:50:48 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([66.187.233.31]:33050 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757331AbYFJSvA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jun 2008 14:51:00 -0400
+In-Reply-To: <yq1iqwhia2m.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+	message of "Tue, 10 Jun 2008 11:28:01 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, justin.chen@hp.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-PATCH 1/2
-Patch supercedes the previous 1/2. Busted, didn't compile test the previous
-patch. :(
+"Martin K. Petersen" <martin.petersen@oracle.com> writes:
 
-This patch adds support for the next generation of HP Smart Array SAS/SATA
-controllers. Shipping date is late Fall 2008. Please consider this for
-inclusion.
+>>>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
+> Jeff> Thanks for all of the great documentation.  It would be good to
+> Jeff> include some instructions on how one would test this, and what
+> Jeff> testing you performed.
+>
+> modprobe scsi_debug dix=199 dif=1 guard=1 dev_size_mb=1024 num_parts=1
+>
+> I'm testing with XFS and btrfs.  Generally doing kernel builds, etc.
+> ext2/3 are still problematic because they modify pages in flight.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+So, is it safe to say that the library routines for integrity-aware file
+systems have not been tested at all?  Specifically, I'm talking about:
+bio_integrity_tag_size
+bio_integrity_set_tag
+bio_integrity_get_tag
 
-diff --git a/Documentation/cciss.txt b/Documentation/cciss.txt
-index e65736c..63e59b8 100644
---- a/Documentation/cciss.txt
-+++ b/Documentation/cciss.txt
-@@ -21,6 +21,11 @@ This driver is known to work with the following cards:
- 	* SA E200
- 	* SA E200i
- 	* SA E500
-+	* SA P212
-+	* SA P410
-+	* SA P410i
-+	* SA P411
-+	* SA P812
- 
- Detecting drive failures:
- -------------------------
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index e336b05..ced904d 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -60,7 +60,8 @@
- MODULE_AUTHOR("Hewlett-Packard Company");
- MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 3.6.14");
- MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
--			" SA6i P600 P800 P400 P400i E200 E200i E500");
-+			" SA6i P600 P800 P400 P400i E200 E200i E500 P700m"
-+			" Smart Array G2 Series SAS/SATA Controllers");
- MODULE_VERSION("3.6.14");
- MODULE_LICENSE("GPL");
- 
-@@ -90,6 +91,11 @@ static const struct pci_device_id cciss_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x323D},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3243},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3245},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3247},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
- 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
- 	{0,}
-@@ -123,6 +129,11 @@ static struct board_type products[] = {
- 	{0x3215103C, "Smart Array E200i", &SA5_access, 120},
- 	{0x3237103C, "Smart Array E500", &SA5_access, 512},
- 	{0x323D103C, "Smart Array P700m", &SA5_access, 512},
-+	{0x3241103C, "Smart Array P212", &SA5_access, 384},
-+	{0x3243103C, "Smart Array P410", &SA5_access, 384},
-+	{0x3245103C, "Smart Array P410i", &SA5_access, 384},
-+	{0x3247103C, "Smart Array P411", &SA5_access, 384},
-+	{0x3249103C, "Smart Array P812", &SA5_access, 384},
- 	{0xFFFF103C, "Unknown Smart Array", &SA5_access, 120},
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 9b940e6..eafc9d6 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -716,6 +716,7 @@
- #define PCI_DEVICE_ID_HP_CISSA		0x3220
- #define PCI_DEVICE_ID_HP_CISSC		0x3230
- #define PCI_DEVICE_ID_HP_CISSD		0x3238
-+#define PCI_DEVICE_ID_HP_CISSE		0x323a
- #define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
- 
- #define PCI_VENDOR_ID_PCTECH		0x1042
+> Jeff> block/blk-core.c: In function 'generic_make_request':
+> Jeff> include/linux/bio.h:469: sorry, unimplemented: inlining failed
+> Jeff> in call to 'bio_i ntegrity_enabled': function body not available
+> Jeff> block/blk-core.c:1388: sorry, unimplemented: called from here
+> Jeff> make[1]: *** [block/blk-core.o] Error 1 make: *** [block] Error
+> Jeff> 2
+>
+> Odd.  Which compiler are you using?  Compiles just fine for me on both
+> EL5 and FC9.
+
+gcc (GCC) 4.1.2 20071124 (Red Hat 4.1.2-41)
+
+> Judging from the error I'm guessing it's objecting to the inlining.
+> Tried to work around it.  Please pull, update and let me know whether
+> that did the trick.
+
+I did a new clone (just to be sure I got your change) and I get the same
+problem.  I also can't see the changeset in the log, so are you sure you
+pushed it?
+
+I got rid of the inline in the definition in bio.h.  The .c file didn't
+define the function as inline, so I didn't have to change it.  It seems
+to be building now.
+
+Cheers,
+
+Jeff
