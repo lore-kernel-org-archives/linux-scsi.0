@@ -1,66 +1,59 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 0 of 7] Block/SCSI Data Integrity Support
-Date: Tue, 10 Jun 2008 14:49:48 -0400
-Message-ID: <x49mylt9lbn.fsf@segfault.boston.devel.redhat.com>
-References: <patchbomb.1212814533@sermon.lab.mkp.net>
-	<x491w35bbdi.fsf@segfault.boston.devel.redhat.com>
-	<yq1iqwhia2m.fsf@sermon.lab.mkp.net>
+From: Chris Clayton <chris2553-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Tue, 10 Jun 2008 18:49:12 +0000
+Message-ID: <200806101849.12637.chris2553@googlemail.com>
+References: <200806010415.05290.chris2553@googlemail.com> <1212950276.3574.7.camel@localhost.localdomain> <20080609230747.GD23391@kroah.com>
+Reply-To: chris2553-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33050 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757331AbYFJSvA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2008 14:51:00 -0400
-In-Reply-To: <yq1iqwhia2m.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Tue, 10 Jun 2008 11:28:01 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20080609230747.GD23391-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
-
->>>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
-> Jeff> Thanks for all of the great documentation.  It would be good to
-> Jeff> include some instructions on how one would test this, and what
-> Jeff> testing you performed.
+On Monday 09 June 2008, Greg KH wrote:
+> On Sun, Jun 08, 2008 at 01:37:56PM -0500, James Bottomley wrote:
+> > > Because of this oddity, I've also built 2.6.26-rc5-git2 with verbose
+> > > USB debugging on. A boot log from that kernel is attached. You will see
+> > > lots of ETIME errors from usb. A log from a similarly verbose 2.6.25.5
+> > > kernel does not show these errors. usb-devel added to cc list.
+> >
+> > I'm starting to think this might be a distribution problem.  I tried
+> > booting my laptop on your config (only system I have with ata_piix)
+> > without an initrd (bit painful for fedora 9) and I didn't see any slow
+> > downs (in fact it was a lot faster than previously; makes note to file
+> > bug with redhat about their initramfs).
 >
-> modprobe scsi_debug dix=199 dif=1 guard=1 dev_size_mb=1024 num_parts=1
+> What distro is this being seen on?  I know that openSUSE 11.0 betas did
+> have a bug in their init scripts that was causing a long delay, much
+> like this one.  But it has been fixed in the later releases
+> (hopefully...)
 >
-> I'm testing with XFS and btrfs.  Generally doing kernel builds, etc.
-> ext2/3 are still problematic because they modify pages in flight.
 
-So, is it safe to say that the library routines for integrity-aware file
-systems have not been tested at all?  Specifically, I'm talking about:
-bio_integrity_tag_size
-bio_integrity_set_tag
-bio_integrity_get_tag
+As I repied to James a few minutes ago, my desktop system was originally (the 
+now lapsed) Peanut Linux, which was a Slackware derivative. But I've been 
+running it for 3 or 4 years, upgrading and adding packages along the way. My 
+udev setup is based on that in a fairly recent Slackware, although I can't now 
+recall precisely which version.
 
-> Jeff> block/blk-core.c: In function 'generic_make_request':
-> Jeff> include/linux/bio.h:469: sorry, unimplemented: inlining failed
-> Jeff> in call to 'bio_i ntegrity_enabled': function body not available
-> Jeff> block/blk-core.c:1388: sorry, unimplemented: called from here
-> Jeff> make[1]: *** [block/blk-core.o] Error 1 make: *** [block] Error
-> Jeff> 2
+Thanks
+
+Chris
+
+> thanks,
 >
-> Odd.  Which compiler are you using?  Compiles just fine for me on both
-> EL5 and FC9.
+> greg k-h
 
-gcc (GCC) 4.1.2 20071124 (Red Hat 4.1.2-41)
 
-> Judging from the error I'm guessing it's objecting to the inlining.
-> Tried to work around it.  Please pull, update and let me know whether
-> that did the trick.
 
-I did a new clone (just to be sure I got your change) and I get the same
-problem.  I also can't see the changeset in the log, so are you sure you
-pushed it?
-
-I got rid of the inline in the definition in bio.h.  The .c file didn't
-define the function as inline, so I didn't have to change it.  It seems
-to be building now.
-
-Cheers,
-
-Jeff
+-- 
+Beauty is in the eye of the beerholder.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
