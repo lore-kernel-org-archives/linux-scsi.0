@@ -1,40 +1,74 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data
-	after	media change and delay
-Date: Tue, 10 Jun 2008 10:56:19 -0500
-Message-ID: <1213113379.3440.23.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
-	 <1212765202.16182.5.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806091443000.17741@vixen.sonytel.be>
-	 <Pine.LNX.4.64.0806091546260.22138@vixen.sonytel.be>
-	 <1213023916.3508.23.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806091721040.22138@vixen.sonytel.be>
-	 <1213111253.3440.5.camel@localhost.localdomain>
-	 <484EA274.2060308@panasas.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/2] cciss: add new hardware support
+Date: Tue, 10 Jun 2008 11:07:19 -0500
+Message-ID: <20080610160719.GA6808@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43384 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751720AbYFJP4X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2008 11:56:23 -0400
-In-Reply-To: <484EA274.2060308@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754758AbYFJQHc@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, justin.chen@hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2008-06-10 at 18:49 +0300, Boaz Harrosh wrote:
-> I think, I recall that, any issued command, not only unit_ready, might be appended
-> with UNIT_ATTENTION sense. So maybe as a deeper fix (with lots of testing) we want 
-> to add this logic into the scsi_check_sense() processing. But I'm not sure either way.
+PATCH 1/2
+This patch adds support for the next generation of HP Smart Array SAS/SATA
+controllers. Shipping date is late Fall 2008. Please consider this for
+inclusion.
 
-We do .. it's in scsi_io_completion().  The problem is that by design
-internally issued commands bypass this, so the problem was that the
-internally issued command wasn't doing the correct update.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-James
-
-
+diff --git a/Documentation/cciss.txt b/Documentation/cciss.txt
+index e65736c..63e59b8 100644
+--- a/Documentation/cciss.txt
++++ b/Documentation/cciss.txt
+@@ -21,6 +21,11 @@ This driver is known to work with the following cards:
+ 	* SA E200
+ 	* SA E200i
+ 	* SA E500
++	* SA P212
++	* SA P410
++	* SA P410i
++	* SA P411
++	* SA P812
+ 
+ Detecting drive failures:
+ -------------------------
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index e336b05..ced904d 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -60,7 +60,8 @@
+ MODULE_AUTHOR("Hewlett-Packard Company");
+ MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 3.6.14");
+ MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+-			" SA6i P600 P800 P400 P400i E200 E200i E500");
++			" SA6i P600 P800 P400 P400i E200 E200i E500 P700m"
++			" Smart Array G2 Series SAS/SATA Controllers");
+ MODULE_VERSION("3.6.14");
+ MODULE_LICENSE("GPL");
+ 
+@@ -90,6 +91,11 @@ static const struct pci_device_id cciss_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x323D},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3243},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3245},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3247},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
+ 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+ 	{0,}
+@@ -123,6 +129,11 @@ static struct board_type products[] = {
+ 	{0x3215103C, "Smart Array E200i", &SA5_access, 120},
+ 	{0x3237103C, "Smart Array E500", &SA5_access, 512},
+ 	{0x323D103C, "Smart Array P700m", &SA5_access, 512},
++	{0x3241103C, "Smart Array P212", &SA5_access, 384},
++	{0x3243103C, "Smart Array P410", &SA5_access, 384},
++	{0x3245103C, "Smart Array P410i", &SA5_access, 384},
++	{0x3247103C, "Smart Array P411", &SA5_access, 384},
++	{0x3249103C, "Smart Array P812", &SA5_access, 384},
+ 	{0xFFFF103C, "Unknown Smart Array", &SA5_access, 120},
+ };
+ 
