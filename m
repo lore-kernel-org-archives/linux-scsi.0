@@ -1,45 +1,30 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Tue, 10 Jun 2008 21:38:09 +0200
-Message-ID: <484ED821.8020904@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0806091040440.2943-100000@iolanthe.rowland.org>
-	<484D8019.3090900@s5r6.in-berlin.de>
-	<200806101900.43572.chris2553@googlemail.com>
+From: Bastian Blank <bastian@waldi.eu.org>
+Subject: Re: [patch 7/8] zfcp: Automatically attach remote ports
+Date: Tue, 10 Jun 2008 21:33:39 +0200
+Message-ID: <20080610193339.GA24771@wavehammer.waldi.eu.org>
+References: <20080610162053.144590000@de.ibm.com> <20080610162518.530294000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <200806101900.43572.chris2553@googlemail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: chris2553@googlemail.com
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wavehammer.waldi.eu.org ([82.139.201.20]:60951 "EHLO
+	wavehammer.waldi.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbYFJUEK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 16:04:10 -0400
+Content-Disposition: inline
+In-Reply-To: <20080610162518.530294000@de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Swen Schillig <swen@vnet.ibm.com>
 
-Chris Clayton wrote:
-> I only 
-> use firewire on the rare occasion that I want to grab some video from my camera 
-> and I use the parallel port even less frequently. So one of the last things 
-> that happens in my rc.local init script is that I unload the related drivers.
+On Tue, Jun 10, 2008 at 06:21:00PM +0200, Christof Schmitt wrote:
+> Automatically attach the remote ports in zfcp when the adapter is set
+> online.
 
-On an unrelated note:  If the driver was automatically loaded in a 
-hotplug-like fashion (based on PCI IDs and module aliases), you could 
-prevent it with "blacklist ohci1394" in one of the modprobe 
-configuration files.
+What do you mean with "remote ports"?
+
+Bastian
+
 -- 
-Stefan Richter
--=====-==--- -==- -=-=-
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://sourceforge.net/services/buy/index.php
+In the strict scientific sense we all feed on death -- even vegetarians.
+		-- Spock, "Wolf in the Fold", stardate 3615.4
