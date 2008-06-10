@@ -1,52 +1,40 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined
-	reference to `request_firmware'
-Date: Tue, 10 Jun 2008 16:24:36 +0300
-Message-ID: <20080610132436.GB16149@cs181133002.pp.htv.fi>
-References: <20080517141749.GD3284@cs181133002.pp.htv.fi> <1211453544.3956.33.camel@localhost.localdomain> <20080523105412.cc13647d.rdunlap@xenotime.net> <1211565551.11477.26.camel@localhost.localdomain> <20080523110457.de353625.rdunlap@xenotime.net> <1211574780.11477.44.camel@localhost.localdomain> <20080523144849.3773cac3.rdunlap@xenotime.net> <1211580030.11477.50.camel@localhost.localdomain> <20080523153924.af48e95e.rdunlap@xenotime.net> <1211583164.11477.52.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755894AbYFJNZx@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1211583164.11477.52.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Toralf =?utf-8?Q?F=C3=B6rster?= <toralf.foerster@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10730] build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined reference to `request_firmware'
+Date: Tue, 10 Jun 2008 06:27:34 -0700 (PDT)
+Message-ID: <20080610132734.31C13108061@picon.linux-foundation.org>
+References: <bug-10730-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60080 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753458AbYFJN1h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jun 2008 09:27:37 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5ADRYxk013427
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2008 06:27:35 -0700
+In-Reply-To: <bug-10730-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 23, 2008 at 05:52:44PM -0500, James Bottomley wrote:
-> On Fri, 2008-05-23 at 15:39 -0700, Randy Dunlap wrote:
-> > On Fri, 23 May 2008 17:00:30 -0500 James Bottomley wrote:
-> > >      1. No stubs and simply select FW_LOADER for everything
-> > >      2. Stubs that actually work in all situations.
-> > > 
-> > > My patch does 2.  I can see an argument for 1. but since we have the
-> > > stubs, making them work in all cases seems like the smaller change to
-> > > functionality.
-> > 
-> > Oh, I'm for the stubs approach.
-> > 
-> > So with SCSI_SAS_LIBSAS=y and FW_LOADER=m, you would want/expect
-> > request_firmware() to return -EINVAL all of the time?
-> 
-> If you want stubs, yes
->...
+http://bugzilla.kernel.org/show_bug.cgi?id=10730
 
-I think I was the only one who had doubts about this patch.
 
-And I've turned into a fan of your patch (plus my
-"always enable FW_LOADER unless EMBEDDED=y" patch).
+bunk@kernel.org changed:
 
-Can you (re)submit your patch so that it gets into 2.6.26?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bunk@kernel.org
 
-> James
 
-Thanks
-Adrian
+
+
+------- Comment #1 from bunk@kernel.org  2008-06-10 06:27 -------
+Handled-By: James Bottomley <James.Bottomley@HansenPartnership.com>
+Patch: http://marc.info/?l=linux-scsi&m=121101871800303&w=4
+
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
