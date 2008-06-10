@@ -1,147 +1,74 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after
-	media change and delay
-Date: Tue, 10 Jun 2008 10:22:02 -0500
-Message-ID: <1213111322.3440.9.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
-	 <1212765202.16182.5.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806091443000.17741@vixen.sonytel.be>
-	 <Pine.LNX.4.64.0806091546260.22138@vixen.sonytel.be>
-	 <1213023916.3508.23.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806091721040.22138@vixen.sonytel.be>
-	 <1213028647.3508.33.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806101705150.1797@vixen.sonytel.be>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0 of 7] Block/SCSI Data Integrity Support
+Date: Tue, 10 Jun 2008 11:28:01 -0400
+Message-ID: <yq1iqwhia2m.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1212814533@sermon.lab.mkp.net>
+	<x491w35bbdi.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34524 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752682AbYFJPWE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2008 11:22:04 -0400
-In-Reply-To: <Pine.LNX.4.64.0806101705150.1797@vixen.sonytel.be>
+Received: from rgminet01.oracle.com ([148.87.113.118]:23969 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304AbYFJP2k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2008 11:28:40 -0400
+In-Reply-To: <x491w35bbdi.fsf@segfault.boston.devel.redhat.com> (Jeff Moyer's message of "Tue\, 10 Jun 2008 10\:41\:45 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2008-06-10 at 17:11 +0200, Geert Uytterhoeven wrote:
-> 	Hi James,
->=20
-> On Mon, 9 Jun 2008, James Bottomley wrote:
-> > My best guess is that it's something to do with eaten UNIT_ATTENTIO=
-N
-> > keys.  I theorise that in the successful case, they get processed i=
-n
-> > scsi_io_completion which sets the changed bit.  In the delay case, =
-the
-> > unit attention is eaten by sr_test_unit_ready so the changed bit is
-> > always kept at zero.  If this is the case, then the patch below sho=
-uld
-> > fix it.  If not, we're back to more debugging ...
->=20
-> Yep, that fixed it. Thanks!
+>>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
 
-OK, will add to rc-fixes and ask for stable backport; thanks.
+Jeff> "Martin K. Petersen" <martin.petersen@oracle.com> writes:
+>> Another post of my block I/O data integrity patches.  This kit goes
+>> on top of the scsi_data_buffer and sd.h cleanups I posted earlier
+>> today.
 
-James
+Jeff> Pointers to archives would have been appreciated.  I can't, for
+Jeff> the life of me, find these.
+
+  http://marc.info/?l=linux-scsi&m=121272302931588&w=2
+  http://marc.info/?l=linux-scsi&m=121278031605941&w=2
+  http://marc.info/?l=linux-scsi&m=121302438515260&w=2
+  http://marc.info/?l=linux-scsi&m=121278067906564&w=2
 
 
-> Inserting first CD, mounting:
->=20
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | Sense Key : 0x2 [current]=20
-> | +5+ CDS_DISC_OK
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | Sense Key : 0x2 [current]=20
-> | +5+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +11+ Return forcing update is 1
->                                 ^
-> 				OK
->=20
-> | ISO 9660 Extensions: RRIP_1991A
->=20
-> Unmounting first CD:
->=20
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 0)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 0)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 0)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +11+ Return forcing update is 0
->=20
-> Inserting second CD, mounting after 30 seconds:
->=20
-> | +0+ the_result =3D 0x8000002 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +1+ CDS_DISC_OK
-> | +0+ the_result =3D 0x0 (sdev->changed =3D 1)
-> | Sense Key : 0x0 [current] [descriptor]
-> | +11+ Return forcing update is 1
->                                 ^
-> 				OK!
->=20
-> | ISO 9660 Extensions: Microsoft Joliet Level 3
-> | ISO 9660 Extensions: RRIP_1991A
->=20
-> =3D> success!
->=20
-> With kind regards,
->=20
-> Geert Uytterhoeven
-> Software Architect
->=20
-> Sony Techsoft Centre
-> The Corporate Village =C2=B7 Da Vincilaan 7-D1 =C2=B7 B-1935 Zaventem=
- =C2=B7 Belgium
->=20
-> Phone:    +32 (0)2 700 8453
-> Fax:      +32 (0)2 700 8622
-> E-mail:   Geert.Uytterhoeven@sonycom.com
-> Internet: http://www.sony-europe.com/
->=20
-> Sony Technology and Software Centre Europe
-> A division of Sony Service Centre (Europe) N.V.
-> Registered office: Technologielaan 7 =C2=B7 B-1840 Londerzeel =C2=B7 =
-Belgium
-> VAT BE 0413.825.160 =C2=B7 RPR Brussels
-> Fortis 293-0376800-10 GEBA-BE-BB
+Jeff> Thanks for all of the great documentation.  It would be good to
+Jeff> include some instructions on how one would test this, and what
+Jeff> testing you performed.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+modprobe scsi_debug dix=199 dif=1 guard=1 dev_size_mb=1024 num_parts=1
+
+I'm testing with XFS and btrfs.  Generally doing kernel builds, etc.
+ext2/3 are still problematic because they modify pages in flight.
+
+
+Jeff> I set out to try your changes, but ran into some problems.
+Jeff> First, this patch set didn't apply cleanly to a git checkout.
+
+I generally track Linus closely so it must be because of the patches
+you were missing.  
+
+You can grab my patch stack here.  It's always in sync with the hg
+repo:
+
+    http://oss.oracle.com/~mkp/patches/
+
+
+Jeff> block/blk-core.c: In function 'generic_make_request':
+Jeff> include/linux/bio.h:469: sorry, unimplemented: inlining failed
+Jeff> in call to 'bio_i ntegrity_enabled': function body not available
+Jeff> block/blk-core.c:1388: sorry, unimplemented: called from here
+Jeff> make[1]: *** [block/blk-core.o] Error 1 make: *** [block] Error
+Jeff> 2
+
+Odd.  Which compiler are you using?  Compiles just fine for me on both
+EL5 and FC9.
+
+Judging from the error I'm guessing it's objecting to the inlining.
+Tried to work around it.  Please pull, update and let me know whether
+that did the trick.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
