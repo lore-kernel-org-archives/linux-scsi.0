@@ -1,43 +1,47 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ibmvfc: IBM Power Virtual Fibre Channel Adapter Client
- Driver
-Date: Wed, 11 Jun 2008 11:01:44 -0500
-Message-ID: <484FF6E8.6060207@linux.vnet.ibm.com>
-References: <200806102250.m5AMoZdK007621@d03av04.boulder.ibm.com> <200806111718.20087.eike-kernel@sf-tec.de>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 4 of 7] block: bio data integrity support
+Date: Wed, 11 Jun 2008 13:41:41 -0400
+Message-ID: <x491w3398dm.fsf@segfault.boston.devel.redhat.com>
+References: <f2ae9d5bce4c33e12083.1212814537@sermon.lab.mkp.net>
+	<x491w359fne.fsf@segfault.boston.devel.redhat.com>
+	<yq1r6b4mx9y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:60773 "EHLO e6.ny.us.ibm.com"
+Received: from mx1.redhat.com ([66.187.233.31]:53108 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbYFKQCu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jun 2008 12:02:50 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m5BG4urQ012598
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2008 12:04:56 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m5BG2S2w1343678
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2008 12:02:28 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m5BG26KJ027226
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2008 10:02:06 -0600
-In-Reply-To: <200806111718.20087.eike-kernel@sf-tec.de>
+	id S1751994AbYFKRlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2008 13:41:44 -0400
+In-Reply-To: <yq1r6b4mx9y.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+	message of "Wed, 11 Jun 2008 00:05:29 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santil@linux.vnet.ibm.com, rcjenn@linux.vnet.ibm.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Rolf Eike Beer wrote:
->> +	vhost->trace = kzalloc(sizeof(struct ibmvfc_trace_entry) *
->> +			       IBMVFC_NUM_TRACE_ENTRIES, GFP_KERNEL);
-> 
-> Use kcalloc() here.
+"Martin K. Petersen" <martin.petersen@oracle.com> writes:
 
-Done.
+>>>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
+> Jeff> Hmm, up until this point you use bi to mean bio_integrity, but
+> Jeff> now it means blk_integrity.  Confusion will ensue.  ;)
+>
+> Err, uhm.  There is no bio_integrity.  There's the bio integrity
+> payload which I always refer to as struct bip *bip.  And struct
+> blk_integrity which is always bi.  I'm also anal about using bv for
+> the data bio_vec and iv for the integrity bio_vec.  I can't see any
+> place where I'm inconsistent.
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Wow, I have no idea where I got that impression.  Sorry!
 
+> Jeff> struct blk_integrity_exchg is not yet defined in your patch set,
+> Jeff> so this will likely break git bisect.
+>
+> bio-integrity.patch and blk-integrity.patch are artificially split up
+> to ease the review process.  They are not meant to be separate
+> changesets.
 
+OK, just wanted to make sure you were aware of it.
+
+Cheers,
+
+Jeff
