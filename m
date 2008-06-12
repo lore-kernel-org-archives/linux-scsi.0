@@ -1,61 +1,68 @@
-From: Jeff Mahoney <jeffm@suse.com>
-Subject: [PATCH] dpt_i2o: Add PROC_IA64 define
-Date: Thu, 12 Jun 2008 00:27:12 -0400
-Message-ID: <4850A5A0.1040601@suse.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sr: avoid kmalloc 8 bytes
+Date: Thu, 12 Jun 2008 15:36:33 +0900
+Message-ID: <20080612154101H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:34909 "EHLO mx1.suse.de"
+Received: from sh.osrg.net ([192.16.179.4]:60830 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638AbYFLE1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jun 2008 00:27:15 -0400
-Received: from Relay1.suse.de (relay-ext.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id A5862415E5
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2008 06:27:14 +0200 (CEST)
+	id S1752541AbYFLGgk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jun 2008 02:36:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
- This fixes the following compile failure in 2.6.26-rc5-git5:
- drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not in a function)
+We don't do DMA to sshdr here so there is no need to complicate the
+code by allocating only 8 bytes.
 
- I'm not sure if these values are magic and defined somewhere, but the
- kernel wouldn't build on IA64 without it.
-
- I changed the value in dpt_i2o.c because the comments indicated that
- PROC_INTEL refered to the 80x86 family, which doesn't include ia64.
-
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/dpt/dptsig.h |    1 +
- drivers/scsi/dpt_i2o.c    |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/sr.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
---- a/drivers/scsi/dpt/dptsig.h
-+++ b/drivers/scsi/dpt/dptsig.h
-@@ -92,6 +92,7 @@ typedef unsigned int sigINT;
- #define PROC_POWERPC    0x04    /* IBM Power PC */
- #define PROC_i960       0x05    /* Intel i960 */
- #define PROC_ULTRASPARC 0x06    /* SPARC processor */
-+#define PROC_IA64	 0x07	 /* IA64 processor */
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7ee86d4..af93ca5 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -200,18 +200,17 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
+-	struct scsi_sense_hdr *sshdr;
++	struct scsi_sense_hdr sshdr;
  
- /* Specific Minimim Processor - sigBYTE dsProcessor;    FLAG BITS */
- /* ------------------------------------------------------------------ */
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -80,7 +80,7 @@ static dpt_sig_S DPTI_sig = {
- #ifdef __i386__
- 	PROC_INTEL, PROC_386 | PROC_486 | PROC_PENTIUM | PROC_SEXIUM,
- #elif defined(__ia64__)
--	PROC_INTEL, PROC_IA64,
-+	PROC_IA64, PROC_IA64,
- #elif defined(__sparc__)
- 	PROC_ULTRASPARC, PROC_ULTRASPARC,
- #elif defined(__alpha__)
-
+ 	if (CDSL_CURRENT != slot) {
+ 		/* no changer support */
+ 		return -EINVAL;
+ 	}
+ 
+-	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+-	retval = sr_test_unit_ready(cd->device, sshdr);
+-	if (retval || (scsi_sense_valid(sshdr) &&
++	retval = sr_test_unit_ready(cd->device, &sshdr);
++	if (retval || (scsi_sense_valid(&sshdr) &&
+ 		       /* 0x3a is medium not present */
+-		       sshdr->asc == 0x3a)) {
++		       sshdr.asc == 0x3a)) {
+ 		/* Media not present or unable to test, unit probably not
+ 		 * ready. This usually means there is no disc in the drive.
+ 		 * Mark as changed, and we will figure it out later once
+@@ -239,11 +238,10 @@ out:
+ 		sdev_evt_send_simple(cd->device, SDEV_EVT_MEDIA_CHANGE,
+ 				     GFP_KERNEL);
+ 	cd->previous_state = retval;
+-	kfree(sshdr);
+ 
+ 	return retval;
+ }
+- 
++
+ /*
+  * sr_done is the interrupt routine for the device driver.
+  *
 -- 
-Jeff Mahoney
-SUSE Labs
+1.5.4.2
+
