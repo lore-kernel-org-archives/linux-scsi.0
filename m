@@ -1,33 +1,71 @@
-From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Thu, 12 Jun 2008 00:03:00 +0200
-Message-ID: <48504B94.9050100@s5r6.in-berlin.de>
-References: <200806010415.05290.chris2553@googlemail.com> <200806111858.05114.chris2553@googlemail.com> <20080611191533.GA6189@kroah.com> <200806111951.09275.chris2553@googlemail.com> <485047C1.3020200@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <485047C1.3020200-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: chris2553-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] scsi_host regression: fix scsi host leak
+Date: Wed, 11 Jun 2008 19:21:00 -0500
+Message-ID: <1213230060-11388-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:40978 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751287AbYFLAVJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2008 20:21:09 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-I wrote:
-> /etc/udev/rules.d/05-udev-early.rules:ACTION=="add", 
-> KERNEL=="[0-9]*:[0-9]*", SUBSYSTEM=="scsi", WAIT_FOR_SYSFS="ioerr_cnt"
-> 
-> Whatever this rule is good for...  Maybe the pattern should be 
-> "[0-9]+(:[0-9]+){3}" to match logical units only.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Actually no; looks like these are just glob(7) patterns.  Then the 
-pattern might already be OK since host devices' and target devices' 
-names don't start with decimal numbers.
+In 2.6.25 we started using class_find_child instead of implementing
+our own loop and lookup. The problem is that class_find_child would get a
+reference to the host's device, then scsi_host_lookup would get an extra
+reference to it when it called scsi_host_get().
+
+In 2.6.26 we started using class_find_device, and this function also
+gets a reference to the device, so we end up with an extra ref
+and the host will not get released.
+
+This patch is made against scsi-rc-fixes and adds a put_device to
+balance the class_find_device() get. I kept the scsi_host_get in
+scsi_host_lookup, because the target layer is using scsi_host_lookup
+and it looks like it needs the SHOST_DEL check.
+
+For 2.6.25 we need a similar patch, but instead of calling
+put_device we have to call class_device_put() due to the differences
+in the the driver model device/class_device between 2.6.25 and
+2.6.26. I can send a patch for 2.6.25 in a seperate mail.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/hosts.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 3690360..c6457bf 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -456,6 +456,10 @@ static int __scsi_host_match(struct device *dev, void *data)
+  *
+  * Return value:
+  *	A pointer to located Scsi_Host or NULL.
++ *
++ *	The caller must do a scsi_host_put() to drop the reference
++ *	that scsi_host_get() took. The put_device() below dropped
++ *	the reference from class_find_device().
+  **/
+ struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+ {
+@@ -463,9 +467,10 @@ struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+ 	struct Scsi_Host *shost = ERR_PTR(-ENXIO);
+ 
+ 	cdev = class_find_device(&shost_class, &hostnum, __scsi_host_match);
+-	if (cdev)
++	if (cdev) {
+ 		shost = scsi_host_get(class_to_shost(cdev));
+-
++		put_device(cdev);
++	}
+ 	return shost;
+ }
+ EXPORT_SYMBOL(scsi_host_lookup);
 -- 
-Stefan Richter
--=====-==--- -==- -=-==
-http://arcgraph.de/sr/
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.5.4.1
+
