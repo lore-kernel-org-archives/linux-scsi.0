@@ -1,45 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Prevent busy looping
-Date: Thu, 12 Jun 2008 12:06:49 +0900
-Message-ID: <485092C9.3050309@gmail.com>
-References: <20080416151305.8788.63912.stgit@denkblock.local>	<20080416163152.GK12774@kernel.dk>	<87r6d5l9pb.fsf@denkblock.local>	<20080417071335.GR12774@kernel.dk>	<87ve2gc1bn.fsf@denkblock.local>	<484F7A8D.1040809@gmail.com> <20080611080502.4aa43980@core> <484F86D4.8050907@gmail.com>
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [PATCH] dpt_i2o: Add PROC_IA64 define
+Date: Thu, 12 Jun 2008 00:27:12 -0400
+Message-ID: <4850A5A0.1040601@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:65485 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbYFLDGz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jun 2008 23:06:55 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so911644tic.23
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2008 20:06:53 -0700 (PDT)
-In-Reply-To: <484F86D4.8050907@gmail.com>
+Received: from ns.suse.de ([195.135.220.2]:34909 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638AbYFLE1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jun 2008 00:27:15 -0400
+Received: from Relay1.suse.de (relay-ext.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id A5862415E5
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2008 06:27:14 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->>> Elias's synthetic test case triggered infinite loop because it wasn't
->>> a proper ->qc_defer().  ->qc_defer() should never defer commands when
->>> the target is idle.
->> Target or host ? We *do* defer commands in the case of an idle channel
->> when dealing with certain simplex controllers that can only issue one
->> command per host not one per cable (and in fact in the general case we
->> can defer commands due to activity on the other drive on the cable).
-> 
-> The term was confusing.  I used target to mean both device
-> (ATA_DEFER_LINK) and host (ATA_DEFER_PORT).  Hmmm... in simplex case,
-> yeah, blocked counters need to be > 1.  We'll need to increase blocked
-> counts after all.  I'll test blocked counts of 2 w/ PMP and make sure it
-> doesn't incur unnecessary delays and post the patch.
+ This fixes the following compile failure in 2.6.26-rc5-git5:
+ drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not in a function)
 
-Setting blocked counts to 2 makes simplex scheduling starve one of the
-drives.  When a drive loses competition, it retries only after plug
-delay and of course it loses most of the time.  For now, it seems we'll
-have to live with busy loops (which doesn't lock up the machine) for
-simplex controllers.  Ewww... :-(
+ I'm not sure if these values are magic and defined somewhere, but the
+ kernel wouldn't build on IA64 without it.
+
+ I changed the value in dpt_i2o.c because the comments indicated that
+ PROC_INTEL refered to the 80x86 family, which doesn't include ia64.
+
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ drivers/scsi/dpt/dptsig.h |    1 +
+ drivers/scsi/dpt_i2o.c    |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+--- a/drivers/scsi/dpt/dptsig.h
++++ b/drivers/scsi/dpt/dptsig.h
+@@ -92,6 +92,7 @@ typedef unsigned int sigINT;
+ #define PROC_POWERPC    0x04    /* IBM Power PC */
+ #define PROC_i960       0x05    /* Intel i960 */
+ #define PROC_ULTRASPARC 0x06    /* SPARC processor */
++#define PROC_IA64	 0x07	 /* IA64 processor */
+ 
+ /* Specific Minimim Processor - sigBYTE dsProcessor;    FLAG BITS */
+ /* ------------------------------------------------------------------ */
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -80,7 +80,7 @@ static dpt_sig_S DPTI_sig = {
+ #ifdef __i386__
+ 	PROC_INTEL, PROC_386 | PROC_486 | PROC_PENTIUM | PROC_SEXIUM,
+ #elif defined(__ia64__)
+-	PROC_INTEL, PROC_IA64,
++	PROC_IA64, PROC_IA64,
+ #elif defined(__sparc__)
+ 	PROC_ULTRASPARC, PROC_ULTRASPARC,
+ #elif defined(__alpha__)
 
 -- 
-tejun
+Jeff Mahoney
+SUSE Labs
