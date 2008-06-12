@@ -1,96 +1,106 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Move FC definitions from zfcp to global header
-Date: Thu, 12 Jun 2008 09:26:24 -0600
-Message-ID: <20080612152624.GY30405@parisc-linux.org>
-References: <20080612130245.GA13761@schmichrtp.de.ibm.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Open-FCoE Second Re-Architecture Status
+Date: Thu, 12 Jun 2008 08:55:00 -0700
+Message-ID: <10A7D0016239E24092DEF05CCC582E4303E3D313@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37714 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482AbYFLP0Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 11:26:25 -0400
-Content-Disposition: inline
-In-Reply-To: <20080612130245.GA13761@schmichrtp.de.ibm.com>
+Received: from mga02.intel.com ([134.134.136.20]:16238 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755843AbYFLPzs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 11:55:48 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Jun 12, 2008 at 03:02:46PM +0200, Christof Schmitt wrote:
-> This was suggested a while ago, now i finally put together a patch
-> that moves the Fibre Channel protocol definitions from zfcp to a new
-> global header file. With the global header, the definitions can be
-> shared across all FC drives.
+Hello everybody,
 
-I think this is a great step forward, thank you for doing it.
+	We're continuing to change the Open-FCoE code to better fit into
+the kernel. We've made some more significant progress. I'd say the theme
+of this update is code removal. Since we started the re-architecture
+we've removed 4,205 lines of code.
 
-> +struct ct_hdr {
-> +	u8 revision;
-> +	u8 in_id[3];
-> +	u8 gs_type;
-> +	u8 gs_subtype;
-> +	u8 options;
-> +	u8 reserved0;
-> +	u16 cmd_rsp_code;
-> +	u16 max_res_size;
-> +	u8 reserved1;
-> +	u8 reason_code;
-> +	u8 reason_code_expl;
-> +	u8 vendor_unique;
-> +} __attribute__ ((packed));
 
-I question the need for packed.  Looking at <scsi/scsi.h>, none of the
-structures there are packed.  Everything is naturally aligned and
-explicitly padded ('reserved1', etc).  Also, those structs use __be16
-instead of u16 to allow sparse to check the correct endian conversion
-functions are used.
+	The major changes we've made since the last update are-
 
-(same comment applies to other structs in the file)
+1) Removal of all ioctl()s
+	- ioctl()s to the previously named openfc and fcoe modules have
+been completely removed.
+	- echo "ethX" > /sys/module/fcoe/create 
+		Creates a fcoe instance for that device and starts
+fabric login.
+	- echo "ethX" > /sys/module/fcoe/destroy
+		Removes the fcoe instance
+	- fcconf userspace application no longer works at all
+	- Attributes to scsi_host will be needed to re-enable this
+application, but those changes are a lower priority than the overall
+re-architecture.
 
-> +struct fcp_cmnd_iu {
-> +	u64 fcp_lun;
+2) Consolidation of fc_remote_port and fc_sess.
+	- fc_sess has been removed and the fc_lport now just has a list
+of fc_remote_ports.
+	- This is a step towards use of the fc_rport provided by
+scsi_transport_fc.
 
-Should be a struct scsi_lun?
+3) Removal of all events.
+	- Previously had events queued and various listeners who would
+drive state changes. It was all unnecessary and a bit too complicated.
+Now all calls are direct.
+	- This was a large reduction in code size.
 
-> +	u8  crn;
-> +#if defined(__BIG_ENDIAN_BITFIELD)
-> +	u8  reserved0:5;
-> +	u8  task_attribute:3;
-> +	u8  task_management_flags;
-> +	u8  add_fcp_cdb_length:6;
-> +	u8  rddata:1;
-> +	u8  wddata:1;
-> +#elif defined(__LITTLE_ENDIAN_BITFIELD)
-> +	u8  wddata:1;
-> +	u8  rddata:1;
-> +	u8  add_fcp_cdb_length:6;
-> +	u8  task_management_flags;
-> +	u8  task_attribute:3;
-> +	u8  reserved0:5;
-> +#endif
+4) Use of our new Exchange Manager (EM) API.
+	- Previously we had added the new API; now we're mostly using
+it.
+	- There are a few areas in the code have not converted to the
+new API and that work is underway.
 
-This isn't right; the endianness has you confused.
+5) Removal of CRC32 Slice-by-8 Algorithm.
+	- This is an alternative CRC32 calculation method that uses a
+larger polynomial table and is faster. 
+	- We believe that we will need this algorithm for performance,
+but have decided to make that change later after the basic libfc/FCoE
+code is accepted into the kernel.
 
-+#elif defined(__LITTLE_ENDIAN_BITFIELD)
-+	u8  task_attribute:3;
-+	u8  reserved0:5;
-+	u8  task_management_flags;
-+	u8  wddata:1;
-+	u8  rddata:1;
-+	u8  add_fcp_cdb_length:6;
-+#endif
+6) Userspace/Kernel Reduction.
+	- Removal of /sys/class/openfc attributes
+	- Removal of events from kernel to userspace
 
-> +	u8  fcp_cdb[FCP_CDB_LENGTH];
-> +} __attribute__((packed));
+7) Caught up with the kernel.
+	- Rebased to 2.6.26 scsi-rc-fixes tree.
+	- Made necessary changes to remove device classes.
 
-I also wonder if we shouldn't define the fields that are in FCP-3.
 
-I also wonder whether we should define bitfields or whether we should
-let drivers mask and shift themselves.  That's jejb's call, IMO.
+	Kernel code URL-
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+git://open-fcoe.org/rearch/open-fcoe-upstream
+
+
+	Things to keep in mind if viewing the code-
+
+1) The code is a bit sloppy. We're focusing on the heavy lifting and a
+polish phase will be needed later.
+
+2) We've broken the code. The goal is to never put patches in that break
+the tree, but we've broken it once or twice inadvertently, so if you
+pull and test the tree, please keep that in mind.
+
+3) We're mostly testing against a FC fabric and aren't focusing on the
+SW target. In fact, we now know there is a bug in the initiator that
+causes problems in P2P connections.
+
+4) fcconf is replaced with /sys/module/fcoe/create and
+/sys/module/fcoe/destroy.
+
+	After we're happy with our re-architecture, we'll roll all of
+the contributions into one big patch and apply it to our primary
+development tree on www.Open-FCoE.org.
+
+	As per usual, any comments are welcome.
+
+Thanks,
+
+//Rob, Vasu, Chris, Steve, Yi
+Open-FCoE
