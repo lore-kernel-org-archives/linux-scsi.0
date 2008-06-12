@@ -1,33 +1,28 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re:
-	+block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers.patchadded
-	 to -mm tree
-Date: Thu, 12 Jun 2008 20:17:37 +0900
-Message-ID: <20080612201737J.fujita.tomonori@lab.ntt.co.jp>
-References: <200806032155.m53LtGxK021677@imap1.linux-foundation.org>
+Subject: Re: + ide-avoid-dma-on-the-stack-for-req_type_ata_pc.patch addedto
+	-mm tree
+Date: Thu, 12 Jun 2008 20:17:27 +0900
+Message-ID: <20080612201727U.fujita.tomonori@lab.ntt.co.jp>
+References: <200806032155.m53LtMZR021684@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
 	charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:41477 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909AbYFLLUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 07:20:02 -0400
-In-Reply-To: <200806032155.m53LtGxK021677@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200806032155.m53LtMZR021684@imap1.linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: akpm@linux-foundation.org
-Cc: mm-commits@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, htejun@gmail.com, jens.axboe@oracle.com, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: mm-commits@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, htejun@gmail.com, jens.axboe@oracle.com, petkovbb@gmail.com, tsbogend@alpha.franken.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 03 Jun 2008 14:55:15 -0700
+On Tue, 03 Jun 2008 14:55:17 -0700
 akpm@linux-foundation.org wrote:
 
 > 
 > The patch titled
->      block: blk_rq_map_kern uses the bounce buffers for stack buffers
+>      ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
 > has been added to the -mm tree.  Its filename is
->      block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers.patch
+>      ide-avoid-dma-on-the-stack-for-req_type_ata_pc.patch
 > 
 > Before you just go and hit "reply", please:
 >    a) Consider who else should be cc'ed
@@ -43,17 +38,18 @@ akpm@linux-foundation.org wrote:
 > The current -mm tree may be found at http://userweb.kernel.org/~akpm/mmotm/
 > 
 > ------------------------------------------------------
-> Subject: block: blk_rq_map_kern uses the bounce buffers for stack buffers
+> Subject: ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
 > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > 
-> blk_rq_map_kern is used for kernel internal I/Os. Some callers use
-> this function with stack buffers but DMA to/from the stack buffers
+> Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
 > leads to memory corruption on a non-coherent platform.
 > 
-> This patch make blk_rq_map_kern uses the bounce buffers if a caller
-> passes a stack buffer (on the all platforms for simplicity).
+> With regard to alignment and padding, ide-cd has the the dma safe
+> check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
+> check to that check.
 > 
 > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Acked-by: Borislav Petkov <petkovbb@gmail.com>
 > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 > Cc: Tejun Heo <htejun@gmail.com>
@@ -62,69 +58,86 @@ akpm@linux-foundation.org wrote:
 > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
 > 
->  block/blk-map.c |    5 +++++
+>  drivers/ide/ide-cd.c |    5 +++++
 >  1 file changed, 5 insertions(+)
 > 
-> diff -puN block/blk-map.c~block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers block/blk-map.c
-> --- a/block/blk-map.c~block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers
-> +++ a/block/blk-map.c
-> @@ -268,6 +268,7 @@ int blk_rq_map_kern(struct request_queue
->  	int reading = rq_data_dir(rq) == READ;
->  	int do_copy = 0;
->  	struct bio *bio;
-> +	unsigned long stack_mask = ~(THREAD_SIZE - 1);
+> diff -puN drivers/ide/ide-cd.c~ide-avoid-dma-on-the-stack-for-req_type_ata_pc drivers/ide/ide-cd.c
+> --- a/drivers/ide/ide-cd.c~ide-avoid-dma-on-the-stack-for-req_type_ata_pc
+> +++ a/drivers/ide/ide-cd.c
+> @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc
+>  		struct request_queue *q = drive->queue;
+>  		unsigned int alignment;
+>  		unsigned long addr;
+> +		unsigned long stack_mask = ~(THREAD_SIZE - 1);
 >  
->  	if (len > (q->max_hw_sectors << 9))
->  		return -EINVAL;
-> @@ -278,6 +279,10 @@ int blk_rq_map_kern(struct request_queue
->  	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
->  	do_copy = ((kaddr & alignment) || (len & alignment));
->  
-> +	if (!((kaddr & stack_mask) ^
-> +	      ((unsigned long)current->stack & stack_mask)))
-> +		do_copy = 1;
+>  		if (rq->bio)
+>  			addr = (unsigned long)bio_data(rq->bio);
+> @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc
+>  		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+>  		if (addr & alignment || rq->data_len & alignment)
+>  			info->dma = 0;
 > +
->  	if (do_copy)
->  		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
->  	else
+> +		if (!((addr & stack_mask) ^
+> +		      ((unsigned long)current->stack & stack_mask)))
+> +			info->dma = 0;
+>  	}
+>  
+>  	/* start sending the command to the drive */
 
 Here's an updated version.
 
-A helper function to test if an object is on the stack was added into
+A helper function to test if an object is on the stack was added to
 -mm. We can use it to simplify this patch.
 
 http://marc.info/?l=linux-kernel&m=121315043731994&w=2
 
 =
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] block: blk_rq_map_kern uses the bounce buffers for stack buffers
+Subject: [PATCH] ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
 
-blk_rq_map_kern is used for kernel internal I/Os. Some callers use
-this function with stack buffers but DMA to/from the stack buffers
+Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
 leads to memory corruption on a non-coherent platform.
 
-This patch make blk_rq_map_kern uses the bounce buffers if a caller
-passes a stack buffer (on the all platforms for simplicity).
+With regard to alignment and padding, ide-cd has the the dma safe
+check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
+check to that check.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/blk-map.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/ide/ide-cd.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 0b1af5a..3cec2b1 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -276,7 +276,8 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index e3f085c..f3a4442 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1194,12 +1194,12 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
+ 		struct request_queue *q = drive->queue;
+ 		unsigned int alignment;
+-		unsigned long addr;
++		char *buf;
  
- 	kaddr = (unsigned long)kbuf;
- 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
--	do_copy = ((kaddr & alignment) || (len & alignment));
-+	do_copy = ((kaddr & alignment) || (len & alignment) ||
-+		   object_is_on_stack(kbuf));
+ 		if (rq->bio)
+-			addr = (unsigned long)bio_data(rq->bio);
++			buf = bio_data(rq->bio);
+ 		else
+-			addr = (unsigned long)rq->data;
++			buf = rq->data;
  
- 	if (do_copy)
- 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
+ 		info->dma = drive->using_dma;
+ 
+@@ -1210,7 +1210,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 * separate masks.
+ 		 */
+ 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+-		if (addr & alignment || rq->data_len & alignment)
++		if ((unsigned long)buf & alignment || rq->data_len & alignment
++		    || object_is_on_stack(buf))
+ 			info->dma = 0;
+ 	}
+ 
 -- 
 1.5.5.GIT
+
 
