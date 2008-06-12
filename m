@@ -1,96 +1,128 @@
-From: "Jeffrey W. Baker" <jwbaker@acm.org>
-Subject: arcmsr aborted command, machine hang, and useless SMART behavior
-Date: Thu, 12 Jun 2008 08:59:40 -0700
-Message-ID: <1213286380.21613.3.camel@squeak.gghcwest.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC] Move FC definitions from zfcp to global header
+Date: Thu, 12 Jun 2008 19:50:23 +0300
+Message-ID: <485153CF.3010207@panasas.com>
+References: <20080612130245.GA13761@schmichrtp.de.ibm.com> <20080612152624.GY30405@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:57411 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbYFLP7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 11:59:43 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1672709pyb.10
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2008 08:59:42 -0700 (PDT)
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13675 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751574AbYFLQwf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 12:52:35 -0400
+In-Reply-To: <20080612152624.GY30405@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-I'm having trouble with arcmsr.  I have an ARC-1280 as follows:
+Matthew Wilcox wrote:
+> On Thu, Jun 12, 2008 at 03:02:46PM +0200, Christof Schmitt wrote:
+>> This was suggested a while ago, now i finally put together a patch
+>> that moves the Fibre Channel protocol definitions from zfcp to a new
+>> global header file. With the global header, the definitions can be
+>> shared across all FC drives.
+> 
+> I think this is a great step forward, thank you for doing it.
+> 
+>> +struct ct_hdr {
+>> +	u8 revision;
+>> +	u8 in_id[3];
+>> +	u8 gs_type;
+>> +	u8 gs_subtype;
+>> +	u8 options;
+>> +	u8 reserved0;
+>> +	u16 cmd_rsp_code;
+>> +	u16 max_res_size;
+>> +	u8 reserved1;
+>> +	u8 reason_code;
+>> +	u8 reason_code_expl;
+>> +	u8 vendor_unique;
+>> +} __attribute__ ((packed));
+> 
+> I question the need for packed.  Looking at <scsi/scsi.h>, none of the
+> structures there are packed.  Everything is naturally aligned and
+> explicitly padded ('reserved1', etc).  Also, those structs use __be16
+> instead of u16 to allow sparse to check the correct endian conversion
+> functions are used.
+> 
 
-CLI> sys info
-The System Information
-===========================================
-Main Processor     : 800MHz
-CPU ICache Size    : 32KB
-CPU DCache Size    : 32KB
-System Memory      : 256MB/533MHz
-Firmware Version   : V1.43 2007-4-17 
-BOOT ROM Version   : V1.43 2007-4-17 
-Serial Number      : Y650CAAWAR800029
-Controller Name    : ARC-1280
-Current IP Address : 192.168.1.100
-===========================================
-GuiErrMsg<0x00>: Success.
+It's best to use the "__packed" macro which might be defined differently 
+for some tool-chains.
 
-CLI> disk info
- #   ModelName        Serial#          FirmRev     Capacity  State
-===============================================================================
- 1   WDC WD5000ABYS-  WD-WCAPW2369251  12.01C01     500.1GB  RaidSet Member(1)
- 2   WDC WD5000ABYS-  WD-WCAPW2620902  12.01C01     500.1GB  RaidSet Member(1)
- 3   WDC WD5000ABYS-  WD-WCAPW2369851  12.01C01     500.1GB  RaidSet Member(2)
- 4   WDC WD5000ABYS-  WD-WCAPW2562218  12.01C01     500.1GB  RaidSet Member(2)
- 5   WDC WD5000ABYS-  WD-WCAPW2368419  12.01C01     500.1GB  RaidSet Member(2)
- 6   WDC WD5000ABYS-  WD-WCAPW2370161  12.01C01     500.1GB  RaidSet Member(2)
- 7   WDC WD5000ABYS-  WD-WCAPW2369852  12.01C01     500.1GB  RaidSet Member(2)
- 8   WDC WD5000ABYS-  WD-WCAPW2608483  12.01C01     500.1GB  RaidSet Member(2)
-===============================================================================
-GuiErrMsg<0x00>: Success.
+And it is best to *do* keep the __packed. At above example the biggest type
+is be16 so for >=32 bit arches it's packed the same, by all gcc versions. But
+if you start having bigger-then-natural types in a structure then different
+size arches will pack things differently. I have been bitten by this, even 
+though I kept everything well defined.
 
-I'm running:
+Also I like the __packed as a warning to fellow programmers that this is
+something on-the-wired defined.
 
-Linux think 2.6.18-5-amd64 #1 SMP Thu Aug 30 01:14:54 UTC 2007 x86_64 GNU/Linux.
+And yes please use __be16 this is SCSI.
 
-The version of arcmsr is 1.20.00.13.  The problem is that the machine
-intermittently hangs after emitting this message:
+> (same comment applies to other structs in the file)
+> 
+>> +struct fcp_cmnd_iu {
+>> +	u64 fcp_lun;
+> 
+> Should be a struct scsi_lun?
+> 
+>> +	u8  crn;
+>> +#if defined(__BIG_ENDIAN_BITFIELD)
+>> +	u8  reserved0:5;
+>> +	u8  task_attribute:3;
+>> +	u8  task_management_flags;
+>> +	u8  add_fcp_cdb_length:6;
+>> +	u8  rddata:1;
+>> +	u8  wddata:1;
+>> +#elif defined(__LITTLE_ENDIAN_BITFIELD)
+>> +	u8  wddata:1;
+>> +	u8  rddata:1;
+>> +	u8  add_fcp_cdb_length:6;
+>> +	u8  task_management_flags;
+>> +	u8  task_attribute:3;
+>> +	u8  reserved0:5;
+>> +#endif
+> 
+> This isn't right; the endianness has you confused.
+> 
+> +#elif defined(__LITTLE_ENDIAN_BITFIELD)
+> +	u8  task_attribute:3;
+> +	u8  reserved0:5;
+> +	u8  task_management_flags;
+> +	u8  wddata:1;
+> +	u8  rddata:1;
+> +	u8  add_fcp_cdb_length:6;
+> +#endif
+> 
 
-Jun 11 20:04:22 think kernel: arcmsr2: abort device command of scsi id=0 lun=1 
-Jun 11 20:08:07 think kernel: arcmsr2: abort device command of scsi id=0 lun=1 
-Jun 11 20:09:26 think kernel: arcmsr2: abort device command of scsi id=0 lun=1 
-Jun 11 20:09:26 think last message repeated 2 times
-Jun 11 20:15:25 think kernel: arcmsr2: abort device command of scsi id=0 lun=1 
-Jun 11 20:15:27 think kernel: arcmsr2: ccb='0xffff810037f222c0' isr got aborted command 
-Jun 11 20:15:31 think kernel: arcmsr2: abort device command of scsi id=0 lun=1 
-Jun 11 20:15:37 think last message repeated 8 times
-Jun 11 20:15:46 think kernel: arcmsr2: ccb='0xffff810037f25f80' isr got aborted command 
+Yes, that GCC bug on some ARCHES, rrrr. 
+Matthew is right the T10 standard always define the exact 
+byte-order which does not change. best just define:
 
-That is the last console message.  Afterwards, the machine is
-non-responsive, i.e. hung and needs a hard reset.
+	u8  task_attribute;
+	u8  task_management_flags;
+	u8  wd_rd_add_fcp_cdb_length;
 
-Is there anything in the latest driver that would fix this?
+and use things like:
+enum {
+	task_attribute_mask = 0xc0,
+	task_attribute_shift = 5,
+	wd_flag = 0x80,
+	rd_flag = 0x40,
+	add_fcp_cdb_length_mask = 0x3F
+};
 
-Further complicating my problem is the fact that the ARC-1280 has this
-completely useless SMART output:
+>> +	u8  fcp_cdb[FCP_CDB_LENGTH];
+>> +} __attribute__((packed));
+> 
+> I also wonder if we shouldn't define the fields that are in FCP-3.
+> 
+> I also wonder whether we should define bitfields or whether we should
+> let drivers mask and shift themselves.  That's jejb's call, IMO.
+> 
 
-CLI> disk smart drv=1~8
-Message: Drive #01 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #02 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #03 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #04 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #05 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #06 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #07 == >Off-Line Data Collection Is In The Progress...
-Message: Drive #08 == >Off-Line Data Collection Is In The Progress...
-GuiErrMsg<0x00>: Success.
-
-It _always_ says that.  I can never get SMART status on any of my
-drives, and therefore I don't know if they've failed or what.  I also
-can't run self-tests when they are in this state:
-
-CLI> disk sttest drv=8 
-ErrMsg: Drive 8 Is Not Available
-
-Please help.
-
--jwb
-
+My $0.017
+Boaz
