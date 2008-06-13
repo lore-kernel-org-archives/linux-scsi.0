@@ -1,78 +1,54 @@
-From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Fri, 13 Jun 2008 18:57:29 +0200
-Message-ID: <8db1092f0806130957r22bf02a4pd5138f67f4ac56dd@mail.gmail.com>
-References: <48328E81.2080504@panasas.com>
-	 <Pine.LNX.4.44L0.0806031047380.2363-100000@iolanthe.rowland.org>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after media
+ change and delay
+Date: Fri, 13 Jun 2008 19:33:00 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0806131932350.30730@vixen.sonytel.be>
+References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1094079654-1213378380=:30730"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:37851 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbYFMQ5b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2008 12:57:31 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so4195872wfd.4
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 09:57:30 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.0806031047380.2363-100000@iolanthe.rowland.org>
-Content-Disposition: inline
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:54063 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750991AbYFMRdD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2008 13:33:03 -0400
+In-Reply-To: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: David Martin <tasio@tasio.net>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
 
-2008/6/3 Alan Stern <stern@rowland.harvard.edu>:
-[...]
->
-> What do you think of a patch like this?
->
-> Index: usb-2.6/include/linux/blkdev.h
-> ===================================================================
-> --- usb-2.6.orig/include/linux/blkdev.h
-> +++ usb-2.6/include/linux/blkdev.h
-> @@ -221,6 +221,7 @@ struct request {
->
->        unsigned int data_len;
->        unsigned int extra_len; /* length of alignment and padding */
-> +       unsigned int min_data_len;
->        unsigned int sense_len;
->        void *data;
->        void *sense;
-> Index: usb-2.6/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
-> +++ usb-2.6/drivers/scsi/scsi_lib.c
-> @@ -1125,6 +1125,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
->                ret = scsi_init_io(cmd, GFP_ATOMIC);
->                if (unlikely(ret))
->                        return ret;
-> +               cmd->underflow = req->min_data_len;
->        } else {
->                BUG_ON(req->data_len);
->                BUG_ON(req->data);
->
-> Combined with an extra minimum-data-length argument to scsi_execute()
-> and scsi_execute_req(), this ought to solve the problem.
->
-> (To refresh your memory: The problem is that a weird device responds to
-> MODE SENSE with Residue equal to the data length -- so none of the
-> returned data is valid -- and Okay status.)
->
-> Alan Stern
->
-> P.S.: Maybe a safer approach would be to add a new flag bit in struct
-> request.  Normally the flag would be clear, indicating that for
-> BLOCK_PC requests, scmd->underflow should be set to 0.  But when the
-> flag is set, scmd->underflow would be set to req->data_len.
->
->
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-It does'n help. I still have "write protect is on" message. Also I see
-"usb-storage: queuecommand called" message.
+---584349381-1094079654-1213378380=:30730
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Log (2.6.26-rc2):
-http://www.unixy.pl/maciek/download/kernel/2.6.26-rc2/20080613/syslog
+On Fri, 6 Jun 2008, Geert Uytterhoeven wrote:
+> When mounting a CD/DVD more than 30 seconds after inserting it, and reading
+> from it, we get:
 
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Apparently the fix didn't make it to all the CCed lists...
+
+http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-rc-fixes-2.6.git;a=commitdiff_plain;h=d1daeabf0da5bfa1943272ce508e2ba785730bf0
+
+With kind regards,
+
+Geert Uytterhoeven
+Software Architect
+
+Sony Techsoft Centre
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Technology and Software Centre Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis 293-0376800-10 GEBA-BE-BB
+---584349381-1094079654-1213378380=:30730--
