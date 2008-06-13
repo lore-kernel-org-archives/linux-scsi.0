@@ -1,128 +1,70 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC] Move FC definitions from zfcp to global header
-Date: Thu, 12 Jun 2008 19:50:23 +0300
-Message-ID: <485153CF.3010207@panasas.com>
-References: <20080612130245.GA13761@schmichrtp.de.ibm.com> <20080612152624.GY30405@parisc-linux.org>
+From: Chris Clayton <chris2553-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
+Subject: Re: 2,6.26-rc4-git2 - long pause during boot
+Date: Fri, 13 Jun 2008 06:56:42 +0000
+Message-ID: <200806130656.43016.chris2553@googlemail.com>
+References: <200806010415.05290.chris2553@googlemail.com> <485027AC.6060901@s5r6.in-berlin.de> <1213212965.3461.12.camel@localhost.localdomain>
+Reply-To: chris2553-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13675 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751574AbYFLQwf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2008 12:52:35 -0400
-In-Reply-To: <20080612152624.GY30405@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1213212965.3461.12.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Thu, Jun 12, 2008 at 03:02:46PM +0200, Christof Schmitt wrote:
->> This was suggested a while ago, now i finally put together a patch
->> that moves the Fibre Channel protocol definitions from zfcp to a new
->> global header file. With the global header, the definitions can be
->> shared across all FC drives.
-> 
-> I think this is a great step forward, thank you for doing it.
-> 
->> +struct ct_hdr {
->> +	u8 revision;
->> +	u8 in_id[3];
->> +	u8 gs_type;
->> +	u8 gs_subtype;
->> +	u8 options;
->> +	u8 reserved0;
->> +	u16 cmd_rsp_code;
->> +	u16 max_res_size;
->> +	u8 reserved1;
->> +	u8 reason_code;
->> +	u8 reason_code_expl;
->> +	u8 vendor_unique;
->> +} __attribute__ ((packed));
-> 
-> I question the need for packed.  Looking at <scsi/scsi.h>, none of the
-> structures there are packed.  Everything is naturally aligned and
-> explicitly padded ('reserved1', etc).  Also, those structs use __be16
-> instead of u16 to allow sparse to check the correct endian conversion
-> functions are used.
-> 
+Hi James,
 
-It's best to use the "__packed" macro which might be defined differently 
-for some tool-chains.
+On Wednesday 11 June 2008, James Bottomley wrote:
+> On Wed, 2008-06-11 at 21:29 +0200, Stefan Richter wrote:
+> > James Bottomley wrote:
+> > > On Wed, 2008-06-11 at 12:15 -0700, Greg KH wrote:
+> > >> On Wed, Jun 11, 2008 at 06:58:05PM +0000, Chris Clayton wrote:
+> > >>> Jun 11 17:48:13 upstairs udevd-event[1457]: wait_for_sysfs: wait for
+> > >>> '/sys/devices/pci0000:00/0000:00:1e.0/0000:02:0a.2/usb11/11-2/11-2:1.
+> > >>>0/host4/ioerr_cnt' for 20 mseconds Jun 11 17:48:18 upstairs last
+> > >>> message repeated 236 times
+> > >>
+> > >> This doesn't look good.  It looks like a udev rule in your system is
+> > >> looking for a file that will never show up.  That's a short way to a
+> > >> long delay time :)
+> > >>
+> > >> Try commenting out the rule that does this and see if things are
+> > >> fixed.
+> > >
+> > > Actually, there's something seriously wrong here:  ioerr_cnt is a
+> > > property of the device, not of the host (as in it will never appear
+> > > under .../host4 but under .../host4/targetX:X:X/4:X:X:X/ioerr_cnt).
+> > > Perhaps an investigation of why udevd-event is looking under host4/ is
+> > > in order.
+> >
+> > So the change which commit b0ed43360fdca227048d88a08290365cb681c1a8
+> > "[SCSI] add scsi_host and scsi_target to scsi_bus" introduced is leading
+> > the udev scripts onto a wrong trail?
+>
+> Yes, I think so ... what it does is make us get bus events for the
+> target as well as the lun, whereas without it we only get them for the
+> lun.  I think something is misparsing the new target event and this is
+> where the trouble is coming from.
+>
 
-And it is best to *do* keep the __packed. At above example the biggest type
-is be16 so for >=32 bit arches it's packed the same, by all gcc versions. But
-if you start having bigger-then-natural types in a structure then different
-size arches will pack things differently. I have been bitten by this, even 
-though I kept everything well defined.
+I assume that since we now the source of this problem, you can create it at 
+will. I only mention because if you need me to test a patch, it will have to be 
+before Tuesday, June 17 - I go on holiday (vacation) on that day.
 
-Also I like the __packed as a warning to fellow programmers that this is
-something on-the-wired defined.
+Thanks
 
-And yes please use __be16 this is SCSI.
+Chris
+> James
 
-> (same comment applies to other structs in the file)
-> 
->> +struct fcp_cmnd_iu {
->> +	u64 fcp_lun;
-> 
-> Should be a struct scsi_lun?
-> 
->> +	u8  crn;
->> +#if defined(__BIG_ENDIAN_BITFIELD)
->> +	u8  reserved0:5;
->> +	u8  task_attribute:3;
->> +	u8  task_management_flags;
->> +	u8  add_fcp_cdb_length:6;
->> +	u8  rddata:1;
->> +	u8  wddata:1;
->> +#elif defined(__LITTLE_ENDIAN_BITFIELD)
->> +	u8  wddata:1;
->> +	u8  rddata:1;
->> +	u8  add_fcp_cdb_length:6;
->> +	u8  task_management_flags;
->> +	u8  task_attribute:3;
->> +	u8  reserved0:5;
->> +#endif
-> 
-> This isn't right; the endianness has you confused.
-> 
-> +#elif defined(__LITTLE_ENDIAN_BITFIELD)
-> +	u8  task_attribute:3;
-> +	u8  reserved0:5;
-> +	u8  task_management_flags;
-> +	u8  wddata:1;
-> +	u8  rddata:1;
-> +	u8  add_fcp_cdb_length:6;
-> +#endif
-> 
 
-Yes, that GCC bug on some ARCHES, rrrr. 
-Matthew is right the T10 standard always define the exact 
-byte-order which does not change. best just define:
 
-	u8  task_attribute;
-	u8  task_management_flags;
-	u8  wd_rd_add_fcp_cdb_length;
-
-and use things like:
-enum {
-	task_attribute_mask = 0xc0,
-	task_attribute_shift = 5,
-	wd_flag = 0x80,
-	rd_flag = 0x40,
-	add_fcp_cdb_length_mask = 0x3F
-};
-
->> +	u8  fcp_cdb[FCP_CDB_LENGTH];
->> +} __attribute__((packed));
-> 
-> I also wonder if we shouldn't define the fields that are in FCP-3.
-> 
-> I also wonder whether we should define bitfields or whether we should
-> let drivers mask and shift themselves.  That's jejb's call, IMO.
-> 
-
-My $0.017
-Boaz
+-- 
+Beauty is in the eye of the beerholder.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
