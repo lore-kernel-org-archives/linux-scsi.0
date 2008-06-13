@@ -1,182 +1,191 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Fri, 13 Jun 2008 14:02:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0806131312340.2166-100000@iolanthe.rowland.org>
-References: <8db1092f0806130957r22bf02a4pd5138f67f4ac56dd@mail.gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 18/19] ibmvscsi: driver enablement for CMO
+Date: Fri, 13 Jun 2008 13:30:55 -0500
+Message-ID: <4852BCDF.80404@linux.vnet.ibm.com>
+References: <20080612222427.GZ30916@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38838 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751954AbYFMSCu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2008 14:02:50 -0400
-In-Reply-To: <8db1092f0806130957r22bf02a4pd5138f67f4ac56dd@mail.gmail.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:33463 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750701AbYFMSbl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2008 14:31:41 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m5DIVekP005364
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 14:31:40 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m5DIVe8a166768
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 12:31:40 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m5DIVd9X020746
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 12:31:40 -0600
+In-Reply-To: <20080612222427.GZ30916@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Robert Jennings <rcj@linux.vnet.ibm.com>
+Cc: paulus@samba.org, linuxppc-dev@ozlabs.org, David Darrington <ddarring@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 13 Jun 2008, Maciej Rutecki wrote:
+CC'ing linux-scsi, although we'd like to take this through the powerpc tree since it
+is part of a patch set to enable a Power platform feature.
 
-> 2008/6/3 Alan Stern <stern@rowland.harvard.edu>:
-> [...]
-> >
-> > What do you think of a patch like this?
+-Brian
 
-...
+Robert Jennings wrote:
+> From: Robert Jennings <rcj@linux.vnet.ibm.com>
+> 
+> Enable the driver to function in a Cooperative Memory Overcommitment (CMO)
+> environment.
+> 
+> The following changes are made to enable the driver for CMO:
+>  * DMA mapping errors will not result in error messages if entitlement has
+>    been exceeded and resources were not available.
+>  * The driver has a get_io_entitlement function defined to function
+>    in a CMO environment. It will indicate how much IO memory it would like
+>    to function.
+> 
+> Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
+> 
+> ---
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |   46 +++++++++++++++++++++++++++++++++------
+>  drivers/scsi/ibmvscsi/ibmvscsi.h |    2 ++
+>  2 files changed, 41 insertions(+), 7 deletions(-)
+> 
+> Index: b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> ===================================================================
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -72,6 +72,8 @@
+>  #include <linux/delay.h>
+>  #include <asm/firmware.h>
+>  #include <asm/vio.h>
+> +#include <asm/firmware.h>
+> +#include <asm/iommu.h>
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_host.h>
+> @@ -426,8 +428,10 @@ static int map_sg_data(struct scsi_cmnd 
+>  					   SG_ALL * sizeof(struct srp_direct_buf),
+>  					   &evt_struct->ext_list_token, 0);
+>  		if (!evt_struct->ext_list) {
+> -			sdev_printk(KERN_ERR, cmd->device,
+> -				    "Can't allocate memory for indirect table\n");
+> +			if (!firmware_has_feature(FW_FEATURE_CMO))
+> +				sdev_printk(KERN_ERR, cmd->device,
+> +				            "Can't allocate memory "
+> +				            "for indirect table\n");
+>  			return 0;
+>  		}
+>  	}
+> @@ -743,7 +747,9 @@ static int ibmvscsi_queuecommand(struct 
+>  	srp_cmd->lun = ((u64) lun) << 48;
+> 
+>  	if (!map_data_for_srp_cmd(cmnd, evt_struct, srp_cmd, hostdata->dev)) {
+> -		sdev_printk(KERN_ERR, cmnd->device, "couldn't convert cmd to srp_cmd\n");
+> +		if (!firmware_has_feature(FW_FEATURE_CMO))
+> +			sdev_printk(KERN_ERR, cmnd->device,
+> +			            "couldn't convert cmd to srp_cmd\n");
+>  		free_event_struct(&hostdata->pool, evt_struct);
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+>  	}
+> @@ -855,7 +861,10 @@ static void send_mad_adapter_info(struct
+>  					    DMA_BIDIRECTIONAL);
+> 
+>  	if (dma_mapping_error(req->buffer)) {
+> -		dev_err(hostdata->dev, "Unable to map request_buffer for adapter_info!\n");
+> +		if (!firmware_has_feature(FW_FEATURE_CMO))
+> +			dev_err(hostdata->dev,
+> +			        "Unable to map request_buffer for "
+> +			        "adapter_info!\n");
+>  		free_event_struct(&hostdata->pool, evt_struct);
+>  		return;
+>  	}
+> @@ -1400,7 +1409,9 @@ static int ibmvscsi_do_host_config(struc
+>  						    DMA_BIDIRECTIONAL);
+> 
+>  	if (dma_mapping_error(host_config->buffer)) {
+> -		dev_err(hostdata->dev, "dma_mapping error getting host config\n");
+> +		if (!firmware_has_feature(FW_FEATURE_CMO))
+> +			dev_err(hostdata->dev,
+> +			        "dma_mapping error getting host config\n");
+>  		free_event_struct(&hostdata->pool, evt_struct);
+>  		return -1;
+>  	}
+> @@ -1604,7 +1615,7 @@ static struct scsi_host_template driver_
+>  	.eh_host_reset_handler = ibmvscsi_eh_host_reset_handler,
+>  	.slave_configure = ibmvscsi_slave_configure,
+>  	.change_queue_depth = ibmvscsi_change_queue_depth,
+> -	.cmd_per_lun = 16,
+> +	.cmd_per_lun = IBMVSCSI_CMDS_PER_LUN_DEFAULT,
+>  	.can_queue = IBMVSCSI_MAX_REQUESTS_DEFAULT,
+>  	.this_id = -1,
+>  	.sg_tablesize = SG_ALL,
+> @@ -1613,6 +1624,26 @@ static struct scsi_host_template driver_
+>  };
+> 
+>  /**
+> + * ibmvscsi_get_io_entitlement - Calculate IO entitlement needed by the driver
+> + *
+> + * @vdev: struct vio_dev for the device whose entitlement is to be returned
+> + *
+> + * Return value:
+> + *	Number of bytes of IO data the driver will need to perform well.
+> + */
+> +static unsigned long ibmvscsi_get_io_entitlement(struct vio_dev *vdev)
+> +{
+> +	/* iu_storage data allocated in initialize_event_pool */
+> +	unsigned long io_entitlement = max_requests * sizeof(union viosrp_iu);
+> +
+> +	/* add io space for sg data */
+> +	io_entitlement += (IBMVSCSI_MAX_SECTORS_DEFAULT *
+> +	                     IBMVSCSI_CMDS_PER_LUN_DEFAULT);
+> +
+> +	return IOMMU_PAGE_ALIGN(io_entitlement);
+> +}
+> +
+> +/**
+>   * Called by bus code for each adapter
+>   */
+>  static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+> @@ -1641,7 +1672,7 @@ static int ibmvscsi_probe(struct vio_dev
+>  	hostdata->host = host;
+>  	hostdata->dev = dev;
+>  	atomic_set(&hostdata->request_limit, -1);
+> -	hostdata->host->max_sectors = 32 * 8; /* default max I/O 32 pages */
+> +	hostdata->host->max_sectors = IBMVSCSI_MAX_SECTORS_DEFAULT;
+> 
+>  	rc = ibmvscsi_ops->init_crq_queue(&hostdata->queue, hostdata, max_requests);
+>  	if (rc != 0 && rc != H_RESOURCE) {
+> @@ -1735,6 +1766,7 @@ static struct vio_driver ibmvscsi_driver
+>  	.id_table = ibmvscsi_device_table,
+>  	.probe = ibmvscsi_probe,
+>  	.remove = ibmvscsi_remove,
+> +	.get_io_entitlement = ibmvscsi_get_io_entitlement,
+>  	.driver = {
+>  		.name = "ibmvscsi",
+>  		.owner = THIS_MODULE,
+> Index: b/drivers/scsi/ibmvscsi/ibmvscsi.h
+> ===================================================================
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
+> @@ -45,6 +45,8 @@ struct Scsi_Host;
+>  #define MAX_INDIRECT_BUFS 10
+> 
+>  #define IBMVSCSI_MAX_REQUESTS_DEFAULT 100
+> +#define IBMVSCSI_CMDS_PER_LUN_DEFAULT 16
+> +#define IBMVSCSI_MAX_SECTORS_DEFAULT 256 /* 32 * 8 = default max I/O 32 pages */
+>  #define IBMVSCSI_MAX_CMDS_PER_LUN 64
+> 
+>  /* ------------------------------------------------------------
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@ozlabs.org
+> https://ozlabs.org/mailman/listinfo/linuxppc-dev
 
-> > (To refresh your memory: The problem is that a weird device responds to
-> > MODE SENSE with Residue equal to the data length -- so none of the
-> > returned data is valid -- and Okay status.)
-> >
-> > Alan Stern
 
-> It does'n help. I still have "write protect is on" message. Also I see
-> "usb-storage: queuecommand called" message.
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-That patch wasn't meant to help; it wasn't complete.  It was meant to 
-stimulate conversation -- and clearly it failed.
-
-Below is a complete patch.  It's very ugly and isn't likely to get
-accepted, but maybe it will convince people to start talking about the
-problem.  Maybe it will offend people's sensibilities so that they will
-just _have_ to chime in, if only to complain about how bad the patch
-is...
-
-Alan Stern
-
-
-
-Index: 2.6.26-rc5/include/linux/blkdev.h
-===================================================================
---- 2.6.26-rc5.orig/include/linux/blkdev.h
-+++ 2.6.26-rc5/include/linux/blkdev.h
-@@ -221,6 +221,7 @@ struct request {
- 
- 	unsigned int data_len;
- 	unsigned int extra_len;	/* length of alignment and padding */
-+	unsigned int min_data_len;
- 	unsigned int sense_len;
- 	void *data;
- 	void *sense;
-Index: 2.6.26-rc5/include/scsi/scsi_device.h
-===================================================================
---- 2.6.26-rc5.orig/include/scsi/scsi_device.h
-+++ 2.6.26-rc5/include/scsi/scsi_device.h
-@@ -324,9 +324,17 @@ extern int scsi_execute(struct scsi_devi
- 			int data_direction, void *buffer, unsigned bufflen,
- 			unsigned char *sense, int timeout, int retries,
- 			int flag);
-+extern int scsi_execute_min(struct scsi_device *sdev, const unsigned char *cmd,
-+			int data_direction, void *buffer, unsigned bufflen,
-+			unsigned char *sense, int timeout, int retries,
-+			int flag, unsigned min_data);
- extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			    int data_direction, void *buffer, unsigned bufflen,
- 			    struct scsi_sense_hdr *, int timeout, int retries);
-+extern int scsi_execute_req_min(struct scsi_device *sdev, const unsigned char *cmd,
-+			    int data_direction, void *buffer, unsigned bufflen,
-+			    struct scsi_sense_hdr *, int timeout, int retries,
-+			    unsigned min_data);
- extern int scsi_execute_async(struct scsi_device *sdev,
- 			      const unsigned char *cmd, int cmd_len, int data_direction,
- 			      void *buffer, unsigned bufflen, int use_sg,
-Index: 2.6.26-rc5/drivers/scsi/scsi_lib.c
-===================================================================
---- 2.6.26-rc5.orig/drivers/scsi/scsi_lib.c
-+++ 2.6.26-rc5/drivers/scsi/scsi_lib.c
-@@ -215,6 +215,44 @@ int scsi_execute(struct scsi_device *sde
- }
- EXPORT_SYMBOL(scsi_execute);
- 
-+int scsi_execute_min(struct scsi_device *sdev, const unsigned char *cmd,
-+		 int data_direction, void *buffer, unsigned bufflen,
-+		 unsigned char *sense, int timeout, int retries, int flags,
-+		 unsigned min_data)
-+{
-+	struct request *req;
-+	int write = (data_direction == DMA_TO_DEVICE);
-+	int ret = DRIVER_ERROR << 24;
-+
-+	req = blk_get_request(sdev->request_queue, write, __GFP_WAIT);
-+
-+	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
-+					buffer, bufflen, __GFP_WAIT))
-+		goto out;
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = retries;
-+	req->timeout = timeout;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= flags | REQ_QUIET | REQ_PREEMPT;
-+	req->min_data_len = min_data;
-+
-+	/*
-+	 * head injection *required* here otherwise quiesce won't work
-+	 */
-+	blk_execute_rq(req->q, NULL, req, 1);
-+
-+	ret = req->errors;
-+ out:
-+	blk_put_request(req);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(scsi_execute_min);
-+
- 
- int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 		     int data_direction, void *buffer, unsigned bufflen,
-@@ -238,6 +276,29 @@ int scsi_execute_req(struct scsi_device 
- }
- EXPORT_SYMBOL(scsi_execute_req);
- 
-+int scsi_execute_req_min(struct scsi_device *sdev, const unsigned char *cmd,
-+		     int data_direction, void *buffer, unsigned bufflen,
-+		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
-+		     unsigned min_data)
-+{
-+	char *sense = NULL;
-+	int result;
-+
-+	if (sshdr) {
-+		sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+		if (!sense)
-+			return DRIVER_ERROR << 24;
-+	}
-+	result = scsi_execute_min(sdev, cmd, data_direction, buffer, bufflen,
-+			      sense, timeout, retries, 0, min_data);
-+	if (sshdr)
-+		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
-+
-+	kfree(sense);
-+	return result;
-+}
-+EXPORT_SYMBOL(scsi_execute_req_min);
-+
- struct scsi_io_context {
- 	void *data;
- 	void (*done)(void *data, char *sense, int result, int resid);
-@@ -1125,6 +1186,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
- 		ret = scsi_init_io(cmd, GFP_ATOMIC);
- 		if (unlikely(ret))
- 			return ret;
-+		cmd->underflow = req->min_data_len;
- 	} else {
- 		BUG_ON(req->data_len);
- 		BUG_ON(req->data);
-@@ -1879,8 +1941,8 @@ scsi_mode_sense(struct scsi_device *sdev
- 
- 	memset(buffer, 0, len);
- 
--	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
--				  sshdr, timeout, retries);
-+	result = scsi_execute_req_min(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
-+				  sshdr, timeout, retries, header_length);
- 
- 	/* This code looks awful: what it's doing is making sure an
- 	 * ILLEGAL REQUEST sense return identifies the actual command
 
