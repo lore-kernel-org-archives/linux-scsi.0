@@ -1,72 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 2,6.26-rc4-git2 - long pause during boot
-Date: Fri, 13 Jun 2008 09:12:50 -0500
-Message-ID: <1213366370.3434.1.camel@localhost.localdomain>
-References: <200806010415.05290.chris2553@googlemail.com>
-	 <485027AC.6060901@s5r6.in-berlin.de>
-	 <1213212965.3461.12.camel@localhost.localdomain>
-	 <200806130656.43016.chris2553@googlemail.com>
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: Re: [PATCH] dpt_i2o: Add PROC_IA64 define
+Date: Fri, 13 Jun 2008 10:38:00 -0400
+Message-ID: <48528648.7070404@suse.com>
+References: <4850A5A0.1040601@suse.com> <81F7F1EB-F658-40EE-ADBA-62CB85BD1F66@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46647 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752677AbYFMOM5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:12:57 -0400
-In-Reply-To: <200806130656.43016.chris2553@googlemail.com>
+Received: from mx2.suse.de ([195.135.220.15]:47033 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752066AbYFMOiF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2008 10:38:05 -0400
+In-Reply-To: <81F7F1EB-F658-40EE-ADBA-62CB85BD1F66@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: chris2553@googlemail.com
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-usb@vger.kernel.org
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2008-06-13 at 06:56 +0000, Chris Clayton wrote:
-> Hi James,
-> 
-> On Wednesday 11 June 2008, James Bottomley wrote:
-> > On Wed, 2008-06-11 at 21:29 +0200, Stefan Richter wrote:
-> > > James Bottomley wrote:
-> > > > On Wed, 2008-06-11 at 12:15 -0700, Greg KH wrote:
-> > > >> On Wed, Jun 11, 2008 at 06:58:05PM +0000, Chris Clayton wrote:
-> > > >>> Jun 11 17:48:13 upstairs udevd-event[1457]: wait_for_sysfs: wait for
-> > > >>> '/sys/devices/pci0000:00/0000:00:1e.0/0000:02:0a.2/usb11/11-2/11-2:1.
-> > > >>>0/host4/ioerr_cnt' for 20 mseconds Jun 11 17:48:18 upstairs last
-> > > >>> message repeated 236 times
-> > > >>
-> > > >> This doesn't look good.  It looks like a udev rule in your system is
-> > > >> looking for a file that will never show up.  That's a short way to a
-> > > >> long delay time :)
-> > > >>
-> > > >> Try commenting out the rule that does this and see if things are
-> > > >> fixed.
-> > > >
-> > > > Actually, there's something seriously wrong here:  ioerr_cnt is a
-> > > > property of the device, not of the host (as in it will never appear
-> > > > under .../host4 but under .../host4/targetX:X:X/4:X:X:X/ioerr_cnt).
-> > > > Perhaps an investigation of why udevd-event is looking under host4/ is
-> > > > in order.
-> > >
-> > > So the change which commit b0ed43360fdca227048d88a08290365cb681c1a8
-> > > "[SCSI] add scsi_host and scsi_target to scsi_bus" introduced is leading
-> > > the udev scripts onto a wrong trail?
-> >
-> > Yes, I think so ... what it does is make us get bus events for the
-> > target as well as the lun, whereas without it we only get them for the
-> > lun.  I think something is misparsing the new target event and this is
-> > where the trouble is coming from.
-> >
-> 
-> I assume that since we now the source of this problem, you can create it at 
-> will. I only mention because if you need me to test a patch, it will have to be 
-> before Tuesday, June 17 - I go on holiday (vacation) on that day.
+Thanks for the feedback, Mark. Round two:
 
-Yes, we can; thanks!
+ This fixes the following compile failure:
+ drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not in a function)
 
-The problem though is that it's in the udev scripts, so there's nothing
-we can fix in the kernel, we now need to persuade the various distros to
-fix it (if they're actually broken), so it might take a while.
+ Mark Salyzyn <Mark_Salyzyn@adaptec.com> indicated that IA64 must report
+ itself as PROC_INTEL, so I've changed the comment for PROC_INTEL.
 
-James
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
 
+ drivers/scsi/dpt/dptsig.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+--- a/drivers/scsi/dpt/dptsig.h
++++ b/drivers/scsi/dpt/dptsig.h
+@@ -85,7 +85,7 @@ typedef unsigned int sigINT;
+ /* ------------------------------------------------------------------ */
+ /* What type of processor the file is meant to run on. */
+ /* This will let us know whether to read sigWORDs as high/low or low/high. */
+-#define PROC_INTEL      0x00    /* Intel 80x86 */
++#define PROC_INTEL      0x00    /* Intel 80x86/ia64 */
+ #define PROC_MOTOROLA   0x01    /* Motorola 68K */
+ #define PROC_MIPS4000   0x02    /* MIPS RISC 4000 */
+ #define PROC_ALPHA      0x03    /* DEC Alpha */
+@@ -104,6 +104,7 @@ typedef unsigned int sigINT;
+ #define PROC_486        0x08    /* Intel 80486 */
+ #define PROC_PENTIUM    0x10    /* Intel 586 aka P5 aka Pentium */
+ #define PROC_SEXIUM	0x20	/* Intel 686 aka P6 aka Pentium Pro or MMX */
++#define PROC_IA64	0x40	/* Intel IA64 processor */
+ 
+ /* PROC_i960: */
+ #define PROC_960RX      0x01    /* Intel 80960RC/RD */
+
+-- 
+Jeff Mahoney
+SUSE Labs
