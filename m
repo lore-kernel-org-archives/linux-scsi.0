@@ -1,68 +1,78 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: Re: [PATCH] dpt_i2o: Add PROC_IA64 define
-Date: Fri, 13 Jun 2008 10:40:35 -0400
-Message-ID: <C3C13D68-8451-429F-8EB6-7C2F770DFD72@adaptec.com>
-References: <4850A5A0.1040601@suse.com> <81F7F1EB-F658-40EE-ADBA-62CB85BD1F66@adaptec.com> <48528648.7070404@suse.com>
-Mime-Version: 1.0 (Apple Message framework v924)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Fri, 13 Jun 2008 18:57:29 +0200
+Message-ID: <8db1092f0806130957r22bf02a4pd5138f67f4ac56dd@mail.gmail.com>
+References: <48328E81.2080504@panasas.com>
+	 <Pine.LNX.4.44L0.0806031047380.2363-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:46634 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758896AbYFMOoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:44:03 -0400
-In-Reply-To: <48528648.7070404@suse.com>
+Received: from wf-out-1314.google.com ([209.85.200.171]:37851 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbYFMQ5b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2008 12:57:31 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so4195872wfd.4
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 09:57:30 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.0806031047380.2363-100000@iolanthe.rowland.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-ACK!!!
+2008/6/3 Alan Stern <stern@rowland.harvard.edu>:
+[...]
+>
+> What do you think of a patch like this?
+>
+> Index: usb-2.6/include/linux/blkdev.h
+> ===================================================================
+> --- usb-2.6.orig/include/linux/blkdev.h
+> +++ usb-2.6/include/linux/blkdev.h
+> @@ -221,6 +221,7 @@ struct request {
+>
+>        unsigned int data_len;
+>        unsigned int extra_len; /* length of alignment and padding */
+> +       unsigned int min_data_len;
+>        unsigned int sense_len;
+>        void *data;
+>        void *sense;
+> Index: usb-2.6/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
+> +++ usb-2.6/drivers/scsi/scsi_lib.c
+> @@ -1125,6 +1125,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+>                ret = scsi_init_io(cmd, GFP_ATOMIC);
+>                if (unlikely(ret))
+>                        return ret;
+> +               cmd->underflow = req->min_data_len;
+>        } else {
+>                BUG_ON(req->data_len);
+>                BUG_ON(req->data);
+>
+> Combined with an extra minimum-data-length argument to scsi_execute()
+> and scsi_execute_req(), this ought to solve the problem.
+>
+> (To refresh your memory: The problem is that a weird device responds to
+> MODE SENSE with Residue equal to the data length -- so none of the
+> returned data is valid -- and Okay status.)
+>
+> Alan Stern
+>
+> P.S.: Maybe a safer approach would be to add a new flag bit in struct
+> request.  Normally the flag would be clear, indicating that for
+> BLOCK_PC requests, scmd->underflow should be set to 0.  But when the
+> flag is set, scmd->underflow would be set to req->data_len.
+>
+>
 
-Sincerely -- Mark Salyzyn
+It does'n help. I still have "write protect is on" message. Also I see
+"usb-storage: queuecommand called" message.
 
-On Jun 13, 2008, at 10:38 AM, Jeff Mahoney wrote:
+Log (2.6.26-rc2):
+http://www.unixy.pl/maciek/download/kernel/2.6.26-rc2/20080613/syslog
 
-> Thanks for the feedback, Mark. Round two:
->
-> This fixes the following compile failure:
-> drivers/scsi/dpt_i2o.c:83: error: 'PROC_IA64' undeclared here (not  
-> in a function)
->
-> Mark Salyzyn <Mark_Salyzyn@adaptec.com> indicated that IA64 must  
-> report
-> itself as PROC_INTEL, so I've changed the comment for PROC_INTEL.
->
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-> ---
->
-> drivers/scsi/dpt/dptsig.h |    3 ++-
-> 1 file changed, 2 insertions(+), 1 deletion(-)
->
-> --- a/drivers/scsi/dpt/dptsig.h
-> +++ b/drivers/scsi/dpt/dptsig.h
-> @@ -85,7 +85,7 @@ typedef unsigned int sigINT;
-> /*  
-> ------------------------------------------------------------------ */
-> /* What type of processor the file is meant to run on. */
-> /* This will let us know whether to read sigWORDs as high/low or low/ 
-> high. */
-> -#define PROC_INTEL      0x00    /* Intel 80x86 */
-> +#define PROC_INTEL      0x00    /* Intel 80x86/ia64 */
-> #define PROC_MOTOROLA   0x01    /* Motorola 68K */
-> #define PROC_MIPS4000   0x02    /* MIPS RISC 4000 */
-> #define PROC_ALPHA      0x03    /* DEC Alpha */
-> @@ -104,6 +104,7 @@ typedef unsigned int sigINT;
-> #define PROC_486        0x08    /* Intel 80486 */
-> #define PROC_PENTIUM    0x10    /* Intel 586 aka P5 aka Pentium */
-> #define PROC_SEXIUM    0x20    /* Intel 686 aka P6 aka Pentium Pro  
-> or MMX */
-> +#define PROC_IA64      0x40    /* Intel IA64 processor */
->
-> /* PROC_i960: */
-> #define PROC_960RX      0x01    /* Intel 80960RC/RD */
->
-> --
-> Jeff Mahoney
-> SUSE Labs
-
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
