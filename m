@@ -1,105 +1,89 @@
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-Subject: Re: [PATCH/RFC] allow userspace to modify scsi command filter on per device basis
-Date: Fri, 13 Jun 2008 22:23:51 +0200
-Message-ID: <6cf6b73e0806131323w5b921c05jd1166ab88471bfd1@mail.gmail.com>
-References: <6cf6b73e0806131233i53942756j24a00ba18abebb47@mail.gmail.com>
-	 <20080613195448.GA30405@parisc-linux.org>
-	 <6cf6b73e0806131322n7642d2d1ne90f70c2b3728f8@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] scsi_host regression: fix scsi host leak
+Date: Fri, 13 Jun 2008 19:50:48 -0500
+Message-ID: <485315E8.1090005@cs.wisc.edu>
+References: <1213230060-11388-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020709020403050804070103"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:47526 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657AbYFMUX4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2008 16:23:56 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2868056fgg.17
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 13:23:51 -0700 (PDT)
-In-Reply-To: <6cf6b73e0806131322n7642d2d1ne90f70c2b3728f8@mail.gmail.com>
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:32868 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755354AbYFNBX3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2008 21:23:29 -0400
+Received: from [20.15.0.7] (c-75-73-66-60.hsd1.mn.comcast.net [75.73.66.60])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id m5E0or2k029019
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2008 19:50:54 -0500
+In-Reply-To: <1213230060-11388-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, pjones@redhat.com, Jens Axboe <jens.axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-2008/6/13 Adel Gadllah <adel.gadllah@gmail.com>:
-> 2008/6/13 Matthew Wilcox <matthew@wil.cx>:
->> On Fri, Jun 13, 2008 at 09:33:27PM +0200, Adel Gadllah wrote:
->>> -             if (blk_verify_command(rq->cmd, has_write_perm))
->>> +             if (blk_cmd_filter_verify_command(bd->cmd_filter, rq->cmd, bd->f_mode))
->>
->> Could you wrap to 80 columns?
->
-> yeah fixed all checkpatch.pl errors/warnings in the attached patch.
->
->>> +static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
->>> +                           const char *page, size_t count, int rw)
->>> +{
->>> +     ssize_t ret = 0;
->>> +     unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
->>> +     int cmd, status, len;
->>> +     substring_t ss;
->>> +
->>> +     memset(&okbits, 0, sizeof (okbits));
->>> +
->>> +     for (len = strlen(page); len > 0; len -= 3) {
->>> +             if (len < 2)
->>> +                     break;
->>> +             ss.from = (char *) page + ret;
->>> +             ss.to = (char *) page + ret + 2;
->>> +             ret+=3;
->>> +             status = match_hex(&ss, &cmd);
->>> +             /* either of these cases means invalid input, so do nothing. */
->>> +             if (status || cmd >= BLK_SCSI_MAX_CMDS)
->>> +                     return -EINVAL;
->>> +
->>> +             set_bit(cmd, okbits);
->>
->> set_bit is atomic.  locked ops can be quite painful on some processors.
->> Since okbits is local, the atomicity isn't necessary and you can simply
->> use __set_bit.
->
-> ok, fixed.
->
->>> +static void rcf_set_defaults(struct blk_scsi_cmd_filter *filter)
->>> +{
->>> +     /* Basic read-only commands */
->>> +     set_bit(TEST_UNIT_READY, filter->read_ok);
->>
->> The set_bit vs __set_bit comment also applies here.
->
-> fixed.
->
->>> +int blk_register_filter(struct gendisk *disk)
->>> +{
->>> +     int ret;
->>> +     struct blk_scsi_cmd_filter *filter = &disk->cmd_filter;
->>> +     struct kobject *parent = kobject_get(disk->holder_dir);
->>> +
->>> +     if(!parent) {
->>> +             return -EBUSY;
->>> +     }
->>
->> Normal style would be to write
->>
->>        if (!parent)
->>                return -EBUSY;
->
-> fixed while adressing the checkpatch.pl stuff.
->
->> (though I don't understand why no parent means we're busy)
->
-> changed to -ENODEV;
->
->>> +
->>> +     ret = kobject_init_and_add(&filter->kobj, &rcf_ktype, parent, "%s", "filter");
->>> +
->>> +     if (ret < 0)
->>> +             return ret;
->>> +
->>> +     rcf_set_defaults(filter);
->>
->> Surely we should set the bits before we make the object visible?
->
-> When is the kobject
-^^ made visisble
+This is a multi-part message in MIME format.
+--------------020709020403050804070103
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> In 2.6.25 we started using class_find_child instead of implementing
+> our own loop and lookup. The problem is that class_find_child would get a
+> reference to the host's device, then scsi_host_lookup would get an extra
+> reference to it when it called scsi_host_get().
+> 
+> In 2.6.26 we started using class_find_device, and this function also
+> gets a reference to the device, so we end up with an extra ref
+> and the host will not get released.
+> 
+> This patch is made against scsi-rc-fixes and adds a put_device to
+> balance the class_find_device() get. I kept the scsi_host_get in
+> scsi_host_lookup, because the target layer is using scsi_host_lookup
+> and it looks like it needs the SHOST_DEL check.
+> 
+> For 2.6.25 we need a similar patch, but instead of calling
+> put_device we have to call class_device_put() due to the differences
+> in the the driver model device/class_device between 2.6.25 and
+> 2.6.26. I can send a patch for 2.6.25 in a seperate mail.
+> 
+
+Attached is a patch for 2.6.25. Sorry it is late and attached instead of 
+inlined. I can send it in a new thread if you want too. I just want to 
+make sure people know it is slightly different from the scsi-rc-fixes 
+patch because of the driver model changes.
+
+--------------020709020403050804070103
+Content-Type: text/plain;
+ name="fix-host-refcount.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="fix-host-refcount.patch"
+
+In 2.6.25 we started using class_find_child instead of implementing
+our own loop and lookup. The problem is that class_find_child would get a
+reference to the host's device, then scsi_host_lookup would get an extra
+reference to it when it called scsi_host_get(). This patch drops the
+ref from class_find_child because scsi_host_get gets a ref if the host
+is not being removed.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+--- linux-2.6.25.2/drivers/scsi/hosts.c	2008-05-06 18:21:32.000000000 -0500
++++ linux-2.6.25.2.work/drivers/scsi/hosts.c	2008-06-13 19:43:15.000000000 -0500
+@@ -455,9 +455,10 @@ struct Scsi_Host *scsi_host_lookup(unsig
+ 	struct Scsi_Host *shost = ERR_PTR(-ENXIO);
+ 
+ 	cdev = class_find_child(&shost_class, &hostnum, __scsi_host_match);
+-	if (cdev)
++	if (cdev) {
+ 		shost = scsi_host_get(class_to_shost(cdev));
+-
++		class_device_put(cdev);
++	}
+ 	return shost;
+ }
+ EXPORT_SYMBOL(scsi_host_lookup);
+
+--------------020709020403050804070103--
