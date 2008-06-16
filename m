@@ -1,91 +1,43 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/4] libiscsi, iscsi_tcp, ib_iser: fix setting of can_queue with old tools.
-Date: Mon, 16 Jun 2008 10:11:33 -0500
-Message-ID: <1213629095-5078-3-git-send-email-michaelc@cs.wisc.edu>
-References: <1213629095-5078-1-git-send-email-michaelc@cs.wisc.edu>
- <1213629095-5078-2-git-send-email-michaelc@cs.wisc.edu>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10711] BUG: unable to handle kernel paging request - scsi_bus_uevent
+Date: Mon, 16 Jun 2008 08:41:04 -0700 (PDT)
+Message-ID: <20080616154104.24AA9108038@picon.linux-foundation.org>
+References: <bug-10711-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752904AbYFPPL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jun 2008 11:11:59 -0400
-In-Reply-To: <1213629095-5078-2-git-send-email-michaelc@cs.wisc.edu>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60821 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752874AbYFPPlH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jun 2008 11:41:07 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5GFf4HA022855
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2008 08:41:05 -0700
+In-Reply-To: <bug-10711-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+http://bugzilla.kernel.org/show_bug.cgi?id=10711
 
-This patch fixes two bugs that are related.
 
-1. Old tools did not set can_queue/cmds_max. This patch modifies
-libiscsi so that when we add the host we catch this and set it
-to the default.
 
-2. iscsi_tcp thought that the scsi command that was passed to
-the eh functions needed a iscsi_cmd_task allocated for it. It
-only needed a mgmt task, and now it does not matter since it
-all comes from the same pool and libiscsi handles this for the
-drivers. ib_iser had copied iscsi_tcp's code and set can_queue
-to its max - 1 to handle this. So this patch removes the max -1,
-and just sets it to the max.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/infiniband/ulp/iser/iscsi_iser.c |    1 -
- drivers/scsi/iscsi_tcp.c                 |    1 -
- drivers/scsi/libiscsi.c                  |    6 ++++++
- 3 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index c02eabd..a56931e 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -595,7 +595,6 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.name                   = "iSCSI Initiator over iSER, v." DRV_VER,
- 	.queuecommand           = iscsi_queuecommand,
- 	.change_queue_depth	= iscsi_change_queue_depth,
--	.can_queue		= ISCSI_DEF_XMIT_CMDS_MAX - 1,
- 	.sg_tablesize           = ISCSI_ISER_SG_TABLESIZE,
- 	.max_sectors		= 1024,
- 	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 0bd8b3d..2a2f009 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1865,7 +1865,6 @@ iscsi_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
- 	shost->max_id = 0;
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
--	shost->can_queue = cmds_max;
- 
- 	if (iscsi_host_add(shost, NULL))
- 		goto free_host;
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 8b4e412..299e075 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1857,6 +1857,9 @@ EXPORT_SYMBOL_GPL(iscsi_pool_free);
-  */
- int iscsi_host_add(struct Scsi_Host *shost, struct device *pdev)
- {
-+	if (!shost->can_queue)
-+		shost->can_queue = ISCSI_DEF_XMIT_CMDS_MAX;
-+
- 	return scsi_add_host(shost, pdev);
- }
- EXPORT_SYMBOL_GPL(iscsi_host_add);
-@@ -1942,6 +1945,9 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
- 	struct iscsi_session *session;
- 	struct iscsi_cls_session *cls_session;
- 	int cmd_i, scsi_cmds, total_cmds = cmds_max;
-+
-+	if (!total_cmds)
-+		total_cmds = ISCSI_DEF_XMIT_CMDS_MAX;
- 	/*
- 	 * The iscsi layer needs some tasks for nop handling and tmfs,
- 	 * so the cmds_max must at least be greater than ISCSI_MGMT_CMDS_MAX
+------- Comment #9 from rjw@sisk.pl  2008-06-16 08:41 -------
+On Monday, 16 of June 2008, Zdenek Kabelac wrote:
+> Hi
+> 
+> I've not see this bug over quite a few recent reboots - so I'd would
+> have considered this bug also fixed for  me - if the problem reapers
+> I'll reopen this bug.
+> 
+> (Well if there was no commit fixing this bug directly - it's hard to
+> be sure the bug is fixed)
+> 
+> Zdenek
+
+
 -- 
-1.5.4.1
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
