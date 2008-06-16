@@ -1,77 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 10915] New: echo min_power >
-	/sys/class/scsi_host/host0/active_mode causes problem
-Date: Sun, 15 Jun 2008 21:00:10 -0500
-Message-ID: <1213581610.3517.44.camel@localhost.localdomain>
-References: <bug-10915-10286@http.bugzilla.kernel.org/>
-	 <20080615180146.8abb9450.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH/RFC v2] allow userspace to modify scsi command filter
+ on per device basis
+Date: Mon, 16 Jun 2008 11:55:24 +0900
+Message-ID: <20080616115952W.fujita.tomonori@lab.ntt.co.jp>
+References: <6cf6b73e0806131322n7642d2d1ne90f70c2b3728f8@mail.gmail.com>
+	<6cf6b73e0806131323w5b921c05jd1166ab88471bfd1@mail.gmail.com>
+	<6cf6b73e0806132351r20fe8f91o479cd102978fa483@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45065 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751423AbYFPCAQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Jun 2008 22:00:16 -0400
-In-Reply-To: <20080615180146.8abb9450.akpm@linux-foundation.org>
+Received: from sh.osrg.net ([192.16.179.4]:47061 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750855AbYFPCz4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Jun 2008 22:55:56 -0400
+In-Reply-To: <6cf6b73e0806132351r20fe8f91o479cd102978fa483@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, cijoml@volny.cz
+To: adel.gadllah@gmail.com
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, pjones@redhat.com, jens.axboe@oracle.com
 
-On Sun, 2008-06-15 at 18:01 -0700, Andrew Morton wrote:
-> On Sun, 15 Jun 2008 01:52:26 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Sat, 14 Jun 2008 08:51:16 +0200
+"Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+
+> Attached a new version of the patch.
+> Moved the sysfs entry up one level (to not be in the "holders"
+> directory) and renamed it t cmd_filter (reflects its purpose better
+> than "filter").
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=10915
-> > 
-> >            Summary: echo min_power > /sys/class/scsi_host/host0/active_mode
-> >                     causes problem
-> >            Product: File System
-> >            Version: 2.5
-> >      KernelVersion: 2.6.25.6
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: SysFS
-> >         AssignedTo: greg@kroah.com
-> >         ReportedBy: cijoml@volny.cz
-> > 
-> > 
-> > Latest working kernel version: unknown
-> > Earliest failing kernel version: unknown
-> > Distribution: Debian testing
-> > Hardware Environment: HP Compaq 6910p
-> > Software Environment: Debian testing, sysfs
-> > Problem Description:
-> > 
-> > In accident I proceed
-> > echo min_power > /sys/class/scsi_host/host0/active_mode
-> > 
-> > which causes HIGH cpu load, echo wasn't killable so reboot was only solution :(
-> > 
-> > Steps to reproduce:
-> > proceed command
+> -----------------------------
 > 
-> For reasons which escape me, there is no description text in bugzilla
-> for this report, yet the reporter entered some.
+> From: Peter Jones <pjones@redhat.com>
 > 
-> Anyway.  Could someone please refile this under scsi?  Or fix the bug ;)
+> This patch exports the per-gendisk command filter to user space through
+> sysfs, so it can be changed by the system administrator.
+> 
+> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> Signed-off-by: Peter Jones <pjones@redhat.com>
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
 
-Um ... actually, maybe not.  The active_mode file is read only (it has a
-NULL store method).  It's designed to show what mode the host is
-activated in "initiator", "target" (or both or unknown).  If echoing
-something to a read only sysfs file with no actual store method is
-causing this behaviour, the root cause has to be somewhere in sysfs.
-
-However, since the file has nothing to do with power saving ... unless
-some driver I can't find is trying to duplicate it, so there's no reason
-to try to echo "min_power" to it, so some of the details on this report
-might bear further investigation ...
-
-James
-
-
+I think that the scsi command filter infrastructure should work with
+all the interfaces, bsg, SG_IO, and sg. This doesn't work with sg,
+right?
