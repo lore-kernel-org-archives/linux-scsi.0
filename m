@@ -1,8 +1,8 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter
  on per device basis
-Date: Wed, 18 Jun 2008 07:40:29 +0900
-Message-ID: <20080618074505V.fujita.tomonori@lab.ntt.co.jp>
+Date: Wed, 18 Jun 2008 07:49:53 +0900
+Message-ID: <20080618075435S.fujita.tomonori@lab.ntt.co.jp>
 References: <6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com>
 	<20080618051447L.fujita.tomonori@lab.ntt.co.jp>
 	<48583074.8010909@redhat.com>
@@ -10,10 +10,10 @@ Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:55080 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:41653 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754439AbYFQWlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jun 2008 18:41:02 -0400
+	id S1755173AbYFQWuV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jun 2008 18:50:21 -0400
 In-Reply-To: <48583074.8010909@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -41,26 +41,16 @@ Peter Jones <pjones@redhat.com> wrote:
 > leaves intact the defaults from the current list used by SG_IO and bsg 
 > (and maybe some other interfaces?), which most programs have been using 
 > for quite some time.
-
-I know that. I've tried to merge this patch in the past.
-
-
+> 
 > If anything, sg is overdue with converting to using the same command 
 > filter as other direct-scsi-command mechanisms.  sg_allow_access() is 
 > really not something we should be keeping.
-> 
-> I don't think this is a reason not to merge the patch; in fact, quite 
-> the opposite.  This is another case where we've got a specific filter in 
-> one code path that doesn't match any of the others.  Fixing it is 
-> something that needs to be done.  Making it configurable from the 
-> userland at the same time effectively aleviates the pain that could 
-> result from doing so.
 
-Even if you can configure the access permissions from the userland,
-the kernel needs to configure the default access permissions. Seemed
-it's hard for everyone to agree on what are proper default permissions
-(I can't recall when this topic was discussed, at LSF'07 or
-somewhere).
+Seems that there is some confusion in the interfaces.
 
-Well, filtering SCSI commands is not a good idea, so removing the
-filtering mechanism would be a better option but...
+We have theree interfaces; scsi_ioctl, bsg, and sg, which let us to
+execute SCSI commands from the userland.
+
+All the interfaces support SG_IO (and they also support their own
+method). But only scsi_ioctl and bsg use blk_verify_command and sg has
+the own permission table.
