@@ -1,49 +1,52 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Peter Jones <pjones@redhat.com>
 Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter
  on per device basis
-Date: Wed, 18 Jun 2008 05:14:47 +0900
-Message-ID: <20080618051447L.fujita.tomonori@lab.ntt.co.jp>
-References: <6cf6b73e0806152249r19cb405ct9d5a33960e619348@mail.gmail.com>
-	<20080616151328Q.fujita.tomonori@lab.ntt.co.jp>
-	<6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com>
+Date: Tue, 17 Jun 2008 17:45:24 -0400
+Message-ID: <48583074.8010909@redhat.com>
+References: <6cf6b73e0806152249r19cb405ct9d5a33960e619348@mail.gmail.com>	<20080616151328Q.fujita.tomonori@lab.ntt.co.jp>	<6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com> <20080618051447L.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:58232 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbYFQURS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2008 16:17:18 -0400
-In-Reply-To: <6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:47196 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757686AbYFQVqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jun 2008 17:46:14 -0400
+In-Reply-To: <20080618051447L.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adel.gadllah@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, matthew@wil.cx, linux-scsi@vger.kernel.org, pjones@redhat.com, jens.axboe@oracle.com, dgilbert@interlog.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: adel.gadllah@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, dgilbert@interlog.com
 
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-Subject: [PATCH/RFC v3] allow userspace to modify scsi command filter on per device basis
-Date: Mon, 16 Jun 2008 11:22:56 +0200
+FUJITA Tomonori wrote:
 
-> 2008/6/16 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
-> > No, sg has own command filtering mechanism, see sg_allow_access().
-> >
-> > When we discussed the per-gendisk command filter before, I think that
-> > we agreed that we had better to have one command filtering mechanism.
-> 
-> The attached patch converts sg to use the cmd_filter too.
-> The sg driver seems to verify commands for read access only. I have
+> Well, this changes sg behaviour since sg's allow_ops filter has a
+> access permission different from blk_verify_command filter's.
+ >
+> I guess that the first thing you need to do is that figuring out a
+> proper access permission for each command, which sg maintainer, etc
+> can agree. It's pretty hard and that's the reason why this patch has
+> not been merged for years, I think.
 
-sg driver lets you perform any command if you have the write
-permission.
+I don't think this logic is sound.
 
+The patch makes it so distros (and individuals, if they're so inclined) 
+can configure the filter correctly for whatever hardware is present, 
+regardless of the kernel's ideas of which commands are correct.  It 
+leaves intact the defaults from the current list used by SG_IO and bsg 
+(and maybe some other interfaces?), which most programs have been using 
+for quite some time.
 
-> not changed this behaviour to avoid breaking things (userspace),
-> but if we want to change this I can submit another patch.
+If anything, sg is overdue with converting to using the same command 
+filter as other direct-scsi-command mechanisms.  sg_allow_access() is 
+really not something we should be keeping.
 
-Well, this changes sg behaviour since sg's allow_ops filter has a
-access permission different from blk_verify_command filter's.
+I don't think this is a reason not to merge the patch; in fact, quite 
+the opposite.  This is another case where we've got a specific filter in 
+one code path that doesn't match any of the others.  Fixing it is 
+something that needs to be done.  Making it configurable from the 
+userland at the same time effectively aleviates the pain that could 
+result from doing so.
 
-I guess that the first thing you need to do is that figuring out a
-proper access permission for each command, which sg maintainer, etc
-can agree. It's pretty hard and that's the reason why this patch has
-not been merged for years, I think.
+-- 
+   Peter
