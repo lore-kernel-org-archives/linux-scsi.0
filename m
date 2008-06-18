@@ -1,41 +1,51 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter
-	on per device basis
-Date: Tue, 17 Jun 2008 21:13:31 -0400
-Message-ID: <20080618011331.GA32633@osc.edu>
-References: <6cf6b73e0806152249r19cb405ct9d5a33960e619348@mail.gmail.com> <20080616151328Q.fujita.tomonori@lab.ntt.co.jp> <6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com> <20080618051447L.fujita.tomonori@lab.ntt.co.jp> <48583074.8010909@redhat.com> <48584252.5030901@interlog.com>
+From: "Pat Read" <tuxman99999@gmail.com>
+Subject: Re: [regression] CD-DA delay needed after insertion
+Date: Wed, 18 Jun 2008 00:18:58 -0500
+Message-ID: <276512670806172218u2ab4fa1fkf627f05461a29e8c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:37144 "EHLO marge.padd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758300AbYFRBNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jun 2008 21:13:37 -0400
+Received: from ug-out-1314.google.com ([66.249.92.172]:34640 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753249AbYFRFTA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2008 01:19:00 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so713045ugf.16
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2008 22:18:58 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <48584252.5030901@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Peter Jones <pjones@redhat.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, adel.gadllah@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-dgilbert@interlog.com wrote on Wed, 18 Jun 2008 01:01 +0200:
-> IMO all command filtering should be dropped
-
-To add fuel to the fire:  I carry a patch to hack around the SCSI
-filtering invoked by bsg to be able to use an object-based storage
-device (OSD).  These devices have a fairly comprehensive policy
-framework that filters commands based on the object being accessed,
-and how it is accessed.  User-space applications acquire credentials
-from a server somewhere on the network and craft SCSI commands that
-present these credentials to the device, which also likely sits
-remotely and is accessed via iSCSI or similar.
-
-OSD commands all have the same opcode 0x7f (variable length CDB),
-and the "service action" (read, write, create, flush, ...) is deeper
-in the CDB, along with the credentials.  Filtering on the single
-byte 0x7f isn't useful, and the local kernel really has no role in
-mediating device access.  Linux provides SCSI initiator services
-including discovery, transport, etc. but has no role in
-authenticating how applications use OSDs.
-
-		-- Pete
+PiBXZSd2ZSBmb3VuZCBhbm90aGVyIHJlZ3Jlc3Npb24gaW4gMi42LjI1IHcuci50LiBDRCBtZWRp
+YSBjaGFuZ2Ugb24gUFMzLgo+Cj4gSXQgY2FuIGVhc2lseSBiZSByZXByb2R1Y2VkIGJ5Ogo+Cj4g
+ICAxLiBJbnNlcnRpbmcgYW4gYXVkaW8gQ0QKPiAgIDIuIFJ1bm5pbmcgdGhlIGZvbGxvd2luZyBj
+b21tYW5kIGFzIHNvb24gYXMgdGhlIGJsdWUgQ0QvRFZEL0JEIGRyaXZlIExFRAo+ICAgICAgc3Rv
+cHMgYmxpbmtpbmcgYW5kIGlzIGxpdCBjb250aW51b3VzbHk6Cj4KPiAJIGNkcGFyYW5vaWEgLVog
+LXEgMS0xWzoxXSAvZGV2L251bGwgfHwgZWNobyBmYWlsZWQKPgo+IE9uIDIuNi4yNSAoYW5kIGN1
+cnJlbnQgbWFpbmxpbmUpLCB5b3UgaGF2ZSB0byB3YWl0IGNhLiAxMCBzZWNvbmRzIGFmdGVyCj4g
+aW5zZXJ0aW9uLCBvciBpdCB3aWxsIGZhaWwuCj4gT24gMi42LjI0IGFuZCBvbGRlciwgaXQganVz
+dCB3b3JrcyBpbW1lZGlhdGVseS4KPgo+IEl0IGRvZXMgbm90IG1hdHRlciB3aGV0aGVyCj4gaHR0
+cDovL2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4JTJGa2VybmVsJTJGZ2l0JTJGamVqYiUyRnNjc2kt
+cmMtZml4ZXMtMi42LmdpdDthPWNvbW1pdGRpZmZfcGxhaW47aD1kMWRhZWFiZjBkYTViZmExOTQz
+MjcyY2U1MDhlMmJhNzg1NzMwYmYwCj4gaXMgYXBwbGllZCBvciBub3QuCj4KPiBXZSBoYXZlbid0
+IGJpc2VjdGVkIGl0IHlldC4KPgo+IFdpdGgga2luZCByZWdhcmRzLAo+Cj4gR2VlcnQgVXl0dGVy
+aG9ldmVuCj4gU29mdHdhcmUgQXJjaGl0ZWN0Cj4KPiBTb255IFRlY2hzb2Z0IENlbnRyZQo+IFRo
+ZSBDb3Jwb3JhdGUgVmlsbGFnZSDDgsK3IERhIFZpbmNpbGFhbiA3LUQxIMOCwrcgQi0xOTM1IFph
+dmVudGVtIMOCwrcgQmVsZ2l1bQo+Cj4gUGhvbmU6ICAgICszMiAoMCkyIDcwMCA4NDUzCj4gRmF4
+OiAgICAgICszMiAoMCkyIDcwMCA4NjIyCj4gRS1tYWlsOiAgIEdlZXJ0LlV5dHRlcmhvZXZlbkBz
+b255Y29tLmNvbQo+IEludGVybmV0OiBodHRwOi8vd3d3LnNvbnktZXVyb3BlLmNvbS8KPgo+IFNv
+bnkgVGVjaG5vbG9neSBhbmQgU29mdHdhcmUgQ2VudHJlIEV1cm9wZQo+IEEgZGl2aXNpb24gb2Yg
+U29ueSBTZXJ2aWNlIENlbnRyZSAoRXVyb3BlKSBOLlYuCj4gUmVnaXN0ZXJlZCBvZmZpY2U6IFRl
+Y2hub2xvZ2llbGFhbiA3IMOCwrcgQi0xODQwIExvbmRlcnplZWwgw4LCtyBCZWxnaXVtCj4gVkFU
+IEJFIDA0MTMuODI1LjE2MCDDgsK3IFJQUiBCcnVzc2Vscwo+IEZvcnRpcyAyOTMtMDM3NjgwMC0x
+MCBHRUJBLUJFLUJCCj4gLS0tNTg0MzQ5MzgxLTE4MjI1NzgxNzctMTIxMzM1ODI0MT06MjE0MS0t
+CgpDdXJpb3VzLCBtaWdodCBzb21lb25lIGxvb2sgYXQKaHR0cDovL2J1Z3ppbGxhLmtlcm5lbC5v
+cmcvc2hvd19idWcuY2dpP2lkPTEwOTAxIGFuZCB0ZWxsIG1lIGlmIHRoaXMKaXMgdGhlIHNhbWUg
+aXNzdWUgYXMgdGhlIGFib3ZlIHJlZ3Jlc3Npb24/CgpJJ20gY3VycmVudGx5IGxvb2tpbmcgYXQg
+dGhlIHNyX3Rlc3RfdW5pdF9yZWFkeSgpIGZ1bmN0aW9uIGluCmRyaXZlcnMvc2NzaS9zci5jIChh
+cyB0aGlzIGlzIG5ldyB0byAyLjYuMjUpLCBhbHRob3VnaCBUZWp1biBIZW8gc2VlbXMKc2tlcHRp
+Y2FsIHRoYXQgdGhlIFRVUiBmdW5jdGlvbnMgYXJlIHRoZSBzb3VyY2Ugb2YgdGhpcyBpc3N1ZSAo
+YmFzZWQKb24gaGlzIGxhdGVzdCBjb21tZW50IGluIEJ1Z3ppbGxhIHRyYWNrZXIpLiAgVGhhbmtz
+IGFsc28gdG8gVGVqdW4gZm9yCnBvaW50aW5nIG1lIHRvIHRoaXMgdGhyZWFkLgoKVGhhbmtzLAog
+ICAgICAgIFBhdHJpY2sgQS4gUmVhZAo=
