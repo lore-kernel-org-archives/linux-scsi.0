@@ -1,51 +1,65 @@
-From: "Pat Read" <tuxman99999@gmail.com>
-Subject: Re: [regression] CD-DA delay needed after insertion
-Date: Wed, 18 Jun 2008 00:18:58 -0500
-Message-ID: <276512670806172218u2ab4fa1fkf627f05461a29e8c@mail.gmail.com>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter on per device basis
+Date: Wed, 18 Jun 2008 09:33:42 +0200
+Message-ID: <6cf6b73e0806180033y1fccba1mb772f59695a9fb53@mail.gmail.com>
+References: <6cf6b73e0806152249r19cb405ct9d5a33960e619348@mail.gmail.com>
+	 <20080616151328Q.fujita.tomonori@lab.ntt.co.jp>
+	 <6cf6b73e0806160222g19d7229dl6a650e13ab36c03b@mail.gmail.com>
+	 <20080618051447L.fujita.tomonori@lab.ntt.co.jp>
+	 <48583074.8010909@redhat.com> <48584252.5030901@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:34640 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753249AbYFRFTA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2008 01:19:00 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so713045ugf.16
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2008 22:18:58 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.176]:4003 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230AbYFRHdp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2008 03:33:45 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so109344waf.23
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2008 00:33:43 -0700 (PDT)
+In-Reply-To: <48584252.5030901@interlog.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: dgilbert@interlog.com
+Cc: Peter Jones <pjones@redhat.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org
 
-PiBXZSd2ZSBmb3VuZCBhbm90aGVyIHJlZ3Jlc3Npb24gaW4gMi42LjI1IHcuci50LiBDRCBtZWRp
-YSBjaGFuZ2Ugb24gUFMzLgo+Cj4gSXQgY2FuIGVhc2lseSBiZSByZXByb2R1Y2VkIGJ5Ogo+Cj4g
-ICAxLiBJbnNlcnRpbmcgYW4gYXVkaW8gQ0QKPiAgIDIuIFJ1bm5pbmcgdGhlIGZvbGxvd2luZyBj
-b21tYW5kIGFzIHNvb24gYXMgdGhlIGJsdWUgQ0QvRFZEL0JEIGRyaXZlIExFRAo+ICAgICAgc3Rv
-cHMgYmxpbmtpbmcgYW5kIGlzIGxpdCBjb250aW51b3VzbHk6Cj4KPiAJIGNkcGFyYW5vaWEgLVog
-LXEgMS0xWzoxXSAvZGV2L251bGwgfHwgZWNobyBmYWlsZWQKPgo+IE9uIDIuNi4yNSAoYW5kIGN1
-cnJlbnQgbWFpbmxpbmUpLCB5b3UgaGF2ZSB0byB3YWl0IGNhLiAxMCBzZWNvbmRzIGFmdGVyCj4g
-aW5zZXJ0aW9uLCBvciBpdCB3aWxsIGZhaWwuCj4gT24gMi42LjI0IGFuZCBvbGRlciwgaXQganVz
-dCB3b3JrcyBpbW1lZGlhdGVseS4KPgo+IEl0IGRvZXMgbm90IG1hdHRlciB3aGV0aGVyCj4gaHR0
-cDovL2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4JTJGa2VybmVsJTJGZ2l0JTJGamVqYiUyRnNjc2kt
-cmMtZml4ZXMtMi42LmdpdDthPWNvbW1pdGRpZmZfcGxhaW47aD1kMWRhZWFiZjBkYTViZmExOTQz
-MjcyY2U1MDhlMmJhNzg1NzMwYmYwCj4gaXMgYXBwbGllZCBvciBub3QuCj4KPiBXZSBoYXZlbid0
-IGJpc2VjdGVkIGl0IHlldC4KPgo+IFdpdGgga2luZCByZWdhcmRzLAo+Cj4gR2VlcnQgVXl0dGVy
-aG9ldmVuCj4gU29mdHdhcmUgQXJjaGl0ZWN0Cj4KPiBTb255IFRlY2hzb2Z0IENlbnRyZQo+IFRo
-ZSBDb3Jwb3JhdGUgVmlsbGFnZSDDgsK3IERhIFZpbmNpbGFhbiA3LUQxIMOCwrcgQi0xOTM1IFph
-dmVudGVtIMOCwrcgQmVsZ2l1bQo+Cj4gUGhvbmU6ICAgICszMiAoMCkyIDcwMCA4NDUzCj4gRmF4
-OiAgICAgICszMiAoMCkyIDcwMCA4NjIyCj4gRS1tYWlsOiAgIEdlZXJ0LlV5dHRlcmhvZXZlbkBz
-b255Y29tLmNvbQo+IEludGVybmV0OiBodHRwOi8vd3d3LnNvbnktZXVyb3BlLmNvbS8KPgo+IFNv
-bnkgVGVjaG5vbG9neSBhbmQgU29mdHdhcmUgQ2VudHJlIEV1cm9wZQo+IEEgZGl2aXNpb24gb2Yg
-U29ueSBTZXJ2aWNlIENlbnRyZSAoRXVyb3BlKSBOLlYuCj4gUmVnaXN0ZXJlZCBvZmZpY2U6IFRl
-Y2hub2xvZ2llbGFhbiA3IMOCwrcgQi0xODQwIExvbmRlcnplZWwgw4LCtyBCZWxnaXVtCj4gVkFU
-IEJFIDA0MTMuODI1LjE2MCDDgsK3IFJQUiBCcnVzc2Vscwo+IEZvcnRpcyAyOTMtMDM3NjgwMC0x
-MCBHRUJBLUJFLUJCCj4gLS0tNTg0MzQ5MzgxLTE4MjI1NzgxNzctMTIxMzM1ODI0MT06MjE0MS0t
-CgpDdXJpb3VzLCBtaWdodCBzb21lb25lIGxvb2sgYXQKaHR0cDovL2J1Z3ppbGxhLmtlcm5lbC5v
-cmcvc2hvd19idWcuY2dpP2lkPTEwOTAxIGFuZCB0ZWxsIG1lIGlmIHRoaXMKaXMgdGhlIHNhbWUg
-aXNzdWUgYXMgdGhlIGFib3ZlIHJlZ3Jlc3Npb24/CgpJJ20gY3VycmVudGx5IGxvb2tpbmcgYXQg
-dGhlIHNyX3Rlc3RfdW5pdF9yZWFkeSgpIGZ1bmN0aW9uIGluCmRyaXZlcnMvc2NzaS9zci5jIChh
-cyB0aGlzIGlzIG5ldyB0byAyLjYuMjUpLCBhbHRob3VnaCBUZWp1biBIZW8gc2VlbXMKc2tlcHRp
-Y2FsIHRoYXQgdGhlIFRVUiBmdW5jdGlvbnMgYXJlIHRoZSBzb3VyY2Ugb2YgdGhpcyBpc3N1ZSAo
-YmFzZWQKb24gaGlzIGxhdGVzdCBjb21tZW50IGluIEJ1Z3ppbGxhIHRyYWNrZXIpLiAgVGhhbmtz
-IGFsc28gdG8gVGVqdW4gZm9yCnBvaW50aW5nIG1lIHRvIHRoaXMgdGhyZWFkLgoKVGhhbmtzLAog
-ICAgICAgIFBhdHJpY2sgQS4gUmVhZAo=
+2008/6/18 Douglas Gilbert <dgilbert@interlog.com>:
+> Peter Jones wrote:
+>>
+>> FUJITA Tomonori wrote:
+>>
+>>> Well, this changes sg behaviour since sg's allow_ops filter has a
+>>> access permission different from blk_verify_command filter's.
+>>
+>>  >
+>>>
+>>> I guess that the first thing you need to do is that figuring out a
+>>> proper access permission for each command, which sg maintainer, etc
+>>> can agree. It's pretty hard and that's the reason why this patch has
+>>> not been merged for years, I think.
+>>
+>> I don't think this logic is sound.
+>
+> That depends on your viewpoint.
+>
+> IMO all command filtering should be dropped **.
+
+Here is the last discussion to this topic.
+http://thread.gmane.org/gmane.linux.scsi/26229/focus=26229
+Seems like people wanted to remove the filter back there but Linus was
+against it.
+So we have to options let people keep running there apps as root or
+with sbit or make the filter configurable.
+I would prefer the later....
+
+ We now have
+> ATA commands tunnelled through SCSI commands (e.g. via SAT)
+> and will soon have encrypted SCSI commands. Are per device
+> command filters being proposed? If not, why should we have
+> the same SCSI command filter for a USB BD drive and a SCSI
+> enclosure services (SES) device controlling a FC array, just
+> because they are on the same system?
+
+The patch does the filtering per device. So each device can have its
+own filtering logic.
