@@ -1,89 +1,72 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] libata support for rotation speed
-Date: Thu, 19 Jun 2008 13:13:38 -0600
-Message-ID: <20080619191337.GO4392@parisc-linux.org>
-References: <20080619160216.GH4392@parisc-linux.org> <20080619175904.GK4392@parisc-linux.org> <1213899895.3501.45.camel@localhost.localdomain> <20080619183113.GM4392@parisc-linux.org> <485AAD0D.9000205@garzik.org>
+From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting root
+Date: Thu, 19 Jun 2008 12:52:40 -0700
+Message-ID: <20080619195240.GX19934@one-eyed-alien.net>
+References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <48118DDD.8010507@s5r6.in-berlin.de> <Pine.LNX.4.64.0804251110400.758@sbz-30.cs.Helsinki.FI> <20080425091122.GA14990@parisc-linux.org> <20080619182310.GA30833@parisc-linux.org> <485AA7EA.6080105@s5r6.in-berlin.de> <20080619185419.GN4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OrT4iOlIQZp3kw4S"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <485AAD0D.9000205@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20080619185419.GN4392-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Cc: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>, Pekka J Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dsd-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vegardno-6miFZF/5cTBuMpJDpNschA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 19, 2008 at 03:01:33PM -0400, Jeff Garzik wrote:
-> Matthew Wilcox wrote:
-> >On Thu, Jun 19, 2008 at 01:24:55PM -0500, James Bottomley wrote:
-> >>This looks like it can be called for ATA_DEV_ATAPI as well, in which
-> >>case it's an illegal page to ask for.
-> >
-> >I was under the impression that this entire file is only used for
-> >non-atapi devices.
-> 
-> Correct.  That code path is not travelled by ATAPI.
 
-Thanks, Jeff.  Here's version three, including the form factor from word
-168:
+--OrT4iOlIQZp3kw4S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, Jun 19, 2008 at 12:54:19PM -0600, Matthew Wilcox wrote:
+> On Thu, Jun 19, 2008 at 08:39:38PM +0200, Stefan Richter wrote:
+> > The problem is AFAIU not exactly how many Scsi_Host instances (initiato=
+r=20
+> > port representations, or something remotely related to that) are=20
+> > instantiated, but rather _when_ they are instantiated.  On multi=20
+> > protocol buses or networks like USB and FireWire, it makes sense to=20
+> > create the SCSI initiator port representation when we discovered that=
+=20
+> > there are actually SCSI targets on the bus or network.
+>=20
+> I'm not convinced of that.  Why shouldn't we create one scsi host for
+> all USB scsi devices?  I know that today there's a certain amount of
+> per-device state stored in the scsi_host, but that should be fixable.
 
-Add support for VPD page b1 to libata
+First, there are usb-storage devices which are USB<->SCSI bridges and
+therefore support multiple target devices.
 
-SCSI VPD page b1 reports the nominal rotation speed and physical size
-of the device.  Devices that conform to ATA-8 can return this information
-in words 217 and 168 of the identify data.
+Second, you would still need multiple hosts when you have more than 15
+target USB devices, anyway.
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+Matt
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2e6e162..c08c3b9 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1778,7 +1778,9 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- 	const u8 pages[] = {
- 		0x00,	/* page 0x00, this page */
- 		0x80,	/* page 0x80, unit serial no page */
--		0x83	/* page 0x83, device ident page */
-+		0x83,	/* page 0x83, device ident page */
-+		0x89,	/* page 0x89, ata info page */
-+		0xb1,	/* page 0xb1, block device characteristics page */
- 	};
- 
- 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-@@ -1899,6 +1901,19 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
- }
- 
-+static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
-+{
-+	rbuf[1] = 0xb1;
-+	rbuf[3] = 0x3c;
-+	if (ata_id_major_version(args->id) > 7) {
-+		rbuf[4] = args->id[217] >> 8;
-+		rbuf[5] = args->id[217];
-+		rbuf[7] = args->id[168] & 0xf;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-@@ -2922,6 +2937,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 		case 0x89:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			break;
-+		case 0xb1:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
-+			break;
- 		default:
- 			ata_scsi_invalid_field(cmd, done);
- 			break;
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+E:  You run this ship with Windows?!  YOU IDIOT!
+L:  Give me a break, it came bundled with the computer!
+					-- ESR and Lan Solaris
+User Friendly, 12/8/1998
+
+--OrT4iOlIQZp3kw4S
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFIWrkIHL9iwnUZqnkRAlwyAJ9dfiPShOEkdDLe+BCTiDgGQR/5KgCfeNAW
+dA/8Sw84JaKVMDwaSrTVMHI=
+=ySY4
+-----END PGP SIGNATURE-----
+
+--OrT4iOlIQZp3kw4S--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
