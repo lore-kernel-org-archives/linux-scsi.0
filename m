@@ -1,42 +1,34 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: ESP scsi driver.
-Date: Thu, 19 Jun 2008 20:26:35 -0700 (PDT)
-Message-ID: <20080619.202635.89650161.davem@davemloft.net>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [Security] [PATCH 0/3 2.6.27] cxgb3i: Add iSCSI driver
+Date: Thu, 19 Jun 2008 10:05:49 -0700
+Message-ID: <20080619170549.GA31091@kroah.com>
+References: <8A71B368A89016469F72CD08050AD334D71285@maui.asicdesigners.com> <8A71B368A89016469F72CD08050AD334D7128B@maui.asicdesigners.com> <20080619065212.GA9107@kroah.com> <8A71B368A89016469F72CD08050AD33402F43B5E@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40532
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751226AbYFTD0g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jun 2008 23:26:36 -0400
+Received: from bombadil.infradead.org ([18.85.46.34]:40355 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714AbYFTDjQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 23:39:16 -0400
+Content-Disposition: inline
+In-Reply-To: <8A71B368A89016469F72CD08050AD33402F43B5E@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: michaelc@cs.wisc.edu, Divy Le Ray <divy@chelsio.com>, netdev@vger.kernel.org, security@kernel.org, open-iscsi@googlegroups.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Thu, Jun 19, 2008 at 08:45:43AM -0700, Karen Xie wrote:
+> Greg,
+> 
+> We'd like to export security_inet_conn_established() from
+> security/security.c.
 
-James, please pull to get these ESP scsi driver fixes.
+Ok, then you need the linux-security-module@vger.kernel.org address,
+which is where the linux security interface maintainer and developers
+are at.  security@kernel.org is the kernel's "security team" address
+where vulnerabilities and other potential problems are reported and then
+fixed.
 
-Thanks a lot!
+thanks,
 
-The following changes since commit 9bedbcb207ed9a571b239231d99c8fd4a34ae24d:
-  Dave Airlie (1):
-        agp: brown paper bag patch - put back two lines that got lost
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/esp-2.6.git master
-
-David S. Miller (2):
-      esp: Fix OOPS in esp_reset_cleanup().
-      esp: Correct chip ID probing sequence.
-
-Frans Pop (1):
-      esp: correct module name in Kconfig help for SCSI_SUNESP
-
- drivers/scsi/Kconfig    |    6 ++++--
- drivers/scsi/esp_scsi.c |   32 +++++++++++++++++++++-----------
- drivers/scsi/esp_scsi.h |    1 +
- 3 files changed, 26 insertions(+), 13 deletions(-)
+greg k-h
