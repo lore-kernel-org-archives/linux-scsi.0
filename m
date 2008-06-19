@@ -1,63 +1,142 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] scsi_debug support for rotation speed
-Date: Thu, 19 Jun 2008 10:02:58 -0600
-Message-ID: <20080619160258.GI4392@parisc-linux.org>
+Subject: [DO NOT APPLY] sd take advantage of rotation speed
+Date: Thu, 19 Jun 2008 10:03:42 -0600
+Message-ID: <20080619160342.GJ4392@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39433 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:39435 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761629AbYFSQC7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 12:02:59 -0400
+	with ESMTP id S1754152AbYFSQDn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 12:03:43 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi@vger.kernel.org
 
-Add support for VPD page b1 to scsi_debug
+Use the noop elevator by default for drives that do not spin
 
-SCSI VPD page b1 reports the nominal rotation speed of the device.
-Since scsi_debug is ram-based, claim to be a non-rotating medium.
+[Not for applying]
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+SSDs do not benefit from the elevator.  It just wastes precious CPU cycles.
+By selecting the noop elevator by default, we can shave a few microseconds
+off each IO.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index f6600bf..91d7e05 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -646,6 +646,14 @@ static int inquiry_evpd_b0(unsigned char * arr)
- 	return sizeof(vpdb0_data);
+I've brazenly stolen sd_vpd_inquiry from mkp's patch here:
+
+http://marc.info/?l=linux-scsi&m=121264354724277&w=2
+
+No need to have two copies of that ... but this will conflict with his code.
+
+On to the self-criticism:
+
+I don't intend the final version of this patch to include a printk for
+the RPM or even a printk to say we switched IO elevator.  I think we're
+too verbose in SCSI as it is.
+
+I think there's an opportunity to improve sd_vpd_inquiry() to remove
+some of the duplicate code between sd_set_elevator() and sd_block_limits,
+but it's not terribly important.
+
+The switching of the elevators isn't particularly nice.  I assume that
+elevator_init("noop") cannot fail, which isn't true.  It would be nice
+to use the #if 0 block instead, but that causes a null ptr dereference
+inside sysfs -- I suspect something isn't set up correctly.
+
+Not-signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 01cefbb..1c5a296 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1534,6 +1534,79 @@ defaults:
+ 	sdkp->DPOFUA = 0;
  }
  
-+static int inquiry_evpd_b1(unsigned char *arr)
++static int sd_vpd_inquiry(struct scsi_disk *sdkp, unsigned char *buffer, u8 page, u8 len)
 +{
-+	memset(arr, 0, 0x3c);
-+	arr[0] = 0;
-+	arr[1] = 1;
++	int result;
++	unsigned char cmd[16];
++	struct scsi_sense_hdr sshdr;
 +
-+	return 0x3c;
++	memset(cmd, 0, 16);
++	cmd[0] = INQUIRY;
++	cmd[1] = 1;		/* EVPD */
++	cmd[2] = page;		/* VPD page */
++	cmd[3] = len;
++	
++	result = scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer,
++				  len, &sshdr, SD_TIMEOUT, SD_MAX_RETRIES);
++
++	if (media_not_present(sdkp, &sshdr))
++		return -EIO;
++
++	if (result) {
++		sd_printk(KERN_ERR, sdkp, "EVPD Inquiry failed\n");
++		return -EIO;
++	}
++
++	if (buffer[1] != page) {
++		sd_printk(KERN_ERR, sdkp, "Page code not %2x (%2x)\n", page,
++			  buffer[1]);
++		return -EIO;
++	}
++
++	return buffer[3];
 +}
++
++static void sd_set_elevator(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	struct scsi_device *sdp = sdkp->device;
++	int res, i, rotation;
++
++	res = sd_vpd_inquiry(sdkp, buffer, 0, 255);
++	if (res < 0)
++		return;
++
++	for (i = 0; i < buffer[3]; i++)
++		if (buffer[i + 4] == 0xb1)
++			goto found;
++	return;
++
++ found:
++	res = sd_vpd_inquiry(sdkp, buffer, 0xb1, 64);
++	if (res < 0)
++		return;
++
++	rotation = (buffer[4] << 8) | buffer[5];
++
++	if (rotation == 0)
++		return;
++
++	if (rotation == 0x0001) {
++#if 0
++		res = elv_iosched_store(sdp->request_queue, "noop", 5);
++		if (res >= 0)
++			sd_printk(KERN_INFO, sdkp,
++						"Switched to noop elevator\n");
++#else
++		elevator_exit(sdp->request_queue->elevator);
++		sdp->request_queue->elevator = NULL;
++		elevator_init(sdp->request_queue, "noop");
++		sd_printk(KERN_INFO, sdkp, "Switched to noop elevator\n");
++#endif
++	} else if (rotation > 0x400) {
++		sd_printk(KERN_INFO, sdkp, "%u RPM drive", rotation);
++	}
++}
++
+ /**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -1581,6 +1654,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_capacity(sdkp, buffer);
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
++		sd_set_elevator(sdkp, buffer);
+ 	}
  
- #define SDEBUG_LONG_INQ_SZ 96
- #define SDEBUG_MAX_INQ_ARR_SZ 584
-@@ -701,6 +709,7 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
- 			arr[n++] = 0x88;  /* SCSI ports */
- 			arr[n++] = 0x89;  /* ATA information */
- 			arr[n++] = 0xb0;  /* Block limits (SBC) */
-+			arr[n++] = 0xb1;  /* Block characteristics (SBC) */
- 			arr[3] = n - 4;	  /* number of supported VPD pages */
- 		} else if (0x80 == cmd[2]) { /* unit serial number */
- 			arr[1] = cmd[2];	/*sanity */
-@@ -740,6 +749,9 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
- 		} else if (0xb0 == cmd[2]) { /* Block limits (SBC) */
- 			arr[1] = cmd[2];        /*sanity */
- 			arr[3] = inquiry_evpd_b0(&arr[4]);
-+		} else if (0xb1 == cmd[2]) { /* Block characteristics (SBC) */
-+			arr[1] = cmd[2];        /*sanity */
-+			arr[3] = inquiry_evpd_b1(&arr[4]);
- 		} else {
- 			/* Illegal request, invalid field in cdb */
- 			mk_sense_buffer(devip, ILLEGAL_REQUEST,
+ 	/*
 -- 
 Intel are signing my paycheques ... these opinions are still mine
 "Bill, look, we understand that you're interested in selling us this
