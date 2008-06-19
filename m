@@ -1,68 +1,63 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] libata support for rotation speed
-Date: Thu, 19 Jun 2008 10:02:16 -0600
-Message-ID: <20080619160216.GH4392@parisc-linux.org>
+Subject: [PATCH] scsi_debug support for rotation speed
+Date: Thu, 19 Jun 2008 10:02:58 -0600
+Message-ID: <20080619160258.GI4392@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:39433 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761629AbYFSQC7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 12:02:59 -0400
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, dougg@torque.net
 
-Add support for VPD page b1 to libata
+Add support for VPD page b1 to scsi_debug
 
 SCSI VPD page b1 reports the nominal rotation speed of the device.
-ATA devices return this information in word 217 of the identify data.
-b1 can also report the physical size of the device (5.25", 3.5", etc)
-but that doesn't surrently seem to be defined in the ATA specification.
-
-I also added 0x89 to the list of pages that libata supports.
+Since scsi_debug is ram-based, claim to be a non-rotating medium.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2e6e162..64e20bb 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1778,7 +1778,9 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- 	const u8 pages[] = {
- 		0x00,	/* page 0x00, this page */
- 		0x80,	/* page 0x80, unit serial no page */
--		0x83	/* page 0x83, device ident page */
-+		0x83,	/* page 0x83, device ident page */
-+		0x89,	/* page 0x89, ata info page */
-+		0xb1,	/* page 0xb1, block device characteristics page */
- 	};
- 
- 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-@@ -1899,6 +1901,16 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index f6600bf..91d7e05 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -646,6 +646,14 @@ static int inquiry_evpd_b0(unsigned char * arr)
+ 	return sizeof(vpdb0_data);
  }
  
-+static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
++static int inquiry_evpd_b1(unsigned char *arr)
 +{
-+	rbuf[1] = 0xb1;
-+	rbuf[3] = 0x3c;
-+	rbuf[4] = args->id[217] >> 8;
-+	rbuf[5] = args->id[217];
++	memset(arr, 0, 0x3c);
++	arr[0] = 0;
++	arr[1] = 1;
 +
-+	return 0;
++	return 0x3c;
 +}
-+
- /**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-@@ -2922,6 +2934,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 		case 0x89:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			break;
-+		case 0xb1:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
-+			break;
- 		default:
- 			ata_scsi_invalid_field(cmd, done);
- 			break;
+ 
+ #define SDEBUG_LONG_INQ_SZ 96
+ #define SDEBUG_MAX_INQ_ARR_SZ 584
+@@ -701,6 +709,7 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
+ 			arr[n++] = 0x88;  /* SCSI ports */
+ 			arr[n++] = 0x89;  /* ATA information */
+ 			arr[n++] = 0xb0;  /* Block limits (SBC) */
++			arr[n++] = 0xb1;  /* Block characteristics (SBC) */
+ 			arr[3] = n - 4;	  /* number of supported VPD pages */
+ 		} else if (0x80 == cmd[2]) { /* unit serial number */
+ 			arr[1] = cmd[2];	/*sanity */
+@@ -740,6 +749,9 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
+ 		} else if (0xb0 == cmd[2]) { /* Block limits (SBC) */
+ 			arr[1] = cmd[2];        /*sanity */
+ 			arr[3] = inquiry_evpd_b0(&arr[4]);
++		} else if (0xb1 == cmd[2]) { /* Block characteristics (SBC) */
++			arr[1] = cmd[2];        /*sanity */
++			arr[3] = inquiry_evpd_b1(&arr[4]);
+ 		} else {
+ 			/* Illegal request, invalid field in cdb */
+ 			mk_sense_buffer(devip, ILLEGAL_REQUEST,
 -- 
 Intel are signing my paycheques ... these opinions are still mine
 "Bill, look, we understand that you're interested in selling us this
