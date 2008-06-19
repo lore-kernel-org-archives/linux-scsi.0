@@ -1,42 +1,70 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [Security] [PATCH 0/3 2.6.27] cxgb3i: Add iSCSI driver
-Date: Thu, 19 Jun 2008 08:45:43 -0700
-Message-ID: <8A71B368A89016469F72CD08050AD33402F43B5E@maui.asicdesigners.com>
-References: <8A71B368A89016469F72CD08050AD334D71285@maui.asicdesigners.com> <8A71B368A89016469F72CD08050AD334D7128B@maui.asicdesigners.com> <20080619065212.GA9107@kroah.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] libata support for rotation speed
+Date: Thu, 19 Jun 2008 10:02:16 -0600
+Message-ID: <20080619160216.GH4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <netdev-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: netdev-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: michaelc@cs.wisc.edu, Divy Le Ray <divy@chelsio.com>, netdev@vger.kernel.org, security@kernel.org, open-iscsi@googlegroups.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Greg,
+Add support for VPD page b1 to libata
 
-We'd like to export security_inet_conn_established() from
-security/security.c.
+SCSI VPD page b1 reports the nominal rotation speed of the device.
+ATA devices return this information in word 217 of the identify data.
+b1 can also report the physical size of the device (5.25", 3.5", etc)
+but that doesn't surrently seem to be defined in the ATA specification.
 
-Thanks.
-Karen
+I also added 0x89 to the list of pages that libata supports.
 
------Original Message-----
-From: Greg KH [mailto:greg@kroah.com] 
-Sent: Wednesday, June 18, 2008 11:52 PM
-To: Karen Xie
-Cc: michaelc@cs.wisc.edu; Divy Le Ray; netdev@vger.kernel.org;
-security@kernel.org; open-iscsi@googlegroups.com;
-linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: Re: [Security] [PATCH 0/3 2.6.27] cxgb3i: Add iSCSI driver
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-On Wed, Jun 18, 2008 at 10:10:00PM -0700, Karen Xie wrote:
-> 
-> Please review the iSCSI drivers for Chelsio CXGB3 (S3XX) devices.  
-
-Is there some reason you send this to security@kernel.org?
-
-confused,
-
-greg k-h
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2e6e162..64e20bb 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1778,7 +1778,9 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+ 	const u8 pages[] = {
+ 		0x00,	/* page 0x00, this page */
+ 		0x80,	/* page 0x80, unit serial no page */
+-		0x83	/* page 0x83, device ident page */
++		0x83,	/* page 0x83, device ident page */
++		0x89,	/* page 0x89, ata info page */
++		0xb1,	/* page 0xb1, block device characteristics page */
+ 	};
+ 
+ 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
+@@ -1899,6 +1901,16 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
+ 	return 0;
+ }
+ 
++static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
++{
++	rbuf[1] = 0xb1;
++	rbuf[3] = 0x3c;
++	rbuf[4] = args->id[217] >> 8;
++	rbuf[5] = args->id[217];
++
++	return 0;
++}
++
+ /**
+  *	ata_scsiop_noop - Command handler that simply returns success.
+  *	@args: device IDENTIFY data / SCSI command of interest.
+@@ -2922,6 +2934,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 		case 0x89:
+ 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
+ 			break;
++		case 0xb1:
++			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
++			break;
+ 		default:
+ 			ata_scsi_invalid_field(cmd, done);
+ 			break;
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
