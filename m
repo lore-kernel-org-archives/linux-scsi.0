@@ -1,78 +1,38 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] libata support for rotation speed
-Date: Thu, 19 Jun 2008 11:59:05 -0600
-Message-ID: <20080619175904.GK4392@parisc-linux.org>
-References: <20080619160216.GH4392@parisc-linux.org>
+Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
+Date: Thu, 19 Jun 2008 12:10:08 -0600
+Message-ID: <20080619181007.GL4392@parisc-linux.org>
+References: <20080619160342.GJ4392@parisc-linux.org> <20080619171258.GA819@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:51371 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:54213 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753460AbYFSR7V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 13:59:21 -0400
+	with ESMTP id S1751333AbYFSSKY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 14:10:24 -0400
 Content-Disposition: inline
-In-Reply-To: <20080619160216.GH4392@parisc-linux.org>
+In-Reply-To: <20080619171258.GA819@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Thu, Jun 19, 2008 at 10:12:58AM -0700, Mike Anderson wrote:
+> Why would we want to do this in the kernel instead of a udev rule
+> similar to how we set timeouts. Since there already exists a sysfs
+> interface to change the IO scheduler it would seem this would be more
+> flexible in case someone did not like the kernel policy selected.
 
-Version 2, Jeff pointed out I was missing a check for a sufficiently
-recent version of the specification.
+You don't lose any flexibility either way; you can always change the
+elevator default.  I just thought this would be a nice little hack to
+give people with SSDs a better default.  I'm not against doing it with
+udev, but it's not a lot of extra code either way.
 
-Add support for VPD page b1 to libata
+> You would need some tool to obtain the vpd data from user space that would
+> always be installed.
 
-SCSI VPD page b1 reports the nominal rotation speed of the device.
-ATA devices return this information in word 217 of the identify data.
-b1 can also report the physical size of the device (5.25", 3.5", etc)
-but that doesn't currently seem to be defined in the ATA specification.
-
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2e6e162..07512d4 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1778,7 +1778,9 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- 	const u8 pages[] = {
- 		0x00,	/* page 0x00, this page */
- 		0x80,	/* page 0x80, unit serial no page */
--		0x83	/* page 0x83, device ident page */
-+		0x83,	/* page 0x83, device ident page */
-+		0x89,	/* page 0x89, ata info page */
-+		0xb1,	/* page 0xb1, block device characteristics page */
- 	};
- 
- 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-@@ -1899,6 +1901,18 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
- }
- 
-+static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
-+{
-+	rbuf[1] = 0xb1;
-+	rbuf[3] = 0x3c;
-+	if (ata_id_major_version(args->id) > 7) {
-+		rbuf[4] = args->id[217] >> 8;
-+		rbuf[5] = args->id[217];
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-@@ -2922,6 +2936,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 		case 0x89:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			break;
-+		case 0xb1:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
-+			break;
- 		default:
- 			ata_scsi_invalid_field(cmd, done);
- 			break;
+Yes.  I've been using sg_inq from sg3_utils to play with it, but one
+could write a specialised tool very quickly.
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
