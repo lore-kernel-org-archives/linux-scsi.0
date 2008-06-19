@@ -1,79 +1,43 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] libata support for rotation speed
-Date: Thu, 19 Jun 2008 12:31:13 -0600
-Message-ID: <20080619183113.GM4392@parisc-linux.org>
-References: <20080619160216.GH4392@parisc-linux.org> <20080619175904.GK4392@parisc-linux.org> <1213899895.3501.45.camel@localhost.localdomain>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [RFC/PATCH] usb-storage: wait for device scanning before mounting
+ root
+Date: Thu, 19 Jun 2008 20:39:38 +0200
+Message-ID: <485AA7EA.6080105@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0804241704220.14840-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0804250022160.1209@sbz-30.cs.Helsinki.FI> <48118DDD.8010507@s5r6.in-berlin.de> <Pine.LNX.4.64.0804251110400.758@sbz-30.cs.Helsinki.FI> <20080425091122.GA14990@parisc-linux.org> <20080619182310.GA30833@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1213899895.3501.45.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51487 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753641AbYFSSkO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2008 14:40:14 -0400
+In-Reply-To: <20080619182310.GA30833@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Pekka J Enberg <penberg@cs.helsinki.fi>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, dsd@gentoo.org, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, vegardno@ifi.uio.no, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>
 
-On Thu, Jun 19, 2008 at 01:24:55PM -0500, James Bottomley wrote:
-> On Thu, 2008-06-19 at 11:59 -0600, Matthew Wilcox wrote:
-> > Version 2, Jeff pointed out I was missing a check for a sufficiently
-> > recent version of the specification.
-> > 
-> > Add support for VPD page b1 to libata
-> > 
-> > SCSI VPD page b1 reports the nominal rotation speed of the device.
-> > ATA devices return this information in word 217 of the identify data.
-> > b1 can also report the physical size of the device (5.25", 3.5", etc)
-> > but that doesn't currently seem to be defined in the ATA specification.
-> > 
-> > Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index 2e6e162..07512d4 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -1899,6 +1901,18 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
-> >  	return 0;
-> >  }
-> >  
-> > +static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
-> > +{
-> > +	rbuf[1] = 0xb1;
-> 
-> This looks like it can be called for ATA_DEV_ATAPI as well, in which
-> case it's an illegal page to ask for.
+> On Fri, Apr 25, 2008 at 03:11:23AM -0600, Matthew Wilcox wrote:
+>> The problem is that USB has one scsi_host per device (rather than, say,
+>> having one scsi_host and adding new devices to it as they're found on
+>> the USB bus).
+>>
+>> I'm certainly open to ideas of hooking into the mechanism -- it's just a
+>> list of completions after all.  Something like this:
+[...]
 
-I was under the impression that this entire file is only used for
-non-atapi devices.  At least, the VPD is supposed to have PQ/PDT filled
-in, which would be 0x5 instead of 0.
+The problem is AFAIU not exactly how many Scsi_Host instances (initiator 
+port representations, or something remotely related to that) are 
+instantiated, but rather _when_ they are instantiated.  On multi 
+protocol buses or networks like USB and FireWire, it makes sense to 
+create the SCSI initiator port representation when we discovered that 
+there are actually SCSI targets on the bus or network.
 
-> Also, shouldn't this be added to
-> VPD page 0 (which shows the list of available VPD pages ... although it
-> looks like the supported 0x89 is missing too)?
-
-You even quoted the bit where I did that:
-
-> > @@ -1778,7 +1778,9 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
-> >  	const u8 pages[] = {
-> >  		0x00,	/* page 0x00, this page */
-> >  		0x80,	/* page 0x80, unit serial no page */
-> > -		0x83	/* page 0x83, device ident page */
-> > +		0x83,	/* page 0x83, device ident page */
-> > +		0x89,	/* page 0x89, ata info page */
-> > +		0xb1,	/* page 0xb1, block device characteristics page */
-> >  	};
-> >  
-> >  	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-> 
-> This would currently set device nominal form factor to unreported.  It's
-> actually available in identify word 168 (bits 0:3) in an identical
-> format to the one the VPD inquiry is expecting, so why not use it?
-
-The version of ATA-ACS 8 I have doesn't have it ;-)
-
-I'll go and download a more recent one and respin with it.
-
+scsi_scan's API is geared towards drivers which create one or more 
+initiator port representations right up front before going on target 
+discovery, right?
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Stefan Richter
+-=====-==--- -==- =--==
+http://arcgraph.de/sr/
