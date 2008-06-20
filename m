@@ -1,77 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Fri, 20 Jun 2008 17:09:34 -0500
-Message-ID: <1213999774.3443.49.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0806201731300.2133-100000@iolanthe.rowland.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: smartd failure on MPT SAS and 2.6.25.6-55.fc9.x86_64
+Date: Sat, 21 Jun 2008 10:52:07 +1200
+Message-ID: <485C3497.2080100@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45095 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753384AbYFTWJj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2008 18:09:39 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0806201731300.2133-100000@iolanthe.rowland.org>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:32909 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753221AbYFTWlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jun 2008 18:41:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2008-06-20 at 17:46 -0400, Alan Stern wrote:
-> On Fri, 20 Jun 2008, James Bottomley wrote:
-> 
-> > > Not having received any comments on that earlier patch, I wrote a new
-> > > version.  Actually it's a pair of patches, and they have to be applied
-> > > in order.  They don't look as ugly as the old one and they have a
-> > > decent chance of being accepted.
-> > 
-> > Actually, just looking at this, what you're really trying to do is
-> > enforce an underrun detection, which is a concept built in to the
-> > command structure but not necessarily well implemented by all drivers.
-> > 
-> > However, I had a tick on this one to go back and look at it.
-> > 
-> > Your initial contention was that the garbage value was "left over data"
-> > in the sense command.  However, I don't see how we're getting this into
-> > the buffer; scsi_mode_sense() clears the buffer up to the length it's
-> > expecting before it executes the request.  How is this getting garbage
-> > data if nothing's returned ... surely it should still be all zeros?
-> 
-> It's not true that nothing's returned.  The device returns N bytes of
-> garbage data (I forget just now what N was) and sets the residue equal
-> to N -- meaning that none of the data was meaningful.
-> 
-> USB mass-storage is perhaps a little strange for people accustomed to 
-> regular SCSI.  Quoting from the relevant spec:
-> 
-> 	For Data-In the device shall report in the dCSWDataResidue the 
-> 	difference between the amount of data expected as stated in the
-> 	dCBWDataTransferLength and the actual amount of relevant data
-> 	sent by the device.
-> 
-> The key word here is "relevant".  The device is allowed to send 
-> non-relevant data and then tell the host to ignore it.  Later on the 
-> spec says:
-> 
->     If the device intends to send less data than the host indicated, then: 
-> 	The device shall send the intended data.
-> 	    The device may send fill data to pad up to a total of dCBWDataTransferLength.
-> 	    If the device actually transfers less data than the host indicated, then:
-> 		The device may end the transfer with a short packet.
-> 		The device shall STALL the Bulk-In pipe.
-> 	The device shall set bCSWStatus to 00h or 01h.
-> 	The device shall set dCSWDataResidue to the difference between dCBWDataTransferLength
-> 	    and the actual amount of relevant data sent.
-> 
-> In this case the fill data is getting treated as real data.  Does this
-> clarify the situation?
+Just updated from 2.6.25.4-30.fc9.x86_64 to 2.6.25.6-55.fc9.x86_64 and a 
+previously working smartd setup (smartmontools-5.38-2.fc9.x86_64) to 
+drives behind an LSISAS1068E, now causes controller resets:
 
-Yes, thanks.  It's a bit nasty from a security point of view, since the
-leaking data apparently belonged to a different command.  Wouldn't a
-better fix (and a more secure one) be to clear from the end of the valid
-data to the end of the buffer?
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00 00 00 00 00 00 ec 00
+mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed}, 
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting target reset! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00 00 00 00 00 00 ec 00
+mptscsih: ioc0: target reset: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting bus reset! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00 00 00 00 00 00 ec 00
+mptscsih: ioc0: bus reset: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting host reset! (sc=ffff81023d0c6b40)
+mptbase: ioc0: Initiating recovery
+mptscsih: ioc0: host reset: SUCCESS (sc=ffff81023d0c6b40)
+sd 4:0:0:0: Device offlined - not ready after error recovery
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
 
-James
 
+smartd.conf
+
+/dev/sdc -d sat,16 -a -I 194 -s L/../../1/01
+
+Regards,
+
+Richard
 
