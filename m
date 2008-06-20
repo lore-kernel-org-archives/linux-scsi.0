@@ -1,358 +1,150 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Fri, 20 Jun 2008 16:22:40 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0806201619010.2133-300000@iolanthe.rowland.org>
-References: <8db1092f0806140002x70629f05xdbefbe1c1c80d77@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Fri, 20 Jun 2008 15:28:57 -0500
+Message-ID: <1213993737.3443.35.camel@localhost.localdomain>
+References: <485B2CC6.6070201@kernel.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1559625215-1692564458-1213993360=:2133"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44172 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1762231AbYFTUWl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2008 16:22:41 -0400
-In-Reply-To: <8db1092f0806140002x70629f05xdbefbe1c1c80d77@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <485B2CC6.6070201@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----1559625215-1692564458-1213993360=:2133
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-
-On Sat, 14 Jun 2008, Maciej Rutecki wrote:
-
-> 2008/6/13 Alan Stern <stern@rowland.harvard.edu>:
+On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
+> Hello, all.
 > 
-> [...]
+> This item was on TODO list for years now.  People all agree that it's
+> necessary but it always had relatively low priority probably because
+> it's a bit difficult and isn't really necessary to make disks and
+> optical drives work.
 > 
-> >
-> > That patch wasn't meant to help; it wasn't complete.  It was meant to
-> > stimulate conversation -- and clearly it failed.
-> >
-> > Below is a complete patch.  It's very ugly and isn't likely to get
-> > accepted, but maybe it will convince people to start talking about the
-> > problem.  Maybe it will offend people's sensibilities so that they will
-> > just _have_ to chime in, if only to complain about how bad the patch
-> > is...
+> Anyways, I think it's about time to take some action as SAS-ATA
+> integration (Brian, sorry about staying so silent about this for long
+> time, I was following the threads but couldn't really think of a quick
+> solution) and other ATA specific things including link power
+> management and bunch of other deferred ones due to lack of proper
+> sysfs interface or high level driver (parallel probing, parallel
+> resume).
 > 
-> [...]
+> Currently, my plan is...
 > 
-> Tested with 2.6.26-rc2 and works fine. Thanks.
+> * Move high level driver handling to request_queue.
 
-Not having received any comments on that earlier patch, I wrote a new
-version.  Actually it's a pair of patches, and they have to be applied
-in order.  They don't look as ugly as the old one and they have a
-decent chance of being accepted.
+Actually, I already did quite a lot of that here:
 
-If they also fix your problem, I'll submit them.
+commit 7f9a6bc4e9d59e7fcf03ed23f60cd81ca5d80b65
+Author: James Bottomley <James.Bottomley@steeleye.com>
+Date:   Sat Aug 4 10:06:25 2007 -0500
 
-Alan Stern
+    [SCSI] move ULD attachment into the prep function
 
----1559625215-1692564458-1213993360=:2133
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="scsi-exe-res.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.0806201622400.2133@iolanthe.rowland.org>
-Content-Description: 
-Content-Disposition: attachment; filename="scsi-exe-res.patch"
+But there's still more to be done.  The way I was thinking of it was
+some type of protocol label (as in a ULD spits out protocols, like SCSI
+or ATA) and then passes them to a LLD which uses libraries (what libata
+and the scsi mid layer become) to process them.
 
-SW5kZXg6IHVzYi0yLjYvaW5jbHVkZS9zY3NpL3Njc2lfZGV2aWNlLmgNCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvaW5jbHVk
-ZS9zY3NpL3Njc2lfZGV2aWNlLmgNCisrKyB1c2ItMi42L2luY2x1ZGUvc2Nz
-aS9zY3NpX2RldmljZS5oDQpAQCAtMzIzLDEwICszMjMsMTEgQEAgZXh0ZXJu
-IGludCBzY3NpX2lzX3RhcmdldF9kZXZpY2UoY29uc3Qgcw0KIGV4dGVybiBp
-bnQgc2NzaV9leGVjdXRlKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldiwgY29u
-c3QgdW5zaWduZWQgY2hhciAqY21kLA0KIAkJCWludCBkYXRhX2RpcmVjdGlv
-biwgdm9pZCAqYnVmZmVyLCB1bnNpZ25lZCBidWZmbGVuLA0KIAkJCXVuc2ln
-bmVkIGNoYXIgKnNlbnNlLCBpbnQgdGltZW91dCwgaW50IHJldHJpZXMsDQot
-CQkJaW50IGZsYWcpOw0KKwkJCWludCBmbGFnLCB1bnNpZ25lZCAqcmVzaWR1
-ZSk7DQogZXh0ZXJuIGludCBzY3NpX2V4ZWN1dGVfcmVxKHN0cnVjdCBzY3Np
-X2RldmljZSAqc2RldiwgY29uc3QgdW5zaWduZWQgY2hhciAqY21kLA0KIAkJ
-CSAgICBpbnQgZGF0YV9kaXJlY3Rpb24sIHZvaWQgKmJ1ZmZlciwgdW5zaWdu
-ZWQgYnVmZmxlbiwNCi0JCQkgICAgc3RydWN0IHNjc2lfc2Vuc2VfaGRyICos
-IGludCB0aW1lb3V0LCBpbnQgcmV0cmllcyk7DQorCQkJICAgIHN0cnVjdCBz
-Y3NpX3NlbnNlX2hkciAqLCBpbnQgdGltZW91dCwgaW50IHJldHJpZXMsDQor
-CQkJICAgIHVuc2lnbmVkICpyZXNpZHVlKTsNCiBleHRlcm4gaW50IHNjc2lf
-ZXhlY3V0ZV9hc3luYyhzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsDQogCQkJ
-ICAgICAgY29uc3QgdW5zaWduZWQgY2hhciAqY21kLCBpbnQgY21kX2xlbiwg
-aW50IGRhdGFfZGlyZWN0aW9uLA0KIAkJCSAgICAgIHZvaWQgKmJ1ZmZlciwg
-dW5zaWduZWQgYnVmZmxlbiwgaW50IHVzZV9zZywNCkluZGV4OiB1c2ItMi42
-L2RyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMNCj09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9hdGEvbGliYXRhLXNj
-c2kuYw0KKysrIHVzYi0yLjYvZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYw0K
-QEAgLTMzMiw3ICszMzIsNyBAQCBpbnQgYXRhX2NtZF9pb2N0bChzdHJ1Y3Qg
-c2NzaV9kZXZpY2UgKnNjDQogCS8qIEdvb2QgdmFsdWVzIGZvciB0aW1lb3V0
-IGFuZCByZXRyaWVzPyAgVmFsdWVzIGJlbG93DQogCSAgIGZyb20gc2NzaV9p
-b2N0bF9zZW5kX2NvbW1hbmQoKSBmb3IgZGVmYXVsdCBjYXNlLi4uICovDQog
-CWNtZF9yZXN1bHQgPSBzY3NpX2V4ZWN1dGUoc2NzaWRldiwgc2NzaV9jbWQs
-IGRhdGFfZGlyLCBhcmdidWYsIGFyZ3NpemUsDQotCQkJCSAgc2Vuc2VidWYs
-ICgxMCpIWiksIDUsIDApOw0KKwkJCQkgIHNlbnNlYnVmLCAoMTAqSFopLCA1
-LCAwLCBOVUxMKTsNCiANCiAJaWYgKGRyaXZlcl9ieXRlKGNtZF9yZXN1bHQp
-ID09IERSSVZFUl9TRU5TRSkgey8qIHNlbnNlIGRhdGEgYXZhaWxhYmxlICov
-DQogCQl1OCAqZGVzYyA9IHNlbnNlYnVmICsgODsNCkBAIC00MTgsNyArNDE4
-LDcgQEAgaW50IGF0YV90YXNrX2lvY3RsKHN0cnVjdCBzY3NpX2RldmljZSAq
-cw0KIAkvKiBHb29kIHZhbHVlcyBmb3IgdGltZW91dCBhbmQgcmV0cmllcz8g
-IFZhbHVlcyBiZWxvdw0KIAkgICBmcm9tIHNjc2lfaW9jdGxfc2VuZF9jb21t
-YW5kKCkgZm9yIGRlZmF1bHQgY2FzZS4uLiAqLw0KIAljbWRfcmVzdWx0ID0g
-c2NzaV9leGVjdXRlKHNjc2lkZXYsIHNjc2lfY21kLCBETUFfTk9ORSwgTlVM
-TCwgMCwNCi0JCQkJc2Vuc2VidWYsICgxMCpIWiksIDUsIDApOw0KKwkJCQlz
-ZW5zZWJ1ZiwgKDEwKkhaKSwgNSwgMCwgTlVMTCk7DQogDQogCWlmIChkcml2
-ZXJfYnl0ZShjbWRfcmVzdWx0KSA9PSBEUklWRVJfU0VOU0UpIHsvKiBzZW5z
-ZSBkYXRhIGF2YWlsYWJsZSAqLw0KIAkJdTggKmRlc2MgPSBzZW5zZWJ1ZiAr
-IDg7DQpJbmRleDogdXNiLTIuNi9kcml2ZXJzL3Njc2kvY2guYw0KPT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PQ0KLS0tIHVzYi0yLjYub3JpZy9kcml2ZXJzL3Nj
-c2kvY2guYw0KKysrIHVzYi0yLjYvZHJpdmVycy9zY3NpL2NoLmMNCkBAIC0x
-ODksNyArMTg5LDcgQEAgY2hfZG9fc2NzaShzY3NpX2NoYW5nZXIgKmNoLCB1
-bnNpZ25lZCBjaA0KIA0KICAgICAgICAgcmVzdWx0ID0gc2NzaV9leGVjdXRl
-X3JlcShjaC0+ZGV2aWNlLCBjbWQsIGRpcmVjdGlvbiwgYnVmZmVyLA0KIAkJ
-CQkgIGJ1Zmxlbmd0aCwgJnNzaGRyLCB0aW1lb3V0ICogSFosDQotCQkJCSAg
-TUFYX1JFVFJJRVMpOw0KKwkJCQkgIE1BWF9SRVRSSUVTLCBOVUxMKTsNCiAN
-CiAJZHByaW50aygicmVzdWx0OiAweCV4XG4iLHJlc3VsdCk7DQogCWlmIChk
-cml2ZXJfYnl0ZShyZXN1bHQpICYgRFJJVkVSX1NFTlNFKSB7DQpJbmRleDog
-dXNiLTIuNi9kcml2ZXJzL3Njc2kvc2NzaV9pb2N0bC5jDQo9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09DQotLS0gdXNiLTIuNi5vcmlnL2RyaXZlcnMvc2NzaS9z
-Y3NpX2lvY3RsLmMNCisrKyB1c2ItMi42L2RyaXZlcnMvc2NzaS9zY3NpX2lv
-Y3RsLmMNCkBAIC05NCw3ICs5NCw3IEBAIHN0YXRpYyBpbnQgaW9jdGxfaW50
-ZXJuYWxfY29tbWFuZChzdHJ1Y3QNCiAJU0NTSV9MT0dfSU9DVEwoMSwgcHJp
-bnRrKCJUcnlpbmcgaW9jdGwgd2l0aCBzY3NpIGNvbW1hbmQgJWRcbiIsICpj
-bWQpKTsNCiANCiAJcmVzdWx0ID0gc2NzaV9leGVjdXRlX3JlcShzZGV2LCBj
-bWQsIERNQV9OT05FLCBOVUxMLCAwLA0KLQkJCQkgICZzc2hkciwgdGltZW91
-dCwgcmV0cmllcyk7DQorCQkJCSAgJnNzaGRyLCB0aW1lb3V0LCByZXRyaWVz
-LCBOVUxMKTsNCiANCiAJU0NTSV9MT0dfSU9DVEwoMiwgcHJpbnRrKCJJb2N0
-bCByZXR1cm5lZCAgMHgleFxuIiwgcmVzdWx0KSk7DQogDQpJbmRleDogdXNi
-LTIuNi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQ0KLS0tIHVzYi0yLjYub3JpZy9kcml2ZXJzL3Njc2kvc2NzaV9s
-aWIuYw0KKysrIHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCkBA
-IC0xNzUsMTMgKzE3NSwxNSBAQCBpbnQgc2NzaV9xdWV1ZV9pbnNlcnQoc3Ry
-dWN0IHNjc2lfY21uZCAqDQogICogQHRpbWVvdXQ6CXJlcXVlc3QgdGltZW91
-dCBpbiBzZWNvbmRzDQogICogQHJldHJpZXM6CW51bWJlciBvZiB0aW1lcyB0
-byByZXRyeSByZXF1ZXN0DQogICogQGZsYWdzOglvciBpbnRvIHJlcXVlc3Qg
-ZmxhZ3M7DQorICogQHJlc2lkdWU6CW51bWJlciBvZiBieXRlcyBub3QgdHJh
-bnNmZXJyZWQgY29ycmVjdGx5DQogICoNCiAgKiByZXR1cm5zIHRoZSByZXEt
-PmVycm9ycyB2YWx1ZSB3aGljaCBpcyB0aGUgc2NzaV9jbW5kIHJlc3VsdA0K
-ICAqIGZpZWxkLg0KICAqLw0KIGludCBzY3NpX2V4ZWN1dGUoc3RydWN0IHNj
-c2lfZGV2aWNlICpzZGV2LCBjb25zdCB1bnNpZ25lZCBjaGFyICpjbWQsDQog
-CQkgaW50IGRhdGFfZGlyZWN0aW9uLCB2b2lkICpidWZmZXIsIHVuc2lnbmVk
-IGJ1ZmZsZW4sDQotCQkgdW5zaWduZWQgY2hhciAqc2Vuc2UsIGludCB0aW1l
-b3V0LCBpbnQgcmV0cmllcywgaW50IGZsYWdzKQ0KKwkJIHVuc2lnbmVkIGNo
-YXIgKnNlbnNlLCBpbnQgdGltZW91dCwgaW50IHJldHJpZXMsIGludCBmbGFn
-cywNCisJCSB1bnNpZ25lZCAqcmVzaWR1ZSkNCiB7DQogCXN0cnVjdCByZXF1
-ZXN0ICpyZXE7DQogCWludCB3cml0ZSA9IChkYXRhX2RpcmVjdGlvbiA9PSBE
-TUFfVE9fREVWSUNFKTsNCkBAIC0yMDcsNiArMjA5LDggQEAgaW50IHNjc2lf
-ZXhlY3V0ZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZQ0KIAkgKi8NCiAJYmxr
-X2V4ZWN1dGVfcnEocmVxLT5xLCBOVUxMLCByZXEsIDEpOw0KIA0KKwlpZiAo
-cmVzaWR1ZSkNCisJCSpyZXNpZHVlID0gcmVxLT5kYXRhX2xlbjsNCiAJcmV0
-ID0gcmVxLT5lcnJvcnM7DQogIG91dDoNCiAJYmxrX3B1dF9yZXF1ZXN0KHJl
-cSk7DQpAQCAtMjE4LDcgKzIyMiw4IEBAIEVYUE9SVF9TWU1CT0woc2NzaV9l
-eGVjdXRlKTsNCiANCiBpbnQgc2NzaV9leGVjdXRlX3JlcShzdHJ1Y3Qgc2Nz
-aV9kZXZpY2UgKnNkZXYsIGNvbnN0IHVuc2lnbmVkIGNoYXIgKmNtZCwNCiAJ
-CSAgICAgaW50IGRhdGFfZGlyZWN0aW9uLCB2b2lkICpidWZmZXIsIHVuc2ln
-bmVkIGJ1ZmZsZW4sDQotCQkgICAgIHN0cnVjdCBzY3NpX3NlbnNlX2hkciAq
-c3NoZHIsIGludCB0aW1lb3V0LCBpbnQgcmV0cmllcykNCisJCSAgICAgc3Ry
-dWN0IHNjc2lfc2Vuc2VfaGRyICpzc2hkciwgaW50IHRpbWVvdXQsIGludCBy
-ZXRyaWVzLA0KKwkJICAgICB1bnNpZ25lZCAqcmVzaWR1ZSkNCiB7DQogCWNo
-YXIgKnNlbnNlID0gTlVMTDsNCiAJaW50IHJlc3VsdDsNCkBAIC0yMjksNyAr
-MjM0LDcgQEAgaW50IHNjc2lfZXhlY3V0ZV9yZXEoc3RydWN0IHNjc2lfZGV2
-aWNlIA0KIAkJCXJldHVybiBEUklWRVJfRVJST1IgPDwgMjQ7DQogCX0NCiAJ
-cmVzdWx0ID0gc2NzaV9leGVjdXRlKHNkZXYsIGNtZCwgZGF0YV9kaXJlY3Rp
-b24sIGJ1ZmZlciwgYnVmZmxlbiwNCi0JCQkgICAgICBzZW5zZSwgdGltZW91
-dCwgcmV0cmllcywgMCk7DQorCQkJICAgICAgc2Vuc2UsIHRpbWVvdXQsIHJl
-dHJpZXMsIDAsIHJlc2lkdWUpOw0KIAlpZiAoc3NoZHIpDQogCQlzY3NpX25v
-cm1hbGl6ZV9zZW5zZShzZW5zZSwgU0NTSV9TRU5TRV9CVUZGRVJTSVpFLCBz
-c2hkcik7DQogDQpAQCAtMTgxNSw3ICsxODIwLDcgQEAgc2NzaV9tb2RlX3Nl
-bGVjdChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZQ0KIAl9DQogDQogCXJldCA9
-IHNjc2lfZXhlY3V0ZV9yZXEoc2RldiwgY21kLCBETUFfVE9fREVWSUNFLCBy
-ZWFsX2J1ZmZlciwgbGVuLA0KLQkJCSAgICAgICBzc2hkciwgdGltZW91dCwg
-cmV0cmllcyk7DQorCQkJICAgICAgIHNzaGRyLCB0aW1lb3V0LCByZXRyaWVz
-LCBOVUxMKTsNCiAJa2ZyZWUocmVhbF9idWZmZXIpOw0KIAlyZXR1cm4gcmV0
-Ow0KIH0NCkBAIC0xODgwLDcgKzE4ODUsNyBAQCBzY3NpX21vZGVfc2Vuc2Uo
-c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2DQogCW1lbXNldChidWZmZXIsIDAs
-IGxlbik7DQogDQogCXJlc3VsdCA9IHNjc2lfZXhlY3V0ZV9yZXEoc2Rldiwg
-Y21kLCBETUFfRlJPTV9ERVZJQ0UsIGJ1ZmZlciwgbGVuLA0KLQkJCQkgIHNz
-aGRyLCB0aW1lb3V0LCByZXRyaWVzKTsNCisJCQkJICBzc2hkciwgdGltZW91
-dCwgcmV0cmllcywgTlVMTCk7DQogDQogCS8qIFRoaXMgY29kZSBsb29rcyBh
-d2Z1bDogd2hhdCBpdCdzIGRvaW5nIGlzIG1ha2luZyBzdXJlIGFuDQogCSAq
-IElMTEVHQUwgUkVRVUVTVCBzZW5zZSByZXR1cm4gaWRlbnRpZmllcyB0aGUg
-YWN0dWFsIGNvbW1hbmQNCkBAIC0xOTYyLDcgKzE5NjcsNyBAQCBzY3NpX3Rl
-c3RfdW5pdF9yZWFkeShzdHJ1Y3Qgc2NzaV9kZXZpY2UgDQogCS8qIHRyeSB0
-byBlYXQgdGhlIFVOSVRfQVRURU5USU9OIGlmIHRoZXJlIGFyZSBlbm91Z2gg
-cmV0cmllcyAqLw0KIAlkbyB7DQogCQlyZXN1bHQgPSBzY3NpX2V4ZWN1dGVf
-cmVxKHNkZXYsIGNtZCwgRE1BX05PTkUsIE5VTEwsIDAsIHNzaGRyLA0KLQkJ
-CQkJICB0aW1lb3V0LCByZXRyaWVzKTsNCisJCQkJCSAgdGltZW91dCwgcmV0
-cmllcywgTlVMTCk7DQogCX0gd2hpbGUgKChkcml2ZXJfYnl0ZShyZXN1bHQp
-ICYgRFJJVkVSX1NFTlNFKSAmJg0KIAkJIHNzaGRyICYmIHNzaGRyLT5zZW5z
-ZV9rZXkgPT0gVU5JVF9BVFRFTlRJT04gJiYNCiAJCSAtLXJldHJpZXMpOw0K
-SW5kZXg6IHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQo9PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09DQotLS0gdXNiLTIuNi5vcmlnL2RyaXZlcnMv
-c2NzaS9zY3NpX3NjYW4uYw0KKysrIHVzYi0yLjYvZHJpdmVycy9zY3NpL3Nj
-c2lfc2Nhbi5jDQpAQCAtMjE2LDcgKzIxNiw3IEBAIHN0YXRpYyB2b2lkIHNj
-c2lfdW5sb2NrX2Zsb3B0aWNhbChzdHJ1Y3QNCiAJc2NzaV9jbWRbNF0gPSAw
-eDJhOyAgICAgLyogc2l6ZSAqLw0KIAlzY3NpX2NtZFs1XSA9IDA7DQogCXNj
-c2lfZXhlY3V0ZV9yZXEoc2Rldiwgc2NzaV9jbWQsIERNQV9GUk9NX0RFVklD
-RSwgcmVzdWx0LCAweDJhLCBOVUxMLA0KLQkJCSBTQ1NJX1RJTUVPVVQsIDMp
-Ow0KKwkJCSBTQ1NJX1RJTUVPVVQsIDMsIE5VTEwpOw0KIH0NCiANCiAvKioN
-CkBAIC01ODAsNyArNTgwLDggQEAgc3RhdGljIGludCBzY3NpX3Byb2JlX2x1
-bihzdHJ1Y3Qgc2NzaV9kZQ0KIA0KIAkJcmVzdWx0ID0gc2NzaV9leGVjdXRl
-X3JlcShzZGV2LCAgc2NzaV9jbWQsIERNQV9GUk9NX0RFVklDRSwNCiAJCQkJ
-CSAgaW5xX3Jlc3VsdCwgdHJ5X2lucXVpcnlfbGVuLCAmc3NoZHIsDQotCQkJ
-CQkgIEhaIC8gMiArIEhaICogc2NzaV9pbnFfdGltZW91dCwgMyk7DQorCQkJ
-CQkgIEhaIC8gMiArIEhaICogc2NzaV9pbnFfdGltZW91dCwgMywNCisJCQkJ
-CSAgTlVMTCk7DQogDQogCQlTQ1NJX0xPR19TQ0FOX0JVUygzLCBwcmludGso
-S0VSTl9JTkZPICJzY3NpIHNjYW46IElOUVVJUlkgJXMgIg0KIAkJCQkid2l0
-aCBjb2RlIDB4JXhcbiIsDQpAQCAtMTM3Niw3ICsxMzc3LDcgQEAgc3RhdGlj
-IGludCBzY3NpX3JlcG9ydF9sdW5fc2NhbihzdHJ1Y3Qgcw0KIA0KIAkJcmVz
-dWx0ID0gc2NzaV9leGVjdXRlX3JlcShzZGV2LCBzY3NpX2NtZCwgRE1BX0ZS
-T01fREVWSUNFLA0KIAkJCQkJICBsdW5fZGF0YSwgbGVuZ3RoLCAmc3NoZHIs
-DQotCQkJCQkgIFNDU0lfVElNRU9VVCArIDQgKiBIWiwgMyk7DQorCQkJCQkg
-IFNDU0lfVElNRU9VVCArIDQgKiBIWiwgMywgTlVMTCk7DQogDQogCQlTQ1NJ
-X0xPR19TQ0FOX0JVUygzLCBwcmludGsgKEtFUk5fSU5GTyAic2NzaSBzY2Fu
-OiBSRVBPUlQgTFVOUyINCiAJCQkJIiAlcyAodHJ5ICVkKSByZXN1bHQgMHgl
-eFxuIiwgcmVzdWx0DQpJbmRleDogdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2Nz
-aV90cmFuc3BvcnRfc3BpLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0t
-LSB1c2ItMi42Lm9yaWcvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nw
-aS5jDQorKysgdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRf
-c3BpLmMNCkBAIC0xMDksNyArMTA5LDcgQEAgc3RhdGljIGludCBzcGlfZXhl
-Y3V0ZShzdHJ1Y3Qgc2NzaV9kZXZpYw0KIAlmb3IoaSA9IDA7IGkgPCBEVl9S
-RVRSSUVTOyBpKyspIHsNCiAJCXJlc3VsdCA9IHNjc2lfZXhlY3V0ZShzZGV2
-LCBjbWQsIGRpciwgYnVmZmVyLCBidWZmbGVuLA0KIAkJCQkgICAgICBzZW5z
-ZSwgRFZfVElNRU9VVCwgLyogcmV0cmllcyAqLyAxLA0KLQkJCQkgICAgICBS
-RVFfRkFJTEZBU1QpOw0KKwkJCQkgICAgICBSRVFfRkFJTEZBU1QsIE5VTEwp
-Ow0KIAkJaWYgKHJlc3VsdCAmIERSSVZFUl9TRU5TRSkgew0KIAkJCXN0cnVj
-dCBzY3NpX3NlbnNlX2hkciBzc2hkcl90bXA7DQogCQkJaWYgKCFzc2hkcikN
-CkluZGV4OiB1c2ItMi42L2RyaXZlcnMvc2NzaS9zZC5jDQo9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09DQotLS0gdXNiLTIuNi5vcmlnL2RyaXZlcnMvc2NzaS9z
-ZC5jDQorKysgdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2QuYw0KQEAgLTg0Miw3
-ICs4NDIsNyBAQCBzdGF0aWMgaW50IHNkX3N5bmNfY2FjaGUoc3RydWN0IHNj
-c2lfZGlzDQogCQkgKiBmbHVzaCBldmVyeXRoaW5nLg0KIAkJICovDQogCQly
-ZXMgPSBzY3NpX2V4ZWN1dGVfcmVxKHNkcCwgY21kLCBETUFfTk9ORSwgTlVM
-TCwgMCwgJnNzaGRyLA0KLQkJCQkgICAgICAgU0RfVElNRU9VVCwgU0RfTUFY
-X1JFVFJJRVMpOw0KKwkJCQkgICAgICAgU0RfVElNRU9VVCwgU0RfTUFYX1JF
-VFJJRVMsIE5VTEwpOw0KIAkJaWYgKHJlcyA9PSAwKQ0KIAkJCWJyZWFrOw0K
-IAl9DQpAQCAtMTA3MCw3ICsxMDcwLDcgQEAgc2Rfc3BpbnVwX2Rpc2soc3Ry
-dWN0IHNjc2lfZGlzayAqc2RrcCkNCiAJCQl0aGVfcmVzdWx0ID0gc2NzaV9l
-eGVjdXRlX3JlcShzZGtwLT5kZXZpY2UsIGNtZCwNCiAJCQkJCQkgICAgICBE
-TUFfTk9ORSwgTlVMTCwgMCwNCiAJCQkJCQkgICAgICAmc3NoZHIsIFNEX1RJ
-TUVPVVQsDQotCQkJCQkJICAgICAgU0RfTUFYX1JFVFJJRVMpOw0KKwkJCQkJ
-CSAgICAgIFNEX01BWF9SRVRSSUVTLCBOVUxMKTsNCiANCiAJCQkvKg0KIAkJ
-CSAqIElmIHRoZSBkcml2ZSBoYXMgaW5kaWNhdGVkIHRvIHVzIHRoYXQgaXQN
-CkBAIC0xMTI2LDcgKzExMjYsOCBAQCBzZF9zcGludXBfZGlzayhzdHJ1Y3Qg
-c2NzaV9kaXNrICpzZGtwKQ0KIAkJCQljbWRbNF0gPSAxOwkvKiBTdGFydCBz
-cGluIGN5Y2xlICovDQogCQkJCXNjc2lfZXhlY3V0ZV9yZXEoc2RrcC0+ZGV2
-aWNlLCBjbWQsIERNQV9OT05FLA0KIAkJCQkJCSBOVUxMLCAwLCAmc3NoZHIs
-DQotCQkJCQkJIFNEX1RJTUVPVVQsIFNEX01BWF9SRVRSSUVTKTsNCisJCQkJ
-CQkgU0RfVElNRU9VVCwgU0RfTUFYX1JFVFJJRVMsDQorCQkJCQkJIE5VTEwp
-Ow0KIAkJCQlzcGludGltZV9leHBpcmUgPSBqaWZmaWVzICsgMTAwICogSFo7
-DQogCQkJCXNwaW50aW1lID0gMTsNCiAJCQl9DQpAQCAtMTE5OSw3ICsxMjAw
-LDggQEAgcmVwZWF0Og0KIAkJDQogCQl0aGVfcmVzdWx0ID0gc2NzaV9leGVj
-dXRlX3JlcShzZHAsIGNtZCwgRE1BX0ZST01fREVWSUNFLA0KIAkJCQkJICAg
-ICAgYnVmZmVyLCBsb25ncmMgPyAxMiA6IDgsICZzc2hkciwNCi0JCQkJCSAg
-ICAgIFNEX1RJTUVPVVQsIFNEX01BWF9SRVRSSUVTKTsNCisJCQkJCSAgICAg
-IFNEX1RJTUVPVVQsIFNEX01BWF9SRVRSSUVTLA0KKwkJCQkJICAgICAgTlVM
-TCk7DQogDQogCQlpZiAobWVkaWFfbm90X3ByZXNlbnQoc2RrcCwgJnNzaGRy
-KSkNCiAJCQlyZXR1cm47DQpAQCAtMTc5NCw3ICsxNzk2LDcgQEAgc3RhdGlj
-IGludCBzZF9zdGFydF9zdG9wX2RldmljZShzdHJ1Y3Qgcw0KIAkJcmV0dXJu
-IC1FTk9ERVY7DQogDQogCXJlcyA9IHNjc2lfZXhlY3V0ZV9yZXEoc2RwLCBj
-bWQsIERNQV9OT05FLCBOVUxMLCAwLCAmc3NoZHIsDQotCQkJICAgICAgIFNE
-X1RJTUVPVVQsIFNEX01BWF9SRVRSSUVTKTsNCisJCQkgICAgICAgU0RfVElN
-RU9VVCwgU0RfTUFYX1JFVFJJRVMsIE5VTEwpOw0KIAlpZiAocmVzKSB7DQog
-CQlzZF9wcmludGsoS0VSTl9XQVJOSU5HLCBzZGtwLCAiU1RBUlRfU1RPUCBG
-QUlMRURcbiIpOw0KIAkJc2RfcHJpbnRfcmVzdWx0KHNka3AsIHJlcyk7DQpJ
-bmRleDogdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2VzLmMNCj09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9zY3NpL3Nl
-cy5jDQorKysgdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2VzLmMNCkBAIC03Nyw3
-ICs3Nyw3IEBAIHN0YXRpYyBpbnQgc2VzX3JlY3ZfZGlhZyhzdHJ1Y3Qgc2Nz
-aV9kZXYNCiAJfTsNCiANCiAJcmV0dXJuIHNjc2lfZXhlY3V0ZV9yZXEoc2Rl
-diwgY21kLCBETUFfRlJPTV9ERVZJQ0UsIGJ1ZiwgYnVmZmxlbiwNCi0JCQkJ
-TlVMTCwgU0VTX1RJTUVPVVQsIFNFU19SRVRSSUVTKTsNCisJCQkJTlVMTCwg
-U0VTX1RJTUVPVVQsIFNFU19SRVRSSUVTLCBOVUxMKTsNCiB9DQogDQogc3Rh
-dGljIGludCBzZXNfc2VuZF9kaWFnKHN0cnVjdCBzY3NpX2RldmljZSAqc2Rl
-diwgaW50IHBhZ2VfY29kZSwNCkBAIC05NSw3ICs5NSw3IEBAIHN0YXRpYyBp
-bnQgc2VzX3NlbmRfZGlhZyhzdHJ1Y3Qgc2NzaV9kZXYNCiAJfTsNCiANCiAJ
-cmVzdWx0ID0gc2NzaV9leGVjdXRlX3JlcShzZGV2LCBjbWQsIERNQV9UT19E
-RVZJQ0UsIGJ1ZiwgYnVmZmxlbiwNCi0JCQkJICBOVUxMLCBTRVNfVElNRU9V
-VCwgU0VTX1JFVFJJRVMpOw0KKwkJCQkgIE5VTEwsIFNFU19USU1FT1VULCBT
-RVNfUkVUUklFUywgTlVMTCk7DQogCWlmIChyZXN1bHQpDQogCQlzZGV2X3By
-aW50ayhLRVJOX0VSUiwgc2RldiwgIlNFTkQgRElBR05PU1RJQyByZXN1bHQ6
-ICU4eFxuIiwNCiAJCQkgICAgcmVzdWx0KTsNCkBAIC0zNjksNyArMzY5LDgg
-QEAgc3RhdGljIHZvaWQgc2VzX21hdGNoX3RvX2VuY2xvc3VyZShzdHJ1Yw0K
-IAkJcmV0dXJuOw0KIA0KIAlpZiAoc2NzaV9leGVjdXRlX3JlcShzZGV2LCBj
-bWQsIERNQV9GUk9NX0RFVklDRSwgYnVmLA0KLQkJCSAgICAgVlBEX0lOUVVJ
-UllfU0laRSwgTlVMTCwgU0VTX1RJTUVPVVQsIFNFU19SRVRSSUVTKSkNCisJ
-CQkgICAgIFZQRF9JTlFVSVJZX1NJWkUsIE5VTEwsIFNFU19USU1FT1VULCBT
-RVNfUkVUUklFUywNCisJCQkgICAgIE5VTEwpKQ0KIAkJZ290byBmcmVlOw0K
-IA0KIAlsZW4gPSAoYnVmWzJdIDw8IDgpICsgYnVmWzNdOw0KSW5kZXg6IHVz
-Yi0yLjYvZHJpdmVycy9zY3NpL3NyLmMNCj09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9zY3NpL3NyLmMNCisrKyB1
-c2ItMi42L2RyaXZlcnMvc2NzaS9zci5jDQpAQCAtMTc3LDcgKzE3Nyw3IEBA
-IGludCBzcl90ZXN0X3VuaXRfcmVhZHkoc3RydWN0IHNjc2lfZGV2aWMNCiAJ
-ZG8gew0KIAkJdGhlX3Jlc3VsdCA9IHNjc2lfZXhlY3V0ZV9yZXEoc2Rldiwg
-Y21kLCBETUFfTk9ORSwgTlVMTCwNCiAJCQkJCSAgICAgIDAsIHNzaGRyLCBT
-Ul9USU1FT1VULA0KLQkJCQkJICAgICAgcmV0cmllcy0tKTsNCisJCQkJCSAg
-ICAgIHJldHJpZXMtLSwgTlVMTCk7DQogDQogCX0gd2hpbGUgKHJldHJpZXMg
-PiAwICYmDQogCQkgKCFzY3NpX3N0YXR1c19pc19nb29kKHRoZV9yZXN1bHQp
-IHx8DQpAQCAtNjg3LDcgKzY4Nyw3IEBAIHN0YXRpYyB2b2lkIGdldF9zZWN0
-b3JzaXplKHN0cnVjdCBzY3NpX2MNCiAJCS8qIERvIHRoZSBjb21tYW5kIGFu
-ZCB3YWl0Li4gKi8NCiAJCXRoZV9yZXN1bHQgPSBzY3NpX2V4ZWN1dGVfcmVx
-KGNkLT5kZXZpY2UsIGNtZCwgRE1BX0ZST01fREVWSUNFLA0KIAkJCQkJICAg
-ICAgYnVmZmVyLCA4LCBOVUxMLCBTUl9USU1FT1VULA0KLQkJCQkJICAgICAg
-TUFYX1JFVFJJRVMpOw0KKwkJCQkJICAgICAgTUFYX1JFVFJJRVMsIE5VTEwp
-Ow0KIA0KIAkJcmV0cmllcy0tOw0KIA0KSW5kZXg6IHVzYi0yLjYvZHJpdmVy
-cy9zY3NpL3NyX2lvY3RsLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0t
-LSB1c2ItMi42Lm9yaWcvZHJpdmVycy9zY3NpL3NyX2lvY3RsLmMNCisrKyB1
-c2ItMi42L2RyaXZlcnMvc2NzaS9zcl9pb2N0bC5jDQpAQCAtMjA3LDcgKzIw
-Nyw3IEBAIGludCBzcl9kb19pb2N0bChTY3NpX0NEICpjZCwgc3RydWN0IHBh
-Y2sNCiAJbWVtc2V0KHNlbnNlLCAwLCBzaXplb2YoKnNlbnNlKSk7DQogCXJl
-c3VsdCA9IHNjc2lfZXhlY3V0ZShTRGV2LCBjZ2MtPmNtZCwgY2djLT5kYXRh
-X2RpcmVjdGlvbiwNCiAJCQkgICAgICBjZ2MtPmJ1ZmZlciwgY2djLT5idWZs
-ZW4sIChjaGFyICopc2Vuc2UsDQotCQkJICAgICAgY2djLT50aW1lb3V0LCBJ
-T0NUTF9SRVRSSUVTLCAwKTsNCisJCQkgICAgICBjZ2MtPnRpbWVvdXQsIElP
-Q1RMX1JFVFJJRVMsIDAsIE5VTEwpOw0KIA0KIAlzY3NpX25vcm1hbGl6ZV9z
-ZW5zZSgoY2hhciAqKXNlbnNlLCBzaXplb2YoKnNlbnNlKSwgJnNzaGRyKTsN
-CiANCg==
----1559625215-1692564458-1213993360=:2133
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="scsi-ms-res.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.0806201622401.2133@iolanthe.rowland.org>
-Content-Description: 
-Content-Disposition: attachment; filename="scsi-ms-res.patch"
+> * Implement queue quiescing and other state management on request_queue.
+> * Implement block_queue_group which...
+> 	- Handles command scheduling.
+> 	- Handles grouped queue quiescing and EH handling
 
-SW5kZXg6IHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmMNCisrKyB1c2ItMi42L2RyaXZlcnMvc2NzaS9zY3Np
-X2xpYi5jDQpAQCAtMTg1Miw2ICsxODUyLDcgQEAgc2NzaV9tb2RlX3NlbnNl
-KHN0cnVjdCBzY3NpX2RldmljZSAqc2Rldg0KIAlpbnQgdXNlXzEwX2Zvcl9t
-czsNCiAJaW50IGhlYWRlcl9sZW5ndGg7DQogCWludCByZXN1bHQ7DQorCXVu
-c2lnbmVkIHJlc2lkdWU7DQogCXN0cnVjdCBzY3NpX3NlbnNlX2hkciBteV9z
-c2hkcjsNCiANCiAJbWVtc2V0KGRhdGEsIDAsIHNpemVvZigqZGF0YSkpOw0K
-QEAgLTE4ODUsNyArMTg4Niw3IEBAIHNjc2lfbW9kZV9zZW5zZShzdHJ1Y3Qg
-c2NzaV9kZXZpY2UgKnNkZXYNCiAJbWVtc2V0KGJ1ZmZlciwgMCwgbGVuKTsN
-CiANCiAJcmVzdWx0ID0gc2NzaV9leGVjdXRlX3JlcShzZGV2LCBjbWQsIERN
-QV9GUk9NX0RFVklDRSwgYnVmZmVyLCBsZW4sDQotCQkJCSAgc3NoZHIsIHRp
-bWVvdXQsIHJldHJpZXMsIE5VTEwpOw0KKwkJCQkgIHNzaGRyLCB0aW1lb3V0
-LCByZXRyaWVzLCAmcmVzaWR1ZSk7DQogDQogCS8qIFRoaXMgY29kZSBsb29r
-cyBhd2Z1bDogd2hhdCBpdCdzIGRvaW5nIGlzIG1ha2luZyBzdXJlIGFuDQog
-CSAqIElMTEVHQUwgUkVRVUVTVCBzZW5zZSByZXR1cm4gaWRlbnRpZmllcyB0
-aGUgYWN0dWFsIGNvbW1hbmQNCkBAIC0xOTA3LDYgKzE5MDgsOCBAQCBzY3Np
-X21vZGVfc2Vuc2Uoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2DQogCX0NCiAN
-CiAJaWYoc2NzaV9zdGF0dXNfaXNfZ29vZChyZXN1bHQpKSB7DQorCQlpZiAo
-cmVzaWR1ZSA+IGxlbiAtIGhlYWRlcl9sZW5ndGgpDQorCQkJcmV0dXJuIFNB
-TV9TVEFUX0NIRUNLX0NPTkRJVElPTjsNCiAJCWlmICh1bmxpa2VseShidWZm
-ZXJbMF0gPT0gMHg4NiAmJiBidWZmZXJbMV0gPT0gMHgwYiAmJg0KIAkJCSAg
-ICAgKG1vZGVwYWdlID09IDYgfHwgbW9kZXBhZ2UgPT0gOCkpKSB7DQogCQkJ
-LyogSW5pdGlvIGJyZWFrYWdlPyAqLw0K
----1559625215-1692564458-1213993360=:2133--
+There's the beginnings of this in Jens' unmerged block timers work
+
+> * Move SCSI high level drivers to new infrastructure
+> * Convert libata to use new command scheduling and EH infrastructure
+> * Apply driver model to libata.
+> * Implement ata_disk ATA high level driver.
+> 
+> In the process, I'm planning to remove ata_host requirement and break
+> down libata EH into actions and sequencers so that SAS can use them
+> easily.
+> 
+> The biggest problem is how to keep userland happy.  hdX -> sdX
+> transition was painful enough and I have a strong feeling that
+> everyone will come after and hunt down us if we try something like sdX
+> -> bdX now.  :-)
+
+In theory mounting by label or ID should have fixed a lot of this.
+However, if we need to head off a revolt, the sdX allocation algorithm
+can be placed into it's own module so both sd and a ULD ata driver could
+use it ...
+
+> It would be ideal if those ATA specific sysfs stuff just shows up
+> without disturbing the original SCSI things which are now widely used
+> for enumeration and manipulation.  I think we can get pretty close by
+> modifying SCSI high level drivers a bit such that they don't register
+> block devices for SCSI devices created to keep backward compatibility.
+> This is an extra burden on SCSI but it's gonna be the last one.
+> 
+> *** Currently, sysfs nodes for a libata disk is like the following.
+> 
+>  /devices/DEV/hostH/targetH:C:I/H:C:I:L/
+> 	 driver			-> /bus/scsi/drivers/sd
+> 	 generic			-> /class/scsi_generic/sgN
+> 	 block/sdX/
+> 		 device		-> ../../
+> 		 partitions...
+>  /bus/scsi/devices/H:C:I:L	-> /devices/DEV/hostH/targetH:C:I/H:C:I:L
+>  /bus/scsi/drivers/sd/H:C:I:L	-> /devices/DEV/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_host/hostH/device	-> /devices/DEV/hostH
+>  /class/scsi_device/H:C:I:L/device -> /devices/DEV/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_disk/H:C:I:L/device -> /devices/DEV/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_generic/sgN/device	-> /devices/DEV/hostH/targetH:C:I/H:C:I:L
+>  /block/sda			-> /devices/DEV/hostH/targetH:C:I/H:C:I:L/block/sdX
+> 
+> *** After conversion, it will look something like the following.
+> 
+>  /devices/DEV/ata_port/P/ata_link/P:L/ata_device/P:D
+> 	 driver			-> /bus/ata/drivers/ata_disk
+> 	 block/sdX/
+> 		 device		-> ../../
+> 		 partitions...
+>  C	scsi_device		-> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+>  /bus/ata/devices/P:D		-> /devices/DEV/ata_port/P/ata_link/P:L/ata_device/P:D
+>  /bus/ata/drivers/ata_disk/P:D	-> /devices/DEV/ata_port/P/ata_link/P:L/ata_device/P:D
+>  /block/sda			-> /devices/DEV/ata_port/P/ata_link/P:L/ata_device/P:D/block/sdX
+
+Could you, perhaps, make the port multipler visible in this as a new
+device, a bit like we do today for SAS expanders?
+
+>  /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L/
+> 	 driver			-> /bus/scsi/drivers/sd
+> 	 generic			-> /class/scsi_generic/sgN
+>  C	block			-> ata_port/P/ata_link/P:L/ata_device/P:D/block
+>  C	ata_device		-> /devices/DEV/ata_port/P/ata_link/P:L/ata_device/P:D
+> 
+>  /bus/scsi/devices/H:C:I:L	-> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+>  /bus/scsi/drivers/sd/H:C:I:L	-> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_host/hostH/device	-> /devices/DEV/scsi_compat/hostH
+>  /class/scsi_device/H:C:I:L/device -> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_disk/H:C:I:L/device	-> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+>  /class/scsi_generic/sgN/device	-> /devices/DEV/scsi_compat/hostH/targetH:C:I/H:C:I:L
+> 
+> The SCSI side of interface will remain as functional as now as it will
+> go through the same libata SAT layer.
+
+Actually, surely we can mostly dump the SAT layer?  libsas should be
+made capable of taking ATA protocol packets straight from your ULD ATA
+driver and sending them out.
+
+I could see us still needing it as an optional component so we can send
+SCSI SG_IO to ATA devices.
+
+>   The only surprise userspace
+> will see aside from the extra ata nodes is that /sys/block/sdX/device
+> will lead to an ATA device node instead of SCSI device node.  Well,
+> that's the whole point of the converion but I think the surprise can
+> be minimized by reusing names used in SCSI device node and possibly
+> making symlinks for nodes which only makes sense for SCSI device.
+> 
+> So, what do you guys think?
+
+I think the devil will be in the details, but that it certainly won't be
+obvious until the conversion is actually tried.
+
+James
+
+
