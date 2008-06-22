@@ -1,118 +1,95 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after media
- change and delay
-Date: Sun, 22 Jun 2008 10:18:36 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0806221018220.9736@vixen.sonytel.be>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
- <Pine.LNX.4.64.0806131932350.30730@vixen.sonytel.be>
- <5a4c581d0806180147qf8fc731y527c79bfb73401b2@mail.gmail.com>
- <Pine.LNX.4.64.0806181156460.13297@vixen.sonytel.be>
- <5a4c581d0806180515g5f24e9d9m85369bfa0a5f2228@mail.gmail.com>
- <5a4c581d0806210718m77be63c9l444d8d7d7a5266bd@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
+Date: Sun, 22 Jun 2008 15:16:49 +0300
+Message-ID: <485E42B1.1060807@panasas.com>
+References: <20080619160342.GJ4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-741793478-1214122716=:9736"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:49442 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750980AbYFVISp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jun 2008 04:18:45 -0400
-In-Reply-To: <5a4c581d0806210718m77be63c9l444d8d7d7a5266bd@mail.gmail.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:16414 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751566AbYFVMRN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jun 2008 08:17:13 -0400
+In-Reply-To: <20080619160342.GJ4392@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alessandro Suardi <alessandro.suardi@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----584349381-741793478-1214122716=:9736
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Sat, 21 Jun 2008, Alessandro Suardi wrote:
-> On Wed, Jun 18, 2008 at 2:15 PM, Alessandro Suardi
-> <alessandro.suardi@gmail.com> wrote:
-> > On Wed, Jun 18, 2008 at 1:13 PM, Geert Uytterhoeven
-> > <Geert.Uytterhoeven@sonycom.com> wrote:
-> >> On Wed, 18 Jun 2008, Alessandro Suardi wrote:
-> >>> On Fri, Jun 13, 2008 at 7:33 PM, Geert Uytterhoeven
-> >>> <Geert.Uytterhoeven@sonycom.com> wrote:
-> >>> > On Fri, 6 Jun 2008, Geert Uytterhoeven wrote:
-> >>> >> When mounting a CD/DVD more than 30 seconds after inserting it, and reading
-> >>> >> from it, we get:
-> >>> >
-> >>> > Apparently the fix didn't make it to all the CCed lists...
-> >>> >
-> >>> > http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-rc-fixes-2.6.git;a=commitdiff_plain;h=d1daeabf0da5bfa1943272ce508e2ba785730bf0
-> >>>
-> >>> Oh, that's in mainline ? I still have the problem of having to
-> >>
-> >> Not yet, it's in the scsi-rc-fixes-2.6 tree.
-> >>
-> >>>  insert DVD / try accessing it and get errors / eject / re-insert
-> >>>  and then it magically works... the messages have changed
-> >>>  from what they were as reported here
-> >>>
-> >>> http://bugzilla.kernel.org/show_bug.cgi?id=10116
-> >>>
-> >>>  (see comments #8 and #9) to these ones, in 2.6.26-rc6-git4:
-> >>>
-> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Result:
-> >>> hostbyte=0x00 driverbyte=0x08
-> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Sense Key : 0x3 [current]
-> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] ASC=0x11 ASCQ=0x0
-> >>> Jun 17 22:38:43 sandman kernel: end_request: I/O error, dev sr0, sector 232
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 29
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 30
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 31
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 32
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 33
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 34
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 35
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 36
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 37
-> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 38
-> >>>
-> >>> here I eject and reinsert the disc, and:
-> >>>
-> >>> Jun 17 22:39:10 sandman kernel: UDF-fs: No VRS found
-> >>>
-> >>>  lo and behold, no problem.
-> >>>
-> >>> This does not, alas, happen every time. It might be at the first
-> >>>  DVD access after booting the laptop, but I haven't investigated
-> >>>  in this detail yet.
-> >>
-> >> Does /sys/block/sr0/size reflect the correct size of the DVD?
-> >>
-> >> Did you try applying the patch?
-> >
-> > ATM I'm away from home (as usual), I'll post back when
-> >  I have the info you asked for and tried applying the
-> >  above patch. Thanks !
+Matthew Wilcox wrote:
+> Use the noop elevator by default for drives that do not spin
 > 
-> Sigh. I haven't been able to reproduce the problem once since
->  I posted this. Will keep trying...
+<snip> 
+> I've brazenly stolen sd_vpd_inquiry from mkp's patch here:
+> 
+> http://marc.info/?l=linux-scsi&m=121264354724277&w=2
+> 
+> No need to have two copies of that ... but this will conflict with his code.
+> 
+<snip>
+> I think there's an opportunity to improve sd_vpd_inquiry() to remove
+> some of the duplicate code between sd_set_elevator() and sd_block_limits,
+> but it's not terribly important.
+> 
+<snip>
+> Not-signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 01cefbb..1c5a296 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1534,6 +1534,79 @@ defaults:
+>  	sdkp->DPOFUA = 0;
+>  }
+>  
+> +static int sd_vpd_inquiry(struct scsi_disk *sdkp, unsigned char *buffer, u8 page, u8 len)
+> +{
+> +	int result;
+> +	unsigned char cmd[16];
+> +	struct scsi_sense_hdr sshdr;
+> +
+> +	memset(cmd, 0, 16);
+> +	cmd[0] = INQUIRY;
+> +	cmd[1] = 1;		/* EVPD */
+> +	cmd[2] = page;		/* VPD page */
+> +	cmd[3] = len;
+> +	
+> +	result = scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer,
+> +				  len, &sshdr, SD_TIMEOUT, SD_MAX_RETRIES);
+> +
+> +	if (media_not_present(sdkp, &sshdr))
+> +		return -EIO;
+> +
+> +	if (result) {
+> +		sd_printk(KERN_ERR, sdkp, "EVPD Inquiry failed\n");
+> +		return -EIO;
+> +	}
+> +
+> +	if (buffer[1] != page) {
+> +		sd_printk(KERN_ERR, sdkp, "Page code not %2x (%2x)\n", page,
+> +			  buffer[1]);
+> +		return -EIO;
+> +	}
+> +
+> +	return buffer[3];
+> +}
 
-Perhaps because the fix is now in mainline?
+I was just copy/pasting the same code into my ULD. Perhaps the low level of above
+could be made into a scsi_vpd_inquiry(...). From a quick search it looks like there
+are 3 more places that issue _vpd_inquiry in the tree today.
 
-With kind regards,
+<snip>
 
-Geert Uytterhoeven
-Software Architect
+Some of the more interesting device information are in vpd's. we should have a generic
+user-mode way to inquire them. sysfs structure, ioctl, I'm not sure, something good for
+udev. There are tones of such little knobs that could be tuned according to vpd
+information.
 
-Sony Techsoft Centre
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+Thanks for doing this, I will investigate if current iscsi-targets will immediately benefit
+from this too. From my testing I found that it is usually better to let the target side
+elevator do the work, and set the Initiator elevator to noop. Do you know what the standard
+say about the default value should be, in the case the page is not present. I would assume 
+it means "No spinning media" too, right?
 
-Phone:    +32 (0)2 700 8453
-Fax:      +32 (0)2 700 8622
-E-mail:   Geert.Uytterhoeven@sonycom.com
-Internet: http://www.sony-europe.com/
-
-Sony Technology and Software Centre Europe
-A division of Sony Service Centre (Europe) N.V.
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
-VAT BE 0413.825.160 · RPR Brussels
-Fortis 293-0376800-10 GEBA-BE-BB
----584349381-741793478-1214122716=:9736--
+Boaz
