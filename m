@@ -1,63 +1,94 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
-Date: Sun, 22 Jun 2008 08:38:51 -0500
-Message-ID: <1214141931.4047.5.camel@localhost.localdomain>
-References: <20080619160342.GJ4392@parisc-linux.org>
+Subject: Re: [PATCH] libata support for rotation speed
+Date: Sun, 22 Jun 2008 08:44:58 -0500
+Message-ID: <1214142298.4047.11.camel@localhost.localdomain>
+References: <20080619160216.GH4392@parisc-linux.org>
+	 <20080619175904.GK4392@parisc-linux.org>
+	 <1213899895.3501.45.camel@localhost.localdomain>
+	 <20080619183113.GM4392@parisc-linux.org> <485AAD0D.9000205@garzik.org>
+	 <20080619191337.GO4392@parisc-linux.org> <485E4894.7000508@panasas.com>
+	 <20080622133105.GY4392@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37406 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751966AbYFVNiy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jun 2008 09:38:54 -0400
-In-Reply-To: <20080619160342.GJ4392@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080622133105.GY4392@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2008-06-19 at 10:03 -0600, Matthew Wilcox wrote:
-> Use the noop elevator by default for drives that do not spin
+On Sun, 2008-06-22 at 07:31 -0600, Matthew Wilcox wrote:
+> On Sun, Jun 22, 2008 at 03:41:56PM +0300, Boaz Harrosh wrote:
+> > > +		rbuf[4] = args->id[217] >> 8;
+> > > +		rbuf[5] = args->id[217];
+> > 
+> > args->id of struct ata_scsi_args are defined as u16.
+> > Are they actually SWABed at this point? Are they LE? BE?
 > 
-> [Not for applying]
+> They're cpu-endian at this point, I believe.  See ata_dev_read_id() in
+> libata-core.c where it calls swap_buf_le16().
 > 
-> SSDs do not benefit from the elevator.  It just wastes precious CPU cycles.
-> By selecting the noop elevator by default, we can shave a few microseconds
-> off each IO.
+> > if args->id are actually __be16 then above should be
+> >  +		put_unaligned(args->id[217], &rbuf[4]);
+> > else
+> >  +		put_unaligned_be16(args->id[217], &rbuf[4]);
 > 
-> I've brazenly stolen sd_vpd_inquiry from mkp's patch here:
+> But the buf isn't unaligned, nor the offset within it.  And I
+> get confused by all these macros anyway.  If we had something like
+> store_scsi_u16(unsigned char *, u16), I'd use that, but put_unaligned_be16
+> just doesn't make sense.
 > 
-> http://marc.info/?l=linux-scsi&m=121264354724277&w=2
+> I actually wrote my own accessors for scsi_ram.  If they were to be more
+> generic, they ought to be renamed, but this is what I found useful:
 > 
-> No need to have two copies of that ... but this will conflict with his code.
+> /*
+>  * SCSI requires quantities to be written MSB.  They're frequently misaligned,
+>  * so don't mess about with cpu_to_beN, just access it byte-wise
+>  */
+> static void scsi_ram_put_u32(unsigned char *addr, unsigned int data)
+> {
+>         addr[0] = data >> 24;
+>         addr[1] = data >> 16;
+>         addr[2] = data >> 8;
+>         addr[3] = data;
+> }
 > 
-> On to the self-criticism:
+> static unsigned int scsi_ram_get_u16(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 8;
+>         data |= addr[1];
 > 
-> I don't intend the final version of this patch to include a printk for
-> the RPM or even a printk to say we switched IO elevator.  I think we're
-> too verbose in SCSI as it is.
+>         return data;
+> }
 > 
-> I think there's an opportunity to improve sd_vpd_inquiry() to remove
-> some of the duplicate code between sd_set_elevator() and sd_block_limits,
-> but it's not terribly important.
+> static unsigned int scsi_ram_get_u24(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 16;
+>         data |= addr[1] << 8;
+>         data |= addr[2];
+> 
+>         return data;
+> }
+> 
+> static unsigned int scsi_ram_get_u32(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 24;
+>         data |= addr[1] << 16;
+>         data |= addr[2] << 8;
+>         data |= addr[3];
+> 
+>         return data;
+> }
 
-and actually ses.c as well.
-
-> The switching of the elevators isn't particularly nice.  I assume that
-> elevator_init("noop") cannot fail, which isn't true.  It would be nice
-> to use the #if 0 block instead, but that causes a null ptr dereference
-> inside sysfs -- I suspect something isn't set up correctly.
-
-I'm really not very keen on this patch, since it's implementing elevator
-policy from sd which is a bit of a layering violation (and a policy
-should be in userspace one).
-
-What's wrong with doing this entirely from udev (it already issues the
-vpd's today, that's how it gets the id from page 0x83 ... it could
-easily look at 0xb1 and set the elevator
-using /sys/block/<>/queue/scheduler)?.
+This last one (but unfortunately that one only) actually exists in
+scsi/scsi.h as scsi_to_u32().  If they're generally useful, expanding
+them to more data types can be done ... they could even be implemented
+in terms of put_unaligned_beX which might hide the confusion that
+plethora of macros causes.
 
 James
 
