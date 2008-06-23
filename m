@@ -1,51 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Mon, 23 Jun 2008 11:04:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0806231054540.2556-100000@iolanthe.rowland.org>
-References: <1213999774.3443.49.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH 1/4] Fix SES timeout
+Date: Mon, 23 Jun 2008 09:14:31 -0600
+Message-ID: <20080623151431.GD4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48071 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754889AbYFWPEw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2008 11:04:52 -0400
-In-Reply-To: <1213999774.3443.49.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:54230 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128AbYFWPOr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2008 11:14:47 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>, Peter Teoh <htmldeveloper@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 20 Jun 2008, James Bottomley wrote:
+Timeouts are measured in jiffies, not in seconds.
 
-> Yes, thanks.  It's a bit nasty from a security point of view, since the
-> leaking data apparently belonged to a different command.  Wouldn't a
-> better fix (and a more secure one) be to clear from the end of the valid
-> data to the end of the buffer?
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-Here's the promised patch.  Maciej and Peter, please try it out.
-
-Alan Stern
-
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
- 	 */
- 	blk_execute_rq(req->q, NULL, req, 1);
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 45df83b..351bce7 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -61,7 +61,7 @@ static int ses_probe(struct device *dev)
+ 	return err;
+ }
  
-+	/*
-+	 * Some devices (USB mass-storage in particular) may transfer
-+	 * garbage data together with a residue indicating that the data
-+	 * is invalid.  Prevent the garbage from being misinterpreted
-+	 * and prevent security leaks by zeroing out the excess data.
-+	 */
-+	if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
-+		memset(buffer + (bufflen - req->data_len), 0, req->data_len);
-+
- 	ret = req->errors;
-  out:
- 	blk_put_request(req);
+-#define SES_TIMEOUT 30
++#define SES_TIMEOUT (30 * HZ)
+ #define SES_RETRIES 3
+ 
+ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
 
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
