@@ -1,123 +1,108 @@
-From: mark gross <mgross@linux.intel.com>
-Subject: Re: Intel IOMMU (and IOMMU for Virtualization) performances
-Date: Mon, 23 Jun 2008 10:54:01 -0700
-Message-ID: <20080623175401.GA17008@linux.intel.com>
-References: <20080604235053K.fujita.tomonori@lab.ntt.co.jp> <20080605220216.GA12927@linux.intel.com> <20080606134839Z.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: mgross@linux.intel.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] esp: tidy up target reference counting
+Date: Mon, 23 Jun 2008 14:52:09 -0500
+Message-ID: <1214250729.3310.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19290 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753273AbYFWRyD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2008 13:54:03 -0400
-Content-Disposition: inline
-In-Reply-To: <20080606134839Z.fujita.tomonori@lab.ntt.co.jp>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52042 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754954AbYFWTwO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jun 2008 15:52:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 06, 2008 at 01:44:30PM +0900, FUJITA Tomonori wrote:
-> On Thu, 5 Jun 2008 15:02:16 -0700
-> mark gross <mgross@linux.intel.com> wrote:
-> 
-> > On Wed, Jun 04, 2008 at 11:47:01PM +0900, FUJITA Tomonori wrote:
-> > > I resumed the work to make the IOMMU respect drivers' DMA alignment
-> > > (since I got a desktop box having VT-d). In short, some IOMMUs
-> > > allocate memory areas spanning driver's segment boundary limit (DMA
-> > > alignment). It forces drivers to have a workaround to split up scatter
-> > > entries into smaller chunks again. To remove such work around in
-> > > drivers, I modified several IOMMUs, X86_64 (Calgary and Gart), Alpha,
-> > > POWER, PARISC, IA64, SPARC64, and swiotlb.
-> > > 
-> > > Now I try to fix Intel IOMMU code, the free space management
-> > > algorithm.
-> > > 
-> > > The major difference between Intel IOMMU code and the others is Intel
-> > > IOMMU code uses Red Black tree to manage free space while the others
-> > > use bitmap (swiotlb is the only exception).
-> > > 
-> > > The Red Black tree method consumes less memory than the bitmap method,
-> > > but it incurs more overheads (the RB tree method needs to walk through
-> > > the tree, allocates a new item, and insert it every time it maps an
-> > > I/O address). Intel IOMMU (and IOMMUs for virtualization) needs
-> > > multiple IOMMU address spaces. That's why the Red Black tree method is
-> > > chosen, I guess.
-> > > 
-> > > Half a year ago, I tried to convert POWER IOMMU code to use the Red
-> > > Black method and saw performance drop:
-> > > 
-> > > http://linux.derkeiler.com/Mailing-Lists/Kernel/2007-11/msg00650.html
-> > > 
-> > > So I tried to convert Intel IOMMU code to use the bitmap method to see
-> > > how much I can get.
-> > > 
-> > > I didn't see noticable performance differences with 1GbE. So I tried
-> > > the modified driver of a SCSI HBA that just does memory accesses to
-> > > emulate the performances of SSD disk drives, 10GbE, Infiniband, etc.
-> > > 
-> > > I got the following results with one thread issuing 1KB I/Os:
-> > > 
-> > >                     IOPS (I/O per second)
-> > > IOMMU disabled         145253.1 (1.000)
-> > > RB tree (mainline)     118313.0 (0.814)
-> > > Bitmap                 128954.1 (0.887)
-> > >
-> > 
-> > FWIW: You'll see bigger deltas if you boot with intel_iommu=strict, but
-> > those will be because of waiting on IOMMU hardware to flush caches and
-> > may further hide effects of gong with a bitmap as opposed to a RB tree.
-> 
-> Yeah, I know. I'll test 'intel_iommu=strict' option next time.
-> 
-> The patch also has 'intel_iommu=strict' option. Wiht it enabled, it
-> flushes TLB cache every time dma_unmap_* is called as the original
-> code does.
-> 
-> 
-> > > I've attached the patch to modify Intel IOMMU code to use the bitmap
-> > > method but I have no intention of arguing that Intel IOMMU code
-> > > consumes more memory for better performance. :) I want to do more
-> > > performance tests with 10GbE (probably, I have to wait for a server
-> > > box having VT-d, which is not available on the market now).
-> > > 
-> > > As I said, what I want to do now is to make Intel IOMMU code respect
-> > > drivers' DMA alignment. Well, it's easier to do that if Intel IOMMU
-> > > uses the bitmap method since I can simply convert the IOMMU code to
-> > > use lib/iommu-helper but I can modify the RB tree method too.
-> > >
-> > 
-> > I'm going to be out of contact for a few weeks but this work sounds
-> > interesting.  
-> 
-> Why did you choose the RB tree instead of a traditional bitmap scheme
-> to manage free space?
->
+The esp driver currently does hand rolled reference counting of its
+target.  It's much easier to do what it needs to do if it's plugged into
+the mid-layer callbacks (target_alloc and target_destroy) which were
+designed for this case, so do it this way and get rid of the internal
+target reference count.
 
-I inherited this code.  And I'm passing it on to David Woodhouse soon.
-I don't know why RB was used over BM.  I guess for scalability to many
-10Gig IO devices, but thats just a guess.
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+---
+
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index fa75636..62a4618 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2361,6 +2361,24 @@ void scsi_esp_unregister(struct esp *esp)
+ }
+ EXPORT_SYMBOL(scsi_esp_unregister);
  
-> 
-> > > I'm just interested in other people's opinions on IOMMU
-> > > implementations, performances, possible future changes for performance
-> > > improvement, etc.
-> > > 
-> > > For further information:
-> > > 
-> > > LSF'08 "Storage Track" summary by Grant Grundler:
-> > > http://iou.parisc-linux.org/lsf2008/SUMMARY-Storage.txt
-> > > 
-> > > My LSF'08 slides:
-> > > http://iou.parisc-linux.org/lsf2008/IO-DMA_Representations-fujita_tomonori.pdf
-> > > 
-> > > 
-> > > Tis patch is against the latst git tree (note that it just converts
-> > > Intel IOMMU code to use the bitmap. It doesn't make it respect
-> > > drivers' DMA alignment yet).
-> > > 
-> > 
-> > I'll look closely at your patch later.
-> 
-> Thanks a lot!
++static int esp_target_alloc(struct scsi_target *starget)
++{
++	struct esp *esp = shost_priv(dev_to_shost(&starget->dev));
++	struct esp_target_data *tp = &esp->target[starget->id];
++
++	tp->starget = starget;
++
++	return 0;
++}
++
++static void esp_target_destroy(struct scsi_target *starget)
++{
++	struct esp *esp = shost_priv(dev_to_shost(&starget->dev));
++	struct esp_target_data *tp = &esp->target[starget->id];
++
++	tp->starget = NULL;
++}
++
+ static int esp_slave_alloc(struct scsi_device *dev)
+ {
+ 	struct esp *esp = shost_priv(dev->host);
+@@ -2372,9 +2390,6 @@ static int esp_slave_alloc(struct scsi_device *dev)
+ 		return -ENOMEM;
+ 	dev->hostdata = lp;
+ 
+-	tp->starget = dev->sdev_target;
+-	tp->starget_ref++;
+-
+ 	spi_min_period(tp->starget) = esp->min_period;
+ 	spi_max_offset(tp->starget) = 15;
+ 
+@@ -2428,17 +2443,10 @@ static int esp_slave_configure(struct scsi_device *dev)
+ 
+ static void esp_slave_destroy(struct scsi_device *dev)
+ {
+-	struct esp *esp = shost_priv(dev->host);
+-	struct esp_target_data *tp = &esp->target[dev->id];
+ 	struct esp_lun_data *lp = dev->hostdata;
+ 
+ 	kfree(lp);
+ 	dev->hostdata = NULL;
+-
+-	BUG_ON(tp->starget_ref <= 0);
+-
+-	if (!--tp->starget_ref)
+-		tp->starget = NULL;
+ }
+ 
+ static int esp_eh_abort_handler(struct scsi_cmnd *cmd)
+@@ -2618,6 +2626,8 @@ struct scsi_host_template scsi_esp_template = {
+ 	.name			= "esp",
+ 	.info			= esp_info,
+ 	.queuecommand		= esp_queuecommand,
++	.target_alloc		= esp_target_alloc,
++	.target_destroy		= esp_target_destroy,
+ 	.slave_alloc		= esp_slave_alloc,
+ 	.slave_configure	= esp_slave_configure,
+ 	.slave_destroy		= esp_slave_destroy,
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 655e0b2..bb43a13 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -322,7 +322,6 @@ struct esp_target_data {
+ 	u8			nego_goal_tags;
+ 
+ 	struct scsi_target	*starget;
+-	int			starget_ref;
+ };
+ 
+ struct esp_event_ent {
+
+
