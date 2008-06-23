@@ -1,42 +1,51 @@
-From: "jidong xiao" <jidong.xiao@gmail.com>
-Subject: Re: Dell 6450 LSI/AMI RAID Card need driver for rhel 5.2
-Date: Mon, 23 Jun 2008 11:48:55 +0800
-Message-ID: <4104961b0806222048p24ccdb8s5174bef21799b314@mail.gmail.com>
-References: <232673.71432.qm@web56214.mail.re3.yahoo.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Mon, 23 Jun 2008 11:04:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0806231054540.2556-100000@iolanthe.rowland.org>
+References: <1213999774.3443.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:23104 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbYFWDs6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jun 2008 23:48:58 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1038318fgg.17
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Jun 2008 20:48:55 -0700 (PDT)
-In-Reply-To: <232673.71432.qm@web56214.mail.re3.yahoo.com>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:48071 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754889AbYFWPEw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2008 11:04:52 -0400
+In-Reply-To: <1213999774.3443.49.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: liyingbo@yahoo.com
-Cc: linux-scsi@vger.kernel.org
+To: Maciej Rutecki <maciej.rutecki@gmail.com>, Peter Teoh <htmldeveloper@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, Jun 22, 2008 at 4:43 AM,  <liyingbo@yahoo.com> wrote:
-> Hi,
->
-> I have a DELL 6450 server, need to install RedHat Enterprise Server 5.2.
-> Can anyone help me find the Raid Control driver? The Raid controller's model is
-> PERC2/DC - dual-channel add-in card, Ultra2 SCSI (aka AMI MegaRAID 467)
->
-> Please send me the img file or link. It is better if you could send me the detail installation guide.
->
-> Thank you!!!
->
-> Albert
->
->
->
-The driver is not included in rhel5u2?megaraid_sas is not fit for your
-controller?
+On Fri, 20 Jun 2008, James Bottomley wrote:
 
-Regards
-Jason
+> Yes, thanks.  It's a bit nasty from a security point of view, since the
+> leaking data apparently belonged to a different command.  Wouldn't a
+> better fix (and a more secure one) be to clear from the end of the valid
+> data to the end of the buffer?
+
+Here's the promised patch.  Maciej and Peter, please try it out.
+
+Alan Stern
+
+
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
+ 	 */
+ 	blk_execute_rq(req->q, NULL, req, 1);
+ 
++	/*
++	 * Some devices (USB mass-storage in particular) may transfer
++	 * garbage data together with a residue indicating that the data
++	 * is invalid.  Prevent the garbage from being misinterpreted
++	 * and prevent security leaks by zeroing out the excess data.
++	 */
++	if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
++		memset(buffer + (bufflen - req->data_len), 0, req->data_len);
++
+ 	ret = req->errors;
+  out:
+ 	blk_put_request(req);
+
