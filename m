@@ -1,109 +1,67 @@
-From: "Peter Teoh" <htmldeveloper@gmail.com>
-Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
-Date: Tue, 24 Jun 2008 12:09:21 +0800
-Message-ID: <804dabb00806232109k32437d04jeed373b7d38abdb3@mail.gmail.com>
-References: <1213999774.3443.49.camel@localhost.localdomain>
-	 <Pine.LNX.4.44L0.0806231054540.2556-100000@iolanthe.rowland.org>
-	 <804dabb00806232025m31ba0826lbddac040428e974f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10974] New: 2.6.25 regression: delay needed after audio CD insertion
+Date: Tue, 24 Jun 2008 02:27:52 -0700 (PDT)
+Message-ID: <bug-10974-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:38796 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbYFXEJW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2008 00:09:22 -0400
-Received: by an-out-0708.google.com with SMTP id d40so660781and.103
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Jun 2008 21:09:21 -0700 (PDT)
-In-Reply-To: <804dabb00806232025m31ba0826lbddac040428e974f@mail.gmail.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33289 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758651AbYFXJ2Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2008 05:28:24 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5O9Rq4Z017461
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2008 02:27:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Sorry, missed this one - in case u need it:
+http://bugzilla.kernel.org/show_bug.cgi?id=10974
 
-Tested-by: Peter Teoh <htmldeveloper@gmail.com>
+           Summary: 2.6.25 regression: delay needed after audio CD insertion
+           Product: SCSI Drivers
+           Version: 2.5
+     KernelVersion: 2.6.25
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: geert@linux-m68k.org
 
-Thanks.
 
-On Tue, Jun 24, 2008 at 11:25 AM, Peter Teoh <htmldeveloper@gmail.com> wrote:
-> On Mon, Jun 23, 2008 at 11:04 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> On Fri, 20 Jun 2008, James Bottomley wrote:
->>
->>> Yes, thanks.  It's a bit nasty from a security point of view, since the
->>> leaking data apparently belonged to a different command.  Wouldn't a
->>> better fix (and a more secure one) be to clear from the end of the valid
->>> data to the end of the buffer?
->>
->> Here's the promised patch.  Maciej and Peter, please try it out.
->>
->> Alan Stern
->>
->>
->> Index: usb-2.6/drivers/scsi/scsi_lib.c
->> ===================================================================
->> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
->> +++ usb-2.6/drivers/scsi/scsi_lib.c
->> @@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
->>         */
->>        blk_execute_rq(req->q, NULL, req, 1);
->>
->> +       /*
->> +        * Some devices (USB mass-storage in particular) may transfer
->> +        * garbage data together with a residue indicating that the data
->> +        * is invalid.  Prevent the garbage from being misinterpreted
->> +        * and prevent security leaks by zeroing out the excess data.
->> +        */
->> +       if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
->> +               memset(buffer + (bufflen - req->data_len), 0, req->data_len);
->> +
->>        ret = req->errors;
->>  out:
->>        blk_put_request(req);
->>
->>
->
-> Yes, it worked (based on latest linus git tree) the before and after
-> patch dmesg are as follows:
->
-> [  387.015562] scsi 3:0:0:0: Direct-Access     WD
-> 1600BEAExternal  1.02 PQ: 0 ANSI: 0
-> [  387.018563] sd 3:0:0:0: [sde] 312581808 512-byte hardware sectors (160042 MB)
-> [  387.018573] sd 3:0:0:0: [sde] Write Protect is on
-> [  387.018583] sd 3:0:0:0: [sde] Mode Sense: 12 a1 9e af
-> [  387.018589] sd 3:0:0:0: [sde] Assuming drive cache: write through
-> [  387.020182] sd 3:0:0:0: [sde] 312581808 512-byte hardware sectors (160042 MB)
-> [  387.020602] sd 3:0:0:0: [sde] Write Protect is on
-> [  387.020602] sd 3:0:0:0: [sde] Mode Sense: 12 a1 9e af
-> [  387.020602] sd 3:0:0:0: [sde] Assuming drive cache: write through
-> [  387.020602]  sde: sde1 sde2 sde3 < sde5 > sde4
-> [  387.094903] sd 3:0:0:0: [sde] Attached SCSI disk
-> [  387.095304] sd 3:0:0:0: Attached scsi generic sg4 type 0
->
-> After patching and recompiling and reboot:
->
-> [  230.281708] sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
-> [  230.282708] sd 3:0:0:0: [sdd] Write Protect is off
-> [  230.282708] sd 3:0:0:0: [sdd] Mode Sense: 00 00 00 00
-> [  230.282708] sd 3:0:0:0: [sdd] Assuming drive cache: write through
-> [  230.283708] sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
-> [  230.284709] sd 3:0:0:0: [sdd] Write Protect is off
-> [  230.284709] sd 3:0:0:0: [sdd] Mode Sense: 00 00 00 00
-> [  230.284709] sd 3:0:0:0: [sdd] Assuming drive cache: write through
-> [  230.284709]  sdd: sdd1 sdd2 sdd3 < sdd5 > sdd4
-> [  230.364830] sd 3:0:0:0: [sdd] Attached SCSI disk
->
-> Thank you very much Alan.
->
-> --
-> Regards,
-> Peter Teoh
->
+Latest working kernel version: 2.6.24
+Hardware Environment: PS3
+Problem Description: Audio CD cannot be read within 10 seconds after insertion
 
+Steps to reproduce:
+  1. Insert an audio CD
+  2. Run the following command as soon as the blue CD/DVD/BD drive LED
+     stops blinking and is lit continuously:
+
+     cdparanoia -Z -q 1-1[:1] /dev/null || echo failed
+
+On 2.6.25 (and current mainline), you have to wait ca. 10 seconds after
+insertion, or it will fail.
+On 2.6.24 and older, it just works immediately.
+
+(I could reproduce it on an Athlon with sym53c8xx SCSI running a Debianized
+ 2.6.25 kernel, too, but I didn't try a 2.6.24 kernel there)
+
+The problem was introduced by:
+
+commit 38582a62ecd337de4212004c7d4844899dc57890
+Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date:   Wed Feb 6 13:01:58 2008 -0600
+
+    [SCSI] sr: fix test unit ready responses
+
+References: http://lkml.org/lkml/2008/6/13/89
 
 
 -- 
-Regards,
-Peter Teoh
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
