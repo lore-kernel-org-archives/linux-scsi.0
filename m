@@ -1,63 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] Separating out libata out of SCSI (finally)
-Date: Tue, 24 Jun 2008 23:59:40 +0900
-Message-ID: <48610BDC.6090101@kernel.org>
-References: <485B2CC6.6070201@kernel.org>	 <1213993737.3443.35.camel@localhost.localdomain>	 <485C31FE.8050408@garzik.org>	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>	 <1214255460.3310.27.camel@localhost.localdomain>	 <4860B099.2030305@panasas.com> <1214318550.3299.7.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] esp: tidy up target reference counting
+Date: Tue, 24 Jun 2008 11:28:04 -0500
+Message-ID: <1214324884.3299.63.camel@localhost.localdomain>
+References: <1214250729.3310.24.camel@localhost.localdomain>
+	 <20080623.145828.60746793.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50427 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755163AbYFXPDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2008 11:03:11 -0400
-In-Reply-To: <1214318550.3299.7.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:50044 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751641AbYFXQ2I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2008 12:28:08 -0400
+In-Reply-To: <20080623.145828.60746793.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Tue, 2008-06-24 at 11:30 +0300, Boaz Harrosh wrote:
->> James Bottomley wrote:
->>> On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
->>>> I've seen a lot of end user complaints about libata only supporting
->>>> 15(14?) partitions.  Will that limit be moved back to the traditional
->>>> drivers/ide limit as part of this?
->>> Number of partitions is directly related to number of minors, so it
->>> can't be changed without a change in the allocation of major/minor space
->>> in sd ... that could only be done compatibly by permuting the space.
->>> The only other way to do it is incompatibly by changing major (again).
->>>
->> Could we do both? I mean use the legacy, up to 15, with the old major,
->> then use the new major for bigger then 15. Since user mode that knows
->> about more then 15 partitions is new, it'll know it needs to jump a major.
+On Mon, 2008-06-23 at 14:58 -0700, David Miller wrote:
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date: Mon, 23 Jun 2008 14:52:09 -0500
 > 
-> Not simultaneously, which is the problem; you can't have two separate
-> block devices for the same physical device unless you want aliasing
-> issues in the page cache.
+> > The esp driver currently does hand rolled reference counting of its
+> > target.  It's much easier to do what it needs to do if it's plugged into
+> > the mid-layer callbacks (target_alloc and target_destroy) which were
+> > designed for this case, so do it this way and get rid of the internal
+> > target reference count.
+> > 
+> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 > 
-> It might be possible to add an extra device to give access to the
-> missing partitions, but that would require a bit of re-engineering in
-> gendisk (which is the in-kernel code to manage the partitions).
+> Much cleaner, thanks!
 > 
-> What might be far more feasible is to set up udev to use kpartx to
-> provide the missing partitions if it detects a partition table that has
-> them ... of course, that requires a udev setup and most of the
-> complaints about the lost partitions seem to come from non-udev systems.
-> 
-> But .... if everyone (particularly the people with these problems) had
-> udev, we could simply migrate to a new major with more partitions, get
-> udev to fix it all up for us and everyone would be happy because no-one
-> would even notice that we'd moved majors ...
+> Signed-off-by: David S. Miller <davem@davemloft.net>
 
-I'm currently working on a scheme where partitions above gd->minors get
-allocated dynamic MAJ:MIN.  It looks like it can be done mostly in block
-layer proper.  The only problem I can foresee is not being able to
-specify MAJ:MIN as root device but that shouldn't be a major problem.
-I'll report back when I make more progress.
+You're welcome ... I actually initially queued this for the merge
+window, but since this looks like it fixes a bug that would affect any
+multi-lun installation, isn't it a candidate for the current git head
+(and indeed for stable), or isn't there that much of a multi-lun install
+base with this driver to worry about?
 
-Thanks.
+James
 
--- 
-tejun
+
