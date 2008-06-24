@@ -1,225 +1,94 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: 2.6.27-rc7-git1: usb-storage breakage with non-functional disk
-Date: Mon, 23 Jun 2008 16:42:10 -0700
-Message-ID: <20080623234210.GB31004@one-eyed-alien.net>
-References: <200806232345.54047.rjw@sisk.pl> <200806232350.09597.Rafal.Wysocki@fuw.edu.pl> <200806232358.33602.rjw@sisk.pl>
+From: "Peter Teoh" <htmldeveloper@gmail.com>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Tue, 24 Jun 2008 11:25:19 +0800
+Message-ID: <804dabb00806232025m31ba0826lbddac040428e974f@mail.gmail.com>
+References: <1213999774.3443.49.camel@localhost.localdomain>
+	 <Pine.LNX.4.44L0.0806231054540.2556-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gKMricLos+KVdGMg"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:42232
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751925AbYFWXmk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2008 19:42:40 -0400
+Received: from an-out-0708.google.com ([209.85.132.241]:53242 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbYFXDZd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2008 23:25:33 -0400
+Received: by an-out-0708.google.com with SMTP id d40so657428and.103
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Jun 2008 20:25:30 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.0806231054540.2556-100000@iolanthe.rowland.org>
 Content-Disposition: inline
-In-Reply-To: <200806232358.33602.rjw@sisk.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: USB development list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Mon, Jun 23, 2008 at 11:04 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Fri, 20 Jun 2008, James Bottomley wrote:
+>
+>> Yes, thanks.  It's a bit nasty from a security point of view, since the
+>> leaking data apparently belonged to a different command.  Wouldn't a
+>> better fix (and a more secure one) be to clear from the end of the valid
+>> data to the end of the buffer?
+>
+> Here's the promised patch.  Maciej and Peter, please try it out.
+>
+> Alan Stern
+>
+>
+> Index: usb-2.6/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
+> +++ usb-2.6/drivers/scsi/scsi_lib.c
+> @@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
+>         */
+>        blk_execute_rq(req->q, NULL, req, 1);
+>
+> +       /*
+> +        * Some devices (USB mass-storage in particular) may transfer
+> +        * garbage data together with a residue indicating that the data
+> +        * is invalid.  Prevent the garbage from being misinterpreted
+> +        * and prevent security leaks by zeroing out the excess data.
+> +        */
+> +       if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
+> +               memset(buffer + (bufflen - req->data_len), 0, req->data_len);
+> +
+>        ret = req->errors;
+>  out:
+>        blk_put_request(req);
+>
+>
 
---gKMricLos+KVdGMg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, it worked (based on latest linus git tree) the before and after
+patch dmesg are as follows:
 
-Huh.  Does SCSI core not do a get_device() before actually scanning?  It
-looks to me like the disconnect path did it's scsi_host_put and the host
-(and struct us_data) got freed immediately.
+[  387.015562] scsi 3:0:0:0: Direct-Access     WD
+1600BEAExternal  1.02 PQ: 0 ANSI: 0
+[  387.018563] sd 3:0:0:0: [sde] 312581808 512-byte hardware sectors (160042 MB)
+[  387.018573] sd 3:0:0:0: [sde] Write Protect is on
+[  387.018583] sd 3:0:0:0: [sde] Mode Sense: 12 a1 9e af
+[  387.018589] sd 3:0:0:0: [sde] Assuming drive cache: write through
+[  387.020182] sd 3:0:0:0: [sde] 312581808 512-byte hardware sectors (160042 MB)
+[  387.020602] sd 3:0:0:0: [sde] Write Protect is on
+[  387.020602] sd 3:0:0:0: [sde] Mode Sense: 12 a1 9e af
+[  387.020602] sd 3:0:0:0: [sde] Assuming drive cache: write through
+[  387.020602]  sde: sde1 sde2 sde3 < sde5 > sde4
+[  387.094903] sd 3:0:0:0: [sde] Attached SCSI disk
+[  387.095304] sd 3:0:0:0: Attached scsi generic sg4 type 0
 
-Matt
+After patching and recompiling and reboot:
 
-On Mon, Jun 23, 2008 at 11:58:32PM +0200, Rafael J. Wysocki wrote:
-> On Monday, 23 of June 2008, R. J. Wysocki wrote:
-> > [sorry for the broken USB list address in the original post.]
->=20
-> [and now my univeristy address instead of the usual one ...]
->=20
-> > On Monday, 23 of June 2008, Rafael J. Wysocki wrote:
-> > > Hi,
-> > >=20
-> > > This has just happened to me with -rc7-git1 while trying to use a not
-> > > sufficiently powered external disk (we should survive that IMO):
-> > >=20
-> > > usb 6-3: new high speed USB device using ehci_hcd and address 9
-> > > usb 6-3: device descriptor read/64, error -110
-> > > usb 6-3: device descriptor read/64, error -110
-> > > usb 6-3: new high speed USB device using ehci_hcd and address 10
-> > > usb 6-3: device descriptor read/64, error -110
-> > > usb 6-3: device descriptor read/64, error -110
-> > > usb 6-3: new high speed USB device using ehci_hcd and address 11
-> > > usb 6-3: device not accepting address 11, error -110
-> > > usb 6-3: new high speed USB device using ehci_hcd and address 12
-> > > usb 6-3: device not accepting address 12, error -110
-> > > hub 6-0:1.0: unable to enumerate USB device on port 3
-> > > usb 2-1: new full speed USB device using ohci_hcd and address 2
-> > > usb 2-1: not running at top speed; connect to a high speed hub
-> > > usb 2-1: configuration #1 chosen from 1 choice
-> > > usb 2-1: New USB device found, idVendor=3D04cf, idProduct=3D8818
-> > > usb 2-1: New USB device strings: Mfr=3D1, Product=3D2, SerialNumber=
-=3D3
-> > > usb 2-1: Product: USB Mass Storage Device
-> > > usb 2-1: Manufacturer: Myson Century, Inc.
-> > > usb 2-1: SerialNumber: 100
-> > > Initializing USB Mass Storage driver...
-> > > scsi12 : SCSI emulation for USB Mass Storage devices
-> > > usb-storage: device found at 2
-> > > usb-storage: waiting for device to settle before scanning
-> > > usbcore: registered new interface driver usb-storage
-> > > USB Mass Storage support registered.
-> > > scsi 12:0:0:0: Direct-Access     IC25N060 ATMR04-0         MO3O PQ: 0=
- ANSI: 0 CCS
-> > > sd 12:0:0:0: [sdc] 117210240 512-byte hardware sectors (60012 MB)
-> > > sd 12:0:0:0: [sdc] Write Protect is off
-> > > sd 12:0:0:0: [sdc] Mode Sense: 00 14 00 00
-> > > sd 12:0:0:0: [sdc] Assuming drive cache: write through
-> > > sd 12:0:0:0: [sdc] 117210240 512-byte hardware sectors (60012 MB)
-> > > sd 12:0:0:0: [sdc] Write Protect is off
-> > > sd 12:0:0:0: [sdc] Mode Sense: 00 14 00 00
-> > > sd 12:0:0:0: [sdc] Assuming drive cache: write through
-> > >  sdc:<6>usb 2-1: USB disconnect, address 2
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_ERROR driverbyte=3DDRIVER_O=
-K,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > Buffer I/O error on device sdc, logical block 0
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_ERROR driverbyte=3DDRIVER_O=
-K,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > Buffer I/O error on device sdc, logical block 0
-> > >  unable to read partition table
-> > > sd 12:0:0:0: [sdc] Attached SCSI disk
-> > > sd 12:0:0:0: Attached scsi generic sg3 type 0
-> > > BUG: unable to handle kernel NULL pointer dereference at 000000000000=
-0004
-> > > IP: [<ffffffffa038e6f1>] :usb_storage:slave_alloc+0x41/0x80
-> > > PGD 1260ff067 PUD 119076067 PMD 0=20
-> > > Oops: 0000 [1] SMP=20
-> > > CPU 3=20
-> > > Modules linked in: usb_storage parport_pc lp parport usblp nfsd lockd=
- auth_rpcgss sunrpc exportfs iptable_filter ip_tables ip6table_filter ip6_t=
-ables x_tables ipv6 cpufreq_conservative cpufreq_ondemand cpufreq_userspace=
- cpufreq_powersave powernow_k8 freq_table snd_pcm_oss snd_mixer_oss snd_seq=
- snd_seq_device reiserfs dm_mod ohci1394 sr_mod cdrom floppy ieee1394 serio=
-_raw rtc_cmos sky2 wmi snd_hda_intel rtc_core sg rtc_lib joydev snd_pcm snd=
-_timer snd_page_alloc snd_hwdep snd evdev button soundcore raid456 async_xo=
-r async_memcpy async_tx xor raid0 usbhid ff_memless ehci_hcd ohci_hcd sd_mo=
-d edd raid1 ext3 jbd fan pata_marvell pata_atiixp thermal processor
-> > > Pid: 9319, comm: usb-stor-scan Not tainted 2.6.26-rc7 #196
-> > > RIP: 0010:[<ffffffffa038e6f1>]  [<ffffffffa038e6f1>] :usb_storage:sla=
-ve_alloc+0x41/0x80
-> > > RSP: 0018:ffff8100a20cdb60  EFLAGS: 00010202
-> > > RAX: 0000000000000000 RBX: ffff810087d828d0 RCX: 0000000000000003
-> > > RDX: ffff8101275f08e0 RSI: ffff810086cc49d0 RDI: ffff810124144b90
-> > > RBP: ffff8100a20cdb70 R08: 0000000000000001 R09: 0000000000000000
-> > > R10: ffffffff807fe7e0 R11: 0000000000000000 R12: ffff810087499000
-> > > R13: ffff810124953678 R14: ffff810087d82000 R15: 0000000000000000
-> > > FS:  00007f22f6561700(0000) GS:ffff810127c997c0(0000) knlGS:00000000e=
-eb1db90
-> > > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> > > CR2: 0000000000000004 CR3: 0000000122089000 CR4: 00000000000006e0
-> > > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> > > DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> > > Process usb-stor-scan (pid: 9319, threadinfo ffff8100a20cc000, task f=
-fff810086cc4300)
-> > > Stack:  ffff810087499000 ffff810124953650 ffff8100a20cdbb0 ffffffff80=
-3ea940
-> > >  ffff8100a20cdbb0 ffff810087d82000 0000000000000000 0000000000000000
-> > >  ffff810124953678 0000000000000000 ffff8100a20cdcf0 ffffffff803eac9a
-> > > Call Trace:
-> > >  [<ffffffff803ea940>] scsi_alloc_sdev+0x1e0/0x250
-> > >  [<ffffffff803eac9a>] scsi_probe_and_add_lun+0x12a/0xc20
-> > >  [<ffffffff803ebd4f>] __scsi_scan_target+0x3bf/0x6c0
-> > >  [<ffffffff8025db46>] ? mark_held_locks+0x56/0xa0
-> > >  [<ffffffff804ebbe9>] ? mutex_lock_nested+0x1b9/0x290
-> > >  [<ffffffff8025dcdf>] ? trace_hardirqs_on+0xbf/0x150
-> > >  [<ffffffff803ec0da>] scsi_scan_channel+0x8a/0xa0
-> > >  [<ffffffff803ec1e8>] scsi_scan_host_selected+0xf8/0x160
-> > >  [<ffffffff803ec2ce>] do_scsi_scan_host+0x7e/0x80
-> > >  [<ffffffff803ec850>] scsi_scan_host+0x190/0x1d0
-> > >  [<ffffffffa0390f3d>] :usb_storage:usb_stor_scan_thread+0x6d/0x1c0
-> > >  [<ffffffff8024f790>] ? autoremove_wake_function+0x0/0x40
-> > >  [<ffffffffa0390ed0>] ? :usb_storage:usb_stor_scan_thread+0x0/0x1c0
-> > >  [<ffffffff8024f33d>] kthread+0x4d/0x80
-> > >  [<ffffffff8020c608>] child_rip+0xa/0x12
-> > >  [<ffffffff8020bd1f>] ? restore_args+0x0/0x30
-> > >  [<ffffffff8024f2f0>] ? kthread+0x0/0x80
-> > >  [<ffffffff8020c5fe>] ? child_rip+0x0/0x12
-> > >=20
-> > >=20
-> > > Code: 1f c6 87 c3 00 00 00 24 48 8b 7f 08 48 81 c3 d0 08 00 00 8b 83 =
-9c 00 00 00 48 8b 53 78 c1 e8 0f 83 e0 0f 48 8b 84 c2 e8 03 00 00 <0f> b7 7=
-0 04 ff ce e8 44 d9 fb df 80 bb c4 00 00 00 04 75 12 49=20
-> > > RIP  [<ffffffffa038e6f1>] :usb_storage:slave_alloc+0x41/0x80
-> > >  RSP <ffff8100a20cdb60>
-> > > CR2: 0000000000000004
-> > > ---[ end trace 2077f860f94c5bf3 ]---
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > Buffer I/O error on device sdc, logical block 0
-> > > Buffer I/O error on device sdc, logical block 1
-> > > Buffer I/O error on device sdc, logical block 2
-> > > Buffer I/O error on device sdc, logical block 3
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > Buffer I/O error on device sdc, logical block 0
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 117210112
-> > > Buffer I/O error on device sdc, logical block 14651264
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 117210112
-> > > Buffer I/O error on device sdc, logical block 14651264
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 117210112
-> > > Buffer I/O error on device sdc, logical block 14651264
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 0
-> > > sd 12:0:0:0: [sdc] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRI=
-VER_OK,SUGGEST_OK
-> > > end_request: I/O error, dev sdc, sector 117210232
-> > >=20
-> > > It resulted in usb-storage being unusable and a system reboot.
-> > >=20
-> > > Thanks,
-> > > Rafael
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[  230.281708] sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
+[  230.282708] sd 3:0:0:0: [sdd] Write Protect is off
+[  230.282708] sd 3:0:0:0: [sdd] Mode Sense: 00 00 00 00
+[  230.282708] sd 3:0:0:0: [sdd] Assuming drive cache: write through
+[  230.283708] sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
+[  230.284709] sd 3:0:0:0: [sdd] Write Protect is off
+[  230.284709] sd 3:0:0:0: [sdd] Mode Sense: 00 00 00 00
+[  230.284709] sd 3:0:0:0: [sdd] Assuming drive cache: write through
+[  230.284709]  sdd: sdd1 sdd2 sdd3 < sdd5 > sdd4
+[  230.364830] sd 3:0:0:0: [sdd] Attached SCSI disk
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Thank you very much Alan.
 
-S:  Another stupid question?
-G:  There's no such thing as a stupid question, only stupid people.
-					-- Stef and Greg
-User Friendly, 7/15/1998
-
---gKMricLos+KVdGMg
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFIYDTSHL9iwnUZqnkRApZJAKCZeG8giDd/LvpyxJ+TSbVsXeJLnQCePEBw
-HGsEfPL+uxjSBaqsPYgDwF8=
-=TJkb
------END PGP SIGNATURE-----
-
---gKMricLos+KVdGMg--
+-- 
+Regards,
+Peter Teoh
