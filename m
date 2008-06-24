@@ -1,171 +1,50 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 7/9] scsi_dh: attach to hardware handler from dm-mpath
-Date: Tue, 24 Jun 2008 12:05:19 +0200
-Message-ID: <20080624100519.E7BBE10B5DE@craiglockhart-ipmi.suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/9] scsi_dh update
+Date: Tue, 24 Jun 2008 12:11:26 +0200
+Message-ID: <4860C84E.30601@suse.de>
+References: <4860C65F.7080301@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49676 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50300 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954AbYFXKFV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:05:21 -0400
+	id S1751722AbYFXKL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2008 06:11:27 -0400
+In-Reply-To: <4860C65F.7080301@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+Hi James,
 
-multipath keeps a separate device table which may be
-more current than the built-in one.
-So we should make sure to always call ->attach whenever
-a multipath map with hardware handler is instantiated.
-And we should call ->detach on removal, too.
+Hannes Reinecke wrote:
+> Hi James,
+>=20
+> this is the consolidated patchset to update the SCSI device_handler
+> infrastructure. Features are:
+>=20
+[ .. ]
+> Please apply.
+>=20
+And as a side note: I'm currently working on multiple driver
+binding, so of course we can convert the device_handler to
+a proper scsi driver once this is in place. But this is quite
+tedious and time-consuming work and I'd really
+like to see my patch queue reduced :-)
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/md/dm-mpath.c                 |   13 ++++++
- drivers/scsi/device_handler/scsi_dh.c |   68 ++++++++++++++++++++++++++++++++-
- include/scsi/scsi_dh.h                |    2 +
- 3 files changed, 81 insertions(+), 2 deletions(-)
+Cheers,
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index e8f704a..bd2bcf4 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -147,9 +147,12 @@ static struct priority_group *alloc_priority_group(void)
- static void free_pgpaths(struct list_head *pgpaths, struct dm_target *ti)
- {
- 	struct pgpath *pgpath, *tmp;
-+	struct multipath *m = (struct multipath *) ti->private;
- 
- 	list_for_each_entry_safe(pgpath, tmp, pgpaths, list) {
- 		list_del(&pgpath->list);
-+		if (m->hw_handler_name)
-+			scsi_dh_detach(bdev_get_queue(pgpath->path.dev->bdev));
- 		dm_put_device(ti, pgpath->path.dev);
- 		free_pgpath(pgpath);
- 	}
-@@ -546,6 +549,7 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- {
- 	int r;
- 	struct pgpath *p;
-+	struct multipath *m = (struct multipath *) ti->private;
- 
- 	/* we need at least a path arg */
- 	if (as->argc < 1) {
-@@ -564,6 +568,15 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- 		goto bad;
- 	}
- 
-+	if (m->hw_handler_name) {
-+		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
-+				   m->hw_handler_name);
-+		if (r < 0) {
-+			dm_put_device(ti, p->path.dev);
-+			goto bad;
-+		}
-+	}
-+
- 	r = ps->type->add_path(ps, &p->path, as->argc, as->argv, &ti->error);
- 	if (r) {
- 		dm_put_device(ti, p->path.dev);
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index 7cbd1f6..a505e83 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -95,8 +95,8 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev,
- 	if (scsi_dh && scsi_dh != sdev->scsi_dh_data->scsi_dh)
- 		return;
- 
--	if (scsi_dh->detach)
--		scsi_dh->detach(sdev);
-+	if (sdev->scsi_dh_data->scsi_dh->detach)
-+		sdev->scsi_dh_data->scsi_dh->detach(sdev);
- }
- 
- /*
-@@ -366,6 +366,70 @@ int scsi_dh_handler_exist(const char *name)
- }
- EXPORT_SYMBOL_GPL(scsi_dh_handler_exist);
- 
-+/*
-+ * scsi_dh_handler_attach - Attach device handler
-+ * @sdev - sdev the handler should be attached to
-+ * @name - name of the handler to attach
-+ */
-+int scsi_dh_attach(struct request_queue *q, const char *name)
-+{
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+	struct scsi_device_handler *scsi_dh;
-+	int err = 0;
-+
-+	scsi_dh = get_device_handler(name);
-+	if (!scsi_dh)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		err = -ENODEV;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	if (!err) {
-+		err = scsi_dh_handler_attach(sdev, scsi_dh);
-+
-+		put_device(&sdev->sdev_gendev);
-+	}
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(scsi_dh_attach);
-+
-+/*
-+ * scsi_dh_handler_detach - Detach device handler
-+ * @sdev - sdev the handler should be detached from
-+ *
-+ * This function will detach the device handler only
-+ * if the sdev is not part of the internal list, ie
-+ * if it has been attached manually.
-+ */
-+void scsi_dh_detach(struct request_queue *q)
-+{
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+	struct scsi_device_handler *scsi_dh = NULL;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		sdev = NULL;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	if (!sdev)
-+		return;
-+
-+	if (sdev->scsi_dh_data) {
-+		/* if sdev is not on internal list, detach */
-+		scsi_dh = sdev->scsi_dh_data->scsi_dh;
-+		if (!device_handler_match(scsi_dh, sdev))
-+			scsi_dh_handler_detach(sdev, scsi_dh);
-+	}
-+	put_device(&sdev->sdev_gendev);
-+}
-+EXPORT_SYMBOL_GPL(scsi_dh_detach);
-+
- static struct notifier_block scsi_dh_nb = {
- 	.notifier_call = scsi_dh_notifier
- };
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 5d05ac0..8032e51 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -59,3 +59,5 @@ enum {
- 
- extern int scsi_dh_activate(struct request_queue *);
- extern int scsi_dh_handler_exist(const char *);
-+extern int scsi_dh_attach(struct request_queue *, const char *);
-+extern void scsi_dh_detach(struct request_queue *q);
--- 
-1.5.2.4
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
