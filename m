@@ -1,41 +1,74 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: blk request timeout handler against 2.6.26
-Date: Tue, 24 Jun 2008 12:16:10 +0200
-Message-ID: <20080624101610.GN20851@kernel.dk>
-References: <20080503020000.GU14976@parisc-linux.org> <20080507074357.GP329@kernel.dk> <20080513032012.GC9511@us.ibm.com> <20080619171741.GB819@linux.vnet.ibm.com> <20080620083738.GX20851@kernel.dk>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Tue, 24 Jun 2008 11:30:17 +0300
+Message-ID: <4860B099.2030305@panasas.com>
+References: <485B2CC6.6070201@kernel.org>	 <1213993737.3443.35.camel@localhost.localdomain>	 <485C31FE.8050408@garzik.org>	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com> <1214255460.3310.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:17822 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751675AbYFXKQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:16:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20080620083738.GX20851@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1214255460.3310.27.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Fri, Jun 20 2008, Jens Axboe wrote:
-> On Thu, Jun 19 2008, Mike Anderson wrote:
-> > Jens,
-> > 
-> > What is the status of the blk request timeout handler patches? I noticed
-> > the branch is showing no update for 7 months and the updates sent to the
-> > list received no response.
-> > 
-> > I was working on a abort function patch on top of the timeout patches to
-> > see if I could speed up some multipath failure over cases and wanted to
-> > understand if the blk timeout patch set was still a valid patch set.
+James Bottomley wrote:
+> On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
+>> On Fri, Jun 20, 2008 at 6:41 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>>> James Bottomley wrote:
+>>>> On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
+>>>>> The biggest problem is how to keep userland happy.  hdX -> sdX
+>>>>> transition was painful enough and I have a strong feeling that
+>>>>> everyone will come after and hunt down us if we try something like sdX
+>>>>> -> bdX now.  :-)
+>>>> In theory mounting by label or ID should have fixed a lot of this.
+>>>> However, if we need to head off a revolt, the sdX allocation algorithm
+>>>> can be placed into it's own module so both sd and a ULD ata driver could
+>>>> use it ...
+>>>> Actually, surely we can mostly dump the SAT layer?
+>>>
+>>> I don't see that we can do that for a long time...  And it's not just the
+>>> sdX allocation algorithm in question -- SCSI block devices come with their
+>>> own partition limits and set of supported ioctls.
+>>>
+>>> Therefore, my recommended path has always been
+>>>
+>>> * create ata_disk block device driver (ULD, in your terminology)
+>>>
+>>> * make SAT an optional piece, which maintains compatibility with existing
+>>> SCSI blkdevs, ioctls, command sets
+>>>
+>>>
+>>> I just don't see a valid path moving forward that breaks userland /again/...
+>>>  we (ATA hackers) would be drummed out of a job I think :)
+>>>
+>>> Another option that's been discussed is
+>>>
+>>> 1) Make SCSI block devices themselves an allocate-able resource (I think
+>>> that's what you meant by "placed into it's own module so both sd and a ULD
+>>> ata driver could use it"?)
+>>>
+>>> 2) Ensure that any ata_disk ULD would support the same partition limits and
+>>> ioctl set, enough to ensure binary compatibility.
+>>>
+>>> Because that's the real need -- maintaining binary compatibility with SCSI
+>>> block devices, so major/minor, ioctl supported set, partition limits, and
+>>> other relevant details need to remain unchanged.
+>>>
+>> I've seen a lot of end user complaints about libata only supporting
+>> 15(14?) partitions.  Will that limit be moved back to the traditional
+>> drivers/ide limit as part of this?
 > 
-> It's still alive, I'll update the branch with the latest stuff. Perhaps
-> we can even make 2.6.27, it should be about ready-cooked now.
+> Number of partitions is directly related to number of minors, so it
+> can't be changed without a change in the allocation of major/minor space
+> in sd ... that could only be done compatibly by permuting the space.
+> The only other way to do it is incompatibly by changing major (again).
+> 
+> James
+> 
+Could we do both? I mean use the legacy, up to 15, with the old major,
+then use the new major for bigger then 15. Since user mode that knows
+about more then 15 partitions is new, it'll know it needs to jump a major.
 
-I've updated the branch, mostly directly based on the updates and
-patches from Malahal.
-
-
--- 
-Jens Axboe
-
+Boaz
