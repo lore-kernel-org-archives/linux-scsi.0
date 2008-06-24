@@ -1,50 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/9] scsi_dh update
-Date: Tue, 24 Jun 2008 12:11:26 +0200
-Message-ID: <4860C84E.30601@suse.de>
-References: <4860C65F.7080301@suse.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: blk request timeout handler against 2.6.26
+Date: Tue, 24 Jun 2008 12:16:10 +0200
+Message-ID: <20080624101610.GN20851@kernel.dk>
+References: <20080503020000.GU14976@parisc-linux.org> <20080507074357.GP329@kernel.dk> <20080513032012.GC9511@us.ibm.com> <20080619171741.GB819@linux.vnet.ibm.com> <20080620083738.GX20851@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50300 "EHLO mx2.suse.de"
+Received: from brick.kernel.dk ([87.55.233.238]:17822 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbYFXKL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:11:27 -0400
-In-Reply-To: <4860C65F.7080301@suse.de>
+	id S1751675AbYFXKQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2008 06:16:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20080620083738.GX20851@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Hi James,
+On Fri, Jun 20 2008, Jens Axboe wrote:
+> On Thu, Jun 19 2008, Mike Anderson wrote:
+> > Jens,
+> > 
+> > What is the status of the blk request timeout handler patches? I noticed
+> > the branch is showing no update for 7 months and the updates sent to the
+> > list received no response.
+> > 
+> > I was working on a abort function patch on top of the timeout patches to
+> > see if I could speed up some multipath failure over cases and wanted to
+> > understand if the blk timeout patch set was still a valid patch set.
+> 
+> It's still alive, I'll update the branch with the latest stuff. Perhaps
+> we can even make 2.6.27, it should be about ready-cooked now.
 
-Hannes Reinecke wrote:
-> Hi James,
->=20
-> this is the consolidated patchset to update the SCSI device_handler
-> infrastructure. Features are:
->=20
-[ .. ]
-> Please apply.
->=20
-And as a side note: I'm currently working on multiple driver
-binding, so of course we can convert the device_handler to
-a proper scsi driver once this is in place. But this is quite
-tedious and time-consuming work and I'd really
-like to see my patch queue reduced :-)
+I've updated the branch, mostly directly based on the updates and
+patches from Malahal.
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jens Axboe
+
