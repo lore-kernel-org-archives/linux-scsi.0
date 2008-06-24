@@ -1,46 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] esp: tidy up target reference counting
-Date: Tue, 24 Jun 2008 11:28:04 -0500
-Message-ID: <1214324884.3299.63.camel@localhost.localdomain>
-References: <1214250729.3310.24.camel@localhost.localdomain>
-	 <20080623.145828.60746793.davem@davemloft.net>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: Re: [Re: Linux 2.6.26-rc2] Write protect on on
+Date: Tue, 24 Jun 2008 18:59:55 +0200
+Message-ID: <8db1092f0806240959x3a811942s673f344e0967a5fa@mail.gmail.com>
+References: <804dabb00806232025m31ba0826lbddac040428e974f@mail.gmail.com>
+	 <Pine.LNX.4.44L0.0806241057430.2160-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50044 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751641AbYFXQ2I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2008 12:28:08 -0400
-In-Reply-To: <20080623.145828.60746793.davem@davemloft.net>
+Received: from py-out-1112.google.com ([64.233.166.178]:26037 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637AbYFXQ75 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2008 12:59:57 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1428062pyb.10
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2008 09:59:56 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.0806241057430.2160-100000@iolanthe.rowland.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Peter Teoh <htmldeveloper@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-06-23 at 14:58 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Mon, 23 Jun 2008 14:52:09 -0500
-> 
-> > The esp driver currently does hand rolled reference counting of its
-> > target.  It's much easier to do what it needs to do if it's plugged into
-> > the mid-layer callbacks (target_alloc and target_destroy) which were
-> > designed for this case, so do it this way and get rid of the internal
-> > target reference count.
-> > 
-> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> Much cleaner, thanks!
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
+2008/6/24 Alan Stern <stern@rowland.harvard.edu>:
 
-You're welcome ... I actually initially queued this for the merge
-window, but since this looks like it fixes a bug that would affect any
-multi-lun installation, isn't it a candidate for the current git head
-(and indeed for stable), or isn't there that much of a multi-lun install
-base with this driver to worry about?
+>
+> How about you, Maciej?  I want to make sure it fixes your problem too
+> before submitting the patch.
+>
 
-James
+Works great on 2.6.26-rc7:
 
+usb 3-1: new high speed USB device using ehci_hcd and address 4
+usb 3-1: configuration #1 chosen from 1 choice
+Initializing USB Mass Storage driver...
+scsi2 : SCSI emulation for USB Mass Storage devices
+usbcore: registered new interface driver usb-storage
+usb-storage: device found at 4
+usb-storage: waiting for device to settle before scanning
+USB Mass Storage support registered.
+scsi 2:0:0:0: Direct-Access     Initio   MHV2080BH PL     3.01 PQ: 0 ANSI: 0
+usb-storage: device scan complete
+Driver 'sd' needs updating - please use bus_type methods
+sd 2:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 00 00 00
+sd 2:0:0:0: [sda] Assuming drive cache: write through
+sd 2:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 00 00 00
+sd 2:0:0:0: [sda] Assuming drive cache: write through
+ sda: sda1
+sd 2:0:0:0: [sda] Attached SCSI disk
 
+maciek@zlom:~$ ntfsmount /dev/sda1 ~/mnt/ntfs/
+maciek@zlom:~$ mount | grep sda1
+/dev/sda1 on /home/maciek/mnt/ntfs type fuseblk
+(rw,nosuid,nodev,default_permissions,allow_other,blksize=4096,user=maciek)
+
+Thanks very much :-)
+
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
