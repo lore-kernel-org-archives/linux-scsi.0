@@ -1,158 +1,170 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 04 of 10] scsi: Support devices with protection information
-	(DIF)
-Date: Wed, 25 Jun 2008 11:22:43 -0400
-Message-ID: <2fd66ca994dbf1ed6d14.1214407363@sermon.lab.mkp.net>
+Subject: [PATCH 01 of 10] sd: Move sd.h header file
+Date: Wed, 25 Jun 2008 11:22:40 -0400
+Message-ID: <c98c38f81ba11487baba.1214407360@sermon.lab.mkp.net>
 References: <patchbomb.1214407359@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:41043 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:41035 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758950AbYFYPZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758942AbYFYPZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 25 Jun 2008 11:25:26 -0400
 In-Reply-To: <patchbomb.1214407359@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
- - Add support for an extra scatter-gather list containing protection
-   information.
-
- - Remember devices with protection information turned on in INQUIRY.
+Christoph objected to having sd.h in include/scsi since it is internal
+to the sd driver.  Move it to drivers/scsi/sd.h.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-4 files changed, 62 insertions(+)
-drivers/scsi/scsi_lib.c    |   38 ++++++++++++++++++++++++++++++++++++++
-drivers/scsi/scsi_scan.c   |    3 +++
-include/scsi/scsi_cmnd.h   |   20 ++++++++++++++++++++
-include/scsi/scsi_device.h |    1 +
+3 files changed, 58 insertions(+), 58 deletions(-)
+drivers/scsi/sd.c |    2 -
+drivers/scsi/sd.h |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+include/scsi/sd.h |   57 -----------------------------------------------------
 
 
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -778,6 +778,11 @@ void scsi_release_buffers(struct scsi_cm
- 		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
- 		cmd->request->next_rq->special = NULL;
- 	}
-+
-+	if (scsi_prot_sg_count(cmd)) {
-+		scsi_free_sgtable(cmd->prot_sdb);
-+		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
-+	}
- }
- EXPORT_SYMBOL(scsi_release_buffers);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -58,8 +58,8 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsicam.h>
+-#include <scsi/sd.h>
  
-@@ -1031,6 +1036,32 @@ static int scsi_init_sgtable(struct requ
- 	return BLKPREP_OK;
- }
++#include "sd.h"
+ #include "scsi_logging.h"
  
-+static int scsi_protect_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+{
-+	struct request *req;
-+	struct scsi_data_buffer *pdb;
-+	int ivecs, count;
+ MODULE_AUTHOR("Eric Youngdale");
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+new file mode 100644
+--- /dev/null
++++ b/drivers/scsi/sd.h
+@@ -0,0 +1,57 @@
++#ifndef _SCSI_DISK_H
++#define _SCSI_DISK_H
 +
-+	req = cmd->request;
++/*
++ * More than enough for everybody ;)  The huge number of majors
++ * is a leftover from 16bit dev_t days, we don't really need that
++ * much numberspace.
++ */
++#define SD_MAJORS	16
 +
-+	pdb = kmem_cache_zalloc(scsi_sdb_cache, gfp_mask);
-+	if (unlikely(pdb == NULL))
-+		return BLKPREP_DEFER;
++/*
++ * This is limited by the naming scheme enforced in sd_probe,
++ * add another character to it if you really need more disks.
++ */
++#define SD_MAX_DISKS	(((26 * 26) + 26 + 1) * 26)
 +
-+	ivecs = blk_rq_count_integrity_sg(req);
++/*
++ * Time out in seconds for disks and Magneto-opticals (which are slower).
++ */
++#define SD_TIMEOUT		(30 * HZ)
++#define SD_MOD_TIMEOUT		(75 * HZ)
 +
-+	if (unlikely(scsi_alloc_sgtable(pdb, ivecs, gfp_mask)))
-+		return BLKPREP_DEFER;
++/*
++ * Number of allowed retries
++ */
++#define SD_MAX_RETRIES		5
++#define SD_PASSTHROUGH_RETRIES	1
 +
-+	count = blk_rq_map_integrity_sg(req, pdb->table.sgl);
-+	BUG_ON(unlikely(count > ivecs));
++/*
++ * Size of the initial data buffer for mode and read capacity data
++ */
++#define SD_BUF_SIZE		512
 +
-+	cmd->prot_sdb = pdb;
-+	cmd->prot_sdb->table.nents = count;
++struct scsi_disk {
++	struct scsi_driver *driver;	/* always &sd_template */
++	struct scsi_device *device;
++	struct device	dev;
++	struct gendisk	*disk;
++	unsigned int	openers;	/* protected by BKL for now, yuck */
++	sector_t	capacity;	/* size in 512-byte sectors */
++	u32		index;
++	u8		media_present;
++	u8		write_prot;
++	unsigned	previous_state : 1;
++	unsigned	WCE : 1;	/* state of disk WCE bit */
++	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
++	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
++};
++#define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
 +
-+	return BLKPREP_OK;
-+}
++#define sd_printk(prefix, sdsk, fmt, a...)				\
++        (sdsk)->disk ?							\
++	sdev_printk(prefix, (sdsk)->device, "[%s] " fmt,		\
++		    (sdsk)->disk->disk_name, ##a) :			\
++	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
 +
- /*
-  * Function:    scsi_init_io()
-  *
-@@ -1060,6 +1091,13 @@ int scsi_init_io(struct scsi_cmnd *cmd, 
- 		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
- 								    GFP_ATOMIC);
- 		if (error)
-+			goto err_exit;
-+	}
-+
-+	if (blk_integrity_rq(cmd->request)) {
-+		error = scsi_protect_io(cmd, gfp_mask);
-+
-+		if (error != BLKPREP_OK)
- 			goto err_exit;
- 	}
- 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -882,6 +882,9 @@ static int scsi_add_lun(struct scsi_devi
- 
- 	if (*bflags & BLIST_USE_10_BYTE_MS)
- 		sdev->use_10_for_ms = 1;
-+
-+	if (inq_result[5] & 0x1)
-+		sdev->protection = 1;
- 
- 	/* set the device running here so that slave configure
- 	 * may do I/O */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -88,6 +88,8 @@ struct scsi_cmnd {
- 
- 	/* These elements define the operation we ultimately want to perform */
- 	struct scsi_data_buffer sdb;
-+	struct scsi_data_buffer *prot_sdb;
-+
- 	unsigned underflow;	/* Return error if less than
- 				   this amount is transferred */
- 
-@@ -209,4 +211,22 @@ static inline int scsi_sg_copy_to_buffer
- 				 buf, buflen);
- }
- 
-+static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
-+}
-+
-+static inline struct scatterlist *scsi_prot_sglist(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb ? cmd->prot_sdb->table.sgl : NULL;
-+}
-+
-+static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb;
-+}
-+
-+#define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
-+	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
-+
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -140,6 +140,7 @@ struct scsi_device {
- 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
- 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
- 	unsigned last_sector_bug:1;	/* Always read last sector in a 1 sector read */
-+	unsigned protection:1;		/* Data Integrity Field */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
++#endif /* _SCSI_DISK_H */
+diff --git a/include/scsi/sd.h b/include/scsi/sd.h
+deleted file mode 100644
+--- a/include/scsi/sd.h
++++ /dev/null
+@@ -1,57 +0,0 @@
+-#ifndef _SCSI_DISK_H
+-#define _SCSI_DISK_H
+-
+-/*
+- * More than enough for everybody ;)  The huge number of majors
+- * is a leftover from 16bit dev_t days, we don't really need that
+- * much numberspace.
+- */
+-#define SD_MAJORS	16
+-
+-/*
+- * This is limited by the naming scheme enforced in sd_probe,
+- * add another character to it if you really need more disks.
+- */
+-#define SD_MAX_DISKS	(((26 * 26) + 26 + 1) * 26)
+-
+-/*
+- * Time out in seconds for disks and Magneto-opticals (which are slower).
+- */
+-#define SD_TIMEOUT		(30 * HZ)
+-#define SD_MOD_TIMEOUT		(75 * HZ)
+-
+-/*
+- * Number of allowed retries
+- */
+-#define SD_MAX_RETRIES		5
+-#define SD_PASSTHROUGH_RETRIES	1
+-
+-/*
+- * Size of the initial data buffer for mode and read capacity data
+- */
+-#define SD_BUF_SIZE		512
+-
+-struct scsi_disk {
+-	struct scsi_driver *driver;	/* always &sd_template */
+-	struct scsi_device *device;
+-	struct device	dev;
+-	struct gendisk	*disk;
+-	unsigned int	openers;	/* protected by BKL for now, yuck */
+-	sector_t	capacity;	/* size in 512-byte sectors */
+-	u32		index;
+-	u8		media_present;
+-	u8		write_prot;
+-	unsigned	previous_state : 1;
+-	unsigned	WCE : 1;	/* state of disk WCE bit */
+-	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+-	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+-};
+-#define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+-
+-#define sd_printk(prefix, sdsk, fmt, a...)				\
+-        (sdsk)->disk ?							\
+-	sdev_printk(prefix, (sdsk)->device, "[%s] " fmt,		\
+-		    (sdsk)->disk->disk_name, ##a) :			\
+-	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
+-
+-#endif /* _SCSI_DISK_H */
 
 
