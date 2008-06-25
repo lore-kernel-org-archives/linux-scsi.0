@@ -1,69 +1,73 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: Kernel Crash when using the open-iscsi initiator on 2.6.25.6
-Date: Wed, 25 Jun 2008 11:54:41 -0500
-Message-ID: <48627851.9010804@cs.wisc.edu>
-References: <81083a450806242236m62754185t3099c06f9f77676@mail.gmail.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
+Date: Wed, 25 Jun 2008 18:57:59 +0200
+Message-ID: <20080625165759.GC20851@kernel.dk>
+References: <20080619160342.GJ4392@parisc-linux.org> <20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com> <48627184.9010609@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <81083a450806242236m62754185t3099c06f9f77676-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi-help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi-unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Ashutosh Naik <ashutosh.naik-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([87.55.233.238]:3435 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751577AbYFYQ6C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2008 12:58:02 -0400
+Content-Disposition: inline
+In-Reply-To: <48627184.9010609@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Ric Wheeler <ricwheeler@gmail.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
+On Wed, Jun 25 2008, Boaz Harrosh wrote:
+> Ric Wheeler wrote:
+> > Jens Axboe wrote:
+> >> On Thu, Jun 19 2008, Matthew Wilcox wrote:
+> >>   
+> >>> Use the noop elevator by default for drives that do not spin
+> >>>
+> >>> [Not for applying]
+> >>>
+> >>> SSDs do not benefit from the elevator.  It just wastes precious CPU cycles.
+> >>> By selecting the noop elevator by default, we can shave a few microseconds
+> >>> off each IO.
+> >>>
+> >>> I've brazenly stolen sd_vpd_inquiry from mkp's patch here:
+> >>>
+> >>> http://marc.info/?l=linux-scsi&m=121264354724277&w=2
+> >>>
+> >>> No need to have two copies of that ... but this will conflict with his code.
+> >>>
+> >>> On to the self-criticism:
+> >>>
+> >>> I don't intend the final version of this patch to include a printk for
+> >>> the RPM or even a printk to say we switched IO elevator.  I think we're
+> >>> too verbose in SCSI as it is.
+> >>>
+> >>> I think there's an opportunity to improve sd_vpd_inquiry() to remove
+> >>> some of the duplicate code between sd_set_elevator() and sd_block_limits,
+> >>> but it's not terribly important.
+> >>>
+> >>> The switching of the elevators isn't particularly nice.  I assume that
+> >>> elevator_init("noop") cannot fail, which isn't true.  It would be nice
+> >>> to use the #if 0 block instead, but that causes a null ptr dereference
+> >>> inside sysfs -- I suspect something isn't set up correctly.
+> >>>     
+> >> I disagree with this approach. For now, lets just add a queue flag that
+> >> says the device doesn't have a seek penalty and let the io schedulers do
+> >> what they need to avoid that (it'd be a one-liner change to cfq and as).
+> >> There's more to io scheduling than just seek reduction, so this is the
+> >> wrong direction to take imo.
+> >>
+> >>   
+> > Very true - you still will get a significant win by coalescing IO's (say 
+> > for example, to do larger, aligned writes to flash devices).
+> > 
+> > ric
+> > 
+> And to not let HUGE writers hug the machine. A scheduler ...
 
-Ashutosh Naik wrote:
-> Please find the kernel log attached. I was using the open-iscsi
-> initiator on kernel 2.6.25.6 with a chelsio iSCSI target and the crash
-> happened on the initiator machine.
-> 
->  connection5:0: ping timeout of 5 secs expired, last rx 4309640121,
-> last ping 4309645121, now 4309650121
->  connection5:0: detected conn error (1011)
+Precisely, merging and fairness is a big part of it. Plus, doing this in
+sd is just a blatant layer violation.
 
-This happens when we cannot reach the target for the noop timout and 
-interval seconds, which can happen if a cable is unplugged or the 
-network is not reach able or is dropping packets.
+-- 
+Jens Axboe
 
-
->  connection5:0: ping timeout of 5 secs expired, last rx 4309652882,
-> last ping 4309657882, now 4309662882
-
-
-However, once it happens we should not report it again like is done 
-here. There is something weird there. Do you have the iscsid output? 
-Between these two reports of pings timing out is there any messages from 
-iscsid about reconnecting?
-
->  connection5:0: detected conn error (1011)
->  connection5:0: detected conn error (1011)
->  session5: host reset succeeded
-
-
-And we should not get here. The iscsi driver's scsi command timeout 
-handler should prevent the command from firing the scsi eh, because in 
-this case we think it is a transport problem.
-
-What version of the iscsi tools are you using? Are they from a distro or 
-open-iscsi.org?
-
-Are you running with the iscsi kernel modules from 2.6.25.6, or are you 
-using the iscsi modules from the open-iscsi.org website that come with 
-the tarball?
-
-Is the kernel a unmodified 2.6.25.6 or does it have some distro patches 
-or patches that you have created?
-
-
-> INFO: task fdisk:5226 blocked for more than 120 seconds.
-
-I think you get this message and what follows, is a result of the above 
-problem. While the iscsi initiator is trying to reconnect, IO is queued 
-by the scsi layer so fdisk is going to be waiting around until we 
-recover or give up.
