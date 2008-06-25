@@ -1,151 +1,91 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 05 of 10] scsi: Host protection capabilities
-Date: Wed, 25 Jun 2008 11:22:44 -0400
-Message-ID: <39e5bbd943566af7039e.1214407364@sermon.lab.mkp.net>
+Subject: [PATCH 08 of 10] scsi: Documentation for the SCSI protection
+	information/DIF support
+Date: Wed, 25 Jun 2008 11:22:47 -0400
+Message-ID: <324ad30d5cc766e8382f.1214407367@sermon.lab.mkp.net>
 References: <patchbomb.1214407359@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:41044 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:41047 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758947AbYFYPZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2008 11:25:27 -0400
+	id S1758954AbYFYPZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2008 11:25:28 -0400
 In-Reply-To: <patchbomb.1214407359@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Controllers that support protection information must indicate this to
-the SCSI midlayer so that the ULD can prepare scsi_cmnds accordingly.
-
-This patch implements a host mask and various types of protection:
-
- - DIF Type 1-3 (between HBA and disk)
- - Type H (identical to Type 1 for use with non-DIF disks)
- - DMA of protection information in a separate scatterlist
-
-The patch also allows the HBA to set the guard type to something
-different than the T10-mandated CRC.
-
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-2 files changed, 76 insertions(+)
-drivers/scsi/scsi_sysfs.c |    4 ++
-include/scsi/scsi_host.h  |   72 +++++++++++++++++++++++++++++++++++++++++++++
+1 file changed, 57 insertions(+)
+Documentation/scsi/data-integrity.txt |   57 +++++++++++++++++++++++++++++++++
 
 
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -249,6 +249,8 @@ shost_rd_attr(can_queue, "%hd\n");
- shost_rd_attr(can_queue, "%hd\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
- shost_rd_attr(unchecked_isa_dma, "%d\n");
-+shost_rd_attr(prot_capabilities, "%u\n");
-+shost_rd_attr(prot_guard_type, "%hd\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
- 
- static struct attribute *scsi_sysfs_shost_attrs[] = {
-@@ -263,6 +265,8 @@ static struct attribute *scsi_sysfs_shos
- 	&dev_attr_hstate.attr,
- 	&dev_attr_supported_mode.attr,
- 	&dev_attr_active_mode.attr,
-+	&dev_attr_prot_capabilities.attr,
-+	&dev_attr_prot_guard_type.attr,
- 	NULL
- };
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -636,6 +636,10 @@ struct Scsi_Host {
- 	 */
- 	unsigned int max_host_blocked;
- 
-+	/* Protection Information */
-+	unsigned int prot_capabilities;
-+	unsigned char prot_guard_type;
+diff --git a/Documentation/scsi/data-integrity.txt b/Documentation/scsi/data-integrity.txt
+new file mode 100644
+--- /dev/null
++++ b/Documentation/scsi/data-integrity.txt
+@@ -0,0 +1,57 @@
++----------------------------------------------------------------------
++1.0 INTRODUCTION
 +
- 	/*
- 	 * q used for scsi_tgt msgs, async events or any other requests that
- 	 * need to be processed in userspace
-@@ -756,6 +760,74 @@ extern void scsi_free_host_dev(struct sc
- extern void scsi_free_host_dev(struct scsi_device *);
- extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
- 
-+/*
-+ * DIF defines the exchange of protection information between
-+ * initiator and SBC block device.
-+ *
-+ * DIX defines the exchange of protection information between OS and
-+ * initiator.
-+ */
-+enum scsi_host_prot_capabilities {
-+	SHOST_DIF_TYPE1_PROTECTION = 1 << 0, /* T10 DIF Type 1 */
-+	SHOST_DIF_TYPE2_PROTECTION = 1 << 1, /* T10 DIF Type 2 */
-+	SHOST_DIF_TYPE3_PROTECTION = 1 << 2, /* T10 DIF Type 3 */
++For a general overview of the data integrity framework please consult
++Documentation/block/data-integrity.txt.
 +
-+	SHOST_DIX_TYPEH_PROTECTION = 1 << 6, /* DIX between OS and HBA */
-+	SHOST_DIX_PROTECTION_DMA   = 1 << 7, /* DIX with DIF Type 1-3 */
-+};
++----------------------------------------------------------------------
++2.0 SCSI LAYER IMPLEMENTATION DETAILS
 +
-+/*
-+ * SCSI hosts which support the Data Integrity Extensions must
-+ * indicate their capabilities by setting the prot_capabilities using
-+ * this call.
-+ */
-+static inline void scsi_host_set_prot(struct Scsi_Host *shost, unsigned int mask)
-+{
-+	shost->prot_capabilities = mask;
-+}
++The scsi_command has been extended with a scatterlist for the
++integrity metadata.  Note that all SCSI mid layer changes refer to
++this using the term "protection information" which is what it is
++called in the T10 spec.
 +
-+static inline unsigned int scsi_host_get_prot(struct Scsi_Host *shost)
-+{
-+	return shost->prot_capabilities;
-+}
++The term DIF (Data Integrity Field) is specific to SCSI disks (SBC).
++The SCSI midlayer doesn't know, or care, about the contents of the
++protection scatterlist, except it calls blk_rq_map_integrity_sg()
++during command initialization.
 +
-+static inline unsigned int scsi_host_dif_type(struct Scsi_Host *shost, unsigned int target_type)
-+{
-+	if (target_type == 0)
-+		return shost->prot_capabilities & SHOST_DIX_TYPEH_PROTECTION;
 +
-+	return shost->prot_capabilities & (1 << (target_type - 1));
-+}
++2.1 SCSI DEVICE SCANNING
 +
-+static inline unsigned int scsi_host_dif_dma(struct Scsi_Host *shost)
-+{
-+	return shost->prot_capabilities & SHOST_DIX_PROTECTION_DMA;
-+}
++A SCSI device has the PROTECT bit set in the standard INQUIRY page if
++it supports protection information.  The state of this bit is saved in
++the scsi_device struct.
 +
-+/*
-+ * All DIX-capable initiators must support the T10-mandated CRC
-+ * checksum.  Controllers can optionally implement the IP checksum
-+ * scheme which has much lower impact on system performance.  Note
-+ * that the main rationale for the checksum is to match integrity
-+ * metadata with data.  Detecting bit errors are a job for ECC memory
-+ * and buses.
-+ */
 +
-+enum scsi_host_guard_type {
-+	SHOST_DIX_GUARD_CRC = 1 << 0,
-+	SHOST_DIX_GUARD_IP  = 1 << 1,
-+};
++2.2 SCSI DISK SETUP
 +
-+static inline void scsi_host_set_guard(struct Scsi_Host *shost, unsigned char type)
-+{
-+	shost->prot_guard_type = type;
-+}
++In the case of a SCSI disk the actual DIF protection format is
++contained in in result of READ CAPACITY(16).  Consequently we have to
++use the 16-byte READ CAPACITY variant if the device is
++protection-capable.
 +
-+static inline unsigned char scsi_host_get_guard(struct Scsi_Host *shost)
-+{
-+	return shost->prot_guard_type;
-+}
++If the device has DIF-enabled we'll negotiate capabilities with the
++HBA.  And if the HBA is capable of protection DMA, the blk_integrity
++profile will be registered.
 +
- /* legacy interfaces */
- extern struct Scsi_Host *scsi_register(struct scsi_host_template *, int);
- extern void scsi_unregister(struct Scsi_Host *);
++Currently we only support Type 1 and Type 3.  Type 2 is only defined
++for 32-byte CDBs and is awaiting varlen CDB support.
++
++The controller may support checksum conversion as an optimization.
++Initial benchmarks showed that calculating a 16-bit CRC for each 512
++bytes of an I/O was expensive.  Emulex' hardware had the capability to
++convert an IP checksum to the T10 CRC on the wire.  So as part of the
++negotiation process the checksum algorithm will be selected and the
++blk_integrity profile set accordingly.
++
++----------------------------------------------------------------------
++3.0 HBA INTERFACE
++
++See the following doc:
++
++http://oss.oracle.com/projects/data-integrity/dist/documentation/linux-hba.pdf
++
++----------------------------------------------------------------------
++2007-12-24 Martin K. Petersen <martin.petersen@oracle.com>
 
 
