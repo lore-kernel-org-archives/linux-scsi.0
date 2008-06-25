@@ -1,148 +1,45 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 03 of 10] lib: Add support for the T10 Data Integrity Field CRC
-Date: Wed, 25 Jun 2008 11:22:42 -0400
-Message-ID: <a4001c0b6598fe95cacb.1214407362@sermon.lab.mkp.net>
-References: <patchbomb.1214407359@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10979] INFO: possible recursive locking detected
+Date: Wed, 25 Jun 2008 08:39:01 -0700 (PDT)
+Message-ID: <20080625153901.63576108045@picon.linux-foundation.org>
+References: <bug-10979-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:41041 "EHLO jaguar.mkp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758949AbYFYPZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2008 11:25:26 -0400
-In-Reply-To: <patchbomb.1214407359@sermon.lab.mkp.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59793 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755863AbYFYPjd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2008 11:39:33 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5PFd1np005246
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2008 08:39:02 -0700
+In-Reply-To: <bug-10979-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The SCSI Block Protocol uses this 16-bit CRC to verify the integrity
-of each data sector.  crc_t10dif() is used by sd_dif.c when performing
-I/O to or from disks formatted with protection information.
+http://bugzilla.kernel.org/show_bug.cgi?id=10979
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
----
-4 files changed, 83 insertions(+)
-include/linux/crc-t10dif.h |    8 +++++
-lib/Kconfig                |    7 ++++
-lib/Makefile               |    1 
-lib/crc-t10dif.c           |   67 ++++++++++++++++++++++++++++++++++++++++++++
+akpm@osdl.org changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@osdl.org,
+                   |                            |axboe@kernel.dk
 
 
 
-diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
-new file mode 100644
---- /dev/null
-+++ b/include/linux/crc-t10dif.h
-@@ -0,0 +1,8 @@
-+#ifndef _LINUX_CRC_T10DIF_H
-+#define _LINUX_CRC_T10DIF_H
-+
-+#include <linux/types.h>
-+
-+__u16 crc_t10dif(unsigned char const *, size_t);
-+
-+#endif
-diff --git a/lib/Kconfig b/lib/Kconfig
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -28,6 +28,13 @@ config CRC16
- 	  modules require CRC16 functions, but a module built outside
- 	  the kernel tree does. Such modules that use library CRC16
- 	  functions require M here.
-+
-+config CRC_T10DIF
-+	tristate "CRC calculation for the T10 Data Integrity Field"
-+	help
-+	  This option is only needed if a module that's not in the
-+	  kernel tree needs to calculate CRC checks for use with the
-+	  SCSI data integrity subsystem.
- 
- config CRC_ITU_T
- 	tristate "CRC ITU-T V.41 functions"
-diff --git a/lib/Makefile b/lib/Makefile
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -45,6 +45,7 @@ obj-$(CONFIG_BITREVERSE) += bitrev.o
- obj-$(CONFIG_BITREVERSE) += bitrev.o
- obj-$(CONFIG_CRC_CCITT)	+= crc-ccitt.o
- obj-$(CONFIG_CRC16)	+= crc16.o
-+obj-$(CONFIG_CRC_T10DIF)+= crc-t10dif.o
- obj-$(CONFIG_CRC_ITU_T)	+= crc-itu-t.o
- obj-$(CONFIG_CRC32)	+= crc32.o
- obj-$(CONFIG_CRC7)	+= crc7.o
-diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
-new file mode 100644
---- /dev/null
-+++ b/lib/crc-t10dif.c
-@@ -0,0 +1,67 @@
-+/*
-+ * T10 Data Integrity Field CRC16 calculation
-+ *
-+ * Copyright (c) 2007 Oracle Corporation.  All rights reserved.
-+ * Written by Martin K. Petersen <martin.petersen@oracle.com>
-+ *
-+ * This source code is licensed under the GNU General Public License,
-+ * Version 2. See the file COPYING for more details.
-+ */
-+
-+#include <linux/types.h>
-+#include <linux/module.h>
-+#include <linux/crc-t10dif.h>
-+
-+/* Table generated using the following polynomium:
-+ * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
-+ * gt: 0x8bb7
-+ */
-+static const __u16 t10_dif_crc_table[256] = {
-+	0x0000, 0x8BB7, 0x9CD9, 0x176E, 0xB205, 0x39B2, 0x2EDC, 0xA56B,
-+	0xEFBD, 0x640A, 0x7364, 0xF8D3, 0x5DB8, 0xD60F, 0xC161, 0x4AD6,
-+	0x54CD, 0xDF7A, 0xC814, 0x43A3, 0xE6C8, 0x6D7F, 0x7A11, 0xF1A6,
-+	0xBB70, 0x30C7, 0x27A9, 0xAC1E, 0x0975, 0x82C2, 0x95AC, 0x1E1B,
-+	0xA99A, 0x222D, 0x3543, 0xBEF4, 0x1B9F, 0x9028, 0x8746, 0x0CF1,
-+	0x4627, 0xCD90, 0xDAFE, 0x5149, 0xF422, 0x7F95, 0x68FB, 0xE34C,
-+	0xFD57, 0x76E0, 0x618E, 0xEA39, 0x4F52, 0xC4E5, 0xD38B, 0x583C,
-+	0x12EA, 0x995D, 0x8E33, 0x0584, 0xA0EF, 0x2B58, 0x3C36, 0xB781,
-+	0xD883, 0x5334, 0x445A, 0xCFED, 0x6A86, 0xE131, 0xF65F, 0x7DE8,
-+	0x373E, 0xBC89, 0xABE7, 0x2050, 0x853B, 0x0E8C, 0x19E2, 0x9255,
-+	0x8C4E, 0x07F9, 0x1097, 0x9B20, 0x3E4B, 0xB5FC, 0xA292, 0x2925,
-+	0x63F3, 0xE844, 0xFF2A, 0x749D, 0xD1F6, 0x5A41, 0x4D2F, 0xC698,
-+	0x7119, 0xFAAE, 0xEDC0, 0x6677, 0xC31C, 0x48AB, 0x5FC5, 0xD472,
-+	0x9EA4, 0x1513, 0x027D, 0x89CA, 0x2CA1, 0xA716, 0xB078, 0x3BCF,
-+	0x25D4, 0xAE63, 0xB90D, 0x32BA, 0x97D1, 0x1C66, 0x0B08, 0x80BF,
-+	0xCA69, 0x41DE, 0x56B0, 0xDD07, 0x786C, 0xF3DB, 0xE4B5, 0x6F02,
-+	0x3AB1, 0xB106, 0xA668, 0x2DDF, 0x88B4, 0x0303, 0x146D, 0x9FDA,
-+	0xD50C, 0x5EBB, 0x49D5, 0xC262, 0x6709, 0xECBE, 0xFBD0, 0x7067,
-+	0x6E7C, 0xE5CB, 0xF2A5, 0x7912, 0xDC79, 0x57CE, 0x40A0, 0xCB17,
-+	0x81C1, 0x0A76, 0x1D18, 0x96AF, 0x33C4, 0xB873, 0xAF1D, 0x24AA,
-+	0x932B, 0x189C, 0x0FF2, 0x8445, 0x212E, 0xAA99, 0xBDF7, 0x3640,
-+	0x7C96, 0xF721, 0xE04F, 0x6BF8, 0xCE93, 0x4524, 0x524A, 0xD9FD,
-+	0xC7E6, 0x4C51, 0x5B3F, 0xD088, 0x75E3, 0xFE54, 0xE93A, 0x628D,
-+	0x285B, 0xA3EC, 0xB482, 0x3F35, 0x9A5E, 0x11E9, 0x0687, 0x8D30,
-+	0xE232, 0x6985, 0x7EEB, 0xF55C, 0x5037, 0xDB80, 0xCCEE, 0x4759,
-+	0x0D8F, 0x8638, 0x9156, 0x1AE1, 0xBF8A, 0x343D, 0x2353, 0xA8E4,
-+	0xB6FF, 0x3D48, 0x2A26, 0xA191, 0x04FA, 0x8F4D, 0x9823, 0x1394,
-+	0x5942, 0xD2F5, 0xC59B, 0x4E2C, 0xEB47, 0x60F0, 0x779E, 0xFC29,
-+	0x4BA8, 0xC01F, 0xD771, 0x5CC6, 0xF9AD, 0x721A, 0x6574, 0xEEC3,
-+	0xA415, 0x2FA2, 0x38CC, 0xB37B, 0x1610, 0x9DA7, 0x8AC9, 0x017E,
-+	0x1F65, 0x94D2, 0x83BC, 0x080B, 0xAD60, 0x26D7, 0x31B9, 0xBA0E,
-+	0xF0D8, 0x7B6F, 0x6C01, 0xE7B6, 0x42DD, 0xC96A, 0xDE04, 0x55B3
-+};
-+
-+__u16 crc_t10dif(const unsigned char *buffer, size_t len)
-+{
-+	__u16 crc = 0;
-+	unsigned int i;
-+
-+	for (i = 0 ; i < len ; i++)
-+		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
-+
-+	return crc;
-+}
-+EXPORT_SYMBOL(crc_t10dif);
-+
-+MODULE_DESCRIPTION("T10 DIF CRC calculation");
-+MODULE_LICENSE("GPL");
+
+------- Comment #1 from akpm@osdl.org  2008-06-25 08:39 -------
+hrm, I'm not sure why that didn't simply deadlock.  But still, doing
+blk_sync_queue()
+within the context of __generic_unplug_device(), with the queue lock
+held sounds wrong.
+
+Jens, could you please have a ponder?
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
