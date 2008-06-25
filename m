@@ -1,47 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
-Date: Wed, 25 Jun 2008 11:34:44 -0600
-Message-ID: <20080625173444.GS4392@parisc-linux.org>
-References: <20080619160342.GJ4392@parisc-linux.org> <20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com> <48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk> <20080625172015.GR4392@parisc-linux.org> <20080625172638.GE20851@kernel.dk>
+Date: Wed, 25 Jun 2008 12:43:50 -0500
+Message-ID: <1214415830.5674.30.camel@localhost.localdomain>
+References: <20080619160342.GJ4392@parisc-linux.org>
+	 <20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com>
+	 <48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk>
+	 <20080625172015.GR4392@parisc-linux.org> <20080625172638.GE20851@kernel.dk>
+	 <20080625173444.GS4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:46004 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675AbYFYRfA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2008 13:35:00 -0400
-Content-Disposition: inline
-In-Reply-To: <20080625172638.GE20851@kernel.dk>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34323 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751995AbYFYRny (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2008 13:43:54 -0400
+In-Reply-To: <20080625173444.GS4392@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Ric Wheeler <ricwheeler@gmail.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, Ric Wheeler <ricwheeler@gmail.com>, linux-scsi@vger.kernel.org
 
-On Wed, Jun 25, 2008 at 07:26:39PM +0200, Jens Axboe wrote:
-> Uhm, but it IS "a blatant layering violation", it's doing things from
-> the wrong side up :-)
+On Wed, 2008-06-25 at 11:34 -0600, Matthew Wilcox wrote:
+> On Wed, Jun 25, 2008 at 07:26:39PM +0200, Jens Axboe wrote:
+> > Uhm, but it IS "a blatant layering violation", it's doing things from
+> > the wrong side up :-)
+> 
+> That's just "doing things from a spot Jens doesn't approve of".  A
+> layering violation would be SCSI knowing how elevators work.
 
-That's just "doing things from a spot Jens doesn't approve of".  A
-layering violation would be SCSI knowing how elevators work.
+When it was setting particular elevators, it was a layering violation
+(as I said at the time).  If it's just setting a seek cost hint, that's
+acceptable.
 
-> I don't think udev is a particularly good idea either. My plan was to
-> introduce device profiles for the queue, but it is probably a bad idea
-> to over-engineer this. So I'll keep it simple, stick to a 'zero cost
-> seek' flag instead and allow drivers to signal that. libata/ide needs to
-> check the ID page word to detect SSD drives as well, so they need a few
-> lines of change too.
+> > I don't think udev is a particularly good idea either. My plan was to
+> > introduce device profiles for the queue, but it is probably a bad idea
+> > to over-engineer this. So I'll keep it simple, stick to a 'zero cost
+> > seek' flag instead and allow drivers to signal that. libata/ide needs to
+> > check the ID page word to detect SSD drives as well, so they need a few
+> > lines of change too.
+> 
+> One of the other patches in this mess was the libata piece to translate
+> ATA8's rotation speed to SCSI's b1 VPD page, so ide is the only
+> remaining work left to do (can't it die already?)
 
-One of the other patches in this mess was the libata piece to translate
-ATA8's rotation speed to SCSI's b1 VPD page, so ide is the only
-remaining work left to do (can't it die already?)
+I don't think there is any IDE work to do ... the last I heard from the
+manufacturers, they were all not going to bother with PATA interfaces to
+SSDs ... unless this has changed?
 
-> I'll just stick the block bit in the 2.6.27 pending queue and let the
-> other patches go through Jeff/James/Bart.
+> > I'll just stick the block bit in the 2.6.27 pending queue and let the
+> > other patches go through Jeff/James/Bart.
 
-Thanks.
+James
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
