@@ -1,59 +1,158 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 02 of 10] sd: Move scsi_disk() accessor function to sd.h
-Date: Wed, 25 Jun 2008 11:22:41 -0400
-Message-ID: <9dfbf13b10cd81bd07aa.1214407361@sermon.lab.mkp.net>
+Subject: [PATCH 04 of 10] scsi: Support devices with protection information
+	(DIF)
+Date: Wed, 25 Jun 2008 11:22:43 -0400
+Message-ID: <2fd66ca994dbf1ed6d14.1214407363@sermon.lab.mkp.net>
 References: <patchbomb.1214407359@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:41039 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:41043 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753359AbYFYPZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758950AbYFYPZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 25 Jun 2008 11:25:26 -0400
 In-Reply-To: <patchbomb.1214407359@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
+ - Add support for an extra scatter-gather list containing protection
+   information.
+
+ - Remember devices with protection information turned on in INQUIRY.
+
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-2 files changed, 5 insertions(+), 5 deletions(-)
-drivers/scsi/sd.c |    5 -----
-drivers/scsi/sd.h |    5 +++++
+4 files changed, 62 insertions(+)
+drivers/scsi/scsi_lib.c    |   38 ++++++++++++++++++++++++++++++++++++++
+drivers/scsi/scsi_scan.c   |    3 +++
+include/scsi/scsi_cmnd.h   |   20 ++++++++++++++++++++
+include/scsi/scsi_device.h |    1 +
 
 
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -293,11 +293,6 @@ static int sd_major(int major_idx)
- 		BUG();
- 		return 0;	/* shut up gcc */
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -778,6 +778,11 @@ void scsi_release_buffers(struct scsi_cm
+ 		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+ 		cmd->request->next_rq->special = NULL;
  	}
--}
--
--static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
--{
--	return container_of(disk->private_data, struct scsi_disk, driver);
++
++	if (scsi_prot_sg_count(cmd)) {
++		scsi_free_sgtable(cmd->prot_sdb);
++		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
++	}
+ }
+ EXPORT_SYMBOL(scsi_release_buffers);
+ 
+@@ -1031,6 +1036,32 @@ static int scsi_init_sgtable(struct requ
+ 	return BLKPREP_OK;
  }
  
- static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -48,6 +48,11 @@ struct scsi_disk {
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
- 
-+static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
++static int scsi_protect_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
 +{
-+	return container_of(disk->private_data, struct scsi_disk, driver);
++	struct request *req;
++	struct scsi_data_buffer *pdb;
++	int ivecs, count;
++
++	req = cmd->request;
++
++	pdb = kmem_cache_zalloc(scsi_sdb_cache, gfp_mask);
++	if (unlikely(pdb == NULL))
++		return BLKPREP_DEFER;
++
++	ivecs = blk_rq_count_integrity_sg(req);
++
++	if (unlikely(scsi_alloc_sgtable(pdb, ivecs, gfp_mask)))
++		return BLKPREP_DEFER;
++
++	count = blk_rq_map_integrity_sg(req, pdb->table.sgl);
++	BUG_ON(unlikely(count > ivecs));
++
++	cmd->prot_sdb = pdb;
++	cmd->prot_sdb->table.nents = count;
++
++	return BLKPREP_OK;
 +}
 +
- #define sd_printk(prefix, sdsk, fmt, a...)				\
-         (sdsk)->disk ?							\
- 	sdev_printk(prefix, (sdsk)->device, "[%s] " fmt,		\
+ /*
+  * Function:    scsi_init_io()
+  *
+@@ -1060,6 +1091,13 @@ int scsi_init_io(struct scsi_cmnd *cmd, 
+ 		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
+ 								    GFP_ATOMIC);
+ 		if (error)
++			goto err_exit;
++	}
++
++	if (blk_integrity_rq(cmd->request)) {
++		error = scsi_protect_io(cmd, gfp_mask);
++
++		if (error != BLKPREP_OK)
+ 			goto err_exit;
+ 	}
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -882,6 +882,9 @@ static int scsi_add_lun(struct scsi_devi
+ 
+ 	if (*bflags & BLIST_USE_10_BYTE_MS)
+ 		sdev->use_10_for_ms = 1;
++
++	if (inq_result[5] & 0x1)
++		sdev->protection = 1;
+ 
+ 	/* set the device running here so that slave configure
+ 	 * may do I/O */
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -88,6 +88,8 @@ struct scsi_cmnd {
+ 
+ 	/* These elements define the operation we ultimately want to perform */
+ 	struct scsi_data_buffer sdb;
++	struct scsi_data_buffer *prot_sdb;
++
+ 	unsigned underflow;	/* Return error if less than
+ 				   this amount is transferred */
+ 
+@@ -209,4 +211,22 @@ static inline int scsi_sg_copy_to_buffer
+ 				 buf, buflen);
+ }
+ 
++static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
++}
++
++static inline struct scatterlist *scsi_prot_sglist(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb ? cmd->prot_sdb->table.sgl : NULL;
++}
++
++static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
++{
++	return cmd->prot_sdb;
++}
++
++#define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
++	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
++
+ #endif /* _SCSI_SCSI_CMND_H */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -140,6 +140,7 @@ struct scsi_device {
+ 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+ 	unsigned last_sector_bug:1;	/* Always read last sector in a 1 sector read */
++	unsigned protection:1;		/* Data Integrity Field */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 
 
