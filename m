@@ -1,50 +1,68 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
-Date: Wed, 25 Jun 2008 19:26:39 +0200
-Message-ID: <20080625172638.GE20851@kernel.dk>
-References: <20080619160342.GJ4392@parisc-linux.org> <20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com> <48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk> <20080625172015.GR4392@parisc-linux.org>
+From: "Ashutosh Naik" <ashutosh.naik@gmail.com>
+Subject: Re: Kernel Crash when using the open-iscsi initiator on 2.6.25.6
+Date: Wed, 25 Jun 2008 23:05:18 +0530
+Message-ID: <81083a450806251035k285e4e3dga052f041c9e2d94d@mail.gmail.com>
+References: <81083a450806242236m62754185t3099c06f9f77676@mail.gmail.com>
+	 <48627851.9010804@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:12425 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752395AbYFYR0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2008 13:26:41 -0400
+Received: from ti-out-0910.google.com ([209.85.142.188]:51584 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774AbYFYRfT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2008 13:35:19 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1728413tic.23
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2008 10:35:18 -0700 (PDT)
+In-Reply-To: <48627851.9010804@cs.wisc.edu>
 Content-Disposition: inline
-In-Reply-To: <20080625172015.GR4392@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Ric Wheeler <ricwheeler@gmail.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com
 
-On Wed, Jun 25 2008, Matthew Wilcox wrote:
-> On Wed, Jun 25, 2008 at 06:57:59PM +0200, Jens Axboe wrote:
-> > Precisely, merging and fairness is a big part of it. Plus, doing this in
-> > sd is just a blatant layer violation.
-> 
-> I'm fine with tweaking the elevators to know about low-latency seeks.
-> But please stop describing it as "a blatant layering violation".
-> It's nothing of the sort.  It's setting a default at a point where we
-> find out the information which would guide us.
+On Wed, Jun 25, 2008 at 10:24 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
 
-Uhm, but it IS "a blatant layering violation", it's doing things from
-the wrong side up :-)
+>>  connection5:0: ping timeout of 5 secs expired, last rx 4309652882,
+>> last ping 4309657882, now 4309662882
+>
+>
+> However, once it happens we should not report it again like is done here.
+> There is something weird there. Do you have the iscsid output? Between these
+> two reports of pings timing out is there any messages from iscsid about
+> reconnecting?
 
-> I haven't looked into doing this in udev yet; I've got caught up in
-> another project.  In any case, it seems like there's no role for udev
-> any more, so I'll probably not spend any more time on this unless there's
-> some need.
+iscsid tried to reconnect but the target died, I think.
 
-I don't think udev is a particularly good idea either. My plan was to
-introduce device profiles for the queue, but it is probably a bad idea
-to over-engineer this. So I'll keep it simple, stick to a 'zero cost
-seek' flag instead and allow drivers to signal that. libata/ide needs to
-check the ID page word to detect SSD drives as well, so they need a few
-lines of change too.
+>>  connection5:0: detected conn error (1011)
+>>  connection5:0: detected conn error (1011)
+>>  session5: host reset succeeded
+>
+>
+> And we should not get here. The iscsi driver's scsi command timeout handler
+> should prevent the command from firing the scsi eh, because in this case we
+> think it is a transport problem.
+>
+> What version of the iscsi tools are you using? Are they from a distro or
+> open-iscsi.org?
+>
+> Are you running with the iscsi kernel modules from 2.6.25.6, or are you
+> using the iscsi modules from the open-iscsi.org website that come with the
+> tarball?
+>
+> Is the kernel a unmodified 2.6.25.6 or does it have some distro patches or
+> patches that you have created?
 
-I'll just stick the block bit in the 2.6.27 pending queue and let the
-other patches go through Jeff/James/Bart.
+It was an unmodififed 2.6.25.6 kernel, and open-iscsi version 2.0-869.2
 
--- 
-Jens Axboe
+>> INFO: task fdisk:5226 blocked for more than 120 seconds.
+>
+> I think you get this message and what follows, is a result of the above
+> problem. While the iscsi initiator is trying to reconnect, IO is queued by
+> the scsi layer so fdisk is going to be waiting around until we recover or
+> give up.
 
+Yep, but is there any way to close gracefully and avoid the kernel dump?
+
+Thanks
+Ashutosh
