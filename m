@@ -1,45 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10979] INFO: possible recursive locking detected
-Date: Wed, 25 Jun 2008 08:39:01 -0700 (PDT)
-Message-ID: <20080625153901.63576108045@picon.linux-foundation.org>
-References: <bug-10979-11613@http.bugzilla.kernel.org/>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] remove the unused SCSI_QLOGIC_FC_FIRMWARE option
+Date: Wed, 25 Jun 2008 19:24:58 +0300
+Message-ID: <20080625162458.GC10285@cs181140183.pp.htv.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59793 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755863AbYFYPjd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2008 11:39:33 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5PFd1np005246
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2008 08:39:02 -0700
-In-Reply-To: <bug-10979-11613@http.bugzilla.kernel.org/>
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:59374 "EHLO smtp5.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881AbYFYQ1E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2008 12:27:04 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Robert P. J. Day" <rpjday@crashcourse.ca>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10979
+This option was forgotten when the SCSI_QLOGIC_FC driver was removed.
 
+Reported-by: Robert P. J. Day <rpjday@crashcourse.ca>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-akpm@osdl.org changed:
+---
+92547181b79610ddd207a9cdbea35653a1d63b8a diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 81ccbd7..a72993c 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1305,14 +1305,6 @@ config SCSI_QLOGIC_FAS
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called qlogicfas.
+ 
+-config SCSI_QLOGIC_FC_FIRMWARE
+-	bool "Include loadable firmware in driver"
+-	depends on SCSI_QLOGIC_FC
+-  	help
+-	  Say Y to include ISP2X00 Fabric Initiator/Target Firmware, with
+-	  expanded LUN addressing and FcTape (FCP-2) support, in the
+-	  qlogicfc driver. This is required on some platforms.
+-
+ config SCSI_QLOGIC_1280
+ 	tristate "Qlogic QLA 1240/1x80/1x160 SCSI support"
+ 	depends on PCI && SCSI
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |akpm@osdl.org,
-                   |                            |axboe@kernel.dk
-
-
-
-
-------- Comment #1 from akpm@osdl.org  2008-06-25 08:39 -------
-hrm, I'm not sure why that didn't simply deadlock.  But still, doing
-blk_sync_queue()
-within the context of __generic_unplug_device(), with the queue lock
-held sounds wrong.
-
-Jens, could you please have a ponder?
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
