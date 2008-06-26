@@ -1,69 +1,54 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter
- on per device basis
-Date: Thu, 26 Jun 2008 23:36:29 +0900
-Message-ID: <20080626233633E.fujita.tomonori@lab.ntt.co.jp>
-References: <48584252.5030901@interlog.com>
-	<48592233.6040408@redhat.com>
-	<6cf6b73e0806260310n5988b59dycb0aeab3b0f5c930@mail.gmail.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 1/9] scsi_dh: Implement common device table handling
+Date: Thu, 26 Jun 2008 07:41:03 -0700
+Message-ID: <1214491263.31845.0.camel@chandra-ubuntu>
+References: <20080624100349.06F5A10B5DE@craiglockhart-ipmi.suse.de>
+	 <1214441566.32521.10.camel@chandra-ubuntu>  <48638F7C.9090602@suse.de>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:51822 "EHLO sh.osrg.net"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:52558 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759872AbYFZOim (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2008 10:38:42 -0400
-In-Reply-To: <6cf6b73e0806260310n5988b59dycb0aeab3b0f5c930@mail.gmail.com>
+	id S1752638AbYFZOlK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2008 10:41:10 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m5QEf7BA024389
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2008 10:41:07 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m5QEf74r215758
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2008 10:41:07 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m5QEf6qf012513
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2008 10:41:07 -0400
+In-Reply-To: <48638F7C.9090602@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adel.gadllah@gmail.com
-Cc: pjones@redhat.com, dgilbert@interlog.com, fujita.tomonori@lab.ntt.co.jp, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Thu, 26 Jun 2008 12:10:25 +0200
-"Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+Great then.
 
-> 2008/6/18 Peter Jones <pjones@redhat.com>:
-> > Douglas Gilbert wrote:
-> >>
-> >> Peter Jones wrote:
-> >>>
-> >>> FUJITA Tomonori wrote:
-> >>>
-> >>>> Well, this changes sg behaviour since sg's allow_ops filter has a
-> >>>> access permission different from blk_verify_command filter's.
-> >>>
-> >>>  >
-> >>>>
-> >>>> I guess that the first thing you need to do is that figuring out a
-> >>>> proper access permission for each command, which sg maintainer, etc
-> >>>> can agree. It's pretty hard and that's the reason why this patch has
-> >>>> not been merged for years, I think.
-> >>>
-> >>> I don't think this logic is sound.
-> >>
-> >> That depends on your viewpoint.
-> >
-> > My viewpoint is this:
-> >
-> > 1) Whether you agree with his reasons or not, Linus made it pretty clear
-> > that he's against removing the command filter (see
-> > http://marc.info/?l=linux-scsi&m=115419945212450&w=2 )
-> > 2) Having different code paths use different filtering code just adds more
-> > confusion.
-> > 3) If we're going to have filtering, it should be configurable on a
-> > per-device basis from userland.
-> >
-> > Which of these do you disagree with?
-> >
-> > [...]
-> >>
-> >> Are per device command filters being proposed?
-> >
-> > Yes, that's what the patch implements.  And it allows the userland to
-> > configure them according to the needs of the hardware.
+Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
+
+On Thu, 2008-06-26 at 14:45 +0200, Hannes Reinecke wrote:
+> Hi Chandra,
 > 
-> Jens can we add merge this for .27 or does anyone still has objections?
+> Chandra Seetharaman wrote:
+> > Other than one minor issue the code looks good (sorry for the late
+> > realization on my part).
+> > 
+> > Issue: scsi_dh_handler_detach() references scsi_dh with no check for
+> > null and scsi_dh_notifier() call it with scsi_dh == NULL. code can be
+> > changed to get the device handler from sdev.
+> > 
+> This is fixed in patch 7/9. I thought I had rediffed them properly,
+> but apparently not. Sorry for that.
+> 
+> Thanks for the review.
+> 
+> Cheers,
+> 
+> Hannes
 
-I think that this patch makes sg's permission stricter. So this could
-break the existing user-space applications.
