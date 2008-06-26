@@ -1,50 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/9] scsi_dh: Implement common device table
-	handling
-Date: Thu, 26 Jun 2008 14:45:48 +0200
-Message-ID: <48638F7C.9090602@suse.de>
-References: <20080624100349.06F5A10B5DE@craiglockhart-ipmi.suse.de>
-	<1214441566.32521.10.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1214441566.32521.10.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@us.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9133] aacraid driver fails with Dell PowerEdge Expandable RAID Controller 3/Di
+Date: Thu, 26 Jun 2008 07:29:13 -0700 (PDT)
+Message-ID: <20080626142913.7AF1310800B@picon.linux-foundation.org>
+References: <bug-9133-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45564 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752859AbYFZO3o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2008 10:29:44 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5QETDRO002559
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2008 07:29:14 -0700
+In-Reply-To: <bug-9133-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Chandra,
+http://bugzilla.kernel.org/show_bug.cgi?id=9133
 
-Chandra Seetharaman wrote:
-> Other than one minor issue the code looks good (sorry for the late
-> realization on my part).
->=20
-> Issue: scsi_dh_handler_detach() references scsi_dh with no check for
-> null and scsi_dh_notifier() call it with scsi_dh =3D=3D NULL. code can =
-be
-> changed to get the device handler from sdev.
->=20
-This is fixed in patch 7/9. I thought I had rediffed them properly,
-but apparently not. Sorry for that.
 
-Thanks for the review.
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+
+------- Comment #8 from hkmaly@gmail.com  2008-06-26 07:29 -------
+I also encountered this issue (with kernel 2.6.24, previous kernel was 2.6.15
+but I suppose the problem was triggered by upgrading memory from 4GB to 6GB) on
+PowerEdge 2650 (with Dell PowerEdge Expandable RAID Controller 3/Di).
+
+I can confirm that firmware/BIOS update (from version 2.8.0.6092 to 2.8.1.7692)
+solved it.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
