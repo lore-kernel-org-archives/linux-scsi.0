@@ -1,128 +1,132 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [regression] CD-DA delay needed after insertion
-Date: Fri, 27 Jun 2008 17:27:14 -0500
-Message-ID: <1214605634.3394.91.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0806131352360.2141@vixen.sonytel.be>
-	 <1213540781.3517.18.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806161659440.30122@vixen.sonytel.be>
-	 <1213648258.3420.12.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0806171530340.22840@vixen.sonytel.be>
+Subject: Re: [PATCH 04 of 10] scsi: Support devices with protection
+	information (DIF)
+Date: Sat, 28 Jun 2008 10:07:38 -0500
+Message-ID: <1214665658.3658.18.camel@localhost.localdomain>
+References: <2fd66ca994dbf1ed6d14.1214407363@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42452 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58284 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755902AbYF0W1U (ORCPT
+	by vger.kernel.org with ESMTP id S1751700AbYF1PHm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2008 18:27:20 -0400
-In-Reply-To: <Pine.LNX.4.64.0806171530340.22840@vixen.sonytel.be>
+	Sat, 28 Jun 2008 11:07:42 -0400
+In-Reply-To: <2fd66ca994dbf1ed6d14.1214407363@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2008-06-17 at 15:31 +0200, Geert Uytterhoeven wrote:
-> On Mon, 16 Jun 2008, James Bottomley wrote:
-> > On Mon, 2008-06-16 at 17:05 +0200, Geert Uytterhoeven wrote:
-> > > On Sun, 15 Jun 2008, James Bottomley wrote:
-> > > > On Fri, 2008-06-13 at 13:57 +0200, Geert Uytterhoeven wrote:
-> > > > > We've found another regression in 2.6.25 w.r.t. CD media change on PS3.
-> > > > > 
-> > > > > It can easily be reproduced by:
-> > > > > 
-> > > > >   1. Inserting an audio CD
-> > > > >   2. Running the following command as soon as the blue CD/DVD/BD drive LED
-> > > > >      stops blinking and is lit continuously:
-> > > > >       
-> > > > > 	 cdparanoia -Z -q 1-1[:1] /dev/null || echo failed
-> > > > > 
-> > > > > On 2.6.25 (and current mainline), you have to wait ca. 10 seconds after
-> > > > > insertion, or it will fail.
-> > > > > On 2.6.24 and older, it just works immediately.
-> > > > > 
-> > > > > It does not matter whether
-> > > > > http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-rc-fixes-2.6.git;a=commitdiff_plain;h=d1daeabf0da5bfa1943272ce508e2ba785730bf0
-> > > > > is applied or not.
-> > > > > 
-> > > > > We haven't bisected it yet.
-> > > > 
-> > > > There aren't that many commits affecting sr between 2.6.24 and 2.6.25,
-> > > > so I'd bet on the previous culprits.
-> > > > 
-> > > > This time, the taxonomy looks like NOT_READY isn't being waited for
-> > > > properly.  I'd still tend to blame
-> > > > 210ba1d1724f5c4ed87a2ab1a21ca861a915f734 it's just that this time I
-> > > 
-> > > Reverting that commit doesn't fix the problem.
-> > 
-> > That's a bit of a problem.  Particularly as:
-> > 
-> > > > suspect this to be the problem line:
-> > > > 
-> > > > 	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04)
-> > > > 		return CDS_DISC_OK;
-> > > > 
-> > > > Previously the code would have returned CDS_NO_DISC for the not ready
-> > > > case.  The CD would have tried to close the door but (and this is the
-> > > > key) it would have waited for the door to close before trying again.
-> > > 
-> > > I tried the patch below.
-> > > 
-> > > Now the kernel spits out messages every 2 seconds:
-> > > 
-> > > | G: CDS_NO_DISC
-> > > | G: CDS_NO_DISC
-> > > 
-> > > Insert CD-DA media
-> > > 
-> > > Reading from CD using cdparanioa fails
-> > > 
-> > > | F: CDS_DISC_OK
-> > > | F: CDS_DISC_OK
-> > > | F: CDS_DISC_OK
-> > > | F: CDS_DISC_OK
-> > > | F: CDS_DISC_OK
-> > 
-> > That's in the two lines I fingered as the source of the problem ...
-> > however, if reversing the apparently bad commit (that introduces those
-> > lines) doesn't work there's something else wrong.
-> > 
-> > Could you try altering your F: case to return CDS_DRIVE_NOT_READY, but
-> > if that doesn't work, it's going to take a bit of bisection, I'm
-> > afraid ...
+On Wed, 2008-06-25 at 11:22 -0400, Martin K. Petersen wrote:
+> - Add support for an extra scatter-gather list containing protection
+>    information.
 > 
-> Doesn't make any difference.
+>  - Remember devices with protection information turned on in INQUIRY.
 > 
-> git-bisect taught me it was introduced by
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 > 
-> commit 38582a62ecd337de4212004c7d4844899dc57890
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Wed Feb 6 13:01:58 2008 -0600
+> ---
+> 4 files changed, 62 insertions(+)
+> drivers/scsi/scsi_lib.c    |   38 ++++++++++++++++++++++++++++++++++++++
+> drivers/scsi/scsi_scan.c   |    3 +++
+> include/scsi/scsi_cmnd.h   |   20 ++++++++++++++++++++
+> include/scsi/scsi_device.h |    1 +
 > 
->     [SCSI] sr: fix test unit ready responses
->     
->     Commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734 updated sr.c to use
->     the scsi_test_unit_ready() function.  Unfortunately, this has the
->     wrong characteristic of eating NOT_READY returns which sr.c relies on
->     for tray status.
->     
->     Fix by rolling an internal sr_test_unit_ready() that doesn't do this.
+> 
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -778,6 +778,11 @@ void scsi_release_buffers(struct scsi_cm
+>  		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+>  		cmd->request->next_rq->special = NULL;
+>  	}
+> +
+> +	if (scsi_prot_sg_count(cmd)) {
+> +		scsi_free_sgtable(cmd->prot_sdb);
+> +		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
+> +	}
+>  }
+>  EXPORT_SYMBOL(scsi_release_buffers);
+>  
+> @@ -1031,6 +1036,32 @@ static int scsi_init_sgtable(struct requ
+>  	return BLKPREP_OK;
+>  }
+>  
+> +static int scsi_protect_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+> +{
+> +	struct request *req;
+> +	struct scsi_data_buffer *pdb;
+> +	int ivecs, count;
+> +
+> +	req = cmd->request;
+> +
+> +	pdb = kmem_cache_zalloc(scsi_sdb_cache, gfp_mask);
+> +	if (unlikely(pdb == NULL))
+> +		return BLKPREP_DEFER;
 
-OK, I thought I had a test case for this, but when I revert this commit
-on git head (and fix up the one reject which just leaves the sr_
-function in place) I still produce the same behaviour.
+I'm afraid you can't do it like this because it will violate our forward
+progress guarantees.  If this is the last spare command required for
+writeout, you need to guarantee either this allocation will succeed, or
+we can proceed without the DIF data.
 
-What I'm trying is 
+I know you copied it from the bidirectional stuff, but they don't need
+forward progress guarantees; something in the mainline does because we
+could get into a vmwriteout failure case even for a DIF protected
+device.
 
-sg_start -i -l <cdrom>
+> +
+> +	ivecs = blk_rq_count_integrity_sg(req);
+> +
+> +	if (unlikely(scsi_alloc_sgtable(pdb, ivecs, gfp_mask)))
+> +		return BLKPREP_DEFER;
+> +
+> +	count = blk_rq_map_integrity_sg(req, pdb->table.sgl);
+> +	BUG_ON(unlikely(count > ivecs));
+> +
+> +	cmd->prot_sdb = pdb;
+> +	cmd->prot_sdb->table.nents = count;
+> +
+> +	return BLKPREP_OK;
+> +}
+> +
+>  /*
+>   * Function:    scsi_init_io()
+>   *
+> @@ -1060,6 +1091,13 @@ int scsi_init_io(struct scsi_cmnd *cmd, 
+>  		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
+>  								    GFP_ATOMIC);
+>  		if (error)
+> +			goto err_exit;
+> +	}
+> +
+> +	if (blk_integrity_rq(cmd->request)) {
+> +		error = scsi_protect_io(cmd, gfp_mask);
+> +
+> +		if (error != BLKPREP_OK)
+>  			goto err_exit;
+>  	}
+>  
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -882,6 +882,9 @@ static int scsi_add_lun(struct scsi_devi
+>  
+>  	if (*bflags & BLIST_USE_10_BYTE_MS)
+>  		sdev->use_10_for_ms = 1;
+> +
+> +	if (inq_result[5] & 0x1)
+> +		sdev->protection = 1;
 
-to close the tray followed by your cdparanoia command
+Is there a reason to have a separate flag here and not just do something
+like the usual in scsi_device.h:
 
-Could you see if reverting this commit on git head works for you (in
-which case I'm not reproducing it correctly)?
-
-Thanks,
+static inline int scsi_device_protection(struct scsi_device *sdev)
+{
+	return sdev->inquiry[5] & (1<<0);
+}
 
 James
 
