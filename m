@@ -1,16 +1,14 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 03/13] libfc: fix locking in tt.rport_lookup_create paths
-Date: Sun, 29 Jun 2008 13:23:53 -0500
-Message-ID: <1214763843-5548-4-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 01/13] set proc name
+Date: Sun, 29 Jun 2008 13:23:51 -0500
+Message-ID: <1214763843-5548-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-2-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47593 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47585 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757532AbYF2SYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757442AbYF2SYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Sun, 29 Jun 2008 14:24:10 -0400
-In-Reply-To: <1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, devel@open-fcoe.org
@@ -18,55 +16,48 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-In some code paths we had the fl_lock when calling
-tt.rport_lookup_create. tt.rport_lookup_create can sleep if
-it needs to create a new rport (fc class uses GFP_KERNEL
-for example), so we need to have the spin locks dropped.
+1. Set proc name to fcoe so we can id from userspace.
+
+2. rearrange includes in fcoe_if.c scsi comes after linux ones,
+and drop unused includes like the cam and tcq ones.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libfc/fc_disc.c  |    7 +++++++
- drivers/scsi/libfc/fc_lport.c |    7 +++++++
- 2 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/fcoe_if.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 45210c3..a1b5171 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -907,7 +907,14 @@ static void fc_disc_enter_dns(struct fc_lport *lp)
- 		/*
- 		 * Set up remote port to directory server.
- 		 */
-+
-+		/*
-+		 * we are called with the fl_lock, but if rport_lookup_create
-+		 * needs to create a rport then it will sleep.
-+		 */
-+		spin_unlock_bh(&lp->fl_lock);
- 		rp = lp->tt.rport_lookup_create(lp, &ids);
-+		spin_lock_bh(&lp->fl_lock);
- 		if (!rp)
- 			goto err;
- 		lp->tt.sess_init(lp, rp);
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e3eae92..a7ffab7 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -177,7 +177,14 @@ static void fc_lport_ptp_setup(struct fc_lport *lp,
- 		.node_name = remote_wwnn,
- 	};
+diff --git a/drivers/scsi/fcoe/fcoe_if.c b/drivers/scsi/fcoe/fcoe_if.c
+index e92a354..24efe01 100644
+--- a/drivers/scsi/fcoe/fcoe_if.c
++++ b/drivers/scsi/fcoe/fcoe_if.c
+@@ -26,10 +26,6 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/spinlock.h>
+-#include <scsi/scsi_tcq.h>
+-#include <scsi/scsicam.h>
+-#include <scsi/scsi_transport.h>
+-#include <scsi/scsi_transport_fc.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ethtool.h>
+@@ -40,6 +36,8 @@
+ #include <scsi/fc/fc_els.h>
+ #include <scsi/fc/fc_encaps.h>
+ #include <scsi/fc/fc_fs.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_fc.h>
  
-+
-+	/*
-+	 * if we have to create a rport the fc class can sleep so we must
-+	 * drop the lock here
-+	 */
-+	spin_unlock_bh(&lp->fl_lock);
- 	rp = lp->tt.rport_lookup_create(lp, &ids);
-+	spin_lock_bh(&lp->fl_lock);
- 	if (rp) {
- 		if (lp->fl_ptp_rp)
- 			lp->tt.rport_release(lp->fl_ptp_rp);
+ #include <scsi/libfc/libfc.h>
+ #include <scsi/libfc/fc_dbg.h>
+@@ -263,6 +261,7 @@ struct device_attribute *fcoe_host_attrs[] = {
+ static struct scsi_host_template fcoe_driver_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "FCoE Driver",
++	.proc_name = FCOE_DRIVER_NAME,
+ 	.queuecommand = fc_queuecommand,
+ 	.eh_abort_handler = fc_eh_abort,
+ 	.eh_device_reset_handler = fc_eh_device_reset,
 -- 
 1.5.4.1
 
