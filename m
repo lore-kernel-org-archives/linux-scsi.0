@@ -1,69 +1,105 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/3] scsi: fix shared tag map setup
-Date: Sun, 29 Jun 2008 01:30:25 -0500
-Message-ID: <1214721027-32426-2-git-send-email-michaelc@cs.wisc.edu>
-References: <1214721027-32426-1-git-send-email-michaelc@cs.wisc.edu>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: [PATCH] SCSI: Fix some locking issues
+Date: Sun, 29 Jun 2008 13:38:05 +0200
+Message-ID: <877ic8o4iq.fsf@denkblock.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48104 "EHLO mx1.redhat.com"
+Received: from nebensachen.de ([195.34.83.29]:45362 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751599AbYF2Gag (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jun 2008 02:30:36 -0400
-In-Reply-To: <1214721027-32426-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1754428AbYF2LlS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jun 2008 07:41:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, promise_linux@promise.com, david.somayajulu@qlogic.com
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
+Cc: stable@kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Hi all,
 
-Currently qla4xxx and stex pass in their can_queue values into
-scsi_activate_tcq because they wanted the tag map that large.
-The problem with this is that it ends up also setting the queue
-depth to that large value. All we want to do this in this case
-is set the device queue depth and the other device settings.
-We do not need to touch the tag map sizing because the drivers
-had setup that map according to their can_queue limits when the
-shared map was created.
+the following patch applies to 2.6.26-rc8. However, the same issues
+exist in the 2.6.25.y stable tree and the patch applies with offsets to
+2.6.25.9; I haven't checked 2.6.24 and before.
 
-The scsi mid layer in request_fn will then handle the case where we
-have more requests than available tags when it checks the host
-queue ready function.
+Regards,
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Elias
+
+
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: SCSI: Fix some locking issues
+
+Make sure that host_blocked is consistently protected by the host_lock.
+Similarly, device_block has to be protected by the queue_lock.  Also,
+blk_plug_device() has to be called with the queue_lock held in
+scsi_host_queue_ready().
+
+Cc: stable@kernel.org
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
- drivers/scsi/scsi.c |   19 ++++++++++++++-----
- 1 files changed, 14 insertions(+), 5 deletions(-)
+
+ drivers/scsi/scsi.c     |    6 ++++++
+ drivers/scsi/scsi_lib.c |   13 +++++++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 36c92f9..5276e73 100644
+index 110e776..b8b7982 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
-@@ -902,11 +902,20 @@ void scsi_adjust_queue_depth(struct scsi_device *sdev, int tagged, int tags)
+@@ -826,8 +826,10 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
++	struct request_queue *q = sdev->request_queue;
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
++	unsigned long flags;
  
- 	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+ 	scsi_device_unbusy(sdev);
  
--	/* Check to see if the queue is managed by the block layer.
--	 * If it is, and we fail to adjust the depth, exit. */
--	if (blk_queue_tagged(sdev->request_queue) &&
--	    blk_queue_resize_tags(sdev->request_queue, tags) != 0)
--		goto out;
-+	/*
-+	 * Check to see if the queue is managed by the block layer.
-+	 * If it is, and we fail to adjust the depth, exit.
-+	 *
-+	 * Do not resize the tag map if it is a host wide share bqt,
-+	 * because the size should be the hosts's can_queue. If there
-+	 * is more IO than the LLD's can_queue (so there are not enuogh
-+	 * tags) request_fn's host queue ready check will handle it.
-+	 */
-+	if (!sdev->host->bqt) {
-+		if (blk_queue_tagged(sdev->request_queue) &&
-+		    blk_queue_resize_tags(sdev->request_queue, tags) != 0)
-+			goto out;
+@@ -839,8 +841,12 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 	 *
+ 	 * XXX(hch): What about locking?
+          */
++	spin_lock_irqsave(shost->host_lock, flags);
+         shost->host_blocked = 0;
++	spin_unlock(shost->host_lock);
++	spin_lock(q->queue_lock);
+         sdev->device_blocked = 0;
++	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a82d2fe..65d0c39 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -133,10 +133,15 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ 	 * if a command is requeued with no other commands outstanding
+ 	 * either for the device or for the host.
+ 	 */
+-	if (reason == SCSI_MLQUEUE_HOST_BUSY)
++	if (reason == SCSI_MLQUEUE_HOST_BUSY) {
++		spin_lock_irqsave(host->host_lock, flags);
+ 		host->host_blocked = host->max_host_blocked;
+-	else if (reason == SCSI_MLQUEUE_DEVICE_BUSY)
++		spin_unlock_irqrestore(host->host_lock, flags);
++	} else if (reason == SCSI_MLQUEUE_DEVICE_BUSY) {
++		spin_lock_irqsave(q->queue_lock, flags);
+ 		device->device_blocked = device->max_device_blocked;
++		spin_unlock_irqrestore(q->queue_lock, flags);
 +	}
  
- 	sdev->queue_depth = tags;
- 	switch (tagged) {
--- 
-1.5.4.1
-
+ 	/*
+ 	 * Decrement the counters, since these commands are no longer
+@@ -1320,7 +1325,11 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				printk("scsi%d unblocking host at zero depth\n",
+ 					shost->host_no));
+ 		} else {
++			spin_unlock(shost->host_lock);
++			spin_lock(q->queue_lock);
+ 			blk_plug_device(q);
++			spin_unlock(q->queue_lock);
++			spin_lock(shost->host_lock);
+ 			return 0;
+ 		}
+ 	}
