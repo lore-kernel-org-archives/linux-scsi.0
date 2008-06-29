@@ -1,18 +1,16 @@
 From: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
-Subject: [PATCH 06/13] libfc: trivial fc_scsi cleanup
-Date: Sun, 29 Jun 2008 13:23:56 -0500
-Message-ID: <1214763843-5548-7-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 04/13] fcoe: fix fcoe_create_interface goto paths
+Date: Sun, 29 Jun 2008 13:23:54 -0500
+Message-ID: <1214763843-5548-5-git-send-email-michaelc@cs.wisc.edu>
 References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
 	<1214763843-5548-2-git-send-email-michaelc@cs.wisc.edu>
 	<1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
 	<1214763843-5548-4-git-send-email-michaelc@cs.wisc.edu>
-	<1214763843-5548-5-git-send-email-michaelc@cs.wisc.edu>
-	<1214763843-5548-6-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1214763843-5548-6-git-send-email-michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+In-Reply-To: <1214763843-5548-4-git-send-email-michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
 	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://www.open-fcoe.org/pipermail/devel>
@@ -27,170 +25,190 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
-Just mostly static stuff.
+1. If fc_scsi_init fails no one noticed.
+2. fcoe_find_fc_lport was called before real_dev was set
+so were hitting a null ptr.
+3. On the cleanup paths, fc_put_dev does a put on the host so there
+was not need to do it again in the out_host_put. fc_lport_destroy removed
+the host so no need to do it in out_host_rem.
 
-1. change allocation flag in fc_scsi_init to GFP_KERNEL since it
-has process context.
-2. Make functions static when only used in this file.
-3. Remove unncessary function declarations - it would be nice to remove
-all of them because they are such a pain in the ass to maintain.
-4. rename openfc_io_compl to just fc_io_compl.
+And fc_put_dev does the host put was sort of wierd because the driver
+called host alloc, so this moves that call the driver (maybe this
+should be done for the host remove call too).
 
 Signed-off-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 ---
- drivers/scsi/libfc/fc_scsi.c |   39 ++++++++++++++++++---------------------
- 1 files changed, 18 insertions(+), 21 deletions(-)
+ drivers/scsi/fcoe/fcoe_if.c  |   70 ++++++++++++++++++++++++------------------
+ drivers/scsi/libfc/fc_exch.c |    1 +
+ drivers/scsi/libfc/fc_scsi.c |    1 -
+ 3 files changed, 41 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_scsi.c b/drivers/scsi/libfc/fc_scsi.c
-index ec7f3dd..b9487bf 100644
---- a/drivers/scsi/libfc/fc_scsi.c
-+++ b/drivers/scsi/libfc/fc_scsi.c
-@@ -163,15 +163,12 @@ static void fc_scsi_timeout(struct fc_scsi_pkt *);
- static void fc_scsi_rec(struct fc_scsi_pkt *);
- static void fc_scsi_rec_error(struct fc_scsi_pkt *, struct fc_frame *);
- static void fc_scsi_rec_resp(struct fc_seq *, struct fc_frame *, void *);
-+static void fc_io_compl(struct fc_scsi_pkt *);
+diff --git a/drivers/scsi/fcoe/fcoe_if.c b/drivers/scsi/fcoe/fcoe_if.c
+index 24efe01..1f32743 100644
+--- a/drivers/scsi/fcoe/fcoe_if.c
++++ b/drivers/scsi/fcoe/fcoe_if.c
+@@ -375,6 +375,7 @@ int fcoe_destroy_interface(const char *ifname)
+ 	}
  
- static void fc_scsi_srr(struct fc_scsi_pkt *, enum fc_rctl, u32);
- static void fc_scsi_srr_resp(struct fc_seq *, struct fc_frame *, void *);
- static void fc_scsi_srr_error(struct fc_scsi_pkt *, struct fc_frame *);
- 
--static void fc_scsi_pkt_hold(struct fc_scsi_pkt *);
--static void fc_scsi_pkt_release(struct fc_scsi_pkt *);
--static int fc_destroy_scsi_slab(struct fc_lport *);
--
- /*
-  * command status codes
-  */
-@@ -199,8 +196,6 @@ static int fc_destroy_scsi_slab(struct fc_lport *);
- 
- #define OPENFC_DFLT_QUEUE_DEPTH 32
- 
--static void openfc_io_compl(struct fc_scsi_pkt *);
--
- /*
-  * function prototypes
-  * FC scsi I/O related functions
-@@ -253,18 +248,18 @@ static int fc_scsi_pkt_free(struct fc_scsi_pkt *sp)
+ 	fcoe_put_dev(lp);
++	scsi_host_put(lp->host);
  	return 0;
  }
  
--void fc_scsi_pkt_hold(struct fc_scsi_pkt *sp)
-+static void fc_scsi_pkt_hold(struct fc_scsi_pkt *sp)
- {
- 	atomic_inc(&sp->ref_cnt);
- }
+@@ -446,13 +447,26 @@ int fcoe_create_interface(const char *ifname)
+ 	u8 flogi_maddr[ETH_ALEN];
+ #endif
  
--void fc_scsi_pkt_release(struct fc_scsi_pkt *sp)
-+static void fc_scsi_pkt_release(struct fc_scsi_pkt *sp)
- {
- 	fc_scsi_pkt_free(sp);
- }
++	net_dev = (void *)dev_get_by_name(&init_net, ifname);
++	if (net_dev == NULL) {
++		FC_DBG("could not get network device for %s",
++		       ifname);
++		return -ENODEV;
++	}
++
++	if (fcoe_find_fc_lport(net_dev->name) != NULL) {
++		rc = -EEXIST;
++		goto out_put_dev;
++	}
++
+ 	host = scsi_host_alloc(&fcoe_driver_template,
+ 			       sizeof(struct fc_lport) +
+ 			       sizeof(struct fcoe_softc));
  
- 
--int fc_destroy_scsi_slab(struct fc_lport *lp)
-+static int fc_destroy_scsi_slab(struct fc_lport *lp)
- {
- 	int rc = -1;
- 	struct fc_scsi_internal *si = fc_get_scsi_internal(lp);
-@@ -922,7 +917,7 @@ static void fc_scsi_abort_io(struct fc_lport *lp)
-  * Context  : called from process context or timer context
-  *	      must not be called holding list lock
-  */
--int fc_scsi_pkt_send(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
-+static int fc_scsi_pkt_send(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
- {
- 	u32 idx, i;
- 	unsigned long flags;
-@@ -1057,7 +1052,7 @@ static void fc_abort_internal(struct fc_scsi_pkt *fsp)
-  * Scsi abort handler- calls fcs to send an abort
-  * and then wait for abort completion
-  */
--int fc_scsi_pkt_abort(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
-+static int fc_scsi_pkt_abort(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
- {
- 	int rc = FAILED;
- 
-@@ -1218,7 +1213,7 @@ out:
-  * this routine will assume that flogo has happened
-  * end we are cleaning all the commands.
-  */
--int fc_inf_reset(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
-+static int fc_inf_reset(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
- {
- 	int idx;
- 	unsigned long flags;
-@@ -1266,7 +1261,7 @@ static void fc_tm_done(struct fc_seq *sp, struct fc_frame *fp, void *arg)
- 	}
- }
- 
--void fc_scsi_cleanup(struct fc_lport *lp)
-+static void fc_scsi_cleanup(struct fc_lport *lp)
- {
- 	int idx;
- 	unsigned long flags;
-@@ -1329,7 +1324,7 @@ static void fc_scsi_timeout(struct fc_scsi_pkt *fsp)
- /*
-  * Send a REC ELS request
-  */
--void fc_scsi_rec(struct fc_scsi_pkt *fsp)
-+static void fc_scsi_rec(struct fc_scsi_pkt *fsp)
- {
- 	struct fc_lport *lp;
- 	struct fc_seq *sp;
-@@ -1761,7 +1756,7 @@ out:
- }
- 
- /**
-- * fc_queuecommand: - The queuecommand function of the scsi template
-+ * fc_queuecommand - The queuecommand function of the scsi template
-  * @cmd:	struct scsi_cmnd to be executed
-  * @done:	Callback function to be called when cmd is completed
-  *
-@@ -1875,7 +1870,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 		stats->ControlRequests++;
+ 	if (host == NULL) {
+ 		FC_DBG("openfc: Could not allocate host structure\n");
+-		goto out;
++		rc = -ENOMEM;
++		goto out_put_dev;
  	}
  
--	sp->done = openfc_io_compl;
-+	sp->done = fc_io_compl;
- 	sp->tgt_flags = rp->tgt_flags;
+ 	host->transportt = fcoe_transport_template;
+@@ -465,6 +479,7 @@ int fcoe_create_interface(const char *ifname)
+ 	fc = (struct fcoe_softc *)lp->drv_priv;
+ 	memset(fc, 0, sizeof(struct fcoe_softc));
+ 	fc->lp = lp;
++	fc->real_dev = net_dev;
  
- 	init_timer(&sp->timer);
-@@ -1900,11 +1895,12 @@ out:
- EXPORT_SYMBOL(fc_queuecommand);
+ 	/* Set the function pointers set by the LLDD */
+ 	memcpy(&lp->tt, &fcoe_libfc_transport_template, sizeof(struct fc_transport_template));
+@@ -474,17 +489,16 @@ int fcoe_create_interface(const char *ifname)
+ 	host->max_id = FC_MAX_FCP_TARGET;
+ 	host->max_channel = 0;
  
- /**
-- * openfc_io_compl: -  Handle responses for completed  commands
-+ * fc_io_compl -  Handle responses for completed  commands
-+ * @sp:		scsi packet
-  *
-  * Translates a openfc error to a Linux SCSI error
-  */
--static void openfc_io_compl(struct fc_scsi_pkt *sp)
-+static void fc_io_compl(struct fc_scsi_pkt *sp)
+-	/* Add the new host to the SCSI-ml */
+-	rc = scsi_add_host(lp->host, NULL);
+-	if (rc) {
+-		FC_DBG("error on scsi_add_host\n");
+-		goto out_host_put;
+-	}
+-
+ 	/* Allocate an EM for this driver */
+ 	lp->emp = fc_exch_mgr_alloc(FC_CLASS_3, 0, 0);
+ 	if (!lp->emp)
+-		goto out_host_rem;
++		goto out_host_put;
++
++	/* Initialize the scsi block */
++	if (fc_scsi_init(lp, &fcoe_libfc_transport_template)) {
++		rc = -ENOMEM;
++		goto out_exch_free;
++	}
+ 
+ 	/* Configure the fc_lport for this host */
+ 	lp->state = FC_INITIALIZATION;
+@@ -495,6 +509,13 @@ int fcoe_create_interface(const char *ifname)
+ 	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
+ 			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
+ 
++	/* Add the new host to the SCSI-ml */
++	rc = scsi_add_host(lp->host, NULL);
++	if (rc) {
++		FC_DBG("error on scsi_add_host\n");
++		goto out_scsi_free;
++	}
++
+ 	/* Initialize most of libfc */
+ 	fc_exch_init(lp, &fcoe_libfc_transport_template);
+ 	fc_lport_init(lp, &fcoe_libfc_transport_template);
+@@ -505,9 +526,6 @@ int fcoe_create_interface(const char *ifname)
+ 	/* Finish fc_lport configuration */
+ 	fc_lport_config(lp);
+ 
+-	/* Initialize the scsi block */
+-	fc_scsi_init(lp, &fcoe_libfc_transport_template);
+-
+ 	/* XXX - Can this be moved into fabric_login()? */
+ 	if (lp->link_status == TRANS_LINK_DOWN) {
+ 		lp->fl_logon_req = 0;
+@@ -519,19 +537,6 @@ int fcoe_create_interface(const char *ifname)
+ 	lp->fc_boot_time = jiffies;
+ 	lp->state = FC_RUNNING;
+ 
+-	if (fcoe_find_fc_lport(fc->real_dev->name) != NULL) {
+-		rc = -EEXIST;
+-		goto out;
+-	}
+-
+-	fc->real_dev = (void *)dev_get_by_name(&init_net, ifname);
+-	if (fc->real_dev == NULL) {
+-		FC_DBG("could not get network device for %s",
+-		       ifname);
+-		rc = -ENODEV;
+-		goto out;
+-	}
+-
+ 	/* Do not support for bonding device */
+ 	if ((fc->real_dev->priv_flags & IFF_MASTER_ALB) ||
+ 	    (fc->real_dev->priv_flags & IFF_SLAVE_INACTIVE) ||
+@@ -634,15 +639,20 @@ int fcoe_create_interface(const char *ifname)
+ 
+ 	return rc;
+ out:
+-	fcoe_put_dev(lp);
+ 	fc_rport_destroy(lp);
+ 	fc_lport_destroy(lp);	/* also closes port */
+-out_host_rem:
+-	scsi_remove_host(lp->host);
+-out_host_put:
++	fcoe_put_dev(lp);
+ 	scsi_host_put(lp->host);
+-	WARN_ON(1);
++	return rc;
+ 
++out_scsi_free:
++	fc_put_dev(lp);
++out_exch_free:
++	fc_exch_mgr_free(lp->emp);
++out_host_put:
++	scsi_host_put(lp->host);
++out_put_dev:
++	dev_put(net_dev);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 9333999..a663442 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1701,6 +1701,7 @@ void fc_exch_mgr_free(struct fc_exch_mgr *mp)
+ 	kmem_cache_destroy(mp->em_cp);
+ 	kfree(mp);
+ }
++EXPORT_SYMBOL(fc_exch_mgr_free);
+ 
+ struct fc_exch *fc_exch_alloc(struct fc_exch_mgr *mp, fc_xid_t ex_id)
  {
- 	struct scsi_cmnd *sc_cmd;
- 	struct fc_lport *lp;
-@@ -2241,8 +2237,8 @@ EXPORT_SYMBOL(fc_change_queue_type);
- 
- /**
-  * fc_put_dev -	 dec the fc_lport ref count
-- * @dev:      Pointer to fc_lport to dec.
-- **/
-+ * @lp:      Pointer to fc_lport to dec.
-+ */
- void fc_put_dev(struct fc_lport *lp)
- {
+diff --git a/drivers/scsi/libfc/fc_scsi.c b/drivers/scsi/libfc/fc_scsi.c
+index b877daa..a438aa0 100644
+--- a/drivers/scsi/libfc/fc_scsi.c
++++ b/drivers/scsi/libfc/fc_scsi.c
+@@ -2248,7 +2248,6 @@ void fc_put_dev(struct fc_lport *lp)
  	fc_destroy_scsi_slab(lp);
-@@ -2263,7 +2259,8 @@ int fc_scsi_init(struct fc_lport *lp,
- 	if (!lp->tt.scsi_abort_io)
- 		lp->tt.scsi_abort_io = fc_scsi_abort_io;
- 	
--	si = (struct fc_scsi_internal*)kzalloc(sizeof(struct fc_scsi_internal), GFP_ATOMIC);
-+	si = (struct fc_scsi_internal*)kzalloc(sizeof(struct fc_scsi_internal),
-+					       GFP_KERNEL);
- 	lp->scsi_priv = (void*)si;
+ 	kfree(fc_get_scsi_internal(lp));
+ 	lp->scsi_priv = NULL;
+-	scsi_host_put(lp->host);
+ }
+ EXPORT_SYMBOL(fc_put_dev);
  
- 	/*
 -- 
 1.5.4.1
