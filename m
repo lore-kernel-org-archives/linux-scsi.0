@@ -1,46 +1,37 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] convert struct scsi_varlen_cdb_hdr in scsi.h to use __u8
- for user space
-Date: Sun, 29 Jun 2008 21:03:28 +0900
-Message-ID: <20080629210323W.fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] convert struct scsi_varlen_cdb_hdr in scsi.h to use __u8 for user space
+Date: Sun, 29 Jun 2008 06:43:46 -0600
+Message-ID: <20080629124346.GJ14894@parisc-linux.org>
+References: <20080629210323W.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:56395 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752314AbYF2MDe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jun 2008 08:03:34 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:53614 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465AbYF2MoE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jun 2008 08:44:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20080629210323W.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- include/scsi/scsi.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+But we don't install anything in include/scsi to userspace:
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 32742c4..01e07a5 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -137,10 +137,10 @@
- 
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
+$ cat include/Kbuild 
+header-y += asm-generic/
+header-y += linux/
+header-y += sound/
+header-y += mtd/
+header-y += rdma/
+header-y += video/
+
+header-y += asm-$(ARCH)/
+
 -- 
-1.5.4.2
-
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
