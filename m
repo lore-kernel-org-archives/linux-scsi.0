@@ -1,26 +1,16 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 13/13] libfc: remove unnessary casts
-Date: Sun, 29 Jun 2008 13:24:03 -0500
-Message-ID: <1214763843-5548-14-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 03/13] libfc: fix locking in tt.rport_lookup_create paths
+Date: Sun, 29 Jun 2008 13:23:53 -0500
+Message-ID: <1214763843-5548-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
  <1214763843-5548-2-git-send-email-michaelc@cs.wisc.edu>
  <1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-4-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-5-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-6-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-7-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-8-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-9-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-10-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-11-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-12-git-send-email-michaelc@cs.wisc.edu>
- <1214763843-5548-13-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47599 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47593 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757549AbYF2SYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jun 2008 14:24:11 -0400
-In-Reply-To: <1214763843-5548-13-git-send-email-michaelc@cs.wisc.edu>
+	id S1757532AbYF2SYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jun 2008 14:24:10 -0400
+In-Reply-To: <1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, devel@open-fcoe.org
@@ -28,39 +18,55 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Trivial remove casts in fc_scsi.c. Just getting it out of the way
-to make other patches smaller.
+In some code paths we had the fl_lock when calling
+tt.rport_lookup_create. tt.rport_lookup_create can sleep if
+it needs to create a new rport (fc class uses GFP_KERNEL
+for example), so we need to have the spin locks dropped.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libfc/fc_scsi.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/libfc/fc_disc.c  |    7 +++++++
+ drivers/scsi/libfc/fc_lport.c |    7 +++++++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_scsi.c b/drivers/scsi/libfc/fc_scsi.c
-index 2ca1db2..b9d0ec4 100644
---- a/drivers/scsi/libfc/fc_scsi.c
-+++ b/drivers/scsi/libfc/fc_scsi.c
-@@ -2028,7 +2028,7 @@ int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
- 	struct fc_lport *lp;
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index 45210c3..a1b5171 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -907,7 +907,14 @@ static void fc_disc_enter_dns(struct fc_lport *lp)
+ 		/*
+ 		 * Set up remote port to directory server.
+ 		 */
++
++		/*
++		 * we are called with the fl_lock, but if rport_lookup_create
++		 * needs to create a rport then it will sleep.
++		 */
++		spin_unlock_bh(&lp->fl_lock);
+ 		rp = lp->tt.rport_lookup_create(lp, &ids);
++		spin_lock_bh(&lp->fl_lock);
+ 		if (!rp)
+ 			goto err;
+ 		lp->tt.sess_init(lp, rp);
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e3eae92..a7ffab7 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -177,7 +177,14 @@ static void fc_lport_ptp_setup(struct fc_lport *lp,
+ 		.node_name = remote_wwnn,
+ 	};
  
- 	lp = shost_priv(sc_cmd->device->host);
--	return (lp->tt.reset_if(lp));
-+	return lp->tt.reset_if(lp);
- }
- EXPORT_SYMBOL(fc_eh_host_reset);
- 
-@@ -2115,9 +2115,8 @@ int fc_scsi_init(struct fc_lport *lp,
- 	if (!lp->tt.scsi_abort_io)
- 		lp->tt.scsi_abort_io = fc_scsi_abort_io;
- 	
--	si = (struct fc_scsi_internal*)kzalloc(sizeof(struct fc_scsi_internal),
--					       GFP_KERNEL);
--	lp->scsi_priv = (void*)si;
-+	si = kzalloc(sizeof(struct fc_scsi_internal), GFP_KERNEL);
-+	lp->scsi_priv = si;
- 
- 	/*
- 	 * we will use openfc's scsi i/f only when lower level driver
++
++	/*
++	 * if we have to create a rport the fc class can sleep so we must
++	 * drop the lock here
++	 */
++	spin_unlock_bh(&lp->fl_lock);
+ 	rp = lp->tt.rport_lookup_create(lp, &ids);
++	spin_lock_bh(&lp->fl_lock);
+ 	if (rp) {
+ 		if (lp->fl_ptp_rp)
+ 			lp->tt.rport_release(lp->fl_ptp_rp);
 -- 
 1.5.4.1
 
