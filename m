@@ -1,41 +1,65 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] convert struct scsi_varlen_cdb_hdr in scsi.h to use __u8 for user space
-Date: Sun, 29 Jun 2008 07:42:56 -0600
-Message-ID: <20080629134256.GK14894@parisc-linux.org>
-References: <20080629210323W.fujita.tomonori@lab.ntt.co.jp> <20080629124346.GJ14894@parisc-linux.org> <20080629220206I.fujita.tomonori@lab.ntt.co.jp>
+From: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+Subject: [PATCH 05/13] libfc: rename target reset
+Date: Sun, 29 Jun 2008 13:23:55 -0500
+Message-ID: <1214763843-5548-6-git-send-email-michaelc@cs.wisc.edu>
+References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
+	<1214763843-5548-2-git-send-email-michaelc@cs.wisc.edu>
+	<1214763843-5548-3-git-send-email-michaelc@cs.wisc.edu>
+	<1214763843-5548-4-git-send-email-michaelc@cs.wisc.edu>
+	<1214763843-5548-5-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:45683 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755391AbYF2NnM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jun 2008 09:43:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20080629220206I.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1214763843-5548-5-git-send-email-michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, dougg@torque.net
 
-On Sun, Jun 29, 2008 at 10:02:03PM +0900, FUJITA Tomonori wrote:
-> On Sun, 29 Jun 2008 06:43:46 -0600
-> Matthew Wilcox <matthew@wil.cx> wrote:
-> 
-> > 
-> > But we don't install anything in include/scsi to userspace:
-> 
-> Yeah, we don't now but it had been exported to user space, I
-> guess.
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
-I believe glibc provides /usr/include/scsi and has for some time.  Maybe
-we should change that now that we have the Kbuild infrastructure to
-export headers to userspace sanely.
+Rename target reset function to lun reset because that is what it sends.
+Also make it static because it is not exported and not used in other
+files.
 
-Doug, what do you think?  You must be the biggest user of include/scsi
-in userspace.
+Signed-off-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+---
+ drivers/scsi/libfc/fc_scsi.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/libfc/fc_scsi.c b/drivers/scsi/libfc/fc_scsi.c
+index a438aa0..ec7f3dd 100644
+--- a/drivers/scsi/libfc/fc_scsi.c
++++ b/drivers/scsi/libfc/fc_scsi.c
+@@ -1128,10 +1128,10 @@ retry:
+ }
+ 
+ /*
+- * Scsi target reset handler- send a LUN RESET to the device
++ * Scsi device reset handler- send a LUN RESET to the device
+  * and wait for reset reply
+  */
+-int fc_target_reset(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
++static int fc_lun_reset(struct fc_lport *lp, struct fc_scsi_pkt *fsp)
+ {
+ 	unsigned long flags;
+ 	u32 idx;
+@@ -2115,7 +2115,7 @@ int fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 		/*
+ 		 * flush outstanding commands
+ 		 */
+-		rc = fc_target_reset(lp, sp);
++		rc = fc_lun_reset(lp, sp);
+ 		sp->state = FC_SRB_FREE;
+ 		fc_scsi_pkt_free(sp);
+ 	}
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.4.1
