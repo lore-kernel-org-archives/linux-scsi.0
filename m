@@ -1,40 +1,46 @@
-From: christof.schmitt@de.ibm.com
-Subject: [patch 01/11] zfcp: wait until adapter is finished with ERP during auto-port
-Date: Mon, 30 Jun 2008 12:52:37 +0200
-Message-ID: <20080630110054.836603000@de.ibm.com>
-References: <20080630105236.960064000@de.ibm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 04 of 10] scsi: Support devices with protection information (DIF)
+Date: Mon, 30 Jun 2008 11:24:35 -0400
+Message-ID: <yq17ic7c5e4.fsf@sermon.lab.mkp.net>
+References: <2fd66ca994dbf1ed6d14.1214407363@sermon.lab.mkp.net>
+	<1214665658.3658.18.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.29.155]:9209 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756812AbYF3LC2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 07:02:28 -0400
-Content-Disposition: inline; filename=zfcp_auto_port_erp_race.diff
+Received: from rgminet01.oracle.com ([148.87.113.118]:36156 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760311AbYF3PYr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 11:24:47 -0400
+In-Reply-To: <1214665658.3658.18.camel@localhost.localdomain> (James Bottomley's message of "Sat\, 28 Jun 2008 10\:07\:38 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-From: Swen Schillig <swen@vnet.ibm.com>
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-In some situations the auto port attachment task is started
-before the ERP is finished. To prevent this unwanted situation
-we wait until the adapter is up and running before we start our work.
+[Protection sgl alloc + init]
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/s390/scsi/zfcp_fc.c |    1 +
- 1 file changed, 1 insertion(+)
+James> I'm afraid you can't do it like this because it will violate
+James> our forward progress guarantees.  If this is the last spare
+James> command required for writeout, you need to guarantee either
+James> this allocation will succeed, or we can proceed without the DIF
+James> data.
 
---- a/drivers/s390/scsi/zfcp_fc.c	2008-06-27 18:07:02.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fc.c	2008-06-27 18:07:26.000000000 +0200
-@@ -520,6 +520,7 @@ int zfcp_scan_ports(struct zfcp_adapter 
- 	int ret, i;
- 	struct zfcp_gpn_ft *gpn_ft;
- 
-+	zfcp_erp_wait(adapter); /* wait until adapter is finished with ERP */
- 	if (fc_host_port_type(adapter->scsi_host) != FC_PORTTYPE_NPORT)
- 		return 0;
- 
+We can't just turn off DIF -- that would violate the integrity
+guarantees.  But I'll move the protection sgl to the host command
+pool.
+
+
+
+>> + if (inq_result[5] & 0x1) + sdev->protection = 1;
+
+James> Is there a reason to have a separate flag here
+
+Not really.  I used to key off of sdp->protection quite a bit but I
+think the only place I use it now is during sd discovery.  So this can
+simply go away...
 
 -- 
+Martin K. Petersen	Oracle Linux Engineering
+
