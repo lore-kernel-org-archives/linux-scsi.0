@@ -1,78 +1,51 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [patch 07/11] zfcp: Cleanup of code in zfcp_aux.c
-Date: Tue, 1 Jul 2008 00:52:59 +0200
-Message-ID: <20080630225259.GB4727@osiris.boeblingen.de.ibm.com>
-References: <20080630105236.960064000@de.ibm.com> <20080630110059.364138000@de.ibm.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: fcoe cleanups and fcoe TODO
+Date: Mon, 30 Jun 2008 18:33:30 -0500
+Message-ID: <48696D4A.1000604@cs.wisc.edu>
+References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
+	<10A7D0016239E24092DEF05CCC582E4303FE4B55@fmsmsx411.amr.corp.intel.com>
+	<4869539F.3070605@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:4675 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753634AbYF3Wxv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 18:53:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20080630110059.364138000@de.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <4869539F.3070605-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: "Love, Robert W" <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: christof.schmitt@de.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Swen Schillig <swen@vnet.ibm.com>
 
-> +static int __init zfcp_device_setup(char *devstr)
->  {
-> -	char *tmp, *str;
-> -	size_t len;
-> +	char *token;
+Mike Christie wrote:
+> Love, Robert W wrote:
+>>> Hey,
+>>>
+>>> Following are some cleanup patches for things I found while trying
+>>> to get setup. I did not get to test the patches well, because
+>>> the rearch code does not seem to work every well the software
+>>> target. I basically loaded the driver and made sure I could login
+>>> and find storage. Trying to do heavy READ and WRITE IO lead to
+>> problems.
+>>> The patches are made over the re-arch git tree.
+>>>
+>> Awesome, I've reviewed a few and will get them in shortly.
 > 
->  	if (!devstr)
->  		return 0;
 > 
-> -	len = strlen(devstr) + 1;
-> -	str = kmalloc(len, GFP_KERNEL);
-> -	if (!str) {
-> -		pr_err("zfcp: Could not allocate memory for "
-> -		       "device parameter string, device not attached.\n");
-> -		return 0;
-> -	}
-> -	memcpy(str, devstr, len);
-> -
-> -	tmp = strchr(str, ',');
-> -	if (!tmp)
-> +	token = strsep(&devstr, ",");
-> +	if (!token || strlen(token) >= BUS_ID_SIZE)
->  		goto err_out;
-> -	*tmp++ = '\0';
-> -	strncpy(zfcp_data.init_busid, str, BUS_ID_SIZE);
-> -	zfcp_data.init_busid[BUS_ID_SIZE-1] = '\0';
-> +	strncpy(zfcp_data.init_busid, token, BUS_ID_SIZE);
-> 
-> -	zfcp_data.init_wwpn = simple_strtoull(tmp, &tmp, 0);
-> -	if (*tmp++ != ',')
-> -		goto err_out;
-> -	if (*tmp == '\0')
-> +	token = strsep(&devstr, ",");
-> +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_wwpn))
->  		goto err_out;
-> 
-> -	zfcp_data.init_fcp_lun = simple_strtoull(tmp, &tmp, 0);
-> -	if (*tmp != '\0')
-> +	token = strsep(&devstr, ",");
-> +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_fcp_lun))
->  		goto err_out;
-> -	kfree(str);
->  	return 1;
-> 
->   err_out:
->  	pr_err("zfcp: Parse error for device parameter string %s, "
-> -	       "device not attached.\n", str);
-> -	kfree(str);
-> +	       "device not attached.\n", devstr);
->  	return 0;
->  }
+> Oh yeah, I just rebased my tree and saw all the checkins from the 
+> weekend so my patches do not apply from a tree that is pulled today. Are 
+> you going to fix that for me, or do you want me to rediff and resend 
+> when you are done reviewing. I heard the iscsi maintainer is really nice 
+> and will rediff for you :)
 
-Sorry, but this still seems to be incorrect. strsep modifies the string that
-gets passed to it. In this case you let it operate on the original module
-parameter string which is also exported via sysfs.
-So after parsing finished the exported string is much shorter than the
-original string. That was actually the whole point why the old code allocated
-memory and copied the string so the copy could be modified.
-A comment would have been good ;)
+Just kidding the iscsi maintainer is jerk and makes you rediff your 
+patches. Here are updated patches against a tree I just downloaded (the 
+last commit is cdf23e6d5ad1843054a70a1bcecbffbfd87935b0).
+
+http://kernel.org/pub/linux/kernel/people/mnc/fcoe/6-30-08/
