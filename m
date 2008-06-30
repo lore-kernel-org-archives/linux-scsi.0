@@ -1,76 +1,78 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: fcoe cleanups and fcoe TODO
-Date: Mon, 30 Jun 2008 16:47:17 -0500
-Message-ID: <48695465.1010401@cs.wisc.edu>
-References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu>
-	<10A7D0016239E24092DEF05CCC582E4303FE4B55@fmsmsx411.amr.corp.intel.com>
-	<4869539F.3070605@cs.wisc.edu>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [patch 07/11] zfcp: Cleanup of code in zfcp_aux.c
+Date: Tue, 1 Jul 2008 00:52:59 +0200
+Message-ID: <20080630225259.GB4727@osiris.boeblingen.de.ibm.com>
+References: <20080630105236.960064000@de.ibm.com> <20080630110059.364138000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <4869539F.3070605-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: "Love, Robert W" <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate5.de.ibm.com ([195.212.29.154]:4675 "EHLO
+	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634AbYF3Wxv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 18:53:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20080630110059.364138000@de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: christof.schmitt@de.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Swen Schillig <swen@vnet.ibm.com>
 
-Mike Christie wrote:
->>> - In general without knowing how hardware is really going to hook into
->>> the lib it is hard to say how the rearch is going :) If we cannot
->>> move more of the fc_remote_port to the rport (or if we just do not
->>> want to move it all there because other drivers like lpfc and qla2xxx
->>> will never use it) then we might want to rename the fc_remote_port
->>> to avoid confusion with the rport and make it clear that the libfc
->> remote
->>> port is only needed for libfc operations.
->>>
->> We'd like to reduce fc_remote_port to nothing and only use fc_rport.
->> We're still not sure we can completely achieve this without either
->> having some private data or adding fields to the fc_rport.
+> +static int __init zfcp_device_setup(char *devstr)
+>  {
+> -	char *tmp, *str;
+> -	size_t len;
+> +	char *token;
 > 
+>  	if (!devstr)
+>  		return 0;
 > 
+> -	len = strlen(devstr) + 1;
+> -	str = kmalloc(len, GFP_KERNEL);
+> -	if (!str) {
+> -		pr_err("zfcp: Could not allocate memory for "
+> -		       "device parameter string, device not attached.\n");
+> -		return 0;
+> -	}
+> -	memcpy(str, devstr, len);
+> -
+> -	tmp = strchr(str, ',');
+> -	if (!tmp)
+> +	token = strsep(&devstr, ",");
+> +	if (!token || strlen(token) >= BUS_ID_SIZE)
+>  		goto err_out;
+> -	*tmp++ = '\0';
+> -	strncpy(zfcp_data.init_busid, str, BUS_ID_SIZE);
+> -	zfcp_data.init_busid[BUS_ID_SIZE-1] = '\0';
+> +	strncpy(zfcp_data.init_busid, token, BUS_ID_SIZE);
 > 
-> On a related note, are there going to be values that we need to export 
-> in sysfs that are specific to fcoe? For remote port values are we going 
-> to export them on the fc_rport (is the fc_rport for anything and 
-> everything related to FC) or some new struct?
+> -	zfcp_data.init_wwpn = simple_strtoull(tmp, &tmp, 0);
+> -	if (*tmp++ != ',')
+> -		goto err_out;
+> -	if (*tmp == '\0')
+> +	token = strsep(&devstr, ",");
+> +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_wwpn))
+>  		goto err_out;
 > 
-> If it is a new struct, what if a driver does not use any 
-> fc_transport_template callouts and does not hook into libfc?
+> -	zfcp_data.init_fcp_lun = simple_strtoull(tmp, &tmp, 0);
+> -	if (*tmp != '\0')
+> +	token = strsep(&devstr, ",");
+> +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_fcp_lun))
+>  		goto err_out;
+> -	kfree(str);
+>  	return 1;
 > 
->>
->>> Should the fc_transport_template be merged with the
->> fc_function_template?
->>> The function callouts to do things lke abort IO or cleanup commands
->> look
->>> similar. But in general should the fc_function_template be common for
->> all
->>> fc drivers and should the fc_transport_template be just for the ones
->> that
->>> are
->>> going to hook into the libfc? If the latter maybe we want to rename
->> this to
->>> make the visibility clear.
->>>
->> So something like libfc_transport_template?
-> 
-> 
-> That makes it clear, but I do not know if it is a good name. It sounds 
-> ugly like something I would name it (I am not good at naming as you can 
-> tell from some of the iscsi function names). All I know is that the 
-> original is not so clear :)
-> 
+>   err_out:
+>  	pr_err("zfcp: Parse error for device parameter string %s, "
+> -	       "device not attached.\n", str);
+> -	kfree(str);
+> +	       "device not attached.\n", devstr);
+>  	return 0;
+>  }
 
-Oh yeah, sorry I did not give a good answer to this. I was thinking if 
-we are thowing everything (fcoe specific attrs) on the scsi_transport_fc 
-fc_rport or fc_host then we might as well throw the callouts on 
-fc_function_template.
+Sorry, but this still seems to be incorrect. strsep modifies the string that
+gets passed to it. In this case you let it operate on the original module
+parameter string which is also exported via sysfs.
+So after parsing finished the exported string is much shorter than the
+original string. That was actually the whole point why the old code allocated
+memory and copied the string so the copy could be modified.
+A comment would have been good ;)
