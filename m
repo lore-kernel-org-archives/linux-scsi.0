@@ -1,55 +1,95 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Should a block device enforce block atomicity?
-Date: Mon, 30 Jun 2008 10:55:56 +0200
-Message-ID: <20080630085556.GL20826@kernel.dk>
-References: <ce513bcc0806292351t7f4ad933l920112381f4ebb4@mail.gmail.com> <20080630065525.GI20826@kernel.dk> <ce513bcc0806300058mbe0f15eya07fafbb9ba4a56@mail.gmail.com> <48689857.1050908@panasas.com> <ac8af0be0806300147i1970a6f7mb705c0ce590326@mail.gmail.com>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [regression] CD-DA delay needed after insertion
+ (http://bugzilla.kernel.org/show_bug.cgi?id=10974)
+Date: Mon, 30 Jun 2008 11:25:28 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0806301120570.10868@vixen.sonytel.be>
+References: <Pine.LNX.4.64.0806131352360.2141@vixen.sonytel.be>
+ <1213540781.3517.18.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0806161659440.30122@vixen.sonytel.be>
+ <1213648258.3420.12.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0806171530340.22840@vixen.sonytel.be>
+ <1214605634.3394.91.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1262841680-1214817928=:10868"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:21180 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbYF3Iz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jun 2008 04:55:59 -0400
-Content-Disposition: inline
-In-Reply-To: <ac8af0be0806300147i1970a6f7mb705c0ce590326@mail.gmail.com>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:48558 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754474AbYF3JZd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:25:33 -0400
+In-Reply-To: <1214605634.3394.91.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhao Forrest <forrest.zhao@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Erez Zilber <erezzi.list@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
 
-On Mon, Jun 30 2008, Zhao Forrest wrote:
-> >
-> > Don't forget that all IO requests are queued on the device. With a
-> > modern HW and disk you usually have NCQ and most drives will throw
-> > away write request to the same sector if they see a later write to
-> > the same sector in the queue.
-> >
-> > That said. There is nothing wrong with writing again and again to
-> > the same sector on disk. File/record locking is done at the FileSystem
-> > level. An application that wants exclusive write need to open the file
-> > that way. Other wise it could even be written from another machine not
-> > even another thread.
-> >
-> > What is it you are concerned with?
-> >
-> I happen to read the email and have a question, that may not be Erez's
-> real question :)
-> Let's suppose the following example:
-> 1 pdflush find a dirty inode and decides to flush a set of dirty pages
-> to harddrive
-> 2 while this set of dirty pages is being committed to
-> harddrive(dma_mapping is done, but dirty pages are not really written
-> to disk media), application/FS is trying to update some pages in this
-> set of dirty pages.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---584349381-1262841680-1214817928=:10868
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+	Hi James,
+
+On Fri, 27 Jun 2008, James Bottomley wrote:
+> > git-bisect taught me it was introduced by
+> > 
+> > commit 38582a62ecd337de4212004c7d4844899dc57890
+> > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Date:   Wed Feb 6 13:01:58 2008 -0600
+> > 
+> >     [SCSI] sr: fix test unit ready responses
+> >     
+> >     Commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734 updated sr.c to use
+> >     the scsi_test_unit_ready() function.  Unfortunately, this has the
+> >     wrong characteristic of eating NOT_READY returns which sr.c relies on
+> >     for tray status.
+> >     
+> >     Fix by rolling an internal sr_test_unit_ready() that doesn't do this.
 > 
-> Then what happens? Will application be put into sleep until page
-> flushing to disk media is done?
+> OK, I thought I had a test case for this, but when I revert this commit
+> on git head (and fix up the one reject which just leaves the sr_
+> function in place) I still produce the same behaviour.
+> 
+> What I'm trying is 
+> 
+> sg_start -i -l <cdrom>
+> 
+> to close the tray followed by your cdparanoia command
+> 
+> Could you see if reverting this commit on git head works for you (in
+> which case I'm not reproducing it correctly)?
 
-Yes, the page needs to be locked before IO can be issued. So it'll block
-on the page lock. That is what I referred to as the page cache providing
-this guarentee for you. With raw IO, the application needs to ensure
-ordering on its own if it commits IO to the same block more than once.
+On 9bedbcb207ed9a571b239231d99c8fd4a34ae24d, the sequence
 
--- 
-Jens Axboe
+    eject; sg_start -i -l /dev/scd0; cdparanoia \
+	-d /dev/scd0 -Z -q 1-1[:1] /dev/null || echo failed
 
+fails with
+
+    004: Unable to read table of contents header
+
+After reverting 38582a62ecd337de4212004c7d4844899dc57890, it works.
+
+I added the eject as the PS3 has a slot-loading drive.
+
+With kind regards,
+
+Geert Uytterhoeven
+Software Architect
+
+Sony Techsoft Centre
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Technology and Software Centre Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis 293-0376800-10 GEBA-BE-BB
+---584349381-1262841680-1214817928=:10868--
