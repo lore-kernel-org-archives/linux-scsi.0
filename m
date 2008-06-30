@@ -1,64 +1,80 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Should a block device enforce block atomicity?
-Date: Mon, 30 Jun 2008 11:24:55 +0300
-Message-ID: <48689857.1050908@panasas.com>
-References: <ce513bcc0806292351t7f4ad933l920112381f4ebb4@mail.gmail.com>	 <20080630065525.GI20826@kernel.dk> <ce513bcc0806300058mbe0f15eya07fafbb9ba4a56@mail.gmail.com>
+From: Arne Wiebalck <arne.wiebalck@cern.ch>
+Subject: Re: SG_IO problem on tape devices
+Date: Mon, 30 Jun 2008 10:43:25 +0200
+Message-ID: <1214815405.5058.20.camel@pcitfio23.cern.ch>
+References: <1212479982.5079.58.camel@pcitfio23.cern.ch>
+	 <1212524159.3329.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28672 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751800AbYF3I0X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 04:26:23 -0400
-In-Reply-To: <ce513bcc0806300058mbe0f15eya07fafbb9ba4a56@mail.gmail.com>
+Received: from cernmx11.cern.ch ([137.138.142.198]:50172 "EHLO
+	cernmx11.cern.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753688AbYF3In1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jun 2008 04:43:27 -0400
+In-Reply-To: <1212524159.3329.18.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erez Zilber <erezzi.list@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: arne.wiebalck@cern.ch
 
-Erez Zilber wrote:
-> On Mon, Jun 30, 2008 at 9:55 AM, Jens Axboe <jens.axboe@oracle.com> wrote:
->> On Mon, Jun 30 2008, Erez Zilber wrote:
->>> Hi,
->>>
->>> I have a question about block devices and whether they are required to
->>> enforce block atomicity:
->>>
->>> I read the code of drivers/block/brd.c, and I didn't see any locking
->>> when blocks are read/written. I also looked at the block layer code
->>> that calls brd and didn't find any locking there. Does it mean that
->>> there's no block atomicity (i.e. multiple threads can write a single
->>> block at the same time)? Is there any hidden assumption here? Is this
->>> the responsibility of the application to do that (e.g. not start a
->>> WRITE request before other READ/WRITE requests to the same block were
->>> completed)?
->> The block layer doesn't give such guarentees, not for "regular" block
->> devices either. If the IO goes through the page cache then that will
->> serialize IO to a given page, but with eg O_DIRECT IO, you could have
->> the same block in flight several times. So if you are doing raw IO, the
->> application has to ensure ordering of the same block.
->>
+On Tue, 2008-06-03 at 15:15 -0500, James Bottomley wrote:
+> On Tue, 2008-06-03 at 09:59 +0200, Arne Wiebalck wrote: 
+> > Hi all,
+> > 
+> > I got a problem using the SG_IO ioctl with our tape drives. 
+> > In order to examine errors on our drives in more detail, I 
+> > would like to make the sense bytes available to the 
+> > application using the REQUEST_SENSE command.
+> > 
+> > However, there's a discrepancy between the kernel output in
+> > /var/log/messages and what I see using SG_IO within my 
+> > application: while the kernel sees
+> > 
+> > kernel: st0: Error with sense data: scsi1 : destination target 0, lun 0
+> > kernel:         command = Space 01 00 0d d5 00
+> > kernel: Info fld=0x1, Current st0: sense key Medium Error
+> > kernel: Additional sense: Read retries exhausted
+> > kernel: Raw sense data:0xf0 0x00 0x03 0x00 0x00 0x00 0x01 0x12 0x00 0x00
+> > 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00 0x37 0xf7 0x10 0x01 0x00 0x00
+> > 0xf7 0x37
+> > 
+> > (which is realistic) the ioctl reports something like
+> > 
+> > 70 00 00 00 00 00 00 12  00 00 00 00 00 00 00 00
+> > 00 00 00 00 00 00 00 00  10 02
+> > 
+> > (since the first bit is not set, the sense bytes are not even valid,
+> > as far as I understand).
+> > 
+> > So, could it be that the sense bytes are already cleared when I request
+> > them? They cleared/set by the next SCSI cmd, I assume? But shouldn't
+> > they be valid even then?
+> > 
+> > I also tried the sg3-utils to query the drive's sense bytes, and they
+> > report (almost) the same sense bytes as SG_IO inside my application
+> > does. Sending an INQUIRY cmd using sg3_utils works fine, btw.
+> > 
+> > Maybe that's all a plain usage error, so please find the code I use
+> > below.
+> > 
+> > Anything obvious I am doing wrong here? All comments appreciated. 
 > 
-> So, do you say that people that write applications need to take care
-> of I/O serialization, and block devices (and the block layer itself)
-> don't need to care about this problem? I thought that standard disks
-> guarantee block atomicity (i.e. they don't count on the layers above
-> them to do that).
+> Yes: SCSI automatically requests sense in response to a check condition.
+> So, the sense should be attached to the SG_IO command that receives the
+> error.  You can't do an additional request sense for it because the
+> sense has already been cleared by the automatic request sense the
+> mid-layer did.
 > 
-> Erez
+> Does the sense data really not get returned by the SG_IO command that
+> actually encounters the check condition return?
 
-Don't forget that all IO requests are queued on the device. With a
-modern HW and disk you usually have NCQ and most drives will throw
-away write request to the same sector if they see a later write to
-the same sector in the queue.
+The code does not use SG_IO interface until now. The command that
+encounters the error is a read or a write. Is there a way to get the 
+sense bytes in such a case (except for replacing all read/write calls
+with the corresponding SG_IO commands)?
 
-That said. There is nothing wrong with writing again and again to 
-the same sector on disk. File/record locking is done at the FileSystem
-level. An application that wants exclusive write need to open the file
-that way. Other wise it could even be written from another machine not
-even another thread.
+TIA,
+ Arne  
 
-What is it you are concerned with?
 
-Boaz
