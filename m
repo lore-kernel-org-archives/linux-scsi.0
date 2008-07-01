@@ -1,42 +1,110 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] cciss: read config to obtain max outstanding
- commands per controller
-Date: Tue, 1 Jul 2008 14:23:08 -0700
-Message-ID: <20080701142308.4958bc5f.akpm@linux-foundation.org>
-References: <20080701210247.GA5095@roadking.ldev.net>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Tue, 01 Jul 2008 23:37:35 +0200
+Message-ID: <87prpxnv4w.fsf@denkblock.local>
+References: <877ic8o4iq.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39587 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752053AbYGAVXx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2008 17:23:53 -0400
-In-Reply-To: <20080701210247.GA5095@roadking.ldev.net>
+Received: from nebensachen.de ([195.34.83.29]:36182 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751683AbYGAViG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jul 2008 17:38:06 -0400
+In-Reply-To: <877ic8o4iq.fsf@denkblock.local> (Elias Oltmanns's message of
+	"Sun, 29 Jun 2008 13:38:05 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, stable@kernel.org
 
-On Tue, 1 Jul 2008 16:02:47 -0500
-Mike Miller <mike.miller@hp.com> wrote:
+Hi James,
 
-> This patch changes the way we determine the maximum number of outstanding
-> commands for each controller. Most Smart Array controllers can support up
-> to 1024 commands, the notable exceptions are the E200 and E200i.
-> The next generation of controllers which were just added support a mode of
-> operation called Zero Memory Raid (ZMR).  In this mode they only support 64 
-> outstanding commands. In Full Function Raid (FFR) mode they support 1024. 
-> We have been setting the queue depth by arbitrarily assigning some value for
-> each controller. We needed a better way to set the queue depth to avoid lots 
-> of annoying "fifo full" messages. So we made the driver a little smarter. We 
-> now read the config table and subtract 4 from the returned value. The -4 is 
-> to allow some room for ioctl calls which are not tracked the same way as io 
-> commands are tracked.
+sorry for bothering you but I've just noticed that the patch below has
+neither been scheduled for the stable review, nor queued up for Linus.
+May be you just don't consider this serious enough for these trees but I
+wanted to make sure that the situation will be dealt with eventualy. The
+patch applies to 2.6.26-rc8.
 
-What would be the effect of _not_ having this patch upon users of the
-new hardware?
+Regards,
 
-If the answer is "bad" then we should get this change into 2.6.26 and
-2.6.25.x, because people will surely be running those kernels on the
-new hardware.
+Elias
+
+
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: SCSI: Fix some locking issues
+
+Make sure that host_blocked is consistently protected by the host_lock.
+Similarly, device_block has to be protected by the queue_lock.  Also,
+blk_plug_device() has to be called with the queue_lock held in
+scsi_host_queue_ready().
+
+Cc: stable@kernel.org
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
+
+ drivers/scsi/scsi.c     |    6 ++++++
+ drivers/scsi/scsi_lib.c |   13 +++++++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 110e776..b8b7982 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -826,8 +826,10 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
++	struct request_queue *q = sdev->request_queue;
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
++	unsigned long flags;
+ 
+ 	scsi_device_unbusy(sdev);
+ 
+@@ -839,8 +841,12 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 	 *
+ 	 * XXX(hch): What about locking?
+          */
++	spin_lock_irqsave(shost->host_lock, flags);
+         shost->host_blocked = 0;
++	spin_unlock(shost->host_lock);
++	spin_lock(q->queue_lock);
+         sdev->device_blocked = 0;
++	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a82d2fe..65d0c39 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -133,10 +133,15 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ 	 * if a command is requeued with no other commands outstanding
+ 	 * either for the device or for the host.
+ 	 */
+-	if (reason == SCSI_MLQUEUE_HOST_BUSY)
++	if (reason == SCSI_MLQUEUE_HOST_BUSY) {
++		spin_lock_irqsave(host->host_lock, flags);
+ 		host->host_blocked = host->max_host_blocked;
+-	else if (reason == SCSI_MLQUEUE_DEVICE_BUSY)
++		spin_unlock_irqrestore(host->host_lock, flags);
++	} else if (reason == SCSI_MLQUEUE_DEVICE_BUSY) {
++		spin_lock_irqsave(q->queue_lock, flags);
+ 		device->device_blocked = device->max_device_blocked;
++		spin_unlock_irqrestore(q->queue_lock, flags);
++	}
+ 
+ 	/*
+ 	 * Decrement the counters, since these commands are no longer
+@@ -1320,7 +1325,11 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				printk("scsi%d unblocking host at zero depth\n",
+ 					shost->host_no));
+ 		} else {
++			spin_unlock(shost->host_lock);
++			spin_lock(q->queue_lock);
+ 			blk_plug_device(q);
++			spin_unlock(q->queue_lock);
++			spin_lock(shost->host_lock);
+ 			return 0;
+ 		}
+ 	}
