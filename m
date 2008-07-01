@@ -1,99 +1,134 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 6/9] scsi_dh: add generic SPC-3 alua handler
-Date: Tue, 01 Jul 2008 11:46:09 -0700
-Message-ID: <1214937969.27507.15.camel@chandra-ubuntu>
-References: <20080624100504.7D8C210B5DE@craiglockhart-ipmi.suse.de>
-	 <486424BA.8040301@cs.wisc.edu> <4864FA31.9020401@suse.de>
-	 <48650C6B.4030404@cs.wisc.edu>
-Reply-To: sekharan@us.ibm.com
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1] cciss: read config to obtain max outstanding commands per controller
+Date: Tue, 1 Jul 2008 16:02:47 -0500
+Message-ID: <20080701210247.GA5095@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:38283 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190AbYGASqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jul 2008 14:46:16 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m61IkF1m025054
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Jul 2008 14:46:15 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m61IkF9J215656
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Jul 2008 14:46:15 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m61IkEBI008431
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Jul 2008 14:46:15 -0400
-In-Reply-To: <48650C6B.4030404@cs.wisc.edu>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:19330 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbYGAVCs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2008 17:02:48 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
+PATCH 1/1
 
-On Fri, 2008-06-27 at 10:51 -0500, Mike Christie wrote:
-> Hannes Reinecke wrote:
-> > Mike Christie wrote:
-> >> Hannes Reinecke wrote:
-> >>> +
-> >>> +static struct request *get_alua_req(struct scsi_device *sdev,
-> >>> +                    void *buffer, unsigned buflen, int rw)
-> >>> +{
-> >>> +    struct request *rq;
-> >>> +    struct request_queue *q = sdev->request_queue;
-> >>> +
-> >>> +    rq = blk_get_request(q, rw, GFP_KERNEL);
-> >>> +
-> >>> +    if (!rq) {
-> >>> +        sdev_printk(KERN_INFO, sdev,
-> >>> +                "%s: blk_get_request failed\n", __FUNCTION__);
-> >>> +        return NULL;
-> >>> +    }
-> >>> +
-> >>> +    if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
-> >>> +        blk_put_request(rq);
-> >>> +        sdev_printk(KERN_INFO, sdev,
-> >>> +                "%s: blk_rq_map_kern failed\n", __FUNCTION__);
-> >>> +        return NULL;
-> >>> +    }
-> >>> +
-> >>> +    rq->cmd_type = REQ_TYPE_BLOCK_PC;
-> >>> +    rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
-> >>> +    rq->retries = ALUA_FAILOVER_RETRIES;
-> >>> +    rq->timeout = ALUA_FAILOVER_TIMEOUT;
-> >>> +
-> >>> +    return rq;
-> >>> +}
-> >>
-> >>
-> >> It looks like this can be called from alua_activate, and we cannot use 
-> >> GFP_KERNEL in the same IO path something could get written to.
-> >>
-> > Is something like GFP_ATOMIC more appropriate?
-> > 
-> 
-> 
-> It will work. I thought we would want to have used GFP_NOIO though since 
-> we are running from work queue. I do not know why we have been using 
-> GFP_ATOMIC in the other handlers. Chandra?
+This patch changes the way we determine the maximum number of outstanding
+commands for each controller. Most Smart Array controllers can support up
+to 1024 commands, the notable exceptions are the E200 and E200i.
+The next generation of controllers which were just added support a mode of
+operation called Zero Memory Raid (ZMR).  In this mode they only support 64 
+outstanding commands. In Full Function Raid (FFR) mode they support 1024. 
+We have been setting the queue depth by arbitrarily assigning some value for
+each controller. We needed a better way to set the queue depth to avoid lots 
+of annoying "fifo full" messages. So we made the driver a little smarter. We 
+now read the config table and subtract 4 from the returned value. The -4 is 
+to allow some room for ioctl calls which are not tracked the same way as io 
+commands are tracked.
 
-Mike,
+Please consider this for inclusion.
 
-I do not recall discussing about this. But, my memory is not that good
-anyways :)...
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-As it stands now, the current code is all GFP_ATOMIC. I agree with you
-that the workqueue allocs could be made GFP_NOIO. I can roll up a patch
-(on top of Hannes's) to fix those.
-
-Thanks,
-
-chandra
-> 
-> 
-> Oh yeah, I was wondering what is up with EMC? Do they need a different 
-> alua handler? Is that needed to handle some quirks in it or something?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--------------------------------------------------------------------------------
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index b2b6fb1..0d5df43 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -106,35 +106,34 @@ MODULE_DEVICE_TABLE(pci, cciss_pci_device_id);
+ /*  board_id = Subsystem Device ID & Vendor ID
+  *  product = Marketing Name for the board
+  *  access = Address of the struct of function pointers
+- *  nr_cmds = Number of commands supported by controller
+  */
+ static struct board_type products[] = {
+-	{0x40700E11, "Smart Array 5300", &SA5_access, 512},
+-	{0x40800E11, "Smart Array 5i", &SA5B_access, 512},
+-	{0x40820E11, "Smart Array 532", &SA5B_access, 512},
+-	{0x40830E11, "Smart Array 5312", &SA5B_access, 512},
+-	{0x409A0E11, "Smart Array 641", &SA5_access, 512},
+-	{0x409B0E11, "Smart Array 642", &SA5_access, 512},
+-	{0x409C0E11, "Smart Array 6400", &SA5_access, 512},
+-	{0x409D0E11, "Smart Array 6400 EM", &SA5_access, 512},
+-	{0x40910E11, "Smart Array 6i", &SA5_access, 512},
+-	{0x3225103C, "Smart Array P600", &SA5_access, 512},
+-	{0x3223103C, "Smart Array P800", &SA5_access, 512},
+-	{0x3234103C, "Smart Array P400", &SA5_access, 512},
+-	{0x3235103C, "Smart Array P400i", &SA5_access, 512},
+-	{0x3211103C, "Smart Array E200i", &SA5_access, 120},
+-	{0x3212103C, "Smart Array E200", &SA5_access, 120},
+-	{0x3213103C, "Smart Array E200i", &SA5_access, 120},
+-	{0x3214103C, "Smart Array E200i", &SA5_access, 120},
+-	{0x3215103C, "Smart Array E200i", &SA5_access, 120},
+-	{0x3237103C, "Smart Array E500", &SA5_access, 512},
+-	{0x323D103C, "Smart Array P700m", &SA5_access, 512},
+-	{0x3241103C, "Smart Array P212", &SA5_access, 384},
+-	{0x3243103C, "Smart Array P410", &SA5_access, 384},
+-	{0x3245103C, "Smart Array P410i", &SA5_access, 384},
+-	{0x3247103C, "Smart Array P411", &SA5_access, 384},
+-	{0x3249103C, "Smart Array P812", &SA5_access, 384},
+-	{0xFFFF103C, "Unknown Smart Array", &SA5_access, 120},
++	{0x40700E11, "Smart Array 5300", &SA5_access},
++	{0x40800E11, "Smart Array 5i", &SA5B_access},
++	{0x40820E11, "Smart Array 532", &SA5B_access},
++	{0x40830E11, "Smart Array 5312", &SA5B_access},
++	{0x409A0E11, "Smart Array 641", &SA5_access},
++	{0x409B0E11, "Smart Array 642", &SA5_access},
++	{0x409C0E11, "Smart Array 6400", &SA5_access},
++	{0x409D0E11, "Smart Array 6400 EM", &SA5_access},
++	{0x40910E11, "Smart Array 6i", &SA5_access},
++	{0x3225103C, "Smart Array P600", &SA5_access},
++	{0x3223103C, "Smart Array P800", &SA5_access},
++	{0x3234103C, "Smart Array P400", &SA5_access},
++	{0x3235103C, "Smart Array P400i", &SA5_access},
++	{0x3211103C, "Smart Array E200i", &SA5_access},
++	{0x3212103C, "Smart Array E200", &SA5_access},
++	{0x3213103C, "Smart Array E200i", &SA5_access},
++	{0x3214103C, "Smart Array E200i", &SA5_access},
++	{0x3215103C, "Smart Array E200i", &SA5_access},
++	{0x3237103C, "Smart Array E500", &SA5_access},
++	{0x323D103C, "Smart Array P700m", &SA5_access},
++	{0x3241103C, "Smart Array P212", &SA5_access},
++	{0x3243103C, "Smart Array P410", &SA5_access},
++	{0x3245103C, "Smart Array P410i", &SA5_access},
++	{0x3247103C, "Smart Array P411", &SA5_access},
++	{0x3249103C, "Smart Array P812", &SA5_access},
++	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
+ };
+ 
+ /* How long to wait (in milliseconds) for board to go into simple mode */
+@@ -3086,11 +3085,20 @@ static int __devinit cciss_pci_init(ctlr_info_t *c, struct pci_dev *pdev)
+ 	print_cfg_table(c->cfgtable);
+ #endif				/* CCISS_DEBUG */
+ 
++	/* Some controllers support Zero Memory Raid (ZMR).
++	 * When configured in ZMR mode the number of supported
++	 * commands drops to 64. So instead of just setting an
++	 * arbitrary value we make the driver a little smarter.
++	 * We read the config table to tell us how many commands
++	 * are supported on the controller then subtract 4 to
++	 * leave a little room for ioctl calls.
++	 */
++	c->max_commands = readl(&(c->cfgtable->CmdsOutMax));
+ 	for (i = 0; i < ARRAY_SIZE(products); i++) {
+ 		if (board_id == products[i].board_id) {
+ 			c->product_name = products[i].product_name;
+ 			c->access = *(products[i].access);
+-			c->nr_cmds = products[i].nr_cmds;
++			c->nr_cmds = c->max_commands - 4;
+ 			break;
+ 		}
+ 	}
+@@ -3110,7 +3118,7 @@ static int __devinit cciss_pci_init(ctlr_info_t *c, struct pci_dev *pdev)
+ 		if (subsystem_vendor_id == PCI_VENDOR_ID_HP) {
+ 			c->product_name = products[i-1].product_name;
+ 			c->access = *(products[i-1].access);
+-			c->nr_cmds = products[i-1].nr_cmds;
++			c->nr_cmds = c->max_commands - 4;
+ 			printk(KERN_WARNING "cciss: This is an unknown "
+ 				"Smart Array controller.\n"
+ 				"cciss: Please update to the latest driver "
