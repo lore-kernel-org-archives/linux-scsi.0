@@ -1,88 +1,104 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: Re: [patch 07/11] zfcp: Cleanup of code in zfcp_aux.c
-Date: Tue, 1 Jul 2008 15:44:13 +0200
-Message-ID: <200807011544.14178.swen@vnet.ibm.com>
-References: <20080630105236.960064000@de.ibm.com> <20080630110059.364138000@de.ibm.com> <20080630225259.GB4727@osiris.boeblingen.de.ibm.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: fcoe cleanups and fcoe TODO
+Date: Tue, 1 Jul 2008 07:37:49 -0700
+Message-ID: <20080701143749.GA495@plap4-2.qlogic.org>
+References: <1214763843-5548-1-git-send-email-michaelc@cs.wisc.edu> <10A7D0016239E24092DEF05CCC582E4303FE4B55@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:30620 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893AbYGANox (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2008 09:44:53 -0400
-In-Reply-To: <20080630225259.GB4727@osiris.boeblingen.de.ibm.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:9293 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755303AbYGAOhv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2008 10:37:51 -0400
 Content-Disposition: inline
+In-Reply-To: <10A7D0016239E24092DEF05CCC582E4303FE4B55@fmsmsx411.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: christof.schmitt@de.ibm.com, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+To: "Love, Robert W" <robert.w.love@intel.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Tuesday 01 July 2008 00:52, Heiko Carstens wrote:
-> > +static int __init zfcp_device_setup(char *devstr)
-> >  {
-> > -	char *tmp, *str;
-> > -	size_t len;
-> > +	char *token;
-> > 
-> >  	if (!devstr)
-> >  		return 0;
-> > 
-> > -	len = strlen(devstr) + 1;
-> > -	str = kmalloc(len, GFP_KERNEL);
-> > -	if (!str) {
-> > -		pr_err("zfcp: Could not allocate memory for "
-> > -		       "device parameter string, device not attached.\n");
-> > -		return 0;
-> > -	}
-> > -	memcpy(str, devstr, len);
-> > -
-> > -	tmp = strchr(str, ',');
-> > -	if (!tmp)
-> > +	token = strsep(&devstr, ",");
-> > +	if (!token || strlen(token) >= BUS_ID_SIZE)
-> >  		goto err_out;
-> > -	*tmp++ = '\0';
-> > -	strncpy(zfcp_data.init_busid, str, BUS_ID_SIZE);
-> > -	zfcp_data.init_busid[BUS_ID_SIZE-1] = '\0';
-> > +	strncpy(zfcp_data.init_busid, token, BUS_ID_SIZE);
-> > 
-> > -	zfcp_data.init_wwpn = simple_strtoull(tmp, &tmp, 0);
-> > -	if (*tmp++ != ',')
-> > -		goto err_out;
-> > -	if (*tmp == '\0')
-> > +	token = strsep(&devstr, ",");
-> > +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_wwpn))
-> >  		goto err_out;
-> > 
-> > -	zfcp_data.init_fcp_lun = simple_strtoull(tmp, &tmp, 0);
-> > -	if (*tmp != '\0')
-> > +	token = strsep(&devstr, ",");
-> > +	if (!token || strict_strtoull(token, 0, &zfcp_data.init_fcp_lun))
-> >  		goto err_out;
-> > -	kfree(str);
-> >  	return 1;
-> > 
-> >   err_out:
-> >  	pr_err("zfcp: Parse error for device parameter string %s, "
-> > -	       "device not attached.\n", str);
-> > -	kfree(str);
-> > +	       "device not attached.\n", devstr);
-> >  	return 0;
-> >  }
+On Mon, 30 Jun 2008, Love, Robert W wrote:
+
+...
+> >I think we need to see more hardware in the end. For now since there is
+> >only
+> >software fcoe that is out, this could probably be ok and as we see more
+> >drivers we can evolve the split for the hardware like was done with
+> iscsi.
+> >For iscsi we ended up with 4 different offload modules so there was no
+> way
+> >we could have designed for all of them and the hardware/firmware
+> >guys's quirks :)
+> >
+> We definitely expect this library to evolve as more LLDs use it. 
 > 
-> Sorry, but this still seems to be incorrect. strsep modifies the string that
-> gets passed to it. In this case you let it operate on the original module
-> parameter string which is also exported via sysfs.
-> So after parsing finished the exported string is much shorter than the
-> original string. That was actually the whole point why the old code allocated
-> memory and copied the string so the copy could be modified.
-> A comment would have been good ;)
-> --
-Correct,
+> >- In general without knowing how hardware is really going to hook into
+> >the lib it is hard to say how the rearch is going :) If we cannot
+> >move more of the fc_remote_port to the rport (or if we just do not
+> >want to move it all there because other drivers like lpfc and qla2xxx
+> >will never use it) then we might want to rename the fc_remote_port
+> >to avoid confusion with the rport and make it clear that the libfc
+> remote
+> >port is only needed for libfc operations.
+> >
+> We'd like to reduce fc_remote_port to nothing and only use fc_rport.
+> We're still not sure we can completely achieve this without either
+> having some private data or adding fields to the fc_rport.
 
-I fixed the patch and Christof will send it soon to the list.
+On the QLogic side, there are several FCoE hardware options for CNAs.
+Each of these FCoe offerings will follow in essence software's (the
+driver's) current interfaces with existing FC hardware and firmware.
+Upstream already has support for one such adapter:
 
-Cheers Swen
+	[SCSI] qla2xxx: Add ISP84XX support.
+	http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4d4df1932b6b116aecc81039066fec27f2050762
 
+It's essentially a 1gb FCoE adapter based on our ISP24xx (4gb) FC
+chip.  Driver continues to use the standard FW interfaces used by 24xx
+firmware.  Future offerings will be similar, but based on more recent
+FC chips.
+
+Architecturally, the current FCoE adapters continue to abstract
+software from the transport details (FC0/FC1 on FC, and ethernet on
+FCoE), so, we forsee the driver continuing to use the currently
+implemented 'level0' interfaces (as noted by James S.) of the
+fc-transport.
+
+As far as libfc interfacing, there's a few possible
+points-of-intersection (this was true even before FCoE):
+
+* generic N-port discovery (assist) -- managing SNS querying,
+  typically fairly generic, GID_PT/G_A_NXT.
+* initiate logins (PLOGI/PRLI) -- still trying to wrap my hands
+  around openfc constructs, my guess would be its fc_remote_port
+  objects having similar mapping to the qla2xxx driver's fc_port_t
+  structure.
+* initiate rport creation -- with login data.
+
+Striking a balance here could be tricky, as qla2xxx is still a
+fairly heavy firmware dependent driver (and not simply a
+frame-shuttler), we'd need to ensure some sort of bi-directional
+interfaces as the firmware is capable of handling implicit logins
+outside of software processing.
+
+<snip>
+> >Do we want a common userspace interface for the setup like we have with
+> >iscsi for the initial merge? If so, we can say the interface is
+> unstable
+> >for now, because we just do not know how the hardware is going to work
+> or
+> >we can try and design a interface based on what we learned from iscsi.
+> The
+> >latter will probably result in a incorrct design since we are only
+> >lowly driver engineers and do not know the fun the firmware guys
+> >have for us :) However breaking userspace interfaces is a real pain
+> >for users. When we did the latter for iscsi it was a tremendous pain
+> for
+> >users and distro integrators.
+
+I'm in the process of gathering specs on FCoE specific attributes our
+hardware (will) export which may be useful from userspace, both
+statistics and tuning-knobs...
+
+--
+av
