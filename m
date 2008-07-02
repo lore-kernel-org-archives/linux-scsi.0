@@ -1,60 +1,40 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10861] 2.6.26-rc4-git2 - long pause during boot
-Date: Wed,  2 Jul 2008 09:18:40 -0700 (PDT)
-Message-ID: <20080702161840.DEF36108047@picon.linux-foundation.org>
-References: <bug-10861-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Wed, 2 Jul 2008 10:23:06 -0600
+Message-ID: <20080702162306.GV14894@parisc-linux.org>
+References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local> <1214963700.3316.41.camel@localhost.localdomain> <87zlp0n4p8.fsf@denkblock.local> <1215009983.3330.14.camel@localhost.localdomain> <87vdzomg4c.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34426 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754566AbYGBQTM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jul 2008 12:19:12 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m62GIeqg011391
-	for <linux-scsi@vger.kernel.org>; Wed, 2 Jul 2008 09:18:41 -0700
-In-Reply-To: <bug-10861-11613@http.bugzilla.kernel.org/>
+Received: from palinux.external.hp.com ([192.25.206.14]:41741 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904AbYGBQXI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 12:23:08 -0400
+Content-Disposition: inline
+In-Reply-To: <87vdzomg4c.fsf@denkblock.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10861
-
-
-
-
-
-------- Comment #6 from rjw@sisk.pl  2008-07-02 09:18 -------
-On Monday, 30 of June 2008, Chris Clayton wrote:
-> Rafael
+On Wed, Jul 02, 2008 at 05:59:31PM +0200, Elias Oltmanns wrote:
+> > The reason no locks are necessary is that there's no race to mediate.
+> > The checks are only is it set or not ...
 > 
-> On Sunday 29 June 2008, Rafael J. Wysocki wrote:
-> > This message has been generated automatically as a part of a report
-> > of recent regressions.
-> >
-> > The following bug entry is on the current list of known regressions
-> > from 2.6.25.  Please verify if it still should be listed.
-> >
-> 
-> As far as I'm concerned, the entry can be closed.. As I've said before, the 
-> patch did have a bad effect on existing user space, but, as Kay pointed out, 
-> there's no getting away from the fact that the rule in Slackware rules 
-> distributed with udev is a bad rule. the Slackware distribution does not 
-> include that rule in its udev rules.
-> 
-> I assume Kay will fix it in the udev package.
-> 
-> >
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=10861
-> > Subject		: 2.6.26-rc4-git2 - long pause during boot
-> > Submitter	: Chris Clayton <chris2553@googlemail.com>
-> > Date		: 2008-06-01 4:15 (29 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=121229382917834&w=4
+> I'm not sure whether that is of any consequence. Don't get me wrong, I
+> really don't know and you may well be right. But how exactly does
+> decrementing from 2 to 1 work? Do we know for sure that there will
+> always be at least one bit set so reading that address will reliably
+> return a non zero value?
 
+The assumption we make (and it is believed to be true on all SMP systems)
+is that a write to a naturally aligned memory location that is sized <=
+sizeof(long) is atomic.  That is, a reader will get either the previous
+value or the subsequent value, not a mixture.  The RCU code relies
+heavily on this assumption.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
