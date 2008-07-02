@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 04/11] zfcp: Small QDIO cleanups
-Date: Wed, 02 Jul 2008 10:56:34 +0200
-Message-ID: <20080702085949.267806000@de.ibm.com>
+Subject: [patch 02/11] zfcp: Fix error checking for ELS ADISC requests
+Date: Wed, 02 Jul 2008 10:56:32 +0200
+Message-ID: <20080702085947.559989000@de.ibm.com>
 References: <20080702085630.473635000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:31736 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164AbYGBI76 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 04:59:58 -0400
-Content-Disposition: inline; filename=qdio-small-cleanup.diff
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:8855 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045AbYGBJAb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 05:00:31 -0400
+Content-Disposition: inline; filename=fix-els-adisc.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,91 +16,24 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <ch
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-QBUFF_PER_PAGE is only used inside the qdio module, so move it to
-zfcp_qdio.c
-
-zfcp_qdio_zero_sbals is now only used in the qdio module, so make it
-static.
+Correctly check the status for ELS ADISC requests. 0 means success.
 
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 ---
----
- drivers/s390/scsi/zfcp_def.h  |    2 --
- drivers/s390/scsi/zfcp_ext.h  |    1 -
- drivers/s390/scsi/zfcp_qdio.c |   31 +++++++++++++------------------
- 3 files changed, 13 insertions(+), 21 deletions(-)
+ drivers/s390/scsi/zfcp_fc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/s390/scsi/zfcp_ext.h	2008-06-27 18:06:59.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_ext.h	2008-06-27 18:08:22.000000000 +0200
-@@ -43,7 +43,6 @@ extern void _zfcp_scan_ports_later(struc
- /******************************* S/390 IO ************************************/
- extern int  zfcp_ccw_register(void);
+--- a/drivers/s390/scsi/zfcp_fc.c	2008-06-27 18:07:26.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fc.c	2008-06-27 18:07:43.000000000 +0200
+@@ -263,7 +263,7 @@ static void zfcp_fc_adisc_handler(unsign
+ 	struct zfcp_port *port = adisc->els.port;
+ 	struct zfcp_ls_adisc_acc *ls_adisc = &adisc->ls_adisc_acc;
  
--extern void zfcp_qdio_zero_sbals(struct qdio_buffer **, int, int);
- extern int  zfcp_qdio_allocate(struct zfcp_adapter *);
- extern void zfcp_qdio_free(struct zfcp_adapter *);
- extern int  zfcp_qdio_send(struct zfcp_fsf_req *fsf_req);
---- a/drivers/s390/scsi/zfcp_qdio.c	2008-06-27 18:06:59.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_qdio.c	2008-06-27 18:08:22.000000000 +0200
-@@ -11,6 +11,7 @@
- /* FIXME(tune): free space should be one max. SBAL chain plus what? */
- #define ZFCP_QDIO_PCI_INTERVAL	(QDIO_MAX_BUFFERS_PER_Q \
- 				- (ZFCP_MAX_SBALS_PER_REQ + 4))
-+#define QBUFF_PER_PAGE		(PAGE_SIZE / sizeof(struct qdio_buffer))
- 
- static int zfcp_qdio_buffers_enqueue(struct qdio_buffer **sbal)
- {
-@@ -63,6 +64,16 @@ static void zfcp_qdio_handler_error(stru
- 				ZFCP_STATUS_COMMON_ERP_FAILED, id, NULL);
- }
- 
-+static void zfcp_qdio_zero_sbals(struct qdio_buffer *sbal[], int first, int cnt)
-+{
-+	int i, sbal_idx;
-+
-+	for (i = first; i < first + cnt; i++) {
-+		sbal_idx = i % QDIO_MAX_BUFFERS_PER_Q;
-+		memset(sbal[sbal_idx], 0, sizeof(struct qdio_buffer));
-+	}
-+}
-+
- static void zfcp_qdio_int_req(struct ccw_device *cdev, unsigned int status,
- 			      unsigned int qdio_err, unsigned int siga_err,
- 			      unsigned int queue_no, int first, int count,
-@@ -366,22 +377,6 @@ int zfcp_qdio_send(struct zfcp_fsf_req *
- }
- 
- /**
-- * zfcp_qdio_zero_sbals - zero all sbals of the specified area and queue
-- * @buf: pointer to array of SBALS
-- * @first: integer specifying the SBAL number to start
-- * @count: integer specifying the number of SBALS to process
-- */
--void zfcp_qdio_zero_sbals(struct qdio_buffer *sbal[], int first, int count)
--{
--	int i, sbal_idx;
--
--	for (i = first; i < first + count; i++) {
--		sbal_idx = i % QDIO_MAX_BUFFERS_PER_Q;
--		memset(sbal[sbal_idx], 0, sizeof(struct qdio_buffer));
--	}
--}
--
--/**
-  * zfcp_qdio_allocate - allocate queue memory and initialize QDIO data
-  * @adapter: pointer to struct zfcp_adapter
-  * Returns: -ENOMEM on memory allocation error or return value from
---- a/drivers/s390/scsi/zfcp_def.h	2008-06-27 18:07:57.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_def.h	2008-06-27 18:08:22.000000000 +0200
-@@ -100,8 +100,6 @@ zfcp_address_to_sg(void *address, struct
- 
- #define ZFCP_TYPE2_RECOVERY_TIME        8	/* seconds */
- 
--#define QBUFF_PER_PAGE			(PAGE_SIZE / sizeof(struct qdio_buffer))
--
- /********************* FSF SPECIFIC DEFINES *********************************/
- 
- #define ZFCP_ULP_INFO_VERSION                   26
+-	if (!adisc->els.status) {
++	if (adisc->els.status) {
+ 		/* request rejected or timed out */
+ 		zfcp_erp_port_forced_reopen(port, 0, 63, NULL);
+ 		goto out;
 
 -- 
