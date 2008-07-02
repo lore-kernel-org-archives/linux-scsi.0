@@ -1,36 +1,52 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [patch 07/11] zfcp: Cleanup of code in zfcp_aux.c
-Date: Wed, 2 Jul 2008 09:03:58 +0200
-Message-ID: <20080702070357.GA16687@schmichrtp.de.ibm.com>
-References: <20080630105236.960064000@de.ibm.com> <20080630110059.364138000@de.ibm.com> <20080630225259.GB4727@osiris.boeblingen.de.ibm.com> <200807011544.14178.swen@vnet.ibm.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Wed, 02 Jul 2008 09:08:35 +0200
+Message-ID: <87zlp0n4p8.fsf@denkblock.local>
+References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local>
+	<1214963700.3316.41.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:64845 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756207AbYGBHEx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 03:04:53 -0400
-Content-Disposition: inline
-In-Reply-To: <200807011544.14178.swen@vnet.ibm.com>
+Received: from nebensachen.de ([195.34.83.29]:44899 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759005AbYGBHIz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jul 2008 03:08:55 -0400
+In-Reply-To: <1214963700.3316.41.camel@localhost.localdomain> (James
+	Bottomley's message of "Tue, 01 Jul 2008 20:55:00 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen@vnet.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, stable@kernel.org
 
-On Tue, Jul 01, 2008 at 03:44:13PM +0200, Swen Schillig wrote:
-> > Sorry, but this still seems to be incorrect. strsep modifies the string that
-> > gets passed to it. In this case you let it operate on the original module
-> > parameter string which is also exported via sysfs.
-> > So after parsing finished the exported string is much shorter than the
-> > original string. That was actually the whole point why the old code allocated
-> > memory and copied the string so the copy could be modified.
-> > A comment would have been good ;)
-> > --
-> Correct,
-> 
-> I fixed the patch and Christof will send it soon to the list.
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Tue, 2008-07-01 at 23:37 +0200, Elias Oltmanns wrote:
+>> Hi James,
+>
+>> 
+>> sorry for bothering you but I've just noticed that the patch below has
+>> neither been scheduled for the stable review, nor queued up for Linus.
+>> May be you just don't consider this serious enough for these trees but I
+>> wanted to make sure that the situation will be dealt with eventualy. The
+>> patch applies to 2.6.26-rc8.
+>
+> OK, well at first glance, the locking around device_blocked and
+> host_blocked looks pointless.  What are the failure traces you're using
+> to decide they need spinlock protection?
 
-While testing this, i also fixed one issue with the erp patch. To
-avoid confusion, i will resend the complete patch series later today.
+scsi_queue_insert() as well as scsi_finish_command() can be called at
+any time as part of regular command completion or error handling. There
+is no reason why the ->request_fn() for the same device or for another
+device on the same host should not be in progress at the same time.
 
-Christof
+>
+> The blk_plug_queue change looks reasonable ... however, blk_plug_queue
+> itself looks like it might not entirely need the queue lock ... I need
+> to investigate more closely.
+
+Well, I rather think it does. We have to serialise access to the
+unplug_timer and there is a call to __set_bit() which, as I understand,
+requires the calling function to ensure atomicity.
+
+Regards,
+
+Elias
