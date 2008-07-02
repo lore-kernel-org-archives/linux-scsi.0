@@ -1,44 +1,33 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [patch 00/11] Updated zfcp patches for 2.6.27
-Date: Wed, 2 Jul 2008 13:31:53 +0200
-Message-ID: <20080702113152.GA17696@schmichrtp.de.ibm.com>
-References: <20080702085630.473635000@de.ibm.com> <1214992150.4974.16.camel@subratamodak.linux.ibm.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Wed, 2 Jul 2008 13:50:31 +0200
+Message-ID: <20080702115030.GK20055@kernel.dk>
+References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local> <1214963700.3316.41.camel@localhost.localdomain> <87zlp0n4p8.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate8.de.ibm.com ([195.212.29.157]:16585 "EHLO
-	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128AbYGBLck (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 07:32:40 -0400
+Received: from brick.kernel.dk ([87.55.233.238]:23397 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764071AbYGBLud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jul 2008 07:50:33 -0400
 Content-Disposition: inline
-In-Reply-To: <1214992150.4974.16.camel@subratamodak.linux.ibm.com>
+In-Reply-To: <87zlp0n4p8.fsf@denkblock.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Subrata Modak <subrata@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, ltp-list <ltp-list@lists.sourceforge.net>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, stable@kernel.org
 
-On Wed, Jul 02, 2008 at 03:19:10PM +0530, Subrata Modak wrote:
-> Hi Christof,
+On Wed, Jul 02 2008, Elias Oltmanns wrote:
+> > The blk_plug_queue change looks reasonable ... however, blk_plug_queue
+> > itself looks like it might not entirely need the queue lock ... I need
+> > to investigate more closely.
 > 
-> Do you have testcases (Automated/Can-be-Automated) for testing this
-> Device driver? If yes, would you like to contribute the same to LTP
-> (http://ltp.cvs.sourceforge.net/ltp/ltp/testcases/kernel/device-drivers/)
-> under GPLv2. I would also request test cases in device drivers category,
-> which can be a good candidate for contribution.
-> 
-> Recently i have been trying to revive the device drivers tests in LTP,
-> but still hoping to receive something new from somebody.
-> 
-> Regards--
-> Subrata
+> Well, I rather think it does. We have to serialise access to the
+> unplug_timer and there is a call to __set_bit() which, as I understand,
+> requires the calling function to ensure atomicity.
 
-Subrata,
+Yep, blk_plug_device() needs to be called with the queue lock held.
 
-the standard tests include error injection on various layers in the
-I/O path (e.g. storage system, SAN, FCP adapter) and see that this is
-recovered automatically while running I/O.
+-- 
+Jens Axboe
 
-The test teams here with IBM have more experience with the details, i
-will try to give you some contact names.
-
-Christof
