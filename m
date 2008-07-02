@@ -1,107 +1,91 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Wed, 02 Jul 2008 11:32:29 -0500
-Message-ID: <1215016350.3330.32.camel@localhost.localdomain>
-References: <877ic8o4iq.fsf@denkblock.local>
-	 <87prpxnv4w.fsf@denkblock.local>
-	 <1214963700.3316.41.camel@localhost.localdomain>
-	 <87zlp0n4p8.fsf@denkblock.local>
-	 <1215009983.3330.14.camel@localhost.localdomain>
-	 <87vdzomg4c.fsf@denkblock.local>
+From: Arne Wiebalck <Arne.Wiebalck@cern.ch>
+Subject: RE: SG_IO permissions
+Date: Wed, 2 Jul 2008 20:00:55 +0200
+Message-ID: <E7F3663B89B60B478C6997C0A0671F8B0D58A9@cernxchg45.cern.ch>
+References: <1215004850.5058.101.camel@pcitfio23.cern.ch> <1215010262.3330.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51647 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755183AbYGBQcd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 12:32:33 -0400
-In-Reply-To: <87vdzomg4c.fsf@denkblock.local>
+Received: from cernmx13.cern.ch ([137.138.142.200]:3299 "EHLO cernmx13.cern.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752173AbYGBSA6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 14:00:58 -0400
+Content-Class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2008-07-02 at 17:59 +0200, Elias Oltmanns wrote:
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > On Wed, 2008-07-02 at 09:08 +0200, Elias Oltmanns wrote:
-> >> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >
-> >> > On Tue, 2008-07-01 at 23:37 +0200, Elias Oltmanns wrote:
-> >> >> Hi James,
-> >> >
-> >> >> 
-> >> >> sorry for bothering you but I've just noticed that the patch below has
-> >> >> neither been scheduled for the stable review, nor queued up for Linus.
-> >> >> May be you just don't consider this serious enough for these trees but I
-> >> >> wanted to make sure that the situation will be dealt with eventualy. The
-> >> >> patch applies to 2.6.26-rc8.
-> >> >
-> >> > OK, well at first glance, the locking around device_blocked and
-> >> > host_blocked looks pointless.  What are the failure traces you're using
-> >> > to decide they need spinlock protection?
-> >> 
-> >> scsi_queue_insert() as well as scsi_finish_command() can be called at
-> >> any time as part of regular command completion or error handling. There
-> >> is no reason why the ->request_fn() for the same device or for another
-> >> device on the same host should not be in progress at the same time.
-> >
-> > So would I be correct in deducing you haven't seen an observed failure?
-> 
-> Yes, I don't even have an SMP machine.
-> 
-> >
-> > The reason no locks are necessary is that there's no race to mediate.
-> > The checks are only is it set or not ...
-> 
-> I'm not sure whether that is of any consequence. Don't get me wrong, I
-> really don't know and you may well be right. But how exactly does
-> decrementing from 2 to 1 work? Do we know for sure that there will
-> always be at least one bit set so reading that address will reliably
-> return a non zero value?
 
-both the check and the decrement are under a lock already. But anyway,
-for an int, we always read an integral value (that's a guarantee of the
-CPU architecture)
+>> Hi all,
+>> 
+>> I am trying to replace some read/write calls in our application
+>> by SG_IO commands in order to have access to the sense bytes in 
+>> case of an error. The underlying devices are tape drives. 
+>> 
+>> Part of our application, such as positioning or reading labels
+>> from the tape, are run as root. This seems to work fine, I get 
+>> the data I expect and the sense bytes in case of an error. 
+>> 
+>> However, the actual data transfer from and to the device is run 
+>> under a user's ID. This part does not work anymore when switching
+>> from read/write to SG_IO: 'Operation not permitted'. 
+>> 
+>> Does a user need some special rights to issue SG_IO (read) commands
+>> (on a file descriptor that he opened for reading and that he 
+>> can use without problems for read() calls)? 
+>> 
+>> The device node that the processes are accessing is a char special
+>> file owned by the user and with all user bits set. This special file
+>> is created on a per tape request basis. I also tried to use /dev/nst0
+>> instead, but that made no difference. 
+>> 
+>> I am running a relatively old kernel (2.6.9 based), could that cause
+>> any problem?
+>> 
+>> BTW, why does it say "except st" on the permission requirements table on
+>> http://sg.torque.net/sg/sg_io.html ? :)
+>> 
+>> 
+>> Any hints appreciated.
+>
+>SG_IO access requires CAP_SYS_RAWIO to defeat the command verifier.
+>
 
-> > unless we get down to zero depth in which case the decrements are done
-> > under lock.
-> 
-> Sorry, but this simply doesn't resolve the matter at hand.
-> scsi_finish_command() can change (host|device)_blocked values to zero at
-> any time currently *not* protected by any lock. In much the same way
-> scsi_queue_insert() can change these values from zero to something else
-> at any time.
+Thanks for the quick reply, James.
 
-Look more closely at the requirements for the decrements:  There have to
-be no outstanding commands: nothing can be in scsi_finish_command for
-the device (or the host for host_blocked).  Likewise,
-scsi_queue_insert() is called either for retry return (but nothing
-outstanding, so can't) or for queuecommand() failure.
+We're talking about this snippet of code from st.c, I guess?
 
-The way locking changes in the queue function introduces a race ... the
-block check to the queuecommand.  Introducing additional locking around
-the variable setting can't mediate that race, so the code has to be
-prepared for it (which it is).
+---
+switch (cmd_in) {
+    case SCSI_IOCTL_GET_IDLUN:
+    case SCSI_IOCTL_GET_BUS_NUMBER:
+        break;
+    default:
+        if ((cmd_in == SG_IO ||
+             cmd_in == SCSI_IOCTL_SEND_COMMAND ||
+             cmd_in == CDROM_SEND_PACKET) &&
+             !capable(CAP_SYS_RAWIO))
+            i = -EPERM;
+        else
+            i = scsi_cmd_ioctl(file, STp->disk->queue,
+                               STp->disk, cmd_in, p);
+            if (i != -ENOTTY)
+                return i;
+        break;
+}
+---
 
-> >
-> >> > The blk_plug_queue change looks reasonable ... however, blk_plug_queue
-> >> > itself looks like it might not entirely need the queue lock ... I need
-> >> > to investigate more closely.
-> >> 
-> >> Well, I rather think it does. We have to serialise access to the
-> >> unplug_timer and there is a call to __set_bit() which, as I understand,
-> >> requires the calling function to ensure atomicity.
-> >
-> > It does at the moment ... it just looks like it could make use of
-> > test_and_set_bit() to avoid the requirement.  The access to the timer
-> > uses mod_timer() which is specifically designed not to require
-> > serialisation.
-> 
-> Concurrent calls to mod_timer() are alright; I'm not so sure what
-> happens when del_timer() is called at the same time (haven't checked
-> though, so you might be right here).
+Obviously. (I just found the discussion about this dating from 
+April '05).
 
-James
+What's the way to go then in order to access a tape as a user, when 
+the user would like to get the sense bytes in case of problems? 
 
+Should the user process get CAP_SYS_RAWIO?
+
+
+TIA,
+ Arne
 
