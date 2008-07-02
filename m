@@ -1,89 +1,60 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Wed, 02 Jul 2008 17:59:31 +0200
-Message-ID: <87vdzomg4c.fsf@denkblock.local>
-References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local>
-	<1214963700.3316.41.camel@localhost.localdomain>
-	<87zlp0n4p8.fsf@denkblock.local>
-	<1215009983.3330.14.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10861] 2.6.26-rc4-git2 - long pause during boot
+Date: Wed,  2 Jul 2008 09:18:40 -0700 (PDT)
+Message-ID: <20080702161840.DEF36108047@picon.linux-foundation.org>
+References: <bug-10861-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37276 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753701AbYGBP7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jul 2008 11:59:46 -0400
-In-Reply-To: <1215009983.3330.14.camel@localhost.localdomain> (James
-	Bottomley's message of "Wed, 02 Jul 2008 09:46:23 -0500")
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34426 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754566AbYGBQTM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jul 2008 12:19:12 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m62GIeqg011391
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Jul 2008 09:18:41 -0700
+In-Reply-To: <bug-10861-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Wed, 2008-07-02 at 09:08 +0200, Elias Oltmanns wrote:
->> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->
->> > On Tue, 2008-07-01 at 23:37 +0200, Elias Oltmanns wrote:
->> >> Hi James,
->> >
->> >> 
->> >> sorry for bothering you but I've just noticed that the patch below has
->> >> neither been scheduled for the stable review, nor queued up for Linus.
->> >> May be you just don't consider this serious enough for these trees but I
->> >> wanted to make sure that the situation will be dealt with eventualy. The
->> >> patch applies to 2.6.26-rc8.
->> >
->> > OK, well at first glance, the locking around device_blocked and
->> > host_blocked looks pointless.  What are the failure traces you're using
->> > to decide they need spinlock protection?
->> 
->> scsi_queue_insert() as well as scsi_finish_command() can be called at
->> any time as part of regular command completion or error handling. There
->> is no reason why the ->request_fn() for the same device or for another
->> device on the same host should not be in progress at the same time.
->
-> So would I be correct in deducing you haven't seen an observed failure?
+http://bugzilla.kernel.org/show_bug.cgi?id=10861
 
-Yes, I don't even have an SMP machine.
 
->
-> The reason no locks are necessary is that there's no race to mediate.
-> The checks are only is it set or not ...
 
-I'm not sure whether that is of any consequence. Don't get me wrong, I
-really don't know and you may well be right. But how exactly does
-decrementing from 2 to 1 work? Do we know for sure that there will
-always be at least one bit set so reading that address will reliably
-return a non zero value?
 
-> unless we get down to zero depth in which case the decrements are done
-> under lock.
 
-Sorry, but this simply doesn't resolve the matter at hand.
-scsi_finish_command() can change (host|device)_blocked values to zero at
-any time currently *not* protected by any lock. In much the same way
-scsi_queue_insert() can change these values from zero to something else
-at any time.
+------- Comment #6 from rjw@sisk.pl  2008-07-02 09:18 -------
+On Monday, 30 of June 2008, Chris Clayton wrote:
+> Rafael
+> 
+> On Sunday 29 June 2008, Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of recent regressions.
+> >
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.25.  Please verify if it still should be listed.
+> >
+> 
+> As far as I'm concerned, the entry can be closed.. As I've said before, the 
+> patch did have a bad effect on existing user space, but, as Kay pointed out, 
+> there's no getting away from the fact that the rule in Slackware rules 
+> distributed with udev is a bad rule. the Slackware distribution does not 
+> include that rule in its udev rules.
+> 
+> I assume Kay will fix it in the udev package.
+> 
+> >
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=10861
+> > Subject		: 2.6.26-rc4-git2 - long pause during boot
+> > Submitter	: Chris Clayton <chris2553@googlemail.com>
+> > Date		: 2008-06-01 4:15 (29 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=121229382917834&w=4
 
->
->> > The blk_plug_queue change looks reasonable ... however, blk_plug_queue
->> > itself looks like it might not entirely need the queue lock ... I need
->> > to investigate more closely.
->> 
->> Well, I rather think it does. We have to serialise access to the
->> unplug_timer and there is a call to __set_bit() which, as I understand,
->> requires the calling function to ensure atomicity.
->
-> It does at the moment ... it just looks like it could make use of
-> test_and_set_bit() to avoid the requirement.  The access to the timer
-> uses mod_timer() which is specifically designed not to require
-> serialisation.
 
-Concurrent calls to mod_timer() are alright; I'm not so sure what
-happens when del_timer() is called at the same time (haven't checked
-though, so you might be right here).
-
-Regards,
-
-Elias
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
