@@ -1,241 +1,58 @@
-From: Martin George <marting@netapp.com>
-Subject: Re: [PATCH 9/9] scsi_dh: Add NetApp hardware handler
-Date: Thu, 03 Jul 2008 01:24:02 +0530
-Message-ID: <486BDCDA.1010604@netapp.com>
-References: <20080624100538.590EB10B5DE@craiglockhart-ipmi.suse.de> <1214443339.32521.25.camel@chandra-ubuntu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Wed, 02 Jul 2008 15:18:23 -0500
+Message-ID: <1215029903.3330.38.camel@localhost.localdomain>
+References: <877ic8o4iq.fsf@denkblock.local>
+	 <87prpxnv4w.fsf@denkblock.local>
+	 <1214963700.3316.41.camel@localhost.localdomain>
+	 <87zlp0n4p8.fsf@denkblock.local> <20080702115030.GK20055@kernel.dk>
+	 <1215010189.3330.17.camel@localhost.localdomain>
+	 <20080702184526.GM20055@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:63593 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752522AbYGBTyL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jul 2008 15:54:11 -0400
-In-Reply-To: <1214443339.32521.25.camel@chandra-ubuntu>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52653 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754741AbYGBUS2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 16:18:28 -0400
+In-Reply-To: <20080702184526.GM20055@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@us.ibm.com
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Yes Chandra, that code needs to be added. Will look into it.
+On Wed, 2008-07-02 at 20:45 +0200, Jens Axboe wrote:
+> On Wed, Jul 02 2008, James Bottomley wrote:
+> > On Wed, 2008-07-02 at 13:50 +0200, Jens Axboe wrote:
+> > > On Wed, Jul 02 2008, Elias Oltmanns wrote:
+> > > > > The blk_plug_queue change looks reasonable ... however, blk_plug_queue
+> > > > > itself looks like it might not entirely need the queue lock ... I need
+> > > > > to investigate more closely.
+> > > > 
+> > > > Well, I rather think it does. We have to serialise access to the
+> > > > unplug_timer and there is a call to __set_bit() which, as I understand,
+> > > > requires the calling function to ensure atomicity.
+> > > 
+> > > Yep, blk_plug_device() needs to be called with the queue lock held.
+> > 
+> > That's what the comment says ... but if you replaced the test_bit with
+> > an atomic operation then the rest of it does look to be in no need of
+> > serialisation ... unless there's something I missed?
+> 
+> Indeed, but then you would have to use atomic bitops everywhere and that
+> is the bit we moved away from.
 
-Thanks,
--Martin
+Not necessarily ... only for QUEUE_FLAG_CLUSTER.  That's really only in
+this one place and then the one in blk_remove_plug would have to become
+test_and_clear_bit.  All the other places barring loop_unplug() are only
+tests (which don't affect the atomicity).
+
+It's just for SCSI the double spin lock followed by double spin unlock
+to get the locking right is kind of nasty ... I'm just wondering what
+the universe would look like if it were rendered unnecessary.
+
+James
 
 
-Chandra Seetharaman wrote:
->
-> One question: If a lun goes to the passive state, how does it get back
-> to active ? There is no code to set the state back.
->
-> On Tue, 2008-06-24 at 12:05 +0200, Hannes Reinecke wrote:
-> > NetApp specific hardware handler to filter out vendor-specific
-> > sense code.
-> >
-> > Signed-off-by: Martin George <marting@netapp.com>
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > ---
-> >  drivers/scsi/device_handler/Kconfig         |    6 +
-> >  drivers/scsi/device_handler/Makefile        |    1 +
-> >  drivers/scsi/device_handler/scsi_dh_ontap.c |  157 
-> +++++++++++++++++++++++++++
-> >  3 files changed, 164 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/scsi/device_handler/scsi_dh_ontap.c
-> >
-> > diff --git a/drivers/scsi/device_handler/Kconfig 
-> b/drivers/scsi/device_handler/Kconfig
-> > index 6707025..841e0e4 100644
-> > --- a/drivers/scsi/device_handler/Kconfig
-> > +++ b/drivers/scsi/device_handler/Kconfig
-> > @@ -31,6 +31,12 @@ config SCSI_DH_EMC
-> >       help
-> >       If you have a EMC CLARiiON select y. Otherwise, say N.
-> >
-> > +config SCSI_DH_ONTAP
-> > +     tristate "NetApp Device Handler"
-> > +     depends on SCSI_DH
-> > +     help
-> > +     If you have a NetApp controller select y. Otherwise, say N.
-> > +
-> >  config SCSI_DH_ALUA
-> >       tristate "SPC-3 ALUA Device Handler (EXPERIMENTAL)"
-> >       depends on SCSI_DH && EXPERIMENTAL
-> > diff --git a/drivers/scsi/device_handler/Makefile 
-> b/drivers/scsi/device_handler/Makefile
-> > index e1d2ea0..abfb9db 100644
-> > --- a/drivers/scsi/device_handler/Makefile
-> > +++ b/drivers/scsi/device_handler/Makefile
-> > @@ -5,4 +5,5 @@ obj-$(CONFIG_SCSI_DH)         += scsi_dh.o
-> >  obj-$(CONFIG_SCSI_DH_RDAC)   += scsi_dh_rdac.o
-> >  obj-$(CONFIG_SCSI_DH_HP_SW)  += scsi_dh_hp_sw.o
-> >  obj-$(CONFIG_SCSI_DH_EMC)    += scsi_dh_emc.o
-> > +obj-$(CONFIG_SCSI_DH_ONTAP)  += scsi_dh_ontap.o
-> >  obj-$(CONFIG_SCSI_DH_ALUA)   += scsi_dh_alua.o
-> > diff --git a/drivers/scsi/device_handler/scsi_dh_ontap.c 
-> b/drivers/scsi/device_handler/scsi_dh_ontap.c
-> > new file mode 100644
-> > index 0000000..175d657
-> > --- /dev/null
-> > +++ b/drivers/scsi/device_handler/scsi_dh_ontap.c
-> > @@ -0,0 +1,157 @@
-> > +/*
-> > + * Copyright 2008 NetApp, Inc., All Rights Reserved
-> > + * Author:  Martin George available at marting@netapp.com
-> > + *
-> > + * This file is released under the GPL.
-> > + *
-> > + * This program is free software; you can redistribute it and/or modify
-> > + * it under the terms of the GNU General Public License version 2 as
-> > + * published by the Free Software Foundation.
-> > + *
-> > + * This program is distributed in the hope that it will be useful, but
-> > + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-> > + * General Public License v2 for more details.
-> > + */
-> > +
-> > +#include <scsi/scsi.h>
-> > +#include <scsi/scsi_eh.h>
-> > +#include <scsi/scsi_dh.h>
-> > +
-> > +#define ONTAP_NAME                   "ontap"
-> > +
-> > +#define ONTAP_STATE_ACTIVE           0
-> > +#define ONTAP_STATE_PASSIVE          1
-> > +
-> > +struct ontap_dh_data {
-> > +     /* To add more members here later */
-> > +     unsigned char                   state;
-> > +};
-> > +
-> > +static inline struct ontap_dh_data *get_ontap_data(struct 
-> scsi_device *sdev)
-> > +{
-> > +     struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
-> > +
-> > +     BUG_ON(scsi_dh_data == NULL);
-> > +     return ((struct ontap_dh_data *) scsi_dh_data->buf);
-> > +}
-> > +
-> > +static int ontap_prep_fn(struct scsi_device *sdev, struct request *req)
-> > +{
-> > +     struct ontap_dh_data *h = get_ontap_data(sdev);
-> > +     int ret = BLKPREP_OK;
-> > +
-> > +     if (h->state != ONTAP_STATE_ACTIVE) {
-> > +             ret = BLKPREP_KILL;
-> > +             req->cmd_flags |= REQ_QUIET;
-> > +     }
-> > +     return ret;
-> > +}
-> > +
-> > +static int ontap_check_sense(struct scsi_device *sdev,
-> > +                             struct scsi_sense_hdr *sense_hdr)
-> > +{
-> > +     struct ontap_dh_data *h = get_ontap_data(sdev);
-> > +
-> > +     switch (sense_hdr->sense_key) {
-> > +     case HARDWARE_ERROR:
-> > +             if (sense_hdr->asc == 0x5D && sense_hdr->ascq == 0x12) {
-> > +                     /* Failed write on NetApp controller
-> > +                         * Fail the IO */
-> > +                     h->state = ONTAP_STATE_PASSIVE;
-> > +                     return FAILED;
-> > +             }
-> > +             break;
-> > +     }
-> > +
-> > +     /* Do not care what scsi-ml does */
-> > +     return SCSI_RETURN_NOT_HANDLED;
-> > +}
-> > +
-> > +const struct scsi_dh_devlist ontap_dev_list[] = {
-> > +     {"NETAPP", "LUN"},
-> > +     {NULL, NULL},
-> > +};
-> > +
-> > +static int ontap_bus_attach(struct scsi_device *sdev);
-> > +static void ontap_bus_detach(struct scsi_device *sdev);
-> > +
-> > +static struct scsi_device_handler ontap_dh = {
-> > +     .name           = ONTAP_NAME,
-> > +     .module         = THIS_MODULE,
-> > +     .devlist        = ontap_dev_list,
-> > +     .attach         = ontap_bus_attach,
-> > +     .detach         = ontap_bus_detach,
-> > +     .check_sense    = ontap_check_sense,
-> > +     .prep_fn        = ontap_prep_fn,
-> > +};
-> > +
-> > +static int ontap_bus_attach(struct scsi_device *sdev)
-> > +{
-> > +     struct scsi_dh_data *scsi_dh_data;
-> > +     struct ontap_dh_data *h;
-> > +     unsigned long flags;
-> > +     int i, found = 0;
-> > +
-> > +     scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
-> > +                            + sizeof(*h) , GFP_KERNEL);
-> > +     if (!scsi_dh_data) {
-> > +             sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
-> > +                         ONTAP_NAME);
-> > +             return -ENOMEM;
-> > +     }
-> > +
-> > +     scsi_dh_data->scsi_dh = &ontap_dh;
-> > +     h = (struct ontap_dh_data *) scsi_dh_data->buf;
-> > +     h->state = ONTAP_STATE_ACTIVE;
-> > +
-> > +     spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-> > +     sdev->scsi_dh_data = scsi_dh_data;
-> > +     spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> > +
-> > +     sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", ONTAP_NAME);
-> > +
-> > +     try_module_get(THIS_MODULE);
-> > +
-> > +     return 0;
-> > +}
-> > +
-> > +static void ontap_bus_detach(struct scsi_device *sdev)
-> > +{
-> > +     struct scsi_dh_data *scsi_dh_data;
-> > +     unsigned long flags;
-> > +
-> > +     spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-> > +     scsi_dh_data = sdev->scsi_dh_data;
-> > +     sdev->scsi_dh_data = NULL;
-> > +     spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> > +
-> > +     sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n",
-> > +                 ONTAP_NAME);
-> > +
-> > +     kfree(scsi_dh_data);
-> > +     module_put(THIS_MODULE);
-> > +}
-> > +
-> > +static int __init ontap_init(void)
-> > +{
-> > +     int r;
-> > +
-> > +     r = scsi_register_device_handler(&ontap_dh);
-> > +     if (r != 0)
-> > +             printk(KERN_ERR "%s: Failed to register scsi device 
-> handler.",
-> > +                     ONTAP_NAME);
-> > +     return r;
-> > +}
-> > +
-> > +static void __exit ontap_exit(void)
-> > +{
-> > +     scsi_unregister_device_handler(&ontap_dh);
-> > +}
-> > +
-> > +module_init(ontap_init);
-> > +module_exit(ontap_exit);
-> > +
-> > +MODULE_DESCRIPTION("NetApp controller driver");
-> > +MODULE_AUTHOR("Martin George <marting@netapp.com>");
-> > +MODULE_LICENSE("GPL");
->
 
