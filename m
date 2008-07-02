@@ -1,33 +1,59 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Wed, 2 Jul 2008 13:50:31 +0200
-Message-ID: <20080702115030.GK20055@kernel.dk>
-References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local> <1214963700.3316.41.camel@localhost.localdomain> <87zlp0n4p8.fsf@denkblock.local>
+From: Arne Wiebalck <arne.wiebalck@cern.ch>
+Subject: SG_IO permissions
+Date: Wed, 2 Jul 2008 15:20:49 +0200
+Message-ID: <1215004850.5058.101.camel@pcitfio23.cern.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:23397 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764071AbYGBLud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jul 2008 07:50:33 -0400
-Content-Disposition: inline
-In-Reply-To: <87zlp0n4p8.fsf@denkblock.local>
+Received: from cernmx11.cern.ch ([137.138.142.198]:35638 "EHLO
+	cernmx11.cern.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbYGBNUw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2008 09:20:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, stable@kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Jul 02 2008, Elias Oltmanns wrote:
-> > The blk_plug_queue change looks reasonable ... however, blk_plug_queue
-> > itself looks like it might not entirely need the queue lock ... I need
-> > to investigate more closely.
-> 
-> Well, I rather think it does. We have to serialise access to the
-> unplug_timer and there is a call to __set_bit() which, as I understand,
-> requires the calling function to ensure atomicity.
+Hi all,
 
-Yep, blk_plug_device() needs to be called with the queue lock held.
+I am trying to replace some read/write calls in our application
+by SG_IO commands in order to have access to the sense bytes in 
+case of an error. The underlying devices are tape drives. 
 
--- 
-Jens Axboe
+Part of our application, such as positioning or reading labels
+from the tape, are run as root. This seems to work fine, I get 
+the data I expect and the sense bytes in case of an error. 
+
+However, the actual data transfer from and to the device is run 
+under a user's ID. This part does not work anymore when switching
+from read/write to SG_IO: 'Operation not permitted'. 
+
+Does a user need some special rights to issue SG_IO (read) commands
+(on a file descriptor that he opened for reading and that he 
+can use without problems for read() calls)? 
+
+The device node that the processes are accessing is a char special
+file owned by the user and with all user bits set. This special file
+is created on a per tape request basis. I also tried to use /dev/nst0
+instead, but that made no difference. 
+
+I am running a relatively old kernel (2.6.9 based), could that cause
+any problem?
+
+BTW, why does it say "except st" on the permission requirements table on
+http://sg.torque.net/sg/sg_io.html ? :)
+
+
+Any hints appreciated.
+
+
+TIA,
+ Arne
+
+
+
+
+ 
+
+
 
