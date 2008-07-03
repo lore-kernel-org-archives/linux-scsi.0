@@ -1,55 +1,52 @@
 From: Elias Oltmanns <eo@nebensachen.de>
 Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Thu, 03 Jul 2008 09:12:26 +0200
-Message-ID: <87abgz30h1.fsf@denkblock.local>
+Date: Thu, 03 Jul 2008 09:25:35 +0200
+Message-ID: <87skur1lao.fsf@denkblock.local>
 References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local>
 	<1214963700.3316.41.camel@localhost.localdomain>
 	<87zlp0n4p8.fsf@denkblock.local>
 	<1215009983.3330.14.camel@localhost.localdomain>
 	<87vdzomg4c.fsf@denkblock.local>
-	<20080702162306.GV14894@parisc-linux.org>
+	<1215016350.3330.32.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:35444 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:56843 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935434AbYGCHMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:12:43 -0400
-In-Reply-To: <20080702162306.GV14894@parisc-linux.org> (Matthew Wilcox's
-	message of "Wed, 2 Jul 2008 10:23:06 -0600")
+	id S937004AbYGCHZr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2008 03:25:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, Jul 02, 2008 at 05:59:31PM +0200, Elias Oltmanns wrote:
->> > The reason no locks are necessary is that there's no race to mediate.
->
->> > The checks are only is it set or not ...
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Wed, 2008-07-02 at 17:59 +0200, Elias Oltmanns wrote:
+>> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+[...]
+>> > unless we get down to zero depth in which case the decrements are done
+>> > under lock.
 >> 
->> I'm not sure whether that is of any consequence. Don't get me wrong, I
->> really don't know and you may well be right. But how exactly does
->> decrementing from 2 to 1 work? Do we know for sure that there will
->> always be at least one bit set so reading that address will reliably
->> return a non zero value?
+>> Sorry, but this simply doesn't resolve the matter at hand.
+>> scsi_finish_command() can change (host|device)_blocked values to zero at
+>> any time currently *not* protected by any lock. In much the same way
+>> scsi_queue_insert() can change these values from zero to something else
+>> at any time.
 >
-> The assumption we make (and it is believed to be true on all SMP systems)
-> is that a write to a naturally aligned memory location that is sized <=
-> sizeof(long) is atomic.  That is, a reader will get either the previous
-> value or the subsequent value, not a mixture.  The RCU code relies
-> heavily on this assumption.
+> Look more closely at the requirements for the decrements:  There have to
+> be no outstanding commands: nothing can be in scsi_finish_command for
+> the device (or the host for host_blocked).
 
-Does that mean that where ever I have
+Yes, I agree as far as the decrements are concerned. There still is the
+check
 
-spin_lock_irqsave(some_lock, flags);
-var = some_val;
-spin_unlock_irqrestore(some_lock, flags);
+if (sdev->device_blocked)
 
-I could just as well discard the locking provided that
-sizeof(var) <= sizeof(long)
-because the assignment of some_val to var will be atomic anyway?
+which can happen while ->device_blocked is changed either by
+scsi_finish_command() or scsi_queue_insert(). If I understand Matthew and
+you correctly, this doesn't pose any problem because assigning an int is
+an atomic operation anyway.
 
-Regards,
+Thanks for explaining,
 
 Elias
