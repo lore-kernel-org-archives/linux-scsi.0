@@ -1,41 +1,24 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Thu, 03 Jul 2008 10:22:43 -0500
-Message-ID: <1215098563.3309.12.camel@localhost.localdomain>
-References: <877ic8o4iq.fsf@denkblock.local>
-	 <87prpxnv4w.fsf@denkblock.local>
-	 <1214963700.3316.41.camel@localhost.localdomain>
-	 <87zlp0n4p8.fsf@denkblock.local>
-	 <1215009983.3330.14.camel@localhost.localdomain>
-	 <87vdzomg4c.fsf@denkblock.local> <20080702162306.GV14894@parisc-linux.org>
-	 <87abgz30h1.fsf@denkblock.local>
+Date: Thu, 3 Jul 2008 09:47:13 -0600
+Message-ID: <20080703154713.GF14894@parisc-linux.org>
+References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local> <1214963700.3316.41.camel@localhost.localdomain> <87zlp0n4p8.fsf@denkblock.local> <1215009983.3330.14.camel@localhost.localdomain> <87vdzomg4c.fsf@denkblock.local> <20080702162306.GV14894@parisc-linux.org> <87abgz30h1.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55349 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751196AbYGCPWt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2008 11:22:49 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:44939 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754003AbYGCPrb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2008 11:47:31 -0400
+Content-Disposition: inline
 In-Reply-To: <87abgz30h1.fsf@denkblock.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2008-07-03 at 09:12 +0200, Elias Oltmanns wrote:
+On Thu, Jul 03, 2008 at 09:12:26AM +0200, Elias Oltmanns wrote:
 > Matthew Wilcox <matthew@wil.cx> wrote:
-> > On Wed, Jul 02, 2008 at 05:59:31PM +0200, Elias Oltmanns wrote:
-> >> > The reason no locks are necessary is that there's no race to mediate.
-> >
-> >> > The checks are only is it set or not ...
-> >> 
-> >> I'm not sure whether that is of any consequence. Don't get me wrong, I
-> >> really don't know and you may well be right. But how exactly does
-> >> decrementing from 2 to 1 work? Do we know for sure that there will
-> >> always be at least one bit set so reading that address will reliably
-> >> return a non zero value?
-> >
 > > The assumption we make (and it is believed to be true on all SMP systems)
 > > is that a write to a naturally aligned memory location that is sized <=
 > > sizeof(long) is atomic.  That is, a reader will get either the previous
@@ -52,18 +35,35 @@ On Thu, 2008-07-03 at 09:12 +0200, Elias Oltmanns wrote:
 > sizeof(var) <= sizeof(long)
 > because the assignment of some_val to var will be atomic anyway?
 
-I think you're still confused about the difference between integral
-observation of values and serialisation.
+You might need a barrier.
 
-Assignment is always integral.  In your example above anything observing
-the variable always sees either the previous value or the one you set it
-to, nothing else.  So, if all you're doing is setting a flag and
-clearing it (as in setting it to an integral value, not setting it via a
-bit operation) and checking it, no locking is needed.  It's when you
-start doing operations on variables that require serialisation, or the
-variables themselves are absolute indicators of events that need
-serialisation that you start having to introduce locking.
+Also, I realised I mis-spoke above.  Early Alphas do not have instructions
+that store byte or 16-bit sized quantities.  So the compiler implements
+a byte store by loading a 32-bit quantity, replacing the appropriate 8
+bits with the new value and storing the word back again.  The same is
+true for most processors with, say, bit-sized quantities.  So while it's
+atomic with respect to other _readers_, it's unsafe with respect to other
+_writers_ in that if you have two modification attempts simultaneously,
+you can end up with only one modification having taken place, not both.
 
-James
+eg:
 
+CPU 0		CPU 1
+load value
+		load value
+modify
+		modify
+store value
+		store value
 
+CPU 1 got the old value, and stored it over CPU 0's value.
+
+CPUs which have instructions like cmpxchg can avoid these kinds of
+problems, but not all do.  It's certainly not something that you can
+make a blanket statement on; you really need to analyse it carefully.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
