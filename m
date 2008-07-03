@@ -1,77 +1,53 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Thu, 3 Jul 2008 19:54:00 +0200
-Message-ID: <20080703175359.GC20055@kernel.dk>
-References: <1214963700.3316.41.camel@localhost.localdomain> <87zlp0n4p8.fsf@denkblock.local> <20080702115030.GK20055@kernel.dk> <1215010189.3330.17.camel@localhost.localdomain> <20080702184526.GM20055@kernel.dk> <1215029903.3330.38.camel@localhost.localdomain> <87mykz1k08.fsf@denkblock.local> <87iqvn1ccf.fsf@denkblock.local> <20080703112456.GV20055@kernel.dk> <1215102715.3309.50.camel@localhost.localdomain>
+From: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Subject: Re: SG_IO permissions
+Date: Thu, 3 Jul 2008 19:57:55 +0200
+Message-ID: <20080703175755.GB1513@luba>
+References: <1215004850.5058.101.camel@pcitfio23.cern.ch> <1215010262.3330.19.camel@localhost.localdomain> <E7F3663B89B60B478C6997C0A0671F8B0D58A9@cernxchg45.cern.ch> <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:17328 "EHLO kernel.dk"
+Received: from ninsei.hu ([212.92.23.158]:56603 "EHLO ninsei.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116AbYGCRyC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2008 13:54:02 -0400
+	id S1753433AbYGCS1L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2008 14:27:11 -0400
+Received: from luba (lns-bzn-35-82-250-199-26.adsl.proxad.net [82.250.199.26])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by chatsubo.ninsei.hu (Postfix) with ESMTP id CA020785F
+	for <linux-scsi@vger.kernel.org>; Thu,  3 Jul 2008 19:57:56 +0200 (CEST)
 Content-Disposition: inline
-In-Reply-To: <1215102715.3309.50.camel@localhost.localdomain>
+In-Reply-To: <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Elias Oltmanns <eo@nebensachen.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Jul 03 2008, James Bottomley wrote:
-> On Thu, 2008-07-03 at 13:24 +0200, Jens Axboe wrote:
-> > On Thu, Jul 03 2008, Elias Oltmanns wrote:
-> > > Elias Oltmanns <eo@nebensachen.de> wrote:
-> > > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > >> On Wed, 2008-07-02 at 20:45 +0200, Jens Axboe wrote:
-> > > >
-> > > >>> On Wed, Jul 02 2008, James Bottomley wrote:
-> > > >>
-> > > >>> > On Wed, 2008-07-02 at 13:50 +0200, Jens Axboe wrote:
-> > > >>> > > Yep, blk_plug_device() needs to be called with the queue lock held.
-> > > >>> > 
-> > > >>> > That's what the comment says ... but if you replaced the test_bit with
-> > > >>> > an atomic operation then the rest of it does look to be in no need of
-> > > >>> > serialisation ... unless there's something I missed?
-> > > >>> 
-> > > >>> Indeed, but then you would have to use atomic bitops everywhere and that
-> > > >>> is the bit we moved away from.
-> > > >>
-> > > >> Not necessarily ... only for QUEUE_FLAG_CLUSTER.  That's really only in
-> > > >> this one place and then the one in blk_remove_plug would have to become
-> > > >> test_and_clear_bit.  All the other places barring loop_unplug() are only
-> > > >> tests (which don't affect the atomicity).
-> > > >>
-> > > >> It's just for SCSI the double spin lock followed by double spin unlock
-> > > >> to get the locking right is kind of nasty ... I'm just wondering what
-> > > >> the universe would look like if it were rendered unnecessary.
-> > > >
-> > > > We have to consider one more thing: Without the locking in
-> > > > blk_plug_device(), the following sequence of events may occur:
-> > > 
-> > > Actually, it's worse than that. Locking is required in order to make
-> > > absolutely sure that the unplug_timer is active iff QUEUE_FLAG_PLUGGED
-> > > is set. Admittedly, it seems *very* unlikely that blk_remove_plug() will
-> > > complete before the call to mod_timer() in blk_plug_device() even though
-> > > it has started only *after* a call to test_and_set_bit(). However, if
-> > > such a thing would ever happen, it could have dire consequences.
-> > 
-> > Both are races possible without either atomic bitops or the queue lock
-> > being held. We can't properly mix eg set_bit() and __set_bit(). The
-> > plugged bit is the most hammered, so it's staying non-atomic and SCSI
-> > will need to provide proper locking there.
-> 
-> You're the boss.
-> 
-> Actually, after all of this, it looks like the host queue plug is
-> superfluous.  If the host actually says not ready from
-> scsi_host_queue_ready() we go to the not ready processing clause in
-> scsi_prep_fn() which actually checks the outstanding on the current
-> device and plugs the queue if there aren't any commands.  This is
-> actually more correct behaviour than a blind plug regardless (and it's
-> also done under the queue lock), so I think this is the correct fix.
+* Arne Wiebalck (arne.wiebalck@cern.ch) [20080702 20:40]:
 
-That looks good, much better than juggling locks there.
+> The user process in my case is forked by another process which
+> runs as root. But since this process does not have CAP_SETPCAP
+> it cannot set the child's capabilities (which is how I naively
+> thought one could implement this).
 
--- 
-Jens Axboe
+There is no need.  Your problem is that setuid() clears the
+permissible capability set.  This should do the trick:
 
+	/* ...in child after fork()... */
+	prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
+	setuid(...);
+	cap_set_proc(cap_from_text("cap_sys_rawio+ep"));
+
+HTH,
+Peter
+
+--=20
+    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
+'
+ Kelemen P=C3=A9ter     /       \       /       \     Peter.Kelemen@cer=
+n.ch
+=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
