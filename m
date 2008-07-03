@@ -1,63 +1,113 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] SCSI: Fix some locking issues
-Date: Thu, 03 Jul 2008 12:38:56 +0200
-Message-ID: <87iqvn1ccf.fsf@denkblock.local>
-References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local>
-	<1214963700.3316.41.camel@localhost.localdomain>
-	<87zlp0n4p8.fsf@denkblock.local> <20080702115030.GK20055@kernel.dk>
-	<1215010189.3330.17.camel@localhost.localdomain>
-	<20080702184526.GM20055@kernel.dk>
-	<1215029903.3330.38.camel@localhost.localdomain>
-	<87mykz1k08.fsf@denkblock.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:50301 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753235AbYGCMT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2008 08:19:26 -0400
-In-Reply-To: <87mykz1k08.fsf@denkblock.local> (Elias Oltmanns's message of
-	"Thu, 03 Jul 2008 09:53:27 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET 2.6.26-rc8] block: implement extended devt
+Date: Thu,  3 Jul 2008 17:33:00 +0900
+Message-ID: <1215073986-4709-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Elias Oltmanns <eo@nebensachen.de> wrote:
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->> On Wed, 2008-07-02 at 20:45 +0200, Jens Axboe wrote:
->
->>> On Wed, Jul 02 2008, James Bottomley wrote:
->>
->>> > On Wed, 2008-07-02 at 13:50 +0200, Jens Axboe wrote:
->>> > > Yep, blk_plug_device() needs to be called with the queue lock held.
->>> > 
->>> > That's what the comment says ... but if you replaced the test_bit with
->>> > an atomic operation then the rest of it does look to be in no need of
->>> > serialisation ... unless there's something I missed?
->>> 
->>> Indeed, but then you would have to use atomic bitops everywhere and that
->>> is the bit we moved away from.
->>
->> Not necessarily ... only for QUEUE_FLAG_CLUSTER.  That's really only in
->> this one place and then the one in blk_remove_plug would have to become
->> test_and_clear_bit.  All the other places barring loop_unplug() are only
->> tests (which don't affect the atomicity).
->>
->> It's just for SCSI the double spin lock followed by double spin unlock
->> to get the locking right is kind of nasty ... I'm just wondering what
->> the universe would look like if it were rendered unnecessary.
->
-> We have to consider one more thing: Without the locking in
-> blk_plug_device(), the following sequence of events may occur:
+Hello, all.
 
-Actually, it's worse than that. Locking is required in order to make
-absolutely sure that the unplug_timer is active iff QUEUE_FLAG_PLUGGED
-is set. Admittedly, it seems *very* unlikely that blk_remove_plug() will
-complete before the call to mod_timer() in blk_plug_device() even though
-it has started only *after* a call to test_and_set_bit(). However, if
-such a thing would ever happen, it could have dire consequences.
+This patchset implements extended devt for block devices.  This is
+mainly to work around sd limitations (16 minors per device) but can
+easily be used to allow more partitions or more devices.
 
-Regards,
+With it turned on, a libata disk w/ 60 partitions looks like the
+following.
 
-Elias
+  # cat /proc/partitions 
+  major   minor   #blocks  name
+
+     3        0   78184008 hda
+     3        1   26218048 hda1
+     3        2    1052257 hda2
+     8        0  156290904 sda
+     8        1       8001 sda1
+     8        2       8032 sda2
+     8        3       8032 sda3
+     8        4          1 sda4
+   ...
+     8       15       8001 sda15
+   259        0       8001 sda16
+   259        1       8001 sda17
+   259        2       8001 sda18
+   ...
+   259       43       8001 sda59
+   259       44       8001 sda60
+
+As you can see, partitions over the genhd->minors limit gets assigned
+under major 259 which breaks the predetermined contiguous minors
+assumption.  I've tested a number of things on it and everything seems
+to work just fine including mounting as root.
+
+A debug option CONFIG_DEBUG_BLOCK_EXT_DEVT is also implemented, when
+enabled, the /proc/partitions looks like the following.
+
+  # cat /proc/partitions
+  major   minor   #blocks  name
+
+     3        0   78184008 hda
+   259        0   26218048 hda1
+   259   524288    1052257 hda2
+     8        0  156290904 sda
+   259   262144       8001 sda1
+   259   786432       8032 sda2
+   259   131072       8032 sda3
+   259   655360          1 sda4
+   259   393216       8001 sda5
+   259   917504       8001 sda6
+   259    65536       8001 sda7
+   ...
+   259   114688       8001 sda55
+   259   638976       8001 sda56
+   259   376832       8001 sda57
+   259   901120       8001 sda58
+   259   245760       8001 sda59
+   259   770048       8001 sda60
+
+The option forces all partitions to be allocated from the extended
+region and spreads the minors as apart as possible to achieve two
+goals.
+
+* Detect kernel or userland code which assumes pre-determined
+  consecutive block devts.
+
+* Prevent such code from accessing the wrong partition and corrupting
+  it by making devts far apart from each other.
+
+I thought about making the spread allocation default for the extended
+area while keeping the conventional minors as they are but that seemed
+like an overkill.  Especially because the only interface which reveals
+how many consecutive minors are allocated is sysfs attribute "range"
+which doesn't change after this patchset.  A new attribute "ext_range"
+which indicates the total limit of minors includnig the extended ones
+is added instead.
+
+I chose major 259 at my own whim.  Is it okay to use this value?  As
+extended devts don't care what MAJ:MIN is used, we can also create a
+pool of MAJ:MINs which any driver can allocate MAJ:MIN from.
+Switching to such mechanism shouldn't be too difficult (some kobj_map
+adjustments will be necessary tho) so no need to worry about it now.
+
+This patchset is also available in the following git tree.
+
+  http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=block-extended-devt
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-extended-devt
+
+Thanks.
+
+ block/genhd.c          |  268 ++++++++++++++++++++++++++++++++++++++++---------
+ block/ioctl.c          |    6 -
+ drivers/ide/ide-disk.c |   17 ++-
+ drivers/scsi/sd.c      |   15 ++
+ fs/block_dev.c         |    2 
+ fs/partitions/check.c  |   44 ++++++--
+ include/linux/fs.h     |    1 
+ include/linux/genhd.h  |   36 ++++++
+ include/linux/major.h  |    2 
+ lib/Kconfig.debug      |   16 ++
+ 10 files changed, 340 insertions(+), 67 deletions(-)
+
+ --
+ tejun
