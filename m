@@ -1,53 +1,63 @@
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: SG_IO permissions
-Date: Thu, 3 Jul 2008 19:57:55 +0200
-Message-ID: <20080703175755.GB1513@luba>
-References: <1215004850.5058.101.camel@pcitfio23.cern.ch> <1215010262.3330.19.camel@localhost.localdomain> <E7F3663B89B60B478C6997C0A0671F8B0D58A9@cernxchg45.cern.ch> <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] SCSI: Fix some locking issues
+Date: Thu, 03 Jul 2008 21:39:22 +0200
+Message-ID: <874p7621w5.fsf@denkblock.local>
+References: <877ic8o4iq.fsf@denkblock.local> <87prpxnv4w.fsf@denkblock.local>
+	<1214963700.3316.41.camel@localhost.localdomain>
+	<87zlp0n4p8.fsf@denkblock.local>
+	<1215009983.3330.14.camel@localhost.localdomain>
+	<87vdzomg4c.fsf@denkblock.local>
+	<20080702162306.GV14894@parisc-linux.org>
+	<87abgz30h1.fsf@denkblock.local>
+	<1215098563.3309.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ninsei.hu ([212.92.23.158]:56603 "EHLO ninsei.hu"
+Received: from nebensachen.de ([195.34.83.29]:47280 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753433AbYGCS1L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2008 14:27:11 -0400
-Received: from luba (lns-bzn-35-82-250-199-26.adsl.proxad.net [82.250.199.26])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by chatsubo.ninsei.hu (Postfix) with ESMTP id CA020785F
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Jul 2008 19:57:56 +0200 (CEST)
-Content-Disposition: inline
-In-Reply-To: <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
+	id S1754113AbYGCTji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2008 15:39:38 -0400
+In-Reply-To: <1215098563.3309.12.camel@localhost.localdomain> (James
+	Bottomley's message of "Thu, 03 Jul 2008 10:22:43 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-* Arne Wiebalck (arne.wiebalck@cern.ch) [20080702 20:40]:
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Thu, 2008-07-03 at 09:12 +0200, Elias Oltmanns wrote:
+>> Matthew Wilcox <matthew@wil.cx> wrote:
+[...]
+>> > The assumption we make (and it is believed to be true on all SMP systems)
+>> > is that a write to a naturally aligned memory location that is sized <=
+>> > sizeof(long) is atomic.  That is, a reader will get either the previous
+>> > value or the subsequent value, not a mixture.  The RCU code relies
+>> > heavily on this assumption.
+>> 
+>> Does that mean that where ever I have
+>> 
+>> spin_lock_irqsave(some_lock, flags);
+>> var = some_val;
+>> spin_unlock_irqrestore(some_lock, flags);
+>> 
+>> I could just as well discard the locking provided that
+>> sizeof(var) <= sizeof(long)
+>> because the assignment of some_val to var will be atomic anyway?
+>
+> I think you're still confused about the difference between integral
+> observation of values and serialisation.
+>
+> Assignment is always integral.  In your example above anything observing
+> the variable always sees either the previous value or the one you set it
+> to, nothing else.  So, if all you're doing is setting a flag and
+> clearing it (as in setting it to an integral value, not setting it via a
+> bit operation) and checking it, no locking is needed.  It's when you
+> start doing operations on variables that require serialisation, or the
+> variables themselves are absolute indicators of events that need
+> serialisation that you start having to introduce locking.
 
-> The user process in my case is forked by another process which
-> runs as root. But since this process does not have CAP_SETPCAP
-> it cannot set the child's capabilities (which is how I naively
-> thought one could implement this).
+Right. Thank you very much for the clarification.
 
-There is no need.  Your problem is that setuid() clears the
-permissible capability set.  This should do the trick:
+Regards,
 
-	/* ...in child after fork()... */
-	prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
-	setuid(...);
-	cap_set_proc(cap_from_text("cap_sys_rawio+ep"));
-
-HTH,
-Peter
-
---=20
-    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
-'
- Kelemen P=C3=A9ter     /       \       /       \     Peter.Kelemen@cer=
-n.ch
-=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Elias
