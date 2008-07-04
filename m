@@ -1,124 +1,99 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/16] qla2xxx: use memory_read_from_buffer()
-Date: Thu, 03 Jul 2008 23:47:33 -0700
-Message-ID: <200807040647.m646lXpN017508@imap1.linux-foundation.org>
+Subject: [patch 10/16] scsi: aic79xx_core fix shadowed variables, add statics
+Date: Thu, 03 Jul 2008 23:47:30 -0700
+Message-ID: <200807040647.m646lUwV017496@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54700 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36744 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754131AbYGDGsI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 02:48:08 -0400
+	by vger.kernel.org with ESMTP id S1754342AbYGDGsG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 02:48:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, akinobu.mita@gmail.com, andrew.vasquez@qlogic.com, linux-driver@qlogic.com, seokmann.ju@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-From: Akinobu Mita <akinobu.mita@gmail.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Andrew Vasquez <linux-driver@qlogic.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-Tested-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>
+Redeclared within different if/else blocks, safe to reuse the
+original from beginning of function.
+drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
+
+Use caminfo for the outer declaration, the redeclared version is
+iterating over all initiator/target pairs (devices) which.
+drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
+
+Forward declaration was already marked static, make the definition match.
+drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/qla2xxx/qla_attr.c |   45 ++++++------------------------
- 1 file changed, 10 insertions(+), 35 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_attr.c~qla2xxx-use-memory_read_from_buffer drivers/scsi/qla2xxx/qla_attr.c
---- a/drivers/scsi/qla2xxx/qla_attr.c~qla2xxx-use-memory_read_from_buffer
-+++ a/drivers/scsi/qla2xxx/qla_attr.c
-@@ -8,6 +8,7 @@
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
+ 			ahd_outb(ahd, CLRLQOINT1, 0);
+ 	} else if ((status & SELTO) != 0) {
+-		u_int  scbid;
+-
+ 		/* Stop the selection */
+ 		ahd_outb(ahd, SCSISEQ0, 0);
  
- #include <linux/kthread.h>
- #include <linux/vmalloc.h>
-+#include <linux/fs.h>
- 
- static int qla24xx_vport_disable(struct fc_vport *, bool);
- 
-@@ -20,18 +21,12 @@ qla2x00_sysfs_read_fw_dump(struct kobjec
+@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		case BUSFREE_DFF0:
+ 		case BUSFREE_DFF1:
+ 		{
+-			u_int	scbid;
+-			struct	scb *scb;
+-
+ 			mode = busfreetime == BUSFREE_DFF0
+ 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
+ 			ahd_set_modes(ahd, mode, mode);
+@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u
+  * by the capabilities of the bus connectivity of and sync settings for
+  * the target.
+  */
+-void
++static void
+ ahd_devlimited_syncrate(struct ahd_softc *ahd,
+ 			struct ahd_initiator_tinfo *tinfo,
+ 			u_int *period, u_int *ppr_options, role_t role)
+@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *
+ int
+ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
  {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	char *rbuf = (char *)ha->fw_dump;
+-	struct	ahd_devinfo devinfo;
++	struct	ahd_devinfo caminfo;
+ 	u_int	initiator;
+ 	u_int	target;
+ 	u_int	max_scsiid;
+@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
  
- 	if (ha->fw_dump_reading == 0)
- 		return 0;
--	if (off > ha->fw_dump_len)
--                return 0;
--	if (off + count > ha->fw_dump_len)
--		count = ha->fw_dump_len - off;
+ 	ahd->pending_device = NULL;
  
--	memcpy(buf, &rbuf[off], count);
--
--	return (count);
-+	return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
-+					ha->fw_dump_len);
- }
+-	ahd_compile_devinfo(&devinfo,
++	ahd_compile_devinfo(&caminfo,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_LUN_WILDCARD,
+@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ 	}
  
- static ssize_t
-@@ -94,20 +89,13 @@ qla2x00_sysfs_read_nvram(struct kobject 
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int		size = ha->nvram_size;
--	char		*nvram_cache = ha->nvram;
+ 	/* Notify the XPT that a bus reset occurred */
+-	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
++	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
+ 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
  
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &nvram_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->nvram,
-+					ha->nvram_size);
- }
- 
- static ssize_t
-@@ -175,14 +163,9 @@ qla2x00_sysfs_read_optrom(struct kobject
- 
- 	if (ha->optrom_state != QLA_SREADING)
- 		return 0;
--	if (off > ha->optrom_region_size)
--		return 0;
--	if (off + count > ha->optrom_region_size)
--		count = ha->optrom_region_size - off;
- 
--	memcpy(buf, &ha->optrom_buffer[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
-+					ha->optrom_region_size);
- }
- 
- static ssize_t
-@@ -374,20 +357,12 @@ qla2x00_sysfs_read_vpd(struct kobject *k
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int           size = ha->vpd_size;
--	char          *vpd_cache = ha->vpd;
- 
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &vpd_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_size);
- }
- 
- static ssize_t
+ 	ahd_restart(ahd);
 _
