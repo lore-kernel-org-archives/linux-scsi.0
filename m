@@ -1,112 +1,109 @@
-From: Arne Wiebalck <arne.wiebalck@cern.ch>
-Subject: RE: SG_IO permissions
-Date: Fri, 4 Jul 2008 10:13:02 +0200
-Message-ID: <1215159183.5058.200.camel@pcitfio23.cern.ch>
-References: <1215004850.5058.101.camel@pcitfio23.cern.ch>
-	 <1215010262.3330.19.camel@localhost.localdomain>
-	 <E7F3663B89B60B478C6997C0A0671F8B0D58A9@cernxchg45.cern.ch>
-	 <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
+From: Ankita Garg <ankita@in.ibm.com>
+Subject: Re: [patch 16/16] lkdtm: fix for CONFIG_SCSI=n
+Date: Fri, 4 Jul 2008 12:25:26 +0530
+Message-ID: <20080704065526.GD7298@in.ibm.com>
+References: <200807040647.m646lYpD017514@imap1.linux-foundation.org>
+Reply-To: Ankita Garg <ankita@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cernmx11.cern.ch ([137.138.142.198]:15708 "EHLO
-	cernmx11.cern.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbYGDINH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 04:13:07 -0400
-In-Reply-To: <E7F3663B89B60B478C6997C0A0671F8B0D58AB@cernxchg45.cern.ch>
+Received: from e28smtp01.in.ibm.com ([59.145.155.1]:55334 "EHLO
+	e28esmtp01.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751262AbYGDKri (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 06:47:38 -0400
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by e28esmtp01.in.ibm.com (8.13.1/8.13.1) with ESMTP id m64Al6GX030118
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Jul 2008 16:17:06 +0530
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m64AjnqC860318
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Jul 2008 16:15:49 +0530
+Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
+	by d28av02.in.ibm.com (8.13.1/8.13.3) with ESMTP id m64Al5Mx002728
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Jul 2008 16:17:06 +0530
+Content-Disposition: inline
+In-Reply-To: <200807040647.m646lYpD017514@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, randy.dunlap@oracle.com
 
-On Wed, 2008-07-02 at 20:40 +0200, Arne Wiebalck wrote:
-> >>> Hi all,
-> >>>
-> >>> I am trying to replace some read/write calls in our application
-> >>> by SG_IO commands in order to have access to the sense bytes in
-> >>> case of an error. The underlying devices are tape drives.
-> >>>
-> >>> Part of our application, such as positioning or reading labels
-> >>> from the tape, are run as root. This seems to work fine, I get
-> >>> the data I expect and the sense bytes in case of an error.
-> >>>
-> >>> However, the actual data transfer from and to the device is run
-> >>> under a user's ID. This part does not work anymore when switching
-> >>> from read/write to SG_IO: 'Operation not permitted'.
-> >>>
-> >>> Does a user need some special rights to issue SG_IO (read)
-> commands
-> >>> (on a file descriptor that he opened for reading and that he
-> >>> can use without problems for read() calls)?
-> >>>
-> >>> The device node that the processes are accessing is a char special
-> >>> file owned by the user and with all user bits set. This special
-> file
-> >>> is created on a per tape request basis. I also tried to
-> use /dev/nst0
-> >>> instead, but that made no difference.
-> >>>
-> >>> I am running a relatively old kernel (2.6.9 based), could that
-> cause
-> >>> any problem?
-> >>>
-> >>> BTW, why does it say "except st" on the permission requirements
-> table on
-> >>> http://sg.torque.net/sg/sg_io.html ? :)
-> >>>
-> >>>
-> >>> Any hints appreciated.
-> >>
-> >>SG_IO access requires CAP_SYS_RAWIO to defeat the command verifier.
-> >>
-> >
-> >Thanks for the quick reply, James.
-> >
-> >We're talking about this snippet of code from st.c, I guess?
-> >
-> >---
-> >switch (cmd_in) {
-> >    case SCSI_IOCTL_GET_IDLUN:
-> >    case SCSI_IOCTL_GET_BUS_NUMBER:
-> >        break;
-> >    default:
-> >        if ((cmd_in == SG_IO ||
-> >             cmd_in == SCSI_IOCTL_SEND_COMMAND ||
-> >             cmd_in == CDROM_SEND_PACKET) &&
-> >             !capable(CAP_SYS_RAWIO))
-> >            i = -EPERM;
-> >        else
-> >            i = scsi_cmd_ioctl(file, STp->disk->queue,
-> >                               STp->disk, cmd_in, p);
-> >            if (i != -ENOTTY)
-> >                return i;
-> >        break;
-> >}
-> >---
-> >
-> >Obviously. (I just found the discussion about this dating from
-> >April '05).
-> >
-> >What's the way to go then in order to access a tape as a user, when
-> >the user would like to get the sense bytes in case of problems?
-> >
-> >Should the user process get CAP_SYS_RAWIO?
+Hi,
+
+On Thu, Jul 03, 2008 at 11:47:34PM -0700, akpm@linux-foundation.org wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> The user process in my case is forked by another process which runs
-> as root. But since this process does not have CAP_SETPCAP it cannot
-> set the child's capabilities (which is how I naively thought one could
-> implement this).
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix lkdtm test code for case of CONFIG_SCSI=n, to avoid build errors:
+> 
+> In file included from linux-next-20080618/tests/lkdtm.c:55:
+> linux-next-20080618/include/scsi/scsi_cmnd.h:28:25: warning: "BLK_MAX_CDB" is not defined
+> linux-next-20080618/include/scsi/scsi_cmnd.h:29:3: error: #error MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
+> In file included from linux-next-20080618/tests/lkdtm.c:55:
+> linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_bidi_cmnd':
+> linux-next-20080618/include/scsi/scsi_cmnd.h:183: error: implicit declaration of function 'blk_bidi_rq'
+> linux-next-20080618/include/scsi/scsi_cmnd.h:184: error: dereferencing pointer to incomplete type
+> linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_in':
+> linux-next-20080618/include/scsi/scsi_cmnd.h:190: error: dereferencing pointer to incomplete type
+> make[2]: *** [tests/lkdtm.o] Error 1
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: <ankita@in.ibm.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Just to close this thread (and in case someone else comes across 
-a similar problem):
+Acked-by: Ankita Garg <ankita@in.ibm.com> 
 
-A solution that seems to work in this specific scenario is to use 
-prctl(2) before the setuid call to keep the capabilities in the
-permitted set and to raise CAP_SYS_RAWIO afterwards using 
-cap_set_proc(3). 
-This way, the user process can again use SG_IO commands for st.
-(Thanks to Peter Kelemen for suggesting that.)
+> ---
+> 
+>  tests/lkdtm.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff -puN tests/lkdtm.c~lkdtm-fix-for-config_scsi=n tests/lkdtm.c
+> --- a/tests/lkdtm.c~lkdtm-fix-for-config_scsi=n
+> +++ a/tests/lkdtm.c
+> @@ -52,7 +52,9 @@
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/hrtimer.h>
+> +#ifdef CONFIG_SCSI
+>  #include <scsi/scsi_cmnd.h>
+> +#endif
+> 
+>  #ifdef CONFIG_IDE
+>  #include <linux/ide.h>
+> @@ -175,12 +177,14 @@ static int jp_hrtimer_start(struct hrtim
+>  	return 0;
+>  }
+> 
+> +#ifdef CONFIG_SCSI
+>  static int jp_scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  {
+>  	lkdtm_handler();
+>  	jprobe_return();
+>  	return 0;
+>  }
+> +#endif
+> 
+>  #ifdef CONFIG_IDE
+>  int jp_generic_ide_ioctl(ide_drive_t *drive, struct file *file,
+> @@ -307,8 +311,12 @@ static int __init lkdtm_module_init(void
+>  		lkdtm.entry = (kprobe_opcode_t*) jp_hrtimer_start;
+>  		break;
+>  	case SCSI_DISPATCH_CMD:
+> +#ifdef CONFIG_SCSI
+>  		lkdtm.kp.symbol_name = "scsi_dispatch_cmd";
+>  		lkdtm.entry = (kprobe_opcode_t*) jp_scsi_dispatch_cmd;
+> +#else
+> +		printk(KERN_INFO "lkdtm : Crash point not available\n");
+> +#endif
+>  		break;
+>  	case IDE_CORE_CP:
+>  #ifdef CONFIG_IDE
+> _
 
-Arne  
-
+-- 
+Regards,
+Ankita Garg (ankita@in.ibm.com)
+Linux Technology Center
+IBM India Systems & Technology Labs, 
+Bangalore, India   
