@@ -1,26 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET 2.6.26-rc8] block: implement extended devt
-Date: Fri, 04 Jul 2008 00:54:46 +0900
-Message-ID: <486CF646.9090208@kernel.org>
-References: <1215073986-4709-1-git-send-email-tj@kernel.org> <20080703132821.GE14894@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080703132821.GE14894@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, jens.axboe@oracle.com, viro@ftp.linux.org.uk, linux-kernel@vger.kernel.org, device@lanana.org
+From: akpm@linux-foundation.org
+Subject: [patch 12/16] drivers/scsi/qla2xxx/qla_os.c: suppress uninitialized-var warning
+Date: Thu, 03 Jul 2008 23:47:31 -0700
+Message-ID: <200807040647.m646lVWF017502@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43690 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752092AbYGDGrf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 02:47:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, andrew.vasquez@qlogic.com
 
-Matthew Wilcox wrote:
-> On Thu, Jul 03, 2008 at 05:33:00PM +0900, Tejun Heo wrote:
->> I chose major 259 at my own whim.  Is it okay to use this value?  As
-> 
-> No.  You need to get it assigned by LANANA (Torben Mathiasen
-> <device@lanana.org>).  See Documentation/devices.txt.
+From: Andrew Morton <akpm@linux-foundation.org>
 
-Yeap, already cc'd && the question was sorta directed to LANANA.  :-)
+drivers/scsi/qla2xxx/qla_os.c: In function 'qla2x00_post_work':
+drivers/scsi/qla2xxx/qla_os.c:2158: warning: 'flags' may be used uninitialized in this function
 
--- 
-tejun
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/qla2xxx/qla_os.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-suppress-uninitialized-var-warning drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-suppress-uninitialized-var-warning
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -2156,7 +2156,7 @@ qla2x00_alloc_work(struct scsi_qla_host 
+ static int
+ qla2x00_post_work(struct scsi_qla_host *ha, struct qla_work_evt *e, int locked)
+ {
+-	unsigned long flags;
++	unsigned long uninitialized_var(flags);
+ 	scsi_qla_host_t *pha = to_qla_parent(ha);
+ 
+ 	if (!locked)
+_
