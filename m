@@ -1,50 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
-Date: Fri, 04 Jul 2008 08:58:12 -0400
-Message-ID: <486E1E64.6090506@garzik.org>
-References: <20080702225743.518230210@intel.com> <20080702161401.0fac6613@appleyard>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/2] scsi_dh patchset fixes
+Date: Fri, 04 Jul 2008 15:45:42 +0200
+Message-ID: <486E2986.6090209@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080702161401.0fac6613@appleyard>
-Sender: linux-ide-owner@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns1.suse.de ([195.135.220.2]:42997 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756662AbYGDNpn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jul 2008 09:45:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-kristen.c.accardi@intel.com wrote:
-> This patch expands the definition of link power management to 
-> include the notion of simply powering the entire port off.  
-> We add a new valid value for link_power_management_policy:
-> 
-> power_off:  phy is not on at all.
-> min_power:  driver uses minimum possible power. hotplug
->             may or may not be available.
-> medium_power: best power/performance tradeoff.  hotplug
->             may or may not be available
-> max_performance: max performance without regard to power
->             hot plug is available.
-> 
-> Additionally - this patch modifies the libata-core to
-> power off the port automatically at init time if the
-> driver marks the port as not hotpluggable.
-> 
-> The user may not power off a port if it is occupied.
-> If the port is powered off, and a new drive is plugged
-> in, the drive will not be detected until the port is
-> powered back up by setting the link_power_management_policy
-> to "max_performance".
-> 
-> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> ---
->  drivers/ata/libata-core.c |   58 +++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/ata/libata-scsi.c |    1 
->  include/linux/libata.h    |    2 +
->  3 files changed, 60 insertions(+), 1 deletion(-)
+Hi James,
 
-Looks good to me, ACK.
+these patches just fix the suggestions made by you and Mike C.
+- Check the return code from try_module_get()
+- Use GFP_ATOMIC in the IO path
 
-I'm apply soonish, unless there are other complaints.
+Patches apply on top of my previous patchset for the scsi_dh fixes.
 
+Please apply.
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
