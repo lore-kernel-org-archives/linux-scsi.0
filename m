@@ -1,106 +1,39 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] move memory_read_from_buffer() from fs.h to string.h
-Date: Sat, 5 Jul 2008 01:39:43 +0900
-Message-ID: <20080704163942.GA15214@localhost.localdomain>
-References: <200807040647.m646lXpN017508@imap1.linux-foundation.org> <1215182555.5413.8.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10730] build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined reference to `request_firmware'
+Date: Fri,  4 Jul 2008 14:40:53 -0700 (PDT)
+Message-ID: <20080704214053.5B5B711D107@picon.linux-foundation.org>
+References: <bug-10730-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:22028 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753946AbYGDQjz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 12:39:55 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1619318rvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Jul 2008 09:39:55 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1215182555.5413.8.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41017 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752330AbYGDVsu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 17:48:50 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m64LmKAm008051
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Jul 2008 14:48:21 -0700
+In-Reply-To: <bug-10730-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, linux-driver@qlogic.com, seokmann.ju@qlogic.com, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jul 04, 2008 at 09:42:35AM -0500, James Bottomley wrote:
-> For such a micro optimisation, this is a pretty big price to pay.
-> 
-> Inclusion of linux/fs.h in a low level driver was always a danger signal
-> usually it meant the driver was trying to access files or something at
-> the very least it was a warning of a potential layering violation.  Now
-> you're trying to make it standard practice ... I really don't like that.
-> Surely a function that does memory to memory copies belongs either in
-> string.h with the rest of our memory copies ... or in another header
-> that would be a usual include for the potential users.
+http://bugzilla.kernel.org/show_bug.cgi?id=10730
 
-OK, I'll move it to linux/string.h
 
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] move memory_read_from_buffer() from fs.h to string.h
+bunk@kernel.org changed:
 
-James Bottomley warns that inclusion of linux/fs.h in a low level driver
-was always a danger signal. This patch moves memory_read_from_buffer()
-from fs.h to string.h and fixes includes in existing memory_read_from_buffer()
-users.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Zhang Rui <rui.zhang@intel.com>
-Cc: Bob Moore <robert.moore@intel.com>
-Cc: Thomas Renninger <trenn@suse.de>
-Cc: Len Brown <lenb@kernel.org>
----
- drivers/acpi/system.c       |    1 +
- drivers/zorro/zorro-sysfs.c |    1 -
- include/linux/fs.h          |    2 --
- include/linux/string.h      |    3 +++
- 4 files changed, 4 insertions(+), 3 deletions(-)
 
-Index: 2.6-mm/include/linux/fs.h
-===================================================================
---- 2.6-mm.orig/include/linux/fs.h
-+++ 2.6-mm/include/linux/fs.h
-@@ -2026,8 +2026,6 @@ extern void simple_release_fs(struct vfs
- 
- extern ssize_t simple_read_from_buffer(void __user *to, size_t count,
- 			loff_t *ppos, const void *from, size_t available);
--extern ssize_t memory_read_from_buffer(void *to, size_t count, loff_t *ppos,
--			const void *from, size_t available);
- 
- #ifdef CONFIG_MIGRATION
- extern int buffer_migrate_page(struct address_space *,
-Index: 2.6-mm/include/linux/string.h
-===================================================================
---- 2.6-mm.orig/include/linux/string.h
-+++ 2.6-mm/include/linux/string.h
-@@ -111,5 +111,8 @@ extern void argv_free(char **argv);
- 
- extern bool sysfs_streq(const char *s1, const char *s2);
- 
-+extern ssize_t memory_read_from_buffer(void *to, size_t count, loff_t *ppos,
-+			const void *from, size_t available);
-+
- #endif
- #endif /* _LINUX_STRING_H_ */
-Index: 2.6-mm/drivers/acpi/system.c
-===================================================================
---- 2.6-mm.orig/drivers/acpi/system.c
-+++ 2.6-mm/drivers/acpi/system.c
-@@ -26,6 +26,7 @@
- #include <linux/proc_fs.h>
- #include <linux/seq_file.h>
- #include <linux/init.h>
-+#include <linux/string.h>
- #include <asm/uaccess.h>
- 
- #include <acpi/acpi_drivers.h>
-Index: 2.6-mm/drivers/zorro/zorro-sysfs.c
-===================================================================
---- 2.6-mm.orig/drivers/zorro/zorro-sysfs.c
-+++ 2.6-mm/drivers/zorro/zorro-sysfs.c
-@@ -15,7 +15,6 @@
- #include <linux/zorro.h>
- #include <linux/stat.h>
- #include <linux/string.h>
--#include <linux/fs.h>
- 
- #include "zorro.h"
- 
+
+
+------- Comment #2 from bunk@kernel.org  2008-07-04 14:40 -------
+fixed by commit 69d44a1835ec8163a82c4ee57367f87ae0f85c2e
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
