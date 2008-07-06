@@ -1,27 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET 2.6.26-rc8] block: implement extended devt
-Date: Sun, 06 Jul 2008 23:37:59 +0900
-Message-ID: <4870D8C7.6080100@gmail.com>
-References: <1215073986-4709-1-git-send-email-tj@kernel.org>
+From: "Ms. Rebecca Clark" <info@yahoo.com>
+Subject: (unknown)
+Date: Sun, 06 Jul 2008 10:33:37 -0400
+Message-ID: <1215354817.4870d7c18532f__19664.5146971152$1215362586$gmane$org@imp.vet.upenn.edu>
+Reply-To: custoservice222@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1215073986-4709-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from imp.vet.upenn.edu ([128.91.146.20]:58285 "EHLO
+	imp.vet.upenn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757028AbYGFQl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2008 12:41:59 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, all.
-> 
-> This patchset implements extended devt for block devices.  This is
-> mainly to work around sd limitations (16 minors per device) but can
-> easily be used to allow more partitions or more devices.
+Dear Winner
+You are a winner in our first organised online Svenska spel lottri. You are a
+lucky winner of 1 million Euros (1 Million Euros). Your Batch Number is
+73465289-SB/2008, and serial Number 140082630118. Kindly Contact: Mr. MARTINS
+J.E-mail: custoservice222@yahoo.com.hk
+Tel:  +0031-619-100-976
+Yours in service,
+Ms. Rebecca Clark
 
-I'm updating the patchset.  Please standby a bit.
 
-Thanks.
 
--- 
-tejun
+
+
+
