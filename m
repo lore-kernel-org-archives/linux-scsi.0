@@ -1,28 +1,36 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
- unbootable
-Date: Sun, 6 Jul 2008 12:34:17 -0700
-Message-ID: <20080706123417.c1e2bebc.akpm@linux-foundation.org>
-References: <bug-11045-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Sun,  6 Jul 2008 12:34:53 -0700 (PDT)
+Message-ID: <20080706193453.EAEB710800B@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36496 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37195 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752677AbYGFTex (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2008 15:34:53 -0400
-In-Reply-To: <bug-11045-10286@http.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1755485AbYGFTfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2008 15:35:24 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m66JYsc1020153
+	for <linux-scsi@vger.kernel.org>; Sun, 6 Jul 2008 12:34:55 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsi.com>, support@lsi.com
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-07-06 12:34 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
 bugzilla web interface).
 
-On Sun,  6 Jul 2008 11:22:08 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Sun,  6 Jul 2008 11:22:08 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
+wrote:
 
 > http://bugzilla.kernel.org/show_bug.cgi?id=11045
 > 
@@ -292,3 +300,8 @@ The acpi problem.
 
 mpt-fusion shouldn't oops, no matter what acpi did to it.
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
