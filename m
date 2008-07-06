@@ -1,39 +1,41 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10730] build issue #503 for v2.6.26-rc2-433-gf26a398 :  undefined reference to `request_firmware'
-Date: Fri,  4 Jul 2008 14:40:53 -0700 (PDT)
-Message-ID: <20080704214053.5B5B711D107@picon.linux-foundation.org>
-References: <bug-10730-11613@http.bugzilla.kernel.org/>
+From: "Alexander Beregalov" <a.beregalov@gmail.com>
+Subject: [PATCH] scsi_cmnd.h: remove double inclusion of linux/blkdev.h
+Date: Sun, 6 Jul 2008 17:01:34 +0400
+Message-ID: <a4423d670807060601sa56948ak812c4569297fada6@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41017 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752330AbYGDVsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2008 17:48:50 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m64LmKAm008051
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Jul 2008 14:48:21 -0700
-In-Reply-To: <bug-10730-11613@http.bugzilla.kernel.org/>
+Received: from wx-out-0506.google.com ([66.249.82.231]:59170 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbYGFNBf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2008 09:01:35 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so676139wxd.4
+        for <linux-scsi@vger.kernel.org>; Sun, 06 Jul 2008 06:01:34 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10730
+From: Alexander Beregalov <a.beregalov@gmail.com>
 
+Remove double inclusion of linux/blkdev.h
 
-bunk@kernel.org changed:
+ include/scsi/scsi_cmnd.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |CODE_FIX
+Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+---
 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 3e46dfa..66c9448 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -7,7 +7,6 @@
+ #include <linux/types.h>
+ #include <linux/timer.h>
+ #include <linux/scatterlist.h>
+-#include <linux/blkdev.h>
 
-
-
-------- Comment #2 from bunk@kernel.org  2008-07-04 14:40 -------
-fixed by commit 69d44a1835ec8163a82c4ee57367f87ae0f85c2e
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+ struct Scsi_Host;
+ struct scsi_device;
