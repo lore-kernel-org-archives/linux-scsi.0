@@ -1,49 +1,66 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [PATCH] sym53c8xx: Fix bogus sym_que_entry re-implementation of container_of
-Date: Mon, 7 Jul 2008 08:02:06 -0700
-Message-ID: <da824cf30807070802g48fc84b1la2ad982a6c0d1acd@mail.gmail.com>
-References: <20080707005030.503A3DDE08@ozlabs.org>
-	 <da824cf30807062335q5057a816wf4071bbec3052093@mail.gmail.com>
-	 <1215413017.8970.101.camel@pasglop>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] cciss: read config to obtain max outstanding
+ commands per controller
+Date: Mon, 7 Jul 2008 15:12:19 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A778825963E5E81@GVW0547EXC.americas.hpqcorp.net>
+References: <20080701210247.GA5095@roadking.ldev.net>
+ <20080701142308.4958bc5f.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:19091 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752942AbYGGPCR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 11:02:17 -0400
-Received: from zps78.corp.google.com (zps78.corp.google.com [172.25.146.78])
-	by smtp-out.google.com with ESMTP id m67F27dK013404
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 16:02:08 +0100
-Received: from wf-out-1314.google.com (wfg23.prod.google.com [10.142.7.23])
-	by zps78.corp.google.com with ESMTP id m67F266m019983
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 08:02:06 -0700
-Received: by wf-out-1314.google.com with SMTP id 23so2432574wfg.25
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Jul 2008 08:02:06 -0700 (PDT)
-In-Reply-To: <1215413017.8970.101.camel@pasglop>
-Content-Disposition: inline
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:40619 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbYGGPMs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 11:12:48 -0400
+In-Reply-To: <20080701142308.4958bc5f.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Matthew Wilcox <matthew@wil.cx>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, Jul 6, 2008 at 11:43 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Sun, 2008-07-06 at 23:35 -0700, Grant Grundler wrote:
-...
->> There are 11 uses of sym_que_entry() macro. Is that too many to
->> completely remove it's use?
->> (question for willy to decide I guess).
+
+
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@linux-foundation.org]
+> Sent: Tuesday, July 01, 2008 4:23 PM
+> To: Miller, Mike (OS Dev)
+> Cc: jens.axboe@oracle.com; linux-kernel@vger.kernel.org;
+> linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] cciss: read config to obtain max
+> outstanding commands per controller
 >
-> Willy wants to completely remove the queue management. While that might
-> be the right thing to do, I'd like the small fixup to go in to at least
-> remove the warnings in the meantime.
+> On Tue, 1 Jul 2008 16:02:47 -0500
+> Mike Miller <mike.miller@hp.com> wrote:
+>
+> > This patch changes the way we determine the maximum number of
+> > outstanding commands for each controller. Most Smart Array
+> controllers
+> > can support up to 1024 commands, the notable exceptions are
+> the E200 and E200i.
+> > The next generation of controllers which were just added support a
+> > mode of operation called Zero Memory Raid (ZMR).  In this mode they
+> > only support 64 outstanding commands. In Full Function Raid
+> (FFR) mode they support 1024.
+> > We have been setting the queue depth by arbitrarily assigning some
+> > value for each controller. We needed a better way to set the queue
+> > depth to avoid lots of annoying "fifo full" messages. So we
+> made the
+> > driver a little smarter. We now read the config table and
+> subtract 4
+> > from the returned value. The -4 is to allow some room for
+> ioctl calls
+> > which are not tracked the same way as io commands are tracked.
+>
+> What would be the effect of _not_ having this patch upon
+> users of the new hardware?
+>
+> If the answer is "bad" then we should get this change into
+> 2.6.26 and 2.6.25.x, because people will surely be running
+> those kernels on the new hardware.
 
-ok - I didn't know the long term plan. That seems reasonable to me.
+Sorry for my late reply, I've been out of the office. Not having this patch would be bad. The performance at a queue depth of 64 is not very good anyway. If we hit the "fifo full" condition we spew annoying messages and spin for a bit and try again. This leads to very poor performance.
 
-BTW, I realized this morning sym_que_entry() should really be an
-inline function and drop the "struct sym_ccb" argument.
-
-thanks,
-grant
+Thanks,
+mikem
