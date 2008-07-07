@@ -1,34 +1,42 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Sun,  6 Jul 2008 13:50:58 -0700 (PDT)
-Message-ID: <20080706205058.B53B1108035@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [PATCH] sym53c8xx: Fix bogus sym_que_entry re-implementation of container_of
+Date: Mon, 07 Jul 2008 10:50:25 +1000
+Message-ID: <20080707005030.503A3DDE08@ozlabs.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47032 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756291AbYGFUvT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2008 16:51:19 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m66KowIW023790
-	for <linux-scsi@vger.kernel.org>; Sun, 6 Jul 2008 13:51:00 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
+Received: from ozlabs.org ([203.10.76.45]:33300 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757373AbYGGAub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Jul 2008 20:50:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
+The sym53c8xx driver, for some reason, seems to mostly re-implement
+linux/list.h with added bogosity. The main one is it's implementation
+of sym_que_entry which spits warnings with recent gcc's on some
+64 bits architectures.
 
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
 
+Can somebody with that HW test the patch in case I did something
+stupid ? I don't have a symbios controller at hand, it's just that
+this driver is part of our defconfig :-)
 
+ drivers/scsi/sym53c8xx_2/sym_misc.h |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-
-------- Comment #3 from bunk@kernel.org  2008-07-06 13:50 -------
-Thanks for this information.
-
-Please open a separate bug for the ACPI problem.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--- linux-work.orig/drivers/scsi/sym53c8xx_2/sym_misc.h	2008-07-07 10:42:03.000000000 +1000
++++ linux-work/drivers/scsi/sym53c8xx_2/sym_misc.h	2008-07-07 10:44:41.000000000 +1000
+@@ -121,9 +121,7 @@ static __inline void sym_que_move(struct
+ 	}
+ }
+ 
+-#define sym_que_entry(ptr, type, member) \
+-	((type *)((char *)(ptr)-(unsigned int)(&((type *)0)->member)))
+-
++#define sym_que_entry(ptr, type, member) container_of(ptr, type, member)
+ 
+ #define sym_insque(new, pos)		__sym_que_add(new, pos, (pos)->flink)
+ 
