@@ -1,55 +1,49 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: Re: linux-next: scsi tree build failure
-Date: Mon, 7 Jul 2008 09:53:40 -0500
-Message-ID: <20080707145340.GB21578@linux.vnet.ibm.com>
-References: <20080707222528.280f0b9e.sfr@canb.auug.org.au> <1215441589.3274.17.camel@localhost.localdomain>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: [PATCH] sym53c8xx: Fix bogus sym_que_entry re-implementation of container_of
+Date: Mon, 7 Jul 2008 08:02:06 -0700
+Message-ID: <da824cf30807070802g48fc84b1la2ad982a6c0d1acd@mail.gmail.com>
+References: <20080707005030.503A3DDE08@ozlabs.org>
+	 <da824cf30807062335q5057a816wf4071bbec3052093@mail.gmail.com>
+	 <1215413017.8970.101.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-out.google.com ([216.239.33.17]:19091 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942AbYGGPCR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 11:02:17 -0400
+Received: from zps78.corp.google.com (zps78.corp.google.com [172.25.146.78])
+	by smtp-out.google.com with ESMTP id m67F27dK013404
+	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 16:02:08 +0100
+Received: from wf-out-1314.google.com (wfg23.prod.google.com [10.142.7.23])
+	by zps78.corp.google.com with ESMTP id m67F266m019983
+	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 08:02:06 -0700
+Received: by wf-out-1314.google.com with SMTP id 23so2432574wfg.25
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Jul 2008 08:02:06 -0700 (PDT)
+In-Reply-To: <1215413017.8970.101.camel@pasglop>
 Content-Disposition: inline
-In-Reply-To: <1215441589.3274.17.camel@localhost.localdomain>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, benh@kernel.crashing.org, linux-scsi <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Matthew Wilcox <matthew@wil.cx>
 
-* James Bottomley (James.Bottomley@HansenPartnership.com) wrote:
-> Correct cc's added
-> 
-> On Mon, 2008-07-07 at 22:25 +1000, Stephen Rothwell wrote:
-> > Hi James,
-> > 
-> > Today's linux-next build (powerpc ppc64_defconfig) failed like this:
-> > 
-> > drivers/scsi/ibmvscsi/ibmvscsi.c: In function 'map_sg_data':
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:431: error: 'FW_FEATURE_CMO' undeclared (first use in this function)
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:431: error: (Each undeclared identifier is reported only once
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:431: error: for each function it appears in.)
-> > drivers/scsi/ibmvscsi/ibmvscsi.c: In function 'ibmvscsi_queuecommand':
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:750: error: 'FW_FEATURE_CMO' undeclared (first use in this function)
-> > drivers/scsi/ibmvscsi/ibmvscsi.c: In function 'send_mad_adapter_info':
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:864: error: 'FW_FEATURE_CMO' undeclared (first use in this function)
-> > drivers/scsi/ibmvscsi/ibmvscsi.c: In function 'ibmvscsi_do_host_config':
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:1412: error: 'FW_FEATURE_CMO' undeclared (first use in this function)
-> > drivers/scsi/ibmvscsi/ibmvscsi.c: At top level:
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:1769: error: unknown field 'get_io_entitlement' specified in initializer
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:1769: warning: missing braces around initializer
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:1769: warning: (near initialization for 'ibmvscsi_driver.driver')
-> > drivers/scsi/ibmvscsi/ibmvscsi.c:1769: warning: initialization from incompatible pointer type
-> > 
-> > Caused because commit 341b56db6804040aa9559e913865108424e3b18b ("[SCSI]
-> > ibmvscsi: driver enablement for CMO"), which was 15/16 in a series, has
-> > been merged before any of the other patches in the series.  I have
-> > reverted that commit.
-> 
-> Do I detect the fact that IBM sent a patch for a SCSI driver for which
-> the core features weren't yet enabled (and which I couldn't check, not
-> having a ppc build system)?
-> 
-> James
+On Sun, Jul 6, 2008 at 11:43 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sun, 2008-07-06 at 23:35 -0700, Grant Grundler wrote:
+...
+>> There are 11 uses of sym_que_entry() macro. Is that too many to
+>> completely remove it's use?
+>> (question for willy to decide I guess).
+>
+> Willy wants to completely remove the queue management. While that might
+> be the right thing to do, I'd like the small fixup to go in to at least
+> remove the warnings in the meantime.
 
-I didn't not properly note in the patch description my intent to have
-this merged in the linuxppc-dev tree.  The patch is part of a larger set
-enabling the feature.  Linux-scsi was CC'ed for this driver for review.
+ok - I didn't know the long term plan. That seems reasonable to me.
 
-Robert Jennings
+BTW, I realized this morning sym_que_entry() should really be an
+inline function and drop the "struct sym_ccb" argument.
+
+thanks,
+grant
