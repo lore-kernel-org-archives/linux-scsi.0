@@ -1,66 +1,50 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/1] cciss: read config to obtain max outstanding
- commands per controller
-Date: Mon, 7 Jul 2008 15:12:19 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778825963E5E81@GVW0547EXC.americas.hpqcorp.net>
-References: <20080701210247.GA5095@roadking.ldev.net>
- <20080701142308.4958bc5f.akpm@linux-foundation.org>
+From: David Teigland <teigland@redhat.com>
+Subject: Re: [BUG]  linux-next: Tree for March 25 kernel oops, when loading mpt fusion driver - regression
+Date: Mon, 7 Jul 2008 10:27:08 -0500
+Message-ID: <20080707152708.GA10404@redhat.com>
+References: <20080325175224.3ee62b09.sfr@canb.auug.org.au> <47E9F0B0.4060006@linux.vnet.ibm.com> <20080626203857.GB3815@redhat.com> <1215372215.4197.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:40619 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556AbYGGPMs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 11:12:48 -0400
-In-Reply-To: <20080701142308.4958bc5f.akpm@linux-foundation.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1215372215.4197.28.camel@localhost.localdomain>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Andy Whitcroft <apw@shadowen.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Sun, Jul 06, 2008 at 02:23:35PM -0500, James Bottomley wrote:
+> On Thu, 2008-06-26 at 15:38 -0500, David Teigland wrote:
+> > On Wed, Mar 26, 2008 at 12:14:00PM +0530, Kamalesh Babulal wrote:
+> > > Hi Stephen,
+> > > 
+> > > Kernel bug is hit while booting up the next-20080325 kernel with MPT
+> > > Fusion driver built in.This was reported previously for the
+> > > next-20080320 kernel
+> > > http://marc.info/?l=linux-next&m=120601013920868&w=2
+> > 
+> > Hi, did you ever get this fixed?  I've been having the same problem,
+> > http://marc.info/?l=linux-scsi&m=121061780821823&w=4
+> > still exists on 2.6.26-rc8 for me,
+> > 
+> > Loading scsi_transport_spi.ko module
+> > Loading mptscsih.ko module
+> > Loading mptspi.ko module
+> > Fusion MPT SPI Host driver 3.04.06
+> > ACPI: PCI Interrupt 0000:86:01.0[A] -> GSI 32 (level, low) -> IRQ 32
+> > mptbase: ioc0: Initiating bringup
+> > ioc0: LSI53C1030 B2: Capabilities={Initiator,Target}
+> > mptbase: ioc0: PCI-MSI enabled
+> 
+> I speculate that this might be related to the problem.  The fusion
+> driver was recently flipped to default to MSI enable (previously it had
+> disabled them).  Could you boot it with the fusion module parameter
+> 
+> mpt_msi_enable=0
+> 
+> if it actually boots that will be a good confirmation that MSI is to
+> blame.
 
-
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> Sent: Tuesday, July 01, 2008 4:23 PM
-> To: Miller, Mike (OS Dev)
-> Cc: jens.axboe@oracle.com; linux-kernel@vger.kernel.org;
-> linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/1] cciss: read config to obtain max
-> outstanding commands per controller
->
-> On Tue, 1 Jul 2008 16:02:47 -0500
-> Mike Miller <mike.miller@hp.com> wrote:
->
-> > This patch changes the way we determine the maximum number of
-> > outstanding commands for each controller. Most Smart Array
-> controllers
-> > can support up to 1024 commands, the notable exceptions are
-> the E200 and E200i.
-> > The next generation of controllers which were just added support a
-> > mode of operation called Zero Memory Raid (ZMR).  In this mode they
-> > only support 64 outstanding commands. In Full Function Raid
-> (FFR) mode they support 1024.
-> > We have been setting the queue depth by arbitrarily assigning some
-> > value for each controller. We needed a better way to set the queue
-> > depth to avoid lots of annoying "fifo full" messages. So we
-> made the
-> > driver a little smarter. We now read the config table and
-> subtract 4
-> > from the returned value. The -4 is to allow some room for
-> ioctl calls
-> > which are not tracked the same way as io commands are tracked.
->
-> What would be the effect of _not_ having this patch upon
-> users of the new hardware?
->
-> If the answer is "bad" then we should get this change into
-> 2.6.26 and 2.6.25.x, because people will surely be running
-> those kernels on the new hardware.
-
-Sorry for my late reply, I've been out of the office. Not having this patch would be bad. The performance at a queue depth of 64 is not very good anyway. If we hit the "fifo full" condition we spew annoying messages and spin for a bit and try again. This leads to very poor performance.
-
+It all works using that option.
 Thanks,
-mikem
+Dave
