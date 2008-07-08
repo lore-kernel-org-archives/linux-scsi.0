@@ -1,334 +1,91 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Tue,  8 Jul 2008 02:03:34 -0700 (PDT)
-Message-ID: <20080708090334.830E310800B@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53165 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751362AbYGHJED (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 05:04:03 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6893Y1T025450
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 02:03:35 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: [BUG]  linux-next: Tree for March 25 kernel oops, when loading
+ mpt fusion driver - regression
+Date: Tue, 08 Jul 2008 16:18:09 +0530
+Message-ID: <487345E9.8090505@linux.vnet.ibm.com>
+References: <20080325175224.3ee62b09.sfr@canb.auug.org.au> <47E9F0B0.4060006@linux.vnet.ibm.com>  <20080626203857.GB3815@redhat.com> <1215372215.4197.28.camel@localhost.localdomain> <487279C9.2010802@linux.vnet.ibm.com> <1215462321.3274.34.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1215462321.3274.34.camel@localhost.localdomain>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: David Teigland <teigland@redhat.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Andy Whitcroft <apw@shadowen.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
+James Bottomley wrote:
+> On Tue, 2008-07-08 at 01:47 +0530, Kamalesh Babulal wrote:
+>> James Bottomley wrote:
+>>> On Thu, 2008-06-26 at 15:38 -0500, David Teigland wrote:
+>>>> On Wed, Mar 26, 2008 at 12:14:00PM +0530, Kamalesh Babulal wrote:
+>>>>> Hi Stephen,
+>>>>>
+>>>>> Kernel bug is hit while booting up the next-20080325 kernel with MPT
+>>>>> Fusion driver built in.This was reported previously for the
+>>>>> next-20080320 kernel
+>>>>> http://marc.info/?l=linux-next&m=120601013920868&w=2
+>>>> Hi, did you ever get this fixed?  I've been having the same problem,
+>>>> http://marc.info/?l=linux-scsi&m=121061780821823&w=4
+>>>> still exists on 2.6.26-rc8 for me,
+>>>>
+>>>> Loading scsi_transport_spi.ko module
+>>>> Loading mptscsih.ko module
+>>>> Loading mptspi.ko module
+>>>> Fusion MPT SPI Host driver 3.04.06
+>>>> ACPI: PCI Interrupt 0000:86:01.0[A] -> GSI 32 (level, low) -> IRQ 32
+>>>> mptbase: ioc0: Initiating bringup
+>>>> ioc0: LSI53C1030 B2: Capabilities={Initiator,Target}
+>>>> mptbase: ioc0: PCI-MSI enabled
+>>> I speculate that this might be related to the problem.  The fusion
+>>> driver was recently flipped to default to MSI enable (previously it had
+>>> disabled them).  Could you boot it with the fusion module parameter
+>>>
+>>> mpt_msi_enable=0
+>>>
+>>> if it actually boots that will be a good confirmation that MSI is to
+>>> blame.
+>>>
+>>>> mptbase: ioc0: Initiating recovery
+>>> This I suspect is because of a lost interrupt.
+>>>
+>>>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000948
+>>> And this one looks to be a second bug:  The MSI fault path is actually
+>>> causing this oops.
+>>>
+>>> James
+>>>
+>> Hi James,
+>>
+>> Kernel Bug is still reproducible with 2.6.26-rc9-git1 kernel, I tried booting with mpt_msi_enable=0
+>> as boot paramenter, but the call trace remains the same
+>>
+>> oading mptbase.ko module[    6.766853] Fusion MPT base driver 3.04.06
+>>
+>> [    6.783482] Copyright (c) 1999-2007 LSI Corporation
+>> Loading mptscsih.ko module
+>> Loading mptspi.ko module
+>> [    6.813157] Fusion MPT SPI Host driver 3.04.06
+>> [    6.827369] ACPI: PCI Interrupt 0000:01:01.0[A] -> GSI 22 (level, low) -> IRQ 22
+>> [    6.850624] mptbase: ioc0: Initiating bringup
+>> [    6.985601] ioc0: LSI53C1030 B2: Capabilities={Initiator}
+>> [    7.002711] mptbase: ioc0: PCI-MSI enabled
+>                                 ^^^^^^^^^^^^^^^
+> 
+> If you had successfully specified mpt_msi_enable=0 this line wouldn't
+> appear.
+> 
+> My best guess is that you incorrectly specified it as a kernel command
+> line parameter rather than a module parameter.
+> 
+> James
+> 
+Hi James,
 
-
-
-
-
-------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-07-08 02:03 -------
-Reply-To: akpm@linux-foundation.org
-
-
-You removed everyone from cc.  Please don't do that - there's not much
-point in asking me to do things - this bug is reported by
-kurk@shiftmail.org.
-
-I don't know what "we do not assist with compiling drivers" can possibly
-mean.  Eric, can you please help here?
-
-
-On Mon, 7 Jul 2008 07:28:00 -0600 "Support, Software" <support@lsi.com> wrote:
-
->  Unfortunately,  we do not assist with compiling drivers.
-> 
-> I would recommend updating the firmware and BIOS on the controllers you are using, so that the compiled driver could communicate with the controller better.
-> 
-> In order to point you to the correct package for the controller that is not taking the compiled driver, I will need for you to send me all of the numbers off of the front and back of the controller.
-> 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> Sent: Sunday, July 06, 2008 3:34 PM
-> To: linux-scsi@vger.kernel.org; linux-acpi@vger.kernel.org
-> Cc: bugme-daemon@bugzilla.kernel.org; Moore, Eric; Support, Software
-> Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7 unbootable
-> 
-> 
-> (switched to email.  Please respond via emailed reply-to-all, not via the bugzilla web interface).
-> 
-> On Sun,  6 Jul 2008 11:22:08 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11045
-> >
-> >            Summary: Bug in MPT Fusion 2.6.26-rc7 unbootable
-> >            Product: Drivers
-> >            Version: 2.5
-> >      KernelVersion: 2.6.26-rc7
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: Other
-> >         AssignedTo: drivers_other@kernel-bugs.osdl.org
-> >         ReportedBy: kurk@shiftmail.org
-> >
-> >
-> > Latest working kernel version: 2.6.25
-> > Earliest failing kernel version: 2.6.26-rc7
-> > Distribution: Debian (but vanilla kernel) Hardware Environment: IBM
-> > xSeries 335 Software Environment: error and hangup at boot Problem
-> > Description: MPT Fusion error, unbootable, see below Steps to
-> > reproduce: see below
-> 
-> We have two bugs here.  One in mpt-fusion and what I suspect is a
-> post-2.6.25 regression in ACPI.
-> 
-> 
-> > Detailed description:
-> >
-> > Hi all,
-> > I'm no kernel expert, I hope I made no mistakes in this report. It
-> > seems to me that a bug was added to the MPT Fusion driver in 2.6.26 (rc7).
-> >
-> > I compiled 2.6.26-rc7 on a machine with controller LSI53C1080 and it
-> > cannot boot. Doing the same with 2.6.25, basically the same config
-> > file, boots without problems.
-> >
-> > I tried to forward-port the Fusion driver from 2.6.25 to 2.6.26-rc7 by
-> > simply copying over the directory drivers/message/fusion/ from 2.6.25
-> > to 2.6.26-rc7 but unfortunately this doesn't compile, so I am stuck
-> > not being able to use
-> > 2.6.26 on this machine (actually I have not tried versions of 2.6.26
-> > earlier than rc7... I don't have much time now).
-> >
-> > I connected a serial cable in order to obtain the boot error message.
-> > I obtained two of those on different boots. I will paste these at the
-> > end of this post.
-> >
-> >
-> > This is the verbose lspci of the controller (obtained with 2.6.25):
-> > ----------------------------------------
-> > 01:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030
-> > PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-> >         Subsystem: IBM Unknown device 026d
-> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-> > ParErr+
-> > Stepping- SERR+ FastB2B- DisINTx-
-> >         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
-> > >TAbort-
-> > <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >         Latency: 72 (4250ns min, 4500ns max), Cache Line Size: 32 bytes
-> >         Interrupt: pin A routed to IRQ 22
-> >         Region 0: I/O ports at 2300 [size=256]
-> >         Region 1: Memory at fbff0000 (64-bit, non-prefetchable) [size=64K]
-> >         Region 3: Memory at fbfe0000 (64-bit, non-prefetchable) [size=64K]
-> >         Capabilities: [50] Power Management version 2
-> >                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
-> > PME(D0-,D1-,D2-,D3hot-,D3cold-)
-> >                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-> >         Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+
-> > Queue=0/0
-> > Enable-
-> >                 Address: 0000000000000000  Data: 0000
-> >         Capabilities: [68] PCI-X non-bridge device
-> >                 Command: DPERE- ERO- RBC=512 OST=1
-> >                 Status: Dev=01:01.0 64bit+ 133MHz+ SCD- USC- DC=simple
-> > DMMRBC=2048 DMOST=8 DMCRS=16 RSCEM- 266MHz- 533MHz-
-> >         Kernel driver in use: mptspi
-> >         Kernel modules: mptspi
-> > ----------------------------------------
-> >
-> >
-> > This is an excerpt of the dmesg on 2.6.25 where the controller WORKS:
-> > --------------------------------------------------------------------
-> > Fusion MPT base driver 3.04.06
-> > Copyright (c) 1999-2007 LSI Corporation Fusion MPT SPI Host driver
-> > 3.04.06 ...
-> > mptbase: ioc0: Initiating bringup
-> > ...
-> > ioc0: LSI53C1030 B2: Capabilities={Initiator} Probing IDE interface
-> > ide1...
-> > hdc: LG CD-ROM CRN-8245B, ATAPI CD/DVD-ROM drive scsi0 : ioc0:
-> > LSI53C1030 B2, FwRev=01000e00h, Ports=1, MaxQ=222, IRQ=22 ...
-> > scsi0 : ioc0: LSI53C1030 B2, FwRev=01000e00h, Ports=1, MaxQ=222,
-> > IRQ=22
-> > hdc: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > hdc: UDMA/33 mode selected
-> > ide1 at 0x170-0x177,0x376 on irq 15
-> > tg3.c:v3.90 (April 12, 2008)
-> > ACPI: PCI Interrupt 0000:02:01.0[A] -> GSI 24 (level, low) -> IRQ 24
-> > scsi 0:0:0:0: Direct-Access     IBM-ESXS DTN018C1UCDY10F  S23J PQ: 0 ANSI: 3
-> >  target0:0:0: Beginning Domain Validation
-> >  target0:0:0: Ending Domain Validation
-> >  target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
-> > scsi 0:0:1:0: Direct-Access     IBM-ESXS DTN018C1UCDY10F  S23J PQ: 0 ANSI: 3
-> >  target0:0:1: Beginning Domain Validation ...
-> > ACPI: PCI Interrupt 0000:02:02.0[A] -> GSI 25 (level, low) -> IRQ 25
-> >  target0:0:1: Ending Domain Validation
-> >  target0:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
-> > ...
-> > hdc: ATAPI 24X CD-ROM drive, 128kB Cache Uniform CD-ROM driver
-> > Revision: 3.20
-> > scsi 0:0:8:0: Processor         IBM      25P3495a S320  1 1    PQ: 0 ANSI: 2
-> >  target0:0:8: Beginning Domain Validation
-> >  target0:0:8: Ending Domain Validation
-> >  target0:0:8: asynchronous
-> > Driver 'sd' needs updating - please use bus_type methods sd 0:0:0:0:
-> > [sda] 35548320 512-byte hardware sectors (18201 MB) sd 0:0:0:0: [sda]
-> > Write Protect is off sd 0:0:0:0: [sda] Mode Sense: cb 00 00 08 sd
-> > 0:0:0:0: Attached scsi generic sg0 type 0 scsi 0:0:1:0: Attached scsi
-> > generic sg1 type 0 scsi 0:0:8:0: Attached scsi generic sg2 type 3
-> > --------------------------------------------------------------------
-> >
-> >
-> > It is an x86 32bit PC compile. This is the excerpt of the .config file
-> > grepping for FUSION
-> > ------------------------------------
-> > CONFIG_FUSION=y
-> > CONFIG_FUSION_SPI=m
-> > CONFIG_FUSION_FC=m
-> > CONFIG_FUSION_SAS=m
-> > CONFIG_FUSION_MAX_SGE=40
-> > CONFIG_FUSION_CTL=m
-> > CONFIG_FUSION_LAN=m
-> > # CONFIG_FUSION_LOGGING is not set
-> > ------------------------------------
-> >
-> >
-> >
-> > This is the boot error message obtained with serial cable. I left it
-> > running for 8 minutes for this. It loops so the message never ends.
-> > --------------------------------------------------------------------
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> >
-> > ACPI: Resource is not an IRQ entry
-> 
-> The acpi problem.
-> 
-> > mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000009!
-> >
-> > BUG: unable to handle kernel NULL pointer dereference at 0000034c
-> >
-> > IP: [<f885cc5e>] :mptspi:mptspi_dv_renegotiate_work+0xa/0x9f
-> >
-> > Oops: 0000 [#1] SMP
-> >
-> > Modules linked in: ide_pci_generic(+) floppy mptspi(+) mptscsih
-> > ohci_hcd tg3 mptbase scsi_transport_spi usbcore serverworks ide_core
-> > ata_generic libata scsi_mod dock thermal processor fan thermal_sys
-> >
-> >
-> >
-> > Pid: 9, comm: events/0 Not tainted (2.6.26-rc7 #1)
-> >
-> > EIP: 0060:[<f885cc5e>] EFLAGS: 00010282 CPU: 0
-> >
-> > EIP is at mptspi_dv_renegotiate_work+0xa/0x9f [mptspi]
-> >
-> > EAX: f7a447c0 EBX: f7429900 ECX: f7a447c4 EDX: c1908988
-> >
-> > ESI: f7a447c0 EDI: 0000034c EBP: f7429904 ESP: f7477f80
-> >
-> >  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-> >
-> > Process events/0 (pid: 9, ti=f7476000 task=f744d770 task.ti=f7476000)
-> >
-> > Stack: f744d8e0 c190b260 00000000 c1908984 f7429900 f7a447c0 f885cc54
-> > f7429904
-> >
-> >        c012f253 f7429900 c012f934 f742990c 00000000 c012f9e8 00000000
-> > f744d770
-> >
-> >        c0131bdc f7477fc4 f7477fc4 f7429900 c012f934 00000000 c0131b1b
-> > c0131ae3
-> >
-> > Call Trace:
-> >
-> >  [<f885cc54>] mptspi_dv_renegotiate_work+0x0/0x9f [mptspi]
-> >
-> >  [<c012f253>] run_workqueue+0x75/0xf6
-> >
-> >  [<c012f934>] worker_thread+0x0/0xbf
-> >
-> >  [<c012f9e8>] worker_thread+0xb4/0xbf
-> >
-> >  [<c0131bdc>] autoremove_wake_function+0x0/0x2b
-> >
-> >  [<c012f934>] worker_thread+0x0/0xbf
-> >
-> >  [<c0131b1b>] kthread+0x38/0x5d
-> >
-> >  [<c0131ae3>] kthread+0x0/0x5d
-> >
-> >  [<c0104573>] kernel_thread_helper+0x7/0x10
-> >
-> >  =======================
-> >
-> > Code: 70 e8 9e f8 ff ff 8b 47 70 e8 44 b7 fe ff 8b 47 70 5a 5b 5e 5f
-> > 5d e9 89
-> > f8 ff ff 58 5b 5e 5f 5d c3 55 57 56 53 83 ec 10 8b 78 10 <8b> 2f e8 c7
-> > 98 90 c7
-> > 66 83 bf 96 02 00 00 00 8b 85 3c 01 00 00
-> >
-> > EIP: [<f885cc5e>] mptspi_dv_renegotiate_work+0xa/0x9f [mptspi] SS:ESP
-> > 0068:f7477f80
-> >
-> > ---[ end trace e311270f757682e4 ]---
-> 
-> mpt-fusion shouldn't oops, no matter what acpi did to it.
-> 
-
+Sorry my fault :(, the kernel bug is not reproducible after disabling it.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
