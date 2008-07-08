@@ -1,19 +1,29 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
- unbootable
-Date: Tue, 8 Jul 2008 01:57:56 -0700
-Message-ID: <20080708015756.baec287c.akpm@linux-foundation.org>
-References: <bug-11045-10286@http.bugzilla.kernel.org/>
-	<20080706123417.c1e2bebc.akpm@linux-foundation.org>
-	<C5679C710E19AF4C8D9C02FF5C72E3C133C9C76A@cosmail01.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <C5679C710E19AF4C8D9C02FF5C72E3C133C9C76A@cosmail01.lsi.com>
-Sender: linux-acpi-owner@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsi.com>, support@lsi.com, kurk@shiftmail.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Tue,  8 Jul 2008 02:03:34 -0700 (PDT)
+Message-ID: <20080708090334.830E310800B@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53165 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751362AbYGHJED (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 05:04:03 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6893Y1T025450
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 02:03:35 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
+
+
+
+
+
+------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-07-08 02:03 -------
+Reply-To: akpm@linux-foundation.org
 
 
 You removed everyone from cc.  Please don't do that - there's not much
@@ -316,3 +326,9 @@ On Mon, 7 Jul 2008 07:28:00 -0600 "Support, Software" <support@lsi.com> wrote:
 > 
 > mpt-fusion shouldn't oops, no matter what acpi did to it.
 > 
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
