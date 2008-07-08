@@ -1,62 +1,65 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Tue,  8 Jul 2008 10:24:03 -0700 (PDT)
-Message-ID: <20080708172403.7CA61108038@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: Re: [PATCH 15/16 v3] ibmvscsi: driver enablement for CMO
+Date: Tue, 8 Jul 2008 12:41:15 -0500
+Message-ID: <20080708174114.GC21578@linux.vnet.ibm.com>
+References: <20080704125631.GR1310@linux.vnet.ibm.com> <4872298D.8050802@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42648 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753602AbYGHRYX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 13:24:23 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m68HO3uS032205
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 10:24:04 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:36710 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756719AbYGHRl2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 13:41:28 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m68HfRNP029656
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 13:41:27 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m68HfRLN173042
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 11:41:27 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m68HfQOj005362
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 11:41:27 -0600
+Content-Disposition: inline
+In-Reply-To: <4872298D.8050802@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: paulus@samba.org, linuxppc-dev@ozlabs.org, linux-scsi@vger.kernel.org, Nathan Fontenot <nfont@austin.ibm.com>, David Darrington <ddarring@linux.vnet.ibm.com>, benh@kernel.crashing.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
-
-
-
-
-
-------- Comment #8 from anonymous@kernel-bugs.osdl.org  2008-07-08 10:24 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Tue, 2008-07-08 at 10:51 -0600, Bjorn Helgaas wrote:
-> On Tuesday 08 July 2008 08:08:46 am James Bottomley wrote:
-> > That said, this line:
-> > 
-> > mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000009!
-> > 
-> > is absolutely characteristic of a lost interrupt.
-> > 
-> > With the current LSI driver, we have two possible causes for this.  One
-> > is the usual ACPI screw up that we never seem to be able to fix.
+* Brian King (brking@linux.vnet.ibm.com) wrote:
+> Robert Jennings wrote:
+> > @@ -1613,6 +1624,26 @@ static struct scsi_host_template driver_
+> >  };
+> >  
+> >  /**
+> > + * ibmvscsi_get_desired_dma - Calculate IO entitlement needed by the driver
+> > + *
+> > + * @vdev: struct vio_dev for the device whose entitlement is to be returned
+> > + *
+> > + * Return value:
+> > + *	Number of bytes of IO data the driver will need to perform well.
+> > + */
+> > +static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
+> > +{
+> > +	/* iu_storage data allocated in initialize_event_pool */
+> > +	unsigned long io_entitlement = max_requests * sizeof(union viosrp_iu);
 > 
-> Which ACPI screw up is that?  And what's the usual recipe?
+> Since you are removing the use of "entitlement" in the function description,
+> you should probably remove it everywhere in this patch.
 
-The usual screw up where subtle ACPI breakage from release to release
-causes some IRQs to get misrouted.
+I'll clean this up.
 
-Usually you start with noacpi and cycle through the pci routing options
+> > +
+> > +	/* add io space for sg data */
+> > +	io_entitlement += (IBMVSCSI_MAX_SECTORS_DEFAULT *
+> > +	                     IBMVSCSI_CMDS_PER_LUN_DEFAULT);
+> > +
+> > +	return IOMMU_PAGE_ALIGN(io_entitlement);
+> 
+> I really think this function should just return the number of bytes and
+> let the caller round it up to any boundary requirements it might have.
 
-> I know about the ancient "pci=routeirq" recipe, but as far as I know,
-> there are no current problems that require that.
+I agree.  I'll be posting a new patch after a work out another issue I'm
+having.  Hope to have that out soon.
 
-If you actually read this bug report, you'll see there was a message
-
-ACPI: Resource is not an IRQ entry
-
-Just before the fusion IRQ failed to get delivered, so I think it's a
-good indicator that there *are* ACPI problems ...
-
-James
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--Rob Jennings
