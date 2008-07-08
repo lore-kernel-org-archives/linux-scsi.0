@@ -1,101 +1,27 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [patch 04/16] git-scsi-misc: fix SCSI_DH build errors
-Date: Mon, 07 Jul 2008 18:02:29 -0700
-Message-ID: <1215478949.27507.88.camel@chandra-ubuntu>
-References: <200807040647.m646lPjk017478@imap1.linux-foundation.org>
-	 <1215468655.3274.45.camel@localhost.localdomain>
-Reply-To: sekharan@us.ibm.com
+From: Kantor Zsolt <kantorzsolt@yahoo.com>
+Subject: SG_GET_VERSION_NUM and SG_IO issue
+Date: Mon, 7 Jul 2008 17:59:07 -0700 (PDT)
+Message-ID: <670709.40869.qm@web35402.mail.mud.yahoo.com>
+Reply-To: kantorzsolt@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:36393 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177AbYGHBCn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 21:02:43 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6812gUq024891
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 21:02:42 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6812gbB079910
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 19:02:42 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6812c7L026825
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Jul 2008 19:02:42 -0600
-In-Reply-To: <1215468655.3274.45.camel@localhost.localdomain>
+Received: from web35402.mail.mud.yahoo.com ([66.163.179.111]:21875 "HELO
+	web35402.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755209AbYGHBFs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2008 21:05:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, agk@redhat.com, andmike@us.ibm.com, hare@suse.de, michaelc@cs.wisc.edu, randy.dunlap@oracle.com
+To: linux-scsi@vger.kernel.org
+
+Hi, I have a strange problem with the SG_GET_VERSION_NUM, and the SG_IO ioctl
+I have blacklisted and renamed all my SCSI subsystem drivers, so the kernel can't load them. I have checked with lsmod, and yes the drivers are not loaded. All my SCSI subsystem is compiled as modules for my running kernel (CONFIG_SCSI=m, CONFIG_CHR_DEV_SG=m, CONFIG_BLK_DEV_SD=m . . .), I checked that in the running kernel config file in the /boot directory.
+In my initrd image the SCSI drivers are not present either.    
+Even so, if the SCSI susbsystem is not loaded at all I can execute successfully the SG_GET_VERSION_NUM ioctl and I can even send commands via the SG_IO ioctl. How is that possible if there are no SCSI drivers loaded ??
+My kernel version is 2.6.18-6-k7 and I'm using Debian etch, if this information is helpful 
+
+Thanks,
+  Kantor
 
 
-On Mon, 2008-07-07 at 17:10 -0500, James Bottomley wrote:
-> On Thu, 2008-07-03 at 23:47 -0700, akpm@linux-foundation.org wrote:
-> > From: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > Do not automatically "select" SCSI_DH for dm-multipath. If SCSI_DH
-> > doesn't exist, just do not allow  hardware handlers to be used.
-> > 
-> > Handle SCSI_DH being a module also. Make sure it doesn't allow DM_MULTIPATH
-> > to be compiled in when SCSI_DH is a module.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > Reported-by: Andrew Morton <akpm@linux-foundation.org>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Cc: Alasdair G Kergon <agk@redhat.com>
-> > Cc: Mike Christie <michaelc@cs.wisc.edu>
-> > Cc: Mike Anderson <andmike@us.ibm.com>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> > 
-> >  drivers/md/Kconfig     |    2 +-
-> >  drivers/md/dm-mpath.c  |    2 ++
-> >  include/scsi/scsi_dh.h |   12 +++++++++++-
-> >  3 files changed, 14 insertions(+), 2 deletions(-)
-> > 
-> > diff -puN drivers/md/Kconfig~git-scsi-misc-fix-scsi_dh-build-errors drivers/md/Kconfig
-> > --- a/drivers/md/Kconfig~git-scsi-misc-fix-scsi_dh-build-errors
-> > +++ a/drivers/md/Kconfig
-> > @@ -252,7 +252,7 @@ config DM_ZERO
-> >  config DM_MULTIPATH
-> >  	tristate "Multipath target"
-> >  	depends on BLK_DEV_DM
-> > -	select SCSI_DH
-> > +	depends on SCSI_DH || !SCSI_DH
-> 
-> This is a bit horrible.  It's not very obvious what it means and it
-> critically depends on the current !m == m behaviour.
-
-I couldn't find other way to solve this dependency. Will look into that
-again.
-
-> 
-> >  	---help---
-> >  	  Allow volume managers to support multipath hardware.
-> >  
-> > diff -puN drivers/md/dm-mpath.c~git-scsi-misc-fix-scsi_dh-build-errors drivers/md/dm-mpath.c
-> > --- a/drivers/md/dm-mpath.c~git-scsi-misc-fix-scsi_dh-build-errors
-> > +++ a/drivers/md/dm-mpath.c
-> > @@ -664,6 +664,8 @@ static int parse_hw_handler(struct arg_s
-> >  	request_module("scsi_dh_%s", m->hw_handler_name);
-> >  	if (scsi_dh_handler_exist(m->hw_handler_name) == 0) {
-> >  		ti->error = "unknown hardware handler type";
-> > +		kfree(m->hw_handler_name);
-> > +		m->hw_handler_name = NULL;
-> 
-> This looks like some type of separate bug fix ... it's certainly not
-> mentioned in the change log and has nothing to do with modular compile
-> problems.
-
-That is true. I can create a separate patch for this.
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+      
