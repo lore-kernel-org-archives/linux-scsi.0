@@ -1,25 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
-	unbootable
-Date: Tue, 08 Jul 2008 12:23:33 -0500
-Message-ID: <1215537813.3214.22.camel@localhost.localdomain>
-References: <bug-11045-10286@http.bugzilla.kernel.org/>
-	 <20080708015756.baec287c.akpm@linux-foundation.org>
-	 <1215526126.3214.8.camel@localhost.localdomain>
-	 <200807081051.33892.bjorn.helgaas@hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Tue,  8 Jul 2008 10:24:03 -0700 (PDT)
+Message-ID: <20080708172403.7CA61108038@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38993 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752983AbYGHRXh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 13:23:37 -0400
-In-Reply-To: <200807081051.33892.bjorn.helgaas@hp.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42648 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753602AbYGHRYX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 13:24:23 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m68HO3uS032205
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 10:24:04 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Support, Software" <support@lsi.com>, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsi.com>, kurk@shiftmail.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
+
+
+
+
+
+------- Comment #8 from anonymous@kernel-bugs.osdl.org  2008-07-08 10:24 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Tue, 2008-07-08 at 10:51 -0600, Bjorn Helgaas wrote:
 > On Tuesday 08 July 2008 08:08:46 am James Bottomley wrote:
@@ -52,3 +56,7 @@ good indicator that there *are* ACPI problems ...
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
