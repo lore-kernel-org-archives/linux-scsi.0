@@ -1,33 +1,74 @@
-From: "Indan Zupancic" <indan-1J6HnF7K7zE@public.gmane.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: 2.6.27-rc7-git1: usb-storage breakage with non-functional disk
-Date: Tue, 8 Jul 2008 15:53:36 +0200 (CEST)
-Message-ID: <14162.84.245.32.19.1215525216.squirrel@secure.samage.net>
-References: <Pine.LNX.4.44L0.0806241032490.2160-100000@iolanthe.rowland.org>
-    <13988.84.245.32.19.1215522030.squirrel@secure.samage.net>
+Date: Tue, 8 Jul 2008 10:01:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807080958160.2442-100000@iolanthe.rowland.org>
+References: <13988.84.245.32.19.1215522030.squirrel@secure.samage.net>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <13988.84.245.32.19.1215522030.squirrel-SDEzVqVlFnWIX31SJU4CB16hYfS7NtTn@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Indan Zupancic <indan-1J6HnF7K7zE@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB development list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33562 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752368AbYGHOBj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2008 10:01:39 -0400
+In-Reply-To: <13988.84.245.32.19.1215522030.squirrel@secure.samage.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Indan Zupancic <indan@nul.nu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB development list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, July 8, 2008 15:00, Indan Zupancic wrote:
+On Tue, 8 Jul 2008, Indan Zupancic wrote:
+
 > Any idea why my cardreader doesn't work in the first place though?
+> 
+> The error is basically:
+> 
+> usb 1-5: new high speed USB device using ehci_hcd and address 22
+> usb 1-5: device not accepting address 22, error -71
+> usb 1-5: new high speed USB device using ehci_hcd and address 23
+> usb 1-5: configuration #1 chosen from 1 choice
+> scsi17 : SCSI emulation for USB Mass Storage devices
+> usb-storage: device found at 23
+> usb-storage: waiting for device to settle before scanning
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> scsi 17:0:0:0: Direct-Access     Generic  USB SD Reader    1.00 PQ: 0 ANSI: 0
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: device not accepting address 23, error -71
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: reset high speed USB device using ehci_hcd and address 23
+> usb 1-5: can't restore configuration #1 (error=-71)
+> usb 1-5: USB disconnect, address 23
+> sd 17:0:0:0: [sdb] READ CAPACITY failed
+> sd 17:0:0:0: [sdb] Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK,SUGGEST_OK
+> sd 17:0:0:0: [sdb] Sense not available.
+> sd 17:0:0:0: [sdb] Write Protect is off
+> sd 17:0:0:0: [sdb] Mode Sense: 00 00 00 00
+> sd 17:0:0:0: [sdb] Assuming drive cache: write through
+> sd 17:0:0:0: [sdb] Attached SCSI removable disk
+> sd 17:0:0:0: Attached scsi generic sg2 type 0
+> usb-storage: device scan complete
+> usb 1-5: new high speed USB device using ehci_hcd and address 24
+> usb 1-5: string descriptor 0 read error: -71
+> usb 1-5: configuration #1 chosen from 1 choice
+> usb 1-5: can't set config #1, error -71
+> 
+> It's a new Trust Mini Cardreader, model CR-1350p.
 
-In case it's useful, an usbmon dump can be found at http://pastebin.org/49630
-This is the log of plugging in the thing and unplugging it again after it failed.
-Corresponding dmesg output with USB and usb-storage debugging enabled at
-http://pastebin.org/49631. This is on 2.6.26-rc9 with Alan's patch applied.
+> It doesn't matter in which port I put the thing (front, back),
+> and I've tried older kernels too (2.6.12), but I get the same
+> error there. This is with an Intel 945G chipset.
+> (I've no Windows to test if it works there.)
+> 
+> Is it just a crappy device which I should bring back, or is
+> there more going on?
 
-Regards,
+It could be a bad device or it could be a bad USB cable.  Have you 
+tried using the card reader with a different computer?
 
-Indan
+A usb-storage verbose debugging log might reveal something useful.
 
+Alan Stern
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
