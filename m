@@ -1,38 +1,66 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: Fix for problems introduced by enabling MSI by default for MPT SPI
- controllers
-Date: Wed, 9 Jul 2008 14:54:32 +0800
-Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72239@hkgmail01.lsi.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE]: Target drivers for QLogic Fibre Channel cards released
+Date: Wed, 09 Jul 2008 11:00:41 +0400
+Message-ID: <48746219.6050104@vlnb.net>
+References: <4873BCD5.5060407@vlnb.net> <4873C6EB.9080207@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58200 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752078AbYGIGyn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 02:54:43 -0400
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id m696oVg1011974
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 23:50:31 -0700 (PDT)
-Received: from PALHUB01.lsi.com (palhub01.lsi.com [128.94.213.114])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id m696sg4p002721
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jul 2008 23:54:42 -0700
-Content-Language: en-US
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:38790 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752640AbYGIHAA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 03:00:00 -0400
+In-Reply-To: <4873C6EB.9080207@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
 
-Recently there are some issues posted in the list with regards to failure of booting or failure of driver loading  when the MSI is enabled by default for MPT SPI controllers.
+Jeff Garzik wrote:
+> Vladislav Bolkhovitin wrote:
+>> I'm glad to announce that version 1.0.0 of target drivers for QLogic 
+>> Fibre Channel cards released and available for download from 
+>> http://scst.sourceforge.net/downloads.html.
+>>
+>> Two target drivers were released:
+>>
+>>   - Target driver qla2x00t for 22xx and 23xx based QLogic Fibre Channel 
+>> cards
+>>
+>>   - Target driver qla_isp for 24xx based QLogic Fibre Channel cards
+>>
+>> Those drivers are designed to work in SCST environment. They are high 
+>> performance drivers, which provide all necessary functionality to work 
+>> as targets in Fibre Channel environment.
+>>
+>> Detail description of the target drivers you can find on SCST home page 
+>> http://scst.sourceforge.net.
+>>
+>> Driver qla2x00t is being prepared in form of patch for review and 
+>> inclusion into the kernel.
+> 
+> Cool.  I'm looking forward to figuring out how to enable ATA target mode 
+> in a similar manner...  sata_mv and some ahci chips support ATA target mode.
 
-James has already provided the patch for fixing the panic.
+Actually, I forgot to mention that there are two more target drivers 
+available for download as well. One of them can be especially interested 
+for you, because it should work with SAS (I have a report with coming 
+CDBs from this transport, but have no hardware to check).
 
-But the reason for IOC bring up failure is enabling the MSI by default for SPI controllers.  The issue is introduced by the following patch. Which is intended for enabling the MSI only for SAS controllers but enables MSI for SPI, FC and SAS controllers.
-http://marc.info/?l=linux-scsi&m=120488594802569&w=4
+  - Target driver for InfiniBand SRP 
+http://scst.sourceforge.net/target_srp.html
 
-I have already posted another patch to rectify this so that MSI will not be enabled by default for SPI and FC controllers. The link for the correction patch is as below.
-http://marc.info/?l=linux-scsi&m=121131228827682&w=4
+  - Target driver for LSI/MPT cards 
+http://scst.sourceforge.net/target_lsi.html. This driver was developed 
+for parallel SCSI, but also should work with SAS and Fibre Channel 
+transports.
 
-Thanks
-Sathya
+They can be downloaded from the SCST SVN by using command:
 
+$ svn co https://scst.svn.sourceforge.net/svnroot/scst
+
+They were not released as a separate packages, because their authors 
+preferred that.
+
+Vlad
