@@ -1,36 +1,20 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Wed,  9 Jul 2008 01:19:29 -0700 (PDT)
-Message-ID: <20080709081929.58B0D11D109@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47876 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752735AbYGIITc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 04:19:32 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m698JT3x018045
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Jul 2008 01:19:30 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Wed, 9 Jul 2008 13:38:14 +0530
+Message-ID: <20080709080814.GA801@lsil.com>
+References: <bug-11045-10286@http.bugzilla.kernel.org/> <200807081051.33892.bjorn.helgaas@hp.com> <1215537813.3214.22.camel@localhost.localdomain> <200807081456.53460.bjorn.helgaas@hp.com> <20080708144720.998a13f2.akpm@linux-foundation.org> <1215554255.3214.48.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1215554255.3214.48.camel@localhost.localdomain>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Bjorn Helgaas <bjorn.helgaas@hp.com>, "Support, Software" <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "kurk@shiftmail.org" <kurk@shiftmail.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
-
-
-
-
-
-------- Comment #12 from anonymous@kernel-bugs.osdl.org  2008-07-09 01:19 -------
-Reply-To: sathya.prakash@lsi.com
-
-This may  be a problem due to enabling MSI for SPI controllers. I have posted
-another message in the list providing the correction patch which is already in
-scsi-misc tree. 
-If the problem is gone with changing the module parameter mpt_msi_enable=0 or
-by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then
-it might be due to MSI enabling.
+This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree. 
+If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
 
 
 On Tue, Jul 08, 2008 at 05:57:35PM -0400, James Bottomley wrote:
@@ -89,9 +73,3 @@ On Tue, Jul 08, 2008 at 05:57:35PM -0400, James Bottomley wrote:
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
