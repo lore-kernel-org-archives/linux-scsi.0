@@ -1,75 +1,169 @@
-From: "Prakash, Sathya" <sathya.prakash@lsi.com>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Wed, 9 Jul 2008 13:38:14 +0530
-Message-ID: <20080709080814.GA801@lsil.com>
-References: <bug-11045-10286@http.bugzilla.kernel.org/> <200807081051.33892.bjorn.helgaas@hp.com> <1215537813.3214.22.camel@localhost.localdomain> <200807081456.53460.bjorn.helgaas@hp.com> <20080708144720.998a13f2.akpm@linux-foundation.org> <1215554255.3214.48.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1215554255.3214.48.camel@localhost.localdomain>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Bjorn Helgaas <bjorn.helgaas@hp.com>, "Support, Software" <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "kurk@shiftmail.org" <kurk@shiftmail.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 1/1] zfcp: add queue_full sysfs attribute
+Date: Wed, 09 Jul 2008 10:27:50 +0200
+Message-ID: <20080709083206.870119000@de.ibm.com>
+References: <20080709082749.843846000@de.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:32896 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531AbYGIIcW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 04:32:22 -0400
+Content-Disposition: inline; filename=queue_full_sysfs
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Stefan Raspl <raspl@linux.vnet.ibm.com>, Martin Peschke <mp3@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree. 
-If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
 
+Adds a new sysfs attribute queue_full for adapters that records the number
+of incidents where a requests could not be submitted due to insufficient
+free space on the request queue.
 
-On Tue, Jul 08, 2008 at 05:57:35PM -0400, James Bottomley wrote:
-> On Tue, 2008-07-08 at 14:47 -0700, Andrew Morton wrote:
-> > On Tue, 8 Jul 2008 14:56:53 -0600 Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
-> >
-> > > On Tuesday 08 July 2008 11:23:33 am James Bottomley wrote:
-> > > > On Tue, 2008-07-08 at 10:51 -0600, Bjorn Helgaas wrote:
-> > > > > Which ACPI screw up is that?  And what's the usual recipe?
-> > > >
-> > > > The usual screw up where subtle ACPI breakage from release to release
-> > > > causes some IRQs to get misrouted.
-> > > >
-> > > > Usually you start with noacpi and cycle through the pci routing options
-> > >
-> > > Don't worry, I wasn't trying to talk you out of an ACPI bug report;
-> > > I just wanted to get enough specifics so I could see whether it was
-> > > something I could fix.
-> > >
-> > > > If you actually read this bug report, you'll see there was a message
-> > > >
-> > > > ACPI: Resource is not an IRQ entry
-> > > >
-> > > > Just before the fusion IRQ failed to get delivered, so I think it's a
-> > > > good indicator that there *are* ACPI problems ...
-> > >
-> > > These messages also happen with 2.6.25, where the MPT Fusion driver
-> > > worked, so Kurk opened a separate bugzilla,
-> > >   http://bugzilla.kernel.org/show_bug.cgi?id=11049
-> > > for them.
-> > >
-> > > Yakui Zhao thinks the messages are harmless because they're
-> > > related to interrupt link devices that we don't use in IOAPIC mode,
-> > > and given that the driver works in 2.6.25, that seems plausible
-> > > to me.
-> > >
-> > > Regardless, the messages are alarming and annoying.  I'd like
-> > > to understand them better, but I'll pursue that in the 11049
-> > > bugzilla.
-> > >
-> >
-> > Let us not forget the other part of this report:
-> >
-> > BUG: unable to handle kernel NULL pointer dereference at 0000034c
-> > IP: [<f885cc5e>] :mptspi:mptspi_dv_renegotiate_work+0xa/0x9f
-> > Oops: 0000 [#1] SMP
-> 
-> That's fixed in the scsi-rc-fixes tree ... but it's a symptom, not a
-> cause.  If essential storage is on this adapter, the system will still
-> be unbootable.
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_def.h   |    1 +
+ drivers/s390/scsi/zfcp_fsf.c   |   24 +++++++++++++++++-------
+ drivers/s390/scsi/zfcp_qdio.c  |    1 +
+ drivers/s390/scsi/zfcp_sysfs.c |   13 +++++++++++++
+ 4 files changed, 32 insertions(+), 7 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_def.h	2008-07-09 10:14:49.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_def.h	2008-07-09 10:16:03.000000000 +0200
+@@ -568,6 +568,7 @@ struct zfcp_adapter {
+ 	struct fsf_qtcb_bottom_port *stats_reset_data;
+ 	unsigned long		stats_reset;
+ 	struct work_struct	scan_work;
++	atomic_t		qdio_outb_full;	   /* queue full incidents */
+ };
+ 
+ struct zfcp_port {
+--- a/drivers/s390/scsi/zfcp_qdio.c	2008-07-09 10:14:49.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_qdio.c	2008-07-09 10:15:32.000000000 +0200
+@@ -287,6 +287,7 @@ static int zfcp_qdio_fill_sbals(struct z
+ 	     addr += length, remaining -= length) {
+ 		sbale = zfcp_qdio_sbale_next(fsf_req, sbtype);
+ 		if (!sbale) {
++			atomic_inc(&fsf_req->adapter->qdio_outb_full);
+ 			zfcp_qdio_undo_sbals(fsf_req);
+ 			return -EINVAL;
+ 		}
+--- a/drivers/s390/scsi/zfcp_fsf.c	2008-07-09 10:14:49.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2008-07-09 10:15:32.000000000 +0200
+@@ -717,6 +717,14 @@ static int zfcp_fsf_sbal_check(struct zf
+ 	return 0;
+ }
+ 
++static int zfcp_fsf_sbal_available(struct zfcp_adapter *adapter)
++{
++	unsigned int count = atomic_read(&adapter->req_q.count);
++	if (!count)
++		atomic_inc(&adapter->qdio_outb_full);
++	return count > 0;
++}
++
+ static int zfcp_fsf_req_sbal_get(struct zfcp_adapter *adapter)
+ {
+ 	long ret;
+@@ -727,6 +735,8 @@ static int zfcp_fsf_req_sbal_get(struct 
+ 					zfcp_fsf_sbal_check(req_q), 5 * HZ);
+ 	if (ret > 0)
+ 		return 0;
++	if (!ret)
++		atomic_inc(&adapter->qdio_outb_full);
+ 
+ 	spin_lock(&req_q->lock);
+ 	return -EIO;
+@@ -984,7 +994,7 @@ struct zfcp_fsf_req *zfcp_fsf_abort_fcp_
+ 	struct zfcp_fsf_req *req = NULL;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_ABORT_FCP_CMND,
+ 				  req_flags, adapter->pool.fsf_req_abort);
+@@ -1219,7 +1229,7 @@ int zfcp_fsf_send_els(struct zfcp_send_e
+ 		return -EBUSY;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_ELS,
+ 				  ZFCP_REQ_AUTO_CLEANUP, NULL);
+@@ -1264,7 +1274,7 @@ int zfcp_fsf_exchange_config_data(struct
+ 	int retval = -EIO;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter,
+ 				  FSF_QTCB_EXCHANGE_CONFIG_DATA,
+@@ -1360,7 +1370,7 @@ int zfcp_fsf_exchange_port_data(struct z
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA,
+ 				  ZFCP_REQ_AUTO_CLEANUP,
+@@ -1406,7 +1416,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA, 0,
+@@ -2224,7 +2234,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 		return -EBUSY;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, req_flags,
+ 				  adapter->pool.fsf_req_scsi);
+@@ -2347,7 +2357,7 @@ struct zfcp_fsf_req *zfcp_fsf_send_fcp_c
+ 		return NULL;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, req_flags,
+ 				  adapter->pool.fsf_req_scsi);
+--- a/drivers/s390/scsi/zfcp_sysfs.c	2008-07-09 10:14:49.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_sysfs.c	2008-07-09 10:19:01.000000000 +0200
+@@ -487,10 +487,23 @@ ZFCP_SHOST_ATTR(megabytes, "%llu %llu\n"
+ ZFCP_SHOST_ATTR(seconds_active, "%llu\n",
+ 		(unsigned long long) stat_info.seconds_act);
+ 
++static ssize_t zfcp_sysfs_adapter_q_full_show(struct device *dev,
++					      struct device_attribute *attr,
++					      char *buf)
++{
++	struct Scsi_Host *scsi_host = class_to_shost(dev);
++	struct zfcp_adapter *adapter =
++		(struct zfcp_adapter *) scsi_host->hostdata[0];
++
++	return sprintf(buf, "%d\n", atomic_read(&adapter->qdio_outb_full));
++}
++static DEVICE_ATTR(queue_full, S_IRUGO, zfcp_sysfs_adapter_q_full_show, NULL);
++
+ struct device_attribute *zfcp_sysfs_shost_attrs[] = {
+ 	&dev_attr_utilization,
+ 	&dev_attr_requests,
+ 	&dev_attr_megabytes,
+ 	&dev_attr_seconds_active,
++	&dev_attr_queue_full,
+ 	NULL
+ };
+
+-- 
