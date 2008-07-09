@@ -1,66 +1,61 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [ANNOUNCE]: Target drivers for QLogic Fibre Channel cards released
-Date: Wed, 09 Jul 2008 11:00:41 +0400
-Message-ID: <48746219.6050104@vlnb.net>
-References: <4873BCD5.5060407@vlnb.net> <4873C6EB.9080207@garzik.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/2] scsi_dh patchset fixes
+Date: Wed, 09 Jul 2008 09:17:57 +0200
+Message-ID: <48746625.7090604@suse.de>
+References: <486E2986.6090209@suse.de> <1215183959.5413.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:38790 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752640AbYGIHAA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 03:00:00 -0400
-In-Reply-To: <4873C6EB.9080207@garzik.org>
+Received: from mail.suse.de ([195.135.220.2]:39799 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018AbYGIHR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jul 2008 03:17:59 -0400
+In-Reply-To: <1215183959.5413.10.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Vladislav Bolkhovitin wrote:
->> I'm glad to announce that version 1.0.0 of target drivers for QLogic 
->> Fibre Channel cards released and available for download from 
->> http://scst.sourceforge.net/downloads.html.
+Hi James,
+
+James Bottomley wrote:
+> On Fri, 2008-07-04 at 15:45 +0200, Hannes Reinecke wrote:
+>> Hi James,
 >>
->> Two target drivers were released:
->>
->>   - Target driver qla2x00t for 22xx and 23xx based QLogic Fibre Channel 
->> cards
->>
->>   - Target driver qla_isp for 24xx based QLogic Fibre Channel cards
->>
->> Those drivers are designed to work in SCST environment. They are high 
->> performance drivers, which provide all necessary functionality to work 
->> as targets in Fibre Channel environment.
->>
->> Detail description of the target drivers you can find on SCST home page 
->> http://scst.sourceforge.net.
->>
->> Driver qla2x00t is being prepared in form of patch for review and 
->> inclusion into the kernel.
-> 
-> Cool.  I'm looking forward to figuring out how to enable ATA target mode 
-> in a similar manner...  sata_mv and some ahci chips support ATA target mode.
+>> these patches just fix the suggestions made by you and Mike C.
+>> - Check the return code from try_module_get()
+>> - Use GFP_ATOMIC in the IO path
+>=20
+> I thought the final agreement was that these should be GFP_NOIO?
+>=20
+Ok, will do so.
 
-Actually, I forgot to mention that there are two more target drivers 
-available for download as well. One of them can be especially interested 
-for you, because it should work with SAS (I have a report with coming 
-CDBs from this transport, but have no hardware to check).
+>> Patches apply on top of my previous patchset for the scsi_dh fixes.
+>=20
+> Could you not do this?  The GFP_KERNEL will spit might sleep warnings=
+ on
+> certain configs and the try_module_get could cause an oops on removal=
+=2E
+> Either of these might confuse a bisection search if it accidentally
+> landed in them.  In general, for unapplied patches with identified bu=
+gs,
+> the patches should be fixed before applying.
+>=20
+Whatever you say :-)
+I'll redo the patchset.
 
-  - Target driver for InfiniBand SRP 
-http://scst.sourceforge.net/target_srp.html
+Cheers,
 
-  - Target driver for LSI/MPT cards 
-http://scst.sourceforge.net/target_lsi.html. This driver was developed 
-for parallel SCSI, but also should work with SAS and Fibre Channel 
-transports.
-
-They can be downloaded from the SCST SVN by using command:
-
-$ svn co https://scst.svn.sourceforge.net/svnroot/scst
-
-They were not released as a separate packages, because their authors 
-preferred that.
-
-Vlad
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
