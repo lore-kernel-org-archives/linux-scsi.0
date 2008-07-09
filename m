@@ -1,67 +1,60 @@
-From: David Howells <dhowells@redhat.com>
+From: "Miquel van Smoorenburg" <miquels@cistron.nl>
 Subject: Re: [PATCH] Mark i2o config broken on 64-bit platforms.
-Date: Wed, 09 Jul 2008 13:07:47 +0100
-Message-ID: <6904.1215605267@redhat.com>
-References: <20080709044743.0dd15a3f.akpm@linux-foundation.org> <20080709113547.19235.15424.stgit@warthog.procyon.org.uk>
+Date: Wed, 09 Jul 2008 15:47:58 +0200
+Message-ID: <E1KGa1W-0004nG-Cw@n2o.xs4all.nl>
+References: <20080709113547.19235.15424.stgit@warthog.procyon.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43549 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752152AbYGIMID (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jul 2008 08:08:03 -0400
+Received: from smtp-vbr8.xs4all.nl ([194.109.24.28]:4689 "EHLO
+	smtp-vbr8.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801AbYGINue (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2008 09:50:34 -0400
 In-Reply-To: <20080709044743.0dd15a3f.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: dhowells@redhat.com, alan@redhat.com, Markus.Lidel@shadowconnect.com, vvs@sw.ru, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: alan@redhat.com, Markus.Lidel@shadowconnect.com, vvs@sw.ru, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-Andrew Morton <akpm@linux-foundation.org> wrote:
+In article <xs4all.20080709044743.0dd15a3f.akpm@linux-foundation.org> you write:
+>On Wed, 09 Jul 2008 12:35:47 +0100 David Howells <dhowells@redhat.com> wrote:
+>
+>> Mark i2o config broken on 64-bit platforms as it generates these:
+>> 
+>> In file included from drivers/message/i2o/config-osm.c:39:
+>> drivers/message/i2o/i2o_config.c: In function 'i2o_cfg_passthru':
+>> drivers/message/i2o/i2o_config.c:889: warning: cast to pointer from
+>integer of different size
+>> drivers/message/i2o/i2o_config.c:945: warning: cast to pointer from
+>integer of different size
+>> 
+>> which are apparently non-trivial to fix (eg: inserting a cast through unsigned
+>> long is not correct according to Linus).  This would be due to struct
+>> sg_simple_element only having a 32-bit addr_bus value.
+>> 
+>Sigh.  I've been staring at that warning for so long.
+>Is it actually known to be broken on 64-bit, or does it happen to work?
 
-> Is it actually known to be broken on 64-bit, or does it happen to work?
+The i2o driver works on 64 bit, though my experiences are less
+than stellar (which is why I submitted the dpt_i2o 64 bit update
+for 2.6.26).
 
-It's casting a 32-bit value to a userspace pointer and then passing that to
-copy_to/from_user():
+However this warning doesn't have much to do with the functioning
+of the driver. It is the Adaptec DPT API for the management interface,
+and that API is currently 32 bits. The i2o layer and the dpt_i2o driver
+have have the same issues here.
 
-				// TODO 64bit fix
-				if (copy_from_user
-				    (p->virt,
-				     (void __user *)(unsigned long)sg[i].
-				     addr_bus, sg_size)) {
+The adaptec management application ("raidutils") is also not 64-bit clean
+(read the code .. it puts pointers into ints etc etc), and fixing
+that is not trivial, _but_ the 32 bit version works on a 64 bit kernel.
 
-and:
+Marking the whole i2o layer broken because the adaptec management API
+hasn't been updated to 64 bits (but does work in 32 bit compatibility
+mode) is going a bit to far I think.
 
-				// TODO 64bit fix
-				if (copy_to_user
-				    ((void __user *)sg[j].addr_bus, sg_list[j],
-				     sg_size)) {
+First, if you want to mark something broken, it would be
+CONFIG_I2O_EXT_ADAPTEC .. second, compiling it gives warnings,
+but it works, and I bet people are using it.
 
-so someone's obviously aware that it is wrong.  According to vc-annotate it's
-been there since before Linus last reset the history, so obviously someone's
-aware of it.
-
-Another of these has in fact been cast in the way Linus objects to:
-
-				// TODO 64bit fix
-				if (copy_to_user
-				    ((void __user *)(u64) sg[j].addr_bus,
-				     sg_list[j].virt, sg_size)) {
-
-The problem, I suspect, is that userspace may have addresses that can't be
-held in the 32-bit addr_bus value, but the 32-bit value is held in the
-i2o_message struct:
-
-	static int i2o_cfg_passthru(unsigned long arg)
-	{
-	...
-		struct i2o_message *msg;
-	...
-			// TODO 64bit fix
-			sg = (struct sg_simple_element *)((&msg->u.head[0]) +
-							  sg_offset);
-	...
-	}
-
-and if these i2o_message structs are actually passed to the hardware, it may
-not be possible to actually expand them, and looking at i2o_msg_post(), that
-seems to be exactly what happens.
-
-David
+Mike.
