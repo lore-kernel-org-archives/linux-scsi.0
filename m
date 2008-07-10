@@ -1,107 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] make sr_mod report more accurate drive status after
-	closing the tray.
-Date: Thu, 10 Jul 2008 16:51:59 -0500
-Message-ID: <1215726719.3353.92.camel@localhost.localdomain>
-References: <48767E08.50202@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] SCSI: erase invalid data returned by device
+Date: Thu, 10 Jul 2008 16:23:41 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0807101623070.2936@woody.linux-foundation.org>
+References: <Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org> <Pine.LNX.4.64.0807101908390.1756@lancer.cnet.absolutedigital.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40772 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752186AbYGJVwD (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57548 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756584AbYGJXYl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 17:52:03 -0400
-In-Reply-To: <48767E08.50202@redhat.com>
+	Thu, 10 Jul 2008 19:24:41 -0400
+In-Reply-To: <Pine.LNX.4.64.0807101908390.1756@lancer.cnet.absolutedigital.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Jones <pjones@redhat.com>
-Cc: linux-scsi@vger.kernel.org, fedora-kernel-list <fedora-kernel-list@redhat.com>
+To: Cal Peake <cp@absolutedigital.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, 2008-07-10 at 17:24 -0400, Peter Jones wrote:
-> Right now, when using sr_mod and issuing the CDROM_DRIVE_STATUS ioctl,
-> there's no way to differentiate between when you've just closed the
-> drive tray, but the media is not yet loaded, and when there's no media.
-> This seems to be accidental.
+
+
+On Thu, 10 Jul 2008, Cal Peake wrote:
 > 
-> Here's a patch that seems to fix this behaviour:
+> It looks like we're getting down to the last -rc; can this patch please 
+> make it into main-line before 2.6.26 goes final?
 
-I'm very wary of doing something like this because it took us months to
-fix up all the breakage the last time ...
+James said he was pushing it out to his scsi-rc-fixes tree, but I haven't 
+seen a pull request.
 
-> Signed-off-by: Peter Jones <pjones@redhat.com>
-> 
-> diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-> index ae87d08..43a084b 100644
-> --- a/drivers/scsi/sr_ioctl.c
-> +++ b/drivers/scsi/sr_ioctl.c
-> @@ -306,10 +306,9 @@ int sr_drive_status(struct cdrom_device_info *cdi, 
-> int slot)
->   		/* we have no changer support */
->   		return -EINVAL;
->   	}
-> -	if (0 == sr_test_unit_ready(cd->device, &sshdr))
-> -		return CDS_DISC_OK;
-> -
-> -	if (!cdrom_get_media_event(cdi, &med)) {
-> +	if (0 == sr_test_unit_ready(cd->device, &sshdr)
-> +			&& sshdr.sense_key == 0
+But you're right, final is near. Maybe I should just merge it directly.
 
-This can't be right; if the return is zero, the sense_key must also be
-zero (as in to have valid sense, it must have returned with at least
-DRIVER_SENSE)
-
-> +			&& !cdrom_get_media_event(cdi, &med)) {
-
-And this really doesn't look right either.  Now you're only calling the
-media event if the test unit ready succeeded.  A drive can be open (thus
-returning not ready and hence non zero) and still give you a valid media
-event.
-
->   		if (med.media_present)
->   			return CDS_DISC_OK;
->   		else if (med.door_open)
-> @@ -319,10 +318,27 @@ int sr_drive_status(struct cdrom_device_info *cdi, 
-> int slot)
->   	}
-> 
->   	/*
-> -	 * 0x04 is format in progress .. but there must be a disc present!
-> +	 * ASC: 0x04: "logical unit is not ready"
-> +	 * ASCQ: 0x01: cause not reportable
-> +	 *       0x02: in process of becoming ready
-> +	 *       0x03: initializing command required
-> +	 *       0x04: format in progress .. but there must be a disc present!
-> +	 *       0x07: operation in progress
-> +	 *       0x08: long write in progress
->   	 */
-> -	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04)
-> -		return CDS_DISC_OK;
-
-This seems to be a nasty historical lie.  It seems to play into the new
-media changed stuff by stalling the change until the media is ready.
-Convince me that if we actually tell the truth here we're not going to
-fire a slew of spurious events at hal.
-
-> +	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04) {
-> +		switch (sshdr.ascq) {
-> +			case 0x01:
-> +			case 0x02:
-> +				return CDS_DRIVE_NOT_READY;
-> +			case 0x03:
-> +				return CDS_TRAY_OPEN;
-
-That's a stretch ... the initialising command can be start motor, but
-the tray can be closed just fine.
-
-> +			case 0x04:
-> +			case 0x07:
-> +			case 0x08:
-> +				return CDS_DRIVE_NOT_READY;
-> +		}
-> +	}
-
-James
-
-
+		Linus
