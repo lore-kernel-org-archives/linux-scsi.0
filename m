@@ -1,105 +1,172 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 04/18] qla2xxx: Track total number of ISP aborts.
-Date: Thu, 10 Jul 2008 16:55:49 -0700
-Message-ID: <1215734163-40825-4-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 06/18] qla2xxx: Cleanup NPIV related functions
+Date: Thu, 10 Jul 2008 16:55:51 -0700
+Message-ID: <1215734163-40825-6-git-send-email-andrew.vasquez@qlogic.com>
 References: <20080710235458.GQ29099@plap4-2.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:45262 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755322AbYGJX4H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 19:56:07 -0400
+	with ESMTP id S1757587AbYGJX4N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 19:56:13 -0400
 In-Reply-To: <20080710235458.GQ29099@plap4-2.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+From: Seokmann Ju <seokmann.ju@qlogic.com>
 
-This parameter counts the total number of ISP aborts during
-driver execution.  The value is exported through a DEVICE_ATTR()
-off the scsi_host.
+Removed repeated or unnecessary operations during vport
+creation/deletion.
 
+Signed-off-by: Shyam Sundar <shyam.sundar@qlogic.com>
+Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
+Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   13 +++++++++++++
- drivers/scsi/qla2xxx/qla_def.h  |    5 +++++
- drivers/scsi/qla2xxx/qla_init.c |    1 +
- 3 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |    6 ------
+ drivers/scsi/qla2xxx/qla_def.h  |    1 -
+ drivers/scsi/qla2xxx/qla_gbl.h  |    1 -
+ drivers/scsi/qla2xxx/qla_mid.c  |   11 +++--------
+ drivers/scsi/qla2xxx/qla_os.c   |    8 +-------
+ 5 files changed, 4 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2a3bc35..5538fa9 100644
+index 5d6dd95..2775413 100644
 --- a/drivers/scsi/qla2xxx/qla_attr.c
 +++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -784,6 +784,16 @@ qla2x00_optrom_fw_version_show(struct device *dev,
- 	    ha->fw_revision[3]);
- }
+@@ -1175,17 +1175,11 @@ vport_create_failed_2:
+ static int
+ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ {
+-	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+ 	scsi_qla_host_t *vha = fc_vport->dd_data;
  
-+static ssize_t
-+qla2x00_total_isp_aborts_show(struct device *dev,
-+			      struct device_attribute *attr, char *buf)
-+{
-+	scsi_qla_host_t *ha = shost_priv(class_to_shost(dev));
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+	    ha->qla_stats.total_isp_aborts);
-+}
-+
- static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
- static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
- static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
-@@ -806,6 +816,8 @@ static DEVICE_ATTR(optrom_fcode_version, S_IRUGO,
- 		   qla2x00_optrom_fcode_version_show, NULL);
- static DEVICE_ATTR(optrom_fw_version, S_IRUGO, qla2x00_optrom_fw_version_show,
- 		   NULL);
-+static DEVICE_ATTR(total_isp_aborts, S_IRUGO, qla2x00_total_isp_aborts_show,
-+		   NULL);
+ 	qla24xx_disable_vp(vha);
+ 	qla24xx_deallocate_vp_id(vha);
  
- struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_driver_version,
-@@ -824,6 +836,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_optrom_efi_version,
- 	&dev_attr_optrom_fcode_version,
- 	&dev_attr_optrom_fw_version,
-+	&dev_attr_total_isp_aborts,
- 	NULL,
- };
+-	mutex_lock(&ha->vport_lock);
+-	ha->cur_vport_count--;
+-	clear_bit(vha->vp_idx, ha->vp_idx_map);
+-	mutex_unlock(&ha->vport_lock);
+-
+ 	kfree(vha->node_name);
+ 	kfree(vha->port_name);
  
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7b0ddc8..fe1eada 100644
+index 2b1bc57..00c7052 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2154,6 +2154,10 @@ struct qla_chip_state_84xx {
- 	uint32_t gold_fw_version;
- };
+@@ -2170,7 +2170,6 @@ typedef struct scsi_qla_host {
+ 	struct pci_dev	*pdev;
  
-+struct qla_statistics {
-+	uint32_t total_isp_aborts;
-+};
-+
- /*
-  * Linux Host Adapter structure
+ 	unsigned long	host_no;
+-	unsigned long	instance;
+ 
+ 	volatile struct {
+ 		uint32_t	init_done		:1;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 5a50fb7..1d57ddd 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -62,7 +62,6 @@ extern int ql2xfdmienable;
+ extern int ql2xallocfwdump;
+ extern int ql2xextended_error_logging;
+ extern int ql2xqfullrampup;
+-extern int num_hosts;
+ 
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 62a3ad6..fa35339 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -43,6 +43,7 @@ qla24xx_allocate_vp_id(scsi_qla_host_t *vha)
+ 
+ 	set_bit(vp_id, ha->vp_idx_map);
+ 	ha->num_vhosts++;
++	ha->cur_vport_count++;
+ 	vha->vp_idx = vp_id;
+ 	list_add_tail(&vha->vp_list, &ha->vp_list);
+ 	mutex_unlock(&ha->vport_lock);
+@@ -58,6 +59,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
+ 	mutex_lock(&ha->vport_lock);
+ 	vp_id = vha->vp_idx;
+ 	ha->num_vhosts--;
++	ha->cur_vport_count--;
+ 	clear_bit(vp_id, ha->vp_idx_map);
+ 	list_del(&vha->vp_list);
+ 	mutex_unlock(&ha->vport_lock);
+@@ -390,7 +392,6 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ 	vha->parent = ha;
+ 	vha->fc_vport = fc_vport;
+ 	vha->device_flags = 0;
+-	vha->instance = num_hosts;
+ 	vha->vp_idx = qla24xx_allocate_vp_id(vha);
+ 	if (vha->vp_idx > ha->max_npiv_vports) {
+ 		DEBUG15(printk("scsi(%ld): Couldn't allocate vp_id.\n",
+@@ -428,7 +429,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ 	host->max_cmd_len = MAX_CMDSZ;
+ 	host->max_channel = MAX_BUSES - 1;
+ 	host->max_lun = MAX_LUNS;
+-	host->unique_id = vha->instance;
++	host->unique_id = host->host_no;
+ 	host->max_id = MAX_TARGETS_2200;
+ 	host->transportt = qla2xxx_transport_vport_template;
+ 
+@@ -436,12 +437,6 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ 	    vha->host_no, vha));
+ 
+ 	vha->flags.init_done = 1;
+-	num_hosts++;
+-
+-	mutex_lock(&ha->vport_lock);
+-	set_bit(vha->vp_idx, ha->vp_idx_map);
+-	ha->cur_vport_count++;
+-	mutex_unlock(&ha->vport_lock);
+ 
+ 	return vha;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 047ee64..e98d502 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -27,7 +27,6 @@ char qla2x00_version_str[40];
   */
-@@ -2595,6 +2599,7 @@ typedef struct scsi_qla_host {
- 	int		cur_vport_count;
+ static struct kmem_cache *srb_cachep;
  
- 	struct qla_chip_state_84xx *cs84xx;
-+	struct qla_statistics qla_stats;
- } scsi_qla_host_t;
+-int num_hosts;
+ int ql2xlogintimeout = 20;
+ module_param(ql2xlogintimeout, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xlogintimeout,
+@@ -1663,9 +1662,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 	host->can_queue = ha->request_q_length + 128;
  
+-	/* load the F/W, read paramaters, and init the H/W */
+-	ha->instance = num_hosts;
+-
+ 	mutex_init(&ha->vport_lock);
+ 	init_completion(&ha->mbx_cmd_comp);
+ 	complete(&ha->mbx_cmd_comp);
+@@ -1713,7 +1709,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
  
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index c7388fa..833a642 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3237,6 +3237,7 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
- 	if (ha->flags.online) {
- 		ha->flags.online = 0;
- 		clear_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
-+		ha->qla_stats.total_isp_aborts++;
+ 	host->this_id = 255;
+ 	host->cmd_per_lun = 3;
+-	host->unique_id = ha->instance;
++	host->unique_id = host->host_no;
+ 	host->max_cmd_len = MAX_CMDSZ;
+ 	host->max_channel = MAX_BUSES - 1;
+ 	host->max_lun = MAX_LUNS;
+@@ -1734,8 +1730,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->flags.init_done = 1;
+ 	ha->flags.online = 1;
  
- 		qla_printk(KERN_INFO, ha,
- 		    "Performing ISP error recovery - ha= %p.\n", ha);
+-	num_hosts++;
+-
+ 	ret = scsi_add_host(host, &pdev->dev);
+ 	if (ret)
+ 		goto probe_failed;
 -- 
 1.5.6.2.292.ga9a3
 
