@@ -1,117 +1,162 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2 of 6] scsi: Command protection operation
-Date: Wed, 09 Jul 2008 22:48:04 -0400
-Message-ID: <f69b72563b8b6c1cdb6c.1215658084@sermon.lab.mkp.net>
+Subject: [PATCH 1 of 6] scsi: Host protection capabilities
+Date: Wed, 09 Jul 2008 22:48:03 -0400
+Message-ID: <19a3c7d93d9be92869ea.1215658083@sermon.lab.mkp.net>
 References: <patchbomb.1215658082@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:58721 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:58718 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326AbYGJCwB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753180AbYGJCwB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 9 Jul 2008 22:52:01 -0400
 In-Reply-To: <patchbomb.1215658082@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Controllers that support DMA of protection information must be told
-explicitly how to handle the I/O.  The controller has no knowledge of
-the protection capabilities of the target device so this information
-must be passed in the scsi_cmnd.
+Controllers that support protection information must indicate this to
+the SCSI midlayer so that the ULD can prepare scsi_cmnds accordingly.
 
-The protection operation tells the HBA whether to generate, strip or
-verify protection information.
+This patch implements a host mask and various types of protection:
 
-When a scsi_cmnd is reused for error handling, the protection
-operation must be cleared and saved while error handling is in
-progress.
+ - DIF Type 1-3 (between HBA and disk)
+ - DIX Type 0-3 (between OS and HBA)
+
+The patch also allows the HBA to set the guard type to something
+different than the T10-mandated CRC.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-3 files changed, 32 insertions(+)
-drivers/scsi/scsi_error.c |    3 +++
-include/scsi/scsi_cmnd.h  |   28 ++++++++++++++++++++++++++++
-include/scsi/scsi_eh.h    |    1 +
+2 files changed, 88 insertions(+)
+drivers/scsi/scsi_sysfs.c |    4 ++
+include/scsi/scsi_host.h  |   84 +++++++++++++++++++++++++++++++++++++++++++++
 
 
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -653,7 +653,9 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd 
- 	ses->sdb = scmd->sdb;
- 	ses->next_rq = scmd->request->next_rq;
- 	ses->result = scmd->result;
-+	ses->prot_op = scmd->prot_op;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -249,6 +249,8 @@ shost_rd_attr(can_queue, "%hd\n");
+ shost_rd_attr(can_queue, "%hd\n");
+ shost_rd_attr(sg_tablesize, "%hu\n");
+ shost_rd_attr(unchecked_isa_dma, "%d\n");
++shost_rd_attr(prot_capabilities, "%u\n");
++shost_rd_attr(prot_guard_type, "%hd\n");
+ shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
  
-+	scmd->prot_op = SCSI_PROT_NORMAL;
- 	scmd->cmnd = ses->eh_cmnd;
- 	memset(scmd->cmnd, 0, BLK_MAX_CDB);
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
-@@ -711,6 +713,7 @@ void scsi_eh_restore_cmnd(struct scsi_cm
- 	scmd->sdb = ses->sdb;
- 	scmd->request->next_rq = ses->next_rq;
- 	scmd->result = ses->result;
-+	scmd->prot_op = ses->prot_op;
- }
- EXPORT_SYMBOL(scsi_eh_restore_cmnd);
+ static struct attribute *scsi_sysfs_shost_attrs[] = {
+@@ -263,6 +265,8 @@ static struct attribute *scsi_sysfs_shos
+ 	&dev_attr_hstate.attr,
+ 	&dev_attr_supported_mode.attr,
+ 	&dev_attr_active_mode.attr,
++	&dev_attr_prot_capabilities.attr,
++	&dev_attr_prot_guard_type.attr,
+ 	NULL
+ };
  
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -77,6 +77,8 @@ struct scsi_cmnd {
- 	int retries;
- 	int allowed;
- 	int timeout_per_command;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -636,6 +636,10 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned int max_host_blocked;
+ 
++	/* Protection Information */
++	unsigned int prot_capabilities;
++	unsigned char prot_guard_type;
 +
-+	unsigned char prot_op;
- 
- 	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
-@@ -209,4 +211,30 @@ static inline int scsi_sg_copy_to_buffer
- 				 buf, buflen);
- }
+ 	/*
+ 	 * q used for scsi_tgt msgs, async events or any other requests that
+ 	 * need to be processed in userspace
+@@ -756,6 +760,86 @@ extern void scsi_free_host_dev(struct sc
+ extern void scsi_free_host_dev(struct scsi_device *);
+ extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
  
 +/*
-+ * The operations below are hints that tell the controller driver how
-+ * to handle I/Os with DIF or similar types of protection information.
++ * DIF defines the exchange of protection information between
++ * initiator and SBC block device.
++ *
++ * DIX defines the exchange of protection information between OS and
++ * initiator.
 + */
++enum scsi_host_prot_capabilities {
++	SHOST_DIF_TYPE1_PROTECTION = 1 << 0, /* T10 DIF Type 1 */
++	SHOST_DIF_TYPE2_PROTECTION = 1 << 1, /* T10 DIF Type 2 */
++	SHOST_DIF_TYPE3_PROTECTION = 1 << 2, /* T10 DIF Type 3 */
 +
-+enum scsi_prot_operations {
-+	/* Normal I/O */
-+	SCSI_PROT_NORMAL = 0,
-+
-+	/* OS-HBA: Protected, HBA-Target: Unprotected */
-+	SCSI_PROT_READ_INSERT,
-+	SCSI_PROT_WRITE_STRIP,
-+
-+	/* OS-HBA: Unprotected, HBA-Target: Protected */
-+	SCSI_PROT_READ_STRIP,
-+	SCSI_PROT_WRITE_INSERT,
-+
-+	/* OS-HBA: Protected, HBA-Target: Protected */
-+	SCSI_PROT_READ_PASS,
-+	SCSI_PROT_WRITE_PASS,
-+
-+	/* OS-HBA: Protected, HBA-Target: Protected, checksum conversion */
-+	SCSI_PROT_READ_CONVERT,
-+	SCSI_PROT_WRITE_CONVERT,
++	SHOST_DIX_TYPE0_PROTECTION = 1 << 3, /* DIX between OS and HBA only */
++	SHOST_DIX_TYPE1_PROTECTION = 1 << 4, /* DIX with DIF Type 1 */
++	SHOST_DIX_TYPE2_PROTECTION = 1 << 5, /* DIX with DIF Type 2 */
++	SHOST_DIX_TYPE3_PROTECTION = 1 << 6, /* DIX with DIF Type 3 */
 +};
 +
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -75,6 +75,7 @@ struct scsi_eh_save {
- 	int result;
- 	enum dma_data_direction data_direction;
- 	unsigned char cmd_len;
-+	unsigned char prot_op;
- 	unsigned char *cmnd;
- 	struct scsi_data_buffer sdb;
- 	struct request *next_rq;
++/*
++ * SCSI hosts which support the Data Integrity Extensions must
++ * indicate their capabilities by setting the prot_capabilities using
++ * this call.
++ */
++static inline void scsi_host_set_prot(struct Scsi_Host *shost, unsigned int mask)
++{
++	shost->prot_capabilities = mask;
++}
++
++static inline unsigned int scsi_host_get_prot(struct Scsi_Host *shost)
++{
++	return shost->prot_capabilities;
++}
++
++static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsigned int target_type)
++{
++	switch (target_type) {
++	case 1: return shost->prot_capabilities & SHOST_DIF_TYPE1_PROTECTION;
++	case 2: return shost->prot_capabilities & SHOST_DIF_TYPE2_PROTECTION;
++	case 3: return shost->prot_capabilities & SHOST_DIF_TYPE3_PROTECTION;
++	}
++
++	return 0;
++}
++
++static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsigned int target_type)
++{
++	switch (target_type) {
++	case 0: return shost->prot_capabilities & SHOST_DIX_TYPE0_PROTECTION;
++	case 1: return shost->prot_capabilities & SHOST_DIX_TYPE1_PROTECTION;
++	case 2: return shost->prot_capabilities & SHOST_DIX_TYPE2_PROTECTION;
++	case 3: return shost->prot_capabilities & SHOST_DIX_TYPE3_PROTECTION;
++	}
++
++	return 0;
++}
++
++/*
++ * All DIX-capable initiators must support the T10-mandated CRC
++ * checksum.  Controllers can optionally implement the IP checksum
++ * scheme which has much lower impact on system performance.  Note
++ * that the main rationale for the checksum is to match integrity
++ * metadata with data.  Detecting bit errors are a job for ECC memory
++ * and buses.
++ */
++
++enum scsi_host_guard_type {
++	SHOST_DIX_GUARD_CRC = 1 << 0,
++	SHOST_DIX_GUARD_IP  = 1 << 1,
++};
++
++static inline void scsi_host_set_guard(struct Scsi_Host *shost, unsigned char type)
++{
++	shost->prot_guard_type = type;
++}
++
++static inline unsigned char scsi_host_get_guard(struct Scsi_Host *shost)
++{
++	return shost->prot_guard_type;
++}
++
+ /* legacy interfaces */
+ extern struct Scsi_Host *scsi_register(struct scsi_host_template *, int);
+ extern void scsi_unregister(struct Scsi_Host *);
 
 
