@@ -1,42 +1,116 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Thu, 10 Jul 2008 09:02:36 -0700 (PDT)
-Message-ID: <20080710160236.66C60108048@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
+From: James.Smart@Emulex.Com
+Subject: RE: bidi support: FC transport layer...
+Date: Thu, 10 Jul 2008 12:10:22 -0400
+Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7EE27@xbl3.ma.emulex.com>
+References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54565 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752157AbYGJQCi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 12:02:38 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6AG2awT022885
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2008 09:02:37 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
+Received: from emulex.emulex.com ([138.239.112.1]:56316 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbYGJQK2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 12:10:28 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: seokmann.ju@qlogic.com, linux-scsi@vger.kernel.org
+Cc: andrew.vasquez@qlogic.com, James.Smart@Emulex.Com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
+Seokmann,
+
+Yes - the idea was that when SGIO v4 and BIDI support was finally in the
+kernel
+(and stable), we would utilize that interface for ELS and CT pass thru.
+We will
+be abusing the "scsi-ness" of this infrastructure, but should be ok.  We
+can use
+the "CDB" area to pass request control information, and the "Sense
+Data/Response"
+area to pass response control information, and the BIDI payloads for the
+actual
+write and read buffers.
+
+We have a few hurdles to cross to get there though:
+- We're going to create an sgio object - is the object 1:1 with
+sysfs/device objects ?
+  or do we allow the adapter/port to be the base object and we then pass
+addressing
+  information in the request control area.  I lean toward the latter, as
+there may
+  be things on the fabric the adapter/port does not want or does not
+know about, to
+  present to the OS. However, I know James is in the other camp - always
+have a node
+  so that the addressing is implicit in the node being talked to. But,
+in order to
+  do this for things that may not already be enumerated, we have to
+build in a 
+  funky "temporarily create object X" interface so you can then talk to
+it, then
+  tear it down.
+
+- We have to figure out a way to address asynchronous reception. It's
+easy to do
+  the request side via BIDI, but how about an ELS/CT request to the port
+? where
+  do we get the buffers ? is it DMA-based ? is there multiple buffer
+pools and
+  a traffic classification policy ? how do we associate traffic to the
+right 
+  user entity ? and so on.
+
+- Will the ideas of "abusing" the SGIO SCSI request work for generic FC
+traffic.
+  I believe we've got the primitives right when we could actually
+support FCP
+  traffic through this raw interface.
+
+- This will all need to be clean integrated into the transport, and we
+have
+  to consider the open-FCOE stack as well. 
+
+-- james s
 
 
-
-
-
-------- Comment #17 from kurk@shiftmail.org  2008-07-10 09:02 -------
-Prakash, Sathya wrote:
-> This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree. 
-> If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
->   
-Another good news: I confirm that yes, the problem is also fixed by the 
-patch linked above by Sathya, and in that case it is not needed to 
-specify option mpt_msi_enable=0 for mptbase. Any one of the two (patch 
-or option) is enough to fix the problem.
-It would be nice to see this patch in the final release of the 2.6.26 kernel
-Thank you
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Seokmann Ju
+> Sent: Thursday, July 10, 2008 8:56 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Andrew Vasquez
+> Subject: bidi support: FC transport layer...
+> 
+> Hi,
+> 
+> With starting to implement FC-CT/ELS support on the qla2xxx 
+> module, I  
+> would like to get some idea about the bidi-bidirectional.
+> As I understand that the bidi is packet transporting 
+> infra-structure,  
+> I think it could be good candidate for the FC specific FC-CT/ELS  
+> packet delivery in between the application and the individual 
+> devices  
+> given topology.
+> 
+> As I have limited understanding about the bid, here are my questions,
+> 0. would the bidi be a right choice for the FC-CT/ELS packet delivery?
+> 1. where should I get any kind of documents/briefs about the bidi?
+> 2. which part of code that I have to walk-through for further  
+> understanding about the bidi mechanism?
+> 3. with the bidi, what's the application interface should look like?
+> 
+> I expect to have some changes/additions in the FC transport layer in  
+> regards to the support and in general.
+> 
+> Any comment/guidance would be greatly helpful.
+> 
+> Thank you,
+> Seokmann
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
