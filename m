@@ -1,42 +1,50 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] SCSI: erase invalid data returned by device
-Date: Thu, 10 Jul 2008 16:35:06 -0700 (PDT)
-Message-ID: <alpine.LFD.1.10.0807101631370.2936@woody.linux-foundation.org>
-References: <Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org>  <Pine.LNX.4.64.0807101908390.1756@lancer.cnet.absolutedigital.net>  <alpine.LFD.1.10.0807101623070.2936@woody.linux-foundation.org>
- <1215732525.3353.102.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Thu, 10 Jul 2008 16:50:40 -0700 (PDT)
+Message-ID: <20080710235040.BFB0C10800B@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58265 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44644 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753456AbYGJXfu (ORCPT
+	by vger.kernel.org with ESMTP id S1754830AbYGJXun (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 19:35:50 -0400
-In-Reply-To: <1215732525.3353.102.camel@localhost.localdomain>
+	Thu, 10 Jul 2008 19:50:43 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6ANoem9023314
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2008 16:50:42 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Cal Peake <cp@absolutedigital.net>, Alan Stern <stern@rowland.harvard.edu>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
 
 
 
-On Thu, 10 Jul 2008, James Bottomley wrote:
-> 
-> It's one of the two patches in scsi-rc-fixes.  I'm just seeing if any
-> problems show up in linux-next.  I'm playing the usual game of trying to
-> judge how long I have left ... so I'm thinking on Monday ... is that
-> about right?
 
-I'm not planning on a -rc10, there's not any real justification for it. 
 
-Yes, we've had changes since -rc9, but apart from 1300+ lines of 
-documentation, the rest is all really small fixes (some for problems that 
-have been pending for a longish while - today has been a good day, for 
-example).
+------- Comment #18 from anonymous@kernel-bugs.osdl.org  2008-07-10 16:50 -------
+Reply-To: akpm@linux-foundation.org
 
-Lacking a -rc10 due to major changes (which quite frankly do not look 
-likely based on current regression lists or other activity), 2.6.26 would 
-probably happen over the weekend. So it would be better to get any trivial 
-changes in _now_, and at least give them a couple of days in -git.
+On Thu, 10 Jul 2008 16:52:01 +0200 kurk <kurk@shiftmail.org> wrote:
 
-		Linus
+> Prakash, Sathya wrote:
+> > This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree. 
+> > If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
+> >   
+> Another good news: I confirm that yes, the problem is also fixed by the 
+> patch linked above by Sathya, and in that case it is not needed to 
+> specify option mpt_msi_enable=0 for mptbase. Any one of the two (patch 
+> or option) is enough to fix the problem.
+> It would be nice to see this patch in the final release of the 2.6.26 kernel
+> Thank you
+
+James, shouldn't we put that into 2.6.26?
+
+That whole patch series looks pretty desirable actually..
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
