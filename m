@@ -1,42 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] lsscsi-0.21 released
-Date: Thu, 10 Jul 2008 00:54:27 -0400
-Message-ID: <48759603.9050803@torque.net>
-Reply-To: dougg@torque.net
+From: Jesper Krogh <jesper@krogh.cc>
+Subject: Re: Media autochanger driver changed behavior.
+Date: Thu, 10 Jul 2008 07:59:26 +0200
+Message-ID: <4875A53E.4030909@krogh.cc>
+References: <487524B9.7000203@krogh.cc>	 <1215640274.3444.42.camel@localhost.localdomain>	 <4875342B.5060702@krogh.cc> <1215641850.3444.52.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:35365 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbYGJEyp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 00:54:45 -0400
+Received: from 2605ds1-ynoe.1.fullrate.dk ([90.184.12.24]:38846 "EHLO
+	shrek.krogh.cc" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752233AbYGJF7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jul 2008 01:59:33 -0400
+In-Reply-To: <1215641850.3444.52.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, taggart@debian.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linux-Scsi <linux-scsi@vger.kernel.org>
 
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about SCSI devices and SCSI hosts. Both a
-compact format (default) which is one line per device and a
-"classic" format (like the output of 'cat /proc/scsi/scsi') are
-supported.
+James Bottomley wrote:
+> On Wed, 2008-07-09 at 23:56 +0200, Jesper Krogh wrote:
+>> James Bottomley wrote:
+>>> On Wed, 2008-07-09 at 22:51 +0200, Jesper Krogh wrote:
+>>>> Hi.
+>>>>
+>>>> Upgrading the OS from an quite old kernel to a newer (2.6.24) changed
+>>>> the behavior of the "ch" driver. Now it does a inventory to the changer
+>>>> on load. This command makes the barcode-reader scan the entire library
+>>>> at driver load time.
+>>> Do I take it from this that your old kernel simply didn't auto load the
+>>> ch driver?  or that something has changed in the way the driver now
+>>> works?
+>> It sure did load the driver and it worked just fine. It just didnt make 
+>> the library unit force scan the barcodes. (the library do that on bootup 
+>> by itself, but it can be forced with mtx over the changer device).
+>>
+>> mtx -f /dev/changer inventory => Force scans barcodes
+>> mtx -f /dev/changer status => Reads out the barcodes labels and slots
+>> from the changer device without forcing the library to scan.
+>> (note I dont know if it is library specific).
+> 
+> OK, so it's not the autoloading code which I thought it might be.
+> 
+> Which is the latest version of the kernel that works? ... that will at
+> least give me the set of changes to look at.
 
-Version 0.21 is available at
-http://www.torque.net/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for tarballs, rpm and deb packages.
-This is a maintenance release: lsscsi version 0.20 (released
-yesterday) was not sufficient to make lsscsi work on lk 2.6.26 .
+I cant give you that, since I havent testet all, but I'm quite sure 
+2.6.20 worked,
+completely sure that 2.6.15 was Ok.
 
-ChangeLog:
-Version 0.21 2008/7/10 [svn: r64]
-   - more sysfs scanning work needed for lk 2.6.26
+I know this is a large timespan, sorry.
 
-Version 0.20 2008/7/9 [svn: r43]
-   - Handle SCSI midlayer rework circa lk 2.6.25/26
-     - this fix needed if CONFIG_SYSFS_DEPRECATED_V2 is not
-       defined in the kernel build (lk 2.6.26)
-   ....
+-- 
+Jesper
 
-Doug Gilbert
