@@ -1,44 +1,58 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
- unbootable
-Date: Thu, 10 Jul 2008 16:44:24 -0700
-Message-ID: <20080710164424.2a0c3622.akpm@linux-foundation.org>
-References: <bug-11045-10286@http.bugzilla.kernel.org/>
-	<200807081051.33892.bjorn.helgaas@hp.com>
-	<1215537813.3214.22.camel@localhost.localdomain>
-	<200807081456.53460.bjorn.helgaas@hp.com>
-	<20080708144720.998a13f2.akpm@linux-foundation.org>
-	<1215554255.3214.48.camel@localhost.localdomain>
-	<20080709080814.GA801@lsil.com>
-	<48762211.5040301@shiftmail.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/18] qla2xxx: updates for 2.6.27 [8.02.01-k5].
+Date: Thu, 10 Jul 2008 16:54:58 -0700
+Message-ID: <20080710235458.GQ29099@plap4-2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52168 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751526AbYGJXul (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 19:50:41 -0400
-In-Reply-To: <48762211.5040301@shiftmail.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:45132 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755094AbYGJXzD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 19:55:03 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kurk <kurk@shiftmail.org>
-Cc: "Prakash, Sathya" <sathya.prakash@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bjorn Helgaas <bjorn.helgaas@hp.com>, "Support, Software" <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Thu, 10 Jul 2008 16:52:01 +0200 kurk <kurk@shiftmail.org> wrote:
+Here's the first round of updates/fixes for 2.6.27.
 
-> Prakash, Sathya wrote:
-> > This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree. 
-> > If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
-> >   
-> Another good news: I confirm that yes, the problem is also fixed by the 
-> patch linked above by Sathya, and in that case it is not needed to 
-> specify option mpt_msi_enable=0 for mptbase. Any one of the two (patch 
-> or option) is enough to fix the problem.
-> It would be nice to see this patch in the final release of the 2.6.26 kernel
-> Thank you
+ drivers/scsi/qla2xxx/qla_attr.c    |   69 +++++++++++++------
+ drivers/scsi/qla2xxx/qla_dbg.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |   12 ++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    5 +-
+ drivers/scsi/qla2xxx/qla_gs.c      |    6 ++
+ drivers/scsi/qla2xxx/qla_init.c    |  126 ++++++++++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_iocb.c    |   23 ++++---
+ drivers/scsi/qla2xxx/qla_isr.c     |    4 -
+ drivers/scsi/qla2xxx/qla_mbx.c     |   12 ++-
+ drivers/scsi/qla2xxx/qla_mid.c     |   15 ++---
+ drivers/scsi/qla2xxx/qla_os.c      |   86 +++++++++++++++---------
+ drivers/scsi/qla2xxx/qla_sup.c     |   48 +++++++++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 13 files changed, 261 insertions(+), 149 deletions(-)
 
-James, shouldn't we put that into 2.6.26?
+here's the commits:
 
-That whole patch series looks pretty desirable actually..
+- Correct locking during NVRAM manipulation.
+- Add dev_loss_tmo_callbk/terminate_rport_io callback support.
+- Set an rport's dev_loss_tmo value in a consistent manner.
+- Track total number of ISP aborts.
+- Add LIP count to FC-transport statistics.
+- Cleanup NPIV related functions
+- Allow the user the option of disabling iIDMA.
+- Retrieve board serial-number and description from VPD.
+- Swap enablement order of EFT and FCE.
+- Always aquire the parent's hardware_lock.
+- Correct fcport state-management during loss.
+- Correct vport management of MBA_PORT_UPDATE.
+- Correct rport/fcport visibility-state handling during loop-resync.
+- Skip FDMI registration on ISP21xx/22xx parts.
+- Correct overflow during dump-processing on large-memory ISP23xx parts.
+- Verify the RISC is not in ROM code if firmware-load is disabled.
+- Don't hardcode fw_transfer_size for ISP2[45]xx parts.
+- Update version number to 8.02.01-k5.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
