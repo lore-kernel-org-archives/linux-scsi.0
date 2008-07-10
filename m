@@ -1,27 +1,32 @@
-From: kurk <kurk@shiftmail.org>
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
-	unbootable
-Date: Thu, 10 Jul 2008 16:24:29 +0200
-Message-ID: <48761B9D.7050700@shiftmail.org>
-References: <bug-11045-10286@http.bugzilla.kernel.org/>
- <200807081051.33892.bjorn.helgaas@hp.com>
- <1215537813.3214.22.camel@localhost.localdomain>
- <200807081456.53460.bjorn.helgaas@hp.com>
- <20080708144720.998a13f2.akpm@linux-foundation.org>
- <1215554255.3214.48.camel@localhost.localdomain>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [PATCH] Mark i2o config broken on 64-bit platforms.
+Date: Thu, 10 Jul 2008 11:23:41 -0400
+Message-ID: <20080710152341.GG15464@devserv.devel.redhat.com>
+References: <20080710121350.52d854c7@the-village.bc.nu> <E1KGa1W-0004nG-Cw@n2o.xs4all.nl> <20080709113547.19235.15424.stgit@warthog.procyon.org.uk> <4561.1215612914@redhat.com> <20080709164929.799e4e05@the-village.bc.nu> <1215630402.18506.10.camel@localhost.localdomain> <27706.1215691933@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-reply-to: <1215554255.3214.48.camel@localhost.localdomain>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, "Support, Software" <support@lsi.com>, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsi.com>, "Prakash, Sathya" <sathya.prakash@lsi.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:46848 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751171AbYGJPY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jul 2008 11:24:27 -0400
+Content-Disposition: inline
+In-Reply-To: <27706.1215691933@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Miquel van Smoorenburg <miquels@cistron.nl>, akpm@linux-foundation.org, alan@redhat.com, Markus.Lidel@shadowconnect.com, vvs@sw.ru, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Bjorn,
-you were right, the serial dump was not complete because there was the 
-"quiet" option specified as kernel parameter.
-I just uploaded the full (non-quiet) serial dump as attachment on the 
-bugzilla web interface.
-Thank you
+On Thu, Jul 10, 2008 at 01:12:13PM +0100, David Howells wrote:
+> 
+> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> 
+> > -static inline int i2o_dma_alloc(struct device *dev, struct i2o_dma *addr,
+> > -				size_t len, gfp_t gfp_mask)
+> > ...
+> > +extern int i2o_dma_alloc(struct device *dev, struct i2o_dma *addr, size_t len);
+> 
+> But where is it now?  Have you forgotten to attach a new file?  i2o/memory.c
+> perhaps?
+
+Yes.. hold on a moment 8)
