@@ -1,42 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Cal Peake <cp@absolutedigital.net>
 Subject: Re: [PATCH] SCSI: erase invalid data returned by device
-Date: Thu, 10 Jul 2008 18:28:45 -0500
-Message-ID: <1215732525.3353.102.camel@localhost.localdomain>
+Date: Thu, 10 Jul 2008 19:15:00 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0807101908390.1756@lancer.cnet.absolutedigital.net>
 References: <Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org>
-	 <Pine.LNX.4.64.0807101908390.1756@lancer.cnet.absolutedigital.net>
-	 <alpine.LFD.1.10.0807101623070.2936@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41014 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752345AbYGJX2t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 19:28:49 -0400
-In-Reply-To: <alpine.LFD.1.10.0807101623070.2936@woody.linux-foundation.org>
+Received: from livid.absolutedigital.net ([66.92.46.173]:53339 "EHLO
+	mx2.absolutedigital.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755012AbYGJXcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 19:32:06 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Cal Peake <cp@absolutedigital.net>, Alan Stern <stern@rowland.harvard.edu>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, 2008-07-10 at 16:23 -0700, Linus Torvalds wrote:
+Hi,
+
+It looks like we're getting down to the last -rc; can this patch please 
+make it into main-line before 2.6.26 goes final?
+
+Thanks!
+
+
+On Tue, 24 Jun 2008, Alan Stern wrote:
+
+> This patch (as1108) fixes a problem that can occur with certain USB
+> mass-storage devices: They return invalid data together with a residue
+> indicating that the data should be ignored.  Rather than leave the
+> invalid data in a transfer buffer, where it can get misinterpreted,
+> the patch clears the invalid portion of the buffer.
 > 
-> On Thu, 10 Jul 2008, Cal Peake wrote:
-> > 
-> > It looks like we're getting down to the last -rc; can this patch please 
-> > make it into main-line before 2.6.26 goes final?
+> This solves a problem (wrong write-protect setting detected) reported
+> by Maciej Rutecki and Peter Teoh.
 > 
-> James said he was pushing it out to his scsi-rc-fixes tree, but I haven't 
-> seen a pull request.
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Tested-by: Peter Teoh <htmldeveloper@gmail.com>
 > 
-> But you're right, final is near. Maybe I should just merge it directly.
+> ---
+> 
+> Index: usb-2.6/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
+> +++ usb-2.6/drivers/scsi/scsi_lib.c
+> @@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
+>  	 */
+>  	blk_execute_rq(req->q, NULL, req, 1);
+>  
+> +	/*
+> +	 * Some devices (USB mass-storage in particular) may transfer
+> +	 * garbage data together with a residue indicating that the data
+> +	 * is invalid.  Prevent the garbage from being misinterpreted
+> +	 * and prevent security leaks by zeroing out the excess data.
+> +	 */
+> +	if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
+> +		memset(buffer + (bufflen - req->data_len), 0, req->data_len);
+> +
+>  	ret = req->errors;
+>   out:
+>  	blk_put_request(req);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-It's one of the two patches in scsi-rc-fixes.  I'm just seeing if any
-problems show up in linux-next.  I'm playing the usual game of trying to
-judge how long I have left ... so I'm thinking on Monday ... is that
-about right?
-
-James
-
+-- 
+Cal Peake
 
