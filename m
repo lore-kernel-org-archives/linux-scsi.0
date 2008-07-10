@@ -1,30 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: Fix for problems introduced by enabling MSI by default for MPT
-	SPI controllers
-Date: Thu, 10 Jul 2008 08:56:27 -0500
-Message-ID: <1215698187.3353.13.camel@localhost.localdomain>
-References: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72405@hkgmail01.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Thu, 10 Jul 2008 06:57:51 -0700 (PDT)
+Message-ID: <20080710135751.5191F108035@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53719 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755125AbYGJN4a (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37591 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753800AbYGJN5x (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 09:56:30 -0400
-In-Reply-To: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72405@hkgmail01.lsi.com>
+	Thu, 10 Jul 2008 09:57:53 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6ADvpSM011284
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2008 06:57:52 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2008-07-10 at 16:38 +0800, Prakash, Sathya wrote:
-> We have some known cases of MSI not working with FC and SPI controllers, that is the reason we don't want to enable the MSI for them by default.
-
-Is that because of motherboard problems or because of actual on board
-issues with the fusion controller?
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
 
 
+
+
+
+------- Comment #14 from kurk@shiftmail.org  2008-07-10 06:57 -------
+Created an attachment (id=16785)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=16785&action=view)
+Boot messages with quiet disabled, serial dump
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
