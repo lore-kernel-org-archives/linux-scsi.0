@@ -1,55 +1,51 @@
-From: Jesper Krogh <jesper@krogh.cc>
-Subject: Re: Media autochanger driver changed behavior.
-Date: Thu, 10 Jul 2008 07:59:26 +0200
-Message-ID: <4875A53E.4030909@krogh.cc>
-References: <487524B9.7000203@krogh.cc>	 <1215640274.3444.42.camel@localhost.localdomain>	 <4875342B.5060702@krogh.cc> <1215641850.3444.52.camel@localhost.localdomain>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: Fix for problems introduced by enabling MSI by default for MPT
+	SPI controllers
+Date: Thu, 10 Jul 2008 16:38:34 +0800
+Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72405@hkgmail01.lsi.com>
+References: <1215612637.3293.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 2605ds1-ynoe.1.fullrate.dk ([90.184.12.24]:38846 "EHLO
-	shrek.krogh.cc" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752233AbYGJF7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2008 01:59:33 -0400
-In-Reply-To: <1215641850.3444.52.camel@localhost.localdomain>
+Received: from mail0.lsil.com ([147.145.40.20]:48644 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751352AbYGJIjI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2008 04:39:08 -0400
+In-Reply-To: <1215612637.3293.1.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linux-Scsi <linux-scsi@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-James Bottomley wrote:
-> On Wed, 2008-07-09 at 23:56 +0200, Jesper Krogh wrote:
->> James Bottomley wrote:
->>> On Wed, 2008-07-09 at 22:51 +0200, Jesper Krogh wrote:
->>>> Hi.
->>>>
->>>> Upgrading the OS from an quite old kernel to a newer (2.6.24) changed
->>>> the behavior of the "ch" driver. Now it does a inventory to the changer
->>>> on load. This command makes the barcode-reader scan the entire library
->>>> at driver load time.
->>> Do I take it from this that your old kernel simply didn't auto load the
->>> ch driver?  or that something has changed in the way the driver now
->>> works?
->> It sure did load the driver and it worked just fine. It just didnt make 
->> the library unit force scan the barcodes. (the library do that on bootup 
->> by itself, but it can be forced with mtx over the changer device).
->>
->> mtx -f /dev/changer inventory => Force scans barcodes
->> mtx -f /dev/changer status => Reads out the barcodes labels and slots
->> from the changer device without forcing the library to scan.
->> (note I dont know if it is library specific).
-> 
-> OK, so it's not the autoloading code which I thought it might be.
-> 
-> Which is the latest version of the kernel that works? ... that will at
-> least give me the set of changes to look at.
+We have some known cases of MSI not working with FC and SPI controllers, that is the reason we don't want to enable the MSI for them by default.
+Thanks
+Sathya
 
-I cant give you that, since I havent testet all, but I'm quite sure 
-2.6.20 worked,
-completely sure that 2.6.15 was Ok.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
+Sent: Wednesday, July 09, 2008 7:41 PM
+To: Prakash, Sathya
+Cc: linux-scsi@vger.kernel.org; Moore, Eric
+Subject: Re: Fix for problems introduced by enabling MSI by default for MPT SPI controllers
 
-I know this is a large timespan, sorry.
+On Wed, 2008-07-09 at 14:54 +0800, Prakash, Sathya wrote:
+> Recently there are some issues posted in the list with regards to failure of booting or failure of driver loading  when the MSI is enabled by default for MPT SPI controllers.
+>
+> James has already provided the patch for fixing the panic.
+>
+> But the reason for IOC bring up failure is enabling the MSI by default for SPI controllers.  The issue is introduced by the following patch. Which is intended for enabling the MSI only for SAS controllers but enables MSI for SPI, FC and SAS controllers.
+> http://marc.info/?l=linux-scsi&m=120488594802569&w=4
+>
+> I have already posted another patch to rectify this so that MSI will not be enabled by default for SPI and FC controllers. The link for the correction patch is as below.
+> http://marc.info/?l=linux-scsi&m=121131228827682&w=4
 
--- 
-Jesper
+Is there an actual fault in the MSI controller on the SPI and FC fusion?
+I'm asking because usually we just follow the platform defaults unless there's a specific reason to blacklist the individual device.
 
+James
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
