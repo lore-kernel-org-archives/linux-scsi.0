@@ -1,74 +1,101 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH 2/2] SCSI Tape: Remove bogus memset
-Date: Fri, 11 Jul 2008 15:06:40 +0300 (EEST)
-Message-ID: <alpine.LNX.1.10.0807111505410.5811@kai.makisara.local>
-References: <alpine.LNX.1.10.0807111503540.5811@kai.makisara.local>
+From: Daniel Debonzi <debonzi@linux.vnet.ibm.com>
+Subject: scsi_host_alloc does not check for used shost->host_no
+Date: Fri, 11 Jul 2008 10:19:09 -0300
+Message-ID: <48775DCD.5010202@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323584-39659870-1215778003=:5811"
+Content-Type: multipart/mixed;
+ boundary="------------070201070008080009050003"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39000 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbYGKMQy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 08:16:54 -0400
-In-Reply-To: <alpine.LNX.1.10.0807111503540.5811@kai.makisara.local>
+Received: from igw1.br.ibm.com ([32.104.18.24]:47239 "EHLO igw1.br.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753054AbYGKNTR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2008 09:19:17 -0400
+Received: from mailhub1.br.ibm.com (mailhub1 [9.18.232.109])
+	by igw1.br.ibm.com (Postfix) with ESMTP id 08CFF32C128
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 09:52:07 -0300 (BRT)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
+	by mailhub1.br.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6BDJHgs1462510
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 10:19:19 -0300
+Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
+	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6BDJCvC026870
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 10:19:12 -0300
+Received: from [9.18.201.76] ([9.18.201.76])
+	by d24av02.br.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m6BDJBva026840
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 10:19:11 -0300
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This is a multi-part message in MIME format.
+--------------070201070008080009050003
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
---8323584-39659870-1215778003=:5811
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi everyone,
 
-Mike Christie noticed a bogus memset. It can be removed as dead code sinc=
-e the
-number of bytes in the driver buffer in fixed block mode is always a mult=
-iple
-of the tape block size.
+First of all, it is the first time I am sending something to one of the 
+kernel mail lists. So, if it is not the right place for that, if it is 
+not the only place for that, or I am doing something wrong, or wherever, 
+please, just let me know.
 
-Signed-off-by: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
----
-The patch is for 2.6.27 (against 2.6.26-rc9).
+After a good time investigating why modprobe/rmmod pata_pdc2027x lots of 
+times was driven to a kernel panic I found out that the problem was on 
+scsi host layer (if I can call it like this).
 
- drivers/scsi/st.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+In a brief explanation, every time a scsi host is allocated a shost 
+structure get an host_no attribute assigned an as far as I can see it 
+should be unique. The point is that this host_no value comes from a 
+variable that is incremented every time a scsi host is allocated and in 
+a first moment, we will not have two shost structs with the same 
+host_no. But for instance, when this always incremented variable 
+overflows, it does not work anymore and it can happen to have to 
+different shost structures with the same host_no.
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index ccaf1ac..1986ebc 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -630,7 +630,7 @@ static int cross_eof(struct scsi_tape * STp, int forw=
-ard)
- /* Flush the write buffer (never need to write if variable blocksize). *=
-/
- static int st_flush_write_buffer(struct scsi_tape * STp)
+I made a patch that solves the problem in a very simple way, but I don't 
+know how acceptable it is. I am sending it in attachment and any 
+feedback will be welcome.
+
+Thanks
+Daniel Debonzi
+
+--------------070201070008080009050003
+Content-Type: text/x-diff;
+ name="scsi_host_no_verify.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_host_no_verify.diff"
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index c6457bf..2e191f4 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -310,7 +310,7 @@ struct device_type scsi_host_type = {
+  **/
+ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
  {
--	int offset, transfer, blks;
-+	int transfer, blks;
- 	int result;
- 	unsigned char cmd[MAX_COMMAND_SIZE];
- 	struct st_request *SRpnt;
-@@ -643,14 +643,10 @@ static int st_flush_write_buffer(struct scsi_tape *=
- STp)
- 	result =3D 0;
- 	if (STp->dirty =3D=3D 1) {
-=20
--		offset =3D (STp->buffer)->buffer_bytes;
--		transfer =3D ((offset + STp->block_size - 1) /
--			    STp->block_size) * STp->block_size;
-+		transfer =3D STp->buffer->buffer_bytes;
-                 DEBC(printk(ST_DEB_MSG "%s: Flushing %d bytes.\n",
-                                tape_name(STp), transfer));
-=20
--		memset((STp->buffer)->b_data + offset, 0, transfer - offset);
--
- 		memset(cmd, 0, MAX_COMMAND_SIZE);
- 		cmd[0] =3D WRITE_6;
- 		cmd[1] =3D 1;
---=20
-1.5.4.3
+-	struct Scsi_Host *shost;
++	struct Scsi_Host *shost, *tmp_shost;
+ 	gfp_t gfp_mask = GFP_KERNEL;
+ 	int rval;
+ 
+@@ -332,7 +332,18 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 
+ 	mutex_init(&shost->scan_mutex);
+ 
++	/* 
++	 * Look if host_no is not been used somewhere else. Is is used to
++	 * happen when scsi_host_next_hn overflows and goes back to 0.
++	 */
++ host_no_already_exists:
+ 	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
++        if(!IS_ERR(tmp_shost = scsi_host_lookup(shost->host_no)))
++          {
++            scsi_host_put(tmp_shost);
++            goto host_no_already_exists;
++          }
++
+ 	shost->dma_channel = 0xff;
+ 
+ 	/* These three are default values which can be overridden */
 
---8323584-39659870-1215778003=:5811--
+--------------070201070008080009050003--
