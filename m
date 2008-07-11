@@ -1,59 +1,50 @@
-From: Peter Jones <pjones-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] make sr_mod report more accurate drive status
- after	closing the tray.
-Date: Fri, 11 Jul 2008 16:17:05 -0400
-Message-ID: <4877BFC1.6070703@redhat.com>
-References: <48767E08.50202@redhat.com>
-	<1215726719.3353.92.camel@localhost.localdomain>
-	<4877738B.4090100@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/3] scsi: fix shared tag map setup
+Date: Fri, 11 Jul 2008 15:58:26 -0500
+Message-ID: <4877C972.9070706@cs.wisc.edu>
+References: <1214721027-32426-1-git-send-email-michaelc@cs.wisc.edu> <1214721027-32426-2-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <fedora-kernel-list-bounces-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-In-Reply-To: <4877738B.4090100-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/fedora-kernel-list>,
-	<mailto:fedora-kernel-list-request-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/fedora-kernel-list>
-List-Post: <mailto:fedora-kernel-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Help: <mailto:fedora-kernel-list-request-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/fedora-kernel-list>,
-	<mailto:fedora-kernel-list-request-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org?subject=subscribe>
-Sender: fedora-kernel-list-bounces-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Errors-To: fedora-kernel-list-bounces-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: fedora-kernel-list <fedora-kernel-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49140 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753940AbYGKU6f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2008 16:58:35 -0400
+In-Reply-To: <1214721027-32426-2-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, promise_linux@promise.com, david.somayajulu@qlogic.com
 
-So, what's happening here is that the drive is reporting a sense of 
-2/4/1 ("logical unit is becoming ready") from sr_test_unit_ready(), and 
-then we ask for the media event notification before checking that result 
-at all.  The check_media_event_descriptor() call isn't getting a check 
-condition, but it's also reporting that the tray is closed and that 
-there's no media.  In actuality it doesn't yet know if there's media or 
-not, but there's no way to express that in the media event status field.
+michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> Currently qla4xxx and stex pass in their can_queue values into
+> scsi_activate_tcq because they wanted the tag map that large.
+> The problem with this is that it ends up also setting the queue
+> depth to that large value. All we want to do this in this case
+> is set the device queue depth and the other device settings.
+> We do not need to touch the tag map sizing because the drivers
+> had setup that map according to their can_queue limits when the
+> shared map was created.
+> 
+> The scsi mid layer in request_fn will then handle the case where we
+> have more requests than available tags when it checks the host
+> queue ready function.
+> 
 
-My current thought is that if it told us the device isn't yet ready, we 
-should return that immediately, since there's nothing that'll tell us 
-any more data than that reliably:
+Actually, I think this code needs one more fix to scsi_request_fn.
 
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index ae87d08..25f2008 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -309,6 +309,11 @@ int sr_drive_status(struct cdrom_device_info *cdi, 
-int slot)
-         if (0 == sr_test_unit_ready(cd->device, &sshdr))
-                 return CDS_DISC_OK;
+If we hit this in scsi_request_fn:
 
-+       /* SK/ASC/ASCQ of 2/4/1 means "unit is becoming ready" */
-+       if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
-+                       && sshdr.asc == 0x04 && sshdr.ascq == 0x01)
-+               return CDS_DRIVE_NOT_READY;
-+
-         if (!cdrom_get_media_event(cdi, &med)) {
-                 if (med.media_present)
-                         return CDS_DISC_OK;
+if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
+	blkdev_dequeue_request(req);
 
+blk_queue_tagged would be 1. blk_queue_start_tag could return 1 if we 
+have too many commands. And then we will accidentally dequeue the 
+request, and when we get to the host queue ready function, we could have 
+raced with a completion which would have decreased the host_busy and so 
+the command will be queued to the driver without a tag.
 
--- 
-   Peter
+I will reroll these patches and add a fix to request_fn for this other 
+problem and resend it all in one patchset.
