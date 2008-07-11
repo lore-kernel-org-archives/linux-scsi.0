@@ -1,53 +1,82 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [RFC, PATCH] SCSI tape: MTIOCSENSE ioctl to return the sense
- data from errors
-Date: Fri, 11 Jul 2008 11:07:10 -0700
-Message-ID: <20080711110710.8728881e.randy.dunlap@oracle.com>
-References: <alpine.LNX.1.10.0807111643250.5811@kai.makisara.local>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH] fc_transport: remove explicit calls to
+	scsi_target_unblock() from terminate_rport_io() callbacks.
+Date: Fri, 11 Jul 2008 11:17:48 -0700
+Message-ID: <20080711181748.GC55164@plap4-2.local>
+References: <20080710235458.GQ29099@plap4-2.local> <1215734163-40825-2-git-send-email-andrew.vasquez@qlogic.com> <48779934.8020000@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:42098 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402AbYGKSHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 14:07:38 -0400
-In-Reply-To: <alpine.LNX.1.10.0807111643250.5811@kai.makisara.local>
+Received: from avexch1.qlogic.com ([198.70.193.115]:38710 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbYGKSRu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 14:17:50 -0400
+Content-Disposition: inline
+In-Reply-To: <48779934.8020000@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, Arne Wiebalck <arne.wiebalck@cern.ch>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Seokmann Ju <seokmann.ju@qlogic.com>, James Smart <james.smart@emulex.com>, Brian King <brking@linux.vnet.ibm.com>
 
-On Fri, 11 Jul 2008 16:57:00 +0300 (EEST) Kai Makisara wrote:
+Recent work in the transport
+(http://marc.info/?l=linux-scsi&m=121263015008613&w=2) centralizes an
+'unblock' operation on an rports scsi-target after the
+terminate_rport_io() callback.
 
-> -----------------------8<-----------------------------------------------
-> diff --git a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
-> index 4075260..7847655 100644
-> --- a/Documentation/scsi/st.txt
-> +++ b/Documentation/scsi/st.txt
-> @@ -457,6 +459,17 @@ MTIOCGET Returns some status information.
->  	is set if there is no tape in the drive. GMT_EOD means either
->  	end of recorded data or end of tape. GMT_EOT means end of tape.
->  
-> +The following ioctl uses the structure mtsense to return error information:
-> +MTIOCSENSE returns the sense data from the previous "interesting" SCSI command
-> +	resulting in CHECK CONDITION. Sense data is not saved from a command
-> +	if is used only for supporting the implementation of the tape
-
-	if is used ??  Confusing.  Maybe "if it is used".
-
-> +	semantics and the sense data from that command would overwrite the
-> +	sense data from the error interesting to the user. For instance, error
-> +	from backspacing over a block by st after a read error does not
-> +	overwrite the sense data from the read. The field 'latest' tells if
-> +	the sense data is from the previous SCSI command sent to the device
-> +	(all SCSI commands are counted). The cmd field is the command byte
-> +	from the SCSI command resulting in the sense data.
->  
->  MISCELLANEOUS COMPILE OPTIONS
->  
-
+Cc: James Smart <james.smart@emulex.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
-~Randy
-Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
-http://linuxplumbersconf.org/
+	On Fri, 11 Jul 2008, Mike Christie wrote:
+
+	> Andrew Vasquez wrote:
+	>> +
+	>> +static void
+	>> +qla2x00_terminate_rport_io(struct fc_rport *rport)
+	>> +{
+	>> +	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
+	>> +
+	>> +	qla2x00_abort_fcport_cmds(fcport);
+	>> +	scsi_target_unblock(&rport->dev);
+	>
+	> I sent a patch so the unblock is always done by the fc class.
+	> http://marc.info/?l=linux-scsi&m=121263015008613&w=2
+	>
+	> Could we do that instead so qlogic and emulex and all other drivers behave 
+	> the same?
+
+	And here's a patch to drop the explicit calls to scsi_target_unblock()
+	from current fc-tranport consumers with a terminate_rport_io()
+	callback.
+
+	BTW: I don't see the patchset in scsi-misc-2.6.git.
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index eb702b9..4c6c6a9 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2002,7 +2002,6 @@ static void ibmvfc_terminate_rport_io(struct fc_rport *rport)
+ 	} else
+ 		ibmvfc_issue_fc_host_lip(shost);
+ 
+-	scsi_target_unblock(&rport->dev);
+ 	LEAVE;
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index a98d11b..f6f50a7 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -89,12 +89,6 @@ lpfc_terminate_rport_io(struct fc_rport *rport)
+ 			ndlp->nlp_sid, 0, LPFC_CTX_TGT);
+ 	}
+ 
+-	/*
+-	 * A device is normally blocked for rediscovery and unblocked when
+-	 * devloss timeout happens.  In case a vport is removed or driver
+-	 * unloaded before devloss timeout happens, we need to unblock here.
+-	 */
+-	scsi_target_unblock(&rport->dev);
+ 	return;
+ }
+ 
