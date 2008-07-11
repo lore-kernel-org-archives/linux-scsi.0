@@ -1,37 +1,22 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
-Date: Thu, 10 Jul 2008 21:35:10 -0700 (PDT)
-Message-ID: <20080711043510.4130E108038@picon.linux-foundation.org>
-References: <bug-11045-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38738 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751462AbYGKEfo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jul 2008 00:35:44 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6B4ZANj004321
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2008 21:35:11 -0700
-In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
+	unbootable
+Date: Fri, 11 Jul 2008 12:33:53 +0800
+Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72503@hkgmail01.lsi.com>
+References: <1215736925.3353.111.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1215736925.3353.111.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: kurk <kurk@shiftmail.org>, Bjorn Helgaas <bjorn.helgaas@hp.com>, "Support, Software" <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11045
-
-
-
-
-
-------- Comment #20 from anonymous@kernel-bugs.osdl.org  2008-07-10 21:35 -------
-Reply-To: Sathya.Prakash@lsi.com
-
-I did a recheck on this, except FC 919X and 929X boards, everything else should
-work fine with MSI. Hence the SPI boards (1030) should work with MSI and the
-problem might be with the motherboard.
-But we would like to keep the MSI disabled for SPI controllers since we have
-not tested internally with MSI and FC enabled by default for them in our recent
-drivers.
+I did a recheck on this, except FC 919X and 929X boards, everything else should work fine with MSI. Hence the SPI boards (1030) should work with MSI and the problem might be with the motherboard.
+But we would like to keep the MSI disabled for SPI controllers since we have not tested internally with MSI and FC enabled by default for them in our recent drivers.
 So I would like to request to pull in the patch to disable MSI for SPI & FC.
 -Thanks
 Sathya
@@ -40,11 +25,8 @@ Sathya
 From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
 Sent: Friday, July 11, 2008 6:12 AM
 To: Andrew Morton
-Cc: kurk; Prakash, Sathya; Bjorn Helgaas; Support, Software;
-linux-scsi@vger.kernel.org; linux-acpi@vger.kernel.org;
-bugme-daemon@bugzilla.kernel.org; Moore, Eric
-Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
-unbootable
+Cc: kurk; Prakash, Sathya; Bjorn Helgaas; Support, Software; linux-scsi@vger.kernel.org; linux-acpi@vger.kernel.org; bugme-daemon@bugzilla.kernel.org; Moore, Eric
+Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7 unbootable
 
 On Thu, 2008-07-10 at 16:44 -0700, Andrew Morton wrote:
 > On Thu, 10 Jul 2008 16:52:01 +0200 kurk <kurk@shiftmail.org> wrote:
@@ -62,27 +44,17 @@ On Thu, 2008-07-10 at 16:44 -0700, Andrew Morton wrote:
 >
 > James, shouldn't we put that into 2.6.26?
 
-I'm still not sure ... if it's a fault on the board with MSI, then yes, we need
-it in ... although the form would then be wrong because we probably should be
-identifying the faulty parts and blacklisting them.
+I'm still not sure ... if it's a fault on the board with MSI, then yes, we need it in ... although the form would then be wrong because we probably should be identifying the faulty parts and blacklisting them.
 
-If it's actually a fault on the motherboard with MSI, then no, this isn't the
-patch series that should be in we need the motherboard strings to blacklist it.
+If it's actually a fault on the motherboard with MSI, then no, this isn't the patch series that should be in we need the motherboard strings to blacklist it.
 
-Unfortunately, I can't seem to get an answer out of LSI on this question, It
-looks like the commit will cherry pick easily enough ...
+Unfortunately, I can't seem to get an answer out of LSI on this question, It looks like the commit will cherry pick easily enough ...
 although now I look at it the parameter's description is wrong.
 
 > That whole patch series looks pretty desirable actually..
 
-Well, it was billed as a driver update ... and it has a lot more than just
-trivial changes, so on an eve of release quality issue, I'd tend to say that
-wouldn't be a good idea.
+Well, it was billed as a driver update ... and it has a lot more than just trivial changes, so on an eve of release quality issue, I'd tend to say that wouldn't be a good idea.
 
 James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
