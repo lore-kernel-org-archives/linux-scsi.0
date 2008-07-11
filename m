@@ -1,18 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
-	unbootable
-Date: Fri, 11 Jul 2008 09:05:34 -0500
-Message-ID: <1215785134.3272.8.camel@localhost.localdomain>
-References: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72503@hkgmail01.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <6A4D764DC1BDE14495DA8DC60A3D69531E95D72503@hkgmail01.lsi.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, kurk <kurk@shiftmail.org>, Bjorn Helgaas <bjorn.helgaas@hp.com>, "Support, Software" <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Fri, 11 Jul 2008 07:06:05 -0700 (PDT)
+Message-ID: <20080711140605.4A5CA108045@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56540 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752344AbYGKOG0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2008 10:06:26 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6BE65E1007866
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 07:06:06 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
+
+
+
+
+
+------- Comment #21 from anonymous@kernel-bugs.osdl.org  2008-07-11 07:06 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Fri, 2008-07-11 at 12:33 +0800, Prakash, Sathya wrote:
 > I did a recheck on this, except FC 919X and 929X boards, everything
@@ -43,3 +55,7 @@ get this all over again with them and a different driver.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
