@@ -1,301 +1,177 @@
-From: "Alessandro Suardi" <alessandro.suardi@gmail.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after media change and delay
-Date: Fri, 11 Jul 2008 23:25:50 +0200
-Message-ID: <5a4c581d0807111425r72e39528w841e24a9b956c245@mail.gmail.com>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
-	 <Pine.LNX.4.64.0806131932350.30730@vixen.sonytel.be>
-	 <5a4c581d0806180147qf8fc731y527c79bfb73401b2@mail.gmail.com>
-	 <Pine.LNX.4.64.0806181156460.13297@vixen.sonytel.be>
-	 <5a4c581d0806180515g5f24e9d9m85369bfa0a5f2228@mail.gmail.com>
-	 <5a4c581d0806210718m77be63c9l444d8d7d7a5266bd@mail.gmail.com>
-	 <Pine.LNX.4.64.0806221018220.9736@vixen.sonytel.be>
-	 <5a4c581d0806220614seab6598ufa798d8642295495@mail.gmail.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [RFC PATCH] fc_transport: Add an API to allow an LLD to create
+	vports.
+Date: Fri, 11 Jul 2008 15:08:19 -0700
+Message-ID: <20080711220819.GE56545@plap4-2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:16260 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487AbYGKVZv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 17:25:51 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so4559542rvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 14:25:50 -0700 (PDT)
-In-Reply-To: <5a4c581d0806220614seab6598ufa798d8642295495@mail.gmail.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:15956 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755934AbYGKWI3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 18:08:29 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: James Smart <james.smart@emulex.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Sun, Jun 22, 2008 at 3:14 PM, Alessandro Suardi
-<alessandro.suardi@gmail.com> wrote:
-> On Sun, Jun 22, 2008 at 10:18 AM, Geert Uytterhoeven
-> <Geert.Uytterhoeven@sonycom.com> wrote:
->> On Sat, 21 Jun 2008, Alessandro Suardi wrote:
->>> On Wed, Jun 18, 2008 at 2:15 PM, Alessandro Suardi
->>> <alessandro.suardi@gmail.com> wrote:
->>> > On Wed, Jun 18, 2008 at 1:13 PM, Geert Uytterhoeven
->>> > <Geert.Uytterhoeven@sonycom.com> wrote:
->>> >> On Wed, 18 Jun 2008, Alessandro Suardi wrote:
->>> >>> On Fri, Jun 13, 2008 at 7:33 PM, Geert Uytterhoeven
->>> >>> <Geert.Uytterhoeven@sonycom.com> wrote:
->>> >>> > On Fri, 6 Jun 2008, Geert Uytterhoeven wrote:
->>> >>> >> When mounting a CD/DVD more than 30 seconds after inserting it, and reading
->>> >>> >> from it, we get:
->>> >>> >
->>> >>> > Apparently the fix didn't make it to all the CCed lists...
->>> >>> >
->>> >>> > http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-rc-fixes-2.6.git;a=commitdiff_plain;h=d1daeabf0da5bfa1943272ce508e2ba785730bf0
->>> >>>
->>> >>> Oh, that's in mainline ? I still have the problem of having to
->>> >>
->>> >> Not yet, it's in the scsi-rc-fixes-2.6 tree.
->>> >>
->>> >>>  insert DVD / try accessing it and get errors / eject / re-insert
->>> >>>  and then it magically works... the messages have changed
->>> >>>  from what they were as reported here
->>> >>>
->>> >>> http://bugzilla.kernel.org/show_bug.cgi?id=10116
->>> >>>
->>> >>>  (see comments #8 and #9) to these ones, in 2.6.26-rc6-git4:
->>> >>>
->>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Result:
->>> >>> hostbyte=0x00 driverbyte=0x08
->>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Sense Key : 0x3 [current]
->>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] ASC=0x11 ASCQ=0x0
->>> >>> Jun 17 22:38:43 sandman kernel: end_request: I/O error, dev sr0, sector 232
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 29
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 30
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 31
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 32
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 33
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 34
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 35
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 36
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 37
->>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 38
->>> >>>
->>> >>> here I eject and reinsert the disc, and:
->>> >>>
->>> >>> Jun 17 22:39:10 sandman kernel: UDF-fs: No VRS found
->>> >>>
->>> >>>  lo and behold, no problem.
->>> >>>
->>> >>> This does not, alas, happen every time. It might be at the first
->>> >>>  DVD access after booting the laptop, but I haven't investigated
->>> >>>  in this detail yet.
->>> >>
->>> >> Does /sys/block/sr0/size reflect the correct size of the DVD?
->>> >>
->>> >> Did you try applying the patch?
->>> >
->>> > ATM I'm away from home (as usual), I'll post back when
->>> >  I have the info you asked for and tried applying the
->>> >  above patch. Thanks !
->>>
->>> Sigh. I haven't been able to reproduce the problem once since
->>>  I posted this. Will keep trying...
->>
->> Perhaps because the fix is now in mainline?
->
-> Eh, that may be a reason :)
->
-> I'm indeed tracking mainline and haven't reproduced with
->  at least six different discs in -rc7.
+There's already a fc_vport_termintate() call exported by
+the transport.  This patch adds a symmetric call to the API to allow
+an NPIV-capable LLD to instantiate vports sans user intervention.
 
-Just had the symptoms again in -rc9-git9 :(
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
 
-Relevant part of dmesg:
+This is mostly just a shuffling and reuse of existing code.  Given we
+already use an *_identifiers interface to create rports, the vport
+creation API continues to use the previously internal
+fc_vport_identifiers structure to define a vport object.
 
-<mount -r /cdrom, access file with gmplayer>
+The impetus for this work is that future QLogic cards will have a
+region set aside in flash-memory so that adminstrators may define
+pre-set NPIVs which should be created during OS load.
 
-SELinux: initialized (dev fuse, type fuse), uses genfs_contexts
-ISO 9660 Extensions: Microsoft Joliet Level 3
-ISO 9660 Extensions: RRIP_1991A
-SELinux: initialized (dev sr0, type iso9660), uses genfs_contexts
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-Buffer I/O error on device sr0, logical block 2110628
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-Buffer I/O error on device sr0, logical block 2110629
-attempt to access beyond end of device
-sr0: rw=0, want=8442524, limit=2097151
-Buffer I/O error on device sr0, logical block 2110630
-attempt to access beyond end of device
-sr0: rw=0, want=8442528, limit=2097151
-Buffer I/O error on device sr0, logical block 2110631
-attempt to access beyond end of device
-sr0: rw=0, want=8442532, limit=2097151
-Buffer I/O error on device sr0, logical block 2110632
-attempt to access beyond end of device
-sr0: rw=0, want=8442536, limit=2097151
-Buffer I/O error on device sr0, logical block 2110633
-attempt to access beyond end of device
-sr0: rw=0, want=8442540, limit=2097151
-Buffer I/O error on device sr0, logical block 2110634
-attempt to access beyond end of device
-sr0: rw=0, want=8442544, limit=2097151
-Buffer I/O error on device sr0, logical block 2110635
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-Buffer I/O error on device sr0, logical block 2110628
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-Buffer I/O error on device sr0, logical block 2110629
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442516, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=8442520, limit=2097151
-
-<here I eject, reinsert and remount the DVD>
-
-UDF-fs: No VRS found
-ISO 9660 Extensions: Microsoft Joliet Level 3
-ISO 9660 Extensions: RRIP_1991A
-SELinux: initialized (dev sr0, type iso9660), uses genfs_contexts
-
-<now works fine>
-
-Have to say that I didn't wait N seconds in the beginning,
- but just rather
-
- - plop cdrom in
- - close tray
- - mount -r /cdrom while disc is still spinning
-
-Unfortunately I only have this after eject/remount:
-
-[asuardi@sandman ~]$ cat /sys/block/sr0/size
-9133120
-
-Final note, as I said earlier in the thread, this is definitely
- an occurrence of first device access after boot - as I just
- rebooted:
-
-[asuardi@sandman ~]$ uptime
- 23:25:28 up 17 min,  6 users,  load average: 0.09, 0.18, 0.15
-[asuardi@sandman ~]$ uname -a
-Linux sandman 2.6.26-rc9-git9 #7 Fri Jul 11 21:59:15 CEST 2008 i686
-i686 i386 GNU/Linux
-
-Thanks,
-
---alessandro
-
- "Give me love / Or give me hate
- Give me anything that's not just ok"
-
- (Sophia, 'Weightless')
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 5fd64e7..37f6449 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -40,31 +40,7 @@
+ 
+ static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
+ static void fc_vport_sched_delete(struct work_struct *work);
+-
+-/*
+- * This is a temporary carrier for creating a vport. It will eventually
+- * be replaced  by a real message definition for sgio or netlink.
+- *
+- * fc_vport_identifiers: This set of data contains all elements
+- * to uniquely identify and instantiate a FC virtual port.
+- *
+- * Notes:
+- *   symbolic_name: The driver is to append the symbolic_name string data
+- *      to the symbolic_node_name data that it generates by default.
+- *      the resulting combination should then be registered with the switch.
+- *      It is expected that things like Xen may stuff a VM title into
+- *      this field.
+- */
+-struct fc_vport_identifiers {
+-	u64 node_name;
+-	u64 port_name;
+-	u32 roles;
+-	bool disable;
+-	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
+-	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
+-};
+-
+-static int fc_vport_create(struct Scsi_Host *shost, int channel,
++static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+ 	struct device *pdev, struct fc_vport_identifiers  *ids,
+ 	struct fc_vport **vport);
+ 
+@@ -1759,7 +1735,7 @@ store_fc_host_vport_create(struct device *dev, struct device_attribute *attr,
+ 	vid.disable = false;		/* always enabled */
+ 
+ 	/* we only allow support on Channel 0 !!! */
+-	stat = fc_vport_create(shost, 0, &shost->shost_gendev, &vid, &vport);
++	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, &vid, &vport);
+ 	return stat ? stat : count;
+ }
+ static FC_DEVICE_ATTR(host, vport_create, S_IWUSR, NULL,
+@@ -3102,7 +3078,7 @@ fc_scsi_scan_rport(struct work_struct *work)
+ 
+ 
+ /**
+- * fc_vport_create - allocates and creates a FC virtual port.
++ * fc_vport_setup - allocates and creates a FC virtual port.
+  * @shost:	scsi host the virtual port is connected to.
+  * @channel:	Channel on shost port connected to.
+  * @pdev:	parent device for vport
+@@ -3117,7 +3093,7 @@ fc_scsi_scan_rport(struct work_struct *work)
+  *	This routine assumes no locks are held on entry.
+  */
+ static int
+-fc_vport_create(struct Scsi_Host *shost, int channel, struct device *pdev,
++fc_vport_setup(struct Scsi_Host *shost, int channel, struct device *pdev,
+ 	struct fc_vport_identifiers  *ids, struct fc_vport **ret_vport)
+ {
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+@@ -3230,6 +3206,27 @@ delete_vport:
+ 	return error;
+ }
+ 
++/**
++ * fc_vport_create - Admin App or LLDD requests creation of a vport
++ * @shost:	scsi host the virtual port is connected to.
++ * @ids:	The world wide names, FC4 port roles, etc for
++ *              the virtual port.
++ *
++ * Notes:
++ *	This routine assumes no locks are held on entry.
++ */
++struct fc_vport *
++fc_vport_create(struct Scsi_Host *shost, struct fc_vport_identifiers *ids)
++{
++	int stat;
++	struct fc_vport *vport;
++
++	/* We only create vports here. */
++	ids->vport_type = FC_PORTTYPE_NPIV;
++	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, ids, &vport);
++	return stat ? NULL : vport;
++}
++EXPORT_SYMBOL(fc_vport_create);
+ 
+ /**
+  * fc_vport_terminate - Admin App or LLDD requests termination of a vport
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 06f72ba..f705d25 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -167,6 +167,29 @@ enum fc_tgtid_binding_type  {
+ struct device_attribute dev_attr_vport_##_name = 	\
+ 	__ATTR(_name,_mode,_show,_store)
+ 
++/*
++ * This is a temporary carrier for creating a vport. It will eventually
++ * be replaced  by a real message definition for sgio or netlink.
++ *
++ * fc_vport_identifiers: This set of data contains all elements
++ * to uniquely identify and instantiate a FC virtual port.
++ *
++ * Notes:
++ *   symbolic_name: The driver is to append the symbolic_name string data
++ *      to the symbolic_node_name data that it generates by default.
++ *      the resulting combination should then be registered with the switch.
++ *      It is expected that things like Xen may stuff a VM title into
++ *      this field.
++ */
++#define FC_VPORT_SYMBOLIC_NAMELEN		64
++struct fc_vport_identifiers {
++	u64 node_name;
++	u64 port_name;
++	u32 roles;
++	bool disable;
++	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
++	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
++};
+ 
+ /*
+  * FC Virtual Port Attributes
+@@ -197,7 +220,6 @@ struct device_attribute dev_attr_vport_##_name = 	\
+  * managed by the transport w/o driver interaction.
+  */
+ 
+-#define FC_VPORT_SYMBOLIC_NAMELEN		64
+ struct fc_vport {
+ 	/* Fixed Attributes */
+ 
+@@ -732,6 +754,8 @@ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 	 *   be sure to read the Vendor Type and ID formatting requirements
+ 	 *   specified in scsi_netlink.h
+ 	 */
++struct fc_vport *fc_vport_create(struct Scsi_Host *shost,
++		struct fc_vport_identifiers *);
+ int fc_vport_terminate(struct fc_vport *vport);
+ 
+ #endif /* SCSI_TRANSPORT_FC_H */
