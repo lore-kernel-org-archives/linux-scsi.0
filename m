@@ -1,75 +1,88 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC
-	controllers
-Date: Fri, 11 Jul 2008 12:26:37 +0800
-Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95D724FD@hkgmail01.lsi.com>
-References: <1215745855.3353.118.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11045] Bug in MPT Fusion 2.6.26-rc7 unbootable
+Date: Thu, 10 Jul 2008 21:35:10 -0700 (PDT)
+Message-ID: <20080711043510.4130E108038@picon.linux-foundation.org>
+References: <bug-11045-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33009 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261AbYGKE0s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 00:26:48 -0400
-In-Reply-To: <1215745855.3353.118.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38738 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751462AbYGKEfo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2008 00:35:44 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6B4ZANj004321
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2008 21:35:11 -0700
+In-Reply-To: <bug-11045-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-James,
-This looks better than mine, Shall I post the new patch with your suggestion or did you include it already?
-Thanks
+http://bugzilla.kernel.org/show_bug.cgi?id=11045
+
+
+
+
+
+------- Comment #20 from anonymous@kernel-bugs.osdl.org  2008-07-10 21:35 -------
+Reply-To: Sathya.Prakash@lsi.com
+
+I did a recheck on this, except FC 919X and 929X boards, everything else should
+work fine with MSI. Hence the SPI boards (1030) should work with MSI and the
+problem might be with the motherboard.
+But we would like to keep the MSI disabled for SPI controllers since we have
+not tested internally with MSI and FC enabled by default for them in our recent
+drivers.
+So I would like to request to pull in the patch to disable MSI for SPI & FC.
+-Thanks
 Sathya
 
 -----Original Message-----
 From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-Sent: Friday, July 11, 2008 8:41 AM
-To: Prakash, Sathya
-Cc: linux-scsi@vger.kernel.org; Moore, Eric
-Subject: Re: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC controllers
+Sent: Friday, July 11, 2008 6:12 AM
+To: Andrew Morton
+Cc: kurk; Prakash, Sathya; Bjorn Helgaas; Support, Software;
+linux-scsi@vger.kernel.org; linux-acpi@vger.kernel.org;
+bugme-daemon@bugzilla.kernel.org; Moore, Eric
+Subject: Re: [Bugme-new] [Bug 11045] New: Bug in MPT Fusion 2.6.26-rc7
+unbootable
 
-On Wed, 2008-05-21 at 00:57 +0530, Prakash, Sathya wrote:
-> The patch submitted to enable the MSI by default for SAS controllers
-> sets the MSI even for SPI and FC controllers due to a coding error
-> This patch fixes that.
+On Thu, 2008-07-10 at 16:44 -0700, Andrew Morton wrote:
+> On Thu, 10 Jul 2008 16:52:01 +0200 kurk <kurk@shiftmail.org> wrote:
+>
+> > Prakash, Sathya wrote:
+> > > This may  be a problem due to enabling MSI for SPI controllers. I have posted another message in the list providing the correction patch which is already in scsi-misc tree.
+> > > If the problem is gone with changing the module parameter mpt_msi_enable=0 or by applying the patch http://marc.info/?l=linux-scsi&m=121131228827682&w=4 then it might be due to MSI enabling.
+> > >
+> > Another good news: I confirm that yes, the problem is also fixed by
+> > the patch linked above by Sathya, and in that case it is not needed
+> > to specify option mpt_msi_enable=0 for mptbase. Any one of the two
+> > (patch or option) is enough to fix the problem.
+> > It would be nice to see this patch in the final release of the
+> > 2.6.26 kernel Thank you
+>
+> James, shouldn't we put that into 2.6.26?
 
-Actually, now I look at this patch, it's not complete.  There's a missed
+I'm still not sure ... if it's a fault on the board with MSI, then yes, we need
+it in ... although the form would then be wrong because we probably should be
+identifying the faulty parts and blacklisting them.
 
-        if (ioc->msi_enable)
-                pci_disable_msi(ioc->pcidev);
+If it's actually a fault on the motherboard with MSI, then no, this isn't the
+patch series that should be in we need the motherboard strings to blacklist it.
 
-in the suspend path which will trigger if ioc->msi_enable is -1.
+Unfortunately, I can't seem to get an answer out of LSI on this question, It
+looks like the commit will cherry pick easily enough ...
+although now I look at it the parameter's description is wrong.
 
-Rather than trying to capture all the uses of ioc->msi_enable (and missing some of them) to check for 1 instead of true, isn't it just easier to fix the driver so that ioc->msi_enable is a logical truth value like this?
+> That whole patch series looks pretty desirable actually..
+
+Well, it was billed as a driver update ... and it has a lot more than just
+trivial changes, so on an eve of release quality issue, I'd tend to say that
+wouldn't be a good idea.
 
 James
 
----
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index db3c892..d40d6d1 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1686,9 +1686,14 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
-                ioc->bus_type = SAS;
-        }
-
--       if (ioc->bus_type == SAS && mpt_msi_enable == -1)
--               ioc->msi_enable = 1;
--       else
-+       if (mpt_msi_enable == -1) {
-+               /* Enable on SAS, disable on FC and SPI */
-+               if (ioc->bus_type == SAS)
-+                       ioc->msi_enable = 1;
-+               else
-+                       ioc->msi_enable = 0;
-+       } else
-+               /* follow flag: 0 - disable; 1 - enable */
-                ioc->msi_enable = mpt_msi_enable;
-
-        if (ioc->errata_flag_1064)
-
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
