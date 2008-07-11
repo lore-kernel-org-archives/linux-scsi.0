@@ -1,68 +1,72 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RESEND PATCH 02/18] qla2xxx: Add	dev_loss_tmo_callbk/terminate_rport_io
- callback support.
-Date: Fri, 11 Jul 2008 13:21:55 -0500
-Message-ID: <4877A4C3.6010903@cs.wisc.edu>
-References: <20080710235458.GQ29099@plap4-2.local> <1215734163-40825-2-git-send-email-andrew.vasquez@qlogic.com> <48779934.8020000@cs.wisc.edu> <20080711180437.GB55164@plap4-2.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
+Date: Fri, 11 Jul 2008 13:37:50 -0500
+Message-ID: <200807111838.m6BIc7Ax010898@d03av04.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48845 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751994AbYGKSWJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jul 2008 14:22:09 -0400
-In-Reply-To: <20080711180437.GB55164@plap4-2.local>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:45857 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756801AbYGKSiW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 14:38:22 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6BIcEaF012061
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 14:38:14 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6BIc87i170608
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 12:38:13 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6BIc8Px011177
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2008 12:38:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Seokmann Ju <seokmann.ju@qlogic.com>, James Smart <James.Smart@Emulex.Com>
-
-Andrew Vasquez wrote:
-> From: Seokmann Ju <seokmann.ju@qlogic.com>
-> 
-> Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
-> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> ---
-> 
-> 	On Fri, 11 Jul 2008, Mike Christie wrote:
-> 
-> 	> Andrew Vasquez wrote:
-> 	>> +
-> 	>> +static void
-> 	>> +qla2x00_terminate_rport_io(struct fc_rport *rport)
-> 	>> +{
-> 	>> +	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-> 	>> +
-> 	>> +	qla2x00_abort_fcport_cmds(fcport);
-> 	>> +	scsi_target_unblock(&rport->dev);
-> 	>
-> 	> I sent a patch so the unblock is always done by the fc class.
-> 	> http://marc.info/?l=linux-scsi&m=121263015008613&w=2
-> 	>
-> 	> Could we do that instead so qlogic and emulex and all other drivers behave 
-> 	> the same?
-> 
-> 	Sure.  Here's a recut of the patch without the explicit
-> 	scsi_target_unblock().
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, miltonm@bga.com
 
 
-Thanks, I think maybe your first patch should go in with this patchset 
-now. Later when my patch goes in I will cleanup the unblock for you.
+Currently, ipr does not support HDIO_GET_IDENTITY to SATA devices.
+An oops occurs if userspace attempts to send the command. Since hald
+issues the command, ensure we fail the ioctl in ipr. This is a
+temporary solution to the oops. Once the ipr libata EH conversion
+is upstream, ipr will fully support HDIO_GET_IDENTITY.
 
-Well, actually I guess it is buggy either way :) I think you guys need 
-it right now for when the terminate callback is called when we remove 
-the port. But if the terminate callback is called for just when the fast 
-io fail tmo fires, we would unblock the queue and then IO in there will 
-just bounce around because when it hits the queuecommand the rport 
-chkready function will just queue it back up. My patches allow us to 
-fail the IO instead of having it bounce around.
+Tested-by: Milton Miller <miltonm@bga.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+James,
 
-JamesB and JamesS, what do you guys think of my patches? I can just do 
-this one
-http://marc.info/?l=linux-scsi&m=121263015008613&w=2
-(but not use the DID_TRANSPORT_ values)
+This bug is causing periodic oopses on Power. If there is still time
+for 2.6.26, I'd like to get it in. Otherwise we can backport to stable.
 
-so that we do not hit the problem above. I will also add some 
-scsi_target_unblock calls when the terminate call back is called for 
-rport removal so the drivers do not have to handle in those cases too.
+Thanks,
+
+Brian
+
+---
+
+ drivers/scsi/ipr.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_sata_no_identify drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_sata_no_identify	2008-07-11 13:27:30.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2008-07-11 13:27:30.000000000 -0500
+@@ -71,6 +71,7 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/libata.h>
++#include <linux/hdreg.h>
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ #include <asm/processor.h>
+@@ -4913,8 +4914,11 @@ static int ipr_ioctl(struct scsi_device 
+ 	struct ipr_resource_entry *res;
+ 
+ 	res = (struct ipr_resource_entry *)sdev->hostdata;
+-	if (res && ipr_is_gata(res))
++	if (res && ipr_is_gata(res)) {
++		if (cmd == HDIO_GET_IDENTITY)
++			return -ENOTTY;
+ 		return ata_scsi_ioctl(sdev, cmd, arg);
++	}
+ 
+ 	return -EINVAL;
+ }
+_
