@@ -1,356 +1,160 @@
-From: "Alessandro Suardi" <alessandro.suardi@gmail.com>
-Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after media change and delay
-Date: Sat, 12 Jul 2008 14:08:26 +0200
-Message-ID: <5a4c581d0807120508m758df950i76fabdb70dfa2d07@mail.gmail.com>
-References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
-	 <Pine.LNX.4.64.0806131932350.30730@vixen.sonytel.be>
-	 <5a4c581d0806180147qf8fc731y527c79bfb73401b2@mail.gmail.com>
-	 <Pine.LNX.4.64.0806181156460.13297@vixen.sonytel.be>
-	 <5a4c581d0806180515g5f24e9d9m85369bfa0a5f2228@mail.gmail.com>
-	 <5a4c581d0806210718m77be63c9l444d8d7d7a5266bd@mail.gmail.com>
-	 <Pine.LNX.4.64.0806221018220.9736@vixen.sonytel.be>
-	 <5a4c581d0806220614seab6598ufa798d8642295495@mail.gmail.com>
-	 <5a4c581d0807111425r72e39528w841e24a9b956c245@mail.gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 11072] New: scsi-layer crash after usb storage
+ device unplug
+Date: Sat, 12 Jul 2008 06:05:25 -0700
+Message-ID: <20080712060525.07b718da.akpm@linux-foundation.org>
+References: <bug-11072-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754786AbYGLMIj@vger.kernel.org>
-In-Reply-To: <5a4c581d0807111425r72e39528w841e24a9b956c245@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <bug-11072-10286-V0hAGp6uBxO456/isadD/XN4h3HLQggn@public.gmane.org/>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 11, 2008 at 11:25 PM, Alessandro Suardi
-<alessandro.suardi@gmail.com> wrote:
-> On Sun, Jun 22, 2008 at 3:14 PM, Alessandro Suardi
-> <alessandro.suardi@gmail.com> wrote:
->> On Sun, Jun 22, 2008 at 10:18 AM, Geert Uytterhoeven
->> <Geert.Uytterhoeven@sonycom.com> wrote:
->>> On Sat, 21 Jun 2008, Alessandro Suardi wrote:
->>>> On Wed, Jun 18, 2008 at 2:15 PM, Alessandro Suardi
->>>> <alessandro.suardi@gmail.com> wrote:
->>>> > On Wed, Jun 18, 2008 at 1:13 PM, Geert Uytterhoeven
->>>> > <Geert.Uytterhoeven@sonycom.com> wrote:
->>>> >> On Wed, 18 Jun 2008, Alessandro Suardi wrote:
->>>> >>> On Fri, Jun 13, 2008 at 7:33 PM, Geert Uytterhoeven
->>>> >>> <Geert.Uytterhoeven@sonycom.com> wrote:
->>>> >>> > On Fri, 6 Jun 2008, Geert Uytterhoeven wrote:
->>>> >>> >> When mounting a CD/DVD more than 30 seconds after inserting it, and reading
->>>> >>> >> from it, we get:
->>>> >>> >
->>>> >>> > Apparently the fix didn't make it to all the CCed lists...
->>>> >>> >
->>>> >>> > http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-rc-fixes-2.6.git;a=commitdiff_plain;h=d1daeabf0da5bfa1943272ce508e2ba785730bf0
->>>> >>>
->>>> >>> Oh, that's in mainline ? I still have the problem of having to
->>>> >>
->>>> >> Not yet, it's in the scsi-rc-fixes-2.6 tree.
->>>> >>
->>>> >>>  insert DVD / try accessing it and get errors / eject / re-insert
->>>> >>>  and then it magically works... the messages have changed
->>>> >>>  from what they were as reported here
->>>> >>>
->>>> >>> http://bugzilla.kernel.org/show_bug.cgi?id=10116
->>>> >>>
->>>> >>>  (see comments #8 and #9) to these ones, in 2.6.26-rc6-git4:
->>>> >>>
->>>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Result:
->>>> >>> hostbyte=0x00 driverbyte=0x08
->>>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] Sense Key : 0x3 [current]
->>>> >>> Jun 17 22:38:43 sandman kernel: sr 1:0:0:0: [sr0] ASC=0x11 ASCQ=0x0
->>>> >>> Jun 17 22:38:43 sandman kernel: end_request: I/O error, dev sr0, sector 232
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 29
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 30
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 31
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 32
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 33
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 34
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 35
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 36
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 37
->>>> >>> Jun 17 22:38:43 sandman kernel: Buffer I/O error on device sr0, logical block 38
->>>> >>>
->>>> >>> here I eject and reinsert the disc, and:
->>>> >>>
->>>> >>> Jun 17 22:39:10 sandman kernel: UDF-fs: No VRS found
->>>> >>>
->>>> >>>  lo and behold, no problem.
->>>> >>>
->>>> >>> This does not, alas, happen every time. It might be at the first
->>>> >>>  DVD access after booting the laptop, but I haven't investigated
->>>> >>>  in this detail yet.
->>>> >>
->>>> >> Does /sys/block/sr0/size reflect the correct size of the DVD?
->>>> >>
->>>> >> Did you try applying the patch?
->>>> >
->>>> > ATM I'm away from home (as usual), I'll post back when
->>>> >  I have the info you asked for and tried applying the
->>>> >  above patch. Thanks !
->>>>
->>>> Sigh. I haven't been able to reproduce the problem once since
->>>>  I posted this. Will keep trying...
->>>
->>> Perhaps because the fix is now in mainline?
->>
->> Eh, that may be a reason :)
->>
->> I'm indeed tracking mainline and haven't reproduced with
->>  at least six different discs in -rc7.
->
-> Just had the symptoms again in -rc9-git9 :(
->
-> Relevant part of dmesg:
->
-> <mount -r /cdrom, access file with gmplayer>
->
-> SELinux: initialized (dev fuse, type fuse), uses genfs_contexts
-> ISO 9660 Extensions: Microsoft Joliet Level 3
-> ISO 9660 Extensions: RRIP_1991A
-> SELinux: initialized (dev sr0, type iso9660), uses genfs_contexts
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110628
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110629
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442524, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110630
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442528, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110631
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442532, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110632
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442536, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110633
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442540, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110634
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442544, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110635
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110628
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> Buffer I/O error on device sr0, logical block 2110629
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442516, limit=2097151
-> attempt to access beyond end of device
-> sr0: rw=0, want=8442520, limit=2097151
->
-> <here I eject, reinsert and remount the DVD>
->
-> UDF-fs: No VRS found
-> ISO 9660 Extensions: Microsoft Joliet Level 3
-> ISO 9660 Extensions: RRIP_1991A
-> SELinux: initialized (dev sr0, type iso9660), uses genfs_contexts
->
-> <now works fine>
->
-> Have to say that I didn't wait N seconds in the beginning,
->  but just rather
->
->  - plop cdrom in
->  - close tray
->  - mount -r /cdrom while disc is still spinning
->
-> Unfortunately I only have this after eject/remount:
->
-> [asuardi@sandman ~]$ cat /sys/block/sr0/size
-> 9133120
->
-> Final note, as I said earlier in the thread, this is definitely
->  an occurrence of first device access after boot - as I just
->  rebooted:
->
-> [asuardi@sandman ~]$ uptime
->  23:25:28 up 17 min,  6 users,  load average: 0.09, 0.18, 0.15
-> [asuardi@sandman ~]$ uname -a
-> Linux sandman 2.6.26-rc9-git9 #7 Fri Jul 11 21:59:15 CEST 2008 i686
-> i686 i386 GNU/Linux
 
-And yet again, in 2.6.26-rc9-git10 freshly compiled/booted,
- when trying to access the Fedora9 DVD to install a bunch
- of packages needed to build SDLmame...
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
-SELinux: initialized (dev fuse, type fuse), uses genfs_contexts
-ISO 9660 Extensions: Microsoft Joliet Level 3
-ISO 9660 Extensions: RRIP_1991A
-SELinux: initialized (dev sr0, type iso9660), uses genfs_contexts
-attempt to access beyond end of device
-sr0: rw=0, want=3291924, limit=2097151
-Buffer I/O error on device sr0, logical block 822980
-attempt to access beyond end of device
-sr0: rw=0, want=3291928, limit=2097151
-Buffer I/O error on device sr0, logical block 822981
-attempt to access beyond end of device
-sr0: rw=0, want=3291932, limit=2097151
-Buffer I/O error on device sr0, logical block 822982
-attempt to access beyond end of device
-sr0: rw=0, want=3291936, limit=2097151
-Buffer I/O error on device sr0, logical block 822983
-attempt to access beyond end of device
-sr0: rw=0, want=3291940, limit=2097151
-Buffer I/O error on device sr0, logical block 822984
-attempt to access beyond end of device
-sr0: rw=0, want=3291944, limit=2097151
-Buffer I/O error on device sr0, logical block 822985
-attempt to access beyond end of device
-sr0: rw=0, want=3291948, limit=2097151
-Buffer I/O error on device sr0, logical block 822986
-attempt to access beyond end of device
-sr0: rw=0, want=3291952, limit=2097151
-Buffer I/O error on device sr0, logical block 822987
-attempt to access beyond end of device
-sr0: rw=0, want=3291924, limit=2097151
-Buffer I/O error on device sr0, logical block 822980
-attempt to access beyond end of device
-sr0: rw=0, want=3291928, limit=2097151
-Buffer I/O error on device sr0, logical block 822981
-attempt to access beyond end of device
-sr0: rw=0, want=3291924, limit=2097151
-attempt to access beyond end of device
-sr0: rw=0, want=3291928, limit=2097151
-[asuardi@sandman sdlmame0126]$ h | grep siz
-  958  cat /sys/block/sr0/size
- 1031  h | grep siz
-[asuardi@sandman sdlmame0126]$ !958
-cat /sys/block/sr0/size
-6993536
+On Sat, 12 Jul 2008 01:50:37 -0700 (PDT) bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
 
-<eject, remount DVD>
+> http://bugzilla.kernel.org/show_bug.cgi?id=11072
+> 
+>            Summary: scsi-layer crash after usb storage device unplug
+>            Product: Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.26-rc9-wl-12766-ga0b2a63-dirty
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: USB
+>         AssignedTo: greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org
+>         ReportedBy: johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org
+> 
+> 
+> Latest working kernel version: no idea, never saw this problem before with the
+> same device, but the memory card is new
+> Earliest failing kernel version: no idea either, current kernel is
+> 2.6.26-rc9-wl-12766-ga0b2a63-dirty
+> Distribution: debian/unstable
+> Hardware Environment: powerbook 5,6
+> Software Environment:
+> Problem Description: SDHC card in USB reader wasn't responding, so I unplugged
+> and got a null pointer deref
+> 
+> Steps to reproduce:
+> I have no idea if I can reproduce this.
+> 
+> What I was doing is that I was trying to access an SDHC card in what is
+> probably just an SD card reader, and the device wasn't responding. I tried this
+> a few times, unplugging and re-plugging with card in it and hot-plugging the
+> card instead of the reader.
+> 
+> At the last attempt, I let it sit there for a while until it gave up (you can
+> see that in the log below, look at the timestamps) and then unplugged it.
+> 
+> [33118.974296] usb 2-2: new high speed USB device using ehci_hcd and address 12
+> [33119.128004] PM: Adding info for usb:2-2
+> [33119.149666] usb 2-2: configuration #1 chosen from 1 choice
+> [33119.150212] PM: Adding info for usb:2-2:1.0
+> [33119.164343] scsi9 : SCSI emulation for USB Mass Storage devices
+> [33119.164963] PM: Adding info for scsi:host9
+> [33119.165151] PM: Adding info for No Bus:host9
+> [33119.179385] PM: Adding info for No Bus:usbdev2.12_ep01
+> [33119.179584] PM: Adding info for No Bus:usbdev2.12_ep82
+> [33119.179752] PM: Adding info for No Bus:usbdev2.12
+> [33119.179993] PM: Adding info for No Bus:usbdev2.12_ep00
+> [33119.180102] usb 2-2: New USB device found, idVendor=058f, idProduct=6362
+> [33119.180112] usb 2-2: New USB device strings: Mfr=1, Product=2,
+> SerialNumber=3
+> [33119.180120] usb 2-2: Product: Mass Storage Device
+> [33119.180125] usb 2-2: Manufacturer: Generic
+> [33119.180130] usb 2-2: SerialNumber: 058F312D81B
+> [33119.182913] usb-storage: device found at 12
+> [33119.182923] usb-storage: waiting for device to settle before scanning
+> [33124.175752] scsi 9:0:0:0: Direct-Access     Generic  USB SD Reader    1.00
+> PQ: 0 ANSI: 0
+> [33124.175817] PM: Adding info for scsi:target9:0:0
+> [33124.184591] PM: Adding info for scsi:9:0:0:0
+> [33124.184798] PM: Adding info for No Bus:9:0:0:0
+> [33154.304287] usb 2-2: reset high speed USB device using ehci_hcd and address
+> 12
+> [33164.574363] usb 2-2: reset high speed USB device using ehci_hcd and address
+> 12
+> [33178.804363] sd 9:0:0:0: Device offlined - not ready after error recovery
+> [33178.804448] sd 9:0:0:0: rejecting I/O to offline device
+> [33178.804490] sd 9:0:0:0: rejecting I/O to offline device
+> [33178.804522] sd 9:0:0:0: rejecting I/O to offline device
+> [33178.804543] sd 9:0:0:0: [sda] READ CAPACITY failed
+> [33178.804548] sd 9:0:0:0: [sda] Result: hostbyte=0x01 driverbyte=0x00
+> [33178.804558] sd 9:0:0:0: [sda] Sense not available.
+> [33178.804578] sd 9:0:0:0: rejecting I/O to offline device
+> [33178.804599] sd 9:0:0:0: [sda] Write Protect is off
+> [33178.804605] sd 9:0:0:0: [sda] Mode Sense: 00 00 00 00
+> [33178.804611] sd 9:0:0:0: [sda] Assuming drive cache: write through
+> [33178.804719] PM: Adding info for No Bus:sda
+> [33178.805011] PM: Adding info for No Bus:8:0
+> [33178.805147] sd 9:0:0:0: [sda] Attached SCSI removable disk
+> [33178.805197] PM: Adding info for No Bus:9:0:0:0
+> [33178.805358] PM: Adding info for No Bus:9:0:0:0
+> [33178.914595] usb 2-2: USB disconnect, address 12
+> [33178.915152] PM: Removing info for usb:2-2:1.0
+> [33178.916008] Unable to handle kernel paging request for data at address
+> 0x00000004
+> [33178.916023] Faulting instruction address: 0xf283185c
+> [33178.916038] Oops: Kernel access of bad area, sig: 11 [#1]
+> [33178.916043] PREEMPT PowerMac
+> [33178.916050] Modules linked in: nls_iso8859_15 nls_cp850 vfat fat sd_mod
+> usb_storage scsi_mod af_packet b43 mac80211 cfg80211 binfmt_misc radeon drm
+> hci_usb rfcomm l2cap bluetooth nls_utf8 hfsplus nls_base fuse dm_snapshot
+> dm_mirror dm_log sha256_generic joydev appletouch arc4 usbhid snd_aoa_codec_tas
+> snd_aoa_fabric_layout snd_aoa evdev snd_aoa_i2sbus snd_pcm_oss snd_mixer_oss
+> snd_pcm snd_timer snd_page_alloc snd soundcore ohci1394 snd_aoa_soundbus
+> ieee1394 ehci_hcd ohci_hcd usbcore ssb pcmcia yenta_socket rsrc_nonstatic
+> pcmcia_core firmware_class uninorth_agp agpgart unix [last unloaded: cfg80211]
+> [33178.916180] NIP: f283185c LR: f262b594 CTR: f2831820
+> [33178.916187] REGS: c5cebcf0 TRAP: 0300   Not tainted 
+> (2.6.26-rc9-wl-12766-ga0b2a63-dirty)
+> [33178.916194] MSR: 00009032 <EE,ME,IR,DR>  CR: 28002028  XER: 20000000
+> [33178.916212] DAR: 00000004, DSISR: 40000000
+> [33178.916218] TASK = ecc4dca0[685] 'usb-stor-scan' THREAD: c5cea000
+> [33178.916224] GPR00: 00000008 c5cebda0 ecc4dca0 ef9a24c0 00009032 eec528f0
+> c5df0008 fffffffd 
+> [33178.916244] GPR08: fffffffc c5df25b8 c03bbdcc 00000000 28002022 00000000
+> 017b7584 017b72f8 
+> [33178.916264] GPR16: 41400000 00240e64 00000000 00000001 c0631d1c ef86ffac
+> eec528f0 00000000 
+> [33178.916283] GPR24: c0047a10 00000000 f2630058 eec528f0 c5d44b08 eec52d24
+> c5d44af0 c5df29e0 
+> [33178.916305] NIP [f283185c] slave_alloc+0x3c/0x84 [usb_storage]
+> [33178.916343] LR [f262b594] scsi_alloc_sdev+0x194/0x210 [scsi_mod]
+> [33178.916404] Call Trace:
+> [33178.916409] [c5cebdc0] [f262b594] scsi_alloc_sdev+0x194/0x210 [scsi_mod]
+> [33178.916436] [c5cebdf0] [f262ba10] scsi_probe_and_add_lun+0x24c/0x9a0
+> [scsi_mod]
+> [33178.916462] [c5cebe80] [f262c4d8] __scsi_scan_target+0xf4/0x5cc [scsi_mod]
+> [33178.916488] [c5cebf30] [f262ca18] scsi_scan_channel+0x68/0xa4 [scsi_mod]
+> [33178.916515] [c5cebf50] [f262cb18] scsi_scan_host_selected+0xc4/0x144
+> [scsi_mod]
+> [33178.916541] [c5cebf80] [f2833f08] usb_stor_scan_thread+0x14c/0x190
+> [usb_storage]
+> [33178.916562] [c5cebfd0] [c0047a60] kthread+0x50/0x88
+> [33178.916576] [c5cebff0] [c0012500] kernel_thread+0x44/0x60
+> [33178.916593] Instruction dump:
+> [33178.916600] 7c7f1b78 90010024 38000024 98030067 83a30000 80630004 3bbd0434
+> 801d003c 
+> [33178.916620] 813d0028 54009eba 7d290214 816901fc <a00b0004> 5404c23e 5004442e
+> 5484043e 
+> [33178.916700] ---[ end trace 9617137d6c0f182d ]---
+> 
+> 
 
-[asuardi@sandman sdlmame0126]$ !mount
-mount -r /cdrom
-[asuardi@sandman sdlmame0126]$ cat /sys/block/sr0/size
-6993536
-
-<now everything works fine>
-
-Possibly a new bug then - since size is always the same ?
-
---alessandro
-
- "Give me love / Or give me hate
- Give me anything that's not just ok"
-
- (Sophia, 'Weightless')
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
