@@ -1,360 +1,471 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [ANNOUNCE]: Generic SCSI Target Mid-level For	Linux (followup)
-Date: Fri, 11 Jul 2008 20:28:01 -0700
-Message-ID: <1215833281.13668.94.camel@haakon2.linux-iscsi.org>
-References: <4873BCA5.10103@vlnb.net>
-	 <1215551354.3977.6.camel@haakon2.linux-iscsi.org>
-	 <48749EB2.1070902@vlnb.net>
-	 <1215632043.9339.89.camel@haakon2.linux-iscsi.org>
-	 <48765433.70604@vlnb.net>
-	 <1215725167.31245.104.camel@haakon2.linux-iscsi.org>
-	 <4877A948.6090507@vlnb.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: PROBLEM: module a100u2w (SCSI, Initio) on ppc
+Date: Fri, 11 Jul 2008 22:09:01 -0700
+Message-ID: <20080711220901.e1b69adb.akpm@linux-foundation.org>
+References: <20080712033040.GA8086@h42136.pems.adfa.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:48982 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752999AbYGLD2O (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33124 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751470AbYGLFKO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jul 2008 23:28:14 -0400
-In-Reply-To: <4877A948.6090507@vlnb.net>
+	Sat, 12 Jul 2008 01:10:14 -0400
+In-Reply-To: <20080712033040.GA8086@h42136.pems.adfa.edu.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, Jeff Garzik <jeff@garzik.org>, Leonid Grossman <leonid.grossman@neterion.com>, "H. Peter Anvin" <hpa@zytor.com>, Pete Wyckoff <pw@osc.edu>, Ming Zhang <blackmagic02881@gmail.com>, "Ross S. W. Walker" <rwalker@medallion.com>, Rafiu Fakunle <rafiu@openfiler.com>, Mike Mazarick <mazarick@bellsouth.net>, Andrew Morton <akpm@osdl.org>, David Miller <davem@davemloft.net>, Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@thunk.org>, Jerome Martin <tramjoe.merin@gmail.com>
+To: Stephen Harker <s.harker@adfa.edu.au>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2008-07-11 at 22:41 +0400, Vladislav Bolkhovitin wrote:
-> Nicholas A. Bellinger wrote:
-> >>>>  And this is a real showstopper for making LIO-Core 
-> >>>> the default and the only SCSI target framework. SCST is SCSI-centric, 
-> >>> Well, one needs to understand that LIO-Core subsystem API is more than a
-> >>> SCSI target framework.  Its a generic method of accessing any possible
-> >>> storage object of the storage stack, and having said engine handle the
-> >>> hardware restrictions (be they physical or virtual) for the underlying
-> >>> storage object.  It can run as a SCSI engine to real (or emualted) SCSI
-> >>> hardware from linux/drivers/scsi, but the real strength is that it sits
-> >>> above the SCSI/BLOCK/FILE layers and uses a single codepath for all
-> >>> underlying storage objects.  For example in the lio-core-2.6.git tree, I
-> >>> chose the location linux/drivers/lio-core, because LIO-Core uses 'struct
-> >>> file' from fs/, 'struct block_device' from block/ and struct scsi_device
-> >>> from drivers/scsi.
-> >> SCST and iSCSI-SCST, basically, do the same things, except iSCSI MC/S 
-> >> and related, + something more, like 1-to-many pass-through and 
-> >> scst_user, which need a big chunks of code, correct? And they are 
-> >> together about 2 times smaller:
-> > 
-> > Yes, something much more.  A complete implementation of traditional
-> > iSCSI/TCP (known as RFC-3720), iSCSI/SCTP (which will be important in
-> > the future), and IPv6 (also important) is a significant amount of logic.
-> > When I say a 'complete implementation' I mean:
-> > 
-> > I) Active-Active connection layer recovery (known as
-> > ErrorRecoveryLevel=2).  (We are going to use the same code for iSER for
-> > inter-nexus OS independent (eg: below the SCSI Initiator level)
-> > recovery.  Again, the important part here is that recovery and
-> > outstanding task migration happens transparently to the host OS SCSI
-> > subsystem.  This means (at least with iSCSI and iSER): not having to
-> > register multiple LUNs and depend (at least completely) on SCSI WWN
-> > information, and OS dependent SCSI level multipath.  
-> > 
-> > II) MC/S for multiplexing (same as I), as well as being able to
-> > multiplex across multiple cards and subnets (using TCP, SCTP has
-> > multi-homing).  Also being able to bring iSCSI connections up/down on
-> > the fly, until we all have iSCSI/SCTP, is very important too.
-> > 
-> > III) Every possible combination of RFC-3720 defined parameter keys (and
-> > provide the apparatis to prove it).  And yes, anyone can do this today
-> > against their own Target.  I created core-iscsi-dv specifically for
-> > testing LIO-Target <-> LIO-Core back in 2005.  Core-iSCSI-DV is the
-> > _ONLY_ _PUBLIC_ RFC-3720 domain validation tool that will actually
-> > demonstrate, using ANY data integrity tool complete domain validation of
-> > user defined keys.  Please have a look at:
-> > 
-> > http://linux-iscsi.org/index.php/Core-iscsi-dv
-> > 
-> > http://www.linux-iscsi.org/files/core-iscsi-dv/README
-> > 
-> > Any traditional iSCSI target mode implementation + Storage Engine +
-> > Subsystem Plugin that thinks its ready to go into the kernel will have
-> > to pass at LEAST the 8k test loop interations, the simplest being:
-> > 
-> > HeaderDigest, DataDigest, MaxRecvDataSegmentLength (512 -> 262144, in
-> > 512 byte increments)
-> > 
-> > Core-iSCSI-DV is also a great indication of stability and data integrity
-> > of hardware/software of an iSCSI Target + Engine, espically when you
-> > have multiple core-iscsi-dv nodes hitting multiple VHACS clouds on
-> > physical machines within the cluster.  I have never run IET against
-> > core-iscsi-dv personally, and I don't think Ming or Ross has either.
+(cc linux-scsi)
 
-Ming or Ross, would you like to make a comment on this, considering
-after it, it is your work..?
+On Sat, 12 Jul 2008 13:30:41 +1000 Stephen Harker <s.harker@adfa.edu.au> wrote:
 
->   So
-> > until SOMEONE actually does this first, I think that iSCSI-SCST is more
-> > of an experiment for your our devel that a strong contender for
-> > Linux/iSCSI Target Mode.
+> The SCSI Initio a100u2w driver compiles as a module, loads, but
+> hangs on a powerpc machine.  
 > 
-> There are big doubts among storage experts if features I and II are 
-> needed at all, see, e.g. http://lkml.org/lkml/2008/2/5/331.
-
-Well, jgarzik is both a NETWORKING and STORAGE (he was a networking guy
-first, mind you) expert!
-
->  I also tend 
-> to agree, that for block storage on practice MC/S is not needed or, at 
-> least, definitely doesn't worth the effort, because:
+> I am running linux (YellowDog 5.0) on a PowerMac 7600.  I am using
+> self-compiled kernels.  The initio a100u2w card runs successfully
+> under Mac OSX and OS9.  In the past when I tried the a100u2w module
+> under kernel 2.4 and early 2.6 it would hang for at least 30 minutes
+> (in the end I rebooted the machine).
 > 
-
-Trying to agrue against MC/S (or against any other major part of
-RFC-3720, including ERL=2) is saying that Linux/iSCSI should be BEHIND
-what the greatest minds in the IETF have produced (and learned) from
-iSCSI.  Considering so many people are interested in seeing Linux/iSCSI
-be best and most complete implementation possible, surely one would not
-be foolish enough to try to debate that Linux should be BEHIND what
-others have figured out, be it with RFCs or running code.
-
-Also, you should understand that MC/S is more than about just moving
-data I/O across multiple TCP connections, its about being able to bring
-those paths up/down on the fly without having to actually STOP/PAUSE
-anything. Then you then add the ERL=2 pixie dust, which you should
-understand, is the result of over a decade of work creating RFC-3720
-within the IETF IPS TWG.  What you have is a fabric that does not
-STOP/PAUSE from an OS INDEPENDENT LEVEL (below the OS dependent SCSI
-subsystem layer) perspective, on every possible T/I node, big and small,
-open or closed platform.  Even as we move towards more logic in the
-network layer (a la Stream Control Transmission Protocol), we will still
-benefit from RFC-3720 as the years roll on.  Quite a powerful thing..
-
-> 1. It is useless for sync. untagged operation (regular reads in most 
-> cases over a single stream), when always there is only one command being 
-> executed at any time, because of the commands connection allegiance, 
-> which forbids transferring data for a command over multiple connections.
+> I thought I would try again recently using 2.6.23.14 and 2.6.25.4
+> kernels.  This was more successful in that the machine did not hang
+> seemingly forever.  However, the module seems to fail in
+> initialisation and no drive partitions are seen/mounted.  I tried
+> removing the module (rmmod), the reloading it (modprobe) and similar
+> issues are noted.  Output from dmesg shows the problems.  The
+> following is the output from dmesg under 2.6.25.4, look for scsi2 and
+> initio and inia100.  I am afraid that I am away from home at present
+> and  don't have all the information that may be desirable.  I hope the
+> following is adequate.  The kernel and system run well except for this
+> one module.
 > 
-
-This is a very Parallel SCSI centric way of looking at design of SAM.
-Since SAM allows the transport fabric to enforce its own ordering rules
-(it does offer some of its own SCSI level ones of course).  Obviously
-each fabric (PSCSI, FC, SAS, iSCSI) are very different from the bus
-phase perspective.  But, if you look back into the history of iSCSI, you
-will see that an asymmetric design with seperate CONTROL/DATA TCP
-connections was considered originally BEFORE the Command Sequence Number
-(CmdSN) ordering algoritim was adopted that allows both SINGLE and
-MULTIPLE TCP connections to move both CONTROL/DATA packets across a
-iSCSI Nexus.
-
-Using MC/S with a modern iSCSI implementation to take advantage of lots
-of cores and hardware threads is something that allows one to multiplex
-across multiple vendor's NIC ports, with the least possible overhead, in
-the OS INDEPENDENT manner.  Keep in mind that you can do the allocation
-and RX of WRITE data OOO, but the actual *EXECUTION* down via the
-subsystem API (which is what LIO-Target <-> LIO-Core does, in a generic
-way) MUST BE in the same over as the CDBs came from the iSCSI Initiator
-port.  This is the only requirement for iSCSI CmdSN order rules wrt the
-SCSI Architecture Model.
-
-> 2. The only advantage it has over traditional OS multi-pathing is 
-> keeping commands execution order, but on practice at the moment there is 
-> no demand for this feature, because all OS'es I know don't rely on 
-> commands order to protect data integrity. They use other techniques, 
-> like queue draining. A good target should be able itself to scheduler 
-> coming commands for execution in the correct from performance POV order 
->   and not rely for that on the commands order as they came from initiators.
+> Using PowerMac machine description
+> Total memory = 768MB; using 2048kB for hash table (at cfe00000)
+> Linux version 2.6.25.4 (root@wonnangatta) (gcc version 4.1.1 20060525 (Yellow Dog 4.1.1-1)) #5 Sat Jul 5 11:02:58 EST 2008
+> Found a Grand Central mac-io controller, rev: 2, mapped at 0xfdf00000
+> PowerMac motherboard: PowerMac 7500
+> console [udbg0] enabled
+> Entering add_active_range(0, 0, 196608) 0 entries of 256 used
+> Cache coherency enabled for bandit/PSX
+> Found Bandit PCI host bridge at 0x00000000f2000000. Firmware bus number: 0->1
+> PCI host bridge /bandit (primary) ranges:
+>  MEM 0x00000000f3000000..0x00000000f3ffffff -> 0x00000000f3000000 
+>   IO 0x00000000f2000000..0x00000000f27fffff -> 0x0000000000000000
+>  MEM 0x0000000080000000..0x000000008fffffff -> 0x0000000080000000 
+> Found Chaos PCI host bridge at 0x00000000f0000000. Firmware bus number: 2->2
+> PCI host bridge /chaos  ranges:
+>  MEM 0x00000000f1000000..0x00000000f1ffffff -> 0x00000000f1000000 
+>   IO 0x00000000f0000000..0x00000000f07fffff -> 0x0000000000000000
+>  MEM 0x0000000090000000..0x000000009fffffff -> 0x0000000090000000 
+> nvram: OF partition at 0x1800
+> nvram: XP partition at 0x1300
+> nvram: NR partition at 0x1400
+> Top of RAM: 0x30000000, Total RAM: 0x30000000
+> Memory hole size: 0MB
+> Zone PFN ranges:
+>   DMA             0 ->   196608
+>   Normal     196608 ->   196608
+> Movable zone start PFN for each node
+> early_node_map[1] active PFN ranges
+>     0:        0 ->   196608
+> On node 0 totalpages: 196608
+>   DMA zone: 1536 pages used for memmap
+>   DMA zone: 0 pages reserved
+>   DMA zone: 195072 pages, LIFO batch:31
+>   Normal zone: 0 pages used for memmap
+>   Movable zone: 0 pages used for memmap
+> Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 195072
+> Kernel command line: root=/dev/sda8 video=atyfb:vmode:16,cmode:32, lcr=0xB9180000
+> irq: Found primary Apple PIC /bandit/gc for 32 irqs
+> irq: System has 32 possible interrupts
+> PID hash table entries: 4096 (order: 12, 16384 bytes)
+> GMT Delta read from XPRAM: 600 minutes, DST: off
+> time_init: decrementer frequency = 12.498833 MHz
+> time_init: processor frequency   = 455.000000 MHz
+> clocksource: timebase mult[14007a61] shift[22] registered
+> clockevent: decrementer mult[333] shift[16] cpu[0]
+> Console: colour dummy device 80x25
+> console handover: boot [udbg0] -> real [tty0]
+> Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+> Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+> Memory: 766336k/786432k available (4328k kernel code, 19760k reserved, 160k data, 137k bss, 208k init)
+> SLUB: Genslabs=12, HWalign=32, Order=0-1, MinObjects=4, CPUs=1, Nodes=1
+> Calibrating delay loop... 24.96 BogoMIPS (lpj=49920)
+> Mount-cache hash table entries: 512
+> device-tree: Duplicate name in /bandit/pci-bridge, renamed to "pci3592,35#1"
+> net_namespace: 536 bytes
+> NET: Registered protocol family 16
+> PCI: Probing PCI hardware
+> PCI: Cannot allocate resource region 0 of device 0001:02:0d.0, will remap
+> PCI: Bridge: 0000:00:0f.0
+>   IO window: disabled.
+>   MEM window: 0x80800000-0x808fffff
+>   PREFETCH window: disabled.
+> Registering pmac pic with sysfs...
+> SCSI subsystem initialized
+> usbcore: registered new interface driver usbfs
+> usbcore: registered new interface driver hub
+> usbcore: registered new device driver usb
+> NET: Registered protocol family 2
+> Switched to high resolution mode on CPU 0
+> IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
+> TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
+> TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
+> TCP: Hash tables configured (established 131072 bind 65536)
+> TCP reno registered
+> Thermal assist unit using timers, shrink_timer: 500 jiffies
+> audit: initializing netlink socket (disabled)
+> type=2000 audit(1215242654.320:1): initialized
+> VFS: Disk quotas dquot_6.5.1
+> Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+> Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+> io scheduler noop registered
+> io scheduler anticipatory registered (default)
+> io scheduler deadline registered
+> io scheduler cfq registered
+> PCI: Enabling device 0000:00:0e.0 (0086 -> 0087)
+> aty128fb: Found Open Firmware ROM Image
+> aty128fb: BIOS not located, guessing timings.
+> aty128fb: Rage128 RE PCI [chip rev 0x2] 16M 128-bit SDR SGRAM (1:1)
+> Console: switching to colour frame buffer device 128x48
+> fb0: ATY Rage128 frame buffer device on Rage128 RE PCI
+> controlfb: VRAM Total = 4MB (2MB @ bank 1, 2MB @ bank 2)
+> controlfb: using video mode 6 and color mode 0.
+> fb1: control display adapter
+> Generic RTC Driver v1.07
+> Macintosh non-volatile memory driver v1.1
+> brd: module loaded
+> loop: module loaded
+> pcnet32.c:v1.34 14.Aug.2007 tsbogend@alpha.franken.de
+> PPP generic driver version 2.4.2
+> PPP Deflate Compression module registered
+> MacIO PCI driver attached to Grand Central chipset
+> eth0: MACE at 00:05:02:ae:83:28, chip revision 25.64
+> input: Macintosh mouse button emulation as /class/input/input0
+> Macintosh CUDA driver v0.5 for Unified ADB.
+> Uniform Multi-Platform E-IDE driver
+> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+> adb: starting probe task...
+> ide-floppy driver 1.00
+> mesh: configured for synchronous 10 MB/s
+> adb devices: [2]: 2 2 [3]: 3 1
+> ADB keyboard at 2, handler set to 3
+> Detected ADB keyboard, type ANSI.
+> input: ADB keyboard as /class/input/input1
+> mesh: performing initial bus reset...
+> ADB mouse at 3, handler set to 2
+> input: ADB mouse as /class/input/input2
+> adb: finished probe task...
+> scsi0 : MESH
+> scsi1 : 53C94
+> st: Version 20080221, fixed bufsize 32768, s/g segs 256
+> Driver 'st' needs updating - please use bus_type methods
+> Driver 'sd' needs updating - please use bus_type methods
+> Driver 'sr' needs updating - please use bus_type methods
+> usbmon: debugfs is not available
+> ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver
+> PCI: Enabling device 0000:01:00.0 (0014 -> 0016)
+> ohci_hcd 0000:01:00.0: OHCI Host Controller
+> ohci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 1
+> ohci_hcd 0000:01:00.0: irq 25, io mem 0x80803000
+> usb usb1: configuration #1 chosen from 1 choice
+> hub 1-0:1.0: USB hub found
+> hub 1-0:1.0: 3 ports detected
+> mesh: target 2 synchronous at 10.0 MB/s
+> scsi 0:0:2:0: Direct-Access     IBM-PSG  DNES-318350Y  !# SA30 PQ: 0 ANSI: 3
+> mesh: target 3 synchronous at 10.0 MB/s
+> scsi 0:0:3:0: CD-ROM            SONY     CD-RW  CRX160S   1.0a PQ: 0 ANSI: 4
+> PCI: Enabling device 0000:01:00.1 (0014 -> 0016)
+> ohci_hcd 0000:01:00.1: OHCI Host Controller
+> ohci_hcd 0000:01:00.1: new USB bus registered, assigned bus number 2
+> ohci_hcd 0000:01:00.1: irq 25, io mem 0x80802000
+> usb usb2: configuration #1 chosen from 1 choice
+> hub 2-0:1.0: USB hub found
+> hub 2-0:1.0: 2 ports detected
+> usb 1-2: new low speed USB device using ohci_hcd and address 2
+> sd 0:0:2:0: [sda] 35548320 512-byte hardware sectors (18201 MB)
+> sd 0:0:2:0: [sda] Write Protect is off
+> sd 0:0:2:0: [sda] Mode Sense: c3 00 00 08
+> usb 1-2: configuration #1 chosen from 1 choice
+> sd 0:0:2:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> sd 0:0:2:0: [sda] 35548320 512-byte hardware sectors (18201 MB)
+> sd 0:0:2:0: [sda] Write Protect is off
+> sd 0:0:2:0: [sda] Mode Sense: c3 00 00 08
+> sd 0:0:2:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>  sda: [mac] sda1 sda2 sda3 sda4 sda5 sda6 sda7 sda8 sda9 sda10 sda11 sda12 sda13
+> sd 0:0:2:0: [sda] Attached SCSI disk
+> sd 0:0:2:0: Attached scsi generic sg0 type 0
+> mice: PS/2 mouse device common for all mice
+> APM Battery Driver
+> input: Logitech USB-PS/2 Optical Mouse as /class/input/input3
+> input: USB HID v1.10 Mouse [Logitech USB-PS/2 Optical Mouse] on usb-0000:01:00.0-2
+> usb 2-2: new full speed USB device using ohci_hcd and address 2
+> usb 2-2: configuration #1 chosen from 1 choice
+> usbcore: registered new interface driver usbhid
+> drivers/hid/usbhid/hid-core.c: v2.6:USB HID core driver
+> oprofile: using timer interrupt.
+> TCP cubic registered
+> Initializing XFRM netlink socket
+> NET: Registered protocol family 1
+> NET: Registered protocol family 17
+> NET: Registered protocol family 15
+> RPC: Registered udp transport module.
+> RPC: Registered tcp transport module.
+> scsi: waiting for bus probes to complete ...
+> sr0: scsi3-mmc drive: 32x/32x writer cd/rw xa/form2 cdda tray
+> Uniform CD-ROM driver Revision: 3.20
+> sr 0:0:3:0: Attached scsi CD-ROM sr0
+> sr 0:0:3:0: Attached scsi generic sg1 type 5
+> kjournald starting.  Commit interval 5 seconds
+> EXT3-fs: mounted filesystem with ordered data mode.
+> VFS: Mounted root (ext3 filesystem) readonly.
+> Freeing unused kernel memory: 208k init
+> pmac_zilog: 0.6 (Benjamin Herrenschmidt <benh@kernel.crashing.org>)
+> ttyS0 at MMIO 0xf3013020 (irq = 36) is a Z85c30 ESCC - Serial port
+> ttyS1 at MMIO 0xf3013000 (irq = 39) is a Z85c30 ESCC - Serial port
+> Linux agpgart interface v0.103
+> scsi2 : Initio INI-A100U2W SCSI device driver; Revision: 1.02d
+> Initializing USB Mass Storage driver...
+> scsi3 : SCSI emulation for USB Mass Storage devices
+> usbcore: registered new interface driver usb-storage
+> USB Mass Storage support registered.
+> usb-storage: device found at 2
+> usb-storage: waiting for device to settle before scanning
+> usbcore: registered new interface driver ub
+> usb-storage: device scan complete
+> scsi 3:0:0:0: Direct-Access     ST320082 2A                    PQ: 0 ANSI: 0
+> PCI: Enabling device 0000:01:00.2 (0014 -> 0016)
+> ehci_hcd 0000:01:00.2: EHCI Host Controller
+> ehci_hcd 0000:01:00.2: new USB bus registered, assigned bus number 3
+> ehci_hcd 0000:01:00.2: irq 25, io mem 0x80800000
+> usb 1-2: USB disconnect, address 2
+> ehci_hcd 0000:01:00.2: USB 2.0 started, EHCI 0.95, driver 10 Dec 2004
+> usb usb3: configuration #1 chosen from 1 choice
+> hub 3-0:1.0: USB hub found
+> hub 3-0:1.0: 5 ports detected
+> usb 2-2: USB disconnect, address 2
+> PCI: Enabling device 0000:01:01.0 (0014 -> 0016)
+> ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[25]  MMIO=[80801000-808017ff]  Max Packet=[2048]  IR/IT contexts=[4/4]
+> ieee1394: Node added: ID:BUS[0-00:1023]  GUID[0001a37050300510]
+> ieee1394: Host added: ID:BUS[0-01:1023]  GUID[00004ce0b000280e]
+> IEEE 1394 device has ROM CRC error
+> scsi4 : SBP-2 IEEE-1394
+> device-mapper: ioctl: 4.13.0-ioctl (2007-10-18) initialised: dm-devel@redhat.com
+> ieee1394: sbp2: Logged into SBP-2 device
+> ieee1394: sbp2: Node 0-00:1023: Max speed [S400] - Max payload [2048]
+> scsi: waiting for bus probes to complete ...
+> EXT3 FS on sda8, internal journal
+> kjournald starting.  Commit interval 5 seconds
+> EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
+> EXT3 FS on sda10, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sda11, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sda12, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sda9, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> scsi 2:0:0:0: Device offlined - not ready after error recovery
+> Adding 262136k swap on /dev/sda7.  Priority:-1 extents:1 across:262136k
+> Adding 713700k swap on /dev/sda13.  Priority:-2 extents:1 across:713700k
+> warning: process `kudzu' used the deprecated sysctl system call with 1.23.
+> ip_tables: (C) 2000-2006 Netfilter Core Team
+> scsi 2:0:1:0: Device offlined - not ready after error recovery
+> scsi 2:0:2:0: Device offlined - not ready after error recovery
+> scsi 2:0:3:0: Device offlined - not ready after error recovery
+> scsi 2:0:4:0: Device offlined - not ready after error recovery
+> warning: `named' uses 32-bit capabilities (legacy support in use)
+> scsi 2:0:5:0: Device offlined - not ready after error recovery
+> scsi 2:0:6:0: Device offlined - not ready after error recovery
+> scsi 2:0:8:0: Device offlined - not ready after error recovery
+> scsi 2:0:9:0: Device offlined - not ready after error recovery
+> scsi 2:0:10:0: Device offlined - not ready after error recovery
+> scsi 2:0:11:0: Device offlined - not ready after error recovery
+> scsi 2:0:12:0: Device offlined - not ready after error recovery
+> scsi 2:0:13:0: Device offlined - not ready after error recovery
+> scsi 2:0:14:0: Device offlined - not ready after error recovery
+> scsi 2:0:15:0: Device offlined - not ready after error recovery
+> sd 3:0:0:0: [sdb] READ CAPACITY failed
+> sd 3:0:0:0: [sdb] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
+> sd 3:0:0:0: [sdb] Sense not available.
+> sd 3:0:0:0: [sdb] Write Protect is off
+> sd 3:0:0:0: [sdb] Mode Sense: 00 00 00 00
+> sd 3:0:0:0: [sdb] Assuming drive cache: write through
+> sd 3:0:0:0: [sdb] Attached SCSI disk
+> sd 3:0:0:0: Attached scsi generic sg2 type 0
+> scsi 4:0:0:0: CD-ROM            LITE-ON  COMBO SOHC-5232K NK0G PQ: 0 ANSI: 0
+> sr1: scsi3-mmc drive: 0x/52x writer cd/rw xa/form2 cdda tray
+> sr 4:0:0:0: Attached scsi CD-ROM sr1
+> sr 4:0:0:0: Attached scsi generic sg2 type 5
+> fd0: SWIM3 floppy controller 
+> hub 3-0:1.0: unable to enumerate USB device on port 3
+> usb 3-4: new high speed USB device using ehci_hcd and address 3
+> usb 3-4: configuration #1 chosen from 1 choice
+> scsi5 : SCSI emulation for USB Mass Storage devices
+> usb-storage: device found at 3
+> usb-storage: waiting for device to settle before scanning
+> usb 1-2: new low speed USB device using ohci_hcd and address 3
+> usb 1-2: configuration #1 chosen from 1 choice
+> input: Logitech USB-PS/2 Optical Mouse as /class/input/input4
+> input: USB HID v1.10 Mouse [Logitech USB-PS/2 Optical Mouse] on usb-0000:01:00.0-2
+> input: PowerMac Beep as /class/input/input5
+> usb-storage: device scan complete
+> scsi 5:0:0:0: Direct-Access     ST320082 2A                    PQ: 0 ANSI: 0
+> sd 5:0:0:0: [sdb] 390721968 512-byte hardware sectors (200050 MB)
+> sd 5:0:0:0: [sdb] Write Protect is off
+> sd 5:0:0:0: [sdb] Mode Sense: 33 00 00 00
+> sd 5:0:0:0: [sdb] Assuming drive cache: write through
+> sd 5:0:0:0: [sdb] 390721968 512-byte hardware sectors (200050 MB)
+> sd 5:0:0:0: [sdb] Write Protect is off
+> sd 5:0:0:0: [sdb] Mode Sense: 33 00 00 00
+> sd 5:0:0:0: [sdb] Assuming drive cache: write through
+>  sdb: [mac] sdb1 sdb2 sdb3 sdb4 sdb5 sdb6 sdb7 sdb8 sdb9 sdb10 sdb11 sdb12 sdb13
+> sd 5:0:0:0: [sdb] Attached SCSI disk
+> sd 5:0:0:0: Attached scsi generic sg3 type 0
+> [drm] Initialized drm 1.1.0 20060810
+> [drm] Initialized r128 2.5.0 20030725 on minor 0
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sdb12, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> inia100: initial orchid fail!!
 > 
-
-Ok, you are completely missing the point of MC/S and ERL=2. Notice how
-it works in both iSCSI *AND* iSER (even across DDP fabrics!).  I
-discussed the significant benefit of ERL=2 in numerious previous
-threads.  But they can all be neatly summerized in:
-
-http://linux-iscsi.org/builds/user/nab/Inter.vs.OuterNexus.Multiplexing.pdf
-
-Internexus Multiplexing is DESIGNED to work with OS dependent multipath
-transparently, and as a matter of fact, it complements it quite well, in
-a OSI (independent) method.  Its completely up to the admin to determine
-the benefit and configure the knobs.
-
-So, the bit: "We should not implement this important part of the RFC
-just because I want some code in the kernel" is not going to get your
-design very far.
-
->  From other side, devices bonding also preserves commands execution 
-> order, but doesn't suffer from the connection allegiance limitation of 
-> MC/S, so can boost performance ever for sync untagged operations. Plus, 
-> it's pretty simple, easy to use and doesn't need any additional code. I 
-> don't have the exact numbers of MC/S vs bonding performance comparison 
-> (mostly, because open-iscsi doesn't support MC/S, but very curious to 
-> see them), but have very strong suspicious that on modern OS'es, which 
-> do TCP frames reorder in zero-copy manner, there shouldn't be much 
-> performance difference between MC/S vs bonding in the maximum possible 
-> throughput, but bonding should outperform MC/S a lot in case of sync 
-> untagged operations.
+> The following is the output of cat /proc/cpuinfo
 > 
-
-Simple case here for you to get your feet wet with MC/S.  Try doing
-bonding across 4x GB/sec ports on 2x socket 2x core x86_64 and compare
-MC/S vs. OS dependent networking bonding and see what you find. There
-about two iSCSI initiators for two OSes that implementing MC/S and
-LIO-Target <-> LIO-Target.  Anyone interested in the CPU overhead on
-this setup between MC/S and Link Layer bonding across 2x 2x 1 Gb/sec
-port chips on 4 core x86_64..?
-
-> Anyway, I think features I and II, if added, would increase iSCSI-SCST 
-> kernel side code not more than on 5K lines, because most of the code is 
-> already there, the most important part which missed is fixes of locking 
-> problems, which almost never add a lot of code.
-
-You can think whatever you want.  Why don't you have a look at
-lio-core-2.6.git and see how big they are for yourself.
-
->  Relating Core-iSCSI-DV, 
-> I'm sure iSCSI-SCST will pass it without problems among the required set 
-> of iSCSI features, although still there are some limitations, derived 
-> from IET, for instance, support for multu-PDU commands in discovery 
-> sessions, which isn't implemented. But for adding to iSCSI-SCST optional 
-> iSCSI features there should be good *practical* reasons, which at the 
-> moment don't exist. And unused features are bad features, because they 
-> overcomplicate the code and make its maintainance harder for no gain.
+> processor	: 0
+> cpu		: 7400, altivec supported
+> temperature 	: 27-29 C (uncalibrated)
+> clock		: 455.000000MHz
+> revision	: 2.9 (pvr 000c 0209)
+> bogomips	: 24.96
+> timebase	: 12498833
+> platform	: PowerMac
+> machine		: Power Macintosh
+> motherboard	: AAPL,7500 MacRISC
+> detected as	: 16 (PowerMac 7500)
+> pmac flags	: 00000000
+> pmac-generation	: OldWorld
 > 
-
-Again, you can think whatever you want.  But since you did not implement
-the majority of the iSCSI-SCST code yourself, (or implement your own
-iSCSI Initiator in parallel with your own iSCSI Target), I do not
-believe you are in a position to say.  Any IET devs want to comment on
-this..?
-
-> So, current SCST+iSCSI-SCST 36K lines + 5K new lines = 41K lines, which 
-> still a lot less than LIO's 63K lines. I downloaded the cleanuped 
-> lio-core-2.6.git tree and:
+> The following is the output of lspci -vvv (as root)
 > 
-
-Blindly comparing lines of code with no context is usually dumb.  But,
-since that is what you seem to be stuck on, how about this:
-
-LIO 63k +
-SCST (minus iSCSI) ??k +
-iSER from STGT ??k ==
-
-For the complete LIO-Core engine on fabrics, and which includes what
-Rafiu from Openfiler has been so kind to call LIO-Target, "arguably the
-most feature complete and mature implementation out there (on any
-platform) "
-
-> $ find lio-core-2.6/drivers/lio-core -type f -name "*.[ch]"|xargs wc
-> 57064  156617 1548344 total
+> 00:0b.0 Host bridge: Apple Computer Inc. Bandit PowerPC host bridge (rev 03)
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
+> 	Latency: 32, Cache Line Size 08
+> 	Interrupt: pin ? routed to IRQ 22
 > 
-> Still much bigger.
+> 00:0d.0 SCSI storage controller: Initio Corporation INI-A100U2W (rev 01)
+> 	Subsystem: Initio Corporation INI-A100U2W
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32, Cache Line Size 08
+> 	Interrupt: pin A routed to IRQ 23
+> 	Region 0: I/O ports at 1000 [size=256]
+> 	Region 1: Memory at 80900000 (32-bit, non-prefetchable) [size=4K]
+> 	Expansion ROM at f3040000 [disabled] [size=64K]
+> 	Capabilities: [50] Power Management version 1
+> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 > 
-> > Obviously not.  Also, what I was talking about there was the strength
-> > and flexibility of the LIO-Core design (it even ran on the Playstation 2
-> > at one point, http://linux-iscsi.org/index.php/Playstation2/iSCSI, when
-> > MIPS r5900 boots modern v2.6, then we will do it again with LIO :-)
+> 00:0e.0 VGA compatible controller: ATI Technologies Inc Rage 128 RE/SG (prog-if 00 [VGA])
+> 	Subsystem: Unknown device b530:0408
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32 (2000ns min), Cache Line Size 08
+> 	Interrupt: pin A routed to IRQ 24
+> 	Region 0: Memory at 88000000 (32-bit, prefetchable) [size=64M]
+> 	Region 1: I/O ports at 0400 [size=256]
+> 	Region 2: Memory at 80904000 (32-bit, non-prefetchable) [size=16K]
+> 	Expansion ROM at f3020000 [disabled] [size=128K]
+> 	Capabilities: [5c] Power Management version 1
+> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 > 
-> SCST and the target drivers have been successfully ran on PPC and 
-> Sparc64, so I don't see any reasons, why it can't be ran on Playstation 
-> 2 as well.
+> 00:0f.0 PCI bridge: Hint Corp HB6 Universal PCI-PCI bridge (non-transparent mode) (rev 11) (prog-if 00 [Normal decode])
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32, Cache Line Size 08
+> 	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> 	I/O behind bridge: 0000f000-00000fff
+> 	Memory behind bridge: 80800000-808fffff
+> 	Prefetchable memory behind bridge: fff00000-000fffff
+> 	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+> 	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
+> 	Capabilities: [80] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1+,D2+,D3hot+,D3cold+)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> 		Bridge: PM- B3+
+> 	Capabilities: [90] #06 [0000]
 > 
-
-Oh it can, can it..?  Does your engine memory allocation algoritim
-provide for a SINGLE method for allocating linked list scatterlists
-containing page links of ANY (not just PAGE_SIZE) size handled
-generically across both internal or preregistered memory allocation
-acases, or coming from say, a software RNIC moving DDP packets for iSCSI
-in a single code path..? 
-
-And then it needs to be able to go down to the PS2-Linux PATA driver,
-that does not show up under the SCSI subsystem mind you.   Surely you
-understand that because the MIPS r5900 is a non cache coherent
-architecture that you simply cannot allocate out multiple page
-contigious scatterlists for your I/Os, and simply expect it to work when
-we are sending blocks down to the 32-bit MIPS r3000 IOP..?
-
-> >>>>   - Pass-through mode (PSCSI) also provides non-enforced 1-to-1 
-> >>>> relationship, as it used to be in STGT (now in STGT support for 
-> >>>> pass-through mode seems to be removed), which isn't mentioned anywhere.
-> >>>>
-> >>> Please be more specific by what you mean here.  Also, note that because
-> >>> PSCSI is an LIO-Core subsystem plugin, LIO-Core handles the limitations
-> >>> of the storage object through the LIO-Core subsystem API.  This means
-> >>> that things like (received initiator CDB sectors > LIO-Core storage
-> >>> object max_sectors) are handled generically by LIO-Core, using a single
-> >>> set of algoritims for all I/O interaction with Linux storage systems.
-> >>> These algoritims are also the same for DIFFERENT types of transport
-> >>> fabrics, both those that expect LIO-Core to allocate memory, OR that
-> >>> hardware will have preallocated memory and possible restrictions from
-> >>> the CPU/BUS architecture (take non-cache coherent MIPS for example) of
-> >>> how the memory gets DMA'ed or PIO'ed down to the packet's intended
-> >>> storage object.
-> >> See here: 
-> >> http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg06911.html
-> >>
-> > 
-> > <nod>
-> > 
-> >>>>   - There is some confusion in the code in the function and variable 
-> >>>> names between persistent and SAM-2 reservations.
-> >>> Well, that would be because persistent reservations are not emulated
-> >>> generally for all of the subsystem plugins just yet.  Obviously with
-> >>> LIO-Core/PSCSI if the underlying hardware supports it, it will work.
-> >> What you did (passing reservation commands directly to devices and 
-> >> nothing more) will work only with a single initiator per device, where 
-> >> reservations in the majority of cases are not needed at all.
-> > 
-> > I know, like I said, implementing Persistent Reservations for stuff
-> > besides real SCSI hardware with LIO-Core/PSCSI is a TODO item.  Note
-> > that the VHACS cloud (see below) will need this for DRBD objects at some
-> > point.
+> 00:10.0 Class ff00: Apple Computer Inc. Grand Central I/O (rev 02)
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR+
+> 	Latency: 32, Cache Line Size 08
+> 	Interrupt: pin ? routed to IRQ 22
+> 	Region 0: Memory at f3000000 (32-bit, non-prefetchable) [size=128K]
 > 
-> The problem is that persistent reservations don't work for multiple 
-> initiators even for real SCSI hardware with LIO-Core/PSCSI and I clearly 
-> described why in the referenced e-mail. Nicholas, why don't you want to 
-> see it?
+> 01:00.0 USB Controller: NEC Corporation USB (rev 41) (prog-if 10 [OHCI])
+> 	Subsystem: Unknown device 3592:0035
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32 (250ns min, 10500ns max), Cache Line Size 08
+> 	Interrupt: pin A routed to IRQ 25
+> 	Region 0: Memory at 80803000 (32-bit, non-prefetchable) [size=4K]
+> 	Capabilities: [40] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 > 
-
-Why don't you provide a reference in the code to where you think the
-problem is, and/or problem case using Linux iSCSI Initiators VMs to
-demonstrate the bug..?
-
-> >>>>> The more in fighting between the
-> >>>>> leaders in our community, the less the community benefits.
-> >>>> Sure. If my note hurts you, I can remove it. But you should also remove 
-> >>>> from your presentation and the summary paper those psychological 
-> >>>> arguments to not confuse people.
-> >>>>
-> >>> Its not about removing, it is about updating the page to better reflect
-> >>> the bigger picture so folks coming to the sight can get the latest
-> >>> information from last update.
-> >> Your suggestions?
-> >>
-> > 
-> > I would consider helping with this at some point, but as you can see, I
-> > am extremly busy ATM.  I have looked at SCST quite a bit over the years,
-> > but I am not the one making a public comparision page, at least not
-> > yet. :-)  So until then, at least explain how there are 3 projects on
-> > your page, with the updated 10,000 ft overviews, and mabye even add some
-> > links to LIO-Target and a bit about VHACS cloud.  I would be willing to
-> > include info about SCST into the Linux-iSCSI.org wiki.  Also, please
-> > feel free to open an account and start adding stuff about SCST yourself
-> > to the site.
-> > 
-> > For Linux-iSCSI.org and VHACS (which is really where everything is going
-> > now), please have a look at:
-> > 
-> > http://linux-iscsi.org/index.php/VHACS-VM
-> > http://linux-iscsi.org/index.php/VHACS
-> > 
-> > Btw, the VHACS and LIO-Core design will allow for other fabrics to be
-> > used inside our cloud, and between other virtualized client setups who
-> > speak the wire protocol presented by the server side of VHACS cloud.
-> > 
-> > Many thanks for your most valuable of time,
-> > 
-
-New v0.8.15 VHACS-VM images online btw.  Keep checking the site for more details.
-
-Many thanks for your most valuable of time,
-
---nab
-
+> 01:00.1 USB Controller: NEC Corporation USB (rev 41) (prog-if 10 [OHCI])
+> 	Subsystem: Unknown device 3592:0035
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32 (250ns min, 10500ns max), Cache Line Size 08
+> 	Interrupt: pin B routed to IRQ 25
+> 	Region 0: Memory at 80802000 (32-bit, non-prefetchable) [size=4K]
+> 	Capabilities: [40] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> 
+> 01:00.2 USB Controller: NEC Corporation USB 2.0 (rev 02) (prog-if 20 [EHCI])
+> 	Subsystem: Unknown device 3592:2050
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32 (4000ns min, 8500ns max), Cache Line Size 08
+> 	Interrupt: pin C routed to IRQ 25
+> 	Region 0: Memory at 80800000 (32-bit, non-prefetchable) [size=256]
+> 	Capabilities: [40] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> 
+> 01:01.0 FireWire (IEEE 1394): NEC Corporation uPD72874 IEEE1394 OHCI 1.1 3-port PHY-Link Ctrlr (rev 01) (prog-if 10 [OHCI])
+> 	Subsystem: NEC Corporation uPD72874 IEEE1394 OHCI 1.1 3-port PHY-Link Ctrlr
+> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32 (5000ns min, 11000ns max), Cache Line Size 08
+> 	Interrupt: pin A routed to IRQ 25
+> 	Region 0: Memory at 80801000 (32-bit, non-prefetchable) [size=4K]
+> 	Capabilities: [60] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME+
+> 
+> 0001:02:0b.0 Non-VGA unclassified device: Apple Computer Inc. Control Video
+> 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Interrupt: pin ? routed to IRQ 26
+> 	Region 1: Memory at 90000000 (32-bit, non-prefetchable) [disabled] [size=64K]
+> 	Region 2: Memory at 94000000 (32-bit, non-prefetchable) [disabled] [size=64M]
+> 
+> 0001:02:0d.0 Class ff00: Apple Computer Inc. PlanB Video-In (rev 01)
+> 	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 32, Cache Line Size 08
+> 	Interrupt: pin ? routed to IRQ 28
+> 	Region 0: Memory at f1000000 (32-bit, non-prefetchable) [disabled] [size=1K]
+> 
 
