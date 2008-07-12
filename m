@@ -1,177 +1,69 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [RFC PATCH] fc_transport: Add an API to allow an LLD to create
-	vports.
-Date: Fri, 11 Jul 2008 15:08:19 -0700
-Message-ID: <20080711220819.GE56545@plap4-2.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 4/4] scsi: fix shared tag map tag allocation
+Date: Fri, 11 Jul 2008 19:50:35 -0500
+Message-ID: <1215823835-4865-5-git-send-email-michaelc@cs.wisc.edu>
+References: <1215823835-4865-1-git-send-email-michaelc@cs.wisc.edu>
+ <1215823835-4865-2-git-send-email-michaelc@cs.wisc.edu>
+ <1215823835-4865-3-git-send-email-michaelc@cs.wisc.edu>
+ <1215823835-4865-4-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:15956 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755934AbYGKWI3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2008 18:08:29 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([66.187.233.31]:35943 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755782AbYGLAvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2008 20:51:03 -0400
+In-Reply-To: <1215823835-4865-4-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: James Smart <james.smart@emulex.com>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: linux-scsi@vger.kernel.org, promise_linux@promise.com, david.somayajulu@qlogic.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-There's already a fc_vport_termintate() call exported by
-the transport.  This patch adds a symmetric call to the API to allow
-an NPIV-capable LLD to instantiate vports sans user intervention.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+When drivers use a shared tag map we can end up with more requests
+than tags, because the tag map is shost->can_queue tags and there
+can be sdevs * sdev->queue_depth requests. In scsi_request_fn
+if tag allocation fails we just drop down to just dequeueing the
+tag without a tag. The problem is that drivers using the shared tag
+map rely on a valid tag always being set, because it will use the
+tag number to lookup commands later.
+
+This patch has us check if we got a valid tag when the host lock
+is held right before we check if the host queue is ready. We do the
+check here because to allocate the tag we need the q lock, but
+if the tag is bad we want to add the device/q onto the starved list
+which requires the host lock.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
+ drivers/scsi/scsi_lib.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-This is mostly just a shuffling and reuse of existing code.  Given we
-already use an *_identifiers interface to create rports, the vport
-creation API continues to use the previously internal
-fc_vport_identifiers structure to define a vport object.
-
-The impetus for this work is that future QLogic cards will have a
-region set aside in flash-memory so that adminstrators may define
-pre-set NPIVs which should be created during OS load.
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 5fd64e7..37f6449 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -40,31 +40,7 @@
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0451903..f1af78d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1488,6 +1488,21 @@ static void scsi_request_fn(struct request_queue *q)
+ 		}
+ 		spin_lock(shost->host_lock);
  
- static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
- static void fc_vport_sched_delete(struct work_struct *work);
--
--/*
-- * This is a temporary carrier for creating a vport. It will eventually
-- * be replaced  by a real message definition for sgio or netlink.
-- *
-- * fc_vport_identifiers: This set of data contains all elements
-- * to uniquely identify and instantiate a FC virtual port.
-- *
-- * Notes:
-- *   symbolic_name: The driver is to append the symbolic_name string data
-- *      to the symbolic_node_name data that it generates by default.
-- *      the resulting combination should then be registered with the switch.
-- *      It is expected that things like Xen may stuff a VM title into
-- *      this field.
-- */
--struct fc_vport_identifiers {
--	u64 node_name;
--	u64 port_name;
--	u32 roles;
--	bool disable;
--	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
--	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
--};
--
--static int fc_vport_create(struct Scsi_Host *shost, int channel,
-+static int fc_vport_setup(struct Scsi_Host *shost, int channel,
- 	struct device *pdev, struct fc_vport_identifiers  *ids,
- 	struct fc_vport **vport);
- 
-@@ -1759,7 +1735,7 @@ store_fc_host_vport_create(struct device *dev, struct device_attribute *attr,
- 	vid.disable = false;		/* always enabled */
- 
- 	/* we only allow support on Channel 0 !!! */
--	stat = fc_vport_create(shost, 0, &shost->shost_gendev, &vid, &vport);
-+	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, &vid, &vport);
- 	return stat ? stat : count;
- }
- static FC_DEVICE_ATTR(host, vport_create, S_IWUSR, NULL,
-@@ -3102,7 +3078,7 @@ fc_scsi_scan_rport(struct work_struct *work)
- 
- 
- /**
-- * fc_vport_create - allocates and creates a FC virtual port.
-+ * fc_vport_setup - allocates and creates a FC virtual port.
-  * @shost:	scsi host the virtual port is connected to.
-  * @channel:	Channel on shost port connected to.
-  * @pdev:	parent device for vport
-@@ -3117,7 +3093,7 @@ fc_scsi_scan_rport(struct work_struct *work)
-  *	This routine assumes no locks are held on entry.
-  */
- static int
--fc_vport_create(struct Scsi_Host *shost, int channel, struct device *pdev,
-+fc_vport_setup(struct Scsi_Host *shost, int channel, struct device *pdev,
- 	struct fc_vport_identifiers  *ids, struct fc_vport **ret_vport)
- {
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-@@ -3230,6 +3206,27 @@ delete_vport:
- 	return error;
- }
- 
-+/**
-+ * fc_vport_create - Admin App or LLDD requests creation of a vport
-+ * @shost:	scsi host the virtual port is connected to.
-+ * @ids:	The world wide names, FC4 port roles, etc for
-+ *              the virtual port.
-+ *
-+ * Notes:
-+ *	This routine assumes no locks are held on entry.
-+ */
-+struct fc_vport *
-+fc_vport_create(struct Scsi_Host *shost, struct fc_vport_identifiers *ids)
-+{
-+	int stat;
-+	struct fc_vport *vport;
++		/*
++		 * We hit this when the driver is using a host wide
++		 * tag map. For device level tag maps the queue_depth check
++		 * in the device ready fn would prevent us from trying
++		 * to allocate a tag. Since the map is a shared host resource
++		 * we add the dev to the starved list so it eventually gets
++		 * a run when a tag is freed.
++		 */
++		if (blk_queue_tagged(q) && (req->tag == -1)) {
++			if (list_empty(&sdev->starved_entry))
++				list_add_tail(&sdev->starved_entry,
++					      &shost->starved_list);
++			goto not_ready;
++		}
 +
-+	/* We only create vports here. */
-+	ids->vport_type = FC_PORTTYPE_NPIV;
-+	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, ids, &vport);
-+	return stat ? NULL : vport;
-+}
-+EXPORT_SYMBOL(fc_vport_create);
- 
- /**
-  * fc_vport_terminate - Admin App or LLDD requests termination of a vport
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 06f72ba..f705d25 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -167,6 +167,29 @@ enum fc_tgtid_binding_type  {
- struct device_attribute dev_attr_vport_##_name = 	\
- 	__ATTR(_name,_mode,_show,_store)
- 
-+/*
-+ * This is a temporary carrier for creating a vport. It will eventually
-+ * be replaced  by a real message definition for sgio or netlink.
-+ *
-+ * fc_vport_identifiers: This set of data contains all elements
-+ * to uniquely identify and instantiate a FC virtual port.
-+ *
-+ * Notes:
-+ *   symbolic_name: The driver is to append the symbolic_name string data
-+ *      to the symbolic_node_name data that it generates by default.
-+ *      the resulting combination should then be registered with the switch.
-+ *      It is expected that things like Xen may stuff a VM title into
-+ *      this field.
-+ */
-+#define FC_VPORT_SYMBOLIC_NAMELEN		64
-+struct fc_vport_identifiers {
-+	u64 node_name;
-+	u64 port_name;
-+	u32 roles;
-+	bool disable;
-+	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
-+	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
-+};
- 
- /*
-  * FC Virtual Port Attributes
-@@ -197,7 +220,6 @@ struct device_attribute dev_attr_vport_##_name = 	\
-  * managed by the transport w/o driver interaction.
-  */
- 
--#define FC_VPORT_SYMBOLIC_NAMELEN		64
- struct fc_vport {
- 	/* Fixed Attributes */
- 
-@@ -732,6 +754,8 @@ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
- 	 *   be sure to read the Vendor Type and ID formatting requirements
- 	 *   specified in scsi_netlink.h
- 	 */
-+struct fc_vport *fc_vport_create(struct Scsi_Host *shost,
-+		struct fc_vport_identifiers *);
- int fc_vport_terminate(struct fc_vport *vport);
- 
- #endif /* SCSI_TRANSPORT_FC_H */
+ 		if (!scsi_host_queue_ready(q, shost, sdev))
+ 			goto not_ready;
+ 		if (scsi_target(sdev)->single_lun) {
+-- 
+1.5.4.1
+
