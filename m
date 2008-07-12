@@ -1,72 +1,46 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC
-	controllers
-Date: Sun, 13 Jul 2008 01:10:18 +0800
-Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95E3B147@hkgmail01.lsi.com>
-References: <1215745855.3353.118.camel@localhost.localdomain>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 11072] New: scsi-layer crash after usb storage
+ device unplug
+Date: Sat, 12 Jul 2008 15:50:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807121548190.17776-100000@netrider.rowland.org>
+References: <20080712060525.07b718da.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:49915 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751616AbYGLRKh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jul 2008 13:10:37 -0400
-In-Reply-To: <1215745855.3353.118.camel@localhost.localdomain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20080712060525.07b718da.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-ACK
+On Sat, 12 Jul 2008, Andrew Morton wrote:
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-Sent: Friday, July 11, 2008 8:41 AM
-To: Prakash, Sathya
-Cc: linux-scsi@vger.kernel.org; Moore, Eric
-Subject: Re: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC controllers
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
+> 
+> On Sat, 12 Jul 2008 01:50:37 -0700 (PDT) bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
+> 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=11072
+> > 
+> >            Summary: scsi-layer crash after usb storage device unplug
 
-On Wed, 2008-05-21 at 00:57 +0530, Prakash, Sathya wrote:
-> The patch submitted to enable the MSI by default for SAS controllers
-> sets the MSI even for SPI and FC controllers due to a coding error
-> This patch fixes that.
+> > Latest working kernel version: no idea, never saw this problem before with the
+> > same device, but the memory card is new
+> > Earliest failing kernel version: no idea either, current kernel is
+> > 2.6.26-rc9-wl-12766-ga0b2a63-dirty
+> > Distribution: debian/unstable
+> > Hardware Environment: powerbook 5,6
+> > Software Environment:
+> > Problem Description: SDHC card in USB reader wasn't responding, so I unplugged
+> > and got a null pointer deref
 
-Actually, now I look at this patch, it's not complete.  There's a missed
+This looks like a problem reported earlier and fixed by this patch:
 
-        if (ioc->msi_enable)
-                pci_disable_msi(ioc->pcidev);
+http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-04-usb/usb-storage-revert-dma-alignment-change-for-wireless-usb.patch
 
-in the suspend path which will trigger if ioc->msi_enable is -1.
+Alan Stern
 
-Rather than trying to capture all the uses of ioc->msi_enable (and missing some of them) to check for 1 instead of true, isn't it just easier to fix the driver so that ioc->msi_enable is a logical truth value like this?
-
-James
-
----
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index db3c892..d40d6d1 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1686,9 +1686,14 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
-                ioc->bus_type = SAS;
-        }
-
--       if (ioc->bus_type == SAS && mpt_msi_enable == -1)
--               ioc->msi_enable = 1;
--       else
-+       if (mpt_msi_enable == -1) {
-+               /* Enable on SAS, disable on FC and SPI */
-+               if (ioc->bus_type == SAS)
-+                       ioc->msi_enable = 1;
-+               else
-+                       ioc->msi_enable = 0;
-+       } else
-+               /* follow flag: 0 - disable; 1 - enable */
-                ioc->msi_enable = mpt_msi_enable;
-
-        if (ioc->errata_flag_1064)
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
