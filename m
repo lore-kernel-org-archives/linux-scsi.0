@@ -1,91 +1,72 @@
-From: Jaswinder Singh <jaswinder@infradead.org>
-Subject: Re: [PATCH] advansys: use request_firmware
-Date: Sat, 12 Jul 2008 22:39:08 +0530
-Message-ID: <1215882548.19076.57.camel@jaswinder.satnam>
-References: <1215770322.2733.12.camel@jaswinder.satnam>
-	 <20080712162921.GZ14894@parisc-linux.org>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC
+	controllers
+Date: Sun, 13 Jul 2008 01:10:18 +0800
+Message-ID: <6A4D764DC1BDE14495DA8DC60A3D69531E95E3B147@hkgmail01.lsi.com>
+References: <1215745855.3353.118.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:47489 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbYGLRJr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jul 2008 13:09:47 -0400
-In-Reply-To: <20080712162921.GZ14894@parisc-linux.org>
+Received: from mail0.lsil.com ([147.145.40.20]:49915 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751616AbYGLRKh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jul 2008 13:10:37 -0400
+In-Reply-To: <1215745855.3353.118.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Woodhouse <dwmw2@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, kernel-janitors <kernel-janitors@vger.kernel.org>, kernelnewbies <kernelnewbies@nl.linux.org>, linux-scsi@vger.kernel.org, hch@infradead.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-Hello Mattew,
+ACK
 
-On Sat, 2008-07-12 at 10:29 -0600, Matthew Wilcox wrote:
-> > +	if (AscLoadMicroCode(iop_base, 0, &fw->data[4],
-> > +			     fw->size - 4) !=3D chksum) {
-> >  		asc_dvc->err_code |=3D ASC_IERR_MCODE_CHKSUM;
-> >  		return warn_code;
-> >  	}
-> > +	release_firmware(fw);
->=20
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+Sent: Friday, July 11, 2008 8:41 AM
+To: Prakash, Sathya
+Cc: linux-scsi@vger.kernel.org; Moore, Eric
+Subject: Re: [PATCH 3/6] : Fixing default enabling of MSI for SPI and FC controllers
 
-Sorry, It should be :-
-+       if (AscLoadMicroCode(iop_base, 0, &fw->data[4],
-+                            fw->size - 4) !=3D chksum) {
-                asc_dvc->err_code |=3D ASC_IERR_MCODE_CHKSUM;
-+               release_firmware(fw);
-                return warn_code;
+On Wed, 2008-05-21 at 00:57 +0530, Prakash, Sathya wrote:
+> The patch submitted to enable the MSI by default for SAS controllers
+> sets the MSI even for SPI and FC controllers due to a coding error
+> This patch fixes that.
+
+Actually, now I look at this patch, it's not complete.  There's a missed
+
+        if (ioc->msi_enable)
+                pci_disable_msi(ioc->pcidev);
+
+in the suspend path which will trigger if ioc->msi_enable is -1.
+
+Rather than trying to capture all the uses of ioc->msi_enable (and missing some of them) to check for 1 instead of true, isn't it just easier to fix the driver so that ioc->msi_enable is a logical truth value like this?
+
+James
+
+---
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index db3c892..d40d6d1 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1686,9 +1686,14 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+                ioc->bus_type = SAS;
         }
-+       release_firmware(fw);
-        warn_code |=3D AscInitMicroCodeVar(asc_dvc);
 
-You can get updated patch from
-http://git.infradead.org/users/jaswinder/firm-jsr-2.6.git=20
+-       if (ioc->bus_type == SAS && mpt_msi_enable == -1)
+-               ioc->msi_enable = 1;
+-       else
++       if (mpt_msi_enable == -1) {
++               /* Enable on SAS, disable on FC and SPI */
++               if (ioc->bus_type == SAS)
++                       ioc->msi_enable = 1;
++               else
++                       ioc->msi_enable = 0;
++       } else
++               /* follow flag: 0 - disable; 1 - enable */
+                ioc->msi_enable = mpt_msi_enable;
 
-This is first draft, final patch will available at David's firmware tre=
-e
-http://git.infradead.org/users/dwmw2/firmware-2.6.git
+        if (ioc->errata_flag_1064)
 
-> You're calling release_firmware() here.  I don't know if that actuall=
-y
-> frees the firmware when it's built-in, but if it does, then freeing t=
-he
-> firmware could cause the chip to stop working if it gets reset before
-> userspace is up.
 
-Normally release_firmware will be called after loading microcode.
-
-Even it gets reset then It will again call request_firmware and load
-firmware and then frees after loading microcode.
-
-Logically it will work same as microcode_buffer say _adv_asc3550_buf[]
-when you need to load microcode you just read from =EF=BB=BF_adv_asc355=
-0_buf[]
-and load it. And if reset occurs you again read from =EF=BB=BF_adv_asc3=
-550_buf[]
-and then load microcode, but you keep =EF=BB=BF_adv_asc3550_buf[] all t=
-he time
-in memory.
-In our case we just request_firmware when need to load microcode and
-release_firmware after loading. So we frees the memory after loading
-microcode.
-
-So it will not stop the chip from working.
-
-> If it is OK to call release_firmware here, then the error path is
-> missing a release_firmware() call.
->=20
-
-=46ixed. Thanks.
-
-If you still have some doubts, please let me know.
-
-Thank you,
-
-Jaswinder Singh.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
