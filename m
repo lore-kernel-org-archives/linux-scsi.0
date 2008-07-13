@@ -1,43 +1,63 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: bidi support: FC transport layer...
-Date: Sun, 13 Jul 2008 12:15:32 +0300
-Message-ID: <4879C7B4.8000609@panasas.com>
-References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <48762B07.703@panasas.com> <4414E10D-6015-4768-BD97-D4A51E439573@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Cbe-oss-dev] [regression/bisected] corrupt CD data after
+	media change and delay
+Date: Sun, 13 Jul 2008 08:33:51 -0500
+Message-ID: <1215956031.4326.4.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0806061458300.6228@vixen.sonytel.be>
+	 <Pine.LNX.4.64.0806131932350.30730@vixen.sonytel.be>
+	 <5a4c581d0806180147qf8fc731y527c79bfb73401b2@mail.gmail.com>
+	 <Pine.LNX.4.64.0806181156460.13297@vixen.sonytel.be>
+	 <5a4c581d0806180515g5f24e9d9m85369bfa0a5f2228@mail.gmail.com>
+	 <5a4c581d0806210718m77be63c9l444d8d7d7a5266bd@mail.gmail.com>
+	 <Pine.LNX.4.64.0806221018220.9736@vixen.sonytel.be>
+	 <5a4c581d0806220614seab6598ufa798d8642295495@mail.gmail.com>
+	 <5a4c581d0807111425r72e39528w841e24a9b956c245@mail.gmail.com>
+	 <5a4c581d0807120508m758df950i76fabdb70dfa2d07@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27476 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750864AbYGMJPw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2008 05:15:52 -0400
-In-Reply-To: <4414E10D-6015-4768-BD97-D4A51E439573@qlogic.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:35414 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750895AbYGMNd4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Jul 2008 09:33:56 -0400
+In-Reply-To: <5a4c581d0807120508m758df950i76fabdb70dfa2d07@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Alessandro Suardi <alessandro.suardi@gmail.com>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Maarten Bressers <mbres@gentoo.org>, Daniel Drake <dsd@gentoo.org>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
 
-Seokmann Ju wrote:
-<snip>
-> FC-CT and ELS are FC specifics.
-> So, as far as I understood, the idea is to control and manage the  
-> given FC layout via those frames without having any subsystem  
-> interventions.
-> One of the goal of the implementation is to provide pipe line in  
-> between the application and the target devices under the given layout.
-> Is the bidi tightly coupled with the SCSI CDB, or it can transport any  
-> packet regardless its contents?
+On Sat, 2008-07-12 at 14:08 +0200, Alessandro Suardi wrote:
+> On Fri, Jul 11, 2008 at 11:25 PM, Alessandro Suardi
+> sr0: rw=0, want=3291928, limit=2097151
+> [asuardi@sandman sdlmame0126]$ h | grep siz
+>   958  cat /sys/block/sr0/size
+>  1031  h | grep siz
+> [asuardi@sandman sdlmame0126]$ !958
+> cat /sys/block/sr0/size
+> 6993536
 > 
+> <eject, remount DVD>
+> 
+> [asuardi@sandman sdlmame0126]$ !mount
+> mount -r /cdrom
+> [asuardi@sandman sdlmame0126]$ cat /sys/block/sr0/size
+> 6993536
+> 
+> <now everything works fine>
+> 
+> Possibly a new bug then - since size is always the same ?
 
-There is *no* restrictions or filtering what so ever. You can send any 
-kind of CDB with any kind of buffers as BIOs. Even better, the scsi
-midlayer is very careful to immediately fail a bidi command and not 
-try any kind of reties or error handling. So yes if you are emulating 
-a command execution in SW you should be safe. What I said is true at 
-scsi level, at block level of course there is no restrictions for 
-any command.
+It looks like a re-manifestation of Geert's bug.
 
-<snip>
+You said everything worked in -rc7, and there actually have been no sr
+changes at all between then and now, so I'm a bit confused as to how it
+could reappear.  Could you try a bisection search for it (first
+re-verify -rc7 is OK, just in case that's a false negative).
 
-Boaz
+Thanks,
+
+James
+
 
