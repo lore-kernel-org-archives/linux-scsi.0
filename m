@@ -1,369 +1,385 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [RFC, PATCH v2] SCSI tape: MTIOCSENSE ioctl to return the sense data
- from errors
-Date: Sun, 13 Jul 2008 17:24:59 +0300 (EEST)
-Message-ID: <alpine.LNX.1.10.0807131723510.16437@kai.makisara.local>
-References: <alpine.LNX.1.10.0807111643250.5811@kai.makisara.local>
+From: Ming Zhang <blackmagic02881@gmail.com>
+Subject: Re: [ANNOUNCE]: Generic SCSI Target Mid-level For	Linux (followup)
+Date: Sun, 13 Jul 2008 14:47:00 -0400
+Message-ID: <1215974820.4096.10.camel@localhost.localdomain>
+References: <4873BCA5.10103@vlnb.net>
+	 <1215551354.3977.6.camel@haakon2.linux-iscsi.org>
+	 <48749EB2.1070902@vlnb.net>
+	 <1215632043.9339.89.camel@haakon2.linux-iscsi.org>
+	 <48765433.70604@vlnb.net>
+	 <1215725167.31245.104.camel@haakon2.linux-iscsi.org>
+	 <4877A948.6090507@vlnb.net>
+	 <1215833281.13668.94.camel@haakon2.linux-iscsi.org>
+Reply-To: blackmagic02881@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:59459 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbYGMOZG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2008 10:25:06 -0400
-In-Reply-To: <alpine.LNX.1.10.0807111643250.5811@kai.makisara.local>
+Received: from yw-out-2324.google.com ([74.125.46.29]:26200 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbYGMSrI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2008 14:47:08 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2258282ywe.1
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Jul 2008 11:47:04 -0700 (PDT)
+In-Reply-To: <1215833281.13668.94.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Arne Wiebalck <arne.wiebalck@cern.ch>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, Jeff Garzik <jeff@garzik.org>, Leonid Grossman <leonid.grossman@neterion.com>, "H. Peter Anvin" <hpa@zytor.com>, Pete Wyckoff <pw@osc.edu>, "Ross S. W. Walker" <rwalker@medallion.com>, Rafiu Fakunle <rafiu@openfiler.com>, Mike Mazarick <mazarick@bellsouth.net>, Andrew Morton <akpm@osdl.org>, David Miller <davem@davemloft.net>, Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@thunk.org>, Jerome Martin <tramjoe.merin@gmail.com>
 
-Here is the second version of the proposed MTIOCSENSE patch. The changes from
-the first version are:
+On Fri, 2008-07-11 at 20:28 -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2008-07-11 at 22:41 +0400, Vladislav Bolkhovitin wrote:
+> > Nicholas A. Bellinger wrote:
+> > >>>>  And this is a real showstopper for making LIO-Core 
+> > >>>> the default and the only SCSI target framework. SCST is SCSI-centric, 
+> > >>> Well, one needs to understand that LIO-Core subsystem API is more than a
+> > >>> SCSI target framework.  Its a generic method of accessing any possible
+> > >>> storage object of the storage stack, and having said engine handle the
+> > >>> hardware restrictions (be they physical or virtual) for the underlying
+> > >>> storage object.  It can run as a SCSI engine to real (or emualted) SCSI
+> > >>> hardware from linux/drivers/scsi, but the real strength is that it sits
+> > >>> above the SCSI/BLOCK/FILE layers and uses a single codepath for all
+> > >>> underlying storage objects.  For example in the lio-core-2.6.git tree, I
+> > >>> chose the location linux/drivers/lio-core, because LIO-Core uses 'struct
+> > >>> file' from fs/, 'struct block_device' from block/ and struct scsi_device
+> > >>> from drivers/scsi.
+> > >> SCST and iSCSI-SCST, basically, do the same things, except iSCSI MC/S 
+> > >> and related, + something more, like 1-to-many pass-through and 
+> > >> scst_user, which need a big chunks of code, correct? And they are 
+> > >> together about 2 times smaller:
+> > > 
+> > > Yes, something much more.  A complete implementation of traditional
+> > > iSCSI/TCP (known as RFC-3720), iSCSI/SCTP (which will be important in
+> > > the future), and IPv6 (also important) is a significant amount of logic.
+> > > When I say a 'complete implementation' I mean:
+> > > 
+> > > I) Active-Active connection layer recovery (known as
+> > > ErrorRecoveryLevel=2).  (We are going to use the same code for iSER for
+> > > inter-nexus OS independent (eg: below the SCSI Initiator level)
+> > > recovery.  Again, the important part here is that recovery and
+> > > outstanding task migration happens transparently to the host OS SCSI
+> > > subsystem.  This means (at least with iSCSI and iSER): not having to
+> > > register multiple LUNs and depend (at least completely) on SCSI WWN
+> > > information, and OS dependent SCSI level multipath.  
+> > > 
+> > > II) MC/S for multiplexing (same as I), as well as being able to
+> > > multiplex across multiple cards and subnets (using TCP, SCTP has
+> > > multi-homing).  Also being able to bring iSCSI connections up/down on
+> > > the fly, until we all have iSCSI/SCTP, is very important too.
+> > > 
+> > > III) Every possible combination of RFC-3720 defined parameter keys (and
+> > > provide the apparatis to prove it).  And yes, anyone can do this today
+> > > against their own Target.  I created core-iscsi-dv specifically for
+> > > testing LIO-Target <-> LIO-Core back in 2005.  Core-iSCSI-DV is the
+> > > _ONLY_ _PUBLIC_ RFC-3720 domain validation tool that will actually
+> > > demonstrate, using ANY data integrity tool complete domain validation of
+> > > user defined keys.  Please have a look at:
+> > > 
+> > > http://linux-iscsi.org/index.php/Core-iscsi-dv
+> > > 
+> > > http://www.linux-iscsi.org/files/core-iscsi-dv/README
+> > > 
+> > > Any traditional iSCSI target mode implementation + Storage Engine +
+> > > Subsystem Plugin that thinks its ready to go into the kernel will have
+> > > to pass at LEAST the 8k test loop interations, the simplest being:
+> > > 
+> > > HeaderDigest, DataDigest, MaxRecvDataSegmentLength (512 -> 262144, in
+> > > 512 byte increments)
+> > > 
+> > > Core-iSCSI-DV is also a great indication of stability and data integrity
+> > > of hardware/software of an iSCSI Target + Engine, espically when you
+> > > have multiple core-iscsi-dv nodes hitting multiple VHACS clouds on
+> > > physical machines within the cluster.  I have never run IET against
+> > > core-iscsi-dv personally, and I don't think Ming or Ross has either.
+> 
+> Ming or Ross, would you like to make a comment on this, considering
+> after it, it is your work..?
 
-1. The command descriptor block (up to 16 bytes) is included in the
-result. The cost is small but the exact command can be useful in
-interpretation of the sense data.
+hot water here ;)
 
-2. The residual from the HBA is included in the returned data.
+i never run that test on iet, probably nobody. if someone actually ran
+the test and find the failed case, i believe there are people who want
+to fix it.
 
-3. Randy's documentation fix.
+why not both of you write/reuse some test scripts to test a most
+advanced/fast target and let the number to talk?
 
-4. Computation of the length field uses also the additional length field in
-the sense data.
 
-The stsense utility at URL http://www.kolumbus.fi/kai.makisara/st.html has 
-been updated to use the new ioctl definition.
 
-The patch below this text applies to 2.6.26-rc9 plus the two bug fixes I have
-sent to linux-scsi (applies with offsets without these fixes).
+> 
+> >   So
+> > > until SOMEONE actually does this first, I think that iSCSI-SCST is more
+> > > of an experiment for your our devel that a strong contender for
+> > > Linux/iSCSI Target Mode.
+> > 
+> > There are big doubts among storage experts if features I and II are 
+> > needed at all, see, e.g. http://lkml.org/lkml/2008/2/5/331.
+> 
+> Well, jgarzik is both a NETWORKING and STORAGE (he was a networking guy
+> first, mind you) expert!
+> 
+> >  I also tend 
+> > to agree, that for block storage on practice MC/S is not needed or, at 
+> > least, definitely doesn't worth the effort, because:
+> > 
+> 
+> Trying to agrue against MC/S (or against any other major part of
+> RFC-3720, including ERL=2) is saying that Linux/iSCSI should be BEHIND
+> what the greatest minds in the IETF have produced (and learned) from
+> iSCSI.  Considering so many people are interested in seeing Linux/iSCSI
+> be best and most complete implementation possible, surely one would not
+> be foolish enough to try to debate that Linux should be BEHIND what
+> others have figured out, be it with RFCs or running code.
+> 
+> Also, you should understand that MC/S is more than about just moving
+> data I/O across multiple TCP connections, its about being able to bring
+> those paths up/down on the fly without having to actually STOP/PAUSE
+> anything. Then you then add the ERL=2 pixie dust, which you should
+> understand, is the result of over a decade of work creating RFC-3720
+> within the IETF IPS TWG.  What you have is a fabric that does not
+> STOP/PAUSE from an OS INDEPENDENT LEVEL (below the OS dependent SCSI
+> subsystem layer) perspective, on every possible T/I node, big and small,
+> open or closed platform.  Even as we move towards more logic in the
+> network layer (a la Stream Control Transmission Protocol), we will still
+> benefit from RFC-3720 as the years roll on.  Quite a powerful thing..
+> 
+> > 1. It is useless for sync. untagged operation (regular reads in most 
+> > cases over a single stream), when always there is only one command being 
+> > executed at any time, because of the commands connection allegiance, 
+> > which forbids transferring data for a command over multiple connections.
+> > 
+> 
+> This is a very Parallel SCSI centric way of looking at design of SAM.
+> Since SAM allows the transport fabric to enforce its own ordering rules
+> (it does offer some of its own SCSI level ones of course).  Obviously
+> each fabric (PSCSI, FC, SAS, iSCSI) are very different from the bus
+> phase perspective.  But, if you look back into the history of iSCSI, you
+> will see that an asymmetric design with seperate CONTROL/DATA TCP
+> connections was considered originally BEFORE the Command Sequence Number
+> (CmdSN) ordering algoritim was adopted that allows both SINGLE and
+> MULTIPLE TCP connections to move both CONTROL/DATA packets across a
+> iSCSI Nexus.
+> 
+> Using MC/S with a modern iSCSI implementation to take advantage of lots
+> of cores and hardware threads is something that allows one to multiplex
+> across multiple vendor's NIC ports, with the least possible overhead, in
+> the OS INDEPENDENT manner.  Keep in mind that you can do the allocation
+> and RX of WRITE data OOO, but the actual *EXECUTION* down via the
+> subsystem API (which is what LIO-Target <-> LIO-Core does, in a generic
+> way) MUST BE in the same over as the CDBs came from the iSCSI Initiator
+> port.  This is the only requirement for iSCSI CmdSN order rules wrt the
+> SCSI Architecture Model.
+> 
+> > 2. The only advantage it has over traditional OS multi-pathing is 
+> > keeping commands execution order, but on practice at the moment there is 
+> > no demand for this feature, because all OS'es I know don't rely on 
+> > commands order to protect data integrity. They use other techniques, 
+> > like queue draining. A good target should be able itself to scheduler 
+> > coming commands for execution in the correct from performance POV order 
+> >   and not rely for that on the commands order as they came from initiators.
+> > 
+> 
+> Ok, you are completely missing the point of MC/S and ERL=2. Notice how
+> it works in both iSCSI *AND* iSER (even across DDP fabrics!).  I
+> discussed the significant benefit of ERL=2 in numerious previous
+> threads.  But they can all be neatly summerized in:
+> 
+> http://linux-iscsi.org/builds/user/nab/Inter.vs.OuterNexus.Multiplexing.pdf
+> 
+> Internexus Multiplexing is DESIGNED to work with OS dependent multipath
+> transparently, and as a matter of fact, it complements it quite well, in
+> a OSI (independent) method.  Its completely up to the admin to determine
+> the benefit and configure the knobs.
+> 
+> So, the bit: "We should not implement this important part of the RFC
+> just because I want some code in the kernel" is not going to get your
+> design very far.
+> 
+> >  From other side, devices bonding also preserves commands execution 
+> > order, but doesn't suffer from the connection allegiance limitation of 
+> > MC/S, so can boost performance ever for sync untagged operations. Plus, 
+> > it's pretty simple, easy to use and doesn't need any additional code. I 
+> > don't have the exact numbers of MC/S vs bonding performance comparison 
+> > (mostly, because open-iscsi doesn't support MC/S, but very curious to 
+> > see them), but have very strong suspicious that on modern OS'es, which 
+> > do TCP frames reorder in zero-copy manner, there shouldn't be much 
+> > performance difference between MC/S vs bonding in the maximum possible 
+> > throughput, but bonding should outperform MC/S a lot in case of sync 
+> > untagged operations.
+> > 
+> 
+> Simple case here for you to get your feet wet with MC/S.  Try doing
+> bonding across 4x GB/sec ports on 2x socket 2x core x86_64 and compare
+> MC/S vs. OS dependent networking bonding and see what you find. There
+> about two iSCSI initiators for two OSes that implementing MC/S and
+> LIO-Target <-> LIO-Target.  Anyone interested in the CPU overhead on
+> this setup between MC/S and Link Layer bonding across 2x 2x 1 Gb/sec
+> port chips on 4 core x86_64..?
+> 
+> > Anyway, I think features I and II, if added, would increase iSCSI-SCST 
+> > kernel side code not more than on 5K lines, because most of the code is 
+> > already there, the most important part which missed is fixes of locking 
+> > problems, which almost never add a lot of code.
+> 
+> You can think whatever you want.  Why don't you have a look at
+> lio-core-2.6.git and see how big they are for yourself.
+> 
+> >  Relating Core-iSCSI-DV, 
+> > I'm sure iSCSI-SCST will pass it without problems among the required set 
+> > of iSCSI features, although still there are some limitations, derived 
+> > from IET, for instance, support for multu-PDU commands in discovery 
+> > sessions, which isn't implemented. But for adding to iSCSI-SCST optional 
+> > iSCSI features there should be good *practical* reasons, which at the 
+> > moment don't exist. And unused features are bad features, because they 
+> > overcomplicate the code and make its maintainance harder for no gain.
+> > 
+> 
+> Again, you can think whatever you want.  But since you did not implement
+> the majority of the iSCSI-SCST code yourself, (or implement your own
+> iSCSI Initiator in parallel with your own iSCSI Target), I do not
+> believe you are in a position to say.  Any IET devs want to comment on
+> this..?
+> 
+> > So, current SCST+iSCSI-SCST 36K lines + 5K new lines = 41K lines, which 
+> > still a lot less than LIO's 63K lines. I downloaded the cleanuped 
+> > lio-core-2.6.git tree and:
+> > 
+> 
+> Blindly comparing lines of code with no context is usually dumb.  But,
+> since that is what you seem to be stuck on, how about this:
+> 
+> LIO 63k +
+> SCST (minus iSCSI) ??k +
+> iSER from STGT ??k ==
+> 
+> For the complete LIO-Core engine on fabrics, and which includes what
+> Rafiu from Openfiler has been so kind to call LIO-Target, "arguably the
+> most feature complete and mature implementation out there (on any
+> platform) "
+> 
+> > $ find lio-core-2.6/drivers/lio-core -type f -name "*.[ch]"|xargs wc
+> > 57064  156617 1548344 total
+> > 
+> > Still much bigger.
+> > 
+> > > Obviously not.  Also, what I was talking about there was the strength
+> > > and flexibility of the LIO-Core design (it even ran on the Playstation 2
+> > > at one point, http://linux-iscsi.org/index.php/Playstation2/iSCSI, when
+> > > MIPS r5900 boots modern v2.6, then we will do it again with LIO :-)
+> > 
+> > SCST and the target drivers have been successfully ran on PPC and 
+> > Sparc64, so I don't see any reasons, why it can't be ran on Playstation 
+> > 2 as well.
+> > 
+> 
+> Oh it can, can it..?  Does your engine memory allocation algoritim
+> provide for a SINGLE method for allocating linked list scatterlists
+> containing page links of ANY (not just PAGE_SIZE) size handled
+> generically across both internal or preregistered memory allocation
+> acases, or coming from say, a software RNIC moving DDP packets for iSCSI
+> in a single code path..? 
+> 
+> And then it needs to be able to go down to the PS2-Linux PATA driver,
+> that does not show up under the SCSI subsystem mind you.   Surely you
+> understand that because the MIPS r5900 is a non cache coherent
+> architecture that you simply cannot allocate out multiple page
+> contigious scatterlists for your I/Os, and simply expect it to work when
+> we are sending blocks down to the 32-bit MIPS r3000 IOP..?
+> 
+> > >>>>   - Pass-through mode (PSCSI) also provides non-enforced 1-to-1 
+> > >>>> relationship, as it used to be in STGT (now in STGT support for 
+> > >>>> pass-through mode seems to be removed), which isn't mentioned anywhere.
+> > >>>>
+> > >>> Please be more specific by what you mean here.  Also, note that because
+> > >>> PSCSI is an LIO-Core subsystem plugin, LIO-Core handles the limitations
+> > >>> of the storage object through the LIO-Core subsystem API.  This means
+> > >>> that things like (received initiator CDB sectors > LIO-Core storage
+> > >>> object max_sectors) are handled generically by LIO-Core, using a single
+> > >>> set of algoritims for all I/O interaction with Linux storage systems.
+> > >>> These algoritims are also the same for DIFFERENT types of transport
+> > >>> fabrics, both those that expect LIO-Core to allocate memory, OR that
+> > >>> hardware will have preallocated memory and possible restrictions from
+> > >>> the CPU/BUS architecture (take non-cache coherent MIPS for example) of
+> > >>> how the memory gets DMA'ed or PIO'ed down to the packet's intended
+> > >>> storage object.
+> > >> See here: 
+> > >> http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg06911.html
+> > >>
+> > > 
+> > > <nod>
+> > > 
+> > >>>>   - There is some confusion in the code in the function and variable 
+> > >>>> names between persistent and SAM-2 reservations.
+> > >>> Well, that would be because persistent reservations are not emulated
+> > >>> generally for all of the subsystem plugins just yet.  Obviously with
+> > >>> LIO-Core/PSCSI if the underlying hardware supports it, it will work.
+> > >> What you did (passing reservation commands directly to devices and 
+> > >> nothing more) will work only with a single initiator per device, where 
+> > >> reservations in the majority of cases are not needed at all.
+> > > 
+> > > I know, like I said, implementing Persistent Reservations for stuff
+> > > besides real SCSI hardware with LIO-Core/PSCSI is a TODO item.  Note
+> > > that the VHACS cloud (see below) will need this for DRBD objects at some
+> > > point.
+> > 
+> > The problem is that persistent reservations don't work for multiple 
+> > initiators even for real SCSI hardware with LIO-Core/PSCSI and I clearly 
+> > described why in the referenced e-mail. Nicholas, why don't you want to 
+> > see it?
+> > 
+> 
+> Why don't you provide a reference in the code to where you think the
+> problem is, and/or problem case using Linux iSCSI Initiators VMs to
+> demonstrate the bug..?
+> 
+> > >>>>> The more in fighting between the
+> > >>>>> leaders in our community, the less the community benefits.
+> > >>>> Sure. If my note hurts you, I can remove it. But you should also remove 
+> > >>>> from your presentation and the summary paper those psychological 
+> > >>>> arguments to not confuse people.
+> > >>>>
+> > >>> Its not about removing, it is about updating the page to better reflect
+> > >>> the bigger picture so folks coming to the sight can get the latest
+> > >>> information from last update.
+> > >> Your suggestions?
+> > >>
+> > > 
+> > > I would consider helping with this at some point, but as you can see, I
+> > > am extremly busy ATM.  I have looked at SCST quite a bit over the years,
+> > > but I am not the one making a public comparision page, at least not
+> > > yet. :-)  So until then, at least explain how there are 3 projects on
+> > > your page, with the updated 10,000 ft overviews, and mabye even add some
+> > > links to LIO-Target and a bit about VHACS cloud.  I would be willing to
+> > > include info about SCST into the Linux-iSCSI.org wiki.  Also, please
+> > > feel free to open an account and start adding stuff about SCST yourself
+> > > to the site.
+> > > 
+> > > For Linux-iSCSI.org and VHACS (which is really where everything is going
+> > > now), please have a look at:
+> > > 
+> > > http://linux-iscsi.org/index.php/VHACS-VM
+> > > http://linux-iscsi.org/index.php/VHACS
+> > > 
+> > > Btw, the VHACS and LIO-Core design will allow for other fabrics to be
+> > > used inside our cloud, and between other virtualized client setups who
+> > > speak the wire protocol presented by the server side of VHACS cloud.
+> > > 
+> > > Many thanks for your most valuable of time,
+> > > 
+> 
+> New v0.8.15 VHACS-VM images online btw.  Keep checking the site for more details.
+> 
+> Many thanks for your most valuable of time,
+> 
+> --nab
+> 
+> 
+-- 
+Ming Zhang
 
-Kai
 
------------------------8<-----------------------------------------------
-diff --git a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
-index 4075260..1f6ff53 100644
---- a/Documentation/scsi/st.txt
-+++ b/Documentation/scsi/st.txt
-@@ -291,6 +291,8 @@ The supported ioctls are:
- 
- The following use the structure mtop:
- 
-+MTIOCTOP implements the following operations
-+
- MTFSF   Space forward over count filemarks. Tape positioned after filemark.
- MTFSFM  As above but tape positioned before filemark.
- MTBSF	Space backward over count filemarks. Tape positioned before
-@@ -457,6 +459,22 @@ MTIOCGET Returns some status information.
- 	is set if there is no tape in the drive. GMT_EOD means either
- 	end of recorded data or end of tape. GMT_EOT means end of tape.
- 
-+The following ioctl uses the structure mtsense to return error information:
-+MTIOCSENSE returns the sense data from the previous "interesting" SCSI command
-+	resulting in CHECK CONDITION. Sense data is not saved from a command
-+	if it is used only for supporting the implementation of the tape
-+	semantics and the sense data from that command would overwrite the
-+	sense data from the error interesting to the user. For instance, error
-+	from backspacing over a block by st after a read error does not
-+	overwrite the sense data from the read. The field 'latest' tells if
-+	the sense data is from the previous SCSI command sent to the device
-+	(all SCSI commands are counted). The cdb array contains the command
-+	block from the command resulting in the sense data. The field length
-+	tells the length of the sense data returned by this ioctl (it may be
-+	smaller than the length of the sense data the device provides if the
-+	it is limited by the HBA driver or SCSI midlevel). The field residual
-+	tells the residual byte count returned by the HBA driver. Note
-+	that all HBA drivers may not return correct residual.
- 
- MISCELLANEOUS COMPILE OPTIONS
- 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1986ebc..2726205 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static const char *verstr = "20080504";
-+static const char *verstr = "20080713";
- 
- #include <linux/module.h>
- 
-@@ -352,14 +352,22 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	char *name = tape_name(STp);
- 	struct st_cmdstatus *cmdstatp;
- 
-+	STp->saved_sense_latest = 0;
- 	if (!result)
- 		return 0;
- 
- 	cmdstatp = &STp->buffer->cmdstat;
- 	st_analyze_sense(SRpnt, cmdstatp);
- 
--	if (cmdstatp->have_sense)
-+	if (cmdstatp->have_sense) {
- 		scode = STp->buffer->cmdstat.sense_hdr.sense_key;
-+		if (SRpnt->save_sense) {
-+			memcpy(STp->saved_sense_cmd, SRpnt->cmd, MAX_COMMAND_SIZE);
-+			memcpy(STp->saved_sense, SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
-+			STp->saved_sense_latest = 1;
-+			STp->saved_residual = STp->buffer->cmdstat.residual;
-+		}
-+	}
- 	else
- 		scode = 0;
- 
-@@ -465,7 +473,7 @@ static void st_release_request(struct st_request *streq)
-    has finished. */
- static struct st_request *
- st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd,
--	   int bytes, int direction, int timeout, int retries, int do_wait)
-+	   int bytes, int direction, int timeout, int retries, int do_wait, int save_sense)
- {
- 	struct completion *waiting;
- 
-@@ -491,6 +499,7 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
- 				(STp->buffer)->syscall_result = (-EBUSY);
- 			return NULL;
- 		}
-+		SRpnt->save_sense = save_sense;
- 		SRpnt->stp = STp;
- 	}
- 
-@@ -612,7 +621,7 @@ static int cross_eof(struct scsi_tape * STp, int forward)
- 		   tape_name(STp), forward ? "forward" : "backward"));
- 
- 	SRpnt = st_do_scsi(NULL, STp, cmd, 0, DMA_NONE,
--			   STp->device->timeout, MAX_RETRIES, 1);
-+			   STp->device->timeout, MAX_RETRIES, 1, 0);
- 	if (!SRpnt)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -656,7 +665,7 @@ static int st_flush_write_buffer(struct scsi_tape * STp)
- 		cmd[4] = blks;
- 
- 		SRpnt = st_do_scsi(NULL, STp, cmd, transfer, DMA_TO_DEVICE,
--				   STp->device->timeout, MAX_WRITE_RETRIES, 1);
-+				   STp->device->timeout, MAX_WRITE_RETRIES, 1, 1);
- 		if (!SRpnt)
- 			return (STp->buffer)->syscall_result;
- 
-@@ -852,7 +861,7 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
- 		memset((void *) &cmd[0], 0, MAX_COMMAND_SIZE);
- 		cmd[0] = TEST_UNIT_READY;
- 		SRpnt = st_do_scsi(SRpnt, STp, cmd, 0, DMA_NONE,
--				   STp->long_timeout, MAX_READY_RETRIES, 1);
-+				   STp->long_timeout, MAX_READY_RETRIES, 1, 1);
- 
- 		if (!SRpnt) {
- 			retval = (STp->buffer)->syscall_result;
-@@ -986,7 +995,7 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- 		cmd[0] = READ_BLOCK_LIMITS;
- 
- 		SRpnt = st_do_scsi(SRpnt, STp, cmd, 6, DMA_FROM_DEVICE,
--				   STp->device->timeout, MAX_READY_RETRIES, 1);
-+				   STp->device->timeout, MAX_READY_RETRIES, 1, 0);
- 		if (!SRpnt) {
- 			retval = (STp->buffer)->syscall_result;
- 			goto err_out;
-@@ -1013,7 +1022,7 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- 	cmd[4] = 12;
- 
- 	SRpnt = st_do_scsi(SRpnt, STp, cmd, 12, DMA_FROM_DEVICE,
--			STp->device->timeout, MAX_READY_RETRIES, 1);
-+			   STp->device->timeout, MAX_READY_RETRIES, 1, 0);
- 	if (!SRpnt) {
- 		retval = (STp->buffer)->syscall_result;
- 		goto err_out;
-@@ -1240,7 +1249,7 @@ static int st_flush(struct file *filp, fl_owner_t id)
- 		cmd[4] = 1 + STp->two_fm;
- 
- 		SRpnt = st_do_scsi(NULL, STp, cmd, 0, DMA_NONE,
--				   STp->device->timeout, MAX_WRITE_RETRIES, 1);
-+				   STp->device->timeout, MAX_WRITE_RETRIES, 1, 1);
- 		if (!SRpnt) {
- 			result = (STp->buffer)->syscall_result;
- 			goto out;
-@@ -1627,7 +1636,7 @@ st_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 		cmd[4] = blks;
- 
- 		SRpnt = st_do_scsi(SRpnt, STp, cmd, transfer, DMA_TO_DEVICE,
--				   STp->device->timeout, MAX_WRITE_RETRIES, !async_write);
-+				   STp->device->timeout, MAX_WRITE_RETRIES, !async_write, 1);
- 		if (!SRpnt) {
- 			retval = STbp->syscall_result;
- 			goto out;
-@@ -1797,7 +1806,7 @@ static long read_tape(struct scsi_tape *STp, long count,
- 
- 	SRpnt = *aSRpnt;
- 	SRpnt = st_do_scsi(SRpnt, STp, cmd, bytes, DMA_FROM_DEVICE,
--			   STp->device->timeout, MAX_RETRIES, 1);
-+			   STp->device->timeout, MAX_RETRIES, 1, 1);
- 	release_buffering(STp, 1);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt)
-@@ -2314,7 +2323,7 @@ static int read_mode_page(struct scsi_tape *STp, int page, int omit_block_descs)
- 	cmd[4] = 255;
- 
- 	SRpnt = st_do_scsi(SRpnt, STp, cmd, cmd[4], DMA_FROM_DEVICE,
--			   STp->device->timeout, 0, 1);
-+			   STp->device->timeout, 0, 1, 0);
- 	if (SRpnt == NULL)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -2345,7 +2354,7 @@ static int write_mode_page(struct scsi_tape *STp, int page, int slow)
- 	(STp->buffer)->b_data[pgo + MP_OFF_PAGE_NBR] &= MP_MSK_PAGE_NBR;
- 
- 	SRpnt = st_do_scsi(SRpnt, STp, cmd, cmd[4], DMA_TO_DEVICE,
--			   (slow ? STp->long_timeout : STp->device->timeout), 0, 1);
-+			   (slow ? STp->long_timeout : STp->device->timeout), 0, 1, 0);
- 	if (SRpnt == NULL)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -2470,7 +2479,7 @@ static int do_load_unload(struct scsi_tape *STp, struct file *filp, int load_cod
- 		);
- 
- 	SRpnt = st_do_scsi(NULL, STp, cmd, 0, DMA_NONE,
--			   timeout, MAX_RETRIES, 1);
-+			   timeout, MAX_RETRIES, 1, 1);
- 	if (!SRpnt)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -2770,7 +2779,7 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 	}
- 
- 	SRpnt = st_do_scsi(NULL, STp, cmd, datalen, direction,
--			   timeout, MAX_RETRIES, 1);
-+			   timeout, MAX_RETRIES, 1, 1);
- 	if (!SRpnt)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -2937,7 +2946,7 @@ static int get_location(struct scsi_tape *STp, unsigned int *block, int *partiti
- 			scmd[1] = 1;
- 	}
- 	SRpnt = st_do_scsi(NULL, STp, scmd, 20, DMA_FROM_DEVICE,
--			STp->device->timeout, MAX_READY_RETRIES, 1);
-+			   STp->device->timeout, MAX_READY_RETRIES, 1, 1);
- 	if (!SRpnt)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -3042,7 +3051,7 @@ static int set_location(struct scsi_tape *STp, unsigned int block, int partition
- 	}
- 
- 	SRpnt = st_do_scsi(NULL, STp, scmd, 0, DMA_NONE,
--			   timeout, MAX_READY_RETRIES, 1);
-+			   timeout, MAX_READY_RETRIES, 1, 1);
- 	if (!SRpnt)
- 		return (STp->buffer)->syscall_result;
- 
-@@ -3223,6 +3232,41 @@ static int partition_tape(struct scsi_tape *STp, int size)
- 	return result;
- }
- 
+@#$%^ purging memory... (*!%
+http://blackmagic02881.wordpress.com/
+http://www.linkedin.com/in/blackmagic02881
+--------------------------------------------
 
-+/* Assemble the MTIOCSENSE return and transfer it to user */
-+static int do_mtiocsense(struct scsi_tape *STp, void __user *p)
-+{
-+	int i, retval = 0;
-+	struct mtsense *mt_sensep;
-+
-+	mt_sensep = kzalloc(sizeof(struct mtsense), GFP_KERNEL);
-+	if (!mt_sensep) {
-+		retval = -ENOMEM;
-+		goto out;
-+	}
-+
-+	if (STp->saved_sense) {
-+		mt_sensep->length = MTIOCSENSE_SENSE_LENGTH;
-+		if (mt_sensep->length > SCSI_SENSE_BUFFERSIZE)
-+			mt_sensep->length = SCSI_SENSE_BUFFERSIZE;
-+		if ((STp->saved_sense[0] & 0x70) == 0x70) {
-+			i = STp->saved_sense[7] + 8;
-+			if (i < mt_sensep->length)
-+				mt_sensep->length = i;
-+		}
-+		mt_sensep->latest = STp->saved_sense_latest;
-+		memcpy(mt_sensep->cdb, STp->saved_sense_cmd, MTIOCSENSE_CDB_LENGTH < MAX_COMMAND_SIZE ?
-+		       MTIOCSENSE_CDB_LENGTH : MAX_COMMAND_SIZE);
-+		mt_sensep->residual = STp->saved_residual;
-+		memcpy(mt_sensep->data, STp->saved_sense, SCSI_SENSE_BUFFERSIZE);
-+	}
-+
-+	i = copy_to_user(p, mt_sensep, sizeof(struct mtsense));
-+	if (i)
-+		retval = (-EFAULT);
-+	kfree(mt_sensep);
-+out:
-+	return retval;
-+}
- 
- 
- /* The ioctl command */
-@@ -3548,6 +3592,12 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 			retval = (-EFAULT);
- 		goto out;
- 	}
-+
-+	if (cmd_type == _IOC_TYPE(MTIOCSENSE) && cmd_nr == _IOC_NR(MTIOCSENSE)) {
-+		retval = do_mtiocsense(STp, p);
-+		goto out;
-+	}
-+
- 	mutex_unlock(&STp->lock);
- 	switch (cmd_in) {
- 		case SCSI_IOCTL_GET_IDLUN:
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index b92712f..f72ab60 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -27,6 +27,7 @@ struct st_request {
- 	unsigned char cmd[MAX_COMMAND_SIZE];
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
- 	int result;
-+	int save_sense;
- 	struct scsi_tape *stp;
- 	struct completion *waiting;
- };
-@@ -160,6 +161,14 @@ struct scsi_tape {
- 	int recover_count;     /* From tape opening */
- 	int recover_reg;       /* From last status call */
- 
-+	/* The latest sense data to be returned to the user. If the first byte is zero,
-+	   there is no sense data to return. */
-+	unsigned char saved_sense[SCSI_SENSE_BUFFERSIZE];
-+	unsigned char saved_sense_cmd[MAX_COMMAND_SIZE];/* the command resulting in request sense */
-+	unsigned char saved_sense_latest;		/* is the sense data from the latest command
-+							   submitted to the device */
-+	int saved_residual;	/* the HBA residual associated with this sense data */
-+
- #if DEBUG
- 	unsigned char write_pending;
- 	int nbr_finished;
-diff --git a/include/linux/mtio.h b/include/linux/mtio.h
-index ef01d6a..2685bd2 100644
---- a/include/linux/mtio.h
-+++ b/include/linux/mtio.h
-@@ -122,11 +122,23 @@ struct	mtpos {
- 	long 	mt_blkno;	/* current block number */
- };
- 
-+/* structure for MTIOCSENSE - mag tape get sense data */
-+#define MTIOCSENSE_SENSE_LENGTH 252
-+#define MTIOCSENSE_CDB_LENGTH   16
-+struct mtsense {
-+	__u16 length;		/* the length of the returned sense data */
-+	__u8 cdb[MTIOCSENSE_CDB_LENGTH];/* the command that returned the sense data */
-+	__u8 latest;		/* is this sense data from the latest SCSI command to device? */
-+	__s32 residual;		/* the residual returned from HBA */
-+	__u8 data[MTIOCSENSE_SENSE_LENGTH];/* space for all data in REQUEST SENSE response */
-+};
-+
- 
- /* mag tape io control commands */
- #define	MTIOCTOP	_IOW('m', 1, struct mtop)	/* do a mag tape op */
- #define	MTIOCGET	_IOR('m', 2, struct mtget)	/* get tape status */
- #define	MTIOCPOS	_IOR('m', 3, struct mtpos)	/* get tape position */
-+#define MTIOCSENSE      _IOR('m', 4, struct mtsense)    /* get latest sense data */
- 
- 
- /* Generic Mag Tape (device independent) status macros for examining
