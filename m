@@ -1,46 +1,43 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [Bugme-new] [Bug 11072] New: scsi-layer crash after usb storage
- device unplug
-Date: Sat, 12 Jul 2008 15:50:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0807121548190.17776-100000@netrider.rowland.org>
-References: <20080712060525.07b718da.akpm@linux-foundation.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: bidi support: FC transport layer...
+Date: Sun, 13 Jul 2008 12:15:32 +0300
+Message-ID: <4879C7B4.8000609@panasas.com>
+References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <48762B07.703@panasas.com> <4414E10D-6015-4768-BD97-D4A51E439573@qlogic.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20080712060525.07b718da.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27476 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750864AbYGMJPw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2008 05:15:52 -0400
+In-Reply-To: <4414E10D-6015-4768-BD97-D4A51E439573@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Sat, 12 Jul 2008, Andrew Morton wrote:
-
-> (switched to email.  Please respond via emailed reply-to-all, not via the
-> bugzilla web interface).
+Seokmann Ju wrote:
+<snip>
+> FC-CT and ELS are FC specifics.
+> So, as far as I understood, the idea is to control and manage the  
+> given FC layout via those frames without having any subsystem  
+> interventions.
+> One of the goal of the implementation is to provide pipe line in  
+> between the application and the target devices under the given layout.
+> Is the bidi tightly coupled with the SCSI CDB, or it can transport any  
+> packet regardless its contents?
 > 
-> On Sat, 12 Jul 2008 01:50:37 -0700 (PDT) bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11072
-> > 
-> >            Summary: scsi-layer crash after usb storage device unplug
 
-> > Latest working kernel version: no idea, never saw this problem before with the
-> > same device, but the memory card is new
-> > Earliest failing kernel version: no idea either, current kernel is
-> > 2.6.26-rc9-wl-12766-ga0b2a63-dirty
-> > Distribution: debian/unstable
-> > Hardware Environment: powerbook 5,6
-> > Software Environment:
-> > Problem Description: SDHC card in USB reader wasn't responding, so I unplugged
-> > and got a null pointer deref
+There is *no* restrictions or filtering what so ever. You can send any 
+kind of CDB with any kind of buffers as BIOs. Even better, the scsi
+midlayer is very careful to immediately fail a bidi command and not 
+try any kind of reties or error handling. So yes if you are emulating 
+a command execution in SW you should be safe. What I said is true at 
+scsi level, at block level of course there is no restrictions for 
+any command.
 
-This looks like a problem reported earlier and fixed by this patch:
+<snip>
 
-http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-04-usb/usb-storage-revert-dma-alignment-change-for-wireless-usb.patch
+Boaz
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
