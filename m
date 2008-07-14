@@ -1,44 +1,88 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: Re: [PATCH] qla1280: use request_firmware
-Date: Mon, 14 Jul 2008 16:03:31 +0200
-Message-ID: <487B5CB3.60207@sgi.com>
-References: <1215770284.2733.10.camel@jaswinder.satnam>	 <487B1C73.5000202@sgi.com> <1216039088.10198.8.camel@jaswinder.satnam>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] advansys: use request_firmware
+Date: Mon, 14 Jul 2008 08:50:34 -0600
+Message-ID: <20080714145033.GD14894@parisc-linux.org>
+References: <1215770322.2733.12.camel@jaswinder.satnam> <20080712162921.GZ14894@parisc-linux.org> <1215882548.19076.57.camel@jaswinder.satnam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.171.30]:39043 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753664AbYGNODg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 10:03:36 -0400
-In-Reply-To: <1216039088.10198.8.camel@jaswinder.satnam>
+Received: from palinux.external.hp.com ([192.25.206.14]:60773 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222AbYGNOuu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jul 2008 10:50:50 -0400
+Content-Disposition: inline
+In-Reply-To: <1215882548.19076.57.camel@jaswinder.satnam>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jaswinder Singh <jaswinder@infradead.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, David Woodhouse <dwmw2@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, kernel-janitors <kernel-janitors@vger.kernel.org>, kernelnewbies <kernelnewbies@nl.linux.org>, linux-scsi@vger.kernel.org, hch@infradead.org
 
-Jaswinder Singh wrote:
-> We have not changed the data.
-> We are passing risc_code01 data by using request_firmware when required.
+On Sat, Jul 12, 2008 at 10:39:08PM +0530, Jaswinder Singh wrote:
+> Sorry, It should be :-
+> +       if (AscLoadMicroCode(iop_base, 0, &fw->data[4],
+> +                            fw->size - 4) != chksum) {
+>                 asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
+> +               release_firmware(fw);
+>                 return warn_code;
+>         }
+> +       release_firmware(fw);
+>         warn_code |= AscInitMicroCodeVar(asc_dvc);
+
+OK, makes sense.
+
+> > You're calling release_firmware() here.  I don't know if that actually
+> > frees the firmware when it's built-in, but if it does, then freeing the
+> > firmware could cause the chip to stop working if it gets reset before
+> > userspace is up.
 > 
-> If you found some problem in the code, Please let me know.
+> Normally release_firmware will be called after loading microcode.
+> 
+> Even it gets reset then It will again call request_firmware and load
+> firmware and then frees after loading microcode.
+> 
+> Logically it will work same as microcode_buffer say _adv_asc3550_buf[]
+> when you need to load microcode you just read from ???_adv_asc3550_buf[]
+> and load it. And if reset occurs you again read from ???_adv_asc3550_buf[]
+> and then load microcode, but you keep ???_adv_asc3550_buf[] all the time
+> in memory.
+> In our case we just request_firmware when need to load microcode and
+> release_firmware after loading. So we frees the memory after loading
+> microcode.
+> 
+> So it will not stop the chip from working.
 
-My issue was not about changing the format of the data, but about it
-being forced into userland, ie. requiring an initrd. After speaking to
-Woodhouse over irc, I have learned that with the new firmware
-infrastructure this is optional and one can still link the firmware into
-the kernel.
+I'm not quite sure whether my question was answered ...
 
-Given that the previous firmware moving patches have always been about
-getting firmware out of the kernel due to certain distro's being silly
-about it, this wasn't actually obvious. If your patch description had
-been a little more detailed and explained that it didn't require
-firmware to go into userland it would have been easier for someone who
-hasn't been following the previous thread on the subject.
+When firmware is built in, does
+1) request_firmware() make a copy of it and then release_firmware free
+   that copy?
+2) request_firmware() return a pointer to the built-in firmware with
+   release_firmware() being a no-op?
+3) request_firmware() return a pointer to the built-in firmware with
+   release_firmware() freeing the original?
 
-So, I don't have any objections to this patch as long as the new
-firmware interface continues to allow me to link this into the kernel.
+Cases 1 and 2 are fine, case 3 is a problem.
 
-Regards,
-Jes
+By the way:
 
++Driver: SCSI_ADVANSYS - AdvanSys SCSI
++
++File: advansys/mcode.bin 
++File: advansys/3550.bin 
++File: advansys/38C0800.bin 
++File: advansys/38C1600.bin 
++
++Licence: Allegedly GPLv2+, but no source visible.
++
++Found in hex form in kernel source.
+
+I haven't modified the firmware at all (how could I?  ;-) since the
+version in, say, 2.6.20 which was licensed under GPL or BSD.  You could
+take the firmware from there under the BSD license without any legal
+trouble from me.  IANAL, but this seems correct to me.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
