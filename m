@@ -1,120 +1,112 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET 2.6.26] block: unify disk/part handling and improve ext devt
-Date: Mon, 14 Jul 2008 16:48:00 +0900
-Message-ID: <1216021693-483-1-git-send-email-tj@kernel.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
+Subject: [PATCH 07/13] block: move holder_dir from disk to part0
+Date: Mon, 14 Jul 2008 16:48:07 +0900
+Message-ID: <1216021693-483-8-git-send-email-tj@kernel.org>
+References: <1216021693-483-1-git-send-email-tj@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:36859 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755085AbYGNHt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2008 03:49:29 -0400
+In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello, again.
+Move disk->holder_dir to part0->holder_dir.  Kill now mostly
+superflous bdev_get_holder().
 
-This is the first take of unify-disk-part-handling patchset.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ fs/block_dev.c        |   10 +---------
+ fs/partitions/check.c |   20 +++++++-------------
+ include/linux/genhd.h |    1 -
+ 3 files changed, 8 insertions(+), 23 deletions(-)
 
-The block code represented a disk with struct genhd and a partition
-with struct hd_struct.  The whole disk (a.k.a partition 0) has a lot
-in common with other partitions but genhd and hd_struct had their own
-versions for the same things.  This led to good number of duplicate
-similar code paths and branches to deal with them separately.  Also,
-the partition array disk->part[] is indexed by partno - 1 which gets
-quite confusing at times.
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 4fd822d..a563e71 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -548,14 +548,6 @@ static struct kobject *bdev_get_kobj(struct block_device *bdev)
+ 		return kobject_get(&disk_to_dev(bdev->bd_disk)->kobj);
+ }
+ 
+-static struct kobject *bdev_get_holder(struct block_device *bdev)
+-{
+-	if (bdev->bd_contains != bdev)
+-		return kobject_get(bdev->bd_part->holder_dir);
+-	else
+-		return kobject_get(bdev->bd_disk->holder_dir);
+-}
+-
+ static int add_symlink(struct kobject *from, struct kobject *to)
+ {
+ 	if (!from || !to)
+@@ -608,7 +600,7 @@ static int bd_holder_grab_dirs(struct block_device *bdev,
+ 	if (!bo->sdev)
+ 		goto fail_put_hdev;
+ 
+-	bo->hdir = bdev_get_holder(bdev);
++	bo->hdir = kobject_get(bdev->bd_part->holder_dir);
+ 	if (!bo->hdir)
+ 		goto fail_put_sdev;
+ 
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index bb969a0..e247b81 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -304,23 +304,17 @@ struct device_type part_type = {
+ 	.release	= part_release,
+ };
+ 
+-static inline void partition_sysfs_add_subdir(struct hd_struct *p)
++static inline void partition_sysfs_add_subdir(struct hd_struct *part)
+ {
+-	struct kobject *k;
+-
+-	k = kobject_get(&part_to_dev(p)->kobj);
+-	p->holder_dir = kobject_create_and_add("holders", k);
+-	kobject_put(k);
++	part->holder_dir = kobject_create_and_add("holders",
++						  &part_to_dev(part)->kobj);
+ }
+ 
+ static inline void disk_sysfs_add_subdirs(struct gendisk *disk)
+ {
+-	struct kobject *k;
+-
+-	k = kobject_get(&disk_to_dev(disk)->kobj);
+-	disk->holder_dir = kobject_create_and_add("holders", k);
+-	disk->slave_dir = kobject_create_and_add("slaves", k);
+-	kobject_put(k);
++	partition_sysfs_add_subdir(&disk->part0);
++	disk->slave_dir = kobject_create_and_add("slaves",
++						 &disk_to_dev(disk)->kobj);
+ }
+ 
+ static void delete_partition_rcu_cb(struct rcu_head *head)
+@@ -588,7 +582,7 @@ void del_gendisk(struct gendisk *disk)
+ 	disk_stat_set_all(disk, 0);
+ 	disk->stamp = 0;
+ 
+-	kobject_put(disk->holder_dir);
++	kobject_put(disk->part0.holder_dir);
+ 	kobject_put(disk->slave_dir);
+ 	disk->driverfs_dev = NULL;
+ #ifndef CONFIG_SYSFS_DEPRECATED
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 0edef09..bf3d7e3 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -142,7 +142,6 @@ struct gendisk {
+ 
+ 	int flags;
+ 	struct device *driverfs_dev;  // FIXME: remove
+-	struct kobject *holder_dir;
+ 	struct kobject *slave_dir;
+ 
+ 	struct timer_rand_state *random;
+-- 
+1.5.4.5
 
-This patchset introduces partition 0 and unifies handling of the whole
-disk and other partitions and, on top of those changes, improves ext
-devt handling such that increasing the number of allowed partitions
-can be done without much overhead and the disk device itself can be
-allocated an extended devt.
-
-This patchset contains the following 13 patches.
-
-  0001-block-implement-and-use-disk-part-_to_dev.patch
-  0002-block-introduce-partition-0.patch
-  0003-block-move-capacity-from-disk-to-part0.patch
-  0004-block-move-__dev-from-disk-to-part0.patch
-  0005-block-unify-sysfs-size-node-handling.patch
-  0006-block-move-policy-from-disk-to-part0.patch
-  0007-block-move-holder_dir-from-disk-to-part0.patch
-  0008-block-always-set-bdev-bd_part.patch
-  0009-block-kill-GENHD_FL_FAIL-and-use-part0-make_it_fai.patch
-  0010-block-move-stats-from-disk-to-part0.patch
-  0011-block-make-partition-array-dynamic.patch
-  0012-block-replace-ext_minors-with-GENHD_FL_EXT_DEVT.patch
-  0013-block-allow-disk-to-have-extended-device-number.patch
-
-0001-0002: preps and introduces part0
-0003-0009: moves what's common from disk to part0 and unifies code
-	   paths
-0010     : simplifies stats handling
-0011	 : make partition array dynamic
-0012	 : ext_minors restriction isn't necessary anymore.  simplify
-           ext devt interface
-0013     : allow disk (part0) to have extended devt
-
-After this patchset, partition number is only limited by the number of
-entries in struct parsed_partitions which is used by actual partition
-scan code.  The limit is currently 256 but it can be increased by
-changing MAX_PART.
-
-A block driver now can simply set GENHD_FL_EXT_DEVT and skip
-specifying disk->minors to tell block layer to use extended devt for
-the disk and its partitions.  There's no need to allocate fixed
-regions and worry about the device number availability.
-
-If CONFIG_DEBUG_BLOCK_EXT_DEVT is turned on, sd and ide-disk use ext
-devt for everything.
-
-This patchset is on top of
-
-  v2.6.26 (bce7f793daec3e65ec5c5705d2457b81fe7b5725)
-+ [1] RCU-implement-rcu_read_[un]lock_preempt
-+ [2] block-fix-block_class-iteration-locking
-+ [3] block-allow-deleting-zero-lenght-partition
-+ [4] block-update-add_partition-error-handling
-+ [5] sd-update-index-allocation-and-use-ida
-+ [6] block-extended-devt patchset, take #2
-
-and available in the following git tree.
-
-  http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=block-unify-disk-part
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-disk-part
-
-Even with the added feature and comments, this patchset reduces code
-by 40 lines.  ;-)
-
- block/blk-core.c           |   84 +++------
- block/blk-merge.c          |    8 
- block/blk-sysfs.c          |    4 
- block/genhd.c              |  402 ++++++++++++++++++++++-----------------------
- block/ioctl.c              |    4 
- drivers/block/aoe/aoeblk.c |    6 
- drivers/block/aoe/aoecmd.c |   12 -
- drivers/block/aoe/aoedev.c |    2 
- drivers/block/nbd.c        |    4 
- drivers/ide/ide-cd.c       |    2 
- drivers/ide/ide-disk.c     |   16 -
- drivers/ide/ide-probe.c    |    2 
- drivers/md/dm-ioctl.c      |    2 
- drivers/md/dm.c            |   19 +-
- drivers/md/linear.c        |    4 
- drivers/md/md.c            |   15 -
- drivers/md/multipath.c     |    4 
- drivers/md/raid0.c         |    4 
- drivers/md/raid1.c         |    4 
- drivers/md/raid10.c        |    4 
- drivers/md/raid5.c         |    4 
- drivers/scsi/sd.c          |   83 ++++++---
- fs/block_dev.c             |   79 +++-----
- fs/partitions/check.c      |  160 +++++++++--------
- fs/partitions/check.h      |    4 
- include/linux/genhd.h      |  238 +++++++++++---------------
- 26 files changed, 565 insertions(+), 605 deletions(-)
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.kernel/706149
-[2] http://article.gmane.org/gmane.linux.kernel/706152
-[3] http://article.gmane.org/gmane.linux.kernel/706153
-[4] http://article.gmane.org/gmane.linux.kernel/706154
-[5] http://article.gmane.org/gmane.linux.scsi/43109
-[6] http://thread.gmane.org/gmane.linux.kernel/706175
