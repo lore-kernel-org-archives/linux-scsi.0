@@ -1,66 +1,57 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/6] ibmvfc: Reduce unnecessary log noise
-Date: Mon, 14 Jul 2008 14:36:29 -0500
-Message-ID: <200807141936.m6EJafjQ016516@d03av03.boulder.ibm.com>
+Subject: [PATCH 4/6] ibmvfc: Miscellaneous fixes
+Date: Mon, 14 Jul 2008 14:36:34 -0500
+Message-ID: <200807141936.m6EJakkZ021154@d01av03.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:38866 "EHLO e4.ny.us.ibm.com"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:54240 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755482AbYGNTgr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 15:36:47 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6EJakQG031151
+	id S1755515AbYGNTg6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2008 15:36:58 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6EJdM4Q030709
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 15:39:22 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6EJalGC218812
 	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 15:36:47 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6EJajUq1916960
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 15:36:46 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6EJafgF016584
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 13:36:42 -0600
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6EJak6C021185
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 15:36:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-Reduces some unnecessary log noise by removing a printk during
-host port state query and increasing the log level required to
-log received async events.
+Properly setup the size of the async event queue. This fixes a bug where async events
+were not getting processed by the driver.
+
+Setup target_id field in the driver's target struct so that target sysfs attributes
+work for multiple targets.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_port_state_fix drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_port_state_fix	2008-07-14 09:01:59.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-07-14 10:13:03.000000000 -0500
-@@ -963,6 +963,9 @@ static void ibmvfc_get_host_port_state(s
- 	case IBMVFC_HALTED:
- 		fc_host_port_state(shost) = FC_PORTSTATE_BLOCKED;
- 		break;
-+	case IBMVFC_NO_CRQ:
-+		fc_host_port_state(shost) = FC_PORTSTATE_UNKNOWN;
-+		break;
- 	default:
- 		ibmvfc_log(vhost, 3, "Unknown port state: %d\n", vhost->state);
- 		fc_host_port_state(shost) = FC_PORTSTATE_UNKNOWN;
-@@ -1404,7 +1407,7 @@ static void ibmvfc_log_error(struct ibmv
- 		err = cmd_status[index].name;
- 	}
- 
--	if (!logerr && (vhost->log_level <= IBMVFC_DEFAULT_LOG_LEVEL))
-+	if (!logerr && (vhost->log_level <= (IBMVFC_DEFAULT_LOG_LEVEL + 1)))
- 		return;
- 
- 	if (rsp->flags & FCP_RSP_LEN_VALID)
-@@ -2054,7 +2057,7 @@ static void ibmvfc_handle_async(struct i
- {
- 	const char *desc = ibmvfc_get_ae_desc(crq->event);
- 
--	ibmvfc_log(vhost, 2, "%s event received\n", desc);
-+	ibmvfc_log(vhost, 3, "%s event received\n", desc);
- 
- 	switch (crq->event) {
- 	case IBMVFC_AE_LINK_UP:
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_misc_fixes drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_misc_fixes	2008-07-11 08:54:59.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-07-11 08:56:38.000000000 -0500
+@@ -1136,7 +1136,7 @@ static void ibmvfc_set_login_info(struct
+ 	login_info->max_cmds = max_requests + IBMVFC_NUM_INTERNAL_REQ;
+ 	login_info->capabilities = IBMVFC_CAN_MIGRATE;
+ 	login_info->async.va = vhost->async_crq.msg_token;
+-	login_info->async.len = vhost->async_crq.size;
++	login_info->async.len = vhost->async_crq.size * sizeof(*vhost->async_crq.msgs);
+ 	strncpy(login_info->partition_name, vhost->partition_name, IBMVFC_MAX_NAME);
+ 	strncpy(login_info->device_name,
+ 		vhost->host->shost_gendev.bus_id, IBMVFC_MAX_NAME);
+@@ -3348,6 +3348,7 @@ static void ibmvfc_tgt_add_rport(struct 
+ 		tgt_dbg(tgt, "rport add succeeded\n");
+ 		rport->maxframe_size = tgt->service_parms.common.bb_rcv_sz & 0x0fff;
+ 		rport->supported_classes = 0;
++		tgt->target_id = rport->scsi_target_id;
+ 		if (tgt->service_parms.class1_parms[0] & 0x80000000)
+ 			rport->supported_classes |= FC_COS_CLASS1;
+ 		if (tgt->service_parms.class2_parms[0] & 0x80000000)
 _
