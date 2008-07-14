@@ -1,137 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/13] block: move __dev from disk to part0
-Date: Mon, 14 Jul 2008 16:48:04 +0900
-Message-ID: <1216021693-483-5-git-send-email-tj@kernel.org>
-References: <1216021693-483-1-git-send-email-tj@kernel.org>
+From: Jes Sorensen <jes@sgi.com>
+Subject: Re: [PATCH] qla1280: use request_firmware
+Date: Mon, 14 Jul 2008 11:29:23 +0200
+Message-ID: <487B1C73.5000202@sgi.com>
+References: <1215770284.2733.10.camel@jaswinder.satnam>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38117 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757165AbYGNHvi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:51:38 -0400
-In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
+Received: from relay1.sgi.com ([192.48.171.29]:46508 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754511AbYGNJ32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2008 05:29:28 -0400
+In-Reply-To: <1215770284.2733.10.camel@jaswinder.satnam>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
-Cc: Tejun Heo <tj@kernel.org>
+To: Jaswinder Singh <jaswinder@infradead.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, David Woodhouse <dwmw2@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, kernel-janitors <kernel-janitors@vger.kernel.org>, kernelnewbies <kernelnewbies@nl.linux.org>, linux-scsi@vger.kernel.org, hch@infradead.org
 
-Move disk->__dev to part0->__dev.  This simplifies bdget_disk() and
-lookup_devt() and allows common sysfs attributes to be unified.
-part_to_disk() is updated to handle part0 -> disk.
+Jaswinder Singh wrote:
+> this is a first draft; please be kind :)
+> 
+> Firmware blob is little endian looks like this...
+> 	unsigned char  Version1
+> 	unsigned char  Version2
+> 	unsigned char  Version3
+> 	unsigned char  Padding
+> 	unsigned short start_address
+> 	unsigned short data
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/genhd.c         |   40 ++++++++++++----------------------------
- include/linux/genhd.h |   13 ++++++++-----
- 2 files changed, 20 insertions(+), 33 deletions(-)
+Hello,
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 07f1597..25f76d5 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -532,22 +532,15 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
-  */
- extern struct block_device *bdget_disk(struct gendisk *disk, int partno)
- {
--	dev_t devt = MKDEV(0, 0);
-+	struct hd_struct *part;
-+	struct block_device *bdev = NULL;
- 
--	if (partno == 0)
--		devt = disk_devt(disk);
--	else {
--		struct hd_struct *part;
-+	part = disk_get_part(disk, partno);
-+	if (part && part->nr_sects)
-+		bdev = bdget(part_devt(part));
-+	disk_put_part(part);
- 
--		part = disk_get_part(disk, partno);
--		if (part && part->nr_sects)
--			devt = part_devt(part);
--		disk_put_part(part);
--	}
--
--	if (likely(devt != MKDEV(0, 0)))
--		return bdget(devt);
--	return NULL;
-+	return bdev;
- }
- EXPORT_SYMBOL(bdget_disk);
- 
-@@ -997,29 +990,20 @@ dev_t blk_lookup_devt(const char *name, int partno)
- 	down(&block_class.sem);
- 	list_for_each_entry(dev, &block_class.devices, node) {
- 		struct gendisk *disk = dev_to_disk(dev);
-+		struct hd_struct *part;
- 
- 		if (dev->type != &disk_type)
- 			continue;
- 		if (strcmp(dev->bus_id, name))
- 			continue;
--		if (partno < 0 || partno >= disk_max_parts(disk))
--			continue;
--
--		if (partno == 0)
--			devt = disk_devt(disk);
--		else {
--			struct hd_struct *part;
--
--			part = disk_get_part(disk, partno);
--			if (!part || !part->nr_sects) {
--				disk_put_part(part);
--				continue;
--			}
- 
-+		part = disk_get_part(disk, partno);
-+		if (part && part->nr_sects) {
- 			devt = part_devt(part);
- 			disk_put_part(part);
-+			break;
- 		}
--		break;
-+		disk_put_part(part);
- 	}
- 	up(&block_class.sem);
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 0c15733..c677bae 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -16,9 +16,9 @@
- #ifdef CONFIG_BLOCK
- 
- #define kobj_to_dev(k)		container_of((k), struct device, kobj)
--#define dev_to_disk(device)	container_of((device), struct gendisk, __dev)
-+#define dev_to_disk(device)	container_of((device), struct gendisk, part0.__dev)
- #define dev_to_part(device)	container_of((device), struct hd_struct, __dev)
--#define disk_to_dev(disk)	(&((disk)->__dev))
-+#define disk_to_dev(disk)	(&(disk)->part0.__dev)
- #define part_to_dev(part)	(&((part)->__dev))
- 
- extern struct device_type part_type;
-@@ -142,7 +142,6 @@ struct gendisk {
- 
- 	int flags;
- 	struct device *driverfs_dev;  // FIXME: remove
--	struct device __dev;
- 	struct kobject *holder_dir;
- 	struct kobject *slave_dir;
- 
-@@ -162,8 +161,12 @@ struct gendisk {
- 
- static inline struct gendisk *part_to_disk(struct hd_struct *part)
- {
--	if (likely(part))
--		return dev_to_disk(part_to_dev(part)->parent);
-+	if (likely(part)) {
-+		if (part->partno)
-+			return dev_to_disk(part_to_dev(part)->parent);
-+		else
-+			return dev_to_disk(part_to_dev(part));
-+	}
- 	return NULL;
- }
- 
--- 
-1.5.4.5
+As the maintainer of this driver I am going to say that I think this is
+a stupid change. Yes I know that politically there's a move to make
+everything use request firmware. However for my boot device, this is
+going to be a royal pain in the butt for developers who wish to boot
+test kernels with a / sitting on a 1280.
 
+IMHO this patch brings us nothing, but provides a lot of unnecessary
+hassle for users.
+
+Nacked-By: Jes Sorensen <jes@sgi.com>
+
+Regards,
+Jes
