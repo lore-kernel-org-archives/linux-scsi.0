@@ -1,112 +1,115 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/13] block: move holder_dir from disk to part0
-Date: Mon, 14 Jul 2008 16:48:07 +0900
-Message-ID: <1216021693-483-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/13] block: move capacity from disk to part0
+Date: Mon, 14 Jul 2008 16:48:03 +0900
+Message-ID: <1216021693-483-4-git-send-email-tj@kernel.org>
 References: <1216021693-483-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36859 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085AbYGNHt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:49:29 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Move disk->holder_dir to part0->holder_dir.  Kill now mostly
-superflous bdev_get_holder().
+Move disk->capacity to part0->nr_sects and convert all users who
+directly accessed the field to use {get|set}_capacity().  This is done
+early to allow the __dev field to be moved.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/block_dev.c        |   10 +---------
- fs/partitions/check.c |   20 +++++++-------------
- include/linux/genhd.h |    1 -
- 3 files changed, 8 insertions(+), 23 deletions(-)
+ drivers/block/aoe/aoeblk.c |    2 +-
+ drivers/block/aoe/aoecmd.c |    4 ++--
+ drivers/block/aoe/aoedev.c |    2 +-
+ fs/partitions/check.c      |    2 +-
+ include/linux/genhd.h      |    5 ++---
+ 5 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 4fd822d..a563e71 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -548,14 +548,6 @@ static struct kobject *bdev_get_kobj(struct block_device *bdev)
- 		return kobject_get(&disk_to_dev(bdev->bd_disk)->kobj);
+diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
+index 3edb6cb..aa69556 100644
+--- a/drivers/block/aoe/aoeblk.c
++++ b/drivers/block/aoe/aoeblk.c
+@@ -276,7 +276,7 @@ aoeblk_gdalloc(void *vp)
+ 	gd->first_minor = d->sysminor * AOE_PARTITIONS;
+ 	gd->fops = &aoe_bdops;
+ 	gd->private_data = d;
+-	gd->capacity = d->ssize;
++	set_capacity(gd, d->ssize);
+ 	snprintf(gd->disk_name, sizeof gd->disk_name, "etherd/e%ld.%d",
+ 		d->aoemajor, d->aoeminor);
+ 
+diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
+index 6710df3..b13e0b7 100644
+--- a/drivers/block/aoe/aoecmd.c
++++ b/drivers/block/aoe/aoecmd.c
+@@ -645,7 +645,7 @@ aoecmd_sleepwork(struct work_struct *work)
+ 		unsigned long flags;
+ 		u64 ssize;
+ 
+-		ssize = d->gd->capacity;
++		ssize = get_capacity(d->gd);
+ 		bd = bdget_disk(d->gd, 0);
+ 
+ 		if (bd) {
+@@ -707,7 +707,7 @@ ataid_complete(struct aoedev *d, struct aoetgt *t, unsigned char *id)
+ 	if (d->flags & (DEVFL_GDALLOC|DEVFL_NEWSIZE))
+ 		return;
+ 	if (d->gd != NULL) {
+-		d->gd->capacity = ssize;
++		set_capacity(d->gd, ssize);
+ 		d->flags |= DEVFL_NEWSIZE;
+ 	} else
+ 		d->flags |= DEVFL_GDALLOC;
+diff --git a/drivers/block/aoe/aoedev.c b/drivers/block/aoe/aoedev.c
+index a1d813a..6a8038d 100644
+--- a/drivers/block/aoe/aoedev.c
++++ b/drivers/block/aoe/aoedev.c
+@@ -91,7 +91,7 @@ aoedev_downdev(struct aoedev *d)
+ 	}
+ 
+ 	if (d->gd)
+-		d->gd->capacity = 0;
++		set_capacity(d->gd, 0);
+ 
+ 	d->flags &= ~DEVFL_UP;
  }
- 
--static struct kobject *bdev_get_holder(struct block_device *bdev)
--{
--	if (bdev->bd_contains != bdev)
--		return kobject_get(bdev->bd_part->holder_dir);
--	else
--		return kobject_get(bdev->bd_disk->holder_dir);
--}
--
- static int add_symlink(struct kobject *from, struct kobject *to)
- {
- 	if (!from || !to)
-@@ -608,7 +600,7 @@ static int bd_holder_grab_dirs(struct block_device *bdev,
- 	if (!bo->sdev)
- 		goto fail_put_hdev;
- 
--	bo->hdir = bdev_get_holder(bdev);
-+	bo->hdir = kobject_get(bdev->bd_part->holder_dir);
- 	if (!bo->hdir)
- 		goto fail_put_sdev;
- 
 diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index bb969a0..e247b81 100644
+index d4e677d..d504c1a 100644
 --- a/fs/partitions/check.c
 +++ b/fs/partitions/check.c
-@@ -304,23 +304,17 @@ struct device_type part_type = {
- 	.release	= part_release,
- };
- 
--static inline void partition_sysfs_add_subdir(struct hd_struct *p)
-+static inline void partition_sysfs_add_subdir(struct hd_struct *part)
- {
--	struct kobject *k;
--
--	k = kobject_get(&part_to_dev(p)->kobj);
--	p->holder_dir = kobject_create_and_add("holders", k);
--	kobject_put(k);
-+	part->holder_dir = kobject_create_and_add("holders",
-+						  &part_to_dev(part)->kobj);
- }
- 
- static inline void disk_sysfs_add_subdirs(struct gendisk *disk)
- {
--	struct kobject *k;
--
--	k = kobject_get(&disk_to_dev(disk)->kobj);
--	disk->holder_dir = kobject_create_and_add("holders", k);
--	disk->slave_dir = kobject_create_and_add("slaves", k);
--	kobject_put(k);
-+	partition_sysfs_add_subdir(&disk->part0);
-+	disk->slave_dir = kobject_create_and_add("slaves",
-+						 &disk_to_dev(disk)->kobj);
- }
- 
- static void delete_partition_rcu_cb(struct rcu_head *head)
-@@ -588,7 +582,7 @@ void del_gendisk(struct gendisk *disk)
+@@ -582,7 +582,7 @@ void del_gendisk(struct gendisk *disk)
+ 		delete_partition(disk, part->partno);
+ 	}
+ 	invalidate_partition(disk, 0);
+-	disk->capacity = 0;
++	set_capacity(disk, 0);
+ 	disk->flags &= ~GENHD_FL_UP;
+ 	unlink_gendisk(disk);
  	disk_stat_set_all(disk, 0);
- 	disk->stamp = 0;
- 
--	kobject_put(disk->holder_dir);
-+	kobject_put(disk->part0.holder_dir);
- 	kobject_put(disk->slave_dir);
- 	disk->driverfs_dev = NULL;
- #ifndef CONFIG_SYSFS_DEPRECATED
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 0edef09..bf3d7e3 100644
+index 9018b11..0c15733 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -142,7 +142,6 @@ struct gendisk {
+@@ -139,7 +139,6 @@ struct gendisk {
+ 	struct block_device_operations *fops;
+ 	struct request_queue *queue;
+ 	void *private_data;
+-	sector_t capacity;
  
  	int flags;
  	struct device *driverfs_dev;  // FIXME: remove
--	struct kobject *holder_dir;
- 	struct kobject *slave_dir;
+@@ -397,11 +396,11 @@ static inline sector_t get_start_sect(struct block_device *bdev)
+ }
+ static inline sector_t get_capacity(struct gendisk *disk)
+ {
+-	return disk->capacity;
++	return disk->part0.nr_sects;
+ }
+ static inline void set_capacity(struct gendisk *disk, sector_t size)
+ {
+-	disk->capacity = size;
++	disk->part0.nr_sects = size;
+ }
  
- 	struct timer_rand_state *random;
+ #ifdef CONFIG_SOLARIS_X86_PARTITION
 -- 
 1.5.4.5
 
