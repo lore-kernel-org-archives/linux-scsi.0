@@ -1,256 +1,398 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 12/13] block: replace @ext_minors with GENHD_FL_EXT_DEVT
-Date: Mon, 14 Jul 2008 16:48:12 +0900
-Message-ID: <1216021693-483-13-git-send-email-tj@kernel.org>
+Subject: [PATCH 11/13] block: make partition array dynamic
+Date: Mon, 14 Jul 2008 16:48:11 +0900
+Message-ID: <1216021693-483-12-git-send-email-tj@kernel.org>
 References: <1216021693-483-1-git-send-email-tj@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37992 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37990 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755707AbYGNHti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:49:38 -0400
+	id S1756034AbYGNHtf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2008 03:49:35 -0400
 In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
 Cc: Tejun Heo <tj@kernel.org>
 
-With previous changes, it's meaningless to limit the number of
-partitions.  Replace @ext_minors with GENHD_FL_EXT_DEVT such that
-setting the flag allows the disk to have maximum number of allowed
-partitions (only limited by the number of entries in parsed_partitions
-as determined by MAX_PART constant).
-
-This kills not-too-pretty alloc_disk_ext[_node]() functions and makes
-@minors parameter to alloc_disk[_node]() unnecessary.  The parameter
-is left alone to avoid disturbing the users.
+disk->__part used to be statically allocated to the maximum possible
+number of partitions.  This patch makes partition array allocation
+dynamic.  The added overhead is minimal as only real change is one
+memory dereference changed to RCU one.  This saves both a bit of
+memory and cpu cycles iterating through unoccupied slots and makes
+increasing partition limit easier.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/genhd.c          |   16 +---------------
- drivers/ide/ide-disk.c |   14 +++++---------
- drivers/scsi/sd.c      |    9 ++-------
- fs/partitions/check.h  |    4 +---
- include/linux/genhd.h  |   16 ++++++++--------
- 5 files changed, 17 insertions(+), 42 deletions(-)
+ block/genhd.c         |  129 +++++++++++++++++++++++++++++++++++++++++--------
+ block/ioctl.c         |    2 +-
+ fs/partitions/check.c |   31 ++++++++++--
+ include/linux/genhd.h |   11 ++++-
+ 4 files changed, 146 insertions(+), 27 deletions(-)
 
 diff --git a/block/genhd.c b/block/genhd.c
-index 72aef36..b38c235 100644
+index 5d0f5d1..72aef36 100644
 --- a/block/genhd.c
 +++ b/block/genhd.c
-@@ -1025,19 +1025,10 @@ struct gendisk *alloc_disk(int minors)
+@@ -52,14 +52,21 @@ static struct device_type disk_type;
+  */
+ struct hd_struct *disk_get_part(struct gendisk *disk, int partno)
  {
- 	return alloc_disk_node(minors, -1);
+-	struct hd_struct *part;
++	struct hd_struct *part = NULL;
++	struct disk_part_tbl *ptbl;
+ 
+-	if (unlikely(partno < 0 || partno >= disk_max_parts(disk)))
++	if (unlikely(partno < 0))
+ 		return NULL;
++
+ 	rcu_read_lock();
+-	part = rcu_dereference(disk->__part[partno]);
+-	if (part)
+-		get_device(part_to_dev(part));
++
++	ptbl = rcu_dereference(disk->part_tbl);
++	if (likely(partno < ptbl->len)) {
++		part = rcu_dereference(ptbl->part[partno]);
++		if (part)
++			get_device(part_to_dev(part));
++	}
++
+ 	rcu_read_unlock();
+ 
+ 	return part;
+@@ -80,17 +87,24 @@ EXPORT_SYMBOL_GPL(disk_get_part);
+ void disk_part_iter_start(struct disk_part_iter *piter, struct gendisk *disk,
+ 			  unsigned int flags)
+ {
++	struct disk_part_tbl *ptbl;
++
++	rcu_read_lock();
++	ptbl = rcu_dereference(disk->part_tbl);
++
+ 	piter->disk = disk;
+ 	piter->part = NULL;
+ 
+ 	if (flags & DISK_PITER_REVERSE)
+-		piter->idx = disk_max_parts(piter->disk) - 1;
++		piter->idx = ptbl->len - 1;
+ 	else if (flags & DISK_PITER_INCL_PART0)
+ 		piter->idx = 0;
+ 	else
+ 		piter->idx = 1;
+ 
+ 	piter->flags = flags;
++
++	rcu_read_unlock();
  }
-+EXPORT_SYMBOL(alloc_disk);
+ EXPORT_SYMBOL_GPL(disk_part_iter_start);
  
- struct gendisk *alloc_disk_node(int minors, int node_id)
+@@ -105,13 +119,16 @@ EXPORT_SYMBOL_GPL(disk_part_iter_start);
+  */
+ struct hd_struct *disk_part_iter_next(struct disk_part_iter *piter)
  {
--	return alloc_disk_ext_node(minors, 0, node_id);
--}
--
--struct gendisk *alloc_disk_ext(int minors, int ext_minors)
--{
--	return alloc_disk_ext_node(minors, ext_minors, -1);
--}
--
--struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
--{
- 	struct gendisk *disk;
++	struct disk_part_tbl *ptbl;
+ 	int inc, end;
  
+ 	/* put the last partition */
+ 	disk_put_part(piter->part);
+ 	piter->part = NULL;
+ 
++	/* get part_tbl */
+ 	rcu_read_lock();
++	ptbl = rcu_dereference(piter->disk->part_tbl);
+ 
+ 	/* determine iteration parameters */
+ 	if (piter->flags & DISK_PITER_REVERSE) {
+@@ -122,14 +139,14 @@ struct hd_struct *disk_part_iter_next(struct disk_part_iter *piter)
+ 			end = 0;
+ 	} else {
+ 		inc = 1;
+-		end = disk_max_parts(piter->disk);
++		end = ptbl->len;
+ 	}
+ 
+ 	/* iterate to the next partition */
+ 	for (; piter->idx != end; piter->idx += inc) {
+ 		struct hd_struct *part;
+ 
+-		part = rcu_dereference(piter->disk->__part[piter->idx]);
++		part = rcu_dereference(ptbl->part[piter->idx]);
+ 		if (!part)
+ 			continue;
+ 		if (!(piter->flags & DISK_PITER_INCL_EMPTY) && !part->nr_sects)
+@@ -180,10 +197,13 @@ EXPORT_SYMBOL_GPL(disk_part_iter_stop);
+  */
+ struct hd_struct *disk_map_sector_rcu(struct gendisk *disk, sector_t sector)
+ {
++	struct disk_part_tbl *ptbl;
+ 	int i;
+ 
+-	for (i = 1; i < disk_max_parts(disk); i++) {
+-		struct hd_struct *part = rcu_dereference(disk->__part[i]);
++	ptbl = rcu_dereference(disk->part_tbl);
++
++	for (i = 1; i < ptbl->len; i++) {
++		struct hd_struct *part = rcu_dereference(ptbl->part[i]);
+ 
+ 		if (part && part->start_sect <= sector &&
+ 		    sector < part->start_sect + part->nr_sects)
+@@ -763,12 +783,86 @@ static struct attribute_group *disk_attr_groups[] = {
+ 	NULL
+ };
+ 
++static void disk_free_ptbl_rcu_cb(struct rcu_head *head)
++{
++	struct disk_part_tbl *ptbl =
++		container_of(head, struct disk_part_tbl, rcu_head);
++
++	kfree(ptbl);
++}
++
++/**
++ * disk_replace_part_tbl - replace disk->part_tbl in RCU-safe way
++ * @disk: disk to replace part_tbl for
++ * @new_ptbl: new part_tbl to install
++ *
++ * Replace disk->part_tbl with @new_ptbl in RCU-safe way.  The
++ * original ptbl is freed using RCU callback.
++ *
++ * LOCKING:
++ * Matching bd_mutx locked.
++ */
++static void disk_replace_part_tbl(struct gendisk *disk,
++				  struct disk_part_tbl *new_ptbl)
++{
++	struct disk_part_tbl *old_ptbl = disk->part_tbl;
++
++	rcu_assign_pointer(disk->part_tbl, new_ptbl);
++	if (old_ptbl)
++		call_rcu(&old_ptbl->rcu_head, disk_free_ptbl_rcu_cb);
++}
++
++/**
++ * disk_expand_part_tbl - expand disk->part_tbl
++ * @disk: disk to expand part_tbl for
++ * @partno: expand such that this partno can fit in
++ *
++ * Expand disk->part_tbl such that @partno can fit in.  disk->part_tbl
++ * uses RCU to allow unlocked dereferencing for stats and other stuff.
++ *
++ * LOCKING:
++ * Matching bd_mutex locked, might sleep.
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
++ */
++int disk_expand_part_tbl(struct gendisk *disk, int partno)
++{
++	struct disk_part_tbl *old_ptbl = disk->part_tbl;
++	struct disk_part_tbl *new_ptbl;
++	int len = old_ptbl ? old_ptbl->len : 0;
++	int target = partno + 1;
++	size_t size;
++	int i;
++
++	/* disk_max_parts() is zero during initialization, ignore if so */
++	if (disk_max_parts(disk) && target > disk_max_parts(disk))
++		return -EINVAL;
++
++	if (target <= len)
++		return 0;
++
++	size = sizeof(*new_ptbl) + target * sizeof(new_ptbl->part[0]);
++	new_ptbl = kzalloc_node(size, GFP_KERNEL, disk->node_id);
++	if (!new_ptbl)
++		return -ENOMEM;
++
++	INIT_RCU_HEAD(&new_ptbl->rcu_head);
++	new_ptbl->len = target;
++
++	for (i = 0; i < len; i++)
++		rcu_assign_pointer(new_ptbl->part[i], old_ptbl->part[i]);
++
++	disk_replace_part_tbl(disk, new_ptbl);
++	return 0;
++}
++
+ static void disk_release(struct device *dev)
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+ 
+ 	kfree(disk->random);
+-	kfree(disk->__part);
++	disk_replace_part_tbl(disk, NULL);
+ 	free_part_stats(&disk->part0);
+ 	kfree(disk);
+ }
+@@ -949,22 +1043,16 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
  	disk = kmalloc_node(sizeof(struct gendisk),
-@@ -1055,7 +1046,6 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
- 		disk->part_tbl->part[0] = &disk->part0;
+ 				GFP_KERNEL | __GFP_ZERO, node_id);
+ 	if (disk) {
+-		int tot_minors = minors + ext_minors;
+-		int size = tot_minors * sizeof(struct hd_struct *);
+-
+ 		if (!init_part_stats(&disk->part0)) {
+ 			kfree(disk);
+ 			return NULL;
+ 		}
+-
+-		disk->__part = kmalloc_node(size, GFP_KERNEL | __GFP_ZERO,
+-					    node_id);
+-		if (!disk->__part) {
+-				free_part_stats(&disk->part0);
++		if (disk_expand_part_tbl(disk, 0)) {
++			free_part_stats(&disk->part0);
+ 			kfree(disk);
+ 			return NULL;
+ 		}
+-		disk->__part[0] = &disk->part0;
++		disk->part_tbl->part[0] = &disk->part0;
  
  		disk->minors = minors;
--		disk->ext_minors = ext_minors;
- 		rand_initialize_disk(disk);
- 		disk_to_dev(disk)->class = &block_class;
- 		disk_to_dev(disk)->type = &disk_type;
-@@ -1066,11 +1056,7 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
+ 		disk->ext_minors = ext_minors;
+@@ -974,6 +1062,7 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
+ 		device_initialize(disk_to_dev(disk));
+ 		INIT_WORK(&disk->async_notify,
+ 			media_change_notify_thread);
++		disk->node_id = node_id;
  	}
  	return disk;
  }
--
--EXPORT_SYMBOL(alloc_disk);
- EXPORT_SYMBOL(alloc_disk_node);
--EXPORT_SYMBOL(alloc_disk_ext);
--EXPORT_SYMBOL(alloc_disk_ext_node);
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 67d2813..a933656 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -30,7 +30,7 @@ static int blkpg_ioctl(struct block_device *bdev, struct blkpg_ioctl_arg __user
+ 	if (bdev != bdev->bd_contains)
+ 		return -EINVAL;
+ 	partno = p.pno;
+-	if (partno <= 0 || partno >= disk_max_parts(disk))
++	if (partno <= 0)
+ 		return -EINVAL;
+ 	switch (a.op) {
+ 		case BLKPG_ADD_PARTITION:
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index e4d4d5c..825da63 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -325,14 +325,18 @@ static void delete_partition_rcu_cb(struct rcu_head *head)
  
- struct kobject *get_disk(struct gendisk *disk)
+ void delete_partition(struct gendisk *disk, int partno)
  {
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 3c6f0fa..6d7cf15 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -41,16 +41,12 @@
- #include <asm/io.h>
- #include <asm/div64.h>
++	struct disk_part_tbl *ptbl = disk->part_tbl;
+ 	struct hd_struct *part;
  
--#define IDE_DISK_PARTS		(1 << PARTN_BITS)
--
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
--#define IDE_DISK_MINORS		IDE_DISK_PARTS
-+#define IDE_DISK_MINORS		(1 << PARTN_BITS)
- #else
- #define IDE_DISK_MINORS		1
- #endif
+-	part = disk->__part[partno];
++	if (partno >= ptbl->len)
++		return;
++
++	part = ptbl->part[partno];
+ 	if (!part)
+ 		return;
  
--#define IDE_DISK_EXT_MINORS	(IDE_DISK_PARTS - IDE_DISK_MINORS)
--
- struct ide_disk_obj {
- 	ide_drive_t	*drive;
- 	ide_driver_t	*driver;
-@@ -1168,8 +1164,7 @@ static int ide_disk_probe(ide_drive_t *drive)
- 	if (!idkp)
- 		goto failed;
+ 	blk_free_devt(part_devt(part));
+-	rcu_assign_pointer(disk->__part[partno], NULL);
++	rcu_assign_pointer(ptbl->part[partno], NULL);
+ 	kobject_put(part->holder_dir);
+ 	device_del(part_to_dev(part));
  
--	g = alloc_disk_ext_node(IDE_DISK_MINORS, IDE_DISK_EXT_MINORS,
--				hwif_to_node(drive->hwif));
-+	g = alloc_disk_node(IDE_DISK_MINORS, hwif_to_node(drive->hwif));
- 	if (!g)
- 		goto out_free_idkp;
+@@ -354,10 +358,16 @@ int add_partition(struct gendisk *disk, int partno,
+ 	dev_t devt = MKDEV(0, 0);
+ 	struct device *ddev = disk_to_dev(disk);
+ 	struct device *pdev;
++	struct disk_part_tbl *ptbl;
+ 	const char *dname;
+ 	int err;
  
-@@ -1196,9 +1191,10 @@ static int ide_disk_probe(ide_drive_t *drive)
- 		drive->attach = 1;
+-	if (disk->__part[partno]) {
++	err = disk_expand_part_tbl(disk, partno);
++	if (err)
++		return err;
++	ptbl = disk->part_tbl;
++
++	if (ptbl->part[partno]) {
+ 		err = -EBUSY;
+ 		goto fail;
+ 	}
+@@ -392,7 +402,7 @@ int add_partition(struct gendisk *disk, int partno,
+ 	pdev->devt = devt;
  
- 	g->minors = IDE_DISK_MINORS;
--	g->ext_minors = IDE_DISK_EXT_MINORS;
- 	g->driverfs_dev = &drive->gendev;
--	g->flags = drive->removable ? GENHD_FL_REMOVABLE : 0;
-+	g->flags |= GENHD_FL_EXT_DEVT;
-+	if (drive->removable)
-+		g->flags |= GENHD_FL_REMOVABLE;
- 	set_capacity(g, idedisk_capacity(drive));
- 	g->fops = &idedisk_ops;
- 	add_disk(g);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f355a39..1f41e3d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -86,16 +86,12 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ 	INIT_RCU_HEAD(&p->rcu_head);
+-	rcu_assign_pointer(disk->__part[partno], p);
++	rcu_assign_pointer(ptbl->part[partno], p);
  
--#define SD_PARTS	64
--
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define SD_MINORS	16
- #else
- #define SD_MINORS	1
- #endif
+ 	/* delay uevent until 'holders' subdir is created */
+ 	pdev->uevent_suppress = 1;
+@@ -489,7 +499,7 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	struct disk_part_iter piter;
+ 	struct hd_struct *part;
+ 	struct parsed_partitions *state;
+-	int p, res;
++	int p, highest, res;
  
--#define SD_EXT_MINORS	(SD_PARTS - SD_MINORS)
--
- static int  sd_revalidate_disk(struct gendisk *);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
-@@ -1651,7 +1647,7 @@ static int sd_probe(struct device *dev)
- 	if (!sdkp)
- 		goto out;
+ 	if (bdev->bd_part_count)
+ 		return -EBUSY;
+@@ -513,6 +523,17 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	/* tell userspace that the media / partition table may have changed */
+ 	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
  
--	gd = alloc_disk_ext(SD_MINORS, SD_EXT_MINORS);
-+	gd = alloc_disk(SD_MINORS);
- 	if (!gd)
- 		goto out_free;
- 
-@@ -1696,7 +1692,6 @@ static int sd_probe(struct device *dev)
- 	gd->major = sd_major((index & 0xf0) >> 4);
- 	gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
- 	gd->minors = SD_MINORS;
--	gd->ext_minors = SD_EXT_MINORS;
- 	gd->fops = &sd_fops;
- 
- 	if (index < 26) {
-@@ -1720,7 +1715,7 @@ static int sd_probe(struct device *dev)
- 	blk_queue_prep_rq(sdp->request_queue, sd_prep_fn);
- 
- 	gd->driverfs_dev = &sdp->sdev_gendev;
--	gd->flags = GENHD_FL_DRIVERFS;
-+	gd->flags = GENHD_FL_EXT_DEVT | GENHD_FL_DRIVERFS;
- 	if (sdp->removable)
- 		gd->flags |= GENHD_FL_REMOVABLE;
- 
-diff --git a/fs/partitions/check.h b/fs/partitions/check.h
-index 17ae8ec..98dbe1a 100644
---- a/fs/partitions/check.h
-+++ b/fs/partitions/check.h
-@@ -5,15 +5,13 @@
-  * add_gd_partition adds a partitions details to the devices partition
-  * description.
-  */
--enum { MAX_PART = 256 };
--
- struct parsed_partitions {
- 	char name[BDEVNAME_SIZE];
- 	struct {
- 		sector_t from;
- 		sector_t size;
- 		int flags;
--	} parts[MAX_PART];
-+	} parts[DISK_MAX_PARTS];
- 	int next;
- 	int limit;
- };
++	/* Detect the highest partition number and preallocate
++	 * disk->part_tbl.  This is an optimization and not strictly
++	 * necessary.
++	 */
++	for (p = 1, highest = 0; p < state->limit; p++)
++		if (state->parts[p].size)
++			highest = p;
++
++	disk_expand_part_tbl(disk, highest);
++
++	/* add partitions */
+ 	for (p = 1; p < state->limit; p++) {
+ 		sector_t size = state->parts[p].size;
+ 		sector_t from = state->parts[p].from;
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index c7d9251..a48f350 100644
+index d5d2ef9..c7d9251 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -58,6 +58,8 @@ enum {
- 	UNIXWARE_PARTITION = 0x63,	/* Same as GNU_HURD and SCO Unix */
- };
- 
-+#define DISK_MAX_PARTS			256
-+
- #include <linux/major.h>
- #include <linux/device.h>
- #include <linux/smp.h>
-@@ -112,6 +114,7 @@ struct hd_struct {
- #define GENHD_FL_CD				8
+@@ -113,6 +113,12 @@ struct hd_struct {
  #define GENHD_FL_UP				16
  #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
-+#define GENHD_FL_EXT_DEVT			64 /* allow extended devt */
  
- struct disk_part_tbl {
- 	struct rcu_head rcu_head;
-@@ -120,15 +123,13 @@ struct disk_part_tbl {
++struct disk_part_tbl {
++	struct rcu_head rcu_head;
++	int len;
++	struct hd_struct *part[];
++};
++
+ struct gendisk {
+ 	/* major, first_minor, minors and ext_minors are input
+ 	 * parameters only, don't use directly.  Use disk_devt() and
+@@ -131,7 +137,7 @@ struct gendisk {
+ 	 * non-critical accesses use RCU.  Always access through
+ 	 * helpers.
+ 	 */
+-	struct hd_struct **__part;
++	struct disk_part_tbl *part_tbl;
+ 	struct hd_struct part0;
+ 
+ 	struct block_device_operations *fops;
+@@ -146,6 +152,8 @@ struct gendisk {
+ 
+ 	atomic_t sync_io;		/* RAID */
+ 	struct work_struct async_notify;
++
++	int node_id;
  };
  
- struct gendisk {
--	/* major, first_minor, minors and ext_minors are input
--	 * parameters only, don't use directly.  Use disk_devt() and
--	 * disk_max_parts().
-+	/* major, first_minor and minors are input parameters only,
-+	 * don't use directly.  Use disk_devt() and disk_max_parts().
- 	 */
- 	int major;			/* major number of driver */
- 	int first_minor;
- 	int minors;                     /* maximum number of minors, =1 for
-                                          * disks that can't be partitioned. */
--	int ext_minors;			/* number of extended dynamic minors */
+ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+@@ -491,6 +499,7 @@ extern void blk_free_devt(dev_t devt);
+ extern dev_t blk_lookup_devt(const char *name, int partno);
+ extern char *disk_name (struct gendisk *hd, int partno, char *buf);
  
- 	char disk_name[32];		/* name of major driver */
- 
-@@ -169,7 +170,9 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
- 
- static inline int disk_max_parts(struct gendisk *disk)
- {
--	return disk->minors + disk->ext_minors;
-+	if (disk->flags & GENHD_FL_EXT_DEVT)
-+		return DISK_MAX_PARTS;
-+	return disk->minors;
- }
- 
- static inline bool disk_partitionable(struct gendisk *disk)
-@@ -507,9 +510,6 @@ extern void printk_all_partitions(void);
- 
- extern struct gendisk *alloc_disk_node(int minors, int node_id);
- extern struct gendisk *alloc_disk(int minors);
--extern struct gendisk *alloc_disk_ext_node(int minors, int ext_minrs,
--					   int node_id);
--extern struct gendisk *alloc_disk_ext(int minors, int ext_minors);
- extern struct kobject *get_disk(struct gendisk *disk);
- extern void put_disk(struct gendisk *disk);
- extern void blk_register_region(dev_t devt, unsigned long range,
++extern int disk_expand_part_tbl(struct gendisk *disk, int target);
+ extern int rescan_partitions(struct gendisk *disk, struct block_device *bdev);
+ extern int add_partition(struct gendisk *, int, sector_t, sector_t, int);
+ extern void delete_partition(struct gendisk *, int);
 -- 
 1.5.4.5
 
