@@ -1,106 +1,107 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/10] sd/ide-disk: apply extended minors to sd and ide
-Date: Mon, 14 Jul 2008 16:12:13 +0900
-Message-ID: <1216019534-29977-10-git-send-email-tj@kernel.org>
-References: <1216019534-29977-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60140 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755908AbYGNHOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:14:19 -0400
-In-Reply-To: <1216019534-29977-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCHSET 2.6.26] block: implement extended devt, take #2
+Date: Mon, 14 Jul 2008 16:12:04 +0900
+Message-ID: <1216019534-29977-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
-Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Update sd and ide-disk such that they can take advantage of extended
-minors.
+Hello, all.
 
-ide-disk already has 64 minors per device and currently doesn't use
-extended minors although after this patch it can be turned on by
-simply tweaking constants.
+This is the second take of block-extended-devt patchset and contains
+the following 10 patches.
 
-sd only had 16 minors per device causing problems on certain peculiar
-configurations.  This patch lifts the restriction and enables it to
-use upto 64 minors.
+0001-block-misc-updates.patch
+0002-block-make-variable-and-argument-names-more-consist.patch
+0003-block-don-t-depend-on-consecutive-minor-space.patch
+0004-block-fix-disk-part-dereferencing-race.patch
+0005-block-always-use-__-disk-part-all-_stat_-and-kil.patch
+0006-block-drop-underbars-from-__-disk-part-all-_stat_.patch
+0007-block-implement-extended-dev-numbers.patch
+0008-block-adjust-formatting-for-large-minors-and-add-ex.patch
+0009-sd-ide-disk-apply-extended-minors-to-sd-and-ide.patch
+0010-block-implement-CONFIG_DEBUG_BLOCK_EXT_DEVT.patch
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ide/ide-disk.c |   11 ++++++++---
- drivers/scsi/sd.c      |    9 +++++++--
- 2 files changed, 15 insertions(+), 5 deletions(-)
+0001-0002 are trivial preparation patches.  0003 implements accessors
+and applies them to insulate consecutive device number assumption and
+help fixing partition dereferencing problem.  0004-0006 fixes
+partition dereferencing bug and simplifies stats handling.  0007-0010
+implement and apply extended devt.
 
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 8e08d08..f8b091a 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -41,6 +41,10 @@
- #include <asm/io.h>
- #include <asm/div64.h>
- 
-+#define IDE_DISK_PARTS		(1 << PARTN_BITS)
-+#define IDE_DISK_MINORS		IDE_DISK_PARTS
-+#define IDE_DISK_EXT_MINORS	(IDE_DISK_PARTS - IDE_DISK_MINORS)
-+
- struct ide_disk_obj {
- 	ide_drive_t	*drive;
- 	ide_driver_t	*driver;
-@@ -1158,8 +1162,8 @@ static int ide_disk_probe(ide_drive_t *drive)
- 	if (!idkp)
- 		goto failed;
- 
--	g = alloc_disk_node(1 << PARTN_BITS,
--			hwif_to_node(drive->hwif));
-+	g = alloc_disk_ext_node(IDE_DISK_MINORS, IDE_DISK_EXT_MINORS,
-+				hwif_to_node(drive->hwif));
- 	if (!g)
- 		goto out_free_idkp;
- 
-@@ -1185,7 +1189,8 @@ static int ide_disk_probe(ide_drive_t *drive)
- 	} else
- 		drive->attach = 1;
- 
--	g->minors = 1 << PARTN_BITS;
-+	g->minors = IDE_DISK_MINORS;
-+	g->ext_minors = IDE_DISK_EXT_MINORS;
- 	g->driverfs_dev = &drive->gendev;
- 	g->flags = drive->removable ? GENHD_FL_REMOVABLE : 0;
- 	set_capacity(g, idedisk_capacity(drive));
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c330f16..0a8b559 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -86,6 +86,10 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
- 
-+#define SD_PARTS	64
-+#define SD_MINORS	16
-+#define SD_EXT_MINORS	(SD_PARTS - SD_MINORS)
-+
- static int  sd_revalidate_disk(struct gendisk *);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
-@@ -1641,7 +1645,7 @@ static int sd_probe(struct device *dev)
- 	if (!sdkp)
- 		goto out;
- 
--	gd = alloc_disk(16);
-+	gd = alloc_disk_ext(SD_MINORS, SD_EXT_MINORS);
- 	if (!gd)
- 		goto out_free;
- 
-@@ -1685,7 +1689,8 @@ static int sd_probe(struct device *dev)
- 
- 	gd->major = sd_major((index & 0xf0) >> 4);
- 	gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
--	gd->minors = 16;
-+	gd->minors = SD_MINORS;
-+	gd->ext_minors = SD_EXT_MINORS;
- 	gd->fops = &sd_fops;
- 
- 	if (index < 26) {
--- 
-1.5.4.5
+Changes from the last take[L] are...
 
+* Partition dereferencing problem is fixed.  This is included in the
+  patchset as it depends on partition helpers implemented by 0003 and
+  extended devt changes depend on partition dereference fix.  Even if
+  the extended devt patches get nacked, 0001-0006 should be worthwhile
+  cleanup.
+
+* For extended devts, kobj_map doesn't make much sense as there's no
+  fixed MAJ:MIN mapping and kernel can't take any default action for
+  missing device, so extended devt lookup no longer goes through
+  kobj_map.  Instead, it's directly looked up using ida.
+
+* ext devt ida lookup / removal locking fixed.  A separate mutex is
+  used to protect lookup against removal.
+
+For general description of the patchset, please read description of
+the last take[L].
+
+This patchset is against...
+
+  v2.6.26 (bce7f793daec3e65ec5c5705d2457b81fe7b5725)
++ [1] RCU-implement-rcu_read_[un]lock_preempt
++ [2] block-fix-block_class-iteration-locking
++ [3] block-allow-deleting-zero-lenght-partition
++ [4] block-update-add_partition-error-handling
+
+and available in the following git tree.
+
+  http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=block-extended-devt
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-extended-devt
+
+and the combined diffstat follows.
+
+ block/blk-core.c                    |   53 ++-
+ block/blk-merge.c                   |    9 
+ block/genhd.c                       |  528 ++++++++++++++++++++++++++++++------
+ block/ioctl.c                       |   38 +-
+ drivers/block/aoe/aoecmd.c          |    6 
+ drivers/block/pktcdvd.c             |    2 
+ drivers/block/ps3disk.c             |    2 
+ drivers/char/random.c               |    6 
+ drivers/ide/ide-disk.c              |   17 -
+ drivers/md/dm-ioctl.c               |    4 
+ drivers/md/dm-stripe.c              |    4 
+ drivers/md/dm.c                     |   13 
+ drivers/md/linear.c                 |    2 
+ drivers/md/multipath.c              |    2 
+ drivers/md/raid0.c                  |    2 
+ drivers/md/raid1.c                  |    2 
+ drivers/md/raid10.c                 |    2 
+ drivers/md/raid5.c                  |    2 
+ drivers/memstick/core/mspro_block.c |    2 
+ drivers/mmc/card/block.c            |    2 
+ drivers/s390/block/dasd_proc.c      |    3 
+ drivers/s390/block/dcssblk.c        |    4 
+ drivers/scsi/sd.c                   |   15 -
+ drivers/scsi/sr.c                   |    2 
+ fs/block_dev.c                      |   23 -
+ fs/partitions/check.c               |  110 ++++---
+ include/linux/fs.h                  |    1 
+ include/linux/genhd.h               |  171 ++++++-----
+ include/linux/major.h               |    2 
+ lib/Kconfig.debug                   |   16 +
+ 30 files changed, 777 insertions(+), 268 deletions(-)
+
+Thanks.
+
+--
+tejun
+ 
+[L] http://thread.gmane.org/gmane.linux.kernel/701825
+[1] http://article.gmane.org/gmane.linux.kernel/706149
+[2] http://article.gmane.org/gmane.linux.kernel/706152
+[3] http://article.gmane.org/gmane.linux.kernel/706153
+[4] http://article.gmane.org/gmane.linux.kernel/706154
