@@ -1,118 +1,90 @@
-From: Daniel Debonzi <debonzi@linux.vnet.ibm.com>
-Subject: [Fwd: scsi_host_alloc does not check for used shost->host_no]
-Date: Mon, 14 Jul 2008 17:06:15 -0300
-Message-ID: <487BB1B7.6040802@linux.vnet.ibm.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 11088] New: Warning about NULL pointer
+ dereference when attaching usb hd
+Date: Tue, 15 Jul 2008 02:23:23 -0700
+Message-ID: <20080715022323.4a6e470e.akpm@linux-foundation.org>
+References: <bug-11088-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060509060306040305000502"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from igw1.br.ibm.com ([32.104.18.24]:34502 "EHLO igw1.br.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756278AbYGNUGu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2008 16:06:50 -0400
-Received: from mailhub1.br.ibm.com (mailhub1 [9.18.232.109])
-	by igw1.br.ibm.com (Postfix) with ESMTP id 8FA7832C0C5
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 16:39:24 -0300 (BRT)
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
-	by mailhub1.br.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6EK6gWs1909034
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 17:06:48 -0300
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6EK6bLc011727
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2008 17:06:37 -0300
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <bug-11088-10286-V0hAGp6uBxO456/isadD/XN4h3HLQggn@public.gmane.org/>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, hanno-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------060509060306040305000502
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Hi James,
-
-Sorry if you are not the right person for that but as far as I got no 
-directions from the mailing list and your email is on the MAINTAINER 
-file, I am trying to contact you directly.
-
-I apologize for any inconvenience.
-
-Regards
-Daniel Debonzi
-
--------- Original Message --------
-Subject: scsi_host_alloc does not check for used shost->host_no
-Date: Fri, 11 Jul 2008 10:19:09 -0300
-From: Daniel Debonzi <debonzi@linux.vnet.ibm.com>
-To: linux-scsi@vger.kernel.org
-
-Hi everyone,
-
-First of all, it is the first time I am sending something to one of the
-kernel mail lists. So, if it is not the right place for that, if it is
-not the only place for that, or I am doing something wrong, or wherever,
-please, just let me know.
-
-After a good time investigating why modprobe/rmmod pata_pdc2027x lots of
-times was driven to a kernel panic I found out that the problem was on
-scsi host layer (if I can call it like this).
-
-In a brief explanation, every time a scsi host is allocated a shost
-structure get an host_no attribute assigned an as far as I can see it
-should be unique. The point is that this host_no value comes from a
-variable that is incremented every time a scsi host is allocated and in
-a first moment, we will not have two shost structs with the same
-host_no. But for instance, when this always incremented variable
-overflows, it does not work anymore and it can happen to have to
-different shost structures with the same host_no.
-
-I made a patch that solves the problem in a very simple way, but I don't
-know how acceptable it is. I am sending it in attachment and any
-feedback will be welcome.
-
-Thanks
-Daniel Debonzi
 
 
---------------060509060306040305000502
-Content-Type: text/x-diff;
- name="scsi_host_no_verify.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_host_no_verify.diff"
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index c6457bf..2e191f4 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -310,7 +310,7 @@ struct device_type scsi_host_type = {
-  **/
- struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
--	struct Scsi_Host *shost;
-+	struct Scsi_Host *shost, *tmp_shost;
- 	gfp_t gfp_mask = GFP_KERNEL;
- 	int rval;
+On Tue, 15 Jul 2008 02:15:53 -0700 (PDT) bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
 
-@@ -332,7 +332,18 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+> http://bugzilla.kernel.org/show_bug.cgi?id=11088
+> 
+>            Summary: Warning about NULL pointer dereference when attaching
+>                     usb hd
+>            Product: Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.26
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: USB
+>         AssignedTo: greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org
+>         ReportedBy: hanno-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org
+> 
+> 
+> I got this when attaching an external usb hd. Kernel is 2.6.26, I'll attach
+> config.
+> 
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
+> BUG: unable to handle kernel NULL pointer dereference at 00000004
+> IP: [<f98c067b>] :usb_storage:slave_alloc+0x2b/0x60
+> *pde = 00000000
+> Oops: 0000 [#1]
+> Modules linked in: radeon drm usb_storage pcmcia nsc_ircc irda parport_pc
+> ehci_hcd uhci_hcd parport usbcore yenta_socket rsrc_nonstatic firewire_ohci
+> pcmcia_core 8139cp firewire_core crc_itu_t ipw2200 8139too i2c_i801
+> 
+> Pid: 1354, comm: usb-stor-scan Not tainted (2.6.26 #1)
+> EIP: 0060:[<f98c067b>] EFLAGS: 00010202 CPU: 0
+> EIP is at slave_alloc+0x2b/0x60 [usb_storage]
+> EAX: 00000000 EBX: f6c6070c ECX: 00000202 EDX: f6cb8c00
+> ESI: f0403400 EDI: f6c10c14 EBP: f6c60400 ESP: f6d9bddc
+>  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+> Process usb-stor-scan (pid: 1354, ti=f6d9a000 task=f7c534c0 task.ti=f6d9a000)
+> Stack: f0403400 f6c10c00 c02f0c73 f60fc938 00000000 00000000 f6c60400 00000000
+>        00000000 00000000 c02f1061 c04cca30 c049cb92 f60fc938 c04bebfe f6c643c8
+>        f6c643d0 f6c643e0 00000000 00000000 c04befed f6ea0288 00000000 f6c10c00
+> Call Trace:
+>  [<c02f0c73>] scsi_alloc_sdev+0x143/0x1b0
+>  [<c02f1061>] scsi_probe_and_add_lun+0x261/0x9a0
+>  [<c02f1c03>] __scsi_scan_target+0x2e3/0x610
+>  [<c0124f40>] process_timeout+0x0/0x10
+>  [<c0424347>] wait_for_common+0x77/0x110
+>  [<c0118ab0>] default_wake_function+0x0/0x10
+>  [<c02f1f87>] scsi_scan_channel+0x57/0xa0
+>  [<c02f2077>] scsi_scan_host_selected+0xa7/0x120
+>  [<c02f215b>] do_scsi_scan_host+0x6b/0x70
+>  [<f98c2625>] usb_stor_scan_thread+0x145/0x190 [usb_storage]
+>  [<c012e6e0>] autoremove_wake_function+0x0/0x50
+>  [<f98c24e0>] usb_stor_scan_thread+0x0/0x190 [usb_storage]
+>  [<c012e2d7>] kthread+0x37/0x70
+>  [<c012e2a0>] kthread+0x0/0x70
+>  [<c0103323>] kernel_thread_helper+0x7/0x14
+>  =======================
+> Code: 83 ec 08 89 74 24 04 89 c6 89 1c 24 8b 18 c6 40 57 24 81 c3 0c 03 00 00
+> 8b 43 20 8b 53 0c c1 e8 0f 83 e0 0f 8b 84 82 8c 01 00 00 <0f> b7 50 04 8b 46 04
+> 4a e8 b8 aa 96 c6 80 7b 3c 04 75 0e 8b 46
+> EIP: [<f98c067b>] slave_alloc+0x2b/0x60 [usb_storage] SS:ESP 0068:f6d9bddc
+> ---[ end trace f3a5e784c4c8fadf ]---
 
- 	mutex_init(&shost->scan_mutex);
-
-+	/* 
-+	 * Look if host_no is not been used somewhere else. Is is used to
-+	 * happen when scsi_host_next_hn overflows and goes back to 0.
-+	 */
-+ host_no_already_exists:
- 	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
-+        if(!IS_ERR(tmp_shost = scsi_host_lookup(shost->host_no)))
-+          {
-+            scsi_host_put(tmp_shost);
-+            goto host_no_already_exists;
-+          }
-+
- 	shost->dma_channel = 0xff;
-
- 	/* These three are default values which can be overridden */
-
-
---------------060509060306040305000502--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
