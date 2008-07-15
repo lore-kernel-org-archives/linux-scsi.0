@@ -1,70 +1,54 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 4/4] Don't crash on IOMMU overflow in A100U2W driver
-Date: Tue, 15 Jul 2008 10:15:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0807151014180.24544@devserv.devel.redhat.com>
-References: <Pine.LNX.4.64.0807151008370.24544@devserv.devel.redhat.com>
- <Pine.LNX.4.64.0807151011350.24544@devserv.devel.redhat.com>
- <Pine.LNX.4.64.0807151012200.24544@devserv.devel.redhat.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] block: fix q->max_segment_size checking in
+ blk_recalc_rq_segments about VMERGE
+Date: Tue, 15 Jul 2008 23:20:14 +0900
+Message-ID: <20080715231956A.fujita.tomonori@lab.ntt.co.jp>
+References: <1216118676-13625-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<Pine.LNX.4.64.0807150924250.21598@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53587 "EHLO mx1.redhat.com"
+Received: from sh.osrg.net ([192.16.179.4]:44128 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752964AbYGOOPg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2008 10:15:36 -0400
-In-Reply-To: <Pine.LNX.4.64.0807151012200.24544@devserv.devel.redhat.com>
+	id S1753238AbYGOOVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jul 2008 10:21:39 -0400
+In-Reply-To: <Pine.LNX.4.64.0807150924250.21598@devserv.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: mpatocka@redhat.com
+Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, linux-parisc@vger.kernel.org
 
-Handle IOMMU overflow correctly, by retrying.
+On Tue, 15 Jul 2008 09:37:05 -0400 (EDT)
+Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
----
-  drivers/scsi/a100u2w.c |   11 ++++++++---
-  1 file changed, 8 insertions(+), 3 deletions(-)
+> On Tue, 15 Jul 2008, FUJITA Tomonori wrote:
+> 
+> > blk_recalc_rq_segments assumes that any segments can be merged in the
+> > case of BIOVEC_VIRT_MERGEABLE && !BIOVEC_VIRT_OVERSIZE. However, an
+> > IOMMU can't merge segments if the total length of the segments is
+> > larger than max_segment_size (the LLD restriction).
+> >
+> > Due to this bug, a LLD may get the larger number of segments than
+> > nr_hw_segments because the block layer puts more segments in a request
+> > than it should do.
+> >
+> > This bug could happen on alpha, parisc, and sparc, which use VMERGE.
+> 
+> Parisc doesn't use virtual merge accounting (there is variable for it but 
+> it's always 0).
 
-Index: linux-2.6.26-fast/drivers/scsi/a100u2w.c
-===================================================================
---- linux-2.6.26-fast.orig/drivers/scsi/a100u2w.c	2008-07-15 15:49:39.000000000 +0200
-+++ linux-2.6.26-fast/drivers/scsi/a100u2w.c	2008-07-15 16:04:50.000000000 +0200
-@@ -840,7 +840,7 @@ static irqreturn_t orc_interrupt(struct
-   *	Build a host adapter control block from the SCSI mid layer command
-   */
+Hmm, really? Looks like PARISC IOMMUs (ccio-dma.c and sba_iomm.c) set
+parisc_vmerge_boundary (CC'ed PARISC mailing list).
 
--static void inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struct scsi_cmnd * cmd)
-+static int inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struct scsi_cmnd * cmd)
-  {				/* Create corresponding SCB     */
-  	struct scatterlist *sg;
-  	struct orc_sgent *sgent;		/* Pointer to SG list           */
-@@ -865,7 +865,8 @@ static void inia100_build_scb(struct orc
-  	sgent = (struct orc_sgent *) & escb->sglist[0];
 
-  	count_sg = scsi_dma_map(cmd);
--	BUG_ON(count_sg < 0);
-+	if (count_sg < 0)
-+		return count_sg;
-  	BUG_ON(count_sg > TOTAL_SG_ENTRY);
+> On sparc64 it is broken anyway with or without your patch. 
 
-  	/* Build the scatter gather lists */
-@@ -898,6 +899,7 @@ static void inia100_build_scb(struct orc
-  		scb->tag_msg = 0;	/* No tag support               */
-  	}
-  	memcpy(scb->cdb, cmd->cmnd, scb->cdb_len);
-+	return 0;
-  }
+Yeah, we need to modify SPARC64 IOMMU code (I'm not sure that it's
+worth). Right now, the best fix is setting BIO_VMERGE_BOUNDARY to 0.
 
-  /**
-@@ -921,7 +923,10 @@ static int inia100_queue(struct scsi_cmn
-  	if ((scb = orc_alloc_scb(host)) == NULL)
-  		return SCSI_MLQUEUE_HOST_BUSY;
 
--	inia100_build_scb(host, scb, cmd);
-+	if (inia100_build_scb(host, scb, cmd)) {
-+		orc_release_scb(host, scb);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-  	orc_exec_scb(host, scb);	/* Start execute SCB            */
-  	return 0;
-  }
+> And alpha alone doesn't justify substantial code bloat in generic block 
+> layer. So I propose this patch to drop it at all.
+
+Jens, what do you think about removing VMERGE code?
