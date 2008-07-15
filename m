@@ -1,127 +1,116 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [git pull 2/2] FireWire updates post 2.6.26 (with a few lines of SCSI
-	in it)
-Date: Tue, 15 Jul 2008 21:33:39 +0200 (CEST)
-Message-ID: <tkrat.898af704693a539b@s5r6.in-berlin.de>
-References: <tkrat.ca57fe6c5cf3640c@s5r6.in-berlin.de>
+From: James.Smart@Emulex.Com
+Subject: RE: bidi support: FC transport layer...
+Date: Tue, 15 Jul 2008 15:35:43 -0400
+Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7EF7B@xbl3.ma.emulex.com>
+References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EE27@xbl3.ma.emulex.com> <77DD6D0A-346F-4797-B05D-C3C24EAD290E@qlogic.com> <C9F1A1B1-136B-4EE0-8F64-8EE5DF04E5B6@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.ca57fe6c5cf3640c@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:42009 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329AbYGOTft convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2008 15:35:49 -0400
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: seokmann.ju@qlogic.com
+Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
 
-Linus, please pull from the sbp2-spindown branch at
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/ieee1394/linux1394-2.6.git sbp2-spindown
-
-to receive the following IEEE 1394/ FireWire subsystem updates.
-James has been polled for ACK or NAK or take-over of the SCSI bit
-three times or so.
-
-Stefan Richter (5):
-      scsi: sd: optionally set power condition in START STOP UNIT
-      firewire: fw-sbp2: fix spindown for PL-3507 and TSB42AA9 firmwares
-      ieee1394: sbp2: fix spindown for PL-3507 and TSB42AA9 firmwares
-      firewire: fw-sbp2: spin disks down on suspend and shutdown
-      ieee1394: sbp2: spin disks down on suspend and shutdown
-
- drivers/firewire/fw-sbp2.c |   25 +++++++++++++++++++++++--
- drivers/ieee1394/sbp2.c    |   22 ++++++++++++++++++++--
- drivers/ieee1394/sbp2.h    |    1 +
- drivers/scsi/sd.c          |    5 +++++
- include/scsi/scsi_device.h |    1 +
- 5 files changed, 50 insertions(+), 4 deletions(-)
-
-
-Start of the series, prerequisite for the rest:
-
-commit d2886ea368a67704ecc13e69075f18a9d74cb12b
-Author: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Date:   Sun May 11 00:34:07 2008 +0200
-
-    scsi: sd: optionally set power condition in START STOP UNIT
-    
-    Adds a new scsi_device flag, start_stop_pwr_cond:  If enabled, the sd
-    driver will not send plain START STOP UNIT commands but ones with the
-    power condition field set to 3 (standby) or 1 (active) respectively.
-    
-    Some FireWire disk firmwares do not stop the motor if power condition is
-    zero.  Or worse, they become unresponsive after a START STOP UNIT with
-    power condition = 0 and start = 0.
-    
-    http://lkml.org/lkml/2008/4/29/704
-    
-    This patch only adds the necessary code to sd_mod but doesn't activate
-    it.  Follow-up patches to the FireWire drivers will add detection of
-    affected devices and enable the code for them.
-    
-    I did not add power condition values to scsi_error.c::scsi_eh_try_stu()
-    for now.  The three firmwares which suffer from above mentioned problems
-    do not need START STOP UNIT in the error handler, and they are not
-    adversely affected by START STOP UNIT with power condition = 0 and start
-    = 1 (like scsi_eh_try_stu() sends it if scsi_device.allow_restart is
-    enabled).
-    
-    Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-    Tested-by: Tino Keitel <tino.keitel@gmx.de>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 01cefbb..d53312c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1124,6 +1124,8 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 				cmd[1] = 1;	/* Return immediately */
- 				memset((void *) &cmd[2], 0, 8);
- 				cmd[4] = 1;	/* Start spin cycle */
-+				if (sdkp->device->start_stop_pwr_cond)
-+					cmd[4] |= 1 << 4;
- 				scsi_execute_req(sdkp->device, cmd, DMA_NONE,
- 						 NULL, 0, &sshdr,
- 						 SD_TIMEOUT, SD_MAX_RETRIES);
-@@ -1790,6 +1792,9 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	if (start)
- 		cmd[4] |= 1;	/* START */
  
-+	if (sdp->start_stop_pwr_cond)
-+		cmd[4] |= start ? 1 << 4 : 3 << 4;	/* Active or Standby */
-+
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f6a9fe0..00b7876 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -134,6 +134,7 @@ struct scsi_device {
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
- 	unsigned manage_start_stop:1;	/* Let HLD (sd) manage start/stop */
-+	unsigned start_stop_pwr_cond:1;	/* Set power cond. in START_STOP_UNIT */
- 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
- 	unsigned select_no_atn:1;
- 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
+> -----Original Message-----
+> From: Seokmann Ju [mailto:seokmann.ju@qlogic.com] 
+> Sent: Tuesday, July 15, 2008 2:55 PM
+> To: Smart, James
+> Cc: linux-scsi@vger.kernel.org; Andrew Vasquez
+> Subject: Re: bidi support: FC transport layer...
+>
+>  From the code walk-through, for the SAS SMP case, the 
+> transport layer  
+> create
+> a file under sysfs per each device detection, which is former case.
+> Could you elaborate why we have to "temporarily create object X and  
+> destroy"?
 
--- 
-Stefan Richter
--=====-==--- -=== -====
-http://arcgraph.de/sr/
+Well - as long as you are only going to talk to what the driver exports,
+ok...
+
+But, what if I want to talk to a Fabric Service or Switch entity the
+driver
+doesn't typically log into or stay logged into ?  Or what if I want to
+talk
+to another FCP initiator (not FCP traffic, but rather just ELS's/CT
+traffic)
+or want to talk to a non-FCP port, but the driver only enumerated the
+rports
+associated with FCP Targets ?  Or what if I just want to FC-Ping some
+random
+FC address ?
+
+Somehow we have to make the driver/transport enumerate the device that
+we
+want to talk to.  Along with this, I'm assuming the driver has to
+initiate/do
+the basic PLOGI to the other address, and be told when to tear it down.
+
+Another part I don't like about the "create a file for each enumeration"
+is,
+we rarely use these files. If the SAN is big, the system has lots of
+adapters,
+and so on, why make the system allocate/maintain/etc all of these things
+that
+are rarely used ? When you start enumerating per phy, and with logical
+entities
+layering on top of the physical thingies, it can really grow. At what
+point does
+SGIO run out of dev_t space ?  Consider that we are enumerating many
+adapters in 
+an enterprise system; and on the physical level down to phys, and
+everything
+on the transport such as expanders and phys on expanders and targets and
+luns;
+and add in virtualization such as NPIV or VSANs, each with potentially
+large
+san connectivity and their own large trees of these things... 
+Does SGIO actually scale ?
+
+> In general, I've been walking through the code to figure out overall  
+> design
+> and implementation details about SAS SMP handling.
+> 1. when each of target device detected, a request_queue for the device
+>   allocated/associated to it.
+> 2. each of device gets device file under sysfs and the device file is
+>   used to send SMP via bsg and the packets get serviced in 
+> the nature of
+>   bidi.
+> 
+> I also think it should be safe to implement FC-CT/ELS support in the
+> manner similar to the SAS SMP.
+> Please let me know for any other missing pieces.
+
+Agreed - for the basic part.  However, you're still under the assumption
+that SAS
+enumerated everything.  Given that some SAS parts could perform
+discovery on it's
+own, with the LLDD interacting with the transport just enough to
+enumerate what it
+found useful, this may not always be the case. Additionally, there
+aren't a lot
+of other "protocols" or "port roles" that exist in SAS - but there are
+in FC.
+
+The more interesting part is to those things (switch services, non-FCP
+targets)
+that the driver did not enumerate.  We should allow the directed
+enumeration of them
+to perform some basic diagnostics or san queries.  And once you have
+this, 
+we can really open some interesting doors - why not an app that talks
+FICON ? or
+something that just message passes between 2 ports ? and so on...
+
+-- james
 
 
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
+
