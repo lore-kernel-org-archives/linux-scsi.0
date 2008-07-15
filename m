@@ -1,48 +1,43 @@
-From: Brian King <brking@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: scsi_host_alloc does not check for used shost->host_no
-Date: Tue, 15 Jul 2008 15:31:47 -0500
-Message-ID: <487D0933.1010201@linux.vnet.ibm.com>
-References: <48775DCD.5010202@linux.vnet.ibm.com> <487D059C.60400@linux.vnet.ibm.com> <20080715202507.GI14894@parisc-linux.org>
+Date: Tue, 15 Jul 2008 15:34:14 -0500
+Message-ID: <1216154055.3312.129.camel@localhost.localdomain>
+References: <48775DCD.5010202@linux.vnet.ibm.com>
+	 <487D059C.60400@linux.vnet.ibm.com>
+	 <20080715202507.GI14894@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:40126 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757615AbYGOUcS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2008 16:32:18 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6FKWGPG026138
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2008 16:32:16 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6FKW2up136120
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2008 14:32:05 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6FKW1xe014431
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2008 14:32:02 -0600
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:44578 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758327AbYGOUeT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jul 2008 16:34:19 -0400
 In-Reply-To: <20080715202507.GI14894@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
-Cc: Daniel Debonzi <debonzi@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: Brian King <brking@linux.vnet.ibm.com>, Daniel Debonzi <debonzi@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
+On Tue, 2008-07-15 at 14:25 -0600, Matthew Wilcox wrote:
+> > Do we need to worry about a host in the SHOST_DEL state? In that case, it will still
+> > exist to some degree, but scsi_host_get will fail. For example, what happens if a
+> > shell is in /sys/class/scsi_host/host5/ and you delete host 5 and try to add another.
+> > Couldn't you run into the same problem? In that case the scsi_host_get will fail.
+> > I suppose you could check specifically for -ENXIO getting returned...
+> 
 > Or we could make the host_no a u64 and avoid the problem ever happening
 > in our lifetimes.  I'm amazed that anyone's had the time to do 4 billion
 > add/removes, to be honest.  Assuming it takes 1 second per add/remove
 > cycle, and there's not even time to scan a bus in that time, that's
 > still 136 years.
 
-That was my thought as well, until I checked struct scsi_host and saw
-that hostno is actually defined as a short there, which makes the problem
-slightly easier to hit. So, we could just increase both of them to u64's
-and be done with it...
+Actually, right at the moment, a lot of the udev stuff is conditioned on
+a non repeating host number (which is why we don't use idr like we do
+for the other things).  I'm really reluctant to go to a u64 host
+number ... what was the use case that produced this problem?
 
--Brian
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+James
 
 
