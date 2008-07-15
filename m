@@ -1,72 +1,93 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 4/4] Don't crash on IOMMU overflow in A100U2W driver
-Date: Tue, 15 Jul 2008 17:19:55 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0807151718410.4356@devserv.devel.redhat.com>
-References: <Pine.LNX.4.64.0807151008370.24544@devserv.devel.redhat.com>
- <Pine.LNX.4.64.0807151011350.24544@devserv.devel.redhat.com>
- <Pine.LNX.4.64.0807151012200.24544@devserv.devel.redhat.com>
- <Pine.LNX.4.64.0807151014180.24544@devserv.devel.redhat.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Open-FCoE Third Re-Architecture Status
+Date: Tue, 15 Jul 2008 15:31:07 -0600
+Message-ID: <72D8A09E39A89147BE9CFBB6F0C73C305F1D8E90FA@rrsmsx501.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42659 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:1056 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761387AbYGOVUr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2008 17:20:47 -0400
-In-Reply-To: <Pine.LNX.4.64.0807151014180.24544@devserv.devel.redhat.com>
+	id S1753320AbYGOVbK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2008 17:31:10 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-Handle IOMMU overflow correctly, by retrying. IOMMU errors can happen and 
-drivers must deal with them.
+Hello everybody,
 
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
----
- drivers/scsi/a100u2w.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+        We're winding down on the Open-FCoE re-architecture and I wanted to
+provide another status report to show what we've done over the last month. The
+list of major changes is shorter that previous updates. In the last month we've
+made a lot of smaller changes that would be overkill to list in a summary.
+Overall our project has been reduced to 12,494 lines and we don't expect it to
+get much smaller.
 
-Index: linux-2.6.26-fast/drivers/scsi/a100u2w.c
-===================================================================
---- linux-2.6.26-fast.orig/drivers/scsi/a100u2w.c	2008-07-15 15:49:39.000000000 +0200
-+++ linux-2.6.26-fast/drivers/scsi/a100u2w.c	2008-07-15 16:04:50.000000000 +0200
-@@ -840,7 +840,7 @@ static irqreturn_t orc_interrupt(struct 
-  *	Build a host adapter control block from the SCSI mid layer command
-  */
- 
--static void inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struct scsi_cmnd * cmd)
-+static int inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struct scsi_cmnd * cmd)
- {				/* Create corresponding SCB     */
- 	struct scatterlist *sg;
- 	struct orc_sgent *sgent;		/* Pointer to SG list           */
-@@ -865,7 +865,8 @@ static void inia100_build_scb(struct orc
- 	sgent = (struct orc_sgent *) & escb->sglist[0];
- 
- 	count_sg = scsi_dma_map(cmd);
--	BUG_ON(count_sg < 0);
-+	if (count_sg < 0)
-+		return count_sg;
- 	BUG_ON(count_sg > TOTAL_SG_ENTRY);
- 
- 	/* Build the scatter gather lists */
-@@ -898,6 +899,7 @@ static void inia100_build_scb(struct orc
- 		scb->tag_msg = 0;	/* No tag support               */
- 	}
- 	memcpy(scb->cdb, cmd->cmnd, scb->cdb_len);
-+	return 0;
- }
- 
- /**
-@@ -921,7 +923,10 @@ static int inia100_queue(struct scsi_cmn
- 	if ((scb = orc_alloc_scb(host)) == NULL)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
--	inia100_build_scb(host, scb, cmd);
-+	if (inia100_build_scb(host, scb, cmd)) {
-+		orc_release_scb(host, scb);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
- 	orc_exec_scb(host, scb);	/* Start execute SCB            */
- 	return 0;
- }
+        The major changes we've made since the last update are-
+
+1) Better integration with fc_rports
+        - fc_rports are now our representation of discovered ports within the
+fabric with some private data for our internal accounting
+        - Use of the scsi_transport_fc's fc_rport management
+        - Rework of name server code to accommodate change
+        - Removal of os_tgt and os_lun structures
+
+2) Exchange Manager (EM) improvements
+        - Complete use and improvements of new EM API
+        - Simplification of reference counting
+        - Improved exchange lookup by indexing array of exchange pointers by xid
+vs. previous linear search
+
+3) Library-ization
+        - Separation of UL blocks (fc_lport, fc_rport, fc_fcp, fc_ns and
+fc_exch)
+        - No direct calls between UL blocks
+        - Better distinguishing between the fc_lport.c (the initiators login/out
+to the fabric) and fc_ns.c (interactions with the name server)
+
+4) General Improvements
+        - Reduction of various structures' members
+        - Intentional bloat of libfc_function_template to expose unnecessary
+cross layer calls then removal of most unnecessary calls
+        - Improved receive path - now is LLD->LP->EM->ULP
+        - No redefinition of existing defines from scsi_transport_fc
+        - Code style clean-up (tabbing, spacing and checkpatch.pl)
+        - Rename of some structures' members to remove prefixes (i.e fl_* or fs_*)
+        - renamed fc_scsi.c to fc_fcp.c and fc_disc.c to fc_ns.c
+        - Miscellaneous bug fixes
+
+       Kernel code URL-
+
+git://open-fcoe.org/rearch/open-fcoe-upstream
+
+        We've also put the code on gitweb at-
+
+http://open-fcoe.org/openfc/gitweb/
+
+
+        Things to keep in mind if viewing the code-
+
+1) The code is stabilizing, but there are some obvious defects that we're aware
+of.
+
+2) We're mostly testing against a FC fabric and have only recently started to
+look at P2P connections again.
+
+3) For the time being, fcconf is replaced with
+
+echo "ethX" > /sys/module/fcoe/create
+echo "ethX" > /sys/module/fcoe/destroy
+
+
+        We'll merge these changes with our primary development tree on
+www.Open-FCoE.org soon. I'll also create a big patch (or whatever is preferable)
+and put it out to the linux-scsi list as an RFC when we're a little further
+along to get more feedback or possible kernel inclusion.
+
+        As per usual, any comments are welcome.
+
+Thanks,
+
+//Rob, Vasu, Chris, Steve, Yi
+Open-FCoE
