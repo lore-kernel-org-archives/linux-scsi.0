@@ -1,90 +1,54 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [Bugme-new] [Bug 11088] New: Warning about NULL pointer
- dereference when attaching usb hd
-Date: Tue, 15 Jul 2008 02:23:23 -0700
-Message-ID: <20080715022323.4a6e470e.akpm@linux-foundation.org>
-References: <bug-11088-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <bug-11088-10286-V0hAGp6uBxO456/isadD/XN4h3HLQggn@public.gmane.org/>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, hanno-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: fix q->max_segment_size checking in blk_recalc_rq_segments about VMERGE
+Date: Tue, 15 Jul 2008 19:44:36 +0900
+Message-ID: <1216118676-13625-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:51794 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754892AbYGOKxI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jul 2008 06:53:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mikulas Patocka <mpatocka@redhat.com>, David Miller <davem@davemloft.net>
 
+blk_recalc_rq_segments assumes that any segments can be merged in the
+case of BIOVEC_VIRT_MERGEABLE && !BIOVEC_VIRT_OVERSIZE. However, an
+IOMMU can't merge segments if the total length of the segments is
+larger than max_segment_size (the LLD restriction).
 
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
+Due to this bug, a LLD may get the larger number of segments than
+nr_hw_segments because the block layer puts more segments in a request
+than it should do.
 
-On Tue, 15 Jul 2008 02:15:53 -0700 (PDT) bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
+This bug could happen on alpha, parisc, and sparc, which use VMERGE.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=11088
-> 
->            Summary: Warning about NULL pointer dereference when attaching
->                     usb hd
->            Product: Drivers
->            Version: 2.5
->      KernelVersion: 2.6.26
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: USB
->         AssignedTo: greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org
->         ReportedBy: hanno-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org
-> 
-> 
-> I got this when attaching an external usb hd. Kernel is 2.6.26, I'll attach
-> config.
-> 
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> sd 0:0:0:0: Attached scsi generic sg0 type 0
-> BUG: unable to handle kernel NULL pointer dereference at 00000004
-> IP: [<f98c067b>] :usb_storage:slave_alloc+0x2b/0x60
-> *pde = 00000000
-> Oops: 0000 [#1]
-> Modules linked in: radeon drm usb_storage pcmcia nsc_ircc irda parport_pc
-> ehci_hcd uhci_hcd parport usbcore yenta_socket rsrc_nonstatic firewire_ohci
-> pcmcia_core 8139cp firewire_core crc_itu_t ipw2200 8139too i2c_i801
-> 
-> Pid: 1354, comm: usb-stor-scan Not tainted (2.6.26 #1)
-> EIP: 0060:[<f98c067b>] EFLAGS: 00010202 CPU: 0
-> EIP is at slave_alloc+0x2b/0x60 [usb_storage]
-> EAX: 00000000 EBX: f6c6070c ECX: 00000202 EDX: f6cb8c00
-> ESI: f0403400 EDI: f6c10c14 EBP: f6c60400 ESP: f6d9bddc
->  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-> Process usb-stor-scan (pid: 1354, ti=f6d9a000 task=f7c534c0 task.ti=f6d9a000)
-> Stack: f0403400 f6c10c00 c02f0c73 f60fc938 00000000 00000000 f6c60400 00000000
->        00000000 00000000 c02f1061 c04cca30 c049cb92 f60fc938 c04bebfe f6c643c8
->        f6c643d0 f6c643e0 00000000 00000000 c04befed f6ea0288 00000000 f6c10c00
-> Call Trace:
->  [<c02f0c73>] scsi_alloc_sdev+0x143/0x1b0
->  [<c02f1061>] scsi_probe_and_add_lun+0x261/0x9a0
->  [<c02f1c03>] __scsi_scan_target+0x2e3/0x610
->  [<c0124f40>] process_timeout+0x0/0x10
->  [<c0424347>] wait_for_common+0x77/0x110
->  [<c0118ab0>] default_wake_function+0x0/0x10
->  [<c02f1f87>] scsi_scan_channel+0x57/0xa0
->  [<c02f2077>] scsi_scan_host_selected+0xa7/0x120
->  [<c02f215b>] do_scsi_scan_host+0x6b/0x70
->  [<f98c2625>] usb_stor_scan_thread+0x145/0x190 [usb_storage]
->  [<c012e6e0>] autoremove_wake_function+0x0/0x50
->  [<f98c24e0>] usb_stor_scan_thread+0x0/0x190 [usb_storage]
->  [<c012e2d7>] kthread+0x37/0x70
->  [<c012e2a0>] kthread+0x0/0x70
->  [<c0103323>] kernel_thread_helper+0x7/0x14
->  =======================
-> Code: 83 ec 08 89 74 24 04 89 c6 89 1c 24 8b 18 c6 40 57 24 81 c3 0c 03 00 00
-> 8b 43 20 8b 53 0c c1 e8 0f 83 e0 0f 8b 84 82 8c 01 00 00 <0f> b7 50 04 8b 46 04
-> 4a e8 b8 aa 96 c6 80 7b 3c 04 75 0e 8b 46
-> EIP: [<f98c067b>] slave_alloc+0x2b/0x60 [usb_storage] SS:ESP 0068:f6d9bddc
-> ---[ end trace f3a5e784c4c8fadf ]---
+Like blk_hw_contig_segment() does, this patch uses hw_seg_size for
+simplicity, which is a bit larger than an exact value (we don't need
+BIOVEC_VIRT_START_SIZE here).
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
+Cc: David Miller <davem@davemloft.net>
+---
+ block/blk-merge.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 5efc9e7..39a22f8 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -83,7 +83,8 @@ void blk_recalc_rq_segments(struct request *rq)
+ 			continue;
+ 		}
+ new_segment:
+-		if (BIOVEC_VIRT_MERGEABLE(bvprv, bv) &&
++		if (hw_seg_size + bv->bv_len <= q->max_segment_size &&
++		    BIOVEC_VIRT_MERGEABLE(bvprv, bv) &&
+ 		    !BIOVEC_VIRT_OVERSIZE(hw_seg_size + bv->bv_len))
+ 			hw_seg_size += bv->bv_len;
+ 		else {
+-- 
+1.5.5.GIT
+
