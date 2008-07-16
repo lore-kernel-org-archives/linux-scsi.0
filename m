@@ -1,153 +1,41 @@
-From: Ingo Molnar <mingo@elte.hu>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
-Date: Wed, 16 Jul 2008 15:15:43 +0200
-Message-ID: <20080716131543.GA3673@elte.hu>
-References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu>
+Date: Wed, 16 Jul 2008 07:28:48 -0600
+Message-ID: <20080716132848.GB25255@parisc-linux.org>
+References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu> <20080716131543.GA3673@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:36158 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754836AbYGPNQG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2008 09:16:06 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:44352 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755957AbYGPN3K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 09:29:10 -0400
 Content-Disposition: inline
-In-Reply-To: <20080716103337.GA22931@elte.hu>
+In-Reply-To: <20080716131543.GA3673@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
+On Wed, Jul 16, 2008 at 03:15:43PM +0200, Ingo Molnar wrote:
+> 
+> * Ingo Molnar <mingo@elte.hu> wrote:
+> 
+> > > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to 
+> > > include blkdev.h as well.
+> > 
+> > that wont work - a better replacement fix is the one below. The 
+> > problem is that scsi.h is included even on !CONFIG_BLOCK and then the 
+> > BLK_MAX_CDB symbol is meaningless.
+> 
+> -v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well. 
+> Note my patch is just a quick RFC, this can probably be done cleaner.
 
-* Ingo Molnar <mingo@elte.hu> wrote:
+Maybe we should just #ifdef CONFIG_BLOCK the inclusion of scsi/*.h in
+fs/compat_ioctl.h?
 
-> > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to=20
-> > include blkdev.h as well.
->=20
-> that wont work - a better replacement fix is the one below. The=20
-> problem is that scsi.h is included even on !CONFIG_BLOCK and then the=
-=20
-> BLK_MAX_CDB symbol is meaningless.
-
--v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well.=20
-Note my patch is just a quick RFC, this can probably be done cleaner.
-
-	Ingo
-
-------------->
-commit 21a6d82fe95eced3775fb45ac46102b872db02e5
-Author: Ingo Molnar <mingo@elte.hu>
-Date:   Wed Jul 16 11:56:08 2008 +0200
-
-    scsi: fix build error in fs/compat_ioctl.c
-   =20
-    -tip testing found that the build broke in fs/compat_ioctl.c:
-   =20
-    ----------->
-    In file included from include/scsi/scsi.h:12,
-                     from fs/compat_ioctl.c:72:
-    include/scsi/scsi_cmnd.h:27:25: warning: "BLK_MAX_CDB" is not defin=
-ed
-    include/scsi/scsi_cmnd.h:28:3: error: #error MAX_COMMAND_SIZE can n=
-ot be bigger than BLK_MAX_CDB
-    In file included from include/scsi/scsi.h:12,
-                     from fs/compat_ioctl.c:72:
-    include/scsi/scsi_cmnd.h: In function =E2=80=98scsi_bidi_cmnd=E2=80=
-=99:
-    include/scsi/scsi_cmnd.h:182: error: implicit declaration of functi=
-on =E2=80=98blk_bidi_rq=E2=80=99
-    include/scsi/scsi_cmnd.h:183: error: dereferencing pointer to incom=
-plete type
-    include/scsi/scsi_cmnd.h: In function =E2=80=98scsi_in=E2=80=99:
-    include/scsi/scsi_cmnd.h:189: error: dereferencing pointer to incom=
-plete type
-    <-----------
-   =20
-    with this config:
-   =20
-      http://redhat.com/~mingo/misc/config-Wed_Jul_16_11_32_32_CEST_200=
-8.bad
-   =20
-    I have bisected it down to:
-   =20
-    | feac6a07c4a3578bffd6769bb4927e8a7e1f3ffe is first bad commit
-    | commit feac6a07c4a3578bffd6769bb4927e8a7e1f3ffe
-    | Author: Martin Petermann <martin@linux.vnet.ibm.com>
-    | Date:   Wed Jul 2 10:56:35 2008 +0200
-    |
-    |    [SCSI] zfcp: Move status accessors from zfcp to SCSI include f=
-ile.
-    |
-    |    Move the accessor functions for the scsi_cmnd status from zfcp=
- to the
-    |    SCSI include file. Change the interface to the functions to pa=
-ss the
-    |    scsi_cmnd pointer instead of the status pointer.
-    |
-    |    Signed-off-by: Martin Petermann <martin@linux.vnet.ibm.com>
-    |    Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-    |    Signed-off-by: James Bottomley <James.Bottomley@HansenPartners=
-hip.com>
-   =20
-    The problem is due to this aspect of that change:
-   =20
-    | @@ -9,6 +9,7 @@
-    |  #define _SCSI_SCSI_H
-    |
-    |  #include <linux/types.h>
-    | +#include <scsi/scsi_cmnd.h>
-    |
-    |  /*
-    |   * The maximum number of SG segments that we will put inside a
-   =20
-    scsi_cmnd.h depends on symbols defined in blkdev.h but those symbol=
-s
-    are not available if !CONFIG_BLOCK.
-   =20
-    Only include scsi/scsi_cmnd.h if on CONFIG_BLOCK.
-    (those methods are not used when CONFIG_BLOCK is off anyway).
-   =20
-    Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
- include/scsi/scsi.h |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 00137a7..0df6c05 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -9,7 +9,10 @@
- #define _SCSI_SCSI_H
-=20
- #include <linux/types.h>
--#include <scsi/scsi_cmnd.h>
-+
-+#ifdef CONFIG_BLOCK
-+# include <scsi/scsi_cmnd.h>
-+#endif
-=20
- /*
-  * The maximum number of SG segments that we will put inside a
-@@ -426,6 +429,7 @@ struct scsi_lun {
- #define driver_byte(result) (((result) >> 24) & 0xff)
- #define suggestion(result)  (driver_byte(result) & SUGGEST_MASK)
-=20
-+#ifdef CONFIG_BLOCK
- static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
- {
- 	cmd->result |=3D status << 8;
-@@ -440,7 +444,7 @@ static inline void set_driver_byte(struct scsi_cmnd=
- *cmd, char status)
- {
- 	cmd->result |=3D status << 24;
- }
--
-+#endif
-=20
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
- #define sense_error(sense)  ((sense) & 0xf)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
