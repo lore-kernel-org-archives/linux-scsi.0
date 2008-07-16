@@ -1,124 +1,76 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
-Date: Wed, 16 Jul 2008 08:52:00 -0500
-Message-ID: <1216216320.3230.1.camel@localhost.localdomain>
-References: <1216138543.3312.60.camel@localhost.localdomain>
-	 <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu>
-	 <20080716131543.GA3673@elte.hu>
+Subject: Re: [PATCH] SCSI: erase invalid data returned by device
+Date: Wed, 16 Jul 2008 08:55:41 -0500
+Message-ID: <1216216541.3230.4.camel@localhost.localdomain>
+References: <804dabb00806232109k32437d04jeed373b7d38abdb3@mail.gmail.com>
+	 <Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org>
+	 <87vdz63q1b.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57913 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:57951 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756985AbYGPNwG (ORCPT
+	by vger.kernel.org with ESMTP id S1757845AbYGPNzr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2008 09:52:06 -0400
-In-Reply-To: <20080716131543.GA3673@elte.hu>
+	Wed, 16 Jul 2008 09:55:47 -0400
+In-Reply-To: <87vdz63q1b.fsf@denkblock.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2008-07-16 at 15:15 +0200, Ingo Molnar wrote:
-> * Ingo Molnar <mingo@elte.hu> wrote:
+On Wed, 2008-07-16 at 15:41 +0200, Elias Oltmanns wrote:
+> Alan Stern <stern@rowland.harvard.edu> wrote:
+> > This patch (as1108) fixes a problem that can occur with certain USB
+> > mass-storage devices: They return invalid data together with a residue
+> > indicating that the data should be ignored.  Rather than leave the
+> > invalid data in a transfer buffer, where it can get misinterpreted,
+> > the patch clears the invalid portion of the buffer.
 > 
-> > > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to 
-> > > include blkdev.h as well.
-> > 
-> > that wont work - a better replacement fix is the one below. The 
-> > problem is that scsi.h is included even on !CONFIG_BLOCK and then the 
-> > BLK_MAX_CDB symbol is meaningless.
+> I've only just stumbled upon this patch and I don't quite understand how
+> it is supposed to work.
 > 
-> -v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well. 
-> Note my patch is just a quick RFC, this can probably be done cleaner.
+> >
+> > This solves a problem (wrong write-protect setting detected) reported
+> > by Maciej Rutecki and Peter Teoh.
+> >
+> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> > Tested-by: Peter Teoh <htmldeveloper@gmail.com>
+> >
+> > ---
+> >
+> > Index: usb-2.6/drivers/scsi/scsi_lib.c
+> > ===================================================================
+> > --- usb-2.6.orig/drivers/scsi/scsi_lib.c
+> > +++ usb-2.6/drivers/scsi/scsi_lib.c
+> > @@ -207,6 +207,15 @@ int scsi_execute(struct scsi_device *sde
+> >  	 */
+> >  	blk_execute_rq(req->q, NULL, req, 1);
+> >  
+> > +	/*
+> > +	 * Some devices (USB mass-storage in particular) may transfer
+> > +	 * garbage data together with a residue indicating that the data
+> > +	 * is invalid.  Prevent the garbage from being misinterpreted
+> > +	 * and prevent security leaks by zeroing out the excess data.
+> > +	 */
+> > +	if (unlikely(req->data_len > 0 && req->data_len <= bufflen))
+> > +		memset(buffer + (bufflen - req->data_len), 0, req->data_len);
+> 
+> Sorry, I don't understand that line at all. Surely, we want to zero out
+> either the excess data, i.e. buffer -> buffer + req->data_len, or the
+> residue, i.e. buffer + req->data_len -> buffer + bufflen. Your patch
+> implies that there are bufflen - req->data_len bytes of valid data at
+> the beginning of buffer. If this is intentional, please bear with me and
+> explain. Otherwise, what about the following patch to 2.6.26? On the
+> other hand, the same could probably be achieved by setting req->data_len
+> to 0. Oh dear, it would appear that I'm completely lost here.
 
-Erm, Ingo, if you'd just follow linux-next instead of your own tree,
-you'd see there's already a fix for this.
+I think all you don't understand is simply that for a REQ_BLOCK_PC, the
+residue (that's the amount of untransferred, or at least bogus, data) is
+returned in req->data_len.  Thus, after such a request completes, you
+have bufflen-req->data_len good bytes.
 
 James
-
-----
-
-From: Randy Dunlap <randy.dunlap@oracle.com>
-
-Fix fs/compat_ioctl.c to handle CONFIG_BLOCK=n, CONFIG_SCSI=n
-to avoid build errors:
-
-In file included from linux-next-20080708/include/scsi/scsi.h:12,
-                 from linux-next-20080708/fs/compat_ioctl.c:71:
-linux-next-20080708/include/scsi/scsi_cmnd.h:27:25: warning:
-"BLK_MAX_CDB" is not defined
-linux-next-20080708/include/scsi/scsi_cmnd.h:28:3: error: #error
-MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
-In file included from linux-next-20080708/include/scsi/scsi.h:12,
-                 from linux-next-20080708/fs/compat_ioctl.c:71:
-linux-next-20080708/include/scsi/scsi_cmnd.h: In function
-'scsi_bidi_cmnd':
-linux-next-20080708/include/scsi/scsi_cmnd.h:182: error: implicit
-declaration of function 'blk_bidi_rq'
-linux-next-20080708/include/scsi/scsi_cmnd.h:183: error: dereferencing
-pointer to incomplete type
-linux-next-20080708/include/scsi/scsi_cmnd.h: In function 'scsi_in':
-linux-next-20080708/include/scsi/scsi_cmnd.h:189: error: dereferencing
-pointer to incomplete type
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- fs/compat_ioctl.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
---- linux-next-20080708.orig/fs/compat_ioctl.c
-+++ linux-next-20080708/fs/compat_ioctl.c
-@@ -68,9 +68,11 @@
- #include <linux/capi.h>
- #include <linux/gigaset_dev.h>
- 
-+#ifdef CONFIG_BLOCK
- #include <scsi/scsi.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
-+#endif
- 
- #include <asm/uaccess.h>
- #include <linux/ethtool.h>
-@@ -1965,6 +1967,7 @@ COMPATIBLE_IOCTL(GIO_UNISCRNMAP)
- COMPATIBLE_IOCTL(PIO_UNISCRNMAP)
- COMPATIBLE_IOCTL(PIO_FONTRESET)
- COMPATIBLE_IOCTL(PIO_UNIMAPCLR)
-+#ifdef CONFIG_BLOCK
- /* Big S */
- COMPATIBLE_IOCTL(SCSI_IOCTL_GET_IDLUN)
- COMPATIBLE_IOCTL(SCSI_IOCTL_DOORLOCK)
-@@ -1974,6 +1977,7 @@ COMPATIBLE_IOCTL(SCSI_IOCTL_GET_BUS_NUMB
- COMPATIBLE_IOCTL(SCSI_IOCTL_SEND_COMMAND)
- COMPATIBLE_IOCTL(SCSI_IOCTL_PROBE_HOST)
- COMPATIBLE_IOCTL(SCSI_IOCTL_GET_PCI)
-+#endif
- /* Big T */
- COMPATIBLE_IOCTL(TUNSETNOCSUM)
- COMPATIBLE_IOCTL(TUNSETDEBUG)
-@@ -2044,6 +2048,7 @@ COMPATIBLE_IOCTL(SIOCGIFVLAN)
- COMPATIBLE_IOCTL(SIOCSIFVLAN)
- COMPATIBLE_IOCTL(SIOCBRADDBR)
- COMPATIBLE_IOCTL(SIOCBRDELBR)
-+#ifdef CONFIG_BLOCK
- /* SG stuff */
- COMPATIBLE_IOCTL(SG_SET_TIMEOUT)
- COMPATIBLE_IOCTL(SG_GET_TIMEOUT)
-@@ -2068,6 +2073,7 @@ COMPATIBLE_IOCTL(SG_SCSI_RESET)
- COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)
- COMPATIBLE_IOCTL(SG_SET_KEEP_ORPHAN)
- COMPATIBLE_IOCTL(SG_GET_KEEP_ORPHAN)
-+#endif
- /* PPP stuff */
- COMPATIBLE_IOCTL(PPPIOCGFLAGS)
- COMPATIBLE_IOCTL(PPPIOCSFLAGS)
-
-
----
-~Randy
-Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
-http://linuxplumbersconf.org/
 
 
