@@ -1,41 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
-Date: Wed, 16 Jul 2008 07:28:48 -0600
-Message-ID: <20080716132848.GB25255@parisc-linux.org>
-References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu> <20080716131543.GA3673@elte.hu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bugme-new] [Bug 11088] New: Warning about NULL pointer dereference
+ when attaching usb hd
+Date: Wed, 16 Jul 2008 09:40:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807160939250.2142-100000@iolanthe.rowland.org>
+References: <4104961b0807152239k177262c8w2ad15077fe94c37f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44352 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755957AbYGPN3K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 09:29:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20080716131543.GA3673@elte.hu>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55437 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755363AbYGPNkO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 09:40:14 -0400
+In-Reply-To: <4104961b0807152239k177262c8w2ad15077fe94c37f@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: jidong xiao <jidong.xiao@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, hanno@gentoo.org, akpm@linux-foundation.org
 
-On Wed, Jul 16, 2008 at 03:15:43PM +0200, Ingo Molnar wrote:
-> 
-> * Ingo Molnar <mingo@elte.hu> wrote:
-> 
-> > > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to 
-> > > include blkdev.h as well.
-> > 
-> > that wont work - a better replacement fix is the one below. The 
-> > problem is that scsi.h is included even on !CONFIG_BLOCK and then the 
-> > BLK_MAX_CDB symbol is meaningless.
-> 
-> -v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well. 
-> Note my patch is just a quick RFC, this can probably be done cleaner.
+On Wed, 16 Jul 2008, jidong xiao wrote:
 
-Maybe we should just #ifdef CONFIG_BLOCK the inclusion of scsi/*.h in
-fs/compat_ioctl.h?
+> Hi, Alan,
+> 
+> I disassembled the source code via kdb.
+> slave_alloc+0x2b: call blk_queue_update_dma_alignment
+> scsi_alloc_sdev+0x143: call scsi_adjust_queue_depth
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> So the problems is, either sdev->request_queue or bulk_in_ep is NULL pointer.
+> In my opinion, bulk_in_ep is more likely to be a NULL pointer as it is
+> just calculated in the prior line.
+> 
+> What do you think about this issue?
+
+Read the full report in Bugzilla and you'll see.
+
+Alan Stern
+
