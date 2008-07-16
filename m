@@ -1,18 +1,18 @@
 From: Ingo Molnar <mingo@elte.hu>
 Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
-Date: Wed, 16 Jul 2008 12:33:37 +0200
-Message-ID: <20080716103337.GA22931@elte.hu>
-References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu>
+Date: Wed, 16 Jul 2008 15:15:43 +0200
+Message-ID: <20080716131543.GA3673@elte.hu>
+References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:37853 "EHLO mx3.mail.elte.hu"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:36158 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755048AbYGPKdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2008 06:33:52 -0400
+	id S1754836AbYGPNQG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2008 09:16:06 -0400
 Content-Disposition: inline
-In-Reply-To: <20080716101634.GA8494@elte.hu>
+In-Reply-To: <20080716103337.GA22931@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -21,29 +21,21 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-fo
 
 * Ingo Molnar <mingo@elte.hu> wrote:
 
-> The problem is this aspect of that change:
+> > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to=20
+> > include blkdev.h as well.
 >=20
-> | @@ -9,6 +9,7 @@
-> |  #define _SCSI_SCSI_H
-> |
-> |  #include <linux/types.h>
-> | +#include <scsi/scsi_cmnd.h>
-> |
-> |  /*
-> |   * The maximum number of SG segments that we will put inside a
->=20
-> scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to=20
-> include blkdev.h as well.
-
-that wont work - a better replacement fix is the one below. The problem=
+> that wont work - a better replacement fix is the one below. The=20
+> problem is that scsi.h is included even on !CONFIG_BLOCK and then the=
 =20
-is that scsi.h is included even on !CONFIG_BLOCK and then the=20
-BLK_MAX_CDB symbol is meaningless.
+> BLK_MAX_CDB symbol is meaningless.
+
+-v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well.=20
+Note my patch is just a quick RFC, this can probably be done cleaner.
 
 	Ingo
 
------------>
-commit 7c2bc6236e6c787ab9962cfc6fad04551d9c4057
+------------->
+commit 21a6d82fe95eced3775fb45ac46102b872db02e5
 Author: Ingo Molnar <mingo@elte.hu>
 Date:   Wed Jul 16 11:56:08 2008 +0200
 
@@ -117,11 +109,11 @@ s
    =20
     Signed-off-by: Ingo Molnar <mingo@elte.hu>
 ---
- include/scsi/scsi.h |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ include/scsi/scsi.h |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 00137a7..b212859 100644
+index 00137a7..0df6c05 100644
 --- a/include/scsi/scsi.h
 +++ b/include/scsi/scsi.h
 @@ -9,7 +9,10 @@
@@ -136,7 +128,24 @@ index 00137a7..b212859 100644
 =20
  /*
   * The maximum number of SG segments that we will put inside a
-
+@@ -426,6 +429,7 @@ struct scsi_lun {
+ #define driver_byte(result) (((result) >> 24) & 0xff)
+ #define suggestion(result)  (driver_byte(result) & SUGGEST_MASK)
+=20
++#ifdef CONFIG_BLOCK
+ static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
+ {
+ 	cmd->result |=3D status << 8;
+@@ -440,7 +444,7 @@ static inline void set_driver_byte(struct scsi_cmnd=
+ *cmd, char status)
+ {
+ 	cmd->result |=3D status << 24;
+ }
+-
++#endif
+=20
+ #define sense_class(sense)  (((sense) >> 4) & 0x7)
+ #define sense_error(sense)  ((sense) & 0xf)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
