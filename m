@@ -1,23 +1,103 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
 Subject: Re: rdac and aac
-Date: Wed, 16 Jul 2008 13:17:22 -0500
-Message-ID: <1216232242.3358.48.camel@localhost.localdomain>
+Date: Wed, 16 Jul 2008 11:46:01 -0700
+Message-ID: <1216233961.27507.225.camel@chandra-ubuntu>
 References: <86802c440807161051r7632c1d3qeb73c3cc1a124ed6@mail.gmail.com>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47290 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752830AbYGPSR0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2008 14:17:26 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:56827 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbYGPSq2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 14:46:28 -0400
 In-Reply-To: <86802c440807161051r7632c1d3qeb73c3cc1a124ed6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Yinghai Lu <yhlu.kernel@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
+Cc: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
+Please test with the attached patch and see if it works.
+
+regards,
+
+chandra
+
+---------------------
+
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+--
+
+Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -608,12 +608,17 @@ static int rdac_bus_notify(struct notifi
+ 			    unsigned long action, void *data)
+ {
+ 	struct device *dev = data;
+-	struct scsi_device *sdev = to_scsi_device(dev);
++	struct scsi_device *sdev;
+ 	struct scsi_dh_data *scsi_dh_data;
+ 	struct rdac_dh_data *h;
+ 	int i, found = 0;
+ 	unsigned long flags;
+ 
++	if (!scsi_is_sdev_device(dev))
++		return 0;
++
++	sdev = to_scsi_device(dev);
++
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
+ 		for (i = 0; rdac_dev_list[i].vendor; i++) {
+ 			if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
+Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_emc.c
+===================================================================
+--- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_emc.c
++++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -416,12 +416,17 @@ static int clariion_bus_notify(struct no
+ 				unsigned long action, void *data)
+ {
+ 	struct device *dev = data;
+-	struct scsi_device *sdev = to_scsi_device(dev);
++	struct scsi_device *sdev;
+ 	struct scsi_dh_data *scsi_dh_data;
+ 	struct clariion_dh_data *h;
+ 	int i, found = 0;
+ 	unsigned long flags;
+ 
++	if (!scsi_is_sdev_device(dev))
++		return 0;
++
++	sdev = to_scsi_device(dev);
++
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
+ 		for (i = 0; clariion_dev_list[i].vendor; i++) {
+ 			if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
+Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+===================================================================
+--- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -131,11 +131,16 @@ static int hp_sw_bus_notify(struct notif
+ 			    unsigned long action, void *data)
+ {
+ 	struct device *dev = data;
+-	struct scsi_device *sdev = to_scsi_device(dev);
++	struct scsi_device *sdev;
+ 	struct scsi_dh_data *scsi_dh_data;
+ 	int i, found = 0;
+ 	unsigned long flags;
+ 
++	if (!scsi_is_sdev_device(dev))
++		return 0;
++
++	sdev = to_scsi_device(dev);
++
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
+ 		for (i = 0; hp_sw_dh_data_list[i].vendor; i++) {
+ 			if (!strncmp(sdev->vendor, hp_sw_dh_data_list[i].vendor,
+---
 On Wed, 2008-07-16 at 10:51 -0700, Yinghai Lu wrote:
 > calling  aac_init+0x0/0x9a
 > Adaptec aacraid driver 1.1-5[2456]-ms
@@ -85,37 +165,17 @@ On Wed, 2008-07-16 at 10:51 -0700, Yinghai Lu wrote:
 >  [<ffffffff8022b589>] child_rip+0xa/0x11
 >  [<ffffffff80f40806>] ? kernel_init+0x0/0x346
 >  [<ffffffff8022b57f>] ? child_rip+0x0/0x11
-
-Great ... I think this is another "we added targets to the scsi bus and
-now it doesn't work" problem.  To test the theory, does this fix the
-problem?
-
-James
-
----
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 6fff077..fdf34b0 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -608,12 +608,17 @@ static int rdac_bus_notify(struct notifier_block *nb,
- 			    unsigned long action, void *data)
- {
- 	struct device *dev = data;
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_device *sdev;
- 	struct scsi_dh_data *scsi_dh_data;
- 	struct rdac_dh_data *h;
- 	int i, found = 0;
- 	unsigned long flags;
- 
-+	if (!scsi_is_sdev_device(dev))
-+		return 0;
-+
-+	sdev = to_scsi_device(dev);
-+
- 	if (action == BUS_NOTIFY_ADD_DEVICE) {
- 		for (i = 0; rdac_dev_list[i].vendor; i++) {
- 			if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
-
+> 
+> 
+> Code: 28 00 00 00 0f be c0 74 05 e8 0e 74 d4 ff c9 c3 55 31 c9 48 89
+> e5 48 83 ec 10 65 48 8b 04 25 28 00 00 00 48 89 45 f8 31 c0 eb 19 <44>
+> 8a 04 0f 44 88 c0 2a 04 0e 84 c0 75 12 48 ff c1 45 84 c0 74
+> RIP  [<ffffffff8051f024>] strncmp+0x1b/0x54
+>  RSP <ffff883824c579f0>
+> CR2: 0000000000000003
+> ---[ end trace c89c20984b386ade ]---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
