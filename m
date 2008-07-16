@@ -1,95 +1,158 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: rdac and aac
-Date: Wed, 16 Jul 2008 10:51:56 -0700
-Message-ID: <86802c440807161051r7632c1d3qeb73c3cc1a124ed6@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: bidi support: FC transport layer...
+Date: Wed, 16 Jul 2008 10:53:47 -0700
+Message-ID: <B8532D23-197D-4C8E-A08C-6081DBDEE6DF@qlogic.com>
+References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EE27@xbl3.ma.emulex.com> <77DD6D0A-346F-4797-B05D-C3C24EAD290E@qlogic.com> <C9F1A1B1-136B-4EE0-8F64-8EE5DF04E5B6@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EF7B@xbl3.ma.emulex.com>
+Mime-Version: 1.0 (Apple Message framework v924)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:7557 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbYGPRv5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 13:51:57 -0400
-Received: by py-out-1112.google.com with SMTP id p76so3418708pyb.10
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2008 10:51:57 -0700 (PDT)
-Content-Disposition: inline
+Received: from avexch2.qlogic.com ([198.70.193.116]:16613 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752790AbYGPRxu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 13:53:50 -0400
+In-Reply-To: <D1D4C3FF75F9354393DB8314DF43DEF2E7EF7B@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
-
-calling  aac_init+0x0/0x9a
-Adaptec aacraid driver 1.1-5[2456]-ms
-vendor=10de device=005d
-ACPI: PCI Interrupt 0000:86:00.0[A] -> Link [LN2C] -> GSI 42 (level,
-low) -> IRQ 42
-PCI: Setting latency timer of device 0000:86:00.0 to 64
-AAC0: kernel 5.2-0[15535] Oct 11 2007
-AAC0: monitor 5.2-0[15535]
-AAC0: bios 5.2-0[15535]
-AAC0: serial 00721EC0115
-AAC0: Non-DASD support enabled.
-AAC0: 64bit support enabled.
-AAC0: 64 Bit DAC enabled
-scsi0 : aacraid
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
-IP: [<ffffffff8051f024>] strncmp+0x1b/0x54
-PGD 0
-Oops: 0000 [1] SMP
-CPU 28
-Modules linked in:
-Pid: 1, comm: swapper Not tainted 2.6.26-tip-00047-g69a6a3e-dirty #394
-RIP: 0010:[<ffffffff8051f024>]  [<ffffffff8051f024>] strncmp+0x1b/0x54
-RSP: 0018:ffff883824c579f0  EFLAGS: 00010206
-RAX: 0000000000000000 RBX: ffffffff80ad2190 RCX: 0000000000000000
-RDX: 0000000000000003 RSI: ffffffff80cfe351 RDI: 0000000000000003
-RBP: ffff883824c57a00 R08: 0000000000000000 R09: ffffe200e0774440
-R10: 00000000f6f3ecb9 R11: 00000000f6f3ecb9 R12: ffff88402206c050
-R13: ffff88402206c170 R14: 0000000000000000 R15: ffffffffffffffff
-FS:  0000000000000000(0000) GS:ffff884024c3b600(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 0000000000000003 CR3: 0000000000201000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process swapper (pid: 1, threadinfo ffff883824c56000, task ffff883024c58000)
-Stack:  ffffffff80e705d0 00000000f6f3ecb9 ffff883824c57a50 ffffffff806ab127
- ffffe200e0774440 00000000f6f3ecb9 00000000f6f3ecb9 0000000000000000
- 00000000ffffffff 0000000000000000 ffff88402206c170 0000000000000001
-Call Trace:
- [<ffffffff806ab127>] rdac_bus_notify+0x68/0x235
- [<ffffffff80a4f7c6>] notifier_call_chain+0x45/0x84
- [<ffffffff802835f1>] __blocking_notifier_call_chain+0x61/0x92
- [<ffffffff80283649>] blocking_notifier_call_chain+0x27/0x3d
- [<ffffffff805b5f36>] device_add+0xf5/0x4fd
- [<ffffffff80682811>] ? scsi_setup_command_freelist+0x6c/0xc6
- [<ffffffff80683477>] scsi_add_host+0xc5/0x20f
- [<ffffffff80a28269>] aac_probe_one+0x3ef/0x4ba
- [<ffffffff8053014e>] pci_device_probe+0xd5/0x142
- [<ffffffff805b8a01>] driver_probe_device+0xd4/0x199
- [<ffffffff802830da>] ? down+0x4b/0x68
- [<ffffffff805b8b29>] __driver_attach+0x63/0xa4
- [<ffffffff805b8ac6>] ? __driver_attach+0x0/0xa4
- [<ffffffff805b8009>] bus_for_each_dev+0x63/0xb1
- [<ffffffff805b87cb>] driver_attach+0x34/0x4a
- [<ffffffff805b7779>] bus_add_driver+0xcb/0x22b
- [<ffffffff8051ae5a>] ? kset_find_obj+0x4c/0x96
- [<ffffffff805b8e4e>] driver_register+0xbc/0x153
- [<ffffffff802313bd>] ? read_tsc+0x9/0x1c
- [<ffffffff8053046f>] __pci_register_driver+0x67/0xb8
- [<ffffffff80f71e34>] ? aac_init+0x0/0x9a
- [<ffffffff80f71e7f>] aac_init+0x4b/0x9a
- [<ffffffff80f409e4>] kernel_init+0x1de/0x346
- [<ffffffff8022a4f4>] ? mcount_call+0x5/0x31
- [<ffffffff80262df7>] ? finish_task_switch+0x14/0xe3
- [<ffffffff8022b589>] child_rip+0xa/0x11
- [<ffffffff80f40806>] ? kernel_init+0x0/0x346
- [<ffffffff8022b57f>] ? child_rip+0x0/0x11
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
 
 
-Code: 28 00 00 00 0f be c0 74 05 e8 0e 74 d4 ff c9 c3 55 31 c9 48 89
-e5 48 83 ec 10 65 48 8b 04 25 28 00 00 00 48 89 45 f8 31 c0 eb 19 <44>
-8a 04 0f 44 88 c0 2a 04 0e 84 c0 75 12 48 ff c1 45 84 c0 74
-RIP  [<ffffffff8051f024>] strncmp+0x1b/0x54
- RSP <ffff883824c579f0>
-CR2: 0000000000000003
----[ end trace c89c20984b386ade ]---
+On Jul 15, 2008, at 12:35 PM, james.smart@emulex.com wrote:
+
+>
+>> -----Original Message-----
+>> From: Seokmann Ju [mailto:seokmann.ju@qlogic.com]
+>> Sent: Tuesday, July 15, 2008 2:55 PM
+>> To: Smart, James
+>> Cc: linux-scsi@vger.kernel.org; Andrew Vasquez
+>> Subject: Re: bidi support: FC transport layer...
+>>
+>> From the code walk-through, for the SAS SMP case, the
+>> transport layer
+>> create
+>> a file under sysfs per each device detection, which is former case.
+>> Could you elaborate why we have to "temporarily create object X and
+>> destroy"?
+>
+> Well - as long as you are only going to talk to what the driver  
+> exports,
+> ok...
+>
+> But, what if I want to talk to a Fabric Service or Switch entity the
+> driver
+> doesn't typically log into or stay logged into ?  Or what if I want to
+> talk
+> to another FCP initiator (not FCP traffic, but rather just ELS's/CT
+> traffic)
+> or want to talk to a non-FCP port, but the driver only enumerated the
+> rports
+> associated with FCP Targets ?  Or what if I just want to FC-Ping some
+> random
+> FC address ?
+Just for my learning, should this (FC-ping the random FC address) case
+also be covered by the implementation?
+
+>
+>
+> Somehow we have to make the driver/transport enumerate the device that
+> we
+> want to talk to.  Along with this, I'm assuming the driver has to
+> initiate/do
+> the basic PLOGI to the other address, and be told when to tear it  
+> down.
+>
+> Another part I don't like about the "create a file for each  
+> enumeration"
+> is,
+> we rarely use these files. If the SAN is big, the system has lots of
+> adapters,
+> and so on, why make the system allocate/maintain/etc all of these  
+> things
+> that
+> are rarely used ? When you start enumerating per phy, and with logical
+> entities
+> layering on top of the physical thingies, it can really grow. At what
+> point does
+> SGIO run out of dev_t space ?  Consider that we are enumerating many
+> adapters in
+> an enterprise system; and on the physical level down to phys, and
+> everything
+> on the transport such as expanders and phys on expanders and targets  
+> and
+> luns;
+> and add in virtualization such as NPIV or VSANs, each with potentially
+> large
+> san connectivity and their own large trees of these things...
+> Does SGIO actually scale ?
+The kernel specifies max. as 32768.
+~/block/gsg.c:BSG_MAX_DEVS	32768
+
+It is not enough for 1.6 M max ports, clearly.
+I'm just thinking that how the 32768 is small practically.
+
+>
+>
+>> In general, I've been walking through the code to figure out overall
+>> design
+>> and implementation details about SAS SMP handling.
+>> 1. when each of target device detected, a request_queue for the  
+>> device
+>>  allocated/associated to it.
+>> 2. each of device gets device file under sysfs and the device file is
+>>  used to send SMP via bsg and the packets get serviced in
+>> the nature of
+>>  bidi.
+>>
+>> I also think it should be safe to implement FC-CT/ELS support in the
+>> manner similar to the SAS SMP.
+>> Please let me know for any other missing pieces.
+>
+> Agreed - for the basic part.  However, you're still under the  
+> assumption
+> that SAS
+> enumerated everything.  Given that some SAS parts could perform
+> discovery on it's
+> own, with the LLDD interacting with the transport just enough to
+> enumerate what it
+> found useful, this may not always be the case. Additionally, there
+> aren't a lot
+> of other "protocols" or "port roles" that exist in SAS - but there are
+> in FC.
+I see..
+There are a couple of more roles have defined in the rports besides
+FC_RPORT_ROLE_FCP_TARGET.
+
+>
+>
+> The more interesting part is to those things (switch services, non-FCP
+> targets)
+> that the driver did not enumerate.  We should allow the directed
+> enumeration of them
+> to perform some basic diagnostics or san queries.  And once you have
+> this,
+> we can really open some interesting doors - why not an app that talks
+> FICON ? or
+> something that just message passes between 2 ports ? and so on...
+OK.
+
+Overall, I guess that having a device file under the sysfs for the
+given port of the HBA should be the approach we need to pursue, then.
+And single device file per each port on the instantiated HBA is also
+be the case, I think.
+For the approach, following are kind of questions that came to me,
+1. tte driver has to maintain some sort of table of
+  the all end ports, and identify one from the table with some index or
+  opaque data provided by the application for a given FC-CT/ELS pkt.
+2. Overall implementation framework should be similar to the one for
+  SMP in the SAS transport.
+
+Thank you,
+Seokmann
+>
+>
+> -- james
+>
+>
+>
+
