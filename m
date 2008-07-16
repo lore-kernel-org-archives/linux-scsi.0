@@ -1,49 +1,113 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] SCSI: erase invalid data returned by device
-Date: Wed, 16 Jul 2008 16:12:37 +0200
-Message-ID: <87prpd5356.fsf@denkblock.local>
-References: <804dabb00806232109k32437d04jeed373b7d38abdb3@mail.gmail.com>
-	<Pine.LNX.4.44L0.0806241402020.2166-100000@iolanthe.rowland.org>
-	<87vdz63q1b.fsf@denkblock.local>
-	<1216216541.3230.4.camel@localhost.localdomain>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
+Date: Wed, 16 Jul 2008 16:18:05 +0200
+Message-ID: <20080716141805.GB22631@elte.hu>
+References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu> <20080716131543.GA3673@elte.hu> <1216216320.3230.1.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:43183 "EHLO mail.nebensachen.de"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:47021 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755766AbYGPOM4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2008 10:12:56 -0400
-In-Reply-To: <1216216541.3230.4.camel@localhost.localdomain> (James
-	Bottomley's message of "Wed, 16 Jul 2008 08:55:41 -0500")
+	id S1756751AbYGPOSS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2008 10:18:18 -0400
+Content-Disposition: inline
+In-Reply-To: <1216216320.3230.1.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Peter Teoh <htmldeveloper@gmail.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Wed, 2008-07-16 at 15:41 +0200, Elias Oltmanns wrote:
->> Alan Stern <stern@rowland.harvard.edu> wrote:
-[...]
->> > +		memset(buffer + (bufflen - req->data_len), 0, req->data_len);
->> 
->> Sorry, I don't understand that line at all. Surely, we want to zero out
->> either the excess data, i.e. buffer -> buffer + req->data_len, or the
->> residue, i.e. buffer + req->data_len -> buffer + bufflen. Your patch
->> implies that there are bufflen - req->data_len bytes of valid data at
->> the beginning of buffer. If this is intentional, please bear with me and
->> explain. Otherwise, what about the following patch to 2.6.26? On the
->> other hand, the same could probably be achieved by setting req->data_len
->> to 0. Oh dear, it would appear that I'm completely lost here.
->
-> I think all you don't understand is simply that for a REQ_BLOCK_PC, the
-> residue (that's the amount of untransferred, or at least bogus, data) is
-> returned in req->data_len.  Thus, after such a request completes, you
-> have bufflen-req->data_len good bytes.
 
-Oh, I see. The name fooled me there, I suppose. So, the meaning of
-req->data_len is inverted, as it were, when the LLDD performs the data
-transfer, right?
+* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Thanks for explaining,
+> On Wed, 2008-07-16 at 15:15 +0200, Ingo Molnar wrote:
+> > * Ingo Molnar <mingo@elte.hu> wrote:
+> > 
+> > > > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to 
+> > > > include blkdev.h as well.
+> > > 
+> > > that wont work - a better replacement fix is the one below. The 
+> > > problem is that scsi.h is included even on !CONFIG_BLOCK and then the 
+> > > BLK_MAX_CDB symbol is meaningless.
+> > 
+> > -v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well. 
+> > Note my patch is just a quick RFC, this can probably be done 
+> > cleaner.
+> 
+> Erm, Ingo, if you'd just follow linux-next instead of your own tree, 
+> you'd see there's already a fix for this.
 
-Elias
+Erm, no. In the merge window i follow upstream -git, not "my tree", and 
+i searched lkml for the build failure signature and it had nothing 
+there. Then i looked at the commit and it said that it was created just 
+1 day before the merge window started:
+
+ commit feac6a07c4a3578bffd6769bb4927e8a7e1f3ffe
+ Author:     Martin Petermann <martin@linux.vnet.ibm.com>
+ AuthorDate: Wed Jul 2 10:56:35 2008 +0200
+ Commit:     James Bottomley <James.Bottomley@HansenPartnership.com>
+ CommitDate: Sat Jul 12 08:22:34 2008 -0500
+                 ^^^^^^
+
+So i didnt even think of it having hit linux-next so i didnt look into 
+the linux-next archives. lkml should have been Cc:-ed in this case, 
+that's where people look for in case of upstream breakages. You would 
+have saved me some effort via that - please try to do it in the future, 
+it's very helpful to testers.
+
+btw., about the technical aspects of the solution, i'm not sure i like 
+these big #ifdef blocks:
+
+> --- linux-next-20080708.orig/fs/compat_ioctl.c
+> +++ linux-next-20080708/fs/compat_ioctl.c
+> @@ -68,9 +68,11 @@
+>  #include <linux/capi.h>
+>  #include <linux/gigaset_dev.h>
+>  
+> +#ifdef CONFIG_BLOCK
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_ioctl.h>
+>  #include <scsi/sg.h>
+> +#endif
+>  
+>  #include <asm/uaccess.h>
+>  #include <linux/ethtool.h>
+> @@ -1965,6 +1967,7 @@ COMPATIBLE_IOCTL(GIO_UNISCRNMAP)
+>  COMPATIBLE_IOCTL(PIO_UNISCRNMAP)
+>  COMPATIBLE_IOCTL(PIO_FONTRESET)
+>  COMPATIBLE_IOCTL(PIO_UNIMAPCLR)
+> +#ifdef CONFIG_BLOCK
+>  /* Big S */
+>  COMPATIBLE_IOCTL(SCSI_IOCTL_GET_IDLUN)
+>  COMPATIBLE_IOCTL(SCSI_IOCTL_DOORLOCK)
+> @@ -1974,6 +1977,7 @@ COMPATIBLE_IOCTL(SCSI_IOCTL_GET_BUS_NUMB
+>  COMPATIBLE_IOCTL(SCSI_IOCTL_SEND_COMMAND)
+>  COMPATIBLE_IOCTL(SCSI_IOCTL_PROBE_HOST)
+>  COMPATIBLE_IOCTL(SCSI_IOCTL_GET_PCI)
+> +#endif
+>  /* Big T */
+>  COMPATIBLE_IOCTL(TUNSETNOCSUM)
+>  COMPATIBLE_IOCTL(TUNSETDEBUG)
+> @@ -2044,6 +2048,7 @@ COMPATIBLE_IOCTL(SIOCGIFVLAN)
+>  COMPATIBLE_IOCTL(SIOCSIFVLAN)
+>  COMPATIBLE_IOCTL(SIOCBRADDBR)
+>  COMPATIBLE_IOCTL(SIOCBRDELBR)
+> +#ifdef CONFIG_BLOCK
+>  /* SG stuff */
+>  COMPATIBLE_IOCTL(SG_SET_TIMEOUT)
+>  COMPATIBLE_IOCTL(SG_GET_TIMEOUT)
+> @@ -2068,6 +2073,7 @@ COMPATIBLE_IOCTL(SG_SCSI_RESET)
+>  COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)
+>  COMPATIBLE_IOCTL(SG_SET_KEEP_ORPHAN)
+>  COMPATIBLE_IOCTL(SG_GET_KEEP_ORPHAN)
+> +#endif
+>  /* PPP stuff */
+>  COMPATIBLE_IOCTL(PPPIOCGFLAGS)
+>  COMPATIBLE_IOCTL(PPPIOCSFLAGS)
+
+the clean solution we use everywhere else is to push such #ifdefs into 
+the headers, to make them generally includable. For example you can 
+include lockdep.h even if you dont have lockdep enabled, you can include 
+smp.h even on UP-only files, etc. etc.
+
+	Ingo
