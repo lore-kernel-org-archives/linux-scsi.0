@@ -1,158 +1,395 @@
-From: "jidong xiao" <jidong.xiao@gmail.com>
-Subject: Re: [Bugme-new] [Bug 11088] New: Warning about NULL pointer dereference when attaching usb hd
-Date: Wed, 16 Jul 2008 13:39:20 +0800
-Message-ID: <4104961b0807152239k177262c8w2ad15077fe94c37f@mail.gmail.com>
-References: <bug-11088-10286@http.bugzilla.kernel.org/>
-	 <20080715022323.4a6e470e.akpm@linux-foundation.org>
-	 <4104961b0807152019p6a704b9mf1d4f3bbeaee43cf@mail.gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 05/10] block: always use __{disk|part|all}_stat_*() and
+	kill non-underbarred versions
+Date: Wed, 16 Jul 2008 08:19:05 +0200
+Message-ID: <1216189145.5232.3.camel@twins>
+References: <1216019534-29977-1-git-send-email-tj@kernel.org>
+	 <1216019534-29977-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:46370 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067AbYGPFjW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 01:39:22 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so465771ugf.16
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2008 22:39:21 -0700 (PDT)
-In-Reply-To: <4104961b0807152019p6a704b9mf1d4f3bbeaee43cf@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1216019534-29977-6-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@ftp.linux.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Paul E McKenney <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, hanno@gentoo.org, akpm@linux-foundation.org
 
-On Wed, Jul 16, 2008 at 11:19 AM, jidong xiao <jidong.xiao@gmail.com> wrote:
-> On Tue, Jul 15, 2008 at 5:23 PM, Andrew Morton
-> <akpm@linux-foundation.org> wrote:
->>
->> (switched to email.  Please respond via emailed reply-to-all, not via the
->> bugzilla web interface).
->>
->> On Tue, 15 Jul 2008 02:15:53 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
->>
->>> http://bugzilla.kernel.org/show_bug.cgi?id=11088
->>>
->>>            Summary: Warning about NULL pointer dereference when attaching
->>>                     usb hd
->>>            Product: Drivers
->>>            Version: 2.5
->>>      KernelVersion: 2.6.26
->>>           Platform: All
->>>         OS/Version: Linux
->>>               Tree: Mainline
->>>             Status: NEW
->>>           Severity: normal
->>>           Priority: P1
->>>          Component: USB
->>>         AssignedTo: greg@kroah.com
->>>         ReportedBy: hanno@gentoo.org
->>>
->>>
->>> I got this when attaching an external usb hd. Kernel is 2.6.26, I'll attach
->>> config.
->>>
->>> sd 0:0:0:0: [sda] Attached SCSI disk
->>> sd 0:0:0:0: Attached scsi generic sg0 type 0
->>> BUG: unable to handle kernel NULL pointer dereference at 00000004
->>> IP: [<f98c067b>] :usb_storage:slave_alloc+0x2b/0x60
->>> *pde = 00000000
->>> Oops: 0000 [#1]
->>> Modules linked in: radeon drm usb_storage pcmcia nsc_ircc irda parport_pc
->>> ehci_hcd uhci_hcd parport usbcore yenta_socket rsrc_nonstatic firewire_ohci
->>> pcmcia_core 8139cp firewire_core crc_itu_t ipw2200 8139too i2c_i801
->>>
->>> Pid: 1354, comm: usb-stor-scan Not tainted (2.6.26 #1)
->>> EIP: 0060:[<f98c067b>] EFLAGS: 00010202 CPU: 0
->>> EIP is at slave_alloc+0x2b/0x60 [usb_storage]
->>> EAX: 00000000 EBX: f6c6070c ECX: 00000202 EDX: f6cb8c00
->>> ESI: f0403400 EDI: f6c10c14 EBP: f6c60400 ESP: f6d9bddc
->>>  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
->>> Process usb-stor-scan (pid: 1354, ti=f6d9a000 task=f7c534c0 task.ti=f6d9a000)
->>> Stack: f0403400 f6c10c00 c02f0c73 f60fc938 00000000 00000000 f6c60400 00000000
->>>        00000000 00000000 c02f1061 c04cca30 c049cb92 f60fc938 c04bebfe f6c643c8
->>>        f6c643d0 f6c643e0 00000000 00000000 c04befed f6ea0288 00000000 f6c10c00
->>> Call Trace:
->>>  [<c02f0c73>] scsi_alloc_sdev+0x143/0x1b0
->>>  [<c02f1061>] scsi_probe_and_add_lun+0x261/0x9a0
->>>  [<c02f1c03>] __scsi_scan_target+0x2e3/0x610
->>>  [<c0124f40>] process_timeout+0x0/0x10
->>>  [<c0424347>] wait_for_common+0x77/0x110
->>>  [<c0118ab0>] default_wake_function+0x0/0x10
->>>  [<c02f1f87>] scsi_scan_channel+0x57/0xa0
->>>  [<c02f2077>] scsi_scan_host_selected+0xa7/0x120
->>>  [<c02f215b>] do_scsi_scan_host+0x6b/0x70
->>>  [<f98c2625>] usb_stor_scan_thread+0x145/0x190 [usb_storage]
->>>  [<c012e6e0>] autoremove_wake_function+0x0/0x50
->>>  [<f98c24e0>] usb_stor_scan_thread+0x0/0x190 [usb_storage]
->>>  [<c012e2d7>] kthread+0x37/0x70
->>>  [<c012e2a0>] kthread+0x0/0x70
->>>  [<c0103323>] kernel_thread_helper+0x7/0x14
->>>  =======================
->>> Code: 83 ec 08 89 74 24 04 89 c6 89 1c 24 8b 18 c6 40 57 24 81 c3 0c 03 00 00
->>> 8b 43 20 8b 53 0c c1 e8 0f 83 e0 0f 8b 84 82 8c 01 00 00 <0f> b7 50 04 8b 46 04
->>> 4a e8 b8 aa 96 c6 80 7b 3c 04 75 0e 8b 46
->>> EIP: [<f98c067b>] slave_alloc+0x2b/0x60 [usb_storage] SS:ESP 0068:f6d9bddc
->>> ---[ end trace f3a5e784c4c8fadf ]---
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> Hi, Hanno,
->
-> 1. Can this bug be reproduced?
-> 2. Can you try it with older kernel?such as 2.6.25 or some other
-> versions prior to 2.6.26.
->
-> Thanks
-> Jason Xiao
->
-
-Hi, Alan,
-
-I disassembled the source code via kdb.
-slave_alloc+0x2b: call blk_queue_update_dma_alignment
-scsi_alloc_sdev+0x143: call scsi_adjust_queue_depth
-
-The Oops is triggered while blk_queue_update_dma_alignment is being
-called. The relevant piece of code is:
-
-     73 static int slave_alloc (struct scsi_device *sdev)
-     74 {
-     75         struct us_data *us = host_to_us(sdev->host);
-     76         struct usb_host_endpoint *bulk_in_ep;
-     77
-     78         /*
-     79          * Set the INQUIRY transfer length to 36.  We don't use any of
-     80          * the extra data and many devices choke if asked for more or
-     81          * less than 36 bytes.
-     82          */
-     83         sdev->inquiry_len = 36;
-     84
-     85         /* Scatter-gather buffers (all but the last) must have a length
-     86          * divisible by the bulk maxpacket size.  Otherwise a
-data packet
-     87          * would end up being short, causing a premature end to the data
-     88          * transfer.  We'll use the maxpacket value of the bulk-IN pipe
-     89          * to set the SCSI device queue's DMA alignment mask.
-     90          */
-     91         bulk_in_ep =
-us->pusb_dev->ep_in[usb_pipeendpoint(us->recv_bulk_pipe)];
-     92         blk_queue_update_dma_alignment(sdev->request_queue,
-     93
-le16_to_cpu(bulk_in_ep->desc.wMaxPacketSize) - 1);
-     94                         /* wMaxPacketSize must be a power of 2 */
-     95
-
-So the problems is, either sdev->request_queue or bulk_in_ep is NULL pointer.
-In my opinion, bulk_in_ep is more likely to be a NULL pointer as it is
-just calculated in the prior line.
-
-What do you think about this issue?
+On Mon, 2008-07-14 at 16:12 +0900, Tejun Heo wrote:
+> There are two variants of stat functions - ones prefixed with double
+> underbars which don't care about preemption and ones without which
+> disable preemption before manipulating per-cpu counters.  It's unclear
+> whether the underbarred ones assume that preemtion is disabled on
+> entry as some callers don't do that.  In any case, stats are not
+> critical data and errors don't lead to critical failures.
+> 
+> However, consistently using the underbarred version and ensuring that
+> they are called with preemption disabled doesn't incur noticeable
+> overhead or even reduces overhead in some cases.
+> 
+> * part stat manipulations need disk_map_sector_rcu() which involves
+>   read locking RCU anyway.  Using rcu_read_lock_preempt() instead
+>   solves the problem nicely.  On rcuclassic, this means no extra
+>   overhead.
+> 
+> * Calls to the non-underbarred versions are converted to explicit
+>   preemtion disable and calls to respective underbarrded versions.  As
+>   all such users had more than one consecutive stat ops, this reduces
+>   extra preemption disable/enables.
+> 
+> * In drivers/md/dm.c::end_io_acct(), __disk_stat_add() call is moved
+>   into neighboring preemption disabled block.
+> 
+> The conversion makes the stats usage more consistent and IMHO the
+> added few preemption calls are well justified for that.
+> 
+> As this change makes non-underbarred versions useless, non-underbarred
+> stat functions and macros are killed.  The next patch will drop
+> underbars from the underbarred versions as it's superflous now.  This
+> is done as a separate step so that compile fails between this and the
+> next patch if someone's left behind.
 
 
-Regards
-Jason
+Aah, found what you use it for...
+
+See, you need the preempt-off for something different than the RCU
+usage, hence it doesn't make sense to mix that in. Use the regular
+get_cpu/put_cpu stuff to fiddle with the percpu counters already.
+
+So NAK on this one too.
+
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  block/blk-core.c           |   16 +++++++-------
+>  block/blk-merge.c          |    4 +-
+>  drivers/block/aoe/aoecmd.c |   12 +++++-----
+>  drivers/md/dm.c            |   10 +++++---
+>  drivers/md/linear.c        |    6 +++-
+>  drivers/md/multipath.c     |    6 +++-
+>  drivers/md/raid0.c         |    6 +++-
+>  drivers/md/raid1.c         |    6 +++-
+>  drivers/md/raid10.c        |    6 +++-
+>  drivers/md/raid5.c         |    6 +++-
+>  include/linux/genhd.h      |   48 --------------------------------------------
+>  11 files changed, 46 insertions(+), 80 deletions(-)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 84292e1..3238ffe 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -60,7 +60,7 @@ static void drive_stat_acct(struct request *rq, int new_io)
+>  	if (!blk_fs_request(rq) || !rq->rq_disk)
+>  		return;
+>  
+> -	rcu_read_lock();
+> +	rcu_read_lock_preempt();
+>  
+>  	part = disk_map_sector_rcu(rq->rq_disk, rq->sector);
+>  	if (!new_io)
+> @@ -74,7 +74,7 @@ static void drive_stat_acct(struct request *rq, int new_io)
+>  		}
+>  	}
+>  
+> -	rcu_read_unlock();
+> +	rcu_read_unlock_preempt();
+>  }
+>  
+>  void blk_queue_congestion_threshold(struct request_queue *q)
+> @@ -1542,11 +1542,11 @@ static int __end_that_request_first(struct request *req, int error,
+>  		const int rw = rq_data_dir(req);
+>  		struct hd_struct *part;
+>  
+> -		rcu_read_lock();
+> +		rcu_read_lock_preempt();
+>  		part = disk_map_sector_rcu(req->rq_disk, req->sector);
+> -		all_stat_add(req->rq_disk, part, sectors[rw],
+> -				nr_bytes >> 9, req->sector);
+> -		rcu_read_unlock();
+> +		__all_stat_add(req->rq_disk, part, sectors[rw],
+> +			       nr_bytes >> 9, req->sector);
+> +		rcu_read_unlock_preempt();
+>  	}
+>  
+>  	total_bytes = bio_nbytes = 0;
+> @@ -1732,7 +1732,7 @@ static void end_that_request_last(struct request *req, int error)
+>  		const int rw = rq_data_dir(req);
+>  		struct hd_struct *part;
+>  
+> -		rcu_read_lock();
+> +		rcu_read_lock_preempt();
+>  
+>  		part = disk_map_sector_rcu(disk, req->sector);
+>  
+> @@ -1745,7 +1745,7 @@ static void end_that_request_last(struct request *req, int error)
+>  			part->in_flight--;
+>  		}
+>  
+> -		rcu_read_unlock();
+> +		rcu_read_unlock_preempt();
+>  	}
+>  
+>  	if (req->end_io)
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 9be9b2f..55456c8 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -469,7 +469,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+>  	if (req->rq_disk) {
+>  		struct hd_struct *part;
+>  
+> -		rcu_read_lock();
+> +		rcu_read_lock_preempt();
+>  
+>  		part = disk_map_sector_rcu(req->rq_disk, req->sector);
+>  		disk_round_stats(req->rq_disk);
+> @@ -479,7 +479,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+>  			part->in_flight--;
+>  		}
+>  
+> -		rcu_read_unlock();
+> +		rcu_read_unlock_preempt();
+>  	}
+>  
+>  	req->ioprio = ioprio_best(req->ioprio, next->ioprio);
+> diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
+> index 50ef9ea..7bd8c98 100644
+> --- a/drivers/block/aoe/aoecmd.c
+> +++ b/drivers/block/aoe/aoecmd.c
+> @@ -757,15 +757,15 @@ diskstats(struct gendisk *disk, struct bio *bio, ulong duration, sector_t sector
+>  	const int rw = bio_data_dir(bio);
+>  	struct hd_struct *part;
+>  
+> -	rcu_read_lock();
+> +	rcu_read_lock_preempt();
+>  
+>  	part = disk_map_sector_rcu(disk, sector);
+> -	all_stat_inc(disk, part, ios[rw], sector);
+> -	all_stat_add(disk, part, ticks[rw], duration, sector);
+> -	all_stat_add(disk, part, sectors[rw], n_sect, sector);
+> -	all_stat_add(disk, part, io_ticks, duration, sector);
+> +	__all_stat_inc(disk, part, ios[rw], sector);
+> +	__all_stat_add(disk, part, ticks[rw], duration, sector);
+> +	__all_stat_add(disk, part, sectors[rw], n_sect, sector);
+> +	__all_stat_add(disk, part, io_ticks, duration, sector);
+>  
+> -	rcu_read_unlock();
+> +	rcu_read_unlock_preempt();
+>  }
+>  
+>  void
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 923fea4..6918bb7 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -396,10 +396,10 @@ static int end_io_acct(struct dm_io *io)
+>  
+>  	preempt_disable();
+>  	disk_round_stats(dm_disk(md));
+> +	__disk_stat_add(dm_disk(md), ticks[rw], duration);
+>  	preempt_enable();
+> -	dm_disk(md)->in_flight = pending = atomic_dec_return(&md->pending);
+>  
+> -	disk_stat_add(dm_disk(md), ticks[rw], duration);
+> +	dm_disk(md)->in_flight = pending = atomic_dec_return(&md->pending);
+>  
+>  	return !pending;
+>  }
+> @@ -850,8 +850,10 @@ static int dm_request(struct request_queue *q, struct bio *bio)
+>  
+>  	down_read(&md->io_lock);
+>  
+> -	disk_stat_inc(dm_disk(md), ios[rw]);
+> -	disk_stat_add(dm_disk(md), sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(dm_disk(md), ios[rw]);
+> +	__disk_stat_add(dm_disk(md), sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	/*
+>  	 * If we're suspended we have to queue
+> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+> index 1074824..ec35b8b 100644
+> --- a/drivers/md/linear.c
+> +++ b/drivers/md/linear.c
+> @@ -322,8 +322,10 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
+>  		return 0;
+>  	}
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	tmp_dev = which_dev(mddev, bio->bi_sector);
+>  	block = bio->bi_sector >> 1;
+> diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+> index e968116..aed8ea9 100644
+> --- a/drivers/md/multipath.c
+> +++ b/drivers/md/multipath.c
+> @@ -158,8 +158,10 @@ static int multipath_make_request (struct request_queue *q, struct bio * bio)
+>  	mp_bh->master_bio = bio;
+>  	mp_bh->mddev = mddev;
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	mp_bh->path = multipath_map(conf);
+>  	if (mp_bh->path < 0) {
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 914c04d..d0cdfe1 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -403,8 +403,10 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+>  		return 0;
+>  	}
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	chunk_size = mddev->chunk_size >> 10;
+>  	chunk_sects = mddev->chunk_size >> 9;
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index c610b94..6687ffe 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -804,8 +804,10 @@ static int make_request(struct request_queue *q, struct bio * bio)
+>  
+>  	bitmap = mddev->bitmap;
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	/*
+>  	 * make_request() can abort the operation when READA is being
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index a71277b..1d644dc 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -838,8 +838,10 @@ static int make_request(struct request_queue *q, struct bio * bio)
+>  	 */
+>  	wait_barrier(conf);
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+> +	preempt_enable();
+>  
+>  	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+>  
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 3b27df5..a869e58 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3580,8 +3580,10 @@ static int make_request(struct request_queue *q, struct bio * bi)
+>  
+>  	md_write_start(mddev, bi);
+>  
+> -	disk_stat_inc(mddev->gendisk, ios[rw]);
+> -	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
+> +	preempt_disable();
+> +	__disk_stat_inc(mddev->gendisk, ios[rw]);
+> +	__disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
+> +	preempt_enable();
+>  
+>  	if (rw == READ &&
+>  	     mddev->reshape_position == MaxSector &&
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 3e35945..87a338b 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -207,13 +207,6 @@ extern void disk_part_iter_stop(struct disk_part_iter *piter);
+>  extern struct hd_struct *disk_map_sector_rcu(struct gendisk *disk,
+>  					     sector_t sector);
+>  
+> -/* 
+> - * Macros to operate on percpu disk statistics:
+> - *
+> - * The __ variants should only be called in critical sections. The full
+> - * variants disable/enable preemption.
+> - */
+> -
+>  #ifdef	CONFIG_SMP
+>  #define __disk_stat_add(gendiskp, field, addnd) 	\
+>  	(per_cpu_ptr(gendiskp->dkstats, smp_processor_id())->field += addnd)
+> @@ -292,63 +285,22 @@ static inline void part_stat_set_all(struct hd_struct *part, int value)
+>  
+>  #endif /* CONFIG_SMP */
+>  
+> -#define disk_stat_add(gendiskp, field, addnd)			\
+> -	do {							\
+> -		preempt_disable();				\
+> -		__disk_stat_add(gendiskp, field, addnd);	\
+> -		preempt_enable();				\
+> -	} while (0)
+> -
+>  #define __disk_stat_dec(gendiskp, field) __disk_stat_add(gendiskp, field, -1)
+> -#define disk_stat_dec(gendiskp, field) disk_stat_add(gendiskp, field, -1)
+> -
+>  #define __disk_stat_inc(gendiskp, field) __disk_stat_add(gendiskp, field, 1)
+> -#define disk_stat_inc(gendiskp, field) disk_stat_add(gendiskp, field, 1)
+> -
+>  #define __disk_stat_sub(gendiskp, field, subnd) \
+>  		__disk_stat_add(gendiskp, field, -subnd)
+> -#define disk_stat_sub(gendiskp, field, subnd) \
+> -		disk_stat_add(gendiskp, field, -subnd)
+> -
+> -#define part_stat_add(gendiskp, field, addnd)		\
+> -	do {						\
+> -		preempt_disable();			\
+> -		__part_stat_add(gendiskp, field, addnd);\
+> -		preempt_enable();			\
+> -	} while (0)
+>  
+>  #define __part_stat_dec(gendiskp, field) __part_stat_add(gendiskp, field, -1)
+> -#define part_stat_dec(gendiskp, field) part_stat_add(gendiskp, field, -1)
+> -
+>  #define __part_stat_inc(gendiskp, field) __part_stat_add(gendiskp, field, 1)
+> -#define part_stat_inc(gendiskp, field) part_stat_add(gendiskp, field, 1)
+> -
+>  #define __part_stat_sub(gendiskp, field, subnd) \
+>  		__part_stat_add(gendiskp, field, -subnd)
+> -#define part_stat_sub(gendiskp, field, subnd) \
+> -		part_stat_add(gendiskp, field, -subnd)
+> -
+> -#define all_stat_add(gendiskp, part, field, addnd, sector)	\
+> -	do {							\
+> -		preempt_disable();				\
+> -		__all_stat_add(gendiskp, part, field, addnd, sector);	\
+> -		preempt_enable();				\
+> -	} while (0)
+>  
+>  #define __all_stat_dec(gendiskp, field, sector) \
+>  		__all_stat_add(gendiskp, field, -1, sector)
+> -#define all_stat_dec(gendiskp, field, sector) \
+> -		all_stat_add(gendiskp, field, -1, sector)
+> -
+>  #define __all_stat_inc(gendiskp, part, field, sector) \
+>  		__all_stat_add(gendiskp, part, field, 1, sector)
+> -#define all_stat_inc(gendiskp, part, field, sector) \
+> -		all_stat_add(gendiskp, part, field, 1, sector)
+> -
+>  #define __all_stat_sub(gendiskp, part, field, subnd, sector) \
+>  		__all_stat_add(gendiskp, part, field, -subnd, sector)
+> -#define all_stat_sub(gendiskp, part, field, subnd, sector) \
+> -		all_stat_add(gendiskp, part, field, -subnd, sector)
+>  
+>  /* Inlines to alloc and free disk stats in struct gendisk */
+>  #ifdef  CONFIG_SMP
+
