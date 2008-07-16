@@ -1,108 +1,65 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: rdac and aac
-Date: Wed, 16 Jul 2008 12:52:12 -0700
-Message-ID: <86802c440807161252j54fee5d3tc572574f083f4735@mail.gmail.com>
-References: <86802c440807161051r7632c1d3qeb73c3cc1a124ed6@mail.gmail.com>
-	 <1216233961.27507.225.camel@chandra-ubuntu>
+From: James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org
+Subject: Re: [PATCH 1/1] libfc: fix queue command rport checks
+Date: Wed, 16 Jul 2008 16:07:16 -0400
+Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7F025@xbl3.ma.emulex.com>
+References: <1216234249-10812-1-git-send-email-michaelc@cs.wisc.edu>	<487E4443.7090601@cs.wisc.edu>	<D1D4C3FF75F9354393DB8314DF43DEF2E7F01C@xbl3.ma.emulex.com>
+	<487E4DC6.4030108@cs.wisc.edu> <487E4FE3.8040904@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:40879 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756599AbYGPTwM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 15:52:12 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so6533655rvb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2008 12:52:12 -0700 (PDT)
-In-Reply-To: <1216233961.27507.225.camel@chandra-ubuntu>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+content-class: urn:content-classes:message
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@us.ibm.com
-Cc: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jul 16, 2008 at 11:46 AM, Chandra Seetharaman
-<sekharan@us.ibm.com> wrote:
-> Please test with the attached patch and see if it works.
->
-> regards,
->
-> chandra
->
-> ---------------------
->
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> --
->
-> Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_rdac.c
-> ===================================================================
-> --- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -608,12 +608,17 @@ static int rdac_bus_notify(struct notifi
->                            unsigned long action, void *data)
->  {
->        struct device *dev = data;
-> -       struct scsi_device *sdev = to_scsi_device(dev);
-> +       struct scsi_device *sdev;
->        struct scsi_dh_data *scsi_dh_data;
->        struct rdac_dh_data *h;
->        int i, found = 0;
->        unsigned long flags;
->
-> +       if (!scsi_is_sdev_device(dev))
-> +               return 0;
-> +
-> +       sdev = to_scsi_device(dev);
-> +
->        if (action == BUS_NOTIFY_ADD_DEVICE) {
->                for (i = 0; rdac_dev_list[i].vendor; i++) {
->                        if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
-> Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_emc.c
-> ===================================================================
-> --- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_emc.c
-> +++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_emc.c
-> @@ -416,12 +416,17 @@ static int clariion_bus_notify(struct no
->                                unsigned long action, void *data)
->  {
->        struct device *dev = data;
-> -       struct scsi_device *sdev = to_scsi_device(dev);
-> +       struct scsi_device *sdev;
->        struct scsi_dh_data *scsi_dh_data;
->        struct clariion_dh_data *h;
->        int i, found = 0;
->        unsigned long flags;
->
-> +       if (!scsi_is_sdev_device(dev))
-> +               return 0;
-> +
-> +       sdev = to_scsi_device(dev);
-> +
->        if (action == BUS_NOTIFY_ADD_DEVICE) {
->                for (i = 0; clariion_dev_list[i].vendor; i++) {
->                        if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-> Index: linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> ===================================================================
-> --- linux2.6.26-git3.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> +++ linux2.6.26-git3/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> @@ -131,11 +131,16 @@ static int hp_sw_bus_notify(struct notif
->                            unsigned long action, void *data)
->  {
->        struct device *dev = data;
-> -       struct scsi_device *sdev = to_scsi_device(dev);
-> +       struct scsi_device *sdev;
->        struct scsi_dh_data *scsi_dh_data;
->        int i, found = 0;
->        unsigned long flags;
->
-> +       if (!scsi_is_sdev_device(dev))
-> +               return 0;
-> +
-> +       sdev = to_scsi_device(dev);
-> +
->        if (action == BUS_NOTIFY_ADD_DEVICE) {
->                for (i = 0; hp_sw_dh_data_list[i].vendor; i++) {
->                        if (!strncmp(sdev->vendor, hp_sw_dh_data_list[i].vendor,
+ 
 
-it works. Thanks
+> -----Original Message-----
+> From: Mike Christie [mailto:michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org] 
+> 
+> > So during a clean shutdown are drivers supposed to remove 
+> the targets by 
+> > calling scsi_remove_target to remove the devices, then 
+> remove the rports 
+> > through the class?
+> 
+> Or for the case where we are stopping a host (rmmod or single 
+> host stop 
+> like with fcoe), should drivers call
 
-YH
+Yes - the steps below is what the drivers do today.  And this does all
+work without failing the cache sync (unless something's changed recently
+in the midlayer above us).
+
+> 
+> 1. fc_remove_host()
+> 	This could be modified to cleanup shutdown targets then 
+> remove rports. 
+> We could then have a rport shutdown callback which the class 
+> could call 
+> and drivers could cleanup and shutdown the rport here before 
+> it is freed.
+
+Is this related to your new scsi-target block code ?
+Yes - agree with your comment - we can change it so that it cleansup
+the blocked target, then terminates the rport.
+> 
+> 2. scsi_remove_host()
+> 
+> 3. cleanup internal host resources.
+> 
+> 4. scsi_put_host().
+> 
+
+
+-- james
