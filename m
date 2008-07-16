@@ -1,33 +1,149 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Ingo Molnar <mingo@elte.hu>
 Subject: Re: [build fix] Re: [GIT PATCH] SCSI part 1
-Date: Wed, 16 Jul 2008 08:41:06 -0600
-Message-ID: <20080716144106.GD25255@parisc-linux.org>
-References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu> <20080716131543.GA3673@elte.hu> <1216216320.3230.1.camel@localhost.localdomain> <20080716141805.GB22631@elte.hu>
+Date: Wed, 16 Jul 2008 16:45:01 +0200
+Message-ID: <20080716144501.GA4369@elte.hu>
+References: <1216138543.3312.60.camel@localhost.localdomain> <20080716101634.GA8494@elte.hu> <20080716103337.GA22931@elte.hu> <20080716131543.GA3673@elte.hu> <1216216320.3230.1.camel@localhost.localdomain> <20080716141805.GB22631@elte.hu> <1216218498.3358.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42863 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755552AbYGPOlI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2008 10:41:08 -0400
+Received: from mx3.mail.elte.hu ([157.181.1.138]:49599 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755584AbYGPOpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2008 10:45:13 -0400
 Content-Disposition: inline
-In-Reply-To: <20080716141805.GB22631@elte.hu>
+In-Reply-To: <1216218498.3358.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Jul 16, 2008 at 04:18:05PM +0200, Ingo Molnar wrote:
-> btw., about the technical aspects of the solution, i'm not sure i like 
-> these big #ifdef blocks:
 
-It's partly the nature of the beast.  There's already several large
-#ifdef blocks in compat_ioctl.c -- CONFIG_NET, CONFIG_VT, CONFIG_SPARC,
-etc.  I think what would help is a bit more grouping so individual
-blocks get bigger.
+* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> On Wed, 2008-07-16 at 16:18 +0200, Ingo Molnar wrote:
+> > * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > 
+> > > On Wed, 2008-07-16 at 15:15 +0200, Ingo Molnar wrote:
+> > > > * Ingo Molnar <mingo@elte.hu> wrote:
+> > > > 
+> > > > > > scsi_cmnd.h depends on symbols defined in blkdev.h. The fix is to 
+> > > > > > include blkdev.h as well.
+> > > > > 
+> > > > > that wont work - a better replacement fix is the one below. The 
+> > > > > problem is that scsi.h is included even on !CONFIG_BLOCK and then the 
+> > > > > BLK_MAX_CDB symbol is meaningless.
+> > > > 
+> > > > -v3 .. the new methods need to be under #ifdef CONFIG_BLOCK as well. 
+> > > > Note my patch is just a quick RFC, this can probably be done 
+> > > > cleaner.
+> > > 
+> > > Erm, Ingo, if you'd just follow linux-next instead of your own tree, 
+> > > you'd see there's already a fix for this.
+> > 
+> > Erm, no. In the merge window i follow upstream -git, not "my tree", and 
+> > i searched lkml for the build failure signature and it had nothing 
+> > there. Then i looked at the commit and it said that it was created just 
+> > 1 day before the merge window started:
+> > 
+> >  commit feac6a07c4a3578bffd6769bb4927e8a7e1f3ffe
+> >  Author:     Martin Petermann <martin@linux.vnet.ibm.com>
+> >  AuthorDate: Wed Jul 2 10:56:35 2008 +0200
+> >  Commit:     James Bottomley <James.Bottomley@HansenPartnership.com>
+> >  CommitDate: Sat Jul 12 08:22:34 2008 -0500
+> >                  ^^^^^^
+> > 
+> > So i didnt even think of it having hit linux-next so i didnt look into 
+> > the linux-next archives. lkml should have been Cc:-ed in this case, 
+> 
+> It was, that would be this email:
+> 
+> http://marc.info/?l=linux-kernel&m=121555252007662
+
+right - i missed it because i limited my search based on the Jul 12 
+CommitDate. Why is the CommitDate in your commit _after_ the creation of 
+a fix to it? I have found the patch in linux-next as well now, but under 
+a different sha1 that was generated on July 7th.
+
+> Perhaps now you might see how even you can miss important stuff on 
+> such a high volume, low signal to noise ratio list ...
+
+at least for me it's much easier to lose information if it's spread out 
+to hundreds of low volume lists. (have you ever tried to remain 
+subscribed on hundreds of lists at once? I have and it's not trivial at 
+all and the resulting loss of information and mails is frequent.) 
+Anyway, YMMV.
+
+> > that's where people look for in case of upstream breakages. You 
+> > would have saved me some effort via that - please try to do it in 
+> > the future, it's very helpful to testers.
+> 
+> Not if they miss the email, as you apparently did.
+> 
+> > btw., about the technical aspects of the solution, i'm not sure i like 
+> > these big #ifdef blocks:
+> > 
+> > > --- linux-next-20080708.orig/fs/compat_ioctl.c
+> > > +++ linux-next-20080708/fs/compat_ioctl.c
+> > > @@ -68,9 +68,11 @@
+> > >  #include <linux/capi.h>
+> > >  #include <linux/gigaset_dev.h>
+> > >  
+> > > +#ifdef CONFIG_BLOCK
+> > >  #include <scsi/scsi.h>
+> > >  #include <scsi/scsi_ioctl.h>
+> > >  #include <scsi/sg.h>
+> > > +#endif
+> > >  
+> > >  #include <asm/uaccess.h>
+> > >  #include <linux/ethtool.h>
+> > > @@ -1965,6 +1967,7 @@ COMPATIBLE_IOCTL(GIO_UNISCRNMAP)
+> > >  COMPATIBLE_IOCTL(PIO_UNISCRNMAP)
+> > >  COMPATIBLE_IOCTL(PIO_FONTRESET)
+> > >  COMPATIBLE_IOCTL(PIO_UNIMAPCLR)
+> > > +#ifdef CONFIG_BLOCK
+> > >  /* Big S */
+> > >  COMPATIBLE_IOCTL(SCSI_IOCTL_GET_IDLUN)
+> > >  COMPATIBLE_IOCTL(SCSI_IOCTL_DOORLOCK)
+> > > @@ -1974,6 +1977,7 @@ COMPATIBLE_IOCTL(SCSI_IOCTL_GET_BUS_NUMB
+> > >  COMPATIBLE_IOCTL(SCSI_IOCTL_SEND_COMMAND)
+> > >  COMPATIBLE_IOCTL(SCSI_IOCTL_PROBE_HOST)
+> > >  COMPATIBLE_IOCTL(SCSI_IOCTL_GET_PCI)
+> > > +#endif
+> > >  /* Big T */
+> > >  COMPATIBLE_IOCTL(TUNSETNOCSUM)
+> > >  COMPATIBLE_IOCTL(TUNSETDEBUG)
+> > > @@ -2044,6 +2048,7 @@ COMPATIBLE_IOCTL(SIOCGIFVLAN)
+> > >  COMPATIBLE_IOCTL(SIOCSIFVLAN)
+> > >  COMPATIBLE_IOCTL(SIOCBRADDBR)
+> > >  COMPATIBLE_IOCTL(SIOCBRDELBR)
+> > > +#ifdef CONFIG_BLOCK
+> > >  /* SG stuff */
+> > >  COMPATIBLE_IOCTL(SG_SET_TIMEOUT)
+> > >  COMPATIBLE_IOCTL(SG_GET_TIMEOUT)
+> > > @@ -2068,6 +2073,7 @@ COMPATIBLE_IOCTL(SG_SCSI_RESET)
+> > >  COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)
+> > >  COMPATIBLE_IOCTL(SG_SET_KEEP_ORPHAN)
+> > >  COMPATIBLE_IOCTL(SG_GET_KEEP_ORPHAN)
+> > > +#endif
+> > >  /* PPP stuff */
+> > >  COMPATIBLE_IOCTL(PPPIOCGFLAGS)
+> > >  COMPATIBLE_IOCTL(PPPIOCSFLAGS)
+> > 
+> > the clean solution we use everywhere else is to push such #ifdefs into 
+> > the headers, to make them generally includable. For example you can 
+> > include lockdep.h even if you dont have lockdep enabled, you can include 
+> > smp.h even on UP-only files, etc. etc.
+> 
+> The problem being that compat stuff only needs to exist for block 
+> ioctls if block actually exists.  If we're going to have a single 
+> giant file for all compat ioctls, then I think we have to fix it the 
+> way randy has done.  If you want to separate it into say 
+> compat_block.h and simply
+> #include that into compat.h then we can fix it more cleanly.
+
+well i guess the primary question would be scsi.h: it used to be a 
+general header file, now it isnt. The ioctl definitions are OK under an 
+#ifdef i guess. Anyway, i've got no strong opinion, this was just an
+observation.
+
+	Ingo
