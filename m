@@ -1,84 +1,95 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: fix q->max_segment_size checking in
-	blk_recalc_rq_segments about VMERGE
-Date: Thu, 17 Jul 2008 08:56:39 -0500
-Message-ID: <1216302999.5515.3.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0807161359001.30207@devserv.devel.redhat.com>
-	 <20080717131444K.fujita.tomonori@lab.ntt.co.jp>
-	 <Pine.LNX.4.64.0807170746001.31185@devserv.devel.redhat.com>
-	 <20080717221908D.fujita.tomonori@lab.ntt.co.jp>
-	 <487F48B7.3010807@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: bidi support: FC transport layer...
+Date: Thu, 17 Jul 2008 06:57:31 -0700
+Message-ID: <3C744A97-F780-41BD-A077-86450263A06B@qlogic.com>
+References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EE27@xbl3.ma.emulex.com> <77DD6D0A-346F-4797-B05D-C3C24EAD290E@qlogic.com> <C9F1A1B1-136B-4EE0-8F64-8EE5DF04E5B6@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EF7B@xbl3.ma.emulex.com> <B8532D23-197D-4C8E-A08C-6081DBDEE6DF@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v924)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <487F48B7.3010807@panasas.com>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mpatocka@redhat.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, linux-parisc@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:45087 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756353AbYGQN5e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 09:57:34 -0400
+In-Reply-To: <B8532D23-197D-4C8E-A08C-6081DBDEE6DF@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Thu, 2008-07-17 at 16:27 +0300, Boaz Harrosh wrote:
-> FUJITA Tomonori wrote:
-> > On Thu, 17 Jul 2008 07:50:24 -0400 (EDT)
-> > Mikulas Patocka <mpatocka@redhat.com> wrote:
-> > 
-> >>>>> Please give me an example how the boundary restriction of a device can
-> >>>>> break the VMERGE accounting and an IOMMU if you aren't still sure.
-> >>>> You have dma_get_seg_boundary and dma_get_max_seg_size. On sparc64, adding 
-> >>>> one of these broken VMERGE accounting (the VMERGE didn't happen past 64-kb 
-> >>>> boundary and bio layer thought that VMERGE would be possible).
-> >>> If the device has 64KB boundary restriction, the device also has
-> >>> max_seg_size restriction of 64KB or under. So the vmerge acounting
-> >>> works (though we need to fix it to handle max_seg_size, as discussed).
-> >>>
-> >>>> And if you fix this case, someone will break it again, sooner or later, by 
-> >>>> adding new restriction.
-> >>> All restrictions that IOMMUs need to know are dma_get_seg_boundary and
-> >>> dma_get_max_seg_size.
-> >>>
-> >>> What is your new restriction?
-> >> We don't know what happens in the future.
-> > 
-> > It's very unlikely to add new restrictions.
-> > 
-> > 
-> >> And that is the problem that we 
-> >> don't know --- but we have two pieces of code (blk-merge and iommu) that 
-> >> try to calculate the same number (number of hw segments) and if they get 
-> >> different result, it will crash. If the calculations were done at one 
-> >> place, there would be no problem with that.
-> > 
-> > I don't think that your argument, 'the problem that we don't know', is
-> > true.
-> > 
-> > With the vmerge accounting, we calculate at two places. So if we add
-> > a new restriction, we need to handle it at two places. It's a logical
-> > result.
-> > 
-> > Of course, it's easier to calculate at one place rather than two
-> > places. But 'we don't know what restriction we will need' isn't a
-> > problem.
-> > 
-> > 
-> > BTW, as I've already said, I'm not against removing the vmerge
-> > accounting from the block layer.
-> 
-> I have a question. Does the block layer know of the IOMMU in use
-> for the device? can it call into the IOMMU to calculate the
-> restriction?
 
-Yes and no.  The parameter PCI_DMA_BUS_IS_PHYS is set if the platform
-doesn't have one.  Nowadays, that's not enough; with VT and bypass what
-the system really needs to know is if the device will be using the
-iommu.
+On Jul 16, 2008, at 10:53 AM, Seokmann Ju wrote:
 
-The idea of calling into the platform iommu code was considered when all
-this was done, but it was rejected.  Function pointer calls are
-incredibly expensive on most platforms that at that time had iommus.
-The best way was to construct a theoretical parametrisation of an iommu
-and get the block layer to follow that model.
+>
+> On Jul 15, 2008, at 12:35 PM, james.smart@emulex.com wrote:
+...
+>>
+>> Agreed - for the basic part.  However, you're still under the  
+>> assumption
+>> that SAS
+>> enumerated everything.  Given that some SAS parts could perform
+>> discovery on it's
+>> own, with the LLDD interacting with the transport just enough to
+>> enumerate what it
+>> found useful, this may not always be the case. Additionally, there
+>> aren't a lot
+>> of other "protocols" or "port roles" that exist in SAS - but there  
+>> are
+>> in FC.
+> I see..
+> There are a couple of more roles have defined in the rports besides
+> FC_RPORT_ROLE_FCP_TARGET.
+>
+>>
+>>
+>> The more interesting part is to those things (switch services, non- 
+>> FCP
+>> targets)
+>> that the driver did not enumerate.  We should allow the directed
+>> enumeration of them
+>> to perform some basic diagnostics or san queries.  And once you have
+>> this,
+>> we can really open some interesting doors - why not an app that talks
+>> FICON ? or
+>> something that just message passes between 2 ports ? and so on...
+> OK.
+>
+> Overall, I guess that having a device file under the sysfs for the
+> given port of the HBA should be the approach we need to pursue, then.
+> And single device file per each port on the instantiated HBA is also
+> be the case, I think.
+> For the approach, following are kind of questions that came to me,
+> 1. tte driver has to maintain some sort of table of
+> the all end ports, and identify one from the table with some index or
+> opaque data provided by the application for a given FC-CT/ELS pkt.
+> 2. Overall implementation framework should be similar to the one for
+> SMP in the SAS transport.
+I just wanted make sure that I've delivered clear communication.
+Please let me know otherwise.
 
-James
+And now, I've got a couple of more questions on the approach.
+1. Should the device file created per instantiate HBA, or per port on
+  the HBA?
+    I think it should be per port base, for example, when 2-ports HBA
+  detected, we will create 2 device for the HBA.
+2. Should we worry about the 4KB size limit?
+    I've heard that sysfs attribute has limited size of data it can
+   transport at one time and that is 4KB.
 
+Thank you,
+Seokmann
+
+
+
+>
+>
+> Thank you,
+> Seokmann
+>>
+>>
+>> -- james
+>>
+>>
+>>
+>
 
