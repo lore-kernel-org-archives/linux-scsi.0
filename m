@@ -1,39 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 4/8] scsi_dh: Update hp_sw hardware handler
-Date: Thu, 17 Jul 2008 18:50:05 -0500
-Message-ID: <1216338605.5515.105.camel@localhost.localdomain>
-References: <20080717073827.155C018C6FD@pentland.suse.de>
-	 <487FD600.1060000@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46049 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760349AbYGQXuJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2008 19:50:09 -0400
-In-Reply-To: <487FD600.1060000@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH 0/8] scsi_dh update
+Date: Thu, 17 Jul 2008 16:52:45 -0700
+Message-ID: <20080717235245.23056.89788.sendpatchset@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: James.Bottomley@HansenPartnership.com, hare@suse.de, linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Thu, 2008-07-17 at 18:30 -0500, Mike Christie wrote:
-> Hannes Reinecke wrote:
-> >  	case NOT_READY:
-> > -		if ((sshdr.asc == 0x04) && (sshdr.ascq == 3)) {
-> > -			rc = SCSI_DH_RETRY;
-> > -			h->retries++;
-> > +		if ((sshdr.asc == 0x04) && (sshdr.ascq == 2)) {
-> 
-> I forgot what we decided. Was this supposed to be 2 or 3? If it was 2, 
-> then patch looks ok.
-> 
-> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+Hi James, Hannes,
 
-Yes, for HP storage it's 2 ... that's initialising command required.
+These are the same set of patches that Hannes sent early this morning with the 
+prelog below.
 
-James
+I just ported it to compile clean on top of 2.6.26-git6.
 
+Made 3 additional changes:
+ 1. Added a break under MODE_SELECT option in function get_req() (in 3/8)
+ 2. Added the ifndef portion for scsi_dh_attach() and scsi_dh_detach (in 6/8)
+ 3. Moved the definition of SCSI_DH_DEV_UNSUPP from 6/8 to 3/8.
 
+regards,
+
+chandra
+------ Here is the 0/8 from Hannes's original patchset. -----------
+
+Hi James,
+
+this is the (hopefully final) update to my scsi_dh patchset.
+Features are:
+
+- Move device-table matching into the device_handler infrastructure,
+ so that individual drivers don't have to implement it themselves
+- Adds a 'dh_state' sysfs attribute for manually attaching device
+ handler to new or unknown disks; this allows to override the
+ internal device tables
+- Update the dm-multipath code to attach the device handler
+ specified in the multipath configuration
+- Add a cache to speed up lookup of several identical devices
+- Update existing EMC, RDAC, and hp_sw device handler to use
+ the new infrastructure
+- Add new SPC-3 ALUA device handler
+
+The NetApp device handler has been left out for now as it's still
+under development.
+
+Please apply.
+
+Cheers,
+
+Hannes
+--------------------------------------------------------------------
