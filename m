@@ -1,365 +1,355 @@
 From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 4/8] scsi_dh: Update hp_sw hardware handler
-Date: Thu, 17 Jul 2008 09:38:26 +0200
-Message-ID: <20080717073827.155C018C6FD@pentland.suse.de>
+Subject: [PATCH 5/8] scsi_dh: Update RDAC device handler
+Date: Thu, 17 Jul 2008 09:38:34 +0200
+Message-ID: <20080717073834.D56C518C6FD@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:37832 "EHLO mx1.suse.de"
+Received: from ns.suse.de ([195.135.220.2]:37841 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757416AbYGQHi2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2008 03:38:28 -0400
+	id S1755131AbYGQHig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2008 03:38:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
 
-This patch updates the hp_sw device handler to properly
-check the return codes etc.
-And adds the 'correct' machine definitions.
+This patch updates the RDAC device handler to
+refuse to attach to devices not supporting the
+RDAC vpd pages.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |  272 +++++++++++++++++++++++----
- 1 files changed, 234 insertions(+), 38 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_rdac.c |  163 ++++++++++++++++------------
+ 1 files changed, 94 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index 78259bc..9c7a1f8 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -4,6 +4,7 @@
-  *
-  * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-  * Copyright (C) 2006 Mike Christie
-+ * Copyright (C) 2008 Hannes Reinecke <hare@suse.de>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -25,13 +26,18 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
- 
--#define HP_SW_NAME	"hp_sw"
-+#define HP_SW_NAME			"hp_sw"
- 
--#define HP_SW_TIMEOUT (60 * HZ)
--#define HP_SW_RETRIES 3
-+#define HP_SW_TIMEOUT			(60 * HZ)
-+#define HP_SW_RETRIES			3
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index e61cde6..d44bef2 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -173,6 +173,11 @@ struct rdac_dh_data {
+ #define RDAC_STATE_ACTIVE	0
+ #define RDAC_STATE_PASSIVE	1
+ 	unsigned char		state;
 +
-+#define HP_SW_PATH_UNINITIALIZED	-1
-+#define HP_SW_PATH_ACTIVE		0
-+#define HP_SW_PATH_PASSIVE		1
- 
- struct hp_sw_dh_data {
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-+	int path_state;
- 	int retries;
++#define RDAC_LUN_UNOWNED	0
++#define RDAC_LUN_OWNED		1
++#define RDAC_LUN_AVT		2
++	char			lun_state;
+ 	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+ 	union			{
+ 		struct c2_inquiry c2;
+@@ -182,6 +187,13 @@ struct rdac_dh_data {
+ 	} inq;
  };
  
-@@ -42,51 +48,161 @@ static inline struct hp_sw_dh_data *get_hp_sw_data(struct scsi_device *sdev)
- 	return ((struct hp_sw_dh_data *) scsi_dh_data->buf);
- }
++static const char *lun_state[] =
++{
++	"unowned",
++	"owned",
++	"owned (AVT mode)",
++};
++
+ static LIST_HEAD(ctlr_list);
+ static DEFINE_SPINLOCK(list_lock);
  
--static int hp_sw_done(struct scsi_device *sdev)
-+/*
-+ * tur_done - Handle TEST UNIT READY return status
-+ * @sdev: sdev the command has been sent to
-+ * @errors: blk error code
-+ *
-+ * Returns SCSI_DH_DEV_OFFLINED if the sdev is on the passive path
-+ */
-+static int tur_done(struct scsi_device *sdev, unsigned char *sense)
+@@ -197,9 +209,8 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
  {
--	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
- 	struct scsi_sense_hdr sshdr;
--	int rc;
--
--	sdev_printk(KERN_INFO, sdev, "hp_sw_done\n");
-+	int ret;
+ 	struct request *rq;
+ 	struct request_queue *q = sdev->request_queue;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
  
--	rc = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sshdr);
--	if (!rc)
-+	ret = scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, &sshdr);
-+	if (!ret) {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "%s: sending tur failed, no sense available\n",
-+			    HP_SW_NAME);
-+		ret = SCSI_DH_IO;
- 		goto done;
-+	}
- 	switch (sshdr.sense_key) {
-+	case UNIT_ATTENTION:
-+		ret = SCSI_DH_IMM_RETRY;
-+		break;
- 	case NOT_READY:
--		if ((sshdr.asc == 0x04) && (sshdr.ascq == 3)) {
--			rc = SCSI_DH_RETRY;
--			h->retries++;
-+		if ((sshdr.asc == 0x04) && (sshdr.ascq == 2)) {
-+			/*
-+			 * LUN not ready - Initialization command required
-+			 *
-+			 * This is the passive path
-+			 */
-+			ret = SCSI_DH_DEV_OFFLINED;
- 			break;
- 		}
--		/* fall through */
-+		/* Fallthrough */
- 	default:
--		h->retries++;
--		rc = SCSI_DH_IMM_RETRY;
-+		sdev_printk(KERN_WARNING, sdev,
-+			   "%s: sending tur failed, sense %x/%x/%x\n",
-+			   HP_SW_NAME, sshdr.sense_key, sshdr.asc,
-+			   sshdr.ascq);
-+		break;
+-	rq = blk_get_request(q, rw, GFP_KERNEL);
++	rq = blk_get_request(q, rw, GFP_NOIO);
+ 
+ 	if (!rq) {
+ 		sdev_printk(KERN_INFO, sdev,
+@@ -207,17 +218,14 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
+ 		return NULL;
  	}
  
+-	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
++	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
+ 		blk_put_request(rq);
+ 		sdev_printk(KERN_INFO, sdev,
+ 				"get_rdac_req: blk_rq_map_kern failed.\n");
+ 		return NULL;
+ 	}
+ 
+-	memset(&rq->cmd, 0, BLK_MAX_CDB);
+-	rq->sense = h->sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
++	memset(rq->cmd, 0, BLK_MAX_CDB);
+ 
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
+@@ -227,12 +235,12 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
+ 	return rq;
+ }
+ 
+-static struct request *rdac_failover_get(struct scsi_device *sdev)
++static struct request *rdac_failover_get(struct scsi_device *sdev,
++					 struct rdac_dh_data *h)
+ {
+ 	struct request *rq;
+ 	struct rdac_mode_common *common;
+ 	unsigned data_size;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+ 	if (h->ctlr->use_ms10) {
+ 		struct rdac_pg_expanded *rdac_pg;
+@@ -277,6 +285,10 @@ static struct request *rdac_failover_get(struct scsi_device *sdev)
+ 	}
+ 	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
+ 
++	rq->sense = h->sense;
++	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
++	rq->sense_len = 0;
++
+ 	return rq;
+ }
+ 
+@@ -321,11 +333,10 @@ done:
+ }
+ 
+ static int submit_inquiry(struct scsi_device *sdev, int page_code,
+-		unsigned int len)
++			  unsigned int len, struct rdac_dh_data *h)
+ {
+ 	struct request *rq;
+ 	struct request_queue *q = sdev->request_queue;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+ 
+ 	rq = get_rdac_req(sdev, &h->inq, len, READ);
+@@ -338,59 +349,68 @@ static int submit_inquiry(struct scsi_device *sdev, int page_code,
+ 	rq->cmd[2] = page_code;
+ 	rq->cmd[4] = len;
+ 	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++
++	rq->sense = h->sense;
++	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
++	rq->sense_len = 0;
++
+ 	err = blk_execute_rq(q, NULL, rq, 1);
+ 	if (err == -EIO)
+ 		err = SCSI_DH_IO;
++
++	blk_put_request(rq);
  done:
--	if (rc == SCSI_DH_OK || rc == SCSI_DH_IO)
--		h->retries = 0;
--	else if (h->retries > HP_SW_RETRIES) {
--		h->retries = 0;
-+	return ret;
-+}
-+
-+/*
-+ * hp_sw_tur - Send TEST UNIT READY
-+ * @sdev: sdev command should be sent to
-+ *
-+ * Use the TEST UNIT READY command to determine
-+ * the path state.
-+ */
-+static int hp_sw_tur(struct scsi_device *sdev, struct hp_sw_dh_data *h)
-+{
-+	struct request *req;
-+	int ret;
-+
-+	req = blk_get_request(sdev->request_queue, WRITE, GFP_NOIO);
-+	if (!req)
-+		return SCSI_DH_RES_TEMP_UNAVAIL;
-+
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_FAILFAST;
-+	req->cmd_len = COMMAND_SIZE(TEST_UNIT_READY);
-+	memset(req->cmd, 0, MAX_COMMAND_SIZE);
-+	req->cmd[0] = TEST_UNIT_READY;
-+	req->timeout = HP_SW_TIMEOUT;
-+	req->sense = h->sense;
-+	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
-+	req->sense_len = 0;
-+
-+retry:
-+	ret = blk_execute_rq(req->q, NULL, req, 1);
-+	if (ret == -EIO) {
-+		if (req->sense_len > 0) {
-+			ret = tur_done(sdev, h->sense);
-+		} else {
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "%s: sending tur failed with %x\n",
-+				    HP_SW_NAME, req->errors);
-+			ret = SCSI_DH_IO;
-+		}
-+	} else {
-+		h->path_state = HP_SW_PATH_ACTIVE;
-+		ret = SCSI_DH_OK;
-+	}
-+	if (ret == SCSI_DH_IMM_RETRY)
-+		goto retry;
-+	if (ret == SCSI_DH_DEV_OFFLINED) {
-+		h->path_state = HP_SW_PATH_PASSIVE;
-+		ret = SCSI_DH_OK;
-+	}
-+
-+	blk_put_request(req);
-+
-+	return ret;
-+}
-+
-+/*
-+ * start_done - Handle START STOP UNIT return status
-+ * @sdev: sdev the command has been sent to
-+ * @errors: blk error code
-+ */
-+static int start_done(struct scsi_device *sdev, unsigned char *sense)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	int rc;
-+
-+	rc = scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, &sshdr);
-+	if (!rc) {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "%s: sending start_stop_unit failed, "
-+			    "no sense available\n",
-+			    HP_SW_NAME);
-+		return SCSI_DH_IO;
-+	}
-+	switch (sshdr.sense_key) {
-+	case NOT_READY:
-+		if ((sshdr.asc == 0x04) && (sshdr.ascq == 3)) {
-+			/*
-+			 * LUN not ready - manual intervention required
-+			 *
-+			 * Switch-over in progress, retry.
-+			 */
-+			rc = SCSI_DH_RETRY;
-+			break;
-+		}
-+		/* fall through */
-+	default:
-+		sdev_printk(KERN_WARNING, sdev,
-+			   "%s: sending start_stop_unit failed, sense %x/%x/%x\n",
-+			   HP_SW_NAME, sshdr.sense_key, sshdr.asc,
-+			   sshdr.ascq);
- 		rc = SCSI_DH_IO;
+ 	return err;
+ }
+ 
+-static int get_lun(struct scsi_device *sdev)
++static int get_lun(struct scsi_device *sdev, struct rdac_dh_data *h)
+ {
+ 	int err;
+ 	struct c8_inquiry *inqp;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+-	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
++	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
+ 	if (err == SCSI_DH_OK) {
+ 		inqp = &h->inq.c8;
+-		h->lun = inqp->lun[7]; /* currently it uses only one byte */
++		if (inqp->page_code != 0xc8)
++			return SCSI_DH_NOSYS;
++		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
++		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
++			return SCSI_DH_NOSYS;
++		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
  	}
-+
- 	return rc;
+ 	return err;
  }
  
--static int hp_sw_activate(struct scsi_device *sdev)
-+/*
-+ * hp_sw_start_stop - Send START STOP UNIT command
-+ * @sdev: sdev command should be sent to
-+ *
-+ * Sending START STOP UNIT activates the SP.
-+ */
-+static int hp_sw_start_stop(struct scsi_device *sdev, struct hp_sw_dh_data *h)
+-#define RDAC_OWNED	0
+-#define RDAC_UNOWNED	1
+-#define RDAC_FAILED	2
+-static int check_ownership(struct scsi_device *sdev)
++static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
  {
--	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
- 	struct request *req;
--	int ret = SCSI_DH_RES_TEMP_UNAVAIL;
-+	int ret, retry;
+ 	int err;
+ 	struct c9_inquiry *inqp;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
  
--	req = blk_get_request(sdev->request_queue, WRITE, GFP_ATOMIC);
-+	req = blk_get_request(sdev->request_queue, WRITE, GFP_NOIO);
- 	if (!req)
--		goto done;
--
--	sdev_printk(KERN_INFO, sdev, "sending START_STOP.");
-+		return SCSI_DH_RES_TEMP_UNAVAIL;
- 
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
-@@ -98,19 +214,78 @@ static int hp_sw_activate(struct scsi_device *sdev)
- 	req->sense = h->sense;
- 	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	req->sense_len = 0;
-+	retry = h->retries;
- 
-+retry:
- 	ret = blk_execute_rq(req->q, NULL, req, 1);
--	if (!ret) /* SUCCESS */
--		ret = hp_sw_done(sdev);
--	else
-+	if (ret == -EIO) {
-+		if (req->sense_len > 0) {
-+			ret = start_done(sdev, h->sense);
-+		} else {
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "%s: sending start_stop_unit failed with %x\n",
-+				    HP_SW_NAME, req->errors);
-+			ret = SCSI_DH_IO;
+-	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
++	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry), h);
+ 	if (err == SCSI_DH_OK) {
+-		err = RDAC_UNOWNED;
+ 		inqp = &h->inq.c9;
+-		/*
+-		 * If in AVT mode or if the path already owns the LUN,
+-		 * return RDAC_OWNED;
+-		 */
+-		if (((inqp->avte_cvp >> 7) == 0x1) ||
+-				 ((inqp->avte_cvp & 0x1) != 0))
+-			err = RDAC_OWNED;
+-	} else
+-		err = RDAC_FAILED;
++		if ((inqp->avte_cvp >> 7) == 0x1) {
++			/* LUN in AVT mode */
++			sdev_printk(KERN_NOTICE, sdev,
++				    "%s: AVT mode detected\n",
++				    RDAC_NAME);
++			h->lun_state = RDAC_LUN_AVT;
++		} else if ((inqp->avte_cvp & 0x1) != 0) {
++			/* LUN was owned by the controller */
++			h->lun_state = RDAC_LUN_OWNED;
 +		}
-+	} else
-+		ret = SCSI_DH_OK;
-+
-+	if (ret == SCSI_DH_RETRY) {
-+		if (--retry)
-+			goto retry;
- 		ret = SCSI_DH_IO;
--done:
 +	}
 +
-+	blk_put_request(req);
-+
-+	return ret;
-+}
-+
-+static int hp_sw_prep_fn(struct scsi_device *sdev, struct request *req)
-+{
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+	int ret = BLKPREP_OK;
-+
-+	if (h->path_state != HP_SW_PATH_ACTIVE) {
-+		ret = BLKPREP_KILL;
-+		req->cmd_flags |= REQ_QUIET;
-+	}
-+	return ret;
-+
-+}
-+
-+/*
-+ * hp_sw_activate - Activate a path
-+ * @sdev: sdev on the path to be activated
-+ *
-+ * The HP Active/Passive firmware is pretty simple;
-+ * the passive path reports NOT READY with sense codes
-+ * 0x04/0x02; a START STOP UNIT command will then
-+ * activate the passive path (and deactivate the
-+ * previously active one).
-+ */
-+static int hp_sw_activate(struct scsi_device *sdev)
-+{
-+	int ret = SCSI_DH_OK;
-+	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-+
-+	ret = hp_sw_tur(sdev, h);
-+
-+	if (ret == SCSI_DH_OK && h->path_state == HP_SW_PATH_PASSIVE) {
-+		ret = hp_sw_start_stop(sdev, h);
-+		if (ret == SCSI_DH_OK)
-+			sdev_printk(KERN_INFO, sdev,
-+				    "%s: activated path\n",
-+				    HP_SW_NAME);
-+	}
-+
- 	return ret;
+ 	return err;
  }
  
- const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
--	{"COMPAQ", "MSA"},
--	{"HP", "HSV"},
-+	{"COMPAQ", "MSA1000 VOLUME"},
-+	{"COMPAQ", "HSV110"},
-+	{"HP", "HSV100"},
- 	{"DEC", "HSG80"},
- 	{NULL, NULL},
- };
-@@ -125,30 +300,51 @@ static struct scsi_device_handler hp_sw_dh = {
- 	.attach		= hp_sw_bus_attach,
- 	.detach		= hp_sw_bus_detach,
- 	.activate	= hp_sw_activate,
-+	.prep_fn	= hp_sw_prep_fn,
- };
- 
- static int hp_sw_bus_attach(struct scsi_device *sdev)
+-static int initialize_controller(struct scsi_device *sdev)
++static int initialize_controller(struct scsi_device *sdev,
++				 struct rdac_dh_data *h)
  {
+ 	int err;
+ 	struct c4_inquiry *inqp;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+-	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry));
++	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry), h);
+ 	if (err == SCSI_DH_OK) {
+ 		inqp = &h->inq.c4;
+ 		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
+@@ -400,13 +420,12 @@ static int initialize_controller(struct scsi_device *sdev)
+ 	return err;
+ }
+ 
+-static int set_mode_select(struct scsi_device *sdev)
++static int set_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
+ {
+ 	int err;
+ 	struct c2_inquiry *inqp;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+-	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry));
++	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry), h);
+ 	if (err == SCSI_DH_OK) {
+ 		inqp = &h->inq.c2;
+ 		/*
+@@ -421,13 +440,13 @@ static int set_mode_select(struct scsi_device *sdev)
+ 	return err;
+ }
+ 
+-static int mode_select_handle_sense(struct scsi_device *sdev)
++static int mode_select_handle_sense(struct scsi_device *sdev,
++				    unsigned char *sensebuf)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	int sense, err = SCSI_DH_IO, ret;
+ 
+-	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
++	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+ 	if (!ret)
+ 		goto done;
+ 
+@@ -451,14 +470,13 @@ done:
+ 	return err;
+ }
+ 
+-static int send_mode_select(struct scsi_device *sdev)
++static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
+ {
+ 	struct request *rq;
+ 	struct request_queue *q = sdev->request_queue;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+ 
+-	rq = rdac_failover_get(sdev);
++	rq = rdac_failover_get(sdev, h);
+ 	if (!rq)
+ 		goto done;
+ 
+@@ -466,9 +484,11 @@ static int send_mode_select(struct scsi_device *sdev)
+ 
+ 	err = blk_execute_rq(q, NULL, rq, 1);
+ 	if (err != SCSI_DH_OK)
+-		err = mode_select_handle_sense(sdev);
++		err = mode_select_handle_sense(sdev, h->sense);
+ 	if (err == SCSI_DH_OK)
+ 		h->state = RDAC_STATE_ACTIVE;
++
++	blk_put_request(rq);
+ done:
+ 	return err;
+ }
+@@ -478,38 +498,23 @@ static int rdac_activate(struct scsi_device *sdev)
+ 	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	int err = SCSI_DH_OK;
+ 
+-	if (h->lun == UNINITIALIZED_LUN) {
+-		err = get_lun(sdev);
+-		if (err != SCSI_DH_OK)
+-			goto done;
+-	}
+-
+-	err = check_ownership(sdev);
+-	switch (err) {
+-	case RDAC_UNOWNED:
+-		break;
+-	case RDAC_OWNED:
+-		err = SCSI_DH_OK;
+-		goto done;
+-	case RDAC_FAILED:
+-	default:
+-		err = SCSI_DH_IO;
++	err = check_ownership(sdev, h);
++	if (err != SCSI_DH_OK)
+ 		goto done;
+-	}
+ 
+ 	if (!h->ctlr) {
+-		err = initialize_controller(sdev);
++		err = initialize_controller(sdev, h);
+ 		if (err != SCSI_DH_OK)
+ 			goto done;
+ 	}
+ 
+ 	if (h->ctlr->use_ms10 == -1) {
+-		err = set_mode_select(sdev);
++		err = set_mode_select(sdev, h);
+ 		if (err != SCSI_DH_OK)
+ 			goto done;
+ 	}
+-
+-	err = send_mode_select(sdev);
++	if (h->lun_state == RDAC_LUN_UNOWNED)
++		err = send_mode_select(sdev, h);
+ done:
+ 	return err;
+ }
+@@ -606,11 +611,12 @@ static int rdac_bus_attach(struct scsi_device *sdev)
  	struct scsi_dh_data *scsi_dh_data;
-+	struct hp_sw_dh_data *h;
+ 	struct rdac_dh_data *h;
  	unsigned long flags;
-+	int ret;
++	int err;
  
  	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
- 			       + sizeof(struct hp_sw_dh_data) , GFP_KERNEL);
+ 			       + sizeof(*h) , GFP_KERNEL);
  	if (!scsi_dh_data) {
--		sdev_printk(KERN_ERR, sdev, "Attach Failed %s.\n",
-+		sdev_printk(KERN_ERR, sdev, "%s: Attach Failed\n",
- 			    HP_SW_NAME);
+-		sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
++		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
+ 			    RDAC_NAME);
  		return 0;
  	}
- 
- 	scsi_dh_data->scsi_dh = &hp_sw_dh;
-+	h = (struct hp_sw_dh_data *) scsi_dh_data->buf;
-+	h->path_state = HP_SW_PATH_UNINITIALIZED;
-+	h->retries = HP_SW_RETRIES;
+@@ -619,14 +625,33 @@ static int rdac_bus_attach(struct scsi_device *sdev)
+ 	h = (struct rdac_dh_data *) scsi_dh_data->buf;
+ 	h->lun = UNINITIALIZED_LUN;
+ 	h->state = RDAC_STATE_ACTIVE;
 +
-+	ret = hp_sw_tur(sdev, h);
-+	if (ret != SCSI_DH_OK || h->path_state == HP_SW_PATH_UNINITIALIZED)
++	err = get_lun(sdev, h);
++	if (err != SCSI_DH_OK)
++		goto failed;
++
++	err = check_ownership(sdev, h);
++	if (err != SCSI_DH_OK)
 +		goto failed;
 +
 +	if (!try_module_get(THIS_MODULE))
@@ -370,38 +360,30 @@ index 78259bc..9c7a1f8 100644
  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
 -	try_module_get(THIS_MODULE);
  
--	sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n", HP_SW_NAME);
-+	sdev_printk(KERN_INFO, sdev, "%s: attached to %s path\n",
-+		    HP_SW_NAME, h->path_state == HP_SW_PATH_ACTIVE?
-+		    "active":"passive");
+-	sdev_printk(KERN_NOTICE, sdev, "Attached %s\n", RDAC_NAME);
++	sdev_printk(KERN_NOTICE, sdev,
++		    "%s: LUN %d (%s)\n",
++		    RDAC_NAME, h->lun, lun_state[(int)h->lun_state]);
  
  	return 0;
 +
 +failed:
 +	kfree(scsi_dh_data);
 +	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
-+		    HP_SW_NAME);
++		    RDAC_NAME);
 +	return -EINVAL;
  }
  
- static void hp_sw_bus_detach( struct scsi_device *sdev )
-@@ -162,7 +358,7 @@ static void hp_sw_bus_detach( struct scsi_device *sdev )
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- 	module_put(THIS_MODULE);
- 
--	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", HP_SW_NAME);
-+	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", HP_SW_NAME);
- 
+ static void rdac_bus_detach( struct scsi_device *sdev )
+@@ -645,7 +670,7 @@ static void rdac_bus_detach( struct scsi_device *sdev )
+ 		kref_put(&h->ctlr->kref, release_controller);
  	kfree(scsi_dh_data);
+ 	module_put(THIS_MODULE);
+-	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", RDAC_NAME);
++	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", RDAC_NAME);
  }
-@@ -180,6 +376,6 @@ static void __exit hp_sw_exit(void)
- module_init(hp_sw_init);
- module_exit(hp_sw_exit);
  
--MODULE_DESCRIPTION("HP MSA 1000");
-+MODULE_DESCRIPTION("HP Active/Passive driver");
- MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu");
- MODULE_LICENSE("GPL");
+ static int __init rdac_init(void)
 -- 
 1.5.2.4
 
