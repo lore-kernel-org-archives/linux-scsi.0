@@ -1,219 +1,225 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3 of 6] scsi: Support devices with protection information
-Date: Thu, 17 Jul 2008 17:08:48 -0400
-Message-ID: <yq17ibk1an3.fsf@sermon.lab.mkp.net>
-References: <C4A4FCE2.2CCA%michael.hernandez@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH] fc_transport: Add an API to allow an LLD to create vports.
+Date: Thu, 17 Jul 2008 14:51:09 -0700
+Message-ID: <20080717215109.GQ64690@n8027av35btxc1.qlogic.org>
+References: <20080711220819.GE56545@plap4-2.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:48697 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758784AbYGQVJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 17:09:07 -0400
-In-Reply-To: <C4A4FCE2.2CCA%michael.hernandez@qlogic.com> (Michael Hernandez's message of "Thu\, 17 Jul 2008 13\:42\:58 -0700")
+Received: from avexch1.qlogic.com ([198.70.193.115]:31061 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874AbYGQVvM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 17:51:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20080711220819.GE56545@plap4-2.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Hernandez <michael.hernandez@qlogic.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: James Smart <james.smart@emulex.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
->>>>> "Mike" == Michael Hernandez <michael.hernandez@qlogic.com> writes:
+There's already a fc_vport_termintate() call exported by
+the transport.  This patch adds a symmetric call to the API to allow
+an NPIV-capable LLD to instantiate vports sans user intervention.
 
-Mike> Shouldn't this check (and potential kmem_cache_free call) get
-Mike> done before freeing the cmd to the cmd_slab?
-
-*sigh*  I think today is Brown Paper Bag Day for me.
-
-But thanks - good spotting!
-
----8<---
-
-scsi: Support devices with protection information
-
-Implement support for DMA of protection information for devices that
-are data integrity capable.
-
- - Add support for mapping an extra scatter-gather list containing
-   the protection information.
-
- - Allocate protection scsi_data_buffer if host is DIX (integrity DMA)
-   capable.
-
- - Accessor function for checking whether a device has protection
-   enabled.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -197,8 +197,40 @@ scsi_pool_free_command(struct scsi_host_
- scsi_pool_free_command(struct scsi_host_cmd_pool *pool,
- 			 struct scsi_cmnd *cmd)
- {
-+	if (cmd->prot_sdb)
-+		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
+On Fri, 11 Jul 2008, Andrew Vasquez wrote:
+
+> This is mostly just a shuffling and reuse of existing code.  Given we
+> already use an *_identifiers interface to create rports, the vport
+> creation API continues to use the previously internal
+> fc_vport_identifiers structure to define a vport object.
+> 
+> The impetus for this work is that future QLogic cards will have a
+> region set aside in flash-memory so that adminstrators may define
+> pre-set NPIVs which should be created during OS load.
+
+Ok, so if there's no major objections to the interface, here's an
+updated patch which adds some bits of documentation.
+
+diff --git a/Documentation/scsi/scsi_fc_transport.txt b/Documentation/scsi/scsi_fc_transport.txt
+index d403e46..63fab5b 100644
+--- a/Documentation/scsi/scsi_fc_transport.txt
++++ b/Documentation/scsi/scsi_fc_transport.txt
+@@ -436,6 +436,40 @@ Other:
+     was updated to remove all vports for the fc_host as well.
+ 
+ 
++Transport supplied functions
++----------------------------
 +
- 	kmem_cache_free(pool->sense_slab, cmd->sense_buffer);
- 	kmem_cache_free(pool->cmd_slab, cmd);
-+}
++The following functions are supplied by the FC-transport for use by LLDs.
++
++   fc_vport_create - create a vport
++   fc_vport_terminate - detach and remove a vport
++
++Details:
 +
 +/**
-+ * scsi_host_alloc_command - internal function to allocate command
-+ * @shost:	SCSI host whose pool to allocate from
-+ * @gfp_mask:	mask for the allocation
++ * fc_vport_create - Admin App or LLDD requests creation of a vport
++ * @shost:     scsi host the virtual port is connected to.
++ * @ids:       The world wide names, FC4 port roles, etc for
++ *              the virtual port.
 + *
-+ * Returns a fully allocated command with sense buffer and protection
-+ * data buffer (where applicable) or NULL on failure
++ * Notes:
++ *     This routine assumes no locks are held on entry.
 + */
-+static struct scsi_cmnd *
-+scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
-+{
-+	struct scsi_cmnd *cmd;
++struct fc_vport *
++fc_vport_create(struct Scsi_Host *shost, struct fc_vport_identifiers *ids)
 +
-+	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
-+	if (!cmd)
-+		return NULL;
++/**
++ * fc_vport_terminate - Admin App or LLDD requests termination of a vport
++ * @vport:      fc_vport to be terminated
++ *
++ * Calls the LLDD vport_delete() function, then deallocates and removes
++ * the vport from the shost and object tree.
++ *
++ * Notes:
++ *      This routine assumes no locks are held on entry.
++ */
 +
-+	if (scsi_host_get_prot(shost) >= SHOST_DIX_TYPE0_PROTECTION) {
-+		cmd->prot_sdb = kmem_cache_zalloc(scsi_sdb_cache, gfp_mask);
 +
-+		if (!cmd->prot_sdb) {
-+			scsi_pool_free_command(shost->cmd_pool, cmd);
-+			return NULL;
-+		}
-+	}
-+
-+	return cmd;
+ Credits
+ =======
+ The following people have contributed to this document:
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 5fd64e7..37f6449 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -40,31 +40,7 @@
+ 
+ static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
+ static void fc_vport_sched_delete(struct work_struct *work);
+-
+-/*
+- * This is a temporary carrier for creating a vport. It will eventually
+- * be replaced  by a real message definition for sgio or netlink.
+- *
+- * fc_vport_identifiers: This set of data contains all elements
+- * to uniquely identify and instantiate a FC virtual port.
+- *
+- * Notes:
+- *   symbolic_name: The driver is to append the symbolic_name string data
+- *      to the symbolic_node_name data that it generates by default.
+- *      the resulting combination should then be registered with the switch.
+- *      It is expected that things like Xen may stuff a VM title into
+- *      this field.
+- */
+-struct fc_vport_identifiers {
+-	u64 node_name;
+-	u64 port_name;
+-	u32 roles;
+-	bool disable;
+-	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
+-	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
+-};
+-
+-static int fc_vport_create(struct Scsi_Host *shost, int channel,
++static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+ 	struct device *pdev, struct fc_vport_identifiers  *ids,
+ 	struct fc_vport **vport);
+ 
+@@ -1759,7 +1735,7 @@ store_fc_host_vport_create(struct device *dev, struct device_attribute *attr,
+ 	vid.disable = false;		/* always enabled */
+ 
+ 	/* we only allow support on Channel 0 !!! */
+-	stat = fc_vport_create(shost, 0, &shost->shost_gendev, &vid, &vport);
++	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, &vid, &vport);
+ 	return stat ? stat : count;
  }
+ static FC_DEVICE_ATTR(host, vport_create, S_IWUSR, NULL,
+@@ -3102,7 +3078,7 @@ fc_scsi_scan_rport(struct work_struct *work)
+ 
  
  /**
-@@ -214,7 +246,7 @@ struct scsi_cmnd *__scsi_get_command(str
- 	struct scsi_cmnd *cmd;
- 	unsigned char *buf;
+- * fc_vport_create - allocates and creates a FC virtual port.
++ * fc_vport_setup - allocates and creates a FC virtual port.
+  * @shost:	scsi host the virtual port is connected to.
+  * @channel:	Channel on shost port connected to.
+  * @pdev:	parent device for vport
+@@ -3117,7 +3093,7 @@ fc_scsi_scan_rport(struct work_struct *work)
+  *	This routine assumes no locks are held on entry.
+  */
+ static int
+-fc_vport_create(struct Scsi_Host *shost, int channel, struct device *pdev,
++fc_vport_setup(struct Scsi_Host *shost, int channel, struct device *pdev,
+ 	struct fc_vport_identifiers  *ids, struct fc_vport **ret_vport)
+ {
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+@@ -3230,6 +3206,27 @@ delete_vport:
+ 	return error;
+ }
  
--	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
-+	cmd = scsi_host_alloc_command(shost, gfp_mask);
++/**
++ * fc_vport_create - Admin App or LLDD requests creation of a vport
++ * @shost:	scsi host the virtual port is connected to.
++ * @ids:	The world wide names, FC4 port roles, etc for
++ *              the virtual port.
++ *
++ * Notes:
++ *	This routine assumes no locks are held on entry.
++ */
++struct fc_vport *
++fc_vport_create(struct Scsi_Host *shost, struct fc_vport_identifiers *ids)
++{
++	int stat;
++	struct fc_vport *vport;
++
++	/* We only create vports here. */
++	ids->vport_type = FC_PORTTYPE_NPIV;
++	stat = fc_vport_setup(shost, 0, &shost->shost_gendev, ids, &vport);
++	return stat ? NULL : vport;
++}
++EXPORT_SYMBOL(fc_vport_create);
  
- 	if (unlikely(!cmd)) {
- 		unsigned long flags;
-@@ -457,7 +489,7 @@ int scsi_setup_command_freelist(struct S
- 	/*
- 	 * Get one backup command for this host.
+ /**
+  * fc_vport_terminate - Admin App or LLDD requests termination of a vport
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 06f72ba..cbd621d 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -167,6 +167,26 @@ enum fc_tgtid_binding_type  {
+ struct device_attribute dev_attr_vport_##_name = 	\
+ 	__ATTR(_name,_mode,_show,_store)
+ 
++/*
++ * fc_vport_identifiers: This set of data contains all elements
++ * to uniquely identify and instantiate a FC virtual port.
++ *
++ * Notes:
++ *   symbolic_name: The driver is to append the symbolic_name string data
++ *      to the symbolic_node_name data that it generates by default.
++ *      the resulting combination should then be registered with the switch.
++ *      It is expected that things like Xen may stuff a VM title into
++ *      this field.
++ */
++#define FC_VPORT_SYMBOLIC_NAMELEN		64
++struct fc_vport_identifiers {
++	u64 node_name;
++	u64 port_name;
++	u32 roles;
++	bool disable;
++	enum fc_port_type vport_type;	/* only FC_PORTTYPE_NPIV allowed */
++	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
++};
+ 
+ /*
+  * FC Virtual Port Attributes
+@@ -197,7 +217,6 @@ struct device_attribute dev_attr_vport_##_name = 	\
+  * managed by the transport w/o driver interaction.
+  */
+ 
+-#define FC_VPORT_SYMBOLIC_NAMELEN		64
+ struct fc_vport {
+ 	/* Fixed Attributes */
+ 
+@@ -732,6 +751,8 @@ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 	 *   be sure to read the Vendor Type and ID formatting requirements
+ 	 *   specified in scsi_netlink.h
  	 */
--	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
-+	cmd = scsi_host_alloc_command(shost, gfp_mask);
- 	if (!cmd) {
- 		scsi_put_host_cmd_pool(gfp_mask);
- 		shost->cmd_pool = NULL;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -65,7 +65,7 @@ static struct scsi_host_sg_pool scsi_sg_
- };
- #undef SP
++struct fc_vport *fc_vport_create(struct Scsi_Host *shost,
++		struct fc_vport_identifiers *);
+ int fc_vport_terminate(struct fc_vport *vport);
  
--static struct kmem_cache *scsi_sdb_cache;
-+struct kmem_cache *scsi_sdb_cache;
- 
- static void scsi_run_queue(struct request_queue *q);
- 
-@@ -787,6 +787,9 @@ void scsi_release_buffers(struct scsi_cm
- 		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
- 		cmd->request->next_rq->special = NULL;
- 	}
-+
-+	if (scsi_prot_sg_count(cmd))
-+		scsi_free_sgtable(cmd->prot_sdb);
- }
- EXPORT_SYMBOL(scsi_release_buffers);
- 
-@@ -1070,6 +1073,26 @@ int scsi_init_io(struct scsi_cmnd *cmd, 
- 								    GFP_ATOMIC);
- 		if (error)
- 			goto err_exit;
-+	}
-+
-+	if (blk_integrity_rq(cmd->request)) {
-+		struct scsi_data_buffer *prot_sdb = cmd->prot_sdb;
-+		int ivecs, count;
-+
-+		BUG_ON(prot_sdb == NULL);
-+		ivecs = blk_rq_count_integrity_sg(cmd->request);
-+
-+		if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask)) {
-+			error = BLKPREP_DEFER;
-+			goto err_exit;
-+		}
-+
-+		count = blk_rq_map_integrity_sg(cmd->request,
-+						prot_sdb->table.sgl);
-+		BUG_ON(unlikely(count > ivecs));
-+
-+		cmd->prot_sdb = prot_sdb;
-+		cmd->prot_sdb->table.nents = count;
- 	}
- 
- 	return BLKPREP_OK ;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -77,6 +77,7 @@ struct request_queue;
- struct request_queue;
- struct request;
- extern int scsi_prep_fn(struct request_queue *, struct request *);
-+extern struct kmem_cache *scsi_sdb_cache;
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -90,6 +90,8 @@ struct scsi_cmnd {
- 
- 	/* These elements define the operation we ultimately want to perform */
- 	struct scsi_data_buffer sdb;
-+	struct scsi_data_buffer *prot_sdb;
-+
- 	unsigned underflow;	/* Return error if less than
- 				   this amount is transferred */
- 
-@@ -274,4 +276,22 @@ static inline sector_t scsi_get_lba(stru
- 	return scmd->request->sector;
- }
- 
-+static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
-+}
-+
-+static inline struct scatterlist *scsi_prot_sglist(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb ? cmd->prot_sdb->table.sgl : NULL;
-+}
-+
-+static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
-+{
-+	return cmd->prot_sdb;
-+}
-+
-+#define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
-+	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
-+
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -416,6 +416,11 @@ static inline int scsi_device_enclosure(
- 	return sdev->inquiry[6] & (1<<6);
- }
- 
-+static inline int scsi_device_protection(struct scsi_device *sdev)
-+{
-+	return sdev->inquiry[5] & (1<<0);
-+}
-+
- #define MODULE_ALIAS_SCSI_DEVICE(type) \
- 	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
- #define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
+ #endif /* SCSI_TRANSPORT_FC_H */
