@@ -1,95 +1,65 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: bidi support: FC transport layer...
-Date: Thu, 17 Jul 2008 06:57:31 -0700
-Message-ID: <3C744A97-F780-41BD-A077-86450263A06B@qlogic.com>
-References: <E11DE615-512A-45C0-9308-036BDA225E9D@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EE27@xbl3.ma.emulex.com> <77DD6D0A-346F-4797-B05D-C3C24EAD290E@qlogic.com> <C9F1A1B1-136B-4EE0-8F64-8EE5DF04E5B6@qlogic.com> <D1D4C3FF75F9354393DB8314DF43DEF2E7EF7B@xbl3.ma.emulex.com> <B8532D23-197D-4C8E-A08C-6081DBDEE6DF@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v924)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0 of 7] Block/SCSI Data Integrity Support
+Date: Thu, 17 Jul 2008 11:35:46 -0400
+Message-ID: <yq1tzeo1q25.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1212814533@sermon.lab.mkp.net>
+	<x491w35bbdi.fsf@segfault.boston.devel.redhat.com>
+	<yq1iqwhia2m.fsf@sermon.lab.mkp.net>
+	<170fa0d20807170655y6cb7df7eh6aae8c727b7b0bb@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:45087 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756353AbYGQN5e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 09:57:34 -0400
-In-Reply-To: <B8532D23-197D-4C8E-A08C-6081DBDEE6DF@qlogic.com>
+Received: from rgminet01.oracle.com ([148.87.113.118]:39512 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574AbYGQPgb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 11:36:31 -0400
+In-Reply-To: <170fa0d20807170655y6cb7df7eh6aae8c727b7b0bb@mail.gmail.com> (Mike Snitzer's message of "Thu\, 17 Jul 2008 09\:55\:45 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
+
+>>>>> "Mike" == Mike Snitzer <snitzer@gmail.com> writes:
+
+>> I'm testing with XFS and btrfs.  Generally doing kernel builds,
+>> etc.  ext2/3 are still problematic because they modify pages in
+>> flight.
+
+Mike> Have you made the ext2/3/4 developers aware of this?
+
+Yep.
 
 
-On Jul 16, 2008, at 10:53 AM, Seokmann Ju wrote:
+Mike> Shouldn't _any_ filesystem "just work" given that the block
+Mike> layer is what is generating the checksums and then verifying
+Mike> them on read?
 
->
-> On Jul 15, 2008, at 12:35 PM, james.smart@emulex.com wrote:
-...
->>
->> Agreed - for the basic part.  However, you're still under the  
->> assumption
->> that SAS
->> enumerated everything.  Given that some SAS parts could perform
->> discovery on it's
->> own, with the LLDD interacting with the transport just enough to
->> enumerate what it
->> found useful, this may not always be the case. Additionally, there
->> aren't a lot
->> of other "protocols" or "port roles" that exist in SAS - but there  
->> are
->> in FC.
-> I see..
-> There are a couple of more roles have defined in the rports besides
-> FC_RPORT_ROLE_FCP_TARGET.
->
->>
->>
->> The more interesting part is to those things (switch services, non- 
->> FCP
->> targets)
->> that the driver did not enumerate.  We should allow the directed
->> enumeration of them
->> to perform some basic diagnostics or san queries.  And once you have
->> this,
->> we can really open some interesting doors - why not an app that talks
->> FICON ? or
->> something that just message passes between 2 ports ? and so on...
-> OK.
->
-> Overall, I guess that having a device file under the sysfs for the
-> given port of the HBA should be the approach we need to pursue, then.
-> And single device file per each port on the instantiated HBA is also
-> be the case, I think.
-> For the approach, following are kind of questions that came to me,
-> 1. tte driver has to maintain some sort of table of
-> the all end ports, and identify one from the table with some index or
-> opaque data provided by the application for a given FC-CT/ELS pkt.
-> 2. Overall implementation framework should be similar to the one for
-> SMP in the SAS transport.
-I just wanted make sure that I've delivered clear communication.
-Please let me know otherwise.
+Yep.
 
-And now, I've got a couple of more questions on the approach.
-1. Should the device file created per instantiate HBA, or per port on
-  the HBA?
-    I think it should be per port base, for example, when 2-ports HBA
-  detected, we will create 2 device for the HBA.
-2. Should we worry about the 4KB size limit?
-    I've heard that sysfs attribute has limited size of data it can
-   transport at one time and that is 4KB.
+There are a couple of issues.  One problem is that pages are no longer
+locked down during I/O.  Instead the writeback bit is being set to
+indicate that I/O is in progress.  Not all corners of ext* have been
+adapted to that properly.  Especially ext2 suffers and often modifies
+pages containing metadata while they are in flight.  If I remember
+correctly, ext2/dir.c hasn't been made aware of writeback at all and
+assumes the page lock still works like it used to.
 
-Thank you,
-Seokmann
+That is normally not a huge problem because the page is being
+scheduled for write again shortly thereafter.  So the inconsistent
+block on disk gets overwritten pretty much instantly.  But that kind
+of sloppy behavior is a no-go with integrity checking turned on.
 
+There also appears to be some quirks in the page cache in general.
+There's something not quite right in clear_page_dirty() /
+page_mkwrite() territory.  If I sync excessively I can make any fs
+keel over.  peterz said that an mmapped page is supposed to be
+read-only during writeback but that appears to be racy when a forced
+sync is involved.
 
+That's my recollection, anyway.  I've been busy with the innards of
+the integrity code stuff for a couple of months and haven't poked at
+the fs/vm issues for a while.
 
->
->
-> Thank you,
-> Seokmann
->>
->>
->> -- james
->>
->>
->>
->
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
