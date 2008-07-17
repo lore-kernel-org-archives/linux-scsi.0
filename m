@@ -1,7 +1,7 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 5/8] scsi_dh: Update RDAC device handler
-Date: Thu, 17 Jul 2008 16:53:15 -0700
-Message-ID: <20080717235315.23056.2877.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 8/8] scsi_dh: create lookup cache
+Date: Thu, 17 Jul 2008 16:53:33 -0700
+Message-ID: <20080717235333.23056.40253.sendpatchset@chandra-ubuntu>
 References: <20080717235245.23056.89788.sendpatchset@chandra-ubuntu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
@@ -19,372 +19,193 @@ To: James.Bottomley@HansenPartnership.com, hare@suse.de, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch updates the RDAC device handler to
-refuse to attach to devices not supporting the
-RDAC vpd pages.
+Create a cache of devices that are seen in a system. This will avoid
+the unnecessary traversal of the device list in the scsi_dh when there
+are multiple luns of a same type.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_rdac.c |  163 ++++++++++++++++------------
- 1 files changed, 94 insertions(+), 69 deletions(-)
+ drivers/scsi/device_handler/scsi_dh.c |  129 +++++++++++++++++++++++++++------
+ 1 files changed, 105 insertions(+), 24 deletions(-)
 
-Index: linux-2.6.26-git5/drivers/scsi/device_handler/scsi_dh_rdac.c
+Index: linux-2.6.26-git5/drivers/scsi/device_handler/scsi_dh.c
 ===================================================================
---- linux-2.6.26-git5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ linux-2.6.26-git5/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -173,6 +173,11 @@ struct rdac_dh_data {
- #define RDAC_STATE_ACTIVE	0
- #define RDAC_STATE_PASSIVE	1
- 	unsigned char		state;
-+
-+#define RDAC_LUN_UNOWNED	0
-+#define RDAC_LUN_OWNED		1
-+#define RDAC_LUN_AVT		2
-+	char			lun_state;
- 	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
- 	union			{
- 		struct c2_inquiry c2;
-@@ -182,6 +187,13 @@ struct rdac_dh_data {
- 	} inq;
- };
+--- linux-2.6.26-git5.orig/drivers/scsi/device_handler/scsi_dh.c
++++ linux-2.6.26-git5/drivers/scsi/device_handler/scsi_dh.c
+@@ -24,8 +24,16 @@
+ #include <scsi/scsi_dh.h>
+ #include "../scsi_priv.h"
  
-+static const char *lun_state[] =
-+{
-+	"unowned",
-+	"owned",
-+	"owned (AVT mode)",
++struct scsi_dh_devinfo_list {
++	struct list_head node;
++	char vendor[9];
++	char model[17];
++	struct scsi_device_handler *handler;
 +};
 +
- static LIST_HEAD(ctlr_list);
  static DEFINE_SPINLOCK(list_lock);
+ static LIST_HEAD(scsi_dh_list);
++static LIST_HEAD(scsi_dh_dev_list);
  
-@@ -197,9 +209,8 @@ static struct request *get_rdac_req(stru
+ static struct scsi_device_handler *get_device_handler(const char *name)
  {
- 	struct request *rq;
- 	struct request_queue *q = sdev->request_queue;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 
--	rq = blk_get_request(q, rw, GFP_KERNEL);
-+	rq = blk_get_request(q, rw, GFP_NOIO);
- 
- 	if (!rq) {
- 		sdev_printk(KERN_INFO, sdev,
-@@ -207,17 +218,14 @@ static struct request *get_rdac_req(stru
- 		return NULL;
- 	}
- 
--	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
-+	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
- 		blk_put_request(rq);
- 		sdev_printk(KERN_INFO, sdev,
- 				"get_rdac_req: blk_rq_map_kern failed.\n");
- 		return NULL;
- 	}
- 
--	memset(&rq->cmd, 0, BLK_MAX_CDB);
--	rq->sense = h->sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = 0;
-+	memset(rq->cmd, 0, BLK_MAX_CDB);
- 
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
-@@ -227,12 +235,12 @@ static struct request *get_rdac_req(stru
- 	return rq;
+@@ -42,21 +50,94 @@ static struct scsi_device_handler *get_d
+ 	return found;
  }
  
--static struct request *rdac_failover_get(struct scsi_device *sdev)
-+static struct request *rdac_failover_get(struct scsi_device *sdev,
-+					 struct rdac_dh_data *h)
- {
- 	struct request *rq;
- 	struct rdac_mode_common *common;
- 	unsigned data_size;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 
- 	if (h->ctlr->use_ms10) {
- 		struct rdac_pg_expanded *rdac_pg;
-@@ -277,6 +285,10 @@ static struct request *rdac_failover_get
- 	}
- 	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
- 
-+	rq->sense = h->sense;
-+	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-+	rq->sense_len = 0;
+-static int device_handler_match(struct scsi_device_handler *tmp,
+-				struct scsi_device *sdev)
 +
- 	return rq;
- }
- 
-@@ -321,11 +333,10 @@ done:
- }
- 
- static int submit_inquiry(struct scsi_device *sdev, int page_code,
--		unsigned int len)
-+			  unsigned int len, struct rdac_dh_data *h)
++static struct scsi_device_handler *
++scsi_dh_cache_lookup(struct scsi_device *sdev)
  {
- 	struct request *rq;
- 	struct request_queue *q = sdev->request_queue;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+-	int i;
++	struct scsi_dh_devinfo_list *tmp;
++	struct scsi_device_handler *found_dh = NULL;
  
- 	rq = get_rdac_req(sdev, &h->inq, len, READ);
-@@ -338,59 +349,68 @@ static int submit_inquiry(struct scsi_de
- 	rq->cmd[2] = page_code;
- 	rq->cmd[4] = len;
- 	rq->cmd_len = COMMAND_SIZE(INQUIRY);
-+
-+	rq->sense = h->sense;
-+	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-+	rq->sense_len = 0;
-+
- 	err = blk_execute_rq(q, NULL, rq, 1);
- 	if (err == -EIO)
- 		err = SCSI_DH_IO;
-+
-+	blk_put_request(rq);
- done:
- 	return err;
- }
- 
--static int get_lun(struct scsi_device *sdev)
-+static int get_lun(struct scsi_device *sdev, struct rdac_dh_data *h)
- {
- 	int err;
- 	struct c8_inquiry *inqp;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 
--	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry));
-+	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
- 	if (err == SCSI_DH_OK) {
- 		inqp = &h->inq.c8;
--		h->lun = inqp->lun[7]; /* currently it uses only one byte */
-+		if (inqp->page_code != 0xc8)
-+			return SCSI_DH_NOSYS;
-+		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
-+		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
-+			return SCSI_DH_NOSYS;
-+		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
+-	for(i = 0; tmp->devlist[i].vendor; i++) {
+-		if (!strncmp(sdev->vendor, tmp->devlist[i].vendor,
+-			     strlen(tmp->devlist[i].vendor)) &&
+-		    !strncmp(sdev->model, tmp->devlist[i].model,
+-			     strlen(tmp->devlist[i].model))) {
+-			return 1;
++	spin_lock(&list_lock);
++	list_for_each_entry(tmp, &scsi_dh_dev_list, node) {
++		if (!strncmp(sdev->vendor, tmp->vendor, strlen(tmp->vendor)) &&
++		    !strncmp(sdev->model, tmp->model, strlen(tmp->model))) {
++			found_dh = tmp->handler;
++			break;
+ 		}
  	}
- 	return err;
- }
++	spin_unlock(&list_lock);
  
--#define RDAC_OWNED	0
--#define RDAC_UNOWNED	1
--#define RDAC_FAILED	2
--static int check_ownership(struct scsi_device *sdev)
-+static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
- {
- 	int err;
- 	struct c9_inquiry *inqp;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 
--	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry));
-+	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry), h);
- 	if (err == SCSI_DH_OK) {
--		err = RDAC_UNOWNED;
- 		inqp = &h->inq.c9;
--		/*
--		 * If in AVT mode or if the path already owns the LUN,
--		 * return RDAC_OWNED;
--		 */
--		if (((inqp->avte_cvp >> 7) == 0x1) ||
--				 ((inqp->avte_cvp & 0x1) != 0))
--			err = RDAC_OWNED;
--	} else
--		err = RDAC_FAILED;
-+		if ((inqp->avte_cvp >> 7) == 0x1) {
-+			/* LUN in AVT mode */
-+			sdev_printk(KERN_NOTICE, sdev,
-+				    "%s: AVT mode detected\n",
-+				    RDAC_NAME);
-+			h->lun_state = RDAC_LUN_AVT;
-+		} else if ((inqp->avte_cvp & 0x1) != 0) {
-+			/* LUN was owned by the controller */
-+			h->lun_state = RDAC_LUN_OWNED;
+-	return 0;
++	return found_dh;
++}
++
++static int scsi_dh_handler_lookup(struct scsi_device_handler *scsi_dh,
++				  struct scsi_device *sdev)
++{
++	int i, found = 0;
++
++	for(i = 0; scsi_dh->devlist[i].vendor; i++) {
++		if (!strncmp(sdev->vendor, scsi_dh->devlist[i].vendor,
++			     strlen(scsi_dh->devlist[i].vendor)) &&
++		    !strncmp(sdev->model, scsi_dh->devlist[i].model,
++			     strlen(scsi_dh->devlist[i].model))) {
++			found = 1;
++			break;
++		}
++	}
++	return found;
++}
++
++/*
++ * device_handler_match - Attach a device handler to a device
++ * @scsi_dh - The device handler to match against or NULL
++ * @sdev - SCSI device to be tested against @scsi_dh
++ *
++ * Tests @sdev against the device handler @scsi_dh or against
++ * all registered device_handler if @scsi_dh == NULL.
++ * Returns the found device handler or NULL if not found.
++ */
++static struct scsi_device_handler *
++device_handler_match(struct scsi_device_handler *scsi_dh,
++		     struct scsi_device *sdev)
++{
++	struct scsi_device_handler *found_dh = NULL;
++	struct scsi_dh_devinfo_list *tmp;
++
++	found_dh = scsi_dh_cache_lookup(sdev);
++	if (found_dh)
++		return found_dh;
++
++	if (scsi_dh) {
++		if (scsi_dh_handler_lookup(scsi_dh, sdev))
++			found_dh = scsi_dh;
++	} else {
++		struct scsi_device_handler *tmp_dh;
++
++		spin_lock(&list_lock);
++		list_for_each_entry(tmp_dh, &scsi_dh_list, list) {
++			if (scsi_dh_handler_lookup(tmp_dh, sdev))
++				found_dh = tmp_dh;
++		}
++		spin_unlock(&list_lock);
++	}
++
++	if (found_dh) { /* If device is found, add it to the cache */
++		tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
++		if (tmp) {
++			strncpy(tmp->vendor, sdev->vendor, 8);
++			strncpy(tmp->model, sdev->model, 16);
++			tmp->vendor[8] = '\0';
++			tmp->model[16] = '\0';
++			tmp->handler = found_dh;
++			spin_lock(&list_lock);
++			list_add(&tmp->node, &scsi_dh_dev_list);
++			spin_unlock(&list_lock);
++		} else {
++			found_dh = NULL;
 +		}
 +	}
 +
- 	return err;
++	return found_dh;
  }
  
--static int initialize_controller(struct scsi_device *sdev)
-+static int initialize_controller(struct scsi_device *sdev,
-+				 struct rdac_dh_data *h)
- {
- 	int err;
- 	struct c4_inquiry *inqp;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
+ /*
+@@ -203,26 +284,18 @@ static int scsi_dh_notifier(struct notif
+ 	struct device *dev = data;
+ 	struct scsi_device *sdev;
+ 	int err = 0;
+-	struct scsi_device_handler *tmp, *devinfo = NULL;
++	struct scsi_device_handler *devinfo = NULL;
  
--	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry));
-+	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry), h);
- 	if (err == SCSI_DH_OK) {
- 		inqp = &h->inq.c4;
- 		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
-@@ -400,13 +420,12 @@ static int initialize_controller(struct 
- 	return err;
- }
- 
--static int set_mode_select(struct scsi_device *sdev)
-+static int set_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
- {
- 	int err;
- 	struct c2_inquiry *inqp;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 
--	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry));
-+	err = submit_inquiry(sdev, 0xC2, sizeof(struct c2_inquiry), h);
- 	if (err == SCSI_DH_OK) {
- 		inqp = &h->inq.c2;
- 		/*
-@@ -421,13 +440,13 @@ static int set_mode_select(struct scsi_d
- 	return err;
- }
- 
--static int mode_select_handle_sense(struct scsi_device *sdev)
-+static int mode_select_handle_sense(struct scsi_device *sdev,
-+				    unsigned char *sensebuf)
- {
- 	struct scsi_sense_hdr sense_hdr;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int sense, err = SCSI_DH_IO, ret;
- 
--	ret = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
-+	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
- 	if (!ret)
- 		goto done;
- 
-@@ -451,14 +470,13 @@ done:
- 	return err;
- }
- 
--static int send_mode_select(struct scsi_device *sdev)
-+static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
- {
- 	struct request *rq;
- 	struct request_queue *q = sdev->request_queue;
--	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
- 
--	rq = rdac_failover_get(sdev);
-+	rq = rdac_failover_get(sdev, h);
- 	if (!rq)
- 		goto done;
- 
-@@ -466,9 +484,11 @@ static int send_mode_select(struct scsi_
- 
- 	err = blk_execute_rq(q, NULL, rq, 1);
- 	if (err != SCSI_DH_OK)
--		err = mode_select_handle_sense(sdev);
-+		err = mode_select_handle_sense(sdev, h->sense);
- 	if (err == SCSI_DH_OK)
- 		h->state = RDAC_STATE_ACTIVE;
-+
-+	blk_put_request(rq);
- done:
- 	return err;
- }
-@@ -478,38 +498,23 @@ static int rdac_activate(struct scsi_dev
- 	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int err = SCSI_DH_OK;
- 
--	if (h->lun == UNINITIALIZED_LUN) {
--		err = get_lun(sdev);
--		if (err != SCSI_DH_OK)
--			goto done;
--	}
--
--	err = check_ownership(sdev);
--	switch (err) {
--	case RDAC_UNOWNED:
--		break;
--	case RDAC_OWNED:
--		err = SCSI_DH_OK;
--		goto done;
--	case RDAC_FAILED:
--	default:
--		err = SCSI_DH_IO;
-+	err = check_ownership(sdev, h);
-+	if (err != SCSI_DH_OK)
- 		goto done;
--	}
- 
- 	if (!h->ctlr) {
--		err = initialize_controller(sdev);
-+		err = initialize_controller(sdev, h);
- 		if (err != SCSI_DH_OK)
- 			goto done;
- 	}
- 
- 	if (h->ctlr->use_ms10 == -1) {
--		err = set_mode_select(sdev);
-+		err = set_mode_select(sdev, h);
- 		if (err != SCSI_DH_OK)
- 			goto done;
- 	}
--
--	err = send_mode_select(sdev);
-+	if (h->lun_state == RDAC_LUN_UNOWNED)
-+		err = send_mode_select(sdev, h);
- done:
- 	return err;
- }
-@@ -606,11 +611,12 @@ static int rdac_bus_attach(struct scsi_d
- 	struct scsi_dh_data *scsi_dh_data;
- 	struct rdac_dh_data *h;
- 	unsigned long flags;
-+	int err;
- 
- 	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
- 			       + sizeof(*h) , GFP_KERNEL);
- 	if (!scsi_dh_data) {
--		sdev_printk(KERN_ERR, sdev, "Attach failed %s.\n",
-+		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
- 			    RDAC_NAME);
+ 	if (!scsi_is_sdev_device(dev))
  		return 0;
- 	}
-@@ -619,14 +625,33 @@ static int rdac_bus_attach(struct scsi_d
- 	h = (struct rdac_dh_data *) scsi_dh_data->buf;
- 	h->lun = UNINITIALIZED_LUN;
- 	h->state = RDAC_STATE_ACTIVE;
-+
-+	err = get_lun(sdev, h);
-+	if (err != SCSI_DH_OK)
-+		goto failed;
-+
-+	err = check_ownership(sdev, h);
-+	if (err != SCSI_DH_OK)
-+		goto failed;
-+
-+	if (!try_module_get(THIS_MODULE))
-+		goto failed;
-+
- 	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->scsi_dh_data = scsi_dh_data;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
--	try_module_get(THIS_MODULE);
  
--	sdev_printk(KERN_NOTICE, sdev, "Attached %s\n", RDAC_NAME);
-+	sdev_printk(KERN_NOTICE, sdev,
-+		    "%s: LUN %d (%s)\n",
-+		    RDAC_NAME, h->lun, lun_state[(int)h->lun_state]);
+ 	sdev = to_scsi_device(dev);
  
- 	return 0;
+-	spin_lock(&list_lock);
+-	list_for_each_entry(tmp, &scsi_dh_list, list) {
+-		if (device_handler_match(tmp, sdev)) {
+-			devinfo = tmp;
+-			break;
+-		}
+-	}
+-	spin_unlock(&list_lock);
+-
+-	if (!devinfo)
+-		goto out;
+-
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		devinfo = device_handler_match(NULL, sdev);
++		if (!devinfo)
++			goto out;
 +
-+failed:
-+	kfree(scsi_dh_data);
-+	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
-+		    RDAC_NAME);
-+	return -EINVAL;
- }
+ 		err = scsi_dh_handler_attach(sdev, devinfo);
+ 		if (!err)
+ 			err = device_create_file(dev, &scsi_dh_state_attr);
+@@ -312,6 +385,8 @@ EXPORT_SYMBOL_GPL(scsi_register_device_h
+  */
+ int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
+ {
++	struct scsi_dh_devinfo_list *tmp, *pos;
++
+ 	if (!get_device_handler(scsi_dh->name))
+ 		return -ENODEV;
  
- static void rdac_bus_detach( struct scsi_device *sdev )
-@@ -645,7 +670,7 @@ static void rdac_bus_detach( struct scsi
- 		kref_put(&h->ctlr->kref, release_controller);
- 	kfree(scsi_dh_data);
- 	module_put(THIS_MODULE);
--	sdev_printk(KERN_NOTICE, sdev, "Detached %s\n", RDAC_NAME);
-+	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", RDAC_NAME);
- }
+@@ -320,6 +395,12 @@ int scsi_unregister_device_handler(struc
  
+ 	spin_lock(&list_lock);
+ 	list_del(&scsi_dh->list);
++	list_for_each_entry_safe(pos, tmp, &scsi_dh_dev_list, node) {
++		if (pos->handler == scsi_dh) {
++			list_del(&pos->node);
++			kfree(pos);
++		}
++	}
+ 	spin_unlock(&list_lock);
+ 	printk(KERN_INFO "%s: device handler unregistered\n", scsi_dh->name);
  
