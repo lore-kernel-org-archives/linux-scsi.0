@@ -1,65 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0 of 7] Block/SCSI Data Integrity Support
-Date: Thu, 17 Jul 2008 11:35:46 -0400
-Message-ID: <yq1tzeo1q25.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1212814533@sermon.lab.mkp.net>
-	<x491w35bbdi.fsf@segfault.boston.devel.redhat.com>
-	<yq1iqwhia2m.fsf@sermon.lab.mkp.net>
-	<170fa0d20807170655y6cb7df7eh6aae8c727b7b0bb@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/8] scsi_dh: Implement common device table handling
+Date: Thu, 17 Jul 2008 12:20:59 -0500
+Message-ID: <1216315259.5515.38.camel@localhost.localdomain>
+References: <20080717073804.588C518C6FD@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:39512 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbYGQPgb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2008 11:36:31 -0400
-In-Reply-To: <170fa0d20807170655y6cb7df7eh6aae8c727b7b0bb@mail.gmail.com> (Mike Snitzer's message of "Thu\, 17 Jul 2008 09\:55\:45 -0400")
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42986 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756778AbYGQRVE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2008 13:21:04 -0400
+In-Reply-To: <20080717073804.588C518C6FD@pentland.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Mike" == Mike Snitzer <snitzer@gmail.com> writes:
+On Thu, 2008-07-17 at 09:38 +0200, Hannes Reinecke wrote:
+> Instead of having each and every driver implement its own
+> device table scanning code we should rather implement a common
+> routine and scan the device tables there.
+> This allows us also to implement a general notifier chain
+> callback for all device handler instead for one per handler.
 
->> I'm testing with XFS and btrfs.  Generally doing kernel builds,
->> etc.  ext2/3 are still problematic because they modify pages in
->> flight.
+This doesn't apply against linus head:
 
-Mike> Have you made the ext2/3/4 developers aware of this?
+Applying scsi_dh: Implement common device table handling
+error: patch failed: drivers/scsi/device_handler/scsi_dh_emc.c:412
+error: drivers/scsi/device_handler/scsi_dh_emc.c: patch does not apply
+error: patch failed: drivers/scsi/device_handler/scsi_dh_hp_sw.c:108
+error: drivers/scsi/device_handler/scsi_dh_hp_sw.c: patch does not apply
+error: patch failed: drivers/scsi/device_handler/scsi_dh_rdac.c:590
+error: drivers/scsi/device_handler/scsi_dh_rdac.c: patch does not apply
 
-Yep.
+It looks like a conflict with this:
 
+commit 33af79d12e0fa25545d49e86afc67ea8ad5f2f40
+Author: Chandra Seetharaman <sekharan@us.ibm.com>
+Date:   Wed Jul 16 17:35:08 2008 -0700
 
-Mike> Shouldn't _any_ filesystem "just work" given that the block
-Mike> layer is what is generating the checksums and then verifying
-Mike> them on read?
+    scsi_dh: Verify "dev" is a sdev before accessing it.
 
-Yep.
+James
 
-There are a couple of issues.  One problem is that pages are no longer
-locked down during I/O.  Instead the writeback bit is being set to
-indicate that I/O is in progress.  Not all corners of ext* have been
-adapted to that properly.  Especially ext2 suffers and often modifies
-pages containing metadata while they are in flight.  If I remember
-correctly, ext2/dir.c hasn't been made aware of writeback at all and
-assumes the page lock still works like it used to.
-
-That is normally not a huge problem because the page is being
-scheduled for write again shortly thereafter.  So the inconsistent
-block on disk gets overwritten pretty much instantly.  But that kind
-of sloppy behavior is a no-go with integrity checking turned on.
-
-There also appears to be some quirks in the page cache in general.
-There's something not quite right in clear_page_dirty() /
-page_mkwrite() territory.  If I sync excessively I can make any fs
-keel over.  peterz said that an mmapped page is supposed to be
-read-only during writeback but that appears to be racy when a forced
-sync is involved.
-
-That's my recollection, anyway.  I've been busy with the innards of
-the integrity code stuff for a couple of months and haven't poked at
-the fs/vm issues for a while.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
 
