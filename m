@@ -1,114 +1,81 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11120] New: aacraid driver stalls on high-load SMP machines
-Date: Fri, 18 Jul 2008 14:36:00 -0700 (PDT)
-Message-ID: <bug-11120-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52833 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754629AbYGRVgD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2008 17:36:03 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6ILa0iv004797
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2008 14:36:01 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+From: Pierre Ossman <drzeus-p3sGCRWkH8CeZLLa646FqQ@public.gmane.org>
+Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
+Date: Sat, 19 Jul 2008 00:47:36 +0200
+Message-ID: <20080719004736.626ef169@mjolnir.drzeus.cx>
+References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>
+	<200807170053.36661.rjw@sisk.pl>
+	<1216249292.3358.66.camel@localhost.localdomain>
+	<200807170109.30655.rjw@sisk.pl>
+	<48808EE0.2060603@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-23535-1216421260-0001-2"
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <48808EE0.2060603-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-ide <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, tino.keitel-Mmb7MZpHnFY@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11120
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-           Summary: aacraid driver stalls on high-load SMP machines
-           Product: SCSI Drivers
-           Version: 2.5
-     KernelVersion: 2.6.24
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: AACRAID
-        AssignedTo: scsi_drivers-aacraid@kernel-bugs.osdl.org
-        ReportedBy: smurf@smurf.noris.de
+--=_freyr.drzeus.cx-23535-1216421260-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 18 Jul 2008 21:38:56 +0900
+Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-Latest working kernel version: unknown
-Earliest failing kernel version: probably forever
-Distribution: Ubuntu hardy
-Hardware Environment: Dell PowerEdge 2650
+>=20
+> The offending commit was 83e7d317cef3ee624886f128401a72e414c0a99d
+> which implements sg iterator but it forgot to add offset to the
+> kmapped address and copy goes out of bounds.  Takashi, this could also
+> be the problem you were seeing if you don't have slab debugging turned
+> on.
+>=20
 
-Problem Description:
+Oops, sorry. This thing wasn't supposed to go out and mess with anyone
+else's tree quite yet. I'll make sure to clean out my -next tree right
+away.
 
-Under load, this happens rather often:
+> The implemented iterator didn't look too pretty and the usage was
+> quite awkward involving a callback and end condition check distributed
+> between the callback and the outer user who runs the loop.  For
+> copying, end of buffer condition was tested by testing whether the
+> callback returned 0 copied bytes for the iteration but AFAIK there's
+> no restriction against zero length sg entry in the middle and it will
+> terminate the copying prematurely.
+>=20
+> So, I implemented slightly different version which follows below.
+>=20
 
-Jul 18 22:55:24 nun kernel: [86674.467410] aacraid: Host adapter abort request
-(0,0,2,0)
-Jul 18 22:55:24 nun kernel: [86674.467487] aacraid: Host adapter abort request
-(0,0,3,0)
-Jul 18 22:55:24 nun kernel: [86674.467617] aacraid: Host adapter reset request.
-SCSI hang ?
-Jul 18 22:57:26 nun kernel: [86815.728423] aacraid: Host adapter abort request
-(0,0,0,0)
-Jul 18 22:57:26 nun kernel: [86815.728500] aacraid: Host adapter abort request
-(0,0,3,0)
-Jul 18 22:57:26 nun kernel: [86815.728573] aacraid: Host adapter abort request
-(0,0,2,0)
-Jul 18 22:57:26 nun kernel: [86815.728640] aacraid: Host adapter abort request
-(0,0,1,0)
-Jul 18 22:57:26 nun kernel: [86815.728772] aacraid: Host adapter reset request.
-SCSI hang ?
+I just have one objection to your version, and that is that it cannot
+be used to nibble away at the sg list. The _next() call jumps an entire
+page, whereas you sometimes need to consume that page in two different
+sweeps. This could be handled by some external buffer that keeps the
+remainder of the page, but the point of these functions was to keep
+things simple for the callers.
 
-Access to the storage thus stalls for ten seconds or so.
+Rgds
+--=20
+     -- Pierre Ossman
 
-I have successfully worked around the problem by using "schedtool -a 1
-pid-of-basically-everything", so it seems to be an SMP-related problem.
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
 
-However, one CPU is _somewhat_ slower than four, which is quite noticeable, so
-we'd like to get this handled somehow :-/
+--=_freyr.drzeus.cx-23535-1216421260-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-lspci:
+iEYEARECAAYFAkiBHYoACgkQ7b8eESbyJLjioACgq9/meiFFoM9mYVbZ+dUmHKbR
+YkQAniXrU9ByoRAnds3bxb4VqRUg1xaQ
+=Hk64
+-----END PGP SIGNATURE-----
 
-05:06.0 SCSI storage controller: Adaptec RAID subsystem HBA (rev 01)
-        Subsystem: Dell PowerEdge 2400,2500,2550,4400
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 7
-        BIST result: 00
-        I/O ports at cc00 [size=256]
-        Memory at fccff000 (64-bit, non-prefetchable) [size=4K]
-        Expansion ROM at fcd00000 [disabled] [size=128K]
-        Capabilities: [dc] Power Management version 2
-
-05:06.1 SCSI storage controller: Adaptec RAID subsystem HBA (rev 01)
-        Subsystem: Dell PowerEdge 2400,2500,2550,4400
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 11
-        BIST result: 00
-        I/O ports at c800 [size=256]
-        Memory at fccfe000 (64-bit, non-prefetchable) [size=4K]
-        Expansion ROM at f8100000 [disabled] [size=128K]
-        Capabilities: [dc] Power Management version 2
-
-
-lspci -n:
-05:06.0 0100: 9005:00c5 (rev 01)
-        Subsystem: 1028:00c5
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 7
-        BIST result: 00
-        I/O ports at cc00 [size=256]
-        Memory at fccff000 (64-bit, non-prefetchable) [size=4K]
-        Expansion ROM at fcd00000 [disabled] [size=128K]
-        Capabilities: [dc] Power Management version 2
-
-05:06.1 0100: 9005:00c5 (rev 01)
-        Subsystem: 1028:00c5
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 11
-        BIST result: 00
-        I/O ports at c800 [size=256]
-        Memory at fccfe000 (64-bit, non-prefetchable) [size=4K]
-        Expansion ROM at f8100000 [disabled] [size=128K]
-        Capabilities: [dc] Power Management version 2
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--=_freyr.drzeus.cx-23535-1216421260-0001-2--
