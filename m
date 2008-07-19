@@ -1,70 +1,64 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [RFC PATCH] HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Sat, 19 Jul 2008 19:52:26 +0900
-Message-ID: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp>
+From: Pierre Ossman <drzeus@drzeus.cx>
+Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
+Date: Sat, 19 Jul 2008 14:07:17 +0200
+Message-ID: <20080719140717.7b296eae@mjolnir.drzeus.cx>
+References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>
+	<200807170053.36661.rjw@sisk.pl>
+	<1216249292.3358.66.camel@localhost.localdomain>
+	<200807170109.30655.rjw@sisk.pl>
+	<48808EE0.2060603@gmail.com>
+	<20080719004736.626ef169@mjolnir.drzeus.cx>
+	<48813C5F.70007@gmail.com>
+	<20080719033050.552f9b49@mjolnir.drzeus.cx>
+	<48814D81.8060001@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754399AbYGSKxu@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mike.miller@hp.com
-Cc: James.Bottomley@HansenPartnership.com, Jens.Axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-30400-1216469241-0001-2"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <48814D81.8060001@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
 List-Id: linux-scsi@vger.kernel.org
 
-This is a SCSI driver for HP (Compaq) Smart Array 5xxx controllers.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-SCSI people can skip the following two paragraphs.
+--=_freyr.drzeus.cx-30400-1216469241-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Currently, a driver for HP (Compaq) Smart Array 5xxx controllers is
-implemented as a block device driver, block/cciss.c (aka, cciss). But
-the controller interface is SCSI-3 compatible. The specification says,
-"A controller that supports CISS is considered to be a SCSI storage
-array controller". A scsi driver for the controllers was discussed
-several times.
+On Sat, 19 Jul 2008 11:12:17 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-I think that a SCSI cciss driver can be much simpler (and
-maintainable) than the block cciss driver (the majority of the code
-forging SCSI command can go away, we have the proper sysfs entries for
-free, we can handle scsi tape drives easily etc). It would be helpful
-for distributions too since they don't need stuff specific to cciss
-(such as udev rules).
+>=20
+> Oh... I see.  How about adding sg_miter_consume(@miter, @bytes)?  If the
+> function is never called, the whole chunk is assumed to be consumed.  If
+> the function is called only @bytes are consumed.
+>=20
 
+Sounds reasonable. Care to make an independent patch so that I can
+continue my PIO hacking adventures? :)
 
-There isn't any easy migration path for users. So I think that we need
-to keep the block and scsi drivers for cciss for some time (say two
-years).
+Rgds
+--=20
+     -- Pierre Ossman
 
-My scsi driver is still in an early stage (I tried to keep the changes
-minimum). I can detect logical units, mount a file system, do lots of
-I/Os, however, there are lots of TODOs in the management features.
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
 
-If I can get an ACK from HP about the long-term migration of cciss to
-SCSI, I'm happy to keep working on the SCSI cciss driver and maintain
-it until HP takes over the driver.
+--=_freyr.drzeus.cx-30400-1216469241-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-The patch is available at:
+iEYEARECAAYFAkiB2PgACgkQ7b8eESbyJLjB2QCg1KCslUIDEmrKFM9JVmIIIShK
+jfIAoPg5hu1NeLw/v+DiodxZY/bqK3pd
+=N4n4
+-----END PGP SIGNATURE-----
 
-http://www.kernel.org/pub/linux/kernel/people/tomo/ciss/0001-add-HP-Compaq-Smart-Array-5xxx-controller-SCSI-dri.patch
-
-clover:/home/fujita# insmod ciss.ko
-clover:/home/fujita# lsscsi
-(snip)
-[1:0:0:0]    disk    HP       LOGICAL VOLUME   1.66  /dev/sde
-[1:0:0:1]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdf
-[1:0:0:2]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdg
-[1:0:0:3]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdh
-
-Yeah, it just works as SCSI disk, the dmesg says:
-
-sd 1:0:0:0: [sde] Attached SCSI disk
-sd 1:0:0:1: [sdf] 143305920 512-byte hardware sectors (73373 MB)
-sd 1:0:0:1: [sdf] Write Protect is off
-sd 1:0:0:1: [sdf] Mode Sense: 5b 00 00 08
-sd 1:0:0:1: [sdf] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-
-I needed a different name and just stole 'ciss' from *BSD. But any
-names (like hpciss) works for me.
-
-
-Thanks,
+--=_freyr.drzeus.cx-30400-1216469241-0001-2--
