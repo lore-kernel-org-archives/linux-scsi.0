@@ -1,30 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Sat, 19 Jul 2008 09:59:11 +0900
-Message-ID: <48813C5F.70007@gmail.com>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com> <20080719004736.626ef169@mjolnir.drzeus.cx>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20080719004736.626ef169@mjolnir.drzeus.cx>
-Sender: linux-next-owner@vger.kernel.org
-To: Pierre Ossman <drzeus@drzeus.cx>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11120] aacraid driver stalls on high-load SMP machines
+Date: Fri, 18 Jul 2008 18:13:10 -0700 (PDT)
+Message-ID: <20080719011310.6B92A10805E@picon.linux-foundation.org>
+References: <bug-11120-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37153 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756207AbYGSBOH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jul 2008 21:14:07 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6J1DbMN016247
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2008 18:13:38 -0700
+In-Reply-To: <bug-11120-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Pierre Ossman wrote:
-> I just have one objection to your version, and that is that it cannot
-> be used to nibble away at the sg list. The _next() call jumps an entire
-> page, whereas you sometimes need to consume that page in two different
-> sweeps. This could be handled by some external buffer that keeps the
-> remainder of the page, but the point of these functions was to keep
-> things simple for the callers.
+http://bugzilla.kernel.org/show_bug.cgi?id=11120
 
-Well, I don't know how often such usages would be necessary.  If it's a
-very common ops, you can add a param to the next function but frankly I
-think it's better to build a inside control structure for that.  There's
-no need for external buffer, just an inner loop is sufficient.
+
+
+
+
+------- Comment #1 from smurf@smurf.noris.de  2008-07-18 18:13 -------
+Update: my uniprocessor band-aid, besides significantly decreasing performance,
+resulted in an eventual CPU soft-hang (all of them) some hours later, so this
+workaround obviously doesn't.
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
