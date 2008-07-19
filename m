@@ -1,65 +1,70 @@
-From: Christophe Varoqui <christophe.varoqui@free.fr>
-Subject: persistent reservation behaviour with dm-multipath
-Date: Sat, 19 Jul 2008 10:59:52 +0200
-Message-ID: <1216457992.7364.15.camel@plop>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [RFC PATCH] HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Sat, 19 Jul 2008 19:52:26 +0900
+Message-ID: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix2-g20.free.fr ([212.27.60.43]:39924 "EHLO
-	postfix2-g20.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546AbYGSJBZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Jul 2008 05:01:25 -0400
-Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
-	by postfix2-g20.free.fr (Postfix) with ESMTP id 6DD8E2830DC9
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Jul 2008 09:01:06 +0200 (CEST)
-Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
-	by smtp7-g19.free.fr (Postfix) with ESMTP id 93FB1322815
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Jul 2008 10:59:52 +0200 (CEST)
-Received: from [192.168.0.105] (chn60-1-82-233-48-227.fbx.proxad.net [82.233.48.227])
-	by smtp7-g19.free.fr (Postfix) with ESMTP id 5DF02322803
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Jul 2008 10:59:52 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754399AbYGSKxu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: mike.miller@hp.com
+Cc: James.Bottomley@HansenPartnership.com, Jens.Axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-The current dm-multipath behaviour is currently a potent data corrupter
-on Persistant Reservation-based clusters sharing multipaths with the
-queue_if_no_path feature on (Clariion, Storageworks, ...).
+This is a SCSI driver for HP (Compaq) Smart Array 5xxx controllers.
 
-Consider the following scenario :
+SCSI people can skip the following two paragraphs.
 
-- Node A take a write-exclusive persistent reservation on LU
-- Node B submits a write io to LU, which is a sda-sdb multipath
-=EF=BB=BF- B dm_multipath routes the wio to sda, the wio is failed, the=
- path is
-marked failed
-=EF=BB=BF- B dm_multipath routes the wio to sdb, the wio is failed, the=
- last
-path is marked failed
-- B queues the wio because of the queue_if_no_path feature. Process
-submitting the wio is stuck in D-state.
-- A releases the reservation. Queued wios are unqueued, corrupting the
-data on LU.
+Currently, a driver for HP (Compaq) Smart Array 5xxx controllers is
+implemented as a block device driver, block/cciss.c (aka, cciss). But
+the controller interface is SCSI-3 compatible. The specification says,
+"A controller that supports CISS is considered to be a SCSI storage
+array controller". A scsi driver for the controllers was discussed
+several times.
 
-I suspect wio returning a "reservation conflict" status should never be
-queued.
+I think that a SCSI cciss driver can be much simpler (and
+maintainable) than the block cciss driver (the majority of the code
+forging SCSI command can go away, we have the proper sysfs entries for
+free, we can handle scsi tape drives easily etc). It would be helpful
+for distributions too since they don't need stuff specific to cciss
+(such as udev rules).
 
-DM suspend/resume on the multipath devmap effectively flushes the queue=
-,
-but this solution leaves a window open for data corruption, between io
-enqueue and user-space driven queue flush.
 
-Is there work in progress to address this issue yet ? What's would be a=
-n
-acceptable solution design (for example Mike Christie suggested in Aug
-2005 a scsi-to-blk error translation patch, which got nowhere) ?
+There isn't any easy migration path for users. So I think that we need
+to keep the block and scsi drivers for cciss for some time (say two
+years).
 
-Regards,
-cvaroqui
+My scsi driver is still in an early stage (I tried to keep the changes
+minimum). I can detect logical units, mount a file system, do lots of
+I/Os, however, there are lots of TODOs in the management features.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If I can get an ACK from HP about the long-term migration of cciss to
+SCSI, I'm happy to keep working on the SCSI cciss driver and maintain
+it until HP takes over the driver.
+
+
+The patch is available at:
+
+http://www.kernel.org/pub/linux/kernel/people/tomo/ciss/0001-add-HP-Compaq-Smart-Array-5xxx-controller-SCSI-dri.patch
+
+clover:/home/fujita# insmod ciss.ko
+clover:/home/fujita# lsscsi
+(snip)
+[1:0:0:0]    disk    HP       LOGICAL VOLUME   1.66  /dev/sde
+[1:0:0:1]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdf
+[1:0:0:2]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdg
+[1:0:0:3]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdh
+
+Yeah, it just works as SCSI disk, the dmesg says:
+
+sd 1:0:0:0: [sde] Attached SCSI disk
+sd 1:0:0:1: [sdf] 143305920 512-byte hardware sectors (73373 MB)
+sd 1:0:0:1: [sdf] Write Protect is off
+sd 1:0:0:1: [sdf] Mode Sense: 5b 00 00 08
+sd 1:0:0:1: [sdf] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+
+I needed a different name and just stole 'ciss' from *BSD. But any
+names (like hpciss) works for me.
+
+
+Thanks,
