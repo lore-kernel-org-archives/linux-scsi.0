@@ -1,65 +1,85 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: fix q->max_segment_size checking in
-	blk_recalc_rq_segments about VMERGE
-Date: Sun, 20 Jul 2008 12:33:31 -0500
-Message-ID: <1216575211.4199.35.camel@localhost.localdomain>
-References: <1216520228.3376.33.camel@localhost.localdomain>
-	 <20080719.210737.197246608.davem@davemloft.net>
-	 <1216565545.4199.10.camel@localhost.localdomain>
-	 <20080720.102302.137955996.davem@davemloft.net>
+From: Pierre Ossman <drzeus@drzeus.cx>
+Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
+Date: Mon, 21 Jul 2008 00:40:33 +0200
+Message-ID: <20080721004033.1fc66aa3@mjolnir.drzeus.cx>
+References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>
+	<200807170053.36661.rjw@sisk.pl>
+	<1216249292.3358.66.camel@localhost.localdomain>
+	<200807170109.30655.rjw@sisk.pl>
+	<48808EE0.2060603@gmail.com>
+	<20080719004736.626ef169@mjolnir.drzeus.cx>
+	<48813C5F.70007@gmail.com>
+	<20080719033050.552f9b49@mjolnir.drzeus.cx>
+	<48814D81.8060001@gmail.com>
+	<20080719140717.7b296eae@mjolnir.drzeus.cx>
+	<4881F437.7000503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <20080720.102302.137955996.davem@davemloft.net>
-Sender: linux-parisc-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: mpatocka@redhat.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-28653-1216593638-0001-2"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4881F437.7000503@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2008-07-20 at 10:23 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Sun, 20 Jul 2008 09:52:25 -0500
-> 
-> > Since we're using it successfully in parisc, I don't want the block code
-> > removed, but I don't see a reason to force other architectures to use
-> > it.
-> > 
-> > However, it has two use cases.  One is the legacy one of making rather
-> > dumb I/O cards perform better (which is the primary on on parisc), but
-> > there is a current one making huge transfers go through SCSI using using
-> > the sg_table code.  That latter is pretty vital to me since I have to
-> > keep the code working, but I don't really have any SCSI cards that can
-> > take advantage of it without virtual merging.  As a slight irony, IBM is
-> > trying to persuade me that a ppc would be better than a parisc for big
-> > endian I/O testing ... so I might just be seeing if I can make virtual
-> > merging work on power too.
-> 
-> All of this is gibberish, we've been over this a few times already
-> in this thread.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Really? I must have missed the proposed replacement for the
-functionality that we're using then.
+--=_freyr.drzeus.cx-28653-1216593638-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> For a dumb I/O card, you advertise SG_ALL capabilities, the IOMMU
-> is going to merge things as it would have anyways, and you have
-> code in the driver to advance SG entries after each "dumb I/O".
+On Sat, 19 Jul 2008 23:03:35 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Not that dumb ... they just have a limited number of SG slots.  We
-wouldn't want to run them as spoon fed PIO because that really would
-kill performance.
+> Pierre Ossman wrote:
+> > On Sat, 19 Jul 2008 11:12:17 +0900
+> > Tejun Heo <htejun@gmail.com> wrote:
+> >=20
+> >> Oh... I see.  How about adding sg_miter_consume(@miter, @bytes)?  If t=
+he
+> >> function is never called, the whole chunk is assumed to be consumed.  =
+If
+> >> the function is called only @bytes are consumed.
+> >>
+> >=20
+> > Sounds reasonable. Care to make an independent patch so that I can
+> > continue my PIO hacking adventures? :)
+>=20
+> Sure thing.  Here you go.  :-)
+>=20
+> Subject: [PATCH 2.6.26] sg: reimplement sg mapping iterator
+>=20
 
-> There is zero value to the vmerge code, the real gains are being
-> realized already.
+I've converted my code to use your implementation instead, and it seems
+to be working perfectly.
 
-There is value to me in my testbed, which I can't achieve any other way
-(except by buying different SCSI cards).
+How comfortable to you feel about your patch? :)
+This fixes a big problem in the sdhci driver where falling back on PIO
+(because of hw DMA bugs) would create lots of potential issues as the
+driver couldn't access highmem pages. I'd like to get this fix in for
+2.6.27, which means that your patch also needs to go in now.
 
-As I said, you can compile it out on sparc just fine.  I wish to keep it
-running for parisc, so I'll maintain it.  If it ever bit rots out of
-parisc like it has done for the other architectures, then feel free to
-remove it.
+Rgds
+--=20
+     -- Pierre Ossman
 
-James
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
 
+--=_freyr.drzeus.cx-28653-1216593638-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkiDvuQACgkQ7b8eESbyJLjU/wCg8Fy/hfuE55g8HvUdDDtEKtui
+mWEAn1gDGsXeqGMD5chL1itu1ND1Rvrd
+=HwL4
+-----END PGP SIGNATURE-----
+
+--=_freyr.drzeus.cx-28653-1216593638-0001-2--
