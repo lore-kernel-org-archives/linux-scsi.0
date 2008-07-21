@@ -1,40 +1,59 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Tue, 22 Jul 2008 00:35:02 +0900
-Message-ID: <4884ACA6.9080509@gmail.com>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com>	<20080719004736.626ef169@mjolnir.drzeus.cx>	<48813C5F.70007@gmail.com>	<20080719033050.552f9b49@mjolnir.drzeus.cx>	<48814D81.8060001@gmail.com>	<20080719140717.7b296eae@mjolnir.drzeus.cx>	<4881F437.7000503@gmail.com>	<20080721004033.1fc66aa3@mjolnir.drzeus.cx>	<4883DA8C.5030306@gmail.com> <20080721133209.62e31bc8@mjolnir.drzeus.cx>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] breakage in bsg
+Date: Mon, 21 Jul 2008 10:50:31 -0500
+Message-ID: <1216655432.3433.30.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:52578 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbYGUPfW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2008 11:35:22 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so852303tic.23
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2008 08:35:20 -0700 (PDT)
-In-Reply-To: <20080721133209.62e31bc8@mjolnir.drzeus.cx>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34551 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751121AbYGUPuf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jul 2008 11:50:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pierre Ossman <drzeus@drzeus.cx>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Pierre Ossman wrote:
-> On Mon, 21 Jul 2008 09:38:36 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
+[Sorry for breaking threading ... this is a cut and paste from mark
+since you didn't post to any list I'm subscribed to]
+
+> 	* with "bsg: bind bsg to request_queue instead of gendisk" we
+> get all requests with NULL ->rq_disk.  SCSI can cope with that, anything
+> else is not promised to be able to surive that.  Indeed, quite a few
+> drivers do not.
+
+That's pretty much by design since we need to allow bsg to be used on
+request queues that don't have a gendisk attached (classic example are
+the transient queues belonging to SAS expanders).  Since drivers have to
+actively allow bsg, we can do the local conversions as necessary.
+
+> 	* WTF are these per-bd flags doing, seeing that you set them
+> on every ->read() and ->write()?  Just what will happen if you have
+> two openers?
+
+This isn't really my area, but there's only one flag: BSG_F_BLOCK which
+is used to signal a temporary blockage of the device ... by definition
+that applies to all openers.
+
+> 	* cmd_filter thing is broken as well (we have no access to
+> gendisk in question and there's a lot of obvious issues when you have
+> several openers).
+
+Well, this is philosophical.  I've always maintained the command filter
+to be broken by design.  BSG reinforces that because now we have actual
+uses that aren't SCSI (the main use I have is to transmit Management
+frames to SAS).  You can't filter something if you don't understand the
+protocols and protocol independence was a requirement for the next
+generation of SG.
+
+> #2 and part of #3 are fixable, but I really don't see what to do with #1.
+> If nothing else, it's absolutely incompatible with cmd_filter, even if you
+> leave aside the issue with non-IDE/non-SCSI drivers.
 > 
->> I think it needs an ACK from Jens.  Jens?
-> 
-> He seems to be on vacation. I sent him a review request for my original
-> code a couple of weeks ago, and I haven't heard anything. marc.info
-> also doesn't show anything since the 3rd. Odds are he won't be back
-> during the merge window. :/
+> Comments?
 
-Right, I have a patchset waiting for his review too.  Anyone knows when
-he'll be back?
+James
 
-We can always back it out later but I don't think pushing stuff in w/o
-maintainer's ack is a good idea.  :-(
 
--- 
-tejun
