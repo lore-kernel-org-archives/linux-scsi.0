@@ -1,38 +1,54 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [RFC, PATCH v2] SCSI tape: MTIOCSENSE ioctl to return the sense
- data from errors
-Date: Mon, 21 Jul 2008 22:27:04 +0300 (EEST)
-Message-ID: <alpine.LNX.1.10.0807212216270.20236@kai.makisara.local>
-References: <alpine.LNX.1.10.0807111643250.5811@kai.makisara.local>  <alpine.LNX.1.10.0807131723510.16437@kai.makisara.local> <1216657840.3433.38.camel@localhost.localdomain>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: [PATCH] sym53c8xx_2: free luntbl in sym_hcb_free
+Date: Mon, 21 Jul 2008 15:58:32 -0700
+Message-ID: <20080721225832.GA4516@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:58731 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402AbYGUT1K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2008 15:27:10 -0400
-In-Reply-To: <1216657840.3433.38.camel@localhost.localdomain>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:53668 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564AbYGUW7A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2008 18:59:00 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e32.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m6LMrA2e027268
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2008 18:53:10 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m6LMwrIf140794
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2008 16:58:53 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m6LMwrUI010810
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2008 16:58:53 -0600
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Arne Wiebalck <arne.wiebalck@cern.ch>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
 
-On Mon, 21 Jul 2008, James Bottomley wrote:
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
 
-> On Sun, 2008-07-13 at 17:24 +0300, Kai Makisara wrote:
-> > Here is the second version of the proposed MTIOCSENSE patch. The changes from
-> > the first version are:
-> > 
-...
-> > The patch below this text applies to 2.6.26-rc9 plus the two bug fixes I have
-> > sent to linux-scsi (applies with offsets without these fixes).
-> 
-> You listed this as an RFC, so I haven't done anything with it but if you
-> want this in for 2.6.27 you'd better change that to a proper PATCH
-> before the merge window closes.
-> 
-I think it has to wait until 2.6.28. This is a new ioctl and it is better 
-to wait for more feedback to be sure that the definition is what users 
-really need.
+This patch frees the luntbl dma area in sym_hcb_free if allocated.
+Since the luntbl is part of a larger dma coherent area not freeing the
+luntbl kept a 64k dma coherent area previous allocated through
+dma_alloc_coherent allocated. This prevented a DLPAR remove IO 
+operation from completing successfully.
 
-Kai
+Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Matthew Wilcox <matthew@wil.cx>
+
+---
+
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: linux-2.6-combined/drivers/scsi/sym53c8xx_2/sym_hipd.c
+===================================================================
+--- linux-2.6-combined.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-07-21 13:38:56.000000000 -0400
++++ linux-2.6-combined/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-07-21 16:06:58.000000000 -0400
+@@ -5741,6 +5741,8 @@
+ 
+ 	for (target = 0; target < SYM_CONF_MAX_TARGET ; target++) {
+ 		tp = &np->target[target];
++		if (tp->luntbl)
++			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
+ #if SYM_CONF_MAX_LUN > 1
+ 		kfree(tp->lunmp);
+ #endif 
