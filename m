@@ -1,37 +1,57 @@
-From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Mon, 21 Jul 2008 09:38:36 +0900
-Message-ID: <4883DA8C.5030306@gmail.com>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com>	<20080719004736.626ef169@mjolnir.drzeus.cx>	<48813C5F.70007@gmail.com>	<20080719033050.552f9b49@mjolnir.drzeus.cx>	<48814D81.8060001@gmail.com>	<20080719140717.7b296eae@mjolnir.drzeus.cx>	<4881F437.7000503@gmail.com> <20080721004033.1fc66aa3@mjolnir.drzeus.cx>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 5/7] drivers/scsi/scsi_scan.c: Release mutex in error handling
+ code
+Date: Mon, 21 Jul 2008 09:58:30 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0807210958120.24625@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20080721004033.1fc66aa3-OhHrUh4vRMSnewYJFaQfwJ5kstrrjoWp@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Pierre Ossman <drzeus-p3sGCRWkH8CeZLLa646FqQ@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-ide <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, tino.keitel-Mmb7MZpHnFY@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw1.diku.dk ([130.225.96.91]:39804 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756847AbYGUH6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jul 2008 03:58:32 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hello, Pierre.
+From: Julia Lawall <julia@diku.dk>
 
-Pierre Ossman wrote:
-> I've converted my code to use your implementation instead, and it seems
-> to be working perfectly.
+The mutex is released on a successful return, so it would seem that it
+should be released on an error return as well.
 
-Cool.
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-> How comfortable to you feel about your patch? :)
+// <smpl>
+@@
+expression l;
+@@
 
-I think it should be okay (well, of course :-) and tested a few corner
-cases by modifying the copy function.
+mutex_lock(l);
+... when != mutex_unlock(l)
+    when any
+    when strict
+(
+if (...) { ... when != mutex_unlock(l)
++   mutex_unlock(l);
+    return ...;
+}
+|
+mutex_unlock(l);
+)
+// </smpl>
 
-> This fixes a big problem in the sdhci driver where falling back on PIO
-> (because of hw DMA bugs) would create lots of potential issues as the
-> driver couldn't access highmem pages. I'd like to get this fix in for
-> 2.6.27, which means that your patch also needs to go in now.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-I think it needs an ACK from Jens.  Jens?
-
--- 
-tejun
+---
+diff -u -p a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1760,6 +1760,7 @@ static void scsi_finish_async_scan(struc
+ 		printk("%s called twice for host %d", __FUNCTION__,
+ 				shost->host_no);
+ 		dump_stack();
++		mutex_unlock(&shost->scan_mutex);
+ 		return;
+ 	}
+ 
