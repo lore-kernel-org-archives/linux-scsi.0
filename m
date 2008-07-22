@@ -1,63 +1,42 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: nr_pages calculation in scsi_req_map_sg()
-Date: Tue, 22 Jul 2008 18:11:56 +0300
-Message-ID: <4885F8BC.8060108@panasas.com>
-References: <4885F22C.76E4.0078.0@novell.com> <4885E095.3080903@panasas.com> <48860C90.76E4.0078.0@novell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] scsi_lib: use blk_rq_tagged in scsi_request_fn
+Date: Tue, 22 Jul 2008 15:34:38 -0500
+Message-ID: <1216758878-4358-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31694 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750770AbYGVPMR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2008 11:12:17 -0400
-In-Reply-To: <48860C90.76E4.0078.0@novell.com>
+Received: from mx1.redhat.com ([66.187.233.31]:35570 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751394AbYGVUem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jul 2008 16:34:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Beulich <jbeulich@novell.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-Jan Beulich wrote:
->>>> Boaz Harrosh <bharrosh@panasas.com> 22.07.08 15:28 >>>
->> Jan Beulich wrote:
->>> James,
->>>
->>> while reviewing code derived from that function I found this calculation
->>> to be suspicious: I would think that it should get it wrong when both
->>> start and end of the buffer area are misaligned (e.g. consider the case
->>> where sgl->offset equals PAGE_SIZE-1 and bufflen equals 2 - the result
->>> would be 1 when it should have been 2).
->>> Is there something preventing this from happening?
->>>
->>> Thanks, Jan
->>>
->>> --
->> It has been discussed before for example look here:
->> http://www.spinics.net/lists/linux-scsi/msg13454.html 
->>
->> But for me the main reason it is not fixed is because
->> this is only called from scsi_execute_async() which
->> is a deprecated function. It is still used by old code
->> which is supposed to be removed soon. Any new code will
->> not be accepted if it uses scsi_execute_async().
-> 
-> No, that's a different issue: Even if the sg elements are all contiguous,
-> the count can be wrong, as described in the original mail. And as said,
-> I found this in code cloned from scsi_req_map_sg(), hence would be
-> interested in confirmation of that fact (or explanation why it's not an
-> issue) regardless of the function itself sitting in a to-be-removed code
-> path only.
-> 
-> Thanks, Jan
-> 
-lets write it like this:
-nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) / PAGE_SIZE;
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-now you say:
-nr_pages = (2 + (PAGE_SIZE-1) + PAGE_SIZE - 1) / PAGE_SIZE;
+I goofed and did not see the macro for checking if a request is tagged.
+This patch has us use blk_rq_tagged instead of digging into the req->tag.
 
-which is (PAGE_SIZE + PAGE_SIZE) / PAGE_SIZE; No?
+Patch was made over scsi-misc.
 
-What am I missing?
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/scsi_lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Boaz
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a20730c..6d62be6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1533,7 +1533,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * we add the dev to the starved list so it eventually gets
+ 		 * a run when a tag is freed.
+ 		 */
+-		if (blk_queue_tagged(q) && (req->tag == -1)) {
++		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
+ 			if (list_empty(&sdev->starved_entry))
+ 				list_add_tail(&sdev->starved_entry,
+ 					      &shost->starved_list);
+-- 
+1.5.4.1
+
