@@ -1,22 +1,24 @@
 From: "adam radford" <aradford@gmail.com>
 Subject: [PATCH 1/1] 3ware add MSI support
-Date: Tue, 22 Jul 2008 16:36:32 -0700
-Message-ID: <b1bc6a000807221636s2c5ef1faj6ed0c375a14ee995@mail.gmail.com>
+Date: Tue, 22 Jul 2008 16:47:40 -0700
+Message-ID: <b1bc6a000807221647s6faefb0eo9ffe946e4b0d2589@mail.gmail.com>
+References: <b1bc6a000807221636s2c5ef1faj6ed0c375a14ee995@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_113608_4663519.1216769792354"
+	boundary="----=_Part_113660_1063474.1216770460048"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:51440 "EHLO
+Received: from rv-out-0506.google.com ([209.85.198.238]:59327 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758650AbYGVXgd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2008 19:36:33 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2108267rvb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2008 16:36:32 -0700 (PDT)
+	with ESMTP id S1753213AbYGVXrk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2008 19:47:40 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2112571rvb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2008 16:47:40 -0700 (PDT)
+In-Reply-To: <b1bc6a000807221636s2c5ef1faj6ed0c375a14ee995@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-------=_Part_113608_4663519.1216769792354
+------=_Part_113660_1063474.1216770460048
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
@@ -41,21 +43,22 @@ Note: This patch is included in-line below and also as an attachment
 in case Gmail hoses the patch.
 
 diff -Naur scsi-misc/drivers/scsi/3w-9xxx.c scsi-misc.new/drivers/scsi/3w-9xxx.c
---- scsi-misc/drivers/scsi/3w-9xxx.c	2008-07-22 15:00:10.000000000 -0700
-+++ scsi-misc.new/drivers/scsi/3w-9xxx.c	2008-07-22 15:14:34.000000000 -0700
+--- scsi-misc/drivers/scsi/3w-9xxx.c    2008-07-22 15:00:10.000000000 -0700
++++ scsi-misc.new/drivers/scsi/3w-9xxx.c        2008-07-22
+15:14:34.000000000 -0700
 @@ -4,7 +4,7 @@
-    Written By: Adam Radford <linuxraid@amcc.com>
-    Modifications By: Tom Couch <linuxraid@amcc.com>
+   Written By: Adam Radford <linuxraid@amcc.com>
+   Modifications By: Tom Couch <linuxraid@amcc.com>
 
 -   Copyright (C) 2004-2007 Applied Micro Circuits Corporation.
 +   Copyright (C) 2004-2008 Applied Micro Circuits Corporation.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
 @@ -71,6 +71,10 @@
-                  Add support for 9650SE controllers.
-    2.26.02.009 - Fix dma mask setting to fallback to 32-bit if 64-bit fails.
-    2.26.02.010 - Add support for 9690SA controllers.
+                 Add support for 9650SE controllers.
+   2.26.02.009 - Fix dma mask setting to fallback to 32-bit if 64-bit fails.
+   2.26.02.010 - Add support for 9690SA controllers.
 +   2.26.02.011 - Increase max AENs drained to 256.
 +                 Add MSI support and "use_msi" module parameter.
 +                 Fix bug in twa_get_param() on 4GB+.
@@ -85,112 +88,115 @@ diff -Naur scsi-misc/drivers/scsi/3w-9xxx.c scsi-misc.new/drivers/scsi/3w-9xxx.c
 TW_Command_Apache_Header *header);
  static int twa_aen_read_queue(TW_Device_Extension *tw_dev, int request_id);
 @@ -1038,7 +1046,6 @@
- 	TW_Command_Full *full_command_packet;
- 	TW_Command *command_packet;
- 	TW_Param_Apache *param;
--	unsigned long param_value;
- 	void *retval = NULL;
+       TW_Command_Full *full_command_packet;
+       TW_Command *command_packet;
+       TW_Param_Apache *param;
+-       unsigned long param_value;
+       void *retval = NULL;
 
- 	/* Setup the command packet */
+       /* Setup the command packet */
 @@ -1057,9 +1064,8 @@
- 	param->table_id = cpu_to_le16(table_id | 0x8000);
- 	param->parameter_id = cpu_to_le16(parameter_id);
- 	param->parameter_size_bytes = cpu_to_le16(parameter_size_bytes);
--	param_value = tw_dev->generic_buffer_phys[request_id];
+       param->table_id = cpu_to_le16(table_id | 0x8000);
+       param->parameter_id = cpu_to_le16(parameter_id);
+       param->parameter_size_bytes = cpu_to_le16(parameter_size_bytes);
+-       param_value = tw_dev->generic_buffer_phys[request_id];
 
--	command_packet->byte8_offset.param.sgl[0].address =
+-       command_packet->byte8_offset.param.sgl[0].address =
 TW_CPU_TO_SGL(param_value);
-+	command_packet->byte8_offset.param.sgl[0].address =
++       command_packet->byte8_offset.param.sgl[0].address =
 TW_CPU_TO_SGL(tw_dev->generic_buffer_phys[request_id]);
- 	command_packet->byte8_offset.param.sgl[0].length =
+       command_packet->byte8_offset.param.sgl[0].length =
 cpu_to_le32(TW_SECTOR_SIZE);
 
- 	/* Post the command packet to the board */
+       /* Post the command packet to the board */
 @@ -2000,7 +2006,7 @@
  {
- 	struct Scsi_Host *host = NULL;
- 	TW_Device_Extension *tw_dev;
--	u32 mem_addr;
-+	unsigned long mem_addr, mem_len;
- 	int retval = -ENODEV;
+       struct Scsi_Host *host = NULL;
+       TW_Device_Extension *tw_dev;
+-       u32 mem_addr;
++       unsigned long mem_addr, mem_len;
+       int retval = -ENODEV;
 
- 	retval = pci_enable_device(pdev);
+       retval = pci_enable_device(pdev);
 @@ -2045,13 +2051,16 @@
- 		goto out_free_device_extension;
- 	}
+               goto out_free_device_extension;
+       }
 
--	if (pdev->device == PCI_DEVICE_ID_3WARE_9000)
-+	if (pdev->device == PCI_DEVICE_ID_3WARE_9000) {
- 		mem_addr = pci_resource_start(pdev, 1);
--	else
-+		mem_len = pci_resource_len(pdev, 1);
-+	} else {
- 		mem_addr = pci_resource_start(pdev, 2);
-+		mem_len = pci_resource_len(pdev, 2);
-+	}
+-       if (pdev->device == PCI_DEVICE_ID_3WARE_9000)
++       if (pdev->device == PCI_DEVICE_ID_3WARE_9000) {
+               mem_addr = pci_resource_start(pdev, 1);
+-       else
++               mem_len = pci_resource_len(pdev, 1);
++       } else {
+               mem_addr = pci_resource_start(pdev, 2);
++               mem_len = pci_resource_len(pdev, 2);
++       }
 
- 	/* Save base address */
--	tw_dev->base_addr = ioremap(mem_addr, PAGE_SIZE);
-+	tw_dev->base_addr = ioremap(mem_addr, mem_len);
- 	if (!tw_dev->base_addr) {
- 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
- 		goto out_release_mem_region;
+       /* Save base address */
+-       tw_dev->base_addr = ioremap(mem_addr, PAGE_SIZE);
++       tw_dev->base_addr = ioremap(mem_addr, mem_len);
+       if (!tw_dev->base_addr) {
+               TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
+               goto out_release_mem_region;
 @@ -2086,7 +2095,7 @@
 
- 	pci_set_drvdata(pdev, host);
+       pci_set_drvdata(pdev, host);
 
--	printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage
+-       printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage
 Controller at 0x%x, IRQ: %d.\n",
-+	printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage
++       printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage
 Controller at 0x%lx, IRQ: %d.\n",
- 	       host->host_no, mem_addr, pdev->irq);
- 	printk(KERN_WARNING "3w-9xxx: scsi%d: Firmware %s, BIOS %s, Ports: %d.\n",
- 	       host->host_no,
+              host->host_no, mem_addr, pdev->irq);
+       printk(KERN_WARNING "3w-9xxx: scsi%d: Firmware %s, BIOS %s,
+Ports: %d.\n",
+              host->host_no,
 @@ -2097,6 +2106,11 @@
- 	       le32_to_cpu(*(int *)twa_get_param(tw_dev, 2, TW_INFORMATION_TABLE,
- 				     TW_PARAM_PORTCOUNT, TW_PARAM_PORTCOUNT_LENGTH)));
+              le32_to_cpu(*(int *)twa_get_param(tw_dev, 2, TW_INFORMATION_TABLE,
+                                    TW_PARAM_PORTCOUNT,
+TW_PARAM_PORTCOUNT_LENGTH)));
 
-+	/* Try to enable MSI */
-+	if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
-+	    !pci_enable_msi(pdev))
-+		set_bit(TW_USING_MSI, &tw_dev->flags);
++       /* Try to enable MSI */
++       if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
++           !pci_enable_msi(pdev))
++               set_bit(TW_USING_MSI, &tw_dev->flags);
 +
- 	/* Now setup the interrupt handler */
- 	retval = request_irq(pdev->irq, twa_interrupt, IRQF_SHARED,
+       /* Now setup the interrupt handler */
+       retval = request_irq(pdev->irq, twa_interrupt, IRQF_SHARED,
 "3w-9xxx", tw_dev);
- 	if (retval) {
+       if (retval) {
 @@ -2120,6 +2134,8 @@
- 	return 0;
+       return 0;
 
  out_remove_host:
-+	if (test_bit(TW_USING_MSI, &tw_dev->flags))
-+		pci_disable_msi(pdev);
- 	scsi_remove_host(host);
++       if (test_bit(TW_USING_MSI, &tw_dev->flags))
++               pci_disable_msi(pdev);
+       scsi_remove_host(host);
  out_iounmap:
- 	iounmap(tw_dev->base_addr);
+       iounmap(tw_dev->base_addr);
 @@ -2151,6 +2167,10 @@
- 	/* Shutdown the card */
- 	__twa_shutdown(tw_dev);
+       /* Shutdown the card */
+       __twa_shutdown(tw_dev);
 
-+	/* Disable MSI if enabled */
-+	if (test_bit(TW_USING_MSI, &tw_dev->flags))
-+		pci_disable_msi(pdev);
++       /* Disable MSI if enabled */
++       if (test_bit(TW_USING_MSI, &tw_dev->flags))
++               pci_disable_msi(pdev);
 +
- 	/* Free IO remapping */
- 	iounmap(tw_dev->base_addr);
+       /* Free IO remapping */
+       iounmap(tw_dev->base_addr);
 
 diff -Naur scsi-misc/drivers/scsi/3w-9xxx.h scsi-misc.new/drivers/scsi/3w-9xxx.h
---- scsi-misc/drivers/scsi/3w-9xxx.h	2008-07-13 14:51:29.000000000 -0700
-+++ scsi-misc.new/drivers/scsi/3w-9xxx.h	2008-07-22 15:14:35.000000000 -0700
+--- scsi-misc/drivers/scsi/3w-9xxx.h    2008-07-13 14:51:29.000000000 -0700
++++ scsi-misc.new/drivers/scsi/3w-9xxx.h        2008-07-22
+15:14:35.000000000 -0700
 @@ -4,7 +4,7 @@
-    Written By: Adam Radford <linuxraid@amcc.com>
-    Modifications By: Tom Couch <linuxraid@amcc.com>
+   Written By: Adam Radford <linuxraid@amcc.com>
+   Modifications By: Tom Couch <linuxraid@amcc.com>
 
 -   Copyright (C) 2004-2007 Applied Micro Circuits Corporation.
 +   Copyright (C) 2004-2008 Applied Micro Circuits Corporation.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
 @@ -319,8 +319,8 @@
 
  /* Compatibility defines */
@@ -203,18 +209,18 @@ diff -Naur scsi-misc/drivers/scsi/3w-9xxx.h scsi-misc.new/drivers/scsi/3w-9xxx.h
 
  /* Phase defines */
 @@ -352,8 +352,9 @@
- #define TW_MAX_RESET_TRIES		      2
- #define TW_MAX_CMDS_PER_LUN		      254
- #define TW_MAX_RESPONSE_DRAIN		      256
--#define TW_MAX_AEN_DRAIN		      40
-+#define TW_MAX_AEN_DRAIN		      255
+ #define TW_MAX_RESET_TRIES                   2
+ #define TW_MAX_CMDS_PER_LUN                  254
+ #define TW_MAX_RESPONSE_DRAIN                256
+-#define TW_MAX_AEN_DRAIN                     40
++#define TW_MAX_AEN_DRAIN                     255
  #define TW_IN_RESET                           2
-+#define TW_USING_MSI			      3
- #define TW_IN_ATTENTION_LOOP		      4
++#define TW_USING_MSI                         3
+ #define TW_IN_ATTENTION_LOOP                 4
  #define TW_MAX_SECTORS                        256
  #define TW_AEN_WAIT_TIME                      1000
 
-------=_Part_113608_4663519.1216769792354
+------=_Part_113660_1063474.1216770460048
 Content-Type: text/x-patch; name=3ware_2.6.26-git10.patch
 Content-Transfer-Encoding: base64
 X-Attachment-Id: f_fiz3hz790
@@ -326,4 +332,4 @@ ZmluZSBUV19JTl9SRVNFVCAgICAgICAgICAgICAgICAgICAgICAgICAgIDIKKyNkZWZpbmUgVFdf
 VVNJTkdfTVNJCQkJICAgICAgMwogI2RlZmluZSBUV19JTl9BVFRFTlRJT05fTE9PUAkJICAgICAg
 NAogI2RlZmluZSBUV19NQVhfU0VDVE9SUyAgICAgICAgICAgICAgICAgICAgICAgIDI1NgogI2Rl
 ZmluZSBUV19BRU5fV0FJVF9USU1FICAgICAgICAgICAgICAgICAgICAgIDEwMDAK
-------=_Part_113608_4663519.1216769792354--
+------=_Part_113660_1063474.1216770460048--
