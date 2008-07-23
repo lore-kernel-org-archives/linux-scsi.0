@@ -1,93 +1,111 @@
-From: Christophe Varoqui <christophe.varoqui@free.fr>
-Subject: Re: persistent reservation behaviour with dm-multipath
-Date: Wed, 23 Jul 2008 23:09:44 +0200
-Message-ID: <1216847384.9122.15.camel@plop>
-References: <1216457992.7364.15.camel@plop>  <48879489.6060401@torque.net>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH] scsi: sd_dif.c use unaligned access helpers
+Date: Wed, 23 Jul 2008 16:07:40 -0700
+Message-ID: <1216854460.30386.32.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix1-g20.free.fr ([212.27.60.42]:43797 "EHLO
-	postfix1-g20.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754586AbYGWVKq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2008 17:10:46 -0400
-Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
-	by postfix1-g20.free.fr (Postfix) with ESMTP id 5C7AD2890589
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2008 23:10:45 +0200 (CEST)
-In-Reply-To: <48879489.6060401@torque.net>
+Received: from yx-out-2324.google.com ([74.125.44.29]:12689 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570AbYGWXHs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2008 19:07:48 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so477836yxm.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2008 16:07:46 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Le mercredi 23 juillet 2008 =C3=A0 16:28 -0400, Douglas Gilbert a =C3=A9=
-crit :
-> Christophe Varoqui wrote:
-> > The current dm-multipath behaviour is currently a potent data corru=
-pter
-> > on Persistant Reservation-based clusters sharing multipaths with th=
-e
-> > queue_if_no_path feature on (Clariion, Storageworks, ...).
-> >=20
-> > Consider the following scenario :
-> >=20
-> > - Node A take a write-exclusive persistent reservation on LU
-> > - Node B submits a write io to LU, which is a sda-sdb multipath
-> > =EF=BB=BF- B dm_multipath routes the wio to sda, the wio is failed,=
- the path is
-> > marked failed
-> > =EF=BB=BF- B dm_multipath routes the wio to sdb, the wio is failed,=
- the last
-> > path is marked failed
-> > - B queues the wio because of the queue_if_no_path feature. Process
-> > submitting the wio is stuck in D-state.
-> > - A releases the reservation. Queued wios are unqueued, corrupting =
-the
-> > data on LU.
-> >=20
-> > I suspect wio returning a "reservation conflict" status should neve=
-r be
-> > queued.
-> >=20
-> > DM suspend/resume on the multipath devmap effectively flushes the q=
-ueue,
-> > but this solution leaves a window open for data corruption, between=
- io
-> > enqueue and user-space driven queue flush.
-> >=20
-> > Is there work in progress to address this issue yet ? What's would =
-be an
-> > acceptable solution design (for example Mike Christie suggested in =
-Aug
-> > 2005 a scsi-to-blk error translation patch, which got nowhere) ?
-> y of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-> If memory serves, a SCSI command status of RESERVATION
-> CONFLICT did not find its way back to the sg driver API
-> (and/or the command was retried). Is that still the case?
->=20
-As far as I can tell, the scsi subsystem alone behaves as expected : a
-wio on a reserved-by-other scsi device gets errored nicely : no retry, =
-a
-clean message indicating the wio error cause in the dmesg.
+This code should be looked at carefully, while this patch doesn't
+change any behaviour, the handling of app_tag, ref_tag seems odd.
+The struct defines both as __be16/32 but in these locations it is
+read in/written out as cpu-byteorder.
 
-The device-mapper multipath target, on the other hand, can be configure=
-d
-to queue ios errored by the scsi layer. Which is a desirable behaviour
-when we know we face a transcient all-paths-down situation (like a LU
-tresspass on a Clariion controller pair), but which is not so smart we
-the io was errored due to a reservation conflict.
+It looks like they should actually be u16/u32.
 
-The problem here is how the scsi layer can instruct the multipath dm
-driver not to queue an errored io. This is what Mike's patch tied to
-address.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/scsi/sd_dif.c |   26 ++++++++------------------
+ 1 files changed, 8 insertions(+), 18 deletions(-)
 
-Regards,
-cvaroqui
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 4d17f3d..e54711e 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -22,6 +22,7 @@
+ 
+ #include <linux/blkdev.h>
+ #include <linux/crc-t10dif.h>
++#include <asm/unaligned.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -142,11 +143,10 @@ static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
+ static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
+ {
+ 	struct sd_dif_tuple *sdt = prot;
+-	char *tag = tag_buf;
+ 	unsigned int i, j;
+ 
+ 	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		sdt->app_tag = tag[j] << 8 | tag[j+1];
++		sdt->app_tag = get_unaligned_be16(tag_buf + j);
+ 		BUG_ON(sdt->app_tag == 0xffff);
+ 	}
+ }
+@@ -154,13 +154,10 @@ static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors
+ static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
+ {
+ 	struct sd_dif_tuple *sdt = prot;
+-	char *tag = tag_buf;
+ 	unsigned int i, j;
+ 
+-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		tag[j] = (sdt->app_tag & 0xff00) >> 8;
+-		tag[j+1] = sdt->app_tag & 0xff;
+-	}
++	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++)
++		put_unaligned_be16(sdt->app_tag, tag_buf + j);
+ }
+ 
+ static struct blk_integrity dif_type1_integrity_crc = {
+@@ -256,29 +253,22 @@ static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
+ static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
+ {
+ 	struct sd_dif_tuple *sdt = prot;
+-	char *tag = tag_buf;
+ 	unsigned int i, j;
+ 
+ 	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
+-		sdt->app_tag = tag[j] << 8 | tag[j+1];
+-		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
+-			tag[j+4] << 8 | tag[j+5];
++		sdt->app_tag = get_unaligned_be16(tag_buf + j);
++		sdt->ref_tag = get_unaligned_be32(tag_buf + 2 + j);
+ 	}
+ }
+ 
+ static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
+ {
+ 	struct sd_dif_tuple *sdt = prot;
+-	char *tag = tag_buf;
+ 	unsigned int i, j;
+ 
+ 	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		tag[j] = (sdt->app_tag & 0xff00) >> 8;
+-		tag[j+1] = sdt->app_tag & 0xff;
+-		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
+-		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
+-		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
+-		tag[j+5] = sdt->ref_tag & 0xff;
++		put_unaligned_be16(sdt->app_tag, tag_buf + j);
++		put_unaligned_be32(sdt->ref_tag, tag_buf + 2 + j);
+ 		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
+ 	}
+ }
+-- 
+1.5.6.4.570.g052e
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
