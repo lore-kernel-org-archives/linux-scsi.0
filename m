@@ -1,72 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] 3ware add MSI support
-Date: Wed, 23 Jul 2008 08:05:23 -0400
-Message-ID: <1216814723.3557.7.camel@localhost.localdomain>
-References: <b1bc6a000807221636s2c5ef1faj6ed0c375a14ee995@mail.gmail.com>
-	 <20080723014745.GH7337@parisc-linux.org>
-	 <1216813629.3557.3.camel@localhost.localdomain>
-	 <48871D04.8070601@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC PATCH] HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Wed, 23 Jul 2008 22:46:49 +0900
+Message-ID: <20080723224432G.tomof@acm.org>
+References: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp>
+	<48858611.8020401@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <48871D04.8070601@panasas.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754328AbYGWNrc@vger.kernel.org>
+In-Reply-To: <48858611.8020401@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.de
+Cc: fujita.tomonori@lab.ntt.co.jp, mike.miller@hp.com, James.Bottomley@HansenPartnership.com, Jens.Axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2008-07-23 at 14:59 +0300, Boaz Harrosh wrote:
-> James Bottomley wrote:
-> > On Tue, 2008-07-22 at 19:47 -0600, Matthew Wilcox wrote:
-> >> On Tue, Jul 22, 2008 at 04:36:32PM -0700, adam radford wrote:
-> >>> This patch for the 3w-9xxx scsi driver applies on top of the
-> >>> BKL-pushdown changes in -git9.
-> >>>
-> >>> This patch does the following:
-> >>>
-> >>> - Increase max AENs drained to 256.
-> >>> - Add MSI support and "use_msi" module parameter.
-> >>> - Fix bug in twa_get_param() on 4GB+.
-> >>> - Use pci_resource_len() for ioremap().
-> >> Is there a reason you default use_msi to off?  I would have thought
-> >> you'd want to enable it as widely as possible.
+On Tue, 22 Jul 2008 09:02:41 +0200
+Hannes Reinecke <hare@suse.de> wrote:
+
+> > There isn't any easy migration path for users. So I think that we need
+> > to keep the block and scsi drivers for cciss for some time (say two
+> > years).
 > > 
-> > Hardly ... just look at our LSI fiasco with globally enabling them.
+> > My scsi driver is still in an early stage (I tried to keep the changes
+> > minimum). I can detect logical units, mount a file system, do lots of
+> > I/Os, however, there are lots of TODOs in the management features.
 > > 
-> > Right at the moment, due to motherboard bugs, it looks like global
-> > enabling of MSI by default would produce a significant increase in "my
-> > system doesn't boot" type bugs.
+> > If I can get an ACK from HP about the long-term migration of cciss to
+> > SCSI, I'm happy to keep working on the SCSI cciss driver and maintain
+> > it until HP takes over the driver.
 > > 
-> > I asked Jesse if we could actually get better recognition of
-> > motherboards with MSI problems in pci/quirks.c to forestall some of
-> > this, but it seems to be a hard problem.  I've cc'd the PCI list in case
-> > they have better suggestions.
-> > 
-> > James
-> > 
+> First of all, thanks, Tomo, for doing this.
+> It's been on my to-do list for about as long as I started looking on
+> the cciss code. However, some thoughts:
 > 
-> This seems to be a general problem. Maybe there should be an LSI_SYSTEM_DEFAULT
-> kind of parameter or function, that will enable LSI if it is default for the
-> system on all supporting drivers. This way a user can configure LSI=on for all
-> drivers in one place instead of configuring each driver individually.
+> - Having cciss using the SCSI infrastructure is indeed far more logical.
+>   Although it looks as if it doesn't support the SCSI spec in full
+>   (ie no conformity claimed in the INQUIRY data) it certainly implements
+>   quite a large subset.
 
-There is ... it's the mpt_msi_enable parameter.  It defaults to off for
-SPI and FC and on for SAS.  When questioned (mainly because I have a
-working MSI SPI controller), LSI admitted it was because SPI was most
-likely to be installed in an older motherboard with some type of MSI
-failure (which gets blamed on the SCSI driver because it causes a boot
-failure).
-
-If you mean a general msi enable/disable; then again we sort of have it
-in PCI; it's pci=nomsi (without this, PCI will enable msi if at all
-possible).
-
-I'd love to toss out the one per driver msi enable/disable parameters,
-but until we can sort out recognition of the bad MSI motherboards
-reliably we're a bit stuck.
-
-James
+I'm not sure about this. The ciss spec says that the controllers
+support mandatory SCSI commands. About INQUIRY data, at least, debian
+udev rules nicely created symbolic links under /dev/disk/by-id/.
 
 
-James
+> - The error handling in the SCSI infrastructure is far better structured
+>   as that one in the existing cciss driver, so the SCSI driver would
+>   benefit from this.
+
+Agreed, this is an area that we can improve greatly with the scsi
+infrastructure, I think.
+
+
+> - Nevertheless, the cciss driver and the corresponding sysfs / device node
+>   layout has become the de-facto standard over the years and it will be
+>   _hard_ to change that.
+> 
+> - However, given that the sysfs information from the cciss driver is quite
+>   rudimentary I doubt if anyone will indeed notice if the _internal_ driver
+>   is a SCSI or a block level driver, as long as the _external_ interface
+>   (ioctl, device-node layout etc) stays the same.
+> 
+> Having said that I think this is the direction it should take:
+> 
+> - Split the existing cciss driver in two parts, one part for the
+>   block-level interface and one for the lower-level device handling bits.
+> - Redo the patch based on that, so that existing code can be shared
+>   (and fixes there would be included in both drivers).
+> - Add some hooks/safeguards so that only _one_ interface driver can
+>   be loaded.
+> 
+> This way we would be able keep the existing functionality and allow
+> users to play around with the new driver.
+> Long-term we can start moving the driver itself to SCSI, and keeping
+> the existing cciss block interface only as a wrapper which adjusts
+> the major:minor numbers; the device-node layout can be handled by udev.
+
+Agreed about keeping the existing interfaces (changing only the
+internal implementation, which users don't care about). I thought
+about the similar things (tricks like ide-scsi does) during writing a
+patch but also thought that udev rules can do the similar jobs, as
+James pointed out. And seems that udev rules nicely works.
