@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 05/14] libosd: attributes Support
-Date: Thu, 24 Jul 2008 20:51:47 +0300
-Message-ID: <4888C133.2070707@panasas.com>
+Subject: [RFC 06/14] osd_ktests: Test Attribute lists
+Date: Thu, 24 Jul 2008 20:53:15 +0300
+Message-ID: <4888C18B.1080701@panasas.com>
 References: <48876009.8010701@panasas.com> <4888BC3B.1050406@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:23961 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11349 "EHLO
 	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751842AbYGXRwo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 13:52:44 -0400
+	with ESMTP id S1752126AbYGXRyC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 13:54:02 -0400
 In-Reply-To: <4888BC3B.1050406@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,967 +18,285 @@ To: open-osd development <osd-dev@open-osd.org>
 Cc: Benny Halevy <bhalevy@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Pete Wyckoff <pw@osc.edu>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-Support for both List-Mode and Page-Mode osd attributes. One of these operations
-may be added to most other operations.
+Add tests for setting/getting Attribute lists. All combinations of read/write
+with set/get attributes are tested. (6 possibilities), So all but data integrity
+request structure layouts are attempted.
 
-Define the OSD standard's attribute pages constants and structures
-(osd_attributes.h)
+This test passes against the IBM-OSD-SIM OSDv1 target.
+(Except retrival of SYSTEM_ID attribute, which is a bug of the IBM target)
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Reviewed-by: Benny Halevy <bhalevy@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |  569 ++++++++++++++++++++++++++++++++++++++
- include/scsi/osd_attributes.h    |  322 +++++++++++++++++++++
- 2 files changed, 891 insertions(+), 0 deletions(-)
- create mode 100644 include/scsi/osd_attributes.h
+ drivers/scsi/osd/osd_ktests.c |  220 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 220 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index a1daded..f10f21e 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -65,6 +65,50 @@ static unsigned _osd_req_cdb_len(struct osd_request *or)
- 	return OSDv1_TOTAL_CDB_LEN;
- }
+diff --git a/drivers/scsi/osd/osd_ktests.c b/drivers/scsi/osd/osd_ktests.c
+index 98dd67d..3186fc8 100644
+--- a/drivers/scsi/osd/osd_ktests.c
++++ b/drivers/scsi/osd/osd_ktests.c
+@@ -39,8 +39,11 @@
+  */
+ #include <scsi/osd_initiator.h>
+ #include <scsi/osd_sec.h>
++#include "scsi/osd_attributes.h"
++
+ #include "osd_debug.h"
  
-+static unsigned _osd_req_alist_elem_size(struct osd_request *or, unsigned len)
++#include <asm/unaligned.h>
+ #include <linux/vmalloc.h>
+ #include <scsi/scsi_device.h>
+ 
+@@ -91,6 +94,111 @@ int test_exec(struct osd_request *or, void *caps, const struct osd_obj_id *obj)
+ 	OSD_DEBUG(msg "\n"); \
+ } while (0)
+ 
++#define ATTR_SDEF(pg, id, l, ptr) \
++	{ .page = pg, .attr_id = id, .len = l, .val_ptr = ptr }
++
++#define ATTR_DEF(pg, id, l) ATTR_SDEF(pg, id, l, NULL)
++
++#define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
++
++int ktest_read_system_info(struct osd_dev *osd_dev)
 +{
-+	return osdv1_attr_list_elem_size(len);
-+}
++	struct osd_request *or;
++	char g_caps[OSD_CAP_LEN];
++	struct osd_attr get_attrs[] = {
++		ATTR_DEF_RI(OSD_ATTR_RI_VENDOR_IDENTIFICATION, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_IDENTIFICATION, 16),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_MODEL, 32),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_REVISION_LEVEL, 4),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER, 64 /*variable*/),
++		ATTR_DEF_RI(OSD_ATTR_RI_OSD_NAME, 64 /*variable*/),
++		ATTR_DEF_RI(OSD_ATTR_RI_TOTAL_CAPACITY, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_USED_CAPACITY, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_NUMBER_OF_PARTITIONS, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_CLOCK, 6),
++		/* IBM-OSD-SIM Has a bug with this one put it last */
++		ATTR_DEF_RI(OSD_ATTR_RI_OSD_SYSTEM_ID, 20),
++	};
++	void *iter = NULL, *pFirst;
++	int nelem = ARRAY_SIZE(get_attrs), a = 0;
++	int ret;
 +
-+static unsigned _osd_req_alist_size(struct osd_request *or, void *list_head)
-+{
-+	return osdv1_list_size(list_head);
-+}
++	KTEST_START_REQ(osd_dev, or);
 +
-+static unsigned _osd_req_sizeof_alist_header(struct osd_request *or)
-+{
-+	return sizeof(struct osdv1_attributes_list_header);
-+}
++	/* get attrs */
++	osd_req_get_attributes(or, &osd_root_object);
++	osd_req_add_get_attr_list(or, get_attrs, ARRAY_SIZE(get_attrs));
 +
-+static void _osd_req_set_alist_type(struct osd_request *or,
-+	void *list, int list_type)
-+{
-+	struct osdv1_attributes_list_header *attr_list = list;
-+
-+	memset(attr_list, 0, sizeof(*attr_list));
-+	attr_list->type = list_type;
-+}
-+
-+static bool _osd_req_is_alist_type(struct osd_request *or,
-+	void *list, int list_type)
-+{
-+	if (!list)
-+		return false;
-+
-+	if (1) {
-+		struct osdv1_attributes_list_header *attr_list = list;
-+
-+		return attr_list->type == list_type;
++	ret = test_exec(or, g_caps, &osd_root_object);
++	if (ret) {
++		OSD_ERR("Failed to detect %s => %d\n", "OSD1", ret);
++		goto out;
 +	}
++
++	osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
++
++	OSD_INFO("Detected %s device\n",
++		"OSD1");
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_VENDOR_IDENTIFICATION [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_IDENTIFICATION [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_MODEL [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_REVISION_LEVEL [%u]\n",
++		get_unaligned_be32(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_OSD_NAME(%d) [%x,%x,%x,%x,%x,%x,%x,%x]\n",
++		get_attrs[a].len,
++		((char *)pFirst)[0], ((char *)pFirst)[1],
++		((char *)pFirst)[2], ((char *)pFirst)[3],
++		((char *)pFirst)[4], ((char *)pFirst)[5],
++		((char *)pFirst)[6], ((char *)pFirst)[7]
++	);
++	a++;
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_TOTAL_CAPACITY [0x%llx]\n",
++		get_unaligned_be64(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_USED_CAPACITY [0x%llx]\n",
++		get_unaligned_be64(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_NUMBER_OF_PARTITIONS [%lld]\n",
++		get_unaligned_be64(pFirst));
++
++	/* FIXME: Where are the time utilities */
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_CLOCK [HEX%x%x%x%x%x%x]\n",
++		((char *)pFirst)[0], ((char *)pFirst)[1],
++		((char *)pFirst)[2], ((char *)pFirst)[3],
++		((char *)pFirst)[4], ((char *)pFirst)[5]);
++
++	if (a < nelem) { /* Might not have it */
++		pFirst = get_attrs[a++].val_ptr;
++		OSD_INFO("OSD_ATTR_RI_OSD_SYSTEM_ID [%s]\n",
++			(char *)pFirst);
++	}
++out:
++	osd_end_request(or);
++	return ret;
 +}
 +
-+static osd_cdb_offset osd_req_encode_offset(struct osd_request *or,
-+	u64 offset, unsigned *padding)
-+{
-+	return __osd_encode_offset(offset, padding,
-+				  OSDv1_OFFSET_MIN_SHIFT, OSD_OFFSET_MAX_SHIFT);
-+}
-+
- void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_dev)
+ int ktest_format(struct osd_dev *osd_dev)
  {
- 	/* FIXME: Take the device reference */
-@@ -130,10 +174,25 @@ static void _abort_unexecuted_bios(struct request *rq)
- 	}
+ 	struct osd_request *or;
+@@ -257,6 +365,91 @@ int ktest_remove_par(struct osd_dev *osd_dev)
+ 	return 0;
  }
  
-+static void _osd_free_seg(struct osd_request *or,
-+	struct _osd_req_data_segment *seg)
++int ktest_write_read_attr(struct osd_dev *osd_dev, void *buff,
++	bool doread, bool doset, bool doget)
 +{
-+	if (!seg->buff || !seg->alloc_size)
-+		return;
++	struct request_queue *req_q = osd_dev->scsi_dev->request_queue;
++	struct osd_request *or;
++	char g_caps[OSD_CAP_LEN];
++	int ret;
++	struct bio *bio;
++	char *domsg;
++	/* set attrs */
++	static char name[] = "ktest_write_read_attr";
++	__be64 max_len = cpu_to_be64(0x80000000L);
++	struct osd_obj_id obj = {
++		.partition = first_par_id,
++		.id = first_obj_id,
++	};
++	struct osd_attr set_attrs[] = {
++		ATTR_SDEF(OSD_APAGE_OBJECT_QUOTAS, OSD_ATTR_OQ_MAXIMUM_LENGTH,
++			sizeof(max_len), &max_len),
++		ATTR_SDEF(OSD_APAGE_OBJECT_INFORMATION, OSD_ATTR_OI_USERNAME,
++			sizeof(name), name),
++	};
++	struct osd_attr get_attrs[] = {
++		ATTR_DEF(OSD_APAGE_OBJECT_INFORMATION,
++			OSD_ATTR_OI_USED_CAPACITY, sizeof(__be64)),
++		ATTR_DEF(OSD_APAGE_OBJECT_INFORMATION,
++			OSD_ATTR_OI_LOGICAL_LENGTH, sizeof(__be64)),
++	};
 +
-+	kfree(seg->buff);
-+	seg->buff = NULL;
-+	seg->alloc_size = 0;
-+}
-+
- void osd_end_request(struct osd_request *or)
- {
- 	struct request *rq = or->request;
- 
-+	_osd_free_seg(or, &or->set_attr);
-+	_osd_free_seg(or, &or->enc_get_attr);
-+	_osd_free_seg(or, &or->get_attr);
-+
- 	if (rq) {
- 		if (rq->next_rq) {
- 			_abort_unexecuted_bios(rq->next_rq);
-@@ -153,6 +212,54 @@ int osd_execute_request(struct osd_request *or)
- }
- EXPORT_SYMBOL(osd_execute_request);
- 
-+u8 sg_out_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
-+u8 sg_in_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
-+
-+static int _osd_realloc_seg(struct osd_request *or,
-+	struct _osd_req_data_segment *seg, unsigned max_bytes)
-+{
-+	void *buff;
-+
-+	if (seg->alloc_size >= max_bytes)
-+		return 0;
-+
-+	buff = krealloc(seg->buff, max_bytes, or->alloc_flags);
-+	if (!buff) {
-+		OSD_ERR("Failed to Realloc %d-bytes was-%d\n", max_bytes,
-+			seg->alloc_size);
++	KTEST_START_REQ(osd_dev, or);
++	bio = bio_map_kern(req_q, buff, BUFF_SIZE, GFP_KERNEL);
++	if (!bio) {
++		OSD_ERR("!!! Failed to allocate BIO\n");
 +		return -ENOMEM;
 +	}
 +
-+	memset(buff + seg->alloc_size, 0, max_bytes - seg->alloc_size);
-+	seg->buff = buff;
-+	seg->alloc_size = max_bytes;
-+	return 0;
-+}
-+
-+static int _alloc_set_attr_list(struct osd_request *or,
-+	const struct osd_attr *oa, unsigned nelem, unsigned add_bytes)
-+{
-+	unsigned total_bytes = add_bytes;
-+
-+	for (; nelem; --nelem, ++oa)
-+		total_bytes += _osd_req_alist_elem_size(or, oa->len);
-+
-+	OSD_DEBUG("total_bytes=%d\n", total_bytes);
-+	return _osd_realloc_seg(or, &or->set_attr, total_bytes);
-+}
-+
-+static int _alloc_get_attr_desc(struct osd_request *or, unsigned max_bytes)
-+{
-+	OSD_DEBUG("total_bytes=%d\n", max_bytes);
-+	return _osd_realloc_seg(or, &or->enc_get_attr, max_bytes);
-+}
-+
-+static int _alloc_get_attr_list(struct osd_request *or)
-+{
-+	OSD_DEBUG("total_bytes=%d\n", or->get_attr.total_bytes);
-+	return _osd_realloc_seg(or, &or->get_attr, or->get_attr.total_bytes);
-+}
-+
- /*
-  * Common to all OSD commands
-  */
-@@ -261,6 +368,409 @@ void osd_req_read(struct osd_request *or,
- }
- EXPORT_SYMBOL(osd_req_read);
- 
-+void osd_req_get_attributes(struct osd_request *or,
-+	const struct osd_obj_id *obj)
-+{
-+	_osd_req_encode_common(or, OSD_ACT_GET_ATTRIBUTES, obj, 0, 0);
-+}
-+EXPORT_SYMBOL(osd_req_get_attributes);
-+
-+void osd_req_set_attributes(struct osd_request *or,
-+	const struct osd_obj_id *obj)
-+{
-+	_osd_req_encode_common(or, OSD_ACT_SET_ATTRIBUTES, obj, 0, 0);
-+}
-+EXPORT_SYMBOL(osd_req_set_attributes);
-+
-+/*
-+ * Attributes List-mode
-+ */
-+
-+int osd_req_add_set_attr_list(struct osd_request *or,
-+	const struct osd_attr *oa, unsigned nelem)
-+{
-+	unsigned total_bytes = or->set_attr.total_bytes;
-+	void *attr_last;
-+	int ret;
-+
-+	if (or->attributes_mode &&
-+	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
-+
-+	if (!total_bytes) { /* first-time: allocate and put list header */
-+		total_bytes = _osd_req_sizeof_alist_header(or);
-+		ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
-+		if (ret)
-+			return ret;
-+		_osd_req_set_alist_type(or, or->set_attr.buff,
-+					OSD_ATTR_LIST_SET_RETRIEVE);
-+	}
-+	attr_last = or->set_attr.buff + total_bytes;
-+
-+	for (; nelem; --nelem) {
-+		struct osd_attributes_list_element *attr;
-+		unsigned elem_size = _osd_req_alist_elem_size(or, oa->len);
-+
-+		total_bytes += elem_size;
-+		if (unlikely(or->set_attr.alloc_size < total_bytes)) {
-+			or->set_attr.total_bytes = total_bytes - elem_size;
-+			ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
-+			if (ret)
-+				return ret;
-+			attr_last =
-+				or->set_attr.buff + or->set_attr.total_bytes;
-+		}
-+
-+		attr = attr_last;
-+		attr->page = cpu_to_be32(oa->page);
-+		attr->attr_id = cpu_to_be32(oa->attr_id);
-+		attr->attr_bytes = cpu_to_be16(oa->len);
-+		memcpy(attr->attr_val, oa->val_ptr, oa->len);
-+
-+		attr_last += elem_size;
-+		++oa;
-+	}
-+
-+	or->set_attr.total_bytes = total_bytes;
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_add_set_attr_list);
-+
-+static int _append_map_kern(struct request *req,
-+	void *buff, unsigned len, gfp_t flags)
-+{
-+	struct bio *bio;
-+	int ret;
-+
-+	bio = bio_map_kern(req->q, buff, len, flags);
-+	if (IS_ERR(bio)) {
-+		OSD_ERR("Failed bio_map_kern(%p, %d) => %ld\n", buff, len,
-+			PTR_ERR(bio));
-+		return PTR_ERR(bio);
-+	}
-+	ret = blk_rq_append_bio(req->q, req, bio);
-+	if (ret) {
-+		OSD_ERR("Failed blk_rq_append_bio(%p) => %d\n", bio, ret);
-+		bio_put(bio);
-+	}
-+	return ret;
-+}
-+
-+static int _req_append_segment(struct osd_request *or,
-+	int padding, struct _osd_req_data_segment *seg,
-+	struct _osd_req_data_segment *last_seg, struct _osd_io_info *io)
-+{
-+	void *pad_buff;
-+	int ret;
-+
-+	if (padding) {
-+		/* check if we can just add it to last buffer */
-+		if (last_seg &&
-+		    (padding <= last_seg->alloc_size - last_seg->total_bytes))
-+			pad_buff = last_seg->buff + last_seg->total_bytes;
-+		else
-+			pad_buff = io->pad_buff;
-+
-+		ret = _append_map_kern(io->req, pad_buff, padding,
-+				       or->alloc_flags);
-+		if (ret)
-+			return ret;
-+		io->total_bytes += padding;
-+	}
-+
-+	ret = _append_map_kern(io->req, seg->buff, seg->total_bytes,
-+			       or->alloc_flags);
-+	if (ret)
-+		return ret;
-+
-+	io->total_bytes += seg->total_bytes;
-+	OSD_DEBUG("padding=%d buff=%p total_bytes=%d\n", padding, seg->buff,
-+		  seg->total_bytes);
-+	return 0;
-+}
-+
-+static int _osd_req_finalize_set_attr_list(struct osd_request *or)
-+{
-+	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
-+	int padding;
-+	int ret;
-+
-+	if (!or->set_attr.total_bytes) {
-+		cdbh->attrs_list.set_attr_offset = OSD_OFFSET_UNUSED;
-+		return 0;
-+	}
-+
-+	cdbh->attrs_list.set_attr_bytes = cpu_to_be32(or->set_attr.total_bytes);
-+	cdbh->attrs_list.set_attr_offset =
-+		osd_req_encode_offset(or, or->out.total_bytes, &padding);
-+
-+	ret = _req_append_segment(or, padding, &or->set_attr,
-+				  or->out.last_seg, &or->out);
-+	if (ret)
-+		return ret;
-+
-+	or->out.last_seg = &or->set_attr;
-+	return 0;
-+}
-+
-+int osd_req_add_get_attr_list(struct osd_request *or,
-+	const struct osd_attr *oa, unsigned nelem)
-+{
-+	unsigned total_bytes = or->enc_get_attr.total_bytes;
-+	void *attr_last;
-+	int ret;
-+
-+	if (or->attributes_mode &&
-+	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
-+
-+	/* first time calc data-in list header size */
-+	if (!or->get_attr.total_bytes)
-+		or->get_attr.total_bytes = _osd_req_sizeof_alist_header(or);
-+
-+	/* calc data-out info */
-+	if (!total_bytes) { /* first-time: allocate and put list header */
-+		unsigned max_bytes;
-+
-+		total_bytes = _osd_req_sizeof_alist_header(or);
-+		max_bytes = total_bytes +
-+			nelem * sizeof(struct osd_attributes_list_attrid);
-+		ret = _alloc_get_attr_desc(or, max_bytes);
-+		if (ret)
-+			return ret;
-+
-+		_osd_req_set_alist_type(or, or->enc_get_attr.buff,
-+					OSD_ATTR_LIST_GET);
-+	}
-+	attr_last = or->enc_get_attr.buff + total_bytes;
-+
-+	for (; nelem; --nelem) {
-+		struct osd_attributes_list_attrid *attrid;
-+		const unsigned cur_size = sizeof(*attrid);
-+
-+		total_bytes += cur_size;
-+		if (unlikely(or->enc_get_attr.alloc_size < total_bytes)) {
-+			or->enc_get_attr.total_bytes = total_bytes - cur_size;
-+			ret = _alloc_get_attr_desc(or,
-+					total_bytes + nelem * sizeof(*attrid));
-+			if (ret)
-+				return ret;
-+			attr_last = or->enc_get_attr.buff +
-+				or->enc_get_attr.total_bytes;
-+		}
-+
-+		attrid = attr_last;
-+		attrid->page = cpu_to_be32(oa->page);
-+		attrid->attr_id = cpu_to_be32(oa->attr_id);
-+
-+		attr_last += cur_size;
-+
-+		/* calc data-in size */
-+		or->get_attr.total_bytes +=
-+			_osd_req_alist_elem_size(or, oa->len);
-+		++oa;
-+	}
-+
-+	or->enc_get_attr.total_bytes = total_bytes;
-+
-+	OSD_DEBUG(
-+	       "get_attr.total_bytes=%u(%u) enc_get_attr.total_bytes=%u(%Zu)\n",
-+	       or->get_attr.total_bytes,
-+	       or->get_attr.total_bytes - _osd_req_sizeof_alist_header(or),
-+	       or->enc_get_attr.total_bytes,
-+	       (or->enc_get_attr.total_bytes - _osd_req_sizeof_alist_header(or))
-+			/ sizeof(struct osd_attributes_list_attrid));
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_add_get_attr_list);
-+
-+static int _osd_req_finalize_get_attr_list(struct osd_request *or)
-+{
-+	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
-+	unsigned out_padding;
-+	unsigned in_padding;
-+	int ret;
-+
-+	if (!or->enc_get_attr.total_bytes) {
-+		cdbh->attrs_list.get_attr_desc_offset = OSD_OFFSET_UNUSED;
-+		cdbh->attrs_list.get_attr_offset = OSD_OFFSET_UNUSED;
-+		return 0;
-+	}
-+
-+	ret = _alloc_get_attr_list(or);
-+	if (ret)
-+		return ret;
-+
-+	/* The out-going buffer info update */
-+	OSD_DEBUG("out-going\n");
-+	cdbh->attrs_list.get_attr_desc_bytes =
-+		cpu_to_be32(or->enc_get_attr.total_bytes);
-+
-+	cdbh->attrs_list.get_attr_desc_offset =
-+		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
-+
-+	ret = _req_append_segment(or, out_padding, &or->enc_get_attr,
-+				  or->out.last_seg, &or->out);
-+	if (ret)
-+		return ret;
-+	or->out.last_seg = &or->enc_get_attr;
-+
-+	/* The incoming buffer info update */
-+	OSD_DEBUG("in-coming\n");
-+	cdbh->attrs_list.get_attr_alloc_length =
-+		cpu_to_be32(or->get_attr.total_bytes);
-+
-+	cdbh->attrs_list.get_attr_offset =
-+		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
-+
-+	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
-+				  &or->in);
-+	if (ret)
-+		return ret;
-+	or->in.last_seg = &or->get_attr;
-+
-+	return 0;
-+}
-+
-+int osd_req_decode_get_attr_list(struct osd_request *or,
-+	struct osd_attr *oa, int *nelem, void **iterator)
-+{
-+	unsigned cur_bytes, returned_bytes, n;
-+	const unsigned sizeof_attr_list = _osd_req_sizeof_alist_header(or);
-+	void *cur_p;
-+
-+	if (!_osd_req_is_alist_type(or, or->get_attr.buff,
-+				    OSD_ATTR_LIST_SET_RETRIEVE)) {
-+		oa->page = 0;
-+		oa->attr_id = 0;
-+		oa->val_ptr = NULL;
-+		oa->len = 0;
-+		*iterator = NULL;
-+		return 0;
-+	}
-+
-+	if (*iterator) {
-+		BUG_ON((*iterator < or->get_attr.buff) ||
-+		     (or->get_attr.buff + or->get_attr.alloc_size < *iterator));
-+		cur_p = *iterator;
-+		cur_bytes = (*iterator - or->get_attr.buff) - sizeof_attr_list;
-+		returned_bytes = or->get_attr.total_bytes;
-+	} else { /* first time decode the list header */
-+		cur_bytes = sizeof_attr_list;
-+		returned_bytes = _osd_req_alist_size(or, or->get_attr.buff) +
-+					sizeof_attr_list;
-+
-+		cur_p = or->get_attr.buff + sizeof_attr_list;
-+
-+		if (returned_bytes > or->get_attr.alloc_size) {
-+			OSD_DEBUG("target report: space was not big enough! "
-+				  "Allocate=%u Needed=%u\n",
-+				  or->get_attr.alloc_size,
-+				  returned_bytes + sizeof_attr_list);
-+
-+			returned_bytes =
-+				or->get_attr.alloc_size - sizeof_attr_list;
-+		}
-+		or->get_attr.total_bytes = returned_bytes;
-+	}
-+
-+	for (n = 0; (n < *nelem) && (cur_bytes < returned_bytes); ++n) {
-+		struct osd_attributes_list_element *attr = cur_p;
-+		unsigned inc;
-+
-+		oa->len = be16_to_cpu(attr->attr_bytes);
-+		inc = _osd_req_alist_elem_size(or, oa->len);
-+		OSD_DEBUG("oa->len=%d inc=%d cur_bytes=%d\n",
-+			  oa->len, inc, cur_bytes);
-+		cur_bytes += inc;
-+		if (cur_bytes > returned_bytes) {
-+			OSD_ERR("BAD FOOD from target. list not valid!"
-+				"c=%d r=%d n=%d\n",
-+				cur_bytes, returned_bytes, n);
-+			oa->val_ptr = NULL;
-+			break;
-+		}
-+
-+		oa->page = be32_to_cpu(attr->page);
-+		oa->attr_id = be32_to_cpu(attr->attr_id);
-+		oa->val_ptr = attr->attr_val;
-+
-+		cur_p += inc;
-+		++oa;
-+	}
-+
-+	*iterator = (returned_bytes - cur_bytes) ? cur_p : NULL;
-+	*nelem = n;
-+	return returned_bytes - cur_bytes;
-+}
-+EXPORT_SYMBOL(osd_req_decode_get_attr_list);
-+
-+/*
-+ * Attributes Page-mode
-+ */
-+
-+int osd_req_add_get_attr_page(struct osd_request *or,
-+	u32 page_id, void *attar_page, unsigned max_page_len,
-+	const struct osd_attr *set_one_attr)
-+{
-+	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
-+
-+	if (or->attributes_mode &&
-+	    or->attributes_mode != OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	or->attributes_mode = OSD_CDB_GET_ATTR_PAGE_SET_ONE;
-+
-+	or->get_attr.buff = attar_page;
-+	or->get_attr.total_bytes = max_page_len;
-+
-+	or->set_attr.buff = set_one_attr->val_ptr;
-+	or->set_attr.total_bytes = set_one_attr->len;
-+
-+	cdbh->attrs_page.get_attr_page = cpu_to_be32(page_id);
-+	cdbh->attrs_page.get_attr_alloc_length = cpu_to_be32(max_page_len);
-+	/* ocdb->attrs_page.get_attr_offset; */
-+
-+	cdbh->attrs_page.set_attr_page = cpu_to_be32(set_one_attr->page);
-+	cdbh->attrs_page.set_attr_id = cpu_to_be32(set_one_attr->attr_id);
-+	cdbh->attrs_page.set_attr_length = cpu_to_be32(set_one_attr->len);
-+	/* ocdb->attrs_page.set_attr_offset; */
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_add_get_attr_page);
-+
-+int _osd_req_finalize_attr_page(struct osd_request *or)
-+{
-+	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
-+	int in_padding, out_padding;
-+	int ret;
-+
-+	/* returned page */
-+	cdbh->attrs_page.get_attr_offset =
-+		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
-+
-+	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
-+				  &or->in);
-+	if (ret)
-+		return ret;
-+
-+	/* set one value */
-+	cdbh->attrs_page.set_attr_offset =
-+		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
-+
-+	ret = _req_append_segment(or, out_padding, &or->enc_get_attr, NULL,
-+				  &or->out);
-+	return ret;
-+}
-+
- /*
-  * osd_finalize_request and helpers
-  */
-@@ -349,9 +859,27 @@ int osd_finalize_request(struct osd_request *or,
- 			or->in.total_bytes, or->in.req->data_len);
- 	}
- 
-+	or->out.pad_buff = sg_out_pad_buffer;
-+	or->in.pad_buff = sg_in_pad_buffer;
-+
- 	if (!or->attributes_mode)
- 		or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
- 	cdbh->command_specific_options |= or->attributes_mode;
-+	if (or->attributes_mode == OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
-+		ret = _osd_req_finalize_attr_page(or);
++	if (doread) {
++		osd_req_read(or, &obj, bio, 0);
++		domsg = "Read-with-attr";
 +	} else {
-+		/* TODO: I think that for the GET_ATTR command these 2 should
-+		 * be reversed to keep them in execution order (for embeded
-+		 * targets with low memory footprint)
-+		 */
-+		ret = _osd_req_finalize_set_attr_list(or);
-+		if (ret)
-+			return ret;
-+
-+		ret = _osd_req_finalize_get_attr_list(or);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	or->request->cmd = or->cdb.buff;
- 	or->request->cmd_len = _osd_req_cdb_len(or);
-@@ -417,3 +945,44 @@ void osd_set_caps(struct osd_cdb *cdb, const void *caps)
- {
- 	memcpy(&cdb->v1.caps, caps, OSDv1_CAP_LEN);
- }
-+
-+/*
-+ * Declared in osd_protocol.h
-+ * 4.12.5 Data-In and Data-Out buffer offsets
-+ * byte offset = mantissa * (2^(exponent+8))
-+ * Returns the smallest allowed encoded offset that contains given @offset
-+ * The actual encoded offset returned is @offset + *@padding.
-+ */
-+osd_cdb_offset __osd_encode_offset(
-+	u64 offset, unsigned *padding, int min_shift, int max_shift)
-+{
-+	u64 try_offset = -1, mod, align;
-+	osd_cdb_offset be32_offset;
-+	int shift;
-+
-+	*padding = 0;
-+	if (!offset)
-+		return 0;
-+
-+	for (shift = min_shift; shift < max_shift; ++shift) {
-+		try_offset = offset >> shift;
-+		if (try_offset < (1 << OSD_OFFSET_MAX_BITS))
-+			break;
++		osd_req_write(or, &obj, bio, 0);
++		domsg = "Write-with-attr";
 +	}
 +
-+	BUG_ON(shift == max_shift);
++	if (doset)
++		osd_req_add_set_attr_list(or, set_attrs, 2);
++	if (doget)
++		osd_req_add_get_attr_list(or, get_attrs, 2);
 +
-+	align = 1 << shift;
-+	mod = offset & (align - 1);
-+	if (mod) {
-+		*padding = align - mod;
-+		try_offset += 1;
++/*	KTEST_EXEC_END(or, &obj, "");*/
++	ret = test_exec(or, g_caps, &obj);
++	if (!ret && doget) {
++		void *iter = NULL, *pFirst, *pSec;
++		int nelem = 2;
++		u64 capacity_len = ~0;
++		u64 logical_len = ~0;
++
++		osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
++
++		/*FIXME: Std does not guaranty order of return attrs */
++		pFirst = get_attrs[0].val_ptr;
++		if (pFirst)
++			capacity_len = get_unaligned_be64(pFirst);
++		else
++			OSD_ERR("failed to read capacity_used\n");
++		pSec = get_attrs[1].val_ptr;
++		if (pSec)
++			logical_len = get_unaligned_be64(pSec);
++		else
++			OSD_ERR("failed to read logical_length\n");
++		OSD_INFO("%s capacity=%llu len=%llu\n",
++			domsg, capacity_len, logical_len);
 +	}
 +
-+	try_offset |= ((shift - 8) & 0xf) << 28;
-+	be32_offset = cpu_to_be32((u32)try_offset);
++	osd_end_request(or);
++	if (ret) {
++		OSD_ERR("!!! Error executing %s => %d doset=%d doget=%d\n",
++			domsg, ret, doset, doget);
++		return ret;
++	}
++	OSD_DEBUG("%s\n", domsg);
 +
-+	OSD_DEBUG("offset=%lld mantissa=%lld exp=%d encoded=%x pad=%d\n",
-+		 offset, try_offset & 0x0FFFFFFF, shift, be32_offset, *padding);
-+	return be32_offset;
++	return 0;
 +}
-diff --git a/include/scsi/osd_attributes.h b/include/scsi/osd_attributes.h
-new file mode 100644
-index 0000000..697a693
---- /dev/null
-+++ b/include/scsi/osd_attributes.h
-@@ -0,0 +1,322 @@
-+#ifndef __OSD_ATTRIBUTES_H__
-+#define __OSD_ATTRIBUTES_H__
 +
-+#include "osd_protocol.h"
+ int do_test_17(struct scsi_device *scsi_dev)
+ {
+ 	struct osd_dev osd_dev;
+@@ -266,6 +459,9 @@ int do_test_17(struct scsi_device *scsi_dev)
+ 
+ 	osd_dev_init(&osd_dev, scsi_dev);
+ 
++	if (ktest_read_system_info(&osd_dev))
++		goto dev_fini;
 +
-+/*
-+ * Contains types and constants that define attribute pages and attribute
-+ * numbers and their data types.
-+ */
+ /* osd_format */
+ 	if (ktest_format(&osd_dev))
+ 		goto dev_fini;
+@@ -304,11 +500,35 @@ int do_test_17(struct scsi_device *scsi_dev)
+ /* List all objects */
+ 
+ /* Write with get_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, false, false, true);
++	if (ret)
++		goto dev_fini;
 +
-+/* osd-r10 4.7.3 Attributes pages */
-+enum {
-+	OSD_APAGE_OBJECT_FIRST		= 0x0,
-+	OSD_APAGE_OBJECT_DIRECTORY	= 0,
-+	OSD_APAGE_OBJECT_INFORMATION	= 1,
-+	OSD_APAGE_OBJECT_QUOTAS		= 2,
-+	OSD_APAGE_OBJECT_TIMESTAMP	= 3,
-+	OSD_APAGE_OBJECT_COLLECTIONS	= 4,
-+	OSD_APAGE_OBJECT_SECURITY	= 5,
-+	OSD_APAGE_OBJECT_LAST		= 0x2fffffff,
+ /* Write with set_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, false, true, false);
++	if (ret)
++		goto dev_fini;
 +
-+	OSD_APAGE_PARTITION_FIRST	= 0x30000000,
-+	OSD_APAGE_PARTITION_DIRECTORY	= OSD_APAGE_PARTITION_FIRST + 0,
-+	OSD_APAGE_PARTITION_INFORMATION = OSD_APAGE_PARTITION_FIRST + 1,
-+	OSD_APAGE_PARTITION_QUOTAS	= OSD_APAGE_PARTITION_FIRST + 2,
-+	OSD_APAGE_PARTITION_TIMESTAMP	= OSD_APAGE_PARTITION_FIRST + 3,
-+	OSD_APAGE_PARTITION_SECURITY	= OSD_APAGE_PARTITION_FIRST + 5,
-+	OSD_APAGE_PARTITION_LAST	= 0x5FFFFFFF,
+ /* Write with set_attr + get_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, false, true, true);
++	if (ret)
++		goto dev_fini;
 +
-+	OSD_APAGE_COLLECTION_FIRST	= 0x60000000,
-+	OSD_APAGE_COLLECTION_DIRECTORY	= OSD_APAGE_COLLECTION_FIRST + 0,
-+	OSD_APAGE_COLLECTION_INFORMATION = OSD_APAGE_COLLECTION_FIRST + 1,
-+	OSD_APAGE_COLLECTION_TIMESTAMP	= OSD_APAGE_COLLECTION_FIRST + 3,
-+	OSD_APAGE_COLLECTION_SECURITY	= OSD_APAGE_COLLECTION_FIRST + 5,
-+	OSD_APAGE_COLLECTION_LAST	= 0x8FFFFFFF,
+ /* Read with set_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, true, true, false);
++	if (ret)
++		goto dev_fini;
 +
-+	OSD_APAGE_ROOT_FIRST		= 0x90000000,
-+	OSD_APAGE_ROOT_DIRECTORY	= OSD_APAGE_ROOT_FIRST + 0,
-+	OSD_APAGE_ROOT_INFORMATION	= OSD_APAGE_ROOT_FIRST + 1,
-+	OSD_APAGE_ROOT_QUOTAS		= OSD_APAGE_ROOT_FIRST + 2,
-+	OSD_APAGE_ROOT_TIMESTAMP	= OSD_APAGE_ROOT_FIRST + 3,
-+	OSD_APAGE_ROOT_SECURITY		= OSD_APAGE_ROOT_FIRST + 5,
-+	OSD_APAGE_ROOT_LAST		= 0xBFFFFFFF,
+ /* Read with get_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, true, false, true);
++	if (ret)
++		goto dev_fini;
 +
-+	OSD_APAGE_RESERVED_TYPE_FIRST	= 0xC0000000,
-+	OSD_APAGE_RESERVED_TYPE_LAST	= 0xEFFFFFFF,
+ /* Read with get_attr + set_attr */
++	ret = ktest_write_read_attr(&osd_dev, write_buff, true, true, true);
++	if (ret)
++		goto dev_fini;
 +
-+	OSD_APAGE_COMMON_FIRST		= 0xF0000000,
-+	OSD_APAGE_COMMON_LAST		= 0xFFFFFFFE,
-+
-+	OSD_APAGE_REQUEST_ALL		= 0xFFFFFFFF,
-+};
-+
-+/* subcategories of attr pages within each range above */
-+enum {
-+	OSD_APAGE_STD_FIRST		= 0x0,
-+	OSD_APAGE_STD_DIRECTORY		= 0,
-+	OSD_APAGE_STD_INFORMATION	= 1,
-+	OSD_APAGE_STD_QUOTAS		= 2,
-+	OSD_APAGE_STD_TIMESTAMP		= 3,
-+	OSD_APAGE_STD_COLLECTIONS	= 4,
-+	OSD_APAGE_STD_POLICY_SECURITY	= 5,
-+	OSD_APAGE_STD_LAST		= 0x0000007F,
-+
-+	OSD_APAGE_RESERVED_FIRST	= 0x00000080,
-+	OSD_APAGE_RESERVED_LAST		= 0x00007FFF,
-+
-+	OSD_APAGE_OTHER_STD_FIRST	= 0x00008000,
-+	OSD_APAGE_OTHER_STD_LAST	= 0x0000EFFF,
-+
-+	OSD_APAGE_PUBLIC_FIRST		= 0x0000F000,
-+	OSD_APAGE_PUBLIC_LAST		= 0x0000FFFF,
-+
-+	OSD_APAGE_APP_DEFINED_FIRST	= 0x00010000,
-+	OSD_APAGE_APP_DEFINED_LAST	= 0x1FFFFFFF,
-+
-+	OSD_APAGE_VENDOR_SPECIFIC_FIRST	= 0x20000000,
-+	OSD_APAGE_VENDOR_SPECIFIC_LAST	= 0x2FFFFFFF,
-+};
-+
-+enum {
-+	OSD_ATTR_PAGE_IDENTIFICATION = 0, /* in all pages 40 bytes */
-+};
-+
-+struct page_identification {
-+	u8 vendor_identification[8];
-+	u8 page_identification[32];
-+}  __packed;
-+
-+struct osd_attr_page_header {
-+	__be32 page_number;
-+	__be32 page_length;
-+} __packed;
-+
-+/* 7.1.2.8 Root Information attributes page (OSD_APAGE_ROOT_INFORMATION) */
-+enum {
-+	OSD_ATTR_RI_OSD_SYSTEM_ID            = 0x3,   /* 20       */
-+	OSD_ATTR_RI_VENDOR_IDENTIFICATION    = 0x4,   /* 8        */
-+	OSD_ATTR_RI_PRODUCT_IDENTIFICATION   = 0x5,   /* 16       */
-+	OSD_ATTR_RI_PRODUCT_MODEL            = 0x6,   /* 32       */
-+	OSD_ATTR_RI_PRODUCT_REVISION_LEVEL   = 0x7,   /* 4        */
-+	OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER    = 0x8,   /* variable */
-+	OSD_ATTR_RI_OSD_NAME                 = 0x9,   /* variable */
-+	OSD_ATTR_RI_TOTAL_CAPACITY           = 0x80,  /* 8        */
-+	OSD_ATTR_RI_USED_CAPACITY            = 0x81,  /* 8        */
-+	OSD_ATTR_RI_NUMBER_OF_PARTITIONS     = 0xC0,  /* 8        */
-+	OSD_ATTR_RI_CLOCK                    = 0x100, /* 6        */
-+};
-+/* Root_Information_attributes_page does not have a get_page structure */
-+
-+/* 7.1.2.9 Partition Information attributes page
-+ * (OSD_APAGE_PARTITION_INFORMATION)
-+ */
-+enum {
-+	OSD_ATTR_PI_PARTITION_ID            = 0x1,     /* 8        */
-+	OSD_ATTR_PI_USERNAME                = 0x9,     /* variable */
-+	OSD_ATTR_PI_USED_CAPACITY           = 0x81,    /* 8        */
-+	OSD_ATTR_PI_NUMBER_OF_OBJECTS       = 0xC1,    /* 8        */
-+};
-+/* Partition Information attributes page does not have a get_page structure */
-+
-+/* 7.1.2.10 Collection Information attributes page
-+ * (OSD_APAGE_COLLECTION_INFORMATION)
-+ */
-+enum {
-+	OSD_ATTR_CI_PARTITION_ID           = 0x1,       /* 8        */
-+	OSD_ATTR_CI_COLLECTION_OBJECT_ID   = 0x2,       /* 8        */
-+	OSD_ATTR_CI_USERNAME               = 0x9,       /* variable */
-+	OSD_ATTR_CI_USED_CAPACITY          = 0x81,      /* 8        */
-+};
-+/* Collection Information attributes page does not have a get_page structure */
-+
-+/* 7.1.2.11 User Object Information attributes page
-+ * (OSD_APAGE_OBJECT_INFORMATION)
-+ */
-+enum {
-+	OSD_ATTR_OI_PARTITION_ID         = 0x1,       /* 8        */
-+	OSD_ATTR_OI_OBJECT_ID            = 0x2,       /* 8        */
-+	OSD_ATTR_OI_USERNAME             = 0x9,       /* variable */
-+	OSD_ATTR_OI_USED_CAPACITY        = 0x81,      /* 8        */
-+	OSD_ATTR_OI_LOGICAL_LENGTH       = 0x82,      /* 8        */
-+};
-+/* Object Information attributes page does not have a get_page structure */
-+
-+/* 7.1.2.12 Root Quotas attributes page (OSD_APAGE_ROOT_QUOTAS) */
-+enum {
-+	OSD_ATTR_RQ_DEFAULT_MAXIMUM_USER_OBJECT_LENGTH     = 0x1,      /* 8  */
-+	OSD_ATTR_RQ_PARTITION_CAPACITY_QUOTA               = 0x10001,  /* 8  */
-+	OSD_ATTR_RQ_PARTITION_OBJECT_COUNT                 = 0x10002,  /* 8  */
-+	OSD_ATTR_RQ_PARTITION_COLLECTIONS_PER_USER_OBJECT  = 0x10081,  /* 4  */
-+	OSD_ATTR_RQ_PARTITION_COUNT                        = 0x20002,  /* 8  */
-+};
-+
-+struct Root_Quotas_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=R+2, size=0x24 */
-+	__be64 default_maximum_user_object_length;
-+	__be64 partition_capacity_quota;
-+	__be64 partition_object_count;
-+	__be64 partition_collections_per_user_object;
-+	__be64 partition_count;
-+}  __packed;
-+
-+/* 7.1.2.13 Partition Quotas attributes page (OSD_APAGE_PARTITION_QUOTAS)*/
-+enum {
-+	OSD_ATTR_PQ_DEFAULT_MAXIMUM_USER_OBJECT_LENGTH  = 0x1,        /* 8 */
-+	OSD_ATTR_PQ_CAPACITY_QUOTA                      = 0x10001,    /* 8 */
-+	OSD_ATTR_PQ_OBJECT_COUNT                        = 0x10002,    /* 8 */
-+	OSD_ATTR_PQ_COLLECTIONS_PER_USER_OBJECT         = 0x10081,    /* 4 */
-+};
-+
-+struct Partition_Quotas_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=P+2, size=0x1C */
-+	__be64 default_maximum_user_object_length;
-+	__be64 capacity_quota;
-+	__be64 object_count;
-+	__be64 collections_per_user_object;
-+}  __packed;
-+
-+/* 7.1.2.14 User Object Quotas attributes page (OSD_APAGE_OBJECT_QUOTAS) */
-+enum {
-+	OSD_ATTR_OQ_MAXIMUM_LENGTH  = 0x1,        /* 8 */
-+};
-+
-+struct Object_Quotas_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=U+2, size=0x8 */
-+	__be64 maximum_length;
-+}  __packed;
-+
-+/* 7.1.2.15 Root Timestamps attributes page (OSD_APAGE_ROOT_TIMESTAMP) */
-+enum {
-+	OSD_ATTR_RT_ATTRIBUTES_ACCESSED_TIME  = 0x2,        /* 6 */
-+	OSD_ATTR_RT_ATTRIBUTES_MODIFIED_TIME  = 0x3,        /* 6 */
-+	OSD_ATTR_RT_TIMESTAMP_BYPASS          = 0xFFFFFFFE, /* 1 */
-+};
-+
-+struct root_timestamps_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=R+3, size=0xD */
-+	struct osd_timestamp attributes_accessed_time;
-+	struct osd_timestamp attributes_modified_time;
-+	u8 timestamp_bypass;
-+}  __packed;
-+
-+/* 7.1.2.16 Partition Timestamps attributes page
-+ * (OSD_APAGE_PARTITION_TIMESTAMP)
-+ */
-+enum {
-+	OSD_ATTR_PT_CREATED_TIME              = 0x1,        /* 6 */
-+	OSD_ATTR_PT_ATTRIBUTES_ACCESSED_TIME  = 0x2,        /* 6 */
-+	OSD_ATTR_PT_ATTRIBUTES_MODIFIED_TIME  = 0x3,        /* 6 */
-+	OSD_ATTR_PT_DATA_ACCESSED_TIME        = 0x4,        /* 6 */
-+	OSD_ATTR_PT_DATA_MODIFIED_TIME        = 0x5,        /* 6 */
-+	OSD_ATTR_PT_TIMESTAMP_BYPASS          = 0xFFFFFFFE, /* 1 */
-+};
-+
-+struct partition_timestamps_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=P+3, size=0x1F */
-+	struct osd_timestamp created_time;
-+	struct osd_timestamp attributes_accessed_time;
-+	struct osd_timestamp attributes_modified_time;
-+	struct osd_timestamp data_accessed_time;
-+	struct osd_timestamp data_modified_time;
-+	u8 timestamp_bypass;
-+}  __packed;
-+
-+/* 7.1.2.17/18 Collection/Object Timestamps attributes page
-+ * (OSD_APAGE_COLLECTION_TIMESTAMP/OSD_APAGE_OBJECT_TIMESTAMP)
-+ */
-+enum {
-+	OSD_ATTR_OT_CREATED_TIME              = 0x1,        /* 6 */
-+	OSD_ATTR_OT_ATTRIBUTES_ACCESSED_TIME  = 0x2,        /* 6 */
-+	OSD_ATTR_OT_ATTRIBUTES_MODIFIED_TIME  = 0x3,        /* 6 */
-+	OSD_ATTR_OT_DATA_ACCESSED_TIME        = 0x4,        /* 6 */
-+	OSD_ATTR_OT_DATA_MODIFIED_TIME        = 0x5,        /* 6 */
-+};
-+
-+/* same for collection */
-+struct object_timestamps_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=C+3/3, size=0x1E */
-+	struct osd_timestamp created_time;
-+	struct osd_timestamp attributes_accessed_time;
-+	struct osd_timestamp attributes_modified_time;
-+	struct osd_timestamp data_accessed_time;
-+	struct osd_timestamp data_modified_time;
-+}  __packed;
-+
-+/* 7.1.2.19 Collections attributes page */
-+/* TBD */
-+
-+/* 7.1.2.20 Root Policy/Security attributes page (OSD_APAGE_ROOT_SECURITY) */
-+enum {
-+	OSD_ATTR_RS_DEFAULT_SECURITY_METHOD           = 0x1,       /* 1      */
-+	OSD_ATTR_RS_OLDEST_VALID_NONCE_LIMIT          = 0x2,       /* 6      */
-+	OSD_ATTR_RS_NEWEST_VALID_NONCE_LIMIT          = 0x3,       /* 6      */
-+	OSD_ATTR_RS_PARTITION_DEFAULT_SECURITY_METHOD = 0x6,       /* 1      */
-+	OSD_ATTR_RS_SUPPORTED_SECURITY_METHODS        = 0x7,       /* 2      */
-+	OSD_ATTR_RS_ADJUSTABLE_CLOCK                  = 0x9,       /* 6      */
-+	OSD_ATTR_RS_MASTER_KEY_IDENTIFIER             = 0x7FFD,    /* 0 or 7 */
-+	OSD_ATTR_RS_ROOT_KEY_IDENTIFIER               = 0x7FFE,    /* 0 or 7 */
-+	OSD_ATTR_RS_SUPPORTED_INTEGRITY_ALGORITHM_0   = 0x80000000,/* 1,(x16)*/
-+	OSD_ATTR_RS_SUPPORTED_DH_GROUP_0              = 0x80000010,/* 1,(x16)*/
-+};
-+
-+struct root_security_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=R+5, size=0x3F */
-+	u8 default_security_method;
-+	u8 partition_default_security_method;
-+	__be16 supported_security_methods;
-+	u8 mki_valid_rki_valid;
-+	struct osd_timestamp oldest_valid_nonce_limit;
-+	struct osd_timestamp newest_valid_nonce_limit;
-+	struct osd_timestamp adjustable_clock;
-+	u8 master_key_identifier[32-25];
-+	u8 root_key_identifier[39-32];
-+	u8 supported_integrity_algorithm[16];
-+	u8 supported_dh_group[16];
-+}  __packed;
-+
-+/* 7.1.2.21 Partition Policy/Security attributes page
-+ * (OSD_APAGE_PARTITION_SECURITY)
-+ */
-+enum {
-+	OSD_ATTR_PS_DEFAULT_SECURITY_METHOD        = 0x1,        /* 1      */
-+	OSD_ATTR_PS_OLDEST_VALID_NONCE             = 0x2,        /* 6      */
-+	OSD_ATTR_PS_NEWEST_VALID_NONCE             = 0x3,        /* 6      */
-+	OSD_ATTR_PS_REQUEST_NONCE_LIST_DEPTH       = 0x4,        /* 2      */
-+	OSD_ATTR_PS_FROZEN_WORKING_KEY_BIT_MASK    = 0x5,        /* 2      */
-+	OSD_ATTR_PS_PARTITION_KEY_IDENTIFIER       = 0x7FFF,     /* 0 or 7 */
-+	OSD_ATTR_PS_WORKING_KEY_IDENTIFIER_FIRST   = 0x8000,     /* 0 or 7 */
-+	OSD_ATTR_PS_WORKING_KEY_IDENTIFIER_LAST    = 0x800F,     /* 0 or 7 */
-+	OSD_ATTR_PS_POLICY_ACCESS_TAG              = 0x40000001, /* 4      */
-+	OSD_ATTR_PS_USER_OBJECT_POLICY_ACCESS_TAG  = 0x40000002, /* 4      */
-+};
-+
-+struct partition_security_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=p+5, size=0x8f */
-+	u8 reserved[3];
-+	u8 default_security_method;
-+	struct osd_timestamp oldest_valid_nonce;
-+	struct osd_timestamp newest_valid_nonce;
-+	__be16 request_nonce_list_depth;
-+	__be16 frozen_working_key_bit_mask;
-+	__be32 policy_access_tag;
-+	__be32 user_object_policy_access_tag;
-+	u8 pki_valid;
-+	__be16 wki_00_0f_vld;
-+	struct osd_key_identifier partition_key_identifier;
-+	struct osd_key_identifier working_key_identifiers[16];
-+}  __packed;
-+
-+/* 7.1.2.22/23 Collection/Object Policy-Security attributes page
-+ * (OSD_APAGE_COLLECTION_SECURITY/OSD_APAGE_OBJECT_SECURITY)
-+ */
-+enum {
-+	OSD_ATTR_OS_POLICY_ACCESS_TAG              = 0x40000001, /* 4      */
-+};
-+
-+struct object_security_attributes_page {
-+	struct osd_attr_page_header hdr; /* id=C+5/5, size=4 */
-+	__be32 policy_access_tag;
-+}  __packed;
-+
-+#endif /*ndef __OSD_ATTRIBUTES_H__*/
+ /* remove objects */
+ 	ret = ktest_remove_obj(&osd_dev);
+ 	if (ret)
 -- 
 1.5.6.rc1.5.gadf6
 
