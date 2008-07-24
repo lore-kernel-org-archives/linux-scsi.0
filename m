@@ -1,99 +1,54 @@
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: scsi: Generalise last_sector_bug; fixes regression and potential
- future issues on USB cardreaders
-Date: Thu, 24 Jul 2008 11:15:55 +0100
-Message-ID: <4888565B.4020102@tuffmail.co.uk>
-References: <4888524D.9070906@tuffmail.co.uk>
+From: scameron@beardog.cca.cpqcorp.net
+Subject: Re: HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Thu, 24 Jul 2008 08:30:12 -0500
+Message-ID: <20080724133012.GH8833@beardog.cca.cpqcorp.net>
+References: <20080722175729.GC8833@beardog.cca.cpqcorp.net> <20080724101953R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.181]:41201 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbYGXKPh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 06:15:37 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so2089088ika.5
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2008 03:15:35 -0700 (PDT)
-In-Reply-To: <4888524D.9070906@tuffmail.co.uk>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:3774 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826AbYGXNaN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 09:30:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20080724101953R.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com
 
-The last_sector_bug flag was added to work around a bug in certain usb
-cardreaders, where they would crash if a multiple sector read included the
-last sector. The original implementation avoids this by e.g. splitting an 8
-sector read which includes the last sector into a 7 sector read, and a single
-sector read for the last sector.  The flag is enabled for all USB devices.
+On Thu, Jul 24, 2008 at 10:32:45AM +0900, FUJITA Tomonori wrote:
+> CC'ed linux-scsi, why did you drop it?
 
-This revealed a second bug in other usb cardreaders, which crash when they
-get a multiple sector read which stops 1 sector short of the last sector.
-Affected hardware includes the Kingston "MobileLite" external USB cardreader
-and the internal USB cardreader on the Asus EeePC.
+You mean my SCSI cciss driver?  For a few reasons:
 
-Extend the last_sector_bug workaround to ensure that any access which touches
-the last 8 hardware sectors of the device is a single sector long.  Requests
-are shrunk as necessary to meet this constraint.
+At the time, it was just kind of a learning exercise, and I
+didn't see it as supplanting the existing driver.  I didn't know
+enough about udev to know that a smooth transition process
+was perhaps possible, and it seemed very disruptive.  And,
+seeing as how I work for HP, it isn't exactly within my
+authority to just decide by myself the course the driver
+development should take.  Paradoxically, if a person works
+for a company that has nothing to do with the driver, one
+has more freedom to do whatever one wants with the code.
 
-This gives us a safety margin against potential unknown or future bugs
-affecting multi-sector access to the end of the device.  The two known bugs
-only affect the last 2 sectors.  However, they suggest that these devices
-are prone to fencepost errors and that multi-sector access to the end of the
-device is not well tested.  Popular OS's use multi-sector accesses, but they
-rarely read the last few sectors.  Linux (with udev & vol_id) automatically
-reads sectors from the end of the device on insertion.  It is assumed that
-single sector accesses are more thoroughly tested during development.
+With help from udev it is less disruptive, but I'm still unsure
+about how smoothly such a change will fit in with the installation 
+process of various distributions.
 
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Tested-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+I will see if management here will let me send you the patches 
+from when I last looked at this, which was a little over a year ago.
+(2.6.20 timeframe), not necessarily to use as is, but in case
+maybe it helps to see how somebody else proceeded. 
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 01cefbb..2415a1b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -406,13 +406,23 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	}
- 
- 	/*
--	 * Some devices (some sdcards for one) don't like it if the
--	 * last sector gets read in a larger then 1 sector read.
-+	 * Some sd cardreaders can't handle multisector accesses which touch
-+	 * the last one or two hardware sectors.  There are likely to be even
-+	 * buggier devices, so apply a workaround to the last eight sectors.
- 	 */
--	if (unlikely(sdp->last_sector_bug &&
--	    rq->nr_sectors > sdp->sector_size / 512 &&
--	    block + this_count == get_capacity(disk)))
--		this_count -= sdp->sector_size / 512;
-+	if (sdp->last_sector_bug) {
-+		unsigned threshold = get_capacity(disk) - 8 * (sdp->sector_size / 512);
-+
-+		if (block + this_count <= threshold) {
-+			;	/* Okay as is */
-+		} else if (block < threshold) {
-+			/* Access up to the threshold but not beyond */
-+			this_count = threshold - block;
-+		} else {
-+			/* Access only a single hardware sector */
-+			this_count = sdp->sector_size / 512;
-+		}
-+	}
- 
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt, "block=%llu\n",
- 					(unsigned long long)block));
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f6a9fe0..0d8d9c1 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -139,7 +139,8 @@ struct scsi_device {
- 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
- 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
- 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
--	unsigned last_sector_bug:1;	/* Always read last sector in a 1 sector read */
-+	unsigned last_sector_bug:1;	/* do not use multisector accesses on
-+					   the last 8 hardware sectors */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+As for the patches I mentioned which were previously ignored
+for improving how the current cciss SCSI code handled hot 
+plogging, if you're curious about that, check here:
 
+http://marc.info/?l=linux-scsi&m=120213565000426&w=4
+
+A change like that becomes more important if logical drives
+are exposed through the scsi layer.
+
+-- steve
 
