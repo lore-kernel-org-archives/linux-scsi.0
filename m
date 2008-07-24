@@ -1,120 +1,42 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 2/5] qla2xxx: use memory_read_from_buffer()
-Date: Thu, 24 Jul 2008 08:31:47 -0700
-Message-ID: <1216913510-14767-2-git-send-email-andrew.vasquez@qlogic.com>
-References: <20080724153108.GI561@plap4-2.local>
+From: scameron@beardog.cca.cpqcorp.net
+Subject: Re: HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Thu, 24 Jul 2008 11:02:16 -0500
+Message-ID: <20080724160216.GL8833@beardog.cca.cpqcorp.net>
+References: <20080722175729.GC8833@beardog.cca.cpqcorp.net> <20080724101953R.fujita.tomonori@lab.ntt.co.jp> <20080724133012.GH8833@beardog.cca.cpqcorp.net> <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:23054 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824AbYGXPbw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 11:31:52 -0400
-In-Reply-To: <20080724153108.GI561@plap4-2.local>
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:20742 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbYGXQCS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 12:02:18 -0400
+Content-Disposition: inline
+In-Reply-To: <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Akinobu Mita <akinobu.mita@gmail.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mike.miller@hp.com, scameron@beardog.cca.cpqcorp.net
 
-From: Akinobu Mita <akinobu.mita@gmail.com>
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Andrew Vasquez <linux-driver@qlogic.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_attr.c |   44 ++++++++-------------------------------
- 1 files changed, 9 insertions(+), 35 deletions(-)
+In case it is of interest, here are the patches 
+to the 2.6.20.4 kernel which make a SCSI Smart Array
+driver that I did in April of 2007.  I called the 
+driver "hpsa", for HP Smart Array.
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 612e3d0..fcec43a 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -20,18 +20,12 @@ qla2x00_sysfs_read_fw_dump(struct kobject *kobj,
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	char *rbuf = (char *)ha->fw_dump;
- 
- 	if (ha->fw_dump_reading == 0)
- 		return 0;
--	if (off > ha->fw_dump_len)
--                return 0;
--	if (off + count > ha->fw_dump_len)
--		count = ha->fw_dump_len - off;
- 
--	memcpy(buf, &rbuf[off], count);
--
--	return (count);
-+	return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
-+					ha->fw_dump_len);
- }
- 
- static ssize_t
-@@ -94,20 +88,13 @@ qla2x00_sysfs_read_nvram(struct kobject *kobj,
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int		size = ha->nvram_size;
--	char		*nvram_cache = ha->nvram;
- 
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &nvram_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->nvram,
-+					ha->nvram_size);
- }
- 
- static ssize_t
-@@ -175,14 +162,9 @@ qla2x00_sysfs_read_optrom(struct kobject *kobj,
- 
- 	if (ha->optrom_state != QLA_SREADING)
- 		return 0;
--	if (off > ha->optrom_region_size)
--		return 0;
--	if (off + count > ha->optrom_region_size)
--		count = ha->optrom_region_size - off;
- 
--	memcpy(buf, &ha->optrom_buffer[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
-+					ha->optrom_region_size);
- }
- 
- static ssize_t
-@@ -374,20 +356,12 @@ qla2x00_sysfs_read_vpd(struct kobject *kobj,
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	int           size = ha->vpd_size;
--	char          *vpd_cache = ha->vpd;
- 
--	if (!capable(CAP_SYS_ADMIN) || off > size || count == 0)
-+	if (!capable(CAP_SYS_ADMIN))
- 		return 0;
--	if (off + count > size) {
--		size -= off;
--		count = size;
--	}
- 
- 	/* Read NVRAM data from cache. */
--	memcpy(buf, &vpd_cache[off], count);
--
--	return count;
-+	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_size);
- }
- 
- static ssize_t
--- 
-1.6.0.rc0.42.g186458
+https://sourceforge.net/project/showfiles.php?group_id=33072&package_id=285296
+
+I made these patches on a system which was booted from
+a SmartArray 6400 using the cciss driver, so the first 
+patch disables cciss support in the cciss driver for the P800, 
+and the resulting SCSI driver supports only the Smartarray P800,
+as I was doing the SCSI driver development on a P800 I had in
+the system.  That's the only reason that stuff is in 
+there in the 1st patch.
+
+Because of the way the first few patches move files around,
+these probably aren't particularly useful directly as patches
+(and of course, they're for an old kernel anyway), but might
+be useful as an illustration of one way things might be done.
+
+-- steve
 
