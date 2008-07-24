@@ -1,54 +1,54 @@
-From: scameron@beardog.cca.cpqcorp.net
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Thu, 24 Jul 2008 08:30:12 -0500
-Message-ID: <20080724133012.GH8833@beardog.cca.cpqcorp.net>
-References: <20080722175729.GC8833@beardog.cca.cpqcorp.net> <20080724101953R.fujita.tomonori@lab.ntt.co.jp>
+Date: Thu, 24 Jul 2008 22:44:03 +0900
+Message-ID: <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
+References: <20080722175729.GC8833@beardog.cca.cpqcorp.net>
+	<20080724101953R.fujita.tomonori@lab.ntt.co.jp>
+	<20080724133012.GH8833@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:3774 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbYGXNaN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 09:30:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20080724101953R.fujita.tomonori@lab.ntt.co.jp>
+Received: from sh.osrg.net ([192.16.179.4]:57496 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990AbYGXNsr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jul 2008 09:48:47 -0400
+In-Reply-To: <20080724133012.GH8833@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com
+To: scameron@beardog.cca.cpqcorp.net
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mike.miller@hp.com
 
-On Thu, Jul 24, 2008 at 10:32:45AM +0900, FUJITA Tomonori wrote:
-> CC'ed linux-scsi, why did you drop it?
+On Thu, 24 Jul 2008 08:30:12 -0500
+scameron@beardog.cca.cpqcorp.net wrote:
 
-You mean my SCSI cciss driver?  For a few reasons:
+> On Thu, Jul 24, 2008 at 10:32:45AM +0900, FUJITA Tomonori wrote:
+> > CC'ed linux-scsi, why did you drop it?
+> 
+> You mean my SCSI cciss driver?  For a few reasons:
 
-At the time, it was just kind of a learning exercise, and I
-didn't see it as supplanting the existing driver.  I didn't know
-enough about udev to know that a smooth transition process
-was perhaps possible, and it seemed very disruptive.  And,
-seeing as how I work for HP, it isn't exactly within my
-authority to just decide by myself the course the driver
-development should take.  Paradoxically, if a person works
-for a company that has nothing to do with the driver, one
-has more freedom to do whatever one wants with the code.
+Ah, I just meant that you dropped linux-scsi mailing list in the
+previous mail though I sent my first RFC mail to linux-kernel and
+linux-scsi.
 
-With help from udev it is less disruptive, but I'm still unsure
-about how smoothly such a change will fit in with the installation 
-process of various distributions.
 
-I will see if management here will let me send you the patches 
-from when I last looked at this, which was a little over a year ago.
-(2.6.20 timeframe), not necessarily to use as is, but in case
-maybe it helps to see how somebody else proceeded. 
+> With help from udev it is less disruptive, but I'm still unsure
+> about how smoothly such a change will fit in with the installation 
+> process of various distributions.
 
-As for the patches I mentioned which were previously ignored
-for improving how the current cciss SCSI code handled hot 
-plogging, if you're curious about that, check here:
+They need to make sure that udev cciss rules match with the kernel
+configuration but I don't think it's difficult.
 
-http://marc.info/?l=linux-scsi&m=120213565000426&w=4
 
-A change like that becomes more important if logical drives
-are exposed through the scsi layer.
+> As for the patches I mentioned which were previously ignored
+> for improving how the current cciss SCSI code handled hot 
+> plogging, if you're curious about that, check here:
+> 
+> http://marc.info/?l=linux-scsi&m=120213565000426&w=4
+> 
+> A change like that becomes more important if logical drives
+> are exposed through the scsi layer.
 
--- steve
-
+We need to think about the best way to map (expose) logical and
+physical drivers to SCSI luns. As I wrote before, I'm interested in
+how HP SCSI driver does.
