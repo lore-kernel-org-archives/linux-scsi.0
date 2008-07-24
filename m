@@ -1,111 +1,83 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH] scsi: sd_dif.c use unaligned access helpers
-Date: Wed, 23 Jul 2008 16:07:40 -0700
-Message-ID: <1216854460.30386.32.camel@brick>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH/RFC v3] allow userspace to modify scsi command filter on per device basis
+Date: Wed, 23 Jul 2008 18:11:58 -0700
+Message-ID: <e9c3a7c20807231811n23785a12jfac8647f698e82a@mail.gmail.com>
+References: <48584252.5030901@interlog.com> <48592233.6040408@redhat.com>
+	 <6cf6b73e0806260310n5988b59dycb0aeab3b0f5c930@mail.gmail.com>
+	 <20080626233633E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:12689 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753570AbYGWXHs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2008 19:07:48 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so477836yxm.1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2008 16:07:46 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.228]:6936 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbYGXBMA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2008 21:12:00 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so2470777wxd.4
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2008 18:11:59 -0700 (PDT)
+In-Reply-To: <20080626233633E.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: adel.gadllah@gmail.com, pjones@redhat.com, dgilbert@interlog.com, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-This code should be looked at carefully, while this patch doesn't
-change any behaviour, the handling of app_tag, ref_tag seems odd.
-The struct defines both as __be16/32 but in these locations it is
-read in/written out as cpu-byteorder.
+On Thu, Jun 26, 2008 at 7:36 AM, FUJITA Tomonori
+<fujita.tomonori@lab.ntt.co.jp> wrote:
+>> Jens can we add merge this for .27 or does anyone still has objections?
+>
+> I think that this patch makes sg's permission stricter. So this could
+> break the existing user-space applications.
 
-It looks like they should actually be u16/u32.
+Yes, it seems to have broken a simple routine I had to retrieve the
+disk serial number from /dev/sg0.  Works fine if I run the ioctl on
+/dev/sda.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/scsi/sd_dif.c |   26 ++++++++------------------
- 1 files changed, 8 insertions(+), 18 deletions(-)
+Can we consider this a regression or am I doing something wrong?  The
+following returns 2 on post-2.6.26 mainline and 0 otherwise.
 
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 4d17f3d..e54711e 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -22,6 +22,7 @@
- 
- #include <linux/blkdev.h>
- #include <linux/crc-t10dif.h>
-+#include <asm/unaligned.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -142,11 +143,10 @@ static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
- static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
- {
- 	struct sd_dif_tuple *sdt = prot;
--	char *tag = tag_buf;
- 	unsigned int i, j;
- 
- 	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		sdt->app_tag = tag[j] << 8 | tag[j+1];
-+		sdt->app_tag = get_unaligned_be16(tag_buf + j);
- 		BUG_ON(sdt->app_tag == 0xffff);
- 	}
- }
-@@ -154,13 +154,10 @@ static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors
- static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
- {
- 	struct sd_dif_tuple *sdt = prot;
--	char *tag = tag_buf;
- 	unsigned int i, j;
- 
--	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		tag[j] = (sdt->app_tag & 0xff00) >> 8;
--		tag[j+1] = sdt->app_tag & 0xff;
--	}
-+	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++)
-+		put_unaligned_be16(sdt->app_tag, tag_buf + j);
- }
- 
- static struct blk_integrity dif_type1_integrity_crc = {
-@@ -256,29 +253,22 @@ static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
- static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
- {
- 	struct sd_dif_tuple *sdt = prot;
--	char *tag = tag_buf;
- 	unsigned int i, j;
- 
- 	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
--		sdt->app_tag = tag[j] << 8 | tag[j+1];
--		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
--			tag[j+4] << 8 | tag[j+5];
-+		sdt->app_tag = get_unaligned_be16(tag_buf + j);
-+		sdt->ref_tag = get_unaligned_be32(tag_buf + 2 + j);
- 	}
- }
- 
- static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
- {
- 	struct sd_dif_tuple *sdt = prot;
--	char *tag = tag_buf;
- 	unsigned int i, j;
- 
- 	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		tag[j] = (sdt->app_tag & 0xff00) >> 8;
--		tag[j+1] = sdt->app_tag & 0xff;
--		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
--		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
--		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
--		tag[j+5] = sdt->ref_tag & 0xff;
-+		put_unaligned_be16(sdt->app_tag, tag_buf + j);
-+		put_unaligned_be32(sdt->ref_tag, tag_buf + 2 + j);
- 		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
- 	}
- }
--- 
-1.5.6.4.570.g052e
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <scsi/scsi.h>
+#include <scsi/sg.h>
 
+int scsi_get_serial(int fd, void *buf, size_t buf_len)
+{
+        unsigned char inq_cmd[] = {INQUIRY, 1, 0x80, 0, buf_len, 0};
+        unsigned char sense[32];
+        struct sg_io_hdr io_hdr;
 
+        memset(&io_hdr, 0, sizeof(io_hdr));
+        io_hdr.interface_id = 'S';
+        io_hdr.cmdp = inq_cmd;
+        io_hdr.cmd_len = sizeof(inq_cmd);
+        io_hdr.dxferp = buf;
+        io_hdr.dxfer_len = buf_len;
+        io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+        io_hdr.sbp = sense;
+        io_hdr.mx_sb_len = sizeof(sense);
+        io_hdr.timeout = 5000;
 
+        return ioctl(fd, SG_IO, &io_hdr);
+}
+
+int main(void)
+{
+        char buf[255];
+        int fd;
+        int ret;
+
+        fd = open("/dev/sda", O_RDONLY);
+        ret = scsi_get_serial(fd, buf, sizeof(buf));
+        if (ret != 0)
+                return 1;
+        fd = open("/dev/sg0", O_RDONLY);
+        ret = scsi_get_serial(fd, buf, sizeof(buf));
+        if (ret != 0)
+                return 2;
+
+        return 0;
+}
