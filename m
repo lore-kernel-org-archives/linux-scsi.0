@@ -1,42 +1,31 @@
-From: scameron@beardog.cca.cpqcorp.net
-Subject: Re: HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Thu, 24 Jul 2008 11:02:16 -0500
-Message-ID: <20080724160216.GL8833@beardog.cca.cpqcorp.net>
-References: <20080722175729.GC8833@beardog.cca.cpqcorp.net> <20080724101953R.fujita.tomonori@lab.ntt.co.jp> <20080724133012.GH8833@beardog.cca.cpqcorp.net> <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 0/5] qla2xxx: more updates/fixes for 2.6.27 [8.02.01-k6].
+Date: Thu, 24 Jul 2008 10:05:36 -0600
+Message-ID: <20080724160536.GA18442@parisc-linux.org>
+References: <20080724153108.GI561@plap4-2.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:20742 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbYGXQCS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 12:02:18 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:52028 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbYGXQFh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 12:05:37 -0400
 Content-Disposition: inline
-In-Reply-To: <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <20080724153108.GI561@plap4-2.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mike.miller@hp.com, scameron@beardog.cca.cpqcorp.net
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
+On Thu, Jul 24, 2008 at 08:31:08AM -0700, Andrew Vasquez wrote:
+> Another round of updates/fixes for 2.6.27.
 
-In case it is of interest, here are the patches 
-to the 2.6.20.4 kernel which make a SCSI Smart Array
-driver that I did in April of 2007.  I called the 
-driver "hpsa", for HP Smart Array.
+Could you take this patch in through your tree too?
 
-https://sourceforge.net/project/showfiles.php?group_id=33072&package_id=285296
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=commitdiff;h=4735ad05143f7a4f3944522f1505ef3be77a2ce6
 
-I made these patches on a system which was booted from
-a SmartArray 6400 using the cciss driver, so the first 
-patch disables cciss support in the cciss driver for the P800, 
-and the resulting SCSI driver supports only the Smartarray P800,
-as I was doing the SCSI driver development on a P800 I had in
-the system.  That's the only reason that stuff is in 
-there in the 1st patch.
-
-Because of the way the first few patches move files around,
-these probably aren't particularly useful directly as patches
-(and of course, they're for an old kernel anyway), but might
-be useful as an illustration of one way things might be done.
-
--- steve
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
