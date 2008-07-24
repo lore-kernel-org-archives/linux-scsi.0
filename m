@@ -1,46 +1,41 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] block: fix q->max_segment_size checking in blk_recalc_rq_segments
- about VMERGE
-Date: Thu, 24 Jul 2008 11:07:02 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0807241103190.1545@devserv.devel.redhat.com>
-References: <1216520228.3376.33.camel@localhost.localdomain>
- <20080719.210737.197246608.davem@davemloft.net>  <1216565545.4199.10.camel@localhost.localdomain>
-  <20080720.102302.137955996.davem@davemloft.net> <1216575211.4199.35.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Fri, 25 Jul 2008 00:06:38 +0900
+Message-ID: <20080725000638Q.fujita.tomonori@lab.ntt.co.jp>
+References: <20080724133012.GH8833@beardog.cca.cpqcorp.net>
+	<20080724224438B.fujita.tomonori@lab.ntt.co.jp>
+	<0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1216575211.4199.35.camel@localhost.localdomain>
-Sender: linux-parisc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Miller <davem@davemloft.net>, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:42985 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbYGXPMr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2008 11:12:47 -0400
+In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike.Miller@hp.com
+Cc: fujita.tomonori@lab.ntt.co.jp, scameron@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> > For a dumb I/O card, you advertise SG_ALL capabilities, the IOMMU
-> > is going to merge things as it would have anyways, and you have
-> > code in the driver to advance SG entries after each "dumb I/O".
-> 
-> Not that dumb ... they just have a limited number of SG slots.  We
-> wouldn't want to run them as spoon fed PIO because that really would
-> kill performance.
-> 
-> > There is zero value to the vmerge code, the real gains are being
-> > realized already.
-> 
-> There is value to me in my testbed, which I can't achieve any other way
-> (except by buying different SCSI cards).
-> 
-> As I said, you can compile it out on sparc just fine.  I wish to keep it
-> running for parisc, so I'll maintain it.  If it ever bit rots out of
-> parisc like it has done for the other architectures, then feel free to
-> remove it.
-> 
-> James
+On Thu, 24 Jul 2008 15:00:00 +0000
+"Miller, Mike (OS Dev)" <Mike.Miller@hp.com> wrote:
 
-So try to #define BIO_VMERGE_BOUNDARY 0 for Pa-Risc and tell us what 
-performance degradation do you see (and what driver do you use and what is 
-the I/O pattern).
+> 
+> > > As for the patches I mentioned which were previously ignored for
+> > > improving how the current cciss SCSI code handled hot plogging, if
+> > > you're curious about that, check here:
+> > >
+> > > http://marc.info/?l=linux-scsi&m=120213565000426&w=4
+> > >
+> > > A change like that becomes more important if logical drives are
+> > > exposed through the scsi layer.
+> >
+> > We need to think about the best way to map (expose) logical
+> > and physical drivers to SCSI luns. As I wrote before, I'm
+> > interested in how HP SCSI driver does.
+> 
+> We don't neccesarily want or need to expose the physical disks. The only exception is disks that are not part of a logical volume. If the disks are part of a logical volume but exposed the user may shoot themselves in the foot by destroying the firmware metadata.
 
-If you show something specific, we can consider that --- but you haven't 
-yet told us anything, except generic talk.
-
-Mikulas
+Oops, sorry, I meant physical tape drives.
