@@ -1,31 +1,46 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] block: fix q->max_segment_size checking in
- blk_recalc_rq_segments about VMERGE
-Date: Thu, 24 Jul 2008 22:21:52 -0700 (PDT)
-Message-ID: <20080724.222152.193709632.davem@davemloft.net>
-References: <Pine.LNX.4.64.0807241727320.12036@devserv.devel.redhat.com>
-	<20080724.145336.41899163.davem@davemloft.net>
-	<1216957670.4524.87.camel@localhost.localdomain>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: [PATCH][SCSI] hptiop: add more PCI device IDs
+Date: Fri, 25 Jul 2008 13:29:24 +0800
+Message-ID: <200807251329.24263.linux@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1216957670.4524.87.camel@localhost.localdomain>
-Sender: linux-parisc-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: mpatocka@redhat.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp109.biz.mail.mud.yahoo.com ([68.142.201.178]:45094 "HELO
+	smtp109.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751220AbYGYFgN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jul 2008 01:36:13 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Thu, 24 Jul 2008 23:47:50 -0400
+Add PCI device ID for new adapter models.
 
-> I'm sorry sparc broke, really I am ... but you changed your iommu code
-> from one with a working vmerge to one without and failed to turn off
-> vmerging.  Partly it wasn't noticed because at 2*PAGE_SIZE you have a
-> strange vmerge boundary, so it's harder to notice.   However, I can't
-> extrapolate that just because this happened on sparc it will inevitably
-> happen on all other architectures.
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+---
 
-The vmerge boundary on sparc64 was 8K which is equal to sparc64's base
-PAGE_SIZE.  I don't know where you get that 2*PAGE_SIZE from.
+ drivers/scsi/hptiop.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff -purN linux-2.6.26-rc8/drivers/scsi/hptiop.c linux-2.6.26-rc8-hpt/drivers/scsi/hptiop.c
+--- linux-2.6.26-rc8/drivers/scsi/hptiop.c	2008-06-25 09:58:20.000000000 +0800
++++ linux-2.6.26-rc8-hpt/drivers/scsi/hptiop.c	2008-07-24 15:09:50.000000000 +0800
+@@ -1249,6 +1249,13 @@ static struct pci_device_id hptiop_id_ta
+ 	{ PCI_VDEVICE(TTI, 0x3522), (kernel_ulong_t)&hptiop_itl_ops },
+ 	{ PCI_VDEVICE(TTI, 0x3410), (kernel_ulong_t)&hptiop_itl_ops },
+ 	{ PCI_VDEVICE(TTI, 0x3540), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x3530), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x3560), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x4322), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x4210), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x4211), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x4310), (kernel_ulong_t)&hptiop_itl_ops },
++	{ PCI_VDEVICE(TTI, 0x4311), (kernel_ulong_t)&hptiop_itl_ops },
+ 	{ PCI_VDEVICE(TTI, 0x3120), (kernel_ulong_t)&hptiop_mv_ops },
+ 	{ PCI_VDEVICE(TTI, 0x3122), (kernel_ulong_t)&hptiop_mv_ops },
+ 	{ PCI_VDEVICE(TTI, 0x3020), (kernel_ulong_t)&hptiop_mv_ops },
 
