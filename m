@@ -1,58 +1,34 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Thu, 24 Jul 2008 13:47:48 -0400
-Message-ID: <1216921668.13842.6.camel@boris.fwe.com>
-References: <20080722175729.GC8833@beardog.cca.cpqcorp.net>
-	 <20080724101953R.fujita.tomonori@lab.ntt.co.jp>
-	 <20080724133012.GH8833@beardog.cca.cpqcorp.net>
-	 <20080724224438B.fujita.tomonori@lab.ntt.co.jp>
-	 <0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH 2/5] drivers/scsi/aic94xx/: replace __FUNCTION__ with
+	__func__
+Date: Fri, 25 Jul 2008 09:42:54 -0700
+Message-ID: <20080725164253.GA7355@tree.beaverton.ibm.com>
+References: <1216954114-31949-1-git-send-email-crquan@gmail.com>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:20982 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbYGYOjS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2008 10:39:18 -0400
-In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:42265 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbYGYQnO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2008 12:43:14 -0400
+Content-Disposition: inline
+In-Reply-To: <1216954114-31949-1-git-send-email-crquan@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Denis ChengRq <crquan@gmail.com>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2008-07-24 at 15:00 +0000, Miller, Mike (OS Dev) wrote:
-> > > As for the patches I mentioned which were previously ignored for
-> > > improving how the current cciss SCSI code handled hot plogging, if
-> > > you're curious about that, check here:
-> > >
-> > > http://marc.info/?l=linux-scsi&m=120213565000426&w=4
-> > >
-> > > A change like that becomes more important if logical drives are
-> > > exposed through the scsi layer.
-> >
-> > We need to think about the best way to map (expose) logical
-> > and physical drivers to SCSI luns. As I wrote before, I'm
-> > interested in how HP SCSI driver does.
-> 
-> We don't neccesarily want or need to expose the physical disks. The
-> only exception is disks that are not part of a logical volume. If the
-> disks are part of a logical volume but exposed the user may shoot
-> themselves in the foot by destroying the firmware metadata.
+On Fri, Jul 25, 2008 at 10:48:33AM +0800, Denis ChengRq wrote:
+> Signed-off-by: Denis ChengRq <crquan@gmail.com>
 
-Exposing the underlying disks can be useful for things such as:
+No justification or changelog?
 
-      * Finding out what is in a logical drive.
-      * Checking and updating disk firmware.
-      * Running smartctrl tests on disks
+> -		__FUNCTION__)
+> +		__func__)
 
-> -- mikem
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
--- 
-Andrew Patterson
-Hewlett-Packard
+include/linux/kernel.h:503:#define __FUNCTION__ (__func__)
 
+I assume you're trying to kill this?
+
+--D
