@@ -1,85 +1,201 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH] scsi: sd_dif.c use unaligned access helpers
-Date: Fri, 25 Jul 2008 22:14:00 -0700
-Message-ID: <1217049240.5971.51.camel@brick>
-References: <1216854460.30386.32.camel@brick>
-	 <yq1od4l8eb2.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/3] rename blk_scsi_cmd_filter to blk_cmd_filter
+Date: Sat, 26 Jul 2008 18:03:25 +0900
+Message-ID: <1217063005-25083-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <20080724123140V.fujita.tomonori@lab.ntt.co.jp>
+ <1217063005-25083-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1217063005-25083-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1217063005-25083-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:22953 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbYGZFOC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2008 01:14:02 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2284362waf.23
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2008 22:14:02 -0700 (PDT)
-In-Reply-To: <yq1od4l8eb2.fsf@sermon.lab.mkp.net>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:55197 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751276AbYGZJFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Jul 2008 05:05:22 -0400
+In-Reply-To: <1217063005-25083-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>
+To: linux-scsi@vger.kernel.org
+Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, dan.j.williams@intel.com, adel.gadllah@gmail.com, pjones@redhat.com, viro@ZenIV.linux.org.uk, dougg@torque.net, matthew@wil.cx, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Sat, 2008-07-26 at 00:22 -0400, Martin K. Petersen wrote:
-> >>>>> "Harvey" == Harvey Harrison <harvey.harrison@gmail.com> writes:
-> 
-> [Sorry about the delayed response.  I've been traveling for a few
-> days.]
-> 
-> Harvey> This code should be looked at carefully, while this patch
-> Harvey> doesn't change any behaviour, the handling of app_tag, ref_tag
-> Harvey> seems odd.  The struct defines both as __be16/32 but in these
-> Harvey> locations it is read in/written out as cpu-byteorder.
-> 
-> The opaque tag space (app in Type 1+2, app + ref in Type 3) is
-> provided for use by filesystems.  The SCSI layer doesn't know anything
-> about the contents of the tag buffer.  It has no idea whether it
-> contains bytes, shorts, ints or longs.  So we can't swab on the
-> assumption that each DIF tuple contains an u16.  Just like we don't
-> byteswap any other data coming down from above.
-> 
-> Filesystems must prepare tags in an endianness-aware fashion just like
-> they prepare normal filesystem metadata.  And at the SCSI layer we
-> treat it as a byte stream.
+Technically, the cmd_filter would be applied to other protocols though
+it's unlikely to happen. Putting SCSI stuff to request_queue is kinda
+layer violation. So let's rename it.
 
-OK.  But everywhere in this file app_tag is treated as host-order,
-and causes no end of sparse warnings.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/cmd-filter.c     |   30 +++++++++++++++---------------
+ block/scsi_ioctl.c     |    2 +-
+ include/linux/blkdev.h |    8 ++++----
+ 3 files changed, 20 insertions(+), 20 deletions(-)
 
-Looking just at type1 (with some comments):
-
-static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
-{
-	struct sd_dif_tuple *sdt = prot;
-	char *tag = tag_buf;
-	unsigned int i, j;
-
-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-//app_tag is host-order, read in as raw byte in be-order
-		sdt->app_tag = tag[j] << 8 | tag[j+1];
-		BUG_ON(sdt->app_tag == 0xffff);
-	}
-}
-
-static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
-{
-	struct sd_dif_tuple *sdt = prot;
-	char *tag = tag_buf;
-	unsigned int i, j;
-
-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-//app_tag is host order again, read out in be-byteorder
-		tag[j] = (sdt->app_tag & 0xff00) >> 8;
-		tag[j+1] = sdt->app_tag & 0xff;
-	}
-}
-
-So who cares what the spec says, the code is treating it as a host-order
-u16 everywhere.  Similarly for the ref_tag.  So if you're going to 
-manipulate them in host-order, just declare the struct in host order.
-
-Anyways, maybe I'm mistaken here.
-
-Harvey
-
-
+diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+index c705c33..0e3a123 100644
+--- a/block/cmd-filter.c
++++ b/block/cmd-filter.c
+@@ -27,7 +27,7 @@
+ #include <scsi/scsi.h>
+ #include <linux/cdrom.h>
+ 
+-int blk_verify_command(struct blk_scsi_cmd_filter *filter,
++int blk_verify_command(struct blk_cmd_filter *filter,
+ 		       unsigned char *cmd, int has_write_perm)
+ {
+ 	/* root can do any command. */
+@@ -51,7 +51,7 @@ int blk_verify_command(struct blk_scsi_cmd_filter *filter,
+ EXPORT_SYMBOL(blk_verify_command);
+ 
+ /* and now, the sysfs stuff */
+-static ssize_t rcf_cmds_show(struct blk_scsi_cmd_filter *filter, char *page,
++static ssize_t rcf_cmds_show(struct blk_cmd_filter *filter, char *page,
+ 			     int rw)
+ {
+ 	char *npage = page;
+@@ -78,18 +78,18 @@ static ssize_t rcf_cmds_show(struct blk_scsi_cmd_filter *filter, char *page,
+ 	return npage - page;
+ }
+ 
+-static ssize_t rcf_readcmds_show(struct blk_scsi_cmd_filter *filter, char *page)
++static ssize_t rcf_readcmds_show(struct blk_cmd_filter *filter, char *page)
+ {
+ 	return rcf_cmds_show(filter, page, READ);
+ }
+ 
+-static ssize_t rcf_writecmds_show(struct blk_scsi_cmd_filter *filter,
++static ssize_t rcf_writecmds_show(struct blk_cmd_filter *filter,
+ 				 char *page)
+ {
+ 	return rcf_cmds_show(filter, page, WRITE);
+ }
+ 
+-static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
++static ssize_t rcf_cmds_store(struct blk_cmd_filter *filter,
+ 			      const char *page, size_t count, int rw)
+ {
+ 	ssize_t ret = 0;
+@@ -122,13 +122,13 @@ static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
+ 	return count;
+ }
+ 
+-static ssize_t rcf_readcmds_store(struct blk_scsi_cmd_filter *filter,
++static ssize_t rcf_readcmds_store(struct blk_cmd_filter *filter,
+ 				  const char *page, size_t count)
+ {
+ 	return rcf_cmds_store(filter, page, count, READ);
+ }
+ 
+-static ssize_t rcf_writecmds_store(struct blk_scsi_cmd_filter *filter,
++static ssize_t rcf_writecmds_store(struct blk_cmd_filter *filter,
+ 				   const char *page, size_t count)
+ {
+ 	return rcf_cmds_store(filter, page, count, WRITE);
+@@ -136,8 +136,8 @@ static ssize_t rcf_writecmds_store(struct blk_scsi_cmd_filter *filter,
+ 
+ struct rcf_sysfs_entry {
+ 	struct attribute attr;
+-	ssize_t (*show)(struct blk_scsi_cmd_filter *, char *);
+-	ssize_t (*store)(struct blk_scsi_cmd_filter *, const char *, size_t);
++	ssize_t (*show)(struct blk_cmd_filter *, char *);
++	ssize_t (*store)(struct blk_cmd_filter *, const char *, size_t);
+ };
+ 
+ static struct rcf_sysfs_entry rcf_readcmds_entry = {
+@@ -164,9 +164,9 @@ static ssize_t
+ rcf_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+ {
+ 	struct rcf_sysfs_entry *entry = to_rcf(attr);
+-	struct blk_scsi_cmd_filter *filter;
++	struct blk_cmd_filter *filter;
+ 
+-	filter = container_of(kobj, struct blk_scsi_cmd_filter, kobj);
++	filter = container_of(kobj, struct blk_cmd_filter, kobj);
+ 	if (entry->show)
+ 		return entry->show(filter, page);
+ 
+@@ -178,7 +178,7 @@ rcf_attr_store(struct kobject *kobj, struct attribute *attr,
+ 			const char *page, size_t length)
+ {
+ 	struct rcf_sysfs_entry *entry = to_rcf(attr);
+-	struct blk_scsi_cmd_filter *filter;
++	struct blk_cmd_filter *filter;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+@@ -186,7 +186,7 @@ rcf_attr_store(struct kobject *kobj, struct attribute *attr,
+ 	if (!entry->store)
+ 		return -EINVAL;
+ 
+-	filter = container_of(kobj, struct blk_scsi_cmd_filter, kobj);
++	filter = container_of(kobj, struct blk_cmd_filter, kobj);
+ 	return entry->store(filter, page, length);
+ }
+ 
+@@ -203,7 +203,7 @@ static struct kobj_type rcf_ktype = {
+ int blk_register_filter(struct gendisk *disk)
+ {
+ 	int ret;
+-	struct blk_scsi_cmd_filter *filter = &disk->queue->cmd_filter;
++	struct blk_cmd_filter *filter = &disk->queue->cmd_filter;
+ 	struct kobject *parent = kobject_get(disk->holder_dir->parent);
+ 
+ 	if (!parent)
+@@ -220,7 +220,7 @@ int blk_register_filter(struct gendisk *disk)
+ 
+ void blk_unregister_filter(struct gendisk *disk)
+ {
+-	struct blk_scsi_cmd_filter *filter = &disk->queue->cmd_filter;
++	struct blk_cmd_filter *filter = &disk->queue->cmd_filter;
+ 
+ 	kobject_put(&filter->kobj);
+ 	kobject_put(disk->holder_dir->parent);
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 1f7d56e..6ae41a5 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -105,7 +105,7 @@ static int sg_emulated_host(struct request_queue *q, int __user *p)
+ 	return put_user(1, p);
+ }
+ 
+-void blk_set_cmd_filter_defaults(struct blk_scsi_cmd_filter *filter)
++void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ {
+ 	/* Basic read-only commands */
+ 	__set_bit(TEST_UNIT_READY, filter->read_ok);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 211160f..e23f2ad 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -283,7 +283,7 @@ struct blk_queue_tag {
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+ 
+-struct blk_scsi_cmd_filter {
++struct blk_cmd_filter {
+ 	unsigned long read_ok[BLK_SCSI_CMD_PER_LONG];
+ 	unsigned long write_ok[BLK_SCSI_CMD_PER_LONG];
+ 	struct kobject kobj;
+@@ -407,7 +407,7 @@ struct request_queue
+ #if defined(CONFIG_BLK_DEV_BSG)
+ 	struct bsg_class_device bsg_dev;
+ #endif
+-	struct blk_scsi_cmd_filter cmd_filter;
++	struct blk_cmd_filter cmd_filter;
+ };
+ 
+ #define QUEUE_FLAG_CLUSTER	0	/* cluster several segments into 1 */
+@@ -842,11 +842,11 @@ extern int blkdev_issue_flush(struct block_device *, sector_t *);
+ /*
+ * command filter functions
+ */
+-extern int blk_verify_command(struct blk_scsi_cmd_filter *filter,
++extern int blk_verify_command(struct blk_cmd_filter *filter,
+ 			      unsigned char *cmd, int has_write_perm);
+ extern int blk_register_filter(struct gendisk *disk);
+ extern void blk_unregister_filter(struct gendisk *disk);
+-extern void blk_set_cmd_filter_defaults(struct blk_scsi_cmd_filter *filter);
++extern void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter);
+ 
+ #define MAX_PHYS_SEGMENTS 128
+ #define MAX_HW_SEGMENTS 128
+-- 
+1.5.4.2
 
