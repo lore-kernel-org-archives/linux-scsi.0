@@ -1,81 +1,81 @@
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-Subject: Re: [PATCH 0/3] cmd_filter fixes
-Date: Sun, 27 Jul 2008 22:02:15 +0200
-Message-ID: <6cf6b73e0807271302o77700222r321102ef7be0333b@mail.gmail.com>
-References: <20080724123140V.fujita.tomonori@lab.ntt.co.jp>
-	 <1217063005-25083-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <6cf6b73e0807271259y2fb9c565jc6981438feeb571f@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC 03/14] osd_uld: OSD scsi ULD
+Date: Sun, 27 Jul 2008 17:16:15 -0400
+Message-ID: <1217193375.3503.31.camel@localhost.localdomain>
+References: <48876009.8010701@panasas.com> <4888BC3B.1050406@panasas.com>
+	 <4888C023.7070105@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:20338 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757622AbYG0UCT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Jul 2008 16:02:19 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1953176fgg.17
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2008 13:02:15 -0700 (PDT)
-In-Reply-To: <6cf6b73e0807271259y2fb9c565jc6981438feeb571f@mail.gmail.com>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:38591 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758433AbYG0WkO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Jul 2008 18:40:14 -0400
+In-Reply-To: <4888C023.7070105@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net, matthew@wil.cx
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Benny Halevy <bhalevy@panasas.com>, Mike Christie <michaelc@cs.wisc.edu>, Pete Wyckoff <pw@osc.edu>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>
 
-2008/7/27 Adel Gadllah <adel.gadllah@gmail.com>:
-> 2008/7/26 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
->> cmd_filter works only for the block layer SG_IO with SCSI block
->> devices. It breaks scsi/sg.c, bsg, and the block layer SG_IO with SCSI
->> character devices (such as st). We might hit a kernel crash with them.
->>
->> The problem is that cmd_filter code accesses to gendisk (having struct
->> blk_scsi_cmd_filter) via inode->i_bdev->bd_disk. It works for only
->> SCSI block device files. With character device files, inode->i_bdev
->> leads you to struct cdev. inode->i_bdev->bd_disk->blk_scsi_cmd_filter
->> isn't safe. For example, I got the following kernel crash with bsg:
->>
->> Pid: 1480, comm: bsg-test Not tainted (2.6.26-06879-gfb2e405 #1)
->> EIP: 0060:[<c01b02fd>] EFLAGS: 00010202 CPU: 0
->> EIP is at blk_cmd_filter_verify_command+0x1e/0x41
->> EAX: 00000000 EBX: 00000237 ECX: 00000011 EDX: 00000003
->> ESI: df9692ae EDI: de93485c EBP: de8ea3a8 ESP: de937e90
->>  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
->> Process bsg-test (pid: 1480, ti=de936000 task=df8b7230 task.ti=de936000)
->> Stack: de937ec4 df969228 fffffff2 c01b0866 df025030 00000000 de937ec4 c01b1009
->>       bf9a5b10 de8ea3a8 c01b110e 00000246 df1985f4 00000051 00000000 00000000
->>       00000006 bf9a5bd2 00000000 00000000 00000000 00000000 00000000 00000000
->> Call Trace:
->>  [<c01b0866>] bsg_map_hdr+0xe7/0x225
->>  [<c01b1009>] bsg_ioctl+0x0/0x17c
->>  [<c01b110e>] bsg_ioctl+0x105/0x17c
->>  [<c01b1009>] bsg_ioctl+0x0/0x17c
->>  [<c015a11a>] vfs_ioctl+0x16/0x48
->>  [<c015a332>] do_vfs_ioctl+0x1e6/0x1f9
->>  [<c01b770c>] trace_hardirqs_on_thunk+0xc/0x10
->>  [<c015a371>] sys_ioctl+0x2c/0x43
->>  [<c01028b1>] sysenter_do_call+0x12/0x35
->>  =======================
->> Code: 10 89 fa ff d3 89 c2 89 d0 5b 5e 5f c3 57 56 53 89 c3 89 d6 89 cf b8 11 00 00 00 e8 fd 94 f6 ff 85 c0 75 1f 85 db 74 1f 0f b6 16 <0f> a3 13 19 c0 85 c0 75 0f 0f a3 53 20 19 c0 85 c0 74 09 f6 07
->> EIP: [<c01b02fd>] blk_cmd_filter_verify_command+0x1e/0x41 SS:ESP 0068:de937e90
->> ---[ end trace 0cceddb2f202a402 ]---
->>
->>
->> SCSI ULDs don't expose gendisk; they keep it private. bsg needs to be
->> independent on any protocols. We shouldn't change ULDs to expose their
->> gendisk.
->>
->> This patchset moves struct blk_scsi_cmd_filter from gendisk to
->> request_queue, a common object, which eveyone can access to.
->>
->> The user interface doesn't change; users can change the filters via
->> /sys/block/. gendisk has a pointer to request_queue so the cmd_filter
->> code accesses to struct blk_scsi_cmd_filter.
->
-> Thanks for the fixes, wanted to test them but they don't apply cleanly
-> here (tried against Jens and Linus tree).
-> Anyway the look fine to me from just reading it ... have you tested if
-> changing the filter actually works?
->
-Should be "Anyway the look fine to me from just reading them ... have
-you tested if
-changing the filter (via sysfs) actually works?"
+On Thu, 2008-07-24 at 20:47 +0300, Boaz Harrosh wrote:
+> Add a Linux driver module that registers as a SCSI ULD and probes for OSD type
+> SCSI devices.
+> 
+> When an OSD-type SCSI device is found a character device is created in the form
+> of /dev/osdX - where X goes from 0 up to hard coded 64.
+> The Major character device number used is *232*, which is free (as of Linux
+> v2.6.27). The same Major was used by the old IBM initiator project.
+> 
+> TODO: How to dynamically allocate a Major and have a /dev/osdX entry linked
+> to it? Do I need/should reserve the minor range in advance, if not how?
+> 
+> A single ioctl is currently supported that will invoke an in-kernel test on
+> the specified OSD device (lun).
+
+The first thing that immediately leaps to mind is are you sure this
+should be a character device?  Since it's only open/close/ioctl (as in
+no read/write) you could then use all the file bdev handling to get back
+to struct osd_device, plus you can bind to bsg (and SG_IO) which is
+unaccountably missing in this prototype.
+
+The second observation is that refcounting in this driver is
+non-existent.  Doing a kfree(osd_dev) from osd_remove makes open device
+remove module do something else look to be a certain oops ... you can
+use the refcounting models of sd or st to see how this is done.
+
+There's a convention that gendisk->private_data points to a pointer to
+the driver.  This was originally a viro clever trick to allow the
+private_data to store both the driver and the uld device (struct
+osd_dev).  I think we've dispensed with needing the driver, so perhaps
+this trick is unnecessary, but you'll need something similar to do
+refcounting properly.
+
+Since OSDs are currently potentially removable spinning media with
+caches, it looks like you potentially also need locking control.  You
+might also need a shutdown method to cope with object flushing before
+power down.
+
+Somehow the capacity has to be plumbed in (this also really makes them
+block devices not character devices).  It looks like the total capacity
+attribute of the root information attributes page would be appropriate
+for this.
+
+The ioctl flow needs to be plumbed into scsi_ioctl() since the gendisk
+ULD will need to handle all the standard SCSI ioctls.
+
+You can't have 232 char as the major for this ... it's already assigned
+to biometric devices (although I think 232 block is free).  Whatever
+number you choose has to be requested through lanana and
+Documentation/device-list.txt updated accordingly.
+
+(as you noted, TYPE_OSD has to be correctly in the global headers)
+
+Please don't use sysfs_create_file (it can be racy and accident prone);
+just do the extra files as declared attributes of the osd class and let
+drivers/base handle all the setup/teardown  (sd is a good template).
+
+James
+
+
