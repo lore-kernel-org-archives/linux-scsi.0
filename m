@@ -1,111 +1,123 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [SCSI] can't plug Nokia 5300 anymore (bisected)
-Date: Mon, 28 Jul 2008 11:19:10 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0807281054060.2296-100000@iolanthe.rowland.org>
-References: <488D837D.1070001@belbone.be>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Mon, 28 Jul 2008 21:33:18 +0400
+Message-ID: <488E02DE.5080100@vlnb.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756513AbYG1PTZ@vger.kernel.org>
-In-Reply-To: <488D837D.1070001@belbone.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?C=E9dric_Godin?= <cedric@belbone.be>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Kernel <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:38537 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750720AbYG1RdP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jul 2008 13:33:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-On Mon, 28 Jul 2008, C=E9dric Godin wrote:
+This patch fixes race on dpc_thread field of struct scsi_qla_host,
+which can lead to crash on the module unload.
 
-> >>>> Hello,
-> >>>>
-> >>>> since 2 or 3 -git kernels (Linus tree)  I have a problem with my=
- laptop=20
-> >>>> and its connection through USB to a nokia 5300 gsm.
-> >>>>
-> >>>> The logs show me a endless loop (until i unplug my USB cable) of=
-=20
-> >>>> following messages :
-> >>>>
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
-> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
-> >>>>
-> >>>> I bisected the kernel and found the following commit as result :
-> >>>>
-> >>>> 427e59f09fdba387547106de7bab980b7fff77be is first bad commit
-> >>>> commit 427e59f09fdba387547106de7bab980b7fff77be
-> >>>> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> >>>> Date:   Sat Mar 8 18:24:17 2008 -0600
-> >>>>
-> >>>>    [SCSI] make use of the residue value
-> >>>>
-> >>>>    USB sometimes doesn't return an error but instead returns a r=
-esidue
-> >>>>    value indicating part (or all) of the command wasn't complete=
-d.  So if
-> >>>>    the driver _done() error processing indicates the command was=
- fully
-> >>>>    processed, subtract off the residue so that this USB error ge=
-ts
-> >>>>    propagated.
+This patch is against 2.6.26
 
-> That's me sending the wrong dmesg, sorry :-$
->=20
-> Attached is the "good" one.
->=20
-> > see only one error, and the commit you found wouldn't have affected=
-=20
-> > that error.  More accurately, if the commit magnified the error int=
-o an=20
-> > endless loop, then without the commit the error would still have be=
-en=20
-> > present and would have caused data corruption.
-> >
-> > Anyway, it would be interesting to see what happens with the commit=
- in=20
-> > place and the following patch applied.  (The first part of the patc=
-h=20
-> > has already been accepted by James.)
-> >  =20
-> Same problem.
+Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 
-Okay.  The problem is one we've seen many times in the past: The device
-reports that it contains one sector more than it really does contain. =20
-When the system tries to access the non-existent "last" sector, all
-sorts of problems occur.  In your case the device returned no data,
-together with an indication that a problem existed (Check Condition
-status) and no indication of what the problem actually was (no Sense
-data).
+ qla_def.h |    1 +
+ qla_mbx.c |    2 +-
+ qla_os.c  |   36 ++++++++++++++++++++++++++----------
+ 3 files changed, 28 insertions(+), 11 deletions(-)
 
-The patch below should fix the problem.
-
-Alan Stern
-
-
-
-Index: usb-2.6/drivers/usb/storage/unusual_devs.h
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- usb-2.6.orig/drivers/usb/storage/unusual_devs.h
-+++ usb-2.6/drivers/usb/storage/unusual_devs.h
-@@ -225,6 +225,13 @@ UNUSUAL_DEV(  0x0421, 0x0495, 0x0370, 0x
- 		US_SC_DEVICE, US_PR_DEVICE, NULL,
- 		US_FL_MAX_SECTORS_64 ),
-=20
-+/* Reported by Cedric Godin <cedric@belbone.be> */
-+UNUSUAL_DEV(  0x0421, 0x04b9, 0x0551, 0x0551,
-+		"Nokia",
-+		"5300",
-+		US_SC_DEVICE, US_PR_DEVICE, NULL,
-+		US_FL_FIX_CAPACITY ),
+diff -upr linux-2.6.26/drivers/scsi/qla2xxx/qla_def.h linux-2.6.26/drivers/scsi/qla2xxx/qla_def.h
+--- linux-2.6.26/drivers/scsi/qla2xxx/qla_def.h	2008-07-14 01:51:29.000000000 +0400
++++ linux-2.6.26/drivers/scsi/qla2xxx/qla_def.h	2008-07-24 10:07:39.000000000 +0400
+@@ -2425,6 +2436,7 @@ typedef struct scsi_qla_host {
+ 	void			*sfp_data;
+ 	dma_addr_t		sfp_data_dma;
+ 
++	spinlock_t		dpc_lock;
+ 	struct task_struct	*dpc_thread;
+ 	uint8_t dpc_active;                  /* DPC routine is active */
+ 
+diff -upr linux-2.6.26/drivers/scsi/qla2xxx/qla_mbx.c linux-2.6.26/drivers/scsi/qla2xxx/qla_mbx.c
+--- linux-2.6.26/drivers/scsi/qla2xxx/qla_mbx.c	2008-07-14 01:51:29.000000000 +0400
++++ linux-2.6.26/drivers/scsi/qla2xxx/qla_mbx.c	2008-07-23 19:27:20.000000000 +0400
+@@ -2683,7 +2687,7 @@ qla24xx_report_id_acquisition(scsi_qla_h
+ 		set_bit(VP_IDX_ACQUIRED, &vha->vp_flags);
+ 		set_bit(VP_DPC_NEEDED, &ha->dpc_flags);
+ 
+-		wake_up_process(ha->dpc_thread);
++		qla2xxx_wake_dpc(ha);
+ 	}
+ }
+ 
+diff -upr linux-2.6.26/drivers/scsi/qla2xxx/qla_os.c linux-2.6.26/drivers/scsi/qla2xxx/qla_os.c
+--- linux-2.6.26/drivers/scsi/qla2xxx/qla_os.c	2008-07-14 01:51:29.000000000 +0400
++++ linux-2.6.26/drivers/scsi/qla2xxx/qla_os.c	2008-07-24 10:13:45.000000000 +0400
+@@ -1632,6 +1630,8 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 	/* load the F/W, read paramaters, and init the H/W */
+ 	ha->instance = num_hosts;
+ 
++	spin_lock_init(&ha->dpc_lock);
 +
- /* Reported by Olaf Hering <olh@suse.de> from novell bug #105878 */
- UNUSUAL_DEV(  0x0424, 0x0fdc, 0x0210, 0x0210,
- 		"SMSC",
+ 	mutex_init(&ha->vport_lock);
+ 	init_completion(&ha->mbx_cmd_comp);
+ 	complete(&ha->mbx_cmd_comp);
+@@ -1764,6 +1770,26 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ }
+ 
+ static void
++qla2x00_stop_dpc_thread(scsi_qla_host_t *ha)
++{
++	struct task_struct *t = NULL;
++
++	spin_lock_irq(&ha->dpc_lock);
++	if (ha->dpc_thread != NULL) {
++		t = ha->dpc_thread;
++		/*
++		 * qla2xxx_wake_dpc checks for ->dpc_thread
++		 * so we need to zero it out.
++		 */
++		ha->dpc_thread = NULL;
++	}
++	spin_unlock_irq(&ha->dpc_lock);
++
++	if (t != NULL)
++		kthread_stop(t);
++}
++
++static void
+ qla2x00_free_device(scsi_qla_host_t *ha)
+ {
+ 	qla2x00_abort_all_cmds(ha, DID_NO_CONNECT << 16);
+@@ -1775,16 +1801,7 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	ha->flags.online = 0;
+ 
+ 	/* Kill the kernel thread for this host */
+-	if (ha->dpc_thread) {
+-		struct task_struct *t = ha->dpc_thread;
+-
+-		/*
+-		 * qla2xxx_wake_dpc checks for ->dpc_thread
+-		 * so we need to zero it out.
+-		 */
+-		ha->dpc_thread = NULL;
+-		kthread_stop(t);
+-	}
++	qla2x00_stop_dpc_thread(ha);
+ 
+ 	if (ha->flags.fce_enabled)
+ 		qla2x00_disable_fce_trace(ha, NULL, NULL);
+@@ -2427,8 +2444,11 @@ qla2x00_do_dpc(void *data)
+ void
+ qla2xxx_wake_dpc(scsi_qla_host_t *ha)
+ {
++	unsigned long flags;
++	spin_lock_irqsave(&ha->dpc_lock, flags);
+ 	if (ha->dpc_thread)
+ 		wake_up_process(ha->dpc_thread);
++	spin_unlock_irqrestore(&ha->dpc_lock, flags);
+ }
+ 
+ /*
+
