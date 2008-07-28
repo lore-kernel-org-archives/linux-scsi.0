@@ -1,48 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
-Date: Mon, 28 Jul 2008 10:31:53 -0400
-Message-ID: <yq1od4ikrl2.fsf@sermon.lab.mkp.net>
-References: <20080619160342.GJ4392@parisc-linux.org>
-	<20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com>
-	<48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk>
-	<20080625172015.GR4392@parisc-linux.org>
-	<20080625172638.GE20851@kernel.dk>
-	<yq1d4m575je.fsf@sermon.lab.mkp.net> <488DCB5A.9080105@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11117] New: aic94xx doesn't sustain the load when more
+	than 2 SAS drives are connected and actively used
+Date: Mon, 28 Jul 2008 09:44:29 -0500
+Message-ID: <1217256269.3503.73.camel@localhost.localdomain>
+References: <bug-11117-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:10173 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbYG1Oci (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2008 10:32:38 -0400
-In-Reply-To: <488DCB5A.9080105@redhat.com> (Ric Wheeler's message of "Mon\, 28 Jul 2008 09\:36\:26 -0400")
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:45315 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751563AbYG1Oo6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jul 2008 10:44:58 -0400
+In-Reply-To: <bug-11117-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rwheeler@redhat.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Ric" == Ric Wheeler <rwheeler@redhat.com> writes:
+On Fri, 2008-07-18 at 08:37 -0700, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=11117
+> 
+>            Summary: aic94xx doesn't sustain the load when more than 2 SAS
+>                     drives are connected and actively used
+[...]
+> aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x6
+> sas: command 0xffff8101d39733c0, task 0xffff8105e9e51240, timed out:
+> EH_NOT_HANDLED
+> sas: command 0xffff8104db3d1e40, task 0xffff8105ed10a6c0, timed out:
 
-Ric> One other thought - is there a way to give non-rotational devices
-Ric> also some indication of latency? (FLASH is slower than enterprise
-Ric> SSD is slower than DRAM ramdisk for example)?
+This is more or less a known problem with aic94xx.  It's root cause is
+that there are certain bus conditions the firmware requires help with.
+REQ_TASK_ABORT is one of them (reason 0x6 means there was a protocol
+error on the bus).  What the card would like is for us to abort and
+retransmit that command immediately (running abort).  What we actually
+do is to mark the command for abort by the error handler, halt all
+in-progress commands and wake up the eh thread.  This causes a nasty
+hiccough in the data flow and runs into a potential snowball effect in
+that if we get another REQ_TASK_ABORT on the retry of all the halted
+commands (and there are quite a number of them), we have to do
+everything over again (do this too often and the command will time out).
 
-The current SBC draft only distinguishes between rotating media
-speeds.  There is only one classification for non-rotating media in
-the block device characteristics VPD.
+The fix is to alter the aic94xx code to do a running abort (as in do it
+itself on the single command instead of halting everything and waking
+the error handler).  Unfortunately no-one's found the time to sit down
+and code this up yet.
 
-For a mechanical disk drive the rpm isn't a terrible gauge for
-performance.  But for a solid state device I think it will be hard to
-define a similar universal metric.
+James
 
-Ignoring SLC vs. MLC for a moment I think it's also safe to predict
-that the enterprise drive of today will be the consumer drive of
-tomorrow.
-
-Maybe the ssd device could export the anticipated command response
-time for a request that matches the Optimal Transfer Length field in
-the block limits VPD?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
 
