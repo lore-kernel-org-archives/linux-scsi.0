@@ -1,64 +1,111 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11117] aic94xx doesn't sustain the load when more than 2 SAS drives are connected and actively used
-Date: Mon, 28 Jul 2008 07:45:06 -0700 (PDT)
-Message-ID: <20080728144506.DE0FB108035@picon.linux-foundation.org>
-References: <bug-11117-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48495 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752015AbYG1OpJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2008 10:45:09 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6SEj6nK009572
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2008 07:45:08 -0700
-In-Reply-To: <bug-11117-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [SCSI] can't plug Nokia 5300 anymore (bisected)
+Date: Mon, 28 Jul 2008 11:19:10 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807281054060.2296-100000@iolanthe.rowland.org>
+References: <488D837D.1070001@belbone.be>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756513AbYG1PTZ@vger.kernel.org>
+In-Reply-To: <488D837D.1070001@belbone.be>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?C=E9dric_Godin?= <cedric@belbone.be>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Kernel <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11117
+On Mon, 28 Jul 2008, C=E9dric Godin wrote:
+
+> >>>> Hello,
+> >>>>
+> >>>> since 2 or 3 -git kernels (Linus tree)  I have a problem with my=
+ laptop=20
+> >>>> and its connection through USB to a nokia 5300 gsm.
+> >>>>
+> >>>> The logs show me a endless loop (until i unplug my USB cable) of=
+=20
+> >>>> following messages :
+> >>>>
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] ASC=3D0x0 ASCQ=3D0x0
+> >>>> Jul 25 15:19:14 enea sd 2:0:0:0: [sdb] Sense Key : 0x0 [current]
+> >>>>
+> >>>> I bisected the kernel and found the following commit as result :
+> >>>>
+> >>>> 427e59f09fdba387547106de7bab980b7fff77be is first bad commit
+> >>>> commit 427e59f09fdba387547106de7bab980b7fff77be
+> >>>> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> >>>> Date:   Sat Mar 8 18:24:17 2008 -0600
+> >>>>
+> >>>>    [SCSI] make use of the residue value
+> >>>>
+> >>>>    USB sometimes doesn't return an error but instead returns a r=
+esidue
+> >>>>    value indicating part (or all) of the command wasn't complete=
+d.  So if
+> >>>>    the driver _done() error processing indicates the command was=
+ fully
+> >>>>    processed, subtract off the residue so that this USB error ge=
+ts
+> >>>>    propagated.
+
+> That's me sending the wrong dmesg, sorry :-$
+>=20
+> Attached is the "good" one.
+>=20
+> > see only one error, and the commit you found wouldn't have affected=
+=20
+> > that error.  More accurately, if the commit magnified the error int=
+o an=20
+> > endless loop, then without the commit the error would still have be=
+en=20
+> > present and would have caused data corruption.
+> >
+> > Anyway, it would be interesting to see what happens with the commit=
+ in=20
+> > place and the following patch applied.  (The first part of the patc=
+h=20
+> > has already been accepted by James.)
+> >  =20
+> Same problem.
+
+Okay.  The problem is one we've seen many times in the past: The device
+reports that it contains one sector more than it really does contain. =20
+When the system tries to access the non-existent "last" sector, all
+sorts of problems occur.  In your case the device returned no data,
+together with an indication that a problem existed (Check Condition
+status) and no indication of what the problem actually was (no Sense
+data).
+
+The patch below should fix the problem.
+
+Alan Stern
 
 
 
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-07-28 07:45 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Fri, 2008-07-18 at 08:37 -0700, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=11117
-> 
->            Summary: aic94xx doesn't sustain the load when more than 2 SAS
->                     drives are connected and actively used
-[...]
-> aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x6
-> sas: command 0xffff8101d39733c0, task 0xffff8105e9e51240, timed out:
-> EH_NOT_HANDLED
-> sas: command 0xffff8104db3d1e40, task 0xffff8105ed10a6c0, timed out:
-
-This is more or less a known problem with aic94xx.  It's root cause is
-that there are certain bus conditions the firmware requires help with.
-REQ_TASK_ABORT is one of them (reason 0x6 means there was a protocol
-error on the bus).  What the card would like is for us to abort and
-retransmit that command immediately (running abort).  What we actually
-do is to mark the command for abort by the error handler, halt all
-in-progress commands and wake up the eh thread.  This causes a nasty
-hiccough in the data flow and runs into a potential snowball effect in
-that if we get another REQ_TASK_ABORT on the retry of all the halted
-commands (and there are quite a number of them), we have to do
-everything over again (do this too often and the command will time out).
-
-The fix is to alter the aic94xx code to do a running abort (as in do it
-itself on the single command instead of halting everything and waking
-the error handler).  Unfortunately no-one's found the time to sit down
-and code this up yet.
-
-James
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Index: usb-2.6/drivers/usb/storage/unusual_devs.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-2.6.orig/drivers/usb/storage/unusual_devs.h
++++ usb-2.6/drivers/usb/storage/unusual_devs.h
+@@ -225,6 +225,13 @@ UNUSUAL_DEV(  0x0421, 0x0495, 0x0370, 0x
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+ 		US_FL_MAX_SECTORS_64 ),
+=20
++/* Reported by Cedric Godin <cedric@belbone.be> */
++UNUSUAL_DEV(  0x0421, 0x04b9, 0x0551, 0x0551,
++		"Nokia",
++		"5300",
++		US_SC_DEVICE, US_PR_DEVICE, NULL,
++		US_FL_FIX_CAPACITY ),
++
+ /* Reported by Olaf Hering <olh@suse.de> from novell bug #105878 */
+ UNUSUAL_DEV(  0x0424, 0x0fdc, 0x0210, 0x0210,
+ 		"SMSC",
