@@ -1,122 +1,78 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Re: Patch to lsi rda  device handler
-Date: Wed, 30 Jul 2008 08:04:26 +0900
-Message-ID: <20080730080403Z.fujita.tomonori@lab.ntt.co.jp>
-References: <00FE57DD11E3A94893D5BD54C3358BE884BE1F@AUSX3MPC128.aus.amer.dell.com>
-	<1216333826.27507.272.camel@chandra-ubuntu>
-	<1217364195.5911.59.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: Sample implementation of a scheme to handle missing interrupts
+Date: Tue, 29 Jul 2008 17:38:26 -0600
+Message-ID: <660360F4F2570145BD872F298951B17A3AC7E4BF@cosmail03.lsi.com>
+References: <1217277901.3503.143.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1217364195.5911.59.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@us.ibm.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: Yanqing_Liu@Dell.com, Ahmad_Ali@Dell.com, Shyam_Iyer@Dell.com, Charles_Rose@Dell.com, Jacob_Cherian@Dell.com, mchristi@redhat.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:63348 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752069AbYG2Xig convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 19:38:36 -0400
+In-Reply-To: <1217277901.3503.143.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On Tue, 29 Jul 2008 13:43:15 -0700
-Chandra Seetharaman <sekharan@us.ibm.com> wrote:
+On Monday, July 28, 2008 2:45 PM, James Bottomley wrote:
+> >
+> > In my case, the MSI problem will manifest itself well before we bind
+> > with the scsi midlayer.    Meaning when there is a MSI problem, we
+> > can't even bring up the card.  Hence adding code in a eh_timed_out
+> > callback handler would be meaningless in solving our problem. What I
+> > need to do is find a problematic card, so I can verify some things.
+>
+> Actually, you don't need this.  I verified the behaviour of the MSI
+> problem simply by commenting out the request_irq.  It looks
+> like there's
+> no simple way to simulate MSI misrouting, but perhaps I should look at
+> that, since it would be useful.
+>
 
-> Hi Yanqing,
-> 
-> All the SCSI hardware handler patches are currently available in
-> 2.6.27-rc1. If you could test it, that will be of great help.
+Well today I found at FC929X where it fails when MSI enabled.   The problem is occuring at the end of mpt_do_ioc_recovery, after we enable interrupts, we are asking for random manufacturing config pages. I see it randomly timing out on the config pages, meaning some time GetLanConfigPages works, then other times it fails. Sometimes it fails later on for either GetIoUnitPage2 or mpt_get_manufacturing_pg_0.  So its randomly timing out on config pages, but most the time is the first one.   So did the following patch (hopefully its not butcherd by ccmail). What I'm doing is failling back to IOAPIC routing after we have a config page timeout.   This works scsi_misc tip with drives attached to both channels of the multifunction FC card.      I'm thinking we may still need do what Matt W. suggest
+ ed just as I pointed, I see random timeouts with the config pages.  A side note, I found that pci_disable_msi() is not working in SLES10 SP2..    Did you have any other suggestion where this could be handled in a generic common method?
 
-(snip)
 
-> > > The change is to zero out the area that the cmd pointer points to,
-> > > instead of the pointer itself in the allocated request structure.
-> > > 
-> > > --- scsi_dh_rdac.c.orig 2008-07-17 01:53:10.000000000 -0400 
-> > > +++ scsi_dh_rdac.c      2008-07-17 01:45:28.000000000 -0400 
-> > > @@ -214,7 +214,7 @@ 
-> > >                 return NULL; 
-> > >         } 
-> > >   
-> > > -       memset(&rq->cmd, 0, BLK_MAX_CDB); 
-> > > +       memset(rq->cmd, 0, BLK_MAX_CDB); 
-> > >         rq->sense = h->sense; 
-> > >         memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE); 
-> > >         rq->sense_len = 0;
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d6a0074..e2804b2 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1754,7 +1754,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
 
-I've sent a patch to fix such bugs in scsi_dh twice:
+        if (mpt_msi_enable == -1) {
+                /* Enable on SAS, disable on FC and SPI */
+-               if (ioc->bus_type == SAS)
++               if (ioc->bus_type == SAS || ioc->bus_type == FC)
+                        ioc->msi_enable = 1;
+                else
+                        ioc->msi_enable = 0;
+@@ -5927,6 +5927,25 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *pCfg)
+        /* mf has been freed - do not access */
 
-http://marc.info/?l=linux-scsi&m=120914881720769&w=2
-http://marc.info/?l=linux-scsi&m=121005693501288&w=2
+        rc = pCfg->status;
++       if ((rc == MPT_CONFIG_ERROR) && ioc->msi_enable) {
++               ioc->msi_enable = 0;
++               printk(MYIOC_s_ERR_FMT "free_irq\n", ioc->name);
++               free_irq(ioc->pci_irq, ioc);
++               printk(MYIOC_s_ERR_FMT "pci_disable_msi\n", ioc->name);
++               pci_disable_msi(ioc->pcidev);
++               printk(MYIOC_s_ERR_FMT "request_irq\n", ioc->name);
++               if (request_irq(ioc->pcidev->irq, mpt_interrupt, IRQF_SHARED,
++                   ioc->name, ioc) < 0) {
++                       printk(MYIOC_s_ERR_FMT "Unable to allocate "
++                           "interrupt %d!\n", ioc->name, ioc->pcidev->irq);
++                       return -EBUSY;
++               }
++               pci_set_master(ioc->pcidev);
++               pci_set_drvdata(ioc->pcidev, ioc);
++               ioc->pci_irq = ioc->pcidev->irq;
++               printk(MYIOC_s_INFO_FMT "PCI-MSI is being disabled\n",
++                   ioc->name);
++       }
 
-rc1 looks fine but as I said twice, you don't need to initialize
-rq->cmd. The block layer does.
-
-Please apply.
-
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi_dh: no need to initialize rq->cmd with blk_get_request
-
-blk_get_request initializes rq->cmd (rq_init does) so the users don't
-need to do that.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/device_handler/scsi_dh_emc.c   |    1 -
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |    2 --
- drivers/scsi/device_handler/scsi_dh_rdac.c  |    2 --
- 3 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index aa46b13..2b96865 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -278,7 +278,6 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
- 		return NULL;
- 	}
- 
--	memset(rq->cmd, 0, BLK_MAX_CDB);
- 	rq->cmd_len = COMMAND_SIZE(cmd);
- 	rq->cmd[0] = cmd;
- 
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index 9c7a1f8..ae576dc 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -114,7 +114,6 @@ static int hp_sw_tur(struct scsi_device *sdev, struct hp_sw_dh_data *h)
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
- 	req->cmd_len = COMMAND_SIZE(TEST_UNIT_READY);
--	memset(req->cmd, 0, MAX_COMMAND_SIZE);
- 	req->cmd[0] = TEST_UNIT_READY;
- 	req->timeout = HP_SW_TIMEOUT;
- 	req->sense = h->sense;
-@@ -207,7 +206,6 @@ static int hp_sw_start_stop(struct scsi_device *sdev, struct hp_sw_dh_data *h)
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
- 	req->cmd_len = COMMAND_SIZE(START_STOP);
--	memset(req->cmd, 0, MAX_COMMAND_SIZE);
- 	req->cmd[0] = START_STOP;
- 	req->cmd[4] = 1;	/* Start spin cycle */
- 	req->timeout = HP_SW_TIMEOUT;
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index b093a50..c93dbaf 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -225,8 +225,6 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
- 		return NULL;
- 	}
- 
--	memset(rq->cmd, 0, BLK_MAX_CDB);
--
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
- 	rq->retries = RDAC_RETRIES;
--- 
-1.5.5.GIT
+        return rc;
+ }
