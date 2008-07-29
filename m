@@ -1,91 +1,65 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Poisoning of Linux initiators on SCST reboot.
-Date: Tue, 29 Jul 2008 11:19:21 -0700
-Message-ID: <20080729181921.GA41607@plap4-2.qlogic.org>
-References: <andrew.vasquez@qlogic.com> <200807282040.m6SKeY9Q013406@wind.enjellic.com> <20080729013414.GA38093@n8027av35btxc1.qlogic.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Tue, 29 Jul 2008 12:26:11 -0600
+Message-ID: <20080729182611.GB24924@parisc-linux.org>
+References: <488F524F.6020905@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:45647 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752604AbYG2STX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 14:19:23 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:45624 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752880AbYG2S0N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 14:26:13 -0400
 Content-Disposition: inline
-In-Reply-To: <20080729013414.GA38093@n8027av35btxc1.qlogic.org>
+In-Reply-To: <488F524F.6020905@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@enjellic.com
-Cc: scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, stf_xl@wp.pl, vst@vlnb.net
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
 
-On Mon, 28 Jul 2008, Andrew Vasquez wrote:
+On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
+> Jim pinged me about the use case for having our tool chain (parted 
+> specifically) support devices with non-512 bytes sectors.
 
-> On Mon, 28 Jul 2008, greg@enjellic.com wrote:
+Matt Domsch spoke with me about this at OLS.  I took that opportunity,
+and I'll take this one, to pimp my ata-ram driver which allows you to
+alter the sector sizse to whatever you want:
+
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
+
+I'll admit to having not tested it with anything other than 512, but it
+ought to support 4096 byte sectors just fine.  I haven't looked at what
+would be required to support 520-byte sectors.
+
+Jeff, any interest in merging ata-ram soon?  I've got some users inside
+Intel, and Zab persuaded me to add the multiple port support last night,
+so it's not just useful for me.  I think it's also a nice template to
+have around to show how to write a minimal libata driver.
+
+> Off the top of my head, the following is the list of existing or soon to 
+> appear devices that could use this (taken from our thread last year, at
+> http://kerneltrap.org/mailarchive/linux-fsdevel/2007/3/11/317183):
 > 
-> ....
-> > SCSI host 4 is being used to access the target which is undergoing the
-> > reboot test.  PWWN of the target is 210000e08b8665b5.
-> > 
-> > ---------------------------------------------------------------------------
-> > Jul 28 14:39:00 init-test syslogd 1.4.1: restart.
-> > Jul 28 14:40:01 init-test crond[4312]: (root) CMD (/usr/lib/sa/sa1 1 1)
-> > Jul 28 14:40:49 init-test kernel: QLogic Fibre Channel HBA Driver: 8.02.01-k4-debug
-> > Jul 28 14:40:49 init-test kernel: ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 16 (level, low) -> IRQ 16
-> > Jul 28 14:40:49 init-test kernel: qla2xxx 0000:04:00.0: Found an ISP2432, irq 16, iobase 0xf8858000
-> ...
+>    (1) R/W optical drives
+>    (2) S390 dasd devices have a 4096 byte sector
+>    (3) new 4096 byte disks (which intend to export a virtual 512 byte 
+> sector)
 > 
-> These logs are good, I don't have a (formal) fix yet, but I believe
-> we've reproduced this locally based on your detailed description and
-> logs...  I hope to have some more details tomorrow...
+> Anything else pop into mind? Any idea if SSD or FLASH devices have 
+> thoughts to use a non-512 byte sector size? What tools are most critical 
+> to support?
+> 
+> Thanks!
+> 
+> Ric
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ok, here's a patch against Linus' latest git tree which corrects the
-issue locally.  Could you try it out on your test configuration?  We'd
-like to perform some additional sanity-testing locally before we
-submit the fix formally for upstream consumption.
-
-Sidenote: we'll also need to backport some form of this fix to stable,
-but qla2xxx in kernels upto 2.6.26 didn't utilize the
-terminate-rport-io infrastructure:
-
-	commit 5f3a9a207f1fccde476dd31b4c63ead2967d934f
-	Refs: v2.6.26-7259-g5f3a9a2
-	Author:     Seokmann Ju <seokmann.ju@qlogic.com>
-	AuthorDate: Thu Jul 10 16:55:47 2008 -0700
-	Commit:     James Bottomley <James.Bottomley@HansenPartnership.com>
-	CommitDate: Sat Jul 26 15:14:36 2008 -0400
-
-	    [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
-
-	    Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
-	    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-	    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-so the stable changes won't be as 'straight-forward'...
-
-In any case, here's the patch...
-
-thanks, av
-
----
-
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2e2bf53..690a4ef 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1082,6 +1082,17 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
- {
- 	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
- 
-+	/*
-+	 * At this point all fcport's software-states are cleared.  Perform any
-+	 * final firmware cleanup of resources (PCBs and XCBs).
-+	 */
-+	if (fcport->loop_id != FC_NO_LOOP_ID) {
-+		fcport->ha->isp_ops->fabric_logout(fcport->ha, fcport->loop_id,
-+		    fcport->d_id.b.domain, fcport->d_id.b.area,
-+		    fcport->d_id.b.al_pa);
-+		fcport->loop_id = FC_NO_LOOP_ID;
-+	}
-+
- 	qla2x00_abort_fcport_cmds(fcport);
- 	scsi_target_unblock(&rport->dev);
- }
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
