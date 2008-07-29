@@ -1,85 +1,95 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 15:14:24 -0400
-Message-ID: <488F6C10.2060209@torque.net>
-References: <660360F4F2570145BD872F298951B17A3AC7E3B3@cosmail03.lsi.com> <yq1y73kpl68.fsf@sermon.lab.mkp.net>
-Reply-To: dougg@torque.net
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [RFC] [PATCH 1/7] pcmcia: add pcmcia_loop_config() helper
+Date: Tue, 29 Jul 2008 14:16:42 -0700
+Message-ID: <20080729141642.47c8d6ca.rdunlap@xenotime.net>
+References: <20080729071539.GB27385@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:38521 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbYG2TOg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 15:14:36 -0400
-In-Reply-To: <yq1y73kpl68.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-serial-owner@vger.kernel.org>
+In-Reply-To: <20080729071539.GB27385@comet.dominikbrodowski.net>
+Sender: linux-serial-owner@vger.kernel.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>, linux-bluetooth@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Karsten Keil <kkeil@suse.de>, isdn4linux@listserv.isdn4linux.de, Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, Harald Welte <laforge@gnumonks.org>, linux-parport@lists.infradead.org, Russell King <rmk+kernel@arm.linux.org.uk>, Ed Okerson <eokerson@quicknet.net>, linux-serial@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jim Meyering <jim@meyering.net>
 
-Martin K. Petersen wrote:
->>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
+On Tue, 29 Jul 2008 09:15:39 +0200 Dominik Brodowski wrote:
+
+> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+> available configuration options. During a driver's probe() phase, one
+> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+> and pcmcia_parse_tuple directly in most if not all cases.
 > 
-> Eric> I was wondering about formatting drives with DIF support??
-> Eric> Martin told me he is using sg_format, however it doesn't support
-> Eric> type 3 protection format, which has 6 byte application tag.
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  Documentation/pcmcia/driver-changes.txt |    6 +++
+>  drivers/pcmcia/pcmcia_resource.c        |   57 +++++++++++++++++++++++++++++++
+>  include/pcmcia/cistpl.h                 |    6 +++
+>  3 files changed, 69 insertions(+), 0 deletions(-)
 > 
-> I have only been testing Type 3 with scsi_debug (which conveniently
-> avoids the formatting step).
+> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+> available configuration options. During a driver's probe() phase, one
+> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+> and pcmcia_parse_tuple directly in most if not all cases.
 > 
-> I doubt we will see any disk drives that support Type 3.  The way the
-> standard is written, a drive can either do Type 1+2 or Type 1+3.  Type
-> 2+3 is not a possible combination.
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  Documentation/pcmcia/driver-changes.txt |    6 +++
+>  drivers/pcmcia/pcmcia_resource.c        |   63 +++++++++++++++++++++++++++++++
+>  include/pcmcia/cistpl.h                 |    6 +++
+>  3 files changed, 75 insertions(+), 0 deletions(-)
 > 
-> In any case.  If you happen to own a Type 3-capable device you format
-> it exactly like if it had been a Type 2.  I.e. set PINFO=1 and
-> RTO_REQ=1 in FORMAT UNIT.  sg_format can already do this.
+> diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
+> index 4884a18..0fa48aa 100644
+> --- a/drivers/pcmcia/pcmcia_resource.c
+> +++ b/drivers/pcmcia/pcmcia_resource.c
+> @@ -909,3 +909,66 @@ void pcmcia_disable_device(struct pcmcia_device *p_dev) {
+>  		pcmcia_release_window(p_dev->win);
+>  }
+>  EXPORT_SYMBOL(pcmcia_disable_device);
+> +
+> +
 
-According to sbc3r15.pdf (section 5.2 table 20 page 56)
-sg_format is setting the correct bits for type 3 protection.
-See the "format cdb" and the "format parameter list" in the
-verbose output below).
+Hi,
 
-The appropriate command line invocation is pretty convoluted:
+One more comment here (sorry I missed it earlier):
 
-
-# sg_format --format --pinfo --rto_req --pfu=1 -vvv /dev/sdb
-open /dev/sdb with flags=0x802
-     inquiry cdb: 12 00 00 00 24 00
-       duration=0 ms
-     Linux     scsi_debug        0004   peripheral_type: disk [0x0]
-       PROTECT=0
-     mode sense (10) cdb: 5a 00 01 00 00 00 00 00 fc 00
-       duration=1 ms
-     mode sense (10): requested 252 bytes but got 28 bytes
-     mode sense (10): response
-         00 1a 00 10 00 00 00 08  00 00 40 00 00 00 02 00
-         01 0a c0 0b f0 00 00 00  05 00 ff ff
-Mode Sense (block descriptor) data, prior to changes:
-   Number of blocks=16384 [0x4000]
-   Block size=512 [0x200]
-
-A FORMAT will commence in 10 seconds
-     ALL data on /dev/sdb will be DESTROYED
-         Press control-C to abort
-A FORMAT will commence in 5 seconds
-     ALL data on /dev/sdb will be DESTROYED
-         Press control-C to abort
-     format cdb: 04 d8 00 00 00 00
-     format parameter list:
-         01 02 00 00
-       duration=1 ms
-format unit:  Fixed format, current;  Sense key: Illegal Request
-  Additional sense: Invalid command operation code
-  Raw sense data (in hex):
-         70 00 05 00 00 00 00 0a  00 00 00 00 20 00 00 00
-         00 00
-Format command not supported
-FORMAT failed
+The kernel-doc comment needs to immediately precede the function, so that
+struct pcmcia_cfg_mem needs to be moved to before the kernel-doc block...
 
 
-Doug Gilbert
+> +/**
+> + * pcmcia_loop_config() - loop over configuration options
+> + * @p_dev:	the struct pcmcia_device which we need to loop for.
+> + * @conf_check:	function to call for each configuration option.
+> + *		It gets passed the struct pcmcia_device, the CIS data
+> + *		describing the configuration option, and private data
+> + *		being passed to pcmcia_loop_config()
+> + * @priv_data:	private data to be passed to the conf_check function.
+> + *
+> + * pcmcia_loop_config() loops over all configuration options, and calls
+> + * the driver-specific conf_check() for each one, checking whether
+> + * it is a valid one.
+> + */
+> +
+> +struct pcmcia_cfg_mem {
+> +	tuple_t tuple;
+> +	cisparse_t parse;
+> +	u8 buf[256];
+> +};
+> +
+> +int pcmcia_loop_config(struct pcmcia_device *p_dev,
+> +		       int	(*conf_check)	(struct pcmcia_device *p_dev,
+> +						 cistpl_cftable_entry_t *cfg,
+> +						 void *priv_data),
+> +		       void *priv_data)
+> +{
+...
+> +}
+> +EXPORT_SYMBOL(pcmcia_loop_config);
 
 
-
+---
+~Randy
+Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
+http://linuxplumbersconf.org/
