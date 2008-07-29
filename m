@@ -1,59 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 14:00:19 -0500
-Message-ID: <1217358019.6103.56.camel@localhost.localdomain>
-References: <488F524F.6020905@redhat.com>
-	 <20080729182611.GB24924@parisc-linux.org>
-	 <1217356645.6103.48.camel@localhost.localdomain>
-	 <20080729184243.GC24924@parisc-linux.org>
-	 <1217357078.6103.51.camel@localhost.localdomain>
-	 <20080729185002.GD24924@parisc-linux.org>
+Date: Tue, 29 Jul 2008 15:03:43 -0400
+Message-ID: <yq1y73kpl68.fsf@sermon.lab.mkp.net>
+References: <660360F4F2570145BD872F298951B17A3AC7E3B3@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43730 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751581AbYG2TAs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2008 15:00:48 -0400
-In-Reply-To: <20080729185002.GD24924@parisc-linux.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:13070 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbYG2TEf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 15:04:35 -0400
+In-Reply-To: <660360F4F2570145BD872F298951B17A3AC7E3B3@cosmail03.lsi.com> (Eric Moore's message of "Tue\, 29 Jul 2008 12\:43\:23 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "rwheeler@redhat.com" <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jim Meyering <jim@meyering.net>
 
-On Tue, 2008-07-29 at 12:50 -0600, Matthew Wilcox wrote:
-> On Tue, Jul 29, 2008 at 01:44:38PM -0500, James Bottomley wrote:
-> > On Tue, 2008-07-29 at 12:42 -0600, Matthew Wilcox wrote:
-> > > On Tue, Jul 29, 2008 at 01:37:25PM -0500, James Bottomley wrote:
-> > > > scsi_debug does exactly the same thing, so it reports anything you tell
-> > > > it (Martin Petersen actually added this so he could test with 4k
-> > > > sectors).
-> > > > 
-> > > > The problem, which ata_ram also suffers, is that the tools we most need
-> > > > to test are the ones for manipulating non volatile characteristics (like
-> > > > partition tables).  We'd really like the disk contents to survive reboot
-> > > > for this ...
-> > > 
-> > > Ummm... _reboot_, or _module unload/reload_?  I could certainly include
-> > > an option to populate the ramdisc from a file.  Is the ioctl to re-read
-> > > the partition table not enough?
-> > 
-> > reboot ... we'd like to take the tools through shutdown restart testing
-> > to make sure they're all working ... of course, then there's the
-> > bios ...
-> 
-> It's not up to us to fix the BIOS.
-> 
-> Since the vast majority of users use a distro, and the vast majority of
-> distros use a fully modular kernel, wouldn't initialising the contents
-> of ata-ram from the initrd/initramfs solve the problem?
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-Well ... we'd really like it file backed to truly verify ... sort of
-like scsi_debug on a loopback.  But saving on shutdown and
-reinitialising from the saved image on boot would likely be perfect.
+Eric> I was wondering about formatting drives with DIF support??
+Eric> Martin told me he is using sg_format, however it doesn't support
+Eric> type 3 protection format, which has 6 byte application tag.
 
-James
+I have only been testing Type 3 with scsi_debug (which conveniently
+avoids the formatting step).
 
+I doubt we will see any disk drives that support Type 3.  The way the
+standard is written, a drive can either do Type 1+2 or Type 1+3.  Type
+2+3 is not a possible combination.
+
+In any case.  If you happen to own a Type 3-capable device you format
+it exactly like if it had been a Type 2.  I.e. set PINFO=1 and
+RTO_REQ=1 in FORMAT UNIT.  sg_format can already do this.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
