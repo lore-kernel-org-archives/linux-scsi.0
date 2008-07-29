@@ -1,43 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 13:37:25 -0500
-Message-ID: <1217356645.6103.48.camel@localhost.localdomain>
+Date: Tue, 29 Jul 2008 19:21:26 +0100
+Message-ID: <20080729192126.7261318b@lxorguk.ukuu.org.uk>
 References: <488F524F.6020905@redhat.com>
-	 <20080729182611.GB24924@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080729182611.GB24924@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53141 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752484AbYG2SjI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 14:39:08 -0400
+In-Reply-To: <488F524F.6020905@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: rwheeler@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>
 
-On Tue, 2008-07-29 at 12:26 -0600, Matthew Wilcox wrote:
-> On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
-> > Jim pinged me about the use case for having our tool chain (parted 
-> > specifically) support devices with non-512 bytes sectors.
+On Tue, 29 Jul 2008 13:24:31 -0400
+Ric Wheeler <rwheeler@redhat.com> wrote:
+
 > 
-> Matt Domsch spoke with me about this at OLS.  I took that opportunity,
-> and I'll take this one, to pimp my ata-ram driver which allows you to
-> alter the sector sizse to whatever you want:
+> Jim pinged me about the use case for having our tool chain (parted 
+> specifically) support devices with non-512 bytes sectors.
 > 
-> http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
+> Off the top of my head, the following is the list of existing or soon to 
+> appear devices that could use this (taken from our thread last year, at
+> http://kerneltrap.org/mailarchive/linux-fsdevel/2007/3/11/317183):
 > 
-> I'll admit to having not tested it with anything other than 512, but it
-> ought to support 4096 byte sectors just fine.  I haven't looked at what
-> would be required to support 520-byte sectors.
+>     (1) R/W optical drives
 
-scsi_debug does exactly the same thing, so it reports anything you tell
-it (Martin Petersen actually added this so he could test with 4k
-sectors).
-
-The problem, which ata_ram also suffers, is that the tools we most need
-to test are the ones for manipulating non volatile characteristics (like
-partition tables).  We'd really like the disk contents to survive reboot
-for this ...
-
-James
+Magneto opticals for years. 640MB M/O is 2K sector size. There are two
+different partition table interpretations. One believes the table is 512
+byte virtual sectors, the other believes the sectors are sectors. Welcome
+to the PC nuthouse...
 
 
+>     (2) S390 dasd devices have a 4096 byte sector
+>     (3) new 4096 byte disks (which intend to export a virtual 512 byte 
+> sector)
+
+And which need a specific layout for performance - doubly so with raid
+overlaid on it.
+
+Also early SD type devices with 256 byte sectors simply don't work with
+our scsi midlayer.
+
+Alan
