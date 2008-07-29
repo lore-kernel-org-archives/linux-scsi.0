@@ -1,47 +1,58 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 13:56:14 -0500
-Message-ID: <1217357774.6103.54.camel@localhost.localdomain>
+Date: Tue, 29 Jul 2008 14:00:19 -0500
+Message-ID: <1217358019.6103.56.camel@localhost.localdomain>
 References: <488F524F.6020905@redhat.com>
 	 <20080729182611.GB24924@parisc-linux.org>
 	 <1217356645.6103.48.camel@localhost.localdomain>
-	 <yq13alsr0g0.fsf@sermon.lab.mkp.net>  <488F6758.8080907@redhat.com>
+	 <20080729184243.GC24924@parisc-linux.org>
+	 <1217357078.6103.51.camel@localhost.localdomain>
+	 <20080729185002.GD24924@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <488F6758.8080907@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: rwheeler@redhat.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43730 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751581AbYG2TAs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2008 15:00:48 -0400
+In-Reply-To: <20080729185002.GD24924@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
 
-On Tue, 2008-07-29 at 14:54 -0400, Ric Wheeler wrote:
-> Martin K. Petersen wrote:
-> >>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> >>>>>>             
-> >
-> > James> The problem, which ata_ram also suffers, is that the tools we
-> > James> most need to test are the ones for manipulating non volatile
-> > James> characteristics (like partition tables).  We'd really like the
-> > James> disk contents to survive reboot for this ...
-> >
-> > Yeah, I should add that I wanted persistence too.  I went through a
-> > whole stack (well, 5-6 or so) fibre channel drives from various
-> > vendors and attempted to low-level format them to 4KB sectors.  Most
-> > of them laughed in my face.  One of them tried to comply and
-> > irreparably confused its firmware in the process.
-> >
-> > Just yesterday I received a couple of prototype drives in the mail.
-> > I'll ask the vendor whether they support 4KB and if so I'll give them
-> > a whirl.
-> >   
-> Isn't this a great use case for a SCSI target device where our target 
-> can be a software disk on a remote host? What is missing for us to put 
-> something like that together?
+On Tue, 2008-07-29 at 12:50 -0600, Matthew Wilcox wrote:
+> On Tue, Jul 29, 2008 at 01:44:38PM -0500, James Bottomley wrote:
+> > On Tue, 2008-07-29 at 12:42 -0600, Matthew Wilcox wrote:
+> > > On Tue, Jul 29, 2008 at 01:37:25PM -0500, James Bottomley wrote:
+> > > > scsi_debug does exactly the same thing, so it reports anything you tell
+> > > > it (Martin Petersen actually added this so he could test with 4k
+> > > > sectors).
+> > > > 
+> > > > The problem, which ata_ram also suffers, is that the tools we most need
+> > > > to test are the ones for manipulating non volatile characteristics (like
+> > > > partition tables).  We'd really like the disk contents to survive reboot
+> > > > for this ...
+> > > 
+> > > Ummm... _reboot_, or _module unload/reload_?  I could certainly include
+> > > an option to populate the ramdisc from a file.  Is the ioctl to re-read
+> > > the partition table not enough?
+> > 
+> > reboot ... we'd like to take the tools through shutdown restart testing
+> > to make sure they're all working ... of course, then there's the
+> > bios ...
+> 
+> It's not up to us to fix the BIOS.
+> 
+> Since the vast majority of users use a distro, and the vast majority of
+> distros use a fully modular kernel, wouldn't initialising the contents
+> of ata-ram from the initrd/initramfs solve the problem?
 
-Technically nothing.  Tomo should already have one for the STGT test
-infrastructure (I've cc'd him).
+Well ... we'd really like it file backed to truly verify ... sort of
+like scsi_debug on a loopback.  But saving on shutdown and
+reinitialising from the saved image on boot would likely be perfect.
 
 James
 
