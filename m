@@ -1,34 +1,26 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 12:42:43 -0600
-Message-ID: <20080729184243.GC24924@parisc-linux.org>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: tools support for non-512 byte sector sizes
+Date: Tue, 29 Jul 2008 12:43:23 -0600
+Message-ID: <660360F4F2570145BD872F298951B17A3AC7E3B3@cosmail03.lsi.com>
+References: <488F524F.6020905@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758453AbYG2Sm7@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1217356645.6103.48.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <488F524F.6020905@redhat.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
+To: "rwheeler@redhat.com" <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Martin Petersen <mkp@mkp.net>
+Cc: Jim Meyering <jim@meyering.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 29, 2008 at 01:37:25PM -0500, James Bottomley wrote:
-> scsi_debug does exactly the same thing, so it reports anything you tell
-> it (Martin Petersen actually added this so he could test with 4k
-> sectors).
-> 
-> The problem, which ata_ram also suffers, is that the tools we most need
-> to test are the ones for manipulating non volatile characteristics (like
-> partition tables).  We'd really like the disk contents to survive reboot
-> for this ...
+Ric Wheeler wrote:
+>     (1) R/W optical drives
+>     (2) S390 dasd devices have a 4096 byte sector
+>     (3) new 4096 byte disks (which intend to export a virtual 512 byte
+> sector)
+>
 
-Ummm... _reboot_, or _module unload/reload_?  I could certainly include
-an option to populate the ramdisc from a file.  Is the ioctl to re-read
-the partition table not enough?
+I was wondering about formatting drives with DIF support??  Martin told me he is using sg_format, however it doesn't support type 3 protection format, which has 6 byte application tag.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Eric
