@@ -1,49 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 19:21:26 +0100
-Message-ID: <20080729192126.7261318b@lxorguk.ukuu.org.uk>
+Date: Tue, 29 Jul 2008 14:41:47 -0400
+Message-ID: <yq17ib4r0r8.fsf@sermon.lab.mkp.net>
 References: <488F524F.6020905@redhat.com>
+	<20080729182611.GB24924@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53141 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752484AbYG2SjI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 14:39:08 -0400
-In-Reply-To: <488F524F.6020905@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080729182611.GB24924@parisc-linux.org> (Matthew Wilcox's message of "Tue\, 29 Jul 2008 12\:26\:11 -0600")
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: rwheeler@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>
 
-On Tue, 29 Jul 2008 13:24:31 -0400
-Ric Wheeler <rwheeler@redhat.com> wrote:
+>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
 
-> 
-> Jim pinged me about the use case for having our tool chain (parted 
-> specifically) support devices with non-512 bytes sectors.
-> 
-> Off the top of my head, the following is the list of existing or soon to 
-> appear devices that could use this (taken from our thread last year, at
-> http://kerneltrap.org/mailarchive/linux-fsdevel/2007/3/11/317183):
-> 
->     (1) R/W optical drives
+Matthew> I'll admit to having not tested it with anything other than
+Matthew> 512, but it ought to support 4096 byte sectors just fine.  I
+Matthew> haven't looked at what would be required to support 520-byte
+Matthew> sectors.
 
-Magneto opticals for years. 640MB M/O is 2K sector size. There are two
-different partition table interpretations. One believes the table is 512
-byte virtual sectors, the other believes the sectors are sectors. Welcome
-to the PC nuthouse...
+I recently added multiple sector support to scsi_debug.  On a recent
+kernel you can modprobe scsi_debug sector_size=4096.
 
+I have only tested 4KB but it also supports 1 and 2KB.
 
->     (2) S390 dasd devices have a 4096 byte sector
->     (3) new 4096 byte disks (which intend to export a virtual 512 byte 
-> sector)
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
-And which need a specific layout for performance - doubly so with raid
-overlaid on it.
-
-Also early SD type devices with 256 byte sectors simply don't work with
-our scsi midlayer.
-
-Alan
