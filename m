@@ -1,35 +1,39 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 13:24:31 -0400
-Message-ID: <488F524F.6020905@redhat.com>
-Reply-To: rwheeler@redhat.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Subtle but oops causing problem with class_device->device
+	conversion
+Date: Tue, 29 Jul 2008 12:42:28 -0500
+Message-ID: <1217353348.6103.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: Jim Meyering <jim@meyering.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:53980 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760202AbYG2Rm4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2008 13:42:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
+It's taken me a while to track this down.  Basically there's an oops in
+scsi_transport_spi that's directly caused by this.
 
-Jim pinged me about the use case for having our tool chain (parted 
-specifically) support devices with non-512 bytes sectors.
+What happened is that you made all class devices become real devices and
+be parented to devices they were formerly allied to through the class
+device dev pointer.  This means that effectively you expanded the child
+list of every device to include not only its real children but also its
+class devices.
 
-Off the top of my head, the following is the list of existing or soon to 
-appear devices that could use this (taken from our thread last year, at
-http://kerneltrap.org/mailarchive/linux-fsdevel/2007/3/11/317183):
+This breaks in device_for_each_child *if* the routine in the iterator
+doesn't perform checks on the devices it gets back (scsi_transport_spi
+was assuming that every device it got was embedded in a struct
+scsi_device because they're the only logical children of a scsi_target).
 
-    (1) R/W optical drives
-    (2) S390 dasd devices have a 4096 byte sector
-    (3) new 4096 byte disks (which intend to export a virtual 512 byte 
-sector)
+I can fix the SCSI breakage, but the whole tree will need auditing to
+check that nothing else is using this assumption.
 
-Anything else pop into mind? Any idea if SSD or FLASH devices have 
-thoughts to use a non-512 byte sector size? What tools are most critical 
-to support?
+James
 
-Thanks!
-
-Ric
 
