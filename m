@@ -1,39 +1,54 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Subtle but oops causing problem with class_device->device
-	conversion
-Date: Tue, 29 Jul 2008 12:42:28 -0500
-Message-ID: <1217353348.6103.20.camel@localhost.localdomain>
+Subject: [PATCH] scsi_transport_spi: fix oops in revalidate
+Date: Tue, 29 Jul 2008 12:52:20 -0500
+Message-ID: <1217353940.6103.24.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53980 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34334 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760202AbYG2Rm4 (ORCPT
+	by vger.kernel.org with ESMTP id S1754410AbYG2Rws (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2008 13:42:56 -0400
+	Tue, 29 Jul 2008 13:52:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>
 
-It's taken me a while to track this down.  Basically there's an oops in
-scsi_transport_spi that's directly caused by this.
-
-What happened is that you made all class devices become real devices and
-be parented to devices they were formerly allied to through the class
-device dev pointer.  This means that effectively you expanded the child
-list of every device to include not only its real children but also its
-class devices.
-
-This breaks in device_for_each_child *if* the routine in the iterator
-doesn't perform checks on the devices it gets back (scsi_transport_spi
-was assuming that every device it got was embedded in a struct
-scsi_device because they're the only logical children of a scsi_target).
-
-I can fix the SCSI breakage, but the whole tree will need auditing to
-check that nothing else is using this assumption.
+The class_device->device conversion is causing an oops in revalidate
+because it's assuming that the device_for_each_child iterator will only
+return struct scsi_device children.  The conversion made all former
+class_devices children of the device as well, so this assumption is
+broken.  Fix it.
 
 James
+
+---
+
+I've audited the rest of SCSI, this is the only unchecked iterator function
+
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 75a64a6..b29360e 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -366,12 +366,14 @@ spi_transport_rd_attr(rti, "%d\n");
+ spi_transport_rd_attr(pcomp_en, "%d\n");
+ spi_transport_rd_attr(hold_mcs, "%d\n");
+ 
+-/* we only care about the first child device so we return 1 */
++/* we only care about the first child device that's a real SCSI device
++ * so we return 1 to terminate the iteration when we find it */
+ static int child_iter(struct device *dev, void *data)
+ {
+-	struct scsi_device *sdev = to_scsi_device(dev);
++	if (!scsi_is_sdev_device(dev))
++		return 0;
+ 
+-	spi_dv_device(sdev);
++	spi_dv_device(to_scsi_device(dev));
+ 	return 1;
+ }
+ 
 
 
