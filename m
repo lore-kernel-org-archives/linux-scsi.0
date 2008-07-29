@@ -1,570 +1,170 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [RFC] [PATCH 4/7] pcmcia: use pcmcia_loop_config in scsi pcmcia
-	drivers
-Date: Tue, 29 Jul 2008 09:19:27 +0200
-Message-ID: <20080729071927.GF27385@comet.dominikbrodowski.net>
-References: <20080729071539.GB27385@comet.dominikbrodowski.net>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Tue, 29 Jul 2008 10:30:30 +0300
+Message-ID: <1217316630.4133.100.camel@galr-linux>
+References: <488E02DE.5080100@vlnb.net>
+	 <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:43266 "EHLO linta.de"
+Received: from mail.storwize.com ([62.90.10.208]:4277 "EHLO swdc2.storwiz.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752800AbYG2HWL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2008 03:22:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20080729071539.GB27385@comet.dominikbrodowski.net>
+	id S1752658AbYG2Haf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2008 03:30:35 -0400
+In-Reply-To: <488E0C78.80205@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-pcmcia@lists.infradead.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-Use the config loop helper in scsi pcmcia drivers.
+Hi All,
 
-CC: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-CC: linux-scsi@vger.kernel.org
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
----
- drivers/scsi/pcmcia/aha152x_stub.c |   57 +++++------
- drivers/scsi/pcmcia/fdomain_stub.c |   36 +++----
- drivers/scsi/pcmcia/nsp_cs.c       |  184 ++++++++++++++++++-----------------
- drivers/scsi/pcmcia/qlogic_stub.c  |   46 ++++-----
- drivers/scsi/pcmcia/sym53c500_cs.c |   45 ++++-----
- 5 files changed, 178 insertions(+), 190 deletions(-)
+I used qla initiator driver based on 2.6.23-8 which was modified to
+support target mode and virtual port on AL topology.
+The issue does not related to the target. As I wrote in other thread it
+happens also when in one shell insmod'ing the driver and in other shell
+rmmod'ing it.
+My Oops is pointing as Andrew stated to the
+qla24xx_report_id_acquisition() routine, because after loading the
+driver I created vport, then rmmod'ing the driver without deleting the
+vport. In that case interrupt comes to report about the deletion of the
+vport, and request the dpc thread. So for sure we need to call
+qla2xxx_wake_dpc() routine instead of calling wake_up_process() routine,
+where we don't check the dpc_thread pointer.
+I am not sure this is enough but I can test it, because as I wrote again
+in other thread, and Vlad quote here, if someone request wake up of the
+dpc thread, check that it is not NULL, call to wake_up_process()
+routine, and exactly at this point other task got the CPU, set the
+pointer to NULL and stop the dpc thread, then we have a problem.
 
-diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
-index 2dd0dc9..bbcc20f 100644
---- a/drivers/scsi/pcmcia/aha152x_stub.c
-+++ b/drivers/scsi/pcmcia/aha152x_stub.c
-@@ -140,44 +140,40 @@ static void aha152x_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int aha152x_config_check(struct pcmcia_device *p_dev,
-+			   cistpl_cftable_entry_t *cfg,
-+			   void *priv_data)
-+{
-+	/* For New Media T&J, look for a SCSI window */
-+	if (cfg->io.win[0].len >= 0x20)
-+		p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	else if ((cfg->io.nwin > 1) &&
-+		 (cfg->io.win[1].len >= 0x20))
-+		p_dev->io.BasePort1 = cfg->io.win[1].base;
-+	if ((cfg->io.nwin > 0) &&
-+	    (p_dev->io.BasePort1 < 0xffff)) {
-+		p_dev->conf.ConfigIndex = cfg->index;
-+		if (!pcmcia_request_io(p_dev, &p_dev->io))
-+			return 0;
-+	}
-+	return -EINVAL;
-+}
-+
- static int aha152x_config_cs(struct pcmcia_device *link)
- {
-     scsi_info_t *info = link->priv;
-     struct aha152x_setup s;
--    tuple_t tuple;
--    cisparse_t parse;
--    int i, last_ret, last_fn;
--    u_char tuple_data[64];
-+    int last_ret, last_fn;
-     struct Scsi_Host *host;
--    
-+
-     DEBUG(0, "aha152x_config(0x%p)\n", link);
- 
--    tuple.TupleData = tuple_data;
--    tuple.TupleDataMax = 64;
--    tuple.TupleOffset = 0;
--    tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--    tuple.Attributes = 0;
--    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--    while (1) {
--	if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--	    goto next_entry;
--	/* For New Media T&J, look for a SCSI window */
--	if (parse.cftable_entry.io.win[0].len >= 0x20)
--	    link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--	else if ((parse.cftable_entry.io.nwin > 1) &&
--		 (parse.cftable_entry.io.win[1].len >= 0x20))
--	    link->io.BasePort1 = parse.cftable_entry.io.win[1].base;
--	if ((parse.cftable_entry.io.nwin > 0) &&
--	    (link->io.BasePort1 < 0xffff)) {
--	    link->conf.ConfigIndex = parse.cftable_entry.index;
--	    i = pcmcia_request_io(link, &link->io);
--	    if (i == CS_SUCCESS) break;
--	}
--    next_entry:
--	CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+    last_ret = pcmcia_loop_config(link, aha152x_config_check, NULL);
-+    if (last_ret) {
-+	cs_error(link, RequestIO, last_ret);
-+	goto failed;
-     }
--    
-+
-     CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-     CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
-     
-@@ -208,6 +204,7 @@ static int aha152x_config_cs(struct pcmcia_device *link)
- 
- cs_failed:
-     cs_error(link, last_fn, last_ret);
-+failed:
-     aha152x_release_cs(link);
-     return -ENODEV;
- }
-diff --git a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
-index d8b9935..fefef7d 100644
---- a/drivers/scsi/pcmcia/fdomain_stub.c
-+++ b/drivers/scsi/pcmcia/fdomain_stub.c
-@@ -123,34 +123,29 @@ static void fdomain_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int fdomain_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
-+{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	return pcmcia_request_io(p_dev, &p_dev->io);
-+}
-+
-+
- static int fdomain_config(struct pcmcia_device *link)
- {
-     scsi_info_t *info = link->priv;
--    tuple_t tuple;
--    cisparse_t parse;
--    int i, last_ret, last_fn;
--    u_char tuple_data[64];
-+    int last_ret, last_fn;
-     char str[22];
-     struct Scsi_Host *host;
- 
-     DEBUG(0, "fdomain_config(0x%p)\n", link);
- 
--    tuple.TupleData = tuple_data;
--    tuple.TupleDataMax = 64;
--    tuple.TupleOffset = 0;
--
--    tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--    while (1) {
--	if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--	    goto next_entry;
--	link->conf.ConfigIndex = parse.cftable_entry.index;
--	link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--	i = pcmcia_request_io(link, &link->io);
--	if (i == CS_SUCCESS) break;
--    next_entry:
--	CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+    last_ret = pcmcia_loop_config(link, fdomain_config_check, NULL);
-+    if (last_ret) {
-+	    cs_error(link, RequestIO, last_ret);
-+	    goto failed;
-     }
- 
-     CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -181,6 +176,7 @@ static int fdomain_config(struct pcmcia_device *link)
- 
- cs_failed:
-     cs_error(link, last_fn, last_ret);
-+failed:
-     fdomain_release(link);
-     return -ENODEV;
- } /* fdomain_config */
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index 5082ca3..f014d6e 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1610,126 +1610,130 @@ static void nsp_cs_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- /*====================================================================*/
--static int nsp_cs_config(struct pcmcia_device *link)
--{
--	int		  ret;
--	scsi_info_t	 *info	 = link->priv;
--	tuple_t		  tuple;
--	cisparse_t	  parse;
--	int		  last_ret, last_fn;
--	unsigned char	  tuple_data[64];
--	config_info_t	  conf;
--	win_req_t         req;
--	memreq_t          map;
--	cistpl_cftable_entry_t dflt = { 0 };
--	struct Scsi_Host *host;
--	nsp_hw_data      *data = &nsp_data_base;
--
--	nsp_dbg(NSP_DEBUG_INIT, "in");
--
--	tuple.Attributes      = 0;
--	tuple.TupleData	      = tuple_data;
--	tuple.TupleDataMax    = sizeof(tuple_data);
--	tuple.TupleOffset     = 0;
- 
--	/* Look up the current Vcc */
--	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(link, &conf));
-+struct nsp_cs_configdata {
-+	nsp_hw_data		*data;
-+	win_req_t		req;
-+	config_info_t		conf;
-+	cistpl_cftable_entry_t	dflt;
-+};
- 
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		cistpl_cftable_entry_t *cfg = &(parse.cftable_entry);
-+static int nsp_cs_config_check(struct pcmcia_device *p_dev,
-+			       cistpl_cftable_entry_t *cfg,
-+			       void *priv_data)
-+{
-+	struct nsp_cs_configdata *cfg_mem = priv_data;
- 
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--				pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
-+	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
-+		memcpy(&cfg_mem->dflt, cfg, sizeof(cistpl_cftable_entry_t));
-+	if (cfg->index == 0)
-+		return -ENODEV;
- 
--		if (cfg->flags & CISTPL_CFTABLE_DEFAULT) { dflt = *cfg; }
--		if (cfg->index == 0) { goto next_entry; }
--		link->conf.ConfigIndex = cfg->index;
-+	p_dev->conf.ConfigIndex = cfg->index;
- 
--		/* Does this card need audio output? */
--		if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
--			link->conf.Attributes |= CONF_ENABLE_SPKR;
--			link->conf.Status = CCSR_AUDIO_ENA;
--		}
-+	/* Does this card need audio output? */
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
-+		p_dev->conf.Status = CCSR_AUDIO_ENA;
-+	}
- 
--		/* Use power settings for Vcc and Vpp if present */
--		/*  Note that the CIS values need to be rescaled */
--		if (cfg->vcc.present & (1<<CISTPL_POWER_VNOM)) {
--			if (conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM]/10000) {
--				goto next_entry;
--			}
--		} else if (dflt.vcc.present & (1<<CISTPL_POWER_VNOM)) {
--			if (conf.Vcc != dflt.vcc.param[CISTPL_POWER_VNOM]/10000) {
--				goto next_entry;
--			}
-+	/* Use power settings for Vcc and Vpp if present */
-+	/*  Note that the CIS values need to be rescaled */
-+	if (cfg->vcc.present & (1<<CISTPL_POWER_VNOM)) {
-+		if (cfg_mem->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM]/10000)
-+			return -ENODEV;
-+		else if (cfg_mem->dflt.vcc.present & (1<<CISTPL_POWER_VNOM)) {
-+			if (cfg_mem->conf.Vcc != cfg_mem->dflt.vcc.param[CISTPL_POWER_VNOM]/10000)
-+				return -ENODEV;
- 		}
- 
- 		if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM)) {
--			link->conf.Vpp =
-+			p_dev->conf.Vpp =
- 				cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
--		} else if (dflt.vpp1.present & (1 << CISTPL_POWER_VNOM)) {
--			link->conf.Vpp =
--				dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
-+		} else if (cfg_mem->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM)) {
-+			p_dev->conf.Vpp =
-+				cfg_mem->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
- 		}
- 
- 		/* Do we need to allocate an interrupt? */
--		if (cfg->irq.IRQInfo1 || dflt.irq.IRQInfo1) {
--			link->conf.Attributes |= CONF_ENABLE_IRQ;
-+		if (cfg->irq.IRQInfo1 || cfg_mem->dflt.irq.IRQInfo1) {
-+			p_dev->conf.Attributes |= CONF_ENABLE_IRQ;
- 		}
- 
- 		/* IO window settings */
--		link->io.NumPorts1 = link->io.NumPorts2 = 0;
--		if ((cfg->io.nwin > 0) || (dflt.io.nwin > 0)) {
--			cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &dflt.io;
--			link->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
-+		p_dev->io.NumPorts1 = p_dev->io.NumPorts2 = 0;
-+		if ((cfg->io.nwin > 0) || (cfg_mem->dflt.io.nwin > 0)) {
-+			cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &cfg_mem->dflt.io;
-+			p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
- 			if (!(io->flags & CISTPL_IO_8BIT))
--				link->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
-+				p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
- 			if (!(io->flags & CISTPL_IO_16BIT))
--				link->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
--			link->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
--			link->io.BasePort1 = io->win[0].base;
--			link->io.NumPorts1 = io->win[0].len;
-+				p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
-+			p_dev->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
-+			p_dev->io.BasePort1 = io->win[0].base;
-+			p_dev->io.NumPorts1 = io->win[0].len;
- 			if (io->nwin > 1) {
--				link->io.Attributes2 = link->io.Attributes1;
--				link->io.BasePort2 = io->win[1].base;
--				link->io.NumPorts2 = io->win[1].len;
-+				p_dev->io.Attributes2 = p_dev->io.Attributes1;
-+				p_dev->io.BasePort2 = io->win[1].base;
-+				p_dev->io.NumPorts2 = io->win[1].len;
- 			}
- 			/* This reserves IO space but doesn't actually enable it */
--			if (pcmcia_request_io(link, &link->io) != 0)
-+			if (pcmcia_request_io(p_dev, &p_dev->io) != 0)
- 				goto next_entry;
- 		}
- 
--		if ((cfg->mem.nwin > 0) || (dflt.mem.nwin > 0)) {
--			cistpl_mem_t *mem =
--				(cfg->mem.nwin) ? &cfg->mem : &dflt.mem;
--			req.Attributes = WIN_DATA_WIDTH_16|WIN_MEMORY_TYPE_CM;
--			req.Attributes |= WIN_ENABLE;
--			req.Base = mem->win[0].host_addr;
--			req.Size = mem->win[0].len;
--			if (req.Size < 0x1000) {
--				req.Size = 0x1000;
-+		if ((cfg->mem.nwin > 0) || (cfg_mem->dflt.mem.nwin > 0)) {
-+			memreq_t	map;
-+			cistpl_mem_t	*mem =
-+				(cfg->mem.nwin) ? &cfg->mem : &cfg_mem->dflt.mem;
-+			cfg_mem->req.Attributes = WIN_DATA_WIDTH_16|WIN_MEMORY_TYPE_CM;
-+			cfg_mem->req.Attributes |= WIN_ENABLE;
-+			cfg_mem->req.Base = mem->win[0].host_addr;
-+			cfg_mem->req.Size = mem->win[0].len;
-+			if (cfg_mem->req.Size < 0x1000) {
-+				cfg_mem->req.Size = 0x1000;
- 			}
--			req.AccessSpeed = 0;
--			if (pcmcia_request_window(&link, &req, &link->win) != 0)
-+			cfg_mem->req.AccessSpeed = 0;
-+			if (pcmcia_request_window(&p_dev, &cfg_mem->req, &p_dev->win) != 0)
- 				goto next_entry;
- 			map.Page = 0; map.CardOffset = mem->win[0].card_addr;
--			if (pcmcia_map_mem_page(link->win, &map) != 0)
-+			if (pcmcia_map_mem_page(p_dev->win, &map) != 0)
- 				goto next_entry;
- 
--			data->MmioAddress = (unsigned long)ioremap_nocache(req.Base, req.Size);
--			data->MmioLength  = req.Size;
-+			cfg_mem->data->MmioAddress = (unsigned long)ioremap_nocache(cfg_mem->req.Base, cfg_mem->req.Size);
-+			cfg_mem->data->MmioLength  = cfg_mem->req.Size;
- 		}
- 		/* If we got this far, we're cool! */
--		break;
--
--	next_entry:
--		nsp_dbg(NSP_DEBUG_INIT, "next");
--		pcmcia_disable_device(link);
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+		return 0;
- 	}
- 
-+next_entry:
-+	nsp_dbg(NSP_DEBUG_INIT, "next");
-+	pcmcia_disable_device(p_dev);
-+	return -ENODEV;
-+}
-+
-+static int nsp_cs_config(struct pcmcia_device *link)
-+{
-+	int		  ret;
-+	scsi_info_t	 *info	 = link->priv;
-+	int		  last_ret, last_fn;
-+	struct nsp_cs_configdata *cfg_mem;
-+	struct Scsi_Host *host;
-+	nsp_hw_data      *data = &nsp_data_base;
-+
-+	nsp_dbg(NSP_DEBUG_INIT, "in");
-+
-+	cfg_mem = kzalloc(sizeof(cfg_mem), GFP_KERNEL);
-+	if (!cfg_mem)
-+		return -ENOMEM;
-+	cfg_mem->data = data;
-+
-+	/* Look up the current Vcc */
-+	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(link, &cfg_mem->conf));
-+	ret = pcmcia_loop_config(link, nsp_cs_config_check, cfg_mem);
-+		goto cs_failed;
-+
- 	if (link->conf.Attributes & CONF_ENABLE_IRQ) {
- 		CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
- 	}
-@@ -1791,16 +1795,18 @@ static int nsp_cs_config(struct pcmcia_device *link)
- 		printk(" & 0x%04x-0x%04x", link->io.BasePort2,
- 		       link->io.BasePort2+link->io.NumPorts2-1);
- 	if (link->win)
--		printk(", mem 0x%06lx-0x%06lx", req.Base,
--		       req.Base+req.Size-1);
-+		printk(", mem 0x%06lx-0x%06lx", cfg_mem->req.Base,
-+		       cfg_mem->req.Base+cfg_mem->req.Size-1);
- 	printk("\n");
- 
-+	kfree(cfg_mem);
- 	return 0;
- 
-  cs_failed:
- 	nsp_dbg(NSP_DEBUG_INIT, "config fail");
- 	cs_error(link, last_fn, last_ret);
- 	nsp_cs_release(link);
-+	kfree(cfg_mem);
- 
- 	return -ENODEV;
- } /* nsp_cs_config */
-diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-index 67c5a58..aa9b9e0 100644
---- a/drivers/scsi/pcmcia/qlogic_stub.c
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c
-@@ -195,39 +195,32 @@ static void qlogic_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int qlogic_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
-+{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	p_dev->io.NumPorts1 = cfg->io.win[0].len;
-+
-+	if (p_dev->io.BasePort1 == 0)
-+		return -ENODEV;
-+
-+	return pcmcia_request_io(p_dev, &p_dev->io);
-+}
-+
- static int qlogic_config(struct pcmcia_device * link)
- {
- 	scsi_info_t *info = link->priv;
--	tuple_t tuple;
--	cisparse_t parse;
--	int i, last_ret, last_fn;
--	unsigned short tuple_data[32];
-+	int last_ret, last_fn;
- 	struct Scsi_Host *host;
- 
- 	DEBUG(0, "qlogic_config(0x%p)\n", link);
- 
--	info->manf_id = link->manf_id;
--
--	tuple.TupleData = (cisdata_t *) tuple_data;
--	tuple.TupleDataMax = 64;
--	tuple.TupleOffset = 0;
--
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--				pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
--		link->conf.ConfigIndex = parse.cftable_entry.index;
--		link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--		link->io.NumPorts1 = parse.cftable_entry.io.win[0].len;
--		if (link->io.BasePort1 != 0) {
--			i = pcmcia_request_io(link, &link->io);
--			if (i == CS_SUCCESS)
--				break;
--		}
--	      next_entry:
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+	last_ret = pcmcia_loop_config(link, qlogic_config_check, NULL);
-+	if (last_ret) {
-+		cs_error(link, RequestIO, last_ret);
-+		goto failed;
- 	}
- 
- 	CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -262,6 +255,7 @@ static int qlogic_config(struct pcmcia_device * link)
- cs_failed:
- 	cs_error(link, last_fn, last_ret);
- 	pcmcia_disable_device(link);
-+failed:
- 	return -ENODEV;
- 
- }				/* qlogic_config */
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index 0be232b..15369d9 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -700,15 +700,26 @@ static struct scsi_host_template sym53c500_driver_template = {
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int SYM53C500_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
-+{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	p_dev->io.NumPorts1 = cfg->io.win[0].len;
-+
-+	if (p_dev->io.BasePort1 == 0)
-+		return -ENODEV;
-+
-+	return pcmcia_request_io(p_dev, &p_dev->io);
-+}
-+
- static int
- SYM53C500_config(struct pcmcia_device *link)
- {
- 	struct scsi_info_t *info = link->priv;
--	tuple_t tuple;
--	cisparse_t parse;
--	int i, last_ret, last_fn;
-+	int last_ret, last_fn;
- 	int irq_level, port_base;
--	unsigned short tuple_data[32];
- 	struct Scsi_Host *host;
- 	struct scsi_host_template *tpnt = &sym53c500_driver_template;
- 	struct sym53c500_data *data;
-@@ -717,27 +728,10 @@ SYM53C500_config(struct pcmcia_device *link)
- 
- 	info->manf_id = link->manf_id;
- 
--	tuple.TupleData = (cisdata_t *)tuple_data;
--	tuple.TupleDataMax = 64;
--	tuple.TupleOffset = 0;
--
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		    pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
--		link->conf.ConfigIndex = parse.cftable_entry.index;
--		link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--		link->io.NumPorts1 = parse.cftable_entry.io.win[0].len;
--
--		if (link->io.BasePort1 != 0) {
--			i = pcmcia_request_io(link, &link->io);
--			if (i == CS_SUCCESS)
--				break;
--		}
--next_entry:
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+	last_ret = pcmcia_loop_config(link, SYM53C500_config_check, NULL);
-+	if (last_ret) {
-+		cs_error(link, RequestIO, last_ret);
-+		goto failed;
- 	}
- 
- 	CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -831,6 +825,7 @@ err_release:
- 
- cs_failed:
- 	cs_error(link, last_fn, last_ret);
-+failed:
- 	SYM53C500_release(link);
- 	return -ENODEV;
- } /* SYM53C500_config */
--- 
-1.5.4.3
+Below is the Oops with Vlad fix revision 470 in SCST with the addition
+of the lock but without the change in qla_mbx.c.  
 
+[67324.049497] [4525]: scst: exit_scst:1652:SCST unloaded
+[67324.765692] qla2xxx 0000:06:00.1: LIP reset occured (f8ef).
+[67325.295690] qla2xxx 0000:06:00.1: LIP occured (f8ef).
+[67325.315689] qla2xxx 0000:06:00.1: LOOP UP detected (4 Gbps).
+[67325.415700] Unable to handle kernel NULL pointer dereference at
+0000000000000008 RIP: 
+[67325.416599] [<ffffffff80226b1e>] task_rq_lock+0x2e/0x90
+[67325.418171] PGD 22d737067 PUD 22df2d067 PMD 0 
+[67325.419114] Oops: 0000 [1] SMP 
+[67325.419736] CPU 0 
+[67325.420162] Modules linked in: qla2xxx loop scsi_transport_fc
+[67325.421333] Pid: 4382, comm: qla2xxx_12_dpc Tainted: GF
+2.6.23.8-64bit-fc-nfs #10
+[67325.422998] RIP: 0010:[<ffffffff80226b1e>] [<ffffffff80226b1e>]
+task_rq_lock+0x2e/0x90
+[67325.424736] RSP: 0018:ffff81022e14bb00 EFLAGS: 00010086
+[67325.425870] RAX: 0000000000000086 RBX: 000000000000000f RCX:
+0000000000000000
+[67325.427379] RDX: 0000000000000000 RSI: ffff81022e14bb80 RDI:
+0000000000000000
+[67325.428899] RBP: ffff81022e14bb20 R08: 0000000000000000 R09:
+ffff81022d160010
+[67325.430406] R10: 0000000000000000 R11: ffffffff8050faf0 R12:
+ffffffff807a4000
+[67325.431925] R13: 0000000000000000 R14: ffff81022e14bb80 R15:
+0000000000000246
+[67325.433433] FS: 0000000000000000(0000) GS:ffffffff8071d000(0000)
+knlGS:0000000000000000
+[67325.435147] CS: 0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+[67325.436371] CR2: 0000000000000008 CR3: 000000022dec0000 CR4:
+00000000000006e0
+[67325.437890] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[67325.439398] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+0000000000000400
+[67325.440921] Process qla2xxx_12_dpc (pid: 4382, threadinfo
+ffff81022e14a000, task ffff81022c6040c0)
+[67325.442813] Stack: 000000000000000f ffff81022d160000
+0000000000000000 ffffc20000038000
+[67325.444551] ffff81022e14bbb0 ffffffff80226ddf ffff81022e14bbd0
+0000000000000046
+[67325.446143] 0000000000000000 ffff810008abc918 000000002c6042e0
+ffff81022c6040c0
+[67325.447697] Call Trace:
+[67325.448252] [<ffffffff80226ddf>] try_to_wake_up+0x2f/0x370
+[67325.449485] [<ffffffff80237854>] lock_timer_base+0x34/0x70
+[67325.450736]
+[<ffffffff8805a9cb>] :qla2xxx:qla24xx_process_response_queue+0x18b/0x1f0
+[67325.452442] [<ffffffff8805bdd8>] :qla2xxx:qla24xx_intr_handler
++0x158/0x200
+[67325.453976] [<ffffffff80237710>] process_timeout+0x0/0x10
+[67325.455196] [<ffffffff88054b0b>] :qla2xxx:qla2x00_mailbox_command
++0x1db/0x5d0
+[67325.456787] [<ffffffff80597980>] thread_return+0x0/0x5c0
+[67325.457978] [<ffffffff80237854>] lock_timer_base+0x34/0x70
+[67325.459214] [<ffffffff88056a17>] :qla2xxx:qla2x00_get_adapter_id
++0x87/0x130
+[67325.460765] [<ffffffff80237710>] process_timeout+0x0/0x10
+[67325.461983] [<ffffffff8804fa9f>] :qla2xxx:qla2x00_configure_loop
++0x33f/0x17a0
+[67325.463573] [<ffffffff80237854>] lock_timer_base+0x34/0x70
+[67325.464807] [<ffffffff880568ea>] :qla2xxx:qla2x00_get_retry_cnt
++0x5a/0x100
+[67325.466333] [<ffffffff8805882c>] :qla2xxx:__qla2x00_marker
++0xec/0x110
+[67325.467781] [<ffffffff880588b0>] :qla2xxx:qla2x00_marker+0x60/0x90
+[67325.469157] [<ffffffff88051b3e>] :qla2xxx:qla2x00_abort_isp
++0x24e/0x610
+[67325.470638] [<ffffffff8804c290>] :qla2xxx:qla2x00_do_dpc+0x430/0x560
+[67325.472052] [<ffffffff8804be60>] :qla2xxx:qla2x00_do_dpc+0x0/0x560
+[67325.473431] [<ffffffff8804be60>] :qla2xxx:qla2x00_do_dpc+0x0/0x560
+[67325.474820] [<ffffffff80242e8b>] kthread+0x4b/0x80
+[67325.475902] [<ffffffff8020c608>] child_rip+0xa/0x12
+[67325.477005] [<ffffffff80242e40>] kthread+0x0/0x80
+[67325.478069] [<ffffffff8020c5fe>] child_rip+0x0/0x12
+[67325.479171] 
+[67325.479486] 
+[67325.479486] Code: 49 8b 45 08 4c 89 e3 8b 40 18 48 8b 04 c5 40 8c 74
+80 48 03 
+[67325.481393] RIP [<ffffffff80226b1e>] task_rq_lock+0x2e/0x90
+[67325.482617] RSP <ffff81022e14bb00>
+[67325.483356] CR2: 0000000000000008
+
+Message from syslogd@HP1b at Tue Jul 22 02:25:48 2008 ...
+
+Message from syslogd@HP1b at Tue Jul 22 02:25:48 2008 ...
+HP1b kernel: [67325.419114] Oops: 0000 [1] SMP 
+HP1b kernel: [67325.483356] CR2: 0000000000000008
+
+Gal.
+
+On Mon, 2008-07-28 at 22:14 +0400, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> > On Mon, 2008-07-28 at 21:33 +0400, Vladislav Bolkhovitin wrote:
+> >> This patch fixes race on dpc_thread field of struct scsi_qla_host,
+> >> which can lead to crash on the module unload.
+> >>
+> >> This patch is against 2.6.26
+> > 
+> > I'm afraid adding a lock is almost certainly the wrong way to handle
+> > this type of failure. 
+> 
+> Why? It's simple and fully solves the problem. All the events, which 
+> left unhandled, because there is nobody to wake up by 
+> qla2xxx_wake_dpc(), are not relevant after the driver's shutdown.
+> 
+> > What should be done is to make sure the qla is
+> > correctly shut down (i.e. no tasks requiring the dpc_thread can be
+> > performed) *before* killing the thread ...
+> 
+> Sure, in ideal it would be the best approach. But, certainly, it would 
+> be a lot more complicated and error-prone.
+> 
+>  From other side, actually, it doesn't matter much for me how it will be 
+> fixed, if it's fixed.
+> 
+> > it sounds like shutdown is
+> > slightly broken in the current driver ... could you post the oops
+> > details and we can try to work out what the problem is
+> 
+> Gal, can you send the details, please?
+> 
+> > James
+> > 
+> > 
+> > 
+> 
