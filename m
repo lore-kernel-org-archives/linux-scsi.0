@@ -1,41 +1,31 @@
-From: Ric Wheeler <rwheeler@redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: tools support for non-512 byte sector sizes
-Date: Tue, 29 Jul 2008 14:54:16 -0400
-Message-ID: <488F6758.8080907@redhat.com>
-References: <488F524F.6020905@redhat.com>	<20080729182611.GB24924@parisc-linux.org>	<1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net>
-Reply-To: rwheeler@redhat.com
+Date: Tue, 29 Jul 2008 12:55:13 -0600
+Message-ID: <20080729185512.GE24924@parisc-linux.org>
+References: <488F524F.6020905@redhat.com> <20080729192126.7261318b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq13alsr0g0.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:37899 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbYG2SzO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 14:55:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20080729192126.7261318b@lxorguk.ukuu.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: rwheeler@redhat.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>
 
-Martin K. Petersen wrote:
->>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->>>>>>             
->
-> James> The problem, which ata_ram also suffers, is that the tools we
-> James> most need to test are the ones for manipulating non volatile
-> James> characteristics (like partition tables).  We'd really like the
-> James> disk contents to survive reboot for this ...
->
-> Yeah, I should add that I wanted persistence too.  I went through a
-> whole stack (well, 5-6 or so) fibre channel drives from various
-> vendors and attempted to low-level format them to 4KB sectors.  Most
-> of them laughed in my face.  One of them tried to comply and
-> irreparably confused its firmware in the process.
->
-> Just yesterday I received a couple of prototype drives in the mail.
-> I'll ask the vendor whether they support 4KB and if so I'll give them
-> a whirl.
->   
-Isn't this a great use case for a SCSI target device where our target 
-can be a software disk on a remote host? What is missing for us to put 
-something like that together?
+On Tue, Jul 29, 2008 at 07:21:26PM +0100, Alan Cox wrote:
+> Also early SD type devices with 256 byte sectors simply don't work with
+> our scsi midlayer.
 
-ric
+Are any of them still spinning, or did the lubricant leak out a couple
+of decades ago?
 
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
