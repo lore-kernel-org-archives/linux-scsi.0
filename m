@@ -1,54 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi_transport_spi: fix oops in revalidate
-Date: Tue, 29 Jul 2008 12:52:20 -0500
-Message-ID: <1217353940.6103.24.camel@localhost.localdomain>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: Subtle but oops causing problem with class_device->device
+ conversion
+Date: Tue, 29 Jul 2008 19:59:48 +0200
+Message-ID: <1217354388.31362.2.camel@linux.site>
+References: <1217353348.6103.20.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34334 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754410AbYG2Rws (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2008 13:52:48 -0400
+Received: from moutng.kundenserver.de ([212.227.126.188]:58105 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690AbYG2R7B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2008 13:59:01 -0400
+In-Reply-To: <1217353348.6103.20.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-The class_device->device conversion is causing an oops in revalidate
-because it's assuming that the device_for_each_child iterator will only
-return struct scsi_device children.  The conversion made all former
-class_devices children of the device as well, so this assumption is
-broken.  Fix it.
+On Tue, 2008-07-29 at 12:42 -0500, James Bottomley wrote:
+> It's taken me a while to track this down.  Basically there's an oops in
+> scsi_transport_spi that's directly caused by this.
+> 
+> What happened is that you made all class devices become real devices and
+> be parented to devices they were formerly allied to through the class
+> device dev pointer.  This means that effectively you expanded the child
+> list of every device to include not only its real children but also its
+> class devices.
+> 
+> This breaks in device_for_each_child *if* the routine in the iterator
+> doesn't perform checks on the devices it gets back (scsi_transport_spi
+> was assuming that every device it got was embedded in a struct
+> scsi_device because they're the only logical children of a scsi_target).
+> 
+> I can fix the SCSI breakage, but the whole tree will need auditing to
+> check that nothing else is using this assumption.
 
-James
+I guess it's caused by:
+  [SCSI] add scsi_host and scsi_target to scsi_bus
 
----
+  This patch implements scsi_host and scsi_target device types
+  and adds both to the scsi_bus.
+  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=b0ed43360fdca227048d88a08290365cb681c1a8
 
-I've audited the rest of SCSI, this is the only unchecked iterator function
+and not by the re-parenting, so it should be limited to SCSI, right?
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 75a64a6..b29360e 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -366,12 +366,14 @@ spi_transport_rd_attr(rti, "%d\n");
- spi_transport_rd_attr(pcomp_en, "%d\n");
- spi_transport_rd_attr(hold_mcs, "%d\n");
- 
--/* we only care about the first child device so we return 1 */
-+/* we only care about the first child device that's a real SCSI device
-+ * so we return 1 to terminate the iteration when we find it */
- static int child_iter(struct device *dev, void *data)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	if (!scsi_is_sdev_device(dev))
-+		return 0;
- 
--	spi_dv_device(sdev);
-+	spi_dv_device(to_scsi_device(dev));
- 	return 1;
- }
- 
-
+Thanks,
+Kay
 
