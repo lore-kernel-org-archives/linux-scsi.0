@@ -1,95 +1,29 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [RFC] [PATCH 1/7] pcmcia: add pcmcia_loop_config() helper
-Date: Tue, 29 Jul 2008 14:16:42 -0700
-Message-ID: <20080729141642.47c8d6ca.rdunlap@xenotime.net>
-References: <20080729071539.GB27385@comet.dominikbrodowski.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Tue, 29 Jul 2008 22:07:22 +0100
+Message-ID: <20080729220722.7d47a948@lxorguk.ukuu.org.uk>
+References: <488F524F.6020905@redhat.com>
+	<20080729192126.7261318b@lxorguk.ukuu.org.uk>
+	<20080729185512.GE24924@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-serial-owner@vger.kernel.org>
-In-Reply-To: <20080729071539.GB27385@comet.dominikbrodowski.net>
-Sender: linux-serial-owner@vger.kernel.org
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>, linux-bluetooth@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Karsten Keil <kkeil@suse.de>, isdn4linux@listserv.isdn4linux.de, Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, Harald Welte <laforge@gnumonks.org>, linux-parport@lists.infradead.org, Russell King <rmk+kernel@arm.linux.org.uk>, Ed Okerson <eokerson@quicknet.net>, linux-serial@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080729185512.GE24924@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: rwheeler@redhat.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 29 Jul 2008 09:15:39 +0200 Dominik Brodowski wrote:
+On Tue, 29 Jul 2008 12:55:13 -0600
+Matthew Wilcox <matthew@wil.cx> wrote:
 
-> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
-> available configuration options. During a driver's probe() phase, one
-> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
-> and pcmcia_parse_tuple directly in most if not all cases.
+> On Tue, Jul 29, 2008 at 07:21:26PM +0100, Alan Cox wrote:
+> > Also early SD type devices with 256 byte sectors simply don't work with
+> > our scsi midlayer.
 > 
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  Documentation/pcmcia/driver-changes.txt |    6 +++
->  drivers/pcmcia/pcmcia_resource.c        |   57 +++++++++++++++++++++++++++++++
->  include/pcmcia/cistpl.h                 |    6 +++
->  3 files changed, 69 insertions(+), 0 deletions(-)
-> 
-> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
-> available configuration options. During a driver's probe() phase, one
-> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
-> and pcmcia_parse_tuple directly in most if not all cases.
-> 
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  Documentation/pcmcia/driver-changes.txt |    6 +++
->  drivers/pcmcia/pcmcia_resource.c        |   63 +++++++++++++++++++++++++++++++
->  include/pcmcia/cistpl.h                 |    6 +++
->  3 files changed, 75 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
-> index 4884a18..0fa48aa 100644
-> --- a/drivers/pcmcia/pcmcia_resource.c
-> +++ b/drivers/pcmcia/pcmcia_resource.c
-> @@ -909,3 +909,66 @@ void pcmcia_disable_device(struct pcmcia_device *p_dev) {
->  		pcmcia_release_window(p_dev->win);
->  }
->  EXPORT_SYMBOL(pcmcia_disable_device);
-> +
-> +
+> Are any of them still spinning, or did the lubricant leak out a couple
+> of decades ago?
 
-Hi,
-
-One more comment here (sorry I missed it earlier):
-
-The kernel-doc comment needs to immediately precede the function, so that
-struct pcmcia_cfg_mem needs to be moved to before the kernel-doc block...
-
-
-> +/**
-> + * pcmcia_loop_config() - loop over configuration options
-> + * @p_dev:	the struct pcmcia_device which we need to loop for.
-> + * @conf_check:	function to call for each configuration option.
-> + *		It gets passed the struct pcmcia_device, the CIS data
-> + *		describing the configuration option, and private data
-> + *		being passed to pcmcia_loop_config()
-> + * @priv_data:	private data to be passed to the conf_check function.
-> + *
-> + * pcmcia_loop_config() loops over all configuration options, and calls
-> + * the driver-specific conf_check() for each one, checking whether
-> + * it is a valid one.
-> + */
-> +
-> +struct pcmcia_cfg_mem {
-> +	tuple_t tuple;
-> +	cisparse_t parse;
-> +	u8 buf[256];
-> +};
-> +
-> +int pcmcia_loop_config(struct pcmcia_device *p_dev,
-> +		       int	(*conf_check)	(struct pcmcia_device *p_dev,
-> +						 cistpl_cftable_entry_t *cfg,
-> +						 void *priv_data),
-> +		       void *priv_data)
-> +{
-...
-> +}
-> +EXPORT_SYMBOL(pcmcia_loop_config);
-
-
----
-~Randy
-Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
-http://linuxplumbersconf.org/
+Lubricant ? there is no lubricant in a flash card. 256 byte hard disks
+probably all died years ago but early smartmedia is 256 byte/sector.
