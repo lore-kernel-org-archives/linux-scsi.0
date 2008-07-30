@@ -1,72 +1,39 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Wed, 30 Jul 2008 12:29:22 -0500
-Message-ID: <20080730172922.GA20191@auslistsprd01.us.dell.com>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <87zlnzb8ce.fsf@rho.meyering.net>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: ses: fix VPD inquiry overrun
+Date: Wed, 30 Jul 2008 10:35:47 -0700
+Message-ID: <1217439347.23389.138.camel@brick>
+References: <1217349505.6103.15.camel@localhost.localdomain>
+	 <48903800.7000008@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:33560 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803AbYG3R3Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 13:29:24 -0400
-Content-Disposition: inline
-In-Reply-To: <87zlnzb8ce.fsf@rho.meyering.net>
+Received: from yw-out-2324.google.com ([74.125.46.31]:44091 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbYG3Rfr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 13:35:47 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so74708ywe.1
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2008 10:35:46 -0700 (PDT)
+In-Reply-To: <48903800.7000008@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jim Meyering <jim@meyering.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 07:16:49PM +0200, Jim Meyering wrote:
-> Matt Domsch <Matt_Domsch@dell.com> wrote:
-> > On Tue, Jul 29, 2008 at 02:48:31PM -0400, Martin K. Petersen wrote:
-> ...
-> >> Just yesterday I received a couple of prototype drives in the mail.
-> >> I'll ask the vendor whether they support 4KB and if so I'll give them
-> >> a whirl.
-> >
-> > I have access to disks with native 4KB sectors now too.  Would
+On Wed, 2008-07-30 at 12:44 +0300, Boaz Harrosh wrote:
+> James Bottomley wrote:
+
+> Harvey where are these bitwise accessors that do an *aligned* access on a 
+> void pointer. the equivalent of:
+> 	u16 = be16_to_cpup((const __be16 *p)&buff[x]);
+> Where I know that x above is some even offset.
 > 
-> Do they expose that sector size?
-> I.e., does ioctl(fd,BLKSSZGET,&ss) set ss to 4096?
-
-yes.
- 
-> I'm interested because I'm preparing GNU Parted's partition table
-> manipulation code (not its FS code) for just that.
-> In particular, now I've heard two stories:
+> I've seen you sent them but I can't find them in my tree
 > 
->   - disk makers will eventually sell drives with >512-byte sectors
 
-yes
- 
->   - some disk makers have sort of agreed not to do that, and
->       expect forever to hide the larger underlying sector size
->       behind a virtual 512 (of course, this imposes alignment
->       restrictions, but that's a smaller problem)
+They weren't accepted.  No need to duplicate be16_to_cpup etc.
 
-yes, this is happening also.
+Cheers,
 
-There will be 3 types of disks eventually:
-1) those that report a 512-byte sector size, and are really a 512-byte
-   size.  This is nearly all disks today.
+Harvey
 
-2) those that report a 512-byte sector size, but are really a
-   4096-byte size, and the drive does the conversions and
-   read/modify/write.  T10 and T13 are looking to add commands to
-   expose this different underlying physical sector size so the OS
-   could be aware of it.  This is primarily being driven to mitigate
-   any problems that may happen with "legacy" OSs that are not aware
-   of the difference.
-
-3) those that report a 4096-byte sector size, and are really a
-   4096-byte size.  This seems ideal for aware OSs.
-
-Which of 2) or 3) hit the market in mass remains to be seen.  I want
-Linux to be able to handle either painlessly.
-
-
--- 
-Matt Domsch
-Linux Technology Strategist, Dell Office of the CTO
-linux.dell.com & www.dell.com/linux
