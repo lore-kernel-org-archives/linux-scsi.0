@@ -1,35 +1,72 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: Problems building 2.6.26 and 2.6.27-rc1
-Date: Wed, 30 Jul 2008 19:34:29 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778826B3E8115C@GVW0547EXC.americas.hpqcorp.net>
-References: <20080730184833.GA936@roadking.ldev.net>
-	<adaiqunyyxd.fsf@cisco.com>
-	<0F5B06BAB751E047AB5C87D1F77A778826B3E81120@GVW0547EXC.americas.hpqcorp.net>
- <ada7ib3yy3v.fsf@cisco.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Wed, 30 Jul 2008 15:35:35 -0400
+Message-ID: <4890C287.60508@pobox.com>
+References: <200807300019.m6U0JkdY012558@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:14509 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752944AbYG3TfY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 15:35:24 -0400
-In-Reply-To: <ada7ib3yy3v.fsf@cisco.com>
-Content-Language: en-US
+Received: from srv5.dvmed.net ([207.36.208.214]:37998 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754256AbYG3Tfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:35:45 -0400
+In-Reply-To: <200807300019.m6U0JkdY012558@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
+To: Karen Xie <kxie@chelsio.com>
+Cc: netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Roland wrote:
+Karen Xie wrote:
+> Cxgb3i iSCSI driver
+> 
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> ---
+> 
+>  drivers/scsi/cxgb3i/Kconfig          |    6 
+>  drivers/scsi/cxgb3i/Makefile         |    5 
+>  drivers/scsi/cxgb3i/cxgb3i.h         |  155 +++
+>  drivers/scsi/cxgb3i/cxgb3i_init.c    |  109 ++
+>  drivers/scsi/cxgb3i/cxgb3i_iscsi.c   |  800 ++++++++++++++
+>  drivers/scsi/cxgb3i/cxgb3i_offload.c | 2001 ++++++++++++++++++++++++++++++++++
+>  drivers/scsi/cxgb3i/cxgb3i_offload.h |  242 ++++
+>  drivers/scsi/cxgb3i/cxgb3i_ulp2.c    |  692 ++++++++++++
+>  drivers/scsi/cxgb3i/cxgb3i_ulp2.h    |  106 ++
+>  9 files changed, 4116 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/cxgb3i/Kconfig
+>  create mode 100644 drivers/scsi/cxgb3i/Makefile
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i.h
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_init.c
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_offload.c
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_offload.h
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_ulp2.c
+>  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_ulp2.h
 
->
-> Hmm, doesn't reproduce here with your config and gcc 4.1.
->
-> No idea, sorry.
+Comments:
 
-Thanks for taking a look. This is perplexing. I know I've built this kernel, but sometimes I hit the build bug and sometimes I don't. I can't pinpoint any differences between working and non-working builds.
+* SCSI drivers should be submitted via the linux-scsi@vger.kernel.org 
+mailing list.
 
-Anybody else? :)
+* The driver is clean and readable, well done
 
--- mikem
+* From a networking standpoint, our main concern becomes how this 
+interacts with the networking stack.  In particular, I'm concerned based 
+on reading the source that this driver uses "TCP port stealing" rather 
+than using a totally separate MAC address (and IP).
+
+Stealing a TCP port on an IP/interface already assigned is a common 
+solution in this space, but also a flawed one.  Precisely because the 
+kernel and applications are unaware of this "special, magic TCP port" 
+you open the potential for application problems that are very difficult 
+for an admin to diagnose based on observed behavior.
+
+So, additional information on your TCP port usage would be greatly 
+appreciated.  Also, how does this interact with IPv6?  Clearly it 
+interacts with IPv4...
+
+	Jeff
+
+
+
+
