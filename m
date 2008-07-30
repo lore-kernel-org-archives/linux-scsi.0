@@ -1,44 +1,52 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Wed, 30 Jul 2008 08:51:47 -0500
-Message-ID: <20080730135147.GA4513@auslistsprd01.us.dell.com>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
+Date: Wed, 30 Jul 2008 10:15:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807301014420.2584-100000@iolanthe.rowland.org>
+References: <1217390922.6103.79.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq13alsr0g0.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54814 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753308AbYG3OPv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 10:15:51 -0400
+In-Reply-To: <1217390922.6103.79.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Frost <artusemrys@yahoo.com>, linux-kernel@vger.kernel.org, Matt Frost <artusemrys@sbcglobal.net>, linux-scsi <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Tue, Jul 29, 2008 at 02:48:31PM -0400, Martin K. Petersen wrote:
-> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> 
-> James> The problem, which ata_ram also suffers, is that the tools we
-> James> most need to test are the ones for manipulating non volatile
-> James> characteristics (like partition tables).  We'd really like the
-> James> disk contents to survive reboot for this ...
-> 
-> Yeah, I should add that I wanted persistence too.  I went through a
-> whole stack (well, 5-6 or so) fibre channel drives from various
-> vendors and attempted to low-level format them to 4KB sectors.  Most
-> of them laughed in my face.  One of them tried to comply and
-> irreparably confused its firmware in the process.
-> 
-> Just yesterday I received a couple of prototype drives in the mail.
-> I'll ask the vendor whether they support 4KB and if so I'll give them
-> a whirl.
+On Tue, 29 Jul 2008, James Bottomley wrote:
 
-I have access to disks with native 4KB sectors now too.  Would
-interested parties be willing to share test plans, so we could be sure
-we have coverage wrt correctness: kernel internals, userspace tools like parted,
-fdisk, kpartx, apps using O_DIRECT)?  Benchmarking winds up being an
-NDA activity this early in the game so I don't want the focus of any
-joint work to be benchmarks yet.
+> > Summary:
+> > Between 2.6.26-rc9-git10 and rc9-git11, the kernel stopped properly
+> > recognizing my USB-card-reader-mounted SDHC 4GB card.  The problem seems to
+> > come up between usb-storage recognizing the device, and the handoff to scsi
+> > to read the disk properties.  The bug remains in 2.6.26 and 2.6.27-rc1;
+> > kernels before 2.6.26-rc9-git10 are unaffected.  On the same EHCI controller,
+> > an old-spec SD 1GB card and its reader are unaffected by this bug.
 
--- 
-Matt Domsch
-Linux Technology Strategist, Dell Office of the CTO
-linux.dell.com & www.dell.com/linux
+> > After the bug, initialization looks the same until the device scan finishes. 
+> > Handoff to scsi produces the following (taken from rc9-git12):
+
+> > sd 5:0:0:0: [sdf] Sector size 0 reported, assuming 512.
+> > sd 5:0:0:0: [sdf] 1 512-byte hardware sectors (0 MB)
+> > sd 5:0:0:0: [sdf] Write Protect is off
+> > sd 5:0:0:0: [sdf] Mode Sense: 4b 00 00 08
+> > sd 5:0:0:0: [sdf] Assuming drive cache: write through
+> > sd 5:0:0:0: [sdf] Sector size 0 reported, assuming 512.
+> > sd 5:0:0:0: [sdf] 1 512-byte hardware sectors (0 MB)
+> > sd 5:0:0:0: [sdf] Write Protect is off
+> > sd 5:0:0:0: [sdf] Mode Sense: 4b 00 00 08
+> > sd 5:0:0:0: [sdf] Assuming drive cache: write through
+> >  sdf: sdf1
+> >  sdf: p1 exceeds device capacity
+> > sd 5:0:0:0: [sdf] Attached SCSI removable disk
+> > sd 5:0:0:0: Attached scsi generic sg7 type 0
+
+The problem will most likely be fixed by this patch:
+
+	http://marc.info/?l=linux-usb&m=121734710306509&w=2
+
+Alan Stern
+
