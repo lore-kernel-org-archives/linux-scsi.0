@@ -1,11 +1,11 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/12] scsi: use the common hex_asc array rather than a private one
-Date: Wed, 30 Jul 2008 12:44:30 -0700
-Message-ID: <200807301944.m6UJiU6W012912@imap1.linux-foundation.org>
+Subject: [patch 08/12] scsi: aic79xx aic79xx_pci.c fix shadowed variables
+Date: Wed, 30 Jul 2008 12:44:26 -0700
+Message-ID: <200807301944.m6UJiRoq012900@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33412 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35615 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751679AbYG3Tw7 (ORCPT
+	by vger.kernel.org with ESMTP id S1753195AbYG3Tw7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Jul 2008 15:52:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
@@ -15,45 +15,40 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail
 
 From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Also use the hi/lo helpers.
+OK to just reuse the outer declaration as it is never used again.
+drivers/scsi/aic7xxx/aic79xx_pci.c:340:12: warning: symbol 'devconfig' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_pci.c:299:12: originally declared here
+
+targpcistat is always assigned just before use, remove the inner declaration.
+drivers/scsi/aic7xxx/aic79xx_pci.c:486:9: warning: symbol 'targpcistat' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_pci.c:429:9: originally declared here
 
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmmca.c    |    3 +--
- drivers/scsi/ultrastor.c |    4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_pci.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff -puN drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ibmmca.c
---- a/drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
-+++ a/drivers/scsi/ibmmca.c
-@@ -1002,12 +1002,11 @@ static char *ti_p(int dev)
- /* interpreter for logical device numbers (ldn) */
- static char *ti_l(int val)
- {
--	const char hex[16] = "0123456789abcdef";
- 	static char answer[2];
+diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-aic79xx-aic79xx_pcic-fix-shadowed-variables drivers/scsi/aic7xxx/aic79xx_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-aic79xx-aic79xx_pcic-fix-shadowed-variables
++++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -337,8 +337,6 @@ ahd_pci_config(struct ahd_softc *ahd, co
+ 	 * 64bit bus (PCI64BIT set in devconfig).
+ 	 */
+ 	if ((ahd->flags & (AHD_39BIT_ADDRESSING|AHD_64BIT_ADDRESSING)) != 0) {
+-		uint32_t devconfig;
+-
+ 		if (bootverbose)
+ 			printf("%s: Enabling 39Bit Addressing\n",
+ 			       ahd_name(ahd));
+@@ -483,8 +481,6 @@ ahd_pci_test_register_access(struct ahd_
+ 		goto fail;
  
- 	answer[1] = (char) (0x0);
- 	if (val <= MAX_LOG_DEV)
--		answer[0] = hex[val];
-+		answer[0] = hex_asc[val];
- 	else
- 		answer[0] = '-';
- 	return (char *) &answer;
-diff -puN drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ultrastor.c
---- a/drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
-+++ a/drivers/scsi/ultrastor.c
-@@ -876,8 +876,8 @@ static int ultrastor_abort(struct scsi_c
- 	for (i = 0; i < 16; i++)
- 	  {
- 	    unsigned char p = inb(port0 + i);
--	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
--	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
-+	    out[28 + i * 3] = hex_asc_hi(p);
-+	    out[29 + i * 3] = hex_asc_lo(p);
- 	    out[30 + i * 3] = ' ';
- 	  }
- 	out[28 + i * 3] = '\n';
+ 	if ((ahd_inb(ahd, INTSTAT) & PCIINT) != 0) {
+-		u_int targpcistat;
+-
+ 		ahd_set_modes(ahd, AHD_MODE_CFG, AHD_MODE_CFG);
+ 		targpcistat = ahd_inb(ahd, TARGPCISTAT);
+ 		if ((targpcistat & STA) != 0)
 _
