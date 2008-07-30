@@ -1,100 +1,124 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/12] scsi: aic79xx_core fix shadowed variables, add statics
-Date: Wed, 30 Jul 2008 12:44:26 -0700
-Message-ID: <200807301944.m6UJiQXX012897@imap1.linux-foundation.org>
+Subject: [patch 01/12] aic7xxx: introduce "dont_generate_debug_code" keyword in aicasm parser
+Date: Wed, 30 Jul 2008 12:44:21 -0700
+Message-ID: <200807301944.m6UJiL17012879@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50501 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37495 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752824AbYG3To7 (ORCPT
+	by vger.kernel.org with ESMTP id S1752513AbYG3To5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:44:59 -0400
+	Wed, 30 Jul 2008 15:44:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, vda.linux@googlemail.com, James.Bottomley@HansenPartnership.com, hare@suse.de
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Denys Vlasenko <vda.linux@googlemail.com>
 
-Redeclared within different if/else blocks, safe to reuse the
-original from beginning of function.
-drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
+aic7xxx still contains ~30kb of dead code if pretty printing of registers
+is requested. These patches deal with it.
 
-Use caminfo for the outer declaration, the redeclared version is
-iterating over all initiator/target pairs (devices) which.
-drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
+Size differences:
 
-Forward declaration was already marked static, make the definition match.
-drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
+   text    data     bss     dec     hex filename
+DEBUG_ENABLE+PRETTY_PRINT:
+ 234697    2362    1188  238247   3a2a7 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 205092    2362    1188  208642   32f02 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+NO_DEBUG_ENABLE+PRETTY_PRINT:
+ 227272    2362    1172  230806   38596 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 197671    2362    1172  201205   311f5 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+DEBUG_ENABLE+NO_PRETTY_PRINT:
+ 192457    2362    1188  196007   2fda7 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 192457    2362    1188  196007   2fda7 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+NO_DEBUG_ENABLE+NO_PRETTY_PRINT:
+ 185040    2362    1172  188574   2e09e linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 185040    2362    1172  188574   2e09e linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+
+This patch:
+
+Introduce "dont_generate_debug_code" keyword in aicasm parser.
+
+Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y   |   10 ++++++++++
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l   |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c |    3 +++
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h |    3 ++-
+ 4 files changed, 16 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics
-+++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
- 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
- 			ahd_outb(ahd, CLRLQOINT1, 0);
- 	} else if ((status & SELTO) != 0) {
--		u_int  scbid;
--
- 		/* Stop the selection */
- 		ahd_outb(ahd, SCSISEQ0, 0);
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_gram.y~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+@@ -147,6 +147,8 @@ void yyerror(const char *string);
  
-@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
- 		case BUSFREE_DFF0:
- 		case BUSFREE_DFF1:
- 		{
--			u_int	scbid;
--			struct	scb *scb;
--
- 			mode = busfreetime == BUSFREE_DFF0
- 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
- 			ahd_set_modes(ahd, mode, mode);
-@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u
-  * by the capabilities of the bus connectivity of and sync settings for
-  * the target.
-  */
--void
-+static void
- ahd_devlimited_syncrate(struct ahd_softc *ahd,
- 			struct ahd_initiator_tinfo *tinfo,
- 			u_int *period, u_int *ppr_options, role_t role)
-@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *
- int
- ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- {
--	struct	ahd_devinfo devinfo;
-+	struct	ahd_devinfo caminfo;
- 	u_int	initiator;
- 	u_int	target;
- 	u_int	max_scsiid;
-@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ %token T_ACCESS_MODE
  
- 	ahd->pending_device = NULL;
++%token T_DONT_GENERATE_DEBUG_CODE
++
+ %token T_MODES
  
--	ahd_compile_devinfo(&devinfo,
-+	ahd_compile_devinfo(&caminfo,
- 			    CAM_TARGET_WILDCARD,
- 			    CAM_TARGET_WILDCARD,
- 			    CAM_LUN_WILDCARD,
-@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ %token T_DEFINE
+@@ -357,6 +359,7 @@ reg_attribute:
+ |	size
+ |	count
+ |	access_mode
++|	dont_generate_debug_code
+ |	modes
+ |	field_defn
+ |	enum_defn
+@@ -410,6 +413,13 @@ access_mode:
  	}
+ ;
  
- 	/* Notify the XPT that a bus reset occurred */
--	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
-+	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
- 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
++dont_generate_debug_code:
++	T_DONT_GENERATE_DEBUG_CODE
++	{
++		cur_symbol->dont_generate_debug_code = 1;
++	}
++;
++
+ modes:
+ 	T_MODES mode_list
+ 	{
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_scan.l~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+@@ -164,6 +164,7 @@ download		{ return T_DOWNLOAD; }
+ address			{ return T_ADDRESS; }
+ count			{ return T_COUNT; }
+ access_mode		{ return T_ACCESS_MODE; }
++dont_generate_debug_code { return T_DONT_GENERATE_DEBUG_CODE; }
+ modes			{ return T_MODES; }
+ RW|RO|WO		{
+ 				 if (strcmp(yytext, "RW") == 0)
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+@@ -539,6 +539,9 @@ symtable_dump(FILE *ofile, FILE *dfile)
+ 	aic_print_include(dfile, stock_include_file);
+ 	SLIST_FOREACH(curnode, &registers, links) {
  
- 	ahd_restart(ahd);
++		if (curnode->symbol->dont_generate_debug_code)
++			continue;
++
+ 		switch(curnode->symbol->type) {
+ 		case REGISTER:
+ 		case SCBLOC:
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h
+@@ -137,7 +137,8 @@ typedef struct symbol {
+ 		struct label_info *linfo;
+ 		struct cond_info  *condinfo;
+ 		struct macro_info *macroinfo;
+-	}info;
++	} info;
++	int	dont_generate_debug_code;
+ } symbol_t;
+ 
+ typedef struct symbol_ref {
 _
