@@ -1,82 +1,63 @@
-From: akpm@linux-foundation.org
-Subject: [patch 10/12] lkdtm: fix for CONFIG_SCSI=n
-Date: Wed, 30 Jul 2008 12:44:28 -0700
-Message-ID: <200807301944.m6UJiSab012906@imap1.linux-foundation.org>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH 0/3] cmd_filter fixes
+Date: Wed, 30 Jul 2008 21:59:41 +0200
+Message-ID: <6cf6b73e0807301259s309f6332wef74d2ac5bafe691@mail.gmail.com>
+References: <1217063005-25083-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <6cf6b73e0807271259y2fb9c565jc6981438feeb571f@mail.gmail.com>
+	 <6cf6b73e0807271302o77700222r321102ef7be0333b@mail.gmail.com>
+	 <20080728111915N.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49975 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754124AbYG3TxQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:53:16 -0400
+Received: from fk-out-0910.google.com ([209.85.128.187]:7843 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbYG3T7m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 15:59:42 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so135879fkq.5
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2008 12:59:41 -0700 (PDT)
+In-Reply-To: <20080728111915N.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, ankita@in.ibm.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net, matthew@wil.cx
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+2008/7/28 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
+>> > Thanks for the fixes, wanted to test them but they don't apply cleanly
+>> > here (tried against Jens and Linus tree).
+>
+> Hmm, I can cleanly apply them against Linus's latest tree:
+>
+> commit c9272c4f9fbe2087beb3392f526dc5b19efaa56b
+> Merge: fb4284b... 744d18d...
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Sun Jul 27 16:47:55 2008 -0700
+>
+>    Merge branch 'hotfixes' of git://git.linux-nfs.org/projects/trondmy/nfs-2.6
+>
+> For your convenience, I also put them to a git tree:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git cmdfilter
+>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Odd, got them to build now from quick testing there seem to work fine.
 
-Fix lkdtm test code for case of CONFIG_SCSI=n, to avoid build errors:
+>> > Anyway the look fine to me from just reading it ... have you tested if
+>> > changing the filter actually works?
+>> >
+>> Should be "Anyway the look fine to me from just reading them ... have
+>> you tested if
+>> changing the filter (via sysfs) actually works?"
+>
+> Yes though not much.
 
-In file included from linux-next-20080618/tests/lkdtm.c:55:
-linux-next-20080618/include/scsi/scsi_cmnd.h:28:25: warning: "BLK_MAX_CDB" is not defined
-linux-next-20080618/include/scsi/scsi_cmnd.h:29:3: error: #error MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
-In file included from linux-next-20080618/tests/lkdtm.c:55:
-linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_bidi_cmnd':
-linux-next-20080618/include/scsi/scsi_cmnd.h:183: error: implicit declaration of function 'blk_bidi_rq'
-linux-next-20080618/include/scsi/scsi_cmnd.h:184: error: dereferencing pointer to incomplete type
-linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_in':
-linux-next-20080618/include/scsi/scsi_cmnd.h:190: error: dereferencing pointer to incomplete type
-make[2]: *** [tests/lkdtm.o] Error 1
+OK, thanks. Will do more detailed testing this weekend.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Acked-by: Ankita Garg <ankita@in.ibm.com> 
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+> BTW, I think that we need a document about how to control command
+> filters via sysfs (and IMO, there might be a better interface to
+> change the filter).
 
- tests/lkdtm.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff -puN tests/lkdtm.c~lkdtm-fix-for-config_scsi=n tests/lkdtm.c
---- a/tests/lkdtm.c~lkdtm-fix-for-config_scsi=n
-+++ a/tests/lkdtm.c
-@@ -53,7 +53,9 @@
- #include <linux/interrupt.h>
- #include <linux/hrtimer.h>
- #include <linux/ide.h>
-+#ifdef CONFIG_SCSI
- #include <scsi/scsi_cmnd.h>
-+#endif
- 
- #define NUM_CPOINTS 8
- #define NUM_CPOINT_TYPES 5
-@@ -172,12 +174,14 @@ static int jp_hrtimer_start(struct hrtim
- 	return 0;
- }
- 
-+#ifdef CONFIG_SCSI
- static int jp_scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- {
- 	lkdtm_handler();
- 	jprobe_return();
- 	return 0;
- }
-+#endif
- 
- #ifdef CONFIG_IDE
- int jp_generic_ide_ioctl(ide_drive_t *drive, struct file *file,
-@@ -304,8 +308,12 @@ static int __init lkdtm_module_init(void
- 		lkdtm.entry = (kprobe_opcode_t*) jp_hrtimer_start;
- 		break;
- 	case SCSI_DISPATCH_CMD:
-+#ifdef CONFIG_SCSI
- 		lkdtm.kp.symbol_name = "scsi_dispatch_cmd";
- 		lkdtm.entry = (kprobe_opcode_t*) jp_scsi_dispatch_cmd;
-+#else
-+		printk(KERN_INFO "lkdtm : Crash point not available\n");
-+#endif
- 		break;
- 	case IDE_CORE_CP:
- #ifdef CONFIG_IDE
-_
+Yeah agreed, will add some docs this weekend.
+As for "better interface" ... I am open for suggestions ;)
+This was the one used in Peter's original patch and it looks straight forward.
