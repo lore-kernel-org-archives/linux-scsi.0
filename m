@@ -1,46 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Fix miscalculation of sg_io timeout in
-	CDROM_SEND_PACKET handler.
-Date: Wed, 30 Jul 2008 10:18:53 -0500
-Message-ID: <1217431134.3335.15.camel@localhost.localdomain>
-References: <488D17DE.5000801@splhi.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in
+ 2.6.27-rc1
+Date: Wed, 30 Jul 2008 11:27:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807301124280.2584-100000@iolanthe.rowland.org>
+References: <1217429722.3335.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49874 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751608AbYG3PS7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 11:18:59 -0400
-In-Reply-To: <488D17DE.5000801@splhi.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:39207 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754474AbYG3P1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 11:27:09 -0400
+In-Reply-To: <1217429722.3335.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Wright <timw@splhi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Matt Frost <artusemrys@sbcglobal.net>
 
-On Sun, 2008-07-27 at 17:50 -0700, Tim Wright wrote:
-> @@ -629,7 +629,7 @@ int scsi_cmd_ioctl(struct file *file, st
->                         hdr.sbp = cgc.sense;
->                         if (hdr.sbp)
->                                 hdr.mx_sb_len = sizeof(struct 
-> request_sense);
-> -                       hdr.timeout = cgc.timeout;
-> +                       hdr.timeout = jiffies_to_msecs(cgc.timeout);
->                         hdr.cmdp = ((struct cdrom_generic_command 
-> __user*) arg)->cmd;
->                         hdr.cmd_len = sizeof(cgc.cmd);
+On Wed, 30 Jul 2008, James Bottomley wrote:
 
-I'm afraid this patch is completely whitespace damaged:  the tabs have
-all become spaces and the mailer has broken some of the lines.
+> On Wed, 2008-07-30 at 10:17 -0400, Alan Stern wrote:
+> > On Tue, 29 Jul 2008, Matthew Dharm wrote:
+> > 
+> > > Actually, I'm seriously starting to think that US_FL_IGNORE_RESIDUE should
+> > > just become a sysfs parameter which defaults to the 'ignore' state...
+> > 
+> > We have to be careful; there definitely are devices out there which 
+> > need to use the Residue.
+> 
+> This is sort of a tradeoff ... there was one complaint I saw where a
+> device turned read only without the fix idenitifed in this report.
+> Devices broken by the fix are definitely crawling out of the woodwork
+> now.  Either this patch needs to be reverted or a new fix needs to be
+> applied soon (and to stable).
 
-Since it's a one liner, I can make the fix directly, but if you look at
+I would expect this patch:
 
-Documentation/SubmittingPatches
+	http://marc.info/?l=linux-usb&m=121734710306509&w=2
 
-It has some good advice about how to fix your email tool to prevent this
-from happening in future.
+to take care of most of the problems.  But it hasn't yet been merged,
+and it can't go into -stable until then.
 
-James
-
+Alan Stern
 
