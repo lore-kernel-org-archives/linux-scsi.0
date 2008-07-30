@@ -1,72 +1,100 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 30 Jul 2008 15:35:35 -0400
-Message-ID: <4890C287.60508@pobox.com>
-References: <200807300019.m6U0JkdY012558@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 07/12] scsi: aic79xx_core fix shadowed variables, add statics
+Date: Wed, 30 Jul 2008 12:44:26 -0700
+Message-ID: <200807301944.m6UJiQXX012897@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37998 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754256AbYG3Tfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:35:45 -0400
-In-Reply-To: <200807300019.m6U0JkdY012558@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50501 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752824AbYG3To7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:44:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-Karen Xie wrote:
-> Cxgb3i iSCSI driver
-> 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> ---
-> 
->  drivers/scsi/cxgb3i/Kconfig          |    6 
->  drivers/scsi/cxgb3i/Makefile         |    5 
->  drivers/scsi/cxgb3i/cxgb3i.h         |  155 +++
->  drivers/scsi/cxgb3i/cxgb3i_init.c    |  109 ++
->  drivers/scsi/cxgb3i/cxgb3i_iscsi.c   |  800 ++++++++++++++
->  drivers/scsi/cxgb3i/cxgb3i_offload.c | 2001 ++++++++++++++++++++++++++++++++++
->  drivers/scsi/cxgb3i/cxgb3i_offload.h |  242 ++++
->  drivers/scsi/cxgb3i/cxgb3i_ulp2.c    |  692 ++++++++++++
->  drivers/scsi/cxgb3i/cxgb3i_ulp2.h    |  106 ++
->  9 files changed, 4116 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/scsi/cxgb3i/Kconfig
->  create mode 100644 drivers/scsi/cxgb3i/Makefile
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i.h
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_init.c
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_iscsi.c
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_offload.c
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_offload.h
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_ulp2.c
->  create mode 100644 drivers/scsi/cxgb3i/cxgb3i_ulp2.h
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Comments:
+Redeclared within different if/else blocks, safe to reuse the
+original from beginning of function.
+drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
 
-* SCSI drivers should be submitted via the linux-scsi@vger.kernel.org 
-mailing list.
+Use caminfo for the outer declaration, the redeclared version is
+iterating over all initiator/target pairs (devices) which.
+drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
 
-* The driver is clean and readable, well done
+Forward declaration was already marked static, make the definition match.
+drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
 
-* From a networking standpoint, our main concern becomes how this 
-interacts with the networking stack.  In particular, I'm concerned based 
-on reading the source that this driver uses "TCP port stealing" rather 
-than using a totally separate MAC address (and IP).
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Stealing a TCP port on an IP/interface already assigned is a common 
-solution in this space, but also a flawed one.  Precisely because the 
-kernel and applications are unaware of this "special, magic TCP port" 
-you open the potential for application problems that are very difficult 
-for an admin to diagnose based on observed behavior.
+ drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-So, additional information on your TCP port usage would be greatly 
-appreciated.  Also, how does this interact with IPv6?  Clearly it 
-interacts with IPv4...
-
-	Jeff
-
-
-
-
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
+ 			ahd_outb(ahd, CLRLQOINT1, 0);
+ 	} else if ((status & SELTO) != 0) {
+-		u_int  scbid;
+-
+ 		/* Stop the selection */
+ 		ahd_outb(ahd, SCSISEQ0, 0);
+ 
+@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		case BUSFREE_DFF0:
+ 		case BUSFREE_DFF1:
+ 		{
+-			u_int	scbid;
+-			struct	scb *scb;
+-
+ 			mode = busfreetime == BUSFREE_DFF0
+ 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
+ 			ahd_set_modes(ahd, mode, mode);
+@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u
+  * by the capabilities of the bus connectivity of and sync settings for
+  * the target.
+  */
+-void
++static void
+ ahd_devlimited_syncrate(struct ahd_softc *ahd,
+ 			struct ahd_initiator_tinfo *tinfo,
+ 			u_int *period, u_int *ppr_options, role_t role)
+@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *
+ int
+ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ {
+-	struct	ahd_devinfo devinfo;
++	struct	ahd_devinfo caminfo;
+ 	u_int	initiator;
+ 	u_int	target;
+ 	u_int	max_scsiid;
+@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ 
+ 	ahd->pending_device = NULL;
+ 
+-	ahd_compile_devinfo(&devinfo,
++	ahd_compile_devinfo(&caminfo,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_LUN_WILDCARD,
+@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ 	}
+ 
+ 	/* Notify the XPT that a bus reset occurred */
+-	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
++	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
+ 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
+ 
+ 	ahd_restart(ahd);
+_
