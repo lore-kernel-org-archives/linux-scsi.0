@@ -1,39 +1,56 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 1/3] move cmd_filter from gendisk to request_queue
-Date: Wed, 30 Jul 2008 16:10:54 -0400
-Message-ID: <4890CACE.8010407@redhat.com>
-References: <20080724123140V.fujita.tomonori@lab.ntt.co.jp> <1217063005-25083-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1217063005-25083-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 10/12] lkdtm: fix for CONFIG_SCSI=n
+Date: Wed, 30 Jul 2008 15:16:48 -0500
+Message-ID: <1217449008.3335.39.camel@localhost.localdomain>
+References: <200807301944.m6UJiSab012906@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52809 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753156AbYG3ULU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 16:11:20 -0400
-In-Reply-To: <1217063005-25083-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:44856 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750885AbYG3UQw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 16:16:52 -0400
+In-Reply-To: <200807301944.m6UJiSab012906@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, dan.j.williams@intel.com, adel.gadllah@gmail.com, viro@ZenIV.linux.org.uk, dougg@torque.net, matthew@wil.cx
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, ankita@in.ibm.com
 
-FUJITA Tomonori wrote:
+On Wed, 2008-07-30 at 12:44 -0700, akpm@linux-foundation.org wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix lkdtm test code for case of CONFIG_SCSI=n, to avoid build errors:
+> 
+> In file included from linux-next-20080618/tests/lkdtm.c:55:
+> linux-next-20080618/include/scsi/scsi_cmnd.h:28:25: warning: "BLK_MAX_CDB" is not defined
+> linux-next-20080618/include/scsi/scsi_cmnd.h:29:3: error: #error MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
+> In file included from linux-next-20080618/tests/lkdtm.c:55:
+> linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_bidi_cmnd':
+> linux-next-20080618/include/scsi/scsi_cmnd.h:183: error: implicit declaration of function 'blk_bidi_rq'
+> linux-next-20080618/include/scsi/scsi_cmnd.h:184: error: dereferencing pointer to incomplete type
+> linux-next-20080618/include/scsi/scsi_cmnd.h: In function 'scsi_in':
+> linux-next-20080618/include/scsi/scsi_cmnd.h:190: error: dereferencing pointer to incomplete type
+> make[2]: *** [tests/lkdtm.o] Error 1
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Acked-by: Ankita Garg <ankita@in.ibm.com> 
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  tests/lkdtm.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff -puN tests/lkdtm.c~lkdtm-fix-for-config_scsi=n tests/lkdtm.c
+> --- a/tests/lkdtm.c~lkdtm-fix-for-config_scsi=n
+> +++ a/tests/lkdtm.c
 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 5a68b09..6c5c6f3 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-...
-> @@ -87,6 +85,7 @@ struct bsg_command {
->  	int err;
->  	struct sg_io_v4 hdr;
->  	char sense[SCSI_SENSE_BUFFERSIZE];
-> +	int has_write_perm;
->  };
->  
->  static void bsg_free_command(struct bsg_command *bc)
+OK, you've sent me this one twice now ... what exactly is it?  There's
+no tests directory in any kernel tree I have.
 
-Why is this added?  It never seems to be used.
+James
 
--- 
-   Peter
+
