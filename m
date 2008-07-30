@@ -1,79 +1,56 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/12] scsi: gdth.c use unaligned access helpers
-Date: Wed, 30 Jul 2008 12:44:29 -0700
-Message-ID: <200807301944.m6UJiTqN012909@imap1.linux-foundation.org>
+Subject: [patch 09/12] ipr: use memory_read_from_buffer()
+Date: Wed, 30 Jul 2008 12:44:27 -0700
+Message-ID: <200807301944.m6UJiRei012903@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50302 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59600 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753625AbYG3TxJ (ORCPT
+	by vger.kernel.org with ESMTP id S1753888AbYG3TxP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:53:09 -0400
+	Wed, 30 Jul 2008 15:53:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, akinobu.mita@gmail.com, brking@us.ibm.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
 
-Remove two now unnecessary local vars.
-
-[akpm@linux-foundation.org: coding-style fixes]
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Brian King <brking@us.ibm.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ drivers/scsi/ipr.c |   16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-+++ a/drivers/scsi/gdth.c
-@@ -131,6 +131,7 @@
- #include <asm/system.h>
- #include <asm/io.h>
- #include <asm/uaccess.h>
-+#include <asm/unaligned.h>
- #include <linux/spinlock.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-@@ -2441,8 +2442,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
- {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
--    ulong32 cnt, blockcnt;
--    ulong64 no, blockno;
-+    ulong32 blockcnt;
-+    ulong64 blockno;
-     int i, cmd_index, read_write, sgcnt, mode64;
+diff -puN drivers/scsi/ipr.c~ipr-use-memory_read_from_buffer drivers/scsi/ipr.c
+--- a/drivers/scsi/ipr.c~ipr-use-memory_read_from_buffer
++++ a/drivers/scsi/ipr.c
+@@ -2456,20 +2456,14 @@ static ssize_t ipr_read_trace(struct kob
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	unsigned long lock_flags = 0;
+-	int size = IPR_TRACE_SIZE;
+-	char *src = (char *)ioa_cfg->trace;
+-
+-	if (off > size)
+-		return 0;
+-	if (off + count > size) {
+-		size -= off;
+-		count = size;
+-	}
++	ssize_t ret;
  
-     cmdp = ha->pccb;
-@@ -2510,19 +2511,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+-	memcpy(buf, &src[off], count);
++	ret = memory_read_from_buffer(buf, count, &off, ioa_cfg->trace,
++				IPR_TRACE_SIZE);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+-	return count;
++
++	return ret;
+ }
  
-     if (read_write) {
-         if (scp->cmd_len == 16) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
--            blockno = be64_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
--            blockcnt = be32_to_cpu(cnt);
-+		blockno = get_unaligned_be64(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
-         } else if (scp->cmd_len == 10) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
--            blockno = be32_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
--            blockcnt = be16_to_cpu(cnt);
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
-         } else {
--            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
--            blockno = be32_to_cpu(no) & 0x001fffffUL;
--            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockno &= 0x001fffffUL;
-+		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
-         }
-         if (mode64) {
-             cmdp->u.cache64.BlockNo = blockno;
+ static struct bin_attribute ipr_trace_attr = {
 _
