@@ -1,54 +1,79 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/12] scsi: aic79xx aic79xx_pci.c fix shadowed variables
-Date: Wed, 30 Jul 2008 12:44:26 -0700
-Message-ID: <200807301944.m6UJiRoq012900@imap1.linux-foundation.org>
+Subject: [patch 11/12] scsi: gdth.c use unaligned access helpers
+Date: Wed, 30 Jul 2008 12:44:29 -0700
+Message-ID: <200807301944.m6UJiTqN012909@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35615 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50302 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753195AbYG3Tw7 (ORCPT
+	by vger.kernel.org with ESMTP id S1753625AbYG3TxJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:52:59 -0400
+	Wed, 30 Jul 2008 15:53:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
 
 From: Harvey Harrison <harvey.harrison@gmail.com>
 
-OK to just reuse the outer declaration as it is never used again.
-drivers/scsi/aic7xxx/aic79xx_pci.c:340:12: warning: symbol 'devconfig' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_pci.c:299:12: originally declared here
+Remove two now unnecessary local vars.
 
-targpcistat is always assigned just before use, remove the inner declaration.
-drivers/scsi/aic7xxx/aic79xx_pci.c:486:9: warning: symbol 'targpcistat' shadows an earlier one
-drivers/scsi/aic7xxx/aic79xx_pci.c:429:9: originally declared here
-
+[akpm@linux-foundation.org: coding-style fixes]
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_pci.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/gdth.c |   23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-aic79xx-aic79xx_pcic-fix-shadowed-variables drivers/scsi/aic7xxx/aic79xx_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-aic79xx-aic79xx_pcic-fix-shadowed-variables
-+++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -337,8 +337,6 @@ ahd_pci_config(struct ahd_softc *ahd, co
- 	 * 64bit bus (PCI64BIT set in devconfig).
- 	 */
- 	if ((ahd->flags & (AHD_39BIT_ADDRESSING|AHD_64BIT_ADDRESSING)) != 0) {
--		uint32_t devconfig;
--
- 		if (bootverbose)
- 			printf("%s: Enabling 39Bit Addressing\n",
- 			       ahd_name(ahd));
-@@ -483,8 +481,6 @@ ahd_pci_test_register_access(struct ahd_
- 		goto fail;
+diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
++++ a/drivers/scsi/gdth.c
+@@ -131,6 +131,7 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ #include <asm/uaccess.h>
++#include <asm/unaligned.h>
+ #include <linux/spinlock.h>
+ #include <linux/blkdev.h>
+ #include <linux/scatterlist.h>
+@@ -2441,8 +2442,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ {
+     register gdth_cmd_str *cmdp;
+     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+-    ulong32 cnt, blockcnt;
+-    ulong64 no, blockno;
++    ulong32 blockcnt;
++    ulong64 blockno;
+     int i, cmd_index, read_write, sgcnt, mode64;
  
- 	if ((ahd_inb(ahd, INTSTAT) & PCIINT) != 0) {
--		u_int targpcistat;
--
- 		ahd_set_modes(ahd, AHD_MODE_CFG, AHD_MODE_CFG);
- 		targpcistat = ahd_inb(ahd, TARGPCISTAT);
- 		if ((targpcistat & STA) != 0)
+     cmdp = ha->pccb;
+@@ -2510,19 +2511,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ 
+     if (read_write) {
+         if (scp->cmd_len == 16) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
+-            blockno = be64_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
+-            blockcnt = be32_to_cpu(cnt);
++		blockno = get_unaligned_be64(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
+         } else if (scp->cmd_len == 10) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
+-            blockno = be32_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
+-            blockcnt = be16_to_cpu(cnt);
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
+         } else {
+-            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
+-            blockno = be32_to_cpu(no) & 0x001fffffUL;
+-            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockno &= 0x001fffffUL;
++		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
+         }
+         if (mode64) {
+             cmdp->u.cache64.BlockNo = blockno;
 _
