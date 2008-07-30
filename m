@@ -1,43 +1,59 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in
- 2.6.27-rc1
-Date: Wed, 30 Jul 2008 15:50:04 -0400
-Message-ID: <4890C5EC.70305@torque.net>
-References: <Pine.LNX.4.44L0.0807301016010.2584-100000@iolanthe.rowland.org> <1217429722.3335.3.camel@localhost.localdomain>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 12/12] scsi: use the common hex_asc array rather than a private one
+Date: Wed, 30 Jul 2008 12:44:30 -0700
+Message-ID: <200807301944.m6UJiU6W012912@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:57159 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756163AbYG3TuV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 15:50:21 -0400
-In-Reply-To: <1217429722.3335.3.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33412 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751679AbYG3Tw7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:52:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Matt Frost <artusemrys@sbcglobal.net>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-James Bottomley wrote:
-> On Wed, 2008-07-30 at 10:17 -0400, Alan Stern wrote:
->> On Tue, 29 Jul 2008, Matthew Dharm wrote:
->>
->>> Actually, I'm seriously starting to think that US_FL_IGNORE_RESIDUE should
->>> just become a sysfs parameter which defaults to the 'ignore' state...
->> We have to be careful; there definitely are devices out there which 
->> need to use the Residue.
-> 
-> This is sort of a tradeoff ... there was one complaint I saw where a
-> device turned read only without the fix idenitifed in this report.
-> Devices broken by the fix are definitely crawling out of the woodwork
-> now.  Either this patch needs to be reverted or a new fix needs to be
-> applied soon (and to stable).
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-The patches to fix this that I have tried do not apply
-cleanly to lk 2.6.26 (and break during compile if forced:
-"us->fflags" is not defined).
+Also use the hi/lo helpers.
 
-Is there a lk 2.6.26 patch available?
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Doug Gilbert
+ drivers/scsi/ibmmca.c    |    3 +--
+ drivers/scsi/ultrastor.c |    4 ++--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff -puN drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ibmmca.c
+--- a/drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ibmmca.c
+@@ -1002,12 +1002,11 @@ static char *ti_p(int dev)
+ /* interpreter for logical device numbers (ldn) */
+ static char *ti_l(int val)
+ {
+-	const char hex[16] = "0123456789abcdef";
+ 	static char answer[2];
+ 
+ 	answer[1] = (char) (0x0);
+ 	if (val <= MAX_LOG_DEV)
+-		answer[0] = hex[val];
++		answer[0] = hex_asc[val];
+ 	else
+ 		answer[0] = '-';
+ 	return (char *) &answer;
+diff -puN drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ultrastor.c
+--- a/drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ultrastor.c
+@@ -876,8 +876,8 @@ static int ultrastor_abort(struct scsi_c
+ 	for (i = 0; i < 16; i++)
+ 	  {
+ 	    unsigned char p = inb(port0 + i);
+-	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
+-	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
++	    out[28 + i * 3] = hex_asc_hi(p);
++	    out[29 + i * 3] = hex_asc_lo(p);
+ 	    out[30 + i * 3] = ' ';
+ 	  }
+ 	out[28 + i * 3] = '\n';
+_
