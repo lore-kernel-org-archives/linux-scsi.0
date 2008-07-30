@@ -1,61 +1,53 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Wed, 30 Jul 2008 09:51:03 +0400
-Message-ID: <48900147.7030106@vlnb.net>
-References: <488F524F.6020905@redhat.com>	 <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Wed, 30 Jul 2008 10:10:39 +0300
+Message-ID: <1217401839.4133.119.camel@galr-linux>
+References: <488E02DE.5080100@vlnb.net>
+	 <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:58399 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754828AbYG3FvG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2008 01:51:06 -0400
-In-Reply-To: <1217356645.6103.48.camel@localhost.localdomain>
+Received: from mail.storwize.com ([62.90.10.208]:31215 "EHLO swdc2.storwiz.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751609AbYG3HKq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 03:10:46 -0400
+In-Reply-To: <488E0C78.80205@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-James Bottomley wrote:
-> On Tue, 2008-07-29 at 12:26 -0600, Matthew Wilcox wrote:
->> On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
->>> Jim pinged me about the use case for having our tool chain (parted 
->>> specifically) support devices with non-512 bytes sectors.
->> Matt Domsch spoke with me about this at OLS.  I took that opportunity,
->> and I'll take this one, to pimp my ata-ram driver which allows you to
->> alter the sector sizse to whatever you want:
->>
->> http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
->>
->> I'll admit to having not tested it with anything other than 512, but it
->> ought to support 4096 byte sectors just fine.  I haven't looked at what
->> would be required to support 520-byte sectors.
-> 
-> scsi_debug does exactly the same thing, so it reports anything you tell
-> it (Martin Petersen actually added this so he could test with 4k
-> sectors).
-> 
-> The problem, which ata_ram also suffers, is that the tools we most need
-> to test are the ones for manipulating non volatile characteristics (like
-> partition tables).  We'd really like the disk contents to survive reboot
-> for this ...
 
-SCST (http://scst.sf.net) fully supports non-512 bytes sectors up to 
-4096. Available target drivers for transports: software iSCSI, FC, 
-InfiniBand SRP, parallel SCSI, SAS (not much tested, because of lack of 
-hardware). With VDISK dev handler you can use files as a backstorage.
+From: James Bottomley <James.Bottomley@Ha...> - 2008-07-29 15:28
 
-I personally for a long time have been working with 4K sectors, because 
-it's better for performance, but so far found the only tool, which 
-doesn't support them: disktest.
+On Tue, 2008-07-29 at 19:13 +0400, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> > On Tue, 2008-07-29 at 13:32 +0400, Vladislav Bolkhovitin wrote:
+> >> Nope, taking only one that hunk from this patch isn't sufficient.
+> >> Around 
+> >> dpc_thread there is pretty simple and classical race. You can't do
+> >>
+> >> if (x != NULL)
+> >> y = *x;
+> >>
+> >> without any protection, if x can be set to NULL by another thread.
+It 
+> >> can happen exactly between "if" and "*x" and hence lead to a crash,
+> >> correct?
+> > 
+> > No.
+> 
+> What "No"? The above unlocked "if (x != NULL) y = *x;" is always safe 
+> now? ;)
 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+No ... no as in your analysis based on the example is not correct to
+conclude protection is required. We have quite a number of examples of
+this within the linux kernel (the SCSI error thread would be one).
+
+But the wake up of the SCSI error thread is also called by holding a
+spinlock (but not to protect the stopping of the thread).
+The difference here is that the assignment of the thread to NULL is in
+the thread function, when exiting from the while loop, and not before
+calling kthread_stop() routine (like in the qla).
+Maybe this would be the solution.  
