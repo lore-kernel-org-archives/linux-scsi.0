@@ -1,37 +1,39 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Wed, 30 Jul 2008 14:45:51 -0400
-Message-ID: <20080730184551.GB5347@mit.edu>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <87zlnzb8ce.fsf@rho.meyering.net> <20080730172922.GA20191@auslistsprd01.us.dell.com> <20080730181351.GA5347@mit.edu> <4890B2BC.10808@redhat.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: Problems building 2.6.26 and 2.6.27-rc1
+Date: Wed, 30 Jul 2008 13:48:33 -0500
+Message-ID: <20080730184833.GA936@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:33624 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904AbYG3Ssg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 14:48:36 -0400
 Content-Disposition: inline
-In-Reply-To: <4890B2BC.10808@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Matt Domsch <Matt_Domsch@dell.com>, Jim Meyering <jim@meyering.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: LKML-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 02:28:12PM -0400, Ric Wheeler wrote:
-> If I remember correctly, the MS Vista new alignment for data partitions  
-> is on a 0 offset, 1MB aligned boundary. The support for 4096 byte  
-> sectors is only for data partitions (not boot).
->
-> Array vendors, who consume a fair amount of drives, are most likely more  
-> friendly to native 4k drives. The big fear from disk vendors is getting  
-> a wave of returns from Best Buy, etc when people go and plug in a new,  
-> native 4k drive into an old box....
+I'm getting the following error when trying to build either 2.6.26 or
+2.6.27-rc1:
 
-Or a new box running XP, either via the Dell "upgrade to XP" program,
-or from a corporate I/T load[1].  :-)
+arch/x86/kernel/head64.c: In function =E2=80=98x86_64_start_kernel=E2=80=
+=99:
+arch/x86/kernel/head64.c:88: error: size of array =E2=80=98type name=E2=
+=80=99 is negative
 
-[1] http://www.theinquirer.net/gb/inquirer/news/2008/06/23/intel-dumps-vista
+Systems I've tried are DL585 G5 with dual-core Opterons and ML370 G5 wi=
+th
+dual-core Intel. Both were originally installed using an x86_64 distro.
 
-More to the point for Linux, are *our* partition table programs (i.e.,
-fdisk, cfdisk, et. al) fixed with better defaults in upstream, and
-what are the upcoming enterprise distributions going to ship with?
-Since that's what a large number of Linux customers will end up using
-for the next 3-5 years....
+Anybody else seen this? Any workarounds?
 
-						- Ted
+Thanks,
+mikem
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
