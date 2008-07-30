@@ -1,76 +1,61 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
-Date: Tue, 29 Jul 2008 22:21:39 -0700
-Message-ID: <20080730052139.GG6091@one-eyed-alien.net>
-References: <103966.68801.qm@web83207.mail.mud.yahoo.com> <1217390922.6103.79.camel@localhost.localdomain>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Wed, 30 Jul 2008 09:51:03 +0400
+Message-ID: <48900147.7030106@vlnb.net>
+References: <488F524F.6020905@redhat.com>	 <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="TiqCXmo5T1hvSQQg"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754534AbYG3FV5@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1217390922.6103.79.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Matt Frost <artusemrys@sbcglobal.net>
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:58399 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754828AbYG3FvG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2008 01:51:06 -0400
+In-Reply-To: <1217356645.6103.48.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
 
+James Bottomley wrote:
+> On Tue, 2008-07-29 at 12:26 -0600, Matthew Wilcox wrote:
+>> On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
+>>> Jim pinged me about the use case for having our tool chain (parted 
+>>> specifically) support devices with non-512 bytes sectors.
+>> Matt Domsch spoke with me about this at OLS.  I took that opportunity,
+>> and I'll take this one, to pimp my ata-ram driver which allows you to
+>> alter the sector sizse to whatever you want:
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
+>>
+>> I'll admit to having not tested it with anything other than 512, but it
+>> ought to support 4096 byte sectors just fine.  I haven't looked at what
+>> would be required to support 520-byte sectors.
+> 
+> scsi_debug does exactly the same thing, so it reports anything you tell
+> it (Martin Petersen actually added this so he could test with 4k
+> sectors).
+> 
+> The problem, which ata_ram also suffers, is that the tools we most need
+> to test are the ones for manipulating non volatile characteristics (like
+> partition tables).  We'd really like the disk contents to survive reboot
+> for this ...
 
---TiqCXmo5T1hvSQQg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+SCST (http://scst.sf.net) fully supports non-512 bytes sectors up to 
+4096. Available target drivers for transports: software iSCSI, FC, 
+InfiniBand SRP, parallel SCSI, SAS (not much tested, because of lack of 
+hardware). With VDISK dev handler you can use files as a backstorage.
 
-On Tue, Jul 29, 2008 at 11:08:42PM -0500, James Bottomley wrote:
-> On Tue, 2008-07-29 at 17:06 -0700, Matthew Frost wrote:
-> > James and co.,=20
-> >=20
-> > Bug report: regression in 2.6.27-rc1 -- scsi WRT usb-storage
-> > Origin: Commit de72aa4c2b82a6cffe15d86a8d391ded4fb57602, "[SCSI] erase
-> > invalid data returned by device"
-> > Location: drivers/scsi_lib.c
-> > Device: Secure Digital HC 4GB card in USB 2.0 card reader
->=20
-> Actually, this is a USB issue ... I've added the correct cc's
+I personally for a long time have been working with 4K sectors, because 
+it's better for performance, but so far found the only tool, which 
+doesn't support them: disktest.
 
-Well, it's both a SCSI and USB issue.
-
-The patch in question clears sections of a data buffer that a device
-reports as invalid.  Basically, the usb storage spec allows devices to
-transfer "garbage" data into buffers; instead of leaving the data there
-(which could be leakage from something sensitive), the SCSI core now zeros
-out the section of buffers that are reported as 'unused' (aka 'residue').
-
-It does this for all devices, not just USB ones.  USB devices, however,
-seem especially prone to not reporting this 'residue' correctly.
-
-Honestly, given the problems this has caused, and the (apparently)
-relatively high number of devices that don't report residue correctly, I'm
-starting to seriously think this should be reverted.
-
-Actually, I'm seriously starting to think that US_FL_IGNORE_RESIDUE should
-just become a sysfs parameter which defaults to the 'ignore' state...
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-You suck Stef.
-					-- Greg=20
-User Friendly, 11/29/97
-
---TiqCXmo5T1hvSQQg
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFIj/pjHL9iwnUZqnkRAv/+AJ0awOYqNbEtfgvT0JxDEaViVrDx1QCgq2xJ
-9ZBwjfWPQ3I5pFgNt3FEsBA=
-=8Eas
------END PGP SIGNATURE-----
-
---TiqCXmo5T1hvSQQg--
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
