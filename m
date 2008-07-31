@@ -1,59 +1,45 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: SCSI device rescan, detection of disconnected	device,	or	switched
- devices.
-Date: Thu, 31 Jul 2008 21:54:32 +0400
-Message-ID: <4891FC58.6050805@vlnb.net>
-References: <1217248348.4133.51.camel@galr-linux>	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>	 <4891792C.6020304@s5r6.in-berlin.de> <1217504895.25491.69.camel@galr-linux>	 <1217513749.3333.7.camel@localhost.localdomain> <4891E149.8070805@vlnb.net> <1217521139.3333.14.camel@localhost.localdomain>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Thu, 31 Jul 2008 10:55:44 -0700
+Message-ID: <20080731175544.GB80258@elab5.qlogic.org>
+References: <488E02DE.5080100@vlnb.net> <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux> <489181C4.70003@vlnb.net> <20080731160251.GB76172@plap4-2.local> <4891F95A.9070409@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:42810 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751852AbYGaRyp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:54:45 -0400
-In-Reply-To: <1217521139.3333.14.camel@localhost.localdomain>
+Received: from avexch1.qlogic.com ([198.70.193.115]:52668 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYGaRzq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 13:55:46 -0400
+Content-Disposition: inline
+In-Reply-To: <4891F95A.9070409@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Gal Rosen <galr@storwize.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-driver@qlogic.com, Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-James Bottomley wrote:
-> On Thu, 2008-07-31 at 19:59 +0400, Vladislav Bolkhovitin wrote:
->> James Bottomley wrote:
->>> Most of the hotplug we do depends on the transport model (because what's
->>> on the transport is changing).  Array reconfiguration has no hotplug
->>> event because SAM-3 has no real way of passing the information
->>> asynchronously.  The best it can do is Unit Attention/reported luns data
->>> has changed (asc=0x3f/ascq=0xe) on the next command.
->>>
->>> The problem is that there's no way to process the event correctly even
->>> when we get it.  All we can do is issue another report LUNS command and
->>> compare.  However, just because it looks like a single LUN disappeared
->>> doesn't mean the others weren't permuted or altered in some way (which
->>> data we cannot get).
->> But why don't do what's possible to do and for what there is complete 
->> information: add new LUN for new LUN and delete deleted LUN for reported 
->> luns data has changed UA? As well as get new capacity for a LU on 
->> capacity data has changed UA after, e.g., new space added to it?
-> 
-> Well, feel free to submit a patch, but it's an incredible mine field.
-> We certainly can't do something that builds a trap for users (as in a
-> policy which gets it right 10% of the time and wrong 90% of the time) so
-> I'm strongly inclined to feel array reconfiguration is a manual process.
-> If you think you can do it online, we don't panic or throw a spanner in
-> the works, but we wait until you tell us what you did, but you'd be well
-> advised to do it offline.
-> 
-> The point is that we can't distinguish LUN added from LUN split or space
-> reapportioned or something ... even LUN renumbered would be seen as a
-> remove followed by an add.
+On Thu, 31 Jul 2008, Vladislav Bolkhovitin wrote:
 
-Sure, in cases, where it is impossible based of INQUIRY data 
-unambiguously determine that, it's better don't do anything. But in 
-cases if it is possible, which is true for most modern devices, it can 
-be handled properly.
+>> The changes above are large (170k diffs so far), and at this point are
+>> being run-through our testing.  The hope is to get the changes
+>> upstream during one of the next two merge windows.
+>>
+>> Given the infrustructure mods and our focus on that front, if there's
+>> something small and contained you can offer above what I've proposed
+>> we'll be interested in reviewing any patches you'd push forward.
+>
+> Then, I believe, my patch should go in as a temporal measure. I don't think 
+> we should crash users for 2 more major releases.
 
-Vlad
+So the 'online' check concerns you?  So, add an 'unloading' flag, set
+it on remove_one(), save a copy of dpc_thread at qla2xxx_wake_dpc(),
+then wake_up() saved value if not 'unloading'.  Of course the direct
+wake_up() in request_acqusition should be modded to call
+qla2xxx_wake_dpc().  We're not talking about some huge window here.
 
+> The same is true for my 
+> other patch "Proposed protection of fcports field of struct scsi_qla_host" 
+> as well, because without it there should be no big problems to crash the 
+> driver via sysfs.
+
+We're still looking through your patches...  So how exactly would it
+be 'be no big problems to crash the driver via sysfs.'???
