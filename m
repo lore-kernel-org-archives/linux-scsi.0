@@ -1,103 +1,84 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
-Date: Thu, 31 Jul 2008 16:44:28 -0700
-Message-ID: <da824cf30807311644r595241ffq97f530eceeef7ef7@mail.gmail.com>
-References: <20080619160342.GJ4392@parisc-linux.org>
-	 <48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk>
-	 <20080625172015.GR4392@parisc-linux.org>
-	 <20080625172638.GE20851@kernel.dk>
-	 <yq1d4m575je.fsf@sermon.lab.mkp.net> <488DCB5A.9080105@redhat.com>
-	 <yq1od4ikrl2.fsf@sermon.lab.mkp.net>
-	 <da824cf30807311400i59065c74q549aa1b62819781e@mail.gmail.com>
-	 <48923C32.3040901@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
+Date: Thu, 31 Jul 2008 16:45:40 -0700 (PDT)
+Message-ID: <20080731234540.E33D3108035@picon.linux-foundation.org>
+References: <bug-11194-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:32490 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbYGaXou (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 19:44:50 -0400
-Received: from spaceape24.eur.corp.google.com (spaceape24.eur.corp.google.com [172.28.16.76])
-	by smtp-out.google.com with ESMTP id m6VNiUVd020337
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Aug 2008 00:44:30 +0100
-Received: from rv-out-0708.google.com (rvfb17.prod.google.com [10.140.179.17])
-	by spaceape24.eur.corp.google.com with ESMTP id m6VNgNXl029511
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 16:44:29 -0700
-Received: by rv-out-0708.google.com with SMTP id b17so656412rvf.40
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 16:44:28 -0700 (PDT)
-In-Reply-To: <48923C32.3040901@redhat.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36562 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751585AbYGaXqN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 19:46:13 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6VNjeko008218
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 16:45:42 -0700
+In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rwheeler@redhat.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Jul 31, 2008 at 3:26 PM, Ric Wheeler <rwheeler@redhat.com> wrote:
-> Grant Grundler wrote:
-...
->> rpm isn't a great gauge of performance either since the perf is a
->> function of rpm * bit density.
->>
->
-> Is this real rotational latency, or normalized?
+http://bugzilla.kernel.org/show_bug.cgi?id=11194
 
-Sorry... I was thinking throughput (MB/s) and not rotational latency.
-mkp is right that rotaional latency (ie rpm) is a significant part of
-total avg latency.
 
->  I think that the avg seek
-> time is usually a bit more predictive of how well we do with the worst case
-> load (fsck).
 
-*nod*
 
-....
->> erase and/or write times could be exported as well somehow for SSDs
->> if the FS (or other higher layer that wants to know) can't avoid
->> garbage collection and erase cycles. I was just told today that flash
->> devices
->> have 10x higher write time than read time. erase is another order of
->> magnitude higher. This doesn't include any garbage collection overhead.
->>
->
-> This is changing - they have various ways of getting them much closer
-> together. On the other hand, a USB flash drive is much slower than a high
-> end SSD which can hit 20,000 IOPS.
 
-The IOPS isn't the issue. It's the difference between having a rotation/seek
-latency and not. The efficiency (percent of theoretical throughput or IOPS)
-of either USB stick or enterprise SSD shouldn't be that different if the
-FS is aware of erase blocks and how it lays out the data. The USB stick
-will always be slower - the question is efficiency not comparing it to
-a faster SSD.
+------- Comment #2 from cshore@fionavar.ca  2008-07-31 16:45 -------
+On Thu, 31 Jul 2008 10:48:10 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
->>
->> I think new file systems should be tuned to work with SSDs before we
->> worry so much about the differences between SSDs/flash technologies
->> and vendors. And then prescribe a different FS for different
->> storage technologies. This avoids the "layering violations" discussion
->> and helps keep the FSs (testing and developement) substantially simpler.
->>
->> grant
->>
->
-> If we have access to the parts, we will try to get them to self tune given
-> whatever we can grab.
+> > 
+> > Latest working kernel version: 2.6.24
+> > Earliest failing kernel version: 2.6.26
+> 
+> The kernel versions are ambiguous.
+> 
+> Which is the earliest failing kernel version?
 
-I'm just pointing out that "self tuning" is more complex, more work,
-and requires
-more testing. Ultimately it will take longer to deploy and I don't think we have
-time for it.  Just trying to defer this work until I see substantial
-evidence of at
-least one FS that works well with SSDs and can be deployed.
+Sorry about that; I did latest failing (unless .27 is out; I haven't
+tested it). Earliest failing is 2.6.25.
 
-I'm not against "self tuning". But I believe sufficiently good results are
-achievable by directly embedding the device attributes in the FS
-as we've done for conventional rotational media in ext2.
+> 
+> > Distribution: Debian Lenny (-testing + -unstable + kernel trunk for
+> > debian)
+> > 
+> > Hardware Environment: ASUS P4B 2.0 GHz P4 Motherboard, Dell
+> > PERC3/DC (like AMI MegraRAID Elite 1600) LVD Ultra3 SCSI Adaptor
+> > with four 80 GB drives on Channel 0 and a SCSI-U2 Seagate DDS-4
+> > tape drive on Channel 1 Software Environment:  Debian Lenny
+> > (up-to-date), with some unstable and tested with the testing kernel
+> > (.25) and the trunk kernel (.26)
+> > 
+> > Problem Description: The kernel panics (claiming it's in the
+> > megaraid_mbox driver) during boot when the st driver would normally
+> > report 
+> > 
+> > st0: Block limits 1 - 16777215 bytes.
+> > 
+> > This is after the logical disk has been found and all filesystems
+> > mounted, so the RAID part of the driver is probably fine.
+> > 
+> > 
+> > The point at which 
+> > 
+> > st 0:1:6:0: Attached scsi tape st0
+> > st 0:1:6:0: st0: try direct i/o: yes (alignment 512 B)
+> > 
+> > appears with .24 is passed before the panic, but I haven't actually
+> > seen those messages as they scroll by too quickly.
+> > 
+> > Steps to reproduce:
+> > 
+> > 1) Install debian lenny with a .24 kernel (I'm not sure how you
+> > would do that now that .24 is no longer the testing kernel); maybe
+> > beta2 would still let you. 2) Install -testing kernel (.25)
+> > 3) Attempt to boot using the new kernel
+> > 4) Kernel panics, system is unusable
+> > 
+> 
 
-Maybe I'm being too skeptical that developments can't be done in
-parallel for new features.
 
-thanks,
-grants
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
