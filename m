@@ -1,60 +1,52 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: SCSI device rescan, detection of disconnected device, or	switched
- devices.
-Date: Thu, 31 Jul 2008 10:34:52 +0200
-Message-ID: <4891792C.6020304@s5r6.in-berlin.de>
-References: <1217248348.4133.51.camel@galr-linux>	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Thu, 31 Jul 2008 13:11:32 +0400
+Message-ID: <489181C4.70003@vlnb.net>
+References: <488E02DE.5080100@vlnb.net>	 <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:40121 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbYGaIfo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 04:35:44 -0400
-In-Reply-To: <1217487434.25491.34.camel@galr-linux>
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:56437 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752499AbYGaJLe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 05:11:34 -0400
+In-Reply-To: <1217484743.25491.7.camel@galr-linux>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gal Rosen <galr@storwize.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-driver@qlogic.com
+Cc: Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
 Gal Rosen wrote:
-> I will try to make my question more clear.
-> I would like to put a box between the client and the storage, and to be
-> fully transparent against the host. All changes on the storage
-> (add/remove/extend devices) should be present automatically to the
-> client. In a direct connection between client and storage the
-> administrator will coordinate between the client and storage before
-> making any changes, in my configuration I do not want to add
-> administration work on my box that stands between the client and the
-> storage.
-> Addition is simple, the application on my box can once in a while scan
-> the SCSI BUS, and then the Linux system will create new sg devices.
-> In removal of a device the Linux system will not remove sg devices after
-> scan. In that case again I can do it from my application, such when I
-> get attention on SCSI command, I can decide to remove the device by
-> echoing to the /sys file system.
+> Andrew,
+> 
+> Add checking of the flag online still does not answer the race that Vlad
+> stated before,
 
-I really don't know how the FibreChannel drivers handle device removal.
-But from what I gather from the documentation of
-fc_remote_port_delete(), which the qla2xxx drivers use, the /dev/sg
-devices should automatically disappear
-  - after a connection loss timeout,
-  - provided that userspace doesn't have the device file opened
-    (among else this is manifest in the kernel in a reference count of
-    the logical unit device representation),
-  - provided that you manage your device files with udev.
+Yes, that's true.
 
-http://lxr.linux.no/linux+v2.6.26/drivers/scsi/scsi_transport_fc.c#L2756
+And, since ha->flags.online set to 0 not only on shutdown, I'm afraid 
+you could introduce a new set of subtle bugs, if not for the moment, but 
+in the future, because with your patch it gets impossible to wake up the 
+DPC thread if HA is offline.
 
-That would be basically just like SCSI device files are created and
-destroyed on the fly for USB or FireWire devices for example.  Except
-that FC has the additional configurable connection loss timeout which
-hides temporary connection losses from applications.
+Vlad
 
-(However, better wait for an answer of somebody who actually uses FC or
-knows the drivers.  I only have experience with FireWire.)
--- 
-Stefan Richter
--=====-==--- -=== =====
-http://arcgraph.de/sr/
+> unless you thought about another way without lock to
+> protect this thread.
+> 
+>> Nope, taking only one that hunk from this patch isn't sufficient.
+>> Around 
+>> dpc_thread there is pretty simple and classical race. You can't do
+>>
+>> if (x != NULL)
+>> y = *x;
+>>
+>> without any protection, if x can be set to NULL by another thread. It 
+>> can happen exactly between "if" and "*x" and hence lead to a crash,
+>> correct?
+> 
+> Gal.
+> 
+
