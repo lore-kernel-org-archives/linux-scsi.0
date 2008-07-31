@@ -1,207 +1,290 @@
-From: Martin Samuelsson <sam@home.se>
-Subject: Re: aacraid and S.M.A.R.T
-Date: Thu, 31 Jul 2008 20:32:06 +0200
-Message-ID: <20080731203206.f19fdcfd.sam@home.se>
-References: <20080730235450.0fcc21a6.sam@home.se>
-	<EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com>
-	<4891C69E.9000106@torque.net>
-	<4F4EA7EA-60E1-4CDC-B03F-7FC2AD9980A7@adaptec.com>
-	<20080731172715.0c37f999.sam@home.se>
-	<4891FBA3.50703@torque.net>
+From: David Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH 1/2] scsi:netlink support in scsi and fc transports for
+ hbaspecific messages
+Date: Thu, 31 Jul 2008 11:58:19 -0700
+Message-ID: <C4B7595B.160C%david.somayajulu@qlogic.com>
+References: <D1D4C3FF75F9354393DB8314DF43DEF2E7F511@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from proxy1.bredband.net ([195.54.101.71]:48403 "EHLO
-	proxy1.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704AbYGaScK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 14:32:10 -0400
-Received: from ironport2.bredband.com (195.54.101.122) by proxy1.bredband.net (7.3.127)
-        id 4811823A0190E20E for linux-scsi@vger.kernel.org; Thu, 31 Jul 2008 20:32:08 +0200
-In-Reply-To: <4891FBA3.50703@torque.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:4759 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753391AbYGaStx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 14:49:53 -0400
+In-Reply-To: <D1D4C3FF75F9354393DB8314DF43DEF2E7F511@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, Linux-Scsi <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>
+To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+Cc: David Somayajulu <david.somayajulu@qlogic.com>
 
-On Thu, 31 Jul 2008 13:51:31 -0400
-Douglas Gilbert <dougg@torque.net> wrote:
 
-> Martin Samuelsson wrote:
-> > On Thu, 31 Jul 2008 10:47:33 -0400
-> > Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
-> > 
-> >> On Jul 31, 2008, at 10:05 AM, Douglas Gilbert wrote:
-> >>
-> >>> Mark Salyzyn wrote:
-> >>>> aacraid driver is not the emulation. The Firmware itself has a SAT  
-> >>>> 0.9
-> >>>> translation layer to the raw SATA drives at the physical transport,  
-> >>>> the
-> >>>> Firmware then deals with all the targets as SCSI representations.
-> >>> Mark,
-> >>> Is that SAT interface at the physical transport accessible
-> >>> to something like smartmontools?
-> >> YES, that is the whole reason we added the physical access via /dev/ 
-> >> sg* in the driver!!!
-> >>
-> >> You may have to do a '-d ata', the patch to smartmontools to automate  
-> >> this for SATA devices was not approved by Adaptec. SAS drives work.
-> > 
-> > Does that mean that
-> > 
-> > [root@disk ~]# smartctl -a -d ata /dev/sg1
-> > 
-> > should return something nicer than
-> > 
-> > ====
-> > smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-> > Home page is http://smartmontools.sourceforge.net/
+
+
+On 7/30/08 7:09 PM, "James.Smart@Emulex.Com" <James.Smart@Emulex.Com> wrote:
+James,
+Thanks for the feedback.
+> David,
 > 
-> Martin,
-> I wouldn't use smartmontools version 5.36 . Could you try
-> version 5.38?
-
-Sure can do, after fetching the tar ball and a fitting C++ compiler.
-
-> Also please don't use "-d ata" on the command line; either don't
-> give a "-d <interface>" argument, or (if there are still problems)
-> try "-d sat".
-
-That did some kind of trick. Without -d sat, the result was the same as before; "bad response to IEC mode page", but with it, there's _something_ happening:
-
-====
-[root@disk ~]# smartctl -a -d sat -T permissive /dev/sg1
-smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-=== START OF INFORMATION SECTION ===
-Device Model:     x_05_9anemf_er
-Serial Number:    [No Information Found]
-Firmware Version: #<binary junk>
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   14
-ATA Standard is:  Not recognized. Minor revision code: 0xb7f8
-Local Time is:    Thu Jul 31 20:18:20 2008 CEST
-SMART support is: Ambiguous - ATA IDENTIFY DEVICE words 82-83 don't show if SMART supported.
-                  Checking for SMART support by trying SMART ENABLE command.
-                  SMART ENABLE appeared to work!  Continuing.
-SMART support is: Ambiguous - ATA IDENTIFY DEVICE words 85-87 don't show if SMART is enabled.
-                  Checking to be sure by trying SMART RETURN STATUS command.
-SMART support is: Enabled
-
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
-
-General SMART Values:
-Offline data collection status:  (0x00) Offline data collection activity
-                                        was never started.
-                                        Auto Offline Data Collection: Disabled.
-Total time to complete Offline 
-data collection:                 (   0) seconds.
-Offline data collection
-capabilities:                    (0x00)         Offline data collection not supported.
-SMART capabilities:            (0x0000) Automatic saving of SMART data                                  is not implemented.
-Error logging capability:        (0x00) Error logging NOT supported.
-                                        No General Purpose Logging support.
-
-Warning: device does not support Error Logging
-SMART Error Log Version: 0
-No Errors Logged
-
-Warning: device does not support Self Test Logging
-SMART Self-test log structure revision number 0
-Warning: ATA Specification requires self-test log structure revision number = 1
-No self-tests have been logged.  [To run self-tests, use: smartctl -t]
-
-
-Device does not support Selective Self Tests/Logging
-====
-
-(I'd say the overall outcome was a failure, if somewhat less than before.)
-
-Doing the same to /dev/sdb gives almost the same; the difference is in:
-
-====
-Device Model:     [No Information Found]
-Serial Number:    [No Information Found]
-Firmware Version: [No Information Found]
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   15
-ATA Standard is:  Not recognized. Minor revision code: 0x83
-====
-
-Without permissive, it stops after the second "Ambiguous".
-
-Regards,
-/Sam
-
+> I've had a similar patch floating around now for months, but it was
+> more for messages destined to the transport. It should easily extend
+> to driver messages too.
 > 
-> Doug Gilbert
+> My approach had the drivers registering with the scsi netlink module
+> rather than using the host template (transports don't have a template,
+> so its either reg/dereg or a static table). Comparing the two, yours
+> seems cleaner, as the registration/deregistration creates some
+> headaches. 
+> I'm a little bothered that there's nothing that qualifies the driver
+> to the shost before invoking the LLDD handler (e.g. driver has a
+> signature, message header contains signature, and the two must match).
+The idea was to let the Low Level Driver validate the message contents -
+signature, etc. Since this is a private message to the LLD, I felt it was
+appropriate that the signature or any other message validation scheme should
+be left to the LLD. The scsi-ml should not be responsible for it.
+> But, perhaps that's livable. One thing yours doesn't do is communicate
+> netlink events to the consumers, so if they were tracking anything
+> by pid, they could clean up. You could add this, but it would mean
+> another template entry point.
+I would appreciate if you can explain your comment a bit more, if my
+reasoning below does not suffice. I have already provided a function
+"fc_host_post_vendor_event_to_pid() [in scsi_transport_fc.c]", which enables
+an LLD to post a message to a specific pid. This may be used by the LLD to
+send response messages to the pid, for command messages sent by the pid. It
+can also be used to post any event messages, provided the user process(pid)
+has already informed the LLD to post event messages to it (in this case the
+LLD can cache the pid value and use it to post event messages to it). I am
+not sure why another template entry point is needed.
+> 
+> I've attached my patch for comparison, although it would need work to
+> do what you are doing.  Anyone else with a preference on the approach ?
+> 
+> -- james s
 > 
 > 
-> > Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
-> > 
-> > A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
-> > ====
-> > ?
-> > 
-> > Without it, I at least get the drive name:
-> > 
-> > ====
-> > [root@disk ~]# smartctl -a /dev/sg1
-> > smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-> > Home page is http://smartmontools.sourceforge.net/
-> > 
-> > Device: WDC      WD3200KS-00PFB0  Version: 21.0
-> >>> Terminate command early due to bad response to IEC mode page
-> > A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
-> > ====
-> > 
-> > The responses are identical for /dev/sdb, by the way. And two permissives state that SMART ENABLE failed in the former case, and that the response to IEC mode page was bad.
-> > 
-> > I got what seems to be Dell's latest firmware for the card
-> > 
-> > http://support.us.dell.com/support/downloads/format.aspx?releaseid=R155588&c=us&l=en&cs=&s=gen
-> > 
-> > (for the CERC SATA 1.5/6ch card, which should be the same), but it didn't like the card.
-> > 
-> > AFA0> controller details
-> > Executing: controller details
-> > Controller Information
-> > ----------------------
-> >          Remote Computer: .
-> >              Device Name: AFA0
-> >          Controller Type: Adaptec 2610SA
-> >              Access Mode: READ-WRITE
-> > Controller Serial Number: Last Six Digits = C31E83
-> >       Number of Channels: 1
-> >      Devices per Channel: 15
-> > Controller Physical Slot: 2
-> >           Controller CPU: i960 series
-> >     Controller CPU Speed: 100 Mhz
-> >        Controller Memory: 64 Mbytes
-> >            Battery State: Not Present
-> > 
-> > Component Revisions
-> > -------------------
-> >                 CLI: 4.1-0 (Build #7420)
-> >                 API: 4.1-0 (Build #7420)
-> >     Miniport Driver: 1.1-5 (Build #2453)
-> > Controller Software: 4.2-1 (Build #9304)
-> >     Controller BIOS: 4.2-1 (Build #9304)
-> > Controller Firmware: (Build #9304)
-> > 
-> > Regards,
-> > /Sam
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org
+>> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of David
+>> Somayajulu
+>> Sent: Wednesday, July 30, 2008 5:54 PM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: David Somayajulu; David Wagner
+>> Subject: [PATCH 1/2] scsi:netlink support in scsi and fc
+>> transports for hbaspecific messages
+>> 
+>> This patch adds support to the scsi transport layer for
+>> passing hba specific netlink messages to a low level driver.
+>> Also support is added to the fc transport, to enable an FC
+>> hba driver to post netlink message to a specific user process.
+>> 
+>> Signed-off-by: David C Somayajulu <david.somayajulu@qlogic.com>
+>> ---
+>>  drivers/scsi/scsi_netlink.c      |   13 +++++++
+>>  drivers/scsi/scsi_transport_fc.c |   72
+>> ++++++++++++++++++++++++++++++++++++++
+>>  include/scsi/scsi_host.h         |    6 +++
+>>  include/scsi/scsi_netlink.h      |    3 +-
+>>  include/scsi/scsi_transport_fc.h |    2 +
+>>  5 files changed, 95 insertions(+), 1 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/scsi_netlink.c b/drivers/scsi/scsi_netlink.c
+>> index ae7ed9a..3bc85c9 100644
+>> --- a/drivers/scsi/scsi_netlink.c
+>> +++ b/drivers/scsi/scsi_netlink.c
+>> @@ -24,6 +24,7 @@
+>>  #include <net/sock.h>
+>>  #include <net/netlink.h>
+>>  
+>> +#include <scsi/scsi_host.h>
+>>  #include <scsi/scsi_netlink.h>
+>>  #include "scsi_priv.h"
+>>  
+>> @@ -47,6 +48,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+>> struct scsi_nl_hdr *hdr;
+>> uint32_t rlen;
+>> int err;
+>> + struct Scsi_Host *shost;
+>>  
+>> while (skb->len >= NLMSG_SPACE(0)) {
+>> err = 0;
+>> @@ -89,6 +91,17 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+>> /*
+>> * We currently don't support anyone sending us
+>> a message
+>> */
+>> +  if (hdr->msgtype == SCSI_NL_HOST_PRIVATE) {
+>> +   shost = scsi_host_lookup(hdr->host_no);
+>> +   if (!shost) {
+>> +    printk(KERN_ERR "%s:
+>> scsi_host_lookup failed "
+>> +     "host no %u\n",
+>> __FUNCTION__, hdr->host_no);
+>> +   } else if (shost->hostt->netlink_rcv_msg) {
+>> +    err = 
+>> shost->hostt->netlink_rcv_msg(shost,
+>> +     (void *)((char
+>> *)hdr+sizeof(*hdr)),
+>> +     hdr->msglen,
+>> NETLINK_CREDS(skb)->pid);
+>> +   }
+>> +  }
+>>  
+>>  next_msg:
+>> if ((err) || (nlh->nlmsg_flags & NLM_F_ACK))
+>> diff --git a/drivers/scsi/scsi_transport_fc.c
+>> b/drivers/scsi/scsi_transport_fc.c
+>> index cb971f0..d1b38d9 100644
+>> --- a/drivers/scsi/scsi_transport_fc.c
+>> +++ b/drivers/scsi/scsi_transport_fc.c
+>> @@ -627,6 +627,78 @@ EXPORT_SYMBOL(fc_host_post_vendor_event);
+>>  
+>>  
+>>  
+>> +/**
+>> + * fc_host_post_vendor_event_to_pid - called to post a
+>> vendor unique event
+>> + *   on an fc_host to a specific process
+>> + * @shost:  host the event occurred on
+>> + * @event_number: fc event number obtained from
+>> get_fc_event_number()
+>> + * @data_len:  amount, in bytes, of vendor unique data
+>> + * @data_buf:  pointer to vendor unique data
+>> + * @vendor_id:          Vendor id
+>> + * @pid:  proc id of the receiver
+>> + *
+>> + * Notes:
+>> + * This routine assumes no locks are held on entry.
+>> + */
+>> +void
+>> +fc_host_post_vendor_event_to_pid(struct Scsi_Host *shost,
+>> u32 event_number,
+>> +  u32 data_len, char * data_buf, u64 vendor_id,
+>> uint32_t pid)
+>> +{
+>> + struct sk_buff *skb;
+>> + struct nlmsghdr *nlh;
+>> + struct fc_nl_event *event;
+>> + u32 len, skblen;
+>> + int err;
+>> +
+>> + if (!scsi_nl_sock) {
+>> +  err = -ENOENT;
+>> +  goto send_vendor_fail;
+>> + }
+>> +
+>> + len = FC_NL_MSGALIGN(sizeof(*event) + data_len);
+>> + skblen = NLMSG_SPACE(len);
+>> +
+>> + skb = alloc_skb(skblen, GFP_KERNEL);
+>> + if (!skb) {
+>> +  err = -ENOBUFS;
+>> +  goto send_vendor_fail;
+>> + }
+>> +
+>> + nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
+>> +    skblen - sizeof(*nlh), 0);
+>> + if (!nlh) {
+>> +  err = -ENOBUFS;
+>> +  goto send_vendor_fail_skb;
+>> + }
+>> + event = NLMSG_DATA(nlh);
+>> +
+>> + INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
+>> +    FC_NL_ASYNC_EVENT, len);
+>> + event->seconds = get_seconds();
+>> + event->vendor_id = vendor_id;
+>> + event->host_no = shost->host_no;
+>> + event->event_datalen = data_len; /* bytes */
+>> + event->event_num = event_number;
+>> + event->event_code = FCH_EVT_VENDOR_UNIQUE;
+>> + memcpy(&event->event_data, data_buf, data_len);
+>> +
+>> + err = nlmsg_unicast(scsi_nl_sock, skb, pid);
+>> + if (err && (err != -ESRCH)) /* filter no recipient errors */
+>> +  /* nlmsg_multicast already kfree_skb'd */
+>> +  goto send_vendor_fail;
+>> +
+>> + return;
+>> +
+>> +send_vendor_fail_skb:
+>> + kfree_skb(skb);
+>> +send_vendor_fail:
+>> + printk(KERN_WARNING
+>> +  "%s: Dropped Event : host %d vendor_unique - err %d\n",
+>> +  __FUNCTION__, shost->host_no, err);
+>> + return;
+>> +}
+>> +EXPORT_SYMBOL(fc_host_post_vendor_event_to_pid);
+>> +
+>>  static __init int fc_transport_init(void)
+>>  {
+>> int error;
+>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+>> index 44a55d1..04afe93 100644
+>> --- a/include/scsi/scsi_host.h
+>> +++ b/include/scsi/scsi_host.h
+>> @@ -485,6 +485,12 @@ struct scsi_host_template {
+>> * module_init/module_exit.
+>> */
+>> struct list_head legacy_hosts;
+>> + /*
+>> +  * passes host specific to netlink messages received on
+>> scsi_nl_sock
+>> +  * to the LLD
+>> +  */
+>> + int (* netlink_rcv_msg)(struct Scsi_Host *, void
+>> *payload, uint32_t len,
+>> +    uint32_t pid);
+>>  };
+>>  
+>>  /*
+>> diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
+>> index 8c1470c..b32596e 100644
+>> --- a/include/scsi/scsi_netlink.h
+>> +++ b/include/scsi/scsi_netlink.h
+>> @@ -42,6 +42,7 @@ struct scsi_nl_hdr {
+>> uint16_t magic;
+>> uint16_t msgtype;
+>> uint16_t msglen;
+>> + uint16_t host_no;
+>>  } __attribute__((aligned(sizeof(uint64_t))));
+>>  
+>>  /* scsi_nl_hdr->version value */
+>> @@ -56,7 +57,7 @@ struct scsi_nl_hdr {
+>>  #define SCSI_NL_MAX_TRANSPORTS   2
+>>  
+>>  /* scsi_nl_hdr->msgtype values are defined in each transport */
+>> -
+>> +#define SCSI_NL_HOST_PRIVATE   1
+>>  
+>>  /*
+>>   * Vendor ID:
+>> diff --git a/include/scsi/scsi_transport_fc.h
+>> b/include/scsi/scsi_transport_fc.h
+>> index 21018a4..217fdc9 100644
+>> --- a/include/scsi/scsi_transport_fc.h
+>> +++ b/include/scsi/scsi_transport_fc.h
+>> @@ -747,6 +747,8 @@ void fc_host_post_event(struct Scsi_Host
+>> *shost, u32 event_number,
+>> enum fc_host_event_code event_code, u32 event_data);
+>>  void fc_host_post_vendor_event(struct Scsi_Host *shost, u32
+>> event_number,
+>> u32 data_len, char * data_buf, u64 vendor_id);
+>> +void fc_host_post_vendor_event_to_pid(struct Scsi_Host
+>> *shost, u32 event_number,
+>> +                u32 data_len, char * data_buf, u64
+>> vendor_id, uint32_t pid);
+>> /* Note: when specifying vendor_id to
+>> fc_host_post_vendor_event()
+>> *   be sure to read the Vendor Type and ID formatting
+>> requirements
+>> *   specified in scsi_netlink.h
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
+
