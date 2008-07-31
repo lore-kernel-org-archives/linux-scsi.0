@@ -1,64 +1,65 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
-Date: Thu, 31 Jul 2008 09:02:51 -0700
-Message-ID: <20080731160251.GB76172@plap4-2.local>
-References: <488E02DE.5080100@vlnb.net> <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux> <489181C4.70003@vlnb.net>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: SCSI device rescan, detection of disconnected device,
+	or	switched devices.
+Date: Thu, 31 Jul 2008 19:09:31 +0300
+Message-ID: <1217520571.6768.14.camel@galr-linux.storwiz.com>
+References: <1217248348.4133.51.camel@galr-linux>
+	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>
+	 <4891792C.6020304@s5r6.in-berlin.de> <1217504895.25491.69.camel@galr-linux>
+	 <1217513749.3333.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:28920 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbYGaQCy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 12:02:54 -0400
-Content-Disposition: inline
-In-Reply-To: <489181C4.70003@vlnb.net>
+Received: from mail.storwize.com ([62.90.10.208]:22772 "EHLO swdc2.storwiz.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750828AbYGaQJd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 12:09:33 -0400
+In-Reply-To: <1217513749.3333.7.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-driver@qlogic.com, Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On Thu, 31 Jul 2008, Vladislav Bolkhovitin wrote:
+On Thu, 2008-07-31 at 09:15 -0500, James Bottomley wrote:
+> Oh ... you're not really talking about hotplug, which is why everyone=
+ is
+> confused.  Hotplug is when you add or remove something from the bus.
+> What you've done is reconfigure the array.
+>=20
+> Most of the hotplug we do depends on the transport model (because wha=
+t's
+> on the transport is changing).  Array reconfiguration has no hotplug
+> event because SAM-3 has no real way of passing the information
+> asynchronously.  The best it can do is Unit Attention/reported luns d=
+ata
+> has changed (asc=3D0x3f/ascq=3D0xe) on the next command.
+>=20
+> The problem is that there's no way to process the event correctly eve=
+n
+> when we get it.  All we can do is issue another report LUNS command a=
+nd
+> compare.  However, just because it looks like a single LUN disappeare=
+d
+> doesn't mean the others weren't permuted or altered in some way (whic=
+h
+> data we cannot get).
+>=20
 
-> Gal Rosen wrote:
->> Andrew,
->>
->> Add checking of the flag online still does not answer the race that Vlad
->> stated before,
->
-> Yes, that's true.
->
-> And, since ha->flags.online set to 0 not only on shutdown, I'm afraid you 
-> could introduce a new set of subtle bugs, if not for the moment, but in the 
-> future, because with your patch it gets impossible to wake up the DPC 
-> thread if HA is offline.
+=EF=BB=BFWhy? if I keep a mapping between sg devices and device id (Inq=
+uiry page
+0x83) then I have all the data.
 
-You are both missing a subtle point, it's incidental if
-qla2xxx_wake_dpc() misses a 'wake-up' due the HBA being 'offline', as
-the qla2x00_timer(), woken up every second, will do the wake-up if
-necessary. The code changes offered, close the window as tightly as
-possible without introducing needlessly complex changes.  All this
-infrastructure is legacy constucts from a time long-before work-queues
-and the like.
+Gal.
 
-This area is one of several where we are moving to clean-up and
-modernize in our upstream offering:
-
-* dropping the heavy DPC thread in favor of work-queues.
-* using proper life-cycle and reference-handling of fcport objects
-  (yes, the objects will be freed after use).
-* refactoring the HA respresentations for physical and virtual ports,
-  the current memcpy() physical-HA to vport-HA and slight-mods is
-  error-prone and doesn't scale.
-* drop the illogical single physical-HA maintains all fcports across
-  N-vports.
-
-The changes above are large (170k diffs so far), and at this point are
-being run-through our testing.  The hope is to get the changes
-upstream during one of the next two merge windows.
-
-Given the infrustructure mods and our focus on that front, if there's
-something small and contained you can offer above what I've proposed
-we'll be interested in reviewing any patches you'd push forward.
-
-Regards,
-Andrew Vasquez
+> So ... this event is manual intervention required because you have to
+> tell SCSI what you did to the array, it can't work it out for itself.
+>=20
+> James
+>=20
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
