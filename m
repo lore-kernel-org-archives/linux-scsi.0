@@ -1,99 +1,74 @@
-From: Daniel Dickinson <cshore@fionavar.ca>
-Subject: Re: [Bugme-new] [Bug 11194] New: megraid_mbox kernel panic during
- st driver initialization
-Date: Thu, 31 Jul 2008 16:00:44 -0400
-Message-ID: <20080731160044.1d26e530@brennin.fionavar.dd>
-References: <bug-11194-10286@http.bugzilla.kernel.org/>
-	<20080731104810.9e18c749.akpm@linux-foundation.org>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: [DO NOT APPLY] sd take advantage of rotation speed
+Date: Thu, 31 Jul 2008 14:00:25 -0700
+Message-ID: <da824cf30807311400i59065c74q549aa1b62819781e@mail.gmail.com>
+References: <20080619160342.GJ4392@parisc-linux.org>
+	 <20080625134705.GZ20851@kernel.dk> <4862552A.5010900@gmail.com>
+	 <48627184.9010609@panasas.com> <20080625165759.GC20851@kernel.dk>
+	 <20080625172015.GR4392@parisc-linux.org>
+	 <20080625172638.GE20851@kernel.dk>
+	 <yq1d4m575je.fsf@sermon.lab.mkp.net> <488DCB5A.9080105@redhat.com>
+	 <yq1od4ikrl2.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/wM_1jZ=QVt1GyFrwrU+.6zY";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server01.gorrie.wightman.ca ([216.110.227.151]:37483 "EHLO
-	mail.wightman.on.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750969AbYGaU1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 16:27:09 -0400
-In-Reply-To: <20080731104810.9e18c749.akpm@linux-foundation.org>
+Received: from smtp-out.google.com ([216.239.33.17]:6023 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753464AbYGaVAj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 17:00:39 -0400
+Received: from spaceape13.eur.corp.google.com (spaceape13.eur.corp.google.com [172.28.16.147])
+	by smtp-out3.google.com with ESMTP id m6VL0RKg019563
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 22:00:27 +0100
+Received: from rv-out-0506.google.com (rvbk40.prod.google.com [10.140.87.40])
+	by spaceape13.eur.corp.google.com with ESMTP id m6VL0O5l012724
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 14:00:26 -0700
+Received: by rv-out-0506.google.com with SMTP id k40so691834rvb.11
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 14:00:26 -0700 (PDT)
+In-Reply-To: <yq1od4ikrl2.fsf@sermon.lab.mkp.net>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, megaraidlinux@lsi.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
 
---Sig_/wM_1jZ=QVt1GyFrwrU+.6zY
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jul 28, 2008 at 7:31 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Ric" == Ric Wheeler <rwheeler@redhat.com> writes:
+>
+> Ric> One other thought - is there a way to give non-rotational devices
+> Ric> also some indication of latency? (FLASH is slower than enterprise
+> Ric> SSD is slower than DRAM ramdisk for example)?
+>
+> The current SBC draft only distinguishes between rotating media
+> speeds.  There is only one classification for non-rotating media in
+> the block device characteristics VPD.
+>
+> For a mechanical disk drive the rpm isn't a terrible gauge for
+> performance.  But for a solid state device I think it will be hard to
+> define a similar universal metric.
 
-On Thu, 31 Jul 2008 10:48:10 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+rpm isn't a great gauge of performance either since the perf is a
+function of rpm * bit density.
 
-> >=20
-> > Latest working kernel version: 2.6.24
-> > Earliest failing kernel version: 2.6.26
->=20
-> The kernel versions are ambiguous.
->=20
-> Which is the earliest failing kernel version?
+> Ignoring SLC vs. MLC for a moment I think it's also safe to predict
+> that the enterprise drive of today will be the consumer drive of
+> tomorrow.
+>
+> Maybe the ssd device could export the anticipated command response
+> time for a request that matches the Optimal Transfer Length field in
+> the block limits VPD?
 
-Sorry about that; I did latest failing (unless .27 is out; I haven't
-tested it). Earliest failing is 2.6.25.
+erase and/or write times could be exported as well somehow for SSDs
+if the FS (or other higher layer that wants to know) can't avoid
+garbage collection and erase cycles. I was just told today that flash devices
+have 10x higher write time than read time. erase is another order of
+magnitude higher. This doesn't include any garbage collection overhead.
 
->=20
-> > Distribution: Debian Lenny (-testing + -unstable + kernel trunk for
-> > debian)
-> >=20
-> > Hardware Environment: ASUS P4B 2.0 GHz P4 Motherboard, Dell
-> > PERC3/DC (like AMI MegraRAID Elite 1600) LVD Ultra3 SCSI Adaptor
-> > with four 80 GB drives on Channel 0 and a SCSI-U2 Seagate DDS-4
-> > tape drive on Channel 1 Software Environment:  Debian Lenny
-> > (up-to-date), with some unstable and tested with the testing kernel
-> > (.25) and the trunk kernel (.26)
-> >=20
-> > Problem Description: The kernel panics (claiming it's in the
-> > megaraid_mbox driver) during boot when the st driver would normally
-> > report=20
-> >=20
-> > st0: Block limits 1 - 16777215 bytes.
-> >=20
-> > This is after the logical disk has been found and all filesystems
-> > mounted, so the RAID part of the driver is probably fine.
-> >=20
-> >=20
-> > The point at which=20
-> >=20
-> > st 0:1:6:0: Attached scsi tape st0
-> > st 0:1:6:0: st0: try direct i/o: yes (alignment 512 B)
-> >=20
-> > appears with .24 is passed before the panic, but I haven't actually
-> > seen those messages as they scroll by too quickly.
-> >=20
-> > Steps to reproduce:
-> >=20
-> > 1) Install debian lenny with a .24 kernel (I'm not sure how you
-> > would do that now that .24 is no longer the testing kernel); maybe
-> > beta2 would still let you. 2) Install -testing kernel (.25)
-> > 3) Attempt to boot using the new kernel
-> > 4) Kernel panics, system is unusable
-> >=20
->=20
+I think new file systems should be tuned to work with SSDs before we
+worry so much about the differences between SSDs/flash technologies
+and vendors. And then prescribe a different FS for different
+storage technologies. This avoids the "layering violations" discussion
+and helps keep the FSs (testing and developement) substantially simpler.
 
-
---=20
-And that's my crabbing done for the day.  Got it out of the way early,=20
-now I have the rest of the afternoon to sniff fragrant tea-roses or=20
-strangle cute bunnies or something.   -- Michael Devore
-GnuPG Key Fingerprint 86 F5 81 A5 D4 2E 1F 1C      http://gnupg.org
-No more sea shells:  Daniel's Weblog    http://cshore.wordpress.com
-
---Sig_/wM_1jZ=QVt1GyFrwrU+.6zY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkiSGewACgkQhvWBpdQuHxzGwACghbqDtW91TghQAzwEYsPDsFzH
-q04AmwRnoZTU3OIp3fTo1Fg7oE67Se4j
-=KWw2
------END PGP SIGNATURE-----
-
---Sig_/wM_1jZ=QVt1GyFrwrU+.6zY--
+grant
