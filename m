@@ -1,65 +1,58 @@
-From: Gal Rosen <galr@storwize.com>
-Subject: Re: SCSI device rescan, detection of disconnected device,
-	or	switched devices.
-Date: Thu, 31 Jul 2008 19:09:31 +0300
-Message-ID: <1217520571.6768.14.camel@galr-linux.storwiz.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SCSI device rescan, detection of disconnected
+	device,	or	switched devices.
+Date: Thu, 31 Jul 2008 11:18:59 -0500
+Message-ID: <1217521139.3333.14.camel@localhost.localdomain>
 References: <1217248348.4133.51.camel@galr-linux>
 	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>
 	 <4891792C.6020304@s5r6.in-berlin.de> <1217504895.25491.69.camel@galr-linux>
-	 <1217513749.3333.7.camel@localhost.localdomain>
+	 <1217513749.3333.7.camel@localhost.localdomain> <4891E149.8070805@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.storwize.com ([62.90.10.208]:22772 "EHLO swdc2.storwiz.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750828AbYGaQJd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 12:09:33 -0400
-In-Reply-To: <1217513749.3333.7.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:38529 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750960AbYGaQTE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 12:19:04 -0400
+In-Reply-To: <4891E149.8070805@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Gal Rosen <galr@storwize.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On Thu, 2008-07-31 at 09:15 -0500, James Bottomley wrote:
-> Oh ... you're not really talking about hotplug, which is why everyone=
- is
-> confused.  Hotplug is when you add or remove something from the bus.
-> What you've done is reconfigure the array.
->=20
-> Most of the hotplug we do depends on the transport model (because wha=
-t's
-> on the transport is changing).  Array reconfiguration has no hotplug
-> event because SAM-3 has no real way of passing the information
-> asynchronously.  The best it can do is Unit Attention/reported luns d=
-ata
-> has changed (asc=3D0x3f/ascq=3D0xe) on the next command.
->=20
-> The problem is that there's no way to process the event correctly eve=
-n
-> when we get it.  All we can do is issue another report LUNS command a=
-nd
-> compare.  However, just because it looks like a single LUN disappeare=
-d
-> doesn't mean the others weren't permuted or altered in some way (whic=
-h
-> data we cannot get).
->=20
+On Thu, 2008-07-31 at 19:59 +0400, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> > Most of the hotplug we do depends on the transport model (because what's
+> > on the transport is changing).  Array reconfiguration has no hotplug
+> > event because SAM-3 has no real way of passing the information
+> > asynchronously.  The best it can do is Unit Attention/reported luns data
+> > has changed (asc=0x3f/ascq=0xe) on the next command.
+> > 
+> > The problem is that there's no way to process the event correctly even
+> > when we get it.  All we can do is issue another report LUNS command and
+> > compare.  However, just because it looks like a single LUN disappeared
+> > doesn't mean the others weren't permuted or altered in some way (which
+> > data we cannot get).
+> 
+> But why don't do what's possible to do and for what there is complete 
+> information: add new LUN for new LUN and delete deleted LUN for reported 
+> luns data has changed UA? As well as get new capacity for a LU on 
+> capacity data has changed UA after, e.g., new space added to it?
 
-=EF=BB=BFWhy? if I keep a mapping between sg devices and device id (Inq=
-uiry page
-0x83) then I have all the data.
+Well, feel free to submit a patch, but it's an incredible mine field.
+We certainly can't do something that builds a trap for users (as in a
+policy which gets it right 10% of the time and wrong 90% of the time) so
+I'm strongly inclined to feel array reconfiguration is a manual process.
+If you think you can do it online, we don't panic or throw a spanner in
+the works, but we wait until you tell us what you did, but you'd be well
+advised to do it offline.
 
-Gal.
+The point is that we can't distinguish LUN added from LUN split or space
+reapportioned or something ... even LUN renumbered would be seen as a
+remove followed by an add.
 
-> So ... this event is manual intervention required because you have to
-> tell SCSI what you did to the array, it can't work it out for itself.
->=20
-> James
->=20
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
