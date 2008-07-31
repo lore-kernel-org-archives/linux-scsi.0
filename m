@@ -1,52 +1,83 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
-Date: Thu, 31 Jul 2008 13:11:32 +0400
-Message-ID: <489181C4.70003@vlnb.net>
-References: <488E02DE.5080100@vlnb.net>	 <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: SCSI device rescan, detection of disconnected device,
+	or	switched devices.
+Date: Thu, 31 Jul 2008 14:48:15 +0300
+Message-ID: <1217504895.25491.69.camel@galr-linux>
+References: <1217248348.4133.51.camel@galr-linux>
+	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>
+	 <4891792C.6020304@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:56437 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752499AbYGaJLe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 05:11:34 -0400
-In-Reply-To: <1217484743.25491.7.camel@galr-linux>
+Received: from mail.storwize.com ([62.90.10.208]:42592 "EHLO swdc2.storwiz.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751144AbYGaLsc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 07:48:32 -0400
+In-Reply-To: <4891792C.6020304@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-driver@qlogic.com
-Cc: Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org
 
-Gal Rosen wrote:
-> Andrew,
+On Thu, 2008-07-31 at 10:34 +0200, Stefan Richter wrote:
+> Gal Rosen wrote:
+> > I will try to make my question more clear.
+> > I would like to put a box between the client and the storage, and to be
+> > fully transparent against the host. All changes on the storage
+> > (add/remove/extend devices) should be present automatically to the
+> > client. In a direct connection between client and storage the
+> > administrator will coordinate between the client and storage before
+> > making any changes, in my configuration I do not want to add
+> > administration work on my box that stands between the client and the
+> > storage.
+> > Addition is simple, the application on my box can once in a while scan
+> > the SCSI BUS, and then the Linux system will create new sg devices.
+> > In removal of a device the Linux system will not remove sg devices after
+> > scan. In that case again I can do it from my application, such when I
+> > get attention on SCSI command, I can decide to remove the device by
+> > echoing to the /sys file system.
 > 
-> Add checking of the flag online still does not answer the race that Vlad
-> stated before,
-
-Yes, that's true.
-
-And, since ha->flags.online set to 0 not only on shutdown, I'm afraid 
-you could introduce a new set of subtle bugs, if not for the moment, but 
-in the future, because with your patch it gets impossible to wake up the 
-DPC thread if HA is offline.
-
-Vlad
-
-> unless you thought about another way without lock to
-> protect this thread.
+> I really don't know how the FibreChannel drivers handle device removal.
+> But from what I gather from the documentation of
+> fc_remote_port_delete(), which the qla2xxx drivers use, the /dev/sg
+> devices should automatically disappear
+>   - after a connection loss timeout,
+>   - provided that userspace doesn't have the device file opened
+>     (among else this is manifest in the kernel in a reference count of
+>     the logical unit device representation),
+>   - provided that you manage your device files with udev.
 > 
->> Nope, taking only one that hunk from this patch isn't sufficient.
->> Around 
->> dpc_thread there is pretty simple and classical race. You can't do
->>
->> if (x != NULL)
->> y = *x;
->>
->> without any protection, if x can be set to NULL by another thread. It 
->> can happen exactly between "if" and "*x" and hence lead to a crash,
->> correct?
-> 
-> Gal.
+> http://lxr.linux.no/linux+v2.6.26/drivers/scsi/scsi_transport_fc.c#L2756
 > 
 
+This is true; when the remote port is no longer exists, after timeout
+all the sg devices will disappear, but what if I am changing the
+configuration in the disk array, and remove only one logical device.
+There will not be any event for that. The hotplug implementation in the
+SCSI today creates events of add/remove when adding/removing HBA, or
+when the FC link go down and up again, but not for additional and
+removal of devices. In the linux documentation in scsi_mid_low_api.txt
+it is written that "The hotplug concept may be extended to SCSI
+devices". I guess that nobody implemented it because what you said
+previously in this thread that someone could hold reference to the
+device.
+I think that I understand the concept. When the FC port is going down/up
+you get interrupt, so you can remove all devices or initiate scsi scan
+and add devices. But when device is added you can't get any event,
+because this device is not known to the client yet (no body is working
+with it), all you can do is to initiate scan every once a while. For
+removing a device there is a possibility to do it automatically. The LLD
+can identify that the device is not ready, and then call to the mid
+layer to remove this device. It will succeed only if nobody is holding a
+reference to that device.
+
+Gal.
+ 
+> That would be basically just like SCSI device files are created and
+> destroyed on the fly for USB or FireWire devices for example.  Except
+> that FC has the additional configurable connection loss timeout which
+> hides temporary connection losses from applications.
+> 
+> (However, better wait for an answer of somebody who actually uses FC or
+> knows the drivers.  I only have experience with FireWire.)
