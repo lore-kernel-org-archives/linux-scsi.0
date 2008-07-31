@@ -1,23 +1,30 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11194] New: megraid_mbox kernel panic during
- st driver initialization
-Date: Thu, 31 Jul 2008 10:48:10 -0700
-Message-ID: <20080731104810.9e18c749.akpm@linux-foundation.org>
-References: <bug-11194-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
+Date: Thu, 31 Jul 2008 10:48:22 -0700 (PDT)
+Message-ID: <20080731174822.9672F108035@picon.linux-foundation.org>
+References: <bug-11194-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34758 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42208 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752672AbYGaRsW (ORCPT
+	by vger.kernel.org with ESMTP id S1753143AbYGaRsn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:48:22 -0400
-In-Reply-To: <bug-11194-10286@http.bugzilla.kernel.org/>
+	Thu, 31 Jul 2008 13:48:43 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6VHmMuY009779
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 10:48:23 -0700
+In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, cshore@fionavar.ca, megaraidlinux@lsi.com
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11194
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-07-31 10:48 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
@@ -25,7 +32,8 @@ bugzilla web interface).
 
 This bugzilla report appears to not have been sent out to the scsi list.
 
-On Thu, 31 Jul 2008 07:15:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Thu, 31 Jul 2008 07:15:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
+wrote:
 
 > http://bugzilla.kernel.org/show_bug.cgi?id=11194
 > 
@@ -87,3 +95,8 @@ Which is the earliest failing kernel version?
 > 4) Kernel panics, system is unusable
 > 
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
