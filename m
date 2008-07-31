@@ -1,61 +1,40 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Thu, 31 Jul 2008 15:45:27 +0300
-Message-ID: <4891B3E7.1090109@panasas.com>
-References: <200807300019.m6U0JkdY012558@localhost.localdomain> <4890C287.60508@pobox.com> <8A71B368A89016469F72CD08050AD334032EC7F5@maui.asicdesigners.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 0/3] cmd_filter fixes
+Date: Thu, 31 Jul 2008 07:04:22 -0600
+Message-ID: <20080731130422.GC30534@parisc-linux.org>
+References: <6cf6b73e0807301259s309f6332wef74d2ac5bafe691@mail.gmail.com> <20080731135521N.fujita.tomonori@lab.ntt.co.jp> <20080731071851.GA30534@parisc-linux.org> <20080731162449X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <8A71B368A89016469F72CD08050AD334032EC7F5@maui.asicdesigners.com>
-Sender: netdev-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, davem@davemloft.net, michaelc@cs.wisc.edu, Steve Wise <swise@opengridcomputing.com>, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Divy Le Ray <divy@chelsio.com>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:41709 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbYGaNEY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 09:04:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20080731162449X.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: adel.gadllah@gmail.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
 
-Karen Xie wrote:
->> Comments:
->>
->> * SCSI drivers should be submitted via the linux-scsi@vger.kernel.org 
->> mailing list.
+On Thu, Jul 31, 2008 at 04:24:54PM +0900, FUJITA Tomonori wrote:
+> > We need to be able to delete as well as add.
 > 
-> Will do that. Thanks.
-> 
->> * The driver is clean and readable, well done
->>
->> * From a networking standpoint, our main concern becomes how this 
->> interacts with the networking stack.  In particular, I'm concerned
-> based 
->> on reading the source that this driver uses "TCP port stealing" rather 
->> than using a totally separate MAC address (and IP).
->>
->> Stealing a TCP port on an IP/interface already assigned is a common 
->> solution in this space, but also a flawed one.  Precisely because the 
->> kernel and applications are unaware of this "special, magic TCP port" 
->> you open the potential for application problems that are very difficult
-> 
->> for an admin to diagnose based on observed behavior.
-> 
-> The collisions between the host stack and iSCSI offload are unlikely
-> because the iSCSI target server's port is unique (nailed down as 3260).
-> If an offload card is plugged in, all iSCSI connections to a given
-> target (i.e., destination/port) are offloaded. There is precedence for
-> this approach such as RDMA/iWarp.
-> 
+> Yeah, I thought about adding a new file such as read_table_off.
 
-Please note that all SW iscsi targets I know, let you change the default
-3260 port to whatever you want. Is that supported?
+Three files seems excessive.  Plus the +/- notation lets you do:
 
-Jeff is there a way for the user-mode demon to reserve the port beforehand
-so it will appear to be taken.
+echo -- +0x02 +0x03 -0x08
 
->> So, additional information on your TCP port usage would be greatly 
->> appreciated.  Also, how does this interact with IPv6?  Clearly it 
->> interacts with IPv4...
-> 
-> Currently, IPv6 connection request will not be honored, I will make sure
-> the checking is added in the resubmission.
-> 
-> 
-Boaz
+atomically.  I don't know if that's an important feature to have.
 
+> Looks another potential option though I prefer "-0x03" than "-03" as I
+> said in the previous mail.
+
+Makes sense.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
