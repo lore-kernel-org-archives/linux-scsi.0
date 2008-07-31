@@ -1,48 +1,32 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 0/3] cmd_filter fixes
-Date: Thu, 31 Jul 2008 01:18:52 -0600
-Message-ID: <20080731071851.GA30534@parisc-linux.org>
-References: <6cf6b73e0807271302o77700222r321102ef7be0333b@mail.gmail.com> <20080728111915N.fujita.tomonori@lab.ntt.co.jp> <6cf6b73e0807301259s309f6332wef74d2ac5bafe691@mail.gmail.com> <20080731135521N.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Bugme-new] [Bug 11185] New: Device/host RESET in SCSI
+Date: Thu, 31 Jul 2008 01:21:59 -0600
+Message-ID: <20080731072159.GB30534@parisc-linux.org>
+References: <bug-11185-10286@http.bugzilla.kernel.org/> <20080730232409.81965504.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56897 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:56850 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371AbYGaHSx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 03:18:53 -0400
+	with ESMTP id S1753319AbYGaHWA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 03:22:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20080731135521N.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <20080730232409.81965504.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: adel.gadllah@gmail.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: cijoml@volny.cz, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Thu, Jul 31, 2008 at 01:55:31PM +0900, FUJITA Tomonori wrote:
-> Someone might think that it would be better if we can change the
-> filter without specifying all the accepted commands. For example, we
-> could do like:
+On Wed, Jul 30, 2008 at 11:24:09PM -0700, Andrew Morton wrote:
+> Why do you describe this regression as a powerpc problem rather than a
+> scsi one?
 > 
-> clover:/sys/block/cciss!c0d0/cmd_filter# cat read_table
-> 03 08 12 1a 1b 1c
-> 
-> clover:/sys/block/cciss!c0d0/cmd_filter# echo 02 > read_table_on
-> 02 03 08 12 1a 1b 1c
-> 
-> But I don't have strong opinions about it.
+> (It could be either or both, I'm just wondering...)
 
-We need to be able to delete as well as add.
-
-We could have a scheme in which:
-
-echo -- "-03" >read_table
-cat read_table
-08 12 1a 1b 1c
-
-echo -- "+02 +07 +08" >read_table
-cat read_table
-02 07 08 12 1a 1b 1c
-
-The + could be implicit.
+This seems quite astute of the reporter.  The error messages from sym2
+are consistent with an interrupt routing problem.  I have an idea for
+reporting this more effectively (because this comes up every 3-6 months
+or so) but testing that patch will have to wait until I'm back home.
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
