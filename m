@@ -1,21 +1,25 @@
 From: Daniel Dickinson <cshore@fionavar.ca>
 Subject: Re: [Bugme-new] [Bug 11194] New: megraid_mbox kernel panic during
  st driver initialization
-Date: Thu, 31 Jul 2008 16:22:14 -0400
-Message-ID: <20080731162214.13a2d383@brennin.fionavar.dd>
+Date: Thu, 31 Jul 2008 16:00:44 -0400
+Message-ID: <20080731160044.1d26e530@brennin.fionavar.dd>
+References: <bug-11194-10286@http.bugzilla.kernel.org/>
+	<20080731104810.9e18c749.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/kLP7lGH4H7qDIf_V=LeKhaI";
+Content-Type: multipart/signed; boundary="Sig_/wM_1jZ=QVt1GyFrwrU+.6zY";
  protocol="application/pgp-signature"; micalg=PGP-SHA1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server01.clifford.wightman.ca ([216.110.227.141]:42424 "EHLO
+Received: from server01.gorrie.wightman.ca ([216.110.227.151]:37483 "EHLO
 	mail.wightman.on.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751043AbYGaUWl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 16:22:41 -0400
+	with ESMTP id S1750969AbYGaU1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 16:27:09 -0400
+In-Reply-To: <20080731104810.9e18c749.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, Andrew Morton <akpm@linux-foundation.org>, megaraidlinux@lsi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, megaraidlinux@lsi.com
 
---Sig_/kLP7lGH4H7qDIf_V=LeKhaI
+--Sig_/wM_1jZ=QVt1GyFrwrU+.6zY
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
@@ -80,16 +84,16 @@ strangle cute bunnies or something.   -- Michael Devore
 GnuPG Key Fingerprint 86 F5 81 A5 D4 2E 1F 1C      http://gnupg.org
 No more sea shells:  Daniel's Weblog    http://cshore.wordpress.com
 
---Sig_/kLP7lGH4H7qDIf_V=LeKhaI
+--Sig_/wM_1jZ=QVt1GyFrwrU+.6zY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkiSHvYACgkQhvWBpdQuHxzvpQCeM52mVeKPdRXOhmL7ADPCeiTg
-6sgAn1U7hvgs+LJqPObxwBDgBmq1E15b
-=oTHb
+iEYEARECAAYFAkiSGewACgkQhvWBpdQuHxzGwACghbqDtW91TghQAzwEYsPDsFzH
+q04AmwRnoZTU3OIp3fTo1Fg7oE67Se4j
+=KWw2
 -----END PGP SIGNATURE-----
 
---Sig_/kLP7lGH4H7qDIf_V=LeKhaI--
+--Sig_/wM_1jZ=QVt1GyFrwrU+.6zY--
