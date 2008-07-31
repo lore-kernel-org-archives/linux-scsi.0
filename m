@@ -1,89 +1,149 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: SCSI device rescan, detection of disconnected device,	or	switched
- devices.
-Date: Thu, 31 Jul 2008 19:59:05 +0400
-Message-ID: <4891E149.8070805@vlnb.net>
-References: <1217248348.4133.51.camel@galr-linux>	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux>	 <4891792C.6020304@s5r6.in-berlin.de> <1217504895.25491.69.camel@galr-linux> <1217513749.3333.7.camel@localhost.localdomain>
+From: Martin Samuelsson <sam@home.se>
+Subject: Re: aacraid and S.M.A.R.T
+Date: Thu, 31 Jul 2008 18:01:57 +0200
+Message-ID: <20080731180157.826c2dcb.sam@home.se>
+References: <20080730235450.0fcc21a6.sam@home.se>
+	<EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com>
+	<4891C69E.9000106@torque.net>
+	<4F4EA7EA-60E1-4CDC-B03F-7FC2AD9980A7@adaptec.com>
+	<20080731172715.0c37f999.sam@home.se>
+	<6922644A-352E-42C1-8F6A-88FC4F01E04E@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-04.mailcluster.net ([77.221.130.216]:60226 "EHLO
-	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752674AbYGaP7I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 11:59:08 -0400
-In-Reply-To: <1217513749.3333.7.camel@localhost.localdomain>
+Received: from proxy2.bredband.net ([195.54.101.72]:65245 "EHLO
+	proxy2.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753064AbYGaQCD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 12:02:03 -0400
+Received: from ironport2.bredband.com (195.54.101.122) by proxy2.bredband.net (7.3.127)
+        id 48118333018A270B for linux-scsi@vger.kernel.org; Thu, 31 Jul 2008 18:02:00 +0200
+In-Reply-To: <6922644A-352E-42C1-8F6A-88FC4F01E04E@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Gal Rosen <galr@storwize.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: "dougg@torque.net" <dougg@torque.net>, Linux-Scsi <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>
 
+On Thu, 31 Jul 2008 11:49:09 -0400
+Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
 
+> Sounds like a compliance issue, this is solely at the Firmware's  
+> discretion :-(
 
-James Bottomley wrote:
-> On Thu, 2008-07-31 at 14:48 +0300, Gal Rosen wrote:
->> On Thu, 2008-07-31 at 10:34 +0200, Stefan Richter wrote:
->>> Gal Rosen wrote:
->>>> I will try to make my question more clear.
->>>> I would like to put a box between the client and the storage, and to be
->>>> fully transparent against the host. All changes on the storage
->>>> (add/remove/extend devices) should be present automatically to the
->>>> client. In a direct connection between client and storage the
->>>> administrator will coordinate between the client and storage before
->>>> making any changes, in my configuration I do not want to add
->>>> administration work on my box that stands between the client and the
->>>> storage.
->>>> Addition is simple, the application on my box can once in a while scan
->>>> the SCSI BUS, and then the Linux system will create new sg devices.
->>>> In removal of a device the Linux system will not remove sg devices after
->>>> scan. In that case again I can do it from my application, such when I
->>>> get attention on SCSI command, I can decide to remove the device by
->>>> echoing to the /sys file system.
->>> I really don't know how the FibreChannel drivers handle device removal.
->>> But from what I gather from the documentation of
->>> fc_remote_port_delete(), which the qla2xxx drivers use, the /dev/sg
->>> devices should automatically disappear
->>>   - after a connection loss timeout,
->>>   - provided that userspace doesn't have the device file opened
->>>     (among else this is manifest in the kernel in a reference count of
->>>     the logical unit device representation),
->>>   - provided that you manage your device files with udev.
->>>
->>> http://lxr.linux.no/linux+v2.6.26/drivers/scsi/scsi_transport_fc.c#L2756
->>>
->> This is true; when the remote port is no longer exists, after timeout
->> all the sg devices will disappear, but what if I am changing the
->> configuration in the disk array, and remove only one logical device.
->> There will not be any event for that. The hotplug implementation in the
->> SCSI today creates events of add/remove when adding/removing HBA, or
->> when the FC link go down and up again, but not for additional and
->> removal of devices. In the linux documentation in scsi_mid_low_api.txt
->> it is written that "The hotplug concept may be extended to SCSI
->> devices". I guess that nobody implemented it because what you said
->> previously in this thread that someone could hold reference to the
->> device.
+I suspected as much. It's a bit frustrating.
+
+> It is somewhat clear you are communicating to the physical component,  
+> but be aware that the logical (array) does NOT respond to SMART, only  
+> the physical components. Looks like you need to take this up with Dell.
+
+Do you mean that it looks like I get through to the firmware's interface, but that it does not forward my request to the physical device?
+
+Yes, either I get through to Dell (though they seem reluctant to talk to people without service tags) or I will have to live with not knowing whether the disks risk running too hot or not, I suppose. We'll see what happens.
+
+Thanks for your help! (All of you.)
+
+/Sam
+
 > 
-> Oh ... you're not really talking about hotplug, which is why everyone is
-> confused.  Hotplug is when you add or remove something from the bus.
-> What you've done is reconfigure the array.
+> Sincerely -- Mark Salyzyn
 > 
-> Most of the hotplug we do depends on the transport model (because what's
-> on the transport is changing).  Array reconfiguration has no hotplug
-> event because SAM-3 has no real way of passing the information
-> asynchronously.  The best it can do is Unit Attention/reported luns data
-> has changed (asc=0x3f/ascq=0xe) on the next command.
+> On Jul 31, 2008, at 11:27 AM, Martin Samuelsson wrote:
 > 
-> The problem is that there's no way to process the event correctly even
-> when we get it.  All we can do is issue another report LUNS command and
-> compare.  However, just because it looks like a single LUN disappeared
-> doesn't mean the others weren't permuted or altered in some way (which
-> data we cannot get).
-
-But why don't do what's possible to do and for what there is complete 
-information: add new LUN for new LUN and delete deleted LUN for reported 
-luns data has changed UA? As well as get new capacity for a LU on 
-capacity data has changed UA after, e.g., new space added to it?
-
-Vlad
-
+> > On Thu, 31 Jul 2008 10:47:33 -0400
+> > Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
+> >
+> >> On Jul 31, 2008, at 10:05 AM, Douglas Gilbert wrote:
+> >>
+> >>> Mark Salyzyn wrote:
+> >>>> aacraid driver is not the emulation. The Firmware itself has a SAT
+> >>>> 0.9
+> >>>> translation layer to the raw SATA drives at the physical transport,
+> >>>> the
+> >>>> Firmware then deals with all the targets as SCSI representations.
+> >>>
+> >>> Mark,
+> >>> Is that SAT interface at the physical transport accessible
+> >>> to something like smartmontools?
+> >>
+> >> YES, that is the whole reason we added the physical access via /dev/
+> >> sg* in the driver!!!
+> >>
+> >> You may have to do a '-d ata', the patch to smartmontools to automate
+> >> this for SATA devices was not approved by Adaptec. SAS drives work.
+> >
+> > Does that mean that
+> >
+> > [root@disk ~]# smartctl -a -d ata /dev/sg1
+> >
+> > should return something nicer than
+> >
+> > ====
+> > smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6  
+> > Bruce Allen
+> > Home page is http://smartmontools.sourceforge.net/
+> >
+> > Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
+> >
+> > A mandatory SMART command failed: exiting. To continue, add one or  
+> > more '-T permissive' options.
+> > ====
+> > ?
+> >
+> > Without it, I at least get the drive name:
+> >
+> > ====
+> > [root@disk ~]# smartctl -a /dev/sg1
+> > smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6  
+> > Bruce Allen
+> > Home page is http://smartmontools.sourceforge.net/
+> >
+> > Device: WDC      WD3200KS-00PFB0  Version: 21.0
+> >>> Terminate command early due to bad response to IEC mode page
+> > A mandatory SMART command failed: exiting. To continue, add one or  
+> > more '-T permissive' options.
+> > ====
+> >
+> > The responses are identical for /dev/sdb, by the way. And two  
+> > permissives state that SMART ENABLE failed in the former case, and  
+> > that the response to IEC mode page was bad.
+> >
+> > I got what seems to be Dell's latest firmware for the card
+> >
+> > http://support.us.dell.com/support/downloads/format.aspx?releaseid=R155588&c=us&l=en&cs=&s=gen
+> >
+> > (for the CERC SATA 1.5/6ch card, which should be the same), but it  
+> > didn't like the card.
+> >
+> > AFA0> controller details
+> > Executing: controller details
+> > Controller Information
+> > ----------------------
+> >         Remote Computer: .
+> >             Device Name: AFA0
+> >         Controller Type: Adaptec 2610SA
+> >             Access Mode: READ-WRITE
+> > Controller Serial Number: Last Six Digits = C31E83
+> >      Number of Channels: 1
+> >     Devices per Channel: 15
+> > Controller Physical Slot: 2
+> >          Controller CPU: i960 series
+> >    Controller CPU Speed: 100 Mhz
+> >       Controller Memory: 64 Mbytes
+> >           Battery State: Not Present
+> >
+> > Component Revisions
+> > -------------------
+> >                CLI: 4.1-0 (Build #7420)
+> >                API: 4.1-0 (Build #7420)
+> >    Miniport Driver: 1.1-5 (Build #2453)
+> > Controller Software: 4.2-1 (Build #9304)
+> >    Controller BIOS: 4.2-1 (Build #9304)
+> > Controller Firmware: (Build #9304)
+> >
+> > Regards,
+> > /Sam
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
