@@ -1,79 +1,88 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
-Date: Thu, 31 Jul 2008 21:41:46 +0400
-Message-ID: <4891F95A.9070409@vlnb.net>
-References: <488E02DE.5080100@vlnb.net> <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux> <489181C4.70003@vlnb.net> <20080731160251.GB76172@plap4-2.local>
+From: James.Smart@Emulex.Com
+Subject: RE: SCSI device rescan, detection of disconnected device, or	switched devices.
+Date: Thu, 31 Jul 2008 13:46:20 -0400
+Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7F549@xbl3.ma.emulex.com>
+References: <1217248348.4133.51.camel@galr-linux>	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux> <4891792C.6020304@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:44261 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751337AbYGaRmE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:42:04 -0400
-In-Reply-To: <20080731160251.GB76172@plap4-2.local>
+Received: from emulex.emulex.com ([138.239.112.1]:45309 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752410AbYGaRqj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 13:46:39 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-driver@qlogic.com, Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: stefanr@s5r6.in-berlin.de, galr@storwize.com
+Cc: linux-scsi@vger.kernel.org
 
+Stefan,
 
-Andrew Vasquez wrote:
-> On Thu, 31 Jul 2008, Vladislav Bolkhovitin wrote:
+You summed it up pretty well...
+
+-- james s 
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Stefan Richter
+> Sent: Thursday, July 31, 2008 4:35 AM
+> To: Gal Rosen
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: SCSI device rescan, detection of disconnected 
+> device, or switched devices.
 > 
->> Gal Rosen wrote:
->>> Andrew,
->>>
->>> Add checking of the flag online still does not answer the race that Vlad
->>> stated before,
->> Yes, that's true.
->>
->> And, since ha->flags.online set to 0 not only on shutdown, I'm afraid you 
->> could introduce a new set of subtle bugs, if not for the moment, but in the 
->> future, because with your patch it gets impossible to wake up the DPC 
->> thread if HA is offline.
+> Gal Rosen wrote:
+> > I will try to make my question more clear.
+> > I would like to put a box between the client and the 
+> storage, and to be
+> > fully transparent against the host. All changes on the storage
+> > (add/remove/extend devices) should be present automatically to the
+> > client. In a direct connection between client and storage the
+> > administrator will coordinate between the client and storage before
+> > making any changes, in my configuration I do not want to add
+> > administration work on my box that stands between the client and the
+> > storage.
+> > Addition is simple, the application on my box can once in a 
+> while scan
+> > the SCSI BUS, and then the Linux system will create new sg devices.
+> > In removal of a device the Linux system will not remove sg 
+> devices after
+> > scan. In that case again I can do it from my application, 
+> such when I
+> > get attention on SCSI command, I can decide to remove the device by
+> > echoing to the /sys file system.
 > 
-> You are both missing a subtle point, it's incidental if
-> qla2xxx_wake_dpc() misses a 'wake-up' due the HBA being 'offline', as
-> the qla2x00_timer(), woken up every second, will do the wake-up if
-> necessary. The code changes offered, close the window as tightly as
-> possible without introducing needlessly complex changes.  All this
-> infrastructure is legacy constucts from a time long-before work-queues
-> and the like.
+> I really don't know how the FibreChannel drivers handle 
+> device removal.
+> But from what I gather from the documentation of
+> fc_remote_port_delete(), which the qla2xxx drivers use, the /dev/sg
+> devices should automatically disappear
+>   - after a connection loss timeout,
+>   - provided that userspace doesn't have the device file opened
+>     (among else this is manifest in the kernel in a reference count of
+>     the logical unit device representation),
+>   - provided that you manage your device files with udev.
 > 
-> This area is one of several where we are moving to clean-up and
-> modernize in our upstream offering:
+> http://lxr.linux.no/linux+v2.6.26/drivers/scsi/scsi_transport_
+> fc.c#L2756
 > 
-> * dropping the heavy DPC thread in favor of work-queues.
-> * using proper life-cycle and reference-handling of fcport objects
->   (yes, the objects will be freed after use).
-> * refactoring the HA respresentations for physical and virtual ports,
->   the current memcpy() physical-HA to vport-HA and slight-mods is
->   error-prone and doesn't scale.
-> * drop the illogical single physical-HA maintains all fcports across
->   N-vports.
-
-Nice to hear that!
-
-> The changes above are large (170k diffs so far), and at this point are
-> being run-through our testing.  The hope is to get the changes
-> upstream during one of the next two merge windows.
+> That would be basically just like SCSI device files are created and
+> destroyed on the fly for USB or FireWire devices for example.  Except
+> that FC has the additional configurable connection loss timeout which
+> hides temporary connection losses from applications.
 > 
-> Given the infrustructure mods and our focus on that front, if there's
-> something small and contained you can offer above what I've proposed
-> we'll be interested in reviewing any patches you'd push forward.
-
-Then, I believe, my patch should go in as a temporal measure. I don't 
-think we should crash users for 2 more major releases. The same is true 
-for my other patch "Proposed protection of fcports field of struct 
-scsi_qla_host" as well, because without it there should be no big 
-problems to crash the driver via sysfs.
-
-> Regards,
-> Andrew Vasquez
+> (However, better wait for an answer of somebody who actually 
+> uses FC or
+> knows the drivers.  I only have experience with FireWire.)
+> -- 
+> Stefan Richter
+> -=====-==--- -=== =====
+> http://arcgraph.de/sr/
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
