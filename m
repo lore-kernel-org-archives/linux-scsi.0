@@ -1,48 +1,38 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/3] move cmd_filter from gendisk to request_queue
-Date: Thu, 31 Jul 2008 14:13:51 +0900
-Message-ID: <20080731141345M.fujita.tomonori@lab.ntt.co.jp>
-References: <1217063005-25083-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1217063005-25083-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<4890CACE.8010407@redhat.com>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Thu, 31 Jul 2008 09:12:23 +0300
+Message-ID: <1217484743.25491.7.camel@galr-linux>
+References: <488E02DE.5080100@vlnb.net>
+	 <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39488 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbYGaFO1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 01:14:27 -0400
-In-Reply-To: <4890CACE.8010407@redhat.com>
+Received: from mail.storwize.com ([62.90.10.208]:52065 "EHLO swdc2.storwiz.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752570AbYGaGMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 02:12:38 -0400
+In-Reply-To: <488E0C78.80205@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pjones@redhat.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, dan.j.williams@intel.com, adel.gadllah@gmail.com, viro@ZenIV.linux.org.uk, dougg@torque.net, matthew@wil.cx
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-On Wed, 30 Jul 2008 16:10:54 -0400
-Peter Jones <pjones@redhat.com> wrote:
+Andrew,
 
-> FUJITA Tomonori wrote:
+Add checking of the flag online still does not answer the race that Vlad
+stated before, unless you thought about another way without lock to
+protect this thread.
+
+> Nope, taking only one that hunk from this patch isn't sufficient.
+> Around 
+> dpc_thread there is pretty simple and classical race. You can't do
 > 
-> > diff --git a/block/bsg.c b/block/bsg.c
-> > index 5a68b09..6c5c6f3 100644
-> > --- a/block/bsg.c
-> > +++ b/block/bsg.c
-> ...
-> > @@ -87,6 +85,7 @@ struct bsg_command {
-> >  	int err;
-> >  	struct sg_io_v4 hdr;
-> >  	char sense[SCSI_SENSE_BUFFERSIZE];
-> > +	int has_write_perm;
-> >  };
-> >  
-> >  static void bsg_free_command(struct bsg_command *bc)
+> if (x != NULL)
+> y = *x;
 > 
-> Why is this added?  It never seems to be used.
+> without any protection, if x can be set to NULL by another thread. It 
+> can happen exactly between "if" and "*x" and hence lead to a crash,
+> correct?
 
-Oops, I just forgot to remove it. Thanks.
-
-I've updated a fixed version of the patchset:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git cmdfilter
-
+Gal.
