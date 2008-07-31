@@ -1,28 +1,57 @@
-From: Martin Samuelsson <sam@home.se>
-Subject: aacraid and S.M.A.R.T
-Date: Wed, 30 Jul 2008 23:54:50 +0200
-Message-ID: <20080730235450.0fcc21a6.sam@home.se>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Wed, 30 Jul 2008 18:24:05 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD334032EC7F5@maui.asicdesigners.com>
+References: <200807300019.m6U0JkdY012558@localhost.localdomain> <4890C287.60508@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from proxy2.bredband.net ([195.54.101.72]:64675 "EHLO
-	proxy2.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670AbYG3WPI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 18:15:08 -0400
-Received: from ironport.bredband.com (195.54.101.120) by proxy2.bredband.net (7.3.127)
-        id 481183330187B1E3 for linux-scsi@vger.kernel.org; Wed, 30 Jul 2008 23:54:52 +0200
+Received: from stargate.chelsio.com ([12.22.49.110]:12823 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753511AbYGaB0F convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jul 2008 21:26:05 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, Steve Wise <swise@opengridcomputing.com>, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Divy Le Ray <divy@chelsio.com>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello list,
+>Comments:
+>
+>* SCSI drivers should be submitted via the linux-scsi@vger.kernel.org 
+>mailing list.
 
-I have an old Adaptec 2610SA SATA RAID controller with six disks. As I'm a bit curious, I'd like to know, for example, the temperature they report. (afacli can't report those, and I suspect aaccli can't either) It seemed utterly impossible until I saw the expose_physicals module option, but after switching that on, I can at least see traces of the individual disks.
+Will do that. Thanks.
 
-If I understand it correctly, aacraid provides an emulation layer between what I see and the physical disks, passing known commands and responses back and forth. However, S.M.A.R.T commands doesn't seem to be among those known ones, is that correct?
+>
+>* The driver is clean and readable, well done
+>
+>* From a networking standpoint, our main concern becomes how this 
+>interacts with the networking stack.  In particular, I'm concerned
+based 
+>on reading the source that this driver uses "TCP port stealing" rather 
+>than using a totally separate MAC address (and IP).
+>
+>Stealing a TCP port on an IP/interface already assigned is a common 
+>solution in this space, but also a flawed one.  Precisely because the 
+>kernel and applications are unaware of this "special, magic TCP port" 
+>you open the potential for application problems that are very difficult
 
-I'm running CentOS 5 with kernel 2.6.18, which is kind of old. Would running a spanking new kernel make me happier and support reading the temperature from the individual disks?
+>for an admin to diagnose based on observed behavior.
 
-Regards,
-/Sam
+The collisions between the host stack and iSCSI offload are unlikely
+because the iSCSI target server's port is unique (nailed down as 3260).
+If an offload card is plugged in, all iSCSI connections to a given
+target (i.e., destination/port) are offloaded. There is precedence for
+this approach such as RDMA/iWarp.
+
+>
+>So, additional information on your TCP port usage would be greatly 
+>appreciated.  Also, how does this interact with IPv6?  Clearly it 
+>interacts with IPv4...
+
+Currently, IPv6 connection request will not be honored, I will make sure
+the checking is added in the resubmission.
+
