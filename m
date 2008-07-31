@@ -1,65 +1,72 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH][SCSI] hptiop: add more PCI device IDs
-Date: Thu, 31 Jul 2008 09:50:50 -0700
-Message-ID: <20080731165050.GC10422@kroah.com>
-References: <200807251329.24263.linux@highpoint-tech.com> <20080729003419.1b754608.akpm@linux-foundation.org> <488ECC3D.9010502@highpoint-tech.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/2] scsi:netlink support in scsi and fc transports for
+ hba	specific messages
+Date: Thu, 31 Jul 2008 14:56:36 -0500
+Message-ID: <489218F4.8020203@cs.wisc.edu>
+References: <1217454832.25166.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:49808 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758338AbYGaTli (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 15:41:38 -0400
-Content-Disposition: inline
-In-Reply-To: <488ECC3D.9010502@highpoint-tech.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44790 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753082AbYGaT47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 15:56:59 -0400
+In-Reply-To: <1217454832.25166.22.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, stable@kernel.org, linux-scsi@vger.kernel.org
+To: David Somayajulu <david.somayajulu@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Wagner <david.wagner@qlogic.com>
 
-On Tue, Jul 29, 2008 at 03:52:29PM +0800, HighPoint Linux Team wrote:
-> At 2008/7/29 15:34, Andrew Morton wrote:
-> > On Fri, 25 Jul 2008 13:29:24 +0800 HighPoint Linux Team <linux@highpoint-tech.com> wrote:
-> >
-> >   
-> >> Add PCI device ID for new adapter models.
-> >>
-> >> Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
-> >> ---
-> >>
-> >>  drivers/scsi/hptiop.c |    7 +++++++
-> >>  1 file changed, 7 insertions(+)
-> >>
-> >> diff -purN linux-2.6.26-rc8/drivers/scsi/hptiop.c linux-2.6.26-rc8-hpt/drivers/scsi/hptiop.c
-> >> --- linux-2.6.26-rc8/drivers/scsi/hptiop.c	2008-06-25 09:58:20.000000000 +0800
-> >> +++ linux-2.6.26-rc8-hpt/drivers/scsi/hptiop.c	2008-07-24 15:09:50.000000000 +0800
-> >> @@ -1249,6 +1249,13 @@ static struct pci_device_id hptiop_id_ta
-> >>  	{ PCI_VDEVICE(TTI, 0x3522), (kernel_ulong_t)&hptiop_itl_ops },
-> >>  	{ PCI_VDEVICE(TTI, 0x3410), (kernel_ulong_t)&hptiop_itl_ops },
-> >>  	{ PCI_VDEVICE(TTI, 0x3540), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x3530), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x3560), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x4322), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x4210), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x4211), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x4310), (kernel_ulong_t)&hptiop_itl_ops },
-> >> +	{ PCI_VDEVICE(TTI, 0x4311), (kernel_ulong_t)&hptiop_itl_ops },
-> >>  	{ PCI_VDEVICE(TTI, 0x3120), (kernel_ulong_t)&hptiop_mv_ops },
-> >>  	{ PCI_VDEVICE(TTI, 0x3122), (kernel_ulong_t)&hptiop_mv_ops },
-> >>  	{ PCI_VDEVICE(TTI, 0x3020), (kernel_ulong_t)&hptiop_mv_ops },
-> >>     
-> >
-> > I assume that this patch makes new devices work, whereas they do not
-> > work correctly in unpatched kernels, yes?
-> >
-> > If so, then this patch should be backported into 2.6.25.x and 2.6.26.x.
-> > Users of these kernels would presumably like their devices to work.
-> >   
-> Yes, this patch should also be backported to 2.6.25.x and 2.6.26.x.
+David Somayajulu wrote:
+> This patch adds support to the scsi transport layer for passing hba specific netlink messages to a low level driver. Also support is added to the fc transport, to enable an FC hba driver to post netlink message to a specific user process.
+> 
+> Signed-off-by: David C Somayajulu <david.somayajulu@qlogic.com>
+> ---
+>  drivers/scsi/scsi_netlink.c      |   13 +++++++
+>  drivers/scsi/scsi_transport_fc.c |   72 ++++++++++++++++++++++++++++++++++++++
+>  include/scsi/scsi_host.h         |    6 +++
+>  include/scsi/scsi_netlink.h      |    3 +-
+>  include/scsi/scsi_transport_fc.h |    2 +
+>  5 files changed, 95 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_netlink.c b/drivers/scsi/scsi_netlink.c
+> index ae7ed9a..3bc85c9 100644
+> --- a/drivers/scsi/scsi_netlink.c
+> +++ b/drivers/scsi/scsi_netlink.c
+> @@ -24,6 +24,7 @@
+>  #include <net/sock.h>
+>  #include <net/netlink.h>
+>  
+> +#include <scsi/scsi_host.h>
+>  #include <scsi/scsi_netlink.h>
+>  #include "scsi_priv.h"
+>  
+> @@ -47,6 +48,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+>  	struct scsi_nl_hdr *hdr;
+>  	uint32_t rlen;
+>  	int err;
+> +	struct Scsi_Host *shost;
+>  
+>  	while (skb->len >= NLMSG_SPACE(0)) {
+>  		err = 0;
+> @@ -89,6 +91,17 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+>  		/*
+>  		 * We currently don't support anyone sending us a message
+>  		 */
+> +		if (hdr->msgtype == SCSI_NL_HOST_PRIVATE) {
+> +			shost = scsi_host_lookup(hdr->host_no);
+> +			if (!shost) {
+> +				printk(KERN_ERR "%s: scsi_host_lookup failed "
+> +					"host no %u\n", __FUNCTION__, hdr->host_no);
+> +			} else if (shost->hostt->netlink_rcv_msg) {
+> +				err = shost->hostt->netlink_rcv_msg(shost,
+> +					(void *)((char *)hdr+sizeof(*hdr)),
+> +					hdr->msglen, NETLINK_CREDS(skb)->pid);
+> +			}
+> +		}
 
-What is the git commit id for this patch in Linus's tree?  I couldn't
-find it when I last looked.
+Finally getting this done :) Thanks!
 
-thanks,
-
-greg k-h
+If shost is not null you need to do a scsi_host_put hen you are done 
+with the host.
