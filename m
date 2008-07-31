@@ -1,88 +1,89 @@
-From: James.Smart@Emulex.Com
-Subject: RE: SCSI device rescan, detection of disconnected device, or	switched devices.
-Date: Thu, 31 Jul 2008 13:46:20 -0400
-Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7F549@xbl3.ma.emulex.com>
-References: <1217248348.4133.51.camel@galr-linux>	 <488DC55C.2050603@s5r6.in-berlin.de> <1217487434.25491.34.camel@galr-linux> <4891792C.6020304@s5r6.in-berlin.de>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 11194] New: megraid_mbox kernel panic during
+ st driver initialization
+Date: Thu, 31 Jul 2008 10:48:10 -0700
+Message-ID: <20080731104810.9e18c749.akpm@linux-foundation.org>
+References: <bug-11194-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:45309 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410AbYGaRqj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 13:46:39 -0400
-content-class: urn:content-classes:message
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34758 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752672AbYGaRsW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2008 13:48:22 -0400
+In-Reply-To: <bug-11194-10286@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stefanr@s5r6.in-berlin.de, galr@storwize.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, cshore@fionavar.ca, megaraidlinux@lsi.com
 
-Stefan,
 
-You summed it up pretty well...
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
--- james s 
+This bugzilla report appears to not have been sent out to the scsi list.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Stefan Richter
-> Sent: Thursday, July 31, 2008 4:35 AM
-> To: Gal Rosen
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: SCSI device rescan, detection of disconnected 
-> device, or switched devices.
+On Thu, 31 Jul 2008 07:15:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=11194
 > 
-> Gal Rosen wrote:
-> > I will try to make my question more clear.
-> > I would like to put a box between the client and the 
-> storage, and to be
-> > fully transparent against the host. All changes on the storage
-> > (add/remove/extend devices) should be present automatically to the
-> > client. In a direct connection between client and storage the
-> > administrator will coordinate between the client and storage before
-> > making any changes, in my configuration I do not want to add
-> > administration work on my box that stands between the client and the
-> > storage.
-> > Addition is simple, the application on my box can once in a 
-> while scan
-> > the SCSI BUS, and then the Linux system will create new sg devices.
-> > In removal of a device the Linux system will not remove sg 
-> devices after
-> > scan. In that case again I can do it from my application, 
-> such when I
-> > get attention on SCSI command, I can decide to remove the device by
-> > echoing to the /sys file system.
+>            Summary: megraid_mbox kernel panic during st driver
+>                     initialization
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.25
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: SCSI
+>         AssignedTo: linux-scsi@vger.kernel.org
+>         ReportedBy: cshore@fionavar.ca
 > 
-> I really don't know how the FibreChannel drivers handle 
-> device removal.
-> But from what I gather from the documentation of
-> fc_remote_port_delete(), which the qla2xxx drivers use, the /dev/sg
-> devices should automatically disappear
->   - after a connection loss timeout,
->   - provided that userspace doesn't have the device file opened
->     (among else this is manifest in the kernel in a reference count of
->     the logical unit device representation),
->   - provided that you manage your device files with udev.
 > 
-> http://lxr.linux.no/linux+v2.6.26/drivers/scsi/scsi_transport_
-> fc.c#L2756
+> Latest working kernel version: 2.6.24
 > 
-> That would be basically just like SCSI device files are created and
-> destroyed on the fly for USB or FireWire devices for example.  Except
-> that FC has the additional configurable connection loss timeout which
-> hides temporary connection losses from applications.
+> Earliest failing kernel version: 2.6.26
+
+The kernel versions are ambiguous.
+
+Which is the earliest failing kernel version?
+
+> Distribution: Debian Lenny (-testing + -unstable + kernel trunk for debian)
 > 
-> (However, better wait for an answer of somebody who actually 
-> uses FC or
-> knows the drivers.  I only have experience with FireWire.)
-> -- 
-> Stefan Richter
-> -=====-==--- -=== =====
-> http://arcgraph.de/sr/
-> --
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hardware Environment: ASUS P4B 2.0 GHz P4 Motherboard, Dell PERC3/DC (like AMI
+> MegraRAID Elite 1600) LVD Ultra3 SCSI Adaptor with four 80 GB drives on Channel
+> 0 and a SCSI-U2 Seagate DDS-4 tape drive on Channel 1
+> Software Environment:  Debian Lenny (up-to-date), with some unstable and tested
+> with the testing kernel (.25) and the trunk kernel (.26)
 > 
+> Problem Description: The kernel panics (claiming it's in the megaraid_mbox
+> driver) during boot when the st driver would normally report 
+> 
+> st0: Block limits 1 - 16777215 bytes.
+> 
+> This is after the logical disk has been found and all filesystems mounted, so
+> the RAID part of the driver is probably fine.
+> 
+> 
+> The point at which 
+> 
+> st 0:1:6:0: Attached scsi tape st0
+> st 0:1:6:0: st0: try direct i/o: yes (alignment 512 B)
+> 
+> appears with .24 is passed before the panic, but I haven't actually seen those
+> messages as they scroll by too quickly.
+> 
+> Steps to reproduce:
+> 
+> 1) Install debian lenny with a .24 kernel (I'm not sure how you would do that
+> now that .24 is no longer the testing kernel); maybe beta2 would still let you.
+> 2) Install -testing kernel (.25)
+> 3) Attempt to boot using the new kernel
+> 4) Kernel panics, system is unusable
+> 
+
