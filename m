@@ -1,40 +1,77 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 0/3] cmd_filter fixes
-Date: Thu, 31 Jul 2008 07:04:22 -0600
-Message-ID: <20080731130422.GC30534@parisc-linux.org>
-References: <6cf6b73e0807301259s309f6332wef74d2ac5bafe691@mail.gmail.com> <20080731135521N.fujita.tomonori@lab.ntt.co.jp> <20080731071851.GA30534@parisc-linux.org> <20080731162449X.fujita.tomonori@lab.ntt.co.jp>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: aacraid and S.M.A.R.T
+Date: Thu, 31 Jul 2008 10:05:18 -0400
+Message-ID: <4891C69E.9000106@torque.net>
+References: <20080730235450.0fcc21a6.sam@home.se> <EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41709 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbYGaNEY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 09:04:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20080731162449X.fujita.tomonori@lab.ntt.co.jp>
+Received: from elrond2.infotech.no ([82.134.31.41]:40619 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751387AbYGaOFb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 10:05:31 -0400
+In-Reply-To: <EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: adel.gadllah@gmail.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
+To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+Cc: Martin Samuelsson <sam@home.se>, Linux-Scsi <linux-scsi@vger.kernel.org>, AACRAID <aacraid@adaptec.com>
 
-On Thu, Jul 31, 2008 at 04:24:54PM +0900, FUJITA Tomonori wrote:
-> > We need to be able to delete as well as add.
+Mark Salyzyn wrote:
+> aacraid driver is not the emulation. The Firmware itself has a SAT 0.9 
+> translation layer to the raw SATA drives at the physical transport, the 
+> Firmware then deals with all the targets as SCSI representations.
+
+Mark,
+Is that SAT interface at the physical transport accessible
+to something like smartmontools?
+
+"SAT 0.9 transport layer" does not correspond to any t10 numbering.
+Is the "0.9" meant to imply that the implementation is just
+shy of compliance to the SAT-1 standard? [Perhaps a version
+descriptor in the INQUIRY response answers my question.]
+
+Doug Gilbert
+
+
+> SMART was supposed to be emulated, but on that old card it was never 
+> tested ... make sure you have the latest Firmware on the card just in 
+> case something got fixed ...
 > 
-> Yeah, I thought about adding a new file such as read_table_off.
+> Sincerely -- Mark Salyzyn
+> 
+> On Jul 30, 2008, at 5:54 PM, Martin Samuelsson wrote:
+> 
+>> Hello list,
+>>
+>> I have an old Adaptec 2610SA SATA RAID controller with six disks. As 
+>> I'm a bit curious, I'd like to know, for example, the temperature they 
+>> report. (afacli can't report those, and I suspect aaccli can't either) 
+>> It seemed utterly impossible until I saw the expose_physicals module 
+>> option, but after switching that on, I can at least see traces of the 
+>> individual disks.
+>>
+>> If I understand it correctly, aacraid provides an emulation layer 
+>> between what I see and the physical disks, passing known commands and 
+>> responses back and forth. However, S.M.A.R.T commands doesn't seem to 
+>> be among those known ones, is that correct?
+>>
+>> I'm running CentOS 5 with kernel 2.6.18, which is kind of old. Would 
+>> running a spanking new kernel make me happier and support reading the 
+>> temperature from the individual disks?
+>>
+>> Regards,
+>> /Sam
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Three files seems excessive.  Plus the +/- notation lets you do:
-
-echo -- +0x02 +0x03 -0x08
-
-atomically.  I don't know if that's an important feature to have.
-
-> Looks another potential option though I prefer "-0x03" than "-03" as I
-> said in the previous mail.
-
-Makes sense.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
