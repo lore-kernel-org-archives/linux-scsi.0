@@ -1,102 +1,123 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
-Date: Thu, 31 Jul 2008 10:48:22 -0700 (PDT)
-Message-ID: <20080731174822.9672F108035@picon.linux-foundation.org>
-References: <bug-11194-11613@http.bugzilla.kernel.org/>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: aacraid and S.M.A.R.T
+Date: Thu, 31 Jul 2008 13:51:31 -0400
+Message-ID: <4891FBA3.50703@torque.net>
+References: <20080730235450.0fcc21a6.sam@home.se>	<EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com>	<4891C69E.9000106@torque.net>	<4F4EA7EA-60E1-4CDC-B03F-7FC2AD9980A7@adaptec.com> <20080731172715.0c37f999.sam@home.se>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42208 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753143AbYGaRsn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:48:43 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6VHmMuY009779
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2008 10:48:23 -0700
-In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
+Received: from elrond2.infotech.no ([82.134.31.41]:36741 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779AbYGaRvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 13:51:39 -0400
+In-Reply-To: <20080731172715.0c37f999.sam@home.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Martin Samuelsson <sam@home.se>
+Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, Linux-Scsi <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11194
-
-
-
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-07-31 10:48 -------
-Reply-To: akpm@linux-foundation.org
-
-
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
-
-This bugzilla report appears to not have been sent out to the scsi list.
-
-On Thu, 31 Jul 2008 07:15:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
-wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=11194
+Martin Samuelsson wrote:
+> On Thu, 31 Jul 2008 10:47:33 -0400
+> Mark Salyzyn <Mark_Salyzyn@adaptec.com> wrote:
 > 
->            Summary: megraid_mbox kernel panic during st driver
->                     initialization
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.25
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: cshore@fionavar.ca
+>> On Jul 31, 2008, at 10:05 AM, Douglas Gilbert wrote:
+>>
+>>> Mark Salyzyn wrote:
+>>>> aacraid driver is not the emulation. The Firmware itself has a SAT  
+>>>> 0.9
+>>>> translation layer to the raw SATA drives at the physical transport,  
+>>>> the
+>>>> Firmware then deals with all the targets as SCSI representations.
+>>> Mark,
+>>> Is that SAT interface at the physical transport accessible
+>>> to something like smartmontools?
+>> YES, that is the whole reason we added the physical access via /dev/ 
+>> sg* in the driver!!!
+>>
+>> You may have to do a '-d ata', the patch to smartmontools to automate  
+>> this for SATA devices was not approved by Adaptec. SAS drives work.
 > 
+> Does that mean that
 > 
-> Latest working kernel version: 2.6.24
+> [root@disk ~]# smartctl -a -d ata /dev/sg1
 > 
-> Earliest failing kernel version: 2.6.26
+> should return something nicer than
+> 
+> ====
+> smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+> Home page is http://smartmontools.sourceforge.net/
 
-The kernel versions are ambiguous.
+Martin,
+I wouldn't use smartmontools version 5.36 . Could you try
+version 5.38?
 
-Which is the earliest failing kernel version?
+Also please don't use "-d ata" on the command line; either don't
+give a "-d <interface>" argument, or (if there are still problems)
+try "-d sat".
 
-> Distribution: Debian Lenny (-testing + -unstable + kernel trunk for debian)
-> 
-> Hardware Environment: ASUS P4B 2.0 GHz P4 Motherboard, Dell PERC3/DC (like AMI
-> MegraRAID Elite 1600) LVD Ultra3 SCSI Adaptor with four 80 GB drives on Channel
-> 0 and a SCSI-U2 Seagate DDS-4 tape drive on Channel 1
-> Software Environment:  Debian Lenny (up-to-date), with some unstable and tested
-> with the testing kernel (.25) and the trunk kernel (.26)
-> 
-> Problem Description: The kernel panics (claiming it's in the megaraid_mbox
-> driver) during boot when the st driver would normally report 
-> 
-> st0: Block limits 1 - 16777215 bytes.
-> 
-> This is after the logical disk has been found and all filesystems mounted, so
-> the RAID part of the driver is probably fine.
-> 
-> 
-> The point at which 
-> 
-> st 0:1:6:0: Attached scsi tape st0
-> st 0:1:6:0: st0: try direct i/o: yes (alignment 512 B)
-> 
-> appears with .24 is passed before the panic, but I haven't actually seen those
-> messages as they scroll by too quickly.
-> 
-> Steps to reproduce:
-> 
-> 1) Install debian lenny with a .24 kernel (I'm not sure how you would do that
-> now that .24 is no longer the testing kernel); maybe beta2 would still let you.
-> 2) Install -testing kernel (.25)
-> 3) Attempt to boot using the new kernel
-> 4) Kernel panics, system is unusable
-> 
+Doug Gilbert
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+> Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
+> 
+> A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
+> ====
+> ?
+> 
+> Without it, I at least get the drive name:
+> 
+> ====
+> [root@disk ~]# smartctl -a /dev/sg1
+> smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+> Home page is http://smartmontools.sourceforge.net/
+> 
+> Device: WDC      WD3200KS-00PFB0  Version: 21.0
+>>> Terminate command early due to bad response to IEC mode page
+> A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
+> ====
+> 
+> The responses are identical for /dev/sdb, by the way. And two permissives state that SMART ENABLE failed in the former case, and that the response to IEC mode page was bad.
+> 
+> I got what seems to be Dell's latest firmware for the card
+> 
+> http://support.us.dell.com/support/downloads/format.aspx?releaseid=R155588&c=us&l=en&cs=&s=gen
+> 
+> (for the CERC SATA 1.5/6ch card, which should be the same), but it didn't like the card.
+> 
+> AFA0> controller details
+> Executing: controller details
+> Controller Information
+> ----------------------
+>          Remote Computer: .
+>              Device Name: AFA0
+>          Controller Type: Adaptec 2610SA
+>              Access Mode: READ-WRITE
+> Controller Serial Number: Last Six Digits = C31E83
+>       Number of Channels: 1
+>      Devices per Channel: 15
+> Controller Physical Slot: 2
+>           Controller CPU: i960 series
+>     Controller CPU Speed: 100 Mhz
+>        Controller Memory: 64 Mbytes
+>            Battery State: Not Present
+> 
+> Component Revisions
+> -------------------
+>                 CLI: 4.1-0 (Build #7420)
+>                 API: 4.1-0 (Build #7420)
+>     Miniport Driver: 1.1-5 (Build #2453)
+> Controller Software: 4.2-1 (Build #9304)
+>     Controller BIOS: 4.2-1 (Build #9304)
+> Controller Firmware: (Build #9304)
+> 
+> Regards,
+> /Sam
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
