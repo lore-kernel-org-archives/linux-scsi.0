@@ -1,106 +1,58 @@
-From: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-Subject: Re: aacraid and S.M.A.R.T
-Date: Thu, 31 Jul 2008 10:47:33 -0400
-Message-ID: <4F4EA7EA-60E1-4CDC-B03F-7FC2AD9980A7@adaptec.com>
-References: <20080730235450.0fcc21a6.sam@home.se> <EC1C30B3-9ED0-4A8B-90FE-F4AB25FF5E7A@adaptec.com> <4891C69E.9000106@torque.net>
-Mime-Version: 1.0 (Apple Message framework v926)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
+Date: Thu, 31 Jul 2008 11:10:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0807311102550.4409-100000@iolanthe.rowland.org>
+References: <20080730155827.524f72d2.zaitcev@redhat.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:42882 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567AbYGaOri (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 10:47:38 -0400
-In-Reply-To: <4891C69E.9000106@torque.net>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36471 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751915AbYGaPKW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 11:10:22 -0400
+In-Reply-To: <20080730155827.524f72d2.zaitcev@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dougg@torque.net" <dougg@torque.net>
-Cc: Martin Samuelsson <sam@home.se>, Linux-Scsi <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>
+To: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matt Frost <artusemrys@sbcglobal.net>, linux-scsi <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Frost <artusemrys@yahoo.com>
 
-On Jul 31, 2008, at 10:05 AM, Douglas Gilbert wrote:
+On Wed, 30 Jul 2008, Pete Zaitcev wrote:
 
-> Mark Salyzyn wrote:
->> aacraid driver is not the emulation. The Firmware itself has a SAT  
->> 0.9
->> translation layer to the raw SATA drives at the physical transport,  
->> the
->> Firmware then deals with all the targets as SCSI representations.
->
-> Mark,
-> Is that SAT interface at the physical transport accessible
-> to something like smartmontools?
+> Perhaps I misunderstand how our SCSI stack works. The code in ub is
+> simpler, it deals with 3 values at the end of transfer:
+>   Lasked is how much we asked for
+>   Lgot   is how much was transferred
+>   Lresid is the reported residue
+> 
+> So, ub checks if the following is true:
+>   Lasked = Lgot + Lresid
+> 
+> If device fails this check, you can assume that it's just not set up
+> to report the residue correctly and so, the danger of valid residue
+> that you outlined becomes rather academic.
 
-YES, that is the whole reason we added the physical access via /dev/ 
-sg* in the driver!!!
+This algorithm is wrong.  See the description under Case (4) or (5) in 
+6.7.2 of the Bulk-Only spec:
 
-You may have to do a '-d ata', the patch to smartmontools to automate  
-this for SATA devices was not approved by Adaptec. SAS drives work.
+	The device may send fill data to pad up to a total of
+	dCBWDataTransferLength.
 
-> "SAT 0.9 transport layer" does not correspond to any t10 numbering.
-> Is the "0.9" meant to imply that the implementation is just
-> shy of compliance to the SAT-1 standard? [Perhaps a version
-> descriptor in the INQUIRY response answers my question.]
+So it's legal to have Lgot == Lasked and Lresid > 0.  There are devices 
+which really do this.
 
-Yes, officially shy of compliance ... but unofficially enhanced when  
-needed when compliance issues have come up (translation: 0.9+) in  
-Adaptec or OEM Q/A. The team responsible for the SAT layer was VERY  
-risk averse when it came to making any changes even when introducing a  
-new released card, so this level is true of old and new cards today.
+(It may seem pointless to add the padding.  However for reasons that 
+aren't clear, the spec requires the device to STALL the bulk-in 
+endpoint if the padding isn't present -- and many devices don't like to 
+STALL bulk endpoints.  Similar reasoning applies to the case of OUT 
+transfers.)
 
-> Doug Gilbert
+> The reason I do it this way is, I've seen a device which reported
+> a correct residue until the first long read, and then residue was
+> miscalculated due to a 16-bit wrap (it did transfer right data though).
+> I think it's one of those which are explicitly blacklisted these
+> days, but I cannot remember.
 
-Sincerely -- Mark Salyzyn
+I hope it's blacklisted!
 
-FYI, my last day of in-office employment with Adaptec is August 8, aacraid@adaptec.com 
-  for driver support will continue to be answered by the team (I may  
-continue at my discretion or at the hands of my new employer <shrug>)
-
->> SMART was supposed to be emulated, but on that old card it was never
->> tested ... make sure you have the latest Firmware on the card just in
->> case something got fixed ...
->>
->> Sincerely -- Mark Salyzyn
->>
->> On Jul 30, 2008, at 5:54 PM, Martin Samuelsson wrote:
->>
->>> Hello list,
->>>
->>> I have an old Adaptec 2610SA SATA RAID controller with six disks. As
->>> I'm a bit curious, I'd like to know, for example, the temperature  
->>> they
->>> report. (afacli can't report those, and I suspect aaccli can't  
->>> either)
->>> It seemed utterly impossible until I saw the expose_physicals module
->>> option, but after switching that on, I can at least see traces of  
->>> the
->>> individual disks.
->>>
->>> If I understand it correctly, aacraid provides an emulation layer
->>> between what I see and the physical disks, passing known commands  
->>> and
->>> responses back and forth. However, S.M.A.R.T commands doesn't seem  
->>> to
->>> be among those known ones, is that correct?
->>>
->>> I'm running CentOS 5 with kernel 2.6.18, which is kind of old. Would
->>> running a spanking new kernel make me happier and support reading  
->>> the
->>> temperature from the individual disks?
->>>
->>> Regards,
->>> /Sam
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux- 
->>> scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux- 
->> scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
+Alan Stern
 
