@@ -1,40 +1,67 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 2/4] scsi: megaraid_sas - Add the shutdown DCMD cmd to
- driver shutdown routine
-Date: Fri, 1 Aug 2008 10:48:48 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C31B080962@cosmail02.lsi.com>
-References: <1205741587.7479.17.camel@pcp021067pcs.se.lsil.com>
+From: David Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH 1/2] scsi:netlink support in scsi and fc transports for
+ hbaspecific messages
+Date: Fri, 01 Aug 2008 11:03:46 -0700
+Message-ID: <C4B89E12.1657%david.somayajulu@qlogic.com>
+References: <D1D4C3FF75F9354393DB8314DF43DEF2E7F57F@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:55150 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751724AbYHAQtg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2008 12:49:36 -0400
-In-Reply-To: <1205741587.7479.17.camel@pcp021067pcs.se.lsil.com>
-Content-Language: en-US
+Received: from avexch1.qlogic.com ([198.70.193.115]:53987 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbYHARzT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2008 13:55:19 -0400
+In-Reply-To: <D1D4C3FF75F9354393DB8314DF43DEF2E7F57F@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "poswald@novell.com" <poswald@novell.com>, "Austria, Winston" <Winston.Austria@lsi.com>
+To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+Cc: David Somayajulu <david.somayajulu@qlogic.com>
 
-Add the shutdown DCMD cmd to driver shutdown routine to make megaraid sas FW shutdown proper.
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
 
----
- drivers/scsi/megaraid/megaraid_sas.c |    1 +
- 1 files changed, 1 insertion(+)
 
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2008-07-31 12:51:06.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2008-07-31 12:54:09.000000000 -0400
-@@ -2863,6 +2863,7 @@ static void megasas_shutdown(struct pci_
- {
-        struct megasas_instance *instance = pci_get_drvdata(pdev);
-        megasas_flush_cache(instance);
-+       megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
- }
+On 7/31/08 5:35 PM, "James.Smart@Emulex.Com" <James.Smart@Emulex.Com> wrote:
 
- /**
+>  
+> 
+> David Somayajulu wrote:
+>>> I'm a little bothered that there's nothing that qualifies the driver
+>>> to the shost before invoking the LLDD handler (e.g. driver has a
+>>> signature, message header contains signature, and the two
+>> must match).
+>> The idea was to let the Low Level Driver validate the message
+>> contents -
+>> signature, etc.
+> 
+> But that's the point - if we have a common action and a common point,
+> lets
+> do it once. Why have all LLDs perform the same kind of thing but in
+> completely different manners ? And worse, what happens if one doesn't
+> validate ?  The check doesn't have to be extensive, and the LLD
+> can certainly do more checks.
+In that case is it o.k to have the first 4 bytes of the LLD payload (i.e.,
+following struct scsi_nl_hdr) define a signature. Let us also define the
+signature to be the first 4 bytes in shost->hostt->name. This we can still
+have some validation without much overhead.
+> 
+>> I would appreciate if you can explain your comment a bit more, if my
+>> reasoning below does not suffice. I have already provided a function
+>> "fc_host_post_vendor_event_to_pid() [in
+>> scsi_transport_fc.c]", which enables
+>> an LLD to post a message to a specific pid. This may be used
+>> by the LLD to
+>> send response messages to the pid, for command messages sent
+>> by the pid. 
+> 
+> it's not about sending...
+> 
+> What happens if the pid unexpectedly dies ? The event notices are an
+> easy way to find out that it died - thus releasing the "cached pid", or
+> terminating partial transactions, and not abusing the netlink socket
+> with data destined to a dead pid.
+Good point. I will add a check to make sure we have a live pid.
+Thanks
+David S. 
+
