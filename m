@@ -1,57 +1,76 @@
-From: Divy Le Ray <divy@chelsio.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Thu, 31 Jul 2008 17:51:59 -0700
-Message-ID: <200807311752.00911.divy@chelsio.com>
-References: <200807300019.m6U0JkdY012558@localhost.localdomain> <4890C287.60508@pobox.com> <aday73jxdfs.fsf@cisco.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH] qla2xxx: Fix dpc_thread race on the module unload
+Date: Fri, 01 Aug 2008 16:28:03 +0400
+Message-ID: <48930153.5090609@vlnb.net>
+References: <488E02DE.5080100@vlnb.net> <1217267776.3503.112.camel@localhost.localdomain> <488E0C78.80205@vlnb.net> <1217484743.25491.7.camel@galr-linux> <489181C4.70003@vlnb.net> <20080731160251.GB76172@plap4-2.local> <4891F95A.9070409@vlnb.net> <20080731175544.GB80258@elab5.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:4474 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425AbYHAAw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2008 20:52:29 -0400
-In-Reply-To: <aday73jxdfs.fsf@cisco.com>
-Content-Disposition: inline
+Received: from mail-relay-04.mailcluster.net ([77.221.130.216]:42624 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751371AbYHAM2Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2008 08:28:16 -0400
+In-Reply-To: <20080731175544.GB80258@elab5.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, Steve Wise <swise@opengridcomputing.com>, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com, Gal Rosen <galr@storwize.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-On Wednesday 30 July 2008 02:35:51 pm Roland Dreier wrote:
->  > * From a networking standpoint, our main concern becomes how this
->  > interacts with the networking stack.  In particular, I'm concerned
->  > based on reading the source that this driver uses "TCP port stealing"
->  > rather than using a totally separate MAC address (and IP).
->  >
->  > Stealing a TCP port on an IP/interface already assigned is a common
->  > solution in this space, but also a flawed one.  Precisely because the
->  > kernel and applications are unaware of this "special, magic TCP port"
->  > you open the potential for application problems that are very
->  > difficult for an admin to diagnose based on observed behavior.
->
-> That's true, but using a separate MAC and IP opens up a bunch of other
-> operational problems.  I don't think the right answer for iSCSI offload
-> is clear yet.
->
->  - R.
+Andrew Vasquez wrote:
+> On Thu, 31 Jul 2008, Vladislav Bolkhovitin wrote:
+> 
+>>> The changes above are large (170k diffs so far), and at this point are
+>>> being run-through our testing.  The hope is to get the changes
+>>> upstream during one of the next two merge windows.
+>>>
+>>> Given the infrustructure mods and our focus on that front, if there's
+>>> something small and contained you can offer above what I've proposed
+>>> we'll be interested in reviewing any patches you'd push forward.
+>> Then, I believe, my patch should go in as a temporal measure. I don't think 
+>> we should crash users for 2 more major releases.
+> 
+> So the 'online' check concerns you?  So, add an 'unloading' flag, set
+> it on remove_one(), save a copy of dpc_thread at qla2xxx_wake_dpc(),
+> then wake_up() saved value if not 'unloading'.  Of course the direct
+> wake_up() in request_acqusition should be modded to call
+> qla2xxx_wake_dpc().  We're not talking about some huge window here.
 
-Hi Jeff,
+My main concern is not about the 'online' flag, but about that your 
+patch doesn't fix the race, which it's intended to fix, because:
 
-We've considered the approach of having a separate IP/MAC addresses to manage
-iSCSI connections. In such a context, the stack would have to be unaware of
-this iSCSI specific IP address. The iSCSI driver would then have to implement
-at least its own ARP reply mechanism. DHCP too would have to be managed
-separately. Most network setting/monitoring tools would also be unavailable.
+1. It doesn't handle possibility of CPU to reorder commands. Hence, it 
+could be possible that other CPUs can see 'online' flag set to 0 *after* 
+dpc_thread set to NULL, despite in the code "ha->flags.online = 0" 
+precede "ha->dpc_thread = NULL". To address that the corresponding 
+memory barriers around ha->flags.online assignment and reading are needed.
 
-The open-iscsi initiator is not a huge consumer of TCP connections, allocating
-a TCP port from the stack would be reasonable in terms of resources in this
-context. It is however unclear if it is an acceptable approach.
+2. More importantly, it doesn't handle possibility for task_struct, to 
+which dpc_thread field refers, to be destroyed exactly between lines
 
-Our current implementation was designed to be the most tolerable one
-within the constraints - real or expected - aforementioned.
+if (ha->flags.online && t)
+	wake_up_process(t);
 
-Cheers,
-Divy
+or inside wake_up_process(). Hence, already freed and possibly reused 
+data will be accessed by wake_up_process() with all corresponding bad 
+consequences.
 
+>> The same is true for my 
+>> other patch "Proposed protection of fcports field of struct scsi_qla_host" 
+>> as well, because without it there should be no big problems to crash the 
+>> driver via sysfs.
+> 
+> We're still looking through your patches...  So how exactly would it
+> be 'be no big problems to crash the driver via sysfs.'???
+
+Example scenario: one or many applications read in a loop any sysfs 
+entry, which go over fcports list, and at the same time DPC thread adds 
+to it new entries. If CPU can reorder commands (most modern CPUs can) it 
+is possible that list_for_each_entry() will access partially inserted 
+entry => NULL pointer dereference.
+
+To see better what I mean look at the difference between list_add() and 
+list_add_rcu() as well as between list_for_each_entry() and 
+list_for_each_entry_rcu().
+
+Vlad
