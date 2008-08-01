@@ -1,33 +1,52 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Fri, 1 Aug 2008 10:11:49 -0600
-Message-ID: <20080801161149.GA26461@parisc-linux.org>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force PCI
+ flush
+Date: Fri, 1 Aug 2008 10:19:07 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
+References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080730135147.GA4513@auslistsprd01.us.dell.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:53072 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258AbYHAQTd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2008 12:19:33 -0400
+In-Reply-To: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
 
-On Wed, Jul 30, 2008 at 08:51:47AM -0500, Matt Domsch wrote:
-> I have access to disks with native 4KB sectors now too.  Would
-> interested parties be willing to share test plans, so we could be sure
-> we have coverage wrt correctness: kernel internals, userspace tools like parted,
-> fdisk, kpartx, apps using O_DIRECT)?  Benchmarking winds up being an
-> NDA activity this early in the game so I don't want the focus of any
-> joint work to be benchmarks yet.
+MegaRAID SAS Driver get unexpected Interrupt.  Add the dumy readl to force PCI flush will fix this issue.
 
-Are they SCSI?  I just got round to trying 4k sector sizes in ata_ram
-(after adding file backed capability) and found that libata currently
-silently ignores the identify bits that report sector size.  I'll work
-on fixing that this afternoon if nobody beats me to it.
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+---
+drivers/scsi/megaraid/megaraid_sas.c |    6 ++++++
+1 files changed, 6 insertions(+)
+
+diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2008-07-31 12:00:58.000000000 -0400
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2008-07-31 12:30:35.000000000 -0400
+@@ -198,6 +198,9 @@ megasas_clear_intr_xscale(struct megasas
+         */
+        writel(status, &regs->outbound_intr_status);
+
++       /* Dummy readl to force pci flush */
++       readl(&regs->outbound_intr_status);
++
+        return 0;
+ }
+
+@@ -293,6 +296,9 @@ megasas_clear_intr_ppc(struct megasas_re
+         */
+        writel(status, &regs->outbound_doorbell_clear);
+
++       /* Dummy readl to force pci flush */
++       readl(&regs->outbound_doorbell_clear);
++
+        return 0;
+ }
+ /**
