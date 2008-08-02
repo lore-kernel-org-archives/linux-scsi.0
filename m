@@ -1,77 +1,120 @@
-From: Matthew Frost <artusemrys@yahoo.com>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
-Date: Fri, 1 Aug 2008 15:22:12 -0700 (PDT)
-Message-ID: <656254.26203.qm@web83208.mail.mud.yahoo.com>
-References: <101516.95411.qm@web83205.mail.mud.yahoo.com>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: [PATCH] cmdfilter: clean up sysfs interface
+Date: Sat, 2 Aug 2008 15:22:07 +0200
+Message-ID: <6cf6b73e0808020622t2165ca0dmdbf60856eb600ad5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web83208.mail.mud.yahoo.com ([216.252.101.64]:46900 "HELO
-	web83208.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752326AbYHAWWN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2008 18:22:13 -0400
-In-Reply-To: <101516.95411.qm@web83205.mail.mud.yahoo.com>
+Received: from fg-out-1718.google.com ([72.14.220.155]:5557 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089AbYHBNWJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2008 09:22:09 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so707605fgg.17
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2008 06:22:08 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Frost <artusemrys@sbcglobal.net>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Matthew Wilcox <matthew@wil.cx>, Peter Jones <pjones@redhat.com>, dougg@torque.net, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com
 
---- Matthew Frost <artusemrys@sbcglobal.net> wrote:
+This patch adds the user interface as discussed in the "cmd filter
+fixes" thread.
+This patch depends on the cmdfilter fixes sent by Fujita.
+I have done tests with this patch ontop of his patchset and everything
+works as expected.
 
-> Alan Stern wrote:
-> > > The patches to fix this that I have tried do not apply
-> > > cleanly to lk 2.6.26 (and break during compile if forced:
-> > > "us->fflags" is not defined).
-> > > 
-> > > Is there a lk 2.6.26 patch available?
-> > 
-> > Sorry about that; my patches are against the USB development tree and
-> > I tend to forget to redo them against the vanilla kernel.  Below is a
-> > patch against 2.6.26.  Or you can just edit the original patch and
-> > change the occurrences of "fflags" to "flags".
-> > 
-> > Alan Stern
-> > 
-> > 
-> > Index: 2.6.26/drivers/usb/storage/transport.c
-> > ===================================================================
-> > --- 2.6.26.orig/drivers/usb/storage/transport.c
-> > +++ 2.6.26/drivers/usb/storage/transport.c
-> > @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
-> >  
-> >  	/* try to compute the actual residue, based on how much data
-> >  	 * was really transferred and what the device tells us */
-> > -	if (residue) {
-> > -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > +
-> > +		/* Heuristically detect devices that generate bogus residues
-> > +		 * by seeing what happens with INQUIRY and READ CAPACITY
-> > +		 * commands.
-> > +		 */
-> > +		if (bcs->Status == US_BULK_STAT_OK &&
-> > +				scsi_get_resid(srb) == 0 &&
-> > +					((srb->cmnd[0] == INQUIRY &&
-> > +						transfer_length == 36) ||
-> > +					(srb->cmnd[0] == READ_CAPACITY &&
-> > +						transfer_length == 8))) {
-> > +			us->flags |= US_FL_IGNORE_RESIDUE;
-> > +
-> > +		} else {
-> >  			residue = min(residue, transfer_length);
-> >  			scsi_set_resid(srb, max(scsi_get_resid(srb),
-> >  			                                       (int) residue));
-> > 
-> > 
-> 
-> Thanks!  I've been trying to fix it manually, and it wouldn't work.  Trying
-> this version now.  Let's see if this fixes my problem.
-> 
-> Matt Frost
-> 
+--------------
+This patch changes the interface of the cmd filter to use a +/- notation like
+echo -- +0x02 +0x03 -0x08 .
+If neither + or - is given it defaults to + (allow command).
 
-Tested under two distributions, this patch restores correct functionality to
-my hardware.  Thank you very much!
+Note: The interface was added in 2.6.17-rc1 and is unused
+and undocumented so far so it's safe to change it.
 
-Matt
+Cc: matthew@wil.cx
+Cc: fujita.tomonori@lab.ntt.co.jp,
+Cc: jens.axboe@oracle.com
+Cc: James.Bottomley@hansenpartnership.com
+Cc: dan.j.williams@intel.com
+Cc: pjones@redhat.com
+Cc: viro@zeniv.linux.org.uk
+Cc: dougg@torque.net
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+
+block/cmd-filter.c |   45 +++++++++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 20 deletions(-)
+
+diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+index eec4404..72a6e5e 100644
+--- a/block/cmd-filter.c
++++ b/block/cmd-filter.c
+@@ -84,8 +84,8 @@ static ssize_t rcf_cmds_show(struct
+blk_scsi_cmd_filter *filter, char *page,
+
+ 	for (i = 0; i < BLK_SCSI_MAX_CMDS; i++) {
+ 		if (test_bit(i, okbits)) {
+-			sprintf(npage, "%02x", i);
+-			npage += 2;
++			sprintf(npage, "0x%02x", i);
++			npage += 4;
+ 			if (i < BLK_SCSI_MAX_CMDS - 1)
+ 				sprintf(npage++, " ");
+ 		}
+@@ -111,33 +111,38 @@ static ssize_t rcf_writecmds_show(struct
+blk_scsi_cmd_filter *filter,
+ static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
+ 			      const char *page, size_t count, int rw)
+ {
+-	ssize_t ret = 0;
+-	unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
+-	int cmd, status, len;
++	unsigned long  *target_okbits;
++	int cmd, status, set;
+ 	substring_t ss;
++	char *p;
+
+-	memset(&okbits, 0, sizeof(okbits));
++	if (rw == READ)
++		target_okbits = filter->read_ok;
++	else
++		target_okbits = filter->write_ok;
++
++	while ((p = strsep(&page, " ")) != NULL) {
++		set = 1;
++
++		if (p[0] == '-') {
++			set = 0;
++			p++;
++		}
+
+-	for (len = strlen(page); len > 0; len -= 3) {
+-		if (len < 2)
+-			break;
+-		ss.from = (char *) page + ret;
+-		ss.to = (char *) page + ret + 2;
+-		ret += 3;
++		if (p[0] == '+')
++			p++;
++		ss.from = (char *) p;
++		ss.to = (char *) p + 4;
+ 		status = match_hex(&ss, &cmd);
+ 		/* either of these cases means invalid input, so do nothing. */
+ 		if (status || cmd >= BLK_SCSI_MAX_CMDS)
+ 			return -EINVAL;
+-
+-		__set_bit(cmd, okbits);
++		if (set)
++			set_bit(cmd, target_okbits);
++		else
++			clear_bit(cmd, target_okbits);
+ 	}
+
+-	if (rw == READ)
+-		target_okbits = filter->read_ok;
+-	else
+-		target_okbits = filter->write_ok;
+-
+-	memmove(target_okbits, okbits, sizeof(okbits));
+ 	return count;
+ }
