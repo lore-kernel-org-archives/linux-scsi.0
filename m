@@ -1,17 +1,17 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 8/10] drivers/scsi: Use DIV_ROUND_UP
-Date: Sat, 2 Aug 2008 17:15:26 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0808021715060.20095@ask.diku.dk>
+Subject: [PATCH 9/10] drivers/scsi/megaraid: Use DIV_ROUND_UP
+Date: Sat, 2 Aug 2008 17:15:49 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0808021715270.20095@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:49412 "EHLO mgw1.diku.dk"
+Received: from mgw2.diku.dk ([130.225.96.92]:37865 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756933AbYHBPPa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Aug 2008 11:15:30 -0400
+	id S1757913AbYHBPPv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Aug 2008 11:15:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
@@ -57,18 +57,18 @@ expression n,d;
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/scsi/esp_scsi.c              |    2 +-
+ drivers/scsi/megaraid/megaraid_sas.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -u -p a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -1464,7 +1464,7 @@ static void esp_msgin_sdtr(struct esp *e
+diff -u -p a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1615,7 +1615,7 @@ static int megasas_create_frame_pool(str
+ 	 * Calculated the number of 64byte frames required for SGL
+ 	 */
+ 	sgl_sz = sge_sz * instance->max_num_sge;
+-	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
++	frame_count = DIV_ROUND_UP(sgl_sz, MEGAMFI_FRAME_SIZE);
  
- 		one_clock = esp->ccycle / 1000;
- 		rounded_up = (period << 2);
--		rounded_up = (rounded_up + one_clock - 1) / one_clock;
-+		rounded_up = DIV_ROUND_UP(rounded_up, one_clock);
- 		stp = rounded_up;
- 		if (stp && esp->rev >= FAS236) {
- 			if (stp >= 50)
+ 	/*
+ 	 * We need one extra frame for the MFI command
