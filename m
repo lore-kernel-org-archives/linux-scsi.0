@@ -1,74 +1,121 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 9/10] drivers/scsi/megaraid: Use DIV_ROUND_UP
-Date: Sat, 2 Aug 2008 17:15:49 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0808021715270.20095@ask.diku.dk>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: [PATCH v2] cmdfilter: clean up sysfs interface
+Date: Sat, 2 Aug 2008 17:19:18 +0200
+Message-ID: <6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
+References: <6cf6b73e0808020622t2165ca0dmdbf60856eb600ad5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:37865 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757913AbYHBPPv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Aug 2008 11:15:51 -0400
+Received: from fg-out-1718.google.com ([72.14.220.153]:35119 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbYHBPTV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2008 11:19:21 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so720722fgg.17
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2008 08:19:18 -0700 (PDT)
+In-Reply-To: <6cf6b73e0808020622t2165ca0dmdbf60856eb600ad5@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Matthew Wilcox <matthew@wil.cx>, Peter Jones <pjones@redhat.com>, dougg@torque.net, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com
 
-From: Julia Lawall <julia@diku.dk>
+vs fix error handling and compiler warnings
 
-The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
-(d)) but is perhaps more readable.
+----------------
 
-An extract of the semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+This patch changes the interface of the cmd filter to use a +/- notation like
+echo -- +0x02 +0x03 -0x08 .
+If neither + or - is given it defaults to + (allow command).
 
-// <smpl>
-@haskernel@
-@@
+Note: The interface was added in 2.6.17-rc1 and is unused
+and undocumented so far so it's safe to change it.
 
-#include <linux/kernel.h>
+Cc: matthew@wil.cx
+Cc: fujita.tomonori@lab.ntt.co.jp,
+Cc: jens.axboe@oracle.com
+Cc: James.Bottomley@hansenpartnership.com
+Cc: dan.j.williams@intel.com
+Cc: pjones@redhat.com
+Cc: viro@zeniv.linux.org.uk
+Cc: dougg@torque.net
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
-@depends on haskernel@
-expression n,d;
-@@
+ block/cmd-filter.c |   44 +++++++++++++++++++++++++++-----------------
+ 1 files changed, 27 insertions(+), 17 deletions(-)
 
-(
-- (n + d - 1) / d
-+ DIV_ROUND_UP(n,d)
-|
-- (n + (d - 1)) / d
-+ DIV_ROUND_UP(n,d)
-)
+diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+index eec4404..cd33f7f 100644
+--- a/block/cmd-filter.c
++++ b/block/cmd-filter.c
+@@ -84,8 +84,8 @@ static ssize_t rcf_cmds_show(struct
+blk_scsi_cmd_filter *filter, char *page,
 
-@depends on haskernel@
-expression n,d;
-@@
+ 	for (i = 0; i < BLK_SCSI_MAX_CMDS; i++) {
+ 		if (test_bit(i, okbits)) {
+-			sprintf(npage, "%02x", i);
+-			npage += 2;
++			sprintf(npage, "0x%02x", i);
++			npage += 4;
+ 			if (i < BLK_SCSI_MAX_CMDS - 1)
+ 				sprintf(npage++, " ");
+ 		}
+@@ -111,32 +111,42 @@ static ssize_t rcf_writecmds_show(struct
+blk_scsi_cmd_filter *filter,
+ static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
+ 			      const char *page, size_t count, int rw)
+ {
+-	ssize_t ret = 0;
+ 	unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
+-	int cmd, status, len;
++	int cmd, status, set;
+ 	substring_t ss;
++	char *p;
 
-- DIV_ROUND_UP((n),d)
-+ DIV_ROUND_UP(n,d)
+-	memset(&okbits, 0, sizeof(okbits));
++	if (rw == READ) {
++		memcpy(&okbits, filter->read_ok, sizeof(okbits));
++		target_okbits = filter->read_ok;
++	} else {
++		memcpy(&okbits, filter->write_ok, sizeof(okbits));
++		target_okbits = filter->write_ok;
++	}
++
++	while ((p = strsep((char **)&page, " ")) != NULL) {
++		set = 1;
++
++		if (p[0] == '-') {
++			set = 0;
++			p++;
++		}
 
-@depends on haskernel@
-expression n,d;
-@@
+-	for (len = strlen(page); len > 0; len -= 3) {
+-		if (len < 2)
+-			break;
+-		ss.from = (char *) page + ret;
+-		ss.to = (char *) page + ret + 2;
+-		ret += 3;
++		if (p[0] == '+')
++			p++;
++		ss.from = (char *) p;
++		ss.to = (char *) p + 4;
+ 		status = match_hex(&ss, &cmd);
+ 		/* either of these cases means invalid input, so do nothing. */
+ 		if (status || cmd >= BLK_SCSI_MAX_CMDS)
+ 			return -EINVAL;
 
-- DIV_ROUND_UP(n,(d))
-+ DIV_ROUND_UP(n,d)
-// </smpl>
+-		__set_bit(cmd, okbits);
++		if (set)
++			__set_bit(cmd, okbits);
++		else
++			__clear_bit(cmd, okbits);
+ 	}
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/megaraid/megaraid_sas.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -u -p a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -1615,7 +1615,7 @@ static int megasas_create_frame_pool(str
- 	 * Calculated the number of 64byte frames required for SGL
- 	 */
- 	sgl_sz = sge_sz * instance->max_num_sge;
--	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
-+	frame_count = DIV_ROUND_UP(sgl_sz, MEGAMFI_FRAME_SIZE);
- 
- 	/*
- 	 * We need one extra frame for the MFI command
+-	if (rw == READ)
+-		target_okbits = filter->read_ok;
+-	else
+-		target_okbits = filter->write_ok;
+-
+ 	memmove(target_okbits, okbits, sizeof(okbits));
+ 	return count;
+ }
