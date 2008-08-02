@@ -1,52 +1,35 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH 1/2] scsi:netlink support in scsi and fc transports forhba	specific messages
-Date: Sat, 2 Aug 2008 14:09:48 -0400
-Message-ID: <D1D4C3FF75F9354393DB8314DF43DEF2E7F5C9@xbl3.ma.emulex.com>
-References: <1217454832.25166.22.camel@localhost.localdomain> <489218F4.8020203@cs.wisc.edu> <1217475321.26535.4.camel@localhost.localdomain>
+From: "=?BIG5?B?p/Ww6qxQ?=" <egx5l1y542w@gmail.com>
+Subject: =?BIG5?B?UEhQwcqqq6iuuOquxq53uvSvuLFNrtc=?=
+Date: Sun, 3 Aug 2008 06:03:28 +0800
+Message-ID: <97923a2a0808021503w4b393addj9bc04d5bca080367@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=BIG5
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51828 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbYHBSKC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2008 14:10:02 -0400
-content-class: urn:content-classes:message
+Received: from po-out-1718.google.com ([72.14.252.157]:20693 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603AbYHBWD3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2008 18:03:29 -0400
+Received: by po-out-1718.google.com with SMTP id c31so2587571poi.1
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2008 15:03:29 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: david.somayajulu@qlogic.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, david.wagner@qlogic.com
+To: linux-ppp@vger.kernel.org
 
-David,
-
-The more I look at the patch, the more it's not done correctly.
-
-For example:
-- The rcv function jumps to the msg_type, and thereby jumps over the
-  transport designator. This should be a msg_type under the generic
-  SCSI Transport (aka SCSI_NL_TRANSPORT). We shouldn't steal msg_types
-  from the transports. There was a layering in the design, granted it
-  wasn't used much yet, that was subverted by this.
-- The message needs to be it's own message type - not munged into the
-  FC event message.
-- The send function, should not be a function under the fc transport,
-  but rather a generic function exported by the scsi netlink module.
-- Your recently added scsi_host_put() was very wrong. You never
-  had a corresponding get().
- 
-I'm testing a patch which corrects the above, and adds the following:
-- adds generic support for any transport to receive messages, and
-  send to pid
-- the shost vendor message is a now a message type of the generic
-  scsi transport
-- adds checks for vendor_id to the reception of vendor message
-- adds event propogation to the scsi hosts too
-- updates shost for the netlink rcv function, event function, vendorid
-- Keeps the basic semantics you already had for entry into the shost.
-
-I'll post it when testing is complete.
-
--- james s
-
-
+pHPgvqzsp9669K22s12tcAoKp9qtzKq6qXamrqFHq8ik4aq6qEOjuKXzpHCoxrGhoUGzo6xPpHPg
+vqq6pGqoxrGhCgqn2q3MpmKxwKVYpfi3fqfOtki69K+4pV2ndKtlpXi69K22rPykdSur4aV4ut6y
+erV7pqEKCq2trsmtrbZxsU2u17v5IKV1rW4kMjksOTAwCgoopmKwZaO4pn4xMDBNQqSjra2sebZx
+uvSvuKrFtqEpCgqn2q3MsLWquqSjpXWsT7r0r7ihQabTrE+xeqX4t36quqRKpGYKCqO4rdOmbqq6
+pfi3frr0r7i46q7Gp1muyafzt3OqurN0q9esT6vcrautbqq6Cgql+Ld+ou2kxqq6sKqrfr3ouc62
+pKFBpbSzebF6qrq69Lj0qvmtsQoKv+++3KRz4L6mqLROsXqqurnat1EKCqHjoeOh46HjoeOh46Hj
+oeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKUFM6IL11pFfByqqruvSvuKfa
+rczB2aVptKOo0ajqpWS+96juoUEKoUChQLtQvXWkV6ZDpkyxYrPmpf6s2bZXsNMrtmynvcO6tk8u
+Li4uLi61par3rHmqQbDIvveo7gqh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
+46HjoeOh46HjoeOh46HjCgrFd6rvqNO5cayiuN+2wLFNrfuhXVNhbaFeoUcwOTgwMTE5ODEyIC8g
+MDkzODc2NDM5NQoKpFe69LdqtE2heaFApHPgvqzsp96kvaVxuvSvuKFAoXqnWaVpp+So7KfarcwK
+CqHjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKpbuk
+vaVxpXSlfrSjqNHD9sHkpnJTRU+xxqfHqkGwyAqrT8PSsU6xeqq6uvSvuKZiWXggLyBHeCAuLi6x
+xqZissSkQK22CqFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQCDFd6rvqNO5cbjf
+sN0hISEKoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
+4wo=
