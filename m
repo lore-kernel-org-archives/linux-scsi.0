@@ -1,65 +1,82 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [PATCH 1/2] scsi:netlink support in scsi and fc transports forhba	specific messages
-Date: Sat, 2 Aug 2008 23:16:48 -0700
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC07015B4249@AVEXCH1.qlogic.org>
-References: <D1D4C3FF75F9354393DB8314DF43DEF2E7F5C9@xbl3.ma.emulex.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in
+ 2.6.27-rc1
+Date: Sun, 03 Aug 2008 13:56:42 +0200
+Message-ID: <48959CFA.6080500@torque.net>
+References: <656254.26203.qm@web83208.mail.mud.yahoo.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:57341 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbYHCGQu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 02:16:50 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <D1D4C3FF75F9354393DB8314DF43DEF2E7F5C9@xbl3.ma.emulex.com>
+Received: from elrond2.infotech.no ([82.134.31.41]:52439 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753772AbYHCL46 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 07:56:58 -0400
+In-Reply-To: <656254.26203.qm@web83208.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: Matthew Frost <artusemrys@yahoo.com>
+Cc: Matthew Frost <artusemrys@sbcglobal.net>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
+Matthew Frost wrote:
+> --- Matthew Frost <artusemrys@sbcglobal.net> wrote:
+> 
+>> Alan Stern wrote:
+>>>> The patches to fix this that I have tried do not apply
+>>>> cleanly to lk 2.6.26 (and break during compile if forced:
+>>>> "us->fflags" is not defined).
+>>>>
+>>>> Is there a lk 2.6.26 patch available?
+>>> Sorry about that; my patches are against the USB development tree and
+>>> I tend to forget to redo them against the vanilla kernel.  Below is a
+>>> patch against 2.6.26.  Or you can just edit the original patch and
+>>> change the occurrences of "fflags" to "flags".
+>>>
+>>> Alan Stern
+>>>
+>>>
+>>> Index: 2.6.26/drivers/usb/storage/transport.c
+>>> ===================================================================
+>>> --- 2.6.26.orig/drivers/usb/storage/transport.c
+>>> +++ 2.6.26/drivers/usb/storage/transport.c
+>>> @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
+>>>  
+>>>  	/* try to compute the actual residue, based on how much data
+>>>  	 * was really transferred and what the device tells us */
+>>> -	if (residue) {
+>>> -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
+>>> +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
+>>> +
+>>> +		/* Heuristically detect devices that generate bogus residues
+>>> +		 * by seeing what happens with INQUIRY and READ CAPACITY
+>>> +		 * commands.
+>>> +		 */
+>>> +		if (bcs->Status == US_BULK_STAT_OK &&
+>>> +				scsi_get_resid(srb) == 0 &&
+>>> +					((srb->cmnd[0] == INQUIRY &&
+>>> +						transfer_length == 36) ||
+>>> +					(srb->cmnd[0] == READ_CAPACITY &&
+>>> +						transfer_length == 8))) {
+>>> +			us->flags |= US_FL_IGNORE_RESIDUE;
+>>> +
+>>> +		} else {
+>>>  			residue = min(residue, transfer_length);
+>>>  			scsi_set_resid(srb, max(scsi_get_resid(srb),
+>>>  			                                       (int) residue));
+>>>
+>>>
+>> Thanks!  I've been trying to fix it manually, and it wouldn't work.  Trying
+>> this version now.  Let's see if this fixes my problem.
+>>
+>> Matt Frost
 
-
-"James.Smart@Emulex.Com" <James.Smart@Emulex.Com> wrote:
-> 
-> David,
-> 
-> The more I look at the patch, the more it's not done correctly.
-> 
-> For example:
-> - The rcv function jumps to the msg_type, and thereby jumps over the
->   transport designator. This should be a msg_type under the generic
->   SCSI Transport (aka SCSI_NL_TRANSPORT). We shouldn't steal msg_types
->   from the transports. There was a layering in the design, granted it
->   wasn't used much yet, that was subverted by this.
-Isn't this what my patch does - as msg type on SCSI_NL_TRANSPORT.
-> - The message needs to be it's own message type - not munged into the
->   FC event message.
-I agree on the send side, if you want everything to be under scsi
-transport. For receive side my patch is fine. 
-> - The send function, should not be a function under the fc transport,
->   but rather a generic function exported by the scsi netlink module.
-I agree it would better if the entire solution is under the scsi
-transport.
-> - Your recently added scsi_host_put() was very wrong. You never
->   had a corresponding get().
-Oops. The version I was looking at for cross reference had a get() in
-scsi_host_lookup() and no corresponding put(). Looks like
-scsi_host_lookup() has changed at some point. (I think Mike Christie was
-under the same impression when he suggested this).
-> 
-> I'm testing a patch which corrects the above, and adds the following:
-> - adds generic support for any transport to receive messages, and
->   send to pid
-> - the shost vendor message is a now a message type of the generic
->   scsi transport
-> - adds checks for vendor_id to the reception of vendor message
-> - adds event propogation to the scsi hosts too
-> - updates shost for the netlink rcv function, event function, vendorid
-> - Keeps the basic semantics you already had for entry into the shost.
-> 
-> I'll post it when testing is complete.
+The above patch made my USB key:
+   Alcor Micro Corp. Transcend JetFlash 110 USB 2.0 Flash Drive (2GB)
+usable in a pretty clean lk 2.6.26 .
 
 Thanks
-David S.
+Doug Gilbert
+
+
+
