@@ -1,38 +1,65 @@
-From: Grant Coady <grant_lkml@dodo.com.au>
-Subject: Re: [PATCH] GDT SCSI DISK ARRAY: fix split line comments for grep
-Date: Sun, 03 Aug 2008 13:39:45 +1000
-Message-ID: <4v9a94lbmt1ript986mkbtgr1g6jffamnc@4ax.com>
-References: <rgo9945k1lva0nh1rfrtaahoingstahl7o@4ax.com> <1217732421.30264.5.camel@localhost.localdomain>
-Reply-To: Grant Coady <gcoady.lk@gmail.com>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: RE: [PATCH 1/2] scsi:netlink support in scsi and fc transports forhba	specific messages
+Date: Sat, 2 Aug 2008 23:16:48 -0700
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC07015B4249@AVEXCH1.qlogic.org>
+References: <D1D4C3FF75F9354393DB8314DF43DEF2E7F5C9@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04.mail-hub.dodo.com.au ([123.2.6.239]:61282 "EHLO
-	relay04.mail-hub.dodo.com.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751834AbYHCDkF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2008 23:40:05 -0400
-In-Reply-To: <1217732421.30264.5.camel@localhost.localdomain>
+Received: from avexch1.qlogic.com ([198.70.193.115]:57341 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889AbYHCGQu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 02:16:50 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <D1D4C3FF75F9354393DB8314DF43DEF2E7F5C9@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Grant Coady <gcoady.lk@gmail.com>, achim_leubner@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Smart@Emulex.Com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
 
-On Sat, 02 Aug 2008 22:00:21 -0500, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
->On Sun, 2008-08-03 at 08:44 +1000, Grant Coady wrote:
->> Hi there,
->> 
->> Following patch unsplits some comment lines that hold driver device 
->> names so they can be grepped.
->
->I don't actually see a problem to be fixed here.  The original author
->obviously split the lines to be under 80 chars.  The actual board names
->are still integral in the comments and thus greppable even for the split
->lines.  What is it that you think needs to be fixed?
 
-I suppose if you always grep with context there's no problem?
+"James.Smart@Emulex.Com" <James.Smart@Emulex.Com> wrote:
+> 
+> David,
+> 
+> The more I look at the patch, the more it's not done correctly.
+> 
+> For example:
+> - The rcv function jumps to the msg_type, and thereby jumps over the
+>   transport designator. This should be a msg_type under the generic
+>   SCSI Transport (aka SCSI_NL_TRANSPORT). We shouldn't steal msg_types
+>   from the transports. There was a layering in the design, granted it
+>   wasn't used much yet, that was subverted by this.
+Isn't this what my patch does - as msg type on SCSI_NL_TRANSPORT.
+> - The message needs to be it's own message type - not munged into the
+>   FC event message.
+I agree on the send side, if you want everything to be under scsi
+transport. For receive side my patch is fine. 
+> - The send function, should not be a function under the fc transport,
+>   but rather a generic function exported by the scsi netlink module.
+I agree it would better if the entire solution is under the scsi
+transport.
+> - Your recently added scsi_host_put() was very wrong. You never
+>   had a corresponding get().
+Oops. The version I was looking at for cross reference had a get() in
+scsi_host_lookup() and no corresponding put(). Looks like
+scsi_host_lookup() has changed at some point. (I think Mike Christie was
+under the same impression when he suggested this).
+> 
+> I'm testing a patch which corrects the above, and adds the following:
+> - adds generic support for any transport to receive messages, and
+>   send to pid
+> - the shost vendor message is a now a message type of the generic
+>   scsi transport
+> - adds checks for vendor_id to the reception of vendor message
+> - adds event propogation to the scsi hosts too
+> - updates shost for the netlink rcv function, event function, vendorid
+> - Keeps the basic semantics you already had for entry into the shost.
+> 
+> I'll post it when testing is complete.
 
-It's the only file I found with this issue while doing other stuff.
-
-Grant.
+Thanks
+David S.
