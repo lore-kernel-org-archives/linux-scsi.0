@@ -1,124 +1,139 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 1/2] pci: add misrouted interrupt error handling
-Date: Sun, 03 Aug 2008 13:02:12 -0500
-Message-ID: <1217786532.4179.24.camel@localhost.localdomain>
+Subject: [PATCH 2/2] fusion:  Implement generic interrupt misroute handling
+Date: Sun, 03 Aug 2008 13:05:09 -0500
+Message-ID: <1217786709.4179.27.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60917 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751874AbYHCSFO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 14:05:14 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>
 
-We're getting a lot of storage drivers blamed for interrupt misrouting
-issues.  This patch provides a standard way of reporting the problem
-... and, if possible, correcting it.
+This patch uses the new pci_lost_interrupt() callback to note the loss
+of an interrupt, and if the reason is MSI, to work around the problem.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+I used the manufacturer config page for this, because every fusion type
+has that one and its loss means that mpt_config() which is interrupt
+driven, failed.
+
+James
+
 ---
- drivers/pci/Makefile |    3 +-
- drivers/pci/irq.c    |   60 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    7 +++++
- 3 files changed, 69 insertions(+), 1 deletions(-)
- create mode 100644 drivers/pci/irq.c
-
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 7d63f8c..19dacb8 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -3,7 +3,8 @@
- #
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d6a0074..2d75c58 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -168,7 +168,7 @@ static int	mpt_readScsiDevicePageHeaders(MPT_ADAPTER *ioc, int portnum);
+ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
+ static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
+ static void	mpt_timer_expired(unsigned long data);
+-static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
++static int	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
+ static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
+ static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
+ static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
+@@ -2052,6 +2052,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 	int	 irq_allocated = 0;
+ 	u8	*a;
  
- obj-y		+= access.o bus.o probe.o remove.o pci.o quirks.o slot.o \
--			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o
-+			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
-+			irq.o
- obj-$(CONFIG_PROC_FS) += proc.o
++ retry:
+ 	printk(MYIOC_s_INFO_FMT "Initiating %s\n", ioc->name,
+ 	    reason == MPT_HOSTEVENT_IOC_BRINGUP ? "bringup" : "recovery");
  
- # Build PCI Express stuff if needed
-diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
-new file mode 100644
-index 0000000..6441dfa
---- /dev/null
-+++ b/drivers/pci/irq.c
-@@ -0,0 +1,60 @@
-+/*
-+ * PCI IRQ failure handing code
-+ *
-+ * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/device.h>
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+
-+static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
-+{
-+	struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
-+
-+	dev_printk(KERN_ERR, &pdev->dev,
-+		   "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
-+		   parent->dev.bus_id, parent->vendor, parent->device);
-+	dev_printk(KERN_ERR, &pdev->dev, "%s\n", reason);
-+	dev_printk(KERN_ERR, &pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
-+	WARN_ON(1);
-+}
-+
-+/**
-+ * pci_lost_interrupt - reports a lost PCI interrupt
-+ * @pdev:	device whose interrupt is lost
-+ * 
-+ * The primary function of this routine is to report a lost interrupt
-+ * in a standard way which users can recognise (instead of blaming the
-+ * driver).
-+ *
-+ * Returns:
-+ *  a suggestion for fixing it (although the driver is not required to
-+ * act on this).
-+ */
-+enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
-+{
-+	if (pdev->msi_enabled || pdev->msix_enabled) {
-+		enum pci_lost_interrupt_reason ret;
-+
-+		if (pdev->msix_enabled) {
-+			pci_note_irq_problem(pdev, "MSIX routing failure");
-+			ret = PCI_LOST_IRQ_DISABLE_MSIX;
-+		} else {
-+			pci_note_irq_problem(pdev, "MSI routing failure");
-+			ret = PCI_LOST_IRQ_DISABLE_MSI;
+@@ -2268,6 +2269,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 	 *	and we try GetLanConfigPages again...
+ 	 */
+ 	if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP)) {
++		int rc;
+ 
+ 		/*
+ 		 * Initalize link list for inactive raid volumes.
+@@ -2275,6 +2277,22 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		mutex_init(&ioc->raid_data.inactive_list_mutex);
+ 		INIT_LIST_HEAD(&ioc->raid_data.inactive_list);
+ 
++		/* May fail becuase of IRQ misrouting */
++		rc = mpt_get_manufacturing_pg_0(ioc);
++		if (rc) {
++			if (pci_lost_interrupt(ioc->pcidev) ==
++			    PCI_LOST_IRQ_DISABLE_MSI) {
++				free_irq(ioc->pci_irq, ioc);
++				ioc->msi_enable = 0;
++				pci_disable_msi(ioc->pcidev);
++				goto retry;
++			}
++			printk(MYIOC_s_ERR_FMT "Cannot recover IRQ routing\n",
++			       ioc->name);
++			return -1;
 +		}
-+		return ret;
-+	}
-+#ifdef CONFIG_ACPI
-+	if (!(acpi_disabled || acpi_noirq)) {
-+		pci_note_irq_problem(pdev, "Potential ACPI misrouting please reboot with acpi=noirq");
-+		/* currently no way to fix acpi on the fly */
-+		return PCI_LOST_IRQ_DISABLE_ACPI;
-+	}
-+#endif
-+	pci_note_irq_problem(pdev, "unknown cause (not MSI or ACPI)");
-+	return PCI_LOST_IRQ_NO_INFORMATION;
-+}
-+EXPORT_SYMBOL(pci_lost_interrupt);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 825be38..121698a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -539,6 +539,13 @@ struct pci_dev __deprecated *pci_find_slot(unsigned int bus,
- 					   unsigned int devfn);
- #endif /* CONFIG_PCI_LEGACY */
++
++
+ 		if (ioc->bus_type == SAS) {
  
-+enum pci_lost_interrupt_reason {
-+	PCI_LOST_IRQ_NO_INFORMATION = 0,
-+	PCI_LOST_IRQ_DISABLE_MSI,
-+	PCI_LOST_IRQ_DISABLE_MSIX,
-+	PCI_LOST_IRQ_DISABLE_ACPI,
-+};
-+enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *dev);
- int pci_find_capability(struct pci_dev *dev, int cap);
- int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
- int pci_find_ext_capability(struct pci_dev *dev, int cap);
--- 
-1.5.6.3
+ 			/* clear persistency table */
+@@ -2326,7 +2344,6 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		}
+ 
+ 		GetIoUnitPage2(ioc);
+-		mpt_get_manufacturing_pg_0(ioc);
+ 	}
+ 
+ 	/*
+@@ -5697,13 +5714,14 @@ mpt_read_ioc_pg_1(MPT_ADAPTER *ioc)
+ 	return;
+ }
+ 
+-static void
++static int
+ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+ {
+ 	CONFIGPARMS		cfg;
+ 	ConfigPageHeader_t	hdr;
+ 	dma_addr_t		buf_dma;
+ 	ManufacturingPage0_t	*pbuf = NULL;
++	int			ret;
+ 
+ 	memset(&cfg, 0 , sizeof(CONFIGPARMS));
+ 	memset(&hdr, 0 , sizeof(ConfigPageHeader_t));
+@@ -5714,20 +5732,23 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+ 	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
+ 	cfg.timeout = 10;
+ 
+-	if (mpt_config(ioc, &cfg) != 0)
++	ret = mpt_config(ioc, &cfg);
++	if (ret != 0)
+ 		goto out;
+ 
+ 	if (!cfg.cfghdr.hdr->PageLength)
+ 		goto out;
+ 
+ 	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
++	ret = -ENOMEM;
+ 	pbuf = pci_alloc_consistent(ioc->pcidev, hdr.PageLength * 4, &buf_dma);
+ 	if (!pbuf)
+ 		goto out;
+ 
+ 	cfg.physAddr = buf_dma;
+ 
+-	if (mpt_config(ioc, &cfg) != 0)
++	ret = mpt_config(ioc, &cfg);
++	if (ret != 0)
+ 		goto out;
+ 
+ 	memcpy(ioc->board_name, pbuf->BoardName, sizeof(ioc->board_name));
+@@ -5738,6 +5759,7 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+ 
+ 	if (pbuf)
+ 		pci_free_consistent(ioc->pcidev, hdr.PageLength * 4, pbuf, buf_dma);
++	return ret;
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+
