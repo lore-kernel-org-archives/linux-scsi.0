@@ -1,50 +1,124 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: Sample implementation of a scheme to handle missing interrupts
-Date: Sun, 03 Aug 2008 12:59:11 -0500
-Message-ID: <1217786351.4179.23.camel@localhost.localdomain>
-References: <660360F4F2570145BD872F298951B17A3AC7E4BF@cosmail03.lsi.com>
+Subject: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Sun, 03 Aug 2008 13:02:12 -0500
+Message-ID: <1217786532.4179.24.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37903 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751628AbYHCR7Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 13:59:16 -0400
-In-Reply-To: <660360F4F2570145BD872F298951B17A3AC7E4BF@cosmail03.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On Tue, 2008-07-29 at 17:38 -0600, Moore, Eric wrote:
-> On Monday, July 28, 2008 2:45 PM, James Bottomley wrote:
-> > >
-> > > In my case, the MSI problem will manifest itself well before we bind
-> > > with the scsi midlayer.    Meaning when there is a MSI problem, we
-> > > can't even bring up the card.  Hence adding code in a eh_timed_out
-> > > callback handler would be meaningless in solving our problem. What I
-> > > need to do is find a problematic card, so I can verify some things.
-> >
-> > Actually, you don't need this.  I verified the behaviour of the MSI
-> > problem simply by commenting out the request_irq.  It looks
-> > like there's
-> > no simple way to simulate MSI misrouting, but perhaps I should look at
-> > that, since it would be useful.
-> >
-> 
-> Well today I found at FC929X where it fails when MSI enabled.   The problem is occuring at the end of mpt_do_ioc_recovery, after we enable interrupts, we are asking for random manufacturing config pages. I see it randomly timing out on the config pages, meaning some time GetLanConfigPages works, then other times it fails. Sometimes it fails later on for either GetIoUnitPage2 or mpt_get_manufacturing_pg_0.  So its randomly timing out on config pages, but most the time is the first one.   So did the following patch (hopefully its not butcherd by ccmail). What I'm doing is failling back to IOAPIC routing after we have a config page timeout.   This works scsi_misc tip with drives attached to both channels of the multifunction FC card.      I'm thinking we may still need do what Matt W. sugge
- sted just as I pointed, I see random timeouts with the config pages.  A side note, I found that pci_disable_msi() is not working in SLES10 SP2..    Did you have any other suggestion where th
- is
->   could be handled in a generic common method?
+We're getting a lot of storage drivers blamed for interrupt misrouting
+issues.  This patch provides a standard way of reporting the problem
+... and, if possible, correcting it.
 
-Actually, I think mpt_config is too deep.  The first time we use it to
-get a page is when the failure occurs ... I think that's the point we
-can intercept and retry.
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/pci/Makefile |    3 +-
+ drivers/pci/irq.c    |   60 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    7 +++++
+ 3 files changed, 69 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/pci/irq.c
 
-I'll send a common coded routine (plus a bit of generic infrastructure
-to make this more standard) shortly.
-
-James
-
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 7d63f8c..19dacb8 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -3,7 +3,8 @@
+ #
+ 
+ obj-y		+= access.o bus.o probe.o remove.o pci.o quirks.o slot.o \
+-			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o
++			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
++			irq.o
+ obj-$(CONFIG_PROC_FS) += proc.o
+ 
+ # Build PCI Express stuff if needed
+diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+new file mode 100644
+index 0000000..6441dfa
+--- /dev/null
++++ b/drivers/pci/irq.c
+@@ -0,0 +1,60 @@
++/*
++ * PCI IRQ failure handing code
++ *
++ * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
++ */
++
++#include <linux/acpi.h>
++#include <linux/device.h>
++#include <linux/kernel.h>
++#include <linux/pci.h>
++
++static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
++{
++	struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
++
++	dev_printk(KERN_ERR, &pdev->dev,
++		   "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
++		   parent->dev.bus_id, parent->vendor, parent->device);
++	dev_printk(KERN_ERR, &pdev->dev, "%s\n", reason);
++	dev_printk(KERN_ERR, &pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
++	WARN_ON(1);
++}
++
++/**
++ * pci_lost_interrupt - reports a lost PCI interrupt
++ * @pdev:	device whose interrupt is lost
++ * 
++ * The primary function of this routine is to report a lost interrupt
++ * in a standard way which users can recognise (instead of blaming the
++ * driver).
++ *
++ * Returns:
++ *  a suggestion for fixing it (although the driver is not required to
++ * act on this).
++ */
++enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
++{
++	if (pdev->msi_enabled || pdev->msix_enabled) {
++		enum pci_lost_interrupt_reason ret;
++
++		if (pdev->msix_enabled) {
++			pci_note_irq_problem(pdev, "MSIX routing failure");
++			ret = PCI_LOST_IRQ_DISABLE_MSIX;
++		} else {
++			pci_note_irq_problem(pdev, "MSI routing failure");
++			ret = PCI_LOST_IRQ_DISABLE_MSI;
++		}
++		return ret;
++	}
++#ifdef CONFIG_ACPI
++	if (!(acpi_disabled || acpi_noirq)) {
++		pci_note_irq_problem(pdev, "Potential ACPI misrouting please reboot with acpi=noirq");
++		/* currently no way to fix acpi on the fly */
++		return PCI_LOST_IRQ_DISABLE_ACPI;
++	}
++#endif
++	pci_note_irq_problem(pdev, "unknown cause (not MSI or ACPI)");
++	return PCI_LOST_IRQ_NO_INFORMATION;
++}
++EXPORT_SYMBOL(pci_lost_interrupt);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 825be38..121698a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -539,6 +539,13 @@ struct pci_dev __deprecated *pci_find_slot(unsigned int bus,
+ 					   unsigned int devfn);
+ #endif /* CONFIG_PCI_LEGACY */
+ 
++enum pci_lost_interrupt_reason {
++	PCI_LOST_IRQ_NO_INFORMATION = 0,
++	PCI_LOST_IRQ_DISABLE_MSI,
++	PCI_LOST_IRQ_DISABLE_MSIX,
++	PCI_LOST_IRQ_DISABLE_ACPI,
++};
++enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *dev);
+ int pci_find_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
+ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+-- 
+1.5.6.3
