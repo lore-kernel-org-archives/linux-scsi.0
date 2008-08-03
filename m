@@ -1,82 +1,50 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in
- 2.6.27-rc1
-Date: Sun, 03 Aug 2008 13:56:42 +0200
-Message-ID: <48959CFA.6080500@torque.net>
-References: <656254.26203.qm@web83208.mail.mud.yahoo.com>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: Sample implementation of a scheme to handle missing interrupts
+Date: Sun, 03 Aug 2008 12:59:11 -0500
+Message-ID: <1217786351.4179.23.camel@localhost.localdomain>
+References: <660360F4F2570145BD872F298951B17A3AC7E4BF@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:52439 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772AbYHCL46 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 07:56:58 -0400
-In-Reply-To: <656254.26203.qm@web83208.mail.mud.yahoo.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37903 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751628AbYHCR7Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 13:59:16 -0400
+In-Reply-To: <660360F4F2570145BD872F298951B17A3AC7E4BF@cosmail03.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Frost <artusemrys@yahoo.com>
-Cc: Matthew Frost <artusemrys@sbcglobal.net>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Matthew Frost wrote:
-> --- Matthew Frost <artusemrys@sbcglobal.net> wrote:
+On Tue, 2008-07-29 at 17:38 -0600, Moore, Eric wrote:
+> On Monday, July 28, 2008 2:45 PM, James Bottomley wrote:
+> > >
+> > > In my case, the MSI problem will manifest itself well before we bind
+> > > with the scsi midlayer.    Meaning when there is a MSI problem, we
+> > > can't even bring up the card.  Hence adding code in a eh_timed_out
+> > > callback handler would be meaningless in solving our problem. What I
+> > > need to do is find a problematic card, so I can verify some things.
+> >
+> > Actually, you don't need this.  I verified the behaviour of the MSI
+> > problem simply by commenting out the request_irq.  It looks
+> > like there's
+> > no simple way to simulate MSI misrouting, but perhaps I should look at
+> > that, since it would be useful.
+> >
 > 
->> Alan Stern wrote:
->>>> The patches to fix this that I have tried do not apply
->>>> cleanly to lk 2.6.26 (and break during compile if forced:
->>>> "us->fflags" is not defined).
->>>>
->>>> Is there a lk 2.6.26 patch available?
->>> Sorry about that; my patches are against the USB development tree and
->>> I tend to forget to redo them against the vanilla kernel.  Below is a
->>> patch against 2.6.26.  Or you can just edit the original patch and
->>> change the occurrences of "fflags" to "flags".
->>>
->>> Alan Stern
->>>
->>>
->>> Index: 2.6.26/drivers/usb/storage/transport.c
->>> ===================================================================
->>> --- 2.6.26.orig/drivers/usb/storage/transport.c
->>> +++ 2.6.26/drivers/usb/storage/transport.c
->>> @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
->>>  
->>>  	/* try to compute the actual residue, based on how much data
->>>  	 * was really transferred and what the device tells us */
->>> -	if (residue) {
->>> -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
->>> +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
->>> +
->>> +		/* Heuristically detect devices that generate bogus residues
->>> +		 * by seeing what happens with INQUIRY and READ CAPACITY
->>> +		 * commands.
->>> +		 */
->>> +		if (bcs->Status == US_BULK_STAT_OK &&
->>> +				scsi_get_resid(srb) == 0 &&
->>> +					((srb->cmnd[0] == INQUIRY &&
->>> +						transfer_length == 36) ||
->>> +					(srb->cmnd[0] == READ_CAPACITY &&
->>> +						transfer_length == 8))) {
->>> +			us->flags |= US_FL_IGNORE_RESIDUE;
->>> +
->>> +		} else {
->>>  			residue = min(residue, transfer_length);
->>>  			scsi_set_resid(srb, max(scsi_get_resid(srb),
->>>  			                                       (int) residue));
->>>
->>>
->> Thanks!  I've been trying to fix it manually, and it wouldn't work.  Trying
->> this version now.  Let's see if this fixes my problem.
->>
->> Matt Frost
+> Well today I found at FC929X where it fails when MSI enabled.   The problem is occuring at the end of mpt_do_ioc_recovery, after we enable interrupts, we are asking for random manufacturing config pages. I see it randomly timing out on the config pages, meaning some time GetLanConfigPages works, then other times it fails. Sometimes it fails later on for either GetIoUnitPage2 or mpt_get_manufacturing_pg_0.  So its randomly timing out on config pages, but most the time is the first one.   So did the following patch (hopefully its not butcherd by ccmail). What I'm doing is failling back to IOAPIC routing after we have a config page timeout.   This works scsi_misc tip with drives attached to both channels of the multifunction FC card.      I'm thinking we may still need do what Matt W. sugge
+ sted just as I pointed, I see random timeouts with the config pages.  A side note, I found that pci_disable_msi() is not working in SLES10 SP2..    Did you have any other suggestion where th
+ is
+>   could be handled in a generic common method?
 
-The above patch made my USB key:
-   Alcor Micro Corp. Transcend JetFlash 110 USB 2.0 Flash Drive (2GB)
-usable in a pretty clean lk 2.6.26 .
+Actually, I think mpt_config is too deep.  The first time we use it to
+get a page is when the failure occurs ... I think that's the point we
+can intercept and retry.
 
-Thanks
-Doug Gilbert
+I'll send a common coded routine (plus a bit of generic infrastructure
+to make this more standard) shortly.
 
+James
 
 
