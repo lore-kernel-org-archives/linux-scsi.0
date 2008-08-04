@@ -1,26 +1,33 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 6/6] cciss: fix bug if scsi tape support is disabled
-Date: Mon, 4 Aug 2008 11:56:33 +0200
-Message-ID: <20080804095633.GA20055@kernel.dk>
-References: <20080730211842.GF1758@roadking.ldev.net>
+From: castet.matthieu@free.fr
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Mon, 04 Aug 2008 12:08:40 +0200
+Message-ID: <1217844520.4896d52835e81@imp.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753551AbYHDJ4t@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080730211842.GF1758@roadking.ldev.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wmproxy1-g27.free.fr ([212.27.42.91]:27200 "EHLO
+	wmproxy1-g27.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbYHDKOv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 06:14:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
-On Wed, Jul 30 2008, Mike Miller wrote:
-> Patch 6 of 6
-> 
-> Bug fix. If SCSI tape support is turned off we get an implicit declaration
-> of cciss_unregister_scsi error in cciss_remove_one.
-> Please consider this for inclusion.
+Hi,
 
-Applied 1-6, thanks.
+Matthew Dharm wrote:
+> Personally, I hate having to make dynamic decisions in usb-storage.  The
+> more we try to do there, the more likely we are to get it wrong.
+>
+Did you see the patch I proposed at
+http://marc.info/?l=linux-usb&m=121762869915609&w=2 ?
 
--- 
-Jens Axboe
+The idea is to keep a list of whitelist of device that support SAT.
+The problem is we should add each new devices to this list (or hope vendor will
+report SPC3 device).
+
+
+Matthieu
+
