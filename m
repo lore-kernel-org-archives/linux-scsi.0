@@ -1,28 +1,29 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 9/10] drivers/scsi/megaraid: Use DIV_ROUND_UP
-Date: Mon, 4 Aug 2008 14:09:32 +0100
-Message-ID: <20080804140932.0167ac82@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0808021715270.20095@ask.diku.dk>
-	<4B6A08C587958942AA3002690DD4F8C31B0FCFA2@cosmail02.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Mon, 04 Aug 2008 08:31:48 -0500
+Message-ID: <1217856708.3318.5.camel@localhost.localdomain>
+References: <1217786532.4179.24.camel@localhost.localdomain>
+	 <20080804043053.GB10519@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60723 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753448AbYHDN05 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 09:26:57 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C31B0FCFA2@cosmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20080804043053.GB10519@colo.lackof.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: Julia Lawall <julia@diku.dk>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "Yuen, Eric" <Eric.Yuen@lsi.com>
 
-On Mon, 4 Aug 2008 06:40:27 -0600
-"Yang, Bo" <Bo.Yang@lsi.com> wrote:
-
-> Julia,
+On Sun, 2008-08-03 at 22:30 -0600, Grant Grundler wrote:
+> On Sun, Aug 03, 2008 at 01:02:12PM -0500, James Bottomley wrote:
+> > We're getting a lot of storage drivers blamed for interrupt misrouting
+> > issues.  This patch provides a standard way of reporting the problem
+> > ... and, if possible, correcting it.
 > 
-> Frame_count is the major parameter used by our megaraid sas FW.  It may cause some issues after this change.  Please keep the original implementation.
+> James,
+> Can you add a paragraph to Documentation/pci.txt about the usage
+> of the new API?
 
-The two are identical code - please explain
+When there actually is a new API, sure.
+
+James
