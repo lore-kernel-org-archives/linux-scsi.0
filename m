@@ -1,47 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.27-rc1
-Date: Mon, 04 Aug 2008 17:11:23 -0400
-Message-ID: <4897707B.60404@garzik.org>
-References: <1217800985.4179.55.camel@localhost.localdomain>	<20080804142927.GG8301@fluff.org.uk> <20080804151533.6fb01b0a@lxorguk.ukuu.org.uk>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Mon, 4 Aug 2008 15:35:35 -0600
+Message-ID: <20080804213535.GM26461@parisc-linux.org>
+References: <1217786532.4179.24.camel@localhost.localdomain> <200808041443.20942.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53955 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758194AbYHDVLe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Aug 2008 17:11:34 -0400
-In-Reply-To: <20080804151533.6fb01b0a@lxorguk.ukuu.org.uk>
+Received: from palinux.external.hp.com ([192.25.206.14]:56815 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088AbYHDWEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 18:04:48 -0400
+Content-Disposition: inline
+In-Reply-To: <200808041443.20942.bjorn.helgaas@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Ben Dooks <ben-linux@fluff.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 
-Alan Cox wrote:
->> I thought group (or non-person) submissions where explicitly
->> prohibitted in the signoff section in Documentation/SubmittingPatches
-> 
-> Highpoint is a legal entity so highpoint can enter into agreements. Thats
-> a bit different from say "Dave the anonymous ferret" or "three people
-> down the pub"
-> 
-> In many ways companies that sign the patches themselves are being nicer
-> to their employees than those who encourage the current practise.
+On Mon, Aug 04, 2008 at 02:43:20PM -0600, Bjorn Helgaas wrote:
+> I tried to standardize the PCI core on "[%04x/%04x]" for vendor/device ID.
 
-(NOTE!! speaking for myself, not for other Red Hatters)
+That's unfortunately different from lspci -nn:
 
-The solution I've settled upon is jgarzik@redhat.com for sign-offs, and 
-my usual addresses (jeff@garzik, jgarzik@pobox) for all email 
-communication and patch posting.
+00:00.0 Host bridge [0600]: Intel Corporation Mobile PM965/GM965/GL960
+Memory Controller Hub [8086:2a00] (rev 03)
 
-That makes it clear who is really signing off on the patches, while 
-still ensuring that if I get fired or leave Red Hat, the flow of 
-communication can be largely uninterrupted.
+Sorry, I should have reviewed your patches ;-(
 
-For those who don't know, to prevent sensitive information leaks, it is 
-standard corporate policy for many companies these days to immediately 
-yank an email address the minute an employee's status changes.
-
-	Jeff
-
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
