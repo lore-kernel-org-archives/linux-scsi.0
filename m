@@ -1,49 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/2] scsi:netlink support in scsi and fc transports forhba
- specific messages
-Date: Mon, 04 Aug 2008 02:18:39 -0500
-Message-ID: <4896AD4F.2080101@cs.wisc.edu>
-References: <0BB3E5E7462EEA4295BC02D49691DC07015B4249@AVEXCH1.qlogic.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Mon, 04 Aug 2008 11:31:58 +0300
+Message-ID: <4896BE7E.3050405@panasas.com>
+References: <489656EC.5000602@torque.net> <20080804022152.GJ4322@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60326 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998AbYHDHTT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Aug 2008 03:19:19 -0400
-In-Reply-To: <0BB3E5E7462EEA4295BC02D49691DC07015B4249@AVEXCH1.qlogic.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:32697 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752054AbYHDIcU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 04:32:20 -0400
+In-Reply-To: <20080804022152.GJ4322@one-eyed-alien.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Somayajulu <david.somayajulu@qlogic.com>
-Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: Douglas Gilbert <dougg@torque.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-David Somayajulu wrote:
->> - Your recently added scsi_host_put() was very wrong. You never
->>   had a corresponding get().
-> Oops. The version I was looking at for cross reference had a get() in
-> scsi_host_lookup() and no corresponding put(). Looks like
-> scsi_host_lookup() has changed at some point. (I think Mike Christie was
-> under the same impression when he suggested this).
+Matthew Dharm wrote:
+> On Mon, Aug 04, 2008 at 03:10:04AM +0200, Douglas Gilbert wrote:
+>> Alan Stern has already noted to another smartmontools developer
+>> that such a change is likely to break some USB storage devices.
+>> Perhaps the maximum sense buffer size could be optionally
+>> specified per usb storage device. Alternatively the usb mass
+>> storage logic could make some dynamic decisions itself.
+> 
+> To clarify: A great many devices choke (fatally) if asked for sense data
+> other than 18 bytes.  Since the first TEST_UNIT_READY will likely require
+> sense data, almost every device sees REQUEST_SENSE.
+> 
+> Personally, I hate having to make dynamic decisions in usb-storage.  The
+> more we try to do there, the more likely we are to get it wrong.
+> 
+> If you've got an app that is sending a command, and you KNOW that command
+> should produce >18 bytes of sense data, then there should be a way to
+> specify to the SCSI core (and thus get passed to usb-storage) that sense
+> data of >18 bytes should be requested.
+> 
 
-I think you guys are missing the get() from class_find_device or what 
-versions are you guys looking at? I have this from scsi-misc from today:
+What?!! The number 18 comes totally from USB land at:
+drivers/usb/storage/transport.c:601 via call to scsi_eh_prep_cmnd
+Otherwise the entire kernel including scsi-ml and all user applications
+request 96 bytes of sense, always.
 
-         cdev = class_find_device(&shost_class, &hostnum, 
-__scsi_host_match);
-         if (cdev) {
-                 shost = scsi_host_get(class_to_shost(cdev));
-                 put_device(cdev);
-         }
+So there is nothing the SCSI core or application can do about it. 
+It is USB fix time I'm afraid.
 
-If class_find_device finds a device class_find_device does a get on it. +1
+> Matt
+> 
 
-If class_find_device found a device (cdev is non null) 
-scsi_host_lookup() does another get() on it if the host is not being 
-deleted. +1 (total =2)
+The SAT layer will have to override transport.c/usb_stor_invoke_transport
+somehow and make do for bigger REQUEST_SENSE. Or a sense_size param per host,
+or per command.
 
-scsi_host_lookup will then release the get() done from 
-class_find_device. -1 (total =1)
-
-So if scsi_host_lookup returns with a host there will be a reference on 
-the host that must be released when we are done with it.
+Boaz
