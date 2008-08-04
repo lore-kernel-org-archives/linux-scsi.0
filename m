@@ -1,43 +1,47 @@
 From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: [usb-storage] USB storage devices and SAT
-Date: Sun, 3 Aug 2008 19:18:22 -0700
-Message-ID: <20080804021822.GI4322@one-eyed-alien.net>
-References: <489656EC.5000602@torque.net> <1217813594.4179.70.camel@localhost.localdomain>
+Date: Sun, 3 Aug 2008 19:21:52 -0700
+Message-ID: <20080804022152.GJ4322@one-eyed-alien.net>
+References: <489656EC.5000602@torque.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
+	protocol="application/pgp-signature"; boundary="ZoaI/ZTpAVc4A5k6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:43715
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:60113
 	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752030AbYHDCS1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 22:18:27 -0400
+	by vger.kernel.org with ESMTP id S1753861AbYHDCVy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2008 22:21:54 -0400
 Content-Disposition: inline
-In-Reply-To: <1217813594.4179.70.camel@localhost.localdomain>
+In-Reply-To: <489656EC.5000602@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: dougg@torque.net, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
 
---jI8keyz6grp/JLjh
+--ZoaI/ZTpAVc4A5k6
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Aug 03, 2008 at 08:33:13PM -0500, James Bottomley wrote:
-> On Mon, 2008-08-04 at 03:10 +0200, Douglas Gilbert wrote:
-> > USB storage devices that support SAT (the T10 SCSI to ATA
-> > translation standard) are beginning to appear.
->=20
-> Um, confused.  The USB devices that were ATA under the covers already
-> have to do SAT since the USB storage transport mandates SCSI.
+On Mon, Aug 04, 2008 at 03:10:04AM +0200, Douglas Gilbert wrote:
+> Alan Stern has already noted to another smartmontools developer
+> that such a change is likely to break some USB storage devices.
+> Perhaps the maximum sense buffer size could be optionally
+> specified per usb storage device. Alternatively the usb mass
+> storage logic could make some dynamic decisions itself.
 
-The enclosures today translate a small subset set of SCSI commands to
-ATA/ATAPI commands.
+To clarify: A great many devices choke (fatally) if asked for sense data
+other than 18 bytes.  Since the first TEST_UNIT_READY will likely require
+sense data, almost every device sees REQUEST_SENSE.
 
-SAT would allow arbitrary ATA commands to be sent to target devices.  In
-theory.  I've only seen a few products that support ATA passthrough, and
-they all did it in a vendor-proprietary manner.
+Personally, I hate having to make dynamic decisions in usb-storage.  The
+more we try to do there, the more likely we are to get it wrong.
+
+If you've got an app that is sending a command, and you KNOW that command
+should produce >18 bytes of sense data, then there should be a way to
+specify to the SCSI core (and thus get passed to usb-storage) that sense
+data of >18 bytes should be requested.
 
 Matt
 
@@ -46,20 +50,20 @@ Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-I could always suspend a few hundred accounts and watch what happens.
-					-- Tanya
-User Friendly, 7/31/1998
+I'm seen in many forms.  Now open your mouth.  It's caffeine time.
+					-- Cola Man to Greg
+User Friendly, 10/28/1998
 
---jI8keyz6grp/JLjh
+--ZoaI/ZTpAVc4A5k6
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQFIlmbuHL9iwnUZqnkRAvyoAKCmhQtNHEHnLLCT2vz1jn6gPB3kZgCgrAAQ
-7kXBlA2Q11mzPGdJMpP0g7Q=
-=huNJ
+iD8DBQFIlmfAHL9iwnUZqnkRAtA9AKCq5agbSJnYqmWLz9Up2Tdtzz1f6gCfYScO
+BS94pSLt06679ew0GFbdJII=
+=Uooh
 -----END PGP SIGNATURE-----
 
---jI8keyz6grp/JLjh--
+--ZoaI/ZTpAVc4A5k6--
