@@ -1,35 +1,26 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] cciss: return -EFAULT if copy_from_user() fails
-Date: Mon, 4 Aug 2008 10:58:14 +0200
-Message-ID: <20080804085814.GZ20055@kernel.dk>
-References: <200807311135.48889.knikanth@suse.de> <0F5B06BAB751E047AB5C87D1F77A778826B3E814F0@GVW0547EXC.americas.hpqcorp.net>
+Subject: Re: [PATCH 6/6] cciss: fix bug if scsi tape support is disabled
+Date: Mon, 4 Aug 2008 11:56:33 +0200
+Message-ID: <20080804095633.GA20055@kernel.dk>
+References: <20080730211842.GF1758@roadking.ldev.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754414AbYHDI63@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753551AbYHDJ4t@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778826B3E814F0@GVW0547EXC.americas.hpqcorp.net>
+In-Reply-To: <20080730211842.GF1758@roadking.ldev.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: Nikanth Karthikesan <knikanth@suse.de>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, ISS StorageDev <iss_storagedev@hp.com>
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 31 2008, Miller, Mike (OS Dev) wrote:
+On Wed, Jul 30 2008, Mike Miller wrote:
+> Patch 6 of 6
 > 
-> 
-> > -----Original Message-----
-> > From: Nikanth Karthikesan [mailto:knikanth@suse.de]
-> > Sent: Thursday, July 31, 2008 1:06 AM
-> > To: Miller, Mike (OS Dev)
-> > Cc: ISS StorageDev; Jens Axboe
-> > Subject: [PATCH] cciss: return -EFAULT if copy_from_user() fails
-> >
-> > Return -EFAULT instead of -ENOMEM if copy_from_user() fails.
-> >
-> > Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
-> 
-> Acked-by: Mike Miller <mike.miller@hp.com>
+> Bug fix. If SCSI tape support is turned off we get an implicit declaration
+> of cciss_unregister_scsi error in cciss_remove_one.
+> Please consider this for inclusion.
 
-Applied
+Applied 1-6, thanks.
 
 -- 
 Jens Axboe
