@@ -1,44 +1,56 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 6/6] cciss: fix bug if scsi tape support is disabled
-Date: Tue, 5 Aug 2008 15:30:12 -0700
-Message-ID: <20080805153012.0076396e.akpm@linux-foundation.org>
-References: <20080730211842.GF1758@roadking.ldev.net>
-	<20080804095633.GA20055@kernel.dk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [2.6 patch] feature-removal-schedule.txt: remove the NCR53C9x entry
+Date: Wed, 6 Aug 2008 01:37:19 +0200
+Message-ID: <20080805233718.GB2514@lst.de>
+References: <20080805200330.GJ22895@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60125 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756196AbYHEWab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 18:30:31 -0400
-In-Reply-To: <20080804095633.GA20055@kernel.dk>
+Received: from verein.lst.de ([213.95.11.210]:52436 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754859AbYHEXiF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Aug 2008 19:38:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20080805200330.GJ22895@cs181140183.pp.htv.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: mike.miller@hp.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: David Miller <davem@davemloft.net>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, 4 Aug 2008 11:56:33 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+This should really be easy enough for any merge window state, whoe wants
+to feed it to Linus?
 
-> On Wed, Jul 30 2008, Mike Miller wrote:
-> > Patch 6 of 6
-> > 
-> > Bug fix. If SCSI tape support is turned off we get an implicit declaration
-> > of cciss_unregister_scsi error in cciss_remove_one.
-> > Please consider this for inclusion.
+On Tue, Aug 05, 2008 at 11:03:30PM +0300, Adrian Bunk wrote:
+> Now that the driver is removed we should also remove the entry in 
+> Documentation/feature-removal-schedule.txt
 > 
-> Applied 1-6, thanks.
-
-I'm not seeing these changes in linux-next nor in
-master.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git#for-next
-nor in #for-akpm.
-
-Also, #for-next is empty, but #for-akpm has the single commit
-
-    commit 7b87c0541a2d606c0b1a47fa8afbaeb32fad6d60
-    Author: Jens Axboe <jens.axboe@oracle.com>
-    Date:   Wed Jun 25 12:04:48 2008 +0200
-
-        vmsplice: implement real vmsplice to userspace
-
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> Acked-by: Christoph Hellwig <hch@lst.de>
+> 
+> ---
+> 
+> This patch has been sent on:
+> - 1 Mar 2008
+> 
+> 6d7882f6e844eaf6551b3a3708e01d1784916435 foobar
+> diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+> index c1d1fd0..a4530f0 100644
+> --- a/Documentation/feature-removal-schedule.txt
+> +++ b/Documentation/feature-removal-schedule.txt
+> @@ -19,15 +19,6 @@ Who:	Pavel Machek <pavel@suse.cz>
+>  
+>  ---------------------------
+>  
+> -What:	old NCR53C9x driver
+> -When:	October 2007
+> -Why:	Replaced by the much better esp_scsi driver.  Actual low-level
+> -	driver can be ported over almost trivially.
+> -Who:	David Miller <davem@davemloft.net>
+> -	Christoph Hellwig <hch@lst.de>
+> -
+> ----------------------------
+> -
+>  What:	Video4Linux API 1 ioctls and video_decoder.h from Video devices.
+>  When:	December 2008
+>  Files:	include/linux/video_decoder.h include/linux/videodev.h
+---end quoted text---
