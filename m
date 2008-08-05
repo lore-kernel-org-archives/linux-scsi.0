@@ -1,64 +1,47 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force
- PCI flush
-Date: Mon, 4 Aug 2008 17:41:28 -0700
-Message-ID: <20080804174128.a0877c27.akpm@linux-foundation.org>
-References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
-	<4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Mon, 04 Aug 2008 17:02:27 -0700
+Message-ID: <1217894547.3318.38.camel@localhost.localdomain>
+References: <1217786532.4179.24.camel@localhost.localdomain>
+	 <200808041443.20942.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34521 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754133AbYHEAlk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 20:41:40 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <200808041443.20942.bjorn.helgaas@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@linuxfoundation.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
 
-On Fri, 1 Aug 2008 10:19:07 -0600 "Yang, Bo" <Bo.Yang@lsi.com> wrote:
+On Mon, 2008-08-04 at 14:43 -0600, Bjorn Helgaas wrote:
+> On Sunday 03 August 2008 12:02:12 pm James Bottomley wrote:
+> > +static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
+> > +{
+> > +	struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
+> > +
+> > +	dev_printk(KERN_ERR, &pdev->dev,
+> > +		   "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
+> > +		   parent->dev.bus_id, parent->vendor, parent->device);
+> 
+> Do you prefer "dev_printk(KERN_ERR, ...)" over "dev_err(...)"?  Easier
+> to grep for the former, maybe?  If so, should we deprecate "dev_err()"
+> and friends?  When I converted most of the PCI core to use dev_printk(),
+> (80ccba1186d48f ...) I used dev_err(), but I don't really care one way
+> or the other.
+> 
+> Maybe use pci_name(parent)?
+> 
+> I tried to standardize the PCI core on "[%04x/%04x]" for vendor/device ID.
 
-> MegaRAID SAS Driver get unexpected Interrupt.  Add the dumy readl to force PCI flush will fix this issue.
-> 
-> Signed-off-by Bo Yang<bo.yang@lsi.com>
-> 
-> ---
-> drivers/scsi/megaraid/megaraid_sas.c |    6 ++++++
-> 1 files changed, 6 insertions(+)
-> 
-> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
-> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2008-07-31 12:00:58.000000000 -0400
-> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2008-07-31 12:30:35.000000000 -0400
-> @@ -198,6 +198,9 @@ megasas_clear_intr_xscale(struct megasas
->          */
->         writel(status, &regs->outbound_intr_status);
-> 
-> +       /* Dummy readl to force pci flush */
-> +       readl(&regs->outbound_intr_status);
-> +
->         return 0;
->  }
-> 
-> @@ -293,6 +296,9 @@ megasas_clear_intr_ppc(struct megasas_re
->          */
->         writel(status, &regs->outbound_doorbell_clear);
-> 
-> +       /* Dummy readl to force pci flush */
-> +       readl(&regs->outbound_doorbell_clear);
-> +
->         return 0;
->  }
->  /**
+To be honest I'm not really interested too much in the various API
+preferences ... they can be fixed up later by the people who care.
 
-These patches all had their tabs replaced with spaces.  I fixed them up.
+What I am interested in is whether we can get this interface to give
+sufficient information to blacklist the offending motherboard if we can
+identify it as the source of the problem.  Since the usual culprit is
+the bridge, that's why I'm doing parent vendor/device pairs.  However,
+better suggestions for the information that should be displayed would be
+gratefully received.
 
-Please always run checkpatch on all patches.  checkpatch found this:
-
-ERROR: Macros with complex values should be enclosed in parenthesis
-#182: FILE: drivers/scsi/megaraid/megaraid_sas.h:586:
-+#define MFI_GEN2_ENABLE_INTERRUPT_MASK		0x00000001 | 0x00000004
-
-which is a potential source of bugs.  I queued a patch to fix that also.
+James
