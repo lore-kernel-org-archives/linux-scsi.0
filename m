@@ -1,47 +1,155 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
-Date: Mon, 04 Aug 2008 17:02:27 -0700
-Message-ID: <1217894547.3318.38.camel@localhost.localdomain>
-References: <1217786532.4179.24.camel@localhost.localdomain>
-	 <200808041443.20942.bjorn.helgaas@hp.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Tue, 05 Aug 2008 14:54:05 +0300
+Message-ID: <48983F5D.6060903@panasas.com>
+References: <489656EC.5000602@torque.net> <Pine.LNX.4.44L0.0808041147580.3818-100000@iolanthe.rowland.org> <20080804174524.GL4322@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <200808041443.20942.bjorn.helgaas@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7691 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758760AbYHELyh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 07:54:37 -0400
+In-Reply-To: <20080804174524.GL4322@one-eyed-alien.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kern>
 
-On Mon, 2008-08-04 at 14:43 -0600, Bjorn Helgaas wrote:
-> On Sunday 03 August 2008 12:02:12 pm James Bottomley wrote:
-> > +static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
-> > +{
-> > +	struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
-> > +
-> > +	dev_printk(KERN_ERR, &pdev->dev,
-> > +		   "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
-> > +		   parent->dev.bus_id, parent->vendor, parent->device);
+Matthew Dharm wrote:
+> On Mon, Aug 04, 2008 at 11:51:57AM -0400, Alan Stern wrote:
+>> I tend to agree with Matt that it would be best to have the higher
+>> layers tell usb-storage exactly how much sense data they want to get.
+>> The problem is that these higher layers would not know about the 
+>> 18-byte restriction on many earlier USB devices, so usb-storage would 
+>> probably end up needing to make its own dynamic decisions anyway.
 > 
-> Do you prefer "dev_printk(KERN_ERR, ...)" over "dev_err(...)"?  Easier
-> to grep for the former, maybe?  If so, should we deprecate "dev_err()"
-> and friends?  When I converted most of the PCI core to use dev_printk(),
-> (80ccba1186d48f ...) I used dev_err(), but I don't really care one way
-> or the other.
+> Why not handle this like other fields in the struct scsi_device?  Let the
+> core initialize it with a value, then override it in the slave_configure()
+> routine via unusual_devs.h flag OR via userspace command to the SCSI core?
 > 
-> Maybe use pci_name(parent)?
+> Matt
 > 
-> I tried to standardize the PCI core on "[%04x/%04x]" for vendor/device ID.
 
-To be honest I'm not really interested too much in the various API
-preferences ... they can be fixed up later by the people who care.
+There was a correct and simple patch proposed that fixes this problem
+the right way:
+http://marc.info/?l=linux-usb&m=121762869915609&w=2
 
-What I am interested in is whether we can get this interface to give
-sufficient information to blacklist the offending motherboard if we can
-identify it as the source of the problem.  Since the usual culprit is
-the bridge, that's why I'm doing parent vendor/device pairs.  However,
-better suggestions for the information that should be displayed would be
-gratefully received.
+Doug could you please test this patch to see if it fixes your device?
 
-James
+scsi-core already gives drivers complete control on what sense_size to
+fetch. It is a parameter to the scsi_eh_prep_cmnd() call. So no need
+for slave_configure(), default value, and all that loop.
+
+Matthieu castet <castet.matthieu@free.fr> wrote ...
+> we have got report from 2 users that scsi sat (to do ata passthrough)  was not fully \
+> working with some usb bridge (maxtor and western digital). Everything works except \
+> the sense result was incomplete [1].
+> 
+> 
+> After some investigation, they need a sense size different of 18 (at least 22). [2]
+> 
+> Because some devices can crash if the sense size is different of 18, in order to not \
+> break these devices a flag that is set either by unusual entries, either for spc3 or \
+> latter devices is used.
+> 
+> 
+> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+
+Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
+
+> 
+> 
+> 
+> [1]
+> http://thread.gmane.org/gmane.linux.utilities.smartmontools/5613
+> 
+> [2]
+> http://thread.gmane.org/gmane.linux.utilities.smartmontools/5721
+> Index: linux-2.6/drivers/usb/storage/scsiglue.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:24.000000000 +0200
+> +++ linux-2.6/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:37.000000000 +0200
+> @@ -170,6 +170,10 @@
+>  		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
+>  			sdev->guess_capacity = 1;
+>  
+> +		/* assume SPC3 or latter device support sense size different of 18 */
+> +		if (sdev->scsi_level > SCSI_SPC_2)
+> +			us->fflags |= US_FL_SANE_SENSE;
+> +
+>  		/* Some devices report a SCSI revision level above 2 but are
+>  		 * unable to handle the REPORT LUNS command (for which
+>  		 * support is mandatory at level 3).  Since we already have
+> Index: linux-2.6/drivers/usb/storage/transport.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/usb/storage/transport.c	2008-08-02 00:07:24.000000000 \
+>                 +0200
+> +++ linux-2.6/drivers/usb/storage/transport.c	2008-08-02 00:07:37.000000000 +0200
+> @@ -595,10 +595,15 @@
+>  	if (need_auto_sense) {
+>  		int temp_result;
+>  		struct scsi_eh_save ses;
+> +		int sense_size = US_SENSE_SIZE;
+> +
+> +		/* device support and need bigger sense buffer */
+> +		if (us->fflags & US_FL_SANE_SENSE)
+> +			sense_size = ~0;
+>  
+>  		US_DEBUGP("Issuing auto-REQUEST_SENSE\n");
+>  
+> -		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, US_SENSE_SIZE);
+> +		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, sense_size);
+>  
+>  		/* FIXME: we must do the protocol translation here */
+>  		if (us->subclass == US_SC_RBC || us->subclass == US_SC_SCSI ||
+> Index: linux-2.6/drivers/usb/storage/unusual_devs.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/usb/storage/unusual_devs.h	2008-08-02 00:07:24.000000000 \
+>                 +0200
+> +++ linux-2.6/drivers/usb/storage/unusual_devs.h	2008-08-02 00:07:37.000000000 +0200
+> @@ -1791,6 +1791,18 @@
+>  		US_SC_DEVICE, US_PR_DEVICE, NULL,
+>  		US_FL_CAPACITY_HEURISTICS),
+>  
+> +UNUSUAL_DEV(  0x0d49, 0x7310, 0x0000, 0x9999,
+> +		"Maxtor",
+> +		"usb sata bridge",
+> +		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> +		US_FL_SANE_SENSE ),
+> +
+> +UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
+> +		"Western Digital",
+> +		"External HDD",
+> +		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> +		US_FL_SANE_SENSE ),
+> +
+>  /* Control/Bulk transport for all SubClass values */
+>  USUAL_DEV(US_SC_RBC, US_PR_CB, USB_US_TYPE_STOR),
+>  USUAL_DEV(US_SC_8020, US_PR_CB, USB_US_TYPE_STOR),
+> Index: linux-2.6/include/linux/usb_usual.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/usb_usual.h	2008-08-02 00:07:24.000000000 +0200
+> +++ linux-2.6/include/linux/usb_usual.h	2008-08-02 00:07:37.000000000 +0200
+> @@ -52,7 +52,9 @@
+>  	US_FLAG(MAX_SECTORS_MIN,0x00002000)			\
+>  		/* Sets max_sectors to arch min */		\
+>  	US_FLAG(BULK_IGNORE_TAG,0x00004000)			\
+> -		/* Ignore tag mismatch in bulk operations */
+> +		/* Ignore tag mismatch in bulk operations */	\
+> +	US_FLAG(SANE_SENSE,0x00008000)			\
+> +		/* Need a sense size different of 18 for some cmd (SAT) */
+>  
+>  
+>  #define US_FLAG(name, value)	US_FL_##name = value ,
+> 
+> 
+
+I recommend this patch. It does exactly what's needed with minimum risk
+it is even maybe over protective, with the white list. Perhaps it should
+be turned to a black list instead. The old broken devices been an extincting
+exception.
+
+Boaz
+
+
