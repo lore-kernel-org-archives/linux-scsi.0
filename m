@@ -1,155 +1,90 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [usb-storage] USB storage devices and SAT
-Date: Tue, 05 Aug 2008 14:54:05 +0300
-Message-ID: <48983F5D.6060903@panasas.com>
-References: <489656EC.5000602@torque.net> <Pine.LNX.4.44L0.0808041147580.3818-100000@iolanthe.rowland.org> <20080804174524.GL4322@one-eyed-alien.net>
+Subject: Re: [patch resend] firewire: ieee1394: Move away from SG_ALL
+Date: Tue, 05 Aug 2008 15:22:20 +0300
+Message-ID: <489845FC.4080104@panasas.com>
+References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de> <1217877676.3318.32.camel@localhost.localdomain> <48975F5F.90906@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7691 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:3925 "EHLO
 	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758760AbYHELyh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 07:54:37 -0400
-In-Reply-To: <20080804174524.GL4322@one-eyed-alien.net>
+	with ESMTP id S1759512AbYHEMXI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 08:23:08 -0400
+In-Reply-To: <48975F5F.90906@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kern>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Matthew Dharm wrote:
-> On Mon, Aug 04, 2008 at 11:51:57AM -0400, Alan Stern wrote:
->> I tend to agree with Matt that it would be best to have the higher
->> layers tell usb-storage exactly how much sense data they want to get.
->> The problem is that these higher layers would not know about the 
->> 18-byte restriction on many earlier USB devices, so usb-storage would 
->> probably end up needing to make its own dynamic decisions anyway.
+Stefan Richter wrote:
+> James Bottomley wrote:
+>> On Mon, 2008-08-04 at 20:08 +0200, Stefan Richter wrote:
+>>> As a discussion reminded me today, I believe I should merge the
+>>> following patch (could have done so much earlier in fact).  Or is there
+>>> anything speaking against it?
+>> The value 255 is chosen because it worked before.  What you need to do
+>> is establish what the upper limit for firewire is (or indeed if it has
+>> one).
 > 
-> Why not handle this like other fields in the struct scsi_device?  Let the
-> core initialize it with a value, then override it in the slave_configure()
-> routine via unusual_devs.h flag OR via userspace command to the SCSI core?
+> The limit is 65535, following from SBP-2 clause 5.1.2, definition of 
+> data_size.
 > 
-> Matt
-> 
-
-There was a correct and simple patch proposed that fixes this problem
-the right way:
-http://marc.info/?l=linux-usb&m=121762869915609&w=2
-
-Doug could you please test this patch to see if it fixes your device?
-
-scsi-core already gives drivers complete control on what sense_size to
-fetch. It is a parameter to the scsi_eh_prep_cmnd() call. So no need
-for slave_configure(), default value, and all that loop.
-
-Matthieu castet <castet.matthieu@free.fr> wrote ...
-> we have got report from 2 users that scsi sat (to do ata passthrough)  was not fully \
-> working with some usb bridge (maxtor and western digital). Everything works except \
-> the sense result was incomplete [1].
-> 
-> 
-> After some investigation, they need a sense size different of 18 (at least 22). [2]
-> 
-> Because some devices can crash if the sense size is different of 18, in order to not \
-> break these devices a flag that is set either by unusual entries, either for spc3 or \
-> latter devices is used.
-> 
-> 
-> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-
-Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
-
-> 
-> 
-> 
-> [1]
-> http://thread.gmane.org/gmane.linux.utilities.smartmontools/5613
-> 
-> [2]
-> http://thread.gmane.org/gmane.linux.utilities.smartmontools/5721
-> Index: linux-2.6/drivers/usb/storage/scsiglue.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:24.000000000 +0200
-> +++ linux-2.6/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:37.000000000 +0200
-> @@ -170,6 +170,10 @@
->  		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
->  			sdev->guess_capacity = 1;
->  
-> +		/* assume SPC3 or latter device support sense size different of 18 */
-> +		if (sdev->scsi_level > SCSI_SPC_2)
-> +			us->fflags |= US_FL_SANE_SENSE;
-> +
->  		/* Some devices report a SCSI revision level above 2 but are
->  		 * unable to handle the REPORT LUNS command (for which
->  		 * support is mandatory at level 3).  Since we already have
-> Index: linux-2.6/drivers/usb/storage/transport.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/usb/storage/transport.c	2008-08-02 00:07:24.000000000 \
->                 +0200
-> +++ linux-2.6/drivers/usb/storage/transport.c	2008-08-02 00:07:37.000000000 +0200
-> @@ -595,10 +595,15 @@
->  	if (need_auto_sense) {
->  		int temp_result;
->  		struct scsi_eh_save ses;
-> +		int sense_size = US_SENSE_SIZE;
-> +
-> +		/* device support and need bigger sense buffer */
-> +		if (us->fflags & US_FL_SANE_SENSE)
-> +			sense_size = ~0;
->  
->  		US_DEBUGP("Issuing auto-REQUEST_SENSE\n");
->  
-> -		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, US_SENSE_SIZE);
-> +		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, sense_size);
->  
->  		/* FIXME: we must do the protocol translation here */
->  		if (us->subclass == US_SC_RBC || us->subclass == US_SC_SCSI ||
-> Index: linux-2.6/drivers/usb/storage/unusual_devs.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/usb/storage/unusual_devs.h	2008-08-02 00:07:24.000000000 \
->                 +0200
-> +++ linux-2.6/drivers/usb/storage/unusual_devs.h	2008-08-02 00:07:37.000000000 +0200
-> @@ -1791,6 +1791,18 @@
->  		US_SC_DEVICE, US_PR_DEVICE, NULL,
->  		US_FL_CAPACITY_HEURISTICS),
->  
-> +UNUSUAL_DEV(  0x0d49, 0x7310, 0x0000, 0x9999,
-> +		"Maxtor",
-> +		"usb sata bridge",
-> +		US_SC_DEVICE, US_PR_DEVICE, NULL,
-> +		US_FL_SANE_SENSE ),
-> +
-> +UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
-> +		"Western Digital",
-> +		"External HDD",
-> +		US_SC_DEVICE, US_PR_DEVICE, NULL,
-> +		US_FL_SANE_SENSE ),
-> +
->  /* Control/Bulk transport for all SubClass values */
->  USUAL_DEV(US_SC_RBC, US_PR_CB, USB_US_TYPE_STOR),
->  USUAL_DEV(US_SC_8020, US_PR_CB, USB_US_TYPE_STOR),
-> Index: linux-2.6/include/linux/usb_usual.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/usb_usual.h	2008-08-02 00:07:24.000000000 +0200
-> +++ linux-2.6/include/linux/usb_usual.h	2008-08-02 00:07:37.000000000 +0200
-> @@ -52,7 +52,9 @@
->  	US_FLAG(MAX_SECTORS_MIN,0x00002000)			\
->  		/* Sets max_sectors to arch min */		\
->  	US_FLAG(BULK_IGNORE_TAG,0x00004000)			\
-> -		/* Ignore tag mismatch in bulk operations */
-> +		/* Ignore tag mismatch in bulk operations */	\
-> +	US_FLAG(SANE_SENSE,0x00008000)			\
-> +		/* Need a sense size different of 18 for some cmd (SAT) */
->  
->  
->  #define US_FLAG(name, value)	US_FL_##name = value ,
-> 
+> [Side note:  The SBP-2 s/g list (a.k.a. page table) consists of 64bit 
+> wide entries and needs to be contiguous in memory from the POV of the 
+> FireWire PCI or PCIe controller, and the SBP-2 target reads the table 
+> from the initiator's memory.  The (fw-)sbp2 driver builds this table as 
+> a copy of the kernel's s/g list; but this was certainly already to the 
+> reader clear from the context in the diff.]
 > 
 
-I recommend this patch. It does exactly what's needed with minimum risk
-it is even maybe over protective, with the white list. Perhaps it should
-be turned to a black list instead. The old broken devices been an extincting
-exception.
+Does the above mean you need contiguous physical memory to hold the   
+sbp2's sg table. If so then it should be allocated with alloc_coherent and
+maybe total size up to a PAGE_SIZE.
+
+>>> Meanwhile, SG_ALL has been redefined from 255 to SCSI_MAX_SG_SEGMENTS =
+>>> 128 without me noticing it.  But since several popular architectures
+>>> define ARCH_HAS_SG_CHAIN, we may want to go back to 255 in (fw-)sbp2.
+>>> (Besides, we should also do some tests to figure out an actual optimum.
+>>> And fw-sbp2.c's struct sbp2_command_orb should become variably sized.)
+>> Don't bother with optmium ... that's block's job based on what it sees
+>> from the completions.  All we need to know is maximum.
+> 
+
+>From my tests, the block layer will, very fast, send you chained commands.
+if you set it to 255 you'll see two chained fragments. In iscsi we have
+4096 and it is very good for performance. However since you are pre-allocating
+the memory per can_queue commands, this can get big, and the memory overhead
+can be an impact on performance.
+
+> OK, with the small caveat that the current (fw-)sbp2 driver code is 
+> somewhat simplistic WRT page table handling and geared towards rather 
+> short page tables.  But this may be possible to enhance without too much 
+> difficulty.
+> 
+>>> Does the most relevant user of large transfers with SBP-2 devices,
+>>> sd-mod, use chained s/g lists?
+>> pass, but firewire is a reasonably slow bus by modern standards, and you
+> 
+> A 3200 Mb/s spec exists :-) (though no silicon yet, to my knowledge).
+> 
+
+As you said above and since bitrate is increasing, a 255 is a good 
+preallocated value, but perhaps it could also be a module parameter so
+fast cards can have a bigger pre-allocated sg table. (per canQ command).
+Also for embedded systems, they might want to lower this value.
+
+>> have the protocol overhead for each ORB, so I'd guess there's a point at
+>> which increasing the transaction size doesn't buy anything.
+>>
+>> James
+> 
+
+>From re-inspecting the code I can see that the struct sbp2_command_orb
+might have problems with none DMA coherent ARCHs. I think for safety
+and flexibility the sbp2_command_orb.page_table array should be
+dynamically allocated at init time with even maybe alloc_coherent.
+
+Do you need that I send you a sketch of what I mean?
 
 Boaz
-
-
