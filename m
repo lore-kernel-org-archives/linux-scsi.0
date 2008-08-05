@@ -1,136 +1,100 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch resend] firewire: ieee1394: Move away from SG_ALL
-Date: Tue, 05 Aug 2008 18:28:55 +0300
-Message-ID: <489871B7.5050904@panasas.com>
-References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de> <1217877676.3318.32.camel@localhost.localdomain> <48975F5F.90906@s5r6.in-berlin.de> <489845FC.4080104@panasas.com> <48986B55.80403@s5r6.in-berlin.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Tue, 05 Aug 2008 17:34:15 +0200
+Message-ID: <489872F7.8050703@torque.net>
+References: <Pine.LNX.4.44L0.0808051047130.2518-100000@iolanthe.rowland.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25316 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760955AbYHEP3k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 11:29:40 -0400
-In-Reply-To: <48986B55.80403@s5r6.in-berlin.de>
+Received: from elrond2.infotech.no ([82.134.31.41]:57183 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754738AbYHEPe2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 11:34:28 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0808051047130.2518-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthieu castet <castet.matthieu@free.fr>
 
-Stefan Richter wrote:
-> Boaz Harrosh wrote:
->> Stefan Richter wrote:
->>> James Bottomley wrote:
->>>> On Mon, 2008-08-04 at 20:08 +0200, Stefan Richter wrote:
->>>>> As a discussion reminded me today, I believe I should merge the
->>>>> following patch (could have done so much earlier in fact).  Or is there
->>>>> anything speaking against it?
->>>> The value 255 is chosen because it worked before.  What you need to do
->>>> is establish what the upper limit for firewire is (or indeed if it has
->>>> one).
->>> The limit is 65535, following from SBP-2 clause 5.1.2, definition of 
->>> data_size.
->>>
->>> [Side note:  The SBP-2 s/g list (a.k.a. page table) consists of 64bit 
->>> wide entries and needs to be contiguous in memory from the POV of the 
->>> FireWire PCI or PCIe controller, and the SBP-2 target reads the table 
->>> from the initiator's memory.  The (fw-)sbp2 driver builds this table as 
->>> a copy of the kernel's s/g list; but this was certainly already to the 
->>> reader clear from the context in the diff.]
->> Does the above mean you need contiguous physical memory to hold the   
->> sbp2's sg table. If so then it should be allocated with alloc_coherent and
->> maybe total size up to a PAGE_SIZE.
+Alan Stern wrote:
+> On Tue, 5 Aug 2008, Boaz Harrosh wrote:
 > 
-> It doesn't have to be cache-coherent but it indeed needs to be memory
-> which can be DMA-mapped in one piece.
+>> There was a correct and simple patch proposed that fixes this problem
+>> the right way:
+>> http://marc.info/?l=linux-usb&m=121762869915609&w=2
+>>
+>> Doug could you please test this patch to see if it fixes your device?
+>>
+>> scsi-core already gives drivers complete control on what sense_size to
+>> fetch. It is a parameter to the scsi_eh_prep_cmnd() call. So no need
+>> for slave_configure(), default value, and all that loop.
 > 
-> (DMA direction is DMA_TO_DEVICE.  Lifetime of the mapping is from before
-> the ORB is committed until after we received completion status, or the
-> request timed out and its ORB was aborted.  fw-sbp2 implements exactly
-> this lifetime, while sbp2 keeps the DMA mapping around from before login
-> to the target until after logout.)
+>>> http://thread.gmane.org/gmane.linux.utilities.smartmontools/5721
+>>> Index: linux-2.6/drivers/usb/storage/scsiglue.c
+>>> ===================================================================
+>>> --- linux-2.6.orig/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:24.000000000 +0200
+>>> +++ linux-2.6/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:37.000000000 +0200
+>>> @@ -170,6 +170,10 @@
+>>>  		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
+>>>  			sdev->guess_capacity = 1;
+>>>  
+>>> +		/* assume SPC3 or latter device support sense size different of 18 */
+>>> +		if (sdev->scsi_level > SCSI_SPC_2)
+>>> +			us->fflags |= US_FL_SANE_SENSE;
+>>> +
+>>>  		/* Some devices report a SCSI revision level above 2 but are
+>>>  		 * unable to handle the REPORT LUNS command (for which
+>>>  		 * support is mandatory at level 3).  Since we already have
+>>> Index: linux-2.6/drivers/usb/storage/transport.c
+>>> ===================================================================
+>>> --- linux-2.6.orig/drivers/usb/storage/transport.c	2008-08-02 00:07:24.000000000 \
+>>>                 +0200
+>>> +++ linux-2.6/drivers/usb/storage/transport.c	2008-08-02 00:07:37.000000000 +0200
+>>> @@ -595,10 +595,15 @@
+>>>  	if (need_auto_sense) {
+>>>  		int temp_result;
+>>>  		struct scsi_eh_save ses;
+>>> +		int sense_size = US_SENSE_SIZE;
+>>> +
+>>> +		/* device support and need bigger sense buffer */
+>>> +		if (us->fflags & US_FL_SANE_SENSE)
+>>> +			sense_size = ~0;
 > 
+> This looks highly suspicious at best.  Shouldn't sense_size be set to a
+> real value, like 22 or 255?
 
-OK you are right, DMA_TO_DEVICE is less problematic in regard to variables
-that are changed by the CPU that share cacheline with DMAed memory. As
-long as the code has a cache-sync before the start of transfer.
-But I see you'll take care of that below.
+The "correct" maximum value (SPC-3 and draft SPC-4) is 252.
+Since SPC-3 the recommended maximum length for the basic
+SCSI commands that have a 1 byte allocation length field was
+altered from 255 to 252. This is to be a little friendlier
+to transports that move data in 4 byte units across their
+transport. Guessing a bit here but SATA, SAS and FCP fall
+into that group of transports.
 
-> 
->>>>> Meanwhile, SG_ALL has been redefined from 255 to SCSI_MAX_SG_SEGMENTS =
->>>>> 128 without me noticing it.  But since several popular architectures
->>>>> define ARCH_HAS_SG_CHAIN, we may want to go back to 255 in (fw-)sbp2.
->>>>> (Besides, we should also do some tests to figure out an actual optimum.
->>>>> And fw-sbp2.c's struct sbp2_command_orb should become variably sized.)
->>>> Don't bother with optmium ... that's block's job based on what it sees
->>>> from the completions.  All we need to know is maximum.
->> From my tests, the block layer will, very fast, send you chained commands.
->> if you set it to 255 you'll see two chained fragments. In iscsi we have
->> 4096 and it is very good for performance. However since you are pre-allocating
->> the memory per can_queue commands, this can get big, and the memory overhead
->> can be an impact on performance.
-> 
-> OK.  This gives me a better picture.
-> 
-> 
->>> OK, with the small caveat that the current (fw-)sbp2 driver code is 
->>> somewhat simplistic WRT page table handling and geared towards rather 
->>> short page tables.  But this may be possible to enhance without too much 
->>> difficulty.
->>>
->>>>> Does the most relevant user of large transfers with SBP-2 devices,
->>>>> sd-mod, use chained s/g lists?
->>>> pass, but firewire is a reasonably slow bus by modern standards, and you
->>> A 3200 Mb/s spec exists :-) (though no silicon yet, to my knowledge).
->> As you said above and since bitrate is increasing, a 255 is a good 
->> preallocated value, but perhaps it could also be a module parameter so
->> fast cards can have a bigger pre-allocated sg table. (per canQ command).
->> Also for embedded systems, they might want to lower this value.
-> 
-> A preset according to connection speed could also be done by the driver
-> without user intervention.
-> 
+At some stage the allocation field length of an INQUIRY
+command was changed from 1 to 2 bytes. So to pick up
+VPD pages on older devices an INQUIRY's maximum allocation
+length of 252 may be prudent. For example, choosing a value
+of 260 (0x104) may give a surprising result if the device
+only expects a 1 byte allocation length field.
 
-Even better thanks, that would be ideal. 
+>> I recommend this patch. It does exactly what's needed with minimum risk
+>> it is even maybe over protective, with the white list. Perhaps it should
+>> be turned to a black list instead. The old broken devices been an extincting
+>> exception.
+> 
+> Changing it to a blacklist would be bad -- in fact it would be a 
+> regression, because all the deficient devices which used to work would 
+> stop working until they were identified and added to the blacklist.
+> 
+> Apart from the one nit above, I agree that this patch looks sensible.
 
-(Except for the embedded systems that would want to keep it low, perhaps
-at configuration time)
+Boaz,
+I didn't test the above patch (as I don't have the external
+USB devices that need it) but a gentleman who did, tells me
+that he used a very similar patch and it solved his problem.
 
-> 
->>>> have the protocol overhead for each ORB, so I'd guess there's a point at
->>>> which increasing the transaction size doesn't buy anything.
->>>>
->>>> James
->> From re-inspecting the code I can see that the struct sbp2_command_orb
->> might have problems with none DMA coherent ARCHs.
-> 
-> Hmm.  This would be a bug.  But from what I see while scrolling through
-> fw-sbp2 and through sbp2, they both do it right.  Well, to be very
-> strict, sbp2 should dma_sync_single_for_cpu() at a slightly different
-> place than it does now.  I shall patch this.
-> 
+Doug Gilbert
 
-Yes I agree with you. Keep me posted I'll review the code
-
-> 
->> I think for safety
->> and flexibility the sbp2_command_orb.page_table array should be
->> dynamically allocated at init time
-> 
-> The older driver sbp2 uses a fixed-size pool of ORBs and s/g tables for
-> the whole time that it is logged in into a target.  The author of the
-> newer fw-sbp2 driver chose to keep ORB and s/g table only around for the
-> lifetime of a request, and I think it's a valid approach.
-> 
->> with even maybe alloc_coherent.
-> 
-> alloc_coherent isn't necessary.  Even code simplicity wouldn't profit
-> too much IMO; we already have to DMA-map the data buffer for each
-> request anyway.
-
-OK I'm convinced. I think the proposed patch, (funny I wrote it) is good
-as a first measure to take matters into drivers hands and avoid any
-unintentional side effects from scsi constants.
-
-Thanks
-Boaz
