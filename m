@@ -1,75 +1,78 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Poisoning of Linux initiators on SCST reboot.
-Date: Tue, 5 Aug 2008 06:52:30 -0700
-Message-ID: <20080805135230.GB27577@plap4-2.local>
-References: <andrew.vasquez@qlogic.com> <200808012022.m71KMNDX004852@wind.enjellic.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Tue, 5 Aug 2008 10:51:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0808051047130.2518-100000@iolanthe.rowland.org>
+References: <48983F5D.6060903@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:19949 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759150AbYHENwf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 09:52:35 -0400
-Content-Disposition: inline
-In-Reply-To: <200808012022.m71KMNDX004852@wind.enjellic.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59579 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755971AbYHEOvm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 10:51:42 -0400
+In-Reply-To: <48983F5D.6060903@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@enjellic.com
-Cc: scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, stf_xl@wp.pl, vst@vlnb.net
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Douglas Gilbert <dougg@torque.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthieu castet <castet.matthieu@free.fr>
 
-On Fri, 01 Aug 2008, greg@enjellic.com wrote:
+On Tue, 5 Aug 2008, Boaz Harrosh wrote:
 
-> On Jul 29, 11:19am, Andrew Vasquez wrote:
-> } Subject: Re: Poisoning of Linux initiators on SCST reboot.
+> There was a correct and simple patch proposed that fixes this problem
+> the right way:
+> http://marc.info/?l=linux-usb&m=121762869915609&w=2
 > 
-> Good afternoon to everyone, hope the week is ending well.
+> Doug could you please test this patch to see if it fixes your device?
 > 
-> > Ok, here's a patch against Linus' latest git tree which corrects the
-> > issue locally.  Could you try it out on your test configuration?
-> > We'd like to perform some additional sanity-testing locally before
-> > we submit the fix formally for upstream consumption.
-> 
-> The patch worked perfectly on our test configuration.  After the SCST
-> target reboot the client initiator picked up on the presence of the
-> storage and properly discovered it.
-> 
-> Evidently the qla2xxx driver has changed significantly from where
-> Linus' tree was at when you sent the patch.  My local git clone is up
-> to date with Linus' git tree which has
-> 94ad374a0751f40d25e22e036c37f7263569d24c at its head and the patch
-> didn't apply.
-> 
-> The kernel I tested against was from my local git clone of Linus' tree
-> which has 94ad374a0751f40d25e22e036c37f7263569d24c at its head.  The
-> qla2xxx driver has evidently changed significantly since the patch
-> didn't apply cleanly against this tree.  It was trivial, however, to
-> update the patch.
+> scsi-core already gives drivers complete control on what sense_size to
+> fetch. It is a parameter to the scsi_eh_prep_cmnd() call. So no need
+> for slave_configure(), default value, and all that loop.
 
-Thank you for the update.  The patch is already in our patch-queue for
-our next -rcX submission.
+> > http://thread.gmane.org/gmane.linux.utilities.smartmontools/5721
+> > Index: linux-2.6/drivers/usb/storage/scsiglue.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:24.000000000 +0200
+> > +++ linux-2.6/drivers/usb/storage/scsiglue.c	2008-08-02 00:07:37.000000000 +0200
+> > @@ -170,6 +170,10 @@
+> >  		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
+> >  			sdev->guess_capacity = 1;
+> >  
+> > +		/* assume SPC3 or latter device support sense size different of 18 */
+> > +		if (sdev->scsi_level > SCSI_SPC_2)
+> > +			us->fflags |= US_FL_SANE_SENSE;
+> > +
+> >  		/* Some devices report a SCSI revision level above 2 but are
+> >  		 * unable to handle the REPORT LUNS command (for which
+> >  		 * support is mandatory at level 3).  Since we already have
+> > Index: linux-2.6/drivers/usb/storage/transport.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/usb/storage/transport.c	2008-08-02 00:07:24.000000000 \
+> >                 +0200
+> > +++ linux-2.6/drivers/usb/storage/transport.c	2008-08-02 00:07:37.000000000 +0200
+> > @@ -595,10 +595,15 @@
+> >  	if (need_auto_sense) {
+> >  		int temp_result;
+> >  		struct scsi_eh_save ses;
+> > +		int sense_size = US_SENSE_SIZE;
+> > +
+> > +		/* device support and need bigger sense buffer */
+> > +		if (us->fflags & US_FL_SANE_SENSE)
+> > +			sense_size = ~0;
 
-> > Sidenote: we'll also need to backport some form of this fix to
-> > stable, but qla2xxx in kernels upto 2.6.26 didn't utilize the
-> > terminate-rport-io infrastructure:
-> 
-> That would seem to be the case.  It doesn't appear 2.6.26 even has the
-> necessary infra-structure to support the patch.
-> 
-> Any idea on how tough a backport to 2.6.26 or earlier would be?
-> Running 'head-of-git' from Linus' tree would be somewhat of a stretch
-> for production applications.... :-)(
+This looks highly suspicious at best.  Shouldn't sense_size be set to a
+real value, like 22 or 255?
 
-We are still looking to finalize a migration path.  As it stands now,
-the least invasive mechanism looks like backporting:
 
-[SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
+> I recommend this patch. It does exactly what's needed with minimum risk
+> it is even maybe over protective, with the white list. Perhaps it should
+> be turned to a black list instead. The old broken devices been an extincting
+> exception.
 
-[SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
+Changing it to a blacklist would be bad -- in fact it would be a 
+regression, because all the deficient devices which used to work would 
+stop working until they were identified and added to the blacklist.
 
-then adding this patch should suffice.  We'll do some more testing
-locally.
+Apart from the one nit above, I agree that this patch looks sensible.
 
-Regards,
-Andrew Vasquez
+Alan Stern
+
