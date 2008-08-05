@@ -1,35 +1,64 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
-Date: Mon, 4 Aug 2008 16:20:35 -0600
-Message-ID: <200808041620.35487.bjorn.helgaas@hp.com>
-References: <1217786532.4179.24.camel@localhost.localdomain> <200808041443.20942.bjorn.helgaas@hp.com> <20080804213535.GM26461@parisc-linux.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force
+ PCI flush
+Date: Mon, 4 Aug 2008 17:41:28 -0700
+Message-ID: <20080804174128.a0877c27.akpm@linux-foundation.org>
+References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
+	<4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:40257 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbYHDWVg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 18:21:36 -0400
-In-Reply-To: <20080804213535.GM26461@parisc-linux.org>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34521 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754133AbYHEAlk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2008 20:41:40 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@linuxfoundation.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
 
-On Monday 04 August 2008 03:35:35 pm Matthew Wilcox wrote:
-> On Mon, Aug 04, 2008 at 02:43:20PM -0600, Bjorn Helgaas wrote:
-> > I tried to standardize the PCI core on "[%04x/%04x]" for vendor/device ID.
-> 
-> That's unfortunately different from lspci -nn:
-> 
-> 00:00.0 Host bridge [0600]: Intel Corporation Mobile PM965/GM965/GL960
-> Memory Controller Hub [8086:2a00] (rev 03)
-> 
-> Sorry, I should have reviewed your patches ;-(
+On Fri, 1 Aug 2008 10:19:07 -0600 "Yang, Bo" <Bo.Yang@lsi.com> wrote:
 
-I can change those.  I just copied what seemed to be the most
-prevalent.  But lspci is harder to change, so we should probably
-follow that.
+> MegaRAID SAS Driver get unexpected Interrupt.  Add the dumy readl to force PCI flush will fix this issue.
+> 
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
+> 
+> ---
+> drivers/scsi/megaraid/megaraid_sas.c |    6 ++++++
+> 1 files changed, 6 insertions(+)
+> 
+> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2008-07-31 12:00:58.000000000 -0400
+> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2008-07-31 12:30:35.000000000 -0400
+> @@ -198,6 +198,9 @@ megasas_clear_intr_xscale(struct megasas
+>          */
+>         writel(status, &regs->outbound_intr_status);
+> 
+> +       /* Dummy readl to force pci flush */
+> +       readl(&regs->outbound_intr_status);
+> +
+>         return 0;
+>  }
+> 
+> @@ -293,6 +296,9 @@ megasas_clear_intr_ppc(struct megasas_re
+>          */
+>         writel(status, &regs->outbound_doorbell_clear);
+> 
+> +       /* Dummy readl to force pci flush */
+> +       readl(&regs->outbound_doorbell_clear);
+> +
+>         return 0;
+>  }
+>  /**
+
+These patches all had their tabs replaced with spaces.  I fixed them up.
+
+Please always run checkpatch on all patches.  checkpatch found this:
+
+ERROR: Macros with complex values should be enclosed in parenthesis
+#182: FILE: drivers/scsi/megaraid/megaraid_sas.h:586:
++#define MFI_GEN2_ENABLE_INTERRUPT_MASK		0x00000001 | 0x00000004
+
+which is a potential source of bugs.  I queued a patch to fix that also.
