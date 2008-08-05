@@ -1,90 +1,76 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch resend] firewire: ieee1394: Move away from SG_ALL
-Date: Tue, 05 Aug 2008 15:22:20 +0300
-Message-ID: <489845FC.4080104@panasas.com>
-References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de> <1217877676.3318.32.camel@localhost.localdomain> <48975F5F.90906@s5r6.in-berlin.de>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force
+ PCI flush
+Date: Tue, 5 Aug 2008 06:27:10 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C31AADD4C1@cosmail02.lsi.com>
+References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
+	<4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>,<20080804174128.a0877c27.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:3925 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759512AbYHEMXI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 08:23:08 -0400
-In-Reply-To: <48975F5F.90906@s5r6.in-berlin.de>
+Received: from mail0.lsil.com ([147.145.40.20]:44583 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755991AbYHEM3d convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 08:29:33 -0400
+In-Reply-To: <20080804174128.a0877c27.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@linuxfoundation.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
 
-Stefan Richter wrote:
-> James Bottomley wrote:
->> On Mon, 2008-08-04 at 20:08 +0200, Stefan Richter wrote:
->>> As a discussion reminded me today, I believe I should merge the
->>> following patch (could have done so much earlier in fact).  Or is there
->>> anything speaking against it?
->> The value 255 is chosen because it worked before.  What you need to do
->> is establish what the upper limit for firewire is (or indeed if it has
->> one).
-> 
-> The limit is 65535, following from SBP-2 clause 5.1.2, definition of 
-> data_size.
-> 
-> [Side note:  The SBP-2 s/g list (a.k.a. page table) consists of 64bit 
-> wide entries and needs to be contiguous in memory from the POV of the 
-> FireWire PCI or PCIe controller, and the SBP-2 target reads the table 
-> from the initiator's memory.  The (fw-)sbp2 driver builds this table as 
-> a copy of the kernel's s/g list; but this was certainly already to the 
-> reader clear from the context in the diff.]
-> 
+Thanks Andrew.
 
-Does the above mean you need contiguous physical memory to hold the   
-sbp2's sg table. If so then it should be allocated with alloc_coherent and
-maybe total size up to a PAGE_SIZE.
+Bo Yang
 
->>> Meanwhile, SG_ALL has been redefined from 255 to SCSI_MAX_SG_SEGMENTS =
->>> 128 without me noticing it.  But since several popular architectures
->>> define ARCH_HAS_SG_CHAIN, we may want to go back to 255 in (fw-)sbp2.
->>> (Besides, we should also do some tests to figure out an actual optimum.
->>> And fw-sbp2.c's struct sbp2_command_orb should become variably sized.)
->> Don't bother with optmium ... that's block's job based on what it sees
->> from the completions.  All we need to know is maximum.
-> 
+________________________________________
+From: Andrew Morton [akpm@linux-foundation.org]
+Sent: Monday, August 04, 2008 8:41 PM
+To: Yang, Bo
+Cc: 'James.Bottomley@SteelEye.com'; 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-kernel@vger.kernel.org'; Patro, Sumant; Austria, Winston; poswald@novell.com
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force PCI flush
 
->From my tests, the block layer will, very fast, send you chained commands.
-if you set it to 255 you'll see two chained fragments. In iscsi we have
-4096 and it is very good for performance. However since you are pre-allocating
-the memory per can_queue commands, this can get big, and the memory overhead
-can be an impact on performance.
+On Fri, 1 Aug 2008 10:19:07 -0600 "Yang, Bo" <Bo.Yang@lsi.com> wrote:
 
-> OK, with the small caveat that the current (fw-)sbp2 driver code is 
-> somewhat simplistic WRT page table handling and geared towards rather 
-> short page tables.  But this may be possible to enhance without too much 
-> difficulty.
-> 
->>> Does the most relevant user of large transfers with SBP-2 devices,
->>> sd-mod, use chained s/g lists?
->> pass, but firewire is a reasonably slow bus by modern standards, and you
-> 
-> A 3200 Mb/s spec exists :-) (though no silicon yet, to my knowledge).
-> 
+> MegaRAID SAS Driver get unexpected Interrupt.  Add the dumy readl to force PCI flush will fix this issue.
+>
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>
+> ---
+> drivers/scsi/megaraid/megaraid_sas.c |    6 ++++++
+> 1 files changed, 6 insertions(+)
+>
+> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2008-07-31 12:00:58.000000000 -0400
+> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2008-07-31 12:30:35.000000000 -0400
+> @@ -198,6 +198,9 @@ megasas_clear_intr_xscale(struct megasas
+>          */
+>         writel(status, &regs->outbound_intr_status);
+>
+> +       /* Dummy readl to force pci flush */
+> +       readl(&regs->outbound_intr_status);
+> +
+>         return 0;
+>  }
+>
+> @@ -293,6 +296,9 @@ megasas_clear_intr_ppc(struct megasas_re
+>          */
+>         writel(status, &regs->outbound_doorbell_clear);
+>
+> +       /* Dummy readl to force pci flush */
+> +       readl(&regs->outbound_doorbell_clear);
+> +
+>         return 0;
+>  }
+>  /**
 
-As you said above and since bitrate is increasing, a 255 is a good 
-preallocated value, but perhaps it could also be a module parameter so
-fast cards can have a bigger pre-allocated sg table. (per canQ command).
-Also for embedded systems, they might want to lower this value.
+These patches all had their tabs replaced with spaces.  I fixed them up.
 
->> have the protocol overhead for each ORB, so I'd guess there's a point at
->> which increasing the transaction size doesn't buy anything.
->>
->> James
-> 
+Please always run checkpatch on all patches.  checkpatch found this:
 
->From re-inspecting the code I can see that the struct sbp2_command_orb
-might have problems with none DMA coherent ARCHs. I think for safety
-and flexibility the sbp2_command_orb.page_table array should be
-dynamically allocated at init time with even maybe alloc_coherent.
+ERROR: Macros with complex values should be enclosed in parenthesis
+#182: FILE: drivers/scsi/megaraid/megaraid_sas.h:586:
++#define MFI_GEN2_ENABLE_INTERRUPT_MASK         0x00000001 | 0x00000004
 
-Do you need that I send you a sketch of what I mean?
-
-Boaz
+which is a potential source of bugs.  I queued a patch to fix that also.
