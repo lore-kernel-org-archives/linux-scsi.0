@@ -1,76 +1,77 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] drivers/firmware/iscsi_ibft.c: make 3 functions static
-Date: Tue, 5 Aug 2008 23:14:31 +0300
-Message-ID: <20080805201427.GK22895@cs181140183.pp.htv.fi>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Tue, 05 Aug 2008 13:44:01 -0700
+Message-ID: <1217969041.9923.64.camel@localhost.localdomain>
+References: <1217786532.4179.24.camel@localhost.localdomain>
+	 <200808051003.10400.jbarnes@virtuousgeek.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:43853 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764075AbYHEUPz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2008 16:15:55 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <200808051003.10400.jbarnes@virtuousgeek.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek <ketuzsezr@darnok.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-This patch makes the following needlessly global functions static:
-- ibft_attr_show_initiator()
-- ibft_attr_show_nic()
-- ibft_attr_show_target()
+On Tue, 2008-08-05 at 10:03 -0700, Jesse Barnes wrote:
+> On Sunday, August 03, 2008 11:02 am James Bottomley wrote:
+> > +/**
+> > + * pci_lost_interrupt - reports a lost PCI interrupt
+> > + * @pdev:	device whose interrupt is lost
+> > + *
+> > + * The primary function of this routine is to report a lost interrupt
+> > + * in a standard way which users can recognise (instead of blaming the
+> > + * driver).
+> > + *
+> > + * Returns:
+> > + *  a suggestion for fixing it (although the driver is not required to
+> > + * act on this).
+> > + */
+> > +enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
+> > +{
+> > +	if (pdev->msi_enabled || pdev->msix_enabled) {
+> > +		enum pci_lost_interrupt_reason ret;
+> > +
+> > +		if (pdev->msix_enabled) {
+> > +			pci_note_irq_problem(pdev, "MSIX routing failure");
+> > +			ret = PCI_LOST_IRQ_DISABLE_MSIX;
+> > +		} else {
+> > +			pci_note_irq_problem(pdev, "MSI routing failure");
+> > +			ret = PCI_LOST_IRQ_DISABLE_MSI;
+> > +		}
+> > +		return ret;
+> > +	}
+> > +#ifdef CONFIG_ACPI
+> > +	if (!(acpi_disabled || acpi_noirq)) {
+> > +		pci_note_irq_problem(pdev, "Potential ACPI misrouting please reboot with
+> > acpi=noirq"); +		/* currently no way to fix acpi on the fly */
+> > +		return PCI_LOST_IRQ_DISABLE_ACPI;
+> > +	}
+> > +#endif
+> > +	pci_note_irq_problem(pdev, "unknown cause (not MSI or ACPI)");
+> > +	return PCI_LOST_IRQ_NO_INFORMATION;
+> > +}
+> 
+> This seems to be a function that just returns what type of IRQ you're using or 
+> how it's routed and it isn't necessarily "lost interrupt" specific.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+So perhaps this routine should only note but not advise?  The drivers
+can then just call pci_interrupt_type to see if they can do anything.
 
----
+> This information is clearly useful to drivers both for informational purposes 
+> and for debugging problems, so on that front it looks good.  However, I think 
+> it should probably be called pci_interrupt_type(struct pci_dev *dev) or 
+> something instead, and just return an enum of either MSIX, MSI, or LINE 
+> (though I'm open to better names).  From that, the driver can infer what 
+> might be going wrong, though in the case of a LINE interrupt, all you can 
+> really do is report that there's probably a platform IRQ routing problem.
 
-This patch has been sent on:
-- 23 Apr 2008
+The only thing that this can't do is ACPI ... but on the other hand once
+the IRQ routing is set by ACPI I'm not sure the driver can do anything
+to fix it.
 
- drivers/firmware/iscsi_ibft.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+So ... depending on how the feedback goes, I'll plan to reroll this as a
+note but not advise function.
 
-421adc9620a633d461059da9a8a94315d8a767ea diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-index 8024e3b..8523811 100644
---- a/drivers/firmware/iscsi_ibft.c
-+++ b/drivers/firmware/iscsi_ibft.c
-@@ -334,9 +334,9 @@ static void ibft_release(struct kobject *kobj)
- /*
-  *  Routines for parsing the iBFT data to be human readable.
-  */
--ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
--				  struct ibft_attribute *attr,
--				  char *buf)
-+static ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
-+					struct ibft_attribute *attr,
-+					char *buf)
- {
- 	struct ibft_initiator *initiator = entry->initiator;
- 	void *ibft_loc = entry->header;
-@@ -376,9 +376,9 @@ ssize_t ibft_attr_show_initiator(struct ibft_kobject *entry,
- 	return str - buf;
- }
- 
--ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
--			    struct ibft_attribute *attr,
--			    char *buf)
-+static ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
-+				  struct ibft_attribute *attr,
-+				  char *buf)
- {
- 	struct ibft_nic *nic = entry->nic;
- 	void *ibft_loc = entry->header;
-@@ -440,9 +440,9 @@ ssize_t ibft_attr_show_nic(struct ibft_kobject *entry,
- 	return str - buf;
- };
- 
--ssize_t ibft_attr_show_target(struct ibft_kobject *entry,
--			       struct ibft_attribute *attr,
--			       char *buf)
-+static ssize_t ibft_attr_show_target(struct ibft_kobject *entry,
-+				     struct ibft_attribute *attr,
-+				     char *buf)
- {
- 	struct ibft_tgt *tgt = entry->tgt;
- 	void *ibft_loc = entry->header;
-
+James
