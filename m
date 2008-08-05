@@ -1,78 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: With kernel 2.6.19 no sg devices for devices that return PQ=1,
-	PDT=0x1f
-Date: Tue, 05 Aug 2008 09:51:30 -0700
-Message-ID: <1217955090.9923.22.camel@localhost.localdomain>
-References: <48984A20.2050002@linux.vnet.ibm.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Tue, 5 Aug 2008 10:54:27 -0600
+Message-ID: <20080805165426.GA2055@parisc-linux.org>
+References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <20080801161149.GA26461@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35089 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758729AbYHEQvl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 12:51:41 -0400
-In-Reply-To: <48984A20.2050002@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080801161149.GA26461@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Petermann <martin@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2008-08-05 at 14:40 +0200, Martin Petermann wrote:
-> With kernel 2.6.19 a change was introduced that no sg device was 
-> generated if PQ=1, PDT=0x1f was returned from the particular device:
-> 
-> commit 84961f28e9d13a4b193d0c8545f3c060c1890ff3
-> Author: dave wysochanski <davidw@netapp.com>
-> Date:   Wed Aug 9 14:56:32 2006 -0400
-> 
->      [SCSI] Don't add scsi_device for devices that return PQ=1, PDT=0x1f
-> 
-> Before it was possible on Linux 390 in user space to a e.g. LUN 0 to a 
-> port and to receive a generic device:
-> 
-> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
-> total 0
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
-> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
-> --w------- 1 root root 4096 Aug  4 12:07 uevent
-> --w------- 1 root root    0 Aug  4 13:46 unit_add
-> --w------- 1 root root    0 Aug  5 14:24 unit_remove
-> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # echo 0 > 
-> unit_add
-> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
-> total 0
-> drwxr-xr-x 2 root root    0 Aug  5 14:25 0x0000000000000000
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
-> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
-> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
-> --w------- 1 root root 4096 Aug  4 12:07 uevent
-> --w------- 1 root root    0 Aug  5 14:25 unit_add
-> --w------- 1 root root    0 Aug  5 14:24 unit_remove
-> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # lsscsi -g
-> [0:0:0:0]    no dev  IBM      2107900          2.27  -         /dev/sg0
-> 
-> After this fix there is no /dev/sg0 device generated.
-> 
-> We are utilizing the possibility to create such a device for the 
-> sg_utils commands in the case no other LUN has been attached to a port.
-> 
-> I do not want to put this fix into question. I would like to know if 
-> someone has an idea how to workaround this problem and to generate a 
-> generic device in user space using kernel 2.6.19 or a later version.
+On Fri, Aug 01, 2008 at 10:11:49AM -0600, Matthew Wilcox wrote:
+> Are they SCSI?  I just got round to trying 4k sector sizes in ata_ram
+> (after adding file backed capability) and found that libata currently
+> silently ignores the identify bits that report sector size.  I'll work
+> on fixing that this afternoon if nobody beats me to it.
 
-First of all, why is the device returning PQ=1 PTD=0x1f? this should
-mean its not connected and probably doesn't exist... ie inaccessible
-without some unspecified action being taken.  If you can use it, it's
-clearly not behaving like a PQ=1 LUN.  Perhaps the simplest thing would
-be for something in s390 to fix up the inquiry data ... or we could
-allow you could have a script to force it to appear (as in if you send a
-specific scan for this one LUN we could override the catch in the code
-that throws it out again).
+OK, I have patches.  I'll send them to linux-ide.  If anyone wants to
+try them, I pushed out two trees; one for libata:
 
-James
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-large-sectors
 
+and one for ata_ram supporting:
+ - large sectors
+ - file backing
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
 
+I hope that will help some more people do testing.
+
+Here's the dmesg from running:
+
+$ sudo modprobe ata_ram sector_size=4096 capacity=262144 nr_ports=2
+
+(note that you'll need at least 2.5GB of ram in your machine to try this,
+or Linux gets really unhappy.  You can, of course, reduce the capacity.
+Would there be interest in a lazily allocated option for ata_ram?)
+
+[ 1134.017240] scsi7 : ata_ram
+[ 1134.017420] scsi8 : ata_ram
+[ 1134.017489] ata8: SATA max UDMA/133 ata_ram_0
+[ 1134.017495] ata9: SATA max UDMA/133 ata_ram_1
+[ 1134.017557] ata8.00: ATA-8: Linux RAM Drive, 0.01, max UDMA7
+[ 1134.017563] ata8.00: 262144 sectors, multi 0: LBA 
+[ 1134.017602] ata8.00: configured for UDMA/133
+[ 1134.017631] ata9.00: ATA-8: Linux RAM Drive, 0.01, max UDMA7
+[ 1134.017636] ata9.00: 262144 sectors, multi 0: LBA 
+[ 1134.017668] ata9.00: configured for UDMA/133
+[ 1134.035741] scsi 7:0:0:0: Direct-Access     ATA      Linux RAM Drive  0.01 PQ: 0 ANSI: 5
+[ 1134.035904] sd 7:0:0:0: [sdb] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.035926] sd 7:0:0:0: [sdb] Write Protect is off
+[ 1134.035932] sd 7:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1134.035961] sd 7:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036039] sd 7:0:0:0: [sdb] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036061] sd 7:0:0:0: [sdb] Write Protect is off
+[ 1134.036066] sd 7:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1134.036095] sd 7:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036119]  sdb: unknown partition table
+[ 1134.036276] sd 7:0:0:0: [sdb] Attached SCSI disk
+[ 1134.036463] sd 7:0:0:0: Attached scsi generic sg2 type 0
+[ 1134.036607] scsi 8:0:0:0: Direct-Access     ATA      Linux RAM Drive  0.01 PQ: 0 ANSI: 5
+[ 1134.036749] sd 8:0:0:0: [sdc] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036768] sd 8:0:0:0: [sdc] Write Protect is off
+[ 1134.036774] sd 8:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1134.036803] sd 8:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036869] sd 8:0:0:0: [sdc] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036888] sd 8:0:0:0: [sdc] Write Protect is off
+[ 1134.036895] sd 8:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1134.036924] sd 8:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036944]  sdc: unknown partition table
+[ 1134.037082] sd 8:0:0:0: [sdc] Attached SCSI disk
+[ 1134.037182] sd 8:0:0:0: Attached scsi generic sg3 type 0
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
