@@ -1,55 +1,34 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH 2/2] fusion:  Implement generic interrupt misroute handling
-Date: Tue, 5 Aug 2008 10:38:38 -0700
-Message-ID: <200808051038.39275.jbarnes@virtuousgeek.org>
-References: <1217786709.4179.27.camel@localhost.localdomain> <48970A4D.2090309@csr.com> <1217954187.9923.15.camel@localhost.localdomain>
+From: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: [usb-storage] USB storage devices and SAT
+Date: Tue, 05 Aug 2008 19:42:49 +0200
+Message-ID: <48989119.8060708@free.fr>
+References: <Pine.LNX.4.44L0.0808051047130.2518-100000@iolanthe.rowland.org> <489872F7.8050703@torque.net> <48987856.9030804@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound-mail-02.bluehost.com ([69.89.21.12]:48923 "HELO
-	outbound-mail-02.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1761399AbYHERiw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2008 13:38:52 -0400
-In-Reply-To: <1217954187.9923.15.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from smtp8-g19.free.fr ([212.27.42.65]:44882 "EHLO smtp8-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757133AbYHERlj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Aug 2008 13:41:39 -0400
+In-Reply-To: <48987856.9030804@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: David Vrabel <david.vrabel@csr.com>, "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: dougg@torque.net, Alan Stern <stern@rowland.harvard.edu>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tuesday, August 05, 2008 9:36 am James Bottomley wrote:
-> On Mon, 2008-08-04 at 14:55 +0100, David Vrabel wrote:
-> > Moore, Eric wrote:
-> > > Thanks, I will try this out.   However I thought I saw lost
-> > > interrupts occurring randomly, meaning it was not necessarily the
-> > > first config page access.  I'm back in the office on 8/11, I will
-> > > test it out then and provide feedback.
-> >
-> > Is this using MSI on a device without per-vector mask bits?  If so, then
-> > this patch may help.
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit
-> >;h=ce6fce4295ba727b36fdc73040e444bd1aae64cd
+Hi,
+
+Boaz Harrosh wrote:
+> Douglas Gilbert wrote:
+> 
+> Do you know if he used the white-list or if his device returned
+> SPC-3 compliance. The reason I ask is because all the devices I have
+> here from usb sticks to external boxes and converters all work with
+> 96 bytes sense but all report spc-2
 >
-> We don't really know what the problem is.  MSI interrupts get lost on
-> older motherboards (the ones most likely to contain a 1030).  Why is
-> anybody's guess although the clever money is on the motherboard bridge
-> having issues.
-
-David just got us to fix an MSI masking bug recently, which could be related.
-
-The issue is that the PCI & interrupt handling code was disabling MSI during 
-interrupt handling, which could end up causing missed interrupts.  When MSI 
-is disabled, devices can still generate interrupts, but they'll go out the 
-interrupt line instead, so unless your IRQ handler is also registered with 
-that IRQ number, you'll probably lose them.
-
-As of the last PCI upstream merge, we work around this issue by never masking 
-MSI interrupts unless the device supports the MSI mask bit (as opposed to 
-just the big hammer enable/disable flag).
-
-Jesse
+He used the white-list. At the moment I don't know if some device report 
+at spc-3, but it could be a easy way to white-list them.
 
 
+Matthieu
