@@ -1,57 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] fusion:  Implement generic interrupt misroute
-	handling
-Date: Tue, 05 Aug 2008 13:45:24 -0700
-Message-ID: <1217969124.9923.67.camel@localhost.localdomain>
-References: <1217786709.4179.27.camel@localhost.localdomain>
-	 <48970A4D.2090309@csr.com> <1217954187.9923.15.camel@localhost.localdomain>
-	 <200808051038.39275.jbarnes@virtuousgeek.org>
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Tue, 5 Aug 2008 13:53:52 -0700
+Message-ID: <200808051353.52323.jbarnes@virtuousgeek.org>
+References: <1217786532.4179.24.camel@localhost.localdomain> <200808051003.10400.jbarnes@virtuousgeek.org> <1217969041.9923.64.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <200808051038.39275.jbarnes@virtuousgeek.org>
+In-Reply-To: <1217969041.9923.64.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-pci-owner@vger.kernel.org
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: David Vrabel <david.vrabel@csr.com>, "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2008-08-05 at 10:38 -0700, Jesse Barnes wrote:
-> On Tuesday, August 05, 2008 9:36 am James Bottomley wrote:
-> > On Mon, 2008-08-04 at 14:55 +0100, David Vrabel wrote:
-> > > Moore, Eric wrote:
-> > > > Thanks, I will try this out.   However I thought I saw lost
-> > > > interrupts occurring randomly, meaning it was not necessarily the
-> > > > first config page access.  I'm back in the office on 8/11, I will
-> > > > test it out then and provide feedback.
-> > >
-> > > Is this using MSI on a device without per-vector mask bits?  If so, then
-> > > this patch may help.
-> > >
-> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit
-> > >;h=ce6fce4295ba727b36fdc73040e444bd1aae64cd
-> >
-> > We don't really know what the problem is.  MSI interrupts get lost on
-> > older motherboards (the ones most likely to contain a 1030).  Why is
-> > anybody's guess although the clever money is on the motherboard bridge
-> > having issues.
-> 
-> David just got us to fix an MSI masking bug recently, which could be related.
-> 
-> The issue is that the PCI & interrupt handling code was disabling MSI during 
-> interrupt handling, which could end up causing missed interrupts.  When MSI 
-> is disabled, devices can still generate interrupts, but they'll go out the 
-> interrupt line instead, so unless your IRQ handler is also registered with 
-> that IRQ number, you'll probably lose them.
-> 
-> As of the last PCI upstream merge, we work around this issue by never masking 
-> MSI interrupts unless the device supports the MSI mask bit (as opposed to 
-> just the big hammer enable/disable flag).
+On Tuesday, August 05, 2008 1:44 pm James Bottomley wrote:
+> On Tue, 2008-08-05 at 10:03 -0700, Jesse Barnes wrote:
+> > This seems to be a function that just returns what type of IRQ you're
+> > using or how it's routed and it isn't necessarily "lost interrupt"
+> > specific.
+>
+> So perhaps this routine should only note but not advise?  The drivers
+> can then just call pci_interrupt_type to see if they can do anything.
 
-True, but this is orthogonal.
+If it's just a pci_irq_type function then it probably shouldn't print 
+anything, and leave that to the caller, since it might be used for other 
+purposes too (e.g. a driver load printk or something).  In the lost interrupt 
+case you already have to disable MSI or MSIX in the Fusion driver, so you may 
+as well put the printk there, right?  I guess I'm saying it should neither 
+note nor advise, just return the IRQ type.
 
-I'm trying to put together a diagnosing tool.  Once we know there's a
-problem and who has it, then we can try seeing if patches like this fix
-it.
+> > This information is clearly useful to drivers both for informational
+> > purposes and for debugging problems, so on that front it looks good. 
+> > However, I think it should probably be called pci_interrupt_type(struct
+> > pci_dev *dev) or something instead, and just return an enum of either
+> > MSIX, MSI, or LINE (though I'm open to better names).  From that, the
+> > driver can infer what might be going wrong, though in the case of a LINE
+> > interrupt, all you can really do is report that there's probably a
+> > platform IRQ routing problem.
+>
+> The only thing that this can't do is ACPI ... but on the other hand once
+> the IRQ routing is set by ACPI I'm not sure the driver can do anything
+> to fix it.
 
-James
+Yeah, ACPI may or may not be the problem, all you'll really know is that 
+you've got a line interrupt that you failed to get...  The driver won't be 
+able to do much in that case aside from complain loudly.
+
+Thanks,
+Jesse
