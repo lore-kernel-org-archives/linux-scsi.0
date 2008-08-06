@@ -1,32 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] Don't register integrity profile for disabled disks
-Date: Wed, 06 Aug 2008 11:17:49 -0700
-Message-ID: <1218046669.7493.36.camel@localhost.localdomain>
+Date: Wed, 06 Aug 2008 14:46:41 -0400
+Message-ID: <yq1promugku.fsf@sermon.lab.mkp.net>
 References: <yq1y73auid5.fsf@sermon.lab.mkp.net>
+	<1218046669.7493.36.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59716 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753427AbYHFSRx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2008 14:17:53 -0400
-In-Reply-To: <yq1y73auid5.fsf@sermon.lab.mkp.net>
+Received: from rgminet01.oracle.com ([148.87.113.118]:59631 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbYHFSrN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2008 14:47:13 -0400
+In-Reply-To: <1218046669.7493.36.camel@localhost.localdomain> (James Bottomley's message of "Wed\, 06 Aug 2008 11\:17\:49 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2008-08-06 at 14:08 -0400, Martin K. Petersen wrote:
-> Avoid registering a block integrity profile if the disk has been
-> disabled earlier in the probe process.
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-This is a possible thing to have happen for devices with SCSI-2
-reservations ... and that's not a permanenet condition.  When the
-reservation is released, tools usually do a BLKRRPART, but that won't
-pick up the DIF information ... perhaps this should be in
-sd_revalidate_disk?
+James> This is a possible thing to have happen for devices with SCSI-2
+James> reservations ... and that's not a permanenet condition.  When
+James> the reservation is released, tools usually do a BLKRRPART, but
+James> that won't pick up the DIF information ... perhaps this should
+James> be in sd_revalidate_disk?
 
-James
+sd_revalidate_disk can be called before the gendisk exists so I can't
+register the profile from there.  At one point I tried shuffling
+add_disk and revalidate in sd_probe but that caused problems with
+sysfs.
 
+I haven't tried reordering since the SCSI sysfs revamp.  I'll try that
+out so just drop the patch for now.  It's mostly cosmetic anyway.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
