@@ -1,54 +1,47 @@
-From: Hugh Dickins <hugh@veritas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH][SCS] sd: Read Capacity if (16) fails
-Date: Wed, 6 Aug 2008 16:34:16 +0100 (BST)
-Message-ID: <Pine.LNX.4.64.0808061629220.10184@blonde.site>
+Date: Wed, 06 Aug 2008 09:35:43 -0700
+Message-ID: <1218040543.7493.10.camel@localhost.localdomain>
 References: <Pine.LNX.4.64.0808061500450.1109@blonde.site>
- <yq1d4kmi5hl.fsf@sermon.lab.mkp.net>
+	 <20080806142521.GK2055@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from extu-mxob-2.symantec.com ([216.10.194.135]:56378 "EHLO
-	extu-mxob-2.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759622AbYHFPe7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2008 11:34:59 -0400
-In-Reply-To: <yq1d4kmi5hl.fsf@sermon.lab.mkp.net>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:57192 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753478AbYHFQhA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2008 12:37:00 -0400
+In-Reply-To: <20080806142521.GK2055@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Hugh Dickins <hugh@veritas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 6 Aug 2008, Martin K. Petersen wrote:
-> >>>>> "Hugh" == Hugh Dickins <hugh@veritas.com> writes:
+On Wed, 2008-08-06 at 08:25 -0600, Matthew Wilcox wrote:
+> On Wed, Aug 06, 2008 at 03:06:21PM +0100, Hugh Dickins wrote:
+> > Commit e0597d70012c82e16ee152270a55d89d8bf66693 (sd: Identify DIF protection
+> > type and application tag ownership) says that if a disk is formatted with
+> > Inquiry bit PROTECT=1, it is required to support Read Capacity(16).  But my
+> > SD cards, accessed by builtin cardreader and generic USB storage, disagree.
+> > 
+> > Therefore fall back to the familiar Read Capacity if Read Capacity(16) fails:
+> > without even showing the "failed" message since I expect this will be common.
 > 
-> Hugh> Commit e0597d70012c82e16ee152270a55d89d8bf66693 (sd: Identify
-> Hugh> DIF protection type and application tag ownership) says that if
-> Hugh> a disk is formatted with Inquiry bit PROTECT=1, it is required
-> Hugh> to support Read Capacity(16).  But my SD cards, accessed by
-> Hugh> builtin cardreader and generic USB storage, disagree.
-> 
-> Argh.  That's really broken.  USB storage has no business setting
-> PROTECT.
-> 
-> Can you send me the sg_inq output so I can see what else they are
-> returning?
+> How about we flip it around?  Unconditionally try READ CAPACITY 16 first,
+> then if that fails, try READ CAPACITY?  I suppose there's always the
+> possibility that a drive will go tits-up if it receives the RC16
+> command, so maybe we'll need a blacklist.
 
-sg_inq?  I assume that's the same as the inquiry_len bytes at inquiry:
+I don't think so ... the read capacity logic looks the way it does
+because we had a bit of trouble with USB devices simply going out to
+lunch on READ_CAPACITY(16) ... otherwise we'd have done the 16 then
+fallback to 10 ages ago.
 
-00000000: 00 8d 00 01 1f 01 00 00 47 65 6e 65 72 69 63 2d  ........Generic-
-00000010: 4d 75 6c 74 69 2d 43 61 72 64 20 20 20 20 20 20  Multi-Card      
-00000020: 31 2e 30 30                                      1.00
+The best way is probably a blacklist for protect ... I assume there's no
+plans in the near future for USB to support it, so we could just turn it
+off globally in USB slave configure.
 
-Ah, sg_inq is a command which spells that out, here you go:
+James
 
-standard INQUIRY:
-  PQual=0  Device_type=0  RMB=1  version=0x00  [no conformance claimed]
-  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=1
-  SCCS=0  ACC=0  TGPS=0  3PC=0  Protect=1  BQue=0
-  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-  [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=0
-    length=36 (0x24)   Peripheral device type: disk
- Vendor identification: Generic-
- Product identification: Multi-Card      
- Product revision level: 1.00
 
-Hugh
