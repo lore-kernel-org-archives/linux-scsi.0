@@ -1,76 +1,55 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] drivers/scsi/a2091.c: make 2 functions static
-Date: Thu, 7 Aug 2008 00:11:15 +0300
-Message-ID: <20080806211115.GQ1702@cs181140183.pp.htv.fi>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 6/6] cciss: fix bug if scsi tape support is disabled
+Date: Thu, 7 Aug 2008 09:43:05 +1000
+Message-ID: <20080807094305.8d315d06.sfr@canb.auug.org.au>
+References: <20080730211842.GF1758@roadking.ldev.net>
+	<20080804095633.GA20055@kernel.dk>
+	<20080805153012.0076396e.akpm@linux-foundation.org>
+	<20080806130825.1567d882.sfr@canb.auug.org.au>
+	<20080806103308.GM20055@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__7_Aug_2008_09_43_05_+1000_0lucu8eP4BtesStq"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:50276 "EHLO smtp5.pp.htv.fi"
+Received: from chilli.pcug.org.au ([203.10.76.44]:56537 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760654AbYHFVMo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Aug 2008 17:12:44 -0400
-Content-Disposition: inline
+	id S1753206AbYHFXnR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Aug 2008 19:43:17 -0400
+In-Reply-To: <20080806103308.GM20055@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, mike.miller@hp.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-a2091_{detect,release}() can become static.
+--Signature=_Thu__7_Aug_2008_09_43_05_+1000_0lucu8eP4BtesStq
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Hi Jens,
 
----
+On Wed, 6 Aug 2008 12:33:08 +0200 Jens Axboe <jens.axboe@oracle.com> wrote:
+>
+> Thanks, but just keep pulling linux-next and I'll try and get them
+> uptodate more frequently :-)
 
-This patch has been sent on:
-- 10 Jun 2008
+OK, will do.
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-22558d3b8c3dcf29bb54d76256a64db89017dedc diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
-index 07d572f..f36029c 100644
---- a/drivers/scsi/a2091.c
-+++ b/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
- 
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
-     }
- }
- 
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -227,7 +229,7 @@ static struct scsi_host_template driver_template = {
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff --git a/drivers/scsi/a2091.h b/drivers/scsi/a2091.h
-index fe809bc..252528f 100644
---- a/drivers/scsi/a2091.h
-+++ b/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+--Signature=_Thu__7_Aug_2008_09_43_05_+1000_0lucu8eP4BtesStq
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkiaNwkACgkQjjKRsyhoI8y6cACcD7F+ShVnfRXbn/+vv9iaFtnj
+DlUAoK7Y+1qhQNyru2wQ1fBHJ20JtF1I
+=wDJQ
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__7_Aug_2008_09_43_05_+1000_0lucu8eP4BtesStq--
