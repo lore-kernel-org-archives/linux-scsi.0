@@ -1,108 +1,121 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: With kernel 2.6.19 no sg devices for devices that return PQ=1,
- PDT=0x1f
-Date: Wed, 06 Aug 2008 11:06:20 +0200
-Message-ID: <4899698C.4050308@torque.net>
-References: <48984A20.2050002@linux.vnet.ibm.com> <1217955090.9923.22.camel@localhost.localdomain> <200808061043.35229.swen@vnet.ibm.com>
-Reply-To: dougg@torque.net
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [patch resend] firewire: ieee1394: Move away from SG_ALL
+Date: Wed, 06 Aug 2008 12:10:21 +0300
+Message-ID: <48996A7D.3080101@panasas.com>
+References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de>
+	<1217877676.3318.32.camel@localhost.localdomain>
+	<48975F5F.90906@s5r6.in-berlin.de> <489845FC.4080104@panasas.com>
+	<4898B0AF.6050800@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:35647 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158AbYHFJGe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2008 05:06:34 -0400
-In-Reply-To: <200808061043.35229.swen@vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <4898B0AF.6050800@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen@vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Martin Petermann <martin@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Swen Schillig wrote:
-> On Tuesday 05 August 2008 18:51, James Bottomley wrote:
->> On Tue, 2008-08-05 at 14:40 +0200, Martin Petermann wrote:
->>> With kernel 2.6.19 a change was introduced that no sg device was 
->>> generated if PQ=1, PDT=0x1f was returned from the particular device:
->>>
->>> commit 84961f28e9d13a4b193d0c8545f3c060c1890ff3
->>> Author: dave wysochanski <davidw@netapp.com>
->>> Date:   Wed Aug 9 14:56:32 2006 -0400
->>>
->>>      [SCSI] Don't add scsi_device for devices that return PQ=1, PDT=0x1f
->>>
->>> Before it was possible on Linux 390 in user space to a e.g. LUN 0 to a 
->>> port and to receive a generic device:
->>>
->>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
->>> total 0
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
->>> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
->>> --w------- 1 root root 4096 Aug  4 12:07 uevent
->>> --w------- 1 root root    0 Aug  4 13:46 unit_add
->>> --w------- 1 root root    0 Aug  5 14:24 unit_remove
->>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # echo 0 > 
->>> unit_add
->>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
->>> total 0
->>> drwxr-xr-x 2 root root    0 Aug  5 14:25 0x0000000000000000
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
->>> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
->>> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
->>> --w------- 1 root root 4096 Aug  4 12:07 uevent
->>> --w------- 1 root root    0 Aug  5 14:25 unit_add
->>> --w------- 1 root root    0 Aug  5 14:24 unit_remove
->>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # lsscsi -g
->>> [0:0:0:0]    no dev  IBM      2107900          2.27  -         /dev/sg0
->>>
->>> After this fix there is no /dev/sg0 device generated.
->>>
->>> We are utilizing the possibility to create such a device for the 
->>> sg_utils commands in the case no other LUN has been attached to a port.
->>>
->>> I do not want to put this fix into question. I would like to know if 
->>> someone has an idea how to workaround this problem and to generate a 
->>> generic device in user space using kernel 2.6.19 or a later version.
->> First of all, why is the device returning PQ=1 PTD=0x1f? this should
->> mean its not connected and probably doesn't exist... ie inaccessible
->> without some unspecified action being taken.  If you can use it, it's
->> clearly not behaving like a PQ=1 LUN.  Perhaps the simplest thing would
->> be for something in s390 to fix up the inquiry data ... or we could
->> allow you could have a script to force it to appear (as in if you send a
->> specific scan for this one LUN we could override the catch in the code
->> that throws it out again).
->>
->> James
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+Stefan Richter wrote:
+> Boaz Harrosh wrote:
+>> From my tests, the block layer will, very fast, send you chained commands.
+>> if you set it to 255 you'll see two chained fragments. In iscsi we have
+>> 4096 and it is very good for performance. However since you are pre-allocating
+>> the memory per can_queue commands, this can get big, and the memory overhead
+>> can be an impact on performance.
 > 
-> James
+> I did repeated read tests with dd now, with a 3.5" 750G SATA/ FireWire 
+> 800 disk and with a 2.5" 250G IDE/ FireWire 400 disk, each with either 
+> FireWire stack.  I used dd with and without iflag=direct, just because I 
+> don't have a clue how to capture the influence of .sg_tablesize best.
 > 
-> I think Martin is saying that this LUN is a non existent one which is just used for scanning
-> all available (existing) LUNs on the remote storage port.
-> That's why PQ=1 PTD=0x1f are returned and correct !
-> 
-> So what's required here is the possibility to add a "dummy" LUN which can be used just for this purpose.
-> Not sure whether this is covered by anything in the standard
+> Tests with .sg_tablesize = 128, 255, and 5000 all yield the same 
+> transfer rates.  So I guess I simply leave it at the current SG_ALL for now.
 
-That sounds like a job for the REPORT LUNS well known logical
-unit (WLUN or W-LUN). I implemented one in the scsi_debug driver.
-See the description of the "no_lun_0" parameter in
-http://sg.torque.net/sg/sdebug26.html
+You will need to enable sg chaining for your device. I'm not sure
+where is the latest documentation. (CC: Jens)
 
-You might try:
-   echo "- - 49409" > /sys/class/scsi_host/host<n>/scan
-where "host<n>" is the controller in question. Then
-see if a WLUN has appeared as a sg device node.
+Here is the script I used in my tests:
 
-Doug Gilbert
+	#!/bin/bash
+	sdx=sdb
+
+	# mess with sglist chaining
+	cd /sys/block/$sdx/queue
+	echo 4096 > max_segments
+	cat max_hw_sectors_kb  > max_sectors_kb
+	echo "max_hw_sectors_kb="$(cat max_hw_sectors_kb) 
+	echo "max_sectors_kb="$(cat max_sectors_kb) 
+	echo "max_segments="$(cat max_segments)
+
+Try to view the content of max_segments before and after
+see if it changed.
 
 
+and also with dd you need a large block size here is how
+I calculated it. (Other people might have better tests)
+I did a write test but a read test should be better:
+
+	if=/dev/zero
+	of=/dev/sdb
+
+	outputfile=$1.txt
+	echo "Testing $1"
+
+	# send 32G in $1 sectrors at once
+	do_dd()
+	{
+		# blocks of one sector
+		bs=512
+		#memory page in blocks
+		page=8
+		#number of scatterlist elements in a transfer
+		sgs=$1
+		#calculate the bpt param
+		bpt=$(($sgs*$page))
+		#total blocks to transfer 32 Giga bytes
+		count=64M
+
+
+		echo $3: "bpt=$bpt"
+
+	\time bash -c \
+		"sg_dd blk_sgio=1 dio=1 if=$if of=$of bpt=$bpt bs=$bs count=$count 2>/dev/null" \
+		2>> $2
+	}
+
+	echo "BEGIN RUN $1" >> $outputfile
+
+	echo "run with 128-sgilist"
+	echo "run with 128-sgilist" >> $outputfile
+	for i in {1..20}; do
+		do_dd 128 $outputfile $i;
+	done
+
+	echo "run with 2048-sgilist"
+	echo "run with 2048-sgilist" >> $outputfile
+	for i in {1..20}; do
+		do_dd 2048 $outputfile $i;
+	done
+
+I think that in the second case with 2048 if your device does
+not support it, dd will fail. (if I recall correctly)
+
+Boaz
+
+PS: OK I used sg_dd from sg-utils sg_read might be even better
+
+
+-------------------------------------------------------------------------
+This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
+Build the coolest Linux based applications with Moblin SDK & win great prizes
+Grand prize is a trip for two to an Open Source event anywhere in the world
+http://moblin-contest.org/redirect.php?banner_id=100&url=/
