@@ -1,62 +1,76 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [patch resend] firewire: ieee1394: Move away from SG_ALL
-Date: Wed, 06 Aug 2008 22:49:43 +0200
-Message-ID: <489A0E67.3070909@s5r6.in-berlin.de>
-References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de>	<1217877676.3318.32.camel@localhost.localdomain>	<48975F5F.90906@s5r6.in-berlin.de>
-	<489845FC.4080104@panasas.com>	<4898B0AF.6050800@s5r6.in-berlin.de>
-	<48996A7D.3080101@panasas.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] drivers/scsi/a3000.c: make 2 functions static
+Date: Thu, 7 Aug 2008 00:11:18 +0300
+Message-ID: <20080806211118.GR1702@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <48996A7D.3080101@panasas.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:59640 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758326AbYHFVMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Aug 2008 17:12:46 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Boaz Harrosh wrote:
-> You will need to enable sg chaining for your device.
+a3000_{detect,release}() can become static.
 
-Probably, because...
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-> I'm not sure where is the latest documentation. (CC: Jens)
-> 
-> Here is the script I used in my tests:
-> 
-> 	#!/bin/bash
-> 	sdx=sdb
-> 
-> 	# mess with sglist chaining
-> 	cd /sys/block/$sdx/queue
-> 	echo 4096 > max_segments
-> 	cat max_hw_sectors_kb  > max_sectors_kb
-> 	echo "max_hw_sectors_kb="$(cat max_hw_sectors_kb) 
-> 	echo "max_sectors_kb="$(cat max_sectors_kb) 
-> 	echo "max_segments="$(cat max_segments)
-> 
-> Try to view the content of max_segments before and after
-> see if it changed.
+---
 
-...right now there is no max_segments attribute.
+This patch has been sent on:
+- 10 Jun 2008
 
-Anyway.  This already fully answers what my ideal table size limit is. 
-Thanks so far,
--- 
-Stefan Richter
--=====-==--- =--- --==-
-http://arcgraph.de/sr/
+ drivers/scsi/a3000.c |    6 ++++--
+ drivers/scsi/a3000.h |    3 ---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
+85a02587af2fff4f03fcecf3bb0f61fbe1cfadc3 diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
+index 8b449d8..6970ce8 100644
+--- a/drivers/scsi/a3000.c
++++ b/drivers/scsi/a3000.c
+@@ -25,6 +25,8 @@
+ 
+ static struct Scsi_Host *a3000_host = NULL;
+ 
++static int a3000_release(struct Scsi_Host *instance);
++
+ static irqreturn_t a3000_intr (int irq, void *dummy)
+ {
+ 	unsigned long flags;
+@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+     }
+ }
+ 
+-int __init a3000_detect(struct scsi_host_template *tpnt)
++static int __init a3000_detect(struct scsi_host_template *tpnt)
+ {
+     wd33c93_regs regs;
+ 
+@@ -232,7 +234,7 @@ static struct scsi_host_template driver_template = {
+ 
+ #include "scsi_module.c"
+ 
+-int a3000_release(struct Scsi_Host *instance)
++static int a3000_release(struct Scsi_Host *instance)
+ {
+     wd33c93_release();
+     DMA(instance)->CNTR = 0;
+diff --git a/drivers/scsi/a3000.h b/drivers/scsi/a3000.h
+index 44a4ec7..c7afe16 100644
+--- a/drivers/scsi/a3000.h
++++ b/drivers/scsi/a3000.h
+@@ -11,9 +11,6 @@
+ 
+ #include <linux/types.h>
+ 
+-int a3000_detect(struct scsi_host_template *);
+-int a3000_release(struct Scsi_Host *);
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+
