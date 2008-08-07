@@ -1,78 +1,78 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Thu, 7 Aug 2008 19:04:54 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778826B3F6BF4C@GVW0547EXC.americas.hpqcorp.net>
-References: <20080724133012.GH8833@beardog.cca.cpqcorp.net>
-	<20080724224438B.fujita.tomonori@lab.ntt.co.jp>
-	<0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
- <20080725000638Q.fujita.tomonori@lab.ntt.co.jp>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Thu, 07 Aug 2008 15:07:49 -0500
+Message-ID: <489B5615.7090902@cs.wisc.edu>
+References: <200807300019.m6U0JkdY012558@localhost.localdomain> <aday73jxdfs.fsf@cisco.com> <200807311752.00911.divy@chelsio.com> <200808071145.03848.divy@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:36763 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627AbYHGTFu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2008 15:05:50 -0400
-In-Reply-To: <20080725000638Q.fujita.tomonori@lab.ntt.co.jp>
-Content-Language: en-US
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55109 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753322AbYHGUL5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Aug 2008 16:11:57 -0400
+In-Reply-To: <200808071145.03848.divy@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Divy Le Ray <divy@chelsio.com>
+Cc: Roland Dreier <rdreier@cisco.com>, Jeff Garzik <jgarzik@pobox.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, Steve Wise <swise@opengridcomputing.com>, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
+Divy Le Ray wrote:
+> On Thursday 31 July 2008 05:51:59 pm Divy Le Ray wrote:
+>> On Wednesday 30 July 2008 02:35:51 pm Roland Dreier wrote:
+>>>  > * From a networking standpoint, our main concern becomes how this
+>>>  > interacts with the networking stack.  In particular, I'm concerned
+>>>  > based on reading the source that this driver uses "TCP port stealing"
+>>>  > rather than using a totally separate MAC address (and IP).
+>>>  >
+>>>  > Stealing a TCP port on an IP/interface already assigned is a common
+>>>  > solution in this space, but also a flawed one.  Precisely because the
+>>>  > kernel and applications are unaware of this "special, magic TCP port"
+>>>  > you open the potential for application problems that are very
+>>>  > difficult for an admin to diagnose based on observed behavior.
+>>>
+>>> That's true, but using a separate MAC and IP opens up a bunch of other
+>>> operational problems.  I don't think the right answer for iSCSI offload
+>>> is clear yet.
+>>>
+>>>  - R.
+>> Hi Jeff,
+>>
+>> We've considered the approach of having a separate IP/MAC addresses to
+>> manage iSCSI connections. In such a context, the stack would have to be
+>> unaware of this iSCSI specific IP address. The iSCSI driver would then have
+>> to implement at least its own ARP reply mechanism. DHCP too would have to
+>> be managed separately. Most network setting/monitoring tools would also be
+>> unavailable.
+>>
+>> The open-iscsi initiator is not a huge consumer of TCP connections,
+>> allocating a TCP port from the stack would be reasonable in terms of
+>> resources in this context. It is however unclear if it is an acceptable
+>> approach.
+>>
+>> Our current implementation was designed to be the most tolerable one
+>> within the constraints - real or expected - aforementioned.
+>>
+> 
+> Hi Jeff,
+> 
+> Mike Christie will not merge this code until he has an explicit 
+> acknowledgement from netdev.
+> 
+> As you mentioned, the port stealing approach we've taken has its issues.
+> We consequently analyzed your suggestion to use a different IP/MAC address for 
+> iSCSI and it raises other tough issues (separate ARP and DHCP management, 
+> unavailability of common networking tools).
 
+If the iscsi tools could not have to deal with networking issues that 
+are already handled by other networking tools it would great for the 
+iscsi users so they do not have to learn new tools. Maybe we could 
+somehow hook into the existing network tools so they support these iscsi 
+hbas as well as normal NICs. Would it be possible to have the iscsi hbas 
+export the necessary network interfaces so that existing network tools 
+can manage them?
 
-> -----Original Message-----
-> From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-> Sent: Thursday, July 24, 2008 10:07 AM
-> To: Miller, Mike (OS Dev)
-> Cc: fujita.tomonori@lab.ntt.co.jp;
-> scameron@beardog.cca.cpqcorp.net;
-> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
->
-> On Thu, 24 Jul 2008 15:00:00 +0000
-> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> wrote:
->
-> >
-> > > > As for the patches I mentioned which were previously
-> ignored for
-> > > > improving how the current cciss SCSI code handled hot
-> plogging, if
-> > > > you're curious about that, check here:
-> > > >
-> > > > http://marc.info/?l=linux-scsi&m=120213565000426&w=4
-> > > >
-> > > > A change like that becomes more important if logical drives are
-> > > > exposed through the scsi layer.
-> > >
-> > > We need to think about the best way to map (expose) logical and
-> > > physical drivers to SCSI luns. As I wrote before, I'm
-> interested in
-> > > how HP SCSI driver does.
-> >
-> > We don't neccesarily want or need to expose the physical
-> disks. The only exception is disks that are not part of a
-> logical volume. If the disks are part of a logical volume but
-> exposed the user may shoot themselves in the foot by
-> destroying the firmware metadata.
->
-> Oops, sorry, I meant physical tape drives.
->
-
-Tomo,
-I patched your driver into the 2.6.27-rc1 kernel. After compiling the driver I get:
-
-[root@testmonkey linux-2.6]# insmod drivers/scsi/ciss.ko
-insmod: error inserting 'drivers/scsi/ciss.ko': -1 Invalid module format
-
-[root@testmonkey linux-2.6]# gcc --version
-gcc (GCC) 4.1.2 20071124 (Red Hat 4.1.2-42)
-
-[root@testmonkey linux-2.6]# uname -r
-2.6.26
-
-I built inside the tree. Any thoughts?
-
--- mikem
+If it comes down to it and your port stealing implementation is not 
+acceptable like how broadcom's was not, I will be ok with doing some 
+special iscsi network tools. Or instead of special iscsi tools, is there 
+something that the RDMA/iWarp guys are using that we can share?
