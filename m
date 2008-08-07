@@ -1,48 +1,37 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 6/6] cciss: fix bug if scsi tape support is disabled
-Date: Thu, 7 Aug 2008 15:29:44 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778826B3F16682@GVW0547EXC.americas.hpqcorp.net>
-References: <20080730211842.GF1758@roadking.ldev.net>
-	<20080804095633.GA20055@kernel.dk>
-	<20080805153012.0076396e.akpm@linux-foundation.org>
-	<20080806130825.1567d882.sfr@canb.auug.org.au>
-	<20080806103308.GM20055@kernel.dk>
- <20080807094305.8d315d06.sfr@canb.auug.org.au>
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 1/2] pci: add misrouted interrupt error handling
+Date: Thu, 7 Aug 2008 09:03:22 -0700
+Message-ID: <200808070903.23787.jbarnes@virtuousgeek.org>
+References: <1217786532.4179.24.camel@localhost.localdomain> <200808051415.59993.jbarnes@virtuousgeek.org> <1217973297.9923.80.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:3380 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbYHGPbJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2008 11:31:09 -0400
-In-Reply-To: <20080807094305.8d315d06.sfr@canb.auug.org.au>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1217973297.9923.80.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, greg@kroah.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>
 
-
-
-> -----Original Message-----
-> From: Stephen Rothwell [mailto:sfr@canb.auug.org.au]
-> Sent: Wednesday, August 06, 2008 6:43 PM
-> To: Jens Axboe
-> Cc: Andrew Morton; Miller, Mike (OS Dev);
-> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 6/6] cciss: fix bug if scsi tape support
-> is disabled
+On Tuesday, August 5, 2008 2:54 pm James Bottomley wrote:
+> > or somesuch.  That seems just as simple for driver writers as your
+> > initial patch, and the function is named in accordance with what it
+> > actually does, rather than what it's used for...
 >
-> Hi Jens,
+> It could, but if the bridge is the culprit (as it usually is for MSI
+> problems), this print won't help identify it.
 >
-> On Wed, 6 Aug 2008 12:33:08 +0200 Jens Axboe
-> <jens.axboe@oracle.com> wrote:
-> >
-> > Thanks, but just keep pulling linux-next and I'll try and get them
-> > uptodate more frequently :-)
->
+> Therefore, rather than give driver writers a recipe for "print this and
+> this and go to the bridge and print this", I'd rather have a single PCI
+> callback that prints all the (hopefully) relevant information that will
+> allow either fixing or blacklisting.
 
-I still can't find my latest patches in any tree. Jens?
+So in addition to the IRQ type check we need to dump some device topology 
+information... yeah that makes sense.  I wonder if the driver core should 
+provide something like this.  Greg?  In the meantime we can definitely add 
+the IRQ type function.
 
--- mikem
+Thanks,
+Jesse
