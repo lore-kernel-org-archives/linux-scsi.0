@@ -1,74 +1,28 @@
-From: Divy Le Ray <divy@chelsio.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Thu, 7 Aug 2008 11:45:01 -0700
-Message-ID: <200808071145.03848.divy@chelsio.com>
-References: <200807300019.m6U0JkdY012558@localhost.localdomain> <aday73jxdfs.fsf@cisco.com> <200807311752.00911.divy@chelsio.com>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH 0/3] cmd_filter fixes
+Date: Thu, 7 Aug 2008 20:47:45 +0200
+Message-ID: <6cf6b73e0808071147o76817aabhc363feb41b0a176c@mail.gmail.com>
+References: <20080731071851.GA30534@parisc-linux.org>
+	 <20080731162449X.fujita.tomonori@lab.ntt.co.jp>
+	 <20080731130422.GC30534@parisc-linux.org>
+	 <20080801001839L.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:19101 "EHLO
-	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753153AbYHGSqH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2008 14:46:07 -0400
-In-Reply-To: <200807311752.00911.divy@chelsio.com>
+Received: from mu-out-0910.google.com ([209.85.134.188]:61814 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214AbYHGSrr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2008 14:47:47 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so902847mue.1
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Aug 2008 11:47:45 -0700 (PDT)
+In-Reply-To: <20080801001839L.tomof@acm.org>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, davem@davemloft.net, michaelc@cs.wisc.edu, Steve Wise <swise@opengridcomputing.com>, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
 
-On Thursday 31 July 2008 05:51:59 pm Divy Le Ray wrote:
-> On Wednesday 30 July 2008 02:35:51 pm Roland Dreier wrote:
-> >  > * From a networking standpoint, our main concern becomes how this
-> >  > interacts with the networking stack.  In particular, I'm concerned
-> >  > based on reading the source that this driver uses "TCP port stealing"
-> >  > rather than using a totally separate MAC address (and IP).
-> >  >
-> >  > Stealing a TCP port on an IP/interface already assigned is a common
-> >  > solution in this space, but also a flawed one.  Precisely because the
-> >  > kernel and applications are unaware of this "special, magic TCP port"
-> >  > you open the potential for application problems that are very
-> >  > difficult for an admin to diagnose based on observed behavior.
-> >
-> > That's true, but using a separate MAC and IP opens up a bunch of other
-> > operational problems.  I don't think the right answer for iSCSI offload
-> > is clear yet.
-> >
-> >  - R.
->
-> Hi Jeff,
->
-> We've considered the approach of having a separate IP/MAC addresses to
-> manage iSCSI connections. In such a context, the stack would have to be
-> unaware of this iSCSI specific IP address. The iSCSI driver would then have
-> to implement at least its own ARP reply mechanism. DHCP too would have to
-> be managed separately. Most network setting/monitoring tools would also be
-> unavailable.
->
-> The open-iscsi initiator is not a huge consumer of TCP connections,
-> allocating a TCP port from the stack would be reasonable in terms of
-> resources in this context. It is however unclear if it is an acceptable
-> approach.
->
-> Our current implementation was designed to be the most tolerable one
-> within the constraints - real or expected - aforementioned.
->
-
-Hi Jeff,
-
-Mike Christie will not merge this code until he has an explicit 
-acknowledgement from netdev.
-
-As you mentioned, the port stealing approach we've taken has its issues.
-We consequently analyzed your suggestion to use a different IP/MAC address for 
-iSCSI and it raises other tough issues (separate ARP and DHCP management, 
-unavailability of common networking tools).
-On these grounds, we believe our current approach is the most tolerable.
-Would the stack provide a TCP port allocation service, we'd be glad to use it 
-to solve the current concerns.
-The cxgb3i driver is up and running here, its merge is pending our decision.
-
-Cheers,
-Divy
+Can we push this patches to Linus?
+They fix the regression and do not seem to introduce a new one
+(couldn't find any while testing it).
