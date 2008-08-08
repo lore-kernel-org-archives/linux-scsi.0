@@ -1,350 +1,56 @@
-From: greg@enjellic.com
-Subject: Re: Poisoning of Linux initiators on SCST reboot.
-Date: Fri, 8 Aug 2008 15:10:16 -0500
-Message-ID: <200808082010.m78KAGJE012193@wind.enjellic.com>
-References: <andrew.vasquez@qlogic.com>
-Reply-To: greg@enjellic.com
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: Scatter-gather segment merges by IOMMU?
+Date: Fri, 8 Aug 2008 13:25:59 -0700
+Message-ID: <da824cf30808081325n416ec436y94eebe494d789207@mail.gmail.com>
+References: <489CA21F.1030604@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wind.enjellic.com ([209.243.13.15]:56314 "EHLO
-	wind.enjellic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbYHHUKp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 16:10:45 -0400
-In-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-       "Re: Poisoning of Linux initiators on SCST reboot." (Aug  5,  6:52am)
+Received: from smtp-out.google.com ([216.239.33.17]:4365 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760156AbYHHU0F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 16:26:05 -0400
+Received: from spaceape13.eur.corp.google.com (spaceape13.eur.corp.google.com [172.28.16.147])
+	by smtp-out.google.com with ESMTP id m78KQ1x1007770
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Aug 2008 21:26:01 +0100
+Received: from rv-out-0506.google.com (rvbg37.prod.google.com [10.140.83.37])
+	by spaceape13.eur.corp.google.com with ESMTP id m78KQ0hN011180
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Aug 2008 13:26:00 -0700
+Received: by rv-out-0506.google.com with SMTP id g37so1166055rvb.23
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 13:25:59 -0700 (PDT)
+In-Reply-To: <489CA21F.1030604@s5r6.in-berlin.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, stf_xl@wp.pl, vst@vlnb.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Aug 5,  6:52am, Andrew Vasquez wrote:
-} Subject: Re: Poisoning of Linux initiators on SCST reboot.
+On Fri, Aug 8, 2008 at 12:44 PM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> Hi all,
+>
+> the block layer usually tries to merge s/g segments if consecutive segments
+> combined fit into the queue's max_segment_size.  When such a scatter gather
+> list is DMA-mapped, can it happen that an IOMMU collapses the elements even
+> further, so that sg_dma_len() of a DMA-mapped s/g segment exceeds
+> max_segment_size?
 
-Hi Andrew, thanks for the follow up.
+I don't see how. The IOMMU code only collapses the "physical" mappings and
+does not add new elements to the SG list. ergo sg_dma_len() shouldn't change.
 
-> > Any idea on how tough a backport to 2.6.26 or earlier would be?
-> > Running 'head-of-git' from Linus' tree would be somewhat of a stretch
-> > for production applications.... :-)(
-> 
-> We are still looking to finalize a migration path.  As it stands now,
-> the least invasive mechanism looks like backporting:
-> 
-> [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
-> 
-> [SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
-> 
-> then adding this patch should suffice.  We'll do some more testing
-> locally.
+grant
 
-I checked out the v2.6.26 tag into a branch and ported the patch
-series.  Everything went in with minimal difficulties, I'm including
-a composite patch below
-
-The modules seem to build fine but I haven't had time to hitch them up
-to the harness to see whether they explode or not.  Will let everyone
-know what we find.
-
----------------------------------------------------------------------------
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 8dd88fc..dd9d493 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -972,26 +972,50 @@ qla2x00_get_starget_port_id(struct scsi_target *starget)
- }
- 
- static void
--qla2x00_get_rport_loss_tmo(struct fc_rport *rport)
-+qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
- {
--	struct Scsi_Host *host = rport_to_shost(rport);
--	scsi_qla_host_t *ha = shost_priv(host);
--
--	rport->dev_loss_tmo = ha->port_down_retry_count + 5;
-+	if (timeout)
-+		rport->dev_loss_tmo = timeout;
-+	else
-+		rport->dev_loss_tmo = 1;
- }
- 
- static void
--qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
-+qla2x00_dev_loss_tmo_callbk(struct fc_rport *rport)
- {
- 	struct Scsi_Host *host = rport_to_shost(rport);
--	scsi_qla_host_t *ha = shost_priv(host);
-+	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-+
-+	qla2x00_abort_fcport_cmds(fcport);
-+
-+	/*
-+	 * Transport has effectively 'deleted' the rport, clear
-+	 * all local references.
-+	 */
-+	spin_lock_irq(host->host_lock);
-+	fcport->rport = NULL;
-+	*((fc_port_t **)rport->dd_data) = NULL;
-+	spin_unlock_irq(host->host_lock);
-+}
- 
--	if (timeout)
--		ha->port_down_retry_count = timeout;
--	else
--		ha->port_down_retry_count = 1;
-+static void
-+qla2x00_terminate_rport_io(struct fc_rport *rport)
-+{
-+	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-+
-+        /*
-+         * At this point all fcport's software-states are cleared.  Perform any
-+         * final firmware cleanup of resources (PCBs and XCBs).
-+         */
-+        if (fcport->loop_id != FC_NO_LOOP_ID) {
-+                fcport->ha->isp_ops->fabric_logout(fcport->ha, fcport->loop_id,
-+		   fcport->d_id.b.domain, fcport->d_id.b.area,
-+		   fcport->d_id.b.al_pa);
-+                fcport->loop_id = FC_NO_LOOP_ID;
-+        }
- 
--	rport->dev_loss_tmo = ha->port_down_retry_count + 5;
-+	qla2x00_abort_fcport_cmds(fcport);
-+	scsi_target_unblock(&rport->dev);
- }
- 
- static int
-@@ -1248,11 +1272,12 @@ struct fc_function_template qla2xxx_transport_functions = {
- 	.get_starget_port_id  = qla2x00_get_starget_port_id,
- 	.show_starget_port_id = 1,
- 
--	.get_rport_dev_loss_tmo = qla2x00_get_rport_loss_tmo,
- 	.set_rport_dev_loss_tmo = qla2x00_set_rport_loss_tmo,
- 	.show_rport_dev_loss_tmo = 1,
- 
- 	.issue_fc_host_lip = qla2x00_issue_lip,
-+	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
-+	.terminate_rport_io = qla2x00_terminate_rport_io,
- 	.get_fc_host_stats = qla2x00_get_fc_host_stats,
- 
- 	.vport_create = qla24xx_vport_create,
-@@ -1291,11 +1316,12 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
- 	.get_starget_port_id  = qla2x00_get_starget_port_id,
- 	.show_starget_port_id = 1,
- 
--	.get_rport_dev_loss_tmo = qla2x00_get_rport_loss_tmo,
- 	.set_rport_dev_loss_tmo = qla2x00_set_rport_loss_tmo,
- 	.show_rport_dev_loss_tmo = 1,
- 
- 	.issue_fc_host_lip = qla2x00_issue_lip,
-+	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
-+	.terminate_rport_io = qla2x00_terminate_rport_io,
- 	.get_fc_host_stats = qla2x00_get_fc_host_stats,
- };
- 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 8dd6000..7b0ddc8 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1544,7 +1544,6 @@ typedef struct fc_port {
- 	int login_retry;
- 	atomic_t port_down_timer;
- 
--	spinlock_t rport_lock;
- 	struct fc_rport *rport, *drport;
- 	u32 supported_classes;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 9b4bebe..5a50fb7 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -71,6 +71,8 @@ extern int qla2x00_post_aen_work(struct scsi_qla_host *, enum
- extern int qla2x00_post_hwe_work(struct scsi_qla_host *, uint16_t , uint16_t,
-     uint16_t, uint16_t);
- 
-+extern void qla2x00_abort_fcport_cmds(fc_port_t *);
-+
- /*
-  * Global Functions in qla_mid.c source file.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index bbbc5a6..c7388fa 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1864,12 +1864,11 @@ qla2x00_rport_del(void *data)
- {
- 	fc_port_t *fcport = data;
- 	struct fc_rport *rport;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&fcport->rport_lock, flags);
-+	spin_lock_irq(fcport->ha->host->host_lock);
- 	rport = fcport->drport;
- 	fcport->drport = NULL;
--	spin_unlock_irqrestore(&fcport->rport_lock, flags);
-+	spin_unlock_irq(fcport->ha->host->host_lock);
- 	if (rport)
- 		fc_remote_port_delete(rport);
- }
-@@ -1898,7 +1897,6 @@ qla2x00_alloc_fcport(scsi_qla_host_t *ha, gfp_t flags)
- 	atomic_set(&fcport->state, FCS_UNCONFIGURED);
- 	fcport->flags = FCF_RLC_SUPPORT;
- 	fcport->supported_classes = FC_COS_UNSPECIFIED;
--	spin_lock_init(&fcport->rport_lock);
- 
- 	return fcport;
- }
-@@ -2243,28 +2241,24 @@ qla2x00_reg_remote_port(scsi_qla_host_t *ha, fc_port_t *fcport)
- {
- 	struct fc_rport_identifiers rport_ids;
- 	struct fc_rport *rport;
--	unsigned long flags;
- 
- 	if (fcport->drport)
- 		qla2x00_rport_del(fcport);
--	if (fcport->rport)
--		return;
- 
- 	rport_ids.node_name = wwn_to_u64(fcport->node_name);
- 	rport_ids.port_name = wwn_to_u64(fcport->port_name);
- 	rport_ids.port_id = fcport->d_id.b.domain << 16 |
- 	    fcport->d_id.b.area << 8 | fcport->d_id.b.al_pa;
- 	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
--	rport = fc_remote_port_add(ha->host, 0, &rport_ids);
-+	fcport->rport = rport = fc_remote_port_add(ha->host, 0, &rport_ids);
- 	if (!rport) {
- 		qla_printk(KERN_WARNING, ha,
- 		    "Unable to allocate fc remote port!\n");
- 		return;
- 	}
--	spin_lock_irqsave(&fcport->rport_lock, flags);
--	fcport->rport = rport;
-+	spin_lock_irq(fcport->ha->host->host_lock);
- 	*((fc_port_t **)rport->dd_data) = fcport;
--	spin_unlock_irqrestore(&fcport->rport_lock, flags);
-+	spin_unlock_irq(fcport->ha->host->host_lock);
- 
- 	rport->supported_classes = fcport->supported_classes;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 48eaa3b..047ee64 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -388,7 +388,7 @@ qla2x00_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 	}
- 
- 	/* Close window on fcport/rport state-transitioning. */
--	if (!*(fc_port_t **)rport->dd_data) {
-+	if (fcport->drport) {
- 		cmd->result = DID_IMM_RETRY << 16;
- 		goto qc_fail_command;
- 	}
-@@ -455,7 +455,7 @@ qla24xx_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 	}
- 
- 	/* Close window on fcport/rport state-transitioning. */
--	if (!*(fc_port_t **)rport->dd_data) {
-+	if (fcport->drport) {
- 		cmd->result = DID_IMM_RETRY << 16;
- 		goto qc24_fail_command;
- 	}
-@@ -617,6 +617,40 @@ qla2x00_wait_for_loop_ready(scsi_qla_host_t *ha)
- 	return (return_status);
- }
- 
-+void
-+qla2x00_abort_fcport_cmds(fc_port_t *fcport)
-+{
-+	int cnt;
-+	unsigned long flags;
-+	srb_t *sp;
-+	scsi_qla_host_t *ha = fcport->ha;
-+	scsi_qla_host_t *pha = to_qla_parent(ha);
-+
-+	spin_lock_irqsave(&pha->hardware_lock, flags);
-+	for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
-+		sp = pha->outstanding_cmds[cnt];
-+		if (!sp)
-+			continue;
-+		if (sp->fcport != fcport)
-+			continue;
-+
-+		spin_unlock_irqrestore(&pha->hardware_lock, flags);
-+		if (ha->isp_ops->abort_command(ha, sp)) {
-+			DEBUG2(qla_printk(KERN_WARNING, ha,
-+			    "Abort failed --  %lx\n", sp->cmd->serial_number));
-+		} else {
-+			if (qla2x00_eh_wait_on_command(ha, sp->cmd) !=
-+			    QLA_SUCCESS)
-+				DEBUG2(qla_printk(KERN_WARNING, ha,
-+				    "Abort failed while waiting --  %lx\n",
-+				    sp->cmd->serial_number));
-+
-+		}
-+		spin_lock_irqsave(&pha->hardware_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&pha->hardware_lock, flags);
-+}
-+
- static void
- qla2x00_block_error_handler(struct scsi_cmnd *cmnd)
- {
-@@ -1073,7 +1107,7 @@ qla2xxx_slave_configure(struct scsi_device *sdev)
- 	else
- 		scsi_deactivate_tcq(sdev, ha->max_q_depth);
- 
--	rport->dev_loss_tmo = ha->port_down_retry_count + 5;
-+	rport->dev_loss_tmo = ha->port_down_retry_count;
- 
- 	return 0;
- }
-@@ -1813,7 +1847,6 @@ static inline void
- qla2x00_schedule_rport_del(struct scsi_qla_host *ha, fc_port_t *fcport,
-     int defer)
- {
--	unsigned long flags;
- 	struct fc_rport *rport;
- 
- 	if (!fcport->rport)
-@@ -1821,19 +1854,13 @@ qla2x00_schedule_rport_del(struct scsi_qla_host *ha, fc_port_t *fcport,
- 
- 	rport = fcport->rport;
- 	if (defer) {
--		spin_lock_irqsave(&fcport->rport_lock, flags);
-+		spin_lock_irq(ha->host->host_lock);
- 		fcport->drport = rport;
--		fcport->rport = NULL;
--		*(fc_port_t **)rport->dd_data = NULL;
--		spin_unlock_irqrestore(&fcport->rport_lock, flags);
-+		spin_unlock_irq(ha->host->host_lock);
- 		set_bit(FCPORT_UPDATE_NEEDED, &ha->dpc_flags);
--	} else {
--		spin_lock_irqsave(&fcport->rport_lock, flags);
--		fcport->rport = NULL;
--		*(fc_port_t **)rport->dd_data = NULL;
--		spin_unlock_irqrestore(&fcport->rport_lock, flags);
-+		qla2xxx_wake_dpc(ha);
-+	} else
- 		fc_remote_port_delete(rport);
--	}
- }
- 
- /*
----------------------------------------------------------------------------
-
-> Regards,
-> Andrew Vasquez
-
-Best wishes for a pleasant weekend to everyone.
-
-}-- End of excerpt from Andrew Vasquez
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"... then the day came when the risk to remain tight in a bud was more
- painful than the risk it took to blossom."
-                                -- Anais Nin
+>
+> As I understood some discussions in the past, this could indeed happen,
+> which is a nuisance.  But I may have misunderstood something, or something
+> may have changed in the meantime...
+> --
+> Stefan Richter
+> -=====-==--- =--- -=---
+> http://arcgraph.de/sr/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
