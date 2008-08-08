@@ -1,45 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Fri, 08 Aug 2008 18:20:01 -0400
-Message-ID: <489CC691.6090905@garzik.org>
-References: <200807300019.m6U0JkdY012558@localhost.localdomain> <aday73jxdfs.fsf@cisco.com> <200807311752.00911.divy@chelsio.com> <200808071145.03848.divy@chelsio.com> <489C8BEB.8060001@opengridcomputing.com> <489CC58D.4010606@pobox.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/3][RFC] libfc and fcoe
+Date: Fri, 08 Aug 2008 16:26:22 -0700
+Message-ID: <20080808232622.24715.7743.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49879 "EHLO mail.dvmed.net"
+Received: from mga11.intel.com ([192.55.52.93]:65510 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750890AbYHHWUJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2008 18:20:09 -0400
-In-Reply-To: <489CC58D.4010606@pobox.com>
+	id S1750890AbYHHX0W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2008 19:26:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Wise <swise@opengridcomputing.com>, davem@davemloft.net
-Cc: Divy Le Ray <divy@chelsio.com>, Roland Dreier <rdreier@cisco.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> * however, giving the user the ability to co-manage IP addresses means 
-> hacking up the kernel TCP code and userland tools for this new concept, 
-> something that I think DaveM would rightly be a bit reluctant to do? You 
-> are essentially adding a bunch of special case code whenever TCP ports 
-> are used:
-> 
->     if (port in list of "magic" TCP ports with special,
->         hardware-specific behavior)
->         ...
->     else
->         do what we've been doing for decades
-> 
-> ISTR Roland(?) pointing out code that already does a bit of this in the 
-> IB space...  but the point is
+This patch-set adds the following code to the SCSI subsystem.
 
-grrr.   but the point is that the solution is not at all complete, with 
-feature disconnects and security audit differences still outsanding, and 
-non-hw-specific management apps still unwritten.
+1) FC and FCoE protocol definitions in header files
+        - Files are added in include/scsi/fc/
+        - New files are: fc_els.h, fc_encaps.h, fc_fc2.h,
+          fc_fcp.h, fc_fs.h, fc_gs.h and fc_ns.h
 
-(I'm not calling for their existence, merely saying trying to strike the 
-justification that current capability to limp along exists)
+2) libfc - a FC assist library
+        - Composed of 5 sub-components: Exchange Manager, Local Port
+          Remote Port, Name Server and SCSI-FCP
+        - Uses libfc_function_template for cross-layer calls
+        - Uses struct fc_lport as primary object shared by all
+	  sub-modules
+        - Common code defined in include/scsi/libfc/libfc.h
 
-	Jeff
+3) fcoe - a FCoE initiator implementation
+        - Simple encapsulation and unpacking layer
+        - Interacts with netdev
+        - Uses /sys/module/fcoe/create and destroy for
+          enabling/disabling FCoE connection over a particular Ethernet
+          adapter
+        - Works on any Ethernet adapter
 
+These patches adds 12,291 lines of code to 4 new directories-
 
+include/scsi/fc/
+include/scsi/libfc/
+drivers/scsi/libfc/
+drivers/scsi/fcoe/
+
+We've created some diagrams to suppliment this RFC. They're posted on
+our wiki at http://www.open-fcoe.org/openfc/wiki/index.php/Architecture.
+
+The Open-FCoE team recognizes that this code will continue to evolve and
+we are committed to maintaining and improving it. We have a list of TODO
+items on our wiki at http://www.open-fcoe.org/openfc/wiki/index.php/TODO
+and intend to work through that list.
+
+In addition to our engineering tasks we will be putting this stack under
+more testing and as defects are exposed we will fix them. Defects are
+tracked on the Open-FCoE.org bugzilla. Currently engineers have been
+testing this stack and within their test environments the stack works.
+It has seen some validation, but no heavy testing.
+
+We recognize that we have a lot of work to do but we also think that
+we've made a lot of progress in the last few months and we would like to
+be merged. We're sending this RFC to solicit any comments, but in
+particular comments about the code that should prevent a merger.
+
+Thanks,
+
+Open-FCoE
+//Rob, Vasu, Chris, Yi, Steve
