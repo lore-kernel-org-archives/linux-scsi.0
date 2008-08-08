@@ -1,88 +1,63 @@
-From: Matthew Frost <artusemrys@sbcglobal.net>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
-Date: Fri, 8 Aug 2008 14:07:28 -0700 (PDT)
-Message-ID: <779703.44181.qm@web83203.mail.mud.yahoo.com>
-References: <656254.26203.qm@web83208.mail.mud.yahoo.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Scatter-gather segment merges by IOMMU?
+Date: Fri, 08 Aug 2008 23:21:28 +0200
+Message-ID: <489CB8D8.60908@s5r6.in-berlin.de>
+References: <489CA21F.1030604@s5r6.in-berlin.de> <da824cf30808081325n416ec436y94eebe494d789207@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web83203.mail.mud.yahoo.com ([216.252.101.47]:44172 "HELO
-	web83203.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752821AbYHHVH3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 17:07:29 -0400
-In-Reply-To: <656254.26203.qm@web83208.mail.mud.yahoo.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51321 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbYHHVVf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 17:21:35 -0400
+In-Reply-To: <da824cf30808081325n416ec436y94eebe494d789207@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Grant Grundler <grundler@google.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
---- Matthew Frost <artusemrys@yahoo.com> wrote:
-
-> --- Matthew Frost <artusemrys@sbcglobal.net> wrote:
+Grant Grundler wrote:
+> On Fri, Aug 8, 2008 at 12:44 PM, Stefan Richter
+> <stefanr@s5r6.in-berlin.de> wrote:
+>> Hi all,
+>>
+>> the block layer usually tries to merge s/g segments if consecutive segments
+>> combined fit into the queue's max_segment_size.  When such a scatter gather
+>> list is DMA-mapped, can it happen that an IOMMU collapses the elements even
+>> further, so that sg_dma_len() of a DMA-mapped s/g segment exceeds
+>> max_segment_size?
 > 
-> > Alan Stern wrote:
-> > > > The patches to fix this that I have tried do not apply
-> > > > cleanly to lk 2.6.26 (and break during compile if forced:
-> > > > "us->fflags" is not defined).
-> > > > 
-> > > > Is there a lk 2.6.26 patch available?
-> > > 
-> > > Sorry about that; my patches are against the USB development tree and
-> > > I tend to forget to redo them against the vanilla kernel.  Below is a
-> > > patch against 2.6.26.  Or you can just edit the original patch and
-> > > change the occurrences of "fflags" to "flags".
-> > > 
-> > > Alan Stern
-> > > 
-> > > 
-> > > Index: 2.6.26/drivers/usb/storage/transport.c
-> > > ===================================================================
-> > > --- 2.6.26.orig/drivers/usb/storage/transport.c
-> > > +++ 2.6.26/drivers/usb/storage/transport.c
-> > > @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
-> > >  
-> > >  	/* try to compute the actual residue, based on how much data
-> > >  	 * was really transferred and what the device tells us */
-> > > -	if (residue) {
-> > > -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > > +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > > +
-> > > +		/* Heuristically detect devices that generate bogus residues
-> > > +		 * by seeing what happens with INQUIRY and READ CAPACITY
-> > > +		 * commands.
-> > > +		 */
-> > > +		if (bcs->Status == US_BULK_STAT_OK &&
-> > > +				scsi_get_resid(srb) == 0 &&
-> > > +					((srb->cmnd[0] == INQUIRY &&
-> > > +						transfer_length == 36) ||
-> > > +					(srb->cmnd[0] == READ_CAPACITY &&
-> > > +						transfer_length == 8))) {
-> > > +			us->flags |= US_FL_IGNORE_RESIDUE;
-> > > +
-> > > +		} else {
-> > >  			residue = min(residue, transfer_length);
-> > >  			scsi_set_resid(srb, max(scsi_get_resid(srb),
-> > >  			                                       (int) residue));
-> > > 
-> > > 
-> > 
-> > Thanks!  I've been trying to fix it manually, and it wouldn't work. 
-> Trying
-> > this version now.  Let's see if this fixes my problem.
-> > 
-> > Matt Frost
-> > 
+> I don't see how. The IOMMU code only collapses the "physical" mappings and
+> does not add new elements to the SG list. ergo sg_dma_len() shouldn't change.
 > 
-> Tested under two distributions, this patch restores correct functionality
-> to my hardware.  Thank you very much!
+> grant
 > 
-> Matt
-> 
-Update/sqeaking-of-the-wheel:
+>> As I understood some discussions in the past, this could indeed happen,
+>> which is a nuisance.  But I may have misunderstood something, or something
+>> may have changed in the meantime...
 
-The same problem still happens under 2.6.27-rc2, and I haven't seen this
-bumped to -stable, either.  It continues to solve the problem here.
+Well, I'm just doing my homework and am tracking down the various 
+dma_map_sg implementations.
 
-Matt
+Here is what PPC does:
+http://lxr.linux.no/linux+v2.6.26/arch/powerpc/kernel/iommu.c#L270
+
+It looks at dma_get_max_seg_size(dev); and then merges according to it.
+
+That's all nice and well, but in my case (FireWire storage protocol 
+a.k.a. SBP-2, which is basically remote DMA), the max_segment_size of 
+the PCI device is different from the size limit of the protocol.  We 
+currently have to deconstruct such merges in the sbp2 drivers again:
+http://lxr.linux.no/linux+v2.6.26/drivers/firewire/fw-sbp2.c#L1384
+
+Either I keep it that way, or I let the protocol driver manipulate the 
+FireWire controller's dev->dma_parms->max_segment_size (via 
+dma_set_max_seg_size() of course), which is not entirely correct.
+
+I first wanted to use blk_queue_max_segment_size(), but that falls short 
+with dma_map_sg implementations like the above are at work.
+-- 
+Stefan Richter
+-=====-==--- =--- -=---
+http://arcgraph.de/sr/
