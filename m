@@ -1,40 +1,39 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] scsi_host_lookup: error returns and NULL pointers
-Date: Thu, 07 Aug 2008 20:18:02 -0400
-Message-ID: <1218154682.4689.5.camel@localhost.localdomain>
+Subject: [PATCH] [Repost] scsi_host_lookup: error returns and NULL pointers
+Date: Thu, 07 Aug 2008 20:49:30 -0400
+Message-ID: <1218156570.3190.1.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:41532 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:44882 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755989AbYHHStv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 14:49:51 -0400
+	with ESMTP id S1760273AbYHHTVq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 15:21:46 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m78Ini0S020879
-	for <linux-scsi@vger.kernel.org>; Fri, 8 Aug 2008 11:49:49 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m78JL0i8024012
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Aug 2008 12:21:45 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+
+It was pointed out I had a whitespace hiccup. Corrected.
+--------------------------
 
 This patch cleans up the behavior of scsi_host_lookup().
 
 The original implementation attempted to use the dual role of
 either returning a pointer value, or a negative error code.
-Consumer's needed to use IS_ERR() to check the result. This is
-a bit obtuse. Additionally, the IS_ERR() macro uses unsigned
-int math to check for negative error values vs a pointer
-(e.g. all negative values between F's and -MAXERRNO are errors).
-Meaning - IS_ERR() never sees a NULL pointer as an error.
-NULL pointers can be returned via scsi_host_get(), which is
-used by scsi_host_lookup().
+User's needed to use IS_ERR() to check the result. Additionally,
+the IS_ERR() macro never checks for when a NULL pointer was
+returned, so a NULL pointer actually passes with a success case.
+Note: scsi_host_get(), used by scsi_host_lookup(), can return
+a NULL pointer.
 
-Talk about a pothole for the uninitiated to step into....
-And, none of the current consumers cared about the ERR_PTR
-value returned.
+Talk about a mudhole for the unitiated to step into....
 
-This patch converts scsi_host_lookup() to return either NULL
+Thisi patch converts scsi_host_lookup() to return either NULL
 or a valid pointer. The consumers were updated for the change.
 
 -- james s
@@ -83,7 +82,7 @@ diff -upNr a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
  	shost = scsi_host_lookup(host);
 -	if (IS_ERR(shost))
 -		return PTR_ERR(shost);
-+	if (!shost) 
++	if (!shost)
 +		return error;
  	sdev = scsi_device_lookup(shost, channel, id, lun);
  	if (sdev) {
