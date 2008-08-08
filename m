@@ -1,68 +1,85 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Scatter-gather segment merges by IOMMU?
-Date: Fri, 08 Aug 2008 23:58:23 +0200
-Message-ID: <489CC17F.7000208@s5r6.in-berlin.de>
-References: <489CA21F.1030604@s5r6.in-berlin.de>	<da824cf30808081325n416ec436y94eebe494d789207@mail.gmail.com>	<489CB8D8.60908@s5r6.in-berlin.de> <20080809063159F.fujita.tomonori@lab.ntt.co.jp>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH v4] cmdfilter: clean up sysfs interface
+Date: Sat, 9 Aug 2008 00:00:05 +0200
+Message-ID: <6cf6b73e0808081500w4e8b290ci83f12aaa6f572b71@mail.gmail.com>
+References: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_25899_15699877.1218232805231"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:51500 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763012AbYHHV6o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 17:58:44 -0400
-In-Reply-To: <20080809063159F.fujita.tomonori@lab.ntt.co.jp>
+Received: from rv-out-0506.google.com ([209.85.198.233]:59534 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758451AbYHHWAG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 18:00:06 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1237798rvb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 15:00:05 -0700 (PDT)
+In-Reply-To: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: grundler@google.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Peter Jones <pjones@redhat.com>, Matthew Wilcox <matthew@wil.cx>, dougg@torque.net, dan.j.williams@intel.com, James.Bottomley@hansenpartnership.com
 
-FUJITA Tomonori wrote:
-> On Fri, 08 Aug 2008 23:21:28 +0200
-> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> Here is what PPC does:
->> http://lxr.linux.no/linux+v2.6.26/arch/powerpc/kernel/iommu.c#L270
->>
->> It looks at dma_get_max_seg_size(dev); and then merges according to it.
-> 
-> Yes, IOMMUs were not able to handle this issue but they should now.
-> 
-> 
->> That's all nice and well, but in my case (FireWire storage protocol 
->> a.k.a. SBP-2, which is basically remote DMA), the max_segment_size of 
->> the PCI device is different from the size limit of the protocol.  We 
->> currently have to deconstruct such merges in the sbp2 drivers again:
->> http://lxr.linux.no/linux+v2.6.26/drivers/firewire/fw-sbp2.c#L1384
->>
->> Either I keep it that way, or I let the protocol driver manipulate the 
->> FireWire controller's dev->dma_parms->max_segment_size (via 
->> dma_set_max_seg_size() of course), which is not entirely correct.
-> 
-> Why is it not correct? Device drivers can set
-> dma_set_max_seg_size(). SCSI does that (see __scsi_alloc_queue).
+------=_Part_25899_15699877.1218232805231
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-FireWire is a multi-protocol bus.  SBP-2 is just one of many quite 
-different protocols.  SBP-2 targets read or write the initiators memory 
-buffers via remote DMA.  These buffer may be exposed as s/g lists to the 
-target.  The protocol limits these s/g lists to up to 65535 elements of 
-up to 65535 bytes size each.
+I hate gmail ....
 
-FireWire controllers on the other hand get their maximum segment size 
-set to 65536 by the PCI subsystem.  (All FireWire controllers supported 
-by mainline Linux are PCI or PCIe devices.)
+------=_Part_25899_15699877.1218232805231
+Content-Type: application/octet-stream; name=cmd-filter-new-iface.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fjncbvqf0
+Content-Disposition: attachment; filename=cmd-filter-new-iface.patch
 
-In case of the drivers/firewire/ stack, the SBP-2 driver is currently 
-the only one which uses dma_map_sg.  In case of the drivers/ieee1394/ 
-stack, also the drivers for isochronous protocols, including userspace 
-drivers via raw1394, use dma_map_sg.
-
-So if the SBP-2 driver manipulated the controller device's 
-max_segment_size, it would influence the DMA mappings of the other 
-protocols.  It wouldn't be a big deal; the isochronous mappings could 
-only be collapsed to chunks of at most 15 pages instead of 16 pages. 
-However, the mapping deconstructing code in the SBP-2 drivers is not a 
-big deal either.
--- 
-Stefan Richter
--=====-==--- =--- -=---
-http://arcgraph.de/sr/
+VGhpcyBwYXRjaCBjaGFuZ2VzIHRoZSBpbnRlcmZhY2Ugb2YgdGhlIGNtZCBmaWx0ZXIgdG8gdXNl
+IGEgKy8tIG5vdGF0aW9uIGxpa2U6CmVjaG8gLS0gKzB4MDIgKzB4MDMgLTB4MDgKSWYgbmVpdGhl
+ciArIG9yIC0gaXMgZ2l2ZW4gaXQgZGVmYXVsdHMgdG8gKyAoYWxsb3cgY29tbWFuZCkuCgpOb3Rl
+OiBUaGUgaW50ZXJmYWNlIHdhcyBhZGRlZCBpbiAyLjYuMTctcmMxIGFuZCBpcyB1bnVzZWQKYW5k
+IHVuZG9jdW1lbnRlZCBzbyBmYXIgc28gaXQncyBzYWZlIHRvIGNoYW5nZSBpdC4KCkNjOiBtYXR0
+aGV3QHdpbC5jeApDYzogZnVqaXRhLnRvbW9ub3JpQGxhYi5udHQuY28uanAsCkNjOiBqZW5zLmF4
+Ym9lQG9yYWNsZS5jb20KQ2M6IEphbWVzLkJvdHRvbWxleUBoYW5zZW5wYXJ0bmVyc2hpcC5jb20K
+Q2M6IGRhbi5qLndpbGxpYW1zQGludGVsLmNvbQpDYzogcGpvbmVzQHJlZGhhdC5jb20KQ2M6IHZp
+cm9AemVuaXYubGludXgub3JnLnVrCkNjOiBkb3VnZ0B0b3JxdWUubmV0ClNpZ25lZC1vZmYtYnk6
+IEFkZWwgR2FkbGxhaCA8YWRlbC5nYWRsbGFoQGdtYWlsLmNvbT4KCmJsb2NrL2NtZC1maWx0ZXIu
+YyB8ICAgNTQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCjEgZmlsZXMgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pCgpk
+aWZmIC0tZ2l0IGEvYmxvY2svY21kLWZpbHRlci5jIGIvYmxvY2svY21kLWZpbHRlci5jCmluZGV4
+IGVlYzQ0MDQuLjcwYmU2MmQgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2NtZC1maWx0ZXIuYworKysgYi9i
+bG9jay9jbWQtZmlsdGVyLmMKQEAgLTIwLDcgKzIwLDYgQEAKICNpbmNsdWRlIDxsaW51eC9saXN0
+Lmg+CiAjaW5jbHVkZSA8bGludXgvZ2VuaGQuaD4KICNpbmNsdWRlIDxsaW51eC9zcGlubG9jay5o
+PgotI2luY2x1ZGUgPGxpbnV4L3BhcnNlci5oPgogI2luY2x1ZGUgPGxpbnV4L2NhcGFiaWxpdHku
+aD4KICNpbmNsdWRlIDxsaW51eC9iaXRvcHMuaD4KIApAQCAtODQsOCArODMsOCBAQCBzdGF0aWMg
+c3NpemVfdCByY2ZfY21kc19zaG93KHN0cnVjdCBibGtfc2NzaV9jbWRfZmlsdGVyICpmaWx0ZXIs
+IGNoYXIgKnBhZ2UsCiAKIAlmb3IgKGkgPSAwOyBpIDwgQkxLX1NDU0lfTUFYX0NNRFM7IGkrKykg
+ewogCQlpZiAodGVzdF9iaXQoaSwgb2tiaXRzKSkgewotCQkJc3ByaW50ZihucGFnZSwgIiUwMngi
+LCBpKTsKLQkJCW5wYWdlICs9IDI7CisJCQlzcHJpbnRmKG5wYWdlLCAiMHglMDJ4IiwgaSk7CisJ
+CQlucGFnZSArPSA0OwogCQkJaWYgKGkgPCBCTEtfU0NTSV9NQVhfQ01EUyAtIDEpCiAJCQkJc3By
+aW50ZihucGFnZSsrLCAiICIpOwogCQl9CkBAIC0xMTEsMzIgKzExMCw0MSBAQCBzdGF0aWMgc3Np
+emVfdCByY2Zfd3JpdGVjbWRzX3Nob3coc3RydWN0IGJsa19zY3NpX2NtZF9maWx0ZXIgKmZpbHRl
+ciwKIHN0YXRpYyBzc2l6ZV90IHJjZl9jbWRzX3N0b3JlKHN0cnVjdCBibGtfc2NzaV9jbWRfZmls
+dGVyICpmaWx0ZXIsCiAJCQkgICAgICBjb25zdCBjaGFyICpwYWdlLCBzaXplX3QgY291bnQsIGlu
+dCBydykKIHsKLQlzc2l6ZV90IHJldCA9IDA7CiAJdW5zaWduZWQgbG9uZyBva2JpdHNbQkxLX1ND
+U0lfQ01EX1BFUl9MT05HXSwgKnRhcmdldF9va2JpdHM7Ci0JaW50IGNtZCwgc3RhdHVzLCBsZW47
+Ci0Jc3Vic3RyaW5nX3Qgc3M7Ci0KLQltZW1zZXQoJm9rYml0cywgMCwgc2l6ZW9mKG9rYml0cykp
+OwotCi0JZm9yIChsZW4gPSBzdHJsZW4ocGFnZSk7IGxlbiA+IDA7IGxlbiAtPSAzKSB7Ci0JCWlm
+IChsZW4gPCAyKQotCQkJYnJlYWs7Ci0JCXNzLmZyb20gPSAoY2hhciAqKSBwYWdlICsgcmV0Owot
+CQlzcy50byA9IChjaGFyICopIHBhZ2UgKyByZXQgKyAyOwotCQlyZXQgKz0gMzsKLQkJc3RhdHVz
+ID0gbWF0Y2hfaGV4KCZzcywgJmNtZCk7CisJaW50IGNtZCwgc2V0OworCWNoYXIgKnAsICpzdGF0
+dXM7CisKKwlpZiAocncgPT0gUkVBRCkgeworCQltZW1jcHkoJm9rYml0cywgZmlsdGVyLT5yZWFk
+X29rLCBzaXplb2Yob2tiaXRzKSk7CisJCXRhcmdldF9va2JpdHMgPSBmaWx0ZXItPnJlYWRfb2s7
+CisJfSBlbHNlIHsKKwkJbWVtY3B5KCZva2JpdHMsIGZpbHRlci0+d3JpdGVfb2ssIHNpemVvZihv
+a2JpdHMpKTsKKwkJdGFyZ2V0X29rYml0cyA9IGZpbHRlci0+d3JpdGVfb2s7CisJfQorCisJd2hp
+bGUgKChwID0gc3Ryc2VwKChjaGFyICoqKSZwYWdlLCAiICIpKSAhPSBOVUxMKSB7CisJCXNldCA9
+IDE7CisKKwkJaWYgKHBbMF0gPT0gJy0nKSB7CisJCQlzZXQgPSAwOworCQkJcCsrOworCQl9CisK
+KwkJaWYgKHBbMF0gPT0gJysnKQorCQkJcCsrOworCisJCWNtZCA9IHNpbXBsZV9zdHJ0b2wocCwg
+JnN0YXR1cywgMTYpOworCiAJCS8qIGVpdGhlciBvZiB0aGVzZSBjYXNlcyBtZWFucyBpbnZhbGlk
+IGlucHV0LCBzbyBkbyBub3RoaW5nLiAqLwotCQlpZiAoc3RhdHVzIHx8IGNtZCA+PSBCTEtfU0NT
+SV9NQVhfQ01EUykKKwkJaWYgKChzdGF0dXMgPT0gcCkgfHwgY21kID49IEJMS19TQ1NJX01BWF9D
+TURTKQogCQkJcmV0dXJuIC1FSU5WQUw7CiAKLQkJX19zZXRfYml0KGNtZCwgb2tiaXRzKTsKKwkJ
+aWYgKHNldCkKKwkJCV9fc2V0X2JpdChjbWQsIG9rYml0cyk7CisJCWVsc2UKKwkJCV9fY2xlYXJf
+Yml0KGNtZCwgb2tiaXRzKTsKIAl9CiAKLQlpZiAocncgPT0gUkVBRCkKLQkJdGFyZ2V0X29rYml0
+cyA9IGZpbHRlci0+cmVhZF9vazsKLQllbHNlCi0JCXRhcmdldF9va2JpdHMgPSBmaWx0ZXItPndy
+aXRlX29rOwotCiAJbWVtbW92ZSh0YXJnZXRfb2tiaXRzLCBva2JpdHMsIHNpemVvZihva2JpdHMp
+KTsKIAlyZXR1cm4gY291bnQ7CiB9Cg==
+------=_Part_25899_15699877.1218232805231--
