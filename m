@@ -1,101 +1,59 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
-Date: Fri, 8 Aug 2008 15:32:02 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778826B3F6C3CA@GVW0547EXC.americas.hpqcorp.net>
-References: <0F5B06BAB751E047AB5C87D1F77A778826B3DD7474@GVW0547EXC.americas.hpqcorp.net>
-	<20080725000638Q.fujita.tomonori@lab.ntt.co.jp>
-	<0F5B06BAB751E047AB5C87D1F77A778826B3F6BF4C@GVW0547EXC.americas.hpqcorp.net>
- <20080808100748M.fujita.tomonori@lab.ntt.co.jp>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [14/17] drivers/scsi/sr_vendor.c: use bcd2bin
+Date: Fri, 8 Aug 2008 19:34:57 +0300
+Message-ID: <20080808163457.GU14495@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:8026 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbYHHPcf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 11:32:35 -0400
-In-Reply-To: <20080808100748M.fujita.tomonori@lab.ntt.co.jp>
-Content-Language: en-US
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:48033 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757984AbYHHQgb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2008 12:36:31 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Brownell <david-b@pacbell.net>
 
+This patch changes sr_vendor.c to use the new bcd2bin function instead 
+of the obsolete BCD2BIN macro.
 
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-> -----Original Message-----
-> From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-> Sent: Thursday, August 07, 2008 8:08 PM
-> To: Miller, Mike (OS Dev)
-> Cc: fujita.tomonori@lab.ntt.co.jp;
-> scameron@beardog.cca.cpqcorp.net;
-> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
->
-> On Thu, 7 Aug 2008 19:04:54 +0000
-> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> wrote:
->
-> >
-> >
-> > > -----Original Message-----
-> > > From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-> > > Sent: Thursday, July 24, 2008 10:07 AM
-> > > To: Miller, Mike (OS Dev)
-> > > Cc: fujita.tomonori@lab.ntt.co.jp;
-> > > scameron@beardog.cca.cpqcorp.net;
-> > > linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> > > Subject: RE: HP (Compaq) Smart Array 5xxx controller SCSI driver
-> > >
-> > > On Thu, 24 Jul 2008 15:00:00 +0000
-> > > "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> wrote:
-> > >
-> > > >
-> > > > > > As for the patches I mentioned which were previously
-> > > ignored for
-> > > > > > improving how the current cciss SCSI code handled hot
-> > > plogging, if
-> > > > > > you're curious about that, check here:
-> > > > > >
-> > > > > > http://marc.info/?l=linux-scsi&m=120213565000426&w=4
-> > > > > >
-> > > > > > A change like that becomes more important if logical drives
-> > > > > > are exposed through the scsi layer.
-> > > > >
-> > > > > We need to think about the best way to map (expose)
-> logical and
-> > > > > physical drivers to SCSI luns. As I wrote before, I'm
-> > > interested in
-> > > > > how HP SCSI driver does.
-> > > >
-> > > > We don't neccesarily want or need to expose the physical
-> > > disks. The only exception is disks that are not part of a logical
-> > > volume. If the disks are part of a logical volume but exposed the
-> > > user may shoot themselves in the foot by destroying the firmware
-> > > metadata.
-> > >
-> > > Oops, sorry, I meant physical tape drives.
-> > >
-> >
-> > Tomo,
-> > I patched your driver into the 2.6.27-rc1 kernel. After
-> compiling the driver I get:
-> >
-> > [root@testmonkey linux-2.6]# insmod drivers/scsi/ciss.ko
-> > insmod: error inserting 'drivers/scsi/ciss.ko': -1 Invalid module
-> > format
->
-> You can get an error message here from `dmseg`, I think.
->
->
-> > [root@testmonkey linux-2.6]# gcc --version gcc (GCC) 4.1.2 20071124
-> > (Red Hat 4.1.2-42)
-> >
-> > [root@testmonkey linux-2.6]# uname -r
-> > 2.6.26
-> >
-> > I built inside the tree. Any thoughts?
->
-> Seems that you try to do insmod a module built for 2.6.27-rc1
-> into 2.6.26?
+---
 
-Duh. Well that was pretty stupid.
+ drivers/scsi/sr_vendor.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+95517eee3647bbde1864a6a2ce7e6cab2770e202 
+diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
+index 4eb3da9..4ad3e01 100644
+--- a/drivers/scsi/sr_vendor.c
++++ b/drivers/scsi/sr_vendor.c
+@@ -223,9 +223,9 @@ int sr_cd_check(struct cdrom_device_info *cdi)
+ 				no_multi = 1;
+ 				break;
+ 			}
+-			min = BCD2BIN(buffer[15]);
+-			sec = BCD2BIN(buffer[16]);
+-			frame = BCD2BIN(buffer[17]);
++			min = bcd2bin(buffer[15]);
++			sec = bcd2bin(buffer[16]);
++			frame = bcd2bin(buffer[17]);
+ 			sector = min * CD_SECS * CD_FRAMES + sec * CD_FRAMES + frame;
+ 			break;
+ 		}
+@@ -252,9 +252,9 @@ int sr_cd_check(struct cdrom_device_info *cdi)
+ 			}
+ 			if (rc != 0)
+ 				break;
+-			min = BCD2BIN(buffer[1]);
+-			sec = BCD2BIN(buffer[2]);
+-			frame = BCD2BIN(buffer[3]);
++			min = bcd2bin(buffer[1]);
++			sec = bcd2bin(buffer[2]);
++			frame = bcd2bin(buffer[3]);
+ 			sector = min * CD_SECS * CD_FRAMES + sec * CD_FRAMES + frame;
+ 			if (sector)
+ 				sector -= CD_MSF_OFFSET;
+
