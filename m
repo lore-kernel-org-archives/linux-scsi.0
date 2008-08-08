@@ -1,115 +1,125 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
 Subject: Re: [PATCH v2] cmdfilter: clean up sysfs interface
-Date: Fri, 8 Aug 2008 16:06:13 +0900
-Message-ID: <20080808160629H.fujita.tomonori@lab.ntt.co.jp>
+Date: Fri, 8 Aug 2008 09:47:44 +0200
+Message-ID: <6cf6b73e0808080047i550f2e6bt71d4e213f81fea87@mail.gmail.com>
 References: <6cf6b73e0808020622t2165ca0dmdbf60856eb600ad5@mail.gmail.com>
-	<6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
+	 <6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
+	 <20080808160629H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:49363 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947AbYHHHG5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2008 03:06:57 -0400
-In-Reply-To: <6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
+Received: from rv-out-0506.google.com ([209.85.198.233]:52722 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779AbYHHHrp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 03:47:45 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so904908rvb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 00:47:44 -0700 (PDT)
+In-Reply-To: <20080808160629H.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adel.gadllah@gmail.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, viro@zeniv.linux.org.uk, matthew@wil.cx, pjones@redhat.com, dougg@torque.net, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com
 
-On Sat, 2 Aug 2008 17:19:18 +0200
-"Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+2008/8/8 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
+> On Sat, 2 Aug 2008 17:19:18 +0200
+> "Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+>
+>> vs fix error handling and compiler warnings
+>>
+>> ----------------
+>>
+>> This patch changes the interface of the cmd filter to use a +/- notation like
+>> echo -- +0x02 +0x03 -0x08 .
+>> If neither + or - is given it defaults to + (allow command).
+>>
+>> Note: The interface was added in 2.6.17-rc1 and is unused
+>> and undocumented so far so it's safe to change it.
+>>
+>> Cc: matthew@wil.cx
+>> Cc: fujita.tomonori@lab.ntt.co.jp,
+>> Cc: jens.axboe@oracle.com
+>> Cc: James.Bottomley@hansenpartnership.com
+>> Cc: dan.j.williams@intel.com
+>> Cc: pjones@redhat.com
+>> Cc: viro@zeniv.linux.org.uk
+>> Cc: dougg@torque.net
+>> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+>>
+>>  block/cmd-filter.c |   44 +++++++++++++++++++++++++++-----------------
+>>  1 files changed, 27 insertions(+), 17 deletions(-)
+>
+> The patch is corrupted?
+>
+> fujita@viola:~/git/linux-2.6$ patch -p1 < /home/fujita/Mail/kernel/scsi/1494
+> patching file block/cmd-filter.c
+> patch: **** malformed patch at line 92: blk_scsi_cmd_filter *filter, char *page,
 
-> vs fix error handling and compiler warnings
-> 
-> ----------------
-> 
-> This patch changes the interface of the cmd filter to use a +/- notation like
-> echo -- +0x02 +0x03 -0x08 .
-> If neither + or - is given it defaults to + (allow command).
-> 
-> Note: The interface was added in 2.6.17-rc1 and is unused
-> and undocumented so far so it's safe to change it.
-> 
-> Cc: matthew@wil.cx
-> Cc: fujita.tomonori@lab.ntt.co.jp,
-> Cc: jens.axboe@oracle.com
-> Cc: James.Bottomley@hansenpartnership.com
-> Cc: dan.j.williams@intel.com
-> Cc: pjones@redhat.com
-> Cc: viro@zeniv.linux.org.uk
-> Cc: dougg@torque.net
-> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
-> 
->  block/cmd-filter.c |   44 +++++++++++++++++++++++++++-----------------
->  1 files changed, 27 insertions(+), 17 deletions(-)
+argh... stupid gmail will resend once I am home. (ie. later today)
 
-The patch is corrupted?
+>> diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+>> index eec4404..cd33f7f 100644
+>> --- a/block/cmd-filter.c
+>> +++ b/block/cmd-filter.c
+>> @@ -84,8 +84,8 @@ static ssize_t rcf_cmds_show(struct
+>> blk_scsi_cmd_filter *filter, char *page,
+>>
+>>       for (i = 0; i < BLK_SCSI_MAX_CMDS; i++) {
+>>               if (test_bit(i, okbits)) {
+>> -                     sprintf(npage, "%02x", i);
+>> -                     npage += 2;
+>> +                     sprintf(npage, "0x%02x", i);
+>> +                     npage += 4;
+>>                       if (i < BLK_SCSI_MAX_CMDS - 1)
+>>                               sprintf(npage++, " ");
+>>               }
+>> @@ -111,32 +111,42 @@ static ssize_t rcf_writecmds_show(struct
+>> blk_scsi_cmd_filter *filter,
+>>  static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
+>>                             const char *page, size_t count, int rw)
+>>  {
+>> -     ssize_t ret = 0;
+>>       unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
+>> -     int cmd, status, len;
+>> +     int cmd, status, set;
+>>       substring_t ss;
+>> +     char *p;
+>>
+>> -     memset(&okbits, 0, sizeof(okbits));
+>> +     if (rw == READ) {
+>> +             memcpy(&okbits, filter->read_ok, sizeof(okbits));
+>> +             target_okbits = filter->read_ok;
+>> +     } else {
+>> +             memcpy(&okbits, filter->write_ok, sizeof(okbits));
+>> +             target_okbits = filter->write_ok;
+>> +     }
+>> +
+>> +     while ((p = strsep((char **)&page, " ")) != NULL) {
+>> +             set = 1;
+>> +
+>> +             if (p[0] == '-') {
+>> +                     set = 0;
+>> +                     p++;
+>> +             }
+>>
+>> -     for (len = strlen(page); len > 0; len -= 3) {
+>> -             if (len < 2)
+>> -                     break;
+>> -             ss.from = (char *) page + ret;
+>> -             ss.to = (char *) page + ret + 2;
+>> -             ret += 3;
+>> +             if (p[0] == '+')
+>> +                     p++;
+>> +             ss.from = (char *) p;
+>> +             ss.to = (char *) p + 4;
+>>               status = match_hex(&ss, &cmd);
+>
+> how about using simple_strtol here? It can handle an value too.
 
-fujita@viola:~/git/linux-2.6$ patch -p1 < /home/fujita/Mail/kernel/scsi/1494
-patching file block/cmd-filter.c
-patch: **** malformed patch at line 92: blk_scsi_cmd_filter *filter, char *page,
+by value you mean a non hex input?
 
+> strchr(str, ' ') would make the intention clear here rather than using
+> '4' ?
 
-> diff --git a/block/cmd-filter.c b/block/cmd-filter.c
-> index eec4404..cd33f7f 100644
-> --- a/block/cmd-filter.c
-> +++ b/block/cmd-filter.c
-> @@ -84,8 +84,8 @@ static ssize_t rcf_cmds_show(struct
-> blk_scsi_cmd_filter *filter, char *page,
-> 
->  	for (i = 0; i < BLK_SCSI_MAX_CMDS; i++) {
->  		if (test_bit(i, okbits)) {
-> -			sprintf(npage, "%02x", i);
-> -			npage += 2;
-> +			sprintf(npage, "0x%02x", i);
-> +			npage += 4;
->  			if (i < BLK_SCSI_MAX_CMDS - 1)
->  				sprintf(npage++, " ");
->  		}
-> @@ -111,32 +111,42 @@ static ssize_t rcf_writecmds_show(struct
-> blk_scsi_cmd_filter *filter,
->  static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
->  			      const char *page, size_t count, int rw)
->  {
-> -	ssize_t ret = 0;
->  	unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
-> -	int cmd, status, len;
-> +	int cmd, status, set;
->  	substring_t ss;
-> +	char *p;
-> 
-> -	memset(&okbits, 0, sizeof(okbits));
-> +	if (rw == READ) {
-> +		memcpy(&okbits, filter->read_ok, sizeof(okbits));
-> +		target_okbits = filter->read_ok;
-> +	} else {
-> +		memcpy(&okbits, filter->write_ok, sizeof(okbits));
-> +		target_okbits = filter->write_ok;
-> +	}
-> +
-> +	while ((p = strsep((char **)&page, " ")) != NULL) {
-> +		set = 1;
-> +
-> +		if (p[0] == '-') {
-> +			set = 0;
-> +			p++;
-> +		}
-> 
-> -	for (len = strlen(page); len > 0; len -= 3) {
-> -		if (len < 2)
-> -			break;
-> -		ss.from = (char *) page + ret;
-> -		ss.to = (char *) page + ret + 2;
-> -		ret += 3;
-> +		if (p[0] == '+')
-> +			p++;
-> +		ss.from = (char *) p;
-> +		ss.to = (char *) p + 4;
->  		status = match_hex(&ss, &cmd);
-
-how about using simple_strtol here? It can handle an value too.
-
-strchr(str, ' ') would make the intention clear here rather than using
-'4' ?
+yeah will do that
