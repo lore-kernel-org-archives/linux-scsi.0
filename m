@@ -1,20 +1,23 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/3] [RFC] FC protocol definition header files
-Date: Fri, 08 Aug 2008 16:26:27 -0700
-Message-ID: <20080808232627.24715.1205.stgit@fritz>
+Subject: [PATCH 3/3] [RFC] fcoe: Fibre Channel over Ethernet
+Date: Fri, 08 Aug 2008 16:26:38 -0700
+Message-ID: <20080808232638.24715.40117.stgit@fritz>
 References: <20080808232622.24715.7743.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42991 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:16887 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752200AbYHHX02 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2008 19:26:28 -0400
+	id S1752968AbYHHX0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2008 19:26:41 -0400
 In-Reply-To: <20080808232622.24715.7743.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+
+Encapsulation protocol for running Fibre Channel over Ethernet interfaces.
+Creates virtual Fibre Channel host adapters using libfc.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
@@ -23,21 +26,65 @@ Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Steve Ma <steve.ma@intel.com>
 ---
 
- include/scsi/fc/fc_els.h    |  802 +++++++++++++++++++++++++++++++++++++++++++
- include/scsi/fc/fc_encaps.h |  138 +++++++
- include/scsi/fc/fc_fc2.h    |  124 +++++++
- include/scsi/fc/fc_fcp.h    |  199 +++++++++++
- include/scsi/fc/fc_fs.h     |  344 ++++++++++++++++++
- include/scsi/fc/fc_gs.h     |   93 +++++
- include/scsi/fc/fc_ns.h     |  159 +++++++++
- 7 files changed, 1859 insertions(+), 0 deletions(-)
+ drivers/scsi/Kconfig         |    6 
+ drivers/scsi/Makefile        |    1 
+ drivers/scsi/fcoe/Makefile   |    8 +
+ drivers/scsi/fcoe/fc_fcoe.h  |  108 +++++++
+ drivers/scsi/fcoe/fcoe_def.h |  100 +++++++
+ drivers/scsi/fcoe/fcoe_dev.c |  633 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_if.c  |  504 +++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoeinit.c |  432 +++++++++++++++++++++++++++++
+ 8 files changed, 1792 insertions(+), 0 deletions(-)
 
-diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index ae5e574..07b0196 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -334,6 +334,12 @@ config LIBFC
+ 	---help---
+ 	  Fibre Channel library module
+ 
++config FCOE
++	tristate "FCoE module"
++	depends on LIBFC
++	---help---
++	  Fibre Channel over Ethernet module
++
+ config ISCSI_TCP
+ 	tristate "iSCSI Initiator over TCP/IP"
+ 	depends on SCSI && INET
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 9158dc6..b0aa59e 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -37,6 +37,7 @@ obj-$(CONFIG_SCSI_SRP_ATTRS)	+= scsi_transport_srp.o
+ obj-$(CONFIG_SCSI_DH)		+= device_handler/
+ 
+ obj-$(CONFIG_LIBFC)		+= libfc/
++obj-$(CONFIG_FCOE)		+= fcoe/
+ obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	iscsi_tcp.o
+ obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+ obj-$(CONFIG_SCSI_A4000T)	+= 53c700.o	a4000t.o
+diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
 new file mode 100644
-index 0000000..af4bf0c
+index 0000000..342e2ad
 --- /dev/null
-+++ b/include/scsi/fc/fc_els.h
-@@ -0,0 +1,802 @@
++++ b/drivers/scsi/fcoe/Makefile
+@@ -0,0 +1,8 @@
++# $Id: Makefile
++
++obj-$(CONFIG_FCOE) += fcoe.o
++
++fcoe-y := \
++	fcoe_dev.o \
++	fcoe_if.o \
++	fcoeinit.o
+diff --git a/drivers/scsi/fcoe/fc_fcoe.h b/drivers/scsi/fcoe/fc_fcoe.h
+new file mode 100644
+index 0000000..b2e07ec
+--- /dev/null
++++ b/drivers/scsi/fcoe/fc_fcoe.h
+@@ -0,0 +1,108 @@
 +/*
 + * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
@@ -57,939 +104,101 @@ index 0000000..af4bf0c
 + * Maintained at www.Open-FCoE.org
 + */
 +
-+#ifndef _FC_ELS_H_
-+#define	_FC_ELS_H_
++#ifndef _FC_FCOE_H_
++#define	_FC_FCOE_H_
 +
 +/*
-+ * Fibre Channel Switch - Enhanced Link Services definitions.
-+ * From T11 FC-LS Rev 1.2 June 7, 2005.
++ * FCoE - Fibre Channel over Ethernet.
 + */
 +
 +/*
-+ * ELS Command codes - byte 0 of the frame payload
++ * The FCoE ethertype eventually goes in net/if_ether.h.
 + */
-+enum fc_els_cmd {
-+	ELS_LS_RJT =	0x01,	/* ESL reject */
-+	ELS_LS_ACC =	0x02,	/* ESL Accept */
-+	ELS_PLOGI =	0x03,	/* N_Port login */
-+	ELS_FLOGI =	0x04,	/* F_Port login */
-+	ELS_LOGO =	0x05,	/* Logout */
-+	ELS_ABTX =	0x06,	/* Abort exchange - obsolete */
-+	ELS_RCS =	0x07,	/* read connection status */
-+	ELS_RES =	0x08,	/* read exchange status block */
-+	ELS_RSS =	0x09,	/* read sequence status block */
-+	ELS_RSI =	0x0a,	/* read sequence initiative */
-+	ELS_ESTS =	0x0b,	/* establish streaming */
-+	ELS_ESTC =	0x0c,	/* estimate credit */
-+	ELS_ADVC =	0x0d,	/* advise credit */
-+	ELS_RTV =	0x0e,	/* read timeout value */
-+	ELS_RLS =	0x0f,	/* read link error status block */
-+	ELS_ECHO =	0x10,	/* echo */
-+	ELS_TEST =	0x11,	/* test */
-+	ELS_RRQ =	0x12,	/* reinstate recovery qualifier */
-+	ELS_REC =	0x13,	/* read exchange concise */
-+	ELS_SRR =	0x14,	/* sequence retransmission request */
-+	ELS_PRLI =	0x20,	/* process login */
-+	ELS_PRLO =	0x21,	/* process logout */
-+	ELS_SCN =	0x22,	/* state change notification */
-+	ELS_TPLS =	0x23,	/* test process login state */
-+	ELS_TPRLO =	0x24,	/* third party process logout */
-+	ELS_LCLM =	0x25,	/* login control list mgmt (obs) */
-+	ELS_GAID =	0x30,	/* get alias_ID */
-+	ELS_FACT =	0x31,	/* fabric activate alias_id */
-+	ELS_FDACDT =	0x32,	/* fabric deactivate alias_id */
-+	ELS_NACT =	0x33,	/* N-port activate alias_id */
-+	ELS_NDACT =	0x34,	/* N-port deactivate alias_id */
-+	ELS_QOSR =	0x40,	/* quality of service request */
-+	ELS_RVCS =	0x41,	/* read virtual circuit status */
-+	ELS_PDISC =	0x50,	/* discover N_port service params */
-+	ELS_FDISC =	0x51,	/* discover F_port service params */
-+	ELS_ADISC =	0x52,	/* discover address */
-+	ELS_RNC =	0x53,	/* report node cap (obs) */
-+	ELS_FARP_REQ =	0x54,	/* FC ARP request */
-+	ELS_FARP_REPL =	0x55,	/* FC ARP reply */
-+	ELS_RPS =	0x56,	/* read port status block */
-+	ELS_RPL =	0x57,	/* read port list */
-+	ELS_RPBC =	0x58,	/* read port buffer condition */
-+	ELS_FAN =	0x60,	/* fabric address notification */
-+	ELS_RSCN =	0x61,	/* registered state change notification */
-+	ELS_SCR =	0x62,	/* state change registration */
-+	ELS_RNFT =	0x63,	/* report node FC-4 types */
-+	ELS_CSR =	0x68,	/* clock synch. request */
-+	ELS_CSU =	0x69,	/* clock synch. update */
-+	ELS_LINIT =	0x70,	/* loop initialize */
-+	ELS_LSTS =	0x72,	/* loop status */
-+	ELS_RNID =	0x78,	/* request node ID data */
-+	ELS_RLIR =	0x79,	/* registered link incident report */
-+	ELS_LIRR =	0x7a,	/* link incident record registration */
-+	ELS_SRL =	0x7b,	/* scan remote loop */
-+	ELS_SBRP =	0x7c,	/* set bit-error reporting params */
-+	ELS_RPSC =	0x7d,	/* report speed capabilities */
-+	ELS_QSA =	0x7e,	/* query security attributes */
-+	ELS_EVFP =	0x7f,	/* exchange virt. fabrics params */
-+	ELS_LKA =	0x80,	/* link keep-alive */
-+	ELS_AUTH_ELS =	0x90,	/* authentication ELS */
-+};
++#ifndef ETH_P_FCOE
++#define	ETH_P_FCOE	0x8906		/* FCOE ether type */
++#endif
 +
 +/*
-+ * Initializer useful for decoding table.
-+ * Please keep this in sync with the above definitions.
++ * FC_FCOE_OUI hasn't been standardized yet.   XXX TBD.
 + */
-+#define	FC_ELS_CMDS_INIT {			\
-+	[ELS_LS_RJT] =	"LS_RJT",		\
-+	[ELS_LS_ACC] =	"LS_ACC",		\
-+	[ELS_PLOGI] =	"PLOGI",		\
-+	[ELS_FLOGI] =	"FLOGI",		\
-+	[ELS_LOGO] =	"LOGO",			\
-+	[ELS_ABTX] =	"ABTX",			\
-+	[ELS_RCS] =	"RCS",			\
-+	[ELS_RES] =	"RES",			\
-+	[ELS_RSS] =	"RSS",			\
-+	[ELS_RSI] =	"RSI",			\
-+	[ELS_ESTS] =	"ESTS",			\
-+	[ELS_ESTC] =	"ESTC",			\
-+	[ELS_ADVC] =	"ADVC",			\
-+	[ELS_RTV] =	"RTV",			\
-+	[ELS_RLS] =	"RLS",			\
-+	[ELS_ECHO] =	"ECHO",			\
-+	[ELS_TEST] =	"TEST",			\
-+	[ELS_RRQ] =	"RRQ",			\
-+	[ELS_REC] =	"REC",			\
-+	[ELS_SRR] =	"SRR",			\
-+	[ELS_PRLI] =	"PRLI",			\
-+	[ELS_PRLO] =	"PRLO",			\
-+	[ELS_SCN] =	"SCN",			\
-+	[ELS_TPLS] =	"TPLS",			\
-+	[ELS_TPRLO] =	"TPRLO",		\
-+	[ELS_LCLM] =	"LCLM",			\
-+	[ELS_GAID] =	"GAID",			\
-+	[ELS_FACT] =	"FACT",			\
-+	[ELS_FDACDT] =	"FDACDT",		\
-+	[ELS_NACT] =	"NACT",			\
-+	[ELS_NDACT] =	"NDACT",		\
-+	[ELS_QOSR] =	"QOSR",			\
-+	[ELS_RVCS] =	"RVCS",			\
-+	[ELS_PDISC] =	"PDISC",		\
-+	[ELS_FDISC] =	"FDISC",		\
-+	[ELS_ADISC] =	"ADISC",		\
-+	[ELS_RNC] =	"RNC",			\
-+	[ELS_FARP_REQ] = "FARP_REQ",		\
-+	[ELS_FARP_REPL] =  "FARP_REPL",		\
-+	[ELS_RPS] =	"RPS",			\
-+	[ELS_RPL] =	"RPL",			\
-+	[ELS_RPBC] =	"RPBC",			\
-+	[ELS_FAN] =	"FAN",			\
-+	[ELS_RSCN] =	"RSCN",			\
-+	[ELS_SCR] =	"SCR",			\
-+	[ELS_RNFT] =	"RNFT",			\
-+	[ELS_CSR] =	"CSR",			\
-+	[ELS_CSU] =	"CSU",			\
-+	[ELS_LINIT] =	"LINIT",		\
-+	[ELS_LSTS] =	"LSTS",			\
-+	[ELS_RNID] =	"RNID",			\
-+	[ELS_RLIR] =	"RLIR",			\
-+	[ELS_LIRR] =	"LIRR",			\
-+	[ELS_SRL] =	"SRL",			\
-+	[ELS_SBRP] =	"SBRP",			\
-+	[ELS_RPSC] =	"RPSC",			\
-+	[ELS_QSA] =	"QSA",			\
-+	[ELS_EVFP] =	"EVFP",			\
-+	[ELS_LKA] =	"LKA",			\
-+	[ELS_AUTH_ELS] = "AUTH_ELS",		\
-+}
++#ifndef FC_FCOE_OUI
++#define	FC_FCOE_OUI	0x0efc00	/* upper 24 bits of FCOE dest MAC TBD */
++#endif
 +
 +/*
-+ * LS_ACC payload.
++ * The destination MAC address for the fabric login may get a different OUI.
++ * This isn't standardized yet.
 + */
-+struct fc_els_ls_acc {
-+	__u8          la_cmd;		/* command code ELS_LS_ACC */
-+	__u8          la_resv[3];	/* reserved */
-+};
++#ifndef FC_FCOE_FLOGI_MAC
++/* gateway MAC - TBD */
++#define	FC_FCOE_FLOGI_MAC { 0x0e, 0xfc, 0x00, 0xff, 0xff, 0xfe }
++#endif
++
++#define	FC_FCOE_VER	0			/* version */
 +
 +/*
-+ * ELS reject payload.
++ * Ethernet Addresses based on FC S_ID and D_ID.
++ * Generated by FC_FCOE_OUI | S_ID/D_ID
 + */
-+struct fc_els_ls_rjt {
-+	__u8	er_cmd;		/* command code ELS_LS_RJT */
-+	__u8	er_resv[4];	/* reserved must be zero */
-+	__u8	er_reason;	/* reason (enum fc_els_rjt_reason below) */
-+	__u8	er_explan;	/* explanation (enum fc_els_rjt_explan below) */
-+	__u8	er_vendor;	/* vendor specific code */
-+};
++#define	FC_FCOE_ENCAPS_ID(n)	(((u64) FC_FCOE_OUI << 24) | (n))
++#define	FC_FCOE_DECAPS_ID(n)	((n) >> 24)
 +
 +/*
-+ * ELS reject reason codes (er_reason).
-+ */
-+enum fc_els_rjt_reason {
-+	ELS_RJT_NONE =		0,	/* no reject - not to be sent */
-+	ELS_RJT_INVAL =		0x01,	/* invalid ELS command code */
-+	ELS_RJT_LOGIC =		0x03,	/* logical error */
-+	ELS_RJT_BUSY =		0x05,	/* logical busy */
-+	ELS_RJT_PROT =		0x07,	/* protocol error */
-+	ELS_RJT_UNAB =		0x09,	/* unable to perform command request */
-+	ELS_RJT_UNSUP =		0x0b,	/* command not supported */
-+	ELS_RJT_INPROG =	0x0e,	/* command already in progress */
-+	ELS_RJT_VENDOR =	0xff,	/* vendor specific error */
-+};
-+
-+
-+/*
-+ * reason code explanation (er_explan).
-+ */
-+enum fc_els_rjt_explan {
-+	ELS_EXPL_NONE =		0x00,	/* No additional explanation */
-+	ELS_EXPL_SPP_OPT_ERR =	0x01,	/* service parameter error - options */
-+	ELS_EXPL_SPP_ICTL_ERR =	0x03,	/* service parm error - initiator ctl */
-+	ELS_EXPL_AH =		0x11,	/* invalid association header */
-+	ELS_EXPL_AH_REQ =	0x13,	/* association_header required */
-+	ELS_EXPL_SID =		0x15,	/* invalid originator S_ID */
-+	ELS_EXPL_OXID_RXID =	0x17,	/* invalid OX_ID-RX_ID combination */
-+	ELS_EXPL_INPROG =	0x19,	/* Request already in progress */
-+	ELS_EXPL_PLOGI_REQD =	0x1e,	/* N_Port login required */
-+	ELS_EXPL_INSUF_RES =	0x29,	/* insufficient resources */
-+	ELS_EXPL_UNAB_DATA =	0x2a,	/* unable to supply requested data */
-+	ELS_EXPL_UNSUPR =	0x2c,	/* Request not supported */
-+	ELS_EXPL_INV_LEN =	0x2d,	/* Invalid payload length */
-+	/* TBD - above definitions incomplete */
-+};
-+
-+/*
-+ * Common service parameters (N ports).
-+ */
-+struct fc_els_csp {
-+	__u8		sp_hi_ver;	/* highest version supported (obs.) */
-+	__u8		sp_lo_ver;	/* highest version supported (obs.) */
-+	__be16		sp_bb_cred;	/* buffer-to-buffer credits */
-+	__be16		sp_features;	/* common feature flags */
-+	__be16		sp_bb_data;	/* b-b state number and data field sz */
-+	union {
-+		struct {
-+			__be16	_sp_tot_seq; /* total concurrent sequences */
-+			__be16	_sp_rel_off; /* rel. offset by info cat */
-+		} sp_plogi;
-+		struct {
-+			__be32	_sp_r_a_tov; /* resource alloc. timeout msec */
-+		} sp_flogi_acc;
-+	} sp_u;
-+	__be32		sp_e_d_tov;	/* error detect timeout value */
-+};
-+#define	sp_tot_seq	sp_u.sp_plogi._sp_tot_seq
-+#define	sp_rel_off	sp_u.sp_plogi._sp_rel_off
-+#define	sp_r_a_tov	sp_u.sp_flogi_acc._sp_r_a_tov
-+
-+#define	FC_SP_BB_DATA_MASK 0xfff /* mask for data field size in sp_bb_data */
-+
-+/*
-+ * Minimum and maximum values for max data field size in service parameters.
-+ */
-+#define	FC_SP_MIN_MAX_PAYLOAD	FC_MIN_MAX_PAYLOAD
-+#define	FC_SP_MAX_MAX_PAYLOAD	FC_MAX_PAYLOAD
-+
-+/*
-+ * sp_features
-+ */
-+#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel. off. */
-+#define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
-+#define	FC_SP_FT_RAND	0x4000	/* random relative offset */
-+#define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
-+#define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
-+#define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
-+#define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
-+#define	FC_SP_FT_MCAST	0x0200	/* multicast */
-+#define	FC_SP_FT_BCAST	0x0100	/* broadcast */
-+#define	FC_SP_FT_HUNT	0x0080	/* hunt group */
-+#define	FC_SP_FT_SIMP	0x0040	/* dedicated simplex */
-+#define	FC_SP_FT_SEC	0x0020	/* reserved for security */
-+#define	FC_SP_FT_CSYN	0x0010	/* clock synch. supported */
-+#define	FC_SP_FT_RTTOV	0x0008	/* R_T_TOV value 100 uS, else 100 mS */
-+#define	FC_SP_FT_HALF	0x0004	/* dynamic half duplex */
-+#define	FC_SP_FT_SEQC	0x0002	/* SEQ_CNT */
-+#define	FC_SP_FT_PAYL	0x0001	/* FLOGI payload length 256, else 116 */
-+
-+/*
-+ * Class-specific service parameters.
-+ */
-+struct fc_els_cssp {
-+	__be16		cp_class;	/* class flags */
-+	__be16		cp_init;	/* initiator flags */
-+	__be16		cp_recip;	/* recipient flags */
-+	__be16		cp_rdfs;	/* receive data field size */
-+	__be16		cp_con_seq;	/* concurrent sequences */
-+	__be16		cp_ee_cred;	/* N-port end-to-end credit */
-+	__u8		cp_resv1;	/* reserved */
-+	__u8		cp_open_seq;	/* open sequences per exchange */
-+	__u8		_cp_resv2[2];	/* reserved */
-+};
-+
-+/*
-+ * cp_class flags.
-+ */
-+#define	FC_CPC_VALID	0x8000		/* class valid */
-+#define	FC_CPC_IMIX	0x4000		/* intermix mode */
-+#define	FC_CPC_SEQ	0x0800		/* sequential delivery */
-+#define	FC_CPC_CAMP	0x0200		/* camp-on */
-+#define	FC_CPC_PRI	0x0080		/* priority */
-+
-+/*
-+ * cp_init flags.
-+ * (TBD: not all flags defined here).
-+ */
-+#define	FC_CPI_CSYN	0x0010		/* clock synch. capable */
-+
-+/*
-+ * cp_recip flags.
-+ */
-+#define	FC_CPR_CSYN	0x0008		/* clock synch. capable */
-+
-+/*
-+ * NFC_ELS_FLOGI: Fabric login request.
-+ * NFC_ELS_PLOGI: Port login request (same format).
-+ */
-+struct fc_els_flogi {
-+	__u8		fl_cmd;		/* command */
-+	__u8		_fl_resvd[3];	/* must be zero */
-+	struct fc_els_csp fl_csp;	/* common service parameters */
-+	__be64		fl_wwpn;	/* port name */
-+	__be64		fl_wwnn;	/* node name */
-+	struct fc_els_cssp fl_cssp[4];	/* class 1-4 service parameters */
-+	__u8		fl_vend[16];	/* vendor version level */
-+} __attribute__((__packed__));
-+
-+/*
-+ * Process login service parameter page.
-+ */
-+struct fc_els_spp {
-+	__u8		spp_type;	/* type code or common service params */
-+	__u8		spp_type_ext;	/* type code extension */
-+	__u8		spp_flags;
-+	__u8		_spp_resvd;
-+	__be32		spp_orig_pa;	/* originator process associator */
-+	__be32		spp_resp_pa;	/* responder process associator */
-+	__be32		spp_params;	/* service parameters */
-+};
-+
-+/*
-+ * spp_flags.
-+ */
-+#define	FC_SPP_OPA_VAL	    0x80	/* originator proc. assoc. valid */
-+#define	FC_SPP_RPA_VAL	    0x40	/* responder proc. assoc. valid */
-+#define	FC_SPP_EST_IMG_PAIR 0x20	/* establish image pair */
-+#define	FC_SPP_RESP_MASK    0x0f	/* mask for response code (below) */
-+
-+/*
-+ * SPP response code in spp_flags - lower 4 bits.
-+ */
-+enum fc_els_spp_resp {
-+	FC_SPP_RESP_ACK	=	1,	/* request executed */
-+	FC_SPP_RESP_RES =	2,	/* unable due to lack of resources */
-+	FC_SPP_RESP_INIT =	3,	/* initialization not complete */
-+	FC_SPP_RESP_NO_PA = 	4,	/* unknown process associator */
-+	FC_SPP_RESP_CONF = 	5,	/* configuration precludes image pair */
-+	FC_SPP_RESP_COND = 	6,	/* request completed conditionally */
-+	FC_SPP_RESP_MULT = 	7,	/* unable to handle multiple SPPs */
-+	FC_SPP_RESP_INVL = 	8,	/* SPP is invalid */
-+};
-+
-+/*
-+ * ELS_RRQ - Reinstate Recovery Qualifier
-+ */
-+struct fc_els_rrq {
-+	__u8		rrq_cmd;	/* command (0x12) */
-+	__u8		rrq_zero[3];	/* specified as zero - part of cmd */
-+	__u8		rrq_resvd;	/* reserved */
-+	__u8		rrq_s_id[3];	/* originator FID */
-+	__be16		rrq_ox_id;	/* originator exchange ID */
-+	__be16		rrq_rx_id;	/* responders exchange ID */
-+};
-+
-+/*
-+ * ELS_REC - Read exchange concise.
-+ */
-+struct fc_els_rec {
-+	__u8		rec_cmd;	/* command (0x13) */
-+	__u8		rec_zero[3];	/* specified as zero - part of cmd */
-+	__u8		rec_resvd;	/* reserved */
-+	__u8		rec_s_id[3];	/* originator FID */
-+	__be16		rec_ox_id;	/* originator exchange ID */
-+	__be16		rec_rx_id;	/* responders exchange ID */
-+};
-+
-+/*
-+ * ELS_REC LS_ACC payload.
-+ */
-+struct fc_els_rec_acc {
-+	__u8		reca_cmd;	/* accept (0x02) */
-+	__u8		reca_zero[3];	/* specified as zero - part of cmd */
-+	__be16		reca_ox_id;	/* originator exchange ID */
-+	__be16		reca_rx_id;	/* responders exchange ID */
-+	__u8		reca_resvd1;	/* reserved */
-+	__u8		reca_ofid[3];	/* originator FID */
-+	__u8		reca_resvd2;	/* reserved */
-+	__u8		reca_rfid[3];	/* responder FID */
-+	__be32		reca_fc4value;	/* FC4 value */
-+	__be32		reca_e_stat;	/* ESB (exchange status block) status */
-+};
-+
-+/*
-+ * ELS_PRLI - Process login request and response.
-+ */
-+struct fc_els_prli {
-+	__u8		prli_cmd;	/* command */
-+	__u8		prli_spp_len;	/* length of each serv. parm. page */
-+	__be16		prli_len;	/* length of entire payload */
-+	/* service parameter pages follow */
-+};
-+
-+/*
-+ * ELS_LOGO - process or fabric logout.
-+ */
-+struct fc_els_logo {
-+	__u8		fl_cmd;		/* command code */
-+	__u8		fl_zero[3];	/* specified as zero - part of cmd */
-+	__u8		fl_resvd;	/* reserved */
-+	__u8		fl_n_port_id[3];/* N port ID */
-+	__be64		fl_n_port_wwn;	/* port name */
-+};
-+
-+/*
-+ * ELS_RTV - read timeout value.
-+ */
-+struct fc_els_rtv {
-+	__u8		rtv_cmd;	/* command code 0x0e */
-+	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
-+};
-+
-+/*
-+ * LS_ACC for ELS_RTV - read timeout value.
-+ */
-+struct fc_els_rtv_acc {
-+	__u8		rtv_cmd;	/* command code 0x02 */
-+	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
-+	__be32		rtv_r_a_tov;	/* resource allocation timeout value */
-+	__be32		rtv_e_d_tov;	/* error detection timeout value */
-+	__be32		rtv_toq;	/* timeout qualifier (see below) */
-+};
-+
-+/*
-+ * rtv_toq bits.
-+ */
-+#define	FC_ELS_RTV_EDRES (1 << 26)	/* E_D_TOV resolution is nS else mS */
-+#define	FC_ELS_RTV_RTTOV (1 << 19)	/* R_T_TOV is 100 uS else 100 mS */
-+
-+/*
-+ * ELS_SCR - state change registration payload.
-+ */
-+struct fc_els_scr {
-+	__u8		scr_cmd;	/* command code */
-+	__u8		scr_resv[6];	/* reserved */
-+	__u8		scr_reg_func;	/* registration function (see below) */
-+};
-+
-+enum fc_els_scr_func {
-+	ELS_SCRF_FAB =	1,	/* fabric-detected registration */
-+	ELS_SCRF_NPORT = 2,	/* Nx_Port-detected registration */
-+	ELS_SCRF_FULL =	3,	/* full registration */
-+	ELS_SCRF_CLEAR = 255,	/* remove any current registrations */
-+};
-+
-+/*
-+ * ELS_RSCN - registered state change notification payload.
-+ */
-+struct fc_els_rscn {
-+	__u8		rscn_cmd;	/* RSCN opcode (0x61) */
-+	__u8		rscn_page_len;	/* page length (4) */
-+	__be16		rscn_plen;	/* payload length including this word */
-+
-+	/* followed by 4-byte generic affected Port_ID pages */
-+};
-+
-+struct fc_els_rscn_page {
-+	__u8		rscn_page_flags; /* event and address format */
-+	__u8		rscn_fid[3];	/* fabric ID */
-+};
-+
-+#define	ELS_RSCN_EV_QUAL_BIT	2	/* shift count for event qualifier */
-+#define	ELS_RSCN_EV_QUAL_MASK	0xf	/* mask for event qualifier */
-+#define	ELS_RSCN_ADDR_FMT_BIT	0	/* shift count for address format */
-+#define	ELS_RSCN_ADDR_FMT_MASK	0x3	/* mask for address format */
-+
-+enum fc_els_rscn_ev_qual {
-+	ELS_EV_QUAL_NONE = 0,		/* unspecified */
-+	ELS_EV_QUAL_NS_OBJ = 1,		/* changed name server object */
-+	ELS_EV_QUAL_PORT_ATTR = 2,	/* changed port attribute */
-+	ELS_EV_QUAL_SERV_OBJ = 3,	/* changed service object */
-+	ELS_EV_QUAL_SW_CONFIG = 4,	/* changed switch configuration */
-+	ELS_EV_QUAL_REM_OBJ = 5,	/* removed object */
-+};
-+
-+enum fc_els_rscn_addr_fmt {
-+	ELS_ADDR_FMT_PORT = 0,	/* rscn_fid is a port address */
-+	ELS_ADDR_FMT_AREA = 1,	/* rscn_fid is a area address */
-+	ELS_ADDR_FMT_DOM = 2,	/* rscn_fid is a domain address */
-+	ELS_ADDR_FMT_FAB = 3,	/* anything on fabric may have changed */
-+};
-+
-+/*
-+ * ELS_RNID - request Node ID.
-+ */
-+struct fc_els_rnid {
-+	__u8		rnid_cmd;	/* RNID opcode (0x78) */
-+	__u8		rnid_resv[3];	/* reserved */
-+	__u8		rnid_fmt;	/* data format */
-+	__u8		rnid_resv2[3];	/* reserved */
-+};
-+
-+/*
-+ * Node Identification Data formats (rnid_fmt)
-+ */
-+enum fc_els_rnid_fmt {
-+	ELS_RNIDF_NONE = 0,		/* no specific identification data */
-+	ELS_RNIDF_GEN = 0xdf,		/* general topology discovery format */
-+};
-+
-+/*
-+ * ELS_RNID response.
-+ */
-+struct fc_els_rnid_resp {
-+	__u8		rnid_cmd;	/* response code (LS_ACC) */
-+	__u8		rnid_resv[3];	/* reserved */
-+	__u8		rnid_fmt;	/* data format */
-+	__u8		rnid_cid_len;	/* common ID data length */
-+	__u8		rnid_resv2;	/* reserved */
-+	__u8		rnid_sid_len;	/* specific ID data length */
-+};
-+
-+struct fc_els_rnid_cid {
-+	__be64		rnid_wwpn;	/* N port name */
-+	__be64		rnid_wwnn;	/* node name */
-+};
-+
-+struct fc_els_rnid_gen {
-+	__u8		rnid_vend_id[16]; /* vendor-unique ID */
-+	__be32		rnid_atype;	/* associated type (see below) */
-+	__be32		rnid_phys_port;	/* physical port number */
-+	__be32		rnid_att_nodes;	/* number of attached nodes */
-+	__u8		rnid_node_mgmt;	/* node management (see below) */
-+	__u8		rnid_ip_ver;	/* IP version (see below) */
-+	__be16		rnid_prot_port;	/* UDP / TCP port number */
-+	__be32		rnid_ip_addr[4]; /* IP address */
-+	__u8		rnid_resvd[2];	/* reserved */
-+	__be16		rnid_vend_spec;	/* vendor-specific field */
-+};
-+
-+enum fc_els_rnid_atype {
-+	ELS_RNIDA_UNK =		0x01,	/* unknown */
-+	ELS_RNIDA_OTHER =	0x02,	/* none of the following */
-+	ELS_RNIDA_HUB =		0x03,
-+	ELS_RNIDA_SWITCH =	0x04,
-+	ELS_RNIDA_GATEWAY =	0x05,
-+	ELS_RNIDA_CONV =	0x06,   /* Obsolete, do not use this value */
-+	ELS_RNIDA_HBA =	        0x07,   /* Obsolete, do not use this value */
-+	ELS_RNIDA_PROXY =       0x08,   /* Obsolete, do not use this value */
-+	ELS_RNIDA_STORAGE =	0x09,
-+	ELS_RNIDA_HOST =	0x0a,
-+	ELS_RNIDA_SUBSYS =	0x0b,	/* storage subsystem (e.g., RAID) */
-+	ELS_RNIDA_ACCESS =	0x0e,	/* access device (e.g. media changer) */
-+	ELS_RNIDA_NAS =		0x11,	/* NAS server */
-+	ELS_RNIDA_BRIDGE =	0x12,	/* bridge */
-+	ELS_RNIDA_VIRT =	0x13,	/* virtualization device */
-+	ELS_RNIDA_MF =		0xff,	/* multifunction device (bits below) */
-+	ELS_RNIDA_MF_HUB =	1UL << 31, 	/* hub */
-+	ELS_RNIDA_MF_SW =	1UL << 30, 	/* switch */
-+	ELS_RNIDA_MF_GW =	1UL << 29,	/* gateway */
-+	ELS_RNIDA_MF_ST =	1UL << 28,	/* storage */
-+	ELS_RNIDA_MF_HOST =	1UL << 27,	/* host */
-+	ELS_RNIDA_MF_SUB =	1UL << 26,	/* storage subsystem */
-+	ELS_RNIDA_MF_ACC =	1UL << 25,	/* storage access dev */
-+	ELS_RNIDA_MF_WDM =	1UL << 24,	/* wavelength division mux */
-+	ELS_RNIDA_MF_NAS =	1UL << 23,	/* NAS server */
-+	ELS_RNIDA_MF_BR =	1UL << 22,	/* bridge */
-+	ELS_RNIDA_MF_VIRT =	1UL << 21,	/* virtualization device */
-+};
-+
-+enum fc_els_rnid_mgmt {
-+	ELS_RNIDM_SNMP =	0,
-+	ELS_RNIDM_TELNET =	1,
-+	ELS_RNIDM_HTTP =	2,
-+	ELS_RNIDM_HTTPS =	3,
-+	ELS_RNIDM_XML =		4,	/* HTTP + XML */
-+};
-+
-+enum fc_els_rnid_ipver {
-+	ELS_RNIDIP_NONE =	0,	/* no IP support or node mgmt. */
-+	ELS_RNIDIP_V4 =		1,	/* IPv4 */
-+	ELS_RNIDIP_V6 =		2,	/* IPv6 */
-+};
-+
-+/*
-+ * ELS RPL - Read Port List.
-+ */
-+struct fc_els_rpl {
-+	__u8		rpl_cmd;	/* command */
-+	__u8		rpl_resv[5];	/* reserved - must be zero */
-+	__be16		rpl_max_size;	/* maximum response size or zero */
-+	__u8		rpl_resv1;	/* reserved - must be zero */
-+	__u8		rpl_index[3];	/* starting index */
-+};
-+
-+/*
-+ * Port number block in RPL response.
-+ */
-+struct fc_els_pnb {
-+	__be32		pnb_phys_pn;	/* physical port number */
-+	__u8		pnb_resv;	/* reserved */
-+	__u8		pnb_port_id[3];	/* port ID */
-+	__be64		pnb_wwpn;	/* port name */
-+};
-+
-+/*
-+ * RPL LS_ACC response.
-+ */
-+struct fc_els_rpl_resp {
-+	__u8		rpl_cmd;	/* ELS_LS_ACC */
-+	__u8		rpl_resv1;	/* reserved - must be zero */
-+	__be16		rpl_plen;	/* payload length */
-+	__u8		rpl_resv2;	/* reserved - must be zero */
-+	__u8		rpl_llen[3];	/* list length */
-+	__u8		rpl_resv3;	/* reserved - must be zero */
-+	__u8		rpl_index[3];	/* starting index */
-+	struct fc_els_pnb rpl_pnb[1];	/* variable number of PNBs */
-+};
-+
-+/*
-+ * Link Error Status Block.
-+ */
-+struct fc_els_lesb {
-+	__be32		lesb_link_fail;	/* link failure count */
-+	__be32		lesb_sync_loss;	/* loss of synchronization count */
-+	__be32		lesb_sig_loss;	/* loss of signal count */
-+	__be32		lesb_prim_err;	/* primitive sequence error count */
-+	__be32		lesb_inv_word;	/* invalid transmission word count */
-+	__be32		lesb_inv_crc;	/* invalid CRC count */
-+};
-+
-+/*
-+ * ELS RPS - Read Port Status Block request.
-+ */
-+struct fc_els_rps {
-+	__u8		rps_cmd;	/* command */
-+	__u8		rps_resv[2];	/* reserved - must be zero */
-+	__u8		rps_flag;	/* flag - see below */
-+	__be64		rps_port_spec;	/* port selection */
-+};
-+
-+enum fc_els_rps_flag {
-+	FC_ELS_RPS_DID =	0x00,	/* port identified by D_ID of req. */
-+	FC_ELS_RPS_PPN =	0x01,	/* port_spec is physical port number */
-+	FC_ELS_RPS_WWPN =	0x02,	/* port_spec is port WWN */
-+};
-+
-+/*
-+ * ELS RPS LS_ACC response.
-+ */
-+struct fc_els_rps_resp {
-+	__u8		rps_cmd;	/* command - LS_ACC */
-+	__u8		rps_resv[2];	/* reserved - must be zero */
-+	__u8		rps_flag;	/* flag - see below */
-+	__u8		rps_resv2[2];	/* reserved */
-+	__be16		rps_status;	/* port status - see below */
-+	struct fc_els_lesb rps_lesb;	/* link error status block */
-+};
-+
-+enum fc_els_rps_resp_flag {
-+	FC_ELS_RPS_LPEV =	0x01,	/* L_port extension valid */
-+};
-+
-+enum fc_els_rps_resp_status {
-+	FC_ELS_RPS_PTP =	1 << 5,	/* point-to-point connection */
-+	FC_ELS_RPS_LOOP =	1 << 4,	/* loop mode */
-+	FC_ELS_RPS_FAB =	1 << 3,	/* fabric present */
-+	FC_ELS_RPS_NO_SIG =	1 << 2,	/* loss of signal */
-+	FC_ELS_RPS_NO_SYNC =	1 << 1,	/* loss of synchronization */
-+	FC_ELS_RPS_RESET =	1 << 0,	/* in link reset protocol */
-+};
-+
-+/*
-+ * ELS LIRR - Link Incident Record Registration request.
-+ */
-+struct fc_els_lirr {
-+	__u8		lirr_cmd;	/* command */
-+	__u8		lirr_resv[3];	/* reserved - must be zero */
-+	__u8		lirr_func;	/* registration function */
-+	__u8		lirr_fmt;	/* FC-4 type of RLIR requested */
-+	__u8		lirr_resv2[2];	/* reserved - must be zero */
-+};
-+
-+enum fc_els_lirr_func {
-+	ELS_LIRR_SET_COND = 	0x01,	/* set - conditionally receive */
-+	ELS_LIRR_SET_UNCOND = 	0x02,	/* set - unconditionally receive */
-+	ELS_LIRR_CLEAR = 	0xff	/* clear registration */
-+};
-+
-+/*
-+ * ELS SRL - Scan Remote Loop request.
-+ */
-+struct fc_els_srl {
-+	__u8		srl_cmd;	/* command */
-+	__u8		srl_resv[3];	/* reserved - must be zero */
-+	__u8		srl_flag;	/* flag - see below */
-+	__u8		srl_flag_param[3];	/* flag parameter */
-+};
-+
-+enum fc_els_srl_flag {
-+	FC_ELS_SRL_ALL =	0x00,	/* scan all FL ports */
-+	FC_ELS_SRL_ONE =	0x01,	/* scan specified loop */
-+	FC_ELS_SRL_EN_PER =	0x02,	/* enable periodic scanning (param) */
-+	FC_ELS_SRL_DIS_PER =	0x03,	/* disable periodic scanning */
-+};
-+
-+/*
-+ * ELS RLS - Read Link Error Status Block request.
-+ */
-+struct fc_els_rls {
-+	__u8		rls_cmd;	/* command */
-+	__u8		rls_resv[4];	/* reserved - must be zero */
-+	__u8		rls_port_id[3];	/* port ID */
-+};
-+
-+/*
-+ * ELS RLS LS_ACC Response.
-+ */
-+struct fc_els_rls_resp {
-+	__u8		rls_cmd;	/* ELS_LS_ACC */
-+	__u8		rls_resv[3];	/* reserved - must be zero */
-+	struct fc_els_lesb rls_lesb;	/* link error status block */
-+};
-+
-+/*
-+ * ELS RLIR - Registered Link Incident Report.
-+ * This is followed by the CLIR and the CLID, described below.
-+ */
-+struct fc_els_rlir {
-+	__u8		rlir_cmd;	/* command */
-+	__u8		rlir_resv[3];	/* reserved - must be zero */
-+	__u8		rlir_fmt;	/* format (FC4-type if type specific) */
-+	__u8		rlir_clr_len;	/* common link incident record length */
-+	__u8		rlir_cld_len;	/* common link incident desc. length */
-+	__u8		rlir_slr_len;	/* spec. link incident record length */
-+};
-+
-+/*
-+ * CLIR - Common Link Incident Record Data. - Sent via RLIR.
-+ */
-+struct fc_els_clir {
-+	__be64		clir_wwpn;	/* incident port name */
-+	__be64		clir_wwnn;	/* incident port node name */
-+	__u8		clir_port_type;	/* incident port type */
-+	__u8		clir_port_id[3];	/* incident port ID */
-+
-+	__be64		clir_conn_wwpn;	/* connected port name */
-+	__be64		clir_conn_wwnn;	/* connected node name */
-+	__be64		clir_fab_name;	/* fabric name */
-+	__be32		clir_phys_port;	/* physical port number */
-+	__be32		clir_trans_id;	/* transaction ID */
-+	__u8		clir_resv[3];	/* reserved */
-+	__u8		clir_ts_fmt;	/* time stamp format */
-+	__be64		clir_timestamp;	/* time stamp */
-+};
-+
-+/*
-+ * CLIR clir_ts_fmt - time stamp format values.
-+ */
-+enum fc_els_clir_ts_fmt {
-+	ELS_CLIR_TS_UNKNOWN = 	0,	/* time stamp field unknown */
-+	ELS_CLIR_TS_SEC_FRAC = 	1,	/* time in seconds and fractions */
-+	ELS_CLIR_TS_CSU =	2,	/* time in clock synch update format */
-+};
-+
-+/*
-+ * Common Link Incident Descriptor - sent via RLIR.
-+ */
-+struct fc_els_clid {
-+	__u8		clid_iq;	/* incident qualifier flags */
-+	__u8		clid_ic;	/* incident code */
-+	__be16		clid_epai;	/* domain/area of ISL */
-+};
-+
-+/*
-+ * CLID incident qualifier flags.
-+ */
-+enum fc_els_clid_iq {
-+	ELS_CLID_SWITCH =	0x20,	/* incident port is a switch node */
-+	ELS_CLID_E_PORT =	0x10,	/* incident is an ISL (E) port */
-+	ELS_CLID_SEV_MASK =	0x0c,	/* severity 2-bit field mask */
-+	ELS_CLID_SEV_INFO =	0x00,	/* report is informational */
-+	ELS_CLID_SEV_INOP =	0x08,	/* link not operational */
-+	ELS_CLID_SEV_DEG =	0x04,	/* link degraded but operational */
-+	ELS_CLID_LASER =	0x02,	/* subassembly is a laser */
-+	ELS_CLID_FRU =		0x01,	/* format can identify a FRU */
-+};
-+
-+/*
-+ * CLID incident code.
-+ */
-+enum fc_els_clid_ic {
-+	ELS_CLID_IC_IMPL =	1,	/* implicit incident */
-+	ELS_CLID_IC_BER =	2,	/* bit-error-rate threshold exceeded */
-+	ELS_CLID_IC_LOS =	3,	/* loss of synch or signal */
-+	ELS_CLID_IC_NOS =	4,	/* non-operational primitive sequence */
-+	ELS_CLID_IC_PST =	5,	/* primitive sequence timeout */
-+	ELS_CLID_IC_INVAL =	6,	/* invalid primitive sequence */
-+	ELS_CLID_IC_LOOP_TO =	7,	/* loop initialization time out */
-+	ELS_CLID_IC_LIP =	8,	/* receiving LIP */
-+};
-+
-+#endif /* _FC_ELS_H_ */
-diff --git a/include/scsi/fc/fc_encaps.h b/include/scsi/fc/fc_encaps.h
-new file mode 100644
-index 0000000..f180c3e
---- /dev/null
-+++ b/include/scsi/fc/fc_encaps.h
-@@ -0,0 +1,138 @@
-+/*
-+ * Copyright(c) 2007 Intel Corporation. All rights reserved.
++ * FCoE frame header - 14 bytes
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
++ * This is the August 2007 version of the FCoE header as defined by T11.
++ * This follows the VLAN header, which includes the ethertype.
 + */
-+#ifndef _FC_ENCAPS_H_
-+#define _FC_ENCAPS_H_
-+
-+/*
-+ * Protocol definitions from RFC 3643 - Fibre Channel Frame Encapsulation.
-+ *
-+ * Note:  The frame length field is the number of 32-bit words in
-+ * the encapsulation including the fcip_encaps_header, CRC and EOF words.
-+ * The minimum frame length value in bytes is (32 + 24 + 4 + 4) * 4 = 64.
-+ * The maximum frame length value in bytes is (32 + 24 + 2112 + 4 + 4) = 2172.
-+ */
-+#define FC_ENCAPS_MIN_FRAME_LEN 64	/* min frame len (bytes) (see above) */
-+#define FC_ENCAPS_MAX_FRAME_LEN (FC_ENCAPS_MIN_FRAME_LEN + FC_MAX_PAYLOAD)
-+
-+#define FC_ENCAPS_VER       1           /* current version number */
-+
-+struct fc_encaps_hdr {
-+	__u8	fc_proto;	/* protocol number */
-+	__u8	fc_ver;		/* version of encapsulation */
-+	__u8	fc_proto_n;	/* ones complement of protocol */
-+	__u8	fc_ver_n;	/* ones complement of version */
-+
-+	unsigned char fc_proto_data[8]; /* protocol specific data */
-+
-+	__be16	fc_len_flags;	/* 10-bit length/4 w/ 6 flag bits */
-+	__be16	fc_len_flags_n;	/* ones complement of length / flags */
-+
-+	/*
-+	 * Offset 0x10
-+	 */
-+	__be32	fc_time[2];	/* time stamp: seconds and fraction */
-+	__be32	fc_crc;		/* CRC */
-+	__be32	fc_sof;		/* start of frame (see FC_SOF below) */
-+
-+	/* 0x20 - FC frame content followed by EOF word */
++struct fcoe_hdr {
++	__u8		fcoe_ver;	/* version field - upper 4 bits */
++	__u8		fcoe_resvd[12];	/* reserved - send zero and ignore */
++	__u8		fcoe_sof;	/* start of frame per RFC 3643 */
 +};
 +
-+#define FCIP_ENCAPS_HDR_LEN 0x20	/* expected length for asserts */
++#define FC_FCOE_DECAPS_VER(hp)	    ((hp)->fcoe_ver >> 4)
++#define FC_FCOE_ENCAPS_VER(hp, ver) ((hp)->fcoe_ver = (ver) << 4)
 +
 +/*
-+ * Macro's for making redundant copies of EOF and SOF.
++ * FCoE CRC & EOF - 8 bytes.
 + */
-+#define FC_XY(x, y)		((((x) & 0xff) << 8) | ((y) & 0xff))
-+#define FC_XYXY(x, y)		((FCIP_XY(x, y) << 16) | FCIP_XY(x, y))
-+#define FC_XYNN(x, y)		(FCIP_XYXY(x, y) ^ 0xffff)
-+
-+#define FC_SOF_ENCODE(n)	FC_XYNN(n, n)
-+#define FC_EOF_ENCODE(n)	FC_XYNN(n, n)
-+
-+/*
-+ * SOF / EOF bytes.
-+ */
-+enum fc_sof {
-+	FC_SOF_F =	0x28,	/* fabric */
-+	FC_SOF_I4 =	0x29,	/* initiate class 4 */
-+	FC_SOF_I2 =	0x2d,	/* initiate class 2 */
-+	FC_SOF_I3 =	0x2e,	/* initiate class 3 */
-+	FC_SOF_N4 =	0x31,	/* normal class 4 */
-+	FC_SOF_N2 =	0x35,	/* normal class 2 */
-+	FC_SOF_N3 =	0x36,	/* normal class 3 */
-+	FC_SOF_C4 =	0x39,	/* activate class 4 */
++struct fcoe_crc_eof {
++	__le32		fcoe_crc32;	/* CRC for FC packet */
++	__u8		fcoe_eof;	/* EOF from RFC 3643 */
++	__u8		fcoe_resvd[3];	/* reserved - send zero and ignore */
 +} __attribute__((packed));
 +
-+enum fc_eof {
-+	FC_EOF_N =	0x41,	/* normal (not last frame of seq) */
-+	FC_EOF_T =	0x42,	/* terminate (last frame of sequence) */
-+	FC_EOF_RT =	0x44,
-+	FC_EOF_DT =	0x46,	/* disconnect-terminate class-1 */
-+	FC_EOF_NI =	0x49,	/* normal-invalid */
-+	FC_EOF_DTI =	0x4e,	/* disconnect-terminate-invalid */
-+	FC_EOF_RTI =	0x4f,
-+	FC_EOF_A =	0x50,	/* abort */
-+} __attribute__((packed));
-+
-+#define FC_SOF_CLASS_MASK 0x06	/* mask for class of service in SOF */
++/*
++ * Store OUI + DID into MAC address field.
++ */
++static inline void fc_fcoe_set_mac(u8 *mac, u8 *did)
++{
++	mac[0] = (u8) (FC_FCOE_OUI >> 16);
++	mac[1] = (u8) (FC_FCOE_OUI >> 8);
++	mac[2] = (u8) FC_FCOE_OUI;
++	mac[3] = did[0];
++	mac[4] = did[1];
++	mac[5] = did[2];
++}
 +
 +/*
-+ * Define classes in terms of the SOF code (initial).
++ * VLAN header.	 This is also defined in linux/if_vlan.h, but for kernels only.
 + */
-+enum fc_class {
-+	FC_CLASS_NONE = 0,	/* software value indicating no class */
-+	FC_CLASS_2 =	FC_SOF_I2,
-+	FC_CLASS_3 =	FC_SOF_I3,
-+	FC_CLASS_4 =	FC_SOF_I4,
-+	FC_CLASS_F =	FC_SOF_F,
++struct fcoe_vlan_hdr {
++	__be16		vlan_tag;	/* VLAN tag including priority */
++	__be16		vlan_ethertype;	/* encapsulated ethertype ETH_P_FCOE */
 +};
 +
-+/*
-+ * Determine whether SOF code indicates the need for a BLS ACK.
-+ */
-+static inline int fc_sof_needs_ack(enum fc_sof sof)
-+{
-+	return (~sof) & 0x02;	/* true for class 1, 2, 4, 6, or F */
-+}
++#ifndef ETH_P_8021Q
++#define	ETH_P_8021Q	0x8100
++#endif
 +
-+/*
-+ * Given an fc_class, return the normal (non-initial) SOF value.
-+ */
-+static inline enum fc_sof fc_sof_normal(enum fc_class class)
-+{
-+	return class + FC_SOF_N3 - FC_SOF_I3;	/* diff is always 8 */
-+}
-+
-+/*
-+ * Compute class from SOF value.
-+ */
-+static inline enum fc_class fc_sof_class(enum fc_sof sof)
-+{
-+	return (sof & 0x7) | FC_SOF_F;
-+}
-+
-+/*
-+ * Determine whether SOF is for the initial frame of a sequence.
-+ */
-+static inline int fc_sof_is_init(enum fc_sof sof)
-+{
-+	return sof < 0x30;
-+}
-+
-+#endif /* _FC_ENCAPS_H_ */
-diff --git a/include/scsi/fc/fc_fc2.h b/include/scsi/fc/fc_fc2.h
++#endif /* _FC_FCOE_H_ */
+diff --git a/drivers/scsi/fcoe/fcoe_def.h b/drivers/scsi/fcoe/fcoe_def.h
 new file mode 100644
-index 0000000..cff8a8c
+index 0000000..defea60
 --- /dev/null
-+++ b/include/scsi/fc/fc_fc2.h
-@@ -0,0 +1,124 @@
++++ b/drivers/scsi/fcoe/fcoe_def.h
+@@ -0,0 +1,100 @@
 +/*
 + * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
@@ -1009,117 +218,93 @@ index 0000000..cff8a8c
 + * Maintained at www.Open-FCoE.org
 + */
 +
-+#ifndef _FC_FC2_H_
-+#define _FC_FC2_H_
++#ifndef _FCOE_DEF_H_
++#define _FCOE_DEF_H_
++
++#include <linux/etherdevice.h>
++#include <linux/if_ether.h>
++
++#include <scsi/libfc/libfc.h>
++
++#include "fc_fcoe.h"
++
++#define	FCOE_DRIVER_NAME    "fcoe"	/* driver name for ioctls */
++#define	FCOE_DRIVER_VENDOR  "Open-FC.org" /* vendor name for ioctls */
++
++#define FCOE_MIN_FRAME	36
++#define FCOE_WORD_TO_BYTE  4
 +
 +/*
-+ * Fibre Channel Exchanges and Sequences.
++ * this is the main  common structure across all instance of fcoe driver.
++ * There is one to one mapping between hba struct and ethernet nic.
++ * list of hbas contains pointer to the hba struct, these structures are
++ * stored in this array using there corresponding if_index.
 + */
-+#ifndef PACKED
-+#define PACKED  __attribute__ ((__packed__))
-+#endif /* PACKED */
 +
++struct fcoe_percpu_s {
++	int		cpu;
++	struct task_struct *thread;
++	struct sk_buff_head fcoe_rx_list;
++	struct page *crc_eof_page;
++	int crc_eof_offset;
++};
++
++struct fcoe_info {
++	struct timer_list timer;
++	/*
++	 * fcoe host list is protected by the following read/write lock
++	 */
++	rwlock_t fcoe_hostlist_lock;
++	struct list_head fcoe_hostlist;
++
++	struct fcoe_percpu_s *fcoe_percpu[NR_CPUS];
++};
++
++struct fcoe_softc {
++	struct list_head list;
++	struct fc_lport *lp;
++	struct net_device *real_dev;
++	struct net_device *phys_dev;		/* device with ethtool_ops */
++	struct packet_type  fcoe_packet_type;
++	struct sk_buff_head fcoe_pending_queue;
++	u16 user_mfs;			/* configured max frame size */
++
++	u8 dest_addr[ETH_ALEN];
++	u8 ctl_src_addr[ETH_ALEN];
++	u8 data_src_addr[ETH_ALEN];
++	/*
++	 * fcoe protocol address learning related stuff
++	 */
++	u16 flogi_oxid;
++	u8 flogi_progress;
++	u8 address_mode;
++};
++
++extern int debug_fcoe;
++extern struct fcoe_percpu_s *fcoe_percpu[];
++extern struct scsi_transport_template *fcoe_transport_template;
++int fcoe_percpu_receive_thread(void *arg);
 +
 +/*
-+ * Sequence Status Block.
-+ * This format is set by the FC-FS standard and is sent over the wire.
-+ * Note that the fields aren't all naturally aligned.
++ * HBA transport ops prototypes
 + */
-+struct fc_ssb {
-+	__u8	ssb_seq_id;		/* sequence ID */
-+	__u8	_ssb_resvd;
-+	__be16	ssb_low_seq_cnt;	/* lowest SEQ_CNT */
++extern struct fcoe_info fcoei;
 +
-+	__be16	ssb_high_seq_cnt;	/* highest SEQ_CNT */
-+	__be16	ssb_s_stat;		/* sequence status flags */
-+
-+	__be16	ssb_err_seq_cnt;	/* error SEQ_CNT */
-+	__u8	ssb_fh_cs_ctl;		/* frame header CS_CTL */
-+	__be16	ssb_fh_ox_id;		/* frame header OX_ID */
-+	__be16	ssb_rx_id;		/* responder's exchange ID */
-+	__u8	_ssb_resvd2[2];
-+} PACKED;
-+
-+/*
-+ * The SSB should be 17 bytes.  Since it's layout is somewhat strange,
-+ * we define the size here so that code can ASSERT that the size comes out
-+ * correct.
-+ */
-+#define FC_SSB_SIZE         17          /* length of fc_ssb for assert */
-+
-+/*
-+ * ssb_s_stat - flags from FC-FS-2 T11/1619-D Rev 0.90.
-+ */
-+#define SSB_ST_RESP         (1 << 15)   /* sequence responder */
-+#define SSB_ST_ACTIVE       (1 << 14)   /* sequence is active */
-+#define SSB_ST_ABNORMAL     (1 << 12)   /* abnormal ending condition */
-+
-+#define SSB_ST_REQ_MASK     (3 << 10)   /* ACK, abort sequence condition */
-+#define SSB_ST_REQ_CONT     (0 << 10)
-+#define SSB_ST_REQ_ABORT    (1 << 10)
-+#define SSB_ST_REQ_STOP     (2 << 10)
-+#define SSB_ST_REQ_RETRANS  (3 << 10)
-+
-+#define SSB_ST_ABTS         (1 << 9)    /* ABTS protocol completed */
-+#define SSB_ST_RETRANS      (1 << 8)    /* retransmission completed */
-+#define SSB_ST_TIMEOUT      (1 << 7)    /* sequence timed out by recipient */
-+#define SSB_ST_P_RJT        (1 << 6)    /* P_RJT transmitted */
-+
-+#define SSB_ST_CLASS_BIT    4           /* class of service field LSB */
-+#define SSB_ST_CLASS_MASK   3           /* class of service mask */
-+#define SSB_ST_ACK          (1 << 3)    /* ACK (EOFt or EOFdt) transmitted */
-+
-+/*
-+ * Exchange Status Block.
-+ * This format is set by the FC-FS standard and is sent over the wire.
-+ * Note that the fields aren't all naturally aligned.
-+ */
-+struct fc_esb {
-+	__u8	esb_cs_ctl;		/* CS_CTL for frame header */
-+	__be16	esb_ox_id;		/* originator exchange ID */
-+	__be16	esb_rx_id;		/* responder exchange ID */
-+	__be32	esb_orig_fid;		/* fabric ID of originator */
-+	__be32	esb_resp_fid;		/* fabric ID of responder */
-+	__be32	esb_e_stat;		/* status */
-+	__u8	_esb_resvd[4];
-+	__u8	esb_service_params[112]; /* TBD */
-+	__u8	esb_seq_status[8];	/* sequence statuses, 8 bytes each */
-+} __attribute__((packed));;
-+
-+
-+/*
-+ * Define expected size for ASSERTs.
-+ * See comments on FC_SSB_SIZE.
-+ */
-+#define FC_ESB_SIZE         (1 + 5*4 + 112 + 8)     /* expected size */
-+
-+/*
-+ * esb_e_stat - flags from FC-FS-2 T11/1619-D Rev 0.90.
-+ */
-+#define ESB_ST_RESP         (1 << 31)   /* responder to exchange */
-+#define ESB_ST_SEQ_INIT     (1 << 30)   /* port holds sequence initiaive */
-+#define ESB_ST_COMPLETE     (1 << 29)   /* exchange is complete */
-+#define ESB_ST_ABNORMAL     (1 << 28)   /* abnormal ending condition */
-+#define ESB_ST_REC_QUAL     (1 << 26)   /* recovery qualifier active */
-+
-+#define ESB_ST_ERRP_BIT     24          /* LSB for error policy */
-+#define ESB_ST_ERRP_MASK    (3 << 24)   /* mask for error policy */
-+#define ESB_ST_ERRP_MULT    (0 << 24)   /* abort, discard multiple sequences */
-+#define ESB_ST_ERRP_SING    (1 << 24)   /* abort, discard single sequence */
-+#define ESB_ST_ERRP_INF     (2 << 24)   /* process with infinite buffers */
-+#define ESB_ST_ERRP_IMM     (3 << 24)   /* discard mult. with immed. retran. */
-+
-+#define ESB_ST_OX_ID_INVL   (1 << 23)   /* originator XID invalid */
-+#define ESB_ST_RX_ID_INVL   (1 << 22)   /* responder XID invalid */
-+#define ESB_ST_PRI_INUSE    (1 << 21)   /* priority / preemption in use */
-+
-+#endif /* _FC_FC2_H_ */
-diff --git a/include/scsi/fc/fc_fcp.h b/include/scsi/fc/fc_fcp.h
++void fcoe_clean_pending_queue(struct fc_lport *fd);
++void fcoe_watchdog(ulong vp);
++int fcoe_destroy_interface(const char *ifname);
++int fcoe_create_interface(const char *ifname);
++int fcoe_xmit(struct fc_lport *, struct fc_frame *);
++int fcoe_rcv(struct sk_buff *, struct net_device *,
++	     struct packet_type *, struct net_device *);
++int fcoe_link_ok(struct fc_lport *);
++#endif /* _FCOE_DEF_H_ */
+diff --git a/drivers/scsi/fcoe/fcoe_dev.c b/drivers/scsi/fcoe/fcoe_dev.c
 new file mode 100644
-index 0000000..5d38f19
+index 0000000..4579a66
 --- /dev/null
-+++ b/include/scsi/fc/fc_fcp.h
-@@ -0,0 +1,199 @@
++++ b/drivers/scsi/fcoe/fcoe_dev.c
+@@ -0,0 +1,633 @@
 +/*
 + * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
@@ -1139,542 +324,626 @@ index 0000000..5d38f19
 + * Maintained at www.Open-FCoE.org
 + */
 +
-+#ifndef _FC_FCP_H_
-+#define	_FC_FCP_H_
-+
 +/*
-+ * Fibre Channel Protocol for SCSI.
-+ * From T10 FCP-3, T10 project 1560-D Rev 4, Sept. 13, 2005.
++ * FCOE protocol file
 + */
 +
-+/*
-+ * fc/fs.h defines FC_TYPE_FCP.
-+ */
++#include <linux/module.h>
++#include <linux/version.h>
++#include <linux/kernel.h>
++#include <linux/spinlock.h>
++#include <linux/skbuff.h>
++#include <linux/netdevice.h>
++#include <linux/etherdevice.h>
++#include <linux/if_ether.h>
++#include <linux/kthread.h>
++#include <linux/crc32.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsicam.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_fc.h>
++#include <net/rtnetlink.h>
++
++#include <scsi/fc/fc_encaps.h>
++
++#include <scsi/libfc/libfc.h>
++#include <scsi/libfc/fc_frame.h>
++
++#include "fc_fcoe.h"
++#include "fcoe_def.h"
++
++#define FCOE_MAX_QUEUE_DEPTH  256
++
++/* destination address mode */
++#define FCOE_GW_ADDR_MODE	    0x00
++#define FCOE_FCOUI_ADDR_MODE	    0x01
++
++/* Function Prototyes */
++static int fcoe_check_wait_queue(struct fc_lport *);
++static void fcoe_insert_wait_queue_head(struct fc_lport *, struct sk_buff *);
++static void fcoe_insert_wait_queue(struct fc_lport *, struct sk_buff *);
++static void fcoe_recv_flogi(struct fcoe_softc *, struct fc_frame *, u8 *);
 +
 +/*
-+ * Service parameter page parameters (word 3 bits) for Process Login.
++ * this is the fcoe receive function
++ * called by NET_RX_SOFTIRQ
++ * this function will receive the packet and
++ * build fc frame and pass it up
 + */
-+#define	FCP_SPPF_TASK_RETRY_ID	0x0200	/* task retry ID requested */
-+#define	FCP_SPPF_RETRY		0x0100	/* retry supported */
-+#define	FCP_SPPF_CONF_COMPL	0x0080	/* confirmed completion allowed */
-+#define	FCP_SPPF_OVLY_ALLOW	0x0040	/* data overlay allowed */
-+#define	FCP_SPPF_INIT_FCN	0x0020	/* initiator function */
-+#define	FCP_SPPF_TARG_FCN	0x0010	/* target function */
-+#define	FCP_SPPF_RD_XRDY_DIS	0x0002	/* disable XFER_RDY for reads */
-+#define	FCP_SPPF_WR_XRDY_DIS	0x0001	/* disable XFER_RDY for writes */
++int fcoe_rcv(struct sk_buff *skb, struct net_device *dev,
++	     struct packet_type *ptype, struct net_device *olddev)
++{
++	struct fc_lport *lp;
++	struct fcoe_rcv_info *fr;
++	struct fcoe_softc *fc;
++	struct fcoe_dev_stats *stats;
++	u8 *data;
++	struct fc_frame_header *fh;
++	unsigned short oxid;
++	int cpu_idx;
++	struct fcoe_percpu_s *fps;
++	struct fcoe_info *fci = &fcoei;
++
++	fc = container_of(ptype, struct fcoe_softc, fcoe_packet_type);
++	lp = fc->lp;
++	if (unlikely(lp == NULL)) {
++		FC_DBG("cannot find hba structure");
++		goto err2;
++	}
++
++	if (unlikely(debug_fcoe)) {
++		FC_DBG("skb_info: len:%d data_len:%d head:%p data:%p tail:%p "
++		       "end:%p sum:%d dev:%s", skb->len, skb->data_len,
++		       skb->head, skb->data, skb_tail_pointer(skb),
++		       skb_end_pointer(skb), skb->csum,
++		       skb->dev ? skb->dev->name : "<NULL>");
++
++	}
++
++	/* check for FCOE packet type */
++	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
++		FC_DBG("wrong FC type frame");
++		goto err;
++	}
++	data = skb->data;
++	data += sizeof(struct fcoe_hdr);
++	fh = (struct fc_frame_header *)data;
++	oxid = ntohs(fh->fh_ox_id);
++
++	fr = fcoe_dev_from_skb(skb);
++	fr->fr_dev = lp;
++	fr->ptype = ptype;
++	cpu_idx = 0;
++#ifdef CONFIG_SMP
++	/*
++	 * The exchange ID are ANDed with num of online CPUs,
++	 * so that will have the least lock contention in
++	 * handling the exchange. if there is no thread
++	 * for a given idx then use first online cpu.
++	 */
++	cpu_idx = oxid & (num_online_cpus() >> 1);
++	if (fci->fcoe_percpu[cpu_idx] == NULL)
++		cpu_idx = first_cpu(cpu_online_map);
++#endif
++	fps = fci->fcoe_percpu[cpu_idx];
++
++	spin_lock_bh(&fps->fcoe_rx_list.lock);
++	__skb_queue_tail(&fps->fcoe_rx_list, skb);
++	if (fps->fcoe_rx_list.qlen == 1)
++		wake_up_process(fps->thread);
++
++	spin_unlock_bh(&fps->fcoe_rx_list.lock);
++
++	return 0;
++err:
++#ifdef CONFIG_SMP
++	stats = lp->dev_stats[smp_processor_id()];
++#else
++	stats = lp->dev_stats[0];
++#endif
++	stats->ErrorFrames++;
++
++err2:
++	kfree_skb(skb);
++	return -1;
++}
++
++static inline int fcoe_start_io(struct sk_buff *skb)
++{
++	int rc;
++
++	skb_get(skb);
++	rc = dev_queue_xmit(skb);
++	if (rc != 0)
++		return rc;
++	kfree_skb(skb);
++	return 0;
++}
++
++static int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen)
++{
++	struct fcoe_info *fci = &fcoei;
++	struct fcoe_percpu_s *fps;
++	struct page *page;
++	int cpu_idx;
++
++	cpu_idx = get_cpu();
++	fps = fci->fcoe_percpu[cpu_idx];
++	page = fps->crc_eof_page;
++	if (!page) {
++		page = alloc_page(GFP_ATOMIC);
++		if (!page) {
++			put_cpu();
++			return -ENOMEM;
++		}
++		fps->crc_eof_page = page;
++		WARN_ON(fps->crc_eof_offset != 0);
++	}
++
++	get_page(page);
++	skb_fill_page_desc(skb, skb_shinfo(skb)->nr_frags, page,
++			   fps->crc_eof_offset, tlen);
++	skb->len += tlen;
++	skb->data_len += tlen;
++	skb->truesize += tlen;
++	fps->crc_eof_offset += sizeof(struct fcoe_crc_eof);
++
++	if (fps->crc_eof_offset >= PAGE_SIZE) {
++		fps->crc_eof_page = NULL;
++		fps->crc_eof_offset = 0;
++		put_page(page);
++	}
++	put_cpu();
++	return 0;
++}
 +
 +/*
-+ * FCP_CMND IU Payload.
++ * this is the frame xmit routine
 + */
-+struct fcp_cmnd {
-+	__u8		fc_lun[8];	/* logical unit number */
-+	__u8		fc_cmdref;	/* commmand reference number */
-+	__u8		fc_pri_ta;	/* priority and task attribute */
-+	__u8		fc_tm_flags;	/* task management flags */
-+	__u8		fc_flags;	/* additional len & flags */
-+	__u8		fc_cdb[16];	/* base CDB */
-+	__be32		fc_dl;		/* data length (must follow fc_cdb) */
-+};
++int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
++{
++	int indx;
++	int wlen, rc = 0;
++	u32 crc;
++	struct ethhdr *eh;
++	struct fcoe_crc_eof *cp;
++	struct sk_buff *skb;
++	struct fcoe_dev_stats *stats;
++	struct fc_frame_header *fh;
++	unsigned int hlen;		/* header length implies the version */
++	unsigned int tlen;		/* trailer length */
++	int flogi_in_progress = 0;
++	struct fcoe_softc *fc;
++	void *data;
++	u8 sof, eof;
++	struct fcoe_hdr *hp;
 +
-+#define	FCP_CMND_LEN	32	/* expected length of structure */
++	WARN_ON((fr_len(fp) % sizeof(u32)) != 0);
 +
-+struct fcp_cmnd32 {
-+	__u8		fc_lun[8];	/* logical unit number */
-+	__u8		fc_cmdref;	/* commmand reference number */
-+	__u8		fc_pri_ta;	/* priority and task attribute */
-+	__u8		fc_tm_flags;	/* task management flags */
-+	__u8		fc_flags;	/* additional len & flags */
-+	__u8		fc_cdb[32];	/* base CDB */
-+	__be32		fc_dl;		/* data length (must follow fc_cdb) */
-+};
++	fc = (struct fcoe_softc *)lp->drv_priv;
++	/*
++	 * if it is a flogi then we need to learn gw-addr
++	 * and my own fcid
++	 */
++	fh = fc_frame_header_get(fp);
++	if (unlikely(fh->fh_r_ctl == FC_RCTL_ELS_REQ)) {
++		if (fc_frame_payload_op(fp) == ELS_FLOGI) {
++			fc->flogi_oxid = ntohs(fh->fh_ox_id);
++			fc->address_mode = FCOE_FCOUI_ADDR_MODE;
++			fc->flogi_progress = 1;
++			flogi_in_progress = 1;
++		} else if (fc->flogi_progress && ntoh24(fh->fh_s_id) != 0) {
++			/*
++			 * Here we must've gotten an SID by accepting an FLOGI
++			 * from a point-to-point connection.  Switch to using
++			 * the source mac based on the SID.  The destination
++			 * MAC in this case would have been set by receving the
++			 * FLOGI.
++			 */
++			fc_fcoe_set_mac(fc->data_src_addr, fh->fh_s_id);
++			fc->flogi_progress = 0;
++		}
++	}
 +
-+#define	FCP_CMND32_LEN	    48	/* expected length of structure */
-+#define	FCP_CMND32_ADD_LEN  (16 / 4)	/* Additional cdb length */
++	skb = fp_skb(fp);
++	sof = fr_sof(fp);
++	eof = fr_eof(fp);
 +
-+/*
-+ * fc_pri_ta.
-+ */
-+#define	FCP_PTA_SIMPLE	    0	/* simple task attribute */
-+#define	FCP_PTA_HEADQ	    1	/* head of queue task attribute */
-+#define	FCP_PTA_ORDERED     2	/* ordered task attribute */
-+#define	FCP_PTA_ACA	    4	/* auto. contigent allegiance */
-+#define	FCP_PRI_SHIFT	    3	/* priority field starts in bit 3 */
-+#define	FCP_PRI_RESVD_MASK  0x80	/* reserved bits in priority field */
++	crc = ~0;
++	crc = crc32(crc, skb->data, skb_headlen(skb));
 +
-+/*
-+ * fc_tm_flags - task management flags field.
-+ */
-+#define	FCP_TMF_CLR_ACA		0x40	/* clear ACA condition */
-+#define	FCP_TMF_LUN_RESET	0x10	/* logical unit reset task management */
-+#define	FCP_TMF_CLR_TASK_SET	0x04	/* clear task set */
-+#define	FCP_TMF_ABT_TASK_SET	0x02	/* abort task set */
++	for (indx = 0; indx < skb_shinfo(skb)->nr_frags; indx++) {
++		skb_frag_t *frag = &skb_shinfo(skb)->frags[indx];
++		unsigned long off = frag->page_offset;
++		unsigned long len = frag->size;
 +
-+/*
-+ * fc_flags.
-+ *  Bits 7:2 are the additional FCP_CDB length / 4.
-+ */
-+#define	FCP_CFL_LEN_MASK	0xfc	/* mask for additional length */
-+#define	FCP_CFL_LEN_SHIFT	2	/* shift bits for additional length */
-+#define	FCP_CFL_RDDATA		0x02	/* read data */
-+#define	FCP_CFL_WRDATA		0x01	/* write data */
++		while (len > 0) {
++			unsigned long clen;
 +
-+/*
-+ * FCP_TXRDY IU - transfer ready payload.
-+ */
-+struct fcp_txrdy {
-+	__be32		ft_data_ro;	/* data relative offset */
-+	__be32		ft_burst_len;	/* burst length */
-+	__u8		_ft_resvd[4];	/* reserved */
-+};
-+
-+#define	FCP_TXRDY_LEN	12	/* expected length of structure */
-+
-+/*
-+ * FCP_RESP IU - response payload.
-+ *
-+ * The response payload comes in three parts: the flags/status, the
-+ * sense/response lengths and the sense data/response info section.
-+ *
-+ * From FCP3r04, note 6 of section 9.5.13:
-+ *
-+ * Some early implementations presented the FCP_RSP IU without the FCP_RESID,
-+ * FCP_SNS_LEN, and FCP_RSP_LEN fields if the FCP_RESID_UNDER, FCP_RESID_OVER,
-+ * FCP_SNS_LEN_VALID, and FCP_RSP_LEN_VALID bits were all set to zero. This
-+ * non-standard behavior should be tolerated.
-+ *
-+ * All response frames will always contain the fcp_resp template.  Some
-+ * will also include the fcp_resp_len template.
-+ */
-+struct fcp_resp {
-+	__u8		_fr_resvd[8];	/* reserved */
-+	__be16		fr_retry_delay;	/* retry delay timer */
-+	__u8		fr_flags;	/* flags */
-+	__u8		fr_status;	/* SCSI status code */
-+};
-+
-+#define	FCP_RESP_LEN	12	/* expected length of structure */
-+
-+struct fcp_resp_ext {
-+	__be32		fr_resid;	/* Residual value */
-+	__be32		fr_sns_len;	/* SCSI Sense length */
-+	__be32		fr_rsp_len;	/* Response Info length */
++			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
++			data = kmap_atomic(frag->page + (off >> PAGE_SHIFT),
++					   KM_SKB_DATA_SOFTIRQ);
++			crc = crc32(crc, data + (off & ~PAGE_MASK),
++				    clen);
++			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
++			off += clen;
++			len -= clen;
++		}
++	}
 +
 +	/*
-+	 * Optionally followed by RSP info and/or SNS info and/or
-+	 * bidirectional read residual length, if any.
++	 * Get header and trailer lengths.
++	 * This is temporary code until we get rid of the old protocol.
++	 * Both versions have essentially the same trailer layout but T11
++	 * has padding afterwards.
 +	 */
-+};
-+
-+#define FCP_RESP_EXT_LEN    12  /* expected length of the structure */
-+
-+struct fcp_resp_rsp_info {
-+    __u8      _fr_resvd[3];       /* reserved */
-+    __u8      rsp_code;           /* Response Info Code */
-+    __u8      _fr_resvd2[4];      /* reserved */
-+};
-+
-+struct fcp_resp_with_ext {
-+	struct fcp_resp resp;
-+	struct fcp_resp_ext ext;
-+};
-+
-+#define	FCP_RESP_WITH_EXT   (FCP_RESP_LEN + FCP_RESP_EXT_LEN)
-+
-+/*
-+ * fr_flags.
-+ */
-+#define	FCP_BIDI_RSP	    0x80	/* bidirectional read response */
-+#define	FCP_BIDI_READ_UNDER 0x40	/* bidir. read less than requested */
-+#define	FCP_BIDI_READ_OVER  0x20	/* DL insufficient for full transfer */
-+#define	FCP_CONF_REQ	    0x10	/* confirmation requested */
-+#define	FCP_RESID_UNDER     0x08	/* transfer shorter than expected */
-+#define	FCP_RESID_OVER	    0x04	/* DL insufficient for full transfer */
-+#define	FCP_SNS_LEN_VAL     0x02	/* SNS_LEN field is valid */
-+#define	FCP_RSP_LEN_VAL     0x01	/* RSP_LEN field is valid */
-+
-+/*
-+ * rsp_codes
-+ */
-+enum fcp_resp_rsp_codes {
-+	FCP_TMF_CMPL = 0,
-+	FCP_DATA_LEN_INVALID = 1,
-+	FCP_CMND_FIELDS_INVALID = 2,
-+	FCP_DATA_PARAM_MISMATCH = 3,
-+	FCP_TMF_REJECTED = 4,
-+	FCP_TMF_FAILED = 5,
-+	FCP_TMF_INVALID_LUN = 9,
-+};
-+
-+/*
-+ * FCP SRR Link Service request - Sequence Retransmission Request.
-+ */
-+struct fcp_srr {
-+	__u8		srr_op;		/* opcode ELS_SRR */
-+	__u8		srr_resvd[3];	/* opcode / reserved - must be zero */
-+	__be16		srr_ox_id;	/* OX_ID of failed command */
-+	__be16		srr_rx_id;	/* RX_ID of failed command */
-+	__be32		srr_rel_off;	/* relative offset */
-+	__u8		srr_r_ctl;	/* r_ctl for the information unit */
-+	__u8		srr_resvd2[3];	/* reserved */
-+};
-+
-+#endif /* _FC_FCP_H_ */
-diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
-new file mode 100644
-index 0000000..ba6df64
---- /dev/null
-+++ b/include/scsi/fc/fc_fs.h
-@@ -0,0 +1,344 @@
-+/*
-+ * Copyright(c) 2007 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+#ifndef _FC_FS_H_
-+#define _FC_FS_H_
-+
-+/*
-+ * Fibre Channel Framing and Signalling definitions.
-+ * From T11 FC-FS-2 Rev 0.90 - 9 August 2005.
-+ */
-+
-+/*
-+ * Frame header
-+ */
-+struct fc_frame_header {
-+	__u8          fh_r_ctl;	/* routing control */
-+	__u8          fh_d_id[3];	/* Destination ID */
-+
-+	__u8          fh_cs_ctl;	/* class of service control / pri */
-+	__u8          fh_s_id[3];	/* Source ID */
-+
-+	__u8          fh_type;		/* see enum fc_fh_type below */
-+	__u8          fh_f_ctl[3];	/* frame control */
-+
-+	__u8          fh_seq_id;	/* sequence ID */
-+	__u8          fh_df_ctl;	/* data field control */
-+	__be16        fh_seq_cnt;	/* sequence count */
-+
-+	__be16        fh_ox_id;		/* originator exchange ID */
-+	__be16        fh_rx_id;		/* responder exchange ID */
-+	__be32        fh_parm_offset;	/* parameter or relative offset */
-+};
-+
-+#define FC_FRAME_HEADER_LEN 24	/* expected length of structure */
-+
-+#define FC_MAX_PAYLOAD  2112U		/* max payload length in bytes */
-+#define FC_MIN_MAX_PAYLOAD  256U 	/* lower limit on max payload */
-+
-+#define FC_MAX_FRAME	(FC_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
-+#define FC_MIN_MAX_FRAME (FC_MIN_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
-+
-+/*
-+ * fh_r_ctl - Routing control definitions.
-+ */
-+    /*
-+     * FC-4 device_data.
-+     */
-+enum fc_rctl {
-+	FC_RCTL_DD_UNCAT = 0x00,	/* uncategorized information */
-+	FC_RCTL_DD_SOL_DATA = 0x01,	/* solicited data */
-+	FC_RCTL_DD_UNSOL_CTL = 0x02,	/* unsolicited control */
-+	FC_RCTL_DD_SOL_CTL = 0x03,	/* solicited control or reply */
-+	FC_RCTL_DD_UNSOL_DATA = 0x04,	/* unsolicited data */
-+	FC_RCTL_DD_DATA_DESC = 0x05,	/* data descriptor */
-+	FC_RCTL_DD_UNSOL_CMD = 0x06,	/* unsolicited command */
-+	FC_RCTL_DD_CMD_STATUS = 0x07,	/* command status */
-+
-+#define FC_RCTL_ILS_REQ FC_RCTL_DD_UNSOL_CTL	/* ILS request */
-+#define FC_RCTL_ILS_REP FC_RCTL_DD_SOL_CTL	/* ILS reply */
++	hlen = sizeof(struct fcoe_hdr);
++	tlen = sizeof(struct fcoe_crc_eof);
 +
 +	/*
-+	 * Extended Link_Data
++	 * copy fc crc and eof to the skb buff
++	 * Use utility buffer in the fc_frame part of the sk_buff for the
++	 * trailer.
++	 * We don't do a get_page for this frag, since that page may not be
++	 * managed that way.  So that skb_free() doesn't do that either, we
++	 * setup the destructor to remove this frag.
 +	 */
-+	FC_RCTL_ELS_REQ = 0x22,	/* extended link services request */
-+	FC_RCTL_ELS_REP = 0x23,	/* extended link services reply */
-+	FC_RCTL_ELS4_REQ = 0x32, /* FC-4 ELS request */
-+	FC_RCTL_ELS4_REP = 0x33, /* FC-4 ELS reply */
-+	/*
-+	 * Basic Link Services fh_r_ctl values.
-+	 */
-+	FC_RCTL_BA_NOP = 0x80,	/* basic link service NOP */
-+	FC_RCTL_BA_ABTS = 0x81,	/* basic link service abort */
-+	FC_RCTL_BA_RMC = 0x82,	/* remove connection */
-+	FC_RCTL_BA_ACC = 0x84,	/* basic accept */
-+	FC_RCTL_BA_RJT = 0x85,	/* basic reject */
-+	FC_RCTL_BA_PRMT = 0x86,	/* dedicated connection preempted */
-+	/*
-+	 * Link Control Information.
-+	 */
-+	FC_RCTL_ACK_1 = 0xc0,	/* acknowledge_1 */
-+	FC_RCTL_ACK_0 = 0xc1,	/* acknowledge_0 */
-+	FC_RCTL_P_RJT = 0xc2,	/* port reject */
-+	FC_RCTL_F_RJT = 0xc3,	/* fabric reject */
-+	FC_RCTL_P_BSY = 0xc4,	/* port busy */
-+	FC_RCTL_F_BSY = 0xc5,	/* fabric busy to data frame */
-+	FC_RCTL_F_BSYL = 0xc6,	/* fabric busy to link control frame */
-+	FC_RCTL_LCR = 0xc7,	/* link credit reset */
-+	FC_RCTL_END = 0xc9,	/* end */
-+};
-+				    /* incomplete list of definitions */
++	if (skb_is_nonlinear(skb)) {
++		skb_frag_t *frag;
++		if (fcoe_get_paged_crc_eof(skb, tlen)) {
++			kfree(skb);
++			return -ENOMEM;
++		}
++		frag = &skb_shinfo(skb)->frags[skb_shinfo(skb)->nr_frags - 1];
++		cp = kmap_atomic(frag->page, KM_SKB_DATA_SOFTIRQ)
++			+ frag->page_offset;
++	} else {
++		cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
++	}
 +
-+/*
-+ * R_CTL names initializer.
-+ * Please keep this matching the above definitions.
-+ */
-+#define FC_RCTL_NAMES_INIT { \
-+	[FC_RCTL_DD_UNCAT] =		"uncat",			\
-+	[FC_RCTL_DD_SOL_DATA] =		"sol data",			\
-+	[FC_RCTL_DD_UNSOL_CTL] =	"unsol ctl",			\
-+	[FC_RCTL_DD_SOL_CTL] =		"sol ctl/reply",		\
-+	[FC_RCTL_DD_UNSOL_DATA] =	"unsol data",			\
-+	[FC_RCTL_DD_DATA_DESC] =	"data desc",			\
-+	[FC_RCTL_DD_UNSOL_CMD] =	"unsol cmd",			\
-+	[FC_RCTL_DD_CMD_STATUS] =	"cmd status",			\
-+	[FC_RCTL_ELS_REQ] =		"ELS req",			\
-+	[FC_RCTL_ELS_REP] =		"ELS rep",			\
-+	[FC_RCTL_ELS4_REQ] =		"FC-4 ELS req",			\
-+	[FC_RCTL_ELS4_REP] =		"FC-4 ELS rep",			\
-+	[FC_RCTL_BA_NOP] =		"BLS NOP",			\
-+	[FC_RCTL_BA_ABTS] =		"BLS abort",			\
-+	[FC_RCTL_BA_RMC] =		"BLS remove connection",	\
-+	[FC_RCTL_BA_ACC] =		"BLS accept",			\
-+	[FC_RCTL_BA_RJT] =		"BLS reject",			\
-+	[FC_RCTL_BA_PRMT] =		"BLS dedicated connection preempted", \
-+	[FC_RCTL_ACK_1] =		"LC ACK_1",			\
-+	[FC_RCTL_ACK_0] =		"LC ACK_0",			\
-+	[FC_RCTL_P_RJT] =		"LC port reject",		\
-+	[FC_RCTL_F_RJT] =		"LC fabric reject",		\
-+	[FC_RCTL_P_BSY] =		"LC port busy",			\
-+	[FC_RCTL_F_BSY] =		"LC fabric busy to data frame",	\
-+	[FC_RCTL_F_BSYL] =		"LC fabric busy to link control frame",\
-+	[FC_RCTL_LCR] =			"LC link credit reset",		\
-+	[FC_RCTL_END] =			"LC end",			\
++	cp->fcoe_eof = eof;
++	cp->fcoe_crc32 = cpu_to_le32(~crc);
++	if (tlen == sizeof(*cp))
++		memset(cp->fcoe_resvd, 0, sizeof(cp->fcoe_resvd));
++	wlen = (skb->len - tlen + sizeof(crc)) / FCOE_WORD_TO_BYTE;
++
++	if (skb_is_nonlinear(skb)) {
++		kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
++		cp = NULL;
++	}
++
++	/*
++	 *	Fill in the control structures
++	 */
++	skb->ip_summed = CHECKSUM_NONE;
++	eh = (struct ethhdr *)skb_push(skb, hlen + sizeof(struct ethhdr));
++	if (fc->address_mode == FCOE_FCOUI_ADDR_MODE)
++		fc_fcoe_set_mac(eh->h_dest, fh->fh_d_id);
++	else
++		/* insert GW address */
++		memcpy(eh->h_dest, fc->dest_addr, ETH_ALEN);
++
++	if (unlikely(flogi_in_progress))
++		memcpy(eh->h_source, fc->ctl_src_addr, ETH_ALEN);
++	else
++		memcpy(eh->h_source, fc->data_src_addr, ETH_ALEN);
++
++	eh->h_proto = htons(ETH_P_FCOE);
++	skb->protocol = htons(ETH_P_802_3);
++	skb_reset_mac_header(skb);
++	skb_reset_network_header(skb);
++
++	hp = (struct fcoe_hdr *)(eh + 1);
++	memset(hp, 0, sizeof(*hp));
++	if (FC_FCOE_VER)
++		FC_FCOE_ENCAPS_VER(hp, FC_FCOE_VER);
++	hp->fcoe_sof = sof;
++
++	stats = lp->dev_stats[smp_processor_id()];
++	stats->TxFrames++;
++	stats->TxWords += wlen;
++	skb->dev = fc->real_dev;
++
++	fr_dev(fp) = lp;
++	if (fc->fcoe_pending_queue.qlen)
++		rc = fcoe_check_wait_queue(lp);
++
++	if (rc == 0)
++		rc = fcoe_start_io(skb);
++
++	if (rc) {
++		fcoe_insert_wait_queue(lp, skb);
++		if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
++			fc_pause(lp);
++	}
++
++	return 0;
++}
++
++int fcoe_percpu_receive_thread(void *arg)
++{
++	struct fcoe_percpu_s *p = arg;
++	u32 fr_len;
++	unsigned int hlen;
++	unsigned int tlen;
++	struct fc_lport *lp;
++	struct fcoe_rcv_info *fr;
++	struct fcoe_dev_stats *stats;
++	struct fc_frame_header *fh;
++	struct sk_buff *skb;
++	struct fcoe_crc_eof *cp;
++	enum fc_sof sof;
++	struct fc_frame *fp;
++	u8 *mac = NULL;
++	struct fcoe_softc *fc;
++	struct fcoe_hdr *hp;
++
++	set_user_nice(current, 19);
++
++	while (!kthread_should_stop()) {
++
++		spin_lock_bh(&p->fcoe_rx_list.lock);
++		while ((skb = __skb_dequeue(&p->fcoe_rx_list)) == NULL) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			spin_unlock_bh(&p->fcoe_rx_list.lock);
++			schedule();
++			set_current_state(TASK_RUNNING);
++			if (kthread_should_stop())
++				return 0;
++			spin_lock_bh(&p->fcoe_rx_list.lock);
++		}
++		spin_unlock_bh(&p->fcoe_rx_list.lock);
++		fr = fcoe_dev_from_skb(skb);
++		lp = fr->fr_dev;
++		if (unlikely(lp == NULL)) {
++			FC_DBG("invalid HBA Structure");
++			kfree_skb(skb);
++			continue;
++		}
++
++		stats = lp->dev_stats[smp_processor_id()];
++
++		if (unlikely(debug_fcoe)) {
++			FC_DBG("skb_info: len:%d data_len:%d head:%p data:%p "
++			       "tail:%p end:%p sum:%d dev:%s",
++			       skb->len, skb->data_len,
++			       skb->head, skb->data, skb_tail_pointer(skb),
++			       skb_end_pointer(skb), skb->csum,
++			       skb->dev ? skb->dev->name : "<NULL>");
++		}
++
++		/*
++		 * Save source MAC address before discarding header.
++		 */
++		fc = lp->drv_priv;
++		if (unlikely(fc->flogi_progress))
++			mac = eth_hdr(skb)->h_source;
++
++		if (skb_is_nonlinear(skb))
++			skb_linearize(skb);	/* not ideal */
++
++		/*
++		 * Check the header and pull it off.
++		 */
++		hlen = sizeof(struct fcoe_hdr);
++
++		hp = (struct fcoe_hdr *)skb->data;
++		if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
++			if (stats->ErrorFrames < 5)
++				FC_DBG("unknown FCoE version %x",
++				       FC_FCOE_DECAPS_VER(hp));
++			stats->ErrorFrames++;
++			kfree_skb(skb);
++			continue;
++		}
++		sof = hp->fcoe_sof;
++		skb_pull(skb, sizeof(*hp));
++		fr_len = skb->len - sizeof(struct fcoe_crc_eof);
++		skb_trim(skb, fr_len);
++		tlen = sizeof(struct fcoe_crc_eof);
++
++		if (unlikely(fr_len > skb->len)) {
++			if (stats->ErrorFrames < 5)
++				FC_DBG("length error fr_len 0x%x skb->len 0x%x",
++				       fr_len, skb->len);
++			stats->ErrorFrames++;
++			kfree_skb(skb);
++			continue;
++		}
++		stats->RxFrames++;
++		stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
++
++		fp = (struct fc_frame *) skb;
++		fc_frame_init(fp);
++		cp = (struct fcoe_crc_eof *)(skb->data + fr_len);
++		fr_eof(fp) = cp->fcoe_eof;
++		fr_sof(fp) = sof;
++		fr_dev(fp) = lp;
++
++		/*
++		 * Check the CRC here, unless it's solicited data for SCSI.
++		 * In that case, the SCSI layer can check it during the copy,
++		 * and it'll be more cache-efficient.
++		 */
++		fh = fc_frame_header_get(fp);
++		if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
++		    fh->fh_type == FC_TYPE_FCP) {
++			fr_flags(fp) |= FCPHF_CRC_UNCHECKED;
++			fc_exch_recv(lp, lp->emp, fp);
++		} else if (le32_to_cpu(cp->fcoe_crc32) ==
++			   ~crc32(~0, skb->data, fr_len)) {
++			if (unlikely(fc->flogi_progress))
++				fcoe_recv_flogi(fc, fp, mac);
++			fc_exch_recv(lp, lp->emp, fp);
++		} else {
++			if (debug_fcoe || stats->InvalidCRCCount < 5) {
++				printk(KERN_WARNING \
++				       "fcoe: dropping frame with CRC error");
++			}
++			stats->InvalidCRCCount++;
++			stats->ErrorFrames++;
++			fc_frame_free(fp);
++		}
++	}
++	return 0;
 +}
 +
 +/*
-+ * Well-known fabric addresses.
++ * Snoop potential response to FLOGI or even incoming FLOGI.
 + */
-+enum fc_well_known_fid {
-+	FC_FID_BCAST =		0xffffff,	/* broadcast */
-+	FC_FID_FLOGI =		0xfffffe,	/* fabric login */
-+	FC_FID_FCTRL =		0xfffffd,	/* fabric controller */
-+	FC_FID_DIR_SERV =	0xfffffc,	/* directory server */
-+	FC_FID_TIME_SERV =	0xfffffb,	/* time server */
-+	FC_FID_MGMT_SERV =	0xfffffa,	/* management server */
-+	FC_FID_QOS =		0xfffff9,	/* QoS Facilitator */
-+	FC_FID_ALIASES =	0xfffff8,	/* alias server (FC-PH2) */
-+	FC_FID_SEC_KEY =	0xfffff7,	/* Security key dist. server */
-+	FC_FID_CLOCK =		0xfffff6,	/* clock synch server */
-+	FC_FID_MCAST_SERV =	0xfffff5,	/* multicast server */
-+};
++static void fcoe_recv_flogi(struct fcoe_softc *fc, struct fc_frame *fp, u8 *sa)
++{
++	struct fc_frame_header *fh;
++	u8 op;
 +
-+#define	FC_FID_WELL_KNOWN_MAX	0xffffff /* highest well-known fabric ID */
-+#define	FC_FID_WELL_KNOWN_BASE	0xfffff5 /* start of well-known fabric ID */
++	fh = fc_frame_header_get(fp);
++	if (fh->fh_type != FC_TYPE_ELS)
++		return;
++	op = fc_frame_payload_op(fp);
++	if (op == ELS_LS_ACC && fh->fh_r_ctl == FC_RCTL_ELS_REP &&
++	    fc->flogi_oxid == ntohs(fh->fh_ox_id)) {
++		/*
++		 * FLOGI accepted.
++		 * If the src mac addr is FC_OUI-based, then we mark the
++		 * address_mode flag to use FC_OUI-based Ethernet DA.
++		 * Otherwise we use the FCoE gateway addr
++		 */
++		if (!compare_ether_addr(sa, (u8[6]) FC_FCOE_FLOGI_MAC)) {
++			fc->address_mode = FCOE_FCOUI_ADDR_MODE;
++		} else {
++			memcpy(fc->dest_addr, sa, ETH_ALEN);
++			fc->address_mode = FCOE_GW_ADDR_MODE;
++		}
 +
-+/*
-+ * Other well-known addresses, outside the above contiguous range.
-+ */
-+#define	FC_FID_DOM_MGR		0xfffc00	/* domain manager base */
++		/*
++		 * Remove any previously-set unicast MAC filter.
++		 * Add secondary FCoE MAC address filter for our OUI.
++		 */
++		rtnl_lock();
++		if (compare_ether_addr(fc->data_src_addr, (u8[6]) { 0 }))
++			dev_unicast_delete(fc->real_dev, fc->data_src_addr,
++					   ETH_ALEN);
++		fc_fcoe_set_mac(fc->data_src_addr, fh->fh_d_id);
++		dev_unicast_add(fc->real_dev, fc->data_src_addr, ETH_ALEN);
++		rtnl_unlock();
 +
-+/*
-+ * Fabric ID bytes.
-+ */
-+#define	FC_FID_DOMAIN		0
-+#define	FC_FID_PORT		1
-+#define	FC_FID_LINK		2
++		fc->flogi_progress = 0;
++	} else if (op == ELS_FLOGI && fh->fh_r_ctl == FC_RCTL_ELS_REQ && sa) {
++		/*
++		 * Save source MAC for point-to-point responses.
++		 */
++		memcpy(fc->dest_addr, sa, ETH_ALEN);
++		fc->address_mode = FCOE_GW_ADDR_MODE;
++	}
++}
 +
-+/*
-+ * fh_type codes
-+ */
-+enum fc_fh_type {
-+	FC_TYPE_BLS =	0x00,	/* basic link service */
-+	FC_TYPE_ELS =	0x01,	/* extended link service */
-+	FC_TYPE_IP =	0x05,	/* IP over FC, RFC 4338 */
-+	FC_TYPE_FCP =	0x08,	/* SCSI FCP */
-+	FC_TYPE_CT =	0x20,	/* Fibre Channel Services (FC-CT) */
-+	FC_TYPE_ILS =	0x22,	/* internal link service */
-+};
++void fcoe_watchdog(ulong vp)
++{
++	struct fc_lport *lp;
++	struct fcoe_softc *fc;
++	struct fcoe_info *fci = &fcoei;
++	int paused = 0;
 +
-+/*
-+ * FC_TYPE names initializer.
-+ * Please keep this matching the above definitions.
-+ */
-+#define FC_TYPE_NAMES_INIT {				\
-+	[FC_TYPE_BLS] =		"BLS",			\
-+	[FC_TYPE_ELS] =		"ELS",			\
-+	[FC_TYPE_IP] =		"IP",			\
-+	[FC_TYPE_FCP] =		"FCP",			\
-+	[FC_TYPE_CT] =		"CT",			\
-+	[FC_TYPE_ILS] =		"ILS",			\
++	read_lock(&fci->fcoe_hostlist_lock);
++	list_for_each_entry(fc, &fci->fcoe_hostlist, list) {
++		lp = fc->lp;
++		if (lp) {
++			if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
++				paused = 1;
++			if (fcoe_check_wait_queue(lp) <	 FCOE_MAX_QUEUE_DEPTH) {
++				if (paused)
++					fc_unpause(lp);
++			}
++		}
++	}
++	read_unlock(&fci->fcoe_hostlist_lock);
++
++	fci->timer.expires = jiffies + (1 * HZ);
++	add_timer(&fci->timer);
 +}
 +
 +/*
-+ * Exchange IDs.
++ * the wait_queue is used when the skb transmit fails. skb will go
++ * in the wait_queue which will be emptied by the time function OR
++ * by the next skb transmit.
++ *
 + */
-+#define FC_XID_UNKNOWN  0xffff	/* unknown exchange ID */
 +
 +/*
-+ * fh_f_ctl - Frame control flags.
++ * Function name : fcoe_check_wait_queue()
++ *
++ * Return Values : 0 or error
++ *
++ * Description	 : empties the wait_queue
++ *		   dequeue the head of the wait_queue queue and
++ *		   calls fcoe_start_io() for each packet
++ *		   if all skb have been transmitted, return 0
++ *		   if a error occurs, then restore wait_queue and try again
++ *		   later
++ *
 + */
-+#define	FC_FC_EX_CTX	(1 << 23)	/* sent by responder to exchange */
-+#define	FC_FC_SEQ_CTX	(1 << 22)	/* sent by responder to sequence */
-+#define	FC_FC_FIRST_SEQ (1 << 21)	/* first sequence of this exchange */
-+#define	FC_FC_LAST_SEQ	(1 << 20)	/* last sequence of this exchange */
-+#define	FC_FC_END_SEQ	(1 << 19)	/* last frame of sequence */
-+#define	FC_FC_END_CONN	(1 << 18)	/* end of class 1 connection pending */
-+#define	FC_FC_RES_B17	(1 << 17)	/* reserved */
-+#define	FC_FC_SEQ_INIT	(1 << 16)	/* transfer of sequence initiative */
-+#define	FC_FC_X_ID_REASS (1 << 15)	/* exchange ID has been changed */
-+#define	FC_FC_X_ID_INVAL (1 << 14)	/* exchange ID invalidated */
 +
-+#define	FC_FC_ACK_1	(1 << 12)	/* 13:12 = 1: ACK_1 expected */
-+#define	FC_FC_ACK_N	(2 << 12)	/* 13:12 = 2: ACK_N expected */
-+#define	FC_FC_ACK_0	(3 << 12)	/* 13:12 = 3: ACK_0 expected */
++static int fcoe_check_wait_queue(struct fc_lport *lp)
++{
++	int rc, unpause = 0;
++	int paused = 0;
++	struct sk_buff *skb;
++	struct fcoe_softc *fc;
 +
-+#define	FC_FC_RES_B11	(1 << 11)	/* reserved */
-+#define	FC_FC_RES_B10	(1 << 10)	/* reserved */
-+#define	FC_FC_RETX_SEQ	(1 << 9)	/* retransmitted sequence */
-+#define	FC_FC_UNI_TX	(1 << 8)	/* unidirectional transmit (class 1) */
-+#define	FC_FC_CONT_SEQ(i) ((i) << 6)
-+#define	FC_FC_ABT_SEQ(i) ((i) << 4)
-+#define	FC_FC_REL_OFF	(1 << 3)	/* parameter is relative offset */
-+#define	FC_FC_RES2	(1 << 2)	/* reserved */
-+#define	FC_FC_FILL(i)	((i) & 3)	/* 1:0: bytes of trailing fill */
++	fc = (struct fcoe_softc *)lp->drv_priv;
++	spin_lock_bh(&fc->fcoe_pending_queue.lock);
 +
-+/*
-+ * BA_ACC payload.
-+ */
-+struct fc_ba_acc {
-+	__u8		ba_seq_id_val;	/* SEQ_ID validity */
-+#define FC_BA_SEQ_ID_VAL 0x80
-+	__u8		ba_seq_id;	/* SEQ_ID of seq last deliverable */
-+	__u8		ba_resvd[2];	/* reserved */
-+	__be16		ba_ox_id;	/* OX_ID for aborted seq or exch */
-+	__be16		ba_rx_id;	/* RX_ID for aborted seq or exch */
-+	__be16		ba_low_seq_cnt;	/* low SEQ_CNT of aborted seq */
-+	__be16		ba_high_seq_cnt; /* high SEQ_CNT of aborted seq */
-+};
++	/*
++	 * is this interface paused?
++	 */
++	if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
++		paused = 1;
++	if (fc->fcoe_pending_queue.qlen) {
++		while ((skb = __skb_dequeue(&fc->fcoe_pending_queue)) != NULL) {
++			spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++			rc = fcoe_start_io(skb);
++			if (rc) {
++				fcoe_insert_wait_queue_head(lp, skb);
++				return rc;
++			}
++			spin_lock_bh(&fc->fcoe_pending_queue.lock);
++		}
++		if (fc->fcoe_pending_queue.qlen < FCOE_MAX_QUEUE_DEPTH)
++			unpause = 1;
++	}
++	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++	if ((unpause) && (paused))
++		fc_unpause(lp);
++	return fc->fcoe_pending_queue.qlen;
++}
 +
-+/*
-+ * BA_RJT: Basic Reject payload.
-+ */
-+struct fc_ba_rjt {
-+	__u8		br_resvd;	/* reserved */
-+	__u8		br_reason;	/* reason code */
-+	__u8		br_explan;	/* reason explanation */
-+	__u8		br_vendor;	/* vendor unique code */
-+};
++static void fcoe_insert_wait_queue_head(struct fc_lport *lp,
++					struct sk_buff *skb)
++{
++	struct fcoe_softc *fc;
 +
-+/*
-+ * BA_RJT reason codes.
-+ * From FS-2.
-+ */
-+enum fc_ba_rjt_reason {
-+	FC_BA_RJT_NONE =	0,	/* in software this means no reject */
-+	FC_BA_RJT_INVL_CMD =	0x01,	/* invalid command code */
-+	FC_BA_RJT_LOG_ERR =	0x03,	/* logical error */
-+	FC_BA_RJT_LOG_BUSY =	0x05,	/* logical busy */
-+	FC_BA_RJT_PROTO_ERR =	0x07,	/* protocol error */
-+	FC_BA_RJT_UNABLE =	0x09,	/* unable to perform request */
-+	FC_BA_RJT_VENDOR =	0xff,	/* vendor-specific (see br_vendor) */
-+};
++	fc = (struct fcoe_softc *)lp->drv_priv;
++	spin_lock_bh(&fc->fcoe_pending_queue.lock);
++	__skb_queue_head(&fc->fcoe_pending_queue, skb);
++	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++}
 +
-+/*
-+ * BA_RJT reason code explanations.
-+ */
-+enum fc_ba_rjt_explan {
-+	FC_BA_RJT_EXP_NONE =	0x00,	/* no additional expanation */
-+	FC_BA_RJT_INV_XID =	0x03,	/* invalid OX_ID-RX_ID combination */
-+	FC_BA_RJT_ABT =		0x05,	/* sequence aborted, no seq info */
-+};
++static void fcoe_insert_wait_queue(struct fc_lport *lp,
++				   struct sk_buff *skb)
++{
++	struct fcoe_softc *fc;
 +
-+/*
-+ * P_RJT or F_RJT: Port Reject or Fabric Reject parameter field.
-+ */
-+struct fc_pf_rjt {
-+	__u8		rj_action;	/* reserved */
-+	__u8		rj_reason;	/* reason code */
-+	__u8		rj_resvd;	/* reserved */
-+	__u8		rj_vendor;	/* vendor unique code */
-+};
-+
-+/*
-+ * P_RJT and F_RJT reject reason codes.
-+ */
-+enum fc_pf_rjt_reason {
-+	FC_RJT_NONE =		0,	/* non-reject (reserved by standard) */
-+	FC_RJT_INVL_DID =	0x01,	/* invalid destination ID */
-+	FC_RJT_INVL_SID =	0x02,	/* invalid source ID */
-+	FC_RJT_P_UNAV_T =	0x03,	/* port unavailable, temporary */
-+	FC_RJT_P_UNAV =		0x04,	/* port unavailable, permanent */
-+	FC_RJT_CLS_UNSUP =	0x05,	/* class not supported */
-+	FC_RJT_DEL_USAGE =	0x06,	/* delimiter usage error */
-+	FC_RJT_TYPE_UNSUP =	0x07,	/* type not supported */
-+	FC_RJT_LINK_CTL =	0x08,	/* invalid link control */
-+	FC_RJT_R_CTL =		0x09,	/* invalid R_CTL field */
-+	FC_RJT_F_CTL =		0x0a,	/* invalid F_CTL field */
-+	FC_RJT_OX_ID =		0x0b,	/* invalid originator exchange ID */
-+	FC_RJT_RX_ID =		0x0c,	/* invalid responder exchange ID */
-+	FC_RJT_SEQ_ID =		0x0d,	/* invalid sequence ID */
-+	FC_RJT_DF_CTL =		0x0e,	/* invalid DF_CTL field */
-+	FC_RJT_SEQ_CNT =	0x0f,	/* invalid SEQ_CNT field */
-+	FC_RJT_PARAM =		0x10,	/* invalid parameter field */
-+	FC_RJT_EXCH_ERR =	0x11,	/* exchange error */
-+	FC_RJT_PROTO =		0x12,	/* protocol error */
-+	FC_RJT_LEN =		0x13,	/* incorrect length */
-+	FC_RJT_UNEXP_ACK =	0x14,	/* unexpected ACK */
-+	FC_RJT_FAB_CLASS =	0x15,	/* class unsupported by fabric entity */
-+	FC_RJT_LOGI_REQ =	0x16,	/* login required */
-+	FC_RJT_SEQ_XS =		0x17,	/* excessive sequences attempted */
-+	FC_RJT_EXCH_EST =	0x18,	/* unable to establish exchange */
-+	FC_RJT_FAB_UNAV =	0x1a,	/* fabric unavailable */
-+	FC_RJT_VC_ID =		0x1b,	/* invalid VC_ID (class 4) */
-+	FC_RJT_CS_CTL =		0x1c,	/* invalid CS_CTL field */
-+	FC_RJT_INSUF_RES =	0x1d,	/* insuff. resources for VC (Class 4) */
-+	FC_RJT_INVL_CLS =	0x1f,	/* invalid class of service */
-+	FC_RJT_PREEMT_RJT =	0x20,	/* preemption request rejected */
-+	FC_RJT_PREEMT_DIS =	0x21,	/* preemption not enabled */
-+	FC_RJT_MCAST_ERR =	0x22,	/* multicast error */
-+	FC_RJT_MCAST_ET =	0x23,	/* multicast error terminate */
-+	FC_RJT_PRLI_REQ =	0x24,	/* process login required */
-+	FC_RJT_INVL_ATT =	0x25,	/* invalid attachment */
-+	FC_RJT_VENDOR =		0xff,	/* vendor specific reject */
-+};
-+
-+/*
-+ * Data descriptor format (R_CTL == FC_RCTL_DD_DATA_DESC).
-+ * This is used for FCP SCSI transfer ready.
-+ */
-+struct fc_data_desc {
-+	__be32		dd_offset;	/* data relative offset in bytes */
-+	__be32		dd_len;		/* transfer buffer size in bytes */
-+	__u8		_dd_resvd[4];
-+};
-+
-+#define FC_DATA_DESC_LEN    12	/* expected length of structure */
-+
-+#endif /* _FC_FS_H_ */
-diff --git a/include/scsi/fc/fc_gs.h b/include/scsi/fc/fc_gs.h
++	fc = (struct fcoe_softc *)lp->drv_priv;
++	spin_lock_bh(&fc->fcoe_pending_queue.lock);
++	__skb_queue_tail(&fc->fcoe_pending_queue, skb);
++	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++}
+diff --git a/drivers/scsi/fcoe/fcoe_if.c b/drivers/scsi/fcoe/fcoe_if.c
 new file mode 100644
-index 0000000..ffab027
+index 0000000..b5a32c6
 --- /dev/null
-+++ b/include/scsi/fc/fc_gs.h
-@@ -0,0 +1,93 @@
++++ b/drivers/scsi/fcoe/fcoe_if.c
+@@ -0,0 +1,504 @@
 +/*
 + * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
@@ -1694,86 +963,497 @@ index 0000000..ffab027
 + * Maintained at www.Open-FCoE.org
 + */
 +
-+#ifndef _FC_GS_H_
-+#define	_FC_GS_H_
-+
 +/*
-+ * Fibre Channel Services - Common Transport.
-+ * From T11.org FC-GS-2 Rev 5.3 November 1998.
++ * FCOE protocol file
 + */
 +
-+struct fc_ct_hdr {
-+	__u8		ct_rev;		/* revision */
-+	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
-+	__u8		ct_fs_type;	/* type of fibre channel service */
-+	__u8		ct_fs_subtype;	/* subtype */
-+	__u8		ct_options;
-+	__u8		_ct_resvd1;
-+	__be16		ct_cmd;		/* command / response code */
-+	__be16		ct_mr_size;	/* maximum / residual size */
-+	__u8		_ct_resvd2;
-+	__u8		ct_reason;	/* reject reason */
-+	__u8		ct_explan;	/* reason code explanation */
-+	__u8		ct_vendor;	/* vendor unique data */
++#include <linux/module.h>
++#include <linux/version.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/spinlock.h>
++#include <linux/netdevice.h>
++#include <linux/etherdevice.h>
++#include <linux/ethtool.h>
++#include <linux/if_ether.h>
++#include <linux/if_vlan.h>
++#include <net/rtnetlink.h>
++
++#include <scsi/fc/fc_els.h>
++#include <scsi/fc/fc_encaps.h>
++#include <scsi/fc/fc_fs.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_fc.h>
++
++#include <scsi/libfc/libfc.h>
++
++#include "fc_fcoe.h"
++#include "fcoe_def.h"
++
++#define FCOE_VERSION "0.1"
++
++#define FCOE_MAX_LUN        255
++#define FCOE_MAX_FCP_TARGET 256
++
++#define FCOE_MIN_XID		    0x0004
++#define FCOE_MAX_XID		    0x07ef
++
++int debug_fcoe;
++
++struct fcoe_info fcoei = {
++	.fcoe_hostlist = LIST_HEAD_INIT(fcoei.fcoe_hostlist),
 +};
 +
-+#define	FC_CT_HDR_LEN	16	/* expected sizeof (struct fc_ct_hdr) */
++static struct fcoe_softc *fcoe_find_fc_lport(const char *name)
++{
++	struct fcoe_softc *fc;
++	struct fc_lport *lp;
++	struct fcoe_info *fci = &fcoei;
 +
-+enum fc_ct_rev {
-+	FC_CT_REV = 1		/* common transport revision */
-+};
++	read_lock(&fci->fcoe_hostlist_lock);
++	list_for_each_entry(fc, &fci->fcoe_hostlist, list) {
++		lp = fc->lp;
++		if (!strncmp(name, lp->ifname, IFNAMSIZ)) {
++			read_unlock(&fci->fcoe_hostlist_lock);
++			return fc;
++		}
++	}
++	read_unlock(&fci->fcoe_hostlist_lock);
++	return NULL;
++}
 +
 +/*
-+ * ct_fs_type values.
++ * Convert 48-bit IEEE MAC address to 64-bit FC WWN.
 + */
-+enum fc_ct_fs_type {
-+	FC_FST_ALIAS =	0xf8,	/* alias service */
-+	FC_FST_MGMT =	0xfa,	/* management service */
-+	FC_FST_TIME =	0xfb,	/* time service */
-+	FC_FST_DIR =	0xfc,	/* directory service */
++static u64 fcoe_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
++			     unsigned int scheme, unsigned int port)
++{
++	u64 wwn;
++	u64 host_mac;
++
++	/* The MAC is in NO, so flip only the low 48 bits */
++	host_mac = ((u64) mac[0] << 40) |
++		((u64) mac[1] << 32) |
++		((u64) mac[2] << 24) |
++		((u64) mac[3] << 16) |
++		((u64) mac[4] << 8) |
++		(u64) mac[5];
++
++	WARN_ON(host_mac >= (1ULL << 48));
++	wwn = host_mac | ((u64) scheme << 60);
++	switch (scheme) {
++	case 1:
++		WARN_ON(port != 0);
++		break;
++	case 2:
++		WARN_ON(port >= 0xfff);
++		wwn |= (u64) port << 48;
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
++
++	return wwn;
++}
++
++static struct scsi_host_template fcoe_driver_template = {
++	.module = THIS_MODULE,
++	.name = "FCoE Driver",
++	.proc_name = FCOE_DRIVER_NAME,
++	.queuecommand = fc_queuecommand,
++	.eh_abort_handler = fc_eh_abort,
++	.eh_device_reset_handler = fc_eh_device_reset,
++	.eh_host_reset_handler = fc_eh_host_reset,
++	.slave_alloc = fc_slave_alloc,
++	.change_queue_depth = fc_change_queue_depth,
++	.change_queue_type = fc_change_queue_type,
++	.this_id = -1,
++	.cmd_per_lun = 32,
++	.can_queue = FC_MAX_OUTSTANDING_COMMANDS,
++	.use_clustering = ENABLE_CLUSTERING,
++	.sg_tablesize = 4,
++	.max_sectors = 0xffff,
 +};
++
++int fcoe_destroy_interface(const char *ifname)
++{
++	int cpu, idx;
++	struct fcoe_dev_stats *p;
++	struct fcoe_percpu_s *pp;
++	struct fcoe_softc *fc;
++	struct fcoe_rcv_info *fr;
++	struct fcoe_info *fci = &fcoei;
++	struct sk_buff_head *list;
++	struct sk_buff *skb, *next;
++	struct sk_buff *head;
++	struct fc_lport *lp;
++	u8 flogi_maddr[ETH_ALEN];
++
++	fc = fcoe_find_fc_lport(ifname);
++	if (!fc)
++		return -ENODEV;
++
++	lp = fc->lp;
++
++	/* Remove the instance from fcoe's list */
++	write_lock_bh(&fci->fcoe_hostlist_lock);
++	list_del(&fc->list);
++	write_unlock_bh(&fci->fcoe_hostlist_lock);
++
++	/* Cleanup the fc_lport */
++	fc_lport_destroy(lp);
++	fc_fcp_destroy(lp);
++	if (lp->emp)
++		fc_exch_mgr_free(lp->emp);
++
++	/* Detach from the scsi-ml */
++	fc_remove_host(lp->host);
++	scsi_remove_host(lp->host);
++
++	/* Don't listen for Ethernet packets anymore */
++	dev_remove_pack(&fc->fcoe_packet_type);
++
++	/* Delete secondary MAC addresses */
++	rtnl_lock();
++	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
++	dev_unicast_delete(fc->real_dev, flogi_maddr, ETH_ALEN);
++	if (compare_ether_addr(fc->data_src_addr, (u8[6]) { 0 }))
++		dev_unicast_delete(fc->real_dev, fc->data_src_addr, ETH_ALEN);
++	rtnl_unlock();
++
++	/* Free the per-CPU revieve threads */
++	for (idx = 0; idx < NR_CPUS; idx++) {
++		if (fci->fcoe_percpu[idx]) {
++			pp = fci->fcoe_percpu[idx];
++			spin_lock_bh(&pp->fcoe_rx_list.lock);
++			list = &pp->fcoe_rx_list;
++			head = list->next;
++			for (skb = head; skb != (struct sk_buff *)list;
++			     skb = next) {
++				next = skb->next;
++				fr = fcoe_dev_from_skb(skb);
++				if (fr->fr_dev == fc->lp) {
++					__skb_unlink(skb, list);
++					kfree_skb(skb);
++				}
++			}
++			spin_unlock_bh(&pp->fcoe_rx_list.lock);
++		}
++	}
++
++	/* Free existing skbs */
++	fcoe_clean_pending_queue(lp);
++
++	/* Free memory used by statistical counters */
++	for_each_online_cpu(cpu) {
++		p = lp->dev_stats[cpu];
++		if (p) {
++			lp->dev_stats[cpu] = NULL;
++			kfree(p);
++		}
++	}
++
++	/* Release the net_device and Scsi_Host */
++	dev_put(fc->real_dev);
++	scsi_host_put(lp->host);
++	return 0;
++}
 +
 +/*
-+ * ct_cmd: Command / response codes
++ * Return zero if link is OK for use by FCoE.
++ * Any permanently-disqualifying conditions have been previously checked.
++ * This checks pause settings, which can change with link.
++ * This also updates the speed setting, which may change with link for 100/1000.
 + */
-+enum fc_ct_cmd {
-+	FC_FS_RJT =	0x8001,	/* reject */
-+	FC_FS_ACC =	0x8002,	/* accept */
++int fcoe_link_ok(struct fc_lport *lp)
++{
++	struct fcoe_softc *fc = (struct fcoe_softc *)lp->drv_priv;
++	struct net_device *dev = fc->real_dev;
++	struct ethtool_pauseparam pause = { ETHTOOL_GPAUSEPARAM };
++	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
++	int rc = 0;
++
++	if ((dev->flags & IFF_UP) && netif_carrier_ok(dev)) {
++		dev = fc->phys_dev;
++		dev->ethtool_ops->get_pauseparam(dev, &pause);
++		if (dev->ethtool_ops->get_settings) {
++			dev->ethtool_ops->get_settings(dev, &ecmd);
++			lp->link_supported_speeds &=
++				~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
++			if (ecmd.supported & (SUPPORTED_1000baseT_Half |
++					      SUPPORTED_1000baseT_Full))
++				lp->link_supported_speeds |= FC_PORTSPEED_1GBIT;
++			if (ecmd.supported & SUPPORTED_10000baseT_Full)
++				lp->link_supported_speeds |=
++					FC_PORTSPEED_10GBIT;
++			if (ecmd.speed == SPEED_1000)
++				lp->link_speed = FC_PORTSPEED_1GBIT;
++			if (ecmd.speed == SPEED_10000)
++				lp->link_speed = FC_PORTSPEED_10GBIT;
++
++			/*
++			 * for 10 G (and faster), ignore autoneg requirement.
++			 */
++			if (ecmd.speed >= SPEED_10000)
++				pause.autoneg = 1;
++		}
++		if (!pause.autoneg || !pause.tx_pause || !pause.rx_pause)
++			rc = -1;
++	} else
++		rc = -1;
++
++	return rc;
++}
++
++static struct libfc_function_template fcoe_libfc_fcn_templ = {
++	.frame_send = fcoe_xmit,
 +};
++
++static int lport_config(struct fc_lport *lp, struct Scsi_Host *shost)
++{
++	int i = 0;
++	struct fcoe_dev_stats *p;
++
++	lp->host = shost;
++	lp->drv_priv = (void *)(lp + 1);
++
++	lp->emp = fc_exch_mgr_alloc(lp, FC_CLASS_3,
++				    FCOE_MIN_XID, FCOE_MAX_XID, 0);
++	if (!lp->emp)
++		return -ENOMEM;
++
++	lp->link_status = 0;
++	lp->max_retry_count = 3;
++	lp->e_d_tov = 2 * 1000;	/* FC-FS default */
++	lp->r_a_tov = 2 * 2 * 1000;
++	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
++			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
++
++	/*
++	 * allocate per cpu stats block
++	 */
++	for_each_online_cpu(i) {
++		p = kzalloc(sizeof(struct fcoe_dev_stats), GFP_KERNEL);
++		if (p)
++			lp->dev_stats[i] = p;
++	}
++
++	/* Finish fc_lport configuration */
++	fc_lport_config(lp);
++
++	return 0;
++}
++
++static int net_config(struct fc_lport *lp)
++{
++	u32 mfs;
++	u64 wwnn, wwpn;
++	struct net_device *net_dev;
++	struct fcoe_softc *fc = (struct fcoe_softc *)lp->drv_priv;
++	u8 flogi_maddr[ETH_ALEN];
++
++	/* Require support for get_pauseparam ethtool op. */
++	net_dev = fc->real_dev;
++	if (!net_dev->ethtool_ops && (net_dev->priv_flags & IFF_802_1Q_VLAN))
++		net_dev = vlan_dev_real_dev(net_dev);
++	if (!net_dev->ethtool_ops || !net_dev->ethtool_ops->get_pauseparam)
++		return -EOPNOTSUPP;
++
++	fc->phys_dev = net_dev;
++
++	/* Do not support for bonding device */
++	if ((fc->real_dev->priv_flags & IFF_MASTER_ALB) ||
++	    (fc->real_dev->priv_flags & IFF_SLAVE_INACTIVE) ||
++	    (fc->real_dev->priv_flags & IFF_MASTER_8023AD)) {
++		return -EOPNOTSUPP;
++	}
++
++	/*
++	 * Determine max frame size based on underlying device and optional
++	 * user-configured limit.  If the MFS is too low, fcoe_link_ok()
++	 * will return 0, so do this first.
++	 */
++	mfs = fc->real_dev->mtu - (sizeof(struct fcoe_hdr) +
++				   sizeof(struct fcoe_crc_eof));
++	fc_set_mfs(lp, mfs);
++
++	lp->link_status = ~FC_PAUSE & ~FC_LINK_UP;
++	if (!fcoe_link_ok(lp))
++		lp->link_status |= FC_LINK_UP;
++
++	if (fc->real_dev->features & NETIF_F_SG)
++		lp->capabilities = TRANS_C_SG;
++
++
++	skb_queue_head_init(&fc->fcoe_pending_queue);
++
++	memcpy(lp->ifname, fc->real_dev->name, IFNAMSIZ);
++
++	/* setup Source Mac Address */
++	memcpy(fc->ctl_src_addr, fc->real_dev->dev_addr,
++	       fc->real_dev->addr_len);
++
++	wwnn = fcoe_wwn_from_mac(fc->real_dev->dev_addr, 1, 0);
++	fc_set_wwnn(lp, wwnn);
++	/* XXX - 3rd arg needs to be vlan id */
++	wwpn = fcoe_wwn_from_mac(fc->real_dev->dev_addr, 2, 0);
++	fc_set_wwpn(lp, wwpn);
++
++	/*
++	 * Add FCoE MAC address as second unicast MAC address
++	 * or enter promiscuous mode if not capable of listening
++	 * for multiple unicast MACs.
++	 */
++	rtnl_lock();
++	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
++	dev_unicast_add(fc->real_dev, flogi_maddr, ETH_ALEN);
++	rtnl_unlock();
++
++	/*
++	 * setup the receive function from ethernet driver
++	 * on the ethertype for the given device
++	 */
++	fc->fcoe_packet_type.func = fcoe_rcv;
++	fc->fcoe_packet_type.type = __constant_htons(ETH_P_FCOE);
++	fc->fcoe_packet_type.dev = fc->real_dev;
++	dev_add_pack(&fc->fcoe_packet_type);
++
++	return 0;
++}
++
++static void shost_config(struct fc_lport *lp)
++{
++	lp->host->max_lun = FCOE_MAX_LUN;
++	lp->host->max_id = FCOE_MAX_FCP_TARGET;
++	lp->host->max_channel = 0;
++	lp->host->transportt = fcoe_transport_template;
++}
++
++static int libfc_config(struct fc_lport *lp)
++{
++	/* Set the function pointers set by the LLDD */
++	memcpy(&lp->tt, &fcoe_libfc_fcn_templ,
++	       sizeof(struct libfc_function_template));
++
++	if (fc_fcp_init(lp))
++		return -ENOMEM;
++	fc_exch_init(lp);
++	fc_lport_init(lp);
++	fc_rport_init(lp);
++	fc_ns_init(lp);
++	fc_attr_init(lp);
++
++	return 0;
++}
 +
 +/*
-+ * FS_RJT reason codes.
++ * This function creates the fcoe interface
++ * create struct fcdev which is a shared structure between opefc
++ * and transport level protocol.
 + */
-+enum fc_ct_reason {
-+	FC_FS_RJT_CMD =		0x01,	/* invalid command code */
-+	FC_FS_RJT_VER =		0x02,	/* invalid version level */
-+	FC_FS_RJT_LOG =		0x03,	/* logical error */
-+	FC_FS_RJT_IUSIZ =	0x04,	/* invalid IU size */
-+	FC_FS_RJT_BSY =		0x05,	/* logical busy */
-+	FC_FS_RJT_PROTO =	0x07,	/* protocol error */
-+	FC_FS_RJT_UNABL =	0x09,	/* unable to perform command request */
-+	FC_FS_RJT_UNSUP =	0x0b,	/* command not supported */
-+};
++int fcoe_create_interface(const char *ifname)
++{
++	struct fc_lport *lp = NULL;
++	struct fcoe_softc *fc;
++	struct net_device *net_dev;
++	struct Scsi_Host *shost;
++	struct fcoe_info *fci = &fcoei;
++	int rc = 0;
 +
-+/*
-+ * FS_RJT reason code explanations.
-+ */
-+enum fc_ct_explan {
-+	FC_FS_EXP_NONE =	0x00,	/* no additional explanation */
-+	FC_FS_EXP_PID =		0x01,	/* port ID not registered */
-+	FC_FS_EXP_PNAM =	0x02,	/* port name not registered */
-+	FC_FS_EXP_NNAM =	0x03,	/* node name not registered */
-+	FC_FS_EXP_COS =		0x04,	/* class of service not registered */
-+	/* definitions not complete */
-+};
++	net_dev = dev_get_by_name(&init_net, ifname);
++	if (net_dev == NULL) {
++		FC_DBG("could not get network device for %s",
++		       ifname);
++		return -ENODEV;
++	}
 +
-+#endif /* _FC_GS_H_ */
-diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
++	if (fcoe_find_fc_lport(net_dev->name) != NULL) {
++		rc = -EEXIST;
++		goto out_put_dev;
++	}
++
++	shost = scsi_host_alloc(&fcoe_driver_template,
++				sizeof(struct fc_lport) +
++				sizeof(struct fcoe_softc));
++
++	if (!shost) {
++		FC_DBG("Could not allocate host structure\n");
++		rc = -ENOMEM;
++		goto out_put_dev;
++	}
++
++	lp = shost_priv(shost);
++	rc = lport_config(lp, shost);
++	if (rc)
++		goto out_host_put;
++
++	/* Configure the fcoe_softc */
++	fc = (struct fcoe_softc *)lp->drv_priv;
++	fc->lp = lp;
++	fc->real_dev = net_dev;
++	shost_config(lp);
++
++
++	/* Add the new host to the SCSI-ml */
++	rc = scsi_add_host(lp->host, NULL);
++	if (rc) {
++		FC_DBG("error on scsi_add_host\n");
++		goto out_lp_destroy;
++	}
++
++	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
++		FCOE_DRIVER_NAME, FCOE_VERSION,
++		ifname);
++
++	/* Configure netdev and networking properties of the lp */
++	rc = net_config(lp);
++	if (rc)
++		goto out_lp_destroy;
++
++	/* Initialize the library */
++	rc = libfc_config(lp);
++	if (rc)
++		goto out_lp_destroy;
++
++	write_lock_bh(&fci->fcoe_hostlist_lock);
++	list_add_tail(&fc->list, &fci->fcoe_hostlist);
++	write_unlock_bh(&fci->fcoe_hostlist_lock);
++
++	lp->boot_time = jiffies;
++
++	fc_fabric_login(lp);
++
++	return rc;
++
++out_lp_destroy:
++	fc_exch_mgr_free(lp->emp); /* Free the EM */
++out_host_put:
++	scsi_host_put(lp->host);
++out_put_dev:
++	dev_put(net_dev);
++	return rc;
++}
++
++void fcoe_clean_pending_queue(struct fc_lport *lp)
++{
++	struct fcoe_softc  *fc = lp->drv_priv;
++	struct sk_buff *skb;
++
++	spin_lock_bh(&fc->fcoe_pending_queue.lock);
++	while ((skb = __skb_dequeue(&fc->fcoe_pending_queue)) != NULL) {
++		spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++		kfree_skb(skb);
++		spin_lock_bh(&fc->fcoe_pending_queue.lock);
++	}
++	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
++}
+diff --git a/drivers/scsi/fcoe/fcoeinit.c b/drivers/scsi/fcoe/fcoeinit.c
 new file mode 100644
-index 0000000..790d7b9
+index 0000000..375699f
 --- /dev/null
-+++ b/include/scsi/fc/fc_ns.h
-@@ -0,0 +1,159 @@
++++ b/drivers/scsi/fcoe/fcoeinit.c
+@@ -0,0 +1,432 @@
 +/*
 + * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
@@ -1793,144 +1473,417 @@ index 0000000..790d7b9
 + * Maintained at www.Open-FCoE.org
 + */
 +
-+#ifndef _FC_NS_H_
-+#define	_FC_NS_H_
++#include <linux/module.h>
++#include <linux/version.h>
++#include <linux/kernel.h>
++#include <linux/kthread.h>
++#include <linux/spinlock.h>
++#include <linux/cpu.h>
++#include <linux/netdevice.h>
++#include <linux/etherdevice.h>
++#include <linux/ethtool.h>
++#include <linux/if_ether.h>
++#include <linux/fs.h>
++#include <linux/sysfs.h>
++#include <linux/ctype.h>
++
++#include <scsi/libfc/libfc.h>
++
++#include "fcoe_def.h"
++
++MODULE_AUTHOR("Open-FCoE.org");
++MODULE_DESCRIPTION("FCoE");
++MODULE_LICENSE("GPL");
 +
 +/*
-+ * Fibre Channel Services - Name Service (dNS)
-+ * From T11.org FC-GS-2 Rev 5.3 November 1998.
++ * Static functions and variables definations
 + */
++#ifdef CONFIG_HOTPLUG_CPU
++static int fcoe_cpu_callback(struct notifier_block *, ulong, void *);
++#endif /* CONFIG_HOTPLUG_CPU */
++static int fcoe_device_notification(struct notifier_block *, ulong, void *);
++static void fcoe_dev_setup(void);
++static void fcoe_dev_cleanup(void);
 +
-+/*
-+ * Common-transport sub-type for Name Server.
-+ */
-+#define	FC_NS_SUBTYPE	    2	/* fs_ct_hdr.ct_fs_subtype */
++struct scsi_transport_template *fcoe_transport_template;
 +
-+/*
-+ * Name server Requests.
-+ * Note:  this is an incomplete list, some unused requests are omitted.
-+ */
-+enum fc_ns_req {
-+	FC_NS_GA_NXT =	0x0100,		/* get all next */
-+	FC_NS_GI_A =	0x0101,		/* get identifiers - scope */
-+	FC_NS_GPN_ID =	0x0112,		/* get port name by ID */
-+	FC_NS_GNN_ID =	0x0113,		/* get node name by ID */
-+	FC_NS_GID_PN =	0x0121,		/* get ID for port name */
-+	FC_NS_GID_NN =	0x0131,		/* get IDs for node name */
-+	FC_NS_GID_FT =	0x0171,		/* get IDs by FC4 type */
-+	FC_NS_GPN_FT =	0x0172,		/* get port names by FC4 type */
-+	FC_NS_GID_PT =	0x01a1,		/* get IDs by port type */
-+	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
-+	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
-+	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
++static int fcoe_reset(struct Scsi_Host *shost)
++{
++	struct fc_lport *lp = shost_priv(shost);
++	fc_lport_enter_reset(lp);
++	return 0;
++}
++
++struct fc_function_template fcoe_transport_function = {
++	.show_host_node_name = 1,
++	.show_host_port_name = 1,
++	.show_host_supported_classes = 1,
++	.show_host_supported_fc4s = 1,
++	.show_host_active_fc4s = 1,
++
++	.get_host_port_id = fc_get_host_port_id,
++	.show_host_port_id = 1,
++	.get_host_speed = fc_get_host_speed,
++	.show_host_speed = 1,
++	.get_host_port_type = fc_get_host_port_type,
++	.show_host_port_type = 1,
++	.show_host_symbolic_name = 1,
++
++	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
++	.show_rport_maxframe_size = 1,
++	.show_rport_supported_classes = 1,
++
++	.get_host_fabric_name = fc_get_host_fabric_name,
++	.show_host_fabric_name = 1,
++	.show_starget_node_name = 1,
++	.show_starget_port_name = 1,
++	.show_starget_port_id = 1,
++	.set_rport_dev_loss_tmo = fc_set_rport_loss_tmo,
++	.show_rport_dev_loss_tmo = 1,
++	.get_fc_host_stats = fc_get_host_stats,
++	.issue_fc_host_lip = fcoe_reset,
 +};
 +
++struct fcoe_percpu_s *fcoe_percpu[NR_CPUS];
++
++#ifdef CONFIG_HOTPLUG_CPU
++static struct notifier_block fcoe_cpu_notifier = {
++	.notifier_call = fcoe_cpu_callback,
++};
++#endif /* CONFIG_HOTPLUG_CPU */
++
 +/*
-+ * Port type values.
++ * notification function from net device
 + */
-+enum fc_ns_pt {
-+	FC_NS_UNID_PORT = 0x00,	/* unidentified */
-+	FC_NS_N_PORT =	0x01,	/* N port */
-+	FC_NS_NL_PORT =	0x02,	/* NL port */
-+	FC_NS_FNL_PORT = 0x03,	/* F/NL port */
-+	FC_NS_NX_PORT =	0x7f,	/* Nx port */
-+	FC_NS_F_PORT =	0x81,	/* F port */
-+	FC_NS_FL_PORT =	0x82,	/* FL port */
-+	FC_NS_E_PORT =	0x84,	/* E port */
-+	FC_NS_B_PORT =	0x85,	/* B port */
++static struct notifier_block fcoe_notifier = {
++	.notifier_call = fcoe_device_notification,
 +};
 +
++#ifdef CONFIG_HOTPLUG_CPU
 +/*
-+ * Port type object.
++ * create percpu stats block
++ * called by cpu add/remove notifier
 + */
-+struct fc_ns_pt_obj {
-+	__u8		pt_type;
-+};
++static void fcoe_create_percpu_data(int cpu)
++{
++	struct fc_lport *lp;
++	struct fcoe_softc *fc;
++	struct fcoe_dev_stats *p;
++	struct fcoe_info *fci = &fcoei;
 +
-+/*
-+ * Port ID object
-+ */
-+struct fc_ns_fid {
-+	__u8		fp_flags;	/* flags for responses only */
-+	__u8		fp_fid[3];
-+};
-+
-+/*
-+ * fp_flags in port ID object, for responses only.
-+ */
-+#define	FC_NS_FID_LAST	0x80		/* last object */
-+
-+/*
-+ * FC4-types object.
-+ */
-+#define	FC_NS_TYPES	256	/* number of possible FC-4 types */
-+#define	FC_NS_BPW	32	/* bits per word in bitmap */
-+
-+struct fc_ns_fts {
-+	__be32	ff_type_map[FC_NS_TYPES / FC_NS_BPW]; /* bitmap of FC-4 types */
-+};
++	write_lock_bh(&fci->fcoe_hostlist_lock);
++	list_for_each_entry(fc, &fci->fcoe_hostlist, list) {
++		lp = fc->lp;
++		if (lp->dev_stats[cpu] == NULL) {
++			p = kzalloc(sizeof(struct fcoe_dev_stats), GFP_KERNEL);
++			if (p)
++				lp->dev_stats[cpu] = p;
++		}
++	}
++	write_unlock_bh(&fci->fcoe_hostlist_lock);
++}
 +
 +/*
-+ * GID_PT request.
++ * destroy percpu stats block
++ * called by cpu add/remove notifier
 + */
-+struct fc_ns_gid_pt {
-+	__u8		fn_pt_type;
-+	__u8		fn_domain_id_scope;
-+	__u8		fn_area_id_scope;
-+	__u8		fn_resvd;
-+};
++static void fcoe_destroy_percpu_data(int cpu)
++{
++	struct fcoe_dev_stats *p;
++	struct fc_lport *lp;
++	struct fcoe_softc *fc;
++	struct fcoe_info *fci = &fcoei;
++
++	write_lock_bh(&fci->fcoe_hostlist_lock);
++	list_for_each_entry(fc, &fci->fcoe_hostlist, list) {
++		lp = fc->lp;
++		p = lp->dev_stats[cpu];
++		if (p != NULL) {
++			lp->dev_stats[cpu] = NULL;
++			kfree(p);
++		}
++	}
++	write_unlock_bh(&fci->fcoe_hostlist_lock);
++}
 +
 +/*
-+ * GID_FT or GPN_FT request.
++ * Get notified when a cpu comes on/off. Be hotplug friendly.
 + */
-+struct fc_ns_gid_ft {
-+	__u8		fn_resvd;
-+	__u8		fn_domain_id_scope;
-+	__u8		fn_area_id_scope;
-+	__u8		fn_fc4_type;
-+};
++static int fcoe_cpu_callback(struct notifier_block *nfb, unsigned long action,
++			     void *hcpu)
++{
++	unsigned int cpu = (unsigned long)hcpu;
++
++	switch (action) {
++	case CPU_ONLINE:
++		fcoe_create_percpu_data(cpu);
++		break;
++	case CPU_DEAD:
++		fcoe_destroy_percpu_data(cpu);
++		break;
++	default:
++		break;
++	}
++	return NOTIFY_OK;
++}
++#endif /* CONFIG_HOTPLUG_CPU */
 +
 +/*
-+ * GPN_FT response.
++ * function to setup link change notification interface
 + */
-+struct fc_gpn_ft_resp {
-+	__u8		fp_flags;	/* see fp_flags definitions above */
-+	__u8		fp_fid[3];	/* port ID */
-+	__be32		fp_resvd;
-+	__be64		fp_wwpn;	/* port name */
-+};
++static void fcoe_dev_setup(void)
++{
++	/*
++	 * here setup a interface specific wd time to
++	 * monitor the link state
++	 */
++	register_netdevice_notifier(&fcoe_notifier);
++}
 +
 +/*
-+ * GID_PN request
++ * function to cleanup link change notification interface
 + */
-+struct fc_ns_gid_pn {
-+	__be64     fn_wwpn;    /* port name */
-+};
++static void fcoe_dev_cleanup(void)
++{
++	unregister_netdevice_notifier(&fcoe_notifier);
++}
 +
 +/*
-+ * GID_PN response
++ * This function is called by the ethernet driver
++ * this is called in case of link change event
 + */
-+struct fc_gid_pn_resp {
-+	__u8      fp_resvd;
-+	__u8      fp_fid[3];     /* port ID */
-+};
++static int fcoe_device_notification(struct notifier_block *notifier,
++				    ulong event, void *ptr)
++{
++	struct fc_lport *lp = NULL;
++	struct net_device *real_dev = ptr;
++	struct fcoe_softc *fc;
++	struct fcoe_dev_stats *stats;
++	struct fcoe_info *fci = &fcoei;
++	u16 new_status;
++	u32 mfs;
++	int rc = NOTIFY_OK;
++
++	read_lock(&fci->fcoe_hostlist_lock);
++	list_for_each_entry(fc, &fci->fcoe_hostlist, list) {
++		if (fc->real_dev == real_dev) {
++			lp = fc->lp;
++			break;
++		}
++	}
++	read_unlock(&fci->fcoe_hostlist_lock);
++	if (lp == NULL) {
++		rc = NOTIFY_DONE;
++		goto out;
++	}
++
++	new_status = lp->link_status;
++	switch (event) {
++	case NETDEV_DOWN:
++	case NETDEV_GOING_DOWN:
++		new_status &= ~FC_LINK_UP;
++		break;
++	case NETDEV_UP:
++	case NETDEV_CHANGE:
++		new_status &= ~FC_LINK_UP;
++		if (!fcoe_link_ok(lp))
++			new_status |= FC_LINK_UP;
++		break;
++	case NETDEV_CHANGEMTU:
++		mfs = fc->real_dev->mtu -
++			(sizeof(struct fcoe_hdr) +
++			 sizeof(struct fcoe_crc_eof));
++		if (fc->user_mfs && fc->user_mfs < mfs)
++			mfs = fc->user_mfs;
++		if (mfs >= FC_MIN_MAX_FRAME)
++			fc_set_mfs(lp, mfs);
++		new_status &= ~FC_LINK_UP;
++		if (!fcoe_link_ok(lp))
++			new_status |= FC_LINK_UP;
++		break;
++	case NETDEV_REGISTER:
++		break;
++	default:
++		FC_DBG("unknown event %ld call", event);
++	}
++	if (lp->link_status != new_status) {
++		lp->link_status = new_status;
++		if ((new_status & FC_LINK_UP) == FC_LINK_UP) {
++			fc_linkup(lp);
++		} else {
++			stats = lp->dev_stats[smp_processor_id()];
++			stats->LinkFailureCount++;
++			fc_linkdown(lp);
++			fcoe_clean_pending_queue(lp);
++		}
++	}
++out:
++	return rc;
++}
++
++static void trimstr(char *str, int len)
++{
++	char *cp = str + len;
++	while (--cp >= str && *cp == '\n')
++		*cp = '\0';
++}
++
++static ssize_t fcoe_destroy(struct kobject *kobj, struct kobj_attribute *attr,
++			    const char *buffer, size_t size)
++{
++	char ifname[40];
++	strcpy(ifname, buffer);
++	trimstr(ifname, strlen(ifname));
++	fcoe_destroy_interface(ifname);
++	return size;
++}
++
++static ssize_t fcoe_create(struct kobject *kobj, struct kobj_attribute *attr,
++			   const char *buffer, size_t size)
++{
++	char ifname[40];
++	strcpy(ifname, buffer);
++	trimstr(ifname, strlen(ifname));
++	fcoe_create_interface(ifname);
++	return size;
++}
++
++static const struct kobj_attribute fcoe_destroyattr = \
++	__ATTR(destroy, S_IWUSR, NULL, fcoe_destroy);
++static const struct kobj_attribute fcoe_createattr = \
++	__ATTR(create, S_IWUSR, NULL, fcoe_create);
 +
 +/*
-+ * RFT_ID request - register FC-4 types for ID.
++ * Initialization routine
++ * 1. Will create fc transport software structure
++ * 2. initialize the link list of port information structure
 + */
-+struct fc_ns_rft_id {
-+	struct fc_ns_fid fr_fid;	/* port ID object */
-+	struct fc_ns_fts fr_fts;	/* FC-4 types object */
-+};
++static int __init fcoeinit(void)
++{
++	int rc = 0;
++	int cpu;
++	struct fcoe_percpu_s *p;
++	struct fcoe_info *fci = &fcoei;
 +
-+/*
-+ * RPN_ID request - register port name for ID.
-+ * RNN_ID request - register node name for ID.
-+ */
-+struct fc_ns_rn_id {
-+	struct fc_ns_fid fr_fid;	/* port ID object */
-+	__be64		fr_wwn;		/* node name or port name */
-+} __attribute__((__packed__));
++	sysfs_create_file(&THIS_MODULE->mkobj.kobj, &fcoe_destroyattr.attr);
++	sysfs_create_file(&THIS_MODULE->mkobj.kobj, &fcoe_createattr.attr);
 +
-+#endif /* _FC_NS_H_ */
++	rwlock_init(&fci->fcoe_hostlist_lock);
++
++#ifdef CONFIG_HOTPLUG_CPU
++	register_cpu_notifier(&fcoe_cpu_notifier);
++#endif /* CONFIG_HOTPLUG_CPU */
++
++	/*
++	 * initialize per CPU interrupt thread
++	 */
++	for_each_online_cpu(cpu) {
++		p = kzalloc(sizeof(struct fcoe_percpu_s), GFP_KERNEL);
++		if (p) {
++			p->thread = kthread_create(fcoe_percpu_receive_thread,
++						   (void *)p,
++						   "fcoethread/%d", cpu);
++
++			/*
++			 * if there is no error then bind the thread to the cpu
++			 * initialize the semaphore and skb queue head
++			 */
++			if (likely(!IS_ERR(p->thread))) {
++				p->cpu = cpu;
++				fci->fcoe_percpu[cpu] = p;
++				skb_queue_head_init(&p->fcoe_rx_list);
++				kthread_bind(p->thread, cpu);
++				wake_up_process(p->thread);
++			} else {
++				fci->fcoe_percpu[cpu] = NULL;
++				kfree(p);
++
++			}
++		}
++	}
++	if (rc < 0) {
++		FC_DBG("failed to initialize proc intrerface\n");
++		rc = -ENODEV;
++		goto out_chrdev;
++	}
++
++	/*
++	 * setup link change notification
++	 */
++	fcoe_dev_setup();
++
++	init_timer(&fci->timer);
++	fci->timer.data = (ulong) fci;
++	fci->timer.function = fcoe_watchdog;
++	fci->timer.expires = (jiffies + (10 * HZ));
++	add_timer(&fci->timer);
++
++	fcoe_transport_template =
++		fc_attach_transport(&fcoe_transport_function);
++
++	if (fcoe_transport_template == NULL) {
++		FC_DBG("fail to attach fc transport");
++		return -1;
++	}
++
++	return 0;
++
++out_chrdev:
++#ifdef CONFIG_HOTPLUG_CPU
++	unregister_cpu_notifier(&fcoe_cpu_notifier);
++#endif /* CONFIG_HOTPLUG_CPU */
++	return rc;
++}
++
++static void __exit fcoe_exit(void)
++{
++	u32 idx;
++	struct fcoe_softc *fc, *tmp;
++	struct fc_lport *lp;
++	struct fcoe_info *fci = &fcoei;
++	struct fcoe_percpu_s *p;
++	struct sk_buff *skb;
++
++	/*
++	 * Stop all call back interfaces
++	 */
++#ifdef CONFIG_HOTPLUG_CPU
++	unregister_cpu_notifier(&fcoe_cpu_notifier);
++#endif /* CONFIG_HOTPLUG_CPU */
++	fcoe_dev_cleanup();
++
++	/*
++	 * stop timer
++	 */
++	del_timer_sync(&fci->timer);
++
++	/*
++	 * assuming that at this time there will be no
++	 * ioctl in prograss, therefore we do not need to lock the
++	 * list.
++	 */
++	list_for_each_entry_safe(fc, tmp, &fci->fcoe_hostlist, list) {
++		lp = fc->lp;
++		fcoe_destroy_interface(lp->ifname);
++	}
++
++	for (idx = 0; idx < NR_CPUS; idx++) {
++		if (fci->fcoe_percpu[idx]) {
++			kthread_stop(fci->fcoe_percpu[idx]->thread);
++			p = fci->fcoe_percpu[idx];
++			spin_lock_bh(&p->fcoe_rx_list.lock);
++			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
++				kfree_skb(skb);
++			spin_unlock_bh(&p->fcoe_rx_list.lock);
++			if (fci->fcoe_percpu[idx]->crc_eof_page)
++				put_page(fci->fcoe_percpu[idx]->crc_eof_page);
++			kfree(fci->fcoe_percpu[idx]);
++		}
++	}
++
++	fc_release_transport(fcoe_transport_template);
++}
++
++module_init(fcoeinit);
++module_exit(fcoe_exit);
 
