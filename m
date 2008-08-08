@@ -1,62 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394: sbp2: avoid DMA bounce buffers for ORBs
-Date: Fri, 8 Aug 2008 14:00:42 +0200 (CEST)
-Message-ID: <tkrat.6abbce7c47a1f236@s5r6.in-berlin.de>
-References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de>
-	<1217877676.3318.32.camel@localhost.localdomain>
-	<48975F5F.90906@s5r6.in-berlin.de> <489845FC.4080104@panasas.com>
-	<48986B55.80403@s5r6.in-berlin.de> <489871B7.5050904@panasas.com>
-	<tkrat.4aaf6794a4dd49c1@s5r6.in-berlin.de>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH v2] cmdfilter: clean up sysfs interface
+Date: Fri, 8 Aug 2008 14:05:08 +0200
+Message-ID: <6cf6b73e0808080505v5989bd3bm7beedea2b443bc55@mail.gmail.com>
+References: <6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
+	 <20080808160629H.fujita.tomonori@lab.ntt.co.jp>
+	 <6cf6b73e0808080047i550f2e6bt71d4e213f81fea87@mail.gmail.com>
+	 <20080808174508Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.4aaf6794a4dd49c1@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.228]:10247 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754431AbYHHMFJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 08:05:09 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so996622rvb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 05:05:08 -0700 (PDT)
+In-Reply-To: <20080808174508Z.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, viro@zeniv.linux.org.uk, matthew@wil.cx, pjones@redhat.com, dougg@torque.net, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com
 
-The command ORB pool is used frequently during the whole lifetime of an
-SBP-2 logical unit.  It doesn't make sense to let it live outside the
-32bit DMA zone.
+2008/8/8 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
+> On Fri, 8 Aug 2008 09:47:44 +0200
+> "Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+>
+>> > strchr(str, ' ') would make the intention clear here rather than using
+>> > '4' ?
+>>
+>> yeah will do that
+>
+> Actually you don't need strchr here. You can just use simple_strtol.
+>
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/ieee1394/sbp2.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-2.6.27-rc2/drivers/ieee1394/sbp2.c
-===================================================================
---- linux-2.6.27-rc2.orig/drivers/ieee1394/sbp2.c
-+++ linux-2.6.27-rc2/drivers/ieee1394/sbp2.c
-@@ -531,7 +531,7 @@ static int sbp2util_create_command_orb_p
- 	int i, orbs = sbp2_serialize_io ? 2 : SBP2_MAX_CMDS;
- 
- 	for (i = 0; i < orbs; i++) {
--		cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+		cmd = kzalloc(sizeof(*cmd), GFP_KERNEL | GFP_DMA32);
- 		if (!cmd)
- 			return -ENOMEM;
- 		cmd->command_orb_dma = dma_map_single(hi->host->device.parent,
-
--- 
-Stefan Richter
--=====-==--- =--- -=---
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
+yeah that makes sense.
