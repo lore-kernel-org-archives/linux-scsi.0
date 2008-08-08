@@ -1,38 +1,46 @@
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-Subject: Re: [PATCH v2] cmdfilter: clean up sysfs interface
-Date: Fri, 8 Aug 2008 14:05:08 +0200
-Message-ID: <6cf6b73e0808080505v5989bd3bm7beedea2b443bc55@mail.gmail.com>
-References: <6cf6b73e0808020819x4501aa1cud4e6c3c9ae77558b@mail.gmail.com>
-	 <20080808160629H.fujita.tomonori@lab.ntt.co.jp>
-	 <6cf6b73e0808080047i550f2e6bt71d4e213f81fea87@mail.gmail.com>
-	 <20080808174508Z.fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Thin device provisioning
+Date: Fri, 8 Aug 2008 07:15:11 -0600
+Message-ID: <20080808131511.GC8618@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:10247 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754431AbYHHMFJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 08:05:09 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so996622rvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 05:05:08 -0700 (PDT)
-In-Reply-To: <20080808174508Z.fujita.tomonori@lab.ntt.co.jp>
+Received: from palinux.external.hp.com ([192.25.206.14]:54448 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbYHHNPb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 09:15:31 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, viro@zeniv.linux.org.uk, matthew@wil.cx, pjones@redhat.com, dougg@torque.net, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com
+To: knight@netapp.com
+Cc: David Woodhouse <dwmw2@infradead.org>, ricwheeler@gmail.com, linux-scsi@vger.kernel.org, t10@t10.org
 
-2008/8/8 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
-> On Fri, 8 Aug 2008 09:47:44 +0200
-> "Adel Gadllah" <adel.gadllah@gmail.com> wrote:
->
->> > strchr(str, ' ') would make the intention clear here rather than using
->> > '4' ?
->>
->> yeah will do that
->
-> Actually you don't need strchr here. You can just use simple_strtol.
->
 
-yeah that makes sense.
+Good morning Fred,
+
+I've been looking at your 08-149r0.pdf with a view to using the 'PUNCH'
+command to implement the Linux 'DISCARD' command.  It's a little
+over-specified for what we need and this causes the implementation to
+be a little more complex than I would like.  The excess capability is
+the ability to do multiple punches in a single command.  Do you really
+need to be able to add/remove lots of ranges atomically, or could you
+use a command specified like this:
+
+0	0x9F
+1	service action
+2-9	LBA
+10-13	length
+14	reserved
+15	control
+
+and send one command for each range?
+
+Apologies if this has already been covered in a T10 discussion; I'm not
+a member and though I've searched the archives, I may have missed a
+discussion.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
