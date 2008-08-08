@@ -1,75 +1,74 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in
- 2.6.27-rc1
-Date: Fri, 8 Aug 2008 17:30:07 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0808081728340.24293-100000@netrider.rowland.org>
-References: <779703.44181.qm@web83203.mail.mud.yahoo.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Scatter-gather segment merges by IOMMU?
+Date: Sat, 9 Aug 2008 06:31:45 +0900
+Message-ID: <20080809063159F.fujita.tomonori@lab.ntt.co.jp>
+References: <489CA21F.1030604@s5r6.in-berlin.de>
+	<da824cf30808081325n416ec436y94eebe494d789207@mail.gmail.com>
+	<489CB8D8.60908@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:3207 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753245AbYHHVaI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 17:30:08 -0400
-In-Reply-To: <779703.44181.qm@web83203.mail.mud.yahoo.com>
+Received: from sh.osrg.net ([192.16.179.4]:33601 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754661AbYHHVcD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2008 17:32:03 -0400
+In-Reply-To: <489CB8D8.60908@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Frost <artusemrys@sbcglobal.net>
-Cc: Greg KH <greg@kroah.com>, Kernel development list <linux-kernel@vger.kernel.org>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: stefanr@s5r6.in-berlin.de
+Cc: grundler@google.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 8 Aug 2008, Matthew Frost wrote:
+On Fri, 08 Aug 2008 23:21:28 +0200
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-> > > > Index: 2.6.26/drivers/usb/storage/transport.c
-> > > > ===================================================================
-> > > > --- 2.6.26.orig/drivers/usb/storage/transport.c
-> > > > +++ 2.6.26/drivers/usb/storage/transport.c
-> > > > @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
-> > > >  
-> > > >  	/* try to compute the actual residue, based on how much data
-> > > >  	 * was really transferred and what the device tells us */
-> > > > -	if (residue) {
-> > > > -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > > > +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
-> > > > +
-> > > > +		/* Heuristically detect devices that generate bogus residues
-> > > > +		 * by seeing what happens with INQUIRY and READ CAPACITY
-> > > > +		 * commands.
-> > > > +		 */
-> > > > +		if (bcs->Status == US_BULK_STAT_OK &&
-> > > > +				scsi_get_resid(srb) == 0 &&
-> > > > +					((srb->cmnd[0] == INQUIRY &&
-> > > > +						transfer_length == 36) ||
-> > > > +					(srb->cmnd[0] == READ_CAPACITY &&
-> > > > +						transfer_length == 8))) {
-> > > > +			us->flags |= US_FL_IGNORE_RESIDUE;
-> > > > +
-> > > > +		} else {
-> > > >  			residue = min(residue, transfer_length);
-> > > >  			scsi_set_resid(srb, max(scsi_get_resid(srb),
-> > > >  			                                       (int) residue));
-> > > > 
-> > > > 
-> > > 
-> > > Thanks!  I've been trying to fix it manually, and it wouldn't work. 
-> > Trying
-> > > this version now.  Let's see if this fixes my problem.
-> > > 
-> > > Matt Frost
-> > > 
+> Grant Grundler wrote:
+> > On Fri, Aug 8, 2008 at 12:44 PM, Stefan Richter
+> > <stefanr@s5r6.in-berlin.de> wrote:
+> >> Hi all,
+> >>
+> >> the block layer usually tries to merge s/g segments if consecutive segments
+> >> combined fit into the queue's max_segment_size.  When such a scatter gather
+> >> list is DMA-mapped, can it happen that an IOMMU collapses the elements even
+> >> further, so that sg_dma_len() of a DMA-mapped s/g segment exceeds
+> >> max_segment_size?
 > > 
-> > Tested under two distributions, this patch restores correct functionality
-> > to my hardware.  Thank you very much!
+> > I don't see how. The IOMMU code only collapses the "physical" mappings and
+> > does not add new elements to the SG list. ergo sg_dma_len() shouldn't change.
 > > 
-> > Matt
+> > grant
 > > 
-> Update/sqeaking-of-the-wheel:
+> >> As I understood some discussions in the past, this could indeed happen,
+> >> which is a nuisance.  But I may have misunderstood something, or something
+> >> may have changed in the meantime...
 > 
-> The same problem still happens under 2.6.27-rc2, and I haven't seen this
-> bumped to -stable, either.  It continues to solve the problem here.
+> Well, I'm just doing my homework and am tracking down the various 
+> dma_map_sg implementations.
+> 
+> Here is what PPC does:
+> http://lxr.linux.no/linux+v2.6.26/arch/powerpc/kernel/iommu.c#L270
+> 
+> It looks at dma_get_max_seg_size(dev); and then merges according to it.
 
-The patch has not yet been pushed to mainline but it is present in Greg 
-KH's USB development tree.  Presumably it will end up in the mainline 
-kernel before 2.6.27-final is released.
+Yes, IOMMUs were not able to handle this issue but they should now.
 
-Alan Stern
 
+> That's all nice and well, but in my case (FireWire storage protocol 
+> a.k.a. SBP-2, which is basically remote DMA), the max_segment_size of 
+> the PCI device is different from the size limit of the protocol.  We 
+> currently have to deconstruct such merges in the sbp2 drivers again:
+> http://lxr.linux.no/linux+v2.6.26/drivers/firewire/fw-sbp2.c#L1384
+> 
+> Either I keep it that way, or I let the protocol driver manipulate the 
+> FireWire controller's dev->dma_parms->max_segment_size (via 
+> dma_set_max_seg_size() of course), which is not entirely correct.
+
+Why is it not correct? Device drivers can set
+dma_set_max_seg_size(). SCSI does that (see __scsi_alloc_queue).
+
+
+> I first wanted to use blk_queue_max_segment_size(), but that falls short 
+> with dma_map_sg implementations like the above are at work.
+
+Yeah, we store the same value at two places (request_queue and device)
+though it's not nice.
