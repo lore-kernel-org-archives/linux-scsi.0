@@ -1,85 +1,151 @@
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-Subject: Re: [PATCH v4] cmdfilter: clean up sysfs interface
-Date: Sat, 9 Aug 2008 00:00:05 +0200
-Message-ID: <6cf6b73e0808081500w4e8b290ci83f12aaa6f572b71@mail.gmail.com>
-References: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Fri, 08 Aug 2008 18:15:41 -0400
+Message-ID: <489CC58D.4010606@pobox.com>
+References: <200807300019.m6U0JkdY012558@localhost.localdomain> <aday73jxdfs.fsf@cisco.com> <200807311752.00911.divy@chelsio.com> <200808071145.03848.divy@chelsio.com> <489C8BEB.8060001@opengridcomputing.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_25899_15699877.1218232805231"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:59534 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758451AbYHHWAG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 18:00:06 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1237798rvb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2008 15:00:05 -0700 (PDT)
-In-Reply-To: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:53017 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbYHHWPv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2008 18:15:51 -0400
+In-Reply-To: <489C8BEB.8060001@opengridcomputing.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Peter Jones <pjones@redhat.com>, Matthew Wilcox <matthew@wil.cx>, dougg@torque.net, dan.j.williams@intel.com, James.Bottomley@hansenpartnership.com
+To: Steve Wise <swise@opengridcomputing.com>, davem@davemloft.net
+Cc: Divy Le Ray <divy@chelsio.com>, Roland Dreier <rdreier@cisco.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>Mike Christie <michaelc@cs.wisc.edu>
 
-------=_Part_25899_15699877.1218232805231
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Steve Wise wrote:
+> 
+>> Hi Jeff,
+>>
+>> Mike Christie will not merge this code until he has an explicit 
+>> acknowledgement from netdev.
+>>
+>> As you mentioned, the port stealing approach we've taken has its issues.
+>> We consequently analyzed your suggestion to use a different IP/MAC 
+>> address for iSCSI and it raises other tough issues (separate ARP and 
+>> DHCP management, unavailability of common networking tools).
+>> On these grounds, we believe our current approach is the most tolerable.
+>> Would the stack provide a TCP port allocation service, we'd be glad to 
+>> use it to solve the current concerns.
+>> The cxgb3i driver is up and running here, its merge is pending our 
+>> decision.
+>>
+>> Cheers,
+>> Divy
+>>   
+> Hey Dave/Jeff,
+> 
+> I think we need some guidance here on how to proceed.   Is the approach 
+> currently being reviewed ACKable?  Or is it DOA? If its DOA, then what 
+> approach do you recommend?  I believe Jeff's opinion is a separate 
+> ipaddr.  But Dave, what do you think?  Lets get some agreement on a high 
+> level design here.
+> Possible solutions seen to date include:
+> 
+> 1) reserving a socket to allocate the port.  This has been NAK'd in the 
+> past and I assume is still a no go.
+> 
+> 2) creating a 4-tuple allocation service so the host stack, the rdma 
+> stack, and the iscsi stack can share the same TCP 4-tuple space.  This 
+> also has been NAK'd in the past and I assume is still a no go.
+> 
+> 3) the iscsi device allocates its own local ephemeral posts (port 
+> stealing) and use the host's ip address for the iscsi offload device.  
+> This is the current proposal and you can review the thread for the pros 
+> and cons.  IMO it is the least objectionable (and I think we really 
+> should be doing #2).
+> 
+> 4) the iscsi device will manage its own ip address thus ensuring 4-tuple 
+> uniqueness.
 
-I hate gmail ....
+Conceptually, it is a nasty business for the OS kernel to be forced to 
+co-manage an IP address in conjunction with a remote, independent entity.
 
-------=_Part_25899_15699877.1218232805231
-Content-Type: application/octet-stream; name=cmd-filter-new-iface.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fjncbvqf0
-Content-Disposition: attachment; filename=cmd-filter-new-iface.patch
+Hardware designers make the mistake of assuming that firmware management 
+of a TCP port ("port stealing") successfully provides the illusion to 
+the OS that that port is simply inactive, and the OS happily continues 
+internetworking its merry way through life.
 
-VGhpcyBwYXRjaCBjaGFuZ2VzIHRoZSBpbnRlcmZhY2Ugb2YgdGhlIGNtZCBmaWx0ZXIgdG8gdXNl
-IGEgKy8tIG5vdGF0aW9uIGxpa2U6CmVjaG8gLS0gKzB4MDIgKzB4MDMgLTB4MDgKSWYgbmVpdGhl
-ciArIG9yIC0gaXMgZ2l2ZW4gaXQgZGVmYXVsdHMgdG8gKyAoYWxsb3cgY29tbWFuZCkuCgpOb3Rl
-OiBUaGUgaW50ZXJmYWNlIHdhcyBhZGRlZCBpbiAyLjYuMTctcmMxIGFuZCBpcyB1bnVzZWQKYW5k
-IHVuZG9jdW1lbnRlZCBzbyBmYXIgc28gaXQncyBzYWZlIHRvIGNoYW5nZSBpdC4KCkNjOiBtYXR0
-aGV3QHdpbC5jeApDYzogZnVqaXRhLnRvbW9ub3JpQGxhYi5udHQuY28uanAsCkNjOiBqZW5zLmF4
-Ym9lQG9yYWNsZS5jb20KQ2M6IEphbWVzLkJvdHRvbWxleUBoYW5zZW5wYXJ0bmVyc2hpcC5jb20K
-Q2M6IGRhbi5qLndpbGxpYW1zQGludGVsLmNvbQpDYzogcGpvbmVzQHJlZGhhdC5jb20KQ2M6IHZp
-cm9AemVuaXYubGludXgub3JnLnVrCkNjOiBkb3VnZ0B0b3JxdWUubmV0ClNpZ25lZC1vZmYtYnk6
-IEFkZWwgR2FkbGxhaCA8YWRlbC5nYWRsbGFoQGdtYWlsLmNvbT4KCmJsb2NrL2NtZC1maWx0ZXIu
-YyB8ICAgNTQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCjEgZmlsZXMgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pCgpk
-aWZmIC0tZ2l0IGEvYmxvY2svY21kLWZpbHRlci5jIGIvYmxvY2svY21kLWZpbHRlci5jCmluZGV4
-IGVlYzQ0MDQuLjcwYmU2MmQgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2NtZC1maWx0ZXIuYworKysgYi9i
-bG9jay9jbWQtZmlsdGVyLmMKQEAgLTIwLDcgKzIwLDYgQEAKICNpbmNsdWRlIDxsaW51eC9saXN0
-Lmg+CiAjaW5jbHVkZSA8bGludXgvZ2VuaGQuaD4KICNpbmNsdWRlIDxsaW51eC9zcGlubG9jay5o
-PgotI2luY2x1ZGUgPGxpbnV4L3BhcnNlci5oPgogI2luY2x1ZGUgPGxpbnV4L2NhcGFiaWxpdHku
-aD4KICNpbmNsdWRlIDxsaW51eC9iaXRvcHMuaD4KIApAQCAtODQsOCArODMsOCBAQCBzdGF0aWMg
-c3NpemVfdCByY2ZfY21kc19zaG93KHN0cnVjdCBibGtfc2NzaV9jbWRfZmlsdGVyICpmaWx0ZXIs
-IGNoYXIgKnBhZ2UsCiAKIAlmb3IgKGkgPSAwOyBpIDwgQkxLX1NDU0lfTUFYX0NNRFM7IGkrKykg
-ewogCQlpZiAodGVzdF9iaXQoaSwgb2tiaXRzKSkgewotCQkJc3ByaW50ZihucGFnZSwgIiUwMngi
-LCBpKTsKLQkJCW5wYWdlICs9IDI7CisJCQlzcHJpbnRmKG5wYWdlLCAiMHglMDJ4IiwgaSk7CisJ
-CQlucGFnZSArPSA0OwogCQkJaWYgKGkgPCBCTEtfU0NTSV9NQVhfQ01EUyAtIDEpCiAJCQkJc3By
-aW50ZihucGFnZSsrLCAiICIpOwogCQl9CkBAIC0xMTEsMzIgKzExMCw0MSBAQCBzdGF0aWMgc3Np
-emVfdCByY2Zfd3JpdGVjbWRzX3Nob3coc3RydWN0IGJsa19zY3NpX2NtZF9maWx0ZXIgKmZpbHRl
-ciwKIHN0YXRpYyBzc2l6ZV90IHJjZl9jbWRzX3N0b3JlKHN0cnVjdCBibGtfc2NzaV9jbWRfZmls
-dGVyICpmaWx0ZXIsCiAJCQkgICAgICBjb25zdCBjaGFyICpwYWdlLCBzaXplX3QgY291bnQsIGlu
-dCBydykKIHsKLQlzc2l6ZV90IHJldCA9IDA7CiAJdW5zaWduZWQgbG9uZyBva2JpdHNbQkxLX1ND
-U0lfQ01EX1BFUl9MT05HXSwgKnRhcmdldF9va2JpdHM7Ci0JaW50IGNtZCwgc3RhdHVzLCBsZW47
-Ci0Jc3Vic3RyaW5nX3Qgc3M7Ci0KLQltZW1zZXQoJm9rYml0cywgMCwgc2l6ZW9mKG9rYml0cykp
-OwotCi0JZm9yIChsZW4gPSBzdHJsZW4ocGFnZSk7IGxlbiA+IDA7IGxlbiAtPSAzKSB7Ci0JCWlm
-IChsZW4gPCAyKQotCQkJYnJlYWs7Ci0JCXNzLmZyb20gPSAoY2hhciAqKSBwYWdlICsgcmV0Owot
-CQlzcy50byA9IChjaGFyICopIHBhZ2UgKyByZXQgKyAyOwotCQlyZXQgKz0gMzsKLQkJc3RhdHVz
-ID0gbWF0Y2hfaGV4KCZzcywgJmNtZCk7CisJaW50IGNtZCwgc2V0OworCWNoYXIgKnAsICpzdGF0
-dXM7CisKKwlpZiAocncgPT0gUkVBRCkgeworCQltZW1jcHkoJm9rYml0cywgZmlsdGVyLT5yZWFk
-X29rLCBzaXplb2Yob2tiaXRzKSk7CisJCXRhcmdldF9va2JpdHMgPSBmaWx0ZXItPnJlYWRfb2s7
-CisJfSBlbHNlIHsKKwkJbWVtY3B5KCZva2JpdHMsIGZpbHRlci0+d3JpdGVfb2ssIHNpemVvZihv
-a2JpdHMpKTsKKwkJdGFyZ2V0X29rYml0cyA9IGZpbHRlci0+d3JpdGVfb2s7CisJfQorCisJd2hp
-bGUgKChwID0gc3Ryc2VwKChjaGFyICoqKSZwYWdlLCAiICIpKSAhPSBOVUxMKSB7CisJCXNldCA9
-IDE7CisKKwkJaWYgKHBbMF0gPT0gJy0nKSB7CisJCQlzZXQgPSAwOworCQkJcCsrOworCQl9CisK
-KwkJaWYgKHBbMF0gPT0gJysnKQorCQkJcCsrOworCisJCWNtZCA9IHNpbXBsZV9zdHJ0b2wocCwg
-JnN0YXR1cywgMTYpOworCiAJCS8qIGVpdGhlciBvZiB0aGVzZSBjYXNlcyBtZWFucyBpbnZhbGlk
-IGlucHV0LCBzbyBkbyBub3RoaW5nLiAqLwotCQlpZiAoc3RhdHVzIHx8IGNtZCA+PSBCTEtfU0NT
-SV9NQVhfQ01EUykKKwkJaWYgKChzdGF0dXMgPT0gcCkgfHwgY21kID49IEJMS19TQ1NJX01BWF9D
-TURTKQogCQkJcmV0dXJuIC1FSU5WQUw7CiAKLQkJX19zZXRfYml0KGNtZCwgb2tiaXRzKTsKKwkJ
-aWYgKHNldCkKKwkJCV9fc2V0X2JpdChjbWQsIG9rYml0cyk7CisJCWVsc2UKKwkJCV9fY2xlYXJf
-Yml0KGNtZCwgb2tiaXRzKTsKIAl9CiAKLQlpZiAocncgPT0gUkVBRCkKLQkJdGFyZ2V0X29rYml0
-cyA9IGZpbHRlci0+cmVhZF9vazsKLQllbHNlCi0JCXRhcmdldF9va2JpdHMgPSBmaWx0ZXItPndy
-aXRlX29rOwotCiAJbWVtbW92ZSh0YXJnZXRfb2tiaXRzLCBva2JpdHMsIHNpemVvZihva2JpdHMp
-KTsKIAlyZXR1cm4gY291bnQ7CiB9Cg==
-------=_Part_25899_15699877.1218232805231--
+This is certainly not true, because of current netfilter and userland 
+application behavior, which often depends on being able to allocate 
+(bind) to random TCP ports.  Allocating a TCP port successfully within 
+the OS, that then behaves different from all other TCP ports (because it 
+is the magic iSCSI port) creates a cascading functional disconnect.  On 
+that magic iSCSI port, strange errors will be returned instead of proper 
+behavior.  Which, in turn, cascades through new (and inevitably 
+under-utilized) error handling paths in the app.
+
+So, of course, one must work around problems like this, which leads to 
+one of two broad choices:
+
+1) implement co-management (sharing) of IP address/port space, between 
+the OS kernel and a remote entity.
+
+2) come up with a solution in hardware that does not require the OS to 
+co-manage the data it has so far been managing exclusively in software.
+
+It should be obvious that we prefer path #2.
+
+For, trudging down path #1 means
+
+* one must give the user the ability to manage shared IP addresses IN A 
+NON-HARDWARE-SPECIFIC manner.  Currently most vendors of "TCP port 
+stealing" solutions seem to expect each user to learn a vendor-specific 
+method of identifying and managing the "magic port".
+
+Excuse my language, but, what a fucking security and management 
+nightmare in a cross-vendor environment.  It is already a pain, with 
+some [unnamed system/chipset vendors] management stealing TCP ports -- 
+and admins only discover this fact when applications behave strangely on 
+new hardware.
+
+But...  its tough to notice because stumbling upon the magic TCP port 
+won't happen often unless the server is heavily loaded.  Thus you have a 
+security/application problem once in a blue moon, due to this magic TCP 
+port mentioned in some obscure online documentation nobody has read.
+
+
+* however, giving the user the ability to co-manage IP addresses means 
+hacking up the kernel TCP code and userland tools for this new concept, 
+something that I think DaveM would rightly be a bit reluctant to do? 
+You are essentially adding a bunch of special case code whenever TCP 
+ports are used:
+
+	if (port in list of "magic" TCP ports with special,
+	    hardware-specific behavior)
+		...
+	else
+		do what we've been doing for decades
+
+ISTR Roland(?) pointing out code that already does a bit of this in the 
+IB space...  but the point is
+
+
+Finally, this shared IP address/port co-management thing has several 
+problems listed on the TOE page: http://www.linuxfoundation.org/en/Net:TOE
+
+such as,
+
+* security updates for TCP problems mean that a single IP address can be 
+PARTIALLY SECURE, because security updates for kernel TCP stack and 
+h/w's firmware are inevitably updated separately (even if distributed 
+and compiled together).  Yay, we are introducing a wonderful new 
+security problem here.
+
+* from a security, network scanner and packet classifier point of view, 
+a single IP address no longer behaves like Linux.  It behaves like 
+Linux... sometime.  Depending on whether it is a magic TCP port or not.
+
+Talk about security audit hell.
+
+This should be plenty, so I'm stopping now.  But looking down the TOE 
+wiki page I could easily come up with more reasons why "IP address 
+remote co-management" is more complicated and costly than you think.
+
+	Jeff
+
+
