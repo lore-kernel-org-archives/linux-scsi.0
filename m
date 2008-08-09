@@ -1,75 +1,48 @@
-From: akpm@linux-foundation.org
-Subject: [patch 4/4] scsi: megaraid_sas: version and Documentation Update
-Date: Sun, 10 Aug 2008 12:42:39 -0700
-Message-ID: <200808101942.m7AJgd3S029523@imap1.linux-foundation.org>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Sat, 9 Aug 2008 15:21:44 +0200
+Message-ID: <20080809132144.GB13169@ucw.cz>
+References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <87zlnzb8ce.fsf@rho.meyering.net> <20080730172922.GA20191@auslistsprd01.us.dell.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44250 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753355AbYHJTnP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Aug 2008 15:43:15 -0400
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:3679 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754333AbYHJUC4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Aug 2008 16:02:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20080730172922.GA20191@auslistsprd01.us.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Bo.Yang@lsi.com, bo.yang@lsi.com
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: Jim Meyering <jim@meyering.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-From: "Yang, Bo" <Bo.Yang@lsi.com>
+Hi!
 
-Update the Version and Documentation.
+> >   - some disk makers have sort of agreed not to do that, and
+> >       expect forever to hide the larger underlying sector size
+> >       behind a virtual 512 (of course, this imposes alignment
+> >       restrictions, but that's a smaller problem)
+> 
+> yes, this is happening also.
+> 
+> There will be 3 types of disks eventually:
+> 1) those that report a 512-byte sector size, and are really a 512-byte
+>    size.  This is nearly all disks today.
+> 
+> 2) those that report a 512-byte sector size, but are really a
+>    4096-byte size, and the drive does the conversions and
+>    read/modify/write.  T10 and T13 are looking to add commands to
+>    expose this different underlying physical sector size so the OS
+>    could be aware of it.  This is primarily being driven to mitigate
+>    any problems that may happen with "legacy" OSs that are not aware
+>    of the difference.
 
-Signed-off-by: Bo Yang<bo.yang@lsi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+How is this going to work with journaling? This has nasty property
+that if you are writing to sector n during powerfail, disk may also
+kill sectors n-3, n-2 and n-1..... and that's bad right?
 
- Documentation/scsi/ChangeLog.megaraid_sas |   23 ++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.h      |    6 ++---
- 2 files changed, 26 insertions(+), 3 deletions(-)
-
-diff -puN Documentation/scsi/ChangeLog.megaraid_sas~scsi-megaraid_sas-version-and-documentation-update Documentation/scsi/ChangeLog.megaraid_sas
---- a/Documentation/scsi/ChangeLog.megaraid_sas~scsi-megaraid_sas-version-and-documentation-update
-+++ a/Documentation/scsi/ChangeLog.megaraid_sas
-@@ -1,3 +1,26 @@
-+
-+1 Release Date    : Thur.July. 24 11:41:51 PST 2008 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Sumant Patro
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.01
-+3 Older Version   : 00.00.03.22
-+
-+1. Add the new controller (0078, 0079) support to the driver
-+       Those controllers are LSI's next generatation(gen2) SAS controllers.
-+
-+1 Release Date    : Mon.June. 23 10:12:45 PST 2008 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Sumant Patro
-+                       Bo Yang
-+
-+2 Current Version : 00.00.03.22
-+3 Older Version   : 00.00.03.20
-+
-+1. Add shutdown DCMD cmd to the shutdown routine to make FW shutdown proper.
-+2. Unexpected interrupt occurs in HWR Linux driver, add the dumy readl pci flush will fix this issue.
-+
- 1 Release Date    : Mon. March 10 11:02:31 PDT 2008 -
- 			(emaild-id:megaraidlinux@lsi.com)
- 			Sumant Patro
-diff -puN drivers/scsi/megaraid/megaraid_sas.h~scsi-megaraid_sas-version-and-documentation-update drivers/scsi/megaraid/megaraid_sas.h
---- a/drivers/scsi/megaraid/megaraid_sas.h~scsi-megaraid_sas-version-and-documentation-update
-+++ a/drivers/scsi/megaraid/megaraid_sas.h
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION			"00.00.03.20-rc1"
--#define MEGASAS_RELDATE			"March 10, 2008"
--#define MEGASAS_EXT_VERSION		"Mon. March 10 11:02:31 PDT 2008"
-+#define MEGASAS_VERSION				"00.00.04.01"
-+#define MEGASAS_RELDATE				"July 24, 2008"
-+#define MEGASAS_EXT_VERSION			"Thu July 24 11:41:51 PST 2008"
- 
- /*
-  * Device IDs
-_
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
