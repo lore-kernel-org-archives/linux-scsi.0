@@ -1,154 +1,194 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: With kernel 2.6.19 no sg devices for devices that return PQ=1,
-	PDT=0x1f
-Date: Sat, 09 Aug 2008 12:50:55 -0400
-Message-ID: <1218300656.3480.47.camel@localhost.localdomain>
-References: <48984A20.2050002@linux.vnet.ibm.com>
-	 <4899698C.4050308@torque.net>
-	 <1218041921.7493.22.camel@localhost.localdomain>
-	 <200808080852.53822.swen@vnet.ibm.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH update] ieee1394: sbp2: stricter dma_sync
+Date: Sat, 9 Aug 2008 20:13:00 +0200 (CEST)
+Message-ID: <tkrat.5ee0a38d3bbf7b46@s5r6.in-berlin.de>
+References: <tkrat.768de7e4b028b713@s5r6.in-berlin.de>
+	<1217877676.3318.32.camel@localhost.localdomain>
+	<48975F5F.90906@s5r6.in-berlin.de> <489845FC.4080104@panasas.com>
+	<48986B55.80403@s5r6.in-berlin.de> <489871B7.5050904@panasas.com>
+	<tkrat.4aaf6794a4dd49c1@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52967 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751011AbYHIQvB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2008 12:51:01 -0400
-In-Reply-To: <200808080852.53822.swen@vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <tkrat.4aaf6794a4dd49c1@s5r6.in-berlin.de>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen@vnet.ibm.com>
-Cc: dougg@torque.net, Martin Petermann <martin@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-On Fri, 2008-08-08 at 08:52 +0200, Swen Schillig wrote:
-> On Wednesday 06 August 2008 18:58, James Bottomley wrote:
-> > On Wed, 2008-08-06 at 11:06 +0200, Douglas Gilbert wrote:
-> > > Swen Schillig wrote:
-> > > > On Tuesday 05 August 2008 18:51, James Bottomley wrote:
-> > > >> On Tue, 2008-08-05 at 14:40 +0200, Martin Petermann wrote:
-> > > >>> With kernel 2.6.19 a change was introduced that no sg device was 
-> > > >>> generated if PQ=1, PDT=0x1f was returned from the particular device:
-> > > >>>
-> > > >>> commit 84961f28e9d13a4b193d0c8545f3c060c1890ff3
-> > > >>> Author: dave wysochanski <davidw@netapp.com>
-> > > >>> Date:   Wed Aug 9 14:56:32 2006 -0400
-> > > >>>
-> > > >>>      [SCSI] Don't add scsi_device for devices that return PQ=1, PDT=0x1f
-> > > >>>
-> > > >>> Before it was possible on Linux 390 in user space to a e.g. LUN 0 to a 
-> > > >>> port and to receive a generic device:
-> > > >>>
-> > > >>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
-> > > >>> total 0
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
-> > > >>> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
-> > > >>> --w------- 1 root root 4096 Aug  4 12:07 uevent
-> > > >>> --w------- 1 root root    0 Aug  4 13:46 unit_add
-> > > >>> --w------- 1 root root    0 Aug  5 14:24 unit_remove
-> > > >>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # echo 0 > 
-> > > >>> unit_add
-> > > >>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # ll
-> > > >>> total 0
-> > > >>> drwxr-xr-x 2 root root    0 Aug  5 14:25 0x0000000000000000
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 access_denied
-> > > >>> -rw-r--r-- 1 root root 4096 Aug  4 12:07 failed
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 in_recovery
-> > > >>> -r--r--r-- 1 root root 4096 Aug  4 12:07 status
-> > > >>> --w------- 1 root root 4096 Aug  4 12:07 uevent
-> > > >>> --w------- 1 root root    0 Aug  5 14:25 unit_add
-> > > >>> --w------- 1 root root    0 Aug  5 14:24 unit_remove
-> > > >>> t6345056:/sys/bus/ccw/devices/0.0.5922/0x500507630313c562 # lsscsi -g
-> > > >>> [0:0:0:0]    no dev  IBM      2107900          2.27  -         /dev/sg0
-> > > >>>
-> > > >>> After this fix there is no /dev/sg0 device generated.
-> > > >>>
-> > > >>> We are utilizing the possibility to create such a device for the 
-> > > >>> sg_utils commands in the case no other LUN has been attached to a port.
-> > > >>>
-> > > >>> I do not want to put this fix into question. I would like to know if 
-> > > >>> someone has an idea how to workaround this problem and to generate a 
-> > > >>> generic device in user space using kernel 2.6.19 or a later version.
-> > > >> First of all, why is the device returning PQ=1 PTD=0x1f? this should
-> > > >> mean its not connected and probably doesn't exist... ie inaccessible
-> > > >> without some unspecified action being taken.  If you can use it, it's
-> > > >> clearly not behaving like a PQ=1 LUN.  Perhaps the simplest thing would
-> > > >> be for something in s390 to fix up the inquiry data ... or we could
-> > > >> allow you could have a script to force it to appear (as in if you send a
-> > > >> specific scan for this one LUN we could override the catch in the code
-> > > >> that throws it out again).
-> > > >>
-> > > >> James
-> > > >>
-> > > >>
-> > > >> --
-> > > >> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > > >> the body of a message to majordomo@vger.kernel.org
-> > > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > >>
-> > > > 
-> > > > James
-> > > > 
-> > > > I think Martin is saying that this LUN is a non existent one which is just used for scanning
-> > > > all available (existing) LUNs on the remote storage port.
-> > > > That's why PQ=1 PTD=0x1f are returned and correct !
-> > > > 
-> > > > So what's required here is the possibility to add a "dummy" LUN which can be used just for this purpose.
-> > > > Not sure whether this is covered by anything in the standard
-> > > 
-> > > That sounds like a job for the REPORT LUNS well known logical
-> > > unit (WLUN or W-LUN). I implemented one in the scsi_debug driver.
-> > > See the description of the "no_lun_0" parameter in
-> > > http://sg.torque.net/sg/sdebug26.html
-> > > 
-> > > You might try:
-> > >    echo "- - 49409" > /sys/class/scsi_host/host<n>/scan
-> > > where "host<n>" is the controller in question. Then
-> > > see if a WLUN has appeared as a sg device node.
-> > 
-> > Actually, if this thing is WLUN or ZLUN ... that's something we should
-> > support unconditionally without looking at the PQ bit ... is that how it
-> > is supposed to show up on the Z?
-> > 
-> > James
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> Yes, that's exactly how it should be !
-> That would mean in our case that LUN 0xc101 would get a generic device 
-> which could be used for scanning.
-> 
-> so something like 
-> 
-> Index: HEAD/drivers/scsi/scsi_scan.c
-> ===================================================================
-> --- HEAD.orig/drivers/scsi/scsi_scan.c
-> +++ HEAD/drivers/scsi/scsi_scan.c
-> @@ -1080,7 +1080,7 @@ static int scsi_probe_and_add_lun(struct
->          * PDT=1Fh none (no FDD connected to the requested logical unit)
->          */
->         if (((result[0] >> 5) == 1 || starget->pdt_1f_for_no_lun) &&
-> -            (result[0] & 0x1f) == 0x1f) {
-> +            (result[0] & 0x1f) == 0x1f && (lun & 0xc100) != 0xc100)) {
->                 SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
->                                         "scsi scan: peripheral device type"
->                                         " of 31, no device added\n"));
+Two dma_sync_single_for_cpu() were called in the wrong place.
+Luckily they were merely for DMA_TO_DEVICE, hence nobody noticed.
 
-I think you mean lun & 0xff00 == 0xc100
+Also reorder the matching dma_sync_single_for_device() a little bit
+so that they reside in the same functions as their counterparts.
+This also avoids syncing the s/g table for requests which don't use it.
 
-perhaps there should be #defines for this too, something like
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
 
-#define SCSI_W_LUN_BASE 0x1c00
-#define SCSI_W_LUN_REPORT_LUNS (SCSI_W_LUN_BASE + 1)
-#define SCSI_W_LUN_ACCESS_CONTROL (SCSI_W_LUN_BASE + 2)
-#define SCSI_W_LUN_TARGET_LOG_PAGE (SCSI_W_LUN_BASE + 3)
+Update:
+  - I forgot to remove four calls of dma_sync_single_for_cpu.
+  - Call the pointer to the controller dmadev instead of dev
+    to avoid confusion with the logical unit's device pointer.
 
-James
+ drivers/ieee1394/sbp2.c |   50 ++++++++++++----------------------------
+ 1 file changed, 16 insertions(+), 34 deletions(-)
+
+Index: linux-2.6.27-rc2/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux-2.6.27-rc2.orig/drivers/ieee1394/sbp2.c
++++ linux-2.6.27-rc2/drivers/ieee1394/sbp2.c
+@@ -1522,6 +1522,10 @@ static void sbp2_prep_command_orb_sg(str
+ 		orb->misc |= ORB_SET_PAGE_TABLE_PRESENT(0x1);
+ 		orb->data_descriptor_lo = cmd->sge_dma;
+ 
++		dma_sync_single_for_cpu(hi->host->device.parent, cmd->sge_dma,
++					sizeof(cmd->scatter_gather_element),
++					DMA_TO_DEVICE);
++
+ 		/* loop through and fill out our SBP-2 page tables
+ 		 * (and split up anything too large) */
+ 		for (i = 0, sg_count = 0; i < count; i++, sg = sg_next(sg)) {
+@@ -1548,6 +1552,11 @@ static void sbp2_prep_command_orb_sg(str
+ 		sbp2util_cpu_to_be32_buffer(sg_element,
+ 				(sizeof(struct sbp2_unrestricted_page_table)) *
+ 				sg_count);
++
++		dma_sync_single_for_device(hi->host->device.parent,
++					   cmd->sge_dma,
++					   sizeof(cmd->scatter_gather_element),
++					   DMA_TO_DEVICE);
+ 	}
+ }
+ 
+@@ -1555,12 +1564,14 @@ static void sbp2_create_command_orb(stru
+ 				    struct sbp2_command_info *cmd,
+ 				    struct scsi_cmnd *SCpnt)
+ {
+-	struct sbp2_fwhost_info *hi = lu->hi;
++	struct device *dmadev = lu->hi->host->device.parent;
+ 	struct sbp2_command_orb *orb = &cmd->command_orb;
+ 	u32 orb_direction;
+ 	unsigned int scsi_request_bufflen = scsi_bufflen(SCpnt);
+ 	enum dma_data_direction dma_dir = SCpnt->sc_data_direction;
+ 
++	dma_sync_single_for_cpu(dmadev, cmd->command_orb_dma,
++				sizeof(struct sbp2_command_orb), DMA_TO_DEVICE);
+ 	/*
+ 	 * Set-up our command ORB.
+ 	 *
+@@ -1592,7 +1603,7 @@ static void sbp2_create_command_orb(stru
+ 		orb->data_descriptor_lo = 0x0;
+ 		orb->misc |= ORB_SET_DIRECTION(1);
+ 	} else
+-		sbp2_prep_command_orb_sg(orb, hi, cmd, scsi_sg_count(SCpnt),
++		sbp2_prep_command_orb_sg(orb, lu->hi, cmd, scsi_sg_count(SCpnt),
+ 					 scsi_sglist(SCpnt),
+ 					 orb_direction, dma_dir);
+ 
+@@ -1600,6 +1611,9 @@ static void sbp2_create_command_orb(stru
+ 
+ 	memset(orb->cdb, 0, sizeof(orb->cdb));
+ 	memcpy(orb->cdb, SCpnt->cmnd, SCpnt->cmd_len);
++
++	dma_sync_single_for_device(dmadev, cmd->command_orb_dma,
++			sizeof(struct sbp2_command_orb), DMA_TO_DEVICE);
+ }
+ 
+ static void sbp2_link_orb_command(struct sbp2_lu *lu,
+@@ -1613,14 +1627,6 @@ static void sbp2_link_orb_command(struct
+ 	size_t length;
+ 	unsigned long flags;
+ 
+-	dma_sync_single_for_device(hi->host->device.parent,
+-				   cmd->command_orb_dma,
+-				   sizeof(struct sbp2_command_orb),
+-				   DMA_TO_DEVICE);
+-	dma_sync_single_for_device(hi->host->device.parent, cmd->sge_dma,
+-				   sizeof(cmd->scatter_gather_element),
+-				   DMA_TO_DEVICE);
+-
+ 	/* check to see if there are any previous orbs to use */
+ 	spin_lock_irqsave(&lu->cmd_orb_lock, flags);
+ 	last_orb = lu->last_orb;
+@@ -1778,13 +1784,6 @@ static int sbp2_handle_status_write(stru
+ 	else
+ 		cmd = sbp2util_find_command_for_orb(lu, sb->ORB_offset_lo);
+ 	if (cmd) {
+-		dma_sync_single_for_cpu(hi->host->device.parent,
+-					cmd->command_orb_dma,
+-					sizeof(struct sbp2_command_orb),
+-					DMA_TO_DEVICE);
+-		dma_sync_single_for_cpu(hi->host->device.parent, cmd->sge_dma,
+-					sizeof(cmd->scatter_gather_element),
+-					DMA_TO_DEVICE);
+ 		/* Grab SCSI command pointers and check status. */
+ 		/*
+ 		 * FIXME: If the src field in the status is 1, the ORB DMA must
+@@ -1901,7 +1900,6 @@ done:
+ 
+ static void sbp2scsi_complete_all_commands(struct sbp2_lu *lu, u32 status)
+ {
+-	struct sbp2_fwhost_info *hi = lu->hi;
+ 	struct list_head *lh;
+ 	struct sbp2_command_info *cmd;
+ 	unsigned long flags;
+@@ -1910,13 +1908,6 @@ static void sbp2scsi_complete_all_comman
+ 	while (!list_empty(&lu->cmd_orb_inuse)) {
+ 		lh = lu->cmd_orb_inuse.next;
+ 		cmd = list_entry(lh, struct sbp2_command_info, list);
+-		dma_sync_single_for_cpu(hi->host->device.parent,
+-				        cmd->command_orb_dma,
+-					sizeof(struct sbp2_command_orb),
+-					DMA_TO_DEVICE);
+-		dma_sync_single_for_cpu(hi->host->device.parent, cmd->sge_dma,
+-					sizeof(cmd->scatter_gather_element),
+-					DMA_TO_DEVICE);
+ 		sbp2util_mark_command_completed(lu, cmd);
+ 		if (cmd->Current_SCpnt) {
+ 			cmd->Current_SCpnt->result = status << 16;
+@@ -2038,7 +2029,6 @@ static void sbp2scsi_slave_destroy(struc
+ static int sbp2scsi_abort(struct scsi_cmnd *SCpnt)
+ {
+ 	struct sbp2_lu *lu = (struct sbp2_lu *)SCpnt->device->host->hostdata[0];
+-	struct sbp2_fwhost_info *hi = lu->hi;
+ 	struct sbp2_command_info *cmd;
+ 	unsigned long flags;
+ 
+@@ -2052,14 +2042,6 @@ static int sbp2scsi_abort(struct scsi_cm
+ 		spin_lock_irqsave(&lu->cmd_orb_lock, flags);
+ 		cmd = sbp2util_find_command_for_SCpnt(lu, SCpnt);
+ 		if (cmd) {
+-			dma_sync_single_for_cpu(hi->host->device.parent,
+-					cmd->command_orb_dma,
+-					sizeof(struct sbp2_command_orb),
+-					DMA_TO_DEVICE);
+-			dma_sync_single_for_cpu(hi->host->device.parent,
+-					cmd->sge_dma,
+-					sizeof(cmd->scatter_gather_element),
+-					DMA_TO_DEVICE);
+ 			sbp2util_mark_command_completed(lu, cmd);
+ 			if (cmd->Current_SCpnt) {
+ 				cmd->Current_SCpnt->result = DID_ABORT << 16;
+
+-- 
+Stefan Richter
+-=====-==--- =--- -=--=
+http://arcgraph.de/sr/
 
 
+-------------------------------------------------------------------------
+This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
+Build the coolest Linux based applications with Moblin SDK & win great prizes
+Grand prize is a trip for two to an Open Source event anywhere in the world
+http://moblin-contest.org/redirect.php?banner_id=100&url=/
