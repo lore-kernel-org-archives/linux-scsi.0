@@ -1,124 +1,44 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH v4] cmdfilter: clean up sysfs interface
-Date: Fri, 8 Aug 2008 21:39:36 -0600
-Message-ID: <20080809033935.GI8618@parisc-linux.org>
-References: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Sat, 09 Aug 2008 00:28:40 -0700 (PDT)
+Message-ID: <20080809.002840.167363463.davem@davemloft.net>
+References: <200808071145.03848.divy@chelsio.com>
+	<489C8BEB.8060001@opengridcomputing.com>
+	<489CC58D.4010606@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49131 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753663AbYHIDjx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2008 23:39:53 -0400
-Content-Disposition: inline
-In-Reply-To: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36903
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752489AbYHIH2j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2008 03:28:39 -0400
+In-Reply-To: <489CC58D.4010606@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Peter Jones <pjones@redhat.com>, dougg@torque.net, dan.j.williams@intel.com, James.Bottomley@hansenpartnership.com
+To: jgarzik@pobox.com
+Cc: swise@opengridcomputing.com, divy@chelsio.com, rdreier@cisco.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 08, 2008 at 11:56:35PM +0200, Adel Gadllah wrote:
-> @@ -84,8 +83,8 @@ static ssize_t rcf_cmds_show(struct
-> blk_scsi_cmd_filter *filter, char *page,
+From: Jeff Garzik <jgarzik@pobox.com>
+Date: Fri, 08 Aug 2008 18:15:41 -0400
+
+> * security updates for TCP problems mean that a single IP address can be 
+> PARTIALLY SECURE, because security updates for kernel TCP stack and 
+> h/w's firmware are inevitably updated separately (even if distributed 
+> and compiled together).  Yay, we are introducing a wonderful new 
+> security problem here.
 > 
->  	for (i = 0; i < BLK_SCSI_MAX_CMDS; i++) {
->  		if (test_bit(i, okbits)) {
-> -			sprintf(npage, "%02x", i);
-> -			npage += 2;
-> +			sprintf(npage, "0x%02x", i);
-> +			npage += 4;
->  			if (i < BLK_SCSI_MAX_CMDS - 1)
->  				sprintf(npage++, " ");
->  		}
+> * from a security, network scanner and packet classifier point of view, 
+> a single IP address no longer behaves like Linux.  It behaves like 
+> Linux... sometime.  Depending on whether it is a magic TCP port or not.
 
-Why not:
+I agree with everything Jeff has stated.
 
-			npage += sprintf(npage, "0x%02x", i);
-?  (and before anyone suggests snprintf, we can at most have 256
-entries, each consuming 5 bytes.  5 * 256 <3k and no arch has less than
-a 4k page size.  so we can't overflow the buffer.)
+Also, I find it ironic that the port abduction is being asked for in
+order to be "compatible with existing tools" yet in fact this stuff
+breaks everything.  You can't netfilter this traffic, you can't apply
+qdiscs to it, you can't execut TC actions on them, you can't do
+segmentation offload on them, you can't look for the usual TCP MIB
+statistics on the connection, etc. etc. etc.
 
-> @@ -111,32 +110,41 @@ static ssize_t rcf_writecmds_show(struct
-> blk_scsi_cmd_filter *filter,
->  static ssize_t rcf_cmds_store(struct blk_scsi_cmd_filter *filter,
->  			      const char *page, size_t count, int rw)
->  {
-> -	ssize_t ret = 0;
->  	unsigned long okbits[BLK_SCSI_CMD_PER_LONG], *target_okbits;
-> -	int cmd, status, len;
-> -	substring_t ss;
-> -
-> -	memset(&okbits, 0, sizeof(okbits));
-> -
-> -	for (len = strlen(page); len > 0; len -= 3) {
-> -		if (len < 2)
-> -			break;
-> -		ss.from = (char *) page + ret;
-> -		ss.to = (char *) page + ret + 2;
-> -		ret += 3;
-> -		status = match_hex(&ss, &cmd);
-> +	int cmd, set;
-> +	char *p, *status;
-> +
-> +	if (rw == READ) {
-> +		memcpy(&okbits, filter->read_ok, sizeof(okbits));
-> +		target_okbits = filter->read_ok;
-> +	} else {
-> +		memcpy(&okbits, filter->write_ok, sizeof(okbits));
-> +		target_okbits = filter->write_ok;
-> +	}
-> +
-> +	while ((p = strsep((char **)&page, " ")) != NULL) {
-> +		set = 1;
-> +
-> +		if (p[0] == '-') {
-> +			set = 0;
-> +			p++;
-> +		}
-> +
-> +		if (p[0] == '+')
-> +			p++;
-> +
-> +		cmd = simple_strtol(p, &status, 16);
-> +
->  		/* either of these cases means invalid input, so do nothing. */
-> -		if (status || cmd >= BLK_SCSI_MAX_CMDS)
-> +		if ((status == p) || cmd >= BLK_SCSI_MAX_CMDS)
->  			return -EINVAL;
-
-Doesn't this accept -+0x20 for example?  Why not:
-
-		set = 1;
-		if (p[0] == '+') {
-			p++;
-		} else if (p[0] == '-') {
-			set = 0;
-			p++;
-		}
-		cmd = simple_strtol(p, &status, 16);
-
-> -		__set_bit(cmd, okbits);
-> +		if (set)
-> +			__set_bit(cmd, okbits);
-> +		else
-> +			__clear_bit(cmd, okbits);
->  	}
-> 
-> -	if (rw == READ)
-> -		target_okbits = filter->read_ok;
-> -	else
-> -		target_okbits = filter->write_ok;
-> -
->  	memmove(target_okbits, okbits, sizeof(okbits));
-
-target_okbits can't overlap with okbits, so you can use memcpy instead
-of memmove here.
-
->  	return count;
->  }
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+It is broken from every possible angle.
