@@ -1,50 +1,79 @@
-From: Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Sat, 09 Aug 2008 09:04:41 -0500
-Message-ID: <489DA3F9.1080703@opengridcomputing.com>
-References: <200808071145.03848.divy@chelsio.com>	<489C8BEB.8060001@opengridcomputing.com>	<489CC58D.4010606@pobox.com> <20080809.002840.167363463.davem@davemloft.net>
+From: Matthew Frost <artusemrys@sbcglobal.net>
+Subject: Re: [usb-storage] BUG: SCSI: usb storage SDHC card doesn't work in 2.6.27-rc1
+Date: Sat, 9 Aug 2008 08:51:22 -0700 (PDT)
+Message-ID: <72707.75302.qm@web83208.mail.mud.yahoo.com>
+References: <Pine.LNX.4.44L0.0808081728340.24293-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20080809.002840.167363463.davem@davemloft.net>
-Sender: netdev-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: jgarzik@pobox.com, divy@chelsio.com, rdreier@cisco.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web83208.mail.mud.yahoo.com ([216.252.101.64]:23139 "HELO
+	web83208.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753410AbYHIPvW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2008 11:51:22 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0808081728340.24293-100000@netrider.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Matthew Frost <artusemrys@sbcglobal.net>
+Cc: Greg KH <greg@kroah.com>, Kernel development list <linux-kernel@vger.kernel.org>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Matthew Frost <artusemrys@yahoo.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-David Miller wrote:
-> From: Jeff Garzik <jgarzik@pobox.com>
-> Date: Fri, 08 Aug 2008 18:15:41 -0400
->
->   
->> * security updates for TCP problems mean that a single IP address can be 
->> PARTIALLY SECURE, because security updates for kernel TCP stack and 
->> h/w's firmware are inevitably updated separately (even if distributed 
->> and compiled together).  Yay, we are introducing a wonderful new 
->> security problem here.
->>
->> * from a security, network scanner and packet classifier point of view, 
->> a single IP address no longer behaves like Linux.  It behaves like 
->> Linux... sometime.  Depending on whether it is a magic TCP port or not.
->>     
->
-> I agree with everything Jeff has stated.
->
-> Also, I find it ironic that the port abduction is being asked for in
-> order to be "compatible with existing tools" yet in fact this stuff
-> breaks everything.  You can't netfilter this traffic, you can't apply
-> qdiscs to it, you can't execut TC actions on them, you can't do
-> segmentation offload on them, you can't look for the usual TCP MIB
-> statistics on the connection, etc. etc. etc.
->
-> It is broken from every possible angle.
->   
+--- Alan Stern <stern@rowland.harvard.edu> wrote:
 
-I think a lot of these _could_ be implemented and integrated with the 
-standard tools.
+> On Fri, 8 Aug 2008, Matthew Frost wrote:
+> 
+> > > > > Index: 2.6.26/drivers/usb/storage/transport.c
+> > > > > ===================================================================
+> > > > > --- 2.6.26.orig/drivers/usb/storage/transport.c
+> > > > > +++ 2.6.26/drivers/usb/storage/transport.c
+> > > > > @@ -1034,8 +1034,21 @@ int usb_stor_Bulk_transport(struct scsi_
+> > > > >  
+> > > > >  	/* try to compute the actual residue, based on how much data
+> > > > >  	 * was really transferred and what the device tells us */
+> > > > > -	if (residue) {
+> > > > > -		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
+> > > > > +	if (residue && !(us->flags & US_FL_IGNORE_RESIDUE)) {
+> > > > > +
+> > > > > +		/* Heuristically detect devices that generate bogus residues
+> > > > > +		 * by seeing what happens with INQUIRY and READ CAPACITY
+> > > > > +		 * commands.
+> > > > > +		 */
+> > > > > +		if (bcs->Status == US_BULK_STAT_OK &&
+> > > > > +				scsi_get_resid(srb) == 0 &&
+> > > > > +					((srb->cmnd[0] == INQUIRY &&
+> > > > > +						transfer_length == 36) ||
+> > > > > +					(srb->cmnd[0] == READ_CAPACITY &&
+> > > > > +						transfer_length == 8))) {
+> > > > > +			us->flags |= US_FL_IGNORE_RESIDUE;
+> > > > > +
+> > > > > +		} else {
+> > > > >  			residue = min(residue, transfer_length);
+> > > > >  			scsi_set_resid(srb, max(scsi_get_resid(srb),
+> > > > >  			                                       (int) residue));
+> > > > > 
+> > > > > 
+> > > > 
+> > > > Thanks!  I've been trying to fix it manually, and it wouldn't work. 
+> > > Trying
+> > > > this version now.  Let's see if this fixes my problem.
+> > > > 
+> > > > Matt Frost
+> > > > 
+> > > 
+> > > Tested under two distributions, this patch restores correct
+> functionality
+> > > to my hardware.  Thank you very much!
+> > > 
+> > > Matt
+> > > 
+> > Update/sqeaking-of-the-wheel:
+> > 
+> > The same problem still happens under 2.6.27-rc2, and I haven't seen this
+> > bumped to -stable, either.  It continues to solve the problem here.
+> 
+> The patch has not yet been pushed to mainline but it is present in Greg 
+> KH's USB development tree.  Presumably it will end up in the mainline 
+> kernel before 2.6.27-final is released.
 
+Thanks for the feedback!  
 
-
-
-
+Matt
