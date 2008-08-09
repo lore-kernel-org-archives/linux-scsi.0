@@ -1,47 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH v5] cmdfilter: clean up sysfs interface
-Date: Sat, 9 Aug 2008 07:55:21 -0600
-Message-ID: <20080809135520.GJ8618@parisc-linux.org>
-References: <6cf6b73e0808081456g7d50f66dvc98f5b42a6bab65b@mail.gmail.com> <20080809033935.GI8618@parisc-linux.org> <6cf6b73e0808090309y94a071dh3079d4e89cc1154f@mail.gmail.com>
+From: Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Sat, 09 Aug 2008 09:04:41 -0500
+Message-ID: <489DA3F9.1080703@opengridcomputing.com>
+References: <200808071145.03848.divy@chelsio.com>	<489C8BEB.8060001@opengridcomputing.com>	<489CC58D.4010606@pobox.com> <20080809.002840.167363463.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52385 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919AbYHINzh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2008 09:55:37 -0400
-Content-Disposition: inline
-In-Reply-To: <6cf6b73e0808090309y94a071dh3079d4e89cc1154f@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20080809.002840.167363463.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: jgarzik@pobox.com, divy@chelsio.com, rdreier@cisco.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, viro@zeniv.linux.org.uk, Peter Jones <pjones@redhat.com>, dougg@torque.net, dan.j.williams@intel.com, James.Bottomley@hansenpartnership.com
 
-On Sat, Aug 09, 2008 at 12:09:38PM +0200, Adel Gadllah wrote:
-> ------------------------
-> This patch changes the interface of the cmd filter to use a +/- notation like:
-> echo -- +0x02 +0x03 -0x08
-> If neither + or - is given it defaults to + (allow command).
-> 
-> Note: The interface was added in 2.6.17-rc1 and is unused
-> and undocumented so far so it's safe to change it.
-> 
-> Cc: matthew@wil.cx
-> Cc: fujita.tomonori@lab.ntt.co.jp
-> Cc: jens.axboe@oracle.com
-> Cc: James.Bottomley@hansenpartnership.com
-> Cc: dan.j.williams@intel.com
-> Cc: pjones@redhat.com
-> Cc: viro@zeniv.linux.org.uk
-> Cc: dougg@torque.net
-> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+David Miller wrote:
+> From: Jeff Garzik <jgarzik@pobox.com>
+> Date: Fri, 08 Aug 2008 18:15:41 -0400
+>
+>   
+>> * security updates for TCP problems mean that a single IP address can be 
+>> PARTIALLY SECURE, because security updates for kernel TCP stack and 
+>> h/w's firmware are inevitably updated separately (even if distributed 
+>> and compiled together).  Yay, we are introducing a wonderful new 
+>> security problem here.
+>>
+>> * from a security, network scanner and packet classifier point of view, 
+>> a single IP address no longer behaves like Linux.  It behaves like 
+>> Linux... sometime.  Depending on whether it is a magic TCP port or not.
+>>     
+>
+> I agree with everything Jeff has stated.
+>
+> Also, I find it ironic that the port abduction is being asked for in
+> order to be "compatible with existing tools" yet in fact this stuff
+> breaks everything.  You can't netfilter this traffic, you can't apply
+> qdiscs to it, you can't execut TC actions on them, you can't do
+> segmentation offload on them, you can't look for the usual TCP MIB
+> statistics on the connection, etc. etc. etc.
+>
+> It is broken from every possible angle.
+>   
 
-Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
+I think a lot of these _could_ be implemented and integrated with the 
+standard tools.
 
 
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+
