@@ -1,57 +1,30 @@
-From: Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Sun, 10 Aug 2008 12:57:20 -0500
-Message-ID: <489F2C00.3080608@opengridcomputing.com>
-References: <489CC58D.4010606@pobox.com>	<20080809.002840.167363463.davem@davemloft.net>	<adavdy9zc2k.fsf@cisco.com> <20080809.224725.130946315.davem@davemloft.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force
+ PCI flush
+Date: Sun, 10 Aug 2008 12:40:11 -0700
+Message-ID: <20080810124011.b5e76eb9.akpm@linux-foundation.org>
+References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
+	<4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
+	<20080804174128.a0877c27.akpm@linux-foundation.org>
+	<4B6A08C587958942AA3002690DD4F8C31AADD4C1@cosmail02.lsi.com>
+	<1218380616.3418.23.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.opengridcomputing.com ([209.198.142.2]:46084 "EHLO
-	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752526AbYHJR5Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Aug 2008 13:57:25 -0400
-In-Reply-To: <20080809.224725.130946315.davem@davemloft.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754122AbYHJTlF@vger.kernel.org>
+In-Reply-To: <1218380616.3418.23.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Yang, Bo" <Bo.Yang@lsi.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@linuxfoundation.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: rdreier@cisco.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-David Miller wrote:
-> From: Roland Dreier <rdreier@cisco.com>
-> Date: Sat, 09 Aug 2008 22:14:11 -0700
->
->   
->>  > Also, I find it ironic that the port abduction is being asked for in
->>  > order to be "compatible with existing tools" yet in fact this stuff
->>  > breaks everything.  You can't netfilter this traffic, you can't apply
->>  > qdiscs to it, you can't execut TC actions on them, you can't do
->>  > segmentation offload on them, you can't look for the usual TCP MIB
->>  > statistics on the connection, etc. etc. etc.
->>
->> We already support offloads that break other features, eg large receive
->> offload breaks forwarding.  We deal with it.
->>     
->
-> We turn it off.  If I want to shape or filter one of these iSCSI
-> connections can we turn it off?
->
->   
-Sure.
+On Sun, 10 Aug 2008 10:03:36 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Seems to me we _could_ architect this all so that these devices would 
-have to support a method for the management/admin tools to tweak, and if 
-nothing else kill, offload connections if policy rules change and the 
-existing connections aren't implementing the policy.  IE: if the offload 
-connection doesn't support whatever security or other facilities that 
-the admin requires, then the admin should have the ability to disable 
-that device.  And of course, some devices will allow doing things like 
-netfilter, qos, tweaking vlan tags, etc even on active connection,  if 
-the OS infrastructure is there to hook it all up.
+> On Tue, 2008-08-05 at 06:27 -0600, Yang, Bo wrote:
+> > Thanks Andrew.
+> 
+> So could we have the corrected patch, please ... at least the pci
+> posting flush fix looks like a pure bug fix that's a rc candidate.
+> 
 
-BTW:  I think all these offload devices provide MIBs and could be pulled 
-in to the normal management tools.
-
-
-Steve.
+I'll send them over now.
