@@ -1,36 +1,36 @@
-From: Roland Dreier <rdreier@cisco.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Sat, 09 Aug 2008 22:14:11 -0700
-Message-ID: <adavdy9zc2k.fsf@cisco.com>
-References: <200808071145.03848.divy@chelsio.com>
-	<489C8BEB.8060001@opengridcomputing.com> <489CC58D.4010606@pobox.com>
-	<20080809.002840.167363463.davem@davemloft.net>
+Date: Sat, 09 Aug 2008 22:46:37 -0700 (PDT)
+Message-ID: <20080809.224637.69833549.davem@davemloft.net>
+References: <489C8BEB.8060001@opengridcomputing.com>
+	<489CC58D.4010606@pobox.com>
+	<adazlnlzc60.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:42911 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbYHJFON (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Aug 2008 01:14:13 -0400
-In-Reply-To: <20080809.002840.167363463.davem@davemloft.net> (David Miller's
-	message of "Sat, 09 Aug 2008 00:28:40 -0700 (PDT)")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <adazlnlzc60.fsf@cisco.com>
+Sender: netdev-owner@vger.kernel.org
+To: rdreier@cisco.com
 Cc: jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
- > Also, I find it ironic that the port abduction is being asked for in
- > order to be "compatible with existing tools" yet in fact this stuff
- > breaks everything.  You can't netfilter this traffic, you can't apply
- > qdiscs to it, you can't execut TC actions on them, you can't do
- > segmentation offload on them, you can't look for the usual TCP MIB
- > statistics on the connection, etc. etc. etc.
+From: Roland Dreier <rdreier@cisco.com>
+Date: Sat, 09 Aug 2008 22:12:07 -0700
 
-We already support offloads that break other features, eg large receive
-offload breaks forwarding.  We deal with it.
+> What I'm sure Chelsio and probably other iSCSI offload vendors
+> would like is a way to make iSCSI (and other) offloads not steal magic
+> ports but actually hook into the normal infrastructure so that the
+> offloaded connections show up in netstat, etc.
 
-I'm sure if we thought about it we could come up with clean ways to fix
-some of the issues you raise, and just disable the offload if someone
-wanted to use a feature we can't support.
+Why show these special connections if the user cannot interact with or
+shape the stream at all like normal ones?
 
- - R.
+This whole "make it look normal" argument is entirely bogus because
+none of the standard Linux networking facilities can be applied to
+these things.
+
+And I even wonder, these days, if you probably get %90 or more of the
+gain these "optimized" iSCSI connections obtain from things like LRO.
+And since LRO can be done entirely in software (although stateless
+HW assistence helps), it is even a NIC agnostic performance improvement.
