@@ -1,165 +1,84 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
-Date: Sun, 10 Aug 2008 13:53:54 -0700 (PDT)
-Message-ID: <20080810205354.92D32108038@picon.linux-foundation.org>
-References: <bug-11302-11613@http.bugzilla.kernel.org/>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch make struct scsi_dh_devlist's static
+Date: Mon, 11 Aug 2008 00:31:31 +0300
+Message-ID: <20080810213131.GC5480@cs181140183.pp.htv.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55855 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753509AbYHJUy1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Aug 2008 16:54:27 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7AKrs8v027844
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Aug 2008 13:53:55 -0700
-In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:53442 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753702AbYHJVdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Aug 2008 17:33:12 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11302
+This patch makes several needlessly global struct scsi_dh_devlist's 
+static.
 
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
+---
 
+ drivers/scsi/device_handler/scsi_dh_alua.c  |    2 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    2 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    2 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
+ae6ee914615e415cc4b22ee1c0545bb088889b6a 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index fcdd73f..994da56 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -680,7 +680,7 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+ 
+ }
+ 
+-const struct scsi_dh_devlist alua_dev_list[] = {
++static const struct scsi_dh_devlist alua_dev_list[] = {
+ 	{"HP", "MSA VOLUME" },
+ 	{"HP", "HSV101" },
+ 	{"HP", "HSV111" },
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index aa46b13..b9d23e9 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -562,7 +562,7 @@ done:
+ 	return result;
+ }
+ 
+-const struct scsi_dh_devlist clariion_dev_list[] = {
++static const struct scsi_dh_devlist clariion_dev_list[] = {
+ 	{"DGC", "RAID"},
+ 	{"DGC", "DISK"},
+ 	{"DGC", "VRAID"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 9c7a1f8..a6a4ef3 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -282,7 +282,7 @@ static int hp_sw_activate(struct scsi_device *sdev)
+ 	return ret;
+ }
+ 
+-const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
++static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
+ 	{"COMPAQ", "MSA1000 VOLUME"},
+ 	{"COMPAQ", "HSV110"},
+ 	{"HP", "HSV100"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index b093a50..e7c7b4e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -574,7 +574,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 	return SCSI_RETURN_NOT_HANDLED;
+ }
+ 
+-const struct scsi_dh_devlist rdac_dev_list[] = {
++static const struct scsi_dh_devlist rdac_dev_list[] = {
+ 	{"IBM", "1722"},
+ 	{"IBM", "1724"},
+ 	{"IBM", "1726"},
 
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-08-10 13:53 -------
-Reply-To: akpm@linux-foundation.org
-
-
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
-
-On Sun, 10 Aug 2008 13:45:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
-wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=11302
-> 
->            Summary: I get a kernel OOPS! If I try to attach an usb card
->                     reader, SD, MMC, ecc.. to my Slamd64
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.26.2
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: blocking
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: pinc_o@yahoo.it
-
-Is this a scsi regresion, or an mmc regression?
-
-> 
-> Latest working kernel version: 2.6.25.x
-> Earliest failing kernel version:
-> Distribution: SLAMD64 12.1
-> Hardware Environment: Asus A7 deluxe
-> Software Environment: KDE/command line
-> Problem Description:
-> 
-> If attach my usb card reader, without load mmc_block an mmc_core modules, then
-> the follow OOPS appear(If first load them, simply doesn't mount the SD. Please
-> note: I always use "automatic loading kernel modules" compiled in "my" kernelS.
-> But from many time, the recent kernelS not load the mmc_block module):
-> 
-> ==========================================================================
-> usb 1-6: new high speed USB device using ehci_hcd and address 6
-> usb 1-6: configuration #1 chosen from 1 choice
-> scsi5 : SCSI emulation for USB Mass Storage devices
-> usb-storage: device found at 6
-> usb-storage: waiting for device to settle before scanning
-> scsi 5:0:0:0: Direct-Access     Generic  USB SD Reader    1.00 PQ: 0 ANSI: 0
-> usb 1-6: reset high speed USB device using ehci_hcd and address 6
-> usb 1-6: reset high speed USB device using ehci_hcd and address 6
-> usb 1-6: reset high speed USB device using ehci_hcd and address 6
-> usb 1-6: can't restore configuration #1 (error=-71)
-> sd 5:0:0:0: Device offlined - not ready after error recovery
-> sd 5:0:0:0: rejecting I/O to offline device
-> sd 5:0:0:0: rejecting I/O to offline device
-> sd 5:0:0:0: rejecting I/O to offline device
-> sd 5:0:0:0: [sdd] READ CAPACITY failed
-> sd 5:0:0:0: [sdd] Result: hostbyte=0x01 driverbyte=0x00
-> sd 5:0:0:0: [sdd] Sense not available.
-> sd 5:0:0:0: rejecting I/O to offline device
-> sd 5:0:0:0: [sdd] Write Protect is off
-> sd 5:0:0:0: [sdd] Mode Sense: 00 00 00 00
-> sd 5:0:0:0: [sdd] Assuming drive cache: write through
-> sd 5:0:0:0: [sdd] Attached SCSI removable disk
-> sd 5:0:0:0: Attached scsi generic sg3 type 0
-> usb 1-6: USB disconnect, address 6
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
-> IP: [<ffffffff8039bea1>] slave_alloc+0x33/0x5b
-> PGD be142067 PUD aab0e067 PMD 0
-> Oops: 0000 [1] PREEMPT SMP
-> CPU 1
-> Modules linked in: nvidia(P) [last unloaded: nvidia]
-> Pid: 6201, comm: usb-stor-scan Tainted: P          2.6.26.2 #2
-> RIP: 0010:[<ffffffff8039bea1>]  [<ffffffff8039bea1>] slave_alloc+0x33/0x5b
-> RSP: 0018:ffff8100aa969c20  EFLAGS: 00010202
-> RAX: 0000000000000000 RBX: ffff8100a29745c8 RCX: 0000000000000000
-> RDX: ffff810026abd000 RSI: 0000000000000202 RDI: ffff8100bed14100
-> RBP: ffff8100a2977800 R08: 00000000ffffffff R09: ffff8100a2977c30
-> R10: 0000000000000000 R11: 0000000000000000 R12: ffff810099d46428
-> R13: ffff8100a2974000 R14: 0000000000000000 R15: ffff810099d46400
-> FS:  00007f5f94bd26f0(0000) GS:ffff8100bf806480(0000) knlGS:00000000f714e6c0
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000004 CR3: 00000000aa9ec000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process usb-stor-scan (pid: 6201, threadinfo ffff8100aa968000, task
-> ffff8100864e85c0)
-> Stack:  ffff810099d46428 ffff8100a2977800 ffff810099d46400 ffffffff80366082
->  ffff8100a2974000 0000000000000000 0000000000000000 0000000000000000
->  0000000000000000 ffffffff80366348 ffff81000000157c ffff810000000003
-> Call Trace:
->  [<ffffffff80366082>] ? scsi_alloc_sdev+0x1b6/0x1fd
->  [<ffffffff80366348>] ? scsi_probe_and_add_lun+0xef/0x926
->  [<ffffffff80343032>] ? attribute_container_add_device+0x27/0x124
->  [<ffffffff802ed533>] ? kobject_get+0x12/0x17
->  [<ffffffff8033ea29>] ? get_device+0x17/0x20
->  [<ffffffff80365e66>] ? scsi_alloc_target+0x225/0x28b
->  [<ffffffff80366e1c>] ? __scsi_scan_target+0xb1/0x4f6
->  [<ffffffff80234b1b>] ? process_timeout+0x0/0x5
->  [<ffffffff8039d3e9>] ? usb_stor_scan_thread+0x0/0x12e
->  [<ffffffff8046bc98>] ? wait_for_common+0x126/0x138
->  [<ffffffff80224fbb>] ? default_wake_function+0x0/0xe
->  [<ffffffff803672af>] ? scsi_scan_channel+0x4e/0x81
->  [<ffffffff80367373>] ? scsi_scan_host_selected+0x91/0xd3
->  [<ffffffff8039d4fb>] ? usb_stor_scan_thread+0x112/0x12e
->  [<ffffffff8023e3bc>] ? autoremove_wake_function+0x0/0x2e
->  [<ffffffff8039d3e9>] ? usb_stor_scan_thread+0x0/0x12e
->  [<ffffffff8023e29f>] ? kthread+0x47/0x74
->  [<ffffffff80227e8b>] ? schedule_tail+0x28/0x5d
->  [<ffffffff8020c008>] ? child_rip+0xa/0x12
->  [<ffffffff8023e258>] ? kthread+0x0/0x74
->  [<ffffffff8020bffe>] ? child_rip+0x0/0x12
-> 
-> 
-> Code: 08 48 8b 1f c6 87 93 00 00 00 24 48 8b 7f 08 48 81 c3 c8 05 00 00 8b 43
-> 3c 48 8b 53 18 c1 e8 0f 83 e0 0f 48 8b 84 c2 d0 02 00 00 <0f> b7 70 04 ff ce e8
-> 26 86 f4 ff 80 7b 64 04 75 11 48 8b 85 c0
-> RIP  [<ffffffff8039bea1>] slave_alloc+0x33/0x5b
->  RSP <ffff8100aa969c20>
-> CR2: 0000000000000004
-> ---[ end trace d443c8e181da42c1 ]---
-> 
-> ========================================================================
-> 
-> Dual Core AMD Opteron(tm) Processor 185
-> 3GB of memory
-> SLAMD64 12.1
-> 
-> Best Regards
-> 
-> 
-> Steps to reproduce:
-> 
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
