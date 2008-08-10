@@ -1,30 +1,52 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/4] scsi: megaraid_sas - Add the dumy readl to force
- PCI flush
-Date: Sun, 10 Aug 2008 12:40:11 -0700
-Message-ID: <20080810124011.b5e76eb9.akpm@linux-foundation.org>
-References: <FFD04EB4FBD32E4B929B6CFDEDA6AA0D632A9F@NAMAIL1.ad.lsil.com>
-	<4B6A08C587958942AA3002690DD4F8C31B08093F@cosmail02.lsi.com>
-	<20080804174128.a0877c27.akpm@linux-foundation.org>
-	<4B6A08C587958942AA3002690DD4F8C31AADD4C1@cosmail02.lsi.com>
-	<1218380616.3418.23.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754122AbYHJTlF@vger.kernel.org>
-In-Reply-To: <1218380616.3418.23.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@linuxfoundation.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>, "poswald@novell.com" <poswald@novell.com>
+From: akpm@linux-foundation.org
+Subject: [patch 1/4] scsi: megaraid_sas: add the dumy readl to force PCI flush
+Date: Sun, 10 Aug 2008 12:42:37 -0700
+Message-ID: <200808101942.m7AJgblW029514@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46000 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753295AbYHJTnK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Aug 2008 15:43:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Bo.Yang@lsi.com, bo.yang@lsi.com
 
-On Sun, 10 Aug 2008 10:03:36 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+From: "Yang, Bo" <Bo.Yang@lsi.com>
 
-> On Tue, 2008-08-05 at 06:27 -0600, Yang, Bo wrote:
-> > Thanks Andrew.
-> 
-> So could we have the corrected patch, please ... at least the pci
-> posting flush fix looks like a pure bug fix that's a rc candidate.
-> 
+MegaRAID SAS Driver get unexpected Interrupt.  Add the dumy readl to force
+PCI flush will fix this issue.
 
-I'll send them over now.
+Signed-off-by: Bo Yang<bo.yang@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/megaraid/megaraid_sas.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff -puN drivers/scsi/megaraid/megaraid_sas.c~scsi-megaraid_sas-add-the-dumy-readl-to-force-pci-flush drivers/scsi/megaraid/megaraid_sas.c
+--- a/drivers/scsi/megaraid/megaraid_sas.c~scsi-megaraid_sas-add-the-dumy-readl-to-force-pci-flush
++++ a/drivers/scsi/megaraid/megaraid_sas.c
+@@ -198,6 +198,9 @@ megasas_clear_intr_xscale(struct megasas
+ 	 */
+ 	writel(status, &regs->outbound_intr_status);
+ 
++	/* Dummy readl to force pci flush */
++	readl(&regs->outbound_intr_status);
++
+ 	return 0;
+ }
+ 
+@@ -293,6 +296,9 @@ megasas_clear_intr_ppc(struct megasas_re
+ 	 */
+ 	writel(status, &regs->outbound_doorbell_clear);
+ 
++	/* Dummy readl to force pci flush */
++	readl(&regs->outbound_doorbell_clear);
++
+ 	return 0;
+ }
+ /**
+_
