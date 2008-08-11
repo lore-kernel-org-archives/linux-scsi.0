@@ -1,55 +1,87 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: BUG in handling of last_sector_bug flag
-Date: Mon, 11 Aug 2008 13:03:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0808111209100.2142-100000@iolanthe.rowland.org>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [2.6 patch make struct scsi_dh_devlist's static
+Date: Mon, 11 Aug 2008 10:50:13 -0700
+Message-ID: <1218477013.16794.7.camel@chandra-ubuntu>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>
-Cc: SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Antonio Ospite <ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:35199 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751979AbYHKRul (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Aug 2008 13:50:41 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Antonio reported a problem in
+This patch makes several needlessly global struct scsi_dh_devlist's 
+static.
 
-	http://marc.info/?l=linux-usb&m=121802760208717&w=2
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-and I have traced it to a bad interaction between the last_sector_bug 
-flag in sd.c and error reporting in the midlayer.
+---
 
-The last_sector_bug flag is set for devices which can't handle 
-multi-sector accesses at the end of the medium.  It causes such 
-accesses to be broken up into multiple single-sector accesses.  For 
-example, a read request for the last 8 sectors of a drive would be 
-turned into eight read requests, each for a single sector.
+ drivers/scsi/device_handler/scsi_dh_alua.c  |    2 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    2 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    2 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-The problem arises when one of those single-sector requests fails with
-an I/O error.  In the example above, the total length of the original
-request was 4096 bytes.  But scsi_io_completion() is called with 
-good_bytes = 0 and this_count gets set to 512, the number of bytes in 
-the failed command.
+ae6ee914615e415cc4b22ee1c0545bb088889b6a 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index fcdd73f..994da56 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -680,7 +680,7 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
 
-At the end of the function, scsi_end_request() is called with error =
--EIO, bytes = 512, and requeue = 0.  This results in a call to
+ }
 
-	blk_end_request(req, -EIO, 512);
+-const struct scsi_dh_devlist alua_dev_list[] = {
++static const struct scsi_dh_devlist alua_dev_list[] = {
+ 	{"HP", "MSA VOLUME" },
+ 	{"HP", "HSV101" },
+ 	{"HP", "HSV111" },
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index aa46b13..b9d23e9 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -562,7 +562,7 @@ done:
+ 	return result;
+ }
 
-and the remainder of the request is left hanging out to dry.  It never 
-is requeued, it never completes, and the caller hangs.
+-const struct scsi_dh_devlist clariion_dev_list[] = {
++static const struct scsi_dh_devlist clariion_dev_list[] = {
+ 	{"DGC", "RAID"},
+ 	{"DGC", "DISK"},
+ 	{"DGC", "VRAID"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 9c7a1f8..a6a4ef3 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -282,7 +282,7 @@ static int hp_sw_activate(struct scsi_device *sdev)
+ 	return ret;
+ }
 
-This suggests that we need to change the call to scsi_end_request() at 
-the end of scsi_io_completion().  If result is nonzero then nothing 
-will be requeued, so this_count should be replaced with the total 
-number of bytes remaining in the request.  Does that sound reasonable?
+-const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
++static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
+ 	{"COMPAQ", "MSA1000 VOLUME"},
+ 	{"COMPAQ", "HSV110"},
+ 	{"HP", "HSV100"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index b093a50..e7c7b4e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -574,7 +574,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 	return SCSI_RETURN_NOT_HANDLED;
+ }
 
-If anyone would like to recreate the conditions leading to this 
-problem, there's a description of how to do it in this email:
+-const struct scsi_dh_devlist rdac_dev_list[] = {
++static const struct scsi_dh_devlist rdac_dev_list[] = {
+ 	{"IBM", "1722"},
+ 	{"IBM", "1724"},
+ 	{"IBM", "1726"},
 
-	http://marc.info/?l=linux-kernel&m=121805565105096&w=2
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
