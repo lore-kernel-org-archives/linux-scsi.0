@@ -1,28 +1,34 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [2.6.27-rc2-git4] Kernel panic on VIA Ester+VIA CX700
-Date: Sun, 10 Aug 2008 16:39:23 -0700
-Message-ID: <489F7C2B.30807@zytor.com>
-References: <20080809220154.GO28946@ZenIV.linux.org.uk>	<E1KS2KD-0000he-00@gondolin.me.apana.org.au> <20080810133056.2fd69a20@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080810133056.2fd69a20@neptune.home>
-Sender: linux-ide-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, Al Viro <viro@ZenIV.linux.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Suresh Siddha <suresh.b.siddha@intel.com>, Ingo Molnar <mingo@elte.hu>, Wolfgang Walter <wolfgang.walter@stwm.de>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
+Date: Sun, 10 Aug 2008 18:55:56 -0700 (PDT)
+Message-ID: <20080811015556.620B2108045@picon.linux-foundation.org>
+References: <bug-11194-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52770 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753045AbYHKB4Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Aug 2008 21:56:25 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7B1tuXF010625
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Aug 2008 18:55:57 -0700
+In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Bruno Pr=E9mont wrote:
->=20
-> Recompiling without viafb+squashfs patches makes the panic go away.
->=20
-> So something from viafb or squashfs triggers the panic or prepare
-> for something else to trigger it...
->=20
+http://bugzilla.kernel.org/show_bug.cgi?id=11194
 
-Out of those, viafb by far seems most likely.  Could you try compiling=20
-with only one or the other?
 
-	-hpa
+
+
+
+------- Comment #3 from cshore@fionavar.ca  2008-08-10 18:55 -------
+Did you receive my email to the lists?  I don't see it in Google so I'm pinging
+to make sure it's not lost given the problems with it not getting to the list.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
