@@ -1,69 +1,90 @@
-From: Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: Re: [2.6.27-rc2-git4] Kernel panic on VIA Ester+VIA CX700
-Date: Mon, 11 Aug 2008 11:17:52 -0700
-Message-ID: <20080811181752.GK13158@linux-os.sc.intel.com>
-References: <20080809220154.GO28946@ZenIV.linux.org.uk> <E1KS2KD-0000he-00@gondolin.me.apana.org.au> <20080810133056.2fd69a20@neptune.home> <489F7C2B.30807@zytor.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [2.6 patch make struct scsi_dh_devlist's static
+Date: Mon, 11 Aug 2008 11:59:21 -0700
+Message-ID: <1218481161.16794.10.camel@chandra-ubuntu>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <489F7C2B.30807@zytor.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Herbert Xu <herbert@gondor.apana.org.au>, Al Viro <viro@ZenIV.linux.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Siddha, Suresh B" <suresh.b.siddha@intel.com>, Ingo Molnar <mingo@elte.hu>, Wolfgang Walter <wolfgang.walter@stwm.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:35604 "EHLO e4.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbYHKS7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Aug 2008 14:59:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Aug 10, 2008 at 04:39:23PM -0700, H. Peter Anvin wrote:
-> Bruno Pr=E9mont wrote:
-> >
-> > Recompiling without viafb+squashfs patches makes the panic go away.
-> >
-> > So something from viafb or squashfs triggers the panic or prepare
-> > for something else to trigger it...
-> >
->=20
-> Out of those, viafb by far seems most likely.  Could you try compilin=
-g
-> with only one or the other?
+From: Adrian Bunk <bunk@kernel.org>
 
-[    5.010629] general protection fault: 0000 [#1]=20
-[    5.021782] Modules linked in:
-[    5.030227]=20
-[    5.030227] Pid: 3, comm: ksoftirqd/0 Not tainted (2.6.27-rc2-git4_n=
-ocrypto #1)
-[    5.030227] EIP: 0060:[<c01042f5>] EFLAGS: 00010046 CPU: 0
-[    5.030227] EIP is at math_state_restore+0x25/0x60
-[    5.030227] EAX: f781db3d EBX: f781d898 ECX: 00000000 EDX: 00000000
-[    5.030227] ESI: f781d000 EDI: f782c20c EBP: f781d840 ESP: f781d838
-[    5.030227]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[    5.030227] Process ksoftirqd/0 (pid: 3, ti=3Df781d000 task=3Df782c6=
-a0 task.ti=3Df782a000)
-[    5.030227] Stack: f782c000 f782c6a0 f781d890 c01038dd f782c000 0000=
-0000 f782c000 f782c6a0=20
-[    5.030227]        f782c20c f781d890 f7807e00 0000007b 0000007b 0000=
-0000 ffffffff c0101e8f=20
-[    5.030227]        00000060 00010002 f782c8ac f782c000 c04d8180 c011=
-fa50 f782afc0 c03cfa61=20
-[    5.030227] Call Trace:
-[    5.030227]  [<c01038dd>] ? device_not_available+0x2d/0x32
-[    5.030227]  [<c0101e8f>] ? __switch_to+0x2f/0x130
+This patch makes several needlessly global struct scsi_dh_devlist's 
+static.
 
-It got a GP fault, because in __switch_to() we were doing unlazy_fpu() =
-and
-fxsave generated a DNA fault(which shouldn't happen unless we are hitti=
-ng the
-via padlock instruction issue or something else) and the math_state_res=
-tore()
-found the task's math state pointer to be 0xf781db3d (EAX in the oops) =
-and while
-doing fxrstor we got GP fault, as the fxrstor pointer(EAX) is not 16byt=
-e
-aligned.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-It is interesting to see the EAX value similar to stack pointer. Task's
-=46P area gets dynamically allocated and as such EAX def looks wrong he=
-re.
-I also see the config is using 4K stacks. Some config(viafb/squashfs?) =
-causing
-some thing wrong with the kernel stack?
+---
+
+ drivers/scsi/device_handler/scsi_dh_alua.c  |    2 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    2 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    2 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+ae6ee914615e415cc4b22ee1c0545bb088889b6a 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index fcdd73f..994da56 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -680,7 +680,7 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+
+ }
+
+-const struct scsi_dh_devlist alua_dev_list[] = {
++static const struct scsi_dh_devlist alua_dev_list[] = {
+ 	{"HP", "MSA VOLUME" },
+ 	{"HP", "HSV101" },
+ 	{"HP", "HSV111" },
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index aa46b13..b9d23e9 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -562,7 +562,7 @@ done:
+ 	return result;
+ }
+
+-const struct scsi_dh_devlist clariion_dev_list[] = {
++static const struct scsi_dh_devlist clariion_dev_list[] = {
+ 	{"DGC", "RAID"},
+ 	{"DGC", "DISK"},
+ 	{"DGC", "VRAID"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 9c7a1f8..a6a4ef3 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -282,7 +282,7 @@ static int hp_sw_activate(struct scsi_device *sdev)
+ 	return ret;
+ }
+
+-const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
++static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
+ 	{"COMPAQ", "MSA1000 VOLUME"},
+ 	{"COMPAQ", "HSV110"},
+ 	{"HP", "HSV100"},
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index b093a50..e7c7b4e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -574,7 +574,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 	return SCSI_RETURN_NOT_HANDLED;
+ }
+
+-const struct scsi_dh_devlist rdac_dev_list[] = {
++static const struct scsi_dh_devlist rdac_dev_list[] = {
+ 	{"IBM", "1722"},
+ 	{"IBM", "1724"},
+ 	{"IBM", "1726"},
+
+
+
