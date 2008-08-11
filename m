@@ -1,36 +1,30 @@
-From: David Miller <davem@davemloft.net>
+From: Roland Dreier <rdreier@cisco.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Mon, 11 Aug 2008 14:12:54 -0700 (PDT)
-Message-ID: <20080811.141254.165409473.davem@davemloft.net>
-References: <adazlnlzc60.fsf@cisco.com>
-	<20080809.224637.69833549.davem@davemloft.net>
-	<48A08145.6060703@hp.com>
+Date: Mon, 11 Aug 2008 14:37:59 -0700
+Message-ID: <adaljz3xmfc.fsf@cisco.com>
+References: <adavdy9zc2k.fsf@cisco.com>
+	<20080809.224725.130946315.davem@davemloft.net>
+	<adabpzzzg81.fsf@cisco.com>
+	<20080811.140918.213422266.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49862
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753628AbYHKVMx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2008 17:12:53 -0400
-In-Reply-To: <48A08145.6060703@hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20080811.140918.213422266.davem@davemloft.net> (David Miller's
+	message of "Mon, 11 Aug 2008 14:09:18 -0700 (PDT)")
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rick.jones2@hp.com
-Cc: rdreier@cisco.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Rick Jones <rick.jones2@hp.com>
-Date: Mon, 11 Aug 2008 11:13:25 -0700
+ > But as Herbert says, we can make LRO such that turning it off
+ > isn't necessary.
+ > 
+ > Can we shape the iSCSI offload traffic without turning it off?
 
-> David Miller wrote:
-> > And I even wonder, these days, if you probably get %90 or more of the
-> > gain these "optimized" iSCSI connections obtain from things like LRO.
-> > And since LRO can be done entirely in software (although stateless
-> > HW assistence helps), it is even a NIC agnostic performance improvement.
-> 
-> Probably depends on whether or not the iSCSI offload solutions are doing 
-> zero-copy receive into the filecache?
+Sure... the same way we can ask the HW vendors to keep old headers
+around when aggregating for LRO, we can ask HW vendors for hooks for
+shaping iSCSI traffic.  And the Chelsio TCP speed record seems to show
+that they already have pretty sophisticated queueing/shaping in their
+current HW.
 
-That's a data placement issue, which also can be solved with
-stateless offloading.
+ - R.
