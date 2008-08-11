@@ -1,90 +1,72 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
-Date: Sun, 10 Aug 2008 23:34:04 -0700 (PDT)
-Message-ID: <20080811063404.1D96D108038@picon.linux-foundation.org>
-References: <bug-11302-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bugme-new] [Bug 11302] New: I get a kernel OOPS! If I try to
+	attach an usb card reader, SD, MMC, ecc.. to my Slamd64
+Date: Mon, 11 Aug 2008 08:33:24 -0500
+Message-ID: <1218461604.6965.4.camel@localhost.localdomain>
+References: <bug-11302-10286@http.bugzilla.kernel.org/>
+	 <20080810135344.6f900129.akpm@linux-foundation.org>
+	 <20080811074553.11b06602@mjolnir.drzeus.cx>
+	 <20080810233352.8423614f.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40386 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806AbYHKGeF (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:52710 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751533AbYHKNdb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2008 02:34:05 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7B6Y4OZ023353
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Aug 2008 23:34:05 -0700
-In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
+	Mon, 11 Aug 2008 09:33:31 -0400
+In-Reply-To: <20080810233352.8423614f.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Pierre Ossman <drzeus@drzeus.cx>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, pinc_o@yahoo.it
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11302
-
-
-
-
-
-------- Comment #3 from anonymous@kernel-bugs.osdl.org  2008-08-10 23:34 -------
-Reply-To: akpm@linux-foundation.org
-
-On Mon, 11 Aug 2008 07:45:53 +0200 Pierre Ossman <drzeus@drzeus.cx> wrote:
-
-> On Sun, 10 Aug 2008 13:53:44 -0700
-> Andrew Morton <akpm@linux-foundation.org> wrote:
+On Sun, 2008-08-10 at 23:33 -0700, Andrew Morton wrote:
+> On Mon, 11 Aug 2008 07:45:53 +0200 Pierre Ossman <drzeus@drzeus.cx> wrote:
 > 
+> > On Sun, 10 Aug 2008 13:53:44 -0700
+> > Andrew Morton <akpm@linux-foundation.org> wrote:
 > > 
-> > (switched to email.  Please respond via emailed reply-to-all, not via the
-> > bugzilla web interface).
-> > 
-> > On Sun, 10 Aug 2008 13:45:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
-> > 
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=11302
 > > > 
-> > >            Summary: I get a kernel OOPS! If I try to attach an usb card
-> > >                     reader, SD, MMC, ecc.. to my Slamd64
-> > >            Product: IO/Storage
-> > >            Version: 2.5
-> > >      KernelVersion: 2.6.26.2
-> > >           Platform: All
-> > >         OS/Version: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: blocking
-> > >           Priority: P1
-> > >          Component: SCSI
-> > >         AssignedTo: linux-scsi@vger.kernel.org
-> > >         ReportedBy: pinc_o@yahoo.it
-> > 
-> > Is this a scsi regresion, or an mmc regression?
-> > 
-
-OK.  There have been some regressions in the scsi area but I thought
-that a) they were fixed and b) none manifested as an oops in
-slave_alloc().
-
-Perhaps James can take a look please?
-
-> There are no USB based "real" MMC controllers, so I'd say SCSI.
+> > > (switched to email.  Please respond via emailed reply-to-all, not via the
+> > > bugzilla web interface).
+> > > 
+> > > On Sun, 10 Aug 2008 13:45:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+> > > 
+> > > > http://bugzilla.kernel.org/show_bug.cgi?id=11302
+> > > > 
+> > > >            Summary: I get a kernel OOPS! If I try to attach an usb card
+> > > >                     reader, SD, MMC, ecc.. to my Slamd64
+> > > >            Product: IO/Storage
+> > > >            Version: 2.5
+> > > >      KernelVersion: 2.6.26.2
+> > > >           Platform: All
+> > > >         OS/Version: Linux
+> > > >               Tree: Mainline
+> > > >             Status: NEW
+> > > >           Severity: blocking
+> > > >           Priority: P1
+> > > >          Component: SCSI
+> > > >         AssignedTo: linux-scsi@vger.kernel.org
+> > > >         ReportedBy: pinc_o@yahoo.it
+> > > 
+> > > Is this a scsi regresion, or an mmc regression?
+> > > 
 > 
-> > > If attach my usb card reader, without load mmc_block an mmc_core modules, then
-> > > the follow OOPS appear(If first load them, simply doesn't mount the SD. Please
-> > > note: I always use "automatic loading kernel modules" compiled in "my" kernelS.
-> > > But from many time, the recent kernelS not load the mmc_block module):
+> OK.  There have been some regressions in the scsi area but I thought
+> that a) they were fixed and b) none manifested as an oops in
+> slave_alloc().
 > 
-> I don't know what kind of weird ass scripts loaded them for USB mass
-> storage to begin with. As for the claimed lack of crashes when loaded;
-> no idea as there is no interaction between the SCSI and MMC layer.
-> 
-> > > Modules linked in: nvidia(P) [last unloaded: nvidia]
-> 
-> This is always a good start..
+> Perhaps James can take a look please?
 
-I very much doubt it.
+Well, this does illustrate one of the problems of making everything
+static:  slave_configure isn't a terribly distinguished name.  However,
+I'd bet this is usbstorage/scsiglue.c:slave_configure()
 
-Paolo, can you please check to see if the crash happens in a kernel
-into which the nvidia driver has never been loaded?
+the taxonomy looks identical to bugs 11088 and 11072.  Which are being
+fixed (have been fixed) in the USB tree.
+
+James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
