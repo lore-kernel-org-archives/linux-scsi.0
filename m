@@ -1,31 +1,76 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
-Date: Sun, 10 Aug 2008 18:55:56 -0700 (PDT)
-Message-ID: <20080811015556.620B2108045@picon.linux-foundation.org>
-References: <bug-11194-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
+Date: Sun, 10 Aug 2008 22:46:35 -0700 (PDT)
+Message-ID: <20080811054635.C956010800B@picon.linux-foundation.org>
+References: <bug-11302-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52770 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35242 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753045AbYHKB4Z (ORCPT
+	by vger.kernel.org with ESMTP id S1750695AbYHKFrI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Aug 2008 21:56:25 -0400
+	Mon, 11 Aug 2008 01:47:08 -0400
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7B1tuXF010625
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Aug 2008 18:55:57 -0700
-In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7B5kZrM020978
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Aug 2008 22:46:36 -0700
+In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11194
+http://bugzilla.kernel.org/show_bug.cgi?id=11302
 
 
 
 
 
-------- Comment #3 from cshore@fionavar.ca  2008-08-10 18:55 -------
-Did you receive my email to the lists?  I don't see it in Google so I'm pinging
-to make sure it's not lost given the problems with it not getting to the list.
+------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-08-10 22:46 -------
+Reply-To: drzeus@drzeus.cx
+
+On Sun, 10 Aug 2008 13:53:44 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
+
+> 
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
+> 
+> On Sun, 10 Aug 2008 13:45:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+> 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=11302
+> > 
+> >            Summary: I get a kernel OOPS! If I try to attach an usb card
+> >                     reader, SD, MMC, ecc.. to my Slamd64
+> >            Product: IO/Storage
+> >            Version: 2.5
+> >      KernelVersion: 2.6.26.2
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: blocking
+> >           Priority: P1
+> >          Component: SCSI
+> >         AssignedTo: linux-scsi@vger.kernel.org
+> >         ReportedBy: pinc_o@yahoo.it
+> 
+> Is this a scsi regresion, or an mmc regression?
+> 
+
+There are no USB based "real" MMC controllers, so I'd say SCSI.
+
+> > If attach my usb card reader, without load mmc_block an mmc_core modules, then
+> > the follow OOPS appear(If first load them, simply doesn't mount the SD. Please
+> > note: I always use "automatic loading kernel modules" compiled in "my" kernelS.
+> > But from many time, the recent kernelS not load the mmc_block module):
+
+I don't know what kind of weird ass scripts loaded them for USB mass
+storage to begin with. As for the claimed lack of crashes when loaded;
+no idea as there is no interaction between the SCSI and MMC layer.
+
+> > Modules linked in: nvidia(P) [last unloaded: nvidia]
+
+This is always a good start..
+
+Rgds
 
 
 -- 
