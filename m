@@ -1,43 +1,46 @@
-From: Steve Wise <swise@opengridcomputing.com>
+From: Divy Le Ray <divy@chelsio.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Mon, 11 Aug 2008 18:20:07 -0500
-Message-ID: <48A0C927.8020501@opengridcomputing.com>
-References: <adavdy9zc2k.fsf@cisco.com>	<20080809.224725.130946315.davem@davemloft.net>	<adabpzzzg81.fsf@cisco.com> <20080811.140918.213422266.davem@davemloft.net>
+Date: Mon, 11 Aug 2008 16:45:03 -0700
+Message-ID: <200808111645.04677.divy@chelsio.com>
+References: <adavdy9zc2k.fsf@cisco.com> <20080811.140918.213422266.davem@davemloft.net> <48A0C927.8020501@opengridcomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.opengridcomputing.com ([209.198.142.2]:37440 "EHLO
-	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751856AbYHKXSP (ORCPT
+Received: from stargate.chelsio.com ([12.22.49.110]:22772 "EHLO
+	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753902AbYHKXqL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2008 19:18:15 -0400
-In-Reply-To: <20080811.140918.213422266.davem@davemloft.net>
+	Mon, 11 Aug 2008 19:46:11 -0400
+In-Reply-To: <48A0C927.8020501@opengridcomputing.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: rdreier@cisco.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Steve Wise <swise@opengridcomputing.com>
+Cc: David Miller <davem@davemloft.net>, rdreier@cisco.com, jgarzik@pobox.com, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-David Miller wrote:
-> From: Roland Dreier <rdreier@cisco.com>
-> Date: Mon, 11 Aug 2008 09:09:02 -0700
+On Monday 11 August 2008 04:20:07 pm Steve Wise wrote:
+> David Miller wrote:
+> > From: Roland Dreier <rdreier@cisco.com>
+> > Date: Mon, 11 Aug 2008 09:09:02 -0700
+> >
+> >>  > We turn it off.  If I want to shape or filter one of these iSCSI
+> >>  > connections can we turn it off?
+> >>
+> >> That seems like a reasonable idea to me -- the standard thing to do when
+> >> a NIC offload conflicts with something else is to turn off the offload
+> >> and fall back to software.
+> >
+> > But as Herbert says, we can make LRO such that turning it off
+> > isn't necessary.
+> >
+> > Can we shape the iSCSI offload traffic without turning it off?
 >
->   
->>  > We turn it off.  If I want to shape or filter one of these iSCSI
->>  > connections can we turn it off?
->>
->> That seems like a reasonable idea to me -- the standard thing to do when
->> a NIC offload conflicts with something else is to turn off the offload
->> and fall back to software.
->>     
->
-> But as Herbert says, we can make LRO such that turning it off
-> isn't necessary.
->
-> Can we shape the iSCSI offload traffic without turning it off?
->   
+> With Chelsio's product you can do this.  Maybe Divy can provide details?
 
-With Chelsio's product you can do this.  Maybe Divy can provide details?
+The T3 adapter is capable of performing rate control and pacing based on RTT 
+on a per-connection basis.
 
-
-
+Cheers,
+Divy
