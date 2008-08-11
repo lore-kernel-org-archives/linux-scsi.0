@@ -1,31 +1,40 @@
-From: Roland Dreier <rdreier@cisco.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Mon, 11 Aug 2008 14:41:16 -0700
-Message-ID: <adad4kfxm9v.fsf@cisco.com>
-References: <adazlnlzc60.fsf@cisco.com>
-	<20080809.224637.69833549.davem@davemloft.net>
-	<48A08145.6060703@hp.com>
-	<20080811.141254.165409473.davem@davemloft.net>
+Date: Mon, 11 Aug 2008 14:51:29 -0700 (PDT)
+Message-ID: <20080811.145129.215922169.davem@davemloft.net>
+References: <adabpzzzg81.fsf@cisco.com>
+	<20080811.140918.213422266.davem@davemloft.net>
+	<adaljz3xmfc.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:26120 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906AbYHKVlS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2008 17:41:18 -0400
-In-Reply-To: <20080811.141254.165409473.davem@davemloft.net> (David Miller's
-	message of "Mon, 11 Aug 2008 14:12:54 -0700 (PDT)")
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57227
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751604AbYHKVv3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Aug 2008 17:51:29 -0400
+In-Reply-To: <adaljz3xmfc.fsf@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: rdreier@cisco.com
+Cc: jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
- > > Probably depends on whether or not the iSCSI offload solutions are doing 
- > > zero-copy receive into the filecache?
- > 
- > That's a data placement issue, which also can be solved with
- > stateless offloading.
+From: Roland Dreier <rdreier@cisco.com>
+Date: Mon, 11 Aug 2008 14:37:59 -0700
 
-How can you place iSCSI data properly with only stateless offloads?
+>  > But as Herbert says, we can make LRO such that turning it off
+>  > isn't necessary.
+>  > 
+>  > Can we shape the iSCSI offload traffic without turning it off?
+> 
+> Sure... the same way we can ask the HW vendors to keep old headers
+> around when aggregating for LRO, we can ask HW vendors for hooks for
+> shaping iSCSI traffic.  And the Chelsio TCP speed record seems to show
+> that they already have pretty sophisticated queueing/shaping in their
+> current HW.
 
- - R.
+You don't get it, you can't add the entire netfilter and qdisc
+stack into the silly firmware.
+
+And we can't fix bugs there either.
