@@ -1,37 +1,43 @@
-From: David Miller <davem@davemloft.net>
+From: Steve Wise <swise@opengridcomputing.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Mon, 11 Aug 2008 14:53:13 -0700 (PDT)
-Message-ID: <20080811.145313.178992274.davem@davemloft.net>
-References: <48A08145.6060703@hp.com>
-	<20080811.141254.165409473.davem@davemloft.net>
-	<adad4kfxm9v.fsf@cisco.com>
+Date: Mon, 11 Aug 2008 18:20:07 -0500
+Message-ID: <48A0C927.8020501@opengridcomputing.com>
+References: <adavdy9zc2k.fsf@cisco.com>	<20080809.224725.130946315.davem@davemloft.net>	<adabpzzzg81.fsf@cisco.com> <20080811.140918.213422266.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38024
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753485AbYHKVxN (ORCPT
+Received: from smtp.opengridcomputing.com ([209.198.142.2]:37440 "EHLO
+	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751856AbYHKXSP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2008 17:53:13 -0400
-In-Reply-To: <adad4kfxm9v.fsf@cisco.com>
+	Mon, 11 Aug 2008 19:18:15 -0400
+In-Reply-To: <20080811.140918.213422266.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rdreier@cisco.com
-Cc: rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: rdreier@cisco.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Roland Dreier <rdreier@cisco.com>
-Date: Mon, 11 Aug 2008 14:41:16 -0700
+David Miller wrote:
+> From: Roland Dreier <rdreier@cisco.com>
+> Date: Mon, 11 Aug 2008 09:09:02 -0700
+>
+>   
+>>  > We turn it off.  If I want to shape or filter one of these iSCSI
+>>  > connections can we turn it off?
+>>
+>> That seems like a reasonable idea to me -- the standard thing to do when
+>> a NIC offload conflicts with something else is to turn off the offload
+>> and fall back to software.
+>>     
+>
+> But as Herbert says, we can make LRO such that turning it off
+> isn't necessary.
+>
+> Can we shape the iSCSI offload traffic without turning it off?
+>   
 
->  > > Probably depends on whether or not the iSCSI offload solutions are doing 
->  > > zero-copy receive into the filecache?
->  > 
->  > That's a data placement issue, which also can be solved with
->  > stateless offloading.
-> 
-> How can you place iSCSI data properly with only stateless offloads?
+With Chelsio's product you can do this.  Maybe Divy can provide details?
 
-By teaching the stateless offload how to parse the iSCSI headers
-on the flow and place the data into pages at the correct offsets
-such that you can place the pages hanging off of the SKB directly
-into the page cache.
+
+
