@@ -1,57 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] 2.6.27-rc2 SCSI Rewrite help text for SCSI_SAS_HOST_SMP
-Date: Tue, 12 Aug 2008 16:46:47 -0500
-Message-ID: <1218577607.3549.57.camel@localhost.localdomain>
-References: <da824cf30808121435x7782a440v65f919010372e7a8@mail.gmail.com>
+From: Divy Le Ray <divy@chelsio.com>
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Tue, 12 Aug 2008 14:57:09 -0700
+Message-ID: <200808121457.11356.divy@chelsio.com>
+References: <48A08145.6060703@hp.com> <adad4kfxm9v.fsf@cisco.com> <20080811.145313.178992274.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:44587 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751664AbYHLVqw (ORCPT
+Received: from stargate.chelsio.com ([12.22.49.110]:17516 "EHLO
+	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754235AbYHLV60 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2008 17:46:52 -0400
-In-Reply-To: <da824cf30808121435x7782a440v65f919010372e7a8@mail.gmail.com>
+	Tue, 12 Aug 2008 17:58:26 -0400
+In-Reply-To: <20080811.145313.178992274.davem@davemloft.net>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, Steve Wise <swise@opengridcomputing.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2008-08-12 at 14:35 -0700, Grant Grundler wrote:
-> Rewrite libsas/Kconfig help text for SCSI_SAS_HOST_SMP option.
-> Previous text is useless. Thanks for Martin Petersen (mkp) for pointing
-> me in the right direction.
-> 
-> Signed-off-By: Grant Grundler <grundler@google.com>
-> 
-> (sorry - patch attached instead of inline because, uhm, gmail white
-> space mangles patches. Yes, we've complained about it).
-> 
-> New text reads:
-> +               Allows SAS hosts to receive SAS Management Protocol (SMP)
-> +               frames.  Selecting this option builds an SMP interpreter
-> +               into libsas. SMP frames are used to manage SAS expanders
-> +               and routing of SAS frames.
+On Monday 11 August 2008 02:53:13 pm David Miller wrote:
+> From: Roland Dreier <rdreier@cisco.com>
+> Date: Mon, 11 Aug 2008 14:41:16 -0700
+>
+> >  > > Probably depends on whether or not the iSCSI offload solutions are
+> >  > > doing zero-copy receive into the filecache?
+> >  >
+> >  > That's a data placement issue, which also can be solved with
+> >  > stateless offloading.
+> >
+> > How can you place iSCSI data properly with only stateless offloads?
+>
+> By teaching the stateless offload how to parse the iSCSI headers
+> on the flow and place the data into pages at the correct offsets
+> such that you can place the pages hanging off of the SKB directly
+> into the page cache.
 
-Actually, you're making it less clear.
+Hi Dave,
 
-What this option is doing is allowing the smp utilities to send SMP
-frames to interrogate the HBA.  Setting (or not setting) this option has
-no effect on the SAS expanders.  Essentially, it allows the HBA ports to
-be treated the same as the expander ports from the point of view of a
-software management tool.
+iSCSI PDUs might spawn over multiple TCP segments, it is unclear to me how to 
+do placement without keeping some state of the transactions.
 
-> +               For more details see:
-> +                       http://www.scsita.org/aboutscsi/sas/tutorials.html
+In any case, such a stateless solution is not yet designed, whereas 
+accelerated iSCSI is available now, from us and other companies.
+The accelerated iSCSI streams benefit from the performance TOE provides, 
+outlined in the following third party papers:
+http://www.chelsio.com/assetlibrary/pdf/redhat-chelsio-toe-final_v2.pdf
+http://www.chelsio.com/assetlibrary/pdf/RMDS6BNTChelsioRHEL5.pdf
 
-It's not the whole of this, just the Management upper layer.
+iSCSI is primarily targeted to the data center, where the SW stack's traffic 
+shaping features might be redundant with specialized equipment. It should 
+however be possible to integrate security features on a per offoaded 
+connection basis, and TOEs - at least ours :) - are capable of rate control 
+and traffic shaping.
 
-> +                       http://www.t11.org/ftp/t11/pub/sm/hba/04-373v0.pdf
+While CPU and - to a far lesser extent - memory performance improves, so does 
+ethernet's. 40G, 100G are not too far ahead. It is not obvious at all that 
+TOE is a point of time solution, especially for heavy load traffic as in a 
+storage environment. It is quite the opposite actually.
 
-This latter one is the HBA API ... it's not really anything to do with
-SMP.
+There is room for co-existence of the SW managed traffic and accelerated 
+traffic. As our submission shows, enabling accelerated iSCSI is not intrusive 
+code wise to the stack. The port stealing issue is solved if we can grab a 
+port from the stack.
 
-James
-
-
+Cheers,
+Divy
