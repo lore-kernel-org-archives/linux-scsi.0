@@ -1,32 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Tue, 12 Aug 2008 15:02:46 -0700 (PDT)
-Message-ID: <20080812.150246.42068558.davem@davemloft.net>
-References: <adad4kfxm9v.fsf@cisco.com>
-	<20080811.145313.178992274.davem@davemloft.net>
-	<200808121457.11356.divy@chelsio.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <200808121457.11356.divy@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: divy@chelsio.com
-Cc: rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
 From: Divy Le Ray <divy@chelsio.com>
-Date: Tue, 12 Aug 2008 14:57:09 -0700
+Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
+Date: Tue, 12 Aug 2008 15:21:08 -0700
+Message-ID: <200808121521.10101.divy@chelsio.com>
+References: <adad4kfxm9v.fsf@cisco.com> <200808121457.11356.divy@chelsio.com> <20080812.150246.42068558.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.22.49.110]:18502 "EHLO
+	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751305AbYHLWXy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Aug 2008 18:23:54 -0400
+In-Reply-To: <20080812.150246.42068558.davem@davemloft.net>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, Steve Wise <swise@opengridcomputing.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> In any case, such a stateless solution is not yet designed, whereas 
-> accelerated iSCSI is available now, from us and other companies.
+On Tuesday 12 August 2008 03:02:46 pm David Miller wrote:
+> From: Divy Le Ray <divy@chelsio.com>
+> Date: Tue, 12 Aug 2008 14:57:09 -0700
+>
+> > In any case, such a stateless solution is not yet designed, whereas
+> > accelerated iSCSI is available now, from us and other companies.
+>
+> So, WHAT?!
+>
+> There are TOE pieces of crap out there too.
 
-So, WHAT?!
+Well, there is demand for accerated iscsi out there, which is the driving 
+reason of our driver submission. 
 
-There are TOE pieces of crap out there too.
+>
+> It's strictly not our problem.
+>
+> Like Herbert said, this is the TOE discussion all over again.
+> The results will be the same, and as per our decisions wrt.
+> TOE, history speaks for itself.
 
-It's strictly not our problem.
+Herbert requested some benchmark numbers, I consequently obliged.
 
-Like Herbert said, this is the TOE discussion all over again.
-The results will be the same, and as per our decisions wrt.
-TOE, history speaks for itself.
+Cheers,
+Divy
+
+
+
