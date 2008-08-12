@@ -1,100 +1,81 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 0/2] scsi: sense retry
-Date: Tue, 12 Aug 2008 12:11:56 -0700
-Message-ID: <1218568318-4065-1-git-send-email-andmike@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:59280 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705AbYHLTMD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Aug 2008 15:12:03 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7CJC1Yv013914
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 15:12:01 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7CJC1Xj180186
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 13:12:01 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7CJC0vx018325
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 13:12:00 -0600
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: BUG in handling of last_sector_bug flag
+Date: Tue, 12 Aug 2008 17:00:09 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0808121648190.3153-100000@iolanthe.rowland.org>
+References: <48A1BB71.5050905@panasas.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <48A1BB71.5050905-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Antonio Ospite <ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, Hannes Reinecke <hare@suse.de>
 
-This patch series effects the retry behavior of IO when blk_noretry_request is used.
+On Tue, 12 Aug 2008, Boaz Harrosh wrote:
 
-The patches effect the retries in two areas. The first is that it allows
-the scsi_dh check_sense routines to have more control of the retry of a
-IO.  Currently if the scsi_dh check_sense functions return NEEDS_RETRY
-this will not lead to a retry in the DM-MP configurations where they are
-most likely to be used because the blk_noretry_request will be true for
-these IOs which will prevent the retry. The second change in behavior of
-the HARDWARE_ERROR sense key is to avoid path failures of all DM-MP paths
-for the IBM device(s) returning this sense key.  The utilization of
-ADD_TO_MLQUEUE for the HARDWARE_ERROR sense key could lead to longer retry
-times for the other user of BLIST_RETRY_HWERROR.
+> What you are doing here is changing the semantics of what used to
+> work.
 
-I have tried to summarize the scsi_decide_disposition current retry behavior
-below.
+Yes, and I don't want to do that unless the current code is truly
+wrong.  That's why I wasn't certain this was the right thing to do.
 
+>  Now I'm not saying it's a bad thing, but You must audit all
+> scsi ULDs to make sure they are not now broken because of  the new
+> assumptions. Let me explain.
+> 
+> This is what happens now (before the patch):
+> A request comes in with some size. And gets prepared by ULD.
+> If the ULD does not like the size for some reason it will
+> chunk off scsi_bufflen and will submit the command with
+> bufflen != req->size. The midlayer and drivers will only
+> respond to bufflen. Until ...
+> 
+> Until this loop magic in scsi_io_completion(). Since the
+> request is not done it will be requeued, the ULD will inspect
+> new size, adjust scsi_bufflen and so on until done.
+> 
+> In case of an error the request goes back to the ULD and the ULD
+> should decide what to do with the reminder.
 
-1.) Based on host_byte
-	The host bytes listed below will return ADD_TO_MLQUEUE or NEEDS_RETRY
-	which is always retried up to the max scsi mid-layer in-flight time
-	(unsigned long  wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;).
+I don't understand this point.  _Every_ non-BLOCK_PC request
+automatically goes back to the ULD via the ->done callback, not only
+those which get an error.  This callback does not get to decide what to
+do with the remainder of the request, as far as I can tell; all it can
+do is return the number of bytes actually handled.
 
-	DID_REQUEUE:
-		(returns ADD_TO_MLQUEUE)
-	DID_IMM_RETRY:
-                (returns NEEDS_RETRY)
+> scsi-ml until now
+> did not see any-other size but scsi_bufflen. So in theory it is
+> sd.c job to check for errors on split up requests and decide if
+> to complete the reminder or re-submit. The scsi-ml did not make
+> that policy.
 
-	The host bytes listed below will use the maybe_retry goto which will
-	not be retried if blk_noretry_request is true.
+How can sd.c decide whether or not to resubmit?  It doesn't know 
+whether scsi_io_completion() will go ahead and requeue the request 
+anyway.  And besides, you can't resubmit the request until the current 
+portion has been sent back to the block layer, which doesn't happen 
+until after ->done returns.
 
-	DID_ERROR:
-	DID_SOFT_ERROR:
-	DID_BUS_BUSY:
-	DID_PARITY:
+> If scsi-ml decides that it wants to set a new error policy here, then
+> you should audit other ULDs to make sure they did not rely on the
+> old behavior.
+> 
+> sd could check for errors in it's drv->done(cmd) function. and return
+> the reminder of the request size in case of error. look at
+> scsi.c::scsi_finish_command(). ULD has control here.
 
-2.) Based on status_byte
-	The status bytes listed below will return ADD_TO_MLQUEUE which is
-	always retried up to the max scsi mid-layer in-flight time (unsigned
-	long  wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;).
+The ->done function does not return the remainder of the request size; 
+it returns good_bytes, which is the number of bytes that were handled.
 
-	BUSY:
-	QUEUE_FULL:
+I agree that since the decision to split the request up into multiple 
+commands was made in sd.c, the decision of what to do about the 
+remainder should also be made in sd.c.  However the current structure 
+of the code doesn't seem to allow this to happen.  Requeue decisions 
+are all made in scsi_io_completion() or scsi_end_request().
 
-3.) Based on sense_key
-	The sense keys and sense checks listed below will return NEEDS_RETRY
-	which will be not be retried if blk_noretry_request is true.
+Alan Stern
 
-	Note1: There is some if checks removed to simplify the list. Please see
-	code for more detailed behavior.
-
-	Note2: All scsi_dh sense_check functions will be effected by the
-	blk_noretry_request check.
-
-	scsi_sense_is_deferred
-	ABORTED_COMMAND:
-	NOT_READY:
-	UNIT_ATTENTION:
-	MEDIUM_ERROR:
-	HARDWARE_ERROR:
-
-
-I have summarized the change in retry behavior below.
-
-1.) Based on sense_key
-
-	The current scsi_dh sense_check functions will return
-	ADD_TO_MLQUEUE.
-
-	HARDWARE_ERROR will return ADD_TO_MLQUEUE if retry_hwerror is set.
-
--andmike
 --
-Michael Anderson
-andmike@linux.vnet.ibm.com
-
-
-
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
