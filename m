@@ -1,46 +1,34 @@
-From: David Miller <davem@davemloft.net>
+From: Roland Dreier <rdreier@cisco.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 13 Aug 2008 15:08:31 -0700 (PDT)
-Message-ID: <20080813.150831.193391799.davem@davemloft.net>
+Date: Wed, 13 Aug 2008 16:03:15 -0700
+Message-ID: <adatzdoiklo.fsf@cisco.com>
 References: <adad4kfxm9v.fsf@cisco.com>
 	<20080811.145313.178992274.davem@davemloft.net>
 	<ada3al8k3l5.fsf@cisco.com>
+	<20080813.150831.193391799.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35346
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752237AbYHMWIa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2008 18:08:30 -0400
-In-Reply-To: <ada3al8k3l5.fsf@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: rdreier@cisco.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20080813.150831.193391799.davem@davemloft.net> (David Miller's
+	message of "Wed, 13 Aug 2008 15:08:31 -0700 (PDT)")
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
 Cc: rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-From: Roland Dreier <rdreier@cisco.com>
-Date: Wed, 13 Aug 2008 14:27:50 -0700
+ > Like I said, you retain a "flow cache" (say it a million times, "flow
+ > cache") that remembers the current parameters and the buffers
+ > currently assigned to that flow and what offset within those buffers.
 
-> I don't see how this could work.  First, it seems that you have to let
-> the adapter know which connections are iSCSI connections so that it
-> knows when to try and parse iSCSI headers.
+OK, I admit you could make something work -- add hooks for the low-level
+driver to ask the iSCSI initiator where PDU boundaries are so it can
+resync when something is evicted from the flow cache, have the initiator
+format its tags in a special way to encode placement data, etc, etc.
+The scheme does bring to mind Alan's earlier comment about pigs and
+propulsion, though.
 
-It always starts from offset zero for never seen before connections.
+In any case, as I said in the part of my email that you snipped, the
+real issue is not designing hypothetical hardware, but deciding how to
+support the Chelsio, Broadcom, etc hardware that exists today.
 
-> So you're already not totally stateless.
-
-Yes, we are.
-
-> Then, since (AFAIK -- I'm not an expert on iSCSI and
-> especially I'm not an expert on what common practice is for current
-> implementations) the iSCSI PDUs can start at any offset in the TCP
-> stream, I don't see how a stateless adapter can even find the PDU
-> headers to parse -- there's not any way that I know of to recognize
-> where a PDU boundary is without keeping track of the lengths of all the
-> PDUs that go by (ie you need per-connection state).
-
-Like I said, you retain a "flow cache" (say it a million times, "flow
-cache") that remembers the current parameters and the buffers
-currently assigned to that flow and what offset within those buffers.
+ - R.
