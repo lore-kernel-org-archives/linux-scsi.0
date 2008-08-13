@@ -1,49 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 13 Aug 2008 15:29:55 -0400
-Message-ID: <48A33633.20800@pobox.com>
-References: <adad4kfxm9v.fsf@cisco.com> <200808121457.11356.divy@chelsio.com> <20080812.150246.42068558.davem@davemloft.net> <200808121521.10101.divy@chelsio.com> <48A32976.7060504@vlnb.net>
+Date: Wed, 13 Aug 2008 13:23:19 -0700 (PDT)
+Message-ID: <20080813.132319.175666454.davem@davemloft.net>
+References: <20080812.150246.42068558.davem@davemloft.net>
+	<200808121521.10101.divy@chelsio.com>
+	<48A32976.7060504@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46026
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752675AbYHMUXS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2008 16:23:18 -0400
 In-Reply-To: <48A32976.7060504@vlnb.net>
-Sender: netdev-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: David Miller <davem@davemloft.net>, open-iscsi@googlegroups.com, rdreier@cisco.com, rick.jones2@hp.com, Steve Wise <swise@opengridcomputing.com>, Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vst@vlnb.net
+Cc: open-iscsi@googlegroups.com, rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, kxie@chelsio.com, netdev@vger.kernel.org, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> Divy Le Ray wrote:
->> On Tuesday 12 August 2008 03:02:46 pm David Miller wrote:
->>> From: Divy Le Ray <divy@chelsio.com>
->>> Date: Tue, 12 Aug 2008 14:57:09 -0700
->>>
->>>> In any case, such a stateless solution is not yet designed, whereas
->>>> accelerated iSCSI is available now, from us and other companies.
->>> So, WHAT?!
->>>
->>> There are TOE pieces of crap out there too.
->>
->> Well, there is demand for accerated iscsi out there, which is the 
->> driving reason of our driver submission. 
-> 
-> I'm, as an iSCSI target developer, strongly voting for hardware iSCSI 
-> offload. Having possibility of the direct data placement is a *HUGE* 
-> performance gain.
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Date: Wed, 13 Aug 2008 22:35:34 +0400
 
-Well, two responses here:
+> This is because the target sends data in a zero-copy manner, so its
+> CPU is capable to deal with the load, but on the initiator there are
+> additional data copies from skb's to page cache and from page cache
+> to application.
 
-* no one is arguing against hardware iSCSI offload.  Rather, it is a 
-problem with a specific implementation, one that falsely assumes two 
-independent TCP stacks can co-exist peacefully on the same IP address 
-and MAC.
+If you've actually been reading at all what I've been saying in this
+thread you'll see that I've described a method to do this copy
+avoidance in a completely stateless manner.
 
-* direct data placement is possible without offloading the entire TCP 
-stack onto a firmware/chip.
+You don't need to implement a TCP stack in the card in order to do
+data placement optimizations.  They can be done completely stateless.
 
-There is plenty of room for hardware iSCSI offload...
-
-	Jeff
-
-
+Also, large portions of the cpu overhead are transactional costs,
+which are significantly reduced by existing technologies such as
+LRO.
