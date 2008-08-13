@@ -1,102 +1,51 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] ieee1394: sbp2: enforce s/g segment size limit
-Date: Wed, 13 Aug 2008 08:44:48 +0900
-Message-ID: <20080813084514K.fujita.tomonori@lab.ntt.co.jp>
-References: <20080809071744I.fujita.tomonori@lab.ntt.co.jp>
-	<tkrat.8f7aa8cea95d423b@s5r6.in-berlin.de>
-	<da824cf30808121004w1ea59dc9rd805e2ae4d9f47a7@mail.gmail.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH]: [scsi_dh] Do not use scsilun in rdac hardware handler
+Date: Tue, 12 Aug 2008 17:26:58 -0700
+Message-ID: <1218587218.16794.70.camel@chandra-ubuntu>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <da824cf30808121004w1ea59dc9rd805e2ae4d9f47a7@mail.gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: grundler@google.com
-Cc: fujita.tomonori@lab.ntt.co.jp, stefanr@s5r6.in-berlin.de, linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:57306 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755086AbYHMA1Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Aug 2008 20:27:24 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7D0KqNV027744
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 20:20:52 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7D0RNk7176204
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 18:27:23 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7D0RMYj028327
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2008 18:27:22 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Yanqing_Liu <Yanqing_Liu@Dell.com>
 
-On Tue, 12 Aug 2008 10:04:14 -0700
-"Grant Grundler" <grundler@google.com> wrote:
 
-> On Sat, Aug 9, 2008 at 11:20 AM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
-> > 1. We don't need to round the SBP-2 segment size limit down to a
-> >   multiple of 4 kB (0xffff -> 0xf000).  It is only necessary to
-> >   ensure quadlet alignment (0xffff -> 0xfffc).
-> >
-> > 2. Use dma_set_max_seg_size() to tell the DMA mapping infrastructure
-> >   and the block IO layer about the restriction.  This way we can
-> >   remove the size checks and segment splitting in the queuecommand
-> >   path.
-> >
-> >   This assumes that no other code in the ieee1394 stack uses
-> >   dma_map_sg() with conflicting requirements.  It furthermore assumes
-> >   that the controller device's platform actually allows us to set the
-> >   segment size to our liking.  Assert the latter with a BUG_ON().
-> >
-> > 3. Also use blk_queue_max_segment_size() to tell the block IO layer
-> >   about it.  It cannot know it because our scsi_add_host() does not
-> >   point to the FireWire controller's device.
-> >
-> > We can also uniformly use dma_map_sg() for the single segment case just
-> > like for the multi segment case, to further simplify the code.
-> >
-> > Also clean up how the page table is converted to big endian.
-> >
-> > Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> > ---
-> >
-> > Applicable after
-> >   [PATCH update] ieee1394: sbp2: stricter dma_sync
-> >   [PATCH] ieee1394: sbp2: check for DMA mapping failures
-> > from a few minutes ago.
-> >
-> >  drivers/ieee1394/sbp2.c |  106 +++++++++++++---------------------------
-> >  drivers/ieee1394/sbp2.h |   37 +++++--------
-> >  2 files changed, 52 insertions(+), 91 deletions(-)
-> ...
-> > +               for_each_sg(sg, sg, sg_count, i) {
-> > +                       len = sg_dma_len(sg);
-> > +                       if (len == 0)
-> > +                               continue;
-> >
-> > -               orb->misc |= ORB_SET_DATA_SIZE(sg_count);
-> > +                       pt[j].high = cpu_to_be32(len << 16);
-> > +                       pt[j].low = cpu_to_be32(sg_dma_address(sg));
-> > +                       j++;
-> > +               }
-> 
-> While this code will probably work correctly, I believe if the
-> sg_dma_len() returns 0, one has walked off the end of the
-> "bus address" list.
->
-> pci_map_sg() returns how many DMA addr/len pairs are used
-> and that count could (should?) be used when pulling the
-> dma_len/addr pairs out of the sg list.
+RDAC storage controller doesn't seem to use the scsilun format. It uses
+only the last byte for LUN.
 
-Yeah, from a quick look, seems that this patch wrongly handles
-sg_count.
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+ drivers/scsi/device_handler/scsi_dh_rdac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This patch sets scsi_sg_count(sc) to sg_count, right? for_each_sg is
-expected to be used with a return value of pci_map_sg.
+Index: linux-2.6.27-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux-2.6.27-rc1.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ linux-2.6.27-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -376,7 +376,7 @@ static int get_lun(struct scsi_device *s
+ 		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
+ 		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
+ 			return SCSI_DH_NOSYS;
+-		h->lun = scsilun_to_int((struct scsi_lun *)inqp->lun);
++		h->lun = inqp->lun[7]; /* Uses only the last byte */
+ 	}
+ 	return err;
+ }
 
-Then this patch can simply do something like:
 
-for_each_sg(sg, sg, sg_count, i) {
-        pt[i].high = cpu_to_be32(sg_dma_len(sg) << 16);
-        pt[i].low = cpu_to_be32(sg_dma_address(sg));
-}
-
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
