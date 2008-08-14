@@ -1,59 +1,190 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Thu, 14 Aug 2008 22:30:11 +0400
-Message-ID: <48A479B3.40609@vlnb.net>
-References: <20080812.150246.42068558.davem@davemloft.net>	<200808121521.10101.divy@chelsio.com>	<48A32976.7060504@vlnb.net> <20080813.132319.175666454.davem@davemloft.net> <48A47925.3000409@vlnb.net>
+From: Vlad Seliverstov <vseliverstov@yandex-team.ru>
+Subject: Strange hotswap behaviour on 2.6.26-5 kernel with SAS1064ET
+Date: Thu, 14 Aug 2008 22:51:14 +0400
+Message-ID: <48A47EA2.2020508@yandex-team.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:41669 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755351AbYHNSaE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Aug 2008 14:30:04 -0400
-In-Reply-To: <48A47925.3000409@vlnb.net>
+Received: from cavolo.yandex.ru ([87.250.244.45]:48459 "EHLO cavolo.yandex.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752321AbYHNTBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Aug 2008 15:01:17 -0400
+Received: from [87.250.250.12] (behemot.yandex.ru [87.250.250.12])
+	by cavolo.yandex.ru (8.14.2/8.14.2) with ESMTP id m7EIpEDV072203
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2008 22:51:15 +0400 (MSD)
+	(envelope-from vseliverstov@yandex-team.ru)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: open-iscsi@googlegroups.com, rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, kxie@chelsio.com, netdev@vger.kernel.org, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> David Miller wrote:
->> From: Vladislav Bolkhovitin <vst@vlnb.net>
->> Date: Wed, 13 Aug 2008 22:35:34 +0400
->>
->>> This is because the target sends data in a zero-copy manner, so its
->>> CPU is capable to deal with the load, but on the initiator there are
->>> additional data copies from skb's to page cache and from page cache
->>> to application.
->> If you've actually been reading at all what I've been saying in this
->> thread you'll see that I've described a method to do this copy
->> avoidance in a completely stateless manner.
->>
->> You don't need to implement a TCP stack in the card in order to do
->> data placement optimizations.  They can be done completely stateless.
-> 
-> Sure, I read what you wrote before writing (although, frankly, didn't 
-> get the idea). But I don't think that overall it would be as efficient 
-> as full hardware offload. See my reply to Jeff Garzik about that.
-> 
->> Also, large portions of the cpu overhead are transactional costs,
->> which are significantly reduced by existing technologies such as
->> LRO.
-> 
-> The test used Myricom Myri-10G cards (myri10ge driver), which support 
-> LRO. And from ethtool -S output I conclude it was enabled. Just in case, 
-> I attached it, so you can recheck me.
+Hi.
 
-Also, there wasn't big difference between MTU 1500 and 9000, which is 
-another point to think that LRO was working.
+I'm experiencing some strange problem with hotswap on my linux box with SAS1064ET SAS controller and 2.6.26-5 kernel. When I'm trying to remove disk from system, like this:
 
-> Thus, apparently, LRO doesn't make a fundamental difference. Maybe this 
-> particular implementation isn't too efficient, I don't know. I don't 
-> have enough information for that.
-> 
-> Vlad
-> 
-> 
+# systool -b scsi
+Bus = "scsi"
 
+  Device = "0:0:0:0"
+  Device = "0:0:1:0"
+  Device = "0:0:2:0"
+  Device = "0:0:3:0"
+  Device = "1:0:0:0"
+
+# echo 1 > /sys/class/scsi_host/host0/device/port-0\:0/end_device-0\:0/target0\:0\:0/0\:0\:0\:0/delete 
+
+# systool -b scsi
+Bus = "scsi"
+
+  Device = "0:0:1:0"
+  Device = "0:0:2:0"
+  Device = "0:0:3:0"
+  Device = "1:0:0:0"
+
+It's OK. Disk successfully removed. When I'm trying to rescan bus without physical removal of this disk like this:
+
+# echo "- - -" > /sys/class/scsi_host/host0/scan 
+
+It's OK again. Disk successfully attached:
+
+# systool -b scsi
+Bus = "scsi"
+
+  Device = "0:0:0:0"
+  Device = "0:0:1:0"
+  Device = "0:0:2:0"
+  Device = "0:0:3:0"
+  Device = "1:0:0:0"
+
+But when I detach disk from system, physically remove it from box, swap it with another one and try to attach it like:
+
+# echo "- - -" > /sys/class/scsi_host/host0/scan
+
+Nothing happens. Linux doesn't see any new hard drives attached to this host.
+Interesting, that if I will swap disk drives again (inserting an old one), and rescan bus - It'll be OK again, and disk will be successfully attached.
+Are there any probability of kernel bug?
+
+I tried 2.6.24-19 and 2.6.26-5 kernels from Ubuntu distribution and got the same on both of them.
+
+Here is some info about my box:
+
+# uname -a
+Linux soap 2.6.26-5-server #1 SMP Tue Aug 12 22:15:37 MSD 2008 x86_64 GNU/Linux
+
+# lspci -nn
+00:00.0 Host bridge [0600]: Intel Corporation 5000P Chipset Memory Controller Hub [8086:25d8] (rev b1)
+00:02.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x8 Port 2-3 [8086:25f7] (rev b1)
+00:04.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x8 Port 4-5 [8086:25f8] (rev b1)
+00:06.0 PCI bridge [0604]: Intel Corporation 5000 Series Chipset PCI Express x8 Port 6-7 [8086:25f9] (rev b1)
+00:08.0 System peripheral [0880]: Intel Corporation 5000 Series Chipset DMA Engine [8086:1a38] (rev b1)
+00:10.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers [8086:25f0] (rev b1)
+00:10.1 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers [8086:25f0] (rev b1)
+00:10.2 Host bridge [0600]: Intel Corporation 5000 Series Chipset FSB Registers [8086:25f0] (rev b1)
+00:11.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset Reserved Registers [8086:25f1] (rev b1)
+00:13.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset Reserved Registers [8086:25f3] (rev b1)
+00:15.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FBD Registers [8086:25f5] (rev b1)
+00:16.0 Host bridge [0600]: Intel Corporation 5000 Series Chipset FBD Registers [8086:25f6] (rev b1)
+00:1c.0 PCI bridge [0604]: Intel Corporation 631xESB/632xESB/3100 Chipset PCI Express Root Port 1 [8086:2690] (rev 09)
+00:1d.0 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset UHCI USB Controller #1 [8086:2688] (rev 09)
+00:1d.1 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset UHCI USB Controller #2 [8086:2689] (rev 09)
+00:1d.2 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset UHCI USB Controller #3 [8086:268a] (rev 09)
+00:1d.3 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset UHCI USB Controller #4 [8086:268b] (rev 09)
+00:1d.7 USB Controller [0c03]: Intel Corporation 631xESB/632xESB/3100 Chipset EHCI USB2 Controller [8086:268c] (rev 09)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 PCI Bridge [8086:244e] (rev d9)
+00:1f.0 ISA bridge [0601]: Intel Corporation 631xESB/632xESB/3100 Chipset LPC Interface Controller [8086:2670] (rev 09)
+00:1f.1 IDE interface [0101]: Intel Corporation 631xESB/632xESB IDE Controller [8086:269e] (rev 09)
+00:1f.3 SMBus [0c05]: Intel Corporation 631xESB/632xESB/3100 Chipset SMBus Controller [8086:269b] (rev 09)
+01:00.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express Upstream Port [8086:3500] (rev 01)
+01:00.3 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express to PCI-X Bridge [8086:350c] (rev 01)
+02:00.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express Downstream Port E1 [8086:3510] (rev 01)
+02:02.0 PCI bridge [0604]: Intel Corporation 6311ESB/6321ESB PCI Express Downstream Port E3 [8086:3518] (rev 01)
+04:00.0 Ethernet controller [0200]: Intel Corporation 80003ES2LAN Gigabit Ethernet Controller (Copper) [8086:1096] (rev 01)
+04:00.1 Ethernet controller [0200]: Intel Corporation 80003ES2LAN Gigabit Ethernet Controller (Copper) [8086:1096] (rev 01)
+06:00.0 SCSI storage controller [0100]: LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS [1000:0056] (rev 08)
+08:00.0 PCI bridge [0604]: Intel Corporation 6702PXH PCI Express-to-PCI Bridge A [8086:032c] (rev 09)
+0a:01.0 VGA compatible controller [0300]: ATI Technologies Inc ES1000 [1002:515e] (rev 02)
+
+# lsmod
+Module                  Size  Used by
+sbs                    22544  0 
+battery                21512  0 
+sbshc                  14592  1 sbs
+ac                     13576  0 
+video                  29588  0 
+output                 12032  1 video
+iptable_filter         11648  0 
+ip_tables              28816  1 iptable_filter
+x_tables               31624  1 ip_tables
+ext3                  146064  1 
+jbd                    61992  1 ext3
+parport_pc             45096  0 
+lp                     19460  0 
+parport                49456  2 parport_pc,lp
+loop                   26636  0 
+snd_pcsp               19708  0 
+snd_pcm                98184  1 snd_pcsp
+snd_timer              33936  1 snd_pcm
+snd                    76872  3 snd_pcsp,snd_pcm,snd_timer
+serio_raw              14596  0 
+soundcore              16672  1 snd
+iTCO_wdt               20688  0 
+e1000e                133284  0 
+psmouse                51100  0 
+snd_page_alloc         17808  1 snd_pcm
+iTCO_vendor_support    12932  1 iTCO_wdt
+ipv6                  308456  44 
+container              12544  0 
+button                 15904  0 
+shpchp                 41760  0 
+pci_hotplug            39352  1 shpchp
+i5000_edac             18824  0 
+edac_core              58776  3 i5000_edac
+joydev                 20864  0 
+evdev                  20480  0 
+ext2                   80400  1 
+mbcache                17412  2 ext3,ext2
+pata_acpi              13440  0 
+sg                     44768  0 
+sd_mod                 36160  8 
+ata_piix               29316  1 
+usbhid                 40288  0 
+hid                    56000  1 usbhid
+ata_generic            14212  0 
+floppy                 73192  0 
+e1000                 143680  0 
+libata                191968  3 pata_acpi,ata_piix,ata_generic
+mptsas                 44816  3 
+dock                   18592  1 libata
+ehci_hcd               46988  0 
+uhci_hcd               34208  0 
+mptscsih               49408  1 mptsas
+mptbase                91364  2 mptsas,mptscsih
+scsi_transport_sas     45184  1 mptsas
+usbcore               172696  4 usbhid,ehci_hcd,uhci_hcd
+scsi_mod              179576  6 sg,sd_mod,libata,mptsas,mptscsih,scsi_transport_sas
+raid10                 30848  1 
+raid456               138272  0 
+async_xor              12800  1 raid456
+async_memcpy           11008  1 raid456
+async_tx               16500  3 raid456,async_xor,async_memcpy
+xor                    14096  2 raid456,async_xor
+raid1                  31488  0 
+raid0                  15488  0 
+multipath              16512  0 
+linear                 13568  0 
+md_mod                 94884  7 raid10,raid456,raid1,raid0,multipath,linear
+thermal                27680  0 
+processor              50496  1 thermal
+fan                    13576  0 
+fbcon                  51200  0 
+tileblit               11392  1 fbcon
+font                   17152  1 fbcon
+bitblit                14464  1 fbcon
+softcursor             10496  1 bitblit
+uvesafb                38184  0 
+cn                     17324  1 uvesafb
+fuse                   66112  1 
+
+
+-- 
+Vlad Seliverstov
