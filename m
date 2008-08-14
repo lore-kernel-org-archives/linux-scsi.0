@@ -1,130 +1,83 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH update] ieee1394: sbp2: enforce s/g segment size limit
-Date: Thu, 14 Aug 2008 16:21:32 +0900
-Message-ID: <20080814162010E.fujita.tomonori@lab.ntt.co.jp>
-References: <tkrat.a77de871a8213efc@s5r6.in-berlin.de>
-	<20080814095549S.fujita.tomonori@lab.ntt.co.jp>
-	<tkrat.84add1a51a966d30@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Poisoning of Linux initiators on SCST reboot.
+Date: Thu, 14 Aug 2008 08:53:37 -0500
+Message-ID: <1218722017.3345.1.camel@localhost.localdomain>
+References: <andrew.vasquez@qlogic.com>
+	 <200808082010.m78KAGJE012193@wind.enjellic.com>
+	 <20080814052807.GN61889@plap4-2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.84add1a51a966d30@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: stefanr@s5r6.in-berlin.de
-Cc: fujita.tomonori@lab.ntt.co.jp, grundler@google.com, linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56038 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758064AbYHNNxo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Aug 2008 09:53:44 -0400
+In-Reply-To: <20080814052807.GN61889@plap4-2.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: greg@enjellic.com, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, stf_xl@wp.pl, vst@vlnb.net
 
-On Thu, 14 Aug 2008 09:12:01 +0200 (CEST)
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-
-> On 14 Aug, FUJITA Tomonori wrote:
-> > On Wed, 13 Aug 2008 12:19:59 +0200 (CEST)
-> > Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> >> I keep the original scsi_sg_count to call dma_unmap_sg with it
-> >> later.
+On Wed, 2008-08-13 at 22:28 -0700, Andrew Vasquez wrote:
+> On Fri, 08 Aug 2008, greg@enjellic.com wrote:
+> 
+> > On Aug 5,  6:52am, Andrew Vasquez wrote:
+> > } Subject: Re: Poisoning of Linux initiators on SCST reboot.
 > > 
-> > You need to keep it? You can access to it via scsi_sg_count when
-> > calling dma_unmap_sg? Seems that firewire code does.
+> > Hi Andrew, thanks for the follow up.
+> > 
+> > > > Any idea on how tough a backport to 2.6.26 or earlier would be?
+> > > > Running 'head-of-git' from Linus' tree would be somewhat of a stretch
+> > > > for production applications.... :-)(
+> > > 
+> > > We are still looking to finalize a migration path.  As it stands now,
+> > > the least invasive mechanism looks like backporting:
+> > > 
+> > > [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
+> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
+> > > 
+> > > [SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
+> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
+> > > 
+> > > then adding this patch should suffice.  We'll do some more testing
+> > > locally.
+> > 
+> > I checked out the v2.6.26 tag into a branch and ported the patch
+> > series.  Everything went in with minimal difficulties, I'm including
+> > a composite patch below
+> > 
+> > The modules seem to build fine but I haven't had time to hitch them up
+> > to the harness to see whether they explode or not.  Will let everyone
+> > know what we find.
 > 
-> Yes, I can easily do it this way; fixed below.
+> Ok, we've verified and backported the three changes through to 2.6.24.
+> The patches in this order:
 > 
-> [...nents in dma_unmap_sg...]
-> > This is from Documentation/DMA-mapping.txt
+>  [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
+>  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
 > 
-> Right.  How did I forget about that?
+>  [SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
+>  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
 > 
+>  [PATCH 2/8] qla2xxx: Correct synchronization of software/firmware fcport states.
+>  http://article.gmane.org/gmane.linux.scsi/43971
 > 
+> apply cleanly to 2.6.26 (git-am clean), and with minor 'fuzz' (git-am
+> warns) while applying the first patch against 2.6.25 and 2.6.24.
 > 
-> From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> Subject: ieee1394: sbp2: remove redundant struct members
-> 
-> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> ---
->  drivers/ieee1394/sbp2.c |   14 +++++---------
->  drivers/ieee1394/sbp2.h |    4 ----
->  2 files changed, 5 insertions(+), 13 deletions(-)
-> 
-> Index: linux/drivers/ieee1394/sbp2.c
-> ===================================================================
-> --- linux.orig/drivers/ieee1394/sbp2.c
-> +++ linux/drivers/ieee1394/sbp2.c
-> @@ -656,11 +656,11 @@ static struct sbp2_command_info *sbp2uti
->  static void sbp2util_mark_command_completed(struct sbp2_lu *lu,
->  					    struct sbp2_command_info *cmd)
->  {
-> -	if (cmd->sg_buffer) {
-> -		dma_unmap_sg(lu->ud->ne->host->device.parent, cmd->sg_buffer,
-> -			     cmd->sg_count, cmd->sg_dir);
-> -		cmd->sg_buffer = NULL;
-> -	}
-> +	if (scsi_sg_count(cmd->Current_SCpnt) > 0)
+> James B., quick question, from what I recall of the 'stable' process,
+> I'll need to wait till the 3rd patch hits Linus' tree before I can
+> submit to stable@kernel.org.  Since I can't 'CC to stable' the first
+> two patches (they are already in Linus' tree), what's the best way to
+> accomidate this disjoint submission?
 
-static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
+Assuming they're OK to apply individually, you just send the first two
+to stable now quoting the upstream commit id and I'll add the CC: stable
+tag on the third which should cause it to sumbit automatically as soon
+as Linus pulls it.
 
-so 
-
-> +	if (scsi_sg_count(cmd->Current_SCpnt))
-
-make more sense, I think. It looks a nice cleanup except for it.
+James
 
 
-> +		dma_unmap_sg(lu->ud->ne->host->device.parent,
-> +			     scsi_sglist(cmd->Current_SCpnt),
-> +			     scsi_sg_count(cmd->Current_SCpnt),
-> +			     cmd->Current_SCpnt->sc_data_direction);
->  	list_move_tail(&cmd->list, &lu->cmd_orb_completed);
->  }
->  
-> @@ -1505,10 +1505,6 @@ static int sbp2_prep_command_orb_sg(stru
->  	if (n == 0)
->  		return -ENOMEM;
->  
-> -	cmd->sg_buffer = sg;
-> -	cmd->sg_count = sg_count;
-> -	cmd->sg_dir = dma_dir;
-> -
->  	orb->data_descriptor_hi = ORB_SET_NODE_ID(hi->host->node_id);
->  	orb->misc |= ORB_SET_DIRECTION(orb_direction);
->  
-> Index: linux/drivers/ieee1394/sbp2.h
-> ===================================================================
-> --- linux.orig/drivers/ieee1394/sbp2.h
-> +++ linux/drivers/ieee1394/sbp2.h
-> @@ -252,10 +252,6 @@ struct sbp2_command_info {
->  	struct sbp2_unrestricted_page_table
->  		scatter_gather_element[SG_ALL] __attribute__((aligned(8)));
->  	dma_addr_t sge_dma;
-> -
-> -	struct scatterlist *sg_buffer;
-> -	int sg_count;
-> -	enum dma_data_direction sg_dir;
->  };
->  
->  /* Per FireWire host */
-> 
-> 
-> -- 
-> Stefan Richter
-> -=====-==--- =--- -===-
-> http://arcgraph.de/sr/
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
