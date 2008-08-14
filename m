@@ -1,33 +1,40 @@
-From: Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 13 Aug 2008 21:44:33 -0500
-Message-ID: <48A39C11.4010506@opengridcomputing.com>
-References: <48A389DB.9050002@opengridcomputing.com>	<20080813.183755.72334968.davem@davemloft.net>	<48A38FEF.6090500@opengridcomputing.com> <20080813.190521.224523380.davem@davemloft.net>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/8] qla2xxx: updates/fixes for 2.6.27-rc3 [8.02.01-k7].
+Date: Wed, 13 Aug 2008 21:36:32 -0700
+Message-ID: <20080814043632.GL61889@plap4-2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.opengridcomputing.com ([209.198.142.2]:44152 "EHLO
-	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751682AbYHNCoh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2008 22:44:37 -0400
-In-Reply-To: <20080813.190521.224523380.davem@davemloft.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:57933 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbYHNEgd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2008 00:36:33 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: tom@opengridcomputing.com, rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-David Miller wrote:
-> I've stated clearly what the base requirement is, which is that the
-> packet is fully processed by the networking stack and that the card
-> merely does data placement optimizations that the stack can completely
-> ignore if it wants to.
->
-> You have an entire engine in there that can interpret an iSCSI
-> transport stream, you have the logic to do these kinds of things,
-> and it can be done without managing the connection on the card.
->   
+Another round of updates/fixes for 2.6.27-rc3.
 
-Thanks for finally stating it clearly.
+ drivers/scsi/qla2xxx/qla_attr.c    |   11 +++++++++++
+ drivers/scsi/qla2xxx/qla_def.h     |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c    |    8 ++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |   14 +++++++-------
+ drivers/scsi/qla2xxx/qla_mbx.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c      |   18 ++++++++++++------
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 7 files changed, 39 insertions(+), 18 deletions(-)
 
+here's the commits:
+
+* Remove semaphore.h
+* Correct synchronization of software/firmware fcport states.
+* Correct vport-state management issues during ISP-ABORT.
+* Don't leak SG-DMA mappings while aborting commands.
+* Set npiv_supported flag for FCoE HBAs.
+* Reference proper ha during SBR handling.
+* Explicitly tear-down vports during PCI remove_one().
+* Update version number to 8.02.01-k7.
+
+Thanks, AV
