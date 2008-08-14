@@ -1,22 +1,21 @@
-From: Steve Wise <swise@opengridcomputing.com>
+From: Tom Tucker <tom@opengridcomputing.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 13 Aug 2008 20:52:47 -0500
-Message-ID: <48A38FEF.6090500@opengridcomputing.com>
+Date: Wed, 13 Aug 2008 20:57:08 -0500
+Message-ID: <48A390F4.5080101@opengridcomputing.com>
 References: <adatzdoiklo.fsf@cisco.com>	<20080813.161237.10205799.davem@davemloft.net>	<48A389DB.9050002@opengridcomputing.com> <20080813.183755.72334968.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.opengridcomputing.com ([209.198.142.2]:54489 "EHLO
-	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751137AbYHNBwx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2008 21:52:53 -0400
+Received: from mail.es335.com ([67.65.19.105]:22749 "EHLO mail.es335.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751835AbYHNB5K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2008 21:57:10 -0400
 In-Reply-To: <20080813.183755.72334968.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: David Miller <davem@davemloft.net>
-Cc: tom@opengridcomputing.com, rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 David Miller wrote:
 > From: Tom Tucker <tom@opengridcomputing.com>
@@ -36,12 +35,23 @@ David Miller wrote:
 >
 > The data placement is a side effect that the networking stack can
 > completely ignore if it chooses to.
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >   
-How do you envision programming such a device?  It will need TCP and 
-iSCSI state to have any chance of doing useful and productive placement 
-of data.  The smarts about the iSCSI stateless offload hw will be in the 
-device driver, probably the iscsi device driver.  How will it gather the 
-information from the TCP stack to insert the correct state for a flow 
-into the hw cache?
+Ok. Maybe we're getting somewhere here ... or at least I am :-)
 
+I'm not trying to be pedantic here but let me try and restate what I 
+think you said above:
+
+- The "header" traverses the real networking stack
+- The "payload" is placed either by by the hardware if possible or by 
+the native stack if on the exception path
+- The "header" may aggregate multiple  PDU (RSO)
+- Data ready indications are controlled entirely by the software/real 
+networking stack
+
+Thanks,
+Tom
 
