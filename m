@@ -1,35 +1,33 @@
-From: David Miller <davem@davemloft.net>
+From: Steve Wise <swise@opengridcomputing.com>
 Subject: Re: [RFC][PATCH 1/1] cxgb3i: cxgb3 iSCSI initiator
-Date: Wed, 13 Aug 2008 19:09:05 -0700 (PDT)
-Message-ID: <20080813.190905.31828583.davem@davemloft.net>
-References: <adatzdoiklo.fsf@cisco.com>
-	<20080813.161237.10205799.davem@davemloft.net>
-	<48A389DB.9050002@opengridcomputing.com>
+Date: Wed, 13 Aug 2008 21:44:33 -0500
+Message-ID: <48A39C11.4010506@opengridcomputing.com>
+References: <48A389DB.9050002@opengridcomputing.com>	<20080813.183755.72334968.davem@davemloft.net>	<48A38FEF.6090500@opengridcomputing.com> <20080813.190521.224523380.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44309
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757316AbYHNCJE (ORCPT
+Received: from smtp.opengridcomputing.com ([209.198.142.2]:44152 "EHLO
+	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751682AbYHNCoh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2008 22:09:04 -0400
-In-Reply-To: <48A389DB.9050002@opengridcomputing.com>
+	Wed, 13 Aug 2008 22:44:37 -0400
+In-Reply-To: <20080813.190521.224523380.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tom@opengridcomputing.com
-Cc: rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, swise@opengridcomputing.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: tom@opengridcomputing.com, rdreier@cisco.com, rick.jones2@hp.com, jgarzik@pobox.com, divy@chelsio.com, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, dm@chelsio.com, leedom@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Tom Tucker <tom@opengridcomputing.com>
-Date: Wed, 13 Aug 2008 20:26:51 -0500
+David Miller wrote:
+> I've stated clearly what the base requirement is, which is that the
+> packet is fully processed by the networking stack and that the card
+> merely does data placement optimizations that the stack can completely
+> ignore if it wants to.
+>
+> You have an entire engine in there that can interpret an iSCSI
+> transport stream, you have the logic to do these kinds of things,
+> and it can be done without managing the connection on the card.
+>   
 
-> Is there any chance your could discuss exactly how a stateless adapter 
-> can determine if a network segment
-> is in-order, next expected, minus productive ack, paws compliant, etc... 
-> without TCP state?
+Thanks for finally stating it clearly.
 
-If you're getting packets out of order, data placement optimizations
-are the least of your concerns.
-
-In fact this is exactly where we want all of the advanced loss
-handling algorithms of the Linux TCP stack to get engaged.
