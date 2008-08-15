@@ -1,66 +1,62 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 2/2] drop vmerge accounting
-Date: Fri, 15 Aug 2008 11:48:00 +0200
-Message-ID: <20080815094800.GI20055@kernel.dk>
-References: <20080808055405.GF20055@kernel.dk> <20080808151147J.fujita.tomonori@lab.ntt.co.jp> <20080808061537.GI20055@kernel.dk> <20080808152845N.fujita.tomonori@lab.ntt.co.jp> <20080808063527.GJ20055@kernel.dk> <Pine.LNX.4.64.0808081247430.11647@devserv.devel.redhat.com> <Pine.LNX.4.64.0808081254000.11647@devserv.devel.redhat.com>
+From: Nick Warne <nick@ukfsn.org>
+Subject: [PATCH] Fixup KERN_INFO in tmscsim.c
+Date: Fri, 15 Aug 2008 12:10:45 +0100
+Message-ID: <20080815121045.48ca37e4@sauron.linicks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="MP_/uefwVYMAj+4xtWZJbMG4sXN"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:2587 "EHLO kernel.dk"
+Received: from mail.ukfsn.org ([77.75.108.10]:53285 "EHLO mail.ukfsn.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751865AbYHOJsC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Aug 2008 05:48:02 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0808081254000.11647@devserv.devel.redhat.com>
+	id S1752941AbYHOLKs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Aug 2008 07:10:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, adel.gadllah@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 08 2008, Mikulas Patocka wrote:
-> On Fri, 8 Aug 2008, Mikulas Patocka wrote:
-> 
-> > On Fri, 8 Aug 2008, Jens Axboe wrote:
-> > 
-> > > On Fri, Aug 08 2008, FUJITA Tomonori wrote:
-> > > > On Fri, 8 Aug 2008 08:15:37 +0200
-> > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > 
-> > > > > > BTW, we also wait for your verdict on:
-> > > > > > 
-> > > > > > http://marc.info/?t=121611935500002&r=1&w=2
-> > > > > 
-> > > > > I've always hated the iommu virtual merging complexity. My plan is to
-> > > > > rip it out.
-> > > > 
-> > > > No complaint from me. I'm just happy to see the verdict at length.
-> > > 
-> > > Mikulas, you had a patch for this. Can you strip out the arch bits and
-> > > just send me the block bits? The arch bits should go in via the arch
-> > > maintainers.
-> > > 
-> > > The iommu code may still do virtual merging, it would be silly not to do
-> > > that if possible. Now that later kernels expose the necessary parameters
-> > > at that level as well, it's perfectly feasible.
-> > 
-> > Here I'm sending the first one, it removes virtual merge accounting from 
-> > blk-merge.c (it acts as if all architectures undefined 
-> > BIO_VMERGE_BOUNDARY). I also created second patch that removes 
-> > bi_hw_segments field from struct bio and struct request. The next task 
-> > would be to remove nr_hw_segments from the request_queue, but it will 
-> > require changing the drivers.
-> > 
-> > Mikulas
-> 
-> (note: raid5 uses nr_hw_segments field for some other purpose, so this 
-> patch will break it. It should be fixed by raid5 maintainers)
-> 
-> Remove hw_segments field from struct bio and struct request. Without virtual
-> merge accounting they have no purpose.
+--MP_/uefwVYMAj+4xtWZJbMG4sXN
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I have applied this and the previous, with a fixup to raid5 to overload
-both active stripe and process count in bi_phys_segments.
+Hi all,
 
+Setting up my new AMD64 I noticed a curious one liner in syslogs:
+
+^Iwith "disable_clustering=1" and report to maintainers
+
+The attached patch fixes this up so he goes back to his wife
+in /var/log/messages (or wherever KERN_INFO logs on the system):
+
+
+DC390: clustering now enabled by default. If you get problems load
+with "disable_clustering=1" and report to maintainers
+
+
+The patch was created on stable 2.6.26.2 git tree.
+
+Nick
+
+Signed off by: "Nick Warne" <nick@ukfsn.org>
 -- 
-Jens Axboe
+Free Software Foundation Associate Member 5508
+--MP_/uefwVYMAj+4xtWZJbMG4sXN
+Content-Type: text/x-patch; name=tmscsim_warn.patch
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=tmscsim_warn.patch
 
+--- drivers/scsi/tmscsim.cORIG	2008-08-15 10:30:47.000000000 +0100
++++ drivers/scsi/tmscsim.c	2008-08-15 11:45:01.000000000 +0100
+@@ -2573,8 +2573,8 @@
+ static int __init dc390_module_init(void)
+ {
+ 	if (!disable_clustering)
+-		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n"
+-		       "\twith \"disable_clustering=1\" and report to maintainers\n");
++		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n");
++		printk(KERN_INFO "with \"disable_clustering=1\" and report to maintainers\n");
+ 
+ 	if (tmscsim[0] == -1 || tmscsim[0] > 15) {
+ 		tmscsim[0] = 7;
+
+--MP_/uefwVYMAj+4xtWZJbMG4sXN--
