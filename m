@@ -1,25 +1,72 @@
-From: ACCOUNT VERIFICATION TEAM <catbells@hcinet.net>
-Subject: DEAR: WEBMAIL ACCOUNT OWNER
-Date: Thu, 14 Aug 2008 18:27:06 +0000
-Message-ID: <20080814182706.JILG29093.invictus__6445.69483488357$1218760061$gmane$org@[192.168.1.30]>
-Reply-To: couryhno@mail2webmaster.com
+From: Hirofumi Nakagawa <hnakagawa@miraclelinux.com>
+Subject: [PATCH] megaraid_mm: moved pci_pool_alloc() from critical section
+ to outward
+Date: Fri, 15 Aug 2008 15:51:08 +0900
+Message-ID: <48A5275C.6050303@miraclelinux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from invictus.bright.net ([209.143.0.12]:39422 "EHLO
-	invictus.bright.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbYHOA0H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2008 20:26:07 -0400
+Received: from ns.miraclelinux.com ([219.118.163.66]:55441 "EHLO
+	mail.miraclelinux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbYHOHBO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Aug 2008 03:01:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: support@webmail.com
+To: megaraidlinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
 
-DEAR: WEBMAIL ACCOUNT OWNER
+Hi
+This patch moved call of pci_pool_alloc from critical section to outward.
+It seems like that original code behavior schedule-in without unlock.
 
-To complete your Webmail Account Verification process, you are to reply this message and enter your password in the space provided (            ), you  are required to do this before the next 48hrs of receipt of this e-mail, oryour Webmail Account will be de-activated and erased from our database.
+Note
+This patch is not tested because I don't have this device.
 
-Your account can also be verified at:
-Thank you for using our Webmail Service.
-ACCOUNT VERIFICATION TEAM
+Thanks.
+Hirofumi Nakagawa
+
+Signed-off-by: Hirofumi Nakagawa <hnakagawa@miraclelinux.com>
+---
+ drivers/scsi/megaraid/megaraid_mm.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index f680561..4d70906 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -499,6 +499,7 @@ mraid_mm_attach_buf(mraid_mmadp_t *adp, uioc_t *kioc, int xferlen)
+ 	int		right_pool = -1;
+ 	unsigned long	flags;
+ 	int		i;
++	void *t;
+
+ 	kioc->pool_index	= -1;
+ 	kioc->buf_vaddr		= NULL;
+@@ -549,17 +550,19 @@ mraid_mm_attach_buf(mraid_mmadp_t *adp, uioc_t *kioc, int xferlen)
+ 	 * to allocate one new buffer. NOTE: This is a blocking call.
+ 	 */
+ 	pool = &adp->dma_pool_list[right_pool];
++	t = pci_pool_alloc(pool->handle, GFP_KERNEL,
++							&kioc->buf_paddr);
++
++	if (!t)
++		return -ENOMEM;
+
+ 	spin_lock_irqsave(&pool->lock, flags);
+
+ 	kioc->pool_index	= right_pool;
+ 	kioc->free_buf		= 1;
+-	kioc->buf_vaddr 	= pci_pool_alloc(pool->handle, GFP_KERNEL,
+-							&kioc->buf_paddr);
+-	spin_unlock_irqrestore(&pool->lock, flags);
++	kioc->buf_vaddr 	= t;
+
+-	if (!kioc->buf_vaddr)
+-		return -ENOMEM;
++	spin_unlock_irqrestore(&pool->lock, flags);
+
+ 	return 0;
+ }
+-- 
 
