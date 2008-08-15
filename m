@@ -1,62 +1,52 @@
-From: Nick Warne <nick@ukfsn.org>
-Subject: [PATCH] Fixup KERN_INFO in tmscsim.c
-Date: Fri, 15 Aug 2008 12:10:45 +0100
-Message-ID: <20080815121045.48ca37e4@sauron.linicks.net>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: megaraid_sas dbg_lvl permissions
+Date: Fri, 15 Aug 2008 08:44:54 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3232D97DD@cosmail02.lsi.com>
+References: <31647799.1118451218748488466.JavaMail.root@ouachita>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/uefwVYMAj+4xtWZJbMG4sXN"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ukfsn.org ([77.75.108.10]:53285 "EHLO mail.ukfsn.org"
+Received: from mail0.lsil.com ([147.145.40.20]:46801 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752941AbYHOLKs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Aug 2008 07:10:48 -0400
+	id S1756189AbYHOOpR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Aug 2008 10:45:17 -0400
+In-Reply-To: <31647799.1118451218748488466.JavaMail.root@ouachita>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: Joe Malicki <jmalicki@metacarta.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+ACK.
+
+Thanks,
+
+Bo Yang
+
+-----Original Message-----
+From: Joe Malicki [mailto:jmalicki@metacarta.com]
+Sent: Thursday, August 14, 2008 5:15 PM
+To: Yang, Bo
 Cc: linux-scsi@vger.kernel.org
+Subject: megaraid_sas dbg_lvl permissions
 
---MP_/uefwVYMAj+4xtWZJbMG4sXN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+/sys/bus/pci/drivers/megaraid_sas/dbg_lvl defaults to being world-writable, which seems bad (letting any user affect kernel driver behavior and logging level).
 
-Hi all,
+This turns off group and user write permissions, so that on typical production systems only root can write to it.
 
-Setting up my new AMD64 I noticed a curious one liner in syslogs:
+Signed-off-by: Joseph Malicki <jmalicki@metacarta.com>
+--
+--- drivers/scsi/megaraid/megaraid_sas.c.orig   2008-01-31 10:49:57.000000000 -0500
++++ drivers/scsi/megaraid/megaraid_sas.c        2008-01-31 10:52:10.000000000 -0500
+@@ -3044,7 +3044,7 @@
+        return retval;
+ }
 
-^Iwith "disable_clustering=1" and report to maintainers
+-static DRIVER_ATTR(dbg_lvl, S_IRUGO|S_IWUGO, megasas_sysfs_show_dbg_lvl,
++static DRIVER_ATTR(dbg_lvl, S_IRUGO|S_IWUSR,
++megasas_sysfs_show_dbg_lvl,
+                   megasas_sysfs_set_dbg_lvl);
 
-The attached patch fixes this up so he goes back to his wife
-in /var/log/messages (or wherever KERN_INFO logs on the system):
-
-
-DC390: clustering now enabled by default. If you get problems load
-with "disable_clustering=1" and report to maintainers
-
-
-The patch was created on stable 2.6.26.2 git tree.
-
-Nick
-
-Signed off by: "Nick Warne" <nick@ukfsn.org>
--- 
-Free Software Foundation Associate Member 5508
---MP_/uefwVYMAj+4xtWZJbMG4sXN
-Content-Type: text/x-patch; name=tmscsim_warn.patch
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=tmscsim_warn.patch
-
---- drivers/scsi/tmscsim.cORIG	2008-08-15 10:30:47.000000000 +0100
-+++ drivers/scsi/tmscsim.c	2008-08-15 11:45:01.000000000 +0100
-@@ -2573,8 +2573,8 @@
- static int __init dc390_module_init(void)
- {
- 	if (!disable_clustering)
--		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n"
--		       "\twith \"disable_clustering=1\" and report to maintainers\n");
-+		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n");
-+		printk(KERN_INFO "with \"disable_clustering=1\" and report to maintainers\n");
- 
- 	if (tmscsim[0] == -1 || tmscsim[0] > 15) {
- 		tmscsim[0] = 7;
-
---MP_/uefwVYMAj+4xtWZJbMG4sXN--
+ /**
+--
