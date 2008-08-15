@@ -1,57 +1,47 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 4/6] ibmvfc: Sanitize response lengths
-Date: Fri, 15 Aug 2008 10:59:26 -0500
-Message-ID: <200808151600.m7FG07hS007533@d03av03.boulder.ibm.com>
+Subject: [PATCH 5/6] ibmvfc: Add details to async event log
+Date: Fri, 15 Aug 2008 10:59:27 -0500
+Message-ID: <200808151600.m7FG09qk010091@d03av02.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:46217 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754907AbYHOQAL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Aug 2008 12:00:11 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.150]:60996 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755613AbYHOQAM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Aug 2008 12:00:12 -0400
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7FG0AR8021701
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 12:00:10 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7FG09ej100812
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 10:00:09 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7FG09L5007692
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 10:00:09 -0600
+	by e32.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7FFrYCe004162
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 11:53:34 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7FG0AdO092706
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 10:00:10 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7FG09DZ010138
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2008 10:00:10 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-Sanitize the response lengths in order to prevent possible oopses
-in the command response path.
+When logging async events, also print the payload in addition to the
+event received.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_sanitize_sense drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_sanitize_sense	2008-08-14 12:44:03.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-08-14 12:44:03.000000000 -0500
-@@ -1457,8 +1457,8 @@ static void ibmvfc_scsi_done(struct ibmv
- 	struct ibmvfc_cmd *vfc_cmd = &evt->xfer_iu->cmd;
- 	struct ibmvfc_fcp_rsp *rsp = &vfc_cmd->rsp;
- 	struct scsi_cmnd *cmnd = evt->cmnd;
--	int rsp_len = 0;
--	int sense_len = rsp->fcp_sense_len;
-+	u32 rsp_len = 0;
-+	u32 sense_len = rsp->fcp_sense_len;
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_ae_log drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_ae_log	2008-08-15 10:25:53.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-08-15 10:27:04.000000000 -0500
+@@ -2084,7 +2084,8 @@ static void ibmvfc_handle_async(struct i
+ {
+ 	const char *desc = ibmvfc_get_ae_desc(crq->event);
  
- 	if (cmnd) {
- 		if (vfc_cmd->response_flags & IBMVFC_ADAPTER_RESID_VALID)
-@@ -1475,7 +1475,7 @@ static void ibmvfc_scsi_done(struct ibmv
- 				rsp_len = rsp->fcp_rsp_len;
- 			if ((sense_len + rsp_len) > SCSI_SENSE_BUFFERSIZE)
- 				sense_len = SCSI_SENSE_BUFFERSIZE - rsp_len;
--			if ((rsp->flags & FCP_SNS_LEN_VALID) && rsp->fcp_sense_len)
-+			if ((rsp->flags & FCP_SNS_LEN_VALID) && rsp->fcp_sense_len && rsp_len <= 8)
- 				memcpy(cmnd->sense_buffer, rsp->data.sense + rsp_len, sense_len);
+-	ibmvfc_log(vhost, 3, "%s event received\n", desc);
++	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %lx, wwpn: %lx,"
++		   " node_name: %lx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
  
- 			ibmvfc_log_error(evt);
+ 	switch (crq->event) {
+ 	case IBMVFC_AE_LINK_UP:
 _
