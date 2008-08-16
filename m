@@ -1,58 +1,91 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] Fixup KERN_INFO in tmscsim.c
-Date: Sun, 17 Aug 2008 00:00:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0808162351560.6275@axis700.grange>
-References: <20080815121045.48ca37e4@sauron.linicks.net>
- <Pine.LNX.4.64.0808152202440.7852@axis700.grange> <20080816090654.4a5188e2@sauron.linicks.net>
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [SCSI] removed unused #include <version.h>
+Date: Sun, 17 Aug 2008 07:50:50 +0800
+Message-ID: <20080817064103.1603.WEIYI.HUANG@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54541 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751411AbYHPV7k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Aug 2008 17:59:40 -0400
-In-Reply-To: <20080816090654.4a5188e2@sauron.linicks.net>
+Received: from ti-out-0910.google.com ([209.85.142.187]:14173 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752514AbYHPXvB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Aug 2008 19:51:01 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so623856tic.23
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Aug 2008 16:51:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Warne <nick@ukfsn.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Nick Warne <nick@ukfsn.org>
+The drivers below do not use LINUX_VERSION_CODE nor KERNEL_VERSION.
+  drivers/scsi/ips.c
+  drivers/scsi/lpfc/lpfc_debugfs.c
+  drivers/scsi/nsp32.c
+  drivers/scsi/pcmcia/nsp_cs.c
+  drivers/scsi/qla2xxx/qla_mid.c
 
-Multiline kernel messages should contain a priority in every line, 
-besides, some log daemons represent a tabulator as "^I", fix both these 
-issues.
+This patch removes the said #include <version.h>.
 
-Signed-off-by: Nick Warne <nick@ukfsn.org>
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
 
----
-
-On Sat, 16 Aug 2008, Nick Warne wrote:
-
-> On Fri, 15 Aug 2008 22:17:57 +0200 (CEST)
-> Guennadi Liakhovetski <g.liakhovetski@gmx.de> wrote:
-> 
-> > So, please, redo as above, create with "-p1" format, fix your Sob line
-> 
-> New patch attached.
-
-Nick, I took the liberty to reformat your Sob and to replace the tab in 
-your patch with spaces - as was in my previous reply to you. Hope, you 
-don't mind:-)
-
-diff -u linux-2.6.26.y/drivers/scsi/tmscsim.cORIG linux-2.6.26.y/drivers/scsi/tmscsim.c
---- linux-2.6.26.y/drivers/scsi/tmscsim.cORIG	2008-08-15 10:30:47.000000000 +0100
-+++ linux-2.6.26.y/drivers/scsi/tmscsim.c	2008-08-16 08:45:43.000000000 +0100
-@@ -2573,8 +2573,8 @@
- static int __init dc390_module_init(void)
- {
- 	if (!disable_clustering)
--		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n"
--		       "\twith \"disable_clustering=1\" and report to maintainers\n");
-+		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n");
-+		printk(KERN_INFO "       with \"disable_clustering=1\" and report to maintainers\n");
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 7c615c7..bc9e6dd 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -165,7 +165,6 @@
+ #include <asm/byteorder.h>
+ #include <asm/page.h>
+ #include <linux/stddef.h>
+-#include <linux/version.h>
+ #include <linux/string.h>
+ #include <linux/errno.h>
+ #include <linux/kernel.h>
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 90272e6..094b47e 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -27,7 +27,6 @@
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/ctype.h>
+-#include <linux/version.h>
  
- 	if (tmscsim[0] == -1 || tmscsim[0] > 15) {
- 		tmscsim[0] = 7;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index edf9fdb..22052bb 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -23,7 +23,6 @@
+  *   1.2: PowerPC (big endian) support.
+  */
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index a221b6e..24e6cb8 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -25,7 +25,6 @@
+ 
+ ***********************************************************************/
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 50baf6a..93560cd 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -6,7 +6,6 @@
+  */
+ #include "qla_def.h"
+ 
+-#include <linux/version.h>
+ #include <linux/moduleparam.h>
+ #include <linux/vmalloc.h>
+ #include <linux/smp_lock.h>
 
