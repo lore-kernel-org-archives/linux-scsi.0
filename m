@@ -1,64 +1,79 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: "Koskinen Aaro (NSN - FI/Helsinki)" <aaro.koskinen@nsn.com>
 Subject: Re: [PATCH 1/1] sym53c8xx_2: Fix validation (Fix hotplug support).
-Date: Sun, 17 Aug 2008 22:47:36 -0500
-Message-ID: <48A8F0D8.3030000@cs.wisc.edu>
+Date: Mon, 18 Aug 2008 14:25:06 +0300
+Message-ID: <48A95C12.9070304@nsn.com>
 References: <1219004320-6384-1-git-send-email-michaelc@cs.wisc.edu> <1219030321.3917.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57779 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751019AbYHRDrr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Aug 2008 23:47:47 -0400
+Received: from smtp.nokia.com ([192.100.122.233]:59394 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbYHRLZj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Aug 2008 07:25:39 -0400
 In-Reply-To: <1219030321.3917.44.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Aaro Koskinen <aaro.koskinen@nsn.com>, Matthew Wilcox <matthew@wil.cx>
+To: ext James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
 James Bottomley wrote:
-> On Sun, 2008-08-17 at 15:18 -0500, michaelc@cs.wisc.edu wrote:
->> From: Mike Christie <michaelc@cs.wisc.edu>
->>
->> The patch and description is from Aaro Koskinen. He sent us the
->> patch against our fedora kernel, but he is short on time and did not have
->> time to send it upstream, so I am sending it for him so it does not sit in
->> just our trees.
->>
->> This patch applies to scsi-fc-fixes.
+> This seems to be a bug in sym_prepare_nego(), yes ... it should do
+> either a PPR or WDTR/SDTR sequence ... there is a case where it won't do
+> anything when asked.
 > 
-> One of the things that's missing from this is really the problem it's
-> trying to solve ... the below is just an analysis of potential bugs in
-> the sym2 code.
+>> - The patch deletes code from sym_sir_task_recovery()/M_RESET branch. It's
+>> unnecessary to reset negotiation status there, since any reset eventually
+>> triggers S_CHECK_COND.
 > 
+> It looks like a reasonable safety feature against problem drives ... I'd
+> be hesitant to remove it.
 
-Sorry. I meant to add a link to the mail with the bug report. Here is my 
-initial post:
-http://marc.info/?l=linux-scsi&m=120898142212407&w=2
+To me, the code looked like it was added there to compensate the bug 
+mentioned above. Anyway, it probably does no harm to leave it there.
 
-Basically users are trying to do a hot unplug and hotplug add of a disk. 
-They will do:
+>> - It seems that the SPI "domain validation" consists solely of INQUIRY
+>> commands.
+> 
+> Actually, no.  DV uses Inquiry solely for non DT negotiations because of
+> potential echo buffer problems in certain drives but it uses the echo
+> buffer for DT verification.
 
-1. echo 1 > /sys/block/sdb/device/delete
-(or do it from proc)
-2. Remove the disk physically.
-3. Insert new disk.
-4. Rescan from sysfs
-(or from proc).
-5. For the rescan we can either get:
+Yes, you are correct.
 
-A. inquiry from scsi_scan.c will timeout and the driver's bus reset 
-funtion will do a BUS RESET (bdr failed and so we got to the bus reset 
-handler). This will succeed, and when the inqiury is resent it will 
-succeed and the rescan will find the device and everything is fine.
+>>  As a result, if (b) is followed, targets that support PPR would
+>> never get to the point of doing PPR transfers during domain validation
+>> (but immediately after on the next command following the dv), since each
+>> INQUIRY re-starts the negotiation cycle. This patch solves this by making
+>> it possible to do the negotiation cycle WIDE -> SYNC -> PPR during a
+>> single SCSI command.
+> 
+> I don't quite follow this.  The way SPI DV works is that we start out
+> fully async for the first INQUIRY, then move to wide async (to check no
+> bus width domain problems, which are the most common) then jump to the
+> highest speed supported by the device and transport.  i.e. we always do
+> 
+> async -> WDTR -> SDTR
+> 
+> or
+> 
+> async -> WDTR -> PPR
+> 
+> we never go
+> 
+> async -> WDTR -> SDTR -> PPR.
+> 
+> What's the actual problem you are seeing?
 
-B. inquiry is failed with 0x100ff. We see this error message from 
-scsi_scan.c:
+If you consider this patch, the WDTR message will be resent when the DV 
+jumps to the highest speed, and then, if you look at the code in 
+sym_wide_nego(), the driver will also send SDTR after the target 
+responds to WDTR since the goal offset is now set. So what you will get 
+is WDTR -> SDTR -> PPR.
 
-scsi_scan_host_selected: <1:0:0:0>
-scsi scan: INQUIRY to host 1 channel 0 id 0 lun 0
-scsi scan: 1st INQUIRY failed with code 0x100ff
+But now that I think of it, perhaps the code in sym_wide_nego() should 
+already check whether to send PPR instead of SDTR if the goals are 
+appropriate.
 
+A.
 
-I will let Aaro handle the other questions because I know nothing about SPI.
