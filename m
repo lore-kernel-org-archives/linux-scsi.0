@@ -1,71 +1,46 @@
-From: James Smart <James.Smart@emulex.com>
-Subject: Re: [PATCH 3/7] fc class: Add support for new transport
-	errors
-Date: Tue, 19 Aug 2008 11:35:42 -0400
-Message-ID: <48AAE84E.2030501@emulex.com>
-References: <1212630106-13413-1-git-send-email-michaelc@cs.wisc.edu>	<1212630106-13413-2-git-send-email-michaelc@cs.wisc.edu>	<1212630106-13413-3-git-send-email-michaelc@cs.wisc.edu>
-	<1212630106-13413-4-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: fc class: terminate callback fixes
+Date: Tue, 19 Aug 2008 11:37:06 -0400
+Message-ID: <48AAE8A2.2090702@emulex.com>
+References: <1215830441-20259-1-git-send-email-michaelc@cs.wisc.edu> <48A89016.5080807@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1212630106-13413-4-git-send-email-michaelc@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:41459 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbYHSPhW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2008 11:37:22 -0400
+In-Reply-To: <48A89016.5080807@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Ack.
+Yep - I just sent the ack...
 
-Although, I have the personal style preference of :
-   rport->flags &= ~(FC_RPORT_FAST_FAIL_TIMEDOUT |
-                     FC_RPORT_DEVLOSS_PENDING);
-over
-  >
-  > +	rport->flags &= ~FC_RPORT_FAST_FAIL_TIMEDOUT;
-  >  	rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
-  >
+Thanks
 
 -- james s
 
-michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
+Mike Christie wrote:
+> michaelc@cs.wisc.edu wrote:
+>> This fixes the problems discussed in this thread:
+>> http://marc.info/?l=linux-scsi&m=121573444523292&w=2
+>> where we need to call scsi_target_unblock in the code
+>> path where the terminate call back is used. The unblock calls is
+>> need so that IO does not get stuck when removing the rport. And for
+>> the fast IO fail case, I merged the patch to fast fail
+>> IO so it does not bounce around between the queue
+>> and driver and is returned to the upper layer quickly.
+>> These patch then solve all the issues and fix the problem
+>> for drivers that were not implementing the callback.
+>>
+>> The patches were made over scsi-misc and the qlogic update
+>> in that thread.
+>>
 > 
-> When we block a rport and the driver implements the terminate
-> callback we will fail IO that was running quickly. However
-> IO that was in the scsi_device/block queue sits there until
-> the dev_loss_tmo fires, and this can make it look like IO is
-> lost because new IO will get executed but that IO stuck in
-> the blocked queue sits there for some time longer.
+> Hey JamesS,
 > 
-> With this patch when the fast io fail tmo fires, we will
-> fail the blocked IO and any new IO. This patch also allows
-> all drivers to partially support the fast io fail tmo. If the
-> terminate io callback is not implemented, we will still fail blocked
-> IO and any new IO, so multipath can handle that. This means that for
-> drivers like qla2xxx which seem to fail the IO when the error is first
-> detected this will then allow drivers like lpfc and qla2xxx to have the
-> IO flushed to the upper layers when the fast io fail tmo is fired.
+> Are these patches ok?
 > 
-> This patch also allows the fc and iscsi classes to implement the
-> same behavior. The timers are just unfornately named differently.
-> 
-> The next patches will convert the drivers to support this.
-> 
-> This patch has been lightly tested with lpfc and qla2xxx. I am not able
-> to test the role change handling.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/scsi_transport_fc.c |   15 ++++++++++-----
->  include/scsi/scsi_transport_fc.h |    8 ++++++--
->  2 files changed, 16 insertions(+), 7 deletions(-)
