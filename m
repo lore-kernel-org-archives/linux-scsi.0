@@ -1,69 +1,74 @@
-From: "Gwendal Grignou" <gwendal@google.com>
-Subject: Re: [PATCH #upstream-fixes] libata: Add transport class for libata
-Date: Tue, 19 Aug 2008 11:14:17 -0700
-Message-ID: <e7510f760808191114w614403eej2fd3ae4fb0176050@mail.gmail.com>
-References: <e7510f760808182131q1bd3aa4bp694ebff75b612995@mail.gmail.com>
-	 <48AAAFAC.9050502@s5r6.in-berlin.de>
-	 <20080819122738.GC21854@parisc-linux.org>
-	 <48AAC7B0.9060107@s5r6.in-berlin.de>
+From: Joe Malicki <jmalicki@metacarta.com>
+Subject: megaraid_sas: Optionally add SCSI devices for individual disks in a
+ raidset
+Date: Tue, 19 Aug 2008 17:20:54 -0400 (EDT)
+Message-ID: <2834632.1190561219180854948.JavaMail.root@ouachita>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <48AAC7B0.9060107@s5r6.in-berlin.de>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from silene.metacarta.com ([208.80.142.18]:40574 "EHLO
+	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbYHSVU5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2008 17:20:57 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: megaraidlinux@lsi.com, linux-poweredge <linux-poweredge@dell.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Stefan,
+This is very dangerous, and you shouldn't use it/apply it unless you're feeling adventurous.
 
-My mistake. I started from scsi_transport_sas.c code already present
-in the kernel; I forgot to remove the copyright notice. I changed the
-copyright notice.
+This lets one, optionally, add /dev/sg* devices, and optionally also /dev/sd* devices, for
+disks in a RAIDset.  It is modeled after similar functionality in the aacraid driver.
 
-About Documentation/ABI, I did not found any information about
-existing transport classes [sas,fc,spi,iscsi,...]. I added on for
-libata transport class. I send a new patch shortly.
+I've been successfully using this to upgrade individual disk firmwares behind a Dell PERC 
+RAID controller with sgdskfl from scsirastools - AFTER the RAID array has been stopped
+with other tools.
 
-Thanks,
+Use the kernel option "megaraid_sas.export_disks=-1" to get /dev/sg* devices.  Unless a
+specific option has been given, the patch doesn't modify behavior.
 
-Gwendal.
+Note that the driver currently says (and has said for some time):
 
-On Tue, Aug 19, 2008 at 6:16 AM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> Matthew Wilcox wrote:
->> I think a more important question is ... this is coming from a Google
->> address, but has a Copyright Dell on it.  Where's the sign-off chain for
->> this?  Who's the author really?
->
-> Indeed, this needs to be clarified.
->
->>> Gwendal Grignou wrote:
->>>> +#define SETUP_TEMPLATE(attrb, field, perm, test)                   \
->>>> +   i->private_##attrb[count] = dev_attr_##field;                   \
->>>> +   i->private_##attrb[count].attr.mode = perm;                     \
->>>> +   i->attrb[count] = &i->private_##attrb[count];                   \
->>>> +   if (test)                                                       \
->>>> +           count++
-> ...
->>>> +#define SETUP_PORT_ATTRIBUTE(field)                                        \
->>>> +   SETUP_TEMPLATE(port_attrs, field, S_IRUGO, 1)
-> ...
->>>> +   count = 0;
->>>> +   SETUP_PORT_ATTRIBUTE(nr_pmp_links);
->>>> +   SETUP_PORT_ATTRIBUTE(idle_irq);
->>>> +   BUG_ON(count > ATA_PORT_ATTRS);
->>>> +   i->port_attrs[count] = NULL;
->
-> I understand that such preprocessor games are hard to avoid in code like
-> sysfs attribute setup.  I have nothing better to suggest, but they are
-> ugly nevertheless, and may amount to bloat.
->
-> Anyway; the BUG_ON there should probably be a BUILD_BUG_ON.
-> --
-> Stefan Richter
-> -=====-==--- =--- =--==
-> http://arcgraph.de/sr/
->
+         * FIXME: Currently we don't export them to the midlayer at all.
+	 * 	  That will be fixed once LSI engineers have audited the
+	 * 	  firmware for possible issues.
+
+So using this is certainly high risk and one should be careful.
+(only signing off so others may feel free to use it, not encouraging this
+to go anywhere unless LSI feels it's safe)
+
+Signed-off-by: jmalicki@metacarta.com
+
+------------
+--- linux-2.6.26.2-orig/drivers/scsi/megaraid/megaraid_sas.c    2008-08-06 12:19:01.000000000 -0400
++++ linux-2.6.26.2/drivers/scsi/megaraid/megaraid_sas.c 2008-08-19 17:12:02.000000000 -0400
+@@ -46,6 +46,12 @@
+ #include <scsi/scsi_host.h>
+ #include "megaraid_sas.h"
+
++static int export_disks = 0;
++module_param(export_disks, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(export_disks, "Export physical disks to the SCSI midlayer (DANGEROUS)"
++       " -1=protect 0=off 1=on");
++
++
+ /*
+  * poll_mode_io:1- schedule complete completion from q cmd
+  */
+@@ -905,8 +911,12 @@
+         *        That will be fixed once LSI engineers have audited the
+         *        firmware for possible issues.
+         */
+-       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
+-               return -ENXIO;
++       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
+{
++               if (export_disks < 0)
++                       sdev->no_uld_attach = 1;
++               else if (export_disks == 0)
++                       return -ENXIO;
++       }
+
+        /*
+         * The RAID firmware may require extended timeouts.
+--------
