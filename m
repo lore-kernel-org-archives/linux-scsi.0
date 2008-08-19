@@ -1,74 +1,100 @@
-From: Joe Malicki <jmalicki@metacarta.com>
-Subject: megaraid_sas: Optionally add SCSI devices for individual disks in a
- raidset
-Date: Tue, 19 Aug 2008 17:20:54 -0400 (EDT)
-Message-ID: <2834632.1190561219180854948.JavaMail.root@ouachita>
+From: Giuliano Pochini <pochini@shiny.it>
+Subject: Re: removable device: can't detect disk changes
+Date: Wed, 20 Aug 2008 00:58:13 +0200
+Message-ID: <20080820005813.da5424bb.pochini@shiny.it>
+References: <20080812150814.a2fd58cd.pochini@shiny.it>
+	<20080818215257.e1d7700c.pochini@shiny.it>
+	<1219093095.3261.68.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silene.metacarta.com ([208.80.142.18]:40574 "EHLO
-	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbYHSVU5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2008 17:20:57 -0400
+Received: from smtp-OUT05A.alice.it ([85.33.3.5]:1601 "EHLO
+	smtp-OUT05A.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754288AbYHSXNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2008 19:13:35 -0400
+In-Reply-To: <1219093095.3261.68.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-poweredge <linux-poweredge@dell.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is very dangerous, and you shouldn't use it/apply it unless you're feeling adventurous.
+On Mon, 18 Aug 2008 15:58:14 -0500
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-This lets one, optionally, add /dev/sg* devices, and optionally also /dev/sd* devices, for
-disks in a RAIDset.  It is modeled after similar functionality in the aacraid driver.
+> On Mon, 2008-08-18 at 21:52 +0200, Giuliano Pochini wrote:
+> > On Tue, 12 Aug 2008 15:08:14 +0200
+> > Giuliano Pochini <pochini@shiny.it> wrote:
+> > 
+> > > 
+> > > Fujitsu magneto-optical drive, Adaptec 29160 and 
+> > > Linux Jay 2.6.26 #7 SMP Sun Aug 10 18:34:22 CEST 2008 ppc 7455, altivec supported PowerMac3,6 GNU/Linux
+> > > 
+> > > When I insert a disk and I mount it, scsi_test_unit_ready() is called and
+> > > the do-while loop gets sshdr->sense_key == UNIT_ATTENTION in the first
+> > > cycle and 0 in the second one. So the if below misses the UNIT_ATTENTION
+> > > and sdev->changed = 1 is not executed. At this point bad things can
+> > > happen... I'm not sure how to fix this. Any clue ?
+> > 
+> > Ok... what about this patch ?  The while() condition also checks for
+> > NOT_READY. For removable devices sdev->changed is set when not_ready is
+> > detected (not only if it occurs in the last cycle).
+> > If works fine here, but since I don't know the SCSI subsystem this patch
+> > may be wrong.
+> 
+> Well done! Almost ... apparently what needs to happen is what we're
+> currently doing in sr_test_unit_ready.  There's no need to keep checking
+> for NOT_READY ... that isn't a volatile condition like UNIT ATTENTION
+> and driver_byte(result) & DRIVER_SENSE is equivalent to
+> scsi_sense_valid(sshdr) in most cases.  Also, the while loop should exit
+> on a non-UNIT ATTENTION condition (like NOT READY).
+>
+> Does this work?
 
-I've been successfully using this to upgrade individual disk firmwares behind a Dell PERC 
-RAID controller with sgdskfl from scsirastools - AFTER the RAID array has been stopped
-with other tools.
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+[...]
 
-Use the kernel option "megaraid_sas.export_disks=-1" to get /dev/sg* devices.  Unless a
-specific option has been given, the patch doesn't modify behavior.
+Yes, it works fine. This is your patch without the check for sshdr!=NULL
+because it is already in scsi_sense_valid().
 
-Note that the driver currently says (and has said for some time):
 
-         * FIXME: Currently we don't export them to the midlayer at all.
-	 * 	  That will be fixed once LSI engineers have audited the
-	 * 	  firmware for possible issues.
+--- drivers/scsi/scsi_lib.c__orig	2008-08-18 21:11:45.000000000 +0200
++++ drivers/scsi/scsi_lib.c	2008-08-19 22:31:41.000000000 +0200
+@@ -1972,22 +1972,21 @@ scsi_test_unit_ready(struct scsi_device 
+ 	do {
+ 		result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
+ 					  timeout, retries);
+-	} while ((driver_byte(result) & DRIVER_SENSE) &&
+-		 sshdr && sshdr->sense_key == UNIT_ATTENTION &&
+-		 --retries);
++		if (sdev->removable && scsi_sense_valid(sshdr) &&
++		    sshdr->sense_key == UNIT_ATTENTION)
++			sdev->changed = 1;
++	} while (scsi_sense_valid(sshdr) &&
++		 sshdr->sense_key == UNIT_ATTENTION && --retries);
+ 
+ 	if (!sshdr)
+ 		/* could not allocate sense buffer, so can't process it */
+ 		return result;
+ 
+-	if ((driver_byte(result) & DRIVER_SENSE) && sdev->removable) {
+-
+-		if ((scsi_sense_valid(sshdr)) &&
+-		    ((sshdr->sense_key == UNIT_ATTENTION) ||
+-		     (sshdr->sense_key == NOT_READY))) {
+-			sdev->changed = 1;
+-			result = 0;
+-		}
++	if (sdev->removable && scsi_sense_valid(sshdr) &&
++	    (sshdr->sense_key == UNIT_ATTENTION ||
++	     sshdr->sense_key == NOT_READY)) {
++		sdev->changed = 1;
++		result = 0;
+ 	}
+ 	if (!sshdr_external)
+ 		kfree(sshdr);
 
-So using this is certainly high risk and one should be careful.
-(only signing off so others may feel free to use it, not encouraging this
-to go anywhere unless LSI feels it's safe)
 
-Signed-off-by: jmalicki@metacarta.com
 
-------------
---- linux-2.6.26.2-orig/drivers/scsi/megaraid/megaraid_sas.c    2008-08-06 12:19:01.000000000 -0400
-+++ linux-2.6.26.2/drivers/scsi/megaraid/megaraid_sas.c 2008-08-19 17:12:02.000000000 -0400
-@@ -46,6 +46,12 @@
- #include <scsi/scsi_host.h>
- #include "megaraid_sas.h"
-
-+static int export_disks = 0;
-+module_param(export_disks, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(export_disks, "Export physical disks to the SCSI midlayer (DANGEROUS)"
-+       " -1=protect 0=off 1=on");
-+
-+
- /*
-  * poll_mode_io:1- schedule complete completion from q cmd
-  */
-@@ -905,8 +911,12 @@
-         *        That will be fixed once LSI engineers have audited the
-         *        firmware for possible issues.
-         */
--       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
--               return -ENXIO;
-+       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
-{
-+               if (export_disks < 0)
-+                       sdev->no_uld_attach = 1;
-+               else if (export_disks == 0)
-+                       return -ENXIO;
-+       }
-
-        /*
-         * The RAID firmware may require extended timeouts.
---------
+--
+Giuliano.
