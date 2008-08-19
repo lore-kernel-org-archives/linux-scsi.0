@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 9/9] scsi: modify scsi to handle new fail fast flags.
-Date: Tue, 19 Aug 2008 18:45:31 -0500
-Message-ID: <1219189531-5243-10-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 8/9] block: separate failfast into multiple bits.
+Date: Tue, 19 Aug 2008 18:45:30 -0500
+Message-ID: <1219189531-5243-9-git-send-email-michaelc@cs.wisc.edu>
 References: <1219189531-5243-1-git-send-email-michaelc@cs.wisc.edu>
  <1219189531-5243-2-git-send-email-michaelc@cs.wisc.edu>
  <1219189531-5243-3-git-send-email-michaelc@cs.wisc.edu>
@@ -10,13 +10,12 @@ References: <1219189531-5243-1-git-send-email-michaelc@cs.wisc.edu>
  <1219189531-5243-6-git-send-email-michaelc@cs.wisc.edu>
  <1219189531-5243-7-git-send-email-michaelc@cs.wisc.edu>
  <1219189531-5243-8-git-send-email-michaelc@cs.wisc.edu>
- <1219189531-5243-9-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48037 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42160 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752795AbYHSXqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Aug 2008 19:46:05 -0400
-In-Reply-To: <1219189531-5243-9-git-send-email-michaelc@cs.wisc.edu>
+	id S1752814AbYHSXqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Aug 2008 19:46:46 -0400
+In-Reply-To: <1219189531-5243-8-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jens.axboe@oracle.com
@@ -24,121 +23,302 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This checks the errors the scsi-ml determined were retryable
-and returns if we should fast fail it based on the request
-fail fast flags.
+Multipath is best at handling transport errors. If it gets a device
+error then there is not much the multipath layer can do. It will just
+access the same device but from a different path.
 
-Without the patch, drivers like lpfc, qla2xxx and fcoe would return
-DID_ERROR for what it determines is a temporary communication problem.
-There is no loss of connectivity at that time and the driver thinks
-that it would be fast to retry at the driver level. SCSI-ml will however
-sees fast fail on the request and DID_ERROR and will fast fail the io.
-This will then cause dm-multipath to fail the path and possibley switch
-target controllers when we should be retrying at the scsi layer.
+This patch breaks up failfast into device, transport and driver errors.
+The multipath layers (md and dm mutlipath) only ask the lower levels to
+fast fail transport errors. The user of failfast, read ahead, will ask
+to fast fail on all errors.
 
-We also were fast failing device errors to dm multiapth when
-unless the scsi_dh modules think otherwis we want to retry at
-the scsi layer because multipath can only retry the IO like scsi
-should have done. multipath is a little dumber though because it
-does not what the error was for and assumes that it should fail
-the paths.
+Note that blk_noretry_request will return true if any failfast bit
+is set. This allows drivers that do not support the multipath failfast
+bits to continue to fail on any failfast error like before. Drivers
+like scsi that are able to fail fast specific errors can check
+for the specific fail fast type. In the next patch I will convert
+scsi.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/scsi/scsi_error.c |   38 ++++++++++++++++++++++++++++++++++++--
- drivers/scsi/scsi_lib.c   |    2 +-
- drivers/scsi/scsi_priv.h  |    1 +
- 3 files changed, 38 insertions(+), 3 deletions(-)
+ block/blk-core.c                            |   11 +++++++++--
+ drivers/md/dm-mpath.c                       |    2 +-
+ drivers/md/multipath.c                      |    4 ++--
+ drivers/s390/block/dasd_diag.c              |    2 +-
+ drivers/s390/block/dasd_eckd.c              |    2 +-
+ drivers/s390/block/dasd_fba.c               |    2 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c  |    3 ++-
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    3 ++-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    6 ++++--
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    3 ++-
+ drivers/scsi/scsi_transport_spi.c           |    4 +++-
+ include/linux/bio.h                         |   26 +++++++++++++++++---------
+ include/linux/blkdev.h                      |   15 ++++++++++++---
+ 13 files changed, 57 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 4e30343..d02ebc0 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1280,6 +1280,40 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
- }
+diff --git a/block/blk-core.c b/block/blk-core.c
+index fef79cc..bebf311 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1055,8 +1055,15 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+ 	/*
+ 	 * inherit FAILFAST from bio (for read-ahead, and explicit FAILFAST)
+ 	 */
+-	if (bio_rw_ahead(bio) || bio_failfast(bio))
+-		req->cmd_flags |= REQ_FAILFAST;
++	if (bio_rw_ahead(bio))
++		req->cmd_flags |= (REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++				   REQ_FAILFAST_DRIVER);
++	if (bio_failfast_dev(bio))
++		req->cmd_flags |= REQ_FAILFAST_DEV;
++	if (bio_failfast_transport(bio))
++		req->cmd_flags |= REQ_FAILFAST_TRANSPORT;
++	if (bio_failfast_driver(bio))
++		req->cmd_flags |= REQ_FAILFAST_DRIVER;
  
- /**
-+ * scsi_noretry_cmd - determinte if command should be failed fast
-+ * @scmd:	SCSI cmd to examine.
-+ */
-+int scsi_noretry_cmd(struct scsi_cmnd *scmd)
-+{
-+	switch (host_byte(scmd->result)) {
-+	case DID_OK:
-+		break;
-+	case DID_BUS_BUSY:
-+		return blk_failfast_transport(scmd->request);
-+	case DID_PARITY:
-+		return blk_failfast_dev(scmd->request);
-+	case DID_ERROR:
-+		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
-+		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-+			return 0;
-+		/* fall through */
-+	case DID_SOFT_ERROR:
-+		return blk_failfast_driver(scmd->request);
-+	}
-+
-+	switch (status_byte(scmd->result)) {
-+	case CHECK_CONDITION:
-+		/*
-+		 * assume caller has checked sense and determinted
-+		 * the check condition was retryable.
-+		 */
-+		return blk_failfast_dev(scmd->request);
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * scsi_decide_disposition - Disposition a cmd on return from LLD.
-  * @scmd:	SCSI cmd to examine.
-  *
-@@ -1457,7 +1491,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 * even if the request is marked fast fail, we still requeue
- 	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
- 	if ((++scmd->retries) <= scmd->allowed
--	    && !blk_noretry_request(scmd->request)) {
-+	    && !scsi_noretry_cmd(scmd)) {
- 		return NEEDS_RETRY;
- 	} else {
- 		/*
-@@ -1582,7 +1616,7 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
- 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
- 		list_del_init(&scmd->eh_entry);
- 		if (scsi_device_online(scmd->device) &&
--		    !blk_noretry_request(scmd->request) &&
-+		    !scsi_noretry_cmd(scmd) &&
- 		    (++scmd->retries <= scmd->allowed)) {
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
- 							  " retry cmd: %p\n",
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ff5d56b..4c95086 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -681,7 +681,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
- 			leftover = req->data_len;
+ 	/*
+ 	 * REQ_BARRIER implies no merging, but lets make it explicit
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 71dd65a..b48e201 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -827,7 +827,7 @@ static int multipath_map(struct dm_target *ti, struct bio *bio,
+ 	dm_bio_record(&mpio->details, bio);
  
- 		/* kill remainder if no retrys */
--		if (error && blk_noretry_request(req))
-+		if (error && scsi_noretry_cmd(cmd))
- 			blk_end_request(req, error, leftover);
- 		else {
- 			if (requeue) {
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 79f0f75..cfbd8a5 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -62,6 +62,7 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
- 			struct list_head *done_q);
- int scsi_eh_get_sense(struct list_head *work_q,
- 		      struct list_head *done_q);
-+int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+ 	map_context->ptr = mpio;
+-	bio->bi_rw |= (1 << BIO_RW_FAILFAST);
++	bio->bi_rw |= (1 << BIO_RW_FAILFAST_TRANSPORT);
+ 	r = map_io(m, bio, mpio, 0);
+ 	if (r < 0 || r == DM_MAPIO_REQUEUE)
+ 		mempool_free(mpio, m->mpio_pool);
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index c4779cc..2426201 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -172,7 +172,7 @@ static int multipath_make_request (struct request_queue *q, struct bio * bio)
+ 	mp_bh->bio = *bio;
+ 	mp_bh->bio.bi_sector += multipath->rdev->data_offset;
+ 	mp_bh->bio.bi_bdev = multipath->rdev->bdev;
+-	mp_bh->bio.bi_rw |= (1 << BIO_RW_FAILFAST);
++	mp_bh->bio.bi_rw |= (1 << BIO_RW_FAILFAST_TRANSPORT);
+ 	mp_bh->bio.bi_end_io = multipath_end_request;
+ 	mp_bh->bio.bi_private = mp_bh;
+ 	generic_make_request(&mp_bh->bio);
+@@ -398,7 +398,7 @@ static void multipathd (mddev_t *mddev)
+ 			*bio = *(mp_bh->master_bio);
+ 			bio->bi_sector += conf->multipaths[mp_bh->path].rdev->data_offset;
+ 			bio->bi_bdev = conf->multipaths[mp_bh->path].rdev->bdev;
+-			bio->bi_rw |= (1 << BIO_RW_FAILFAST);
++			bio->bi_rw |= (1 << BIO_RW_FAILFAST_TRANSPORT);
+ 			bio->bi_end_io = multipath_end_request;
+ 			bio->bi_private = mp_bh;
+ 			generic_make_request(bio);
+diff --git a/drivers/s390/block/dasd_diag.c b/drivers/s390/block/dasd_diag.c
+index 85fcb43..7844461 100644
+--- a/drivers/s390/block/dasd_diag.c
++++ b/drivers/s390/block/dasd_diag.c
+@@ -544,7 +544,7 @@ static struct dasd_ccw_req *dasd_diag_build_cp(struct dasd_device *memdev,
+ 	}
+ 	cqr->retries = DIAG_MAX_RETRIES;
+ 	cqr->buildclk = get_clock();
+-	if (req->cmd_flags & REQ_FAILFAST)
++	if (blk_noretry_request(req))
+ 		set_bit(DASD_CQR_FLAGS_FAILFAST, &cqr->flags);
+ 	cqr->startdev = memdev;
+ 	cqr->memdev = memdev;
+diff --git a/drivers/s390/block/dasd_eckd.c b/drivers/s390/block/dasd_eckd.c
+index 3590fdb..b904099 100644
+--- a/drivers/s390/block/dasd_eckd.c
++++ b/drivers/s390/block/dasd_eckd.c
+@@ -1607,7 +1607,7 @@ static struct dasd_ccw_req *dasd_eckd_build_cp(struct dasd_device *startdev,
+ 			recid++;
+ 		}
+ 	}
+-	if (req->cmd_flags & REQ_FAILFAST)
++	if (blk_noretry_request(req))
+ 		set_bit(DASD_CQR_FLAGS_FAILFAST, &cqr->flags);
+ 	cqr->startdev = startdev;
+ 	cqr->memdev = startdev;
+diff --git a/drivers/s390/block/dasd_fba.c b/drivers/s390/block/dasd_fba.c
+index aa0c533..115e032 100644
+--- a/drivers/s390/block/dasd_fba.c
++++ b/drivers/s390/block/dasd_fba.c
+@@ -355,7 +355,7 @@ static struct dasd_ccw_req *dasd_fba_build_cp(struct dasd_device * memdev,
+ 			recid++;
+ 		}
+ 	}
+-	if (req->cmd_flags & REQ_FAILFAST)
++	if (blk_noretry_request(req))
+ 		set_bit(DASD_CQR_FLAGS_FAILFAST, &cqr->flags);
+ 	cqr->startdev = memdev;
+ 	cqr->memdev = memdev;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index fcdd73f..0fda1c6 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -109,7 +109,8 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+ 	}
  
- /* scsi_lib.c */
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
++	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++			 REQ_FAILFAST_DRIVER | REQ_NOMERGE;
+ 	rq->retries = ALUA_FAILOVER_RETRIES;
+ 	rq->timeout = ALUA_FAILOVER_TIMEOUT;
+ 
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index aa46b13..f6abeb3 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -304,7 +304,8 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 
+ 	rq->cmd[4] = len;
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST;
++	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++			 REQ_FAILFAST_DRIVER;
+ 	rq->timeout = CLARIION_TIMEOUT;
+ 	rq->retries = CLARIION_RETRIES;
+ 
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 9c7a1f8..b1e1017 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -112,7 +112,8 @@ static int hp_sw_tur(struct scsi_device *sdev, struct hp_sw_dh_data *h)
+ 		return SCSI_DH_RES_TEMP_UNAVAIL;
+ 
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+-	req->cmd_flags |= REQ_FAILFAST;
++	req->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++			  REQ_FAILFAST_DRIVER;
+ 	req->cmd_len = COMMAND_SIZE(TEST_UNIT_READY);
+ 	memset(req->cmd, 0, MAX_COMMAND_SIZE);
+ 	req->cmd[0] = TEST_UNIT_READY;
+@@ -205,7 +206,8 @@ static int hp_sw_start_stop(struct scsi_device *sdev, struct hp_sw_dh_data *h)
+ 		return SCSI_DH_RES_TEMP_UNAVAIL;
+ 
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+-	req->cmd_flags |= REQ_FAILFAST;
++	req->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++			  REQ_FAILFAST_DRIVER;
+ 	req->cmd_len = COMMAND_SIZE(START_STOP);
+ 	memset(req->cmd, 0, MAX_COMMAND_SIZE);
+ 	req->cmd[0] = START_STOP;
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index b093a50..ddee8d0 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -228,7 +228,8 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
+ 	memset(rq->cmd, 0, BLK_MAX_CDB);
+ 
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
++	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++			 REQ_FAILFAST_DRIVER;
+ 	rq->retries = RDAC_RETRIES;
+ 	rq->timeout = RDAC_TIMEOUT;
+ 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 75a64a6..b39e12e 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -109,7 +109,9 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
+ 	for(i = 0; i < DV_RETRIES; i++) {
+ 		result = scsi_execute(sdev, cmd, dir, buffer, bufflen,
+ 				      sense, DV_TIMEOUT, /* retries */ 1,
+-				      REQ_FAILFAST);
++				      REQ_FAILFAST_DEV |
++				      REQ_FAILFAST_TRANSPORT |
++				      REQ_FAILFAST_DRIVER);
+ 		if (result & DRIVER_SENSE) {
+ 			struct scsi_sense_hdr sshdr_tmp;
+ 			if (!sshdr)
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 0933a14..425a4ec 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -147,15 +147,20 @@ struct bio {
+  * bit 0 -- read (not set) or write (set)
+  * bit 1 -- rw-ahead when set
+  * bit 2 -- barrier
+- * bit 3 -- fail fast, don't want low level driver retries
+- * bit 4 -- synchronous I/O hint: the block layer will unplug immediately
++ * bit 3 -- synchronous I/O hint: the block layer will unplug immediately
++ * bit 4 -- meta data
++ * bit 5 -- fail fast device errors
++ * bit 6 -- fail fast transport errors
++ * bit 7 -- fail fast driver errors
+  */
+-#define BIO_RW		0
+-#define BIO_RW_AHEAD	1
+-#define BIO_RW_BARRIER	2
+-#define BIO_RW_FAILFAST	3
+-#define BIO_RW_SYNC	4
+-#define BIO_RW_META	5
++#define BIO_RW				0
++#define BIO_RW_AHEAD			1
++#define BIO_RW_BARRIER			2
++#define BIO_RW_SYNC			3
++#define BIO_RW_META			4
++#define BIO_RW_FAILFAST_DEV		5
++#define BIO_RW_FAILFAST_TRANSPORT	6
++#define BIO_RW_FAILFAST_DRIVER		7
+ 
+ /*
+  * upper 16 bits of bi_rw define the io priority of this bio
+@@ -182,7 +187,10 @@ struct bio {
+ #define bio_sectors(bio)	((bio)->bi_size >> 9)
+ #define bio_barrier(bio)	((bio)->bi_rw & (1 << BIO_RW_BARRIER))
+ #define bio_sync(bio)		((bio)->bi_rw & (1 << BIO_RW_SYNC))
+-#define bio_failfast(bio)	((bio)->bi_rw & (1 << BIO_RW_FAILFAST))
++#define bio_failfast_dev(bio)	((bio)->bi_rw &	(1 << BIO_RW_FAILFAST_DEV))
++#define bio_failfast_transport(bio)	\
++	((bio)->bi_rw & (1 << BIO_RW_FAILFAST_TRANSPORT))
++#define bio_failfast_driver(bio) ((bio)->bi_rw & (1 << BIO_RW_FAILFAST_DRIVER))
+ #define bio_rw_ahead(bio)	((bio)->bi_rw & (1 << BIO_RW_AHEAD))
+ #define bio_rw_meta(bio)	((bio)->bi_rw & (1 << BIO_RW_META))
+ #define bio_empty_barrier(bio)	(bio_barrier(bio) && !(bio)->bi_size)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 88d6808..05b41a0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -88,7 +88,9 @@ enum {
+  */
+ enum rq_flag_bits {
+ 	__REQ_RW,		/* not set, read. set, write */
+-	__REQ_FAILFAST,		/* no low level driver retries */
++	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
++	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
++	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
+ 	__REQ_SORTED,		/* elevator knows about this request */
+ 	__REQ_SOFTBARRIER,	/* may not be passed by ioscheduler */
+ 	__REQ_HARDBARRIER,	/* may not be passed by drive either */
+@@ -111,7 +113,9 @@ enum rq_flag_bits {
+ };
+ 
+ #define REQ_RW		(1 << __REQ_RW)
+-#define REQ_FAILFAST	(1 << __REQ_FAILFAST)
++#define REQ_FAILFAST_DEV	(1 << __REQ_FAILFAST_DEV)
++#define REQ_FAILFAST_TRANSPORT	(1 << __REQ_FAILFAST_TRANSPORT)
++#define REQ_FAILFAST_DRIVER	(1 << __REQ_FAILFAST_DRIVER)
+ #define REQ_SORTED	(1 << __REQ_SORTED)
+ #define REQ_SOFTBARRIER	(1 << __REQ_SOFTBARRIER)
+ #define REQ_HARDBARRIER	(1 << __REQ_HARDBARRIER)
+@@ -523,7 +527,12 @@ enum {
+ #define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
+ #define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
+ 
+-#define blk_noretry_request(rq)	((rq)->cmd_flags & REQ_FAILFAST)
++#define blk_failfast_dev(rq)	((rq)->cmd_flags & REQ_FAILFAST_DEV)
++#define blk_failfast_transport(rq) ((rq)->cmd_flags & REQ_FAILFAST_TRANSPORT)
++#define blk_failfast_driver(rq)	((rq)->cmd_flags & REQ_FAILFAST_DRIVER)
++#define blk_noretry_request(rq)	(blk_failfast_dev(rq) ||	\
++				 blk_failfast_transport(rq) ||	\
++				 blk_failfast_driver(rq))
+ #define blk_rq_started(rq)	((rq)->cmd_flags & REQ_STARTED)
+ 
+ #define blk_account_rq(rq)	(blk_rq_started(rq) && blk_fs_request(rq))
 -- 
 1.5.4.1
 
