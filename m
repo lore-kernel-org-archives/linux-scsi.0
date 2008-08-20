@@ -1,72 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/18] drivers/scsi/a2091.c: make 2 functions static
-Date: Wed, 20 Aug 2008 16:55:33 -0700
-Message-ID: <200808202355.m7KNtXWW006219@imap1.linux-foundation.org>
+Subject: [patch 15/18] drivers/scsi: Use DIV_ROUND_UP
+Date: Wed, 20 Aug 2008 16:55:34 -0700
+Message-ID: <200808202355.m7KNtYIu006225@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48601 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33039 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757570AbYHUADh (ORCPT
+	by vger.kernel.org with ESMTP id S1758202AbYHUADa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Aug 2008 20:03:37 -0400
+	Wed, 20 Aug 2008 20:03:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Julia Lawall <julia@diku.dk>
 
-a2091_{detect,release}() can become static.
+The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
+(d)) but is perhaps more readable.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+An extract of the semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@haskernel@
+@@
+
+#include <linux/kernel.h>
+
+@depends on haskernel@
+expression n,d;
+@@
+
+(
+- (n + d - 1) / d
++ DIV_ROUND_UP(n,d)
+|
+- (n + (d - 1)) / d
++ DIV_ROUND_UP(n,d)
+)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP((n),d)
++ DIV_ROUND_UP(n,d)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP(n,(d))
++ DIV_ROUND_UP(n,d)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/esp_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+diff -puN drivers/scsi/esp_scsi.c~drivers-scsi-use-div_round_up drivers/scsi/esp_scsi.c
+--- a/drivers/scsi/esp_scsi.c~drivers-scsi-use-div_round_up
++++ a/drivers/scsi/esp_scsi.c
+@@ -1464,7 +1464,7 @@ static void esp_msgin_sdtr(struct esp *e
  
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
- 
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -227,7 +229,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ 		one_clock = esp->ccycle / 1000;
+ 		rounded_up = (period << 2);
+-		rounded_up = (rounded_up + one_clock - 1) / one_clock;
++		rounded_up = DIV_ROUND_UP(rounded_up, one_clock);
+ 		stp = rounded_up;
+ 		if (stp && esp->rev >= FAS236) {
+ 			if (stp >= 50)
 _
