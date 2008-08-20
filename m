@@ -1,69 +1,124 @@
-From: greg@enjellic.com
-Subject: Re: Poisoning of Linux initiators on SCST reboot.
-Date: Wed, 20 Aug 2008 18:44:12 -0500
-Message-ID: <200808202344.m7KNiCs6016234@wind.enjellic.com>
-References: <andrew.vasquez@qlogic.com>
-Reply-To: greg@enjellic.com
+From: akpm@linux-foundation.org
+Subject: [patch 01/18] aic7xxx: introduce "dont_generate_debug_code" keyword in aicasm parser
+Date: Wed, 20 Aug 2008 16:55:23 -0700
+Message-ID: <200808202355.m7KNtNKD006182@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wind.enjellic.com ([209.243.13.15]:34501 "EHLO
-	wind.enjellic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbYHTXo3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2008 19:44:29 -0400
-In-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-       "Re: Poisoning of Linux initiators on SCST reboot." (Aug 20,  3:30pm)
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52414 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755190AbYHTX4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Aug 2008 19:56:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, vst@vlnb.net, Marcus Barrow <marcus.barrow@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, vda.linux@googlemail.com, James.Bottomley@HansenPartnership.com, hare@suse.de
 
-On Aug 20,  3:30pm, Andrew Vasquez wrote:
-} Subject: Re: Poisoning of Linux initiators on SCST reboot.
+From: Denys Vlasenko <vda.linux@googlemail.com>
 
-Hi Andrew, thanks for the note.
+aic7xxx still contains ~30kb of dead code if pretty printing of registers
+is requested. These patches deal with it.
 
-> > There is a remote port defined for the target server.  The port WWN
-> > and FCID match previous values.  The only difference is the LUN on
-> > which the storage is being delivered.
-> > 
-> > We tore down the SCST storage definition on the target and re-mapped
-> > the storage as LUN 1 but this had no affect on the situation.  That
-> > isn't really surprising since the problem appears be secondary to the
-> > initiator and target being unable to establish an N_PORT relationship.
-> > 
-> > I would be interested in any thoughts the group might have.  From the
-> > perspective of the initiators the behavior seems somewhat identical to
-> > what we experienced earlier.  The Qlogic driver is essentially
-> > 'poisoned' with respect to its ability to access the remote port which
-> > has seen a change in configuration.
+Size differences:
 
-> These upstream changes are in the queue of updates to be pushed for
-> RHEL5.3.
+   text    data     bss     dec     hex filename
+DEBUG_ENABLE+PRETTY_PRINT:
+ 234697    2362    1188  238247   3a2a7 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 205092    2362    1188  208642   32f02 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+NO_DEBUG_ENABLE+PRETTY_PRINT:
+ 227272    2362    1172  230806   38596 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 197671    2362    1172  201205   311f5 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+DEBUG_ENABLE+NO_PRETTY_PRINT:
+ 192457    2362    1188  196007   2fda7 linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 192457    2362    1188  196007   2fda7 linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
+NO_DEBUG_ENABLE+NO_PRETTY_PRINT:
+ 185040    2362    1172  188574   2e09e linux-2.6.26-rc8-/drivers/scsi/aic7xxx/built-in.o
+ 185040    2362    1172  188574   2e09e linux-2.6.26-rc8/drivers/scsi/aic7xxx/built-in.o
 
-Very good to hear, the client guys will be glad to hear that.
 
-In the meantime is our analysis correct that this is the same problem,
-only caused by the LUN change rather than the role changes?  Knowing
-that would be very helpful.
+This patch:
 
-If so we are hosed and will need to proceed with our outage to recover
-the initiators.  It will also impact the next round of migrations we
-need to do.
+Introduce "dont_generate_debug_code" keyword in aicasm parser.
 
-> Regards,
-> Andrew Vasquez
+Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Thanks for the information, will look forward to confirmation on the above.
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y   |   10 ++++++++++
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l   |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c |    3 +++
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h |    3 ++-
+ 4 files changed, 16 insertions(+), 1 deletion(-)
 
-Have a good evening.
-
-}-- End of excerpt from Andrew Vasquez
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"How appropriate, you fight like a cow."
-                                -- Guybrush Threepwood
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_gram.y~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+@@ -147,6 +147,8 @@ void yyerror(const char *string);
+ 
+ %token T_ACCESS_MODE
+ 
++%token T_DONT_GENERATE_DEBUG_CODE
++
+ %token T_MODES
+ 
+ %token T_DEFINE
+@@ -357,6 +359,7 @@ reg_attribute:
+ |	size
+ |	count
+ |	access_mode
++|	dont_generate_debug_code
+ |	modes
+ |	field_defn
+ |	enum_defn
+@@ -410,6 +413,13 @@ access_mode:
+ 	}
+ ;
+ 
++dont_generate_debug_code:
++	T_DONT_GENERATE_DEBUG_CODE
++	{
++		cur_symbol->dont_generate_debug_code = 1;
++	}
++;
++
+ modes:
+ 	T_MODES mode_list
+ 	{
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_scan.l~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+@@ -164,6 +164,7 @@ download		{ return T_DOWNLOAD; }
+ address			{ return T_ADDRESS; }
+ count			{ return T_COUNT; }
+ access_mode		{ return T_ACCESS_MODE; }
++dont_generate_debug_code { return T_DONT_GENERATE_DEBUG_CODE; }
+ modes			{ return T_MODES; }
+ RW|RO|WO		{
+ 				 if (strcmp(yytext, "RW") == 0)
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+@@ -539,6 +539,9 @@ symtable_dump(FILE *ofile, FILE *dfile)
+ 	aic_print_include(dfile, stock_include_file);
+ 	SLIST_FOREACH(curnode, &registers, links) {
+ 
++		if (curnode->symbol->dont_generate_debug_code)
++			continue;
++
+ 		switch(curnode->symbol->type) {
+ 		case REGISTER:
+ 		case SCBLOC:
+diff -puN drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h~aic7xxx-introduce-dont_generate_debug_code-keyword-in-aicasm-parser
++++ a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h
+@@ -137,7 +137,8 @@ typedef struct symbol {
+ 		struct label_info *linfo;
+ 		struct cond_info  *condinfo;
+ 		struct macro_info *macroinfo;
+-	}info;
++	} info;
++	int	dont_generate_debug_code;
+ } symbol_t;
+ 
+ typedef struct symbol_ref {
+_
