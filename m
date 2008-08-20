@@ -1,79 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 10/18] scsi: gdth.c use unaligned access helpers
-Date: Wed, 20 Aug 2008 16:55:31 -0700
-Message-ID: <200808202355.m7KNtVSk006209@imap1.linux-foundation.org>
+Subject: [patch 12/18] scsi: remove the unused SCSI_QLOGIC_FC_FIRMWARE option
+Date: Wed, 20 Aug 2008 16:55:32 -0700
+Message-ID: <200808202355.m7KNtWqM006215@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50060 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34932 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753910AbYHUADj (ORCPT
+	by vger.kernel.org with ESMTP id S1757570AbYHUADm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Aug 2008 20:03:39 -0400
+	Wed, 20 Aug 2008 20:03:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, rpjday@crashcourse.ca
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
 
-Remove two now unnecessary local vars.
+This option was forgotten when the SCSI_QLOGIC_FC driver was removed.
 
-[akpm@linux-foundation.org: coding-style fixes]
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+Reported-by: Robert P. J. Day <rpjday@crashcourse.ca>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ drivers/scsi/Kconfig |    8 --------
+ 1 file changed, 8 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-+++ a/drivers/scsi/gdth.c
-@@ -131,6 +131,7 @@
- #include <asm/system.h>
- #include <asm/io.h>
- #include <asm/uaccess.h>
-+#include <asm/unaligned.h>
- #include <linux/spinlock.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-@@ -2441,8 +2442,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
- {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
--    ulong32 cnt, blockcnt;
--    ulong64 no, blockno;
-+    ulong32 blockcnt;
-+    ulong64 blockno;
-     int i, cmd_index, read_write, sgcnt, mode64;
+diff -puN drivers/scsi/Kconfig~scsi-remove-the-unused-scsi_qlogic_fc_firmware-option drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig~scsi-remove-the-unused-scsi_qlogic_fc_firmware-option
++++ a/drivers/scsi/Kconfig
+@@ -1336,14 +1336,6 @@ config SCSI_QLOGIC_FAS
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called qlogicfas.
  
-     cmdp = ha->pccb;
-@@ -2510,19 +2511,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
- 
-     if (read_write) {
-         if (scp->cmd_len == 16) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
--            blockno = be64_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
--            blockcnt = be32_to_cpu(cnt);
-+		blockno = get_unaligned_be64(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
-         } else if (scp->cmd_len == 10) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
--            blockno = be32_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
--            blockcnt = be16_to_cpu(cnt);
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
-         } else {
--            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
--            blockno = be32_to_cpu(no) & 0x001fffffUL;
--            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockno &= 0x001fffffUL;
-+		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
-         }
-         if (mode64) {
-             cmdp->u.cache64.BlockNo = blockno;
+-config SCSI_QLOGIC_FC_FIRMWARE
+-	bool "Include loadable firmware in driver"
+-	depends on SCSI_QLOGIC_FC
+-  	help
+-	  Say Y to include ISP2X00 Fabric Initiator/Target Firmware, with
+-	  expanded LUN addressing and FcTape (FCP-2) support, in the
+-	  qlogicfc driver. This is required on some platforms.
+-
+ config SCSI_QLOGIC_1280
+ 	tristate "Qlogic QLA 1240/1x80/1x160 SCSI support"
+ 	depends on PCI && SCSI
 _
