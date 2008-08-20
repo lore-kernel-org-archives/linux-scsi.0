@@ -1,86 +1,108 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: megaraid_sas: Optionally add SCSI devices for individual disks
- in a raidset
-Date: Wed, 20 Aug 2008 13:53:09 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C32340969D@cosmail02.lsi.com>
-References: <2834632.1190561219180854948.JavaMail.root@ouachita>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: greg@enjellic.com
+Subject: Re: Poisoning of Linux initiators on SCST reboot.
+Date: Wed, 20 Aug 2008 16:13:45 -0500
+Message-ID: <200808202113.m7KLDj6T015673@wind.enjellic.com>
+References: <andrew.vasquez@qlogic.com>
+Reply-To: greg@enjellic.com
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35003 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753854AbYHTTyb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2008 15:54:31 -0400
-In-Reply-To: <2834632.1190561219180854948.JavaMail.root@ouachita>
-Content-Language: en-US
+Received: from wind.enjellic.com ([209.243.13.15]:34203 "EHLO
+	wind.enjellic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbYHTVOP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2008 17:14:15 -0400
+In-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+       "Re: Poisoning of Linux initiators on SCST reboot." (Aug 13, 10:28pm)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Malicki <jmalicki@metacarta.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, linux-poweredge <linux-poweredge@dell.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, greg@enjellic.com, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, vst@vlnb.net
 
-MegaRAID SAS controllers are RAID controller, it is not a good idea to export the physical drives to the midlayer (also it is dangerous).
+On Aug 13, 10:28pm, Andrew Vasquez wrote:
+} Subject: Re: Poisoning of Linux initiators on SCST reboot.
 
-Regards,
+Good afternoon to everyone, hope the day is going well.
 
-Bo Yang
+> Ok, we've verified and backported the three changes through to 2.6.24.
+> The patches in this order:
+> 
+>  [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
+>  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
+> 
+>  [SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
+>  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
+> 
+>  [PATCH 2/8] qla2xxx: Correct synchronization of software/firmware fcport states.
+>  http://article.gmane.org/gmane.linux.scsi/43971
+> 
+> apply cleanly to 2.6.26 (git-am clean), and with minor 'fuzz' (git-am
+> warns) while applying the first patch against 2.6.25 and 2.6.24.
 
------Original Message-----
-From: Joe Malicki [mailto:jmalicki@metacarta.com]
-Sent: Tuesday, August 19, 2008 5:21 PM
-To: DL-MegaRAID Linux; linux-poweredge; linux-scsi
-Subject: megaraid_sas: Optionally add SCSI devices for individual disks in a raidset
+We ran into an issue today which I wanted to bounce off everyone since
+it may be related.  If not there may be another issue to look at.
 
-This is very dangerous, and you shouldn't use it/apply it unless you're feeling adventurous.
+We were transitioning storage on a pair of our production boxes from
+an existing Linux SCSI target solution to SCST.  Previously the
+storage was being accessed as target 0/LUN1.  Under SCST the storage
+would be accessed as target 0/LUN0.
 
-This lets one, optionally, add /dev/sg* devices, and optionally also /dev/sd* devices, for disks in a RAIDset.  It is modeled after similar functionality in the aacraid driver.
+The target machine was upgraded and rebooted.  SCST loaded and
+initialized.  The MDS indicated the initiator and target were both
+logged into the zone.   So there would seem to be connectivity at the
+link layer between the initiator/target and the switch.
 
-I've been successfully using this to upgrade individual disk firmwares behind a Dell PERC RAID controller with sgdskfl from scsirastools - AFTER the RAID array has been stopped with other tools.
+Unfortunately we cannot get a session established on the target for
+the initiator(s).  The initiators are running stock RHEL5 2.6.18
+kernels.
 
-Use the kernel option "megaraid_sas.export_disks=-1" to get /dev/sg* devices.  Unless a specific option has been given, the patch doesn't modify behavior.
+Enabling/disabling the interface on the target server results in the
+following messages on the initiators:
 
-Note that the driver currently says (and has said for some time):
+Aug 20 14:54:27 initiator kernel: rport-4:0-1: blocked FC remote port
+time out: saving binding
 
-         * FIXME: Currently we don't export them to the midlayer at all.
-         *        That will be fixed once LSI engineers have audited the
-         *        firmware for possible issues.
+The following are also noted in the output of dmesg on the initiators:
 
-So using this is certainly high risk and one should be careful.
-(only signing off so others may feel free to use it, not encouraging this to go anywhere unless LSI feels it's safe)
+scsi 4:0:0:0: timing out command, waited 22s
 
-Signed-off-by: jmalicki@metacarta.com
+There is a remote port defined for the target server.  The port WWN
+and FCID match previous values.  The only difference is the LUN on
+which the storage is being delivered.
 
-------------
---- linux-2.6.26.2-orig/drivers/scsi/megaraid/megaraid_sas.c    2008-08-06 12:19:01.000000000 -0400
-+++ linux-2.6.26.2/drivers/scsi/megaraid/megaraid_sas.c 2008-08-19
-+++ 17:12:02.000000000 -0400
-@@ -46,6 +46,12 @@
- #include <scsi/scsi_host.h>
- #include "megaraid_sas.h"
+We tore down the SCST storage definition on the target and re-mapped
+the storage as LUN 1 but this had no affect on the situation.  That
+isn't really surprising since the problem appears be secondary to the
+initiator and target being unable to establish an N_PORT relationship.
 
-+static int export_disks = 0;
-+module_param(export_disks, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(export_disks, "Export physical disks to the SCSI midlayer (DANGEROUS)"
-+       " -1=protect 0=off 1=on");
-+
-+
- /*
-  * poll_mode_io:1- schedule complete completion from q cmd
-  */
-@@ -905,8 +911,12 @@
-         *        That will be fixed once LSI engineers have audited the
-         *        firmware for possible issues.
-         */
--       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
--               return -ENXIO;
-+       if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type ==
-+ TYPE_DISK)
-{
-+               if (export_disks < 0)
-+                       sdev->no_uld_attach = 1;
-+               else if (export_disks == 0)
-+                       return -ENXIO;
-+       }
+I would be interested in any thoughts the group might have.  From the
+perspective of the initiators the behavior seems somewhat identical to
+what we experienced earlier.  The Qlogic driver is essentially
+'poisoned' with respect to its ability to access the remote port which
+has seen a change in configuration.
 
-        /*
-         * The RAID firmware may require extended timeouts.
---------
+I should note that it doesn't appear there was an attempt by the
+target's HBA to log into the fabric as an initiator.  So this would
+seem to be a different scenario than what we noted before when the
+target transitioned to an initiator role and back to a target role
+from the perspective of the initiator.
+
+> Thanks, av
+
+We are in the process of scheduling an outage to reboot the initiators
+to see if we can clear the situation.  Holler quickly if anyone has
+any additional testing they would like conducted and I will try to get
+that done before the outage.
+
+Have a good evening.
+
+}-- End of excerpt from Andrew Vasquez
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"Any intelligent fool can make things bigger and more complex... It
+ takes a touch of genius - and a lot of courage to move in the opposite
+ direction."
+                                -- Albert Einstein
