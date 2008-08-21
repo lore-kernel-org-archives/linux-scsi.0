@@ -1,84 +1,78 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Thu, 21 Aug 2008 14:26:06 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A778835116209D3@GVW0547EXC.americas.hpqcorp.net>
-References: <48AD02B2.7020004@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Who do we point to?
+Date: Thu, 21 Aug 2008 09:32:19 -0500
+Message-ID: <1219329139.3265.17.camel@localhost.localdomain>
+References: <200808201911.m7KJBTik015082@wind.enjellic.com>
+	 <48AD5C14.6050508@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759488AbYHUO1G@vger.kernel.org>
-In-Reply-To: <48AD02B2.7020004@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: rdunlap <randy.dunlap@oracle.com>, lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <48AD5C14.6050508@vlnb.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: greg@enjellic.com, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linuxraid@amcc.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2008-08-21 at 16:14 +0400, Vladislav Bolkhovitin wrote:
+> MOANING MODE ON
+> 
+> Testing SCST and target drivers I often have to deal with various 
+> failures and with how initiators recover from them. And,
+> unfortunately, 
+> my observations on Linux aren't very encouraging. See, for instance, 
+> http://marc.info/?l=linux-scsi&m=119557128825721&w=2 thread.
+> Receiving 
+> from the target TASK ABORTED status isn't really a failure, it's
+> rather 
+> a corner case behavior, but it leads to immediate file system errors
+> on 
+> initiator and then after remount ext3 journal replay doesn't
+> completely 
+> repair it, only manual e2fsck helps. Even mounting with barrier=1 
+> doesn't improve anything. Target can't be blamed for the failure, 
+> because it stayed online, all its cache fully healthy and no commands 
+> were lost. Hence, apparently, the journaling code in ext3 isn't as 
+> reliable in face of storage corner cases as it's thought. I haven't 
+> tried that test since I reported it, but recently I've seen the
+> similar 
+> ext3 failures on 2.6.26 in other tests, so I guess the problem(s)
+> still 
+> there.
+> 
+> A software SCSI target, like SCST, is beautiful to test things like 
+> that, because it allows easily simulate any possible corner case and 
+> storage failure. Unfortunately, I don't work on file systems level
+> and 
+> can't participate in all that great testing and fixing effort. I can 
+> only help with setup and assistance in failures simulations.
+> 
+> MOANING MODE OFF
+
+Well, since I can see your just so anxious to stop moaning and get
+coding, let me help you.
+
+Firstly, from a standards point of view, TASK_ABORTED means that the
+target is telling us this particular command was killed by another
+initiator (seeing this also requires the TAS bit to be set in the
+control mode page, so you can easily fix your current problem by
+unsetting it).  This makes TASK_ABORTED an incredibly rare status
+condition (hence the problems below).
+
+The way the kernel currently handles it is to return SUCCESS (around
+line 1411 in scsi_error.c).  This return actually propagates an I/O
+error all the way up the stack.  If the filesystem is the consumer, then
+how it handles the error depends on what you have the errors= switch set
+to.  If you've got it set to a safety condition like remount-ro or
+panic, then the fs should be recoverable on reboot (or unmount recheck).
+If you have it set to something unsafe like continue, then yes, you're
+asking for trouble and fs corruption ... but it's hardly the OSs fault,
+you told it you didn't want to operate safely.
+
+So, given what TASK_ABORT means, it looks to me like the handling should
+go through the maybe_retry path.  I'd say that's about a three line
+patch ... and since you have the test bed, you can even try it out.
+
+James
 
 
-> -----Original Message-----
-> From: rdunlap [mailto:randy.dunlap@oracle.com]
-> Sent: Thursday, August 21, 2008 12:53 AM
-> To: lkml; scsi; Miller, Mike (OS Dev)
-> Subject: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
->
-> on x86_64, 4 proc, 8 GB RAM:
->
-> calling  cciss_init+0x0/0x2e [cciss]
-> HP CISS Driver (v 3.6.20)
-> ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss
-> 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high)
-> -> IRQ 54
-> cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 503 using DAC
-> BUG: unable to handle kernel NULL pointer dereference at
-> 0000000000000248
-> IP: [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
-> PGD 17e422067 PUD 17e423067 PMD 0
-> Oops: 0002 [1] SMP
-> CPU 2
-> Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
-> Pid: 0, comm: swapper Not tainted 2.6.27-rc3-git7 #1
-> RIP: 0010:[<ffffffffa001bb68>]  [<ffffffffa001bb68>]
-> do_cciss_intr+0x627/0xa6c [cciss]
-> RSP: 0018:ffff88027f66fee8  EFLAGS: 00010007
-> RAX: 0000000000000000 RBX: ffff88007f840270 RCX: 000000000000000c
-> RDX: 0000000000000000 RSI: ffff88027e5c0000 RDI: ffff88027e5c0000
-> RBP: ffff88027f66ff18 R08: 0000000000000000 R09: ffff88017fa95e88
-> R10: 0000000000000000 R11: ffff88027f66ff48 R12: ffff88027e5c0000
-> R13: 0000000000000000 R14: 00000000000001f7 R15: 0000000000000086
-> FS:  0000000000680850(0000) GS:ffff88017fc02c80(0000)
-> knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000248 CR3: 000000017e425000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400 Process swapper (pid: 0, threadinfo
-> ffff88017fa94000, task ffff88027f63d340)
-> Stack:  ffff88027f66fee0 ffff88017e9b4800 0000000000000000
-> 0000000000000000
->  00000000000001f7 0000000000000000 ffff88027f66ff48
-> ffffffff8026757e  ffffffff80719000 00000000000001f7
-> ffff88017e9b4800 ffffffff80719050 Call Trace:
->  <IRQ>  [<ffffffff8026757e>] handle_IRQ_event+0x27/0x57
-> [<ffffffff80268d08>] handle_edge_irq+0xed/0x12e
-> [<ffffffff8020eaab>] do_IRQ+0xf6/0x167  [<ffffffff8020c471>]
-> ret_from_intr+0x0/0xa  <EOI>  [<ffffffff802122b1>] ?
-> default_idle+0x2b/0x40  [<ffffffff802124bf>] ?
-> c1e_idle+0xd4/0xdb  [<ffffffff8055677d>] ?
-> atomic_notifier_call_chain+0xf/0x11
->  [<ffffffff8020ac6c>] ? cpu_idle+0x71/0x8f
-> [<ffffffff8054e752>] ? start_secondary+0x157/0x15c
->
->
-> Code: 8b 83 48 02 00 00 48 39 d8 74 37 49 39 9c 24 c0 00 01
-> 00 75 08 49 89 84 24 c0 00 01 00 48 8b 83 40 02 00 00 48 8b
-> 93 48 02 00 00 <48> 89 90 48 02 00 00 48 8b 93 48 02 00 00 48
-> 89 82 40 02 00 00 RIP  [<ffffffffa001bb68>]
-> do_cciss_intr+0x627/0xa6c [cciss]  RSP <ffff88027f66fee8>
-> CR2: 0000000000000248
-> ---[ end trace 902dc79a9e72d3ed ]---
->
-
-Randy,
-Sorry I haven't replied sooner. I saw your earlier mail, just been busy breaking stuff internally. Did this happen during driver init or runtime?
-
--- mikem
