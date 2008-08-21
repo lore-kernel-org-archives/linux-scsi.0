@@ -1,37 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 17/18] scsi: select CRC_T10DIF only when necessary
-Date: Thu, 21 Aug 2008 09:19:56 -0500
-Message-ID: <1219328396.3265.4.camel@localhost.localdomain>
-References: <200808202355.m7KNtaxo006233@imap1.linux-foundation.org>
-	 <yq1vdxuzcum.fsf@sermon.lab.mkp.net>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Thu, 21 Aug 2008 14:26:06 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A778835116209D3@GVW0547EXC.americas.hpqcorp.net>
+References: <48AD02B2.7020004@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36842 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750801AbYHUOUA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2008 10:20:00 -0400
-In-Reply-To: <yq1vdxuzcum.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759488AbYHUO1G@vger.kernel.org>
+In-Reply-To: <48AD02B2.7020004@oracle.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: rdunlap <randy.dunlap@oracle.com>, lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, stefanr@s5r6.in-berlin.de
-
-On Thu, 2008-08-21 at 10:01 -0400, Martin K. Petersen wrote:
-> -	select CRC_T10DIF
-> +	select CRC_T10DIF if BLK_DEV_INTEGRITY
-> 
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-Actually, I don't think this is right at all.
-
-This is a purely cosmetic fix and the tip of the iceberg.  If not
-compiling in the integrity code matters on grounds of kernel bloat, and
-I think it does, then the correct fix is to make sure none of it
-compiles into SD if BLK_DEV_INTEGRITY isn't set.
-
-James
 
 
+
+> -----Original Message-----
+> From: rdunlap [mailto:randy.dunlap@oracle.com]
+> Sent: Thursday, August 21, 2008 12:53 AM
+> To: lkml; scsi; Miller, Mike (OS Dev)
+> Subject: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+>
+> on x86_64, 4 proc, 8 GB RAM:
+>
+> calling  cciss_init+0x0/0x2e [cciss]
+> HP CISS Driver (v 3.6.20)
+> ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss
+> 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high)
+> -> IRQ 54
+> cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 503 using DAC
+> BUG: unable to handle kernel NULL pointer dereference at
+> 0000000000000248
+> IP: [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
+> PGD 17e422067 PUD 17e423067 PMD 0
+> Oops: 0002 [1] SMP
+> CPU 2
+> Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
+> Pid: 0, comm: swapper Not tainted 2.6.27-rc3-git7 #1
+> RIP: 0010:[<ffffffffa001bb68>]  [<ffffffffa001bb68>]
+> do_cciss_intr+0x627/0xa6c [cciss]
+> RSP: 0018:ffff88027f66fee8  EFLAGS: 00010007
+> RAX: 0000000000000000 RBX: ffff88007f840270 RCX: 000000000000000c
+> RDX: 0000000000000000 RSI: ffff88027e5c0000 RDI: ffff88027e5c0000
+> RBP: ffff88027f66ff18 R08: 0000000000000000 R09: ffff88017fa95e88
+> R10: 0000000000000000 R11: ffff88027f66ff48 R12: ffff88027e5c0000
+> R13: 0000000000000000 R14: 00000000000001f7 R15: 0000000000000086
+> FS:  0000000000680850(0000) GS:ffff88017fc02c80(0000)
+> knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 0000000000000248 CR3: 000000017e425000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+> 0000000000000400 Process swapper (pid: 0, threadinfo
+> ffff88017fa94000, task ffff88027f63d340)
+> Stack:  ffff88027f66fee0 ffff88017e9b4800 0000000000000000
+> 0000000000000000
+>  00000000000001f7 0000000000000000 ffff88027f66ff48
+> ffffffff8026757e  ffffffff80719000 00000000000001f7
+> ffff88017e9b4800 ffffffff80719050 Call Trace:
+>  <IRQ>  [<ffffffff8026757e>] handle_IRQ_event+0x27/0x57
+> [<ffffffff80268d08>] handle_edge_irq+0xed/0x12e
+> [<ffffffff8020eaab>] do_IRQ+0xf6/0x167  [<ffffffff8020c471>]
+> ret_from_intr+0x0/0xa  <EOI>  [<ffffffff802122b1>] ?
+> default_idle+0x2b/0x40  [<ffffffff802124bf>] ?
+> c1e_idle+0xd4/0xdb  [<ffffffff8055677d>] ?
+> atomic_notifier_call_chain+0xf/0x11
+>  [<ffffffff8020ac6c>] ? cpu_idle+0x71/0x8f
+> [<ffffffff8054e752>] ? start_secondary+0x157/0x15c
+>
+>
+> Code: 8b 83 48 02 00 00 48 39 d8 74 37 49 39 9c 24 c0 00 01
+> 00 75 08 49 89 84 24 c0 00 01 00 48 8b 83 40 02 00 00 48 8b
+> 93 48 02 00 00 <48> 89 90 48 02 00 00 48 8b 93 48 02 00 00 48
+> 89 82 40 02 00 00 RIP  [<ffffffffa001bb68>]
+> do_cciss_intr+0x627/0xa6c [cciss]  RSP <ffff88027f66fee8>
+> CR2: 0000000000000248
+> ---[ end trace 902dc79a9e72d3ed ]---
+>
+
+Randy,
+Sorry I haven't replied sooner. I saw your earlier mail, just been busy breaking stuff internally. Did this happen during driver init or runtime?
+
+-- mikem
