@@ -1,89 +1,91 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Poisoning of Linux initiators on SCST reboot.
-Date: Wed, 20 Aug 2008 15:30:58 -0700
-Message-ID: <20080820223058.GL10859@plap4-2.local>
-References: <andrew.vasquez@qlogic.com> <200808202113.m7KLDj6T015673@wind.enjellic.com>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [Scst-devel] Who do we point to?
+Date: Thu, 21 Aug 2008 03:06:39 +0200
+Message-ID: <200808210306.39959.stf_xl@wp.pl>
+References: <200808201911.m7KJBTik015082@wind.enjellic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:39356 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbYHTWbA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2008 18:31:00 -0400
+Received: from mx1.wp.pl ([212.77.101.5]:34347 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751491AbYHTXTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Aug 2008 19:19:50 -0400
+In-Reply-To: <200808201911.m7KJBTik015082@wind.enjellic.com>
 Content-Disposition: inline
-In-Reply-To: <200808202113.m7KLDj6T015673@wind.enjellic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@enjellic.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, vst@vlnb.net, Marcus Barrow <marcus.barrow@qlogic.com>
+To: scst-devel@lists.sourceforge.net, greg@enjellic.com
+Cc: vst@vlnb.net, linux-driver@qlogic.com, neilb@suse.de, linux-raid@vger.kernel.org, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
-On Wed, 20 Aug 2008, greg@enjellic.com wrote:
+On Wednesday 20 August 2008, greg@enjellic.com wrote:
+> Good morning hope the day is going well for everyone.
+Hi Greg!
 
-> 
-> On Aug 13, 10:28pm, Andrew Vasquez wrote:
-> } Subject: Re: Poisoning of Linux initiators on SCST reboot.
-> 
-> Good afternoon to everyone, hope the day is going well.
-> 
-> > Ok, we've verified and backported the three changes through to 2.6.24.
-> > The patches in this order:
-> > 
-> >  [SCSI] qla2xxx: Add dev_loss_tmo_callbk/terminate_rport_io callback support.
-> >  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5f3a9a207f1fccde476dd31b4c63ead2967d934f
-> > 
-> >  [SCSI] qla2xxx: Set an rport's dev_loss_tmo value in a consistent manner.
-> >  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=85821c906cf3563a00a3d98fa380a2581a7a5ff1
-> > 
-> >  [PATCH 2/8] qla2xxx: Correct synchronization of software/firmware fcport states.
-> >  http://article.gmane.org/gmane.linux.scsi/43971
-> > 
-> > apply cleanly to 2.6.26 (git-am clean), and with minor 'fuzz' (git-am
-> > warns) while applying the first patch against 2.6.25 and 2.6.24.
-> 
-> We ran into an issue today which I wanted to bounce off everyone since
-> it may be related.  If not there may be another issue to look at.
-> 
-> We were transitioning storage on a pair of our production boxes from
-> an existing Linux SCSI target solution to SCST.  Previously the
-> storage was being accessed as target 0/LUN1.  Under SCST the storage
-> would be accessed as target 0/LUN0.
-> 
-> The target machine was upgraded and rebooted.  SCST loaded and
-> initialized.  The MDS indicated the initiator and target were both
-> logged into the zone.   So there would seem to be connectivity at the
-> link layer between the initiator/target and the switch.
-> 
-> Unfortunately we cannot get a session established on the target for
-> the initiator(s).  The initiators are running stock RHEL5 2.6.18
-> kernels.
-> 
-> Enabling/disabling the interface on the target server results in the
-> following messages on the initiators:
-> 
-> Aug 20 14:54:27 initiator kernel: rport-4:0-1: blocked FC remote port
-> time out: saving binding
-> 
-> The following are also noted in the output of dmesg on the initiators:
-> 
-> scsi 4:0:0:0: timing out command, waited 22s
-> 
-> There is a remote port defined for the target server.  The port WWN
-> and FCID match previous values.  The only difference is the LUN on
-> which the storage is being delivered.
-> 
-> We tore down the SCST storage definition on the target and re-mapped
-> the storage as LUN 1 but this had no affect on the situation.  That
-> isn't really surprising since the problem appears be secondary to the
-> initiator and target being unable to establish an N_PORT relationship.
-> 
-> I would be interested in any thoughts the group might have.  From the
-> perspective of the initiators the behavior seems somewhat identical to
-> what we experienced earlier.  The Qlogic driver is essentially
-> 'poisoned' with respect to its ability to access the remote port which
-> has seen a change in configuration.
+> Apologies for the large broadcast domain on this.  I wanted to make
+> sure everyone who may have an interest in this is involved.
+>
+> Some feedback on another issue we encountered with Linux in a
+> production initiator/target environment with SCST.  I'm including logs
+> below from three separate systems involved in the incident.  I've gone
+> through them with my team and we are currently unsure on what
+> triggered all this, hence mail to everyone who may be involved.
+>
+> The system involved is SCST 1.0.0.0 running on a Linux 2.6.24.7 target
+> platform using the qla_isp driver module.  The target machine has two
+> 9650 eight port 3Ware controller cards driving a total of 16 750
+> gigabyte Seagate NearLine drives.  Firmware on the 3ware and Qlogic
+> cards should all be current.  There are two identical servers in two
+> geographically separated data-centers.
+>
+> The drives on each platform are broken into four 3+1 RAID5 devices
+> with software RAID.  Each RAID5 volume is a physical volume for an LVM
+> volume group. There is currently one logical volume exported from each
+> of four RAID5 volumes as a target device.  A total of four initiators
+> are thus accessing the target server, each accessing different RAID5
+> volumes.
+>
+> The initiators are running a stock 2.6.26.2 kernel with a RHEL5
+> userspace.  Access to the SAN is via a 2462 dual-port Qlogic card.
+> The initiators see a block device from each of the two target servers
+> through separate ports/paths.  The block devices form a software RAID1
+> device (with bitmaps) which is the physical volume for an LVM volume
+> group.  The production filesystem is supported by a single logical
+> volume allocated from that volume group.
+>
+> A drive failure occured last Sunday afternoon on one of the RAID5
+> volumes.  The target kernel recognized the failure, failed the device
+> and kept going.
+>
+> Unfortunately three of the four initiators picked up a device failure
+> which caused the SCST exported volume to be faulted out of the RAID1
+> device.  One of the initiators noted an incident was occurring, issued
+> a target reset and continued forward with no issues.
+>
+> The initiator which got things 'right' was not accessing the RAID5
+> volume on the target which experienced the error.  Two of the three
+> initiators which faulted out their volumes were not accessing the
+> compromised RAID5 volume.  The initiator accessing the volume faulted
+> out its device.
+For some reason SCST core need to wait for logical unit driver (aka dev 
+handler) for abort comand. It is not possible to abort command instantly i.e.  
+mark command as aborted, return task management success to initiator and 
+after logical unit driver finish, just free resources for aborted command (I 
+don't know way, maybe Vlad could tell more about this). Qlogic initiator 
+device just waits for 3ware card to abort commands. As both systems have the 
+same SCSI stack, such same commands timeouts. 3ware driver will return error 
+to RAID5 roughly at the same time when Qlogic initiator timeouts. So 
+sometimes Qlogic send only device reset and sometimes target reset too.
 
-These upstream changes are in the queue of updates to be pushed for
-RHEL5.3.
+I believe increasing timeouts in sd driver on initiator site (and maybe 
+decreasing in on target system) will help. This things are not run time 
+configurable, only compile time. On initiator systems I suggest to increase 
+SD_TIMEOUT and maybe on target site decrease SD_MAX_RETRIES, both values are 
+in drivers/scsi/sd.h. In such configuration, when physical disk fail, 3ware 
+will return error during initiator waiting for command complete, RAID5 on 
+target will do the right job and from initiator point of view command will 
+finish successfully.
 
-Regards,
-Andrew Vasquez
+Cheers
+Stanislaw Gruszka
