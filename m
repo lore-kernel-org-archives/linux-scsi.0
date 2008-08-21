@@ -1,67 +1,98 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 2/6] zfcp: Correctly query end flag in gpn_ft response
-Date: Thu, 21 Aug 2008 13:43:33 +0200
-Message-ID: <20080821114556.622855000@de.ibm.com>
-References: <20080821114331.148204000@de.ibm.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Who do we point to?
+Date: Thu, 21 Aug 2008 16:17:56 +0400
+Message-ID: <48AD5CF4.9060407@vlnb.net>
+References: <200808201911.m7KJBTik015082@wind.enjellic.com> <200808210306.39959.stf_xl@wp.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:59941 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbYHULrd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2008 07:47:33 -0400
-Content-Disposition: inline; filename=702-zfcp-gpn_ft.diff
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:48230 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755610AbYHUMkT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Aug 2008 08:40:19 -0400
+In-Reply-To: <200808210306.39959.stf_xl@wp.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Petermann <martin@linux.vnet.ibm.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: scst-devel@lists.sourceforge.net, greg@enjellic.com, linux-driver@qlogic.com, neilb@suse.de, linux-raid@vger.kernel.org, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Stanislaw Gruszka wrote:
+>> Apologies for the large broadcast domain on this.  I wanted to make
+>> sure everyone who may have an interest in this is involved.
+>>
+>> Some feedback on another issue we encountered with Linux in a
+>> production initiator/target environment with SCST.  I'm including logs
+>> below from three separate systems involved in the incident.  I've gone
+>> through them with my team and we are currently unsure on what
+>> triggered all this, hence mail to everyone who may be involved.
+>>
+>> The system involved is SCST 1.0.0.0 running on a Linux 2.6.24.7 target
+>> platform using the qla_isp driver module.  The target machine has two
+>> 9650 eight port 3Ware controller cards driving a total of 16 750
+>> gigabyte Seagate NearLine drives.  Firmware on the 3ware and Qlogic
+>> cards should all be current.  There are two identical servers in two
+>> geographically separated data-centers.
+>>
+>> The drives on each platform are broken into four 3+1 RAID5 devices
+>> with software RAID.  Each RAID5 volume is a physical volume for an LVM
+>> volume group. There is currently one logical volume exported from each
+>> of four RAID5 volumes as a target device.  A total of four initiators
+>> are thus accessing the target server, each accessing different RAID5
+>> volumes.
+>>
+>> The initiators are running a stock 2.6.26.2 kernel with a RHEL5
+>> userspace.  Access to the SAN is via a 2462 dual-port Qlogic card.
+>> The initiators see a block device from each of the two target servers
+>> through separate ports/paths.  The block devices form a software RAID1
+>> device (with bitmaps) which is the physical volume for an LVM volume
+>> group.  The production filesystem is supported by a single logical
+>> volume allocated from that volume group.
+>>
+>> A drive failure occured last Sunday afternoon on one of the RAID5
+>> volumes.  The target kernel recognized the failure, failed the device
+>> and kept going.
+>>
+>> Unfortunately three of the four initiators picked up a device failure
+>> which caused the SCST exported volume to be faulted out of the RAID1
+>> device.  One of the initiators noted an incident was occurring, issued
+>> a target reset and continued forward with no issues.
+>>
+>> The initiator which got things 'right' was not accessing the RAID5
+>> volume on the target which experienced the error.  Two of the three
+>> initiators which faulted out their volumes were not accessing the
+>> compromised RAID5 volume.  The initiator accessing the volume faulted
+>> out its device.
+> For some reason SCST core need to wait for logical unit driver (aka dev 
+> handler) for abort comand. It is not possible to abort command instantly i.e.  
+> mark command as aborted, return task management success to initiator and 
+> after logical unit driver finish, just free resources for aborted command (I 
+> don't know way, maybe Vlad could tell more about this).
 
-When the last port entry in the gpn_ft response is already a known
-port, the eval function would skip the end flag and try to attach
-ports with wwpn 0. Fix this by checking the flag first.
+That's a SAM requirement. Otherwise, if complete TM commands 
+"instantly", without waiting for all affected commands to complete, it 
+is possible that the aborted command would be executed in one more retry 
+*after* the next command that initiator issued after the reset was 
+completed. Initiator would think that the aborted commands are already 
+dead and such behavior could kill journaled filesystems.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-Signed-off-by: Martin Petermann <martin@linux.vnet.ibm.com>
----
+> Qlogic initiator 
+> device just waits for 3ware card to abort commands. As both systems have the 
+> same SCSI stack, such same commands timeouts. 3ware driver will return error 
+> to RAID5 roughly at the same time when Qlogic initiator timeouts. So 
+> sometimes Qlogic send only device reset and sometimes target reset too.
+> 
+> I believe increasing timeouts in sd driver on initiator site (and maybe 
+> decreasing in on target system) will help. This things are not run time 
+> configurable, only compile time. On initiator systems I suggest to increase 
+> SD_TIMEOUT and maybe on target site decrease SD_MAX_RETRIES, both values are 
+> in drivers/scsi/sd.h. In such configuration, when physical disk fail, 3ware 
+> will return error during initiator waiting for command complete, RAID5 on 
+> target will do the right job and from initiator point of view command will 
+> finish successfully.
+> 
+> Cheers
+> Stanislaw Gruszka
+> 
 
- drivers/s390/scsi/zfcp_fc.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2008-08-20 14:41:08.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2008-08-20 14:41:34.000000000 +0200
-@@ -475,7 +475,7 @@ static int zfcp_scan_eval_gpn_ft(struct 
- 	struct zfcp_adapter *adapter = ct->port->adapter;
- 	struct zfcp_port *port, *tmp;
- 	u32 d_id;
--	int ret = 0, x;
-+	int ret = 0, x, last = 0;
- 
- 	if (ct->status)
- 		return -EIO;
-@@ -492,12 +492,13 @@ static int zfcp_scan_eval_gpn_ft(struct 
- 	down(&zfcp_data.config_sema);
- 
- 	/* first entry is the header */
--	for (x = 1; x < ZFCP_GPN_FT_MAX_ENTRIES; x++) {
-+	for (x = 1; x < ZFCP_GPN_FT_MAX_ENTRIES && !last; x++) {
- 		if (x % (ZFCP_GPN_FT_ENTRIES + 1))
- 			acc++;
- 		else
- 			acc = sg_virt(++sg);
- 
-+		last = acc->control & 0x80;
- 		d_id = acc->port_id[0] << 16 | acc->port_id[1] << 8 |
- 		       acc->port_id[2];
- 
-@@ -513,8 +514,6 @@ static int zfcp_scan_eval_gpn_ft(struct 
- 			ret = PTR_ERR(port);
- 		else
- 			zfcp_erp_port_reopen(port, 0, 149, NULL);
--		if (acc->control & 0x80) /* last entry */
--			break;
- 	}
- 
- 	zfcp_erp_wait(adapter);
-
--- 
