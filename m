@@ -1,74 +1,41 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Thu, 21 Aug 2008 00:16:07 -0700
-Message-ID: <20080821001607.14a2e0e7.akpm@linux-foundation.org>
-References: <48AD02B2.7020004@oracle.com>
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+Subject: Re: [PATCH 0/3] cmd_filter fixes
+Date: Thu, 21 Aug 2008 11:26:37 +0200
+Message-ID: <6cf6b73e0808210226r76e3d817j35491babd227794@mail.gmail.com>
+References: <20080731130422.GC30534@parisc-linux.org>
+	 <20080801001839L.tomof@acm.org>
+	 <6cf6b73e0808071147o76817aabhc363feb41b0a176c@mail.gmail.com>
+	 <20080808092014J.fujita.tomonori@lab.ntt.co.jp>
+	 <20080808055405.GF20055@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60068 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751893AbYHUHQU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2008 03:16:20 -0400
-In-Reply-To: <48AD02B2.7020004@oracle.com>
+Received: from rv-out-0506.google.com ([209.85.198.226]:40228 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbYHUJ0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2008 05:26:38 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so861282rvb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2008 02:26:37 -0700 (PDT)
+In-Reply-To: <20080808055405.GF20055@kernel.dk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rdunlap <randy.dunlap@oracle.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, mike.miller@hp.com
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
 
-On Wed, 20 Aug 2008 22:52:50 -0700 rdunlap <randy.dunlap@oracle.com> wrote:
+2008/8/8 Jens Axboe <jens.axboe@oracle.com>:
+> On Fri, Aug 08 2008, FUJITA Tomonori wrote:
+>> On Thu, 7 Aug 2008 20:47:45 +0200
+>> "Adel Gadllah" <adel.gadllah@gmail.com> wrote:
+>>
+>> > Can we push this patches to Linus?
+>> > They fix the regression and do not seem to introduce a new one
+>> > (couldn't find any while testing it).
+>>
+>> Jens? Any comments on the patchset?
+>
+> Looks fine, I'll queue it up.
 
-> on x86_64, 4 proc, 8 GB RAM:
-> 
-> calling  cciss_init+0x0/0x2e [cciss]
-> HP CISS Driver (v 3.6.20)
-> ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54
-> cciss 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high) -> IRQ 54
-> cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 503 using DAC
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000248
-> IP: [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
-> PGD 17e422067 PUD 17e423067 PMD 0
-> Oops: 0002 [1] SMP
-> CPU 2
-> Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
-> Pid: 0, comm: swapper Not tainted 2.6.27-rc3-git7 #1
-> RIP: 0010:[<ffffffffa001bb68>]  [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
-> RSP: 0018:ffff88027f66fee8  EFLAGS: 00010007
-> RAX: 0000000000000000 RBX: ffff88007f840270 RCX: 000000000000000c
-> RDX: 0000000000000000 RSI: ffff88027e5c0000 RDI: ffff88027e5c0000
-> RBP: ffff88027f66ff18 R08: 0000000000000000 R09: ffff88017fa95e88
-> R10: 0000000000000000 R11: ffff88027f66ff48 R12: ffff88027e5c0000
-> R13: 0000000000000000 R14: 00000000000001f7 R15: 0000000000000086
-> FS:  0000000000680850(0000) GS:ffff88017fc02c80(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000248 CR3: 000000017e425000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process swapper (pid: 0, threadinfo ffff88017fa94000, task ffff88027f63d340)
-> Stack:  ffff88027f66fee0 ffff88017e9b4800 0000000000000000 0000000000000000
->  00000000000001f7 0000000000000000 ffff88027f66ff48 ffffffff8026757e
->  ffffffff80719000 00000000000001f7 ffff88017e9b4800 ffffffff80719050
-> Call Trace:
->  <IRQ>  [<ffffffff8026757e>] handle_IRQ_event+0x27/0x57
->  [<ffffffff80268d08>] handle_edge_irq+0xed/0x12e
->  [<ffffffff8020eaab>] do_IRQ+0xf6/0x167
->  [<ffffffff8020c471>] ret_from_intr+0x0/0xa
->  <EOI>  [<ffffffff802122b1>] ? default_idle+0x2b/0x40
->  [<ffffffff802124bf>] ? c1e_idle+0xd4/0xdb
->  [<ffffffff8055677d>] ? atomic_notifier_call_chain+0xf/0x11
->  [<ffffffff8020ac6c>] ? cpu_idle+0x71/0x8f
->  [<ffffffff8054e752>] ? start_secondary+0x157/0x15c
-> 
-> 
-> Code: 8b 83 48 02 00 00 48 39 d8 74 37 49 39 9c 24 c0 00 01 00 75 08 49 89 84 24 c0 00 01 00 48 8b 83 40 02 00 00 48 8b 93 48 02 00 00 <48> 89 90 48 02 00 00 48 8b 93 48 02 00 00 48 89 82 40 02 00 00
-> RIP  [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
->  RSP <ffff88027f66fee8>
-> CR2: 0000000000000248
-
-Is it repeatable?
-
-Is it a regression?
-
-Any chance of finding the offending code with gdb?
+ping?
+seems still not merged in rc4.....
