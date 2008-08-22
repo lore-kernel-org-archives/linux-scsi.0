@@ -1,48 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Arjan van de Ven <arjan@linux.intel.com>
 Subject: Re: [Ksummit-2008-discuss] Kernel Summit Request for Discussion:
-	The Future of Target mode and Cloud storage on Linux
-Date: Thu, 21 Aug 2008 18:53:52 -0500
-Message-ID: <1219362832.3265.59.camel@localhost.localdomain>
-References: <48ADC53B.6090501@vlnb.net>  <48ADFAB7.5010201@cs.wisc.edu>
+ The Future of Target mode and Cloud storage on Linux
+Date: Thu, 21 Aug 2008 17:26:20 -0700
+Message-ID: <48AE07AC.5020009@linux.intel.com>
+References: <48ADC53B.6090501@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58144 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752253AbYHUXx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2008 19:53:56 -0400
-In-Reply-To: <48ADFAB7.5010201@cs.wisc.edu>
+Received: from mga06.intel.com ([134.134.136.21]:19441 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752624AbYHVA0Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2008 20:26:24 -0400
+In-Reply-To: <48ADC53B.6090501@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, ksummit-2008-discuss@lists.linux-foundation.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@gmail.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: ksummit-2008-discuss@lists.linux-foundation.org, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>
 
-On Thu, 2008-08-21 at 18:31 -0500, Mike Christie wrote:
-> I think James also said something about moving STGT in-kernel to get 
-> performance gains, but I do not think it means that we have to push 
-> exact code that sits in Tomo's git tree from usrspace into the kernel. 
-> If along the way we replace it with scst or Nick's code and we end up 
-> with a variant of scst or Nicks code that can still support userspace 
-> targets then I do not think any one is going to make long threads like 
-> these have resulted in :)
+Vladislav Bolkhovitin wrote:
+> (My apologies that I'm late to this discussion. I wasn't subscribed to 
+> ksummit-2008-discuss, so wasn't aware about it. Big thanks to Nicholas 
+> 
 
-I meant actually allowing performance critical pieces to work either
-in-user or in-kernel.  How, I'm not sure ... if we could use the same
-code for both, that would be brilliant ... if we have to have separate
-pieces, that will be OK.
-
-The error injection and transport debug people think it's important to
-have the state machine in user space for fast prototyping and debugging,
-so I'm not going to take this away from them.
-
-> Will this work for everyone?
-
-Sounds like a plan.  (However, it also sounds suspiciously like the last
-plan we had from the storage summit which didn't actually attract any
-implementers ...)
-
-James
-
-
+no need to apologize; it's not the right list for this to be discussed anyway,
+and it's increasingly clear that this isn't a topic for the Kernel Summit... it's
+a topic where the stakeholders really need to get their act together and in a storage
+forum come up with some agreement.....
