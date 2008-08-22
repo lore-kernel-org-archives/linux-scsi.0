@@ -1,53 +1,58 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11404] New: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Fri, 22 Aug 2008 14:51:14 -0700 (PDT)
-Message-ID: <bug-11404-11613@http.bugzilla.kernel.org/>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] pass through support in fc transport: via bsg (block SG)
+Date: Fri, 22 Aug 2008 17:53:11 -0400
+Message-ID: <48AF3547.4040703@emulex.com>
+References: <1283B1A7-A1A2-465A-A9E4-07A778BC3FE8@qlogic.com> <423FD491-FCA2-4CBF-8411-B08E90243236@qlogic.com> <7773BCE2-99A3-467D-B7AF-C182F2773A9C@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45148 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757921AbYHVVvo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2008 17:51:44 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7MLpEpP005410
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2008 14:51:15 -0700
+Received: from emulex.emulex.com ([138.239.112.1]:39122 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757028AbYHVVxf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2008 17:53:35 -0400
+In-Reply-To: <7773BCE2-99A3-467D-B7AF-C182F2773A9C@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: Robert W Love <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Boaz Harrosh <bharrosh@panasas.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11404
+Nope - not forgotten, just a lot of different things to get to.
 
-           Summary: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-           Product: SCSI Drivers
-           Version: 2.5
-     KernelVersion: 2.6.23-rc3-git7
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: rjw@sisk.pl
-OtherBugsDependingO 11167
-             nThis:
-        Regression: 1
+I don't know of anything in the header that needs to be specified. 
+Everything is either fixed because it is an ELS/CT request, or what 
+needs to be specified (usually S_ID/D_ID) comes from the object the bsg 
+reference is to. CS_CTL is the only one that is a maybe - but that's a 
+whole different story, and we should just ignore it for now. So I'm 
+against a header.
 
+Additionally, we have to be careful about what kind of interface we 
+believe the LLD's support. If they expected a raw frame transmit, I 
+don't know how many support that, especially as adapters very much 
+control XID's, etc. Create Exchange, w/ Send/Receive, sequence is 
+prefered, but even that might be too low.  At best, there is explicit 
+els or ct assist interfaces - which means the LLD/adapter is likely 
+handling all the header and segmentation, and the interface is just 
+passing payload buffers.
 
-Subject    : BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-Submitter  : rdunlap <randy.dunlap@oracle.com>
-Date       : 2008-08-21 5:52
-References : http://marc.info/?l=linux-kernel&m=121929819616273&w=4
-References : http://marc.info/?l=linux-kernel&m=121932889105368&w=4
-Handled-By : "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Handled-By : James Bottomley <James.Bottomley@hansenpartnership.com>
+So in general it's a request, w/ xmt payload, buffer for response, and a 
+  completion status (which I would assume is more than just an int and a 
+couple of #defines - we have to cover the F_RJT/P_RJT/ABORT cases..)
 
-This entry is being used for tracking a regression from 2.6.26.  Please don't
-close it until the problem is fixed in the mainline.
+-- james s
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Seokmann Ju wrote:
+> I just want to re-stroke this thread to make sure it is not skipped.
+> 
+> One question came to me while testing qla2xxx module with the changes.
+> When the application issues ELS/CT packet, should the packet include
+> the FC frame header?
+> And if the answer is 'yes', should the driver also include the FC
+> frame header when it returns response to the application (just like
+> any other frame exchanges in between two ports on the FC)?
+> The FC frame header has type field that identifies what type of the
+> payload (ELS / CT / etc.) the frame contains and the type field is
+> being checked by the FC transport layer before it calls LLDD's handler.
+> 
+> Thank you,
+> Seokmann
