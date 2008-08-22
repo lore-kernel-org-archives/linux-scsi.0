@@ -1,53 +1,46 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH]: scsi_dh: Initialize path state to be passive when path is
-	not owned
-Date: Thu, 21 Aug 2008 23:12:40 -0700
-Message-ID: <1219385560.14830.103.camel@chandra-ubuntu>
-Reply-To: sekharan@us.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 3/4] drop vmerge accounting
+Date: Fri, 22 Aug 2008 11:17:40 +0200
+Message-ID: <20080822091740.GB20055@kernel.dk>
+References: <20080808055405.GF20055@kernel.dk> <20080808151147J.fujita.tomonori@lab.ntt.co.jp> <20080808061537.GI20055@kernel.dk> <20080808152845N.fujita.tomonori@lab.ntt.co.jp> <20080808063527.GJ20055@kernel.dk> <Pine.LNX.4.64.0808081247430.11647@devserv.devel.redhat.com> <Pine.LNX.4.64.0808081254000.11647@devserv.devel.redhat.com> <20080815094800.GI20055@kernel.dk> <Pine.LNX.4.64.0808151418240.24727@hs20-bc2-1.build.redhat.com> <20080822091044.GA20055@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:32943 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752997AbYHVGNJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2008 02:13:09 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7M6D8KK011385
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2008 02:13:08 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7M6D8U5206460
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2008 00:13:08 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7M6D8Sh008744
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2008 00:13:08 -0600
+Received: from [93.163.65.50] ([93.163.65.50]:27756 "EHLO kernel.dk"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbYHVJRn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Aug 2008 05:17:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20080822091044.GA20055@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, adel.gadllah@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net, drzeus-mmc@drzeus.cx
 
-Set the path state to be passive when we learn that the controller does
-not own the path to the LUN.
+On Fri, Aug 22 2008, Jens Axboe wrote:
+> On Fri, Aug 15 2008, Mikulas Patocka wrote:
+> > > I have applied this and the previous, with a fixup to raid5 to overload
+> > > both active stripe and process count in bi_phys_segments.
+> > > 
+> > > -- 
+> > > Jens Axboe
+> > 
+> > Hi
+> > 
+> > So here are two new patches. Patch 3 drops blk_queue_max_hw_segments 
+> > function and max_hw_segments entry. I checked all the drivers, most of 
+> > them set blk_queue_max_hw_segments equal to blk_queue_max_phys_segments, 
+> > for the few ones that don't (for example scsi_lib.c), I set minimum of the 
+> > two values with blk_queue_max_phys_segments.
+> > 
+> > The next patch 4 drops the hw_segments logic from MMC card subsystem.
+> 
+> Thanks, I've queued both up for review and inclusion for 2.6.28.
 
-This will avoid sending even a single i/o thru the passive path at the
-probe time.
+Spoke too soon, they don't really apply to the for-2.6.28 branch of the
+block git tree that has your two previous patches. Can you please
+recheck and resend against that?
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
-
-Index: linux-2.6.27-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
-===================================================================
---- linux-2.6.27-rc3.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ linux-2.6.27-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -402,6 +402,9 @@ static int check_ownership(struct scsi_d
- 		}
- 	}
- 
-+	if (h->lun_state == RDAC_LUN_UNOWNED)
-+		h->state = RDAC_STATE_PASSIVE;
-+
- 	return err;
- }
- 
-
+-- 
+Jens Axboe
 
