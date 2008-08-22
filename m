@@ -1,29 +1,54 @@
-From: Arjan van de Ven <arjan@linux.intel.com>
-Subject: Re: [Ksummit-2008-discuss] Kernel Summit Request for Discussion:
- The Future of Target mode and Cloud storage on Linux
-Date: Thu, 21 Aug 2008 17:26:20 -0700
-Message-ID: <48AE07AC.5020009@linux.intel.com>
-References: <48ADC53B.6090501@vlnb.net>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Thu, 21 Aug 2008 17:26:53 -0700
+Message-ID: <20080821172653.3e3e855c.randy.dunlap@oracle.com>
+References: <48AD02B2.7020004@oracle.com>
+	<0F5B06BAB751E047AB5C87D1F77A778835116209D3@GVW0547EXC.americas.hpqcorp.net>
+	<20080821084333.c471b439.randy.dunlap@oracle.com>
+	<0F5B06BAB751E047AB5C87D1F77A7788351181004C@GVW0547EXC.americas.hpqcorp.net>
+	<20080821091514.8f56e2d5.randy.dunlap@oracle.com>
+	<0F5B06BAB751E047AB5C87D1F77A778835118100D6@GVW0547EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:19441 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752624AbYHVA0Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2008 20:26:24 -0400
-In-Reply-To: <48ADC53B.6090501@vlnb.net>
+Received: from agminet01.oracle.com ([141.146.126.228]:52392 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785AbYHVA0z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2008 20:26:55 -0400
+In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778835118100D6@GVW0547EXC.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: ksummit-2008-discuss@lists.linux-foundation.org, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 
-Vladislav Bolkhovitin wrote:
-> (My apologies that I'm late to this discussion. I wasn't subscribed to 
-> ksummit-2008-discuss, so wasn't aware about it. Big thanks to Nicholas 
-> 
+On Thu, 21 Aug 2008 16:25:24 +0000 Miller, Mike (OS Dev) wrote:
 
-no need to apologize; it's not the right list for this to be discussed anyway,
-and it's increasingly clear that this isn't a topic for the Kernel Summit... it's
-a topic where the stakeholders really need to get their act together and in a storage
-forum come up with some agreement.....
+> > >
+> > > Randy,
+> > > We know of a race condition in cciss_init_one. It's fixed
+> > in 2.6.26 I believe. Here's the patch:
+> > >
+> > >
+> > http://groups.google.com/group/linux.kernel/browse_thread/thread/7b39f
+> > > 2b77622ab03/4f5f45c008655ca1?hl=en&lnk=gst&q=cciss#4f5f45c008655ca1
+> >
+> >
+> > Mike,
+> > Sorry, but my fingers have typoed the $subject.  My bad.
+> > Kernel is 2.6.27-rc3-git7 (from above):
+> >
+> > > > > > Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
+> > > > > > Pid: 0, comm: swapper Not tainted 2.6.27-rc3-git7 #1
+> > > > > > RIP: 0010:[<ffffffffa001bb68>]  [<ffffffffa001bb68>]
+> > > > > > do_cciss_intr+0x627/0xa6c [cciss]
+> >
+> Hmmmmm, let me know what happens from your retest. I'll look at this as soon as I finish what I'm doing now. We trying to spin for our test teams but I have something hopelessly broken. :(
+
+It didn't BUG in the retest.  That just means that it's more difficult
+to find/fix, right?
+
+---
+~Randy
+Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
+http://linuxplumbersconf.org/
