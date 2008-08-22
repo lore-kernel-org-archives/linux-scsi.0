@@ -1,40 +1,40 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/3] cmd_filter fixes
-Date: Fri, 22 Aug 2008 11:10:01 +0200
-Message-ID: <20080822091001.GZ20055@kernel.dk>
-References: <20080731130422.GC30534@parisc-linux.org> <20080801001839L.tomof@acm.org> <6cf6b73e0808071147o76817aabhc363feb41b0a176c@mail.gmail.com> <20080808092014J.fujita.tomonori@lab.ntt.co.jp> <20080808055405.GF20055@kernel.dk> <6cf6b73e0808210226r76e3d817j35491babd227794@mail.gmail.com>
+Subject: Re: [PATCH 3/4] drop vmerge accounting
+Date: Fri, 22 Aug 2008 11:10:45 +0200
+Message-ID: <20080822091044.GA20055@kernel.dk>
+References: <20080808055405.GF20055@kernel.dk> <20080808151147J.fujita.tomonori@lab.ntt.co.jp> <20080808061537.GI20055@kernel.dk> <20080808152845N.fujita.tomonori@lab.ntt.co.jp> <20080808063527.GJ20055@kernel.dk> <Pine.LNX.4.64.0808081247430.11647@devserv.devel.redhat.com> <Pine.LNX.4.64.0808081254000.11647@devserv.devel.redhat.com> <20080815094800.GI20055@kernel.dk> <Pine.LNX.4.64.0808151418240.24727@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [93.163.65.50] ([93.163.65.50]:23654 "EHLO kernel.dk"
+Received: from [93.163.65.50] ([93.163.65.50]:23655 "EHLO kernel.dk"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152AbYHVJmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754154AbYHVJmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 22 Aug 2008 05:42:55 -0400
 Content-Disposition: inline
-In-Reply-To: <6cf6b73e0808210226r76e3d817j35491babd227794@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0808151418240.24727@hs20-bc2-1.build.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, adel.gadllah@gmail.com, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dan.j.williams@intel.com, pjones@redhat.com, viro@zeniv.linux.org.uk, dougg@torque.net, drzeus-mmc@drzeus.cx
 
-On Thu, Aug 21 2008, Adel Gadllah wrote:
-> 2008/8/8 Jens Axboe <jens.axboe@oracle.com>:
-> > On Fri, Aug 08 2008, FUJITA Tomonori wrote:
-> >> On Thu, 7 Aug 2008 20:47:45 +0200
-> >> "Adel Gadllah" <adel.gadllah@gmail.com> wrote:
-> >>
-> >> > Can we push this patches to Linus?
-> >> > They fix the regression and do not seem to introduce a new one
-> >> > (couldn't find any while testing it).
-> >>
-> >> Jens? Any comments on the patchset?
-> >
-> > Looks fine, I'll queue it up.
+On Fri, Aug 15 2008, Mikulas Patocka wrote:
+> > I have applied this and the previous, with a fixup to raid5 to overload
+> > both active stripe and process count in bi_phys_segments.
+> > 
+> > -- 
+> > Jens Axboe
 > 
-> ping?
-> seems still not merged in rc4.....
+> Hi
+> 
+> So here are two new patches. Patch 3 drops blk_queue_max_hw_segments 
+> function and max_hw_segments entry. I checked all the drivers, most of 
+> them set blk_queue_max_hw_segments equal to blk_queue_max_phys_segments, 
+> for the few ones that don't (for example scsi_lib.c), I set minimum of the 
+> two values with blk_queue_max_phys_segments.
+> 
+> The next patch 4 drops the hw_segments logic from MMC card subsystem.
 
-It's queued up, I'll send it upstream soon.
+Thanks, I've queued both up for review and inclusion for 2.6.28.
 
 -- 
 Jens Axboe
