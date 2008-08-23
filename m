@@ -1,28 +1,45 @@
-From: bburk@extremeprotocol.com
-Subject: ATA resets
-Date: Sat, 23 Aug 2008 08:18:23 -0700
-Message-ID: <20080823081823.a3c6426c1bfee0652ed014f32bc3b38e.48eba9268d.wbe@email.secureserver.net>
+From: Divy Le Ray <divy@chelsio.com>
+Subject: Re: [PATCH 4/4 2.6.28] cxgb3i - cxgb3i iscsi driver
+Date: Sat, 23 Aug 2008 12:31:38 -0700
+Message-ID: <200808231231.40751.divy@chelsio.com>
+References: <200808221840.m7MIeuvB004442@localhost.localdomain> <20080822124844.b05ee3e8.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpoutwbe03.prod.mesa1.secureserver.net ([208.109.78.114]:54549
-	"HELO smtpoutwbe03.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751063AbYHWPSY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Aug 2008 11:18:24 -0400
+Received: from stargate.chelsio.com ([12.22.49.110]:30842 "EHLO
+	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753266AbYHWTik (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Aug 2008 15:38:40 -0400
+In-Reply-To: <20080822124844.b05ee3e8.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, davem@davemloft.net, michaelc@cs.wisc.edu, Steve Wise <swise@opengridcomputing.com>, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>
 
-Is there any mechanism to force resets (device and/or host/bus) on ATA
-devices?   SG_SCSI_RESET results in ENOTTY on the sd interface and EIO
-on the sg interface.  hdparm didn't seem able to do it, and I haven't
-been able to get protocols 0, 1, or 9 to work via the SATL mechanism.
- 
-As far as I can tell the driver(s) basically just reject the call out of
-hand even though it's a valid action.
- 
- 
-Brent
+On Friday 22 August 2008 12:48:44 pm Andrew Morton wrote:
+> On Fri, 22 Aug 2008 11:40:56 -0700
+>
+> Karen Xie <kxie@chelsio.com> wrote:
+> > [PATCH 4/4 2.6.28] cxgb3i - cxgb3i iscsi driver
+> >
+> > From: Karen Xie <kxie@chelsio.com>
+> >
+> > cxgb3i iSCSI driver.
+> >
+> > Signed-off-by: Karen Xie <kxie@chelsio.com>
+>
+> I'm going to suggest that this not be merged in this form due to the
+> __GFP_NOFAIL issues identified below.
+>
 
+Hi Andrew,
+
+thanks for the review. We've started fixing the obvious and looking at 
+alternatives for the nofail allocations.
+
+Cheers,
+Divy
