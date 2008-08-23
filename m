@@ -1,41 +1,43 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [PATCH 4/4 2.6.28] cxgb3i - cxgb3i iscsi driver
-Date: Sat, 23 Aug 2008 14:37:53 +0530
-Message-ID: <46A00B48CC54E4468EF6911F877AC4CA018D73BC@blrx3m10.blr.amer.dell.com>
-References: <200808221840.m7MIeuvB004442@localhost.localdomain><20080822124844.b05ee3e8.akpm@linux-foundation.org><46A00B48CC54E4468EF6911F877AC4CA018D73BB@blrx3m10.blr.amer.dell.com> <20080823.012830.262443664.davem@davemloft.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 4/4 2.6.28] cxgb3i - cxgb3i iscsi driver
+Date: Sat, 23 Aug 2008 02:29:34 -0700 (PDT)
+Message-ID: <20080823.022934.127206564.davem@davemloft.net>
+References: <46A00B48CC54E4468EF6911F877AC4CA018D73BB@blrx3m10.blr.amer.dell.com>
+	<20080823.012830.262443664.davem@davemloft.net>
+	<46A00B48CC54E4468EF6911F877AC4CA018D73BC@blrx3m10.blr.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <netdev-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20080823.012830.262443664.davem@davemloft.net>
-Sender: netdev-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: akpm@linux-foundation.org, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47420
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751873AbYHWJ3g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Aug 2008 05:29:36 -0400
+In-Reply-To: <46A00B48CC54E4468EF6911F877AC4CA018D73BC@blrx3m10.blr.amer.dell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shyam_Iyer@Dell.com
+Cc: akpm@linux-foundation.org, kxie@chelsio.com, netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com
 
-> David Miller wrote: 
-> > Andrew Morton wrote:
-> >I'd suggest that the version number just be removed.  It becomes
-> meaningless (and often misleading) once a driver is in the mainline 
-> kernel.  People will >update the driver without changing the version 
-> number.  Code external to the driver but which affects it can change.
+From: <Shyam_Iyer@Dell.com>
+Date: Sat, 23 Aug 2008 14:37:53 +0530
 
->I totally disagree.  I find it very useful when I get a debugging dump
-from the user and they have no idea where their kernel came from nor can
-figure 
->out how to determine the kernel version.
+> Exactly. And I am also suggesting that the driver version is not
+> standard among different vendors.
 
->Sure it might sometimes not get updated for trivial patches that bypass
-the maintainer, but the maintainer is always going to bump it after
-non-trivial 
->changes.
+It should not be standardized because every driver maintainer works
+differently, and every driver is developed differently, and therefore
+has different needs and desires for the version number.
 
-Exactly. And I am also suggesting that the driver version is not
-standard among different vendors. So, why not get them generated in an
-automatic build process.
-Something like "kernel-version.driver-version". I am just imagining
-here. The details can be worked out.
+All that matters is that the driver version makes sense to the
+person maintaining the driver, and works for them when reviewing
+bug reports.
 
--Shyam
+Look, what you're suggesting is to change existing practice and that
+doesn't belong in the discussion of the review of a specific driver.
+If you want to bring that up as a topic and change globally how that
+is handled, bring that up as a seperate topic on linux-kernel.
+
+Don't bug the poor driver submitter who is just following existing
+and accepted practice.
