@@ -1,74 +1,123 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Ksummit-2008-discuss] Kernel Summit Request for Discussion:
- The Future of Target mode and Cloud storage on Linux
-Date: Sat, 23 Aug 2008 11:35:58 +0900
-Message-ID: <20080823113624A.fujita.tomonori@lab.ntt.co.jp>
-References: <48ADC53B.6090501@vlnb.net>
-	<20080822081958A.fujita.tomonori@lab.ntt.co.jp>
-	<48AF0D1F.5030605@vlnb.net>
+From: jeykholt@cisco.com
+Subject: [RFC][PATCH 0/6] fnic: initial submission of driver for FCoE HBA
+Date: Fri, 22 Aug 2008 19:51:56 -0700
+Message-ID: <20080823024949.13569.94133.stgit@feynman.nuovasystems.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:57127 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751238AbYHWCgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2008 22:36:19 -0400
-In-Reply-To: <48AF0D1F.5030605@vlnb.net>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:38773 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbYHWCwI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2008 22:52:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vst@vlnb.net
-Cc: fujita.tomonori@lab.ntt.co.jp, ksummit-2008-discuss@lists.linux-foundation.org, bart.vanassche@gmail.com, James.Bottomley@HansenPartnership.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jre@nuovasystems.com, ajoglekar@nuovasystems.com
 
-On Fri, 22 Aug 2008 23:01:51 +0400
-Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+The following patches add a driver for a Fibre Channel over Ethernet HBA.
+This requires the libfc code to be integrated first.
+This applies on top of the open-fcoe.org initiator tree at
+        git://open-fcoe.org/openfc/open-fcoe-initiator.git
 
-> FUJITA Tomonori wrote:
-> > On Thu, 21 Aug 2008 23:42:51 +0400
-> > Vladislav Bolkhovitin <vst@vlnb.net> wrote:
-> > 
-> >>> Hmm, really? STGT development is more active IET.
-> >> Tomo-san, be honest. It was *you*, who stopped the IET development, 
-> >> forcing people to switch to STGT. There is no point to prepare patches 
-> >> for IET, if they will never get merged.
-> > 
-> > I stopped working on IET but it doesn't mean that I force others to
-> > stop working on IET. Arne said that he merges patches.
-> 
-> Well, how about declaring unlimited code freeze for all core parts?
+Cisco is working on developing a new product offering that will
+leverage open-source code and will use specialized network adapter for
+connectivity to existing LAN and SAN infrastructures.  The submitted
+driver is required to guarantee the proper level of interoperability
+and support.
 
-Why is it difficult for you to understand what I wrote? I wrote again:
+This driver was written by Abhijeet Joglekar and myself.
 
-I stopped working on IET but it doesn't mean that I force others to
-stop working on IET.
+We would appreciate any review comments.
+
+        Thanks,
+        Joe and Abhijeet
 
 
-> Has anybody, except you, had a right to merge patches to IET?
+---
 
-Nobody asked me to give a right to merge patches to IET. When Arne
-asked me, I was happy to give it him because he has a good knowledge
-of IET code.
-
-
-> Which %% of 
-> coming non-trivial patches have you merged in the last few years? Near 
-> zero?
-
-Probably, near zero because I stopped working on IET. What does 'stop
-working on something' mean for you?
+Joe Eykholt (6):
+      fnic: add Makefile, patch Kconfig, MAINTAINERS, pci_ids.h
+      fnic: add queue interfaces
+      fnic: add resource, interrupt, and firmware interfaces.
+      fnic:  Add fnic_fcs.c and fnic_attr.c.
+      fnic: add fnic_scsi.c and fnic_io.h.
+      fnic: add main file with module infrastructure, etc.
 
 
-> For instance, how many not too bad patches from Ross S. W. Walker 
-> were silently ignored? He didn't received even small comments, which 
-> made him so frustrated, so he stopped all the development activities?
+ MAINTAINERS                       |    8 
+ drivers/scsi/Kconfig              |   10 
+ drivers/scsi/Makefile             |    1 
+ drivers/scsi/fnic/Makefile        |   15 
+ drivers/scsi/fnic/cq_desc.h       |   90 ++
+ drivers/scsi/fnic/cq_enet_desc.h  |  222 +++++
+ drivers/scsi/fnic/cq_exch_desc.h  |  261 ++++++
+ drivers/scsi/fnic/fcpio.h         |  743 +++++++++++++++++
+ drivers/scsi/fnic/fnic.h          |  233 +++++
+ drivers/scsi/fnic/fnic_attrs.c    |   71 ++
+ drivers/scsi/fnic/fnic_fcs.c      |  710 ++++++++++++++++
+ drivers/scsi/fnic/fnic_io.h       |   65 +
+ drivers/scsi/fnic/fnic_isr.c      |  345 ++++++++
+ drivers/scsi/fnic/fnic_main.c     |  918 +++++++++++++++++++++
+ drivers/scsi/fnic/fnic_res.c      |  367 ++++++++
+ drivers/scsi/fnic/fnic_res.h      |  199 +++++
+ drivers/scsi/fnic/fnic_scsi.c     | 1605 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/rq_enet_desc.h  |   58 +
+ drivers/scsi/fnic/vnic_cq.c       |   86 ++
+ drivers/scsi/fnic/vnic_cq.h       |  113 +++
+ drivers/scsi/fnic/vnic_cq_copy.h  |   62 +
+ drivers/scsi/fnic/vnic_dev.c      |  577 +++++++++++++
+ drivers/scsi/fnic/vnic_dev.h      |   92 ++
+ drivers/scsi/fnic/vnic_devcmd.h   |  204 +++++
+ drivers/scsi/fnic/vnic_intr.c     |   60 +
+ drivers/scsi/fnic/vnic_intr.h     |   89 ++
+ drivers/scsi/fnic/vnic_nic.h      |   63 +
+ drivers/scsi/fnic/vnic_resource.h |   61 +
+ drivers/scsi/fnic/vnic_rq.c       |  192 ++++
+ drivers/scsi/fnic/vnic_rq.h       |  205 +++++
+ drivers/scsi/fnic/vnic_scsi.h     |   58 +
+ drivers/scsi/fnic/vnic_stats.h    |   62 +
+ drivers/scsi/fnic/vnic_wq.c       |  173 ++++
+ drivers/scsi/fnic/vnic_wq.h       |  150 +++
+ drivers/scsi/fnic/vnic_wq_copy.c  |  117 +++
+ drivers/scsi/fnic/vnic_wq_copy.h  |  125 +++
+ drivers/scsi/fnic/wq_enet_desc.h  |   92 ++
+ include/linux/pci_ids.h           |    3 
+ 38 files changed, 8505 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/fnic/Makefile
+ create mode 100644 drivers/scsi/fnic/cq_desc.h
+ create mode 100644 drivers/scsi/fnic/cq_enet_desc.h
+ create mode 100644 drivers/scsi/fnic/cq_exch_desc.h
+ create mode 100644 drivers/scsi/fnic/fcpio.h
+ create mode 100644 drivers/scsi/fnic/fnic.h
+ create mode 100644 drivers/scsi/fnic/fnic_attrs.c
+ create mode 100644 drivers/scsi/fnic/fnic_fcs.c
+ create mode 100644 drivers/scsi/fnic/fnic_io.h
+ create mode 100644 drivers/scsi/fnic/fnic_isr.c
+ create mode 100644 drivers/scsi/fnic/fnic_main.c
+ create mode 100644 drivers/scsi/fnic/fnic_res.c
+ create mode 100644 drivers/scsi/fnic/fnic_res.h
+ create mode 100644 drivers/scsi/fnic/fnic_scsi.c
+ create mode 100644 drivers/scsi/fnic/rq_enet_desc.h
+ create mode 100644 drivers/scsi/fnic/vnic_cq.c
+ create mode 100755 drivers/scsi/fnic/vnic_cq.h
+ create mode 100644 drivers/scsi/fnic/vnic_cq_copy.h
+ create mode 100644 drivers/scsi/fnic/vnic_dev.c
+ create mode 100644 drivers/scsi/fnic/vnic_dev.h
+ create mode 100644 drivers/scsi/fnic/vnic_devcmd.h
+ create mode 100644 drivers/scsi/fnic/vnic_intr.c
+ create mode 100755 drivers/scsi/fnic/vnic_intr.h
+ create mode 100755 drivers/scsi/fnic/vnic_nic.h
+ create mode 100644 drivers/scsi/fnic/vnic_resource.h
+ create mode 100644 drivers/scsi/fnic/vnic_rq.c
+ create mode 100755 drivers/scsi/fnic/vnic_rq.h
+ create mode 100755 drivers/scsi/fnic/vnic_scsi.h
+ create mode 100755 drivers/scsi/fnic/vnic_stats.h
+ create mode 100644 drivers/scsi/fnic/vnic_wq.c
+ create mode 100755 drivers/scsi/fnic/vnic_wq.h
+ create mode 100644 drivers/scsi/fnic/vnic_wq_copy.c
+ create mode 100644 drivers/scsi/fnic/vnic_wq_copy.h
+ create mode 100644 drivers/scsi/fnic/wq_enet_desc.h
 
-Several days ago on the mailing list, I saw that Ross works on IET
-with Arne.
-
-
-I have no idea why you think that you know better than me about the
-project that I had maintained. But can you please stop talking about
-wrong information? I can just ignore your wrong statements (I often
-did) but I don't like to see other people misunderstanding.
-
-Thanks,
+-- 
+Signature
