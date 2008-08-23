@@ -1,92 +1,52 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4 2.6.28] cxgb3 - manage a private ip address for iSCSI
-Date: Sat, 23 Aug 2008 14:55:20 +1000
-Message-ID: <20080823045520.GA4759@gondor.apana.org.au>
-References: <200808221838.m7MIcW6a004400@localhost.localdomain> <20080822120851.c45a90f2.akpm@linux-foundation.org>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [PATCH 4/4 2.6.28] cxgb3i - cxgb3i iscsi driver
+Date: Sat, 23 Aug 2008 13:52:26 +0530
+Message-ID: <46A00B48CC54E4468EF6911F877AC4CA018D73BB@blrx3m10.blr.amer.dell.com>
+References: <200808221840.m7MIeuvB004442@localhost.localdomain> <20080822124844.b05ee3e8.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:59094 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751148AbYHWEzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Aug 2008 00:55:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20080822120851.c45a90f2.akpm@linux-foundation.org>
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:8256 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbYHWIWh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Aug 2008 04:22:37 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20080822124844.b05ee3e8.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Karen Xie <kxie@chelsio.com>, netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, davem@davemloft.net, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com
+To: akpm@linux-foundation.org
+Cc: netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, davem@davemloft.net, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com, kxie@chelsio.com
 
-On Fri, Aug 22, 2008 at 07:08:51PM +0000, Andrew Morton wrote:
->
->> +static ssize_t iscsi_ipaddr_attr_store(struct device *d,
->> +                                    const char *buf, size_t len)
->> +{
->> +     struct port_info *pi = netdev_priv(to_net_dev(d));
->> +     __be32 a = 0;
-> 
-> There's not really any need to use __be32 in kernel code.  Plain old
-> be23 is fine.
+>Andrew Morton wrote:
+> > + *
+> > + * Written by: Karen Xie (kxie@chelsio.com)  */
+> > +
+> > +#include "cxgb3i.h"
+> > +
+> > +#define DRV_MODULE_NAME         "cxgb3i"
+> > +#define DRV_MODULE_VERSION      "1.0.0"
 
-Sorry but where is be32 defined? I couldn't find it in linux/types.h.
+>I'd suggest that the version number just be removed.  It becomes
+meaningless (and often misleading) once a driver is in the mainline
+kernel.  People will >update the driver without changing the version
+number.  Code external to the driver but which affects it can change.
 
-Perhaps we should resurrect this patch from 2005?
+>The kernel version identifier is really the only way in whcih you and
+your support people can reproduce a user's code.
 
-[PATCH] Add be*/le* types without underscores
+> > +#define DRV_MODULE_RELDATE      "May 1, 2008"
 
-I've seen a number of patches that have started to use the __le*/__be*
-types within the kernel.  Nice as they are, the underscores are really
-a bit of an eye sore.  Since there seems to be no name conflict within
-the kernel, why don't we use them without the underscores like just as
-we do with types like u32?
+>Ditto.
 
-Here is a patch to do just that.  I've verified that there are no
-conflicts by grepping the current git tree and then building it with
-the patch.
 
-Of course userspace won't see them since they're protected by
-#ifdef __KERNEL__.
+It gives us a stick to ask vendors to maintain upstream versions of
+driver code in the distros. 
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+While we are at this. I believe that there is not much of a standard for
+driver versioning. If we automatically get a driver version from the
+kernel version then it solves both problems. Thoughts ??
 
-diff --git a/fs/ntfs/types.h b/fs/ntfs/types.h
-index 8c8053b..79b44c7 100644
---- a/fs/ntfs/types.h
-+++ b/fs/ntfs/types.h
-@@ -25,9 +25,6 @@
- 
- #include <linux/types.h>
- 
--typedef __le16 le16;
--typedef __le32 le32;
--typedef __le64 le64;
- typedef __u16 __bitwise sle16;
- typedef __u32 __bitwise sle32;
- typedef __u64 __bitwise sle64;
-diff --git a/include/linux/types.h b/include/linux/types.h
-index d4a9ce6..61747dc 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -189,6 +189,15 @@ typedef __u16 __bitwise __sum16;
- typedef __u32 __bitwise __wsum;
- 
- #ifdef __KERNEL__
-+typedef __le16 le16;
-+typedef __be16 be16;
-+typedef __le32 le32;
-+typedef __be32 be32;
-+#if defined(__GNUC__)
-+typedef __le64 le64;
-+typedef __be64 be64;
-+#endif
-+
- typedef unsigned __bitwise__ gfp_t;
- 
- #ifdef CONFIG_RESOURCES_64BIT
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Thanks,
+Shyam
