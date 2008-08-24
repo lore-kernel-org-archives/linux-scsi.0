@@ -1,74 +1,146 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] scsi_netlink: Add transport and LLD receive and event
- support
-Date: Sun, 24 Aug 2008 07:54:35 -0400
-Message-ID: <48B14BFB.2070401@emulex.com>
-References: <C4D2105F.1F8A%david.somayajulu@qlogic.com>
+From: Jochen Radmacher <jr@dioscuri.de>
+Subject: Re: megaraid_sas: Optionally add SCSI devices for individual disks
+	in a raidset
+Date: Sun, 24 Aug 2008 16:51:22 +0200
+Message-ID: <48B1756A.3040301@dioscuri.de>
+References: <2834632.1190561219180854948.JavaMail.root@ouachita>
+Reply-To: jradmacher@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:54719 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753207AbYHXLym (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Aug 2008 07:54:42 -0400
-In-Reply-To: <C4D2105F.1F8A%david.somayajulu@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="------------040202080509000303070606"
+Return-path: <linux-poweredge-bounces@dell.com>
+In-Reply-To: <2834632.1190561219180854948.JavaMail.root@ouachita>
+List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
+List-Post: <mailto:linux-poweredge@dell.com>
+List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
+List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
+Sender: linux-poweredge-bounces@dell.com
+Errors-To: linux-poweredge-bounces@dell.com
+To: Joe Malicki <jmalicki@metacarta.com>
+Cc: megaraidlinux@lsi.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-poweredge <linux-poweredge@dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: David Somayajulu <david.somayajulu@qlogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------040202080509000303070606
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Hello,
+I am running a similar patch for some time now, and haven't had any 
+problems so far. (I posted the patch a while ago in linux-scsi, but 
+nobody cared.) The only difference is, that I hardcoded the creation of 
+the sgx devices and additionally made them read only. (sdev->writeable=1;)
 
-David Somayajulu wrote:
-> However I have one minor gripe, which is regarding the vendor unique id in
-> the receive path. This makes it appear as if the scsi netlink layer is
-> peeking into its payload (where each msg is treated as <hdr -containing
-> address information><payload>). In the network stack, each layer looks at
-> the packet it receives and consumes if it is the final destination,
-> otherwise determines the next destination from the header and sends it. No
-> layer peeks into the payload if it is not the consumer. The only integrity
-> check is typically a checksum.
+This is what I have tested so far (kernel 2.6.24):
+"smartctl --device=sat --all /dev/sgx" (5.38) This works for all 
+harddisks. The controller logs an "Unexpected sense" for the smart 
+response from the hardrive, but this doesn't do any harm.
+The smart daemon does not work corretly in this version
+hdparm (v8.6) mostly works, but setting the suspend timeouts doesn't 
+show any effekt. Manually supending (hdparm -y) works.
 
-I understand your intent - but view it a little differently. I break the 
-"stack layers" into the following:
-- "scsi netlink", which is the glue logic for our SCSI channel, that 
-everything use. It does the first level of message decode (consuming 
-scsi_nl_hdr), performing the main validity checks (length vs netlink 
-packet), and selecting a transport.
-- "transport", which could be the SAS transport, FC transport, or the 
-catch-all SCSI (midlayer) transport. Each transport has its own message 
-types. It may fully handle the message, or can be a multiplexer for the 
-components that belong to it.
-- The component layer - with shosts belonging to the catch-all SCSI 
-transport. FC components would be fc_host's, fc_rports, etc; and so-on 
-for SAS.
+My main intention was suspending the harddrives automatically if the are 
+not used, so I wrote this little script. (idlecheck, see attachment) The 
+wakeup is done automatically by the controller and takes about 6seconds 
+per disk in the raid array.
 
-In this case, the vendor shost msg maps to the catch-all SCSI transport. 
-The SCSI transport consumes scsi_nl_host_vendor_msg, performs common 
-steps such as driver validation, then pushes the payload to LLDD/shost 
-for the rest of the processing. So same concepts as you describe.
+Joe Malicki wrote:
+> This is very dangerous, and you shouldn't use it/apply it unless you're feeling adventurous.
+> 
+> This lets one, optionally, add /dev/sg* devices, and optionally also /dev/sd* devices, for
+> disks in a RAIDset.  It is modeled after similar functionality in the aacraid driver.
+Just a little sidenote: If I remember my experiments correctly, the 
+device nodes for the individual disks get created in front of the nodes 
+for the array, so you need to change the fstab entries if you use this flag.
+> 
+> I've been successfully using this to upgrade individual disk firmwares behind a Dell PERC 
+> RAID controller with sgdskfl from scsirastools - AFTER the RAID array has been stopped
+> with other tools.
+> 
+> Use the kernel option "megaraid_sas.export_disks=-1" to get /dev/sg* devices.  Unless a
+> specific option has been given, the patch doesn't modify behavior.
+megaraid_sas.export_disks=1 gives you the sdx devices
+> 
+> Note that the driver currently says (and has said for some time):
+> 
+>          * FIXME: Currently we don't export them to the midlayer at all.
+> 	 * 	  That will be fixed once LSI engineers have audited the
+> 	 * 	  firmware for possible issues.
+> 
+> So using this is certainly high risk and one should be careful.
+> (only signing off so others may feel free to use it, not encouraging this
+> to go anywhere unless LSI feels it's safe)
+> 
+The only thing LSI needs to change in the firmware is the handling of 
+external smart requests, so it doesn't create a warning in the log.
 
-There is only one violation of the "don't peek into the next layer" 
-rule, but it's around scsi_nl_header:msgtype (not vendor unique id). The 
-field belongs proper to the transport, but is contained in the glue 
-header.
+One more idea (If it is possible): It would be nice, if the driver could 
+detect, when a drive is used in an array and not create an sdx node for it.
+Greets,
+  Jochen
 
-I agree the vendor unique id initially feels odd. We needed some handle 
-to recognize the driver entry points by for registration/deregistration, 
-and we also needed at least 1 validation of something to ensure the 
-driver and the message match. Given that we had it in the event 
-messages, I used it as the handle. I couldn't think of a better alternative.
+--------------040202080509000303070606
+Content-Type: application/x-sh;
+ name="idlecheck.sh"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="idlecheck.sh"
 
- > I would suggest that we augment the " struct
-> scsi_nl_hdr" with a bunch of reserved bytes and which are interpreted based
-> on the scsi_nl_hdr->msgtype values, or have "struct scsi_nl_host_vendor_msg"
-> sans "struct scsi_nl_hdr" as part of a union within "struct scsi_nl_hdr"
-> which is interpreted based on scsi_nl_hdr->msgtype values. In all this is a
-> minor issue which is more about details and doesn't matter either way.
+#!/bin/sh
 
-I don't see what this buys... Unless you are just expanding the message 
-headers for some future binary-compatible expansion.
+### settings ###
+TIMEOUT=2400
 
--- james s
+################
+trap cleanup 1 2 3 6 15
+cleanup()
+{
+ echo "stopping"
+ RUN=0
+}
 
+checkdisk()
+{
+	rwsectors=$(iostat |grep sdb|awk '{print $5+$6 }')
+}
+RUN=1
+IDLETIME=0
+checkdisk
+while [ $RUN -eq "1" ]; do
+ rwsectors_old=$rwsectors
+ checkdisk
+ if [ "$rwsectors_old" -ne "$rwsectors" ]; then
+  IDLETIME=0
+  echo $rwsectors " - active" >/dev/shm/idlecheck.state
+ else
+  IDLETIME=`expr ${IDLETIME} + 5`
+  echo "$rwsectors" " - idle since $IDLETIME seconds" >/dev/shm/idlecheck.state
+ fi
+ if [ $IDLETIME -eq $TIMEOUT ]; then
+  hdparm -y /dev/sg0
+  hdparm -y /dev/sg1
+  hdparm -y /dev/sg2
+  hdparm -y /dev/sg3 
+ fi
+ if [ $IDLETIME -gt $TIMEOUT ]; then
+  echo "disk haven been shutdown" >>/dev/shm/idlecheck.state
+ fi
+ sleep 5
+done;
+echo "clean exit"
+exit 0;
+
+--------------040202080509000303070606
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linux-PowerEdge mailing list
+Linux-PowerEdge@dell.com
+http://lists.us.dell.com/mailman/listinfo/linux-poweredge
+Please read the FAQ at http://lists.us.dell.com/faq
+--------------040202080509000303070606--
