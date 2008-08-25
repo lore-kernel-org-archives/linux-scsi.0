@@ -1,39 +1,41 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: atp870u: bad udelay call, build failure on ARM with SCSI_ACARD
-Date: Mon, 25 Aug 2008 15:06:51 +0300
-Message-ID: <20080825120651.GA13757@deprecation.cyrius.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/2] scsi: scsi_dh check_sense return ADD_TO_MLQUEUE
+Date: Mon, 25 Aug 2008 14:33:49 +0200
+Message-ID: <48B2A6AD.5040809@suse.de>
+References: <1218568318-4065-1-git-send-email-andmike@linux.vnet.ibm.com> <1218568318-4065-2-git-send-email-andmike@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:3693 "EHLO sorrow.cyrius.com"
+Received: from mail.suse.de ([195.135.220.2]:48806 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013AbYHYMHI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2008 08:07:08 -0400
-Content-Disposition: inline
+	id S1753577AbYHYMdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2008 08:33:54 -0400
+In-Reply-To: <1218568318-4065-2-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Chandra Seetharaman <sekharan@us.ibm.com>
 
-drivers/scsi/atp870u.ko fails to build on ARM with:
+Hi Mike,
 
-ERROR: "__bad_udelay" [drivers/scsi/atp870u.ko] undefined!
-make[1]: *** [__modpost] Error 1
+Mike Anderson wrote:
+> Change scsi_dh check_sense functions to return ADD_TO_MLQUEUE
+> to allow retries to occur without restriction of blk_noretry_request
+> check.
+>=20
+Correct. Error on my side.
 
-__bad_udelay is specifically designed on ARM to fail when udelay is
-called in a bad way.  arch/arm/include/asm/delay.h has this to say
-about __bad_udelay:
-
-/*
- * This function intentionally does not exist; if you see references to
- * it, it means that you're calling udelay() with an out of range value.
- *
- * With currently imposed limits, this means that we support a max delay
- * of 2000us. Further limits: HZ<=1000 and bogomips<=3355
- */
-extern void __bad_udelay(void);
-
-Can you check why your driver is calling udelay() with a value > 2000?
-
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+> Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
