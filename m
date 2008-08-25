@@ -1,141 +1,256 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/13] block: move policy from disk to part0
-Date: Mon, 25 Aug 2008 19:56:10 +0900
-Message-ID: <1219661777-17648-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/13] block: replace @ext_minors with GENHD_FL_EXT_DEVT
+Date: Mon, 25 Aug 2008 19:56:16 +0900
+Message-ID: <1219661777-17648-13-git-send-email-tj@kernel.org>
 References: <1219661777-17648-1-git-send-email-tj@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51830 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:51869 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756169AbYHYK6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2008 06:58:25 -0400
+	id S1757434AbYHYK6w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2008 06:58:52 -0400
 In-Reply-To: <1219661777-17648-1-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@ftp.linux.org.uk, linux-ide@vger.kernel.org, neilb@suse.de, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Move disk->policy to part0->policy.  Implement and use get_disk_ro().
+With previous changes, it's meaningless to limit the number of
+partitions.  Replace @ext_minors with GENHD_FL_EXT_DEVT such that
+setting the flag allows the disk to have maximum number of allowed
+partitions (only limited by the number of entries in parsed_partitions
+as determined by MAX_PART constant).
+
+This kills not-too-pretty alloc_disk_ext[_node]() functions and makes
+@minors parameter to alloc_disk[_node]() unnecessary.  The parameter
+is left alone to avoid disturbing the users.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/genhd.c         |   16 +++++-----------
- drivers/ide/ide-cd.c  |    2 +-
- drivers/md/dm-ioctl.c |    2 +-
- fs/partitions/check.c |    2 +-
- include/linux/genhd.h |    6 +++++-
- 5 files changed, 13 insertions(+), 15 deletions(-)
+ block/genhd.c          |   16 +---------------
+ drivers/ide/ide-disk.c |   14 +++++---------
+ drivers/scsi/sd.c      |    9 ++-------
+ fs/partitions/check.h  |    4 +---
+ include/linux/genhd.h  |   16 ++++++++--------
+ 5 files changed, 17 insertions(+), 42 deletions(-)
 
 diff --git a/block/genhd.c b/block/genhd.c
-index b560d71..8762f35 100644
+index c84a021..2bf0e67 100644
 --- a/block/genhd.c
 +++ b/block/genhd.c
-@@ -758,7 +758,7 @@ static ssize_t disk_ro_show(struct device *dev,
+@@ -1025,19 +1025,10 @@ struct gendisk *alloc_disk(int minors)
  {
- 	struct gendisk *disk = dev_to_disk(dev);
- 
--	return sprintf(buf, "%d\n", disk->policy ? 1 : 0);
-+	return sprintf(buf, "%d\n", get_disk_ro(disk) ? 1 : 0);
+ 	return alloc_disk_node(minors, -1);
  }
++EXPORT_SYMBOL(alloc_disk);
  
- static ssize_t disk_capability_show(struct device *dev,
-@@ -1091,10 +1091,7 @@ EXPORT_SYMBOL(put_disk);
- 
- void set_device_ro(struct block_device *bdev, int flag)
+ struct gendisk *alloc_disk_node(int minors, int node_id)
  {
--	if (bdev->bd_contains != bdev)
--		bdev->bd_part->policy = flag;
--	else
--		bdev->bd_disk->policy = flag;
-+	bdev->bd_part->policy = flag;
+-	return alloc_disk_ext_node(minors, 0, node_id);
+-}
+-
+-struct gendisk *alloc_disk_ext(int minors, int ext_minors)
+-{
+-	return alloc_disk_ext_node(minors, ext_minors, -1);
+-}
+-
+-struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
+-{
+ 	struct gendisk *disk;
+ 
+ 	disk = kmalloc_node(sizeof(struct gendisk),
+@@ -1055,7 +1046,6 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
+ 		disk->part_tbl->part[0] = &disk->part0;
+ 
+ 		disk->minors = minors;
+-		disk->ext_minors = ext_minors;
+ 		rand_initialize_disk(disk);
+ 		disk_to_dev(disk)->class = &block_class;
+ 		disk_to_dev(disk)->type = &disk_type;
+@@ -1066,11 +1056,7 @@ struct gendisk *alloc_disk_ext_node(int minors, int ext_minors, int node_id)
+ 	}
+ 	return disk;
  }
+-
+-EXPORT_SYMBOL(alloc_disk);
+ EXPORT_SYMBOL(alloc_disk_node);
+-EXPORT_SYMBOL(alloc_disk_ext);
+-EXPORT_SYMBOL(alloc_disk_ext_node);
  
- EXPORT_SYMBOL(set_device_ro);
-@@ -1104,8 +1101,8 @@ void set_disk_ro(struct gendisk *disk, int flag)
- 	struct disk_part_iter piter;
- 	struct hd_struct *part;
- 
--	disk->policy = flag;
--	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
-+	disk_part_iter_init(&piter, disk,
-+			    DISK_PITER_INCL_EMPTY | DISK_PITER_INCL_PART0);
- 	while ((part = disk_part_iter_next(&piter)))
- 		part->policy = flag;
- 	disk_part_iter_exit(&piter);
-@@ -1117,10 +1114,7 @@ int bdev_read_only(struct block_device *bdev)
+ struct kobject *get_disk(struct gendisk *disk)
  {
- 	if (!bdev)
- 		return 0;
--	else if (bdev->bd_contains != bdev)
--		return bdev->bd_part->policy;
--	else
--		return bdev->bd_disk->policy;
-+	return bdev->bd_part->policy;
- }
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index b4cc1ce..f584ef8 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -41,16 +41,12 @@
+ #include <asm/io.h>
+ #include <asm/div64.h>
  
- EXPORT_SYMBOL(bdev_read_only);
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 49a8c58..62c3a79 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1113,7 +1113,7 @@ static ide_startstop_t cdrom_start_rw(ide_drive_t *drive, struct request *rq)
+-#define IDE_DISK_PARTS		(1 << PARTN_BITS)
+-
+ #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
+-#define IDE_DISK_MINORS		IDE_DISK_PARTS
++#define IDE_DISK_MINORS		(1 << PARTN_BITS)
+ #else
+ #define IDE_DISK_MINORS		1
+ #endif
  
- 	if (write) {
- 		/* disk has become write protected */
--		if (cd->disk->policy) {
-+		if (get_disk_ro(cd->disk)) {
- 			cdrom_end_request(drive, 0);
- 			return ide_stopped;
- 		}
-diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
-index c3de311..5b91915 100644
---- a/drivers/md/dm-ioctl.c
-+++ b/drivers/md/dm-ioctl.c
-@@ -548,7 +548,7 @@ static int __dev_status(struct mapped_device *md, struct dm_ioctl *param)
- 	 */
- 	param->open_count = dm_open_count(md);
+-#define IDE_DISK_EXT_MINORS	(IDE_DISK_PARTS - IDE_DISK_MINORS)
+-
+ struct ide_disk_obj {
+ 	ide_drive_t	*drive;
+ 	ide_driver_t	*driver;
+@@ -1175,8 +1171,7 @@ static int ide_disk_probe(ide_drive_t *drive)
+ 	if (!idkp)
+ 		goto failed;
  
--	if (disk->policy)
-+	if (get_disk_ro(disk))
- 		param->flags |= DM_READONLY_FLAG;
+-	g = alloc_disk_ext_node(IDE_DISK_MINORS, IDE_DISK_EXT_MINORS,
+-				hwif_to_node(drive->hwif));
++	g = alloc_disk_node(IDE_DISK_MINORS, hwif_to_node(drive->hwif));
+ 	if (!g)
+ 		goto out_free_idkp;
  
- 	param->event_nr = dm_get_event_nr(md);
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 9ab3e64..cb9ec77 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -375,7 +375,7 @@ int add_partition(struct gendisk *disk, int partno,
- 	p->start_sect = start;
- 	p->nr_sects = len;
- 	p->partno = partno;
--	p->policy = disk->policy;
-+	p->policy = get_disk_ro(disk);
+@@ -1203,9 +1198,10 @@ static int ide_disk_probe(ide_drive_t *drive)
+ 		drive->attach = 1;
  
- 	dname = dev_name(ddev);
- 	if (isdigit(dname[strlen(dname) - 1]))
+ 	g->minors = IDE_DISK_MINORS;
+-	g->ext_minors = IDE_DISK_EXT_MINORS;
+ 	g->driverfs_dev = &drive->gendev;
+-	g->flags = drive->removable ? GENHD_FL_REMOVABLE : 0;
++	g->flags |= GENHD_FL_EXT_DEVT;
++	if (drive->removable)
++		g->flags |= GENHD_FL_REMOVABLE;
+ 	set_capacity(g, idedisk_capacity(drive));
+ 	g->fops = &idedisk_ops;
+ 	add_disk(g);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 280d231..6598024 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -86,16 +86,12 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ 
+-#define SD_PARTS	64
+-
+ #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
+ #define SD_MINORS	16
+ #else
+ #define SD_MINORS	1
+ #endif
+ 
+-#define SD_EXT_MINORS	(SD_PARTS - SD_MINORS)
+-
+ static int  sd_revalidate_disk(struct gendisk *);
+ static int  sd_probe(struct device *);
+ static int  sd_remove(struct device *);
+@@ -1811,7 +1807,7 @@ static int sd_probe(struct device *dev)
+ 	if (!sdkp)
+ 		goto out;
+ 
+-	gd = alloc_disk_ext(SD_MINORS, SD_EXT_MINORS);
++	gd = alloc_disk(SD_MINORS);
+ 	if (!gd)
+ 		goto out_free;
+ 
+@@ -1856,7 +1852,6 @@ static int sd_probe(struct device *dev)
+ 	gd->major = sd_major((index & 0xf0) >> 4);
+ 	gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
+ 	gd->minors = SD_MINORS;
+-	gd->ext_minors = SD_EXT_MINORS;
+ 	gd->fops = &sd_fops;
+ 
+ 	if (index < 26) {
+@@ -1880,7 +1875,7 @@ static int sd_probe(struct device *dev)
+ 	blk_queue_prep_rq(sdp->request_queue, sd_prep_fn);
+ 
+ 	gd->driverfs_dev = &sdp->sdev_gendev;
+-	gd->flags = GENHD_FL_DRIVERFS;
++	gd->flags = GENHD_FL_EXT_DEVT | GENHD_FL_DRIVERFS;
+ 	if (sdp->removable)
+ 		gd->flags |= GENHD_FL_REMOVABLE;
+ 
+diff --git a/fs/partitions/check.h b/fs/partitions/check.h
+index 17ae8ec..98dbe1a 100644
+--- a/fs/partitions/check.h
++++ b/fs/partitions/check.h
+@@ -5,15 +5,13 @@
+  * add_gd_partition adds a partitions details to the devices partition
+  * description.
+  */
+-enum { MAX_PART = 256 };
+-
+ struct parsed_partitions {
+ 	char name[BDEVNAME_SIZE];
+ 	struct {
+ 		sector_t from;
+ 		sector_t size;
+ 		int flags;
+-	} parts[MAX_PART];
++	} parts[DISK_MAX_PARTS];
+ 	int next;
+ 	int limit;
+ };
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index e89559a..461ba6d 100644
+index bf87b77..4b5d762 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -155,7 +155,6 @@ struct gendisk {
- 	struct kobject *slave_dir;
+@@ -58,6 +58,8 @@ enum {
+ 	UNIXWARE_PARTITION = 0x63,	/* Same as GNU_HURD and SCO Unix */
+ };
  
- 	struct timer_rand_state *random;
--	int policy;
- 
- 	atomic_t sync_io;		/* RAID */
- 	unsigned long stamp;
-@@ -413,6 +412,11 @@ extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
- extern void set_device_ro(struct block_device *bdev, int flag);
- extern void set_disk_ro(struct gendisk *disk, int flag);
- 
-+static inline int get_disk_ro(struct gendisk *disk)
-+{
-+	return disk->part0.policy;
-+}
++#define DISK_MAX_PARTS			256
 +
- /* drivers/char/random.c */
- extern void add_disk_randomness(struct gendisk *disk);
- extern void rand_initialize_disk(struct gendisk *disk);
+ #include <linux/major.h>
+ #include <linux/device.h>
+ #include <linux/smp.h>
+@@ -112,6 +114,7 @@ struct hd_struct {
+ #define GENHD_FL_CD				8
+ #define GENHD_FL_UP				16
+ #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
++#define GENHD_FL_EXT_DEVT			64 /* allow extended devt */
+ 
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+@@ -129,15 +132,13 @@ struct disk_part_tbl {
+ };
+ 
+ struct gendisk {
+-	/* major, first_minor, minors and ext_minors are input
+-	 * parameters only, don't use directly.  Use disk_devt() and
+-	 * disk_max_parts().
++	/* major, first_minor and minors are input parameters only,
++	 * don't use directly.  Use disk_devt() and disk_max_parts().
+ 	 */
+ 	int major;			/* major number of driver */
+ 	int first_minor;
+ 	int minors;                     /* maximum number of minors, =1 for
+                                          * disks that can't be partitioned. */
+-	int ext_minors;			/* number of extended dynamic minors */
+ 
+ 	char disk_name[32];		/* name of major driver */
+ 
+@@ -181,7 +182,9 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+ 
+ static inline int disk_max_parts(struct gendisk *disk)
+ {
+-	return disk->minors + disk->ext_minors;
++	if (disk->flags & GENHD_FL_EXT_DEVT)
++		return DISK_MAX_PARTS;
++	return disk->minors;
+ }
+ 
+ static inline bool disk_partitionable(struct gendisk *disk)
+@@ -528,9 +531,6 @@ extern void printk_all_partitions(void);
+ 
+ extern struct gendisk *alloc_disk_node(int minors, int node_id);
+ extern struct gendisk *alloc_disk(int minors);
+-extern struct gendisk *alloc_disk_ext_node(int minors, int ext_minrs,
+-					   int node_id);
+-extern struct gendisk *alloc_disk_ext(int minors, int ext_minors);
+ extern struct kobject *get_disk(struct gendisk *disk);
+ extern void put_disk(struct gendisk *disk);
+ extern void blk_register_region(dev_t devt, unsigned long range,
 -- 
 1.5.4.5
 
