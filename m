@@ -1,128 +1,69 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: Re: [patch 1/1] scsi: fix check of PQ and PDT bits for WLUNs
-Date: Mon, 25 Aug 2008 10:41:09 +0200
-Message-ID: <200808251041.09507.swen@vnet.ibm.com>
-References: <20080812114037.963047000@linux.vnet.ibm.com> <20080812114123.133900000@linux.vnet.ibm.com> <1219349654.3265.38.camel@localhost.localdomain>
+From: eerov@welho.com
+Subject: RE: mptsas and mptbase sas problems on fujitsu-siemens rx200-s3
+	rack server
+Date: Mon, 25 Aug 2008 12:00:54 +0300
+Message-ID: <20080825120054.6cpgvw8l4wkwcccs@webmail.welho.com>
+References: <E7A31DABE7AC2D4C9BB5B343E834737802564215@enbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([195.212.29.139]:44429 "EHLO
-	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753604AbYHYIlM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Aug 2008 04:41:12 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate6.uk.ibm.com (8.13.8/8.13.8) with ESMTP id m7P8df6Z185996
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2008 08:39:41 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7P8dfkk3223590
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2008 09:39:41 +0100
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7P8deZ8022602
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2008 09:39:41 +0100
-In-Reply-To: <1219349654.3265.38.camel@localhost.localdomain>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:43941 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753654AbYHYJAz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Aug 2008 05:00:55 -0400
+In-Reply-To: <E7A31DABE7AC2D4C9BB5B343E834737802564215@enbmail01.lsi.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Martin Petermann <martin@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: "Heusmann, Heino" <Heino.Heusmann@lsi.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Eero Volotinen <eero.volotinen@iki.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Stewart, Ken" <Ken.Stewart@lsi.com>, "martin.wilck@fujitsu-siemens.com" <martin.wilck@fujitsu-siemens.com>
 
-On Thursday 21 August 2008 22:14, James Bottomley wrote:
-> On Tue, 2008-08-12 at 13:40 +0200, Martin Petermann wrote:
-> > plain text document attachment (scsi_scan.diff)
-> > From: Martin Petermann <martin@linux.vnet.ibm.com>
-> > 
-> > With kernel version 2.6.19 a check was introduced not to create a generic
-> > SCSI device for devices that return PQ=1 and PDT=0x1f. For WLUNs (see 
-> > SAM-3, p. 41ff) generic SCSI devices should be created unconditionally
-> > without looking at the PQ bit. I'm referring here to the thread "With kernel
-> > 2.6.19 no sg devices for devices that return PQ=1, PDT=0x1f" of the 
-> > linux-scsi forum. This is my proposed fix.
-> > 
-> > Signed-off-by: Martin Petermann <martin@linux.vnet.ibm.com>
-> > 
-> > ---
-> >  drivers/scsi/scsi_scan.c |    7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > --- a/drivers/scsi/scsi_scan.c	2008-08-12 12:51:32.000000000 +0200
-> > +++ b/drivers/scsi/scsi_scan.c	2008-08-12 12:58:16.000000000 +0200
-> > @@ -75,6 +75,11 @@
-> >  #define SCSI_SCAN_TARGET_PRESENT	1
-> >  #define SCSI_SCAN_LUN_PRESENT		2
-> >  
-> > +#define SCSI_W_LUN_BASE 0xc100
-> > +#define SCSI_W_LUN_REPORT_LUNS (SCSI_W_LUN_BASE + 1)
-> > +#define SCSI_W_LUN_ACCESS_CONTROL (SCSI_W_LUN_BASE + 2)
-> > +#define SCSI_W_LUN_TARGET_LOG_PAGE (SCSI_W_LUN_BASE + 3)
-> 
-> These need to be in a header file, I think, probably scsi.h
-> 
-> >  static const char *scsi_null_device_strs = "nullnullnullnull";
-> >  
-> >  #define MAX_SCSI_LUNS	512
-> > @@ -1080,7 +1085,7 @@ static int scsi_probe_and_add_lun(struct
-> >  	 * PDT=1Fh none (no FDD connected to the requested logical unit)
-> >  	 */
-> >  	if (((result[0] >> 5) == 1 || starget->pdt_1f_for_no_lun) &&
-> > -	     (result[0] & 0x1f) == 0x1f) {
-> > +	    (result[0] & 0x1f) == 0x1f && (lun & 0xff00) != SCSI_W_LUN_BASE) {
-> 
-> And this should probably be wrapped nicely too.
-> 
-> >  		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-> >  					"scsi scan: peripheral device type"
-> >  					" of 31, no device added\n"));
-> 
-> Does this look OK?
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 84b4879..34d0de6 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1080,7 +1080,8 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
->  	 * PDT=1Fh none (no FDD connected to the requested logical unit)
->  	 */
->  	if (((result[0] >> 5) == 1 || starget->pdt_1f_for_no_lun) &&
-> -	     (result[0] & 0x1f) == 0x1f) {
-> +	    (result[0] & 0x1f) == 0x1f &&
-> +	    !scsi_is_wlun(lun)) {
->  		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
->  					"scsi scan: peripheral device type"
->  					" of 31, no device added\n"));
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 5c40cc5..192f871 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -309,6 +309,20 @@ struct scsi_lun {
->  };
-> 
->  /*
-> + * The Well Known LUNS (SAM-3) in our int representation of a LUN
-> + */
-> +#define SCSI_W_LUN_BASE 0xc100
-> +#define SCSI_W_LUN_REPORT_LUNS (SCSI_W_LUN_BASE + 1)
-> +#define SCSI_W_LUN_ACCESS_CONTROL (SCSI_W_LUN_BASE + 2)
-> +#define SCSI_W_LUN_TARGET_LOG_PAGE (SCSI_W_LUN_BASE + 3)
-> +
-> +static inline int scsi_is_wlun(unsigned int lun)
-> +{
-> +	return (lun & 0xff00) == SCSI_W_LUN_BASE;
-> +}
-> +
-> +
-> +/*
->   *  MESSAGE CODES
->   */
+Quoting "Heusmann, Heino" <Heino.Heusmann@lsi.com>:
 
+> Hello Eero,
+> Please contact FSC for firmware update.
+> The support and the firmware must come from FSC.
+> Our standard FW from the Web won't work, because the FW has special   
+> settings for each Board included.
+>
+> Best Regards
+> Heino Heusmann
+> LSI Storage FAE
 
-Looks ok.
+I already updated to lastest firmware that is available from FSC,  
+using serverview serverstart 7.804 version and latest mpt_sas driver  
+from LSI logic support web.
 
-So ACK from my side, if required.
+Current firmware version is:
 
-Cheers Swen
+      Port Name         Chip Vendor/Type/Rev    MPT Rev  Firmware Rev
+  1.  /proc/mpt/ioc0    LSI Logic SAS1068 B0      105      01122800
+
+This problem still exists, it works a bit better, but I still get sometimes
+many errors when disk i/o r/w load and system is unstable and very slow.
+
+Errormessages look like this:
+
+sd 0:1:0:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 0,  
+sc=ffff81001aedb500, mf = ffff81007e811180, idx=1d3
+sd 0:1:0:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 0,  
+sc=ffff81007f4af680, mf = ffff81007e811280, idx=1d5
+sd 0:1:0:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 0,  
+sc=ffff81007f6d96c0, mf = ffff81007e812300, idx=1f6
+sd 0:1:0:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 0,  
+sc=ffff81001afbc540, mf = ffff81007e812380, idx=1f7
+sd 0:1:0:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 0,  
+sc=ffff81001ac6cb40, mf = ffff81007e812680, idx=1fd
+
+with  2.6.16.60-0.21-smp #1 SMP Tue May 6 12:41:02 UTC 2008 x86_64  
+x86_64 x86_64 GNU/Linux and
+
+SUSE Linux Enterprise Server 10 (x86_64)
+VERSION = 10
+PATCHLEVEL = 2
+
+--
+Eero
+
