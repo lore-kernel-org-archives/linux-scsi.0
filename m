@@ -1,79 +1,48 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/5] convert sg to use the block layer
-Date: Tue, 26 Aug 2008 09:56:28 +0200
-Message-ID: <20080826075627.GU20055@kernel.dk>
-References: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC] [PATCH] Potential bug fix for blk_tag_queue
+Date: Tue, 26 Aug 2008 10:58:52 +0200
+Message-ID: <20080826085852.GV20055@kernel.dk>
+References: <20080826005856.27375.59152.stgit@feynman.nuovasystems.com> <20080826024620.GC23698@parisc-linux.org> <20080826070046.GQ20055@kernel.dk> <34BDD2A93E5FD84594BB230DD6C18EA205B3437D@nuova-ex1.hq.nuovaimpresa.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [93.163.65.50] ([93.163.65.50]:16177 "EHLO kernel.dk"
+Received: from [93.163.65.50] ([93.163.65.50]:17981 "EHLO kernel.dk"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752140AbYHZH43 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2008 03:56:29 -0400
+	id S1752356AbYHZI6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2008 04:58:54 -0400
 Content-Disposition: inline
-In-Reply-To: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <34BDD2A93E5FD84594BB230DD6C18EA205B3437D@nuova-ex1.hq.nuovaimpresa.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
+To: Abhijeet Joglekar <ajoglekar@nuovasystems.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Tue, Aug 26 2008, FUJITA Tomonori wrote:
-> This patchset converts sg to use the block layer functions. That is,
-> sg doesn't use scsi_execute_async() any more. This is a part of the
-> overdue task to remove scsi_req_map_sg.
-> 
-> I tested this patchset with sg v3 and the old interface (struct
-> sg_header) via SG_IO (v3) and the vfs API.
-> 
-> 
-> Doug,
-> 
-> 1. I don't demote the sg driver's GFP_ATOMIC to GFP_KERNEL. sg always
-> uses GFP_ATOMIC as before.
-> 
-> 2. I don't remove GFP_DMA allocation. As before, sg allocates reserved
-> pages with GFP_DMA (sfp->low_dma case).
-> 
-> 3. I keep the reserved buffer per struct sg_fd as before.
-> 
-> 4. I use high-order page allocation for reserved buffer as before. sg
-> works well with HBAs that have the limitation of the number of sg
-> entries.
-> 
-> 5. I think that you were concern about the overhead of the block layer
-> functions. But if you look at scsi_execute_async() that sg uses now,
-> you can find that scsi_execute_async() uses the block layer functions
-> internally. So the current sg incurs the overhead (if such overhead
-> exists).
-> 
-> 
-> Jens,
-> 
-> I keep the block API changes to a minimum (I might need more changes
-> for st/osst but I'd like to progress step by step). I did only two
-> things.
-> 
-> 1. I add gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov.
-> 
-> 2. I introduces struct rq_map_data holding pages. sg puts
-> pre-allocated pages to it and passes it to bio_copy_user_iov(). The
-> current users of bio_copy_user_iov simply passes NULL. blk_rq_map_user
-> and blk_rq_map_user_iov take a pointer to struct rq_map_data and in
-> the end bio_copy_user_iov gets it.
-> 
-> 
-> This patchset against the for-linus branch in Jens' tree + the two
-> patches for 2.6.27:
-> 
-> http://marc.info/?l=linux-kernel&m=121964251911717&w=2
-> http://marc.info/?l=linux-kernel&m=121964241911611&w=2
-> 
-> After Jens rebases the for-2.6.28 brach, I'll update this patchset
-> too.
 
-Thanks a lot for doing this work, it's been pending for a long time.
-I've rebased for-2.6.28 on top of for-linus to ease this integration, so
-if you could resend the patchset then I can add it.
+(please don't top post!)
+
+On Tue, Aug 26 2008, Abhijeet Joglekar wrote:
+> Ok, removing that works too. 
+> 
+> Shouldn't the BUG_ON be checking upto bqt->real_max_depth instead of
+> bqt->depth?  
+> 
+> BUG_ON(find_first_bit(bqt->tag_map, bqt->real_max_depth) <
+>                       bqt->real_max_depth);
+> 
+> 
+> In cases where the tag map gets resized to a value less than the
+> originally allocated tag map, blk_queue_resize_tags seems to be setting
+> bqt->max_depth to the new_depth. 
+> 
+> There could still be outstanding tags max_depth <= t <= real_max_depth
+> which might not get freed, which the BUG_ON will not capture if it
+> checks against max_depth.
+
+max_depth is fine, it's the safer choice. For the real_max_depth to
+potentially catch any extra offenders, you would have to do a resize to
+a larger depth, get bunch of IO issued, then resize down and shut down
+the queue. Using real_max_depth should work as well, but then you have
+to audit the ending of tags > max/real_max_depth. It looks ok, though.
 
 -- 
 Jens Axboe
