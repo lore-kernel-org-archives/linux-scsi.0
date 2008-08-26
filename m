@@ -1,32 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] block: add gfp_mask argument to blk_rq_map_user
-	and blk_rq_map_user_iov
-Date: Tue, 26 Aug 2008 12:35:45 -0400
-Message-ID: <20080826163545.GA26201@infradead.org>
-References: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1219716654-27827-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11375] MegaRAID performance issues on Dell CERC card (was: R8169 will not negotiate 1000BaseT)
+Date: Tue, 26 Aug 2008 12:47:48 -0700 (PDT)
+Message-ID: <20080826194748.3F0A811D107@picon.linux-foundation.org>
+References: <bug-11375-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58819 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753844AbYHZQfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2008 12:35:48 -0400
-Content-Disposition: inline
-In-Reply-To: <1219716654-27827-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48635 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754820AbYHZTsU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2008 15:48:20 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7QJlmEe004829
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Aug 2008 12:47:49 -0700
+In-Reply-To: <bug-11375-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, Aug 26, 2008 at 11:10:50AM +0900, FUJITA Tomonori wrote:
-> Currently, blk_rq_map_user and blk_rq_map_user_iov always do
-> GFP_KERNEL allocation.
-> 
-> This adds gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov
-> so sg can use it (sg always does GFP_ATOMIC allocation).
+http://bugzilla.kernel.org/show_bug.cgi?id=11375
 
-Most GFP_ATOMIC looks rather spurious to me, and are there probably
-for some historic reason.  Do you have a caller that actually needs
-GFP_ATOMIC because it's under a spinlock or from irq context, or is this
-just to stay as close as possible to the existing sg code?
 
+romieu@fr.zoreil.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|romieu@fr.zoreil.com        |scsi_drivers-other@kernel-
+                   |                            |bugs.osdl.org
+             Status|ASSIGNED                    |NEW
+          Component|Other                       |Other
+            Product|Drivers                     |SCSI Drivers
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
