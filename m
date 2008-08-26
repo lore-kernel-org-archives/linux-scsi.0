@@ -1,89 +1,147 @@
-From: Abhijeet Joglekar <ajoglekar@nuovasystems.com>
-Subject: [RFC][PATCH] blk-tag: Use atomic_t type for bqt->busy.
-Date: Mon, 25 Aug 2008 18:03:30 -0700
-Message-ID: <20080826010306.27375.59063.stgit@feynman.nuovasystems.com>
-References: <20080826005856.27375.59152.stgit@feynman.nuovasystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/5] sg: convert the non-data path to use the block layer
+Date: Tue, 26 Aug 2008 11:10:52 +0900
+Message-ID: <1219716654-27827-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1219716654-27827-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1219716654-27827-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.nuovasystems.com ([67.91.200.194]:29697 "EHLO
-	feynman.nuovasystems.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753751AbYHZByc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2008 21:54:32 -0400
-In-Reply-To: <20080826005856.27375.59152.stgit@feynman.nuovasystems.com>
+Received: from sh.osrg.net ([192.16.179.4]:46416 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753913AbYHZCNK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2008 22:13:10 -0400
+In-Reply-To: <1219716654-27827-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, ajoglekar@nuovasystems.com
+To: linux-scsi@vger.kernel.org
+Cc: jens.axboe@oracle.com, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp
 
-blk-tag: Use atomic_t type for bqt->busy.
+This patch converts the non data path to use the block layer functions
+(blk_get_request, blk_execute_rq_nowait, etc) instead of uses
+scsi_execute_async().
 
-bqt->busy is an integer that keeps count of number of outstanding tags. For
-host-wide shared tag map, busy is accessed in a queue lock (not host lock)
-which corrupts the busy value. Change busy to atomic_t and use atomic
-macros to access it.
-
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- block/blk-tag.c        |    8 ++++----
- include/linux/blkdev.h |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/sg.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 files changed, 47 insertions(+), 4 deletions(-)
 
-
-diff --git a/block/blk-tag.c b/block/blk-tag.c
-index 32667be..8f37d08 100644
---- a/block/blk-tag.c
-+++ b/block/blk-tag.c
-@@ -38,7 +38,7 @@ static int __blk_free_tags(struct blk_queue_tag *bqt)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 661f9f2..d1b3de9 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -137,6 +137,7 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
+ 	char orphan;		/* 1 -> drop on sight, 0 -> normal */
+ 	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
+ 	volatile char done;	/* 0->before bh, 1->before read, 2->read */
++	struct request *rq;
+ } Sg_request;
  
- 	retval = atomic_dec_and_test(&bqt->refcnt);
- 	if (retval) {
--		BUG_ON(bqt->busy);
-+		BUG_ON(atomic_read(&bqt->busy));
- 
- 		kfree(bqt->tag_index);
- 		bqt->tag_index = NULL;
-@@ -147,7 +147,7 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
- 	if (init_tag_map(q, tags, depth))
- 		goto fail;
- 
--	tags->busy = 0;
-+	atomic_set(&tags->busy, 0);
- 	atomic_set(&tags->refcnt, 1);
- 	return tags;
- fail:
-@@ -313,7 +313,7 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
- 	 * unlock memory barrier semantics.
- 	 */
- 	clear_bit_unlock(tag, bqt->tag_map);
--	bqt->busy--;
-+	atomic_dec(&bqt->busy);
+ typedef struct sg_fd {		/* holds the state of a file descriptor */
+@@ -176,7 +177,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ static int sg_fasync(int fd, struct file *filp, int mode);
+ /* tasklet or soft irq callback */
+ static void sg_cmd_done(void *data, char *sense, int result, int resid);
+-static int sg_start_req(Sg_request * srp);
++static int sg_start_req(Sg_request * srp, unsigned char *cmd);
+ static void sg_finish_rem_req(Sg_request * srp);
+ static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
+ static int sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp,
+@@ -229,6 +230,11 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ 				  cmd, filp->f_mode & FMODE_WRITE);
  }
- EXPORT_SYMBOL(blk_queue_end_tag);
  
-@@ -368,7 +368,7 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
- 	bqt->tag_index[tag] = rq;
- 	blkdev_dequeue_request(rq);
- 	list_add(&rq->queuelist, &q->tag_busy_list);
--	bqt->busy++;
-+	atomic_inc(&bqt->busy);
- 	return 0;
++static void sg_rq_end_io(struct request *rq, int uptodate)
++{
++	sg_cmd_done(rq->end_io_data, rq->sense, rq->errors, rq->data_len);
++}
++
+ static int
+ sg_open(struct inode *inode, struct file *filp)
+ {
+@@ -732,7 +738,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	SCSI_LOG_TIMEOUT(4, printk("sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
+ 			  (int) cmnd[0], (int) hp->cmd_len));
+ 
+-	if ((k = sg_start_req(srp))) {
++	if ((k = sg_start_req(srp, cmnd))) {
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: start_req err=%d\n", k));
+ 		sg_finish_rem_req(srp);
+ 		return k;	/* probably out of space --> ENOMEM */
+@@ -765,6 +771,12 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	hp->duration = jiffies_to_msecs(jiffies);
+ /* Now send everything of to mid-level. The next time we hear about this
+    packet is when sg_cmd_done() is called (i.e. a callback). */
++	if (srp->rq) {
++		srp->rq->timeout = timeout;
++		blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
++				      srp->rq, 1, sg_rq_end_io);
++		return 0;
++	}
+ 	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
+ 				hp->dxfer_len, srp->data.k_use_sg, timeout,
+ 				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
+@@ -1634,8 +1646,33 @@ exit_sg(void)
+ 	idr_destroy(&sg_index_idr);
  }
- EXPORT_SYMBOL(blk_queue_start_tag);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 88d6808..106531e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -274,7 +274,7 @@ enum blk_queue_state {
- struct blk_queue_tag {
- 	struct request **tag_index;	/* map of busy tags */
- 	unsigned long *tag_map;		/* bit map of free/busy tags */
--	int busy;			/* current depth */
-+	atomic_t busy;			/* current depth */
- 	int max_depth;			/* what we will send to device */
- 	int real_max_depth;		/* what the array can hold */
- 	atomic_t refcnt;		/* map can be shared */
-
+ 
++static int __sg_start_req(struct sg_request *srp, struct sg_io_hdr *hp,
++			  unsigned char *cmd)
++{
++	struct sg_fd *sfp = srp->parentfp;
++	struct request_queue *q = sfp->parentdp->device->request_queue;
++	struct request *rq;
++	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
++
++	rq = blk_get_request(q, rw, GFP_ATOMIC);
++	if (!rq)
++		return -ENOMEM;
++
++	memcpy(rq->cmd, cmd, hp->cmd_len);
++
++	rq->cmd_len = hp->cmd_len;
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++
++	srp->rq = rq;
++	rq->end_io_data = srp;
++	rq->sense = srp->sense_b;
++	rq->retries = SG_DEFAULT_RETRIES;
++
++	return 0;
++}
++
+ static int
+-sg_start_req(Sg_request * srp)
++sg_start_req(Sg_request * srp, unsigned char *cmd)
+ {
+ 	int res;
+ 	Sg_fd *sfp = srp->parentfp;
+@@ -1646,8 +1683,10 @@ sg_start_req(Sg_request * srp)
+ 	Sg_scatter_hold *rsv_schp = &sfp->reserve;
+ 
+ 	SCSI_LOG_TIMEOUT(4, printk("sg_start_req: dxfer_len=%d\n", dxfer_len));
++
+ 	if ((dxfer_len <= 0) || (dxfer_dir == SG_DXFER_NONE))
+-		return 0;
++		return __sg_start_req(srp, hp, cmd);
++
+ 	if (sg_allow_dio && (hp->flags & SG_FLAG_DIRECT_IO) &&
+ 	    (dxfer_dir != SG_DXFER_UNKNOWN) && (0 == hp->iovec_count) &&
+ 	    (!sfp->parentdp->device->host->unchecked_isa_dma)) {
+@@ -1678,6 +1717,10 @@ sg_finish_rem_req(Sg_request * srp)
+ 		sg_unlink_reserve(sfp, srp);
+ 	else
+ 		sg_remove_scat(req_schp);
++
++	if (srp->rq)
++		blk_put_request(srp->rq);
++
+ 	sg_remove_request(sfp, srp);
+ }
+ 
+-- 
+1.5.5.GIT
 
