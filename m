@@ -1,30 +1,46 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: BUG in handling of last_sector_bug flag
-Date: Wed, 27 Aug 2008 10:21:18 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0808271019450.2498-100000@iolanthe.rowland.org>
-References: <20080826231301.aac6f0e5.ospite@studenti.unina.it>
+Date: Wed, 27 Aug 2008 09:33:46 -0500
+Message-ID: <1219847626.3292.17.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0808271019450.2498-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20080826231301.aac6f0e5.ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Antonio Ospite <ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
-Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:55296 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754679AbYH0Ods (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Aug 2008 10:33:48 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0808271019450.2498-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Antonio Ospite <ospite@studenti.unina.it>, USB list <linux-usb@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Alan Jenkins <alan-jenkins@tuffmail.co.uk>, Hans de Goede <j.w.r.degoede@hhs.nl>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 26 Aug 2008, Antonio Ospite wrote:
-
-> Hi,
+On Wed, 2008-08-27 at 10:21 -0400, Alan Stern wrote:
+> On Tue, 26 Aug 2008, Antonio Ospite wrote:
 > 
-> is the fix going to be merged? I haven't seen it in rc4-git series.
+> > Hi,
+> > 
+> > is the fix going to be merged? I haven't seen it in rc4-git series.
+> 
+> Sorry, it slipped my mind.  I'll submit it shortly.  However it may not 
+> be accepted right away, since it affects a very important and difficult 
+> part of the SCSI stack.
 
-Sorry, it slipped my mind.  I'll submit it shortly.  However it may not 
-be accepted right away, since it affects a very important and difficult 
-part of the SCSI stack.
+Um, it was my impression that the failure to retry hang problem was, in
+fact, fixed in USB by this:
 
-Alan Stern
+commit 580da34847488b404218d1d7f53b156f245f5555
+Author: Alan Stern <stern@rowland.harvard.edu>
+Date:   Tue Aug 5 13:05:17 2008 -0400
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    Fix USB storage hang on command abort
+
+What bug is still manifesting with the last_sector_bug flag that still
+needs fixing?
+
+James
+
+
