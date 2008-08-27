@@ -1,98 +1,111 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: Kernel Summit Request for Discussion: The Future of Target mode
  and Cloud storage on Linux
-Date: Wed, 27 Aug 2008 21:51:55 +0400
-Message-ID: <48B5943B.80707@vlnb.net>
-References: <48ADC53B.6090501@vlnb.net> <48ADFAB7.5010201@cs.wisc.edu> <48AF0C75.4060204@vlnb.net> <48AF1789.6080803@cs.wisc.edu>
+Date: Wed, 27 Aug 2008 21:56:38 +0400
+Message-ID: <48B59556.7050108@vlnb.net>
+References: <48ADC53B.6090501@vlnb.net>  <48ADFAB7.5010201@cs.wisc.edu> <1219701570.13470.156.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:49140 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751068AbYH0Rv0 (ORCPT
+Received: from mail-relay-04.mailcluster.net ([77.221.130.216]:50404 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751068AbYH0R4J (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2008 13:51:26 -0400
-In-Reply-To: <48AF1789.6080803@cs.wisc.edu>
+	Wed, 27 Aug 2008 13:56:09 -0400
+In-Reply-To: <1219701570.13470.156.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@gmail.com>
 
-Mike Christie wrote:
-> Vladislav Bolkhovitin wrote:
->>> 3. Start sending patches for common code like scatterlist improvements 
->>> and scatterlist memory reservations.
->> What do you mean?
+Nicholas A. Bellinger wrote:
+> On Thu, 2008-08-21 at 18:31 -0500, Mike Christie wrote:
+>> snip
+>>
 > 
-> There were some nice functionality that Nick's target had and I thought 
-> scst had too that could be more generic like the ability to reservre 
-> memory for a scatterlist or basically make sure you can have a 
-> scatterlist that is within a drivers/hardwares limits and can fullfill 
-> the request. For exmaple if the target driver could only do X segments, 
-> but the command was 8 MBs then we need a scatterlist with big segments, 
-> and I thought you guys had nice to code to handle this. It is the same 
-> thing that is needed by the SCSI upper layer drives when chaining is not 
-> supported.
+> Ok, I took in the weekend to let things settle for a few moments.. 
 > 
-> You should rip that out of the scst patch set or whatever Nicsk patchset 
-> is called and get it in right away to make it easier to review the 
-> target patches (less target code to argue about :)).
-
-Yes, there is such code. Sure, it can be extracted and posted as a 
-separate patch, so other drivers would be able to use it as well (it 
-isn't SCSI specific, so, I think, should be put somewhere in drivers/base/).
-
-But, in fact, so far we have not argued a bit of code. We argue 
-fundamental principles, so extracting SGV cache or Nick's analog won't 
-actually change anything.
-
->>> 4. Send patches for new target infrastructure core code for review and 
->>> cleanup. And send ibm vscsi target driver for an example and to make 
->>> sure there are no functionality regressions. The latter should not be 
->>> too hard because stgt does not have many features right? :)
->>>
->>> 5. When common code is merged and new core target infrastructure is 
->>> through the review process we can just swap out the new code for stgt 
->>> and name it whatever you want.
->>>
->>> Tomo and I can handle trying to modify the new framework to support 
->>> putting a scsi state machine in userspace and sharing that with kernel 
->>> code. Right now the primary targets for stgt that users are deploying 
->>> are are completely in userspace, so we do not have much to worry 
->>> about. There are ibm vscsi users, but they are a lot smaller in number 
->>> compared to iscsi. I would bet the ibmvscsi would prefer to use the 
->>> kernel target we make too.
->>>
->>> Our userspace tools will also be able to support both kernel space and 
->>> userspace targets with little trouble so distros that have stgt will 
->>> not notice any differences.
->> So, do you propose to start converting STGT to SCST? Do I understand you 
->> correctly?
+>>> If all necessary pieces of STGT moved in the kernel, it would become 
+>>> pretty much the same as SCST at the moment. 
+>> In the top paragraph James is saying to move scst into stgt, so it seems 
+>> like we can do the following:
+>>
+>> 1. You and with Nick battle each other about what are the best pieces of 
+>> scst and his target and what should go upstream.
+>>
 > 
-> Will we ever finish these threads if we go the other way where we 
-> convert scst to stgt :) Yes, we will convert stgt to scst if that is how 
-> you want to word it. I think when people are saying evolve the code they 
-> do not mean that we have to force scst into stgt or the reverse. With 
-> James allowing performance critical stuff in the kernel we can add 
-> whatever is best. For the stgt functionalty that may not be support by 
-> scst or whatever is going to go in, then yeah, Tomo and I can handle that.
+> Ok, Vlad and I have discussed and determined that the process will be
+> something roughly along the lines of
+> 
+> *) Vlad releases upstream patches for SCST Core in the late v2.6.27 time
+> frame.
+> *) /me will cherry picks from lio-core-2.6.git specific code (namely the
+> memory allocation and mapping algorithms) and begin to integrate these
+> into SCST-Core upstream and get bulk I/O moving between SCST Core
+> kernel/user CDB generation API.
+> *) Around the same time, I will begin the porting process of moving
+> LIO-Target to use the new upstream target infrastructure, whatever it
+> shall be called.. :-)
 
-What not clear to me are the reasons behind decision to use STGT as a 
-base point for future development. AFAIK, the only valuable advantage it 
-has over SCST is ibmvscsi target driver. And that's all. ISER target 
-driver doesn't need any kernel support, so can happily live without 
-STGT. Correct me, if I wrong.
+I agree
 
-Usually people, choosing the starting point of some consolidating 
-project among several similar ones, choose one, which is the closest to 
-what they ultimately want to see in the finish. Apparently, SCST is a 
-lot closer to that, than STGT, correct? So, then, why the choice was 
-done to start from STGT? Definitely, this choice will add a lot of 
-effort without any return. Or, am I missing something? There is nothing 
-personal in my questions, I'm caring only about amount of needed effort.
+>> Our userspace tools will also be able to support both kernel space and 
+>> userspace targets with little trouble so distros that have stgt will not 
+>> notice any differences.
+> 
+> So this is one of the items that I mentioned to Vlad as being a
+> potential stumbling block..  I stated that I have no problem dumping the
+> LIO IOCTL in favor of something better, and having to break backwards
+> compat with LIO userspace tools (well, until I have to emulate the
+> backwards compat wrt target-ctl ;-)) is something I am ready to deal
+> with.
+> 
+> So I definately see your point here, having the exist CLI logic in place
+> into distros is something that we are going to have to deal with (even
+> if the core behind them is completely different).  
+> 
+> I should also mention that virtually all of the configuration logic done
+> from the LIO-Core and LIO-Target IOCTLs today is intended (minus a bug
+> or two :-) to be done without having to shutdown/stop anything other
+> than the referenced object for the target-ctl operation.  Obviously, I
+> really want to keep the same functionality with the CLI interface the
+> LIO pieces are ported to.
+> 
+> I will be sure to take a look at the STGT control interface and see how
+> I can fit the current functionality in.  I believe SCST uses an IOCTL
+> today as well, which would put them in a similar situation.
+
+I, personally, don't like an interface, like tgtadm, which tries to do 
+all non-trivial configuration work from a single command line tool, 
+because of the following 3 reasons:
+
+1. It's a lot of effort to write and maintain such a tool, because it 
+needs to be extensible to work with new modules and modes. For instance, 
+iptables tool is 86K lines long. The whole netfilter code for all 
+network protocols in the kernel is less that 50K lines long. Do we want 
+such a code bloat (170% of code to configure) and dedicated team of 
+maintainers to solve a fundamentally simple configuration task?
+
+2. It assumes the stateless type of configuration, when each call 
+configures exactly one thing without any side effects on already 
+configured or future entries. This approach is good for cases like 
+iptables, but for SCSI targets it's possible that several configuration 
+steps require to be done in an atomic manner, like adding an iSCSI 
+target and configuring its parameters.
+
+3. It's hard to read 5+ parameters in one command line, so it's a lot 
+easier to make a mistake there.
+
+So, I believe, a configuration interface should be rather /proc or /sys 
+interface based. I don't think we should care much about backward 
+compatibility with tgtadm, because the existing interface doesn't reach 
+the state of being widely used. As I already mentioned, only ibmvscsi at 
+the moment uses it, hardware for which is pretty rare.
+
+Thus, I would suggest that before making the further move we should also 
+consider configuration interfaces of SCST and LIO and choose the best 
+things from all 3.
 
 Vlad
-
-
 
