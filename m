@@ -1,48 +1,92 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/5] block: add gfp_mask argument to blk_rq_map_user
-	and blk_rq_map_user_iov
-Date: Wed, 27 Aug 2008 10:30:11 +0900
-Message-ID: <20080827100311C.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/5] convert sg to use the block layer
+Date: Wed, 27 Aug 2008 11:14:46 +0900
+Message-ID: <20080827111425Y.fujita.tomonori@lab.ntt.co.jp>
 References: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1219716654-27827-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20080826163545.GA26201@infradead.org>
+	<20080826075627.GU20055@kernel.dk>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mfo11.iij4u.or.jp ([210.138.174.81]:36981 "EHLO
-	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbYH0BhB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2008 21:37:01 -0400
-In-Reply-To: <20080826163545.GA26201@infradead.org>
+Received: from sh.osrg.net ([192.16.179.4]:37131 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753182AbYH0CPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2008 22:15:12 -0400
+In-Reply-To: <20080826075627.GU20055@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-On Tue, 26 Aug 2008 12:35:45 -0400
-Christoph Hellwig <hch@infradead.org> wrote:
+On Tue, 26 Aug 2008 09:56:28 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-> On Tue, Aug 26, 2008 at 11:10:50AM +0900, FUJITA Tomonori wrote:
-> > Currently, blk_rq_map_user and blk_rq_map_user_iov always do
-> > GFP_KERNEL allocation.
+> On Tue, Aug 26 2008, FUJITA Tomonori wrote:
+> > This patchset converts sg to use the block layer functions. That is,
+> > sg doesn't use scsi_execute_async() any more. This is a part of the
+> > overdue task to remove scsi_req_map_sg.
 > > 
-> > This adds gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov
-> > so sg can use it (sg always does GFP_ATOMIC allocation).
+> > I tested this patchset with sg v3 and the old interface (struct
+> > sg_header) via SG_IO (v3) and the vfs API.
+> > 
+> > 
+> > Doug,
+> > 
+> > 1. I don't demote the sg driver's GFP_ATOMIC to GFP_KERNEL. sg always
+> > uses GFP_ATOMIC as before.
+> > 
+> > 2. I don't remove GFP_DMA allocation. As before, sg allocates reserved
+> > pages with GFP_DMA (sfp->low_dma case).
+> > 
+> > 3. I keep the reserved buffer per struct sg_fd as before.
+> > 
+> > 4. I use high-order page allocation for reserved buffer as before. sg
+> > works well with HBAs that have the limitation of the number of sg
+> > entries.
+> > 
+> > 5. I think that you were concern about the overhead of the block layer
+> > functions. But if you look at scsi_execute_async() that sg uses now,
+> > you can find that scsi_execute_async() uses the block layer functions
+> > internally. So the current sg incurs the overhead (if such overhead
+> > exists).
+> > 
+> > 
+> > Jens,
+> > 
+> > I keep the block API changes to a minimum (I might need more changes
+> > for st/osst but I'd like to progress step by step). I did only two
+> > things.
+> > 
+> > 1. I add gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov.
+> > 
+> > 2. I introduces struct rq_map_data holding pages. sg puts
+> > pre-allocated pages to it and passes it to bio_copy_user_iov(). The
+> > current users of bio_copy_user_iov simply passes NULL. blk_rq_map_user
+> > and blk_rq_map_user_iov take a pointer to struct rq_map_data and in
+> > the end bio_copy_user_iov gets it.
+> > 
+> > 
+> > This patchset against the for-linus branch in Jens' tree + the two
+> > patches for 2.6.27:
+> > 
+> > http://marc.info/?l=linux-kernel&m=121964251911717&w=2
+> > http://marc.info/?l=linux-kernel&m=121964241911611&w=2
+> > 
+> > After Jens rebases the for-2.6.28 brach, I'll update this patchset
+> > too.
 > 
-> Most GFP_ATOMIC looks rather spurious to me, and are there probably
-> for some historic reason.  Do you have a caller that actually needs
-> GFP_ATOMIC because it's under a spinlock or from irq context,
+> Thanks a lot for doing this work, it's been pending for a long time.
+> I've rebased for-2.6.28 on top of for-linus to ease this integration, so
+> if you could resend the patchset then I can add it.
 
-No, we don't have.
+Thanks, I put an updated version against the for-2.6.28 branch in your
+tree:
 
-> or is this just to stay as close as possible to the existing sg
-> code?
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git sg-block
 
-Yes, I don't change sg behavior.
 
-GFP_NOWAIT would be more appropriate than GFP_ATOMIC for sg, I guess.
+Can you wait for a little while before applying this to your
+for-2.6.28 branch? We need Doug's ACK on this.
 
-But let me finish the conversion without changing sg behavior. I know
-changing the behavior makes it more difficult to get Doug's ACK on
-these patches.
+But I think that it's nice if you can send this to linux-next since
+testing this patchset on linux-next is good.
