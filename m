@@ -1,97 +1,94 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Kernel Summit Request for Discussion: The Future of Target mode
- and Cloud storage on Linux
-Date: Wed, 27 Aug 2008 22:00:25 +0400
-Message-ID: <48B59639.6050802@vlnb.net>
-References: <48ADC53B.6090501@vlnb.net>	<20080822081958A.fujita.tomonori@lab.ntt.co.jp>	<48AF0D1F.5030605@vlnb.net> <20080823113624A.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Who do we point to?
+Date: Wed, 27 Aug 2008 22:17:15 +0400
+Message-ID: <48B59A2B.7040207@vlnb.net>
+References: <200808201911.m7KJBTik015082@wind.enjellic.com>	 <48AD5C14.6050508@vlnb.net> <1219329139.3265.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:35705 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751476AbYH0R7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2008 13:59:54 -0400
-In-Reply-To: <20080823113624A.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1219329139.3265.17.camel@localhost.localdomain>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: greg@enjellic.com, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linuxraid@amcc.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-FUJITA Tomonori wrote:
->>>>> Hmm, really? STGT development is more active IET.
->>>> Tomo-san, be honest. It was *you*, who stopped the IET development, 
->>>> forcing people to switch to STGT. There is no point to prepare patches 
->>>> for IET, if they will never get merged.
->>> I stopped working on IET but it doesn't mean that I force others to
->>> stop working on IET. Arne said that he merges patches.
->> Well, how about declaring unlimited code freeze for all core parts?
+James Bottomley wrote:
+> On Thu, 2008-08-21 at 16:14 +0400, Vladislav Bolkhovitin wrote:
+>> MOANING MODE ON
+>>
+>> Testing SCST and target drivers I often have to deal with various 
+>> failures and with how initiators recover from them. And,
+>> unfortunately, 
+>> my observations on Linux aren't very encouraging. See, for instance, 
+>> http://marc.info/?l=linux-scsi&m=119557128825721&w=2 thread.
+>> Receiving 
+>> from the target TASK ABORTED status isn't really a failure, it's
+>> rather 
+>> a corner case behavior, but it leads to immediate file system errors
+>> on 
+>> initiator and then after remount ext3 journal replay doesn't
+>> completely 
+>> repair it, only manual e2fsck helps. Even mounting with barrier=1 
+>> doesn't improve anything. Target can't be blamed for the failure, 
+>> because it stayed online, all its cache fully healthy and no commands 
+>> were lost. Hence, apparently, the journaling code in ext3 isn't as 
+>> reliable in face of storage corner cases as it's thought. I haven't 
+>> tried that test since I reported it, but recently I've seen the
+>> similar 
+>> ext3 failures on 2.6.26 in other tests, so I guess the problem(s)
+>> still 
+>> there.
+>>
+>> A software SCSI target, like SCST, is beautiful to test things like 
+>> that, because it allows easily simulate any possible corner case and 
+>> storage failure. Unfortunately, I don't work on file systems level
+>> and 
+>> can't participate in all that great testing and fixing effort. I can 
+>> only help with setup and assistance in failures simulations.
+>>
+>> MOANING MODE OFF
 > 
-> Why is it difficult for you to understand what I wrote? I wrote again:
+> Well, since I can see your just so anxious to stop moaning and get
+> coding, let me help you.
 > 
-> I stopped working on IET but it doesn't mean that I force others to
-> stop working on IET.
+> Firstly, from a standards point of view, TASK_ABORTED means that the
+> target is telling us this particular command was killed by another
+> initiator (seeing this also requires the TAS bit to be set in the
+> control mode page, so you can easily fix your current problem by
+> unsetting it).  This makes TASK_ABORTED an incredibly rare status
+> condition (hence the problems below).
+> 
+> The way the kernel currently handles it is to return SUCCESS (around
+> line 1411 in scsi_error.c).  This return actually propagates an I/O
+> error all the way up the stack.  If the filesystem is the consumer, then
+> how it handles the error depends on what you have the errors= switch set
+> to.  If you've got it set to a safety condition like remount-ro or
+> panic, then the fs should be recoverable on reboot (or unmount recheck).
+> If you have it set to something unsafe like continue, then yes, you're
+> asking for trouble and fs corruption ... but it's hardly the OSs fault,
+> you told it you didn't want to operate safely.
 
-You stopped working on it, but you didn't stop maintaining it, did you? 
-The were neither announcement of it, nor request for somebody else to do 
-the maintainership work. So, for everybody you remained the maintainer 
-and the only person who can accept or reject patches.
+Yes, we already agreed in the referenced thread that there are 2 
+separate and completely unrelated problems were discovered here:
 
->> Has anybody, except you, had a right to merge patches to IET?
-> 
-> Nobody asked me to give a right to merge patches to IET. When Arne
-> asked me, I was happy to give it him because he has a good knowledge
-> of IET code.
+1. Handling of TASK_ABORTED status is different from handling "Commands
+cleared by another initiator" Unit Attention.
 
-Great position! You put yourself as misunderstood. But the problem that 
-everybody misunderstood you and it's really hard to believe that you 
-wasn't aware of it.
+2. The file system layer after receiving an I/O error handles something 
+not too well. I use default mount and format options, so "errors" was 
+"remount-ro", but recovery on reboot wasn't sufficient.
 
-In fact, it was *you* who should have asked about the replacement. It's 
-pretty regular practice in Open Source, when people get bored of some 
-project and gracefully pass its maintainership to someone other.
+We in the SCSI layer can fix (1), but only FS people can fix (2).
 
->> Which %% of 
->> coming non-trivial patches have you merged in the last few years? Near 
->> zero?
-> 
-> Probably, near zero because I stopped working on IET. What does 'stop
-> working on something' mean for you?
-> 
-> 
->> For instance, how many not too bad patches from Ross S. W. Walker 
->> were silently ignored? He didn't received even small comments, which 
->> made him so frustrated, so he stopped all the development activities?
-> 
-> Several days ago on the mailing list, I saw that Ross works on IET
-> with Arne.
-> 
-> 
-> I have no idea why you think that you know better than me about the
-> project that I had maintained. But can you please stop talking about
-> wrong information? I can just ignore your wrong statements (I often
-> did) but I don't like to see other people misunderstanding.
+> So, given what TASK_ABORT means, it looks to me like the handling should
+> go through the maybe_retry path.  I'd say that's about a three line
+> patch ... and since you have the test bed, you can even try it out.
 
-This isn't only my impression, this is rather what people using IET 
-think. Everyone after digging in IET mailing list archive can find the 
-evidences. For instance, see this e-mail: 
-http://www.nabble.com/forum/ViewPost.jtp?post=13776875&framed=y
-You didn't disprove it, although definitely read, because you replied on 
-the later message in that thread. So, what one should think after that 
-and after seeing a lot of good patches going to nowhere and only trivial 
-ones merged?
+OK, I'll prepare it.
 
-> Thanks,
+> James
 > 
-> -------------------------------------------------------------------------
-> This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-> Build the coolest Linux based applications with Moblin SDK & win great prizes
-> Grand prize is a trip for two to an Open Source event anywhere in the world
-> http://moblin-contest.org/redirect.php?banner_id=100&url=/
-> _______________________________________________
-> Scst-devel mailing list
-> Scst-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/scst-devel
+> 
 > 
 
