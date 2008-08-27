@@ -1,101 +1,30 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/5] convert sg to use the block layer
-Date: Wed, 27 Aug 2008 09:10:18 +0200
-Message-ID: <20080827071018.GX20055@kernel.dk>
-References: <1219716654-27827-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080826075627.GU20055@kernel.dk> <20080827111425Y.fujita.tomonori@lab.ntt.co.jp>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: BUG in handling of last_sector_bug flag
+Date: Wed, 27 Aug 2008 10:21:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0808271019450.2498-100000@iolanthe.rowland.org>
+References: <20080826231301.aac6f0e5.ospite@studenti.unina.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:40319 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752228AbYH0HKX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2008 03:10:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20080827111425Y.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20080826231301.aac6f0e5.ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Antonio Ospite <ospite-aNJ+ML1ZbiP93QAQaVx+gl6hYfS7NtTn@public.gmane.org>
+Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-On Wed, Aug 27 2008, FUJITA Tomonori wrote:
-> On Tue, 26 Aug 2008 09:56:28 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
+On Tue, 26 Aug 2008, Antonio Ospite wrote:
+
+> Hi,
 > 
-> > On Tue, Aug 26 2008, FUJITA Tomonori wrote:
-> > > This patchset converts sg to use the block layer functions. That is,
-> > > sg doesn't use scsi_execute_async() any more. This is a part of the
-> > > overdue task to remove scsi_req_map_sg.
-> > > 
-> > > I tested this patchset with sg v3 and the old interface (struct
-> > > sg_header) via SG_IO (v3) and the vfs API.
-> > > 
-> > > 
-> > > Doug,
-> > > 
-> > > 1. I don't demote the sg driver's GFP_ATOMIC to GFP_KERNEL. sg always
-> > > uses GFP_ATOMIC as before.
-> > > 
-> > > 2. I don't remove GFP_DMA allocation. As before, sg allocates reserved
-> > > pages with GFP_DMA (sfp->low_dma case).
-> > > 
-> > > 3. I keep the reserved buffer per struct sg_fd as before.
-> > > 
-> > > 4. I use high-order page allocation for reserved buffer as before. sg
-> > > works well with HBAs that have the limitation of the number of sg
-> > > entries.
-> > > 
-> > > 5. I think that you were concern about the overhead of the block layer
-> > > functions. But if you look at scsi_execute_async() that sg uses now,
-> > > you can find that scsi_execute_async() uses the block layer functions
-> > > internally. So the current sg incurs the overhead (if such overhead
-> > > exists).
-> > > 
-> > > 
-> > > Jens,
-> > > 
-> > > I keep the block API changes to a minimum (I might need more changes
-> > > for st/osst but I'd like to progress step by step). I did only two
-> > > things.
-> > > 
-> > > 1. I add gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov.
-> > > 
-> > > 2. I introduces struct rq_map_data holding pages. sg puts
-> > > pre-allocated pages to it and passes it to bio_copy_user_iov(). The
-> > > current users of bio_copy_user_iov simply passes NULL. blk_rq_map_user
-> > > and blk_rq_map_user_iov take a pointer to struct rq_map_data and in
-> > > the end bio_copy_user_iov gets it.
-> > > 
-> > > 
-> > > This patchset against the for-linus branch in Jens' tree + the two
-> > > patches for 2.6.27:
-> > > 
-> > > http://marc.info/?l=linux-kernel&m=121964251911717&w=2
-> > > http://marc.info/?l=linux-kernel&m=121964241911611&w=2
-> > > 
-> > > After Jens rebases the for-2.6.28 brach, I'll update this patchset
-> > > too.
-> > 
-> > Thanks a lot for doing this work, it's been pending for a long time.
-> > I've rebased for-2.6.28 on top of for-linus to ease this integration, so
-> > if you could resend the patchset then I can add it.
-> 
-> Thanks, I put an updated version against the for-2.6.28 branch in your
-> tree:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git sg-block
-> 
-> 
-> Can you wait for a little while before applying this to your
-> for-2.6.28 branch? We need Doug's ACK on this.
+> is the fix going to be merged? I haven't seen it in rc4-git series.
 
-Sure, just let me know...
+Sorry, it slipped my mind.  I'll submit it shortly.  However it may not 
+be accepted right away, since it affects a very important and difficult 
+part of the SCSI stack.
 
-> But I think that it's nice if you can send this to linux-next since
-> testing this patchset on linux-next is good.
+Alan Stern
 
-for-2.6.28 is already in linux-next, so once this gets applied it'll get
-tested there as well. And in -mm.
-
--- 
-Jens Axboe
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
