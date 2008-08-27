@@ -1,126 +1,88 @@
-From: Ming Zhang <blackmagic02881@gmail.com>
-Subject: Re: [Scst-devel] Kernel Summit Request for Discussion: The Future
-	of Target mode and Cloud storage on Linux
-Date: Wed, 27 Aug 2008 13:59:37 -0400
-Message-ID: <1219859977.22978.7.camel@mzhang-PC.home>
-References: <48ADC53B.6090501@vlnb.net> <48ADFAB7.5010201@cs.wisc.edu>
-	 <1219701570.13470.156.camel@haakon2.linux-iscsi.org>
-	 <48B59556.7050108@vlnb.net>
-Reply-To: blackmagic02881@gmail.com
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Kernel Summit Request for Discussion: The Future of Target mode
+ and Cloud storage on Linux
+Date: Wed, 27 Aug 2008 22:00:25 +0400
+Message-ID: <48B59639.6050802@vlnb.net>
+References: <48ADC53B.6090501@vlnb.net>	<20080822081958A.fujita.tomonori@lab.ntt.co.jp>	<48AF0D1F.5030605@vlnb.net> <20080823113624A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.248]:21717 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbYH0R7l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Aug 2008 13:59:41 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so570177hsl.5
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2008 10:59:39 -0700 (PDT)
-In-Reply-To: <48B59556.7050108@vlnb.net>
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:35705 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751476AbYH0R7y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Aug 2008 13:59:54 -0400
+In-Reply-To: <20080823113624A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-On Wed, 2008-08-27 at 21:56 +0400, Vladislav Bolkhovitin wrote:
-> Nicholas A. Bellinger wrote:
-> > On Thu, 2008-08-21 at 18:31 -0500, Mike Christie wrote:
-> >> snip
-> >>
-> > 
-> > Ok, I took in the weekend to let things settle for a few moments.. 
-> > 
-> >>> If all necessary pieces of STGT moved in the kernel, it would become 
-> >>> pretty much the same as SCST at the moment. 
-> >> In the top paragraph James is saying to move scst into stgt, so it seems 
-> >> like we can do the following:
-> >>
-> >> 1. You and with Nick battle each other about what are the best pieces of 
-> >> scst and his target and what should go upstream.
-> >>
-> > 
-> > Ok, Vlad and I have discussed and determined that the process will be
-> > something roughly along the lines of
-> > 
-> > *) Vlad releases upstream patches for SCST Core in the late v2.6.27 time
-> > frame.
-> > *) /me will cherry picks from lio-core-2.6.git specific code (namely the
-> > memory allocation and mapping algorithms) and begin to integrate these
-> > into SCST-Core upstream and get bulk I/O moving between SCST Core
-> > kernel/user CDB generation API.
-> > *) Around the same time, I will begin the porting process of moving
-> > LIO-Target to use the new upstream target infrastructure, whatever it
-> > shall be called.. :-)
+FUJITA Tomonori wrote:
+>>>>> Hmm, really? STGT development is more active IET.
+>>>> Tomo-san, be honest. It was *you*, who stopped the IET development, 
+>>>> forcing people to switch to STGT. There is no point to prepare patches 
+>>>> for IET, if they will never get merged.
+>>> I stopped working on IET but it doesn't mean that I force others to
+>>> stop working on IET. Arne said that he merges patches.
+>> Well, how about declaring unlimited code freeze for all core parts?
 > 
-> I agree
+> Why is it difficult for you to understand what I wrote? I wrote again:
 > 
-> >> Our userspace tools will also be able to support both kernel space and 
-> >> userspace targets with little trouble so distros that have stgt will not 
-> >> notice any differences.
-> > 
-> > So this is one of the items that I mentioned to Vlad as being a
-> > potential stumbling block..  I stated that I have no problem dumping the
-> > LIO IOCTL in favor of something better, and having to break backwards
-> > compat with LIO userspace tools (well, until I have to emulate the
-> > backwards compat wrt target-ctl ;-)) is something I am ready to deal
-> > with.
-> > 
-> > So I definately see your point here, having the exist CLI logic in place
-> > into distros is something that we are going to have to deal with (even
-> > if the core behind them is completely different).  
-> > 
-> > I should also mention that virtually all of the configuration logic done
-> > from the LIO-Core and LIO-Target IOCTLs today is intended (minus a bug
-> > or two :-) to be done without having to shutdown/stop anything other
-> > than the referenced object for the target-ctl operation.  Obviously, I
-> > really want to keep the same functionality with the CLI interface the
-> > LIO pieces are ported to.
-> > 
-> > I will be sure to take a look at the STGT control interface and see how
-> > I can fit the current functionality in.  I believe SCST uses an IOCTL
-> > today as well, which would put them in a similar situation.
-> 
-> I, personally, don't like an interface, like tgtadm, which tries to do 
-> all non-trivial configuration work from a single command line tool, 
-> because of the following 3 reasons:
-> 
-> 1. It's a lot of effort to write and maintain such a tool, because it 
-> needs to be extensible to work with new modules and modes. For instance, 
-> iptables tool is 86K lines long. The whole netfilter code for all 
-> network protocols in the kernel is less that 50K lines long. Do we want 
-> such a code bloat (170% of code to configure) and dedicated team of 
-> maintainers to solve a fundamentally simple configuration task?
-> 
-> 2. It assumes the stateless type of configuration, when each call 
-> configures exactly one thing without any side effects on already 
-> configured or future entries. This approach is good for cases like 
-> iptables, but for SCSI targets it's possible that several configuration 
-> steps require to be done in an atomic manner, like adding an iSCSI 
-> target and configuring its parameters.
-> 
-> 3. It's hard to read 5+ parameters in one command line, so it's a lot 
-> easier to make a mistake there.
-> 
-> So, I believe, a configuration interface should be rather /proc or /sys 
-> interface based. I don't think we should care much about backward 
-> compatibility with tgtadm, because the existing interface doesn't reach 
-> the state of being widely used. As I already mentioned, only ibmvscsi at 
-> the moment uses it, hardware for which is pretty rare.
-> 
+> I stopped working on IET but it doesn't mean that I force others to
+> stop working on IET.
 
-forget about proc. configfs is better. but problem is how u configure
-user space target with configfs?
+You stopped working on it, but you didn't stop maintaining it, did you? 
+The were neither announcement of it, nor request for somebody else to do 
+the maintainership work. So, for everybody you remained the maintainer 
+and the only person who can accept or reject patches.
 
-
-> Thus, I would suggest that before making the further move we should also 
-> consider configuration interfaces of SCST and LIO and choose the best 
-> things from all 3.
-
-
+>> Has anybody, except you, had a right to merge patches to IET?
 > 
-> Vlad
+> Nobody asked me to give a right to merge patches to IET. When Arne
+> asked me, I was happy to give it him because he has a good knowledge
+> of IET code.
+
+Great position! You put yourself as misunderstood. But the problem that 
+everybody misunderstood you and it's really hard to believe that you 
+wasn't aware of it.
+
+In fact, it was *you* who should have asked about the replacement. It's 
+pretty regular practice in Open Source, when people get bored of some 
+project and gracefully pass its maintainership to someone other.
+
+>> Which %% of 
+>> coming non-trivial patches have you merged in the last few years? Near 
+>> zero?
 > 
+> Probably, near zero because I stopped working on IET. What does 'stop
+> working on something' mean for you?
+> 
+> 
+>> For instance, how many not too bad patches from Ross S. W. Walker 
+>> were silently ignored? He didn't received even small comments, which 
+>> made him so frustrated, so he stopped all the development activities?
+> 
+> Several days ago on the mailing list, I saw that Ross works on IET
+> with Arne.
+> 
+> 
+> I have no idea why you think that you know better than me about the
+> project that I had maintained. But can you please stop talking about
+> wrong information? I can just ignore your wrong statements (I often
+> did) but I don't like to see other people misunderstanding.
+
+This isn't only my impression, this is rather what people using IET 
+think. Everyone after digging in IET mailing list archive can find the 
+evidences. For instance, see this e-mail: 
+http://www.nabble.com/forum/ViewPost.jtp?post=13776875&framed=y
+You didn't disprove it, although definitely read, because you replied on 
+the later message in that thread. So, what one should think after that 
+and after seeing a lot of good patches going to nowhere and only trivial 
+ones merged?
+
+> Thanks,
 > 
 > -------------------------------------------------------------------------
 > This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
@@ -131,4 +93,5 @@ user space target with configfs?
 > Scst-devel mailing list
 > Scst-devel@lists.sourceforge.net
 > https://lists.sourceforge.net/lists/listinfo/scst-devel
+> 
 
