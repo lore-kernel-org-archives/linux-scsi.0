@@ -1,27 +1,30 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 5/5] sg: convert the indirect IO path to use the block layer
-Date: Thu, 28 Aug 2008 16:17:09 +0900
-Message-ID: <1219907829-27365-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 2/5] block: introduce struct rq_map_data to use reserved pages
+Date: Thu, 28 Aug 2008 16:17:06 +0900
+Message-ID: <1219907829-27365-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <20080828070725.GP20055@kernel.dk>
  <1219907829-27365-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1219907829-27365-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1219907829-27365-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1219907829-27365-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39577 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:39575 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752806AbYH1HTI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752786AbYH1HTI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 28 Aug 2008 03:19:08 -0400
-In-Reply-To: <1219907829-27365-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1219907829-27365-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This patch converts the indirect IO path (including mmap IO and old
-struct sg_header) to use the block layer functions (blk_get_request,
-blk_execute_rq_nowait, blk_rq_map_user, etc) instead of
-scsi_execute_async().
+This patch introduces struct rq_map_data to enable bio_copy_use_iov()
+use reserved pages.
+
+Currently, bio_copy_user_iov allocates bounce pages but
+drivers/scsi/sg.c wants to allocate pages by itself and use
+them. struct rq_map_data can be used to pass allocated pages to
+bio_copy_user_iov.
+
+The current users of bio_copy_user_iov simply passes NULL (they don't
+want to use pre-allocated pages).
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Jens Axboe <jens.axboe@oracle.com>
@@ -29,657 +32,403 @@ Cc: Douglas Gilbert <dougg@torque.net>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/sg.c |  393 ++++++++++++++---------------------------------------
- 1 files changed, 103 insertions(+), 290 deletions(-)
+ block/blk-map.c             |   26 ++++++++++++-------
+ block/bsg.c                 |    7 +++--
+ block/scsi_ioctl.c          |    4 +-
+ drivers/cdrom/cdrom.c       |    2 +-
+ drivers/scsi/scsi_tgt_lib.c |    2 +-
+ fs/bio.c                    |   58 ++++++++++++++++++++++++++++++------------
+ include/linux/bio.h         |    8 +++--
+ include/linux/blkdev.h      |   12 +++++++-
+ 8 files changed, 80 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index cb6de07..56a5d96 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -47,7 +47,6 @@ static int sg_version_num = 30534;	/* 2 digits for each component */
- #include <linux/seq_file.h>
- #include <linux/blkdev.h>
- #include <linux/delay.h>
--#include <linux/scatterlist.h>
- #include <linux/blktrace_api.h>
- #include <linux/smp_lock.h>
+diff --git a/block/blk-map.c b/block/blk-map.c
+index ac21b73..dad6a29 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -41,8 +41,8 @@ static int __blk_rq_unmap_user(struct bio *bio)
+ }
  
-@@ -119,7 +118,8 @@ typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
- 	unsigned sglist_len; /* size of malloc'd scatter-gather list ++ */
- 	unsigned bufflen;	/* Size of (aggregate) data buffer */
- 	unsigned b_malloc_len;	/* actual len malloc'ed in buffer */
--	struct scatterlist *buffer;/* scatter list */
+ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+-			     void __user *ubuf, unsigned int len,
+-			     gfp_t gfp_mask)
++			     struct rq_map_data *map_data, void __user *ubuf,
++			     unsigned int len, gfp_t gfp_mask)
+ {
+ 	unsigned long uaddr;
+ 	unsigned int alignment;
+@@ -57,10 +57,10 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 	 */
+ 	uaddr = (unsigned long) ubuf;
+ 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+-	if (!(uaddr & alignment) && !(len & alignment))
++	if (!(uaddr & alignment) && !(len & alignment) && !map_data)
+ 		bio = bio_map_user(q, NULL, uaddr, len, reading, gfp_mask);
+ 	else
+-		bio = bio_copy_user(q, uaddr, len, reading, gfp_mask);
++		bio = bio_copy_user(q, map_data, uaddr, len, reading, gfp_mask);
+ 
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+@@ -89,6 +89,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+  * blk_rq_map_user - map user data to a request, for REQ_TYPE_BLOCK_PC usage
+  * @q:		request queue where request should be inserted
+  * @rq:		request structure to fill
++ * @map_data:   pointer to the rq_map_data holding pages (if necessary)
+  * @ubuf:	the user buffer
+  * @len:	length of user data
+  * @gfp_mask:	memory allocation flags
+@@ -107,7 +108,8 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+  *    unmapping.
+  */
+ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+-		    void __user *ubuf, unsigned long len, gfp_t gfp_mask)
++		    struct rq_map_data *map_data, void __user *ubuf,
++		    unsigned long len, gfp_t gfp_mask)
+ {
+ 	unsigned long bytes_read = 0;
+ 	struct bio *bio = NULL;
+@@ -134,7 +136,8 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 		if (end - start > BIO_MAX_PAGES)
+ 			map_len -= PAGE_SIZE;
+ 
+-		ret = __blk_rq_map_user(q, rq, ubuf, map_len, gfp_mask);
++		ret = __blk_rq_map_user(q, rq, map_data, ubuf, map_len,
++					gfp_mask);
+ 		if (ret < 0)
+ 			goto unmap_rq;
+ 		if (!bio)
+@@ -159,6 +162,7 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  * blk_rq_map_user_iov - map user data to a request, for REQ_TYPE_BLOCK_PC usage
+  * @q:		request queue where request should be inserted
+  * @rq:		request to map data to
++ * @map_data:   pointer to the rq_map_data holding pages (if necessary)
+  * @iov:	pointer to the iovec
+  * @iov_count:	number of elements in the iovec
+  * @len:	I/O byte count
+@@ -178,8 +182,8 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  *    unmapping.
+  */
+ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+-			struct sg_iovec *iov, int iov_count, unsigned int len,
+-			gfp_t gfp_mask)
++			struct rq_map_data *map_data, struct sg_iovec *iov,
++			int iov_count, unsigned int len, gfp_t gfp_mask)
+ {
+ 	struct bio *bio;
+ 	int i, read = rq_data_dir(rq) == READ;
+@@ -197,8 +201,9 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 		}
+ 	}
+ 
+-	if (unaligned || (q->dma_pad_mask & len))
+-		bio = bio_copy_user_iov(q, iov, iov_count, read, gfp_mask);
++	if (unaligned || (q->dma_pad_mask & len) || map_data)
++		bio = bio_copy_user_iov(q, map_data, iov, iov_count, read,
++					gfp_mask);
+ 	else
+ 		bio = bio_map_user_iov(q, NULL, iov, iov_count, read, gfp_mask);
+ 
+@@ -220,6 +225,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 	rq->buffer = rq->data = NULL;
+ 	return 0;
+ }
++EXPORT_SYMBOL(blk_rq_map_user_iov);
+ 
+ /**
+  * blk_rq_unmap_user - unmap a request with user data
+diff --git a/block/bsg.c b/block/bsg.c
+index e7a142e..56cb343 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -283,8 +283,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, int has_write_perm)
+ 		next_rq->cmd_type = rq->cmd_type;
+ 
+ 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+-		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len,
+-				       GFP_KERNEL);
++		ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
++				       hdr->din_xfer_len, GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
+@@ -299,7 +299,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, int has_write_perm)
+ 		dxfer_len = 0;
+ 
+ 	if (dxfer_len) {
+-		ret = blk_rq_map_user(q, rq, dxferp, dxfer_len, GFP_KERNEL);
++		ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
++				      GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index f49d6a1..c34272a 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -314,11 +314,11 @@ static int sg_io(struct file *file, struct request_queue *q,
+ 			goto out;
+ 		}
+ 
+-		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count,
++		ret = blk_rq_map_user_iov(q, rq, NULL, iov, hdr->iovec_count,
+ 					  hdr->dxfer_len, GFP_KERNEL);
+ 		kfree(iov);
+ 	} else if (hdr->dxfer_len)
+-		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len,
++		ret = blk_rq_map_user(q, rq, NULL, hdr->dxferp, hdr->dxfer_len,
+ 				      GFP_KERNEL);
+ 
+ 	if (ret)
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index e861d24..d47f2f8 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2097,7 +2097,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
+ 
+ 		len = nr * CD_FRAMESIZE_RAW;
+ 
+-		ret = blk_rq_map_user(q, rq, ubuf, len, GFP_KERNEL);
++		ret = blk_rq_map_user(q, rq, NULL, ubuf, len, GFP_KERNEL);
+ 		if (ret)
+ 			break;
+ 
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 2a4fd82..3117bb1 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -362,7 +362,7 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+ 	int err;
+ 
+ 	dprintk("%lx %u\n", uaddr, len);
+-	err = blk_rq_map_user(q, rq, (void *)uaddr, len, GFP_KERNEL);
++	err = blk_rq_map_user(q, rq, NULL, (void *)uaddr, len, GFP_KERNEL);
+ 	if (err) {
+ 		/*
+ 		 * TODO: need to fixup sg_tablesize, max_segment_size,
+diff --git a/fs/bio.c b/fs/bio.c
+index 3d2e9ad..a2f0726 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -439,16 +439,19 @@ int bio_add_page(struct bio *bio, struct page *page, unsigned int len,
+ 
+ struct bio_map_data {
+ 	struct bio_vec *iovecs;
+-	int nr_sgvecs;
+ 	struct sg_iovec *sgvecs;
++	int nr_sgvecs;
++	int is_our_pages;
+ };
+ 
+ static void bio_set_map_data(struct bio_map_data *bmd, struct bio *bio,
+-			     struct sg_iovec *iov, int iov_count)
++			     struct sg_iovec *iov, int iov_count,
++			     int is_our_pages)
+ {
+ 	memcpy(bmd->iovecs, bio->bi_io_vec, sizeof(struct bio_vec) * bio->bi_vcnt);
+ 	memcpy(bmd->sgvecs, iov, sizeof(struct sg_iovec) * iov_count);
+ 	bmd->nr_sgvecs = iov_count;
++	bmd->is_our_pages = is_our_pages;
+ 	bio->bi_private = bmd;
+ }
+ 
+@@ -483,7 +486,8 @@ static struct bio_map_data *bio_alloc_map_data(int nr_segs, int iov_count,
+ }
+ 
+ static int __bio_copy_iov(struct bio *bio, struct bio_vec *iovecs,
+-			  struct sg_iovec *iov, int iov_count, int uncopy)
++			  struct sg_iovec *iov, int iov_count, int uncopy,
++			  int do_free_page)
+ {
+ 	int ret = 0, i;
+ 	struct bio_vec *bvec;
+@@ -526,7 +530,7 @@ static int __bio_copy_iov(struct bio *bio, struct bio_vec *iovecs,
+ 			}
+ 		}
+ 
+-		if (uncopy)
++		if (do_free_page)
+ 			__free_page(bvec->bv_page);
+ 	}
+ 
+@@ -545,7 +549,8 @@ int bio_uncopy_user(struct bio *bio)
+ 	struct bio_map_data *bmd = bio->bi_private;
+ 	int ret;
+ 
+-	ret = __bio_copy_iov(bio, bmd->iovecs, bmd->sgvecs, bmd->nr_sgvecs, 1);
++	ret = __bio_copy_iov(bio, bmd->iovecs, bmd->sgvecs, bmd->nr_sgvecs, 1,
++			     bmd->is_our_pages);
+ 
+ 	bio_free_map_data(bmd);
+ 	bio_put(bio);
+@@ -555,6 +560,7 @@ int bio_uncopy_user(struct bio *bio)
+ /**
+  *	bio_copy_user_iov	-	copy user data to bio
+  *	@q: destination block queue
++ *	@map_data: pointer to the rq_map_data holding pages (if necessary)
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -564,8 +570,10 @@ int bio_uncopy_user(struct bio *bio)
+  *	to/from kernel pages as necessary. Must be paired with
+  *	call bio_uncopy_user() on io completion.
+  */
+-struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+-			      int iov_count, int write_to_vm, gfp_t gfp_mask)
++struct bio *bio_copy_user_iov(struct request_queue *q,
++			      struct rq_map_data *map_data,
++			      struct sg_iovec *iov, int iov_count,
++			      int write_to_vm, gfp_t gfp_mask)
+ {
+ 	struct bio_map_data *bmd;
+ 	struct bio_vec *bvec;
+@@ -600,13 +608,26 @@ struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+ 	bio->bi_rw |= (!write_to_vm << BIO_RW);
+ 
+ 	ret = 0;
++	i = 0;
+ 	while (len) {
+-		unsigned int bytes = PAGE_SIZE;
++		unsigned int bytes;
++
++		if (map_data)
++			bytes = 1U << (PAGE_SHIFT + map_data->page_order);
++		else
++			bytes = PAGE_SIZE;
+ 
+ 		if (bytes > len)
+ 			bytes = len;
+ 
+-		page = alloc_page(q->bounce_gfp | gfp_mask);
++		if (map_data) {
++			if (i == map_data->nr_entries) {
++				ret = -ENOMEM;
++				break;
++			}
++			page = map_data->pages[i++];
++		} else
++			page = alloc_page(q->bounce_gfp | gfp_mask);
+ 		if (!page) {
+ 			ret = -ENOMEM;
+ 			break;
+@@ -625,16 +646,17 @@ struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+ 	 * success
+ 	 */
+ 	if (!write_to_vm) {
+-		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0);
++		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0, 0);
+ 		if (ret)
+ 			goto cleanup;
+ 	}
+ 
+-	bio_set_map_data(bmd, bio, iov, iov_count);
++	bio_set_map_data(bmd, bio, iov, iov_count, map_data ? 0 : 1);
+ 	return bio;
+ cleanup:
+-	bio_for_each_segment(bvec, bio, i)
+-		__free_page(bvec->bv_page);
++	if (!map_data)
++		bio_for_each_segment(bvec, bio, i)
++			__free_page(bvec->bv_page);
+ 
+ 	bio_put(bio);
+ out_bmd:
+@@ -645,6 +667,7 @@ out_bmd:
+ /**
+  *	bio_copy_user	-	copy user data to bio
+  *	@q: destination block queue
++ *	@map_data: pointer to the rq_map_data holding pages (if necessary)
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -654,15 +677,16 @@ out_bmd:
+  *	to/from kernel pages as necessary. Must be paired with
+  *	call bio_uncopy_user() on io completion.
+  */
+-struct bio *bio_copy_user(struct request_queue *q, unsigned long uaddr,
+-			  unsigned int len, int write_to_vm, gfp_t gfp_mask)
++struct bio *bio_copy_user(struct request_queue *q, struct rq_map_data *map_data,
++			  unsigned long uaddr, unsigned int len,
++			  int write_to_vm, gfp_t gfp_mask)
+ {
+ 	struct sg_iovec iov;
+ 
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
+ 
+-	return bio_copy_user_iov(q, &iov, 1, write_to_vm, gfp_mask);
++	return bio_copy_user_iov(q, map_data, &iov, 1, write_to_vm, gfp_mask);
+ }
+ 
+ static struct bio *__bio_map_user_iov(struct request_queue *q,
+@@ -1028,7 +1052,7 @@ struct bio *bio_copy_kern(struct request_queue *q, void *data, unsigned int len,
+ 	bio->bi_private = bmd;
+ 	bio->bi_end_io = bio_copy_kern_endio;
+ 
+-	bio_set_map_data(bmd, bio, &iov, 1);
++	bio_set_map_data(bmd, bio, &iov, 1, 1);
+ 	return bio;
+ cleanup:
+ 	bio_for_each_segment(bvec, bio, i)
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 200b185..bc386cd 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -327,6 +327,7 @@ extern int bio_get_nr_vecs(struct block_device *);
+ extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+ 				unsigned long, unsigned int, int, gfp_t);
+ struct sg_iovec;
++struct rq_map_data;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+ 				    struct block_device *,
+ 				    struct sg_iovec *, int, int, gfp_t);
+@@ -337,9 +338,10 @@ extern struct bio *bio_copy_kern(struct request_queue *, void *, unsigned int,
+ 				 gfp_t, int);
+ extern void bio_set_pages_dirty(struct bio *bio);
+ extern void bio_check_pages_dirty(struct bio *bio);
+-extern struct bio *bio_copy_user(struct request_queue *, unsigned long,
+-				 unsigned int, int, gfp_t);
+-extern struct bio *bio_copy_user_iov(struct request_queue *, struct sg_iovec *,
++extern struct bio *bio_copy_user(struct request_queue *, struct rq_map_data *,
++				 unsigned long, unsigned int, int, gfp_t);
++extern struct bio *bio_copy_user_iov(struct request_queue *,
++				     struct rq_map_data *, struct sg_iovec *,
+ 				     int, int, gfp_t);
+ extern int bio_uncopy_user(struct bio *);
+ void zero_fill_bio(struct bio *bio);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 9512c5b..d2faa72 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -642,6 +642,12 @@ static inline void blk_queue_bounce(struct request_queue *q, struct bio **bio)
+ }
+ #endif /* CONFIG_MMU */
+ 
++struct rq_map_data {
 +	struct page **pages;
 +	int page_order;
- 	char dio_in_use;	/* 0->indirect IO (or mmap), 1->dio */
- 	unsigned char cmd_opcode; /* first byte of command */
- } Sg_scatter_hold;
-@@ -190,8 +190,6 @@ static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
- 			int read_only, Sg_request **o_srp);
- static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 			   unsigned char *cmnd, int timeout, int blocking);
--static int sg_u_iovec(sg_io_hdr_t * hp, int sg_num, int ind,
--		      int wr_xf, int *countp, unsigned char __user **up);
- static int sg_write_xfer(Sg_request * srp);
- static int sg_read_xfer(Sg_request * srp);
- static int sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer);
-@@ -199,8 +197,6 @@ static void sg_remove_scat(Sg_scatter_hold * schp);
- static void sg_build_reserve(Sg_fd * sfp, int req_size);
- static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
- static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
--static struct page *sg_page_malloc(int rqSz, int lowDma, int *retSzp);
--static void sg_page_free(struct page *page, int size);
- static Sg_fd *sg_add_sfp(Sg_device * sdp, int dev);
- static int sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
- static void __sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
-@@ -771,26 +767,11 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		break;
- 	}
- 	hp->duration = jiffies_to_msecs(jiffies);
--/* Now send everything of to mid-level. The next time we hear about this
--   packet is when sg_cmd_done() is called (i.e. a callback). */
--	if (srp->rq) {
--		srp->rq->timeout = timeout;
--		blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
--				      srp->rq, 1, sg_rq_end_io);
--		return 0;
--	}
--	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
--				hp->dxfer_len, srp->data.k_use_sg, timeout,
--				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
--				GFP_ATOMIC)) {
--		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: scsi_execute_async failed\n"));
--		/*
--		 * most likely out of mem, but could also be a bad map
--		 */
--		sg_finish_rem_req(srp);
--		return -ENOMEM;
--	} else
--		return 0;
++	int nr_entries;
++};
 +
-+	srp->rq->timeout = timeout;
-+	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
-+			      srp->rq, 1, sg_rq_end_io);
-+	return 0;
- }
- 
- static int
-@@ -1206,8 +1187,7 @@ sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	Sg_fd *sfp;
- 	unsigned long offset, len, sa;
- 	Sg_scatter_hold *rsv_schp;
--	struct scatterlist *sg;
--	int k;
-+	int k, length;
- 
- 	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
- 		return VM_FAULT_SIGBUS;
-@@ -1217,15 +1197,14 @@ sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 		return VM_FAULT_SIGBUS;
- 	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
- 				   offset, rsv_schp->k_use_sg));
--	sg = rsv_schp->buffer;
- 	sa = vma->vm_start;
--	for (k = 0; (k < rsv_schp->k_use_sg) && (sa < vma->vm_end);
--	     ++k, sg = sg_next(sg)) {
-+	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
-+	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
- 		len = vma->vm_end - sa;
--		len = (len < sg->length) ? len : sg->length;
-+		len = (len < length) ? len : length;
- 		if (offset < len) {
--			struct page *page;
--			page = virt_to_page(page_address(sg_page(sg)) + offset);
-+			struct page *page = nth_page(rsv_schp->pages[k],
-+						     offset >> PAGE_SHIFT);
- 			get_page(page);	/* increment page count */
- 			vmf->page = page;
- 			return 0; /* success */
-@@ -1247,8 +1226,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
- 	Sg_fd *sfp;
- 	unsigned long req_sz, len, sa;
- 	Sg_scatter_hold *rsv_schp;
--	int k;
--	struct scatterlist *sg;
-+	int k, length;
- 
- 	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
- 		return -ENXIO;
-@@ -1262,11 +1240,10 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
- 		return -ENOMEM;	/* cannot map more than reserved buffer */
- 
- 	sa = vma->vm_start;
--	sg = rsv_schp->buffer;
--	for (k = 0; (k < rsv_schp->k_use_sg) && (sa < vma->vm_end);
--	     ++k, sg = sg_next(sg)) {
-+	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
-+	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
- 		len = vma->vm_end - sa;
--		len = (len < sg->length) ? len : sg->length;
-+		len = (len < length) ? len : length;
- 		sa += len;
- 	}
- 
-@@ -1310,7 +1287,6 @@ sg_cmd_done(void *data, char *sense, int result, int resid)
- 	if (0 != result) {
- 		struct scsi_sense_hdr sshdr;
- 
--		memcpy(srp->sense_b, sense, sizeof (srp->sense_b));
- 		srp->header.status = 0xff & result;
- 		srp->header.masked_status = status_byte(result);
- 		srp->header.msg_status = msg_byte(result);
-@@ -1685,34 +1661,51 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 	Sg_scatter_hold *rsv_schp = &sfp->reserve;
- 	struct request_queue *q = sfp->parentdp->device->request_queue;
- 	unsigned long alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-+	struct rq_map_data map_data;
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_start_req: dxfer_len=%d\n", dxfer_len));
- 
-+	res = __sg_start_req(srp, hp, cmd);
-+	if (res)
-+		return res;
-+
- 	if ((dxfer_len <= 0) || (dxfer_dir == SG_DXFER_NONE))
--		return __sg_start_req(srp, hp, cmd);
-+		return 0;
- 
- #ifdef SG_ALLOW_DIO_CODE
- 	if (sg_allow_dio && (hp->flags & SG_FLAG_DIRECT_IO) &&
- 	    (dxfer_dir != SG_DXFER_UNKNOWN) && (0 == hp->iovec_count) &&
- 	    (!sfp->parentdp->device->host->unchecked_isa_dma) &&
--	    !(uaddr & alignment) && !(dxfer_len & alignment)) {
--		res = __sg_start_req(srp, hp, cmd);
--		if (!res)
--			res = sg_build_direct(srp, sfp, dxfer_len);
--
--		return res;
--	}
-+	    !(uaddr & alignment) && !(dxfer_len & alignment))
-+		return sg_build_direct(srp, sfp, dxfer_len);
- #endif
- 	if ((!sg_res_in_use(sfp)) && (dxfer_len <= rsv_schp->bufflen))
- 		sg_link_reserve(sfp, srp, dxfer_len);
--	else {
-+	else
- 		res = sg_build_indirect(req_schp, sfp, dxfer_len);
--		if (res) {
--			sg_remove_scat(req_schp);
--			return res;
--		}
-+
-+	if (!res) {
-+		struct request *rq = srp->rq;
-+		Sg_scatter_hold *schp = &srp->data;
-+		int iovec_count = (int) hp->iovec_count;
-+
-+		map_data.pages = schp->pages;
-+		map_data.page_order = schp->page_order;
-+		map_data.nr_entries = schp->k_use_sg;
-+
-+		if (iovec_count)
-+			res = blk_rq_map_user_iov(q, rq, &map_data, hp->dxferp,
-+						  iovec_count,
-+						  hp->dxfer_len, GFP_ATOMIC);
-+		else
-+			res = blk_rq_map_user(q, rq, &map_data, hp->dxferp,
-+					      hp->dxfer_len, GFP_ATOMIC);
-+
-+		if (!res)
-+			srp->bio = rq->bio;
- 	}
--	return 0;
-+
-+	return res;
- }
- 
- static void
-@@ -1730,6 +1723,7 @@ sg_finish_rem_req(Sg_request * srp)
- 	if (srp->rq) {
- 		if (srp->bio)
- 			blk_rq_unmap_user(srp->bio);
-+
- 		blk_put_request(srp->rq);
- 	}
- 
-@@ -1739,21 +1733,12 @@ sg_finish_rem_req(Sg_request * srp)
- static int
- sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
- {
--	int sg_bufflen = tablesize * sizeof(struct scatterlist);
-+	int sg_bufflen = tablesize * sizeof(struct page *);
- 	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
- 
--	/*
--	 * TODO: test without low_dma, we should not need it since
--	 * the block layer will bounce the buffer for us
--	 *
--	 * XXX(hch): we shouldn't need GFP_DMA for the actual S/G list.
--	 */
--	if (sfp->low_dma)
--		 gfp_flags |= GFP_DMA;
--	schp->buffer = kzalloc(sg_bufflen, gfp_flags);
--	if (!schp->buffer)
-+	schp->pages = kzalloc(sg_bufflen, gfp_flags);
-+	if (!schp->pages)
- 		return -ENOMEM;
--	sg_init_table(schp->buffer, tablesize);
- 	schp->sglist_len = sg_bufflen;
- 	return tablesize;	/* number of scat_gath elements allocated */
- }
-@@ -1780,11 +1765,10 @@ sg_build_direct(Sg_request * srp, Sg_fd * sfp, int dxfer_len)
- static int
- sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- {
--	struct scatterlist *sg;
--	int ret_sz = 0, k, rem_sz, num, mx_sc_elems;
-+	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
--	int blk_size = buff_size;
--	struct page *p = NULL;
-+	int blk_size = buff_size, order;
-+	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN;
- 
- 	if (blk_size < 0)
- 		return -EFAULT;
-@@ -1808,15 +1792,26 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 		} else
- 			scatter_elem_sz_prev = num;
- 	}
--	for (k = 0, sg = schp->buffer, rem_sz = blk_size;
--	     (rem_sz > 0) && (k < mx_sc_elems);
--	     ++k, rem_sz -= ret_sz, sg = sg_next(sg)) {
--		
-+
-+	if (sfp->low_dma)
-+		gfp_mask |= GFP_DMA;
-+
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		gfp_mask |= __GFP_ZERO;
-+
-+	order = get_order(num);
-+retry:
-+	ret_sz = 1 << (PAGE_SHIFT + order);
-+
-+	for (k = 0, rem_sz = blk_size; rem_sz > 0 && k < mx_sc_elems;
-+	     k++, rem_sz -= ret_sz) {
-+
- 		num = (rem_sz > scatter_elem_sz_prev) ?
--		      scatter_elem_sz_prev : rem_sz;
--		p = sg_page_malloc(num, sfp->low_dma, &ret_sz);
--		if (!p)
--			return -ENOMEM;
-+			scatter_elem_sz_prev : rem_sz;
-+
-+		schp->pages[k] = alloc_pages(gfp_mask, order);
-+		if (!schp->pages[k])
-+			goto out;
- 
- 		if (num == scatter_elem_sz_prev) {
- 			if (unlikely(ret_sz > scatter_elem_sz_prev)) {
-@@ -1824,12 +1819,12 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 				scatter_elem_sz_prev = ret_sz;
- 			}
- 		}
--		sg_set_page(sg, p, (ret_sz > num) ? num : ret_sz, 0);
- 
- 		SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k=%d, num=%d, "
- 				 "ret_sz=%d\n", k, num, ret_sz));
- 	}		/* end of for loop */
- 
-+	schp->page_order = order;
- 	schp->k_use_sg = k;
- 	SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k_use_sg=%d, "
- 			 "rem_sz=%d\n", k, rem_sz));
-@@ -1837,8 +1832,15 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 	schp->bufflen = blk_size;
- 	if (rem_sz > 0)	/* must have failed */
- 		return -ENOMEM;
--
- 	return 0;
-+out:
-+	for (i = 0; i < k; i++)
-+		__free_pages(schp->pages[k], order);
-+
-+	if (--order >= 0)
-+		goto retry;
-+
-+	return -ENOMEM;
- }
- 
- static int
-@@ -1846,13 +1848,8 @@ sg_write_xfer(Sg_request * srp)
- {
- 	sg_io_hdr_t *hp = &srp->header;
- 	Sg_scatter_hold *schp = &srp->data;
--	struct scatterlist *sg = schp->buffer;
- 	int num_xfer = 0;
--	int j, k, onum, usglen, ksglen, res;
--	int iovec_count = (int) hp->iovec_count;
- 	int dxfer_dir = hp->dxfer_direction;
--	unsigned char *p;
--	unsigned char __user *up;
- 	int new_interface = ('\0' == hp->interface_id) ? 0 : 1;
- 
- 	if ((SG_DXFER_UNKNOWN == dxfer_dir) || (SG_DXFER_TO_DEV == dxfer_dir) ||
-@@ -1868,103 +1865,26 @@ sg_write_xfer(Sg_request * srp)
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_write_xfer: num_xfer=%d, iovec_count=%d, k_use_sg=%d\n",
- 			  num_xfer, iovec_count, schp->k_use_sg));
--	if (iovec_count) {
--		onum = iovec_count;
--		if (!access_ok(VERIFY_READ, hp->dxferp, SZ_SG_IOVEC * onum))
--			return -EFAULT;
--	} else
--		onum = 1;
--
--	ksglen = sg->length;
--	p = page_address(sg_page(sg));
--	for (j = 0, k = 0; j < onum; ++j) {
--		res = sg_u_iovec(hp, iovec_count, j, 1, &usglen, &up);
--		if (res)
--			return res;
--
--		for (; p; sg = sg_next(sg), ksglen = sg->length,
--		     p = page_address(sg_page(sg))) {
--			if (usglen <= 0)
--				break;
--			if (ksglen > usglen) {
--				if (usglen >= num_xfer) {
--					if (__copy_from_user(p, up, num_xfer))
--						return -EFAULT;
--					return 0;
--				}
--				if (__copy_from_user(p, up, usglen))
--					return -EFAULT;
--				p += usglen;
--				ksglen -= usglen;
--				break;
--			} else {
--				if (ksglen >= num_xfer) {
--					if (__copy_from_user(p, up, num_xfer))
--						return -EFAULT;
--					return 0;
--				}
--				if (__copy_from_user(p, up, ksglen))
--					return -EFAULT;
--				up += ksglen;
--				usglen -= ksglen;
--			}
--			++k;
--			if (k >= schp->k_use_sg)
--				return 0;
--		}
--	}
- 
- 	return 0;
- }
- 
--static int
--sg_u_iovec(sg_io_hdr_t * hp, int sg_num, int ind,
--	   int wr_xf, int *countp, unsigned char __user **up)
--{
--	int num_xfer = (int) hp->dxfer_len;
--	unsigned char __user *p = hp->dxferp;
--	int count;
--
--	if (0 == sg_num) {
--		if (wr_xf && ('\0' == hp->interface_id))
--			count = (int) hp->flags;	/* holds "old" input_size */
--		else
--			count = num_xfer;
--	} else {
--		sg_iovec_t iovec;
--		if (__copy_from_user(&iovec, p + ind*SZ_SG_IOVEC, SZ_SG_IOVEC))
--			return -EFAULT;
--		p = iovec.iov_base;
--		count = (int) iovec.iov_len;
--	}
--	if (!access_ok(wr_xf ? VERIFY_READ : VERIFY_WRITE, p, count))
--		return -EFAULT;
--	if (up)
--		*up = p;
--	if (countp)
--		*countp = count;
--	return 0;
--}
--
- static void
- sg_remove_scat(Sg_scatter_hold * schp)
- {
- 	SCSI_LOG_TIMEOUT(4, printk("sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
--	if (schp->buffer && (schp->sglist_len > 0)) {
--		struct scatterlist *sg = schp->buffer;
--
-+	if (schp->pages && schp->sglist_len > 0) {
- 		if (!schp->dio_in_use) {
- 			int k;
- 
--			for (k = 0; (k < schp->k_use_sg) && sg_page(sg);
--			     ++k, sg = sg_next(sg)) {
-+			for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
- 				SCSI_LOG_TIMEOUT(5, printk(
--				    "sg_remove_scat: k=%d, pg=0x%p, len=%d\n",
--				    k, sg_page(sg), sg->length));
--				sg_page_free(sg_page(sg), sg->length);
-+				    "sg_remove_scat: k=%d, pg=0x%p\n",
-+				    k, page));
-+				__free_pages(schp->pages[k], schp->page_order);
- 			}
- 
--			kfree(schp->buffer);
-+			kfree(schp->pages);
- 		}
- 	}
- 	memset(schp, 0, sizeof (*schp));
-@@ -1975,13 +1895,8 @@ sg_read_xfer(Sg_request * srp)
- {
- 	sg_io_hdr_t *hp = &srp->header;
- 	Sg_scatter_hold *schp = &srp->data;
--	struct scatterlist *sg = schp->buffer;
- 	int num_xfer = 0;
--	int j, k, onum, usglen, ksglen, res;
--	int iovec_count = (int) hp->iovec_count;
- 	int dxfer_dir = hp->dxfer_direction;
--	unsigned char *p;
--	unsigned char __user *up;
- 	int new_interface = ('\0' == hp->interface_id) ? 0 : 1;
- 
- 	if ((SG_DXFER_UNKNOWN == dxfer_dir) || (SG_DXFER_FROM_DEV == dxfer_dir)
-@@ -1996,53 +1911,7 @@ sg_read_xfer(Sg_request * srp)
- 		return 0;
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_read_xfer: num_xfer=%d, iovec_count=%d, k_use_sg=%d\n",
--			  num_xfer, iovec_count, schp->k_use_sg));
--	if (iovec_count) {
--		onum = iovec_count;
--		if (!access_ok(VERIFY_READ, hp->dxferp, SZ_SG_IOVEC * onum))
--			return -EFAULT;
--	} else
--		onum = 1;
--
--	p = page_address(sg_page(sg));
--	ksglen = sg->length;
--	for (j = 0, k = 0; j < onum; ++j) {
--		res = sg_u_iovec(hp, iovec_count, j, 0, &usglen, &up);
--		if (res)
--			return res;
--
--		for (; p; sg = sg_next(sg), ksglen = sg->length,
--		     p = page_address(sg_page(sg))) {
--			if (usglen <= 0)
--				break;
--			if (ksglen > usglen) {
--				if (usglen >= num_xfer) {
--					if (__copy_to_user(up, p, num_xfer))
--						return -EFAULT;
--					return 0;
--				}
--				if (__copy_to_user(up, p, usglen))
--					return -EFAULT;
--				p += usglen;
--				ksglen -= usglen;
--				break;
--			} else {
--				if (ksglen >= num_xfer) {
--					if (__copy_to_user(up, p, num_xfer))
--						return -EFAULT;
--					return 0;
--				}
--				if (__copy_to_user(up, p, ksglen))
--					return -EFAULT;
--				up += ksglen;
--				usglen -= ksglen;
--			}
--			++k;
--			if (k >= schp->k_use_sg)
--				return 0;
--		}
--	}
--
-+			  num_xfer, (int)hp->iovec_count, schp->k_use_sg));
- 	return 0;
- }
- 
-@@ -2050,7 +1919,6 @@ static int
- sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
- {
- 	Sg_scatter_hold *schp = &srp->data;
--	struct scatterlist *sg = schp->buffer;
- 	int k, num;
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_read_oxfer: num_read_xfer=%d\n",
-@@ -2058,15 +1926,18 @@ sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
- 	if ((!outp) || (num_read_xfer <= 0))
- 		return 0;
- 
--	for (k = 0; (k < schp->k_use_sg) && sg_page(sg); ++k, sg = sg_next(sg)) {
--		num = sg->length;
-+	blk_rq_unmap_user(srp->bio);
-+	srp->bio = NULL;
-+
-+	num = 1 << (PAGE_SHIFT + schp->page_order);
-+	for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
- 		if (num > num_read_xfer) {
--			if (__copy_to_user(outp, page_address(sg_page(sg)),
-+			if (__copy_to_user(outp, page_address(schp->pages[k]),
- 					   num_read_xfer))
- 				return -EFAULT;
- 			break;
- 		} else {
--			if (__copy_to_user(outp, page_address(sg_page(sg)),
-+			if (__copy_to_user(outp, page_address(schp->pages[k]),
- 					   num))
- 				return -EFAULT;
- 			num_read_xfer -= num;
-@@ -2101,24 +1972,22 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
- {
- 	Sg_scatter_hold *req_schp = &srp->data;
- 	Sg_scatter_hold *rsv_schp = &sfp->reserve;
--	struct scatterlist *sg = rsv_schp->buffer;
- 	int k, num, rem;
- 
- 	srp->res_used = 1;
- 	SCSI_LOG_TIMEOUT(4, printk("sg_link_reserve: size=%d\n", size));
- 	rem = size;
- 
--	for (k = 0; k < rsv_schp->k_use_sg; ++k, sg = sg_next(sg)) {
--		num = sg->length;
-+	num = 1 << (PAGE_SHIFT + rsv_schp->page_order);
-+	for (k = 0; k < rsv_schp->k_use_sg; k++) {
- 		if (rem <= num) {
--			sfp->save_scat_len = num;
--			sg->length = rem;
- 			req_schp->k_use_sg = k + 1;
- 			req_schp->sglist_len = rsv_schp->sglist_len;
--			req_schp->buffer = rsv_schp->buffer;
-+			req_schp->pages = rsv_schp->pages;
- 
- 			req_schp->bufflen = size;
- 			req_schp->b_malloc_len = rsv_schp->b_malloc_len;
-+			req_schp->page_order = rsv_schp->page_order;
- 			break;
- 		} else
- 			rem -= num;
-@@ -2132,22 +2001,13 @@ static void
- sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
- {
- 	Sg_scatter_hold *req_schp = &srp->data;
--	Sg_scatter_hold *rsv_schp = &sfp->reserve;
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_unlink_reserve: req->k_use_sg=%d\n",
- 				   (int) req_schp->k_use_sg));
--	if ((rsv_schp->k_use_sg > 0) && (req_schp->k_use_sg > 0)) {
--		struct scatterlist *sg = rsv_schp->buffer;
--
--		if (sfp->save_scat_len > 0)
--			(sg + (req_schp->k_use_sg - 1))->length =
--			    (unsigned) sfp->save_scat_len;
--		else
--			SCSI_LOG_TIMEOUT(1, printk ("sg_unlink_reserve: BAD save_scat_len\n"));
--	}
- 	req_schp->k_use_sg = 0;
- 	req_schp->bufflen = 0;
--	req_schp->buffer = NULL;
-+	req_schp->pages = NULL;
-+	req_schp->page_order = 0;
- 	req_schp->sglist_len = 0;
- 	sfp->save_scat_len = 0;
- 	srp->res_used = 0;
-@@ -2405,53 +2265,6 @@ sg_res_in_use(Sg_fd * sfp)
- 	return srp ? 1 : 0;
- }
- 
--/* The size fetched (value output via retSzp) set when non-NULL return */
--static struct page *
--sg_page_malloc(int rqSz, int lowDma, int *retSzp)
--{
--	struct page *resp = NULL;
--	gfp_t page_mask;
--	int order, a_size;
--	int resSz;
--
--	if ((rqSz <= 0) || (NULL == retSzp))
--		return resp;
--
--	if (lowDma)
--		page_mask = GFP_ATOMIC | GFP_DMA | __GFP_COMP | __GFP_NOWARN;
--	else
--		page_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN;
--
--	for (order = 0, a_size = PAGE_SIZE; a_size < rqSz;
--	     order++, a_size <<= 1) ;
--	resSz = a_size;		/* rounded up if necessary */
--	resp = alloc_pages(page_mask, order);
--	while ((!resp) && order) {
--		--order;
--		a_size >>= 1;	/* divide by 2, until PAGE_SIZE */
--		resp =  alloc_pages(page_mask, order);	/* try half */
--		resSz = a_size;
--	}
--	if (resp) {
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			memset(page_address(resp), 0, resSz);
--		*retSzp = resSz;
--	}
--	return resp;
--}
--
--static void
--sg_page_free(struct page *page, int size)
--{
--	int order, a_size;
--
--	if (!page)
--		return;
--	for (order = 0, a_size = PAGE_SIZE; a_size < size;
--	     order++, a_size <<= 1) ;
--	__free_pages(page, order);
--}
--
- #ifdef CONFIG_SCSI_PROC_FS
- static int
- sg_idr_max_id(int id, void *p, void *data)
+ struct req_iterator {
+ 	int i;
+ 	struct bio *bio;
+@@ -711,11 +717,13 @@ extern void __blk_run_queue(struct request_queue *);
+ extern void blk_run_queue(struct request_queue *);
+ extern void blk_start_queueing(struct request_queue *);
+ extern int blk_rq_map_user(struct request_queue *, struct request *,
+-			   void __user *, unsigned long, gfp_t);
++			   struct rq_map_data *, void __user *, unsigned long,
++			   gfp_t);
+ extern int blk_rq_unmap_user(struct bio *);
+ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+-			       struct sg_iovec *, int, unsigned int, gfp_t);
++			       struct rq_map_data *, struct sg_iovec *, int,
++			       unsigned int, gfp_t);
+ extern int blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
 -- 
 1.5.5.GIT
 
