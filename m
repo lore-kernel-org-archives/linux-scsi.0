@@ -1,24 +1,24 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 3/5] sg: convert the non-data path to use the block layer
-Date: Thu, 28 Aug 2008 16:17:07 +0900
-Message-ID: <1219907829-27365-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/5] block: add gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov
+Date: Thu, 28 Aug 2008 16:17:05 +0900
+Message-ID: <1219907829-27365-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <20080828070725.GP20055@kernel.dk>
- <1219907829-27365-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1219907829-27365-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39574 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:39578 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752126AbYH1HTI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2008 03:19:08 -0400
-In-Reply-To: <1219907829-27365-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1752841AbYH1HTJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2008 03:19:09 -0400
+In-Reply-To: <20080828070725.GP20055@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This patch converts the non data path to use the block layer functions
-(blk_get_request, blk_execute_rq_nowait, etc) instead of uses
-scsi_execute_async().
+Currently, blk_rq_map_user and blk_rq_map_user_iov always do
+GFP_KERNEL allocation.
+
+This adds gfp_mask argument to blk_rq_map_user and blk_rq_map_user_iov
+so sg can use it (sg always does GFP_ATOMIC allocation).
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Jens Axboe <jens.axboe@oracle.com>
@@ -26,123 +26,352 @@ Cc: Douglas Gilbert <dougg@torque.net>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- drivers/scsi/sg.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 48 insertions(+), 5 deletions(-)
+ block/blk-map.c             |   20 ++++++++++++--------
+ block/bsg.c                 |    5 +++--
+ block/scsi_ioctl.c          |    5 +++--
+ drivers/cdrom/cdrom.c       |    2 +-
+ drivers/scsi/scsi_tgt_lib.c |    2 +-
+ fs/bio.c                    |   33 +++++++++++++++++++--------------
+ include/linux/bio.h         |    9 +++++----
+ include/linux/blkdev.h      |    5 +++--
+ 8 files changed, 47 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 661f9f2..487c777 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -137,6 +137,7 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
- 	char orphan;		/* 1 -> drop on sight, 0 -> normal */
- 	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
- 	volatile char done;	/* 0->before bh, 1->before read, 2->read */
-+	struct request *rq;
- } Sg_request;
- 
- typedef struct sg_fd {		/* holds the state of a file descriptor */
-@@ -176,7 +177,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
- static int sg_fasync(int fd, struct file *filp, int mode);
- /* tasklet or soft irq callback */
- static void sg_cmd_done(void *data, char *sense, int result, int resid);
--static int sg_start_req(Sg_request * srp);
-+static int sg_start_req(Sg_request *srp, unsigned char *cmd);
- static void sg_finish_rem_req(Sg_request * srp);
- static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
- static int sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp,
-@@ -229,6 +230,11 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 				  cmd, filp->f_mode & FMODE_WRITE);
+diff --git a/block/blk-map.c b/block/blk-map.c
+index ea1bf53..ac21b73 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -41,7 +41,8 @@ static int __blk_rq_unmap_user(struct bio *bio)
  }
  
-+static void sg_rq_end_io(struct request *rq, int uptodate)
-+{
-+	sg_cmd_done(rq->end_io_data, rq->sense, rq->errors, rq->data_len);
-+}
-+
- static int
- sg_open(struct inode *inode, struct file *filp)
+ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+-			     void __user *ubuf, unsigned int len)
++			     void __user *ubuf, unsigned int len,
++			     gfp_t gfp_mask)
  {
-@@ -732,7 +738,8 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 	SCSI_LOG_TIMEOUT(4, printk("sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
- 			  (int) cmnd[0], (int) hp->cmd_len));
- 
--	if ((k = sg_start_req(srp))) {
-+	k = sg_start_req(srp, cmnd);
-+	if (k) {
- 		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: start_req err=%d\n", k));
- 		sg_finish_rem_req(srp);
- 		return k;	/* probably out of space --> ENOMEM */
-@@ -765,6 +772,12 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 	hp->duration = jiffies_to_msecs(jiffies);
- /* Now send everything of to mid-level. The next time we hear about this
-    packet is when sg_cmd_done() is called (i.e. a callback). */
-+	if (srp->rq) {
-+		srp->rq->timeout = timeout;
-+		blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
-+				      srp->rq, 1, sg_rq_end_io);
-+		return 0;
-+	}
- 	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
- 				hp->dxfer_len, srp->data.k_use_sg, timeout,
- 				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
-@@ -1634,8 +1647,32 @@ exit_sg(void)
- 	idr_destroy(&sg_index_idr);
- }
- 
--static int
--sg_start_req(Sg_request * srp)
-+static int __sg_start_req(struct sg_request *srp, struct sg_io_hdr *hp,
-+			  unsigned char *cmd)
-+{
-+	struct sg_fd *sfp = srp->parentfp;
-+	struct request_queue *q = sfp->parentdp->device->request_queue;
-+	struct request *rq;
-+	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
-+
-+	rq = blk_get_request(q, rw, GFP_ATOMIC);
-+	if (!rq)
-+		return -ENOMEM;
-+
-+	memcpy(rq->cmd, cmd, hp->cmd_len);
-+
-+	rq->cmd_len = hp->cmd_len;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+
-+	srp->rq = rq;
-+	rq->end_io_data = srp;
-+	rq->sense = srp->sense_b;
-+	rq->retries = SG_DEFAULT_RETRIES;
-+
-+	return 0;
-+}
-+
-+static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- {
- 	int res;
- 	Sg_fd *sfp = srp->parentfp;
-@@ -1646,8 +1683,10 @@ sg_start_req(Sg_request * srp)
- 	Sg_scatter_hold *rsv_schp = &sfp->reserve;
- 
- 	SCSI_LOG_TIMEOUT(4, printk("sg_start_req: dxfer_len=%d\n", dxfer_len));
-+
- 	if ((dxfer_len <= 0) || (dxfer_dir == SG_DXFER_NONE))
--		return 0;
-+		return __sg_start_req(srp, hp, cmd);
-+
- 	if (sg_allow_dio && (hp->flags & SG_FLAG_DIRECT_IO) &&
- 	    (dxfer_dir != SG_DXFER_UNKNOWN) && (0 == hp->iovec_count) &&
- 	    (!sfp->parentdp->device->host->unchecked_isa_dma)) {
-@@ -1678,6 +1717,10 @@ sg_finish_rem_req(Sg_request * srp)
- 		sg_unlink_reserve(sfp, srp);
+ 	unsigned long uaddr;
+ 	unsigned int alignment;
+@@ -57,9 +58,9 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 	uaddr = (unsigned long) ubuf;
+ 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+ 	if (!(uaddr & alignment) && !(len & alignment))
+-		bio = bio_map_user(q, NULL, uaddr, len, reading);
++		bio = bio_map_user(q, NULL, uaddr, len, reading, gfp_mask);
  	else
- 		sg_remove_scat(req_schp);
-+
-+	if (srp->rq)
-+		blk_put_request(srp->rq);
-+
- 	sg_remove_request(sfp, srp);
+-		bio = bio_copy_user(q, uaddr, len, reading);
++		bio = bio_copy_user(q, uaddr, len, reading, gfp_mask);
+ 
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+@@ -90,6 +91,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+  * @rq:		request structure to fill
+  * @ubuf:	the user buffer
+  * @len:	length of user data
++ * @gfp_mask:	memory allocation flags
+  *
+  * Description:
+  *    Data will be mapped directly for zero copy I/O, if possible. Otherwise
+@@ -105,7 +107,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+  *    unmapping.
+  */
+ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+-		    void __user *ubuf, unsigned long len)
++		    void __user *ubuf, unsigned long len, gfp_t gfp_mask)
+ {
+ 	unsigned long bytes_read = 0;
+ 	struct bio *bio = NULL;
+@@ -132,7 +134,7 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 		if (end - start > BIO_MAX_PAGES)
+ 			map_len -= PAGE_SIZE;
+ 
+-		ret = __blk_rq_map_user(q, rq, ubuf, map_len);
++		ret = __blk_rq_map_user(q, rq, ubuf, map_len, gfp_mask);
+ 		if (ret < 0)
+ 			goto unmap_rq;
+ 		if (!bio)
+@@ -160,6 +162,7 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  * @iov:	pointer to the iovec
+  * @iov_count:	number of elements in the iovec
+  * @len:	I/O byte count
++ * @gfp_mask:	memory allocation flags
+  *
+  * Description:
+  *    Data will be mapped directly for zero copy I/O, if possible. Otherwise
+@@ -175,7 +178,8 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  *    unmapping.
+  */
+ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+-			struct sg_iovec *iov, int iov_count, unsigned int len)
++			struct sg_iovec *iov, int iov_count, unsigned int len,
++			gfp_t gfp_mask)
+ {
+ 	struct bio *bio;
+ 	int i, read = rq_data_dir(rq) == READ;
+@@ -194,9 +198,9 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 	}
+ 
+ 	if (unaligned || (q->dma_pad_mask & len))
+-		bio = bio_copy_user_iov(q, iov, iov_count, read);
++		bio = bio_copy_user_iov(q, iov, iov_count, read, gfp_mask);
+ 	else
+-		bio = bio_map_user_iov(q, NULL, iov, iov_count, read);
++		bio = bio_map_user_iov(q, NULL, iov, iov_count, read, gfp_mask);
+ 
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+diff --git a/block/bsg.c b/block/bsg.c
+index 0aae8d7..e7a142e 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -283,7 +283,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, int has_write_perm)
+ 		next_rq->cmd_type = rq->cmd_type;
+ 
+ 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+-		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len);
++		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len,
++				       GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
+@@ -298,7 +299,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, int has_write_perm)
+ 		dxfer_len = 0;
+ 
+ 	if (dxfer_len) {
+-		ret = blk_rq_map_user(q, rq, dxferp, dxfer_len);
++		ret = blk_rq_map_user(q, rq, dxferp, dxfer_len, GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 3aab80a..f49d6a1 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -315,10 +315,11 @@ static int sg_io(struct file *file, struct request_queue *q,
+ 		}
+ 
+ 		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count,
+-					  hdr->dxfer_len);
++					  hdr->dxfer_len, GFP_KERNEL);
+ 		kfree(iov);
+ 	} else if (hdr->dxfer_len)
+-		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
++		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len,
++				      GFP_KERNEL);
+ 
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 74031de..e861d24 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2097,7 +2097,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
+ 
+ 		len = nr * CD_FRAMESIZE_RAW;
+ 
+-		ret = blk_rq_map_user(q, rq, ubuf, len);
++		ret = blk_rq_map_user(q, rq, ubuf, len, GFP_KERNEL);
+ 		if (ret)
+ 			break;
+ 
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 257e097..2a4fd82 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -362,7 +362,7 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+ 	int err;
+ 
+ 	dprintk("%lx %u\n", uaddr, len);
+-	err = blk_rq_map_user(q, rq, (void *)uaddr, len);
++	err = blk_rq_map_user(q, rq, (void *)uaddr, len, GFP_KERNEL);
+ 	if (err) {
+ 		/*
+ 		 * TODO: need to fixup sg_tablesize, max_segment_size,
+diff --git a/fs/bio.c b/fs/bio.c
+index 6a637b5..3d2e9ad 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -558,13 +558,14 @@ int bio_uncopy_user(struct bio *bio)
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@gfp_mask: memory allocation flags
+  *
+  *	Prepares and returns a bio for indirect user io, bouncing data
+  *	to/from kernel pages as necessary. Must be paired with
+  *	call bio_uncopy_user() on io completion.
+  */
+ struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+-			      int iov_count, int write_to_vm)
++			      int iov_count, int write_to_vm, gfp_t gfp_mask)
+ {
+ 	struct bio_map_data *bmd;
+ 	struct bio_vec *bvec;
+@@ -587,12 +588,12 @@ struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+ 		len += iov[i].iov_len;
+ 	}
+ 
+-	bmd = bio_alloc_map_data(nr_pages, iov_count, GFP_KERNEL);
++	bmd = bio_alloc_map_data(nr_pages, iov_count, gfp_mask);
+ 	if (!bmd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	ret = -ENOMEM;
+-	bio = bio_alloc(GFP_KERNEL, nr_pages);
++	bio = bio_alloc(gfp_mask, nr_pages);
+ 	if (!bio)
+ 		goto out_bmd;
+ 
+@@ -605,7 +606,7 @@ struct bio *bio_copy_user_iov(struct request_queue *q, struct sg_iovec *iov,
+ 		if (bytes > len)
+ 			bytes = len;
+ 
+-		page = alloc_page(q->bounce_gfp | GFP_KERNEL);
++		page = alloc_page(q->bounce_gfp | gfp_mask);
+ 		if (!page) {
+ 			ret = -ENOMEM;
+ 			break;
+@@ -647,26 +648,27 @@ out_bmd:
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@gfp_mask: memory allocation flags
+  *
+  *	Prepares and returns a bio for indirect user io, bouncing data
+  *	to/from kernel pages as necessary. Must be paired with
+  *	call bio_uncopy_user() on io completion.
+  */
+ struct bio *bio_copy_user(struct request_queue *q, unsigned long uaddr,
+-			  unsigned int len, int write_to_vm)
++			  unsigned int len, int write_to_vm, gfp_t gfp_mask)
+ {
+ 	struct sg_iovec iov;
+ 
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
+ 
+-	return bio_copy_user_iov(q, &iov, 1, write_to_vm);
++	return bio_copy_user_iov(q, &iov, 1, write_to_vm, gfp_mask);
  }
  
+ static struct bio *__bio_map_user_iov(struct request_queue *q,
+ 				      struct block_device *bdev,
+ 				      struct sg_iovec *iov, int iov_count,
+-				      int write_to_vm)
++				      int write_to_vm, gfp_t gfp_mask)
+ {
+ 	int i, j;
+ 	int nr_pages = 0;
+@@ -692,12 +694,12 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
+ 	if (!nr_pages)
+ 		return ERR_PTR(-EINVAL);
+ 
+-	bio = bio_alloc(GFP_KERNEL, nr_pages);
++	bio = bio_alloc(gfp_mask, nr_pages);
+ 	if (!bio)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	ret = -ENOMEM;
+-	pages = kcalloc(nr_pages, sizeof(struct page *), GFP_KERNEL);
++	pages = kcalloc(nr_pages, sizeof(struct page *), gfp_mask);
+ 	if (!pages)
+ 		goto out;
+ 
+@@ -776,19 +778,21 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@gfp_mask: memory allocation flags
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user(struct request_queue *q, struct block_device *bdev,
+-			 unsigned long uaddr, unsigned int len, int write_to_vm)
++			 unsigned long uaddr, unsigned int len, int write_to_vm,
++			 gfp_t gfp_mask)
+ {
+ 	struct sg_iovec iov;
+ 
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
+ 
+-	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
++	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm, gfp_mask);
+ }
+ 
+ /**
+@@ -798,18 +802,19 @@ struct bio *bio_map_user(struct request_queue *q, struct block_device *bdev,
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@gfp_mask: memory allocation flags
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user_iov(struct request_queue *q, struct block_device *bdev,
+ 			     struct sg_iovec *iov, int iov_count,
+-			     int write_to_vm)
++			     int write_to_vm, gfp_t gfp_mask)
+ {
+ 	struct bio *bio;
+ 
+-	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
+-
++	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm,
++				 gfp_mask);
+ 	if (IS_ERR(bio))
+ 		return bio;
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 13aba20..200b185 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -325,11 +325,11 @@ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ extern int bio_get_nr_vecs(struct block_device *);
+ extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+-				unsigned long, unsigned int, int);
++				unsigned long, unsigned int, int, gfp_t);
+ struct sg_iovec;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+ 				    struct block_device *,
+-				    struct sg_iovec *, int, int);
++				    struct sg_iovec *, int, int, gfp_t);
+ extern void bio_unmap_user(struct bio *);
+ extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
+ 				gfp_t);
+@@ -337,9 +337,10 @@ extern struct bio *bio_copy_kern(struct request_queue *, void *, unsigned int,
+ 				 gfp_t, int);
+ extern void bio_set_pages_dirty(struct bio *bio);
+ extern void bio_check_pages_dirty(struct bio *bio);
+-extern struct bio *bio_copy_user(struct request_queue *, unsigned long, unsigned int, int);
++extern struct bio *bio_copy_user(struct request_queue *, unsigned long,
++				 unsigned int, int, gfp_t);
+ extern struct bio *bio_copy_user_iov(struct request_queue *, struct sg_iovec *,
+-				     int, int);
++				     int, int, gfp_t);
+ extern int bio_uncopy_user(struct bio *);
+ void zero_fill_bio(struct bio *bio);
+ extern struct bio_vec *bvec_alloc_bs(gfp_t, int, unsigned long *, struct bio_set *);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ed9324f..9512c5b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -710,11 +710,12 @@ extern void __blk_stop_queue(struct request_queue *q);
+ extern void __blk_run_queue(struct request_queue *);
+ extern void blk_run_queue(struct request_queue *);
+ extern void blk_start_queueing(struct request_queue *);
+-extern int blk_rq_map_user(struct request_queue *, struct request *, void __user *, unsigned long);
++extern int blk_rq_map_user(struct request_queue *, struct request *,
++			   void __user *, unsigned long, gfp_t);
+ extern int blk_rq_unmap_user(struct bio *);
+ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+-			       struct sg_iovec *, int, unsigned int);
++			       struct sg_iovec *, int, unsigned int, gfp_t);
+ extern int blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
 -- 
 1.5.5.GIT
 
