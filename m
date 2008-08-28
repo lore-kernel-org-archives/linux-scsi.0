@@ -1,136 +1,164 @@
-From: "Abhijeet Joglekar" <ajoglekar@nuovasystems.com>
-Subject: RE: [RFC][PATCH 2/6] fnic: add fnic_scsi.c and fnic_io.h.
-Date: Wed, 27 Aug 2008 18:31:24 -0700
-Message-ID: <34BDD2A93E5FD84594BB230DD6C18EA205B873F8@nuova-ex1.hq.nuovaimpresa.com>
-References: <20080823024949.13569.94133.stgit@feynman.nuovasystems.com> <20080823025222.13569.37765.stgit@feynman.nuovasystems.com> <48B2F880.7080108@cs.wisc.edu> <48B304BD.9060404@emulex.com> <48B30885.1010808@cs.wisc.edu> <48B30A81.9020406@emulex.com> <48B31DAF.3060400@nuovasystems.com> <48B32967.9000306@cs.wisc.edu> <48B32A52.1040100@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH 1/4 2.6.28] cxgb3 - manage a private ip address for iSCSI
+Date: Wed, 27 Aug 2008 21:21:57 -0700
+Message-ID: <200808280421.m7S4LvAB006456@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nuova-ex1.nuovasystems.com ([67.91.200.196]:41296 "EHLO
-	nuova-ex1.nuovasystems.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753614AbYH1Bb0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2008 21:31:26 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <48B32A52.1040100@cs.wisc.edu>
+Received: from stargate.chelsio.com ([12.22.49.110]:29390 "EHLO
+	stargate.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750874AbYH1EJV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2008 00:09:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Joe Eykholt <jre@nuovasystems.com>
-Cc: James Smart <James.Smart@Emulex.Com>, jeykholt@cisco.com, linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jgarzik@pobox.com, davem@davemloft.net, michaelc@cs.wisc.edu, swise@opengridcomputing.com, rdreier@cisco.com, daisyc@us.ibm.com, wenxiong@us.ibm.com, bhua@us.ibm.com, divy@chelsio.com, dm@chelsio.com, leedom@chelsio.com, kxie@chelsio.com
 
->Mike Christie wrote:
->> Joe Eykholt wrote:
->>> James Smart wrote:
->>>>
->>>> Mike Christie wrote:
->>>>>> Well - what should be happening is - prior to the reset or as
-part of
->>>>>> it, the fc transport fc_remote_port_delete() call should be made
-on 
->>>>>> all
->>>>>> those remote ports that connectivity is about to be terminated
-on.  
->>>>>> This
->>>>>> will place all the associated targets/luns on those rports into a
->>>>>> blocked state, and start the devloss timer on them.  This will
->>>>>>suspend
->>>>>> the eh path as well.  Thus, things suspend until either the 
->>>>>> driver/fcoe
->>>>> What do you mean by that? For lpfc it will or for this driver?
-This
->>>>> driver does not have that block call like
-lpfc_block_error_handler, so
->>>>> if the rport event occurs after the scsi eh is running we do not 
->>>>> suspend
->>>>> the eh.
->>>>>
->>>>> So below I am saying we should make the lpfc_block_error_handler
->>>>> functionality and the equivalent in the qla2xxx and mpfc common so
->>>>> libfc/fcoe and fnic can use it.
->>>> Well there's successive layers of the onion here. And your right,
-one >>>>of
->>>> them is the block_error_handler.  Agreed, all of this should be
-common.
->>>>
->>>> -- james s
->>>>
->>>
->>> I think you're both on the right track.  When we reset the local
-port, 
->>> it should make all
->>> remote ports non-ready ... we no longer have a PLOGI to them.  Until
+[PATCH 1/4 2.6.28] cxgb3 - manage a private ip address for iSCSI
 
->>> we redo FLOGI and
->>> discovery, no SCSI ops will succeed.  fc_lport_reset() calls 
->>> fc_lport_set_fid, which calls
->>> lp_rport_reset_list() ... but that doesn't seem to do much to rports
+From: Karen Xie <kxie@chelsio.com>
 
->>> other than the
->>> directory server.
->>>
->>> fc_rport_reset() puts the rport in state INIT, but I don't think 
->>> that's enough.  Maybe
->>> that's where the remote port should get blocked.  Sound right?
->>>
->> 
->> Did you see the thread
->> http://www.open-fcoe.org/pipermail/devel/2008-July/000394.html
->> I think we basically said we need to overhaul the fc class 
->> fc_remote_port and the libfc's use - some of the discussion went off 
->> list into some call. James and Chris were going to work on it. I
-think 
->> both got busy with other issues or are still working on it.
+Create a per port sysfs entry to pass an IP address to the NIC driver, and a control call for the iSCSI driver to grab it.
+The IP address is required in both drivers to manage ARP requests and connection set up.
 
->Hit send too soon.
+Signed-off-by: Divy Le Ray <divy@chelsio.com>
+---
 
->We basically should be deleting the port for these scenarios, then that
-
->sets the dev_loss_tmo and blocks the rport. We should then wait in the 
->eh for the rport to be added back or for the dev_loss_tmo to fire.
-
-Apologies for not getting back earlier, I just got a chance to look at
-this thread and review the code. Here's the summary of what I think
-should be fixed, please correct if wrong -
-
-1) fnic_host_reset should wait after call to lport_reset to allow all
-rports to come back up or get offlined after dev_loss_tmo. Ideally,
-there should be a wait on state for lport to get ready and then a wait
-on each of the discovered rports to go to unblock. 
-
-Currently, the fnic driver was relying on HOST_RESET_SETTLE_TIME (10
-secs) after host reset success (since skip_settle_delay is 0) before
-trying to send TUR to online devices. If fabric login succeeded and
-rports came back up within that time, the TUR would succeed, and
-commands would get moved out of the eh_work_q.
-
-At a minimum, the wait and check lport state after initiating
-lport_reset can be moved down to the fnic driver instead of relying on
-SCSI-ML to do it.
-
-2) fnic_abort_cmd and fnic_device_reset wait for rport to unblock as the
-first step in the fxn since there is no point in sending any recovery
-commands to remote port if it is currently gone. However, its not clear
-why fnic_host_reset needs to block as its first step. All it does it
-clean up all the SCSI commands locally and then resets the local port
-which in turn resets the rports and restarts fabric login. As discussed
-in (1) above, it is clear why blocking the thread is required after call
-to lport_reset, it is not clear why the first step in host_reset should
-be to block error handler (unless you never said that, and I
-misunderstood)
-
-3) In queuecommand, if local port is not ready after rport check is ok,
-then return busy. This is to cover transition of rport from online to
-blocked which started just after we did the rport check. Eventually if
-dev_loss_tmo really fires and rport goes away, then the scsi_device will
-get blocked and scsi-ml will block the device queue. If rport comes
-back, subsequent queuecommand calls will be able to successfully issue
-IOs.
-
-Let me know if you have more review comments.
-
-thanks,
---abhijeet
+ drivers/net/cxgb3/adapter.h        |    1 +
+ drivers/net/cxgb3/cxgb3_ctl_defs.h |    7 +++++
+ drivers/net/cxgb3/cxgb3_main.c     |   46 ++++++++++++++++++++++++++++++++++++
+ drivers/net/cxgb3/cxgb3_offload.c  |    6 +++++
+ 4 files changed, 60 insertions(+), 0 deletions(-)
 
 
+diff --git a/drivers/net/cxgb3/adapter.h b/drivers/net/cxgb3/adapter.h
+index 2711404..adc2f13 100644
+--- a/drivers/net/cxgb3/adapter.h
++++ b/drivers/net/cxgb3/adapter.h
+@@ -64,6 +64,7 @@ struct port_info {
+ 	struct link_config link_config;
+ 	struct net_device_stats netstats;
+ 	int activity;
++	__be32 iscsi_ipv4addr;
+ };
+ 
+ enum {				/* adapter flags */
+diff --git a/drivers/net/cxgb3/cxgb3_ctl_defs.h b/drivers/net/cxgb3/cxgb3_ctl_defs.h
+index 6ad9240..2bf5027 100644
+--- a/drivers/net/cxgb3/cxgb3_ctl_defs.h
++++ b/drivers/net/cxgb3/cxgb3_ctl_defs.h
+@@ -57,6 +57,7 @@ enum {
+ 	RDMA_GET_MIB		= 19,
+ 
+ 	GET_RX_PAGE_INFO	= 50,
++	GET_ISCSI_IPV4ADDR	= 51,
+ };
+ 
+ /*
+@@ -86,6 +87,12 @@ struct iff_mac {
+ 	u16 vlan_tag;
+ };
+ 
++/* Structure used to request a port's iSCSI IPv4 address */
++struct iscsi_ipv4addr {
++	struct net_device *dev;		/* the net_device */
++	__be32 ipv4addr;		/* the return iSCSI IPv4 address */
++};
++
+ struct pci_dev;
+ 
+ /*
+diff --git a/drivers/net/cxgb3/cxgb3_main.c b/drivers/net/cxgb3/cxgb3_main.c
+index 5447f3e..4f72c06 100644
+--- a/drivers/net/cxgb3/cxgb3_main.c
++++ b/drivers/net/cxgb3/cxgb3_main.c
+@@ -34,6 +34,7 @@
+ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>
++#include <linux/inet.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ #include <linux/if_vlan.h>
+@@ -687,6 +688,47 @@ static struct attribute *offload_attrs[] = {
+ 
+ static struct attribute_group offload_attr_group = {.attrs = offload_attrs };
+ 
++static ssize_t iscsi_ipv4addr_attr_show(struct device *d, char *buf)
++{
++	struct port_info *pi = netdev_priv(to_net_dev(d));
++	__be32 a = pi->iscsi_ipv4addr;
++
++	return sprintf(buf, NIPQUAD_FMT "\n", NIPQUAD(a));
++}
++
++static ssize_t iscsi_ipv4addr_attr_store(struct device *d,
++				       const char *buf, size_t len)
++{
++	struct port_info *pi = netdev_priv(to_net_dev(d));
++
++	pi->iscsi_ipv4addr = in_aton(buf);
++	return len;
++}
++
++#define ISCSI_IPADDR_ATTR(name) \
++static ssize_t show_##name(struct device *d, struct device_attribute *attr, \
++			   char *buf) \
++{ \
++	return iscsi_ipv4addr_attr_show(d, buf); \
++} \
++static ssize_t store_##name(struct device *d, struct device_attribute *attr, \
++			    const char *buf, size_t len) \
++{ \
++	return iscsi_ipv4addr_attr_store(d, buf, len); \
++} \
++static DEVICE_ATTR(name, S_IRUGO | S_IWUSR, show_##name, store_##name)
++
++ISCSI_IPADDR_ATTR(iscsi_ipv4addr);
++
++static struct attribute *iscsi_offload_attrs[] = {
++	&dev_attr_iscsi_ipv4addr.attr,
++	NULL
++};
++
++static struct attribute_group iscsi_offload_attr_group = {
++	.attrs = iscsi_offload_attrs
++};
++
+ /*
+  * Sends an sk_buff to an offload queue driver
+  * after dealing with any active network taps.
+@@ -1078,6 +1120,7 @@ static int cxgb_open(struct net_device *dev)
+ 		if (err)
+ 			printk(KERN_WARNING
+ 			       "Could not initialize offload capabilities\n");
++		sysfs_create_group(&dev->dev.kobj, &iscsi_offload_attr_group);
+ 	}
+ 
+ 	link_start(dev);
+@@ -1100,6 +1143,9 @@ static int cxgb_close(struct net_device *dev)
+ 	netif_carrier_off(dev);
+ 	t3_mac_disable(&pi->mac, MAC_DIRECTION_TX | MAC_DIRECTION_RX);
+ 
++	if (is_offload(adapter) && !ofld_disable)
++		sysfs_remove_group(&dev->dev.kobj, &iscsi_offload_attr_group);
++
+ 	spin_lock(&adapter->work_lock);	/* sync with update task */
+ 	clear_bit(pi->port_id, &adapter->open_device_map);
+ 	spin_unlock(&adapter->work_lock);
+diff --git a/drivers/net/cxgb3/cxgb3_offload.c b/drivers/net/cxgb3/cxgb3_offload.c
+index c5b3de1..f8f4faa 100644
+--- a/drivers/net/cxgb3/cxgb3_offload.c
++++ b/drivers/net/cxgb3/cxgb3_offload.c
+@@ -407,6 +407,12 @@ static int cxgb_offload_ctl(struct t3cdev *tdev, unsigned int req, void *data)
+ 		rx_page_info->page_size = tp->rx_pg_size;
+ 		rx_page_info->num = tp->rx_num_pgs;
+ 		break;
++	case GET_ISCSI_IPV4ADDR: {
++		struct iscsi_ipv4addr *p = data;
++		struct port_info *pi = netdev_priv(p->dev);
++		p->ipv4addr = pi->iscsi_ipv4addr;
++		break;
++	}
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
