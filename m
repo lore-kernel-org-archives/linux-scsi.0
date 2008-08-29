@@ -1,91 +1,81 @@
 From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 0/6] detect online disk resize
-Date: Fri, 29 Aug 2008 17:12:54 -0600
-Message-ID: <20080829231254.25065.66052.stgit@bluto.andrew>
+Subject: [PATCH 1/6] Wrapper for lower-level revalidate_disk routines.
+Date: Fri, 29 Aug 2008 17:13:00 -0600
+Message-ID: <20080829231259.25065.79887.stgit@bluto.andrew>
+References: <20080829231254.25065.66052.stgit@bluto.andrew>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:25553 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbYH2XM4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2008 19:12:56 -0400
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:3122 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbYH2XNC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2008 19:13:02 -0400
+In-Reply-To: <20080829231254.25065.66052.stgit@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: andrew.patterson@hp.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
 
-This is version 2 of a patch series I submitted back in May 2008. This
-version now checks for device size changes in the rescan_partitions()
-routine.  Which in turn is called when a device is opened and in the
-BLKRRPART ioctl.
+Wrapper for lower-level revalidate_disk routines.
 
-I am resubmitting this patch series as I got little response the
-previous time.  Al Viro has told me offline that he would look at it this
-time.
+This is a wrapper for the lower-level revalidate_disk call-backs such
+as sd_revalidate_disk(). It allows us to perform pre and post
+operations when calling them.
 
-This patch series handles online disk resizes that are currently not
-completely recognized by the kernel using the existing revalidate_disk
-routines.  An online resize can occur when growing or shrinking a
-Fibre Channel LUN or perhaps by adding a disk to an existing RAID
-volume.
+We will use this wrapper in a later patch to adjust block device sizes
+after an online resize (a _post_ operation).
 
-The kernel currently recognizes a device size change when the
-lower-level revalidate_disk routines are called; however, the block
-layer does not use the new size while it has any current openers on
-the device. So, for example, if LVM has an volume open on the device,
-you will generally not see the size change until after a reboot. We
-fix this problem by creating a wrapper to be used with lower-level
-revalidate_disk routines.  This wrapper first calls the lower-level
-driver's revalidate_disk routine. It then compares the gendisk
-capacity to the block devices inode size. If there is a difference, we
-adjust the block device's size. If the size has changed, we then flush
-the disk for safety. The size is also checked in rescan_partitions
-which is called when the device is opened or when the BLKRRPART ioctl
-is called.
+Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
+---
 
-There are several ways to "kick off" a device size change:
-
-1. For SCSI devices do:
-
-  # echo 1 > /sys/class/scsi_device/<device>/device/rescan
-
-  or
-
-  # blockdev --rereadpt <device file>
-
-2. Other devices (not device mapper)
-
-  # blockdev --rereadpt <device file>
-
-I have tested this patch on SCSI and SmartArray (cciss)
-devices. Device mapper still does not recognize device size changes
-until the device is restarted.
-
-Jeff Moyer and Andy Ryan have done some light testing on the previous
-version of this series.
-
-This patch set has been tested with scsi-misc-2.6. It also applies to
-linux-next with some minor, obvious changes.
+ fs/block_dev.c     |   21 +++++++++++++++++++++
+ include/linux/fs.h |    1 +
+ 2 files changed, 22 insertions(+), 0 deletions(-)
 
 
-Diff stats:
-
- drivers/scsi/sd.c     |    4 +-
- fs/block_dev.c        |   92 ++++++++++++++++++++++++++++++++++++++++++++++---
- fs/partitions/check.c |    3 +-
- include/linux/fs.h    |    3 ++
- 4 files changed, 94 insertions(+), 8 deletions(-)
-
-Commits:
-
- - Wrapper for lower-level revalidate_disk routines.
- - Adjust block device size after an online resize of a disk.
- - Check for device resize in rescan_partitions.
- - SCSI sd driver calls revalidate_disk wrapper.
- - Added flush_disk to factor out common buffer cache flushing code.
- - Call flush_disk() after detecting an online resize.
-
--- 
-Andrew Patterson
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index aff5421..30bafca 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -868,6 +868,27 @@ struct block_device *open_by_devnum(dev_t dev, unsigned mode)
+ 
+ EXPORT_SYMBOL(open_by_devnum);
+ 
++/**
++ * revalidate_disk - wrapper for lower-level driver's revalidate_disk
++ *                   call-back
++ *
++ * @disk: struct gendisk to be revalidated
++ *
++ * This routine is a wrapper for lower-level driver's revalidate_disk
++ * call-backs.  It is used to do common pre and post operations needed
++ * for all revalidate_disk operations.
++ */
++int revalidate_disk(struct gendisk *disk)
++{
++	int ret = 0;
++
++	if (disk->fops->revalidate_disk)
++		ret = disk->fops->revalidate_disk(disk);
++
++	return ret;
++}
++EXPORT_SYMBOL(revalidate_disk);
++
+ /*
+  * This routine checks whether a removable media has been changed,
+  * and invalidates all buffer-cache-entries in that case. This
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 580b513..28756a9 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1718,6 +1718,7 @@ extern int fs_may_remount_ro(struct super_block *);
+  */
+ #define bio_data_dir(bio)	((bio)->bi_rw & 1)
+ 
++extern int revalidate_disk(struct gendisk *);
+ extern int check_disk_change(struct block_device *);
+ extern int __invalidate_device(struct block_device *);
+ extern int invalidate_partition(struct gendisk *, int);
 
