@@ -1,92 +1,77 @@
 From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 5/6] Added flush_disk to factor out common buffer cache
-	flushing code.
-Date: Fri, 29 Aug 2008 17:13:20 -0600
-Message-ID: <20080829231320.25065.44013.stgit@bluto.andrew>
+Subject: [PATCH 6/6] Call flush_disk() after detecting an online resize.
+Date: Fri, 29 Aug 2008 17:13:26 -0600
+Message-ID: <20080829231325.25065.48172.stgit@bluto.andrew>
 References: <20080829231254.25065.66052.stgit@bluto.andrew>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:37582 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbYH2XNW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2008 19:13:22 -0400
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:5640 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751828AbYH2XN2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2008 19:13:28 -0400
 In-Reply-To: <20080829231254.25065.66052.stgit@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: andrew.patterson@hp.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
 
-Added flush_disk to factor out common buffer cache flushing code.
+Call flush_disk() after detecting an online resize.
 
-We need to be able to flush the buffer cache for for more than
-just when a disk is changed, so we factor out common cache flush code
-in check_disk_change() to an internal flush_disk() routine.  This
-routine will then be used for both disk changes and disk resizes (in a
-later patch).
+We call flush_disk() to make sure the buffer cache for the disk is
+flushed after a disk resize. There are two resize cases, growing and
+shrinking. Given that users can shrink/then grow a disk before
+revalidate_disk() is called, we treat the grow case identically to
+shrinking. We need to flush the buffer cache after an online shrink
+because, as James Bottomley puts it,
 
-Include the disk name in the text indicating that there are busy
-inodes on the device and increase the KERN severity of the message.
+     The two use cases for shrinking I can see are
+
+     1. planned: the fs is already shrunk to within the new boundaries
+        and all data is relocated, so invalidate is fine (any dirty
+        buffers that might exist in the shrunk region are there only
+        because they were relocated but not yet written to their
+        original location).
+     2. unplanned:  In this case, the fs is probably toast, so whether
+        we invalidate or not isn't going to make a whole lot of
+        difference; it's still going to try to read or write from
+        sectors beyond the new size and get I/O errors.
+
+Immediately invalidating shrunk disks will cause errors for outstanding
+I/Os for reads/write beyond the new end of the disk to be generated
+earlier then if we waited for the normal buffer cache operation. It also
+removes a potential security hole where we might keep old data around
+from beyond the end of the shrunk disk if the disk was not invalidated.
 
 Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
 ---
 
- fs/block_dev.c |   33 ++++++++++++++++++++++++++++-----
- 1 files changed, 28 insertions(+), 5 deletions(-)
+ fs/block_dev.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/block_dev.c b/fs/block_dev.c
-index f8df73a..5ce28b1 100644
+index 5ce28b1..6cb00dd 100644
 --- a/fs/block_dev.c
 +++ b/fs/block_dev.c
-@@ -868,6 +868,33 @@ struct block_device *open_by_devnum(dev_t dev, unsigned mode)
+@@ -885,8 +885,8 @@ static void flush_disk(struct block_device *bdev)
  
- EXPORT_SYMBOL(open_by_devnum);
+ 		if (bdev->bd_disk)
+ 			disk_name(bdev->bd_disk, 0, name);
+-		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
+-		       name);
++		printk(KERN_WARNING "VFS: busy inodes on changed media or "
++		       "resized disk %s\n", name);
+ 	}
  
-+
-+/**
-+ * flush_disk - invalidates all buffer-cache entries on a disk
-+ *
-+ * @bdev:      struct block device to be flushed
-+ *
-+ * Invalidates all buffer-cache entries on a disk. It should be called
-+ * when a disk has been changed -- either by a media change or online
-+ * resize.
-+ */
-+static void flush_disk(struct block_device *bdev)
-+{
-+	if (__invalidate_device(bdev)) {
-+		char name[BDEVNAME_SIZE] = "";
-+
-+		if (bdev->bd_disk)
-+			disk_name(bdev->bd_disk, 0, name);
-+		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
-+		       name);
-+	}
-+
-+	if (!bdev->bd_disk)
-+		return;
-+	if (bdev->bd_disk->minors > 1)
-+		bdev->bd_invalidated = 1;
-+}
-+
- /**
-  * check_disk_size_change - checks for disk size change and adjusts
-  *                          bdev size.
-@@ -945,13 +972,9 @@ int check_disk_change(struct block_device *bdev)
- 	if (!bdops->media_changed(bdev->bd_disk))
- 		return 0;
- 
--	if (__invalidate_device(bdev))
--		printk("VFS: busy inodes on changed media.\n");
--
-+	flush_disk(bdev);
- 	if (bdops->revalidate_disk)
- 		bdops->revalidate_disk(bdev->bd_disk);
--	if (bdev->bd_disk->minors > 1)
--		bdev->bd_invalidated = 1;
- 	return 1;
+ 	if (!bdev->bd_disk)
+@@ -919,6 +919,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
+ 		       "%s: detected capacity change from %lld to %lld\n",
+ 		       name, bdev_size, disk_size);
+ 		i_size_write(bdev->bd_inode, disk_size);
++		flush_disk(bdev);
+ 	}
  }
- 
+ EXPORT_SYMBOL(check_disk_size_change);
 
