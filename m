@@ -1,65 +1,71 @@
-From: Pierre Ossman <drzeus-list@drzeus.cx>
+From: Simon Arlott <simon@fire.lp0.eu>
 Subject: Re: [PATCH] scsi/sd: Fix size output in MB
-Date: Sat, 30 Aug 2008 22:59:50 +0200
-Message-ID: <20080830225950.4828dcf6@mjolnir.drzeus.cx>
-References: <48B9546B.4010004@simon.arlott.org.uk>
-	<1220117091.3615.3.camel@localhost.localdomain>
-	<20080830174516.GD1239@parisc-linux.org>
+Date: Sat, 30 Aug 2008 22:02:10 +0100
+Message-ID: <48B9B552.8060406@simon.arlott.org.uk>
+References: <48B9546B.4010004@simon.arlott.org.uk> <1220117091.3615.3.camel@localhost.localdomain> <20080830174516.GD1239@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-9247-1220129996-0001-2"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server.drzeus.cx ([85.8.24.28]:34650 "EHLO smtp.drzeus.cx"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752898AbYH3VAM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Aug 2008 17:00:12 -0400
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756765AbYH3VC1@vger.kernel.org>
 In-Reply-To: <20080830174516.GD1239@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On 30/08/08 18:45, Matthew Wilcox wrote:
+> On Sat, Aug 30, 2008 at 12:24:50PM -0500, James Bottomley wrote:
+>> No, this is wrong.  By mandated standards the manufacturers are allowed
+>> to calculate MB by dividing by 10^6.  This is a fiddle to allow them to
+>> make their drives look slightly bigger.  However, we want the printed
+>> information to match that written on the drive, so in this printk, we
+>> use the manufacturer standard for calculation (and then do everything
+>> else in bytes so we don't have to bother with it ever again).
 
---=_freyr.drzeus.cx-9247-1220129996-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+It's unlikely to match what's on the drive, "1000204886016" isn't 1TB 
+by any standard.
 
-On Sat, 30 Aug 2008 11:45:16 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
+> I was looking at this code recently because it looks really bizarre when
+> you create a half-petabyte filesystem:
+> 
+> $ sudo insmod drivers/ata/ata_ram.ko capacity=1099511627776 preallocate=0
+> 
+> [12095.028093] ata7.00: 1099511627776 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [12095.028093] ata7.00: configured for UDMA/133
+> [12095.041915] scsi 7:0:0:0: Direct-Access     ATA      Linux RAM Drive 0.01 PQ: 0 ANSI: 5
+> [12095.041915] sd 7:0:0:0: [sdc] Very big device. Trying to use READ CAPACITY(16).
+> [12095.041915] sd 7:0:0:0: [sdc] 1099511627776 512-byte hardware sectors (562949953 MB)
+> [12095.041915] sd 7:0:0:0: [sdc] Write Protect is off
+> [12095.041915] sd 7:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
 
->=20
+This looks useful for testing this... do you have an updated version?
+
+> 1. Avoiding 64-bit divisions is _so_ last decade.  We have
+> linux/math64.h, we should use it.
+> 
 > 2. We should report in GB or TB when appropriate.  The exact definition
 > of 'appropriate' is going to vary from person to person.  Might I
 > suggest that we should report between two and four significant digits.
 > eg 9543 MB is ok, 10543 MB should be 10 GB.
->=20
 
-I've been looking at doing something like this for the mmc_block
-driver, so a generic helper is welcome. :)
+I've gone with five digits, it switches to GB at ~98GB, and to TB 
+at ~98TB etc.
 
---=20
-     -- Pierre Ossman
+> 3. I hate myself for saying this ... but maybe we should be using the
+> horrific MiB/GiB/TiB instead of MB/GB/TB.
 
-  Linux kernel, MMC maintainer        http://www.kernel.org
-  rdesktop, core developer          http://www.rdesktop.org
+Somehow this stuff got into net-tools (ifconfig) too, so I have a
+patch to remove it from my systems.
 
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
+> 4. I've been far too busy to write said patch.  Simon, would you mind
+> doing the honours?
 
---=_freyr.drzeus.cx-9247-1220129996-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
+Sure, patch will follow this email... it can only go as far as 8192EB 
+and then there's not enough space to store more than 2^64 512-byte 
+sectors.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+(And if you only modify drivers/scsi/sd.c, the kernel make system 
+won't recompile sd.o!)
 
-iEYEARECAAYFAki5tMkACgkQ7b8eESbyJLi+XwCeMGfeYvIReLdriov3TjmxSBHF
-PtUAnA4rOFhL4TXjyKyaYEk86H8vZKXY
-=5oE7
------END PGP SIGNATURE-----
-
---=_freyr.drzeus.cx-9247-1220129996-0001-2--
+-- 
+Simon Arlott
