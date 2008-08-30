@@ -1,77 +1,64 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 6/6] Call flush_disk() after detecting an online resize.
-Date: Fri, 29 Aug 2008 17:13:26 -0600
-Message-ID: <20080829231325.25065.48172.stgit@bluto.andrew>
-References: <20080829231254.25065.66052.stgit@bluto.andrew>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi/sd: Fix size output in MB
+Date: Sat, 30 Aug 2008 12:24:50 -0500
+Message-ID: <1220117091.3615.3.camel@localhost.localdomain>
+References: <48B9546B.4010004@simon.arlott.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:5640 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbYH2XN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2008 19:13:28 -0400
-In-Reply-To: <20080829231254.25065.66052.stgit@bluto.andrew>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47533 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752344AbYH3RYv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Aug 2008 13:24:51 -0400
+In-Reply-To: <48B9546B.4010004@simon.arlott.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: andrew.patterson@hp.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
+To: Simon Arlott <simon@fire.lp0.eu>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Call flush_disk() after detecting an online resize.
+linux-scsi is the correct list for this, cc's added
 
-We call flush_disk() to make sure the buffer cache for the disk is
-flushed after a disk resize. There are two resize cases, growing and
-shrinking. Given that users can shrink/then grow a disk before
-revalidate_disk() is called, we treat the grow case identically to
-shrinking. We need to flush the buffer cache after an online shrink
-because, as James Bottomley puts it,
+On Sat, 2008-08-30 at 15:08 +0100, Simon Arlott wrote:
+> The capacity printk'd in bytes is divided by 1000000,
+> whereas 1048576 would be more consistent with the rest
+> of the OS and disk-related utilities ('df' etc.).
+> 
+> This change replaces the (sz - (sz/625 - 974))/1950
+> calculation with a simple right shift by 11 bits
+> (/2048).
+> 
+> Signed-off-by: Simon Arlott <simon@fire.lp0.eu>
+> ---
+>  drivers/scsi/sd.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index e5e7d78..e6fd6fd 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1441,10 +1441,8 @@ got_data:
+>  		sector_t mb = sz;
+>  
+>  		blk_queue_hardsect_size(queue, hard_sector);
+> -		/* avoid 64-bit division on 32-bit platforms */
+> -		sector_div(sz, 625);
+> -		mb -= sz - 974;
+> -		sector_div(mb, 1950);
+> +		/* Convert to megabytes (/2048) */
+> +		mb = sz >> 11;
+>  
+>  		sd_printk(KERN_NOTICE, sdkp,
+>  			  "%llu %d-byte hardware sectors (%llu MB)\n",
 
-     The two use cases for shrinking I can see are
+No, this is wrong.  By mandated standards the manufacturers are allowed
+to calculate MB by dividing by 10^6.  This is a fiddle to allow them to
+make their drives look slightly bigger.  However, we want the printed
+information to match that written on the drive, so in this printk, we
+use the manufacturer standard for calculation (and then do everything
+else in bytes so we don't have to bother with it ever again).
 
-     1. planned: the fs is already shrunk to within the new boundaries
-        and all data is relocated, so invalidate is fine (any dirty
-        buffers that might exist in the shrunk region are there only
-        because they were relocated but not yet written to their
-        original location).
-     2. unplanned:  In this case, the fs is probably toast, so whether
-        we invalidate or not isn't going to make a whole lot of
-        difference; it's still going to try to read or write from
-        sectors beyond the new size and get I/O errors.
+James
 
-Immediately invalidating shrunk disks will cause errors for outstanding
-I/Os for reads/write beyond the new end of the disk to be generated
-earlier then if we waited for the normal buffer cache operation. It also
-removes a potential security hole where we might keep old data around
-from beyond the end of the shrunk disk if the disk was not invalidated.
-
-Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
----
-
- fs/block_dev.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 5ce28b1..6cb00dd 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -885,8 +885,8 @@ static void flush_disk(struct block_device *bdev)
- 
- 		if (bdev->bd_disk)
- 			disk_name(bdev->bd_disk, 0, name);
--		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
--		       name);
-+		printk(KERN_WARNING "VFS: busy inodes on changed media or "
-+		       "resized disk %s\n", name);
- 	}
- 
- 	if (!bdev->bd_disk)
-@@ -919,6 +919,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
- 		       "%s: detected capacity change from %lld to %lld\n",
- 		       name, bdev_size, disk_size);
- 		i_size_write(bdev->bd_inode, disk_size);
-+		flush_disk(bdev);
- 	}
- }
- EXPORT_SYMBOL(check_disk_size_change);
 
