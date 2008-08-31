@@ -1,59 +1,98 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Kernel Level Generic Target Mode control path
-Date: Sun, 31 Aug 2008 20:42:51 +0200
-Message-ID: <e2e108260808311142lda0063bh819718a510ade505@mail.gmail.com>
-References: <48ADC53B.6090501@vlnb.net> <48ADFAB7.5010201@cs.wisc.edu>
-	 <1219701570.13470.156.camel@haakon2.linux-iscsi.org>
-	 <48B59556.7050108@vlnb.net>
-	 <1219875219.13470.380.camel@haakon2.linux-iscsi.org>
-	 <48B6E5C8.2000306@vlnb.net>
-	 <1219964919.13470.505.camel@haakon2.linux-iscsi.org>
-	 <48B823C4.7010803@vlnb.net>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: [PATCH] mmc_block: use generic helper to print capacities
+Date: Sun, 31 Aug 2008 20:54:48 +0200
+Message-ID: <20080831205448.5b23507d@mjolnir.drzeus.cx>
+References: <48B9546B.4010004@simon.arlott.org.uk>
+	<1220117091.3615.3.camel@localhost.localdomain>
+	<20080830174516.GD1239@parisc-linux.org>
+	<48B9B552.8060406@simon.arlott.org.uk>
+	<48B9B588.7060709@simon.arlott.org.uk>
+	<1220147947.3615.18.camel@localhost.localdomain>
+	<20080831025412.GJ1239@parisc-linux.org>
+	<1220195310.4021.4.camel@localhost.localdomain>
+	<1220195634.4021.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:18199 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755167AbYHaSmx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2008 14:42:53 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1065121fgg.17
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Aug 2008 11:42:51 -0700 (PDT)
-In-Reply-To: <48B823C4.7010803@vlnb.net>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-27280-1220208895-0001-2"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757436AbYHaSzO@vger.kernel.org>
+In-Reply-To: <1220195634.4021.9.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, Jerome Martin <tramjoe.merin@gmail.com>
 
-On Fri, Aug 29, 2008 at 6:28 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
-> It has a big problem with atomicity of changes. Configuration of each iSCSI
-> target should be atomic and on the target driver's start configuration of
-> *all* targets as a whole should be atomic as well. How are you going to
-> solve this issue?
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-One way to solve this (I'm not saying it's the best way to solve this)
-is to implement a transaction interface through configfs. A configfs
-interface for transactions could e.g. be implemented as follows:
-1. Provide one integer variable representing the sequence number of
-the ongoing transaction. This variable is incremented before its value
-is returned to userspace.
-2. Provide as many variables as needed to allow entry of all the data
-involved in the transaction.
-3. Provide one variable for requesting a commit. A commit is requested
-by writing a number to this variable. If and only if the value written
-equals the current value of counter (1), a commit is performed.
-Whether or not this action triggered a commit must be reported to
-userspace, e.g. through errno.
+--=_freyr.drzeus.cx-27280-1220208895-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-User space processes must use this interface as follows:
-(a) Read counter (1).
-(b) Write all relevant data to (2).
-(c) Write the value read in step (a) to variable (3).
-(d) If step (c) reported that the transaction failed, go back to step (a).
+From: Pierre Ossman <drzeus@drzeus.cx>
 
-This is an optimistic locking scheme that can be used by several
-processes simultaneously and that survives processes that are killed
-while performing a transaction.
+Signed-off-by: Pierre Ossman <drzeus@drzeus.cx>
 
-Bart.
+---
+
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index 62a4c91..dad8edb 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -29,6 +29,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/mutex.h>
+ #include <linux/scatterlist.h>
++#include <linux/string_helpers.h>
+=20
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+@@ -496,6 +497,8 @@ static int mmc_blk_probe(struct mmc_card *card)
+        struct mmc_blk_data *md;
+        int err;
+=20
++       char cap_str[10];
++
+        /*
+         * Check that the card supports the command class(es) we need.
+         */
+@@ -510,10 +513,11 @@ static int mmc_blk_probe(struct mmc_card *card)
+        if (err)
+                goto out;
+=20
+-       printk(KERN_INFO "%s: %s %s %lluKiB %s\n",
++       string_get_size(get_capacity(md->disk) << 9, STRING_UNITS_2,
++                       cap_str, sizeof(cap_str));
++       printk(KERN_INFO "%s: %s %s %s %s\n",
+                md->disk->disk_name, mmc_card_id(card), mmc_card_name(card),
+-               (unsigned long long)(get_capacity(md->disk) >> 1),
+-               md->read_only ? "(ro)" : "");
++               cap_str, md->read_only ? "(ro)" : "");
+=20
+        mmc_set_drvdata(card, md);
+        add_disk(md->disk);
+
+
+--=20
+     -- Pierre Ossman
+
+  Linux kernel, MMC maintainer        http://www.kernel.org
+  rdesktop, core developer          http://www.rdesktop.org
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.drzeus.cx-27280-1220208895-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAki66PwACgkQ7b8eESbyJLhZWwCfb3D89aa4WJz8tnEtU/2NuPCR
+7/4Anj/91OnqfPFeWsOjgNsRyyzyzTlE
+=ajmH
+-----END PGP SIGNATURE-----
+
+--=_freyr.drzeus.cx-27280-1220208895-0001-2--
