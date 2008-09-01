@@ -1,47 +1,61 @@
-From: pinco pallino <pinc_o@yahoo.it>
-Subject: WAS: "Re: [Bugme-new] [Bug 11302] New: I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64"
-Date: Mon, 1 Sep 2008 23:30:56 +0000 (GMT)
-Message-ID: <8635.97645.qm@web27302.mail.ukl.yahoo.com>
-References: <20080810233352.8423614f.akpm@linux-foundation.org>
-Reply-To: pinc_o@yahoo.it
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
+Date: Mon,  1 Sep 2008 16:31:36 -0700 (PDT)
+Message-ID: <20080901233136.615CB108058@picon.linux-foundation.org>
+References: <bug-11302-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web27302.mail.ukl.yahoo.com ([217.146.177.163]:33806 "HELO
-	web27302.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751541AbYIAXa7 convert rfc822-to-8bit
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39101 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751475AbYIAXcH convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Sep 2008 19:30:59 -0400
-In-Reply-To: <20080810233352.8423614f.akpm@linux-foundation.org>
+	Mon, 1 Sep 2008 19:32:07 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m81NVaXs003773
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Sep 2008 16:31:37 -0700
+In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pierre Ossman <drzeus@drzeus.cx>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=3D11302
+
+
+
+
+
+------- Comment #6 from pinc_o@yahoo.it  2008-09-01 16:31 -------
 Hi Andrew,
 
 with the new kernel 2.6.26.3 the SD are now read and wrote correctly, b=
-ut SDHC are not read! The kernel repeat the error. Follow the error:
+ut SDHC
+are not read! The kernel repeat the error. Follow the error:
 
 Sep  1 22:08:20 athos -- MARK --
 Sep  1 22:19:12 athos kernel: usb 1-6: new high speed USB device using =
-ehci_hcd and address 5
+ehci_hcd
+and address 5
 Sep  1 22:19:12 athos kernel: usb 1-6: configuration #1 chosen from 1 c=
 hoice
 Sep  1 22:19:12 athos kernel: scsi5 : SCSI emulation for USB Mass Stora=
-ge devices
+ge
+devices
 Sep  1 22:19:17 athos kernel: scsi 5:0:0:0: Direct-Access     Generic  =
-USB SD Reader    1.00 PQ: 0 ANSI: 0
+USB SD
+Reader    1.00 PQ: 0 ANSI: 0
 Sep  1 22:19:47 athos kernel: usb 1-6: reset high speed USB device usin=
-g ehci_hcd and address 5
+g
+ehci_hcd and address 5
 Sep  1 22:20:14 athos last message repeated 3 times
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: Device offlined - not ready a=
-fter error recovery
+fter
+error recovery
 Sep  1 22:20:14 athos kernel: usb 1-6: USB disconnect, address 5
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] READ CAPACITY failed
-Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Result: hostbyte=3D0x01=
- driverbyte=3D0x00
+Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Result: hostbyte=3D0x01
+driverbyte=3D0x00
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Sense not available.
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Write Protect is off
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Attached SCSI removable=
@@ -49,23 +63,29 @@ Sep  1 22:20:14 athos kernel: sd 5:0:0:0: [sdd] Attached SCSI removable=
 Sep  1 22:20:14 athos kernel: sd 5:0:0:0: Attached scsi generic sg3 typ=
 e 0
 Sep  1 22:20:14 athos kernel: usb 1-6: new high speed USB device using =
-ehci_hcd and address 6
+ehci_hcd
+and address 6
 Sep  1 22:20:14 athos kernel: usb 1-6: configuration #1 chosen from 1 c=
 hoice
 Sep  1 22:20:14 athos kernel: scsi6 : SCSI emulation for USB Mass Stora=
-ge devices
+ge
+devices
 Sep  1 22:20:19 athos kernel: scsi 6:0:0:0: Direct-Access     Generic  =
-USB SD Reader    1.00 PQ: 0 ANSI: 0
+USB SD
+Reader    1.00 PQ: 0 ANSI: 0
 Sep  1 22:20:49 athos kernel: usb 1-6: reset high speed USB device usin=
-g ehci_hcd and address 6
+g
+ehci_hcd and address 6
 Sep  1 22:20:59 athos kernel: usb 1-6: reset high speed USB device usin=
-g ehci_hcd and address 6
+g
+ehci_hcd and address 6
 Sep  1 22:21:00 athos kernel: usb 1-6: USB disconnect, address 6
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: Device offlined - not ready a=
-fter error recovery
+fter
+error recovery
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] READ CAPACITY failed
-Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Result: hostbyte=3D0x01=
- driverbyte=3D0x00
+Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Result: hostbyte=3D0x01
+driverbyte=3D0x00
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Sense not available.
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Write Protect is off
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Attached SCSI removable=
@@ -73,21 +93,26 @@ Sep  1 22:21:00 athos kernel: sd 6:0:0:0: [sdd] Attached SCSI removable=
 Sep  1 22:21:00 athos kernel: sd 6:0:0:0: Attached scsi generic sg3 typ=
 e 0
 Sep  1 22:21:00 athos kernel: usb 1-6: new high speed USB device using =
-ehci_hcd and address 7
+ehci_hcd
+and address 7
 Sep  1 22:21:00 athos kernel: usb 1-6: configuration #1 chosen from 1 c=
 hoice
 Sep  1 22:21:00 athos kernel: scsi7 : SCSI emulation for USB Mass Stora=
-ge devices
+ge
+devices
 Sep  1 22:21:05 athos kernel: scsi 7:0:0:0: Direct-Access     Generic  =
-USB SD Reader    1.00 PQ: 0 ANSI: 0
+USB SD
+Reader    1.00 PQ: 0 ANSI: 0
 Sep  1 22:21:35 athos kernel: usb 1-6: reset high speed USB device usin=
-g ehci_hcd and address 7
+g
+ehci_hcd and address 7
 Sep  1 22:21:36 athos kernel: usb 1-6: USB disconnect, address 7
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: Device offlined - not ready a=
-fter error recovery
+fter
+error recovery
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] READ CAPACITY failed
-Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Result: hostbyte=3D0x01=
- driverbyte=3D0x00
+Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Result: hostbyte=3D0x01
+driverbyte=3D0x00
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Sense not available.
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Write Protect is off
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Attached SCSI removable=
@@ -95,16 +120,19 @@ Sep  1 22:21:36 athos kernel: sd 7:0:0:0: [sdd] Attached SCSI removable=
 Sep  1 22:21:36 athos kernel: sd 7:0:0:0: Attached scsi generic sg3 typ=
 e 0
 Sep  1 22:22:00 athos kernel: usb 1-6: new high speed USB device using =
-ehci_hcd and address 8
+ehci_hcd
+and address 8
 Sep  1 22:22:00 athos kernel: usb 1-6: configuration #1 chosen from 1 c=
 hoice
 Sep  1 22:22:00 athos kernel: scsi8 : SCSI emulation for USB Mass Stora=
-ge devices
+ge
+devices
 Sep  1 22:22:05 athos kernel: scsi 8:0:0:0: Direct-Access     Generic  =
-USB SD Reader    1.00 PQ: 0 ANSI: 0
+USB SD
+Reader    1.00 PQ: 0 ANSI: 0
 Sep  1 22:22:27 athos kernel: sd 8:0:0:0: [sdd] READ CAPACITY failed
-Sep  1 22:22:27 athos kernel: sd 8:0:0:0: [sdd] Result: hostbyte=3D0x07=
- driverbyte=3D0x00
+Sep  1 22:22:27 athos kernel: sd 8:0:0:0: [sdd] Result: hostbyte=3D0x07
+driverbyte=3D0x00
 Sep  1 22:22:27 athos kernel: sd 8:0:0:0: [sdd] Sense not available.
 Sep  1 22:22:27 athos kernel: sd 8:0:0:0: [sdd] Write Protect is off
 Sep  1 22:22:28 athos kernel: sd 8:0:0:0: [sdd] Attached SCSI removable=
@@ -213,8 +241,15 @@ c_o@yahoo.it, "James Bottomley" <James.Bottomley@HansenPartnership.com>
 __________________________________________________
 Do You Yahoo!?
 Poco spazio e tanto spam? Yahoo! Mail ti protegge dallo spam e ti da ta=
-nto spazio gratuito per i tuoi file e i messaggi=20
-http://mail.yahoo.it=20
+nto
+spazio gratuito per i tuoi file e i messaggi=20
+http://mail.yahoo.it
+
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
