@@ -1,98 +1,67 @@
-From: Pierre Ossman <drzeus-list@drzeus.cx>
-Subject: [PATCH] mmc_block: use generic helper to print capacities
-Date: Sun, 31 Aug 2008 20:54:48 +0200
-Message-ID: <20080831205448.5b23507d@mjolnir.drzeus.cx>
-References: <48B9546B.4010004@simon.arlott.org.uk>
-	<1220117091.3615.3.camel@localhost.localdomain>
-	<20080830174516.GD1239@parisc-linux.org>
-	<48B9B552.8060406@simon.arlott.org.uk>
-	<48B9B588.7060709@simon.arlott.org.uk>
-	<1220147947.3615.18.camel@localhost.localdomain>
-	<20080831025412.GJ1239@parisc-linux.org>
-	<1220195310.4021.4.camel@localhost.localdomain>
-	<1220195634.4021.9.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-27280-1220208895-0001-2"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757436AbYHaSzO@vger.kernel.org>
-In-Reply-To: <1220195634.4021.9.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11194] megaraid_mbox kernel panic during st driver initialization
+Date: Sun, 31 Aug 2008 22:37:31 -0700 (PDT)
+Message-ID: <20080901053731.282F010805B@picon.linux-foundation.org>
+References: <bug-11194-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46142 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750840AbYIAFiD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Sep 2008 01:38:03 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m815bV3g030348
+	for <linux-scsi@vger.kernel.org>; Sun, 31 Aug 2008 22:37:32 -0700
+In-Reply-To: <bug-11194-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_freyr.drzeus.cx-27280-1220208895-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-From: Pierre Ossman <drzeus@drzeus.cx>
-
-Signed-off-by: Pierre Ossman <drzeus@drzeus.cx>
-
----
-
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index 62a4c91..dad8edb 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -29,6 +29,7 @@
- #include <linux/blkdev.h>
- #include <linux/mutex.h>
- #include <linux/scatterlist.h>
-+#include <linux/string_helpers.h>
-=20
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
-@@ -496,6 +497,8 @@ static int mmc_blk_probe(struct mmc_card *card)
-        struct mmc_blk_data *md;
-        int err;
-=20
-+       char cap_str[10];
-+
-        /*
-         * Check that the card supports the command class(es) we need.
-         */
-@@ -510,10 +513,11 @@ static int mmc_blk_probe(struct mmc_card *card)
-        if (err)
-                goto out;
-=20
--       printk(KERN_INFO "%s: %s %s %lluKiB %s\n",
-+       string_get_size(get_capacity(md->disk) << 9, STRING_UNITS_2,
-+                       cap_str, sizeof(cap_str));
-+       printk(KERN_INFO "%s: %s %s %s %s\n",
-                md->disk->disk_name, mmc_card_id(card), mmc_card_name(card),
--               (unsigned long long)(get_capacity(md->disk) >> 1),
--               md->read_only ? "(ro)" : "");
-+               cap_str, md->read_only ? "(ro)" : "");
-=20
-        mmc_set_drvdata(card, md);
-        add_disk(md->disk);
+http://bugzilla.kernel.org/show_bug.cgi?id=11194
 
 
---=20
-     -- Pierre Ossman
+cshore@fionavar.ca changed:
 
-  Linux kernel, MMC maintainer        http://www.kernel.org
-  rdesktop, core developer          http://www.rdesktop.org
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |cshore@fionavar.ca
 
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
 
---=_freyr.drzeus.cx-27280-1220208895-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
 
-iEYEARECAAYFAki66PwACgkQ7b8eESbyJLhZWwCfb3D89aa4WJz8tnEtU/2NuPCR
-7/4Anj/91OnqfPFeWsOjgNsRyyzyzTlE
-=ajmH
------END PGP SIGNATURE-----
+------- Comment #5 from cshore@fionavar.ca  2008-08-31 22:37 -------
+Using a second adaptor card and moving the non-RAID devices off the megaraid
+controller solved the panic.  It appears the problem is the non-RAID devices
+and may be related the the bug for which there is a patch for newer CERC
+firmware (sorry don't have the post url, it was on this list) which deals with
+an error in the way the devices are enumerated.
 
---=_freyr.drzeus.cx-27280-1220208895-0001-2--
+This controller is a Dell PERC3/DCL and has the following BIOS/firmware
+revision info:
+
+on boot screen BIOS is listed as 3.35 May 7,2004
+Standard Firmware is listed as 199D
+
+in the setup screen, it shows
+PERC/CERC BIOS Configuration Utility U827
+
+lspci -vvv gives:
+
+04:00.0 RAID bus controller: American Megatrends Inc. MegaRAID (rev 20)
+        Subsystem: Dell Device 0493
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 32, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 22
+        Region 0: Memory at e0000000 (32-bit, prefetchable) [size=64M]
+        [virtual] Expansion ROM at dff00000 [disabled] [size=64K]
+        Capabilities: <access denied>
+        Kernel driver in use: megaraid
+        Kernel modules: megaraid_mbox
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
