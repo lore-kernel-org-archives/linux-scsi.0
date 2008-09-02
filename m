@@ -1,48 +1,58 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 3/8] sg: remove b_malloc_len in sg_scatter_hold struct
-Date: Tue,  2 Sep 2008 22:50:03 +0900
-Message-ID: <1220363408-7134-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 2/8] sg: remove SG_ALLOW_DIO_CODE define
+Date: Tue,  2 Sep 2008 22:50:02 +0900
+Message-ID: <1220363408-7134-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1220363408-7134-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1220363408-7134-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1220363408-7134-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:56055 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:50908 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489AbYIBNwq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2008 09:52:46 -0400
-In-Reply-To: <1220363408-7134-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751545AbYIBNwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Sep 2008 09:52:49 -0400
+In-Reply-To: <1220363408-7134-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp
 
-It's not used for anything useful after the block layer conversion.
+sg had lots of the own functions for the direct IO but now sg uses the
+block layer functions for it. There are only five lines for the direct
+IO. SG_ALLOW_DIO_CODE define was used to compile out the direct IO
+code but we don't need the define. If someone wants to remove the
+direct IO code, he can do easily without the define.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/sg.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/sg.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 2c30331..ccce31a 100644
+index d18f90d..2c30331 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -116,7 +116,6 @@ typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
- 	unsigned short k_use_sg; /* Count of kernel scatter-gather pieces */
- 	unsigned sglist_len; /* size of malloc'd scatter-gather list ++ */
- 	unsigned bufflen;	/* Size of (aggregate) data buffer */
--	unsigned b_malloc_len;	/* actual len malloc'ed in buffer */
- 	struct page **pages;
- 	int page_order;
- 	char dio_in_use;	/* 0->indirect IO (or mmap), 1->dio */
-@@ -1986,7 +1985,6 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
- 			req_schp->pages = rsv_schp->pages;
+@@ -68,7 +68,6 @@ static void sg_proc_cleanup(void);
+ #endif
  
- 			req_schp->bufflen = size;
--			req_schp->b_malloc_len = rsv_schp->b_malloc_len;
- 			req_schp->page_order = rsv_schp->page_order;
- 			break;
- 		} else
+ #define SG_ALLOW_DIO_DEF 0
+-#define SG_ALLOW_DIO_CODE /* compile out by commenting this define */
+ 
+ #define SG_MAX_DEVS 32768
+ 
+@@ -1674,13 +1673,12 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	if ((dxfer_len <= 0) || (dxfer_dir == SG_DXFER_NONE))
+ 		return 0;
+ 
+-#ifdef SG_ALLOW_DIO_CODE
+ 	if (sg_allow_dio && (hp->flags & SG_FLAG_DIRECT_IO) &&
+ 	    (dxfer_dir != SG_DXFER_UNKNOWN) && (0 == hp->iovec_count) &&
+ 	    (!sfp->parentdp->device->host->unchecked_isa_dma) &&
+ 	    blk_rq_aligned(q, hp->dxferp, dxfer_len))
+ 		return sg_build_direct(srp, sfp, dxfer_len);
+-#endif
++
+ 	if ((!sg_res_in_use(sfp)) && (dxfer_len <= rsv_schp->bufflen))
+ 		sg_link_reserve(sfp, srp, dxfer_len);
+ 	else
 -- 
 1.5.4.2
 
