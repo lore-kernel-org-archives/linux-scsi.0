@@ -1,22 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: WAS: "Re: [Bugme-new] [Bug 11302] New: I get a kernel OOPS! If
-	I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64"
-Date: Mon, 01 Sep 2008 19:05:10 -0500
-Message-ID: <1220313910.3353.4.camel@localhost.localdomain>
-References: <8635.97645.qm@web27302.mail.ukl.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
+Date: Mon,  1 Sep 2008 17:05:51 -0700 (PDT)
+Message-ID: <20080902000551.063BB108059@picon.linux-foundation.org>
+References: <bug-11302-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37119 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751383AbYIBAFO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Sep 2008 20:05:14 -0400
-In-Reply-To: <8635.97645.qm@web27302.mail.ukl.yahoo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38661 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751456AbYIBAGW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Sep 2008 20:06:22 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8205pwi005464
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Sep 2008 17:05:52 -0700
+In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pinc_o@yahoo.it
-Cc: Pierre Ossman <drzeus@drzeus.cx>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-usb@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11302
+
+
+
+
+
+------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-09-01 17:05 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Mon, 2008-09-01 at 23:30 +0000, pinco pallino wrote:
 > Hi Andrew,
@@ -66,3 +73,7 @@ need a bisection search from there.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
