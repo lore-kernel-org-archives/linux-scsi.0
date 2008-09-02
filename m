@@ -1,22 +1,22 @@
 From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 09/14] scsi: have device handlers return SCSI_MLQUEUE error value
-Date: Tue,  2 Sep 2008 09:05:38 -0700
-Message-ID: <1220371543-15099-10-git-send-email-andmike@linux.vnet.ibm.com>
+Subject: [PATCH 02/14] scsi: add transport host byte errors (v3)
+Date: Tue,  2 Sep 2008 09:05:31 -0700
+Message-ID: <1220371543-15099-3-git-send-email-andmike@linux.vnet.ibm.com>
 References: <1220371543-15099-1-git-send-email-andmike@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:39481 "EHLO e2.ny.us.ibm.com"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:39479 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751511AbYIBQFu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751530AbYIBQFu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 2 Sep 2008 12:05:50 -0400
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m82G5nlA027574
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:49 -0400
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m82G5jFw027527
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:45 -0400
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m82G5n57173078
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:49 -0400
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m82G5jK1173310
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:45 -0400
 Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m82G5mH6021300
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:49 -0400
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m82G5j0A020932
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2008 12:05:45 -0400
 In-Reply-To: <1220371543-15099-1-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,171 +25,117 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This has the scsi device handlers return SCSI_MLQUEUE error
-values instead of the old values.
+Currently, if there is a transport problem the iscsi drivers will return
+outstanding commands (commands being exeucted by the driver/fw/hw) with
+DID_BUS_BUSY and block the session so no new commands can be queued.
+Commands that are caught between the failure handling and blocking are
+failed with DID_IMM_RETRY or one of the scsi ml queuecommand return values.
+When the recovery_timeout fires, the iscsi drivers then fail IO with
+DID_NO_CONNECT.
 
-One change is that if the handler does not care we return 0
-instead of SCSI_RETURN_NOT_HANDLED.
+For fcp, some drivers will fail some outstanding IO (disk but possibly not
+tape) with DID_BUS_BUSY or DID_ERROR or some other value that causes a retry
+and hits the scsi_error.c failfast check, block the rport, and commands
+caught in the race are failed with DID_IMM_RETRY. Other drivers, may
+hold onto all IO and wait for the terminate_rport_io or dev_loss_tmo_callbk
+to be called.
+
+The following patches attempt to unify what upper layers will see drivers
+like multipath can make a good guess. This relies on drivers being
+hooked into their transport class.
+
+This first patch just defines two new host byte errors so drivers can
+return the same value for when a rport/session is blocked and for
+when the fast_io_fail_tmo fires.
+
+The idea is that if the LLD/class detects a problem and is going to block
+a rport/session, then if the LLD wants or must return the command to scsi-ml,
+then it can return it with DID_TRANSPORT_DISRUPTED. This will requeue
+the IO into the same scsi queue it came from, until the fast io fail timer
+fires and the class decides what to do.
+
+When using multipath and the fast_io_fail_tmo fires then the class
+can fail commands with DID_TRANSPORT_FAILFAST or drivers can use
+DID_TRANSPORT_FAILFAST in their terminate_rport_io callbacks or
+the equivlent in iscsi if we ever implement more advanced recovery methods.
+A LLD, like lpfc, could continue to return DID_ERROR and then it will hit
+the normal failfast path, so drivers do not have fully be ported to
+work better. The point of the patches is that upper layers will
+not see a failure that could be recovered from while the rport/session is
+blocked until fast_io_fail_tmo/recovery_timeout fires.
+
+V3
+Remove some comments.
+V2
+Fixed patch/diff errors and renamed DID_TRANSPORT_BLOCKED to
+DID_TRANSPORT_DISRUPTED.
+V1
+initial patch.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c |   16 ++++++++--------
- drivers/scsi/device_handler/scsi_dh_emc.c  |    8 ++++----
- drivers/scsi/device_handler/scsi_dh_rdac.c |   10 +++++-----
- drivers/scsi/scsi_error.c                  |    2 +-
- 4 files changed, 18 insertions(+), 18 deletions(-)
+ drivers/scsi/constants.c  |    3 ++-
+ drivers/scsi/scsi_error.c |   15 ++++++++++++++-
+ include/scsi/scsi.h       |    5 +++++
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 6bc55a6..b98d531 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -426,45 +426,45 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			/*
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
- 			/*
- 			 * LUN Not Accessible -- Target port in standby state
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c)
- 			/*
- 			 * LUN Not Accessible -- Target port in unavailable state
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x12)
- 			/*
- 			 * LUN Not Ready -- Offline
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
- 			/*
- 			 * Power On, Reset, or Bus Device Reset, just retry.
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
- 			/*
- 			 * ALUA state changed
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		}
- 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
- 			/*
- 			 * Implicit ALUA state transition failed
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		}
- 		break;
- 	}
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 9785d73..4003dee 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1364,7 +1364,8 @@ EXPORT_SYMBOL(scsi_print_sense);
+ static const char * const hostbyte_table[]={
+ "DID_OK", "DID_NO_CONNECT", "DID_BUS_BUSY", "DID_TIME_OUT", "DID_BAD_TARGET",
+ "DID_ABORT", "DID_PARITY", "DID_ERROR", "DID_RESET", "DID_BAD_INTR",
+-"DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE"};
++"DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
++"DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST" };
+ #define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
  
--	return SCSI_RETURN_NOT_HANDLED;
-+	return 0;
- }
- 
- /*
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 64a56e5..4be7be3 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -418,7 +418,7 @@ static int clariion_check_sense(struct scsi_device *sdev,
- 			 * Can return FAILED only when we want the error
- 			 * recovery process to kick in.
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		break;
- 	case ILLEGAL_REQUEST:
- 		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
-@@ -432,7 +432,7 @@ static int clariion_check_sense(struct scsi_device *sdev,
- 			 * Can return FAILED only when we want the error
- 			 * recovery process to kick in.
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-@@ -440,11 +440,11 @@ static int clariion_check_sense(struct scsi_device *sdev,
- 			 * Unit Attention Code. This is the first IO
- 			 * to the new path, so just retry.
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		break;
- 	}
- 
--	return SCSI_RETURN_NOT_HANDLED;
-+	return 0;
- }
- 
- static int clariion_prep_fn(struct scsi_device *sdev, struct request *req)
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index c504afe..9b1c2d5 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -546,13 +546,13 @@ static int rdac_check_sense(struct scsi_device *sdev,
- 			 *
- 			 * Nothing we can do here. Try to bypass the path.
- 			 */
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0xA1)
- 			/* LUN Not Ready - Quiescense in progress
- 			 *
- 			 * Just retry and wait.
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		break;
- 	case ILLEGAL_REQUEST:
- 		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01) {
-@@ -561,7 +561,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
- 			 * Fail the path, so that the other path be used.
- 			 */
- 			h->state = RDAC_STATE_PASSIVE;
--			return SUCCESS;
-+			return SCSI_MLQUEUE_DIS_FINISH;
- 		}
- 		break;
- 	case UNIT_ATTENTION:
-@@ -569,11 +569,11 @@ static int rdac_check_sense(struct scsi_device *sdev,
- 			/*
- 			 * Power On, Reset, or Bus Device Reset, just retry.
- 			 */
--			return NEEDS_RETRY;
-+			return SCSI_MLQUEUE_IMM_RETRY;
- 		break;
- 	}
- 	/* success just means we do not care what scsi-ml does */
--	return SCSI_RETURN_NOT_HANDLED;
-+	return 0;
- }
- 
- static const struct scsi_dh_devlist rdac_dev_list[] = {
+ static const char * const driverbyte_table[]={
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 45c7d24..b0e4b42 100644
+index 880051c..4e30343 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -314,7 +314,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		int rc;
+@@ -1351,7 +1351,20 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
  
- 		rc = sdev->scsi_dh_data->scsi_dh->check_sense(sdev, &sshdr);
--		if (rc != SCSI_RETURN_NOT_HANDLED)
-+		if (rc)
- 			return rc;
- 		/* handler does not care. Drop down to default handling */
- 	}
+ 	case DID_REQUEUE:
+ 		return ADD_TO_MLQUEUE;
+-
++	case DID_TRANSPORT_DISRUPTED:
++		/*
++		 * LLD/transport was disrupted during processing of the IO.
++		 * The transport class is now blocked/blocking,
++		 * and the transport will decide what to do with the IO
++		 * based on its timers and recovery capablilities.
++		 */
++		return ADD_TO_MLQUEUE;
++	case DID_TRANSPORT_FAILFAST:
++		/*
++		 * The transport decided to failfast the IO (most likely
++		 * the fast io fail tmo fired), so send IO directly upwards.
++		 */
++		return SUCCESS;
+ 	case DID_ERROR:
+ 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
+ 		    status_byte(scmd->result) == RESERVATION_CONFLICT)
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 5c40cc5..8740a16 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -367,6 +367,11 @@ struct scsi_lun {
+ #define DID_IMM_RETRY   0x0c	/* Retry without decrementing retry count  */
+ #define DID_REQUEUE	0x0d	/* Requeue command (no immediate retry) also
+ 				 * without decrementing the retry count	   */
++#define DID_TRANSPORT_DISRUPTED 0x0e /* Transport error disrupted execution
++				      * and the driver blocked the port to
++				      * recover the link. Transport class will
++				      * retry or fail IO */
++#define DID_TRANSPORT_FAILFAST	0x0f /* Transport class fastfailed the io */
+ #define DRIVER_OK       0x00	/* Driver status                           */
+ 
+ /*
 -- 
 1.5.5.1
 
