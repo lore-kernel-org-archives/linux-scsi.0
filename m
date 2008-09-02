@@ -1,64 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Tue, 02 Sep 2008 15:22:42 -0400
-Message-ID: <48BD9282.702@garzik.org>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>	<48BD2136.1020101@garzik.org>	<20080902125310.729b0997@lxorguk.ukuu.org.uk>	<48BD2B37.6060000@garzik.org> <20080902145710.2034690d@lxorguk.ukuu.org.uk>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Tue, 02 Sep 2008 15:32:39 -0400
+Message-ID: <200809021932.m82JWfj3001152@colby.verdasys.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
+ <200803101519.m2AFJCJS032509@colby.verdasys.com>
+ <1205163386.2941.14.camel@localhost.localdomain>
+ <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
+ <200803252343.m2PNh8kl020506@colby.verdasys.com>
+ <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+ <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+ <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
+ <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51464 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751776AbYIBTWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2008 15:22:47 -0400
-In-Reply-To: <20080902145710.2034690d@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
+ <200803101519.m2AFJCJS032509@colby.verdasys.com>
+ <1205163386.2941.14.camel@localhost.localdomain>
+ <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
+ <200803252343.m2PNh8kl020506@colby.verdasys.com>
+ <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+ <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+ <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
+ <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Grant Grundler <grundler@google.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Alan Cox wrote:
->> Refresh my memory...  what is the problem with loading pata_marvell first?
-> 
-> The fact its almost impossible to do with a distribution kernel. eg
-> you can't make it work with Fedora (see the Fedora bugs assigned to
-> you)
+At 16:45 3/27/2008, Marc Bejarano wrote:
+ >unfortunately, we've already spent longer than we had.  the server
+ >deployment is way overdue and our current plan is to just avoid
+ >problematic drives and punt the problem to seagate.
 
-Hogwash -- just load one driver before the other.
+i fought the good fight to try and get a seagate field application 
+engineer to come on site to investigate or get them to reproduce the 
+issue in their labs, but ultimately failed :(  at least seagate 
+swapped some 70 problematic 7200.10's with equivalent 7200.11's and 
+we haven't seen the presumed head placement issue with these.
 
+i give up.  it's now somebody else's problem...
 
-> If pata_marvell should be driving these chips please remove the entries
-> from the ahci.c driver as I asked before.
-> 
-> If ahci.c should be driving them then we need the documentation for
-> whatever extension they use driving the ports via AHCI. Clearly there is
-> one as its possible under Windows.
+fwiw, since this nightmare began, we've been buying hitachis and have 
+had much better luck wrt performance, failure rates, etc.
 
-Situation before ahci mod:
+ >at least the next
+ >time somebody sees similar issues with 3.AAJ and 3.AAK 7200.10's,
+ >they'll know they aren't alone.
 
-	Users with PATA may use pata_marvell.
-	Users wanting SATA screwed.
-	Users wanting PATA+SATA screwed.
+and if you have this problem, feel free to contact me at 781-228-5669 
+and i'll put you in touch with the folks at seagate that it took me 
+forever to get to.  hopefully you'll have better luck getting the 
+dinosaur to react.
 
-Situation after ahci mod:
-
-	Users with PATA may use pata_marvell
-	Users with SATA may use ahci
-	Users wanting PATA+SATA screwed
-
-
->> AFAICS, if you load pata_marvell before ahci, it will grab the PATA 
->> disks and the PCI device itself.
-> 
-> If you have a degree in initrd-foo
-
-Just switch the order of 'ahci' and 'pata_marvell' in 
-/etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
-
-See?  It's not rocket science, and the current configuration can be 
-easily made to work for Fedora users.
-
-	Jeff
-
-
+cheers,
+marc
 
