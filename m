@@ -1,38 +1,36 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/2] older SG interface fixes (for the block layer conversion)
-Date: Tue, 2 Sep 2008 09:31:26 +0200
-Message-ID: <20080902073125.GY20055@kernel.dk>
-References: <1220340020-4855-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
+Date: Tue, 02 Sep 2008 07:19:18 -0400
+Message-ID: <48BD2136.1020101@garzik.org>
+References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:51429 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbYIBHba (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2008 03:31:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1220340020-4855-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Nelson <mdnelson8@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jpy
 
-On Tue, Sep 02 2008, FUJITA Tomonori wrote:
-> I messed up the older SG interface's READ commands.
+Mark Nelson wrote:
+> Add an appropriate entry for the Promise PDC42819 controller. It has an
+> AHCI mode and seems to work correctly with board_ahci.
 > 
-> With READ commands via the older SG interface, we don't know a
-> user-space address to transfer the result data when executing a SCSI
-> command. So we can't pass a user-space address to blk_rq_map_user.
+> This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650 (4 port)
+> software-based RAID cards (for which there is a binary driver, t3sas) and
+> can be found on some motherboards, for example the MSI K9A2 Platinum,
+> which calls the chip a Promise T3 controller.
 > 
-> This changes blk_rq_map_user to takes a NULL user-space address. That
-> is, sg uses blk_rq_map_user to just set up a request and bios with
-> page frames without data transfer (similar to what scsi_req_map_sg
-> does for sg now).
-> 
-> blk_rq_map_user doesn't map a user space address so the name,
-> blk_rq_map_user, might be odd but I leave it alone.
+> Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
+> ---
+> Apparently this chip also supports SAS disks, will these work with the
+> ahci driver (I've only tested with normal desktop SATA disks)?
 
-Applied
+ahci is definitely SATA-only, so I wonder how they modified AHCI to 
+support SAS transport...
 
--- 
-Jens Axboe
+	Jeff
+
+
 
