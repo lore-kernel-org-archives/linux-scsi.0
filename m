@@ -1,43 +1,29 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
-Date: Mon,  1 Sep 2008 23:04:00 -0700 (PDT)
-Message-ID: <20080902060400.93FDD108059@picon.linux-foundation.org>
-References: <bug-11302-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 0/2] older SG interface fixes (for the block layer conversion)
+Date: Tue,  2 Sep 2008 16:20:18 +0900
+Message-ID: <1220340020-4855-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51320 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751925AbYIBGEb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2008 02:04:31 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m82640gx024619
-	for <linux-scsi@vger.kernel.org>; Mon, 1 Sep 2008 23:04:01 -0700
-In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:57312 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751414AbYIBHVs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Sep 2008 03:21:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jpy
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11302
+I messed up the older SG interface's READ commands.
 
+With READ commands via the older SG interface, we don't know a
+user-space address to transfer the result data when executing a SCSI
+command. So we can't pass a user-space address to blk_rq_map_user.
 
+This changes blk_rq_map_user to takes a NULL user-space address. That
+is, sg uses blk_rq_map_user to just set up a request and bios with
+page frames without data transfer (similar to what scsi_req_map_sg
+does for sg now).
 
-
-
-------- Comment #9 from anonymous@kernel-bugs.osdl.org  2008-09-01 23:04 -------
-Reply-To: drzeus@drzeus.cx
-
-On Mon, 1 Sep 2008 23:30:56 +0000 (GMT)
-pinco pallino <pinc_o@yahoo.it> wrote:
-
-> Hi Andrew,
-> 
-> with the new kernel 2.6.26.3 the SD are now read and wrote correctly, but SDHC are not read! The kernel repeat the error. Follow the error:
-> 
-
-Have you checked that the reader does in fact support SDHC? They tend
-to fail in all sorts of ways when they don't.
+blk_rq_map_user doesn't map a user space address so the name,
+blk_rq_map_user, might be odd but I leave it alone.
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
