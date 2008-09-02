@@ -1,61 +1,43 @@
-From: Pierre Ossman <drzeus@drzeus.cx>
-Subject: Re: WAS: "Re: [Bugme-new] [Bug 11302] New: I get a kernel OOPS! If
- I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64"
-Date: Tue, 2 Sep 2008 08:03:16 +0200
-Message-ID: <20080902080316.0167b47f@mjolnir.drzeus.cx>
-References: <20080810233352.8423614f.akpm@linux-foundation.org>
-	<8635.97645.qm@web27302.mail.ukl.yahoo.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-13404-1220335402-0001-2"
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card reader, SD, MMC, ecc.. to my Slamd64
+Date: Mon,  1 Sep 2008 23:04:00 -0700 (PDT)
+Message-ID: <20080902060400.93FDD108059@picon.linux-foundation.org>
+References: <bug-11302-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server.drzeus.cx ([85.8.24.28]:40818 "EHLO smtp.drzeus.cx"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751818AbYIBGDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2008 02:03:24 -0400
-In-Reply-To: <8635.97645.qm@web27302.mail.ukl.yahoo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51320 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751925AbYIBGEb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2008 02:04:31 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m82640gx024619
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Sep 2008 23:04:01 -0700
+In-Reply-To: <bug-11302-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pinc_o@yahoo.it
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+http://bugzilla.kernel.org/show_bug.cgi?id=11302
 
---=_freyr.drzeus.cx-13404-1220335402-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+
+
+
+
+------- Comment #9 from anonymous@kernel-bugs.osdl.org  2008-09-01 23:04 -------
+Reply-To: drzeus@drzeus.cx
 
 On Mon, 1 Sep 2008 23:30:56 +0000 (GMT)
 pinco pallino <pinc_o@yahoo.it> wrote:
 
 > Hi Andrew,
->=20
-> with the new kernel 2.6.26.3 the SD are now read and wrote correctly, but=
- SDHC are not read! The kernel repeat the error. Follow the error:
->=20
+> 
+> with the new kernel 2.6.26.3 the SD are now read and wrote correctly, but SDHC are not read! The kernel repeat the error. Follow the error:
+> 
 
 Have you checked that the reader does in fact support SDHC? They tend
 to fail in all sorts of ways when they don't.
 
---=20
-     -- Pierre Ossman
 
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
-
---=_freyr.drzeus.cx-13404-1220335402-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAki81ycACgkQ7b8eESbyJLi6vQCgolJCW5bQ/iqXsi2MIZ0ajn1J
-UPgAn0Ut+G9A3bfSCbDsg8J/aOm88NXi
-=YQ94
------END PGP SIGNATURE-----
-
---=_freyr.drzeus.cx-13404-1220335402-0001-2--
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
