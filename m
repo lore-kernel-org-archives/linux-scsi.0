@@ -1,41 +1,158 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Tue, 2 Sep 2008 23:30:32 +0100
-Message-ID: <20080902233032.5159688c@lxorguk.ukuu.org.uk>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
-	<48BD2136.1020101@garzik.org>
-	<20080902125310.729b0997@lxorguk.ukuu.org.uk>
-	<48BD2B37.6060000@garzik.org>
-	<20080902145710.2034690d@lxorguk.ukuu.org.uk>
-	<48BD9282.702@garzik.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] lib: add generic helper to print sizes rounded to
+ the correct SI range
+Date: Tue, 2 Sep 2008 20:39:14 -0700
+Message-ID: <20080902203914.4ddf3735.akpm@linux-foundation.org>
+References: <48B9546B.4010004@simon.arlott.org.uk>
+	<1220117091.3615.3.camel@localhost.localdomain>
+	<20080830174516.GD1239@parisc-linux.org>
+	<48B9B552.8060406@simon.arlott.org.uk>
+	<48B9B588.7060709@simon.arlott.org.uk>
+	<1220147947.3615.18.camel@localhost.localdomain>
+	<20080831025412.GJ1239@parisc-linux.org>
+	<1220195310.4021.4.camel@localhost.localdomain>
+	<1220195634.4021.9.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38505 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753315AbYIBWbT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2008 18:31:19 -0400
-In-Reply-To: <48BD9282.702@garzik.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58205 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755334AbYICDj4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2008 23:39:56 -0400
+In-Reply-To: <1220195634.4021.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Oh and some small other PS items from going back over mail
+On Sun, 31 Aug 2008 10:13:54 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> This patch adds the ability to print sizes in either units of 10^3 (SI)
+> or 2^10 (Binary) units.  It rounds up to three significant figures and
+> can be used for either memory or storage capacities.
+> 
+> Oh, and I'm fully aware that 64 bits is only 16EiB ... the Zetta and
+> Yotta units are added for future proofing against the day we have 128
+> bit computers ...
+> 
+
+As Matthew said - a new %p thingy might be appropriate.
+
+> 
+> ---
+>  include/linux/string_helpers.h |   10 ++++++
+>  lib/Makefile                   |    3 +-
+>  lib/string_helpers.c           |   62 ++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 74 insertions(+), 1 deletions(-)
+>  create mode 100644 include/linux/string_helpers.h
+>  create mode 100644 lib/string_helpers.c
+> 
+> diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
+> new file mode 100644
+> index 0000000..6b827fb
+> --- /dev/null
+> +++ b/include/linux/string_helpers.h
+> @@ -0,0 +1,10 @@
+> +#include <linux/types.h>
+> +
+> +enum string_size_units {
+> +	STRING_UNITS_10,
+> +	STRING_UNITS_2,
+> +};
+
+Could do with some comments.
+
+> +int string_get_size(u64 size, enum string_size_units units,
+> +		    char *buf, int len);
+> +
+> diff --git a/lib/Makefile b/lib/Makefile
+> index 3b1f94b..44001af 100644
+> --- a/lib/Makefile
+> +++ b/lib/Makefile
+> @@ -19,7 +19,8 @@ lib-$(CONFIG_SMP) += cpumask.o
+>  lib-y	+= kobject.o kref.o klist.o
+>  
+>  obj-y += bcd.o div64.o sort.o parser.o halfmd4.o debug_locks.o random32.o \
+> -	 bust_spinlocks.o hexdump.o kasprintf.o bitmap.o scatterlist.o
+> +	 bust_spinlocks.o hexdump.o kasprintf.o bitmap.o scatterlist.o \
+> +	 string_helpers.o
+>  
+>  ifeq ($(CONFIG_DEBUG_KOBJECT),y)
+>  CFLAGS_kobject.o += -DDEBUG
+> diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+> new file mode 100644
+> index 0000000..3675eaa
+> --- /dev/null
+> +++ b/lib/string_helpers.c
+> @@ -0,0 +1,62 @@
+> +/*
+> + * Helpers for formatting and printing strings
+> + *
+> + * Copyright 31 August 2008 James Bottomley
+> + */
+> +#include <linux/kernel.h>
+> +#include <linux/math64.h>
+> +#include <linux/module.h>
+> +#include <linux/string_helpers.h>
+> +
+> +/**
+> + * string_get_size - get the size in the specified units
+> + * @size:	The size to be converted
+> + * @units:	units to use (powers of 1000 or 1024)
+> + * @buf:	buffer to format to
+> + * @len:	length of buffer
+> + *
+> + * This function returns a string formatted to 3 significant figures
+> + * giving the size in the required units.  Returns 0 on success or
+> + * error on failure.  @buf is always zero terminated.
+> + *
+> + */
+> +int string_get_size(u64 size, const enum string_size_units units,
+> +		    char *buf, int len)
+> +{
+> +	const char *units_10[] = { "B", "KB", "MB", "GB", "TB", "PB",
+> +				   "EB", "ZB", "YB", NULL};
+> +	const char *units_2[] = {"B", "Kib", "MiB", "GiB", "TiB", "PiB",
+> +				 "EiB", "ZiB", "YiB", NULL };
+> +	const char **units_str[] = {
+> +		[STRING_UNITS_10] =  units_10,
+> +		[STRING_UNITS_2] = units_2,
+> +	};
+> +	const int divisor[] = {
+> +		[STRING_UNITS_10] = 1000,
+> +		[STRING_UNITS_2] = 1024,
+> +	};
+
+Formally these should be static, but I expect the compiler will work it out.
 
 
-- You previously (a year ago) stated you had the docs for the extension
+> +	int i,j;
+> +	u64 remainder = 0, sf_cap;
+> +	char tmp[8];
+> +
+> +	tmp[0] = '\0';
+> +
+> +	for (i = 0; size > divisor[units] && units_str[units][i]; i++)
+> +		remainder = do_div(size, divisor[units]);
+> +
+> +	sf_cap = size;
+> +	for (j = 0; sf_cap*10 < 1000; j++)
+> +		sf_cap *= 10;
+> +
+> +	if (j) {
+> +		remainder *= 1000;
+> +		do_div(remainder, divisor[units]);
+> +		snprintf(tmp, sizeof(tmp), ".%03lld", remainder);
+> +		tmp[j+1] = '\0';
+> +	}
+> +
+> +	snprintf(buf, len, "%lld%s%s", size, tmp, units_str[units][i]);
 
-- You've been ignoring bugs assigned to you about this for months (not
-even replying to them)
+Can't print a u64 - we don't know what type it has.  It must be cast to
+something, usually unsigned long long.
 
-- You can't even install most distros to work around this mess you
-created to sort out the initrd
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(string_get_size);
 
-
-So I'm simply at this point going to give up and send patches and an
-explanation to Linus. If you care to find the docs you said you had then
-I can fix it nicely, if not then I'll fix it the blunter way.
-
-Alan
