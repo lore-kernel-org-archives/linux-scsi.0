@@ -1,55 +1,49 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 3/6] Check for device resize when rescanning partitions
-Date: Thu, 04 Sep 2008 14:27:30 -0600
-Message-ID: <20080904202730.10456.14322.stgit@bob.kio>
-References: <20080904202714.10456.88061.stgit@bob.kio>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 11/15] lpfc 8.2.8 : Update driver to use new Host byte
+	error code DID_TRANSPORT_DISRUPTED
+Date: Thu, 04 Sep 2008 16:08:18 -0500
+Message-ID: <1220562498.3276.60.camel@localhost.localdomain>
+References: <1219629018.7890.41.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:13263 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758122AbYIDU1b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 16:27:31 -0400
-In-Reply-To: <20080904202714.10456.88061.stgit@bob.kio>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47807 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755515AbYIDVIU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 17:08:20 -0400
+In-Reply-To: <1219629018.7890.41.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: andrew.patterson@hp.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-Check for device resize when rescanning partitions
+On Sun, 2008-08-24 at 21:50 -0400, James Smart wrote:
+> Update driver to use new Host byte error code DID_TRANSPORT_DISRUPTED.
+> 
+> This patch depends pending upstream patches described in:
+> http://marc.info/?l=linux-scsi&m=121263014808604&w=2
+> 
+> Particularly:
+> http://marc.info/?l=linux-scsi&m=121263014908607&w=2
+> which defines DID_TRANSPORT_DISRUPTED.
+> 
+> This patch supercedes the lpfc patch in that series:
+> http://marc.info/?l=linux-scsi&m=121263015008616&w=2
 
-Check for device resize in the rescan_partitions() routine. If the device
-has been resized, the bdev size is set to match. The rescan_partitions()
-routine is called when opening the device and when calling the
-BLKRRPART ioctl.
+I've got this one, but only partially.  The third hunk doesn't apply:
 
-Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
----
+--- 1072,1078 ----
+  	 * transport is still transitioning.
+  	 */
+  	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
++ 		cmnd->result = ScsiResult(DID_TRANSPORT_DISRUPTED, 0);
+  		goto out_fail_command;
+  	}
 
- fs/partitions/check.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+It became a goto out_target_busy, which returns SCSI_MLQUEUE_TARGET_BUSY
+via a patch which you acked.
 
+James
 
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index e6f378f..77cfe63 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -504,7 +504,6 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
- 	res = invalidate_partition(disk, 0);
- 	if (res)
- 		return res;
--	bdev->bd_invalidated = 0;
- 
- 	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
- 	while ((part = disk_part_iter_next(&piter)))
-@@ -513,6 +512,8 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
- 
- 	if (disk->fops->revalidate_disk)
- 		disk->fops->revalidate_disk(disk);
-+	check_disk_size_change(disk, bdev);
-+	bdev->bd_invalidated = 0;
- 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
- 		return 0;
- 	if (IS_ERR(state))	/* I/O error reading the partition table */
 
