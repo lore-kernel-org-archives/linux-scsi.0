@@ -1,82 +1,85 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: [PATCH 0/6] detect online disk resize
-Date: Thu, 04 Sep 2008 08:25:00 -0600
-Message-ID: <1220538300.6601.21.camel@grinch>
-References: <20080829231254.25065.66052.stgit@bluto.andrew>
-	 <20080904072651.GX20055@kernel.dk>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
+Date: Thu, 4 Sep 2008 16:27:52 +0200
+Message-ID: <18623.61544.364082.226862@harpo.it.uu.se>
+References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
+	<48BD2136.1020101@garzik.org>
+	<65a6ef750809020455q7b7ee6a8jc404b4970f660c50@mail.gmail.com>
+	<18621.11426.870514.781750@harpo.it.uu.se>
+	<65a6ef750809020521wfaca733r8253795860b95f4@mail.gmail.com>
+	<48BFBA5E.5050300@garzik.org>
+	<65a6ef750809040459h3ffe3183nf0b5a35d15ab86e4@mail.gmail.com>
+	<48BFE5FA.9090006@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:9521 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbYIDOZ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 10:25:26 -0400
-In-Reply-To: <20080904072651.GX20055@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <48BFE5FA.9090006@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Nelson <mdnelson8@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
 
-On Thu, 2008-09-04 at 09:26 +0200, Jens Axboe wrote:
-> On Fri, Aug 29 2008, Andrew Patterson wrote:
-> > This is version 2 of a patch series I submitted back in May 2008. This
-> > version now checks for device size changes in the rescan_partitions()
-> > routine.  Which in turn is called when a device is opened and in the
-> > BLKRRPART ioctl.
-> > 
-> > I am resubmitting this patch series as I got little response the
-> > previous time.  Al Viro has told me offline that he would look at it this
-> > time.
-> > 
-> > This patch series handles online disk resizes that are currently not
-> > completely recognized by the kernel using the existing revalidate_disk
-> > routines.  An online resize can occur when growing or shrinking a
-> > Fibre Channel LUN or perhaps by adding a disk to an existing RAID
-> > volume.
-> > 
-> > The kernel currently recognizes a device size change when the
-> > lower-level revalidate_disk routines are called; however, the block
-> > layer does not use the new size while it has any current openers on
-> > the device. So, for example, if LVM has an volume open on the device,
-> > you will generally not see the size change until after a reboot. We
-> > fix this problem by creating a wrapper to be used with lower-level
-> > revalidate_disk routines.  This wrapper first calls the lower-level
-> > driver's revalidate_disk routine. It then compares the gendisk
-> > capacity to the block devices inode size. If there is a difference, we
-> > adjust the block device's size. If the size has changed, we then flush
-> > the disk for safety. The size is also checked in rescan_partitions
-> > which is called when the device is opened or when the BLKRRPART ioctl
-> > is called.
-> > 
-> > There are several ways to "kick off" a device size change:
-> > 
-> > 1. For SCSI devices do:
-> > 
-> >   # echo 1 > /sys/class/scsi_device/<device>/device/rescan
-> > 
-> >   or
-> > 
-> >   # blockdev --rereadpt <device file>
-> > 
-> > 2. Other devices (not device mapper)
-> > 
-> >   # blockdev --rereadpt <device file>
-> > 
-> > I have tested this patch on SCSI and SmartArray (cciss)
-> > devices. Device mapper still does not recognize device size changes
-> > until the device is restarted.
-> > 
-> > Jeff Moyer and Andy Ryan have done some light testing on the previous
-> > version of this series.
-> > 
-> > This patch set has been tested with scsi-misc-2.6. It also applies to
-> > linux-next with some minor, obvious changes.
-> 
-> This version looks sane to me. Care to resend against for-2.6.28 of the
-> block repo?
+Jeff Garzik writes:
+ > Mark Nelson wrote:
+ > > On Thu, Sep 4, 2008 at 8:37 PM, Jeff Garzik <jeff@garzik.org> wrote:
+ > >> Mark Nelson wrote:
+ > >>> On Tue, Sep 2, 2008 at 10:08 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+ > >>>> Mark Nelson writes:
+ > >>>>  > On Tue, Sep 2, 2008 at 9:19 PM, Jeff Garzik <jeff@garzik.org> wrote:
+ > >>>>  > > Mark Nelson wrote:
+ > >>>>  > >>
+ > >>>>  > >> Add an appropriate entry for the Promise PDC42819 controller. It
+ > >>>> has an
+ > >>>>  > >> AHCI mode and seems to work correctly with board_ahci.
+ > >>>>  > >>
+ > >>>>  > >> This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650
+ > >>>> (4
+ > >>>>  > >> port)
+ > >>>>  > >> software-based RAID cards (for which there is a binary driver,
+ > >>>> t3sas) and
+ > >>>>  > >> can be found on some motherboards, for example the MSI K9A2
+ > >>>> Platinum,
+ > >>>>  > >> which calls the chip a Promise T3 controller.
+ > >>>>  > >>
+ > >>>>  > >> Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
+ > >>>>  > >> ---
+ > >>>>  > >> Apparently this chip also supports SAS disks, will these work with
+ > >>>> the
+ > >>>>  > >> ahci driver (I've only tested with normal desktop SATA disks)?
+ > >>>>  > >
+ > >>>>  > > ahci is definitely SATA-only, so I wonder how they modified AHCI to
+ > >>>> support
+ > >>>>  > > SAS transport...
+ > >>>>  >
+ > >>>>  > That is a good question. From my understanding the controller is a SAS
+ > >>>>  > controller that can drive SATA disks (as I guess all SAS controllers
+ > >>>> can
+ > >>>>  > do...). Could it be that the controller can be setup to act as an AHCI
+ > >>>>  > SATA controller or if the right registers are poked a SAS controller?
+ > >>>>
+ > >>>> Based on how the sata_promise-supported chips work I'd guess that they
+ > >>>> have dual programming interfaces with AHCI for JBOD SATA and a native
+ > >>>> one (perhaps just additional control registers) for SAS and raid.
+ > >>>>
+ > >>> That's interesting; and makes sense. I'm guessing that we won't end up
+ > >>> with an open source driver that can do SAS on these chips then... But
+ > >>> for now at least we can use them as SATA controllers and if Promise
+ > >>> wants to come to the table with specs or datasheets they can in the
+ > >>> future. I'm just happy to be able to use my eSATA ports (and perhaps
+ > >>> the possibility of getting my hard disk off the SB600, although I should
+ > >>> benchmark both controllers before jumping to any conclusions).
+ > >> FWIW, I'll poke my Promise contacts, but they have gone mostly silent in the
+ > >> past year, so don't get your hopes up...
+ > > 
+ > > Thanks Jeff!
+ > > 
+ > > No need for hope - we have ahci now :)
+ > 
+ > Well, I still think this PCI ID addition leaves open the possibility 
+ > that plugging in a SAS disk could hang the system or similar misbehavior.
 
-Will do.  Thanks
+Agreed, there's no telling what Promise-specific magic is needed
+to properly drive the T3.
 
-Andrew
-
+/Mikael
