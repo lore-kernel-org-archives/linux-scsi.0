@@ -1,37 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 04/14] scsi: Move retries check
-Date: Thu, 04 Sep 2008 13:27:26 -0500
-Message-ID: <1220552846.3276.54.camel@localhost.localdomain>
-References: <1220371543-15099-1-git-send-email-andmike@linux.vnet.ibm.com>
-	 <1220371543-15099-5-git-send-email-andmike@linux.vnet.ibm.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Thu,  4 Sep 2008 12:42:36 -0700 (PDT)
+Message-ID: <20080904194236.150B010805B@picon.linux-foundation.org>
+References: <bug-11404-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38363 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753506AbYIDS12 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 14:27:28 -0400
-In-Reply-To: <1220371543-15099-5-git-send-email-andmike@linux.vnet.ibm.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44934 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757000AbYIDTnX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2008 15:43:23 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m84JgaFN024742
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Sep 2008 12:42:37 -0700
+In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2008-09-02 at 09:05 -0700, Mike Anderson wrote:
-> Move retries check to scsi_queue_insert.
+http://bugzilla.kernel.org/show_bug.cgi?id=11404
+
+
+
+
+
+------- Comment #1 from rjw@sisk.pl  2008-09-04 12:42 -------
+On Thursday, 4 of September 2008, Randy Dunlap wrote:
+> Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of recent regressions.
+> > 
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.26.  Please verify if it still should be listed and let me know
+> > (either way).
+> > 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11404
+> > Subject		: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+> > Submitter	: rdunlap <randy.dunlap@oracle.com>
+> > Date		: 2008-08-21 5:52 (10 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=121929819616273&w=4
+> > 		  http://marc.info/?l=linux-kernel&m=121932889105368&w=4
+> > Handled-By	: Miller, Mike (OS Dev) <Mike.Miller@hp.com>
+> > 		  James Bottomley <James.Bottomley@hansenpartnership.com>
 > 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
-
-Could you clarify the signoff chain on this, please?  It implies that
-the patch originated with Mike, but there's no From: for him.
-
-If it's his patch, it needs a From:
-
-If it's your patch, your signoff needs to be first, and his needs to
-become an acked-by.
-
-James
+> Yes, just got this same bug in 2.6.27-rc5-git3.
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
