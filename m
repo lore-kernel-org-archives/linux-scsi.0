@@ -1,81 +1,71 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Thu, 04 Sep 2008 09:43:22 -0400
-Message-ID: <48BFE5FA.9090006@garzik.org>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>	 <48BD2136.1020101@garzik.org>	 <65a6ef750809020455q7b7ee6a8jc404b4970f660c50@mail.gmail.com>	 <18621.11426.870514.781750@harpo.it.uu.se>	 <65a6ef750809020521wfaca733r8253795860b95f4@mail.gmail.com>	 <48BFBA5E.5050300@garzik.org> <65a6ef750809040459h3ffe3183nf0b5a35d15ab86e4@mail.gmail.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 5/6] Added flush_disk to factor out common buffer cache flushing code.
+Date: Thu, 04 Sep 2008 09:13:16 -0400
+Message-ID: <x49d4jkm4ur.fsf@segfault.boston.devel.redhat.com>
+References: <20080829231254.25065.66052.stgit@bluto.andrew>
+	<20080829231320.25065.44013.stgit@bluto.andrew>
+	<x4963pd9jnk.fsf@segfault.boston.devel.redhat.com>
+	<1220501780.6601.14.camel@grinch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45057 "EHLO mail.dvmed.net"
+Received: from mx2.redhat.com ([66.187.237.31]:33654 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbYIDNn1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Sep 2008 09:43:27 -0400
-In-Reply-To: <65a6ef750809040459h3ffe3183nf0b5a35d15ab86e4@mail.gmail.com>
+	id S1751454AbYIDNuS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2008 09:50:18 -0400
+In-Reply-To: <1220501780.6601.14.camel@grinch> (Andrew Patterson's message of
+	"Thu, 04 Sep 2008 04:16:20 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Nelson <mdnelson8@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com
 
-Mark Nelson wrote:
-> On Thu, Sep 4, 2008 at 8:37 PM, Jeff Garzik <jeff@garzik.org> wrote:
->> Mark Nelson wrote:
->>> On Tue, Sep 2, 2008 at 10:08 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
->>>> Mark Nelson writes:
->>>>  > On Tue, Sep 2, 2008 at 9:19 PM, Jeff Garzik <jeff@garzik.org> wrote:
->>>>  > > Mark Nelson wrote:
->>>>  > >>
->>>>  > >> Add an appropriate entry for the Promise PDC42819 controller. It
->>>> has an
->>>>  > >> AHCI mode and seems to work correctly with board_ahci.
->>>>  > >>
->>>>  > >> This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650
->>>> (4
->>>>  > >> port)
->>>>  > >> software-based RAID cards (for which there is a binary driver,
->>>> t3sas) and
->>>>  > >> can be found on some motherboards, for example the MSI K9A2
->>>> Platinum,
->>>>  > >> which calls the chip a Promise T3 controller.
->>>>  > >>
->>>>  > >> Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
->>>>  > >> ---
->>>>  > >> Apparently this chip also supports SAS disks, will these work with
->>>> the
->>>>  > >> ahci driver (I've only tested with normal desktop SATA disks)?
->>>>  > >
->>>>  > > ahci is definitely SATA-only, so I wonder how they modified AHCI to
->>>> support
->>>>  > > SAS transport...
->>>>  >
->>>>  > That is a good question. From my understanding the controller is a SAS
->>>>  > controller that can drive SATA disks (as I guess all SAS controllers
->>>> can
->>>>  > do...). Could it be that the controller can be setup to act as an AHCI
->>>>  > SATA controller or if the right registers are poked a SAS controller?
->>>>
->>>> Based on how the sata_promise-supported chips work I'd guess that they
->>>> have dual programming interfaces with AHCI for JBOD SATA and a native
->>>> one (perhaps just additional control registers) for SAS and raid.
->>>>
->>> That's interesting; and makes sense. I'm guessing that we won't end up
->>> with an open source driver that can do SAS on these chips then... But
->>> for now at least we can use them as SATA controllers and if Promise
->>> wants to come to the table with specs or datasheets they can in the
->>> future. I'm just happy to be able to use my eSATA ports (and perhaps
->>> the possibility of getting my hard disk off the SB600, although I should
->>> benchmark both controllers before jumping to any conclusions).
->> FWIW, I'll poke my Promise contacts, but they have gone mostly silent in the
->> past year, so don't get your hopes up...
-> 
-> Thanks Jeff!
-> 
-> No need for hope - we have ahci now :)
+Andrew Patterson <andrew.patterson@hp.com> writes:
 
-Well, I still think this PCI ID addition leaves open the possibility 
-that plugging in a SAS disk could hang the system or similar misbehavior.
+> On Wed, 2008-09-03 at 14:19 -0400, Jeff Moyer wrote:
+>> Andrew Patterson <andrew.patterson@hp.com> writes:
+>> 
+>> > Added flush_disk to factor out common buffer cache flushing code.
+>> >
+>> > We need to be able to flush the buffer cache for for more than
+>> > just when a disk is changed, so we factor out common cache flush code
+>> > in check_disk_change() to an internal flush_disk() routine.  This
+>> > routine will then be used for both disk changes and disk resizes (in a
+>> > later patch).
+>> >
+>> > Include the disk name in the text indicating that there are busy
+>> > inodes on the device and increase the KERN severity of the message.
+>> >
+>> > Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
+>> Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+>> 
+>> > +static void flush_disk(struct block_device *bdev)
+>> > +{
+>> > +	if (__invalidate_device(bdev)) {
+>> > +		char name[BDEVNAME_SIZE] = "";
+>> > +
+>> > +		if (bdev->bd_disk)
+>> > +			disk_name(bdev->bd_disk, 0, name);
+>> > +		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
+>> > +		       name);
+>> > +	}
+>> 
+>> This message will scare folks growing their devices online.  Can you
+>> think of some better verbiage for this?
+>
+> This message is shared with the check_disk_change() routine. Yes, it is
+> scary, but perhaps that is to the good. We have no guarantee how the
+> user changed the underlying storage.  For example, they might have
+> shrunk the volume below the size of an underlying file-system and then
+> grew it again before kicking off the resize detection (admittedly a
+> degenerate case), in which case the warning is appropriate.  Any
+> suggestions on better wording?
 
-	Jeff
+I'm not sure how verbose we want to be with printk's;  it's a dilemma.
+Any verbiage suggesting that strictly growing the partition is safe
+would be welcome, but I agree, that's tough to convey at this point.
 
+I guess I'm okay with things as they stand, but I do think this will
+generate customer calls.  ;)
 
-
+-Jeff
