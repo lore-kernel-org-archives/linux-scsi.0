@@ -1,66 +1,55 @@
 From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 6/6] Call flush_disk() after detecting an online resize.
-Date: Thu, 04 Sep 2008 14:27:45 -0600
-Message-ID: <20080904202745.10456.20803.stgit@bob.kio>
+Subject: [PATCH 3/6] Check for device resize when rescanning partitions
+Date: Thu, 04 Sep 2008 14:27:30 -0600
+Message-ID: <20080904202730.10456.14322.stgit@bob.kio>
 References: <20080904202714.10456.88061.stgit@bob.kio>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:39971 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758717AbYIDU1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 16:27:46 -0400
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:13263 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758122AbYIDU1b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 16:27:31 -0400
 In-Reply-To: <20080904202714.10456.88061.stgit@bob.kio>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: andrew.patterson@hp.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
 
-Call flush_disk() after detecting an online resize.
+Check for device resize when rescanning partitions
 
-We call flush_disk() to make sure the buffer cache for the disk is
-flushed after a disk resize. There are two resize cases, growing and
-shrinking. Given that users can shrink/then grow a disk before
-revalidate_disk() is called, we treat the grow case identically to
-shrinking. We need to flush the buffer cache after an online shrink
-because, as James Bottomley puts it,
-
-     The two use cases for shrinking I can see are
-
-     1. planned: the fs is already shrunk to within the new boundaries
-        and all data is relocated, so invalidate is fine (any dirty
-        buffers that might exist in the shrunk region are there only
-        because they were relocated but not yet written to their
-        original location).
-     2. unplanned:  In this case, the fs is probably toast, so whether
-        we invalidate or not isn't going to make a whole lot of
-        difference; it's still going to try to read or write from
-        sectors beyond the new size and get I/O errors.
-
-Immediately invalidating shrunk disks will cause errors for outstanding
-I/Os for reads/write beyond the new end of the disk to be generated
-earlier then if we waited for the normal buffer cache operation. It also
-removes a potential security hole where we might keep old data around
-from beyond the end of the shrunk disk if the disk was not invalidated.
+Check for device resize in the rescan_partitions() routine. If the device
+has been resized, the bdev size is set to match. The rescan_partitions()
+routine is called when opening the device and when calling the
+BLKRRPART ioctl.
 
 Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
 ---
 
- fs/block_dev.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ fs/partitions/check.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 33650fc..57e2786 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -902,6 +902,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
- 		       "%s: detected capacity change from %lld to %lld\n",
- 		       name, bdev_size, disk_size);
- 		i_size_write(bdev->bd_inode, disk_size);
-+		flush_disk(bdev);
- 	}
- }
- EXPORT_SYMBOL(check_disk_size_change);
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index e6f378f..77cfe63 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -504,7 +504,6 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	res = invalidate_partition(disk, 0);
+ 	if (res)
+ 		return res;
+-	bdev->bd_invalidated = 0;
+ 
+ 	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
+ 	while ((part = disk_part_iter_next(&piter)))
+@@ -513,6 +512,8 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 
+ 	if (disk->fops->revalidate_disk)
+ 		disk->fops->revalidate_disk(disk);
++	check_disk_size_change(disk, bdev);
++	bdev->bd_invalidated = 0;
+ 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
+ 		return 0;
+ 	if (IS_ERR(state))	/* I/O error reading the partition table */
 
