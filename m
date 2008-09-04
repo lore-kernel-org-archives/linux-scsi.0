@@ -1,63 +1,79 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: [PATCH 5/6] Added flush_disk to factor out common buffer cache
-	flushing code.
-Date: Thu, 04 Sep 2008 04:16:20 +0000
-Message-ID: <1220501780.6601.14.camel@grinch>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/6] detect online disk resize
+Date: Thu, 4 Sep 2008 09:26:51 +0200
+Message-ID: <20080904072651.GX20055@kernel.dk>
 References: <20080829231254.25065.66052.stgit@bluto.andrew>
-	 <20080829231320.25065.44013.stgit@bluto.andrew>
-	 <x4963pd9jnk.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:12093 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbYIDEQZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2008 00:16:25 -0400
-In-Reply-To: <x4963pd9jnk.fsf@segfault.boston.devel.redhat.com>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:57174 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048AbYIDH04 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2008 03:26:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20080829231254.25065.66052.stgit@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com, jmoyer@redhat.com
 
-On Wed, 2008-09-03 at 14:19 -0400, Jeff Moyer wrote:
-> Andrew Patterson <andrew.patterson@hp.com> writes:
+On Fri, Aug 29 2008, Andrew Patterson wrote:
+> This is version 2 of a patch series I submitted back in May 2008. This
+> version now checks for device size changes in the rescan_partitions()
+> routine.  Which in turn is called when a device is opened and in the
+> BLKRRPART ioctl.
 > 
-> > Added flush_disk to factor out common buffer cache flushing code.
-> >
-> > We need to be able to flush the buffer cache for for more than
-> > just when a disk is changed, so we factor out common cache flush code
-> > in check_disk_change() to an internal flush_disk() routine.  This
-> > routine will then be used for both disk changes and disk resizes (in a
-> > later patch).
-> >
-> > Include the disk name in the text indicating that there are busy
-> > inodes on the device and increase the KERN severity of the message.
-> >
-> > Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
-> Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+> I am resubmitting this patch series as I got little response the
+> previous time.  Al Viro has told me offline that he would look at it this
+> time.
 > 
-> > +static void flush_disk(struct block_device *bdev)
-> > +{
-> > +	if (__invalidate_device(bdev)) {
-> > +		char name[BDEVNAME_SIZE] = "";
-> > +
-> > +		if (bdev->bd_disk)
-> > +			disk_name(bdev->bd_disk, 0, name);
-> > +		printk(KERN_WARNING "VFS: busy inodes on changed media %s\n",
-> > +		       name);
-> > +	}
+> This patch series handles online disk resizes that are currently not
+> completely recognized by the kernel using the existing revalidate_disk
+> routines.  An online resize can occur when growing or shrinking a
+> Fibre Channel LUN or perhaps by adding a disk to an existing RAID
+> volume.
 > 
-> This message will scare folks growing their devices online.  Can you
-> think of some better verbiage for this?
+> The kernel currently recognizes a device size change when the
+> lower-level revalidate_disk routines are called; however, the block
+> layer does not use the new size while it has any current openers on
+> the device. So, for example, if LVM has an volume open on the device,
+> you will generally not see the size change until after a reboot. We
+> fix this problem by creating a wrapper to be used with lower-level
+> revalidate_disk routines.  This wrapper first calls the lower-level
+> driver's revalidate_disk routine. It then compares the gendisk
+> capacity to the block devices inode size. If there is a difference, we
+> adjust the block device's size. If the size has changed, we then flush
+> the disk for safety. The size is also checked in rescan_partitions
+> which is called when the device is opened or when the BLKRRPART ioctl
+> is called.
+> 
+> There are several ways to "kick off" a device size change:
+> 
+> 1. For SCSI devices do:
+> 
+>   # echo 1 > /sys/class/scsi_device/<device>/device/rescan
+> 
+>   or
+> 
+>   # blockdev --rereadpt <device file>
+> 
+> 2. Other devices (not device mapper)
+> 
+>   # blockdev --rereadpt <device file>
+> 
+> I have tested this patch on SCSI and SmartArray (cciss)
+> devices. Device mapper still does not recognize device size changes
+> until the device is restarted.
+> 
+> Jeff Moyer and Andy Ryan have done some light testing on the previous
+> version of this series.
+> 
+> This patch set has been tested with scsi-misc-2.6. It also applies to
+> linux-next with some minor, obvious changes.
 
-This message is shared with the check_disk_change() routine. Yes, it is
-scary, but perhaps that is to the good. We have no guarantee how the
-user changed the underlying storage.  For example, they might have
-shrunk the volume below the size of an underlying file-system and then
-grew it again before kicking off the resize detection (admittedly a
-degenerate case), in which case the warning is appropriate.  Any
-suggestions on better wording?
+This version looks sane to me. Care to resend against for-2.6.28 of the
+block repo?
 
-Andrew
+-- 
+Jens Axboe
 
