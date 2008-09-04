@@ -1,1064 +1,1181 @@
 From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: [RFC 1/2] scsi_transport_fc: pass through support through bsg interface
-Date: Wed, 3 Sep 2008 19:55:13 -0700
-Message-ID: <66E945FC-7033-4D66-9FD9-78731EE97AF6@qlogic.com>
+Subject: [RFC 2/2] qla2xxx: pass through support through bsg interface
+Date: Wed, 3 Sep 2008 19:55:40 -0700
+Message-ID: <E2859F0D-AFB4-473C-9599-8F963ED365BD@qlogic.com>
 Mime-Version: 1.0 (Apple Message framework v928.1)
-Content-Type: multipart/mixed; boundary=Apple-Mail-4--475938107
+Content-Type: multipart/mixed; boundary=Apple-Mail-6--475911475
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:39122 "EHLO
+Received: from avexch2.qlogic.com ([198.70.193.116]:39148 "EHLO
 	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753382AbYIDCzQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2008 22:55:16 -0400
+	with ESMTP id S1753321AbYIDCzn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2008 22:55:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com, Robert W Love <robert.w.love@intel.com>
 Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>
 
 
---Apple-Mail-4--475938107
+--Apple-Mail-6--475911475
 Content-Type: text/plain;
 	charset=US-ASCII;
 	format=flowed;
 	delsp=yes
 Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
-scsi_transport_fc.c
-index cb971f0..a3c10ef 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -43,6 +43,13 @@ static void fc_vport_sched_delete(struct  
-work_struct *work);
-  static int fc_vport_setup(struct Scsi_Host *shost, int channel,
-  	struct device *pdev, struct fc_vport_identifiers  *ids,
-  	struct fc_vport **vport);
-+static void fc_service_timedout(unsigned long);
-+static void fc_service_done(struct fc_service *);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/ 
+qla_attr.c
+index 0ddfe71..5ae948e 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1233,6 +1233,270 @@ qla24xx_vport_disable(struct fc_vport  
+*fc_vport, bool disable)
+  	return 0;
+  }
+
 +static int
-+fc_service_handler(struct Scsi_Host *, struct fc_rport *, struct  
-request *);
-+static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
-+
-+struct kmem_cache *fc_service_cache;
-
-  /*
-   * Redefine so that we can have same named attributes in the
-@@ -642,6 +649,11 @@ static __init int fc_transport_init(void)
-  	error = transport_class_register(&fc_rport_class);
-  	if (error)
-  		return error;
-+	fc_service_cache = kmem_cache_create("fc_service",
-+					     sizeof(struct fc_service),
-+					     0, SLAB_HWCACHE_ALIGN, NULL);
-+	if (!fc_service_cache)
-+		return -ENOMEM;
-  	return transport_class_register(&fc_transport_class);
-  }
-
-@@ -651,6 +663,7 @@ static void __exit fc_transport_exit(void)
-  	transport_class_unregister(&fc_rport_class);
-  	transport_class_unregister(&fc_host_class);
-  	transport_class_unregister(&fc_vport_class);
-+	kmem_cache_destroy(fc_service_cache);
-  }
-
-  /*
-@@ -2057,6 +2070,9 @@ fc_attach_transport(struct fc_function_template  
-*ft)
-
-  	i->f = ft;
-
-+	/* for FC services (FC-CT, ELS, etc.) */
-+	i->f->fc_service_handler = fc_service_handler;
-+
-  	/* Transport uses the shost workq for scsi scanning */
-  	i->t.create_work_queue = 1;
-
-@@ -2406,12 +2422,235 @@ fc_rport_final_delete(struct work_struct *work)
-
-  	transport_remove_device(dev);
-  	device_del(dev);
-+	fc_bsg_remove(shost, rport);
-  	transport_destroy_device(dev);
-  	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
-  	put_device(dev);			/* for self-reference */
-  }
-
-
-+static void fc_service_timedout(unsigned long _service)
++qla2x00_execute_fc_els_service(struct fc_service *service)
 +{
-+	struct fc_service *service = (void *) _service;
++	int count = service->req_size;
++	struct fc_els_frame *frame_backup;
++	struct fc_els_frame *frame = service->els_frame;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct els_entry_24xx *els_iocb;
 +	unsigned long flags;
++	fc_port_t *fcport = *(fc_port_t **) rport->dd_data;
++	dma_addr_t req_dma;
++	dma_addr_t resp_dma;
 +
-+	spin_lock_irqsave(&service->service_state_lock, flags);
-+	if (!(service->service_state_flags & FC_SERVICE_STATE_DONE))
-+		service->service_state_flags |= FC_SERVICE_STATE_ABORTED;
-+	spin_unlock_irqrestore(&service->service_state_lock, flags);
++	count -= sizeof(frame->fc_hdr);
 +
-+	complete(&service->completion);
-+}
++	if (count < sizeof(frame->els_hdr) || ha->pass_thru_cmd_in_process ||
++	    ha->pass_thru_cmd_result)
++		goto els_error0;
 +
-+static void fc_service_done(struct fc_service *service)
-+{
-+	if (!del_timer_sync(&service->timer)) {
-+		printk(KERN_ERR "ERROR: FC timed out for rport %p\n",
-+		    service->rport);
-+		return;
-+	}
-+	complete(&service->completion);
-+}
++	if (rport->port_state != FC_PORTSTATE_ONLINE || !fcport)
++		goto els_error0;
 +
-+static int
-+issue_fc_service(struct fc_rport *rport, void *req, int req_size,
-+    void *resp, int resp_size, void *service_reply)
-+{
-+	int res = -ECOMM;
-+	struct fc_service *service = NULL;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+	struct fc_frame_header *frame = req;
++	memset(service->response, 0, service->resp_size);
++	frame_backup = kzalloc(service->req_size, GFP_KERNEL);
++	if (!frame_backup)
++		goto els_error0;
 +
-+	if (!((frame->fh_type == FC_FRAME_TYPE_ELS) ||
-+	    (frame->fh_type == FC_FRAME_TYPE_FC_CT))) {
-+		printk(KERN_ERR "ERROR: invalid FC service type = %2x\n",
-+		    frame->fh_type);
-+		return -EINVAL;
-+	}
++	memcpy(frame_backup, frame, service->req_size);
++	memset(frame, 0, service->req_size);
++	memcpy(frame, &frame_backup->els_hdr, count);
 +
-+	if (frame->fh_type == FC_FRAME_TYPE_ELS) {
-+		if (!i->f->execute_fc_els_service)
-+			goto ex_err;
-+	} else if (frame->fh_type == FC_FRAME_TYPE_FC_CT) {
-+		if (!i->f->execute_fc_ct_service)
-+			goto ex_err;
++	req_dma = dma_map_single(&ha->pdev->dev, (void *) service->els_frame,
++	    service->req_size, DMA_TO_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, req_dma))
++		goto els_error0;
++	resp_dma = dma_map_single(&ha->pdev->dev, (void *) service->response,
++	    service->resp_size, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, resp_dma))
++		goto els_error1;
++
++	ha->pass_thru_cmd_in_process = 1;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	els_iocb = (struct els_entry_24xx *)qla2x00_req_pkt(ha);
++
++	if (els_iocb == NULL) {
++		qla_printk(KERN_WARNING, ha,
++		    "Passthru ELS request failed to get request packet\n");
++		goto els_error3;
 +	}
 +
-+	service = fc_alloc_service();
-+	if (!service)
-+		return -ENOMEM;
++	els_iocb->entry_type = ELS_IOCB_TYPE;
++	els_iocb->entry_count = 1;
++	els_iocb->sys_define = 0;
++	els_iocb->entry_status = 0;
++	els_iocb->handle = fcport->d_id.b24;
++	els_iocb->nport_handle = cpu_to_le16(fcport->loop_id);
++	els_iocb->tx_dsd_count = __constant_cpu_to_le16(1);
++	els_iocb->vp_index = ha->vp_idx;
++	els_iocb->sof_type = EST_SOFI3;
++	els_iocb->rx_dsd_count = __constant_cpu_to_le16(1);
++	els_iocb->opcode = frame_backup->els_hdr.els_cmd;
++	els_iocb->port_id[0] = fcport->d_id.b.al_pa;
++	els_iocb->port_id[1] = fcport->d_id.b.area;
++	els_iocb->port_id[2] = fcport->d_id.b.domain;
++	els_iocb->control_flags = 0;
++	els_iocb->rx_byte_count = cpu_to_le32(service->resp_size);
++	els_iocb->tx_byte_count = cpu_to_le32(count);
++	els_iocb->tx_address[0] = cpu_to_le32(LSD(req_dma));
++	els_iocb->tx_address[1] = cpu_to_le32(MSD(req_dma));
++	els_iocb->tx_len = els_iocb->tx_byte_count;
++	els_iocb->rx_address[0] = cpu_to_le32(LSD(resp_dma));
++	els_iocb->rx_address[1] = cpu_to_le32(MSD(resp_dma));
++	els_iocb->rx_len = els_iocb->rx_byte_count;
 +
-+	service->service_type = frame->fh_type;
-+	service->ct_frame = (struct fc_ct_frame *) req;
-+	service->req_size = req_size;
-+	service->response = resp;
-+	service->resp_size = resp_size;
-+	service->rport = rport;
-+	/* sense area of the request structure */
-+	service->reply_seq = service_reply;
-+	service->service_done = fc_service_done;
++	service->lld_pkt = (void *) els_iocb;
 +
-+	service->timer.data = (unsigned long) service;
-+	service->timer.function = fc_service_timedout;
-+	service->timer.expires = jiffies + FC_SERVICE_TIMEOUT*HZ;
++	ha->active_els_service = service;
 +
-+	sg_init_one(&service->sg_req, req, req_size);
-+	sg_init_one(&service->sg_resp, resp, resp_size);
++	wmb();
++	qla2x00_isp_cmd(ha);
 +
-+	add_timer(&service->timer);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	if (!wait_for_completion_timeout(&ha->pass_thru_intr_comp, 10 * HZ))
++		goto els_error2;
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
 +
-+	if (service->service_type == FC_FRAME_TYPE_ELS)
-+		res = i->f->execute_fc_els_service(service);
-+	else if (service->service_type == FC_FRAME_TYPE_FC_CT)
-+		res = i->f->execute_fc_ct_service(service);
++	memcpy(frame, frame_backup, service->req_size);
 +
-+	if (res) {
-+		del_timer(&service->timer);
-+		printk(KERN_ERR "ERROR: executing FC service failed:%d\n",
-+		    res);
-+		goto ex_err;
-+	}
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
 +
-+	wait_for_completion(&service->completion);
++	service->lld_pkt = (void *) 0;
++	ha->active_els_service = (struct fc_service *)0;
++	service->service_done(service);
++	return service->status.residual;
 +
-+	if ((service->service_state_flags & FC_SERVICE_STATE_ABORTED)) {
-+		printk(KERN_ERR "ERROR: FC service timed out or aborted\n");
-+		i->f->abort_fc_service(service);
-+		if (!(service->service_state_flags &
-+		     FC_SERVICE_STATE_DONE)) {
-+			printk(KERN_ERR "ERROR: FC service aborted"
-+			    " and not done\n");
-+			goto ex_err;
-+		}
-+	}
-+	if (service->status.resp == FC_SERVICE_COMPLETE)
-+		res = 0;
-+	else {
-+		printk(KERN_ERR "ERROR: FC service to rport %p"
-+		    " response: 0x%x\n", rport, service->status.resp);
-+		fc_free_service(service);
-+		service = NULL;
-+		return res;
-+	}
-+ex_err:
-+	if (service != NULL)
-+		fc_free_service(service);
++els_error3:
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++els_error2:
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++els_error1:
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++els_error0:
++	qla_printk(KERN_WARNING, ha, "Passthru ELS failed\n");
 +
-+	return res;
-+}
-+
-+static int
-+fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
-+			  struct request *req)
-+{
-+	int ret;
-+	struct request *rsp = req->next_rq;
-+
-+	if (!rsp) {
-+		printk(KERN_ERR "ERROR: space for a FC service"
-+		   " response is missing\n");
-+		return -EINVAL;
-+	}
-+
-+	/* ELS doesn't support multiple SG */
-+	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
-+		printk(KERN_WARNING "ERROR: multiple segments req %u,"
-+		    " rsp %u  are not supported for ELS services\n",
-+		    req->bio->bi_vcnt, rsp->bio->bi_vcnt);
-+		return -EINVAL;
-+	}
-+
-+	ret = issue_fc_service(rport, bio_data(req->bio), req->data_len,
-+			bio_data(rsp->bio), rsp->data_len, req->sense);
-+
-+	if (ret > 0) {
-+		/* positive number is the untransferred residual */
-+		rsp->data_len = ret;
-+		req->data_len = 0;
-+		ret = 0;
-+	} else if (ret == 0) {
-+		rsp->data_len = 0;
-+		req->data_len = 0;
-+	}
-+
-+	return ret;
-+}
-+
-+static void fc_service_request(struct request_queue *q)
-+{
-+	struct request *req;
-+	struct fc_rport *rport = q->queuedata;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+	int (*handler)(struct Scsi_Host *, struct fc_rport *,
-+		       struct request *);
-+
-+	while (!blk_queue_plugged(q)) {
-+		req = elv_next_request(q);
-+		if (!req)
-+			break;
-+
-+		blkdev_dequeue_request(req);
-+		spin_unlock_irq(q->queue_lock);
-+		handler = to_fc_internal
-+			(shost->transportt)->f->fc_service_handler;
-+		if (handler)
-+			req->errors = handler(shost, rport, req);
-+
-+		spin_lock_irq(q->queue_lock);
-+		req->end_io(req, req->errors);
-+	}
++	return -EINVAL;
 +}
 +
 +static int
-+fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
++qla2x00_execute_fc_ct_service(struct fc_service *service)
 +{
-+	struct request_queue *q;
-+	int error;
-+	struct device *dev;
-+	const char *name;
-+	void (*release)(struct device *);
++	int count = service->req_size;
++	struct fc_ct_frame *frame_backup;
++	struct fc_ct_frame *frame = service->ct_frame;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct ct_entry_24xx *ct_iocb;
++	unsigned long flags;
++	dma_addr_t req_dma;
++	dma_addr_t resp_dma;
 +
-+	if (!to_fc_internal(shost->transportt)->f->fc_service_handler)
-+		return 0;
++	count -= sizeof(frame->fc_hdr);
 +
-+	if (!rport) {
-+		printk(KERN_ERR "ERROR: rport is NULL\n");
-+		return -ENOMEM;
++	if (count < sizeof(frame->ct_hdr) ||
++	    (ha->pass_thru_cmd_in_process || ha->pass_thru_cmd_result))
++		goto ct_error0;
++
++	if (qla2x00_mgmt_svr_login(ha))
++		goto ct_error0;
++
++	memset(service->response, 0, service->resp_size);
++	frame_backup = kzalloc(service->req_size, GFP_KERNEL);
++	if (!frame_backup)
++		goto ct_error0;
++
++	memcpy(frame_backup, frame, service->req_size);
++	memset(frame, 0, service->req_size);
++	memcpy(frame, &frame_backup->ct_hdr, count);
++	req_dma = dma_map_single(&ha->pdev->dev, (void *) service->els_frame,
++	    service->req_size, DMA_TO_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, req_dma))
++		goto ct_error0;
++	resp_dma = dma_map_single(&ha->pdev->dev, (void *) service->response,
++	    service->resp_size, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, resp_dma))
++		goto ct_error1;
++
++	ha->pass_thru_cmd_in_process = 1;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	ct_iocb = (struct ct_entry_24xx *)qla2x00_req_pkt(ha);
++	if (ct_iocb == NULL)
++		goto ct_error3;
++
++	ct_iocb->entry_type = CT_IOCB_TYPE;
++	ct_iocb->entry_count = 1;
++	ct_iocb->entry_status = 0;
++	ct_iocb->comp_status = __constant_cpu_to_le16(0);
++	if (IS_FWI2_CAPABLE(ha))
++		ct_iocb->nport_handle = cpu_to_le16(NPH_SNS);
++	else
++		ct_iocb->nport_handle = cpu_to_le16(SIMPLE_NAME_SERVER);
++	ct_iocb->cmd_dsd_count = __constant_cpu_to_le16(1);
++	ct_iocb->vp_index = ha->vp_idx;
++	ct_iocb->timeout = __constant_cpu_to_le16(20);  /* R_A_TOV * 2 */
++	ct_iocb->rsp_dsd_count = __constant_cpu_to_le16(1);
++	ct_iocb->rsp_byte_count = cpu_to_le32(service->resp_size);
++	ct_iocb->cmd_byte_count = cpu_to_le32(count);
++	ct_iocb->dseg_0_address[0] = cpu_to_le32(LSD(req_dma));
++	ct_iocb->dseg_0_address[1] = cpu_to_le32(MSD(req_dma));
++	ct_iocb->dseg_0_len = ct_iocb->cmd_byte_count;
++	ct_iocb->dseg_1_address[0] = cpu_to_le32(LSD(resp_dma));
++	ct_iocb->dseg_1_address[1] = cpu_to_le32(MSD(resp_dma));
++	ct_iocb->dseg_1_len = ct_iocb->rsp_byte_count;
++
++	ha->active_ct_service = service;
++
++	wmb();
++	qla2x00_isp_cmd(ha);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	if (!wait_for_completion_timeout(&ha->pass_thru_intr_comp, 20 * HZ))
++		goto ct_error2;
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++
++	memcpy(frame, frame_backup, service->req_size);
++
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++
++	ha->active_ct_service = (struct fc_service *) 0;
++
++	service->service_done(service);
++	return service->status.residual;
++
++ct_error3:
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++ct_error2:
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++ct_error1:
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++ct_error0:
++	qla_printk(KERN_WARNING, ha, "Passthru CT failed\n");
++
++	return -EINVAL;
++}
++
++static int
++qla2x00_abort_fc_service(struct fc_service *service)
++{
++	unsigned long flags;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct fc_frame_header *frame = (struct fc_frame_header *)
++		service->els_frame;
++	struct abort_entry_24xx *abort_iocb;
++	struct els_entry_24xx *els_iocb = service->lld_pkt;
++
++	if (frame->fh_type != FC_FRAME_TYPE_ELS) {
++		printk(KERN_ERR "abort frame is not supported\n");
++		return -EINVAL;
 +	}
 +
-+	q = blk_init_queue(fc_service_request, NULL);
-+	if (!q)
-+		return -ENOMEM;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	abort_iocb = (struct abort_entry_24xx *)qla2x00_req_pkt(ha);
 +
-+	dev = &rport->dev;
-+	name = dev->bus_id;
-+	release = NULL;
++	abort_iocb->entry_type = ABORT_IOCB_TYPE;
++	abort_iocb->entry_count = 1;
++	abort_iocb->handle_count = 0;
++	abort_iocb->entry_status = 0;
++	abort_iocb->options = 0;
++	abort_iocb->handle_to_abort = els_iocb->handle;
++	abort_iocb->port_id[0] = els_iocb->port_id[0];
++	abort_iocb->port_id[1] = els_iocb->port_id[1];
++	abort_iocb->port_id[2] = els_iocb->port_id[2];
++	abort_iocb->vp_index = ha->vp_idx;
 +
-+	error = bsg_register_queue(q, dev, name, release);
-+	if (error) {
-+		blk_cleanup_queue(q);
-+		return -ENOMEM;
-+	}
++	wmb();
++	qla2x00_isp_cmd(ha);
 +
-+	rport->q = q;
-+	q->queuedata = rport;
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 +
 +	return 0;
 +}
 +
-+static void
-+fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
-+{
-+	struct request_queue *q = rport->q;
+  struct fc_function_template qla2xxx_transport_functions = {
+
+  	.show_host_node_name = 1,
+@@ -1276,6 +1540,10 @@ struct fc_function_template  
+qla2xxx_transport_functions = {
+  	.vport_create = qla24xx_vport_create,
+  	.vport_disable = qla24xx_vport_disable,
+  	.vport_delete = qla24xx_vport_delete,
 +
-+	if (!q)
-+		return;
-+
-+	bsg_unregister_queue(q);
-+}
-+
-  /**
-   * fc_rport_create - allocates and creates a remote FC port.
-   * @shost:	scsi host the remote port is connected to.
-@@ -2471,8 +2710,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-channel,
-  	else
-  		rport->scsi_target_id = -1;
-  	list_add_tail(&rport->peers, &fc_host->rports);
--	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
-
-+	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
-  	spin_unlock_irqrestore(shost->host_lock, flags);
-
-  	dev = &rport->dev;
-@@ -2491,6 +2730,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-channel,
-  	transport_add_device(dev);
-  	transport_configure_device(dev);
-
-+	fc_bsg_initialize(shost, rport);
-+
-  	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
-  		/* initiate a scan of the target */
-  		rport->flags |= FC_RPORT_SCAN_PENDING;
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/ 
-scsi_transport_fc.h
-index 21018a4..5cef236 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -32,7 +32,7 @@
-  #include <scsi/scsi_netlink.h>
-
-  struct scsi_transport_template;
--
-+extern struct kmem_cache *fc_service_cache;
-
-  /*
-   * FC Port definitions - Following FC HBAAPI guidelines
-@@ -352,6 +352,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
-   	struct delayed_work fail_io_work;
-   	struct work_struct stgt_delete_work;
-  	struct work_struct rport_delete_work;
-+	struct request_queue *q;
-  } __attribute__((aligned(sizeof(unsigned long))));
-
-  /* bit field values for struct fc_rport "flags" field: */
-@@ -514,6 +515,134 @@ struct fc_host_attrs {
-  	struct workqueue_struct *devloss_work_q;
++	.execute_fc_els_service = qla2x00_execute_fc_els_service,
++	.execute_fc_ct_service = qla2x00_execute_fc_ct_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
   };
 
-+#define FC_STATUS_BUF_SIZE 96
+  struct fc_function_template qla2xxx_transport_vport_functions = {
+@@ -1316,6 +1584,10 @@ struct fc_function_template  
+qla2xxx_transport_vport_functions = {
+  	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
+  	.terminate_rport_io = qla2x00_terminate_rport_io,
+  	.get_fc_host_stats = qla2x00_get_fc_host_stats,
 +
-+enum fc_frame_type {
-+	FC_FRAME_TYPE_BS,
-+	FC_FRAME_TYPE_ELS,
-+	FC_FRAME_TYPE_IEC = 4,
-+	FC_FRAME_TYPE_IP,
-+	FC_FRAME_TYPE_FCP = 8,
-+	FC_FRAME_TYPE_GPP,
-+	FC_FRAME_TYPE_FC_CT = 0x20,
-+};
-+
-+enum service_response {
-+	FC_SERVICE_COMPLETE,
-+	FC_SERVICE_ERROR = -1,
-+};
-+
-+#define FC_SERVICE_STATE_PENDING      1
-+#define FC_SERVICE_STATE_DONE         2
-+#define FC_SERVICE_STATE_ABORTED      4
-+#define FC_SERVICE_AT_INITIATOR       16
-+
-+struct fc_service_status {
-+	enum service_response resp;
-+	int  error;
-+	int  buf_valid_size;
-+
-+	u8   buf[FC_STATUS_BUF_SIZE];
-+
-+	u32  residual;
-+};
-+
-+/* NOTE - fc_frame_header is already defined in open-fcoe-upstream  
-branch */
-+/*
-+ * Frame header
-+ */
-+struct fc_frame_header {
-+	__u8          fh_r_ctl;	/* routing control */
-+	__u8          fh_d_id[3];	/* Destination ID */
-+
-+	__u8          fh_cs_ctl;	/* class of service control / pri */
-+	__u8          fh_s_id[3];	/* Source ID */
-+
-+	__u8          fh_type;		/* see enum fc_fh_type below */
-+	__u8          fh_f_ctl[3];	/* frame control */
-+
-+	__u8          fh_seq_id;	/* sequence ID */
-+	__u8          fh_df_ctl;	/* data field control */
-+	__be16        fh_seq_cnt;	/* sequence count */
-+
-+	__be16        fh_ox_id;		/* originator exchange ID */
-+	__be16        fh_rx_id;		/* responder exchange ID */
-+	__be32        fh_parm_offset;	/* parameter or relative offset */
-+};
-+
-+/* TBD - fc_els_hdr to move to ~/include/scsi/fc/fc_els.h */
-+struct fc_els_hdr {
-+	__u8	els_cmd;
-+	__u8	els_param[3];
-+};
-+
-+/* NOTE - fc_ct_hdr is already defined in open-fcoe-upstream branch */
-+/*
-+ * Fibre Channel Services - Common Transport.
-+ * From T11.org FC-GS-2 Rev 5.3 November 1998.
-+ */
-+
-+struct fc_ct_hdr {
-+	__u8		ct_rev;		/* revision */
-+	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
-+	__u8		ct_fs_type;	/* type of fibre channel service */
-+	__u8		ct_fs_subtype;	/* subtype */
-+	__u8		ct_options;
-+	__u8		_ct_resvd1;
-+	__be16		ct_cmd;		/* command / response code */
-+	__be16		ct_mr_size;	/* maximum / residual size */
-+	__u8		_ct_resvd2;
-+	__u8		ct_reason;	/* reject reason */
-+	__u8		ct_explan;	/* reason code explanation */
-+	__u8		ct_vendor;	/* vendor unique data */
-+};
-+
-+struct fc_els_frame {
-+	struct fc_frame_header fc_hdr;
-+	struct fc_els_hdr els_hdr;
-+	u32 els_cmd[4];
-+};
-+
-+struct fc_ct_frame {
-+	struct fc_frame_header fc_hdr;
-+	struct fc_ct_hdr ct_hdr;
-+	u32 ct_cmd[1];
-+};
-+
-+#define FC_SERVICE_TIMEOUT 10
-+
-+struct fc_service {
-+	struct fc_rport *rport;
-+	struct list_head      list;
-+
-+	spinlock_t   service_state_lock;
-+	unsigned     service_state_flags;
-+
-+	enum   fc_frame_type   service_type;
-+
-+	/* Used by the discovery code. */
-+	struct timer_list     timer;
-+	struct completion     completion;
-+
-+	union {
-+		struct fc_ct_frame *ct_frame;
-+		struct fc_els_frame *els_frame;
-+	};
-+	int req_size;
-+	void *response;
-+	int resp_size;
-+
-+	struct scatterlist sg_req;
-+	struct scatterlist sg_resp;
-+
-+	struct fc_service_status status;
-+	void *reply_seq;   /* pointer to sense area of request */
-+	void   (*service_done)(struct fc_service *);
-+
-+	void *lld_pkt;
-+	struct work_struct abort_work;
-+};
-+
-  #define shost_to_fc_host(x) \
-  	((struct fc_host_attrs *)(x)->shost_data)
++	.execute_fc_els_service = qla2x00_execute_fc_els_service,
++	.execute_fc_ct_service = qla2x00_execute_fc_ct_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
+  };
 
-@@ -612,6 +741,14 @@ struct fc_function_template {
-  	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
-  	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+  void
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/ 
+qla_def.h
+index ab802e9..957b077 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -95,6 +95,11 @@
+  #define MSD(x)	((uint32_t)((((uint64_t)(x)) >> 16) >> 16))
 
-+	/* fibre-channel services */
-+	int	(*fc_service_handler)(struct Scsi_Host *,
-+				      struct fc_rport *rport,
-+				      struct request *);
-+	int	(*execute_fc_els_service)(struct fc_service *);
-+	int	(*execute_fc_ct_service)(struct fc_service *);
-+	int	(*abort_fc_service)(struct fc_service *);
-+
-  	/* allocation lengths for host-specific data */
-  	u32	 			dd_fcrport_size;
-  	u32	 			dd_fcvport_size;
-@@ -732,6 +869,33 @@ fc_vport_set_state(struct fc_vport *vport, enum  
-fc_vport_state new_state)
-  	vport->vport_state = new_state;
-  }
 
-+static inline struct fc_service *
-+fc_alloc_service(void)
-+{
-+	struct fc_service *service =
-+	    kmem_cache_zalloc(fc_service_cache, GFP_KERNEL);
++/* ELS PT request buffer = 32 bytes */
++#define EXT_ELS_PT_REQ_WWPN_VALID	0x1
++#define EXT_ELS_PT_REQ_WWNN_VALID	0x2
++#define EXT_ELS_PT_REQ_PID_VALID	0x4
 +
-+	if (!service)
-+		return NULL;
+  /*
+   * I/O register
+  */
+@@ -2426,6 +2431,8 @@ typedef struct scsi_qla_host {
+  	/* SNS command interfaces for 2200. */
+  	struct sns_cmd_pkt	*sns_cmd;
+  	dma_addr_t		sns_cmd_dma;
++	char			*pass_thru;
++	dma_addr_t		pass_thru_dma;
+
+  #define SFP_DEV_SIZE	256
+  #define SFP_BLOCK_SIZE	64
+@@ -2467,6 +2474,7 @@ typedef struct scsi_qla_host {
+  	struct mutex vport_lock;	/* Virtual port synchronization */
+  	struct completion mbx_cmd_comp;	/* Serialize mbx access */
+  	struct completion mbx_intr_comp;  /* Used for completion  
+notification */
++	struct completion pass_thru_intr_comp;
+
+  	uint32_t	mbx_flags;
+  #define  MBX_IN_PROGRESS	BIT_0
+@@ -2611,6 +2619,12 @@ typedef struct scsi_qla_host {
+
+  	struct qla_chip_state_84xx *cs84xx;
+  	struct qla_statistics qla_stats;
 +
-+	INIT_LIST_HEAD(&service->list);
-+	spin_lock_init(&service->service_state_lock);
-+	service->service_state_flags = FC_SERVICE_STATE_PENDING;
-+	init_timer(&service->timer);
-+	init_completion(&service->completion);
++	/* pass through support */
++	int		pass_thru_cmd_result;
++	int		pass_thru_cmd_in_process;
++	struct fc_service *active_els_service;
++	struct fc_service *active_ct_service;
+  } scsi_qla_host_t;
+
+
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/ 
+qla_fw.h
+index d1d1420..05b6910 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -625,6 +625,41 @@ struct els_entry_24xx {
+  	uint32_t rx_len;		/* Data segment 1 length. */
+  };
+
++struct els_status_24xx {
++	uint8_t entry_type;		/* Entry type. */
++	uint8_t entry_count;		/* Entry count. */
++	uint8_t sys_define;		/* System Defined. */
++	uint8_t entry_status;		/* Entry Status. */
 +
-+	return service;
-+}
++	uint32_t handle;		/* System handle. */
 +
-+static inline void
-+fc_free_service(struct fc_service *service)
-+{
-+	if (service) {
-+		BUG_ON(!list_empty(&service->list));
-+		kmem_cache_free(fc_service_cache, service);
-+	}
-+}
++	uint16_t comp_status;
++
++	uint16_t nport_handle;		/* N_PORT handle. */
++
++	uint16_t tx_dsd_count;
++
++	uint8_t vp_index;
++	uint8_t sof_type;
++
++	uint32_t rx_xchg_address;	/* Receive exchange address. */
++	uint16_t rx_dsd_count;
++
++	uint8_t opcode;
++	uint8_t reserved_2;
++
++	uint8_t port_id[3];
++	uint8_t reserved_3;
++
++	uint16_t reserved_4;
++
++	uint16_t control_flags;		/* Control flags. */
++
++	uint32_t total_byte_count;
++	uint32_t err_subcode1;
++	uint32_t err_subcode2;
++};
++
+  /*
+   * ISP queue - Mailbox Command entry structure definition.
+   */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/ 
+qla_gbl.h
+index 753dbe6..d0b6ac9 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -121,6 +121,8 @@ extern int qla2x00_start_scsi(srb_t *sp);
+  extern int qla24xx_start_scsi(srb_t *sp);
+  int qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
+  int __qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
++extern request_t * qla2x00_req_pkt(scsi_qla_host_t *);
++extern void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+
+  /*
+   * Global Function Prototypes in qla_mbx.c source file.
+@@ -347,6 +349,7 @@ extern int qla2x00_fdmi_register(scsi_qla_host_t *);
+  extern int qla2x00_gfpn_id(scsi_qla_host_t *, sw_info_t *);
+  extern int qla2x00_gpsc(scsi_qla_host_t *, sw_info_t *);
+  extern void qla2x00_get_sym_node_name(scsi_qla_host_t *, uint8_t *);
++extern int qla2x00_mgmt_svr_login(scsi_qla_host_t *);
+
+  /*
+   * Global Function Prototypes in qla_attr.c source file.
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/ 
+qla_gs.c
+index c2a4bfb..ceef231 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1093,7 +1093,7 @@ qla2x00_sns_rnn_id(scsi_qla_host_t *ha)
+   *
+   * Returns 0 on success.
+   */
+-static int
++int
+  qla2x00_mgmt_svr_login(scsi_qla_host_t *ha)
+  {
+  	int ret;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/ 
+qla_init.c
+index 20847fb..be06132 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2392,6 +2392,18 @@ qla2x00_configure_fabric(scsi_qla_host_t *ha)
+  			return (QLA_SUCCESS);
+  		}
+
++		/* allocate fc_port_t structure for name/directory server */
++		fcptemp = qla2x00_alloc_fcport(ha, GFP_KERNEL);
++		fcptemp->flags |= (FCF_FABRIC_DEVICE | FCF_LOGIN_NEEDED);
++		fcptemp->loop_id = loop_id;
++		fcptemp->d_id.b.domain = 0xff;
++		fcptemp->d_id.b.area = 0xff;
++		fcptemp->d_id.b.al_pa = 0xfc;
++		list_add_tail(&fcptemp->list, &pha->fcports);
++		atomic_set(&fcptemp->state, FCS_ONLINE);
++		qla2x00_reg_remote_port(ha, fcptemp);
++
++
+  		if (test_and_clear_bit(REGISTER_FC4_NEEDED, &ha->dpc_flags)) {
+  			if (qla2x00_rft_id(ha)) {
+  				/* EMPTY */
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/ 
+qla_iocb.c
+index 9778f0b..9e7f636 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -11,8 +11,6 @@
+
+  #include <scsi/scsi_tcq.h>
+
+-static request_t *qla2x00_req_pkt(scsi_qla_host_t *ha);
+-static void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+
+  /**
+   * qla2x00_get_cmd_direction() - Determine control_flag data  
+direction.
+@@ -476,7 +474,7 @@ qla2x00_marker(scsi_qla_host_t *ha, uint16_t  
+loop_id, uint16_t lun,
+   *
+   * Returns NULL if function failed, else, a pointer to the request  
+packet.
+   */
+-static request_t *
++request_t *
+  qla2x00_req_pkt(scsi_qla_host_t *ha)
+  {
+  	device_reg_t __iomem *reg = ha->iobase;
+@@ -546,7 +544,7 @@ qla2x00_req_pkt(scsi_qla_host_t *ha)
+   *
+   * Note: The caller must hold the hardware lock before calling this  
+routine.
+   */
+-static void
++void
+  qla2x00_isp_cmd(scsi_qla_host_t *ha)
+  {
+  	device_reg_t __iomem *reg = ha->iobase;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/ 
+qla_isr.c
+index 45a3b93..749e3ed 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1398,6 +1398,9 @@ qla24xx_process_response_queue(struct  
+scsi_qla_host *ha)
+  {
+  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+  	struct sts_entry_24xx *pkt;
++	struct els_status_24xx *els_status;
++	struct abort_entry_24xx *abort_iocb;
++	struct fc_service *service;
+
+  	if (!ha->flags.online)
+  		return;
+@@ -1430,10 +1433,47 @@ qla24xx_process_response_queue(struct  
+scsi_qla_host *ha)
+  		case STATUS_CONT_TYPE:
+  			qla2x00_status_cont_entry(ha, (sts_cont_entry_t *)pkt);
+  			break;
++ 		case MS_IOCB_TYPE:
++		case ELS_IOCB_TYPE:
++			els_status = (struct els_status_24xx *)pkt;
++
++			if (pkt->entry_type == MS_IOCB_TYPE)
++				service = ha->active_ct_service;
++			else
++				service = ha->active_els_service;
++
++			service->status.resp = FC_SERVICE_COMPLETE;
++			service->status.error = els_status->comp_status;
++
++			if (els_status->comp_status) {
++				if (els_status->comp_status == CS_DATA_UNDERRUN)
++					service->status.residual =
++					    els_status->total_byte_count;
++				else
++					service->status.residual = 0;
++				service->status.resp = FC_SERVICE_ERROR;
++			}
++
++			if (ha->pass_thru_cmd_result)
++				qla_printk(KERN_INFO, ha,
++				    "Passthru cmd result on.\n");
++			if (!ha->pass_thru_cmd_in_process)
++				qla_printk(KERN_INFO, ha,
++				    "Passthru in process off.\n");
++
++			ha->pass_thru_cmd_result = 1;
++			complete(&ha->pass_thru_intr_comp);
++ 			break;
+  		case VP_RPT_ID_IOCB_TYPE:
+  			qla24xx_report_id_acquisition(ha,
+  			    (struct vp_rpt_id_entry_24xx *)pkt);
+  			break;
++		case ABORT_IOCB_TYPE:
++			abort_iocb = (struct abort_entry_24xx *)pkt;
++			if (abort_iocb->nport_handle)
++				qla_printk(KERN_ERR, ha,
++				    "failed to abort ELS service\n");
++			break;
+  		default:
+  			/* Type Not Supported. */
+  			DEBUG4(printk(KERN_WARNING
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
+qla_os.c
+index 62fe267..e7586d9 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1669,6 +1669,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+struct pci_device_id *id)
+  	init_completion(&ha->mbx_cmd_comp);
+  	complete(&ha->mbx_cmd_comp);
+  	init_completion(&ha->mbx_intr_comp);
++	init_completion(&ha->pass_thru_intr_comp);
 +
 
-  struct scsi_transport_template *fc_attach_transport(
-  			struct fc_function_template *);
+  	INIT_LIST_HEAD(&ha->list);
+  	INIT_LIST_HEAD(&ha->fcports);
+@@ -2017,6 +2019,8 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+  		    sizeof(struct ct_sns_pkt), &ha->ct_sns_dma, GFP_KERNEL);
+  		if (!ha->ct_sns)
+  			goto fail_free_ms_iocb;
++		ha->pass_thru = dma_alloc_coherent(&ha->pdev->dev,
++		    PAGE_SIZE, &ha->pass_thru_dma, GFP_KERNEL);
+  	}
+
+  	return 0;
 ---
 
---Apple-Mail-4--475938107
+--Apple-Mail-6--475911475
 Content-Disposition: attachment;
-	filename=bidi-support-transport.patch
+	filename=bidi-support-qla2xxx.patch
 Content-Type: application/octet-stream;
 	x-unix-mode=0644;
-	name="bidi-support-transport.patch"
+	name="bidi-support-qla2xxx.patch"
 Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index cb971f0..a3c10ef 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -43,6 +43,13 @@ static void fc_vport_sched_delete(struct work_struct *work);
- static int fc_vport_setup(struct Scsi_Host *shost, int channel,
- 	struct device *pdev, struct fc_vport_identifiers  *ids,
- 	struct fc_vport **vport);
-+static void fc_service_timedout(unsigned long);
-+static void fc_service_done(struct fc_service *);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 0ddfe71..5ae948e 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1233,6 +1233,270 @@ qla24xx_vport_disable(struct fc_vport *fc_vport, bool disable)
+ 	return 0;
+ }
+ 
 +static int
-+fc_service_handler(struct Scsi_Host *, struct fc_rport *, struct request *);
-+static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
-+
-+struct kmem_cache *fc_service_cache;
- 
- /*
-  * Redefine so that we can have same named attributes in the
-@@ -642,6 +649,11 @@ static __init int fc_transport_init(void)
- 	error = transport_class_register(&fc_rport_class);
- 	if (error)
- 		return error;
-+	fc_service_cache = kmem_cache_create("fc_service",
-+					     sizeof(struct fc_service),
-+					     0, SLAB_HWCACHE_ALIGN, NULL);
-+	if (!fc_service_cache)
-+		return -ENOMEM;
- 	return transport_class_register(&fc_transport_class);
- }
- 
-@@ -651,6 +663,7 @@ static void __exit fc_transport_exit(void)
- 	transport_class_unregister(&fc_rport_class);
- 	transport_class_unregister(&fc_host_class);
- 	transport_class_unregister(&fc_vport_class);
-+	kmem_cache_destroy(fc_service_cache);
- }
- 
- /*
-@@ -2057,6 +2070,9 @@ fc_attach_transport(struct fc_function_template *ft)
- 
- 	i->f = ft;
- 
-+	/* for FC services (FC-CT, ELS, etc.) */
-+	i->f->fc_service_handler = fc_service_handler;
-+
- 	/* Transport uses the shost workq for scsi scanning */
- 	i->t.create_work_queue = 1;
- 
-@@ -2406,12 +2422,235 @@ fc_rport_final_delete(struct work_struct *work)
- 
- 	transport_remove_device(dev);
- 	device_del(dev);
-+	fc_bsg_remove(shost, rport);
- 	transport_destroy_device(dev);
- 	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
- 	put_device(dev);			/* for self-reference */
- }
- 
- 
-+static void fc_service_timedout(unsigned long _service)
++qla2x00_execute_fc_els_service(struct fc_service *service)
 +{
-+	struct fc_service *service = (void *) _service;
++	int count = service->req_size;
++	struct fc_els_frame *frame_backup;
++	struct fc_els_frame *frame = service->els_frame;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct els_entry_24xx *els_iocb;
 +	unsigned long flags;
++	fc_port_t *fcport = *(fc_port_t **) rport->dd_data;
++	dma_addr_t req_dma;
++	dma_addr_t resp_dma;
 +
-+	spin_lock_irqsave(&service->service_state_lock, flags);
-+	if (!(service->service_state_flags & FC_SERVICE_STATE_DONE))
-+		service->service_state_flags |= FC_SERVICE_STATE_ABORTED;
-+	spin_unlock_irqrestore(&service->service_state_lock, flags);
++	count -= sizeof(frame->fc_hdr);
 +
-+	complete(&service->completion);
-+}
++	if (count < sizeof(frame->els_hdr) || ha->pass_thru_cmd_in_process ||
++	    ha->pass_thru_cmd_result)
++		goto els_error0;
 +
-+static void fc_service_done(struct fc_service *service)
-+{
-+	if (!del_timer_sync(&service->timer)) {
-+		printk(KERN_ERR "ERROR: FC timed out for rport %p\n",
-+		    service->rport);
-+		return;
-+	}
-+	complete(&service->completion);
-+}
++	if (rport->port_state != FC_PORTSTATE_ONLINE || !fcport)
++		goto els_error0;
 +
-+static int
-+issue_fc_service(struct fc_rport *rport, void *req, int req_size,
-+    void *resp, int resp_size, void *service_reply)
-+{
-+	int res = -ECOMM;
-+	struct fc_service *service = NULL;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+	struct fc_frame_header *frame = req;
++	memset(service->response, 0, service->resp_size);
++	frame_backup = kzalloc(service->req_size, GFP_KERNEL);
++	if (!frame_backup)
++		goto els_error0;
 +
-+	if (!((frame->fh_type == FC_FRAME_TYPE_ELS) ||
-+	    (frame->fh_type == FC_FRAME_TYPE_FC_CT))) {
-+		printk(KERN_ERR "ERROR: invalid FC service type = %2x\n",
-+		    frame->fh_type);
-+		return -EINVAL;
-+	}
++	memcpy(frame_backup, frame, service->req_size);
++	memset(frame, 0, service->req_size);
++	memcpy(frame, &frame_backup->els_hdr, count);
 +
-+	if (frame->fh_type == FC_FRAME_TYPE_ELS) {
-+		if (!i->f->execute_fc_els_service)
-+			goto ex_err;
-+	} else if (frame->fh_type == FC_FRAME_TYPE_FC_CT) {
-+		if (!i->f->execute_fc_ct_service)
-+			goto ex_err;
++	req_dma = dma_map_single(&ha->pdev->dev, (void *) service->els_frame,
++	    service->req_size, DMA_TO_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, req_dma))
++		goto els_error0;
++	resp_dma = dma_map_single(&ha->pdev->dev, (void *) service->response,
++	    service->resp_size, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, resp_dma))
++		goto els_error1;
++
++	ha->pass_thru_cmd_in_process = 1;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	els_iocb = (struct els_entry_24xx *)qla2x00_req_pkt(ha);
++
++	if (els_iocb == NULL) {
++		qla_printk(KERN_WARNING, ha,
++		    "Passthru ELS request failed to get request packet\n");
++		goto els_error3;
 +	}
 +
-+	service = fc_alloc_service();
-+	if (!service)
-+		return -ENOMEM;
++	els_iocb->entry_type = ELS_IOCB_TYPE;
++	els_iocb->entry_count = 1;
++	els_iocb->sys_define = 0;
++	els_iocb->entry_status = 0;
++	els_iocb->handle = fcport->d_id.b24;
++	els_iocb->nport_handle = cpu_to_le16(fcport->loop_id);
++	els_iocb->tx_dsd_count = __constant_cpu_to_le16(1);
++	els_iocb->vp_index = ha->vp_idx;
++	els_iocb->sof_type = EST_SOFI3;
++	els_iocb->rx_dsd_count = __constant_cpu_to_le16(1);
++	els_iocb->opcode = frame_backup->els_hdr.els_cmd;
++	els_iocb->port_id[0] = fcport->d_id.b.al_pa;
++	els_iocb->port_id[1] = fcport->d_id.b.area;
++	els_iocb->port_id[2] = fcport->d_id.b.domain;
++	els_iocb->control_flags = 0;
++	els_iocb->rx_byte_count = cpu_to_le32(service->resp_size);
++	els_iocb->tx_byte_count = cpu_to_le32(count);
++	els_iocb->tx_address[0] = cpu_to_le32(LSD(req_dma));
++	els_iocb->tx_address[1] = cpu_to_le32(MSD(req_dma));
++	els_iocb->tx_len = els_iocb->tx_byte_count;
++	els_iocb->rx_address[0] = cpu_to_le32(LSD(resp_dma));
++	els_iocb->rx_address[1] = cpu_to_le32(MSD(resp_dma));
++	els_iocb->rx_len = els_iocb->rx_byte_count;
 +
-+	service->service_type = frame->fh_type;
-+	service->ct_frame = (struct fc_ct_frame *) req;
-+	service->req_size = req_size;
-+	service->response = resp;
-+	service->resp_size = resp_size;
-+	service->rport = rport;
-+	/* sense area of the request structure */
-+	service->reply_seq = service_reply;
-+	service->service_done = fc_service_done;
++	service->lld_pkt = (void *) els_iocb;
 +
-+	service->timer.data = (unsigned long) service;
-+	service->timer.function = fc_service_timedout;
-+	service->timer.expires = jiffies + FC_SERVICE_TIMEOUT*HZ;
++	ha->active_els_service = service;
 +
-+	sg_init_one(&service->sg_req, req, req_size);
-+	sg_init_one(&service->sg_resp, resp, resp_size);
++	wmb();
++	qla2x00_isp_cmd(ha);
 +
-+	add_timer(&service->timer);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	if (!wait_for_completion_timeout(&ha->pass_thru_intr_comp, 10 * HZ))
++		goto els_error2;
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
 +
-+	if (service->service_type == FC_FRAME_TYPE_ELS)
-+		res = i->f->execute_fc_els_service(service);
-+	else if (service->service_type == FC_FRAME_TYPE_FC_CT)
-+		res = i->f->execute_fc_ct_service(service);
++	memcpy(frame, frame_backup, service->req_size);
 +
-+	if (res) {
-+		del_timer(&service->timer);
-+		printk(KERN_ERR "ERROR: executing FC service failed:%d\n",
-+		    res);
-+		goto ex_err;
-+	}
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
 +
-+	wait_for_completion(&service->completion);
++	service->lld_pkt = (void *) 0;
++	ha->active_els_service = (struct fc_service *)0;
++	service->service_done(service);
++	return service->status.residual;
 +
-+	if ((service->service_state_flags & FC_SERVICE_STATE_ABORTED)) {
-+		printk(KERN_ERR "ERROR: FC service timed out or aborted\n");
-+		i->f->abort_fc_service(service);
-+		if (!(service->service_state_flags &
-+		     FC_SERVICE_STATE_DONE)) {
-+			printk(KERN_ERR "ERROR: FC service aborted"
-+			    " and not done\n");
-+			goto ex_err;
-+		}
-+	}
-+	if (service->status.resp == FC_SERVICE_COMPLETE)
-+		res = 0;
-+	else {
-+		printk(KERN_ERR "ERROR: FC service to rport %p"
-+		    " response: 0x%x\n", rport, service->status.resp);
-+		fc_free_service(service);
-+		service = NULL;
-+		return res;
-+	}
-+ex_err:
-+	if (service != NULL)
-+		fc_free_service(service);
++els_error3:
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++els_error2:
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++els_error1:
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++els_error0:
++	qla_printk(KERN_WARNING, ha, "Passthru ELS failed\n");
 +
-+	return res;
-+}
-+
-+static int
-+fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
-+			  struct request *req)
-+{
-+	int ret;
-+	struct request *rsp = req->next_rq;
-+
-+	if (!rsp) {
-+		printk(KERN_ERR "ERROR: space for a FC service"
-+		   " response is missing\n");
-+		return -EINVAL;
-+	}
-+
-+	/* ELS doesn't support multiple SG */
-+	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
-+		printk(KERN_WARNING "ERROR: multiple segments req %u,"
-+		    " rsp %u  are not supported for ELS services\n",
-+		    req->bio->bi_vcnt, rsp->bio->bi_vcnt);
-+		return -EINVAL;
-+	}
-+
-+	ret = issue_fc_service(rport, bio_data(req->bio), req->data_len,
-+			bio_data(rsp->bio), rsp->data_len, req->sense);
-+
-+	if (ret > 0) {
-+		/* positive number is the untransferred residual */
-+		rsp->data_len = ret;
-+		req->data_len = 0;
-+		ret = 0;
-+	} else if (ret == 0) {
-+		rsp->data_len = 0;
-+		req->data_len = 0;
-+	}
-+
-+	return ret;
-+}
-+
-+static void fc_service_request(struct request_queue *q)
-+{
-+	struct request *req;
-+	struct fc_rport *rport = q->queuedata;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+	int (*handler)(struct Scsi_Host *, struct fc_rport *,
-+		       struct request *);
-+
-+	while (!blk_queue_plugged(q)) {
-+		req = elv_next_request(q);
-+		if (!req)
-+			break;
-+
-+		blkdev_dequeue_request(req);
-+		spin_unlock_irq(q->queue_lock);
-+		handler = to_fc_internal
-+			(shost->transportt)->f->fc_service_handler;
-+		if (handler)
-+			req->errors = handler(shost, rport, req);
-+
-+		spin_lock_irq(q->queue_lock);
-+		req->end_io(req, req->errors);
-+	}
++	return -EINVAL;
 +}
 +
 +static int
-+fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
++qla2x00_execute_fc_ct_service(struct fc_service *service)
 +{
-+	struct request_queue *q;
-+	int error;
-+	struct device *dev;
-+	const char *name;
-+	void (*release)(struct device *);
++	int count = service->req_size;
++	struct fc_ct_frame *frame_backup;
++	struct fc_ct_frame *frame = service->ct_frame;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct ct_entry_24xx *ct_iocb;
++	unsigned long flags;
++	dma_addr_t req_dma;
++	dma_addr_t resp_dma;
 +
-+	if (!to_fc_internal(shost->transportt)->f->fc_service_handler)
-+		return 0;
++	count -= sizeof(frame->fc_hdr);
 +
-+	if (!rport) {
-+		printk(KERN_ERR "ERROR: rport is NULL\n");
-+		return -ENOMEM;
++	if (count < sizeof(frame->ct_hdr) ||
++	    (ha->pass_thru_cmd_in_process || ha->pass_thru_cmd_result))
++		goto ct_error0;
++
++	if (qla2x00_mgmt_svr_login(ha))
++		goto ct_error0;
++
++	memset(service->response, 0, service->resp_size);
++	frame_backup = kzalloc(service->req_size, GFP_KERNEL);
++	if (!frame_backup)
++		goto ct_error0;
++
++	memcpy(frame_backup, frame, service->req_size);
++	memset(frame, 0, service->req_size);
++	memcpy(frame, &frame_backup->ct_hdr, count);
++	req_dma = dma_map_single(&ha->pdev->dev, (void *) service->els_frame,
++	    service->req_size, DMA_TO_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, req_dma))
++		goto ct_error0;
++	resp_dma = dma_map_single(&ha->pdev->dev, (void *) service->response,
++	    service->resp_size, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&ha->pdev->dev, resp_dma))
++		goto ct_error1;
++
++	ha->pass_thru_cmd_in_process = 1;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	ct_iocb = (struct ct_entry_24xx *)qla2x00_req_pkt(ha);
++	if (ct_iocb == NULL)
++		goto ct_error3;
++
++	ct_iocb->entry_type = CT_IOCB_TYPE;
++	ct_iocb->entry_count = 1;
++	ct_iocb->entry_status = 0;
++	ct_iocb->comp_status = __constant_cpu_to_le16(0);
++	if (IS_FWI2_CAPABLE(ha))
++		ct_iocb->nport_handle = cpu_to_le16(NPH_SNS);
++	else
++		ct_iocb->nport_handle = cpu_to_le16(SIMPLE_NAME_SERVER);
++	ct_iocb->cmd_dsd_count = __constant_cpu_to_le16(1);
++	ct_iocb->vp_index = ha->vp_idx;
++	ct_iocb->timeout = __constant_cpu_to_le16(20);  /* R_A_TOV * 2 */
++	ct_iocb->rsp_dsd_count = __constant_cpu_to_le16(1);
++	ct_iocb->rsp_byte_count = cpu_to_le32(service->resp_size);
++	ct_iocb->cmd_byte_count = cpu_to_le32(count);
++	ct_iocb->dseg_0_address[0] = cpu_to_le32(LSD(req_dma));
++	ct_iocb->dseg_0_address[1] = cpu_to_le32(MSD(req_dma));
++	ct_iocb->dseg_0_len = ct_iocb->cmd_byte_count;
++	ct_iocb->dseg_1_address[0] = cpu_to_le32(LSD(resp_dma));
++	ct_iocb->dseg_1_address[1] = cpu_to_le32(MSD(resp_dma));
++	ct_iocb->dseg_1_len = ct_iocb->rsp_byte_count;
++
++	ha->active_ct_service = service;
++
++	wmb();
++	qla2x00_isp_cmd(ha);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	if (!wait_for_completion_timeout(&ha->pass_thru_intr_comp, 20 * HZ))
++		goto ct_error2;
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++
++	memcpy(frame, frame_backup, service->req_size);
++
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++
++	ha->active_ct_service = (struct fc_service *) 0;
++
++	service->service_done(service);
++	return service->status.residual;
++
++ct_error3:
++	ha->pass_thru_cmd_result = 0;
++	ha->pass_thru_cmd_in_process = 0;
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++ct_error2:
++	dma_unmap_single(&ha->pdev->dev, resp_dma, service->resp_size,
++	    DMA_FROM_DEVICE);
++ct_error1:
++	dma_unmap_single(&ha->pdev->dev, req_dma, service->req_size,
++	    DMA_TO_DEVICE);
++ct_error0:
++	qla_printk(KERN_WARNING, ha, "Passthru CT failed\n");
++
++	return -EINVAL;
++}
++
++static int
++qla2x00_abort_fc_service(struct fc_service *service)
++{
++	unsigned long flags;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct fc_frame_header *frame = (struct fc_frame_header *)
++		service->els_frame;
++	struct abort_entry_24xx *abort_iocb;
++	struct els_entry_24xx *els_iocb = service->lld_pkt;
++
++	if (frame->fh_type != FC_FRAME_TYPE_ELS) {
++		printk(KERN_ERR "abort frame is not supported\n");
++		return -EINVAL;
 +	}
 +
-+	q = blk_init_queue(fc_service_request, NULL);
-+	if (!q)
-+		return -ENOMEM;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	abort_iocb = (struct abort_entry_24xx *)qla2x00_req_pkt(ha);
 +
-+	dev = &rport->dev;
-+	name = dev->bus_id;
-+	release = NULL;
++	abort_iocb->entry_type = ABORT_IOCB_TYPE;
++	abort_iocb->entry_count = 1;
++	abort_iocb->handle_count = 0;
++	abort_iocb->entry_status = 0;
++	abort_iocb->options = 0;
++	abort_iocb->handle_to_abort = els_iocb->handle;
++	abort_iocb->port_id[0] = els_iocb->port_id[0];
++	abort_iocb->port_id[1] = els_iocb->port_id[1];
++	abort_iocb->port_id[2] = els_iocb->port_id[2];
++	abort_iocb->vp_index = ha->vp_idx;
 +
-+	error = bsg_register_queue(q, dev, name, release);
-+	if (error) {
-+		blk_cleanup_queue(q);
-+		return -ENOMEM;
-+	}
++	wmb();
++	qla2x00_isp_cmd(ha);
 +
-+	rport->q = q;
-+	q->queuedata = rport;
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 +
 +	return 0;
 +}
 +
-+static void
-+fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
-+{
-+	struct request_queue *q = rport->q;
+ struct fc_function_template qla2xxx_transport_functions = {
+ 
+ 	.show_host_node_name = 1,
+@@ -1276,6 +1540,10 @@ struct fc_function_template qla2xxx_transport_functions = {
+ 	.vport_create = qla24xx_vport_create,
+ 	.vport_disable = qla24xx_vport_disable,
+ 	.vport_delete = qla24xx_vport_delete,
 +
-+	if (!q)
-+		return;
-+
-+	bsg_unregister_queue(q);
-+}
-+
- /**
-  * fc_rport_create - allocates and creates a remote FC port.
-  * @shost:	scsi host the remote port is connected to.
-@@ -2471,8 +2710,8 @@ fc_rport_create(struct Scsi_Host *shost, int channel,
- 	else
- 		rport->scsi_target_id = -1;
- 	list_add_tail(&rport->peers, &fc_host->rports);
--	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
- 
-+	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	dev = &rport->dev;
-@@ -2491,6 +2730,8 @@ fc_rport_create(struct Scsi_Host *shost, int channel,
- 	transport_add_device(dev);
- 	transport_configure_device(dev);
- 
-+	fc_bsg_initialize(shost, rport);
-+
- 	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
- 		/* initiate a scan of the target */
- 		rport->flags |= FC_RPORT_SCAN_PENDING;
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 21018a4..5cef236 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -32,7 +32,7 @@
- #include <scsi/scsi_netlink.h>
- 
- struct scsi_transport_template;
--
-+extern struct kmem_cache *fc_service_cache;
- 
- /*
-  * FC Port definitions - Following FC HBAAPI guidelines
-@@ -352,6 +352,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
-  	struct delayed_work fail_io_work;
-  	struct work_struct stgt_delete_work;
- 	struct work_struct rport_delete_work;
-+	struct request_queue *q;
- } __attribute__((aligned(sizeof(unsigned long))));
- 
- /* bit field values for struct fc_rport "flags" field: */
-@@ -514,6 +515,134 @@ struct fc_host_attrs {
- 	struct workqueue_struct *devloss_work_q;
++	.execute_fc_els_service = qla2x00_execute_fc_els_service,
++	.execute_fc_ct_service = qla2x00_execute_fc_ct_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
  };
  
-+#define FC_STATUS_BUF_SIZE 96
+ struct fc_function_template qla2xxx_transport_vport_functions = {
+@@ -1316,6 +1584,10 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
+ 	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
+ 	.terminate_rport_io = qla2x00_terminate_rport_io,
+ 	.get_fc_host_stats = qla2x00_get_fc_host_stats,
 +
-+enum fc_frame_type {
-+	FC_FRAME_TYPE_BS,
-+	FC_FRAME_TYPE_ELS,
-+	FC_FRAME_TYPE_IEC = 4,
-+	FC_FRAME_TYPE_IP,
-+	FC_FRAME_TYPE_FCP = 8,
-+	FC_FRAME_TYPE_GPP,
-+	FC_FRAME_TYPE_FC_CT = 0x20,
-+};
-+
-+enum service_response {
-+	FC_SERVICE_COMPLETE,
-+	FC_SERVICE_ERROR = -1,
-+};
-+
-+#define FC_SERVICE_STATE_PENDING      1
-+#define FC_SERVICE_STATE_DONE         2
-+#define FC_SERVICE_STATE_ABORTED      4
-+#define FC_SERVICE_AT_INITIATOR       16
-+
-+struct fc_service_status {
-+	enum service_response resp;
-+	int  error;
-+	int  buf_valid_size;
-+
-+	u8   buf[FC_STATUS_BUF_SIZE];
-+
-+	u32  residual;
-+};
-+
-+/* NOTE - fc_frame_header is already defined in open-fcoe-upstream branch */
-+/*
-+ * Frame header
-+ */
-+struct fc_frame_header {
-+	__u8          fh_r_ctl;	/* routing control */
-+	__u8          fh_d_id[3];	/* Destination ID */
-+
-+	__u8          fh_cs_ctl;	/* class of service control / pri */
-+	__u8          fh_s_id[3];	/* Source ID */
-+
-+	__u8          fh_type;		/* see enum fc_fh_type below */
-+	__u8          fh_f_ctl[3];	/* frame control */
-+
-+	__u8          fh_seq_id;	/* sequence ID */
-+	__u8          fh_df_ctl;	/* data field control */
-+	__be16        fh_seq_cnt;	/* sequence count */
-+
-+	__be16        fh_ox_id;		/* originator exchange ID */
-+	__be16        fh_rx_id;		/* responder exchange ID */
-+	__be32        fh_parm_offset;	/* parameter or relative offset */
-+};
-+
-+/* TBD - fc_els_hdr to move to ~/include/scsi/fc/fc_els.h */
-+struct fc_els_hdr {
-+	__u8	els_cmd;
-+	__u8	els_param[3];
-+};
-+
-+/* NOTE - fc_ct_hdr is already defined in open-fcoe-upstream branch */
-+/*
-+ * Fibre Channel Services - Common Transport.
-+ * From T11.org FC-GS-2 Rev 5.3 November 1998.
-+ */
-+
-+struct fc_ct_hdr {
-+	__u8		ct_rev;		/* revision */
-+	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
-+	__u8		ct_fs_type;	/* type of fibre channel service */
-+	__u8		ct_fs_subtype;	/* subtype */
-+	__u8		ct_options;
-+	__u8		_ct_resvd1;
-+	__be16		ct_cmd;		/* command / response code */
-+	__be16		ct_mr_size;	/* maximum / residual size */
-+	__u8		_ct_resvd2;
-+	__u8		ct_reason;	/* reject reason */
-+	__u8		ct_explan;	/* reason code explanation */
-+	__u8		ct_vendor;	/* vendor unique data */
-+};
-+
-+struct fc_els_frame {
-+	struct fc_frame_header fc_hdr;
-+	struct fc_els_hdr els_hdr;
-+	u32 els_cmd[4];
-+};
-+
-+struct fc_ct_frame {
-+	struct fc_frame_header fc_hdr;
-+	struct fc_ct_hdr ct_hdr;
-+	u32 ct_cmd[1];
-+};
-+
-+#define FC_SERVICE_TIMEOUT 10
-+
-+struct fc_service {
-+	struct fc_rport *rport;
-+	struct list_head      list;
-+
-+	spinlock_t   service_state_lock;
-+	unsigned     service_state_flags;
-+
-+	enum   fc_frame_type   service_type;
-+
-+	/* Used by the discovery code. */
-+	struct timer_list     timer;
-+	struct completion     completion;
-+
-+	union {
-+		struct fc_ct_frame *ct_frame;
-+		struct fc_els_frame *els_frame;
-+	};
-+	int req_size;
-+	void *response;
-+	int resp_size;
-+
-+	struct scatterlist sg_req;
-+	struct scatterlist sg_resp;
-+
-+	struct fc_service_status status;
-+	void *reply_seq;   /* pointer to sense area of request */
-+	void   (*service_done)(struct fc_service *);
-+
-+	void *lld_pkt;
-+	struct work_struct abort_work;
-+};
-+
- #define shost_to_fc_host(x) \
- 	((struct fc_host_attrs *)(x)->shost_data)
++	.execute_fc_els_service = qla2x00_execute_fc_els_service,
++	.execute_fc_ct_service = qla2x00_execute_fc_ct_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
+ };
  
-@@ -612,6 +741,14 @@ struct fc_function_template {
- 	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
- 	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+ void
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index ab802e9..957b077 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -95,6 +95,11 @@
+ #define MSD(x)	((uint32_t)((((uint64_t)(x)) >> 16) >> 16))
  
-+	/* fibre-channel services */
-+	int	(*fc_service_handler)(struct Scsi_Host *,
-+				      struct fc_rport *rport,
-+				      struct request *);
-+	int	(*execute_fc_els_service)(struct fc_service *);
-+	int	(*execute_fc_ct_service)(struct fc_service *);
-+	int	(*abort_fc_service)(struct fc_service *);
-+
- 	/* allocation lengths for host-specific data */
- 	u32	 			dd_fcrport_size;
- 	u32	 			dd_fcvport_size;
-@@ -732,6 +869,33 @@ fc_vport_set_state(struct fc_vport *vport, enum fc_vport_state new_state)
- 	vport->vport_state = new_state;
- }
  
-+static inline struct fc_service *
-+fc_alloc_service(void)
-+{
-+	struct fc_service *service =
-+	    kmem_cache_zalloc(fc_service_cache, GFP_KERNEL);
++/* ELS PT request buffer = 32 bytes */
++#define EXT_ELS_PT_REQ_WWPN_VALID	0x1
++#define EXT_ELS_PT_REQ_WWNN_VALID	0x2
++#define EXT_ELS_PT_REQ_PID_VALID	0x4
 +
-+	if (!service)
-+		return NULL;
+ /*
+  * I/O register
+ */
+@@ -2426,6 +2431,8 @@ typedef struct scsi_qla_host {
+ 	/* SNS command interfaces for 2200. */
+ 	struct sns_cmd_pkt	*sns_cmd;
+ 	dma_addr_t		sns_cmd_dma;
++	char			*pass_thru;
++	dma_addr_t		pass_thru_dma;
+ 
+ #define SFP_DEV_SIZE	256
+ #define SFP_BLOCK_SIZE	64
+@@ -2467,6 +2474,7 @@ typedef struct scsi_qla_host {
+ 	struct mutex vport_lock;	/* Virtual port synchronization */
+ 	struct completion mbx_cmd_comp;	/* Serialize mbx access */
+ 	struct completion mbx_intr_comp;  /* Used for completion notification */
++	struct completion pass_thru_intr_comp;
+ 
+ 	uint32_t	mbx_flags;
+ #define  MBX_IN_PROGRESS	BIT_0
+@@ -2611,6 +2619,12 @@ typedef struct scsi_qla_host {
+ 
+ 	struct qla_chip_state_84xx *cs84xx;
+ 	struct qla_statistics qla_stats;
 +
-+	INIT_LIST_HEAD(&service->list);
-+	spin_lock_init(&service->service_state_lock);
-+	service->service_state_flags = FC_SERVICE_STATE_PENDING;
-+	init_timer(&service->timer);
-+	init_completion(&service->completion);
++	/* pass through support */
++	int		pass_thru_cmd_result;
++	int		pass_thru_cmd_in_process;
++	struct fc_service *active_els_service;
++	struct fc_service *active_ct_service;
+ } scsi_qla_host_t;
+ 
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index d1d1420..05b6910 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -625,6 +625,41 @@ struct els_entry_24xx {
+ 	uint32_t rx_len;		/* Data segment 1 length. */
+ };
+ 
++struct els_status_24xx {
++	uint8_t entry_type;		/* Entry type. */
++	uint8_t entry_count;		/* Entry count. */
++	uint8_t sys_define;		/* System Defined. */
++	uint8_t entry_status;		/* Entry Status. */
 +
-+	return service;
-+}
++	uint32_t handle;		/* System handle. */
 +
-+static inline void
-+fc_free_service(struct fc_service *service)
-+{
-+	if (service) {
-+		BUG_ON(!list_empty(&service->list));
-+		kmem_cache_free(fc_service_cache, service);
-+	}
-+}
++	uint16_t comp_status;
++
++	uint16_t nport_handle;		/* N_PORT handle. */
++
++	uint16_t tx_dsd_count;
++
++	uint8_t vp_index;
++	uint8_t sof_type;
++
++	uint32_t rx_xchg_address;	/* Receive exchange address. */
++	uint16_t rx_dsd_count;
++
++	uint8_t opcode;
++	uint8_t reserved_2;
++
++	uint8_t port_id[3];
++	uint8_t reserved_3;
++
++	uint16_t reserved_4;
++
++	uint16_t control_flags;		/* Control flags. */
++
++	uint32_t total_byte_count;
++	uint32_t err_subcode1;
++	uint32_t err_subcode2;
++};
++
+ /*
+  * ISP queue - Mailbox Command entry structure definition.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 753dbe6..d0b6ac9 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -121,6 +121,8 @@ extern int qla2x00_start_scsi(srb_t *sp);
+ extern int qla24xx_start_scsi(srb_t *sp);
+ int qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
+ int __qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
++extern request_t * qla2x00_req_pkt(scsi_qla_host_t *);
++extern void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+ 
+ /*
+  * Global Function Prototypes in qla_mbx.c source file.
+@@ -347,6 +349,7 @@ extern int qla2x00_fdmi_register(scsi_qla_host_t *);
+ extern int qla2x00_gfpn_id(scsi_qla_host_t *, sw_info_t *);
+ extern int qla2x00_gpsc(scsi_qla_host_t *, sw_info_t *);
+ extern void qla2x00_get_sym_node_name(scsi_qla_host_t *, uint8_t *);
++extern int qla2x00_mgmt_svr_login(scsi_qla_host_t *);
+ 
+ /*
+  * Global Function Prototypes in qla_attr.c source file.
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index c2a4bfb..ceef231 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1093,7 +1093,7 @@ qla2x00_sns_rnn_id(scsi_qla_host_t *ha)
+  *
+  * Returns 0 on success.
+  */
+-static int
++int
+ qla2x00_mgmt_svr_login(scsi_qla_host_t *ha)
+ {
+ 	int ret;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 20847fb..be06132 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2392,6 +2392,18 @@ qla2x00_configure_fabric(scsi_qla_host_t *ha)
+ 			return (QLA_SUCCESS);
+ 		}
+ 
++		/* allocate fc_port_t structure for name/directory server */
++		fcptemp = qla2x00_alloc_fcport(ha, GFP_KERNEL);
++		fcptemp->flags |= (FCF_FABRIC_DEVICE | FCF_LOGIN_NEEDED);
++		fcptemp->loop_id = loop_id;
++		fcptemp->d_id.b.domain = 0xff;
++		fcptemp->d_id.b.area = 0xff;
++		fcptemp->d_id.b.al_pa = 0xfc;
++		list_add_tail(&fcptemp->list, &pha->fcports);
++		atomic_set(&fcptemp->state, FCS_ONLINE);
++		qla2x00_reg_remote_port(ha, fcptemp);
++
++
+ 		if (test_and_clear_bit(REGISTER_FC4_NEEDED, &ha->dpc_flags)) {
+ 			if (qla2x00_rft_id(ha)) {
+ 				/* EMPTY */
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 9778f0b..9e7f636 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -11,8 +11,6 @@
+ 
+ #include <scsi/scsi_tcq.h>
+ 
+-static request_t *qla2x00_req_pkt(scsi_qla_host_t *ha);
+-static void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+ 
+ /**
+  * qla2x00_get_cmd_direction() - Determine control_flag data direction.
+@@ -476,7 +474,7 @@ qla2x00_marker(scsi_qla_host_t *ha, uint16_t loop_id, uint16_t lun,
+  *
+  * Returns NULL if function failed, else, a pointer to the request packet.
+  */
+-static request_t *
++request_t *
+ qla2x00_req_pkt(scsi_qla_host_t *ha)
+ {
+ 	device_reg_t __iomem *reg = ha->iobase;
+@@ -546,7 +544,7 @@ qla2x00_req_pkt(scsi_qla_host_t *ha)
+  *
+  * Note: The caller must hold the hardware lock before calling this routine.
+  */
+-static void
++void
+ qla2x00_isp_cmd(scsi_qla_host_t *ha)
+ {
+ 	device_reg_t __iomem *reg = ha->iobase;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 45a3b93..749e3ed 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1398,6 +1398,9 @@ qla24xx_process_response_queue(struct scsi_qla_host *ha)
+ {
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	struct sts_entry_24xx *pkt;
++	struct els_status_24xx *els_status;
++	struct abort_entry_24xx *abort_iocb;
++	struct fc_service *service;
+ 
+ 	if (!ha->flags.online)
+ 		return;
+@@ -1430,10 +1433,47 @@ qla24xx_process_response_queue(struct scsi_qla_host *ha)
+ 		case STATUS_CONT_TYPE:
+ 			qla2x00_status_cont_entry(ha, (sts_cont_entry_t *)pkt);
+ 			break;
++ 		case MS_IOCB_TYPE:
++		case ELS_IOCB_TYPE:
++			els_status = (struct els_status_24xx *)pkt;
++
++			if (pkt->entry_type == MS_IOCB_TYPE)
++				service = ha->active_ct_service;
++			else
++				service = ha->active_els_service;
++
++			service->status.resp = FC_SERVICE_COMPLETE;
++			service->status.error = els_status->comp_status;
++
++			if (els_status->comp_status) {
++				if (els_status->comp_status == CS_DATA_UNDERRUN)
++					service->status.residual =
++					    els_status->total_byte_count;
++				else
++					service->status.residual = 0;
++				service->status.resp = FC_SERVICE_ERROR;
++			}
++
++			if (ha->pass_thru_cmd_result)
++				qla_printk(KERN_INFO, ha,
++				    "Passthru cmd result on.\n");
++			if (!ha->pass_thru_cmd_in_process)
++				qla_printk(KERN_INFO, ha,
++				    "Passthru in process off.\n");
++
++			ha->pass_thru_cmd_result = 1;
++			complete(&ha->pass_thru_intr_comp);
++ 			break;
+ 		case VP_RPT_ID_IOCB_TYPE:
+ 			qla24xx_report_id_acquisition(ha,
+ 			    (struct vp_rpt_id_entry_24xx *)pkt);
+ 			break;
++		case ABORT_IOCB_TYPE:
++			abort_iocb = (struct abort_entry_24xx *)pkt;
++			if (abort_iocb->nport_handle)
++				qla_printk(KERN_ERR, ha,
++				    "failed to abort ELS service\n");
++			break;
+ 		default:
+ 			/* Type Not Supported. */
+ 			DEBUG4(printk(KERN_WARNING
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 62fe267..e7586d9 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1669,6 +1669,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	init_completion(&ha->mbx_cmd_comp);
+ 	complete(&ha->mbx_cmd_comp);
+ 	init_completion(&ha->mbx_intr_comp);
++	init_completion(&ha->pass_thru_intr_comp);
 +
  
- struct scsi_transport_template *fc_attach_transport(
- 			struct fc_function_template *);
+ 	INIT_LIST_HEAD(&ha->list);
+ 	INIT_LIST_HEAD(&ha->fcports);
+@@ -2017,6 +2019,8 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+ 		    sizeof(struct ct_sns_pkt), &ha->ct_sns_dma, GFP_KERNEL);
+ 		if (!ha->ct_sns)
+ 			goto fail_free_ms_iocb;
++		ha->pass_thru = dma_alloc_coherent(&ha->pdev->dev,
++		    PAGE_SIZE, &ha->pass_thru_dma, GFP_KERNEL);
+ 	}
+ 
+ 	return 0;
 
---Apple-Mail-4--475938107
+--Apple-Mail-6--475911475
 Content-Type: text/plain;
 	charset=US-ASCII;
 	format=flowed
@@ -1066,4 +1183,4 @@ Content-Transfer-Encoding: 7bit
 
 
 
---Apple-Mail-4--475938107--
+--Apple-Mail-6--475911475--
