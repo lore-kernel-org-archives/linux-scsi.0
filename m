@@ -1,65 +1,112 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] block: set req->timeout in blk_add_timer
-Date: Sat,  6 Sep 2008 00:50:40 -0500
-Message-ID: <1220680240-27724-1-git-send-email-michaelc@cs.wisc.edu>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: [PATCH] mmc_block: use generic helper to print capacities
+Date: Sat, 6 Sep 2008 10:57:57 +0200
+Message-ID: <20080906105757.00badd4f@mjolnir.drzeus.cx>
+References: <48B9546B.4010004@simon.arlott.org.uk>
+	<1220117091.3615.3.camel@localhost.localdomain>
+	<20080830174516.GD1239@parisc-linux.org>
+	<48B9B552.8060406@simon.arlott.org.uk>
+	<48B9B588.7060709@simon.arlott.org.uk>
+	<1220147947.3615.18.camel@localhost.localdomain>
+	<20080831025412.GJ1239@parisc-linux.org>
+	<1220195310.4021.4.camel@localhost.localdomain>
+	<1220195634.4021.9.camel@localhost.localdomain>
+	<20080831205448.5b23507d@mjolnir.drzeus.cx>
+	<1220645340.3331.55.camel@localhost.localdomain>
+	<20080905225209.29aace1b@mjolnir.drzeus.cx>
+	<1220648634.3331.57.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-27721-1220691485-0001-2"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51840 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586AbYIFFxB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Sep 2008 01:53:01 -0400
+Received: from server.drzeus.cx ([85.8.24.28]:60930 "EHLO smtp.drzeus.cx"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752133AbYIFI6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Sep 2008 04:58:08 -0400
+In-Reply-To: <1220648634.3331.57.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jens.axboe@oracle.com
-Cc: Mike Christie <mchristi@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Mike Christie <mchristi@redhat.com>
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-To prevent a reques from running forever, scsi-ml checks if
-a command has been running req->timeout * cmd->allowed + 1 seconds.
-If it has, scsi-ml will fail the request. From what I can tell
-it looks like in Jen's tree that the block layer is not setting
-this value, so a command is failed right away a lot of times because
-wait_for in scsi_softirq_done is zero seconds. It is only set by ioctls
-and passthrough.
+--=_freyr.drzeus.cx-27721-1220691485-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This patch just copies the q timeout that is used, so any one
-checking it will still be able to see it.
+On Fri, 05 Sep 2008 16:03:54 -0500
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-For the scsi-ml req->timeout usage, I think we can move the retries and
-the infinite retry check from the scsi layer to the block layer. I was
-not sure if we should do that in this patch or a separate one. I can
-cook up another patch if people want. If it would be possible to do
-that after MikeA's patches it would probably be best though since
-he is working on that code too.
+>=20
+> Oh ... your inline attached patch is actually whitespace broken (it has
+> spaces for tabs), which is why it doesn't apply.  Sorry, that's the
+> first thing I usually check, I just skipped it in your case.  Could you
+> resend it as an attachment?
+>=20
 
-This patch was made over James's scsi post tree.
+What the... It seems someone broke git-diff (or less). This one is
+properly undamaged:
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- block/blk-timeout.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-index 779f439..6e7778d 100644
---- a/block/blk-timeout.c
-+++ b/block/blk-timeout.c
-@@ -132,9 +132,14 @@ void blk_add_timer(struct request *req)
- 
- 	if (req->timeout)
- 		req->deadline = jiffies + req->timeout;
--	else
-+	else {
- 		req->deadline = jiffies + q->rq_timeout;
--
-+		/*
-+		 * Some LLDs, like scsi, peek at the timeout to prevent
-+		 * a command from being retried forever.
-+		 */
-+		req->timeout = q->rq_timeout;
-+	}
- 	list_add_tail(&req->timeout_list, &q->timeout_list);
- 
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index 62a4c91..dad8edb 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -29,6 +29,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/mutex.h>
+ #include <linux/scatterlist.h>
++#include <linux/string_helpers.h>
+=20
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+@@ -496,6 +497,8 @@ static int mmc_blk_probe(struct mmc_card *card)
+ 	struct mmc_blk_data *md;
+ 	int err;
+=20
++	char cap_str[10];
++
  	/*
--- 
-1.5.5.1
+ 	 * Check that the card supports the command class(es) we need.
+ 	 */
+@@ -510,10 +513,11 @@ static int mmc_blk_probe(struct mmc_card *card)
+ 	if (err)
+ 		goto out;
+=20
+-	printk(KERN_INFO "%s: %s %s %lluKiB %s\n",
++	string_get_size(get_capacity(md->disk) << 9, STRING_UNITS_2,
++			cap_str, sizeof(cap_str));
++	printk(KERN_INFO "%s: %s %s %s %s\n",
+ 		md->disk->disk_name, mmc_card_id(card), mmc_card_name(card),
+-		(unsigned long long)(get_capacity(md->disk) >> 1),
+-		md->read_only ? "(ro)" : "");
++		cap_str, md->read_only ? "(ro)" : "");
+=20
+ 	mmc_set_drvdata(card, md);
+ 	add_disk(md->disk);
 
+--=20
+     -- Pierre Ossman
+
+  Linux kernel, MMC maintainer        http://www.kernel.org
+  rdesktop, core developer          http://www.rdesktop.org
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.drzeus.cx-27721-1220691485-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkjCRhoACgkQ7b8eESbyJLhNSACfQqxCW+HmPS3abGvheXQku33X
+WRUAn1vc2CUPO3dBR5Ue/Z6aGWwWcdDX
+=B7IC
+-----END PGP SIGNATURE-----
+
+--=_freyr.drzeus.cx-27721-1220691485-0001-2--
