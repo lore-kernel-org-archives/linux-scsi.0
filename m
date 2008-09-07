@@ -1,43 +1,37 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/3] 24-bit types: typedef and macros for accessing 3-byte
- arrays as integers
-Date: Sun, 07 Sep 2008 12:57:24 +0300
-Message-ID: <48C3A584.6040005@panasas.com>
-References: <20080905165732.16689.50256.stgit@localhost.localdomain>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/3] lpfc 8.2.8 v2 : recut of conflicting 8.2.8 patches
+Date: Sun, 07 Sep 2008 11:51:46 -0400
+Message-ID: <1220802706.6747.9.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:8869 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752908AbYIGJ5v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2008 05:57:51 -0400
-In-Reply-To: <20080905165732.16689.50256.stgit@localhost.localdomain>
+Received: from emulex.emulex.com ([138.239.112.1]:61712 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbYIGPxN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2008 11:53:13 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m87FrBT7026385
+	for <linux-scsi@vger.kernel.org>; Sun, 7 Sep 2008 08:53:12 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Leech <christopher.leech@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Chris Leech wrote:
-> Both iSCSI and Fibre Channel make use of 24-bit big-endian values in
-> frame headers.  This patch defines __be24 and __le24 typedefs for a
-> structure wrapped around a 3-byte array, and macros to convert back and
-> forth to a 32-bit integer.
-> 
-> The undefs in iscsi_proto.h are because of the different calling
-> convention for the existing hton24 macro in the iSCSI code.  iSCSI will
-> be converted in a subsequent patch.
-> 
-> Signed-off-by: Chris Leech <christopher.leech@intel.com>
-<snip>
 
-Chris please don't cross-post to a mailing list that is members only.
-I press reply-all when on linux-scsi or linux-kernel, and then I get
-accused of pocking where I don't belong. So just don't do that.
+This patch set is reworked versions of 8.2.8 patches that were failing
+due to conflicts with the target busy and transport disrupted changes.
 
-And my advise to the devel@open-fcoe.org mailing list. Drop the
-members only. It is useless with it. I know because I made the same
-mistake with my osd-dev@open-osd.org. Believe me the span-filter
-at mailman is fine and the span that will get through is not that bad.
+patch1 resolves the target_busy vs transport_disrupted status
 
-Boaz
+patch2 is a recut of:
+  [PATCH 12/15] lpfc 8.2.8 : Add sysfs control of target queue depth handling
+
+patch3 is a recut of:
+  [PATCH 14/15] lpfc 8.2.8 : Add statistical reporting control and additional
+    fc vendor events
+
+-- james s
+
+
+
