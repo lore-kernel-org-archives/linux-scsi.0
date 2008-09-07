@@ -1,148 +1,265 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: Tree for September 4
-Date: Sat, 06 Sep 2008 08:42:10 -0500
-Message-ID: <1220708530.3430.8.camel@localhost.localdomain>
-References: <20080904193606.573f2cb3.sfr@canb.auug.org.au>
-	 <200809051256.36257.rjw@sisk.pl>
-	 <20080905113042.0f6d5850.akpm@linux-foundation.org>
-	 <200809061325.20924.rjw@sisk.pl>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/3] 24-bit types: typedef and macros for accessing 3-byte
+ arrays as integers
+Date: Sun, 07 Sep 2008 12:36:41 +0300
+Message-ID: <48C3A0A9.3000206@panasas.com>
+References: <20080905165732.16689.50256.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200809061325.20924.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:14469 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750871AbYIGJhH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2008 05:37:07 -0400
+In-Reply-To: <20080905165732.16689.50256.stgit@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Leech <christopher.leech@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, Harvey Harrison <harvey.harrison@gmail.com>
 
-On Sat, 2008-09-06 at 13:25 +0200, Rafael J. Wysocki wrote:
-> On Friday, 5 of September 2008, Andrew Morton wrote:
-> > On Fri, 5 Sep 2008 12:56:35 +0200 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> > 
-> > > On Friday, 5 of September 2008, Andrew Morton wrote:
-> > > > On Thu, 4 Sep 2008 19:36:06 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> > > > 
-> > > > > I have created today's linux-next tree at
-> > > > > git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
-> > > > 
-> > > > The infamous Vaio hasn't finished catching up with you guys yet. 
-> > > > Something in linux-next broke suspend-to-RAM.
-> > > > 
-> > > > An `echo mem > /sys/power/state' causes "Freezing of tasks failed after
-> > > > 20.00 seconds (1 tasks refusing to freeze):"
-> > > > 
-> > > > dmesg: http://userweb.kernel.org/~akpm/dmesg-sony-suspend.txt
-> > > > config: http://userweb.kernel.org/~akpm/config-sony.txt
-> > > > 
-> > > > This only happens after the X server has been started.
-> > > > 
-> > > > Mainline is OK.
-> > > 
-> > > According to your dmesg the process that refused to freeze was
-> > > 
-> > > hald-addon-stor
-> > > 
-> > > which got stuck in ... getnstimeofday (???) (can you check what
-> > > source code corresponds to getnstimeofday+0x37/0xbc pls?):
-> > > 
-> > > hald-addon-st D 00000046     0  2322   2282
-> > >        f4de5b74 00000046 f4de5b54 00000046 f4de5b5c c0135f56 f6b96e44 f4deaf40 
-> > >        f4deb0bc f5580948 f4de5bb0 f4de5b6c c013336e f6aa77c8 f6aa77c8 f6aa77a0 
-> > >        f4de5bb0 f4de5b7c c0331f09 f4de5bd0 c01f4205 00000000 00000000 00000000 
-> > > Call Trace:
-> > >  [<c0135f56>] ? getnstimeofday+0x37/0xbc
-> > >  [<c013336e>] ? ktime_get_ts+0x40/0x44
-> > >  [<c0331f09>] io_schedule+0x39/0x6c
-> > >  [<c01f4205>] get_request_wait+0x80/0xcd
-> > > ...
-> > 
-> > (gdb) x/60i getnstimeofday
-> > 0xc0135d63 <getnstimeofday>:    push   %ebp
-> > 0xc0135d64 <getnstimeofday+1>:  mov    %esp,%ebp
-> > 0xc0135d66 <getnstimeofday+3>:  push   %edi
-> > 0xc0135d67 <getnstimeofday+4>:  push   %esi
-> > 0xc0135d68 <getnstimeofday+5>:  push   %ebx
-> > 0xc0135d69 <getnstimeofday+6>:  sub    $0x8,%esp
-> > 0xc0135d6c <getnstimeofday+9>:  mov    %eax,0xffffffec(%ebp)
-> > 0xc0135d6f <getnstimeofday+12>: mov    0xc045a2c0,%eax
-> > 0xc0135d74 <getnstimeofday+17>: mov    %eax,0xfffffff0(%ebp)
-> > 0xc0135d77 <getnstimeofday+20>: test   $0x1,%al
-> > 0xc0135d79 <getnstimeofday+22>: je     0xc0135d7f <getnstimeofday+28>
-> > 0xc0135d7b <getnstimeofday+24>: pause  
-> > 0xc0135d7d <getnstimeofday+26>: jmp    0xc0135d6f <getnstimeofday+12>
-> > 0xc0135d7f <getnstimeofday+28>: mov    0xffffffec(%ebp),%ecx
-> > 0xc0135d82 <getnstimeofday+31>: mov    0xc05db920,%eax
-> > 0xc0135d87 <getnstimeofday+36>: mov    0xc05db924,%edx
-> > 0xc0135d8d <getnstimeofday+42>: mov    %eax,(%ecx)
-> > 0xc0135d8f <getnstimeofday+44>: mov    %edx,0x4(%ecx)
-> > 0xc0135d92 <getnstimeofday+47>: mov    0xc05db938,%eax
-> > 0xc0135d97 <getnstimeofday+52>: call   *0x10(%eax)
-> > 0xc0135d9a <getnstimeofday+55>: mov    0xc05db938,%esi
-> > 0xc0135da0 <getnstimeofday+61>: mov    0x1c(%esi),%ecx
-> > 0xc0135da3 <getnstimeofday+64>: sub    0x48(%esi),%eax
-> > 0xc0135da6 <getnstimeofday+67>: sbb    0x4c(%esi),%edx
-> > 0xc0135da9 <getnstimeofday+70>: and    0x14(%esi),%eax
-> > 0xc0135dac <getnstimeofday+73>: and    0x18(%esi),%edx
-> > 0xc0135daf <getnstimeofday+76>: mov    %edx,%edi
-> > 0xc0135db1 <getnstimeofday+78>: imul   %ecx,%edi
-> > 0xc0135db4 <getnstimeofday+81>: mul    %ecx
-> > 0xc0135db6 <getnstimeofday+83>: mov    0x24(%esi),%ecx
-> > 0xc0135db9 <getnstimeofday+86>: lea    (%edi,%edx,1),%edx
-> > 0xc0135dbc <getnstimeofday+89>: mov    %eax,%ebx
-> > 0xc0135dbe <getnstimeofday+91>: mov    %edx,%esi
-> > 0xc0135dc0 <getnstimeofday+93>: xor    %edi,%edi
-> > 0xc0135dc2 <getnstimeofday+95>: shrd   %cl,%edx,%ebx
-> > 0xc0135dc5 <getnstimeofday+98>: shr    %cl,%esi
-> > 0xc0135dc7 <getnstimeofday+100>:        test   $0x20,%cl
-> > 0xc0135dca <getnstimeofday+103>:        cmovne %esi,%ebx
-> > 0xc0135dcd <getnstimeofday+106>:        cmovne %edi,%esi
-> > 0xc0135dd0 <getnstimeofday+109>:        mov    %ebx,%edx
-> > 
-> > (gdb) l *0xc0135d9a
-> > 0xc0135d9a is in getnstimeofday (kernel/time/timekeeping.c:104).
-> > 99      
-> > 100                     /* read clocksource: */
-> > 101                     cycle_now = clocksource_read(clock);
-> > 102     
-> > 103                     /* calculate the delta since the last update_wall_time: */
-> > 104                     cycle_delta = (cycle_now - clock->cycle_last) & clock->mask;
-> > 105     
-> > 106                     /* convert to nanoseconds: */
-> > 107                     nsecs = cyc2ns(clock, cycle_delta);
-> > 108     
-> > 
-> > Which implies that someone mucked up xtime_lock.
-> > 
-> > But I don't think any of that is correct.  The getnstimeofday is just
-> > stack gunk.  hald is in D state and is asleep in get_request_wait().
+Chris Leech wrote:
+> Both iSCSI and Fibre Channel make use of 24-bit big-endian values in
+> frame headers.  This patch defines __be24 and __le24 typedefs for a
+> structure wrapped around a 3-byte array, and macros to convert back and
+> forth to a 32-bit integer.
 > 
-> Right.  It looks like there was a media change in the CD drive and hald was
-> waiting for the device in sr_test_unit_ready() forever.  Apparently, the device
-> could not get ready.
+> The undefs in iscsi_proto.h are because of the different calling
+> convention for the existing hton24 macro in the iSCSI code.  iSCSI will
+> be converted in a subsequent patch.
 > 
-> It looks like a SATA/ATA (whatever the CD-ROM is attached to) issue or sr_mod
-> breakage.
+> Signed-off-by: Chris Leech <christopher.leech@intel.com>
 
-Um, I don't see how that follows.
+I like what this patch wants to accomplish, but I disagree with the
+implementation.
 
-get_request_wait() is the first thing the block layer does to try to get
-a request structure for the queue.  If it's stuck there it means that
-block was out of requests and is waiting for some memory to free up.  If
-we're stuck there, nothing went down to the CD.
+First why is the double definition, one in include/linux/byteorder.h
+and one in include/linux/byteorder/generic.h ?
 
-However, being stuck here really isn't good news.  These things are
-mempool backed to prevent writeout deadlock ... we shouldn't be running
-out of them.  What does 
+Second and most important, in both these files all routines are inline's
+not MACROs, and rightly so. There is no place for a macro and the MACRO
+works bad for these. One - the definition of a local variable in a {} scope
+in the middle of anywhere. Second - type safety.
 
-/sys/block/<dev>/queue/nr_reqeusts
+I CC: Harvey Harrison which did lots of work in these area's.
 
-and
+For me this patch is totally unacceptable.
 
-/sys/block/<dev>/stat
-
-say for this device?
-
-James
-
+Thanks for working on this
+Boaz
+> ---
+> 
+>  include/linux/byteorder.h         |   56 ++++++++++++++++++++++++++++++++++++
+>  include/linux/byteorder/generic.h |   57 +++++++++++++++++++++++++++++++++++++
+>  include/linux/types.h             |    2 +
+>  include/scsi/iscsi_proto.h        |    2 +
+>  4 files changed, 117 insertions(+), 0 deletions(-)
+> 
+> 
+> diff --git a/include/linux/byteorder.h b/include/linux/byteorder.h
+> index 29f002d..e41c17b 100644
+> --- a/include/linux/byteorder.h
+> +++ b/include/linux/byteorder.h
+> @@ -62,6 +62,54 @@
+>  # define __cpu_to_le64(x) ((__force __le64)__swab64(x))
+>  #endif
+>  
+> +/**
+> + * __le24_to_cpu - read a 3-byte array as a 24-bit little-endian integer
+> + * @x: __le24, a structure wrapper around a 3-byte array
+> + *
+> + * Evaluates to a __u32 integer type
+> + */
+> +#define __le24_to_cpu(x) \
+> +({ \
+> +	__le24 _x = (x); \
+> +	(__u32) ((_x.b[2] << 16) | (_x.b[1] << 8) | (_x.b[0])); \
+> +})
+> +
+> +/**
+> + * __cpu_to_le24 - store a value in a 3-byte array in little-endian format
+> + * @x: __u32, there is no checking to ensure only the lower 24 bits are set
+> + *
+> + * Evaluates to an __le24 compound literal
+> + */
+> +#define __cpu_to_le24(x) \
+> +({ \
+> +	__u32 _x = (x); \
+> +	(__le24) { .b = { _x & 0xff, (_x >> 8) & 0xff, (_x >> 16) & 0xff } }; \
+> +})
+> +
+> +/**
+> + * __be24_to_cpu - read a 3-byte array as a 24-bit big-endian integer
+> + * @x: __be24, a structure wrapper around a 3-byte array
+> + *
+> + * Evaluates to a __u32 integer type
+> + */
+> +#define __be24_to_cpu(x) \
+> +({ \
+> +	__be24 _x = (x); \
+> +	(__u32) ((_x.b[0] << 16) | (_x.b[1] << 8) | (_x.b[2])); \
+> +})
+> +
+> +/**
+> + * __cpu_to_be24 - store a value in a 3-byte array in big-endian format
+> + * @x: __u32, there is no checking to ensure only the lower 24 bits are set
+> + *
+> + * Evaluates to an __be24 compound literal
+> + */
+> +#define __cpu_to_be24(x) \
+> +({ \
+> +	__u32 _x = (x); \
+> +	(__be24) { .b = { (_x >> 16) & 0xff, (_x >> 8) & 0xff, _x & 0xff } }; \
+> +})
+> +
+>  /*
+>   * These helpers could be phased out over time as the base version
+>   * handles constant folding.
+> @@ -280,15 +328,19 @@ static inline __be64 __cpu_to_be64p(const __u64 *p)
+>  #ifdef __KERNEL__
+>  
+>  # define le16_to_cpu __le16_to_cpu
+> +# define le24_to_cpu __le24_to_cpu
+>  # define le32_to_cpu __le32_to_cpu
+>  # define le64_to_cpu __le64_to_cpu
+>  # define be16_to_cpu __be16_to_cpu
+> +# define be24_to_cpu __be24_to_cpu
+>  # define be32_to_cpu __be32_to_cpu
+>  # define be64_to_cpu __be64_to_cpu
+>  # define cpu_to_le16 __cpu_to_le16
+> +# define cpu_to_le24 __cpu_to_le24
+>  # define cpu_to_le32 __cpu_to_le32
+>  # define cpu_to_le64 __cpu_to_le64
+>  # define cpu_to_be16 __cpu_to_be16
+> +# define cpu_to_be24 __cpu_to_be24
+>  # define cpu_to_be32 __cpu_to_be32
+>  # define cpu_to_be64 __cpu_to_be64
+>  
+> @@ -332,11 +384,15 @@ static inline __be64 __cpu_to_be64p(const __u64 *p)
+>  # define ___htons(x) __cpu_to_be16(x)
+>  # define ___ntohl(x) __be32_to_cpu(x)
+>  # define ___ntohs(x) __be16_to_cpu(x)
+> +# define ___hton24(x) __cpu_to_be24(x)
+> +# define ___ntoh24(x) __be24_to_cpu(x)
+>  
+>  # define htonl(x) ___htonl(x)
+>  # define ntohl(x) ___ntohl(x)
+>  # define htons(x) ___htons(x)
+>  # define ntohs(x) ___ntohs(x)
+> +# define hton24(x) ___hton24(x)
+> +# define ntoh24(x) ___ntoh24(x)
+>  
+>  static inline void le16_add_cpu(__le16 *var, u16 val)
+>  {
+> diff --git a/include/linux/byteorder/generic.h b/include/linux/byteorder/generic.h
+> index 0846e6b..a57fbc3 100644
+> --- a/include/linux/byteorder/generic.h
+> +++ b/include/linux/byteorder/generic.h
+> @@ -119,6 +119,59 @@
+>  #define cpu_to_be16s __cpu_to_be16s
+>  #define be16_to_cpus __be16_to_cpus
+>  
+> +/**
+> + * __le24_to_cpu - read a 3-byte array as a 24-bit little-endian integer
+> + * @x: __le24, a structure wrapper around a 3-byte array
+> + *
+> + * Evaluates to a __u32 integer type
+> + */
+> +#define __le24_to_cpu(x) \
+> +({ \
+> +	__le24 _x = (x); \
+> +	(__u32) ((_x.b[2] << 16) | (_x.b[1] << 8) | (_x.b[0])); \
+> +})
+> +
+> +/**
+> + * __cpu_to_le24 - store a value in a 3-byte array in little-endian format
+> + * @x: __u32, there is no checking to ensure only the lower 24 bits are set
+> + *
+> + * Evaluates to an __le24 compound literal
+> + */
+> +#define __cpu_to_le24(x) \
+> +({ \
+> +	__u32 _x = (x); \
+> +	(__le24) { .b = { _x & 0xff, (_x >> 8) & 0xff, (_x >> 16) & 0xff } }; \
+> +})
+> +
+> +/**
+> + * __be24_to_cpu - read a 3-byte array as a 24-bit big-endian integer
+> + * @x: __be24, a structure wrapper around a 3-byte array
+> + *
+> + * Evaluates to a __u32 integer type
+> + */
+> +#define __be24_to_cpu(x) \
+> +({ \
+> +	__be24 _x = (x); \
+> +	(__u32) ((_x.b[0] << 16) | (_x.b[1] << 8) | (_x.b[2])); \
+> +})
+> +
+> +/**
+> + * __cpu_to_be24 - store a value in a 3-byte array in big-endian format
+> + * @x: __u32, there is no checking to ensure only the lower 24 bits are set
+> + *
+> + * Evaluates to an __be24 compound literal
+> + */
+> +#define __cpu_to_be24(x) \
+> +({ \
+> +	__u32 _x = (x); \
+> +	(__be24) { .b = { (_x >> 16) & 0xff, (_x >> 8) & 0xff, _x & 0xff } }; \
+> +})
+> +
+> +#define le24_to_cpu __le24_to_cpu
+> +#define cpu_to_le24 __cpu_to_le24
+> +#define be24_to_cpu __be24_to_cpu
+> +#define cpu_to_be24 __cpu_to_be24
+> +
+>  /*
+>   * They have to be macros in order to do the constant folding
+>   * correctly - if the argument passed into a inline function
+> @@ -134,11 +187,15 @@
+>  #define ___htons(x) __cpu_to_be16(x)
+>  #define ___ntohl(x) __be32_to_cpu(x)
+>  #define ___ntohs(x) __be16_to_cpu(x)
+> +#define ___hton24(x) __cpu_to_be24(x)
+> +#define ___ntoh24(x) __be24_to_cpu(x)
+>  
+>  #define htonl(x) ___htonl(x)
+>  #define ntohl(x) ___ntohl(x)
+>  #define htons(x) ___htons(x)
+>  #define ntohs(x) ___ntohs(x)
+> +#define hton24(x) ___hton24(x)
+> +#define ntoh24(x) ___ntoh24(x)
+>  
+>  static inline void le16_add_cpu(__le16 *var, u16 val)
+>  {
+> diff --git a/include/linux/types.h b/include/linux/types.h
+> index d4a9ce6..85fcff7 100644
+> --- a/include/linux/types.h
+> +++ b/include/linux/types.h
+> @@ -188,6 +188,8 @@ typedef __u64 __bitwise __be64;
+>  typedef __u16 __bitwise __sum16;
+>  typedef __u32 __bitwise __wsum;
+>  
+> +typedef struct { __u8 b[3]; } __be24, __le24;
+> +
+>  #ifdef __KERNEL__
+>  typedef unsigned __bitwise__ gfp_t;
+>  
+> diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+> index f2a2c11..429c5ff 100644
+> --- a/include/scsi/iscsi_proto.h
+> +++ b/include/scsi/iscsi_proto.h
+> @@ -35,6 +35,8 @@
+>  /*
+>   * useful common(control and data pathes) macro
+>   */
+> +#undef ntoh24
+> +#undef hton24
+>  #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
+>  #define hton24(p, v) { \
+>          p[0] = (((v) >> 16) & 0xFF); \
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
