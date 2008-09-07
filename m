@@ -1,87 +1,48 @@
-From: "Chris Leech" <chris.leech@gmail.com>
-Subject: Re: [PATCH 1/3] 24-bit types: typedef and macros for accessing 3-byte arrays as integers
-Date: Sun, 7 Sep 2008 08:56:36 -0700
-Message-ID: <41b516cb0809070856v2000b93bm5305236e4a98b81a@mail.gmail.com>
-References: <20080905165732.16689.50256.stgit@localhost.localdomain>
-	 <48C3A0A9.3000206@panasas.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 0/3] lpfc 8.2.8 v2 : recut of conflicting 8.2.8 patches
+Date: Sun, 7 Sep 2008 11:57:20 -0400
+Message-ID: <48C3F9E0.3020308@emulex.com>
+References: <1220802706.6747.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:19032 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbYIGP4h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2008 11:56:37 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1211082wfd.4
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Sep 2008 08:56:36 -0700 (PDT)
-In-Reply-To: <48C3A0A9.3000206@panasas.com>
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:62021 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbYIGP5Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2008 11:57:25 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m87FvPVO026694
+	for <linux-scsi@vger.kernel.org>; Sun, 7 Sep 2008 08:57:25 -0700 (PDT)
+In-Reply-To: <1220802706.6747.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Harvey Harrison <harvey.harrison@gmail.com>
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, Sep 7, 2008 at 2:36 AM, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> Chris Leech wrote:
->> Both iSCSI and Fibre Channel make use of 24-bit big-endian values in
->> frame headers.  This patch defines __be24 and __le24 typedefs for a
->> structure wrapped around a 3-byte array, and macros to convert back and
->> forth to a 32-bit integer.
->>
->> The undefs in iscsi_proto.h are because of the different calling
->> convention for the existing hton24 macro in the iSCSI code.  iSCSI will
->> be converted in a subsequent patch.
->>
->> Signed-off-by: Chris Leech <christopher.leech@intel.com>
->
-> I like what this patch wants to accomplish, but I disagree with the
-> implementation.
->
-> First why is the double definition, one in include/linux/byteorder.h
-> and one in include/linux/byteorder/generic.h ?
+fyi - the patches were cut against scsi-post-merge-2.6
 
-Because there are currently two byteorder/swab implementations in the
-kernel.  As you said Harvey Harrison has done a lot of work in this
-area, but right now only the arm and avr32 architectures make use of
-the new linux/byteorder.h.  I could put the 24-bit support in it's own
-header instead.
+-- james s
 
-> Second and most important, in both these files all routines are inline's
-> not MACROs, and rightly so. There is no place for a macro and the MACRO
-> works bad for these.
-
-I understand the benefits of inline functions, but I disagree that a
-macro is a bad choice in this case.  An inline implementation of
-cpu_to_be24/hton24 would require a different interface than the rest
-of the byteorder functions, looking more like the existing iSCSI
-hton24 macro by taking a pointer to a memory location to store the
-result in.
-
-By using a macro that expands to a compound literal, I was able to
-maintain the same calling convention of X = cpu_to_be24(Y);
-Attempting to do so with an inline results in a function definition
-that returns a structure by value, and even when inlined generates
-much worse assembly (yes, I tried it).
-
-> One - the definition of a local variable in a {} scope in the middle of anywhere.
-
-That was done in order to only evaluate the macro operand only once,
-making it safe to call with an expression that may have side effects.
-Macros that create scoped variables are all over the place, like min,
-max and container_of.  I consider it necessary in creating a good
-macro implementation for this functionality, and my motivation for
-using macros was given above.
-
-> Second - type safety.
-
-Actually, the assignment to a locally scoped variable gives just as
-much type checking as an inline would :-)
-
-Chris
-
-> I CC: Harvey Harrison which did lots of work in these area's.
->
-> For me this patch is totally unacceptable.
->
-> Thanks for working on this
-> Boaz
+Smart, James wrote:
+> This patch set is reworked versions of 8.2.8 patches that were failing
+> due to conflicts with the target busy and transport disrupted changes.
+> 
+> patch1 resolves the target_busy vs transport_disrupted status
+> 
+> patch2 is a recut of:
+>   [PATCH 12/15] lpfc 8.2.8 : Add sysfs control of target queue depth handling
+> 
+> patch3 is a recut of:
+>   [PATCH 14/15] lpfc 8.2.8 : Add statistical reporting control and additional
+>     fc vendor events
+> 
+> -- james s
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
