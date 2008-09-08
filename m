@@ -1,62 +1,47 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [usb-storage] USB storage devices and SAT
-Date: Mon, 08 Sep 2008 10:27:00 +0300
-Message-ID: <48C4D3C4.80806@panasas.com>
-References: <489656EC.5000602@torque.net> <Pine.LNX.4.44L0.0808041147580.3818-100000@iolanthe.rowland.org> <20080804174524.GL4322@one-eyed-alien.net> <48983F5D.6060903@panasas.com> <48C42D02.7080809@free.fr>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/1] block: set req->timeout in blk_add_timer
+Date: Mon, 8 Sep 2008 09:38:41 +0200
+Message-ID: <20080908073839.GD20055@kernel.dk>
+References: <1220680240-27724-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:20026 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751633AbYIHH2E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2008 03:28:04 -0400
-In-Reply-To: <48C42D02.7080809@free.fr>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:59053 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbYIHHin (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Sep 2008 03:38:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1220680240-27724-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthieu castet <castet.matthieu@free.fr>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>
 
-matthieu castet wrote:
-> Hi,
+On Sat, Sep 06 2008, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <mchristi@redhat.com>
 > 
-> Boaz Harrosh wrote:
->> There was a correct and simple patch proposed that fixes this problem
->> the right way:
->> http://marc.info/?l=linux-usb&m=121762869915609&w=2
->>
->> Doug could you please test this patch to see if it fixes your device?
->>
->> scsi-core already gives drivers complete control on what sense_size to
->> fetch. It is a parameter to the scsi_eh_prep_cmnd() call. So no need
->> for slave_configure(), default value, and all that loop.
->>
->> Matthieu castet <castet.matthieu@free.fr> wrote ...
->>> we have got report from 2 users that scsi sat (to do ata passthrough)  was not fully \
->>> working with some usb bridge (maxtor and western digital). Everything works except \
->>> the sense result was incomplete [1].
->>>
->>>
->>> After some investigation, they need a sense size different of 18 (at least 22). [2]
->>>
->>> Because some devices can crash if the sense size is different of 18, in order to not \
->>> break these devices a flag that is set either by unusual entries, either for spc3 or \
->>> latter devices is used.
->>>
->>>
->>> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
->> Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
->>
-> What the status of that.
+> To prevent a reques from running forever, scsi-ml checks if
+> a command has been running req->timeout * cmd->allowed + 1 seconds.
+> If it has, scsi-ml will fail the request. From what I can tell
+> it looks like in Jen's tree that the block layer is not setting
+> this value, so a command is failed right away a lot of times because
+> wait_for in scsi_softirq_done is zero seconds. It is only set by ioctls
+> and passthrough.
 > 
-> Should I try to resubmit that patch on linux-usb ?
+> This patch just copies the q timeout that is used, so any one
+> checking it will still be able to see it.
 > 
+> For the scsi-ml req->timeout usage, I think we can move the retries and
+> the infinite retry check from the scsi layer to the block layer. I was
+> not sure if we should do that in this patch or a separate one. I can
+> cook up another patch if people want. If it would be possible to do
+> that after MikeA's patches it would probably be best though since
+> he is working on that code too.
+> 
+> This patch was made over James's scsi post tree.
 
-I see the To: is me. But I'm not a USB guy at all.
+Thanks Mike, I'll merge it into the original patch.
 
-Like you said, I too think the best is to freshen up the 
-patch for latest USB tree and send it to the USB mailing
-list.
+-- 
+Jens Axboe
 
-Cheers
-Boaz
