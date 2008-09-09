@@ -1,37 +1,31 @@
-From: "Sharon Geva" <sharon.geva75@gmail.com>
-Subject: Is there an option to limit in FC-SCST the max size of data transfer?
-Date: Tue, 9 Sep 2008 11:40:58 +0300
-Message-ID: <ed9363010809090140tf64d6b2n7a2a3130852751eb@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/8] sg cleanup patches after the block conversion
+Date: Tue, 9 Sep 2008 22:35:31 +0900
+Message-ID: <20080909223555K.fujita.tomonori@lab.ntt.co.jp>
+References: <1220363408-7134-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.231]:55165 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775AbYIIIlA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2008 04:41:00 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so3449669qba.17
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Sep 2008 01:40:59 -0700 (PDT)
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:38660 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752513AbYIINgo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2008 09:36:44 -0400
+In-Reply-To: <1220363408-7134-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-Hi,
+On Tue,  2 Sep 2008 22:50:00 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-I'm looking for a way to limit the size of max data transferred in a
-single SCSI command when using FC-SCST (isp_scst).
+> Here's some cleanup patches, removing functions that became
+> unnecessary after the block conversion, functions used temporally
+> during the conversion, etc.
+> 
+> This is against the for-2.6.28 brach in the block tree:
 
-Generally - using SCSI over FC in target mode - Is there a way for the
-target device to declare what is the maximum size of IO data that it
-is capable of receiving in a single SCSI command?
-I know there is the 'block limits vpd page', which specifies the max
-transfer size, however, I understand this page code is optional, so It
-is not possible to rely on it.
-Is it the FC layer that can communicate and enforce such a limit?
+Jens, can you apply this to your for-2.6.28?
 
-Is there any option in any of SCST modules to set this option?
-
-Thanks in advance,
-
-SG
+Thanks,
