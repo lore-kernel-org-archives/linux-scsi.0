@@ -1,28 +1,56 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch] qla2xxx: Fix "occured" spelling errors
-Date: Mon, 8 Sep 2008 19:09:22 -0700
-Message-ID: <20080909020922.GF25591@plap4-2.qlogic.org>
-References: <200808221317.07173.bjorn.helgaas@hp.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: [PATCH 0/6] detect online disk resize
+Date: Tue, 9 Sep 2008 10:41:32 +0300
+Message-ID: <20080909074132.GV13941@edu.joroinen.fi>
+References: <20080829231254.25065.66052.stgit@bluto.andrew> <x49prnett3p.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:27546 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbYIICJX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2008 22:09:23 -0400
+Received: from edu.joroinen.fi ([194.89.68.130]:60853 "EHLO edu.joroinen.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754127AbYIIHle (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2008 03:41:34 -0400
 Content-Disposition: inline
-In-Reply-To: <200808221317.07173.bjorn.helgaas@hp.com>
+In-Reply-To: <x49prnett3p.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Andrew Patterson <andrew.patterson@hp.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, axboe@kernel.dk, andmike@linux.vnet.ibm.com, mike.miller@hp.com, genanr@emsphone.com
 
-On Fri, 22 Aug 2008, Bjorn Helgaas wrote:
-
-> Fix "occured" spelling errors.  Most of these are in comments, which
-> I wouldn't normally bother with, but a couple are in printks, which
-> irritate me more.  So I just fixed them all at the same time.
+On Mon, Sep 08, 2008 at 02:01:14PM -0400, Jeff Moyer wrote:
+> Andrew Patterson <andrew.patterson@hp.com> writes:
 > 
-> Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
+> > This is version 2 of a patch series I submitted back in May 2008. This
+> > version now checks for device size changes in the rescan_partitions()
+> > routine.  Which in turn is called when a device is opened and in the
+> > BLKRRPART ioctl.
+> >
+> > I am resubmitting this patch series as I got little response the
+> > previous time.  Al Viro has told me offline that he would look at it this
+> > time.
+> 
+> [...]
+> 
+> > I have tested this patch on SCSI and SmartArray (cciss)
+> > devices. Device mapper still does not recognize device size changes
+> > until the device is restarted.
+> >
+> > Jeff Moyer and Andy Ryan have done some light testing on the previous
+> > version of this series.
+> 
+> I re-tested this new patch series using an iSCSI target via the
+> following steps:
+> 
+> 1) Connect to iSCSI storage, creating the /dev/sd* devices.
+> 2) Create a file system on the block device
+> 3) Mount the file system, and leave a shell active on the mount point.
+> 4) resize the iSCSI LUN
+> 5) rescan the iSCSI session
+> 6) resize the file system
+> 
+> This procedure worked fine.
+> 
 
-Thanks!  I've queued this up in my next patchset.
+So now we just need a sane way to resize dm-multipath devices online :)
+
+-- Pasi
