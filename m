@@ -1,101 +1,180 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11529] aacraid - WARNING: at lib/scatterlist.c
-Date: Wed, 10 Sep 2008 07:13:25 -0700 (PDT)
-Message-ID: <20080910141325.7CA7110805B@picon.linux-foundation.org>
-References: <bug-11529-11613@http.bugzilla.kernel.org/>
+From: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
+Subject: Re:[PATCH 1/3] 24-bit types: typedef and macros for
+	accessing	3-byte arrays as integers
+Date: Wed, 10 Sep 2008 10:40:41 -0500
+Message-ID: <1221061241.27385.14.camel@norville.austin.ibm.com>
+References: <20080905165732.16689.50256.stgit@localhost.localdomain>
+	 <20080910140712.GA12280@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39339 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751821AbYIJON1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2008 10:13:27 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8AEDPAD029606
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2008 07:13:26 -0700
-In-Reply-To: <bug-11529-11613@http.bugzilla.kernel.org/>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:57816 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752394AbYIJPkz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2008 11:40:55 -0400
+In-Reply-To: <20080910140712.GA12280@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chris Leech <christopher.leech@intel.com>, jfs-discussion@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11529
+On Wed, 2008-09-10 at 10:07 -0400, Christoph Hellwig wrote:
 
+> JFS already defines an __le24, see fs/jfs/endian24.h.  Please try to
+> cover it, too or at least make sure you don't break it.
 
-
-
-
-------- Comment #3 from anonymous@kernel-bugs.osdl.org  2008-09-10 07:13 -------
-Reply-To: fujita.tomonori@lab.ntt.co.jp
-
-On Wed, 10 Sep 2008 05:44:31 -0700 (PDT)
-bugme-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=11529
-> 
-> 
-> 
-> 
-> 
-> ------- Comment #2 from winfried@tilanus.com  2008-09-10 05:44 -------
-> The patch didn't apply, but adding the lines by hand worked.
-
-Strange, I can cleanly apply the patch to 2.6.26.5 that the mailing
-list delivered...
-
-
-> It solved most of
-> the warnings, but I am still left with two warnings at boottime:
-
-Ah, sorry. Can you try this patch?
+Chris,
+This patch takes care of jfs.  Please add it to your patchset.
 
 Thanks,
+Shaggy
 
+24-bit types: Convert jfs to use the common 24-bit types
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index aa4e77c..160feab 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -404,13 +404,16 @@ static void get_container_name_callback(void *context,
-struct fib * fibptr)
-                        char d[sizeof(((struct inquiry_data
-*)NULL)->inqd_pid)];
-                        int count = sizeof(d);
-                        char *dp = d;
-+                       unsigned long flags;
-                        do {
-                                *dp++ = (*sp) ? *sp++ : ' ';
-                        } while (--count > 0);
+This patch cleans up some of the ugliness in the jfs headers and
+uses the common 24-bit types instead of its private definitions.
 
-+                       local_irq_save(flags);
-                        scsi_sg_copy_to_buffer(scsicmd, &inq, sizeof(inq));
-                        memcpy(inq.inqd_pid, d, sizeof(d));
-                        scsi_sg_copy_from_buffer(scsicmd, &inq, sizeof(inq));
-+                       local_irq_restore(flags);
-                }
-        }
+Signed-off-by: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
 
-@@ -793,6 +796,7 @@ static void get_container_serial_callback(void *context,
-struct fib * fibptr)
-        get_serial_reply = (struct aac_get_serial_resp *) fib_data(fibptr);
-        /* Failure is irrelevant, using default value instead */
-        if (le32_to_cpu(get_serial_reply->status) == CT_OK) {
-+               unsigned long flags;
-                char sp[13];
-                /* EVPD bit set */
-                sp[0] = INQD_PDT_DA;
-@@ -800,7 +804,9 @@ static void get_container_serial_callback(void *context,
-struct fib * fibptr)
-                sp[2] = 0;
-                sp[3] = snprintf(sp+4, sizeof(sp)-4, "%08X",
-                  le32_to_cpu(get_serial_reply->uid));
-+               local_irq_save(flags);
-                scsi_sg_copy_from_buffer(scsicmd, sp, sizeof(sp));
-+               local_irq_restore(flags);
-        }
-
-        scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
-
+diff --git a/fs/jfs/endian24.h b/fs/jfs/endian24.h
+deleted file mode 100644
+index fa92f7f..0000000
+--- a/fs/jfs/endian24.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-/*
+- *   Copyright (C) International Business Machines Corp., 2001
+- *
+- *   This program is free software;  you can redistribute it and/or modify
+- *   it under the terms of the GNU General Public License as published by
+- *   the Free Software Foundation; either version 2 of the License, or
+- *   (at your option) any later version.
+- *
+- *   This program is distributed in the hope that it will be useful,
+- *   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+- *   the GNU General Public License for more details.
+- *
+- *   You should have received a copy of the GNU General Public License
+- *   along with this program;  if not, write to the Free Software
+- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+- */
+-#ifndef _H_ENDIAN24
+-#define	_H_ENDIAN24
+-
+-/*
+- *	endian24.h:
+- *
+- * Endian conversion for 24-byte data
+- *
+- */
+-#define __swab24(x) \
+-({ \
+-	__u32 __x = (x); \
+-	((__u32)( \
+-		((__x & (__u32)0x000000ffUL) << 16) | \
+-		 (__x & (__u32)0x0000ff00UL)	    | \
+-		((__x & (__u32)0x00ff0000UL) >> 16) )); \
+-})
+-
+-#if (defined(__KERNEL__) && defined(__LITTLE_ENDIAN)) || (defined(__BYTE_ORDER) && (__BYTE_ORDER == __LITTLE_ENDIAN))
+-	#define __cpu_to_le24(x) ((__u32)(x))
+-	#define __le24_to_cpu(x) ((__u32)(x))
+-#else
+-	#define __cpu_to_le24(x) __swab24(x)
+-	#define __le24_to_cpu(x) __swab24(x)
+-#endif
+-
+-#ifdef __KERNEL__
+-	#define cpu_to_le24 __cpu_to_le24
+-	#define le24_to_cpu __le24_to_cpu
+-#endif
+-
+-#endif				/* !_H_ENDIAN24 */
+diff --git a/fs/jfs/jfs_types.h b/fs/jfs/jfs_types.h
+index 649f981..6c49b93 100644
+--- a/fs/jfs/jfs_types.h
++++ b/fs/jfs/jfs_types.h
+@@ -30,8 +30,6 @@
+ #include <linux/types.h>
+ #include <linux/nls.h>
+ 
+-#include "endian24.h"
+-
+ /*
+  * transaction and lock id's
+  *
+@@ -62,7 +60,7 @@ struct timestruc_t {
+  */
+ typedef struct {
+ 	unsigned len:24;
+-	unsigned off1:8;
++	u8 off1;
+ 	u32 off2;
+ } lxd_t;
+ 
+@@ -90,8 +88,8 @@ struct lxdlist {
+  *	physical xd (pxd)
+  */
+ typedef struct {
+-	unsigned len:24;
+-	unsigned addr1:8;
++	__le24 len;
++	u8 addr1;
+ 	__le32 addr2;
+ } pxd_t;
+ 
+@@ -122,13 +120,13 @@ struct pxdlist {
+  *	data extent descriptor (dxd)
+  */
+ typedef struct {
+-	unsigned flag:8;	/* 1: flags */
+-	unsigned rsrvd:24;
+-	__le32 size;		/* 4: size in byte */
+-	unsigned len:24;	/* 3: length in unit of fsblksize */
+-	unsigned addr1:8;	/* 1: address in unit of fsblksize */
+-	__le32 addr2;		/* 4: address in unit of fsblksize */
+-} dxd_t;			/* - 16 - */
++	u8 flag;	/* 1: flags */
++	u8 rsrvd[3];
++	__le32 size;	/* 4: size in byte */
++	__le24 len;	/* 3: length in unit of fsblksize */
++	u8 addr1;	/* 1: address in unit of fsblksize */
++	__le32 addr2;	/* 4: address in unit of fsblksize */
++} dxd_t;		/* - 16 - */
+ 
+ /* dxd_t flags */
+ #define	DXD_INDEX	0x80	/* B+-tree index */
+diff --git a/fs/jfs/jfs_xtree.h b/fs/jfs/jfs_xtree.h
+index 70815c8..92beff3 100644
+--- a/fs/jfs/jfs_xtree.h
++++ b/fs/jfs/jfs_xtree.h
+@@ -29,14 +29,14 @@
+  *	extent allocation descriptor (xad)
+  */
+ typedef struct xad {
+-	unsigned flag:8;	/* 1: flag */
+-	unsigned rsvrd:16;	/* 2: reserved */
+-	unsigned off1:8;	/* 1: offset in unit of fsblksize */
+-	__le32 off2;		/* 4: offset in unit of fsblksize */
+-	unsigned len:24;	/* 3: length in unit of fsblksize */
+-	unsigned addr1:8;	/* 1: address in unit of fsblksize */
+-	__le32 addr2;		/* 4: address in unit of fsblksize */
+-} xad_t;			/* (16) */
++	u8 flag;	/* 1: flag */
++	u8 rsvrd[2];	/* 2: reserved */
++	u8 off1;	/* 1: offset in unit of fsblksize */
++	__le32 off2;	/* 4: offset in unit of fsblksize */
++	__le24 len;	/* 3: length in unit of fsblksize */
++	u8 addr1;	/* 1: address in unit of fsblksize */
++	__le32 addr2;	/* 4: address in unit of fsblksize */
++} xad_t;		/* (16) */
+ 
+ #define MAXXLEN		((1 << 24) - 1)
+ 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+David Kleikamp
+IBM Linux Technology Center
+
