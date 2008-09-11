@@ -1,55 +1,70 @@
-From: Josip Rodin <joy@entuzijast.net>
-Subject: Re: kernel 2.6.26.3 qla2xxx oopsing on Fire 280R
-Date: Thu, 11 Sep 2008 13:37:27 +0200
-Message-ID: <20080911113727.GA24487@orion.carnet.hr>
-References: <20080904093929.GA29006@orion.carnet.hr> <20080908211331.GC22598@plap4-2.qlogic.org> <20080909015321.GA14147@orion.carnet.hr> <20080909020102.GE25591@plap4-2.qlogic.org> <20080909143932.GA27117@orion.carnet.hr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [RFC] pass through support in fc transport: via bsg (block SG)
+Date: Thu, 11 Sep 2008 06:25:06 -0700
+Message-ID: <4627F04F-2980-4C9B-AED7-891452BA84E2@qlogic.com>
+References: <1283B1A7-A1A2-465A-A9E4-07A778BC3FE8@qlogic.com> <423FD491-FCA2-4CBF-8411-B08E90243236@qlogic.com> <7773BCE2-99A3-467D-B7AF-C182F2773A9C@qlogic.com> <48AF3547.4040703@emulex.com>
+Mime-Version: 1.0 (Apple Message framework v928.1)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orion.CARNet.hr ([161.53.160.90]:45229 "EHLO orion.carnet.hr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752349AbYIKLh3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2008 07:37:29 -0400
-Content-Disposition: inline
-In-Reply-To: <20080909143932.GA27117@orion.carnet.hr>
+Received: from avexch2.qlogic.com ([198.70.193.116]:25607 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbYIKNZJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2008 09:25:09 -0400
+In-Reply-To: <48AF3547.4040703@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Robert W Love <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Boaz Harrosh <bharrosh@panasas.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-On Tue, Sep 09, 2008 at 04:39:32PM +0200, Josip Rodin wrote:
-> On Mon, Sep 08, 2008 at 07:01:02PM -0700, Andrew Vasquez wrote:
-> > Yes, please do try the patch.  Could you also enable error-logging via
-> > the ql2xextended_error_logging module parameter:
-> > 
-> > 	# insmod qla2xxx.ko ql2xextended_error_logging=1
-> > 
-> > And send the kernel messages...  Thanks, AV
-> 
-> OK, I reset the bisection, pulled the latest updates, applied your patch
-> and added the parameter to the initrd module setup, rebuilt after an
-> all-enter make oldconfig. After rebooting, it failed to load the firmware:
-> 
-> scsi(0): **** Load RISC code **** 
-> firmware: requesting ql2200_fw.bin 
-> scsi(0): Failed to load firmware image (ql2200_fw.bin). 
-> qla2xxx 0001:00:04.0: Firmware image unavailable. 
 
-OK, so I did git reset --hard bed475c4cde5d12f537f445bdd0a5a3bb5684481
-to get back to the point which the bisection said was the problem, and
-yet that version of 2.6.27-rc2 also exhibited the firmware problem.
+On Aug 22, 2008, at 2:53 PM, James Smart wrote:
 
-Then I went back up to git reset --hard bf6583b5831d3195c45f98ec3016499389cbe18f
-to see if it'll do that again, and that 2.6.26 *also* did the same.
+> Nope - not forgotten, just a lot of different things to get to.
+>
+> I don't know of anything in the header that needs to be specified.  
+> Everything is either fixed because it is an ELS/CT request, or what  
+> needs to be specified (usually S_ID/D_ID) comes from the object the  
+> bsg reference is to. CS_CTL is the only one that is a maybe - but  
+> that's a whole different story, and we should just ignore it for  
+> now. So I'm against a header.
+>
+> Additionally, we have to be careful about what kind of interface we  
+> believe the LLD's support. If they expected a raw frame transmit, I  
+> don't know how many support that, especially as adapters very much  
+> control XID's, etc. Create Exchange, w/ Send/Receive, sequence is  
+> prefered, but even that might be too low.  At best, there is  
+> explicit els or ct assist interfaces - which means the LLD/adapter  
+> is likely handling all the header and segmentation, and the  
+> interface is just passing payload buffers.
+>
+> So in general it's a request, w/ xmt payload, buffer for response,  
+> and a  completion status (which I would assume is more than just an  
+> int and a couple of #defines - we have to cover the F_RJT/P_RJT/ 
+> ABORT cases..)
+I actually had missed the point at that time and now I'm getting it as  
+I read one more time.
+So, in this case, how to identify whether the request is ELS or CT if  
+the application issues the request without the frame header?
 
-So I reviewed my steps and concluded that the only other thing different was
-adding ql2xextended_error_logging=1. I undid that change, rebuilt the
-initramfs image, and then the machine booted fine!
+Seokmann
+>
+>
+> -- james s
+>
+> Seokmann Ju wrote:
+>> I just want to re-stroke this thread to make sure it is not skipped.
+>> One question came to me while testing qla2xxx module with the  
+>> changes.
+>> When the application issues ELS/CT packet, should the packet include
+>> the FC frame header?
+>> And if the answer is 'yes', should the driver also include the FC
+>> frame header when it returns response to the application (just like
+>> any other frame exchanges in between two ports on the FC)?
+>> The FC frame header has type field that identifies what type of the
+>> payload (ELS / CT / etc.) the frame contains and the type field is
+>> being checked by the FC transport layer before it calls LLDD's  
+>> handler.
+>> Thank you,
+>> Seokmann
 
-So, um, please fix the debugging code so that it doesn't cause more bugs... :/
-
-In the meantime, I'll go back up to bed475c4cde5d12f537f445bdd0a5a3bb5684481
-and see how it does with the debugging patch.
-
--- 
-     2. That which causes joy or happiness.
