@@ -1,53 +1,64 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: Block timeouts seem not to be working
-Date: Thu, 11 Sep 2008 08:42:05 -0700
-Message-ID: <20080911154205.GA1069@linux.vnet.ibm.com>
-References: <1221145521.3330.2.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] sg: disable interrupts inside sg_copy_buffer
+Date: Thu, 11 Sep 2008 18:33:03 +0200
+Message-ID: <20080911163302.GV20055@kernel.dk>
+References: <20080911235215U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:53952 "EHLO e2.ny.us.ibm.com"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:33263 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752661AbYIKPmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2008 11:42:11 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8BFg8KQ023724
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 11:42:08 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8BFg8ls226018
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 11:42:08 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8BFg7n7020112
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 11:42:08 -0400
+	id S1752787AbYIKQdI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Sep 2008 12:33:08 -0400
 Content-Disposition: inline
-In-Reply-To: <1221145521.3330.2.camel@localhost.localdomain>
+In-Reply-To: <20080911235215U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> I just noticed this with a rather finickey SAS system I have.  It's got
-> a SATA DVD attached over an expander.  Periodically the DVD just hangs
-> up, so we wait for the timeout and then send a phy reset which clears
-> it.
+On Thu, Sep 11 2008, FUJITA Tomonori wrote:
+> The callers of sg_copy_buffer must disable interrupts before calling
+> it (since it uses kmap_atomic). Some callers use it on
+> interrupt-disabled code but some need to take the trouble to disable
+> interrupts just for this. No wonder they forget about it and we hit a
+> bug like:
 > 
-> What I'm seeing with the new block timer code is that the timer never
-> expires.  I can dig some more into this, but if you wanted to test it as
-> well, the timer code is easy to excite.  Just throw away one command in
-> every 128 or so in the queuecommand routine of your favourite HBA
-> driver.
+> http://bugzilla.kernel.org/show_bug.cgi?id=11529
+> 
+> James said that it might be better to disable interrupts inside the
+> function rather than risk the callers getting it wrong.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  lib/scatterlist.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+> index 876ba6d..dd52cd5 100644
+> --- a/lib/scatterlist.c
+> +++ b/lib/scatterlist.c
+> @@ -422,6 +422,9 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+>  {
+>  	unsigned int offset = 0;
+>  	struct sg_mapping_iter miter;
+> +	unsigned long flags;
+> +
+> +	local_irq_save(flags);
+>  
+>  	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC);
+>  
+> @@ -442,6 +445,8 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+>  
+>  	sg_miter_stop(&miter);
+>  
+> +	local_irq_restore(flags);
+> +
+>  	return offset;
+>  }
 
-I have not seen the case of the timer never expiring, but will look into
-other test cases.
+Agreed and applied.
 
-Mike C and I where seeing timeout issues (host staying in recovery state
-or list debug bugon's) when running tests with timeouts set to 1 or 2
-seconds. We are working with Jens to address this.  The issue we where
-hitting appears related to the scsi_eh / scsi_done completion
-synchronization.
+-- 
+Jens Axboe
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
