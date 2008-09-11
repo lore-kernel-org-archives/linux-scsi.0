@@ -1,103 +1,93 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/3] 24-bit types: typedef and macros	for	accessing	3-byte
- arrays as integers
-Date: Thu, 11 Sep 2008 11:30:04 +0300
-Message-ID: <48C8D70C.7090908@panasas.com>
-References: <20080905165732.16689.50256.stgit@localhost.localdomain>	 <20080910140712.GA12280@infradead.org>	 <1221061241.27385.14.camel@norville.austin.ibm.com>	 <48C7F19D.3080507@panasas.com> <1221074409.27385.39.camel@norville.austin.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: ConfigFS + Target Mode Engine API discussion
+Date: Thu, 11 Sep 2008 01:58:49 -0700
+Message-ID: <1221123529.27831.343.camel@haakon2.linux-iscsi.org>
+References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org>
+	 <20080910233107.GC23864@mail.oracle.com>
+	 <1221097366.27831.216.camel@haakon2.linux-iscsi.org>
+	 <20080911021331.GA12902@mail.oracle.com>
+	 <1221107358.27831.289.camel@haakon2.linux-iscsi.org>
+	 <20080911063846.GB16583@mail.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:5444 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751806AbYIKIhs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2008 04:37:48 -0400
-In-Reply-To: <1221074409.27385.39.camel@norville.austin.ibm.com>
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:43653 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752698AbYIKI6v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Sep 2008 04:58:51 -0400
+In-Reply-To: <20080911063846.GB16583@mail.oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Leech <christopher.leech@intel.com>, jfs-discussion@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
 
-Dave Kleikamp wrote:
-> On Wed, 2008-09-10 at 19:11 +0300, Boaz Harrosh wrote:
->> Dave Kleikamp wrote:
+On Wed, 2008-09-10 at 23:38 -0700, Joel Becker wrote:
+> On Wed, Sep 10, 2008 at 09:29:18PM -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2008-09-10 at 19:13 -0700, Joel Becker wrote:
+> > > On Wed, Sep 10, 2008 at 06:42:46PM -0700, Nicholas A. Bellinger wrote:
+> > > > So I am thinking about the following question:  What would be the
+> > > > preferred method for calling ct_group_ops->make_group() in order to
+> > > > create the $CONFIGFS/target/$FABRIC struct config_item directly from
+> > > > target_fabric_configfs_register() call?  From there, the config group
+> > > > hanging off $CONFIGFS/target/$FABRIC will be fabric dependent and
+> > > > providing their own groups, items, depends, from the passed *fabric_cit.
+> > > > How do I "simulate" a mkdir(2) configfs -> make_group() call coming from
+> > > > the fabric module itself..?   This would be assuming that both mkdir(2)
+> > > 
+> > > 	That's precisely what you don't do with configfs.  It's a
+> > > defined "not to be done" thing.  So there's no preferred way, there's no
+> > > way at all.
+> > > 	What you want do to is drive this from mkdir().  The
+> > > make_group() will look up the sub-module it needs and return the
+> > > appropriate item.
+> > > 
+> > 
+> > Whew, good thing I asked about this case first..  :-)
 > 
->>> @@ -62,7 +60,7 @@ struct timestruc_t {
->>>   */
->>>  typedef struct {
->>>  	unsigned len:24;
->>> -	unsigned off1:8;
->>> +	u8 off1;
->>>  	u32 off2;
->>>  } lxd_t;
->>>  
->> Why is the difference from below definition. That is the
->> use/not of __le24? 
-> 
-> Answered elsewhere, but this is host-endian.  I plan to kill this
-> structure soon.
-> 
->>> @@ -90,8 +88,8 @@ struct lxdlist {
->>>   *	physical xd (pxd)
->>>   */
->>>  typedef struct {
->>> -	unsigned len:24;
->>> -	unsigned addr1:8;
->>> +	__le24 len;
->> Is this stuff on-the-wire?
-> 
-> Written to disk, so basically, yeah.
-> 
->> Do you need a:
->> +	__le24 len __packed;
->>
->>> +	u8 addr1;
->>>  	__le32 addr2;
->>>  } pxd_t;
->> and:
->>   } pxd_t __packed ;
-> 
-> I'm not convinced that this is needed.  Does the compiler do any padding
-> for alignment when it only contains char types (or structs of chars)?
-> 
->> Note that before the :24 bit-field was kept packed but now
->> with the use of struct at the __le24 definition it might
->> choose to pad them.
-> 
-> Maybe, but I can't get the compiler to add any padding playing around
-> with variants of these structures.  I've tested a simple program on both
-> x86 and ppc64, but I'm not sure what would happen on, say, arm.
+> 	Can you give me a more complete description of what you're
+> trying to do?  that way I can maybe help with some suggestions.
 > 
 
-You have an "__le32 addr2" followed, it might want too in rare cases.
-But for me this is also a a declaration issue and a readability issue.
+Sure, the process to get the things up and running would look like:
 
-I'm telling the compiler, don't mess with my structure, this needs
-to be constant whatever the compiler is. In C the compiler is even
-allowed to change fields order if it wants to. Why the guess work,
-__packed and be done with it.
+# Load in the generic target's configfs infrastructure
+modprobe target_core_configfs
 
-And it's also a readability issue. Look above lxd_t vs pxd_t. I can't
-know that one is in memory and one is on disk. I have to ask questions
-and make wrong remarks. But if the later had a __packed on it, then
-there are no more questions.
+*) $CONFIGFS/target is created with configfs_register_subsystem()
 
-__packed for me is a statement for both the programmer and compiler
-that says: "This stuff will be seen externally of the machine. It must
-be universally constant"
+*) $CONFIGFS/target/core is created as a default group under struct
+configfs_subsystem->su_group to interact with generic target mode
+engine's storage objects (eg: SCSI HCTL referenced devices, LVM UUID, MD
+UUID). 
 
->> Chris you might want to change the definitions at linux/types.h
->> to:
->>
->> typedef struct { __u8 b[3]; } __be24, __le24 __packed;
->>
->> With gcc it will not help with the proceeding fields, and the
->> containing struct will need it's own "__packed" declaration
->> but it will keep it packed with previous fields.
->>
->> Just my $0.017
->> Boaz
-> 
-> Shaggy
+...........
 
-Boaz
+ # Load LIO-Target using function symbols from target_core_configfs
+modprobe iscsi_target_mod
+
+module_init() from iscsi_target_mod (eg: the fabric module) calls
+target_fabric_configfs_register() in target_core_configfs.ko, which is a
+small wrapper for calling sys_mkdir($CONFIGFS/target/$FABRIC) to kick
+off the struct config_group_operations->make_group() to create a struct
+config_item for /sys/kernel/config/target/iscsi (or whatever the fabric
+is called).
+
+config_item_get() is also called in target_fabric_configfs_register()
+and returns the newly allocated struct config_item to
+iscsi_target_mod.ko code to then create new struct config_groups for
+iSCSI target fabric specific abstractions and LUN mappings between
+$CONFIGFS/target/core/$STORAGE_OBJECT and Fabric dependent code. I think
+the latter would be done with symlinks between $FABRIC <-> Generic
+Target Core Storage Object.
+
+Anyways, knowing that make_group() and drop_item() will *NEVER* be
+called internally clears up alot for me.  I will keep working on this
+setup and let you know if I run into any more head scratchers.
+
+Thanks again Joel!
+
+--nab
+
+
