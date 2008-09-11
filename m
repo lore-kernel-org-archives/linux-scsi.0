@@ -1,95 +1,93 @@
-From: Dave Kleikamp <shaggy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 1/3] 24-bit types: typedef and
-	macros	for	accessing	3-byte arrays as integers
-Date: Wed, 10 Sep 2008 14:20:09 -0500
-Message-ID: <1221074409.27385.39.camel@norville.austin.ibm.com>
-References: <20080905165732.16689.50256.stgit@localhost.localdomain>
-	<20080910140712.GA12280@infradead.org>
-	<1221061241.27385.14.camel@norville.austin.ibm.com>
-	<48C7F19D.3080507@panasas.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: ConfigFS + Target Mode Engine API discussion
+Date: Wed, 10 Sep 2008 18:42:46 -0700
+Message-ID: <1221097366.27831.216.camel@haakon2.linux-iscsi.org>
+References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org>
+	 <20080910233107.GC23864@mail.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <48C7F19D.3080507-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Cc: jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:28823 "HELO
+	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750818AbYIKBmt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2008 21:42:49 -0400
+In-Reply-To: <20080910233107.GC23864@mail.oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
 
-On Wed, 2008-09-10 at 19:11 +0300, Boaz Harrosh wrote:
-> Dave Kleikamp wrote:
-
-> > @@ -62,7 +60,7 @@ struct timestruc_t {
-> >   */
-> >  typedef struct {
-> >  	unsigned len:24;
-> > -	unsigned off1:8;
-> > +	u8 off1;
-> >  	u32 off2;
-> >  } lxd_t;
-> >  
+On Wed, 2008-09-10 at 16:31 -0700, Joel Becker wrote:
+> On Wed, Sep 10, 2008 at 03:59:07PM -0700, Nicholas A. Bellinger wrote:
+> > Whoops, forgot to CC you boss. :-)
 > 
-> Why is the difference from below definition. That is the
-> use/not of __le24? 
-
-Answered elsewhere, but this is host-endian.  I plan to kill this
-structure soon.
-
-> > @@ -90,8 +88,8 @@ struct lxdlist {
-> >   *	physical xd (pxd)
-> >   */
-> >  typedef struct {
-> > -	unsigned len:24;
-> > -	unsigned addr1:8;
-> > +	__le24 len;
+> 	FYI, I'll be at both KSummit and Plumbers.
 > 
-> Is this stuff on-the-wire?
-
-Written to disk, so basically, yeah.
-
-> Do you need a:
-> +	__le24 len __packed;
+> Joel
 > 
-> > +	u8 addr1;
-> >  	__le32 addr2;
-> >  } pxd_t;
-> and:
->   } pxd_t __packed ;
 
-I'm not convinced that this is needed.  Does the compiler do any padding
-for alignment when it only contains char types (or structs of chars)?
+Great, I look forward to catching up.. :-)
 
-> 
-> Note that before the :24 bit-field was kept packed but now
-> with the use of struct at the __le24 definition it might
-> choose to pad them.
+Btw, I started working on the target related configfs this past weekend,
+and stuck on one particular item wrt the API of a target mode fabric
+plugin with a configfs enabled target engine under
+$CONFIGFS/target/$FABRIC
 
-Maybe, but I can't get the compiler to add any padding playing around
-with variants of these structures.  I've tested a simple program on both
-x86 and ppc64, but I'm not sure what would happen on, say, arm.
+I am making a default group under $CONFIGFS/target/core that will be
+used for the generic target engine for storage object registration and
+device object tuning related to target mode export, etc.  From there, I
+expect the target fabric modules that are being loaded to call the
+following API routines at modprobe time from a previously allocated
+struct configfs_subsystem:
 
-> Chris you might want to change the definitions at linux/types.h
-> to:
-> 
-> typedef struct { __u8 b[3]; } __be24, __le24 __packed;
-> 
-> With gcc it will not help with the proceeding fields, and the
-> containing struct will need it's own "__packed" declaration
-> but it will keep it packed with previous fields.
->
-> Just my $0.017
-> Boaz
+extern struct config_group *target_fabric_configfs_init (void)
+{
+        struct configfs_subsystem *subsys;
 
-Shaggy
--- 
-David Kleikamp
-IBM Linux Technology Center
+        subsys = &target_core_subsystem[0];
+        return(&subsys->su_group);
+}
+
+extern struct config_group *target_fabric_configfs_register (
+        struct config_group *su_cg,
+        char *name,
+        struct config_item_type *fabric_cit)
+{
+
+	if (!(fabric_cg = kzalloc(struct config_group, GFP_NORMAL))) {
+                printk(KERN_ERR "Unable to allocate fabric_cg\n");
+                ERR_PTR(-ENOMEM);
+        }
+
+        config_group_init_type_name(fabric_cg, name, fabric_cit);
+
+}
+
+So I am thinking about the following question:  What would be the
+preferred method for calling ct_group_ops->make_group() in order to
+create the $CONFIGFS/target/$FABRIC struct config_item directly from
+target_fabric_configfs_register() call?  From there, the config group
+hanging off $CONFIGFS/target/$FABRIC will be fabric dependent and
+providing their own groups, items, depends, from the passed *fabric_cit.
+How do I "simulate" a mkdir(2) configfs -> make_group() call coming from
+the fabric module itself..?   This would be assuming that both mkdir(2)
+and rmdir(2) would be *NOT* be able to be called directly on
+$CONFIGFS/target/$FABRIC, and only the rmmod $FABRIC_MOD will call
+target_fabric_configfs_unregister() and -> drop_item() to remove the
+$FABRIC plugin from $CONFIGFS/target/
+
+The configfs enabled generic target engine will need similar
+functionality to simulate mkdir(2) -> make_group() and rmdir(2) ->
+drop_item() in order for autoregistration of storage objects using echo
+$STORAGE_OBJECT > $CONFIGFS/target/$FABRIC/$FABRIC_ENDPOINT/lun_0 to
+setup the mapping as I envision.
+
+Thanks Joel!
+
+--nab
+
+
+
+
