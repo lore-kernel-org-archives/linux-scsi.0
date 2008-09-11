@@ -1,93 +1,102 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: ConfigFS + Target Mode Engine API discussion
-Date: Thu, 11 Sep 2008 01:58:49 -0700
-Message-ID: <1221123529.27831.343.camel@haakon2.linux-iscsi.org>
-References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org>
-	 <20080910233107.GC23864@mail.oracle.com>
-	 <1221097366.27831.216.camel@haakon2.linux-iscsi.org>
-	 <20080911021331.GA12902@mail.oracle.com>
-	 <1221107358.27831.289.camel@haakon2.linux-iscsi.org>
-	 <20080911063846.GB16583@mail.oracle.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support via bsg
+	interface
+Date: Thu, 11 Sep 2008 11:32:35 +0200
+Message-ID: <20080911093234.GA4762@schmichrtp.de.ibm.com>
+References: <0C1F2063-A090-4E57-AAFC-C74B32B43BD5@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:43653 "HELO
-	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752698AbYIKI6v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2008 04:58:51 -0400
-In-Reply-To: <20080911063846.GB16583@mail.oracle.com>
+Received: from mtagate2.de.ibm.com ([195.212.17.162]:46501 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbYIKJc7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2008 05:32:59 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate2.de.ibm.com (8.13.1/8.13.1) with ESMTP id m8B9WuV6018936
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 09:32:56 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8B9Wtuu2764900
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 11:32:56 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8B9Wpo0005706
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 11:32:52 +0200
+Content-Disposition: inline
+In-Reply-To: <0C1F2063-A090-4E57-AAFC-C74B32B43BD5@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: James.Smart@Emulex.Com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Robert W Love <robert.w.love@intel.com>, Sven Schuetz <sven@linux.vnet.ibm.com>
 
-On Wed, 2008-09-10 at 23:38 -0700, Joel Becker wrote:
-> On Wed, Sep 10, 2008 at 09:29:18PM -0700, Nicholas A. Bellinger wrote:
-> > On Wed, 2008-09-10 at 19:13 -0700, Joel Becker wrote:
-> > > On Wed, Sep 10, 2008 at 06:42:46PM -0700, Nicholas A. Bellinger wrote:
-> > > > So I am thinking about the following question:  What would be the
-> > > > preferred method for calling ct_group_ops->make_group() in order to
-> > > > create the $CONFIGFS/target/$FABRIC struct config_item directly from
-> > > > target_fabric_configfs_register() call?  From there, the config group
-> > > > hanging off $CONFIGFS/target/$FABRIC will be fabric dependent and
-> > > > providing their own groups, items, depends, from the passed *fabric_cit.
-> > > > How do I "simulate" a mkdir(2) configfs -> make_group() call coming from
-> > > > the fabric module itself..?   This would be assuming that both mkdir(2)
-> > > 
-> > > 	That's precisely what you don't do with configfs.  It's a
-> > > defined "not to be done" thing.  So there's no preferred way, there's no
-> > > way at all.
-> > > 	What you want do to is drive this from mkdir().  The
-> > > make_group() will look up the sub-module it needs and return the
-> > > appropriate item.
-> > > 
-> > 
-> > Whew, good thing I asked about this case first..  :-)
-> 
-> 	Can you give me a more complete description of what you're
-> trying to do?  that way I can maybe help with some suggestions.
-> 
+On Wed, Sep 10, 2008 at 07:04:01AM -0700, Seokmann Ju wrote:
 
-Sure, the process to get the things up and running would look like:
+[...]
+> +struct fc_frame_header {
+> +	__u8          fh_r_ctl;	/* routing control */
+> +	__u8          fh_d_id[3];	/* Destination ID */
+> +
+> +	__u8          fh_cs_ctl;	/* class of service control / pri */
+> +	__u8          fh_s_id[3];	/* Source ID */
+> +
+> +	__u8          fh_type;		/* see enum fc_fh_type below */
+> +	__u8          fh_f_ctl[3];	/* frame control */
+> +
+> +	__u8          fh_seq_id;	/* sequence ID */
+> +	__u8          fh_df_ctl;	/* data field control */
+> +	__be16        fh_seq_cnt;	/* sequence count */
+> +
+> +	__be16        fh_ox_id;		/* originator exchange ID */
+> +	__be16        fh_rx_id;		/* responder exchange ID */
+> +	__be32        fh_parm_offset;	/* parameter or relative offset */
+> +};
+> +
+> +/* TBD - fc_els_hdr to move to ~/include/scsi/fc/fc_els.h */
+> +struct fc_els_hdr {
+> +	__u8	els_cmd;
+> +	__u8	els_param[3];
+> +};
+> +
+> +/* NOTE - fc_ct_hdr is already defined in open-fcoe-upstream branch */
+> +/*
+> + * Fibre Channel Services - Common Transport.
+> + * From T11.org FC-GS-2 Rev 5.3 November 1998.
+> + */
+> +
+> +struct fc_ct_hdr {
+> +	__u8		ct_rev;		/* revision */
+> +	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
+> +	__u8		ct_fs_type;	/* type of fibre channel service */
+> +	__u8		ct_fs_subtype;	/* subtype */
+> +	__u8		ct_options;
+> +	__u8		_ct_resvd1;
+> +	__be16		ct_cmd;		/* command / response code */
+> +	__be16		ct_mr_size;	/* maximum / residual size */
+> +	__u8		_ct_resvd2;
+> +	__u8		ct_reason;	/* reject reason */
+> +	__u8		ct_explan;	/* reason code explanation */
+> +	__u8		ct_vendor;	/* vendor unique data */
+> +};
+> +
+> +struct fc_els_frame {
+> +	struct fc_frame_header fc_hdr;
+> +	struct fc_els_hdr els_hdr;
+> +	u32 els_cmd[4];
+> +};
+> +
+> +struct fc_ct_frame {
+> +	struct fc_frame_header fc_hdr;
+> +	struct fc_ct_hdr ct_hdr;
+> +	u32 ct_cmd[1];
+> +};
 
-# Load in the generic target's configfs infrastructure
-modprobe target_core_configfs
+I was just reading he patch and i am wondering why the fc_frame_header
+is included here. There was a discussion in August and the conclusion
+was to only include the common ct_hdr in the LLD interface:
 
-*) $CONFIGFS/target is created with configfs_register_subsystem()
+http://marc.info/?t=121908849700001&r=1&w=2
 
-*) $CONFIGFS/target/core is created as a default group under struct
-configfs_subsystem->su_group to interact with generic target mode
-engine's storage objects (eg: SCSI HCTL referenced devices, LVM UUID, MD
-UUID). 
+The zfcp driver does not care about the FC headers, this is hidden in
+the System z FCP HBA. I would prefer that the interface to the LLD
+does not include the frame_header, otherwise userspace would fill the
+frame_header and zfcp would simply discard it.
 
-...........
-
- # Load LIO-Target using function symbols from target_core_configfs
-modprobe iscsi_target_mod
-
-module_init() from iscsi_target_mod (eg: the fabric module) calls
-target_fabric_configfs_register() in target_core_configfs.ko, which is a
-small wrapper for calling sys_mkdir($CONFIGFS/target/$FABRIC) to kick
-off the struct config_group_operations->make_group() to create a struct
-config_item for /sys/kernel/config/target/iscsi (or whatever the fabric
-is called).
-
-config_item_get() is also called in target_fabric_configfs_register()
-and returns the newly allocated struct config_item to
-iscsi_target_mod.ko code to then create new struct config_groups for
-iSCSI target fabric specific abstractions and LUN mappings between
-$CONFIGFS/target/core/$STORAGE_OBJECT and Fabric dependent code. I think
-the latter would be done with symlinks between $FABRIC <-> Generic
-Target Core Storage Object.
-
-Anyways, knowing that make_group() and drop_item() will *NEVER* be
-called internally clears up alot for me.  I will keep working on this
-setup and let you know if I run into any more head scratchers.
-
-Thanks again Joel!
-
---nab
-
-
+Christof
