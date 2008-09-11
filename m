@@ -1,243 +1,276 @@
 From: Chris Leech <christopher.leech@intel.com>
-Subject: [PATCH 1/4] 24-bit types: typedef and functions for accessing 3-byte
-	arrays as integers
-Date: Wed, 10 Sep 2008 19:14:48 -0700
-Message-ID: <20080911021448.23621.42553.stgit@localhost.localdomain>
+Subject: [PATCH 2/4] 24-bit types: convert iSCSI to use the __be24 type and
+	macros
+Date: Wed, 10 Sep 2008 19:14:54 -0700
+Message-ID: <20080911021454.23621.192.stgit@localhost.localdomain>
+References: <20080911021448.23621.42553.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:41750 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:48907 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968AbYIKCOu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2008 22:14:50 -0400
+	id S1753730AbYIKCPB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2008 22:15:01 -0400
+In-Reply-To: <20080911021448.23621.42553.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: jfs-discussion@lists.sourceforge.net, Boaz Harrosh <bharrosh@panasas.com>, Harvey Harrison <harvey.harrison@gmail.com>, Chris Leech <christopher.leech@intel.com>
+Cc: jfs-discussion@lists.sourceforge.net, Boaz Harrosh <bharrosh@panasas.com>, Harvey Harrison <harvey.harrison@gmail.com>, Chris Leech <christopher.leech@intel.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-Both iSCSI and Fibre Channel make use of 24-bit big-endian values in
-frame headers.  This patch defines __be24 and __le24 typedefs for a
-structure wrapped around a 3-byte array, and functions to convert back and
-forth to a 32-bit integer.
-
-The undefs in iscsi_proto.h are because of the different calling
-convention for the existing hton24 macro in the iSCSI code.  iSCSI will
-be converted in a subsequent patch.
-
-The undefs in fs/jfs/endian24.h allow JFS to continue using it's own le24
-conversion macros.  JFS is converted to use these types and functions in a
-subsequent patch.
-
-Change from last posting:
-
-Moved the 24-bit inline functions to their own header instead of having
-duplicate definitions in linux/byteorder.h and linux/byteorder/generic.h
+The calling convention of hton24 is different now, it takes a single u32
+as an argument and evaluates to a __be24 lvalue.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Acked-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
 
- fs/jfs/endian24.h                 |    5 ++++
- include/linux/byteorder.h         |    9 ++++++++
- include/linux/byteorder/generic.h |   10 ++++++++
- include/linux/endian24.h          |   44 +++++++++++++++++++++++++++++++++++++
- include/linux/types.h             |    2 ++
- include/scsi/iscsi_proto.h        |    2 ++
- 6 files changed, 72 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/endian24.h
+ drivers/scsi/iscsi_tcp.c   |    8 ++++----
+ drivers/scsi/libiscsi.c    |    6 +++---
+ include/scsi/iscsi_proto.h |   46 ++++++++++++++++++--------------------------
+ 3 files changed, 26 insertions(+), 34 deletions(-)
 
 
-diff --git a/fs/jfs/endian24.h b/fs/jfs/endian24.h
-index fa92f7f..45b6397 100644
---- a/fs/jfs/endian24.h
-+++ b/fs/jfs/endian24.h
-@@ -33,6 +33,9 @@
- 		((__x & (__u32)0x00ff0000UL) >> 16) )); \
- })
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 2a2f009..c9d6e96 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -608,11 +608,11 @@ iscsi_solicit_data_init(struct iscsi_conn *conn, struct iscsi_task *task,
+ 	hdr->exp_statsn = r2t->exp_statsn;
+ 	hdr->offset = cpu_to_be32(r2t->data_offset);
+ 	if (r2t->data_length > conn->max_xmit_dlength) {
+-		hton24(hdr->dlength, conn->max_xmit_dlength);
++		hdr->dlength = hton24(conn->max_xmit_dlength);
+ 		r2t->data_count = conn->max_xmit_dlength;
+ 		hdr->flags = 0;
+ 	} else {
+-		hton24(hdr->dlength, r2t->data_length);
++		hdr->dlength = hton24(r2t->data_length);
+ 		r2t->data_count = r2t->data_length;
+ 		hdr->flags = ISCSI_FLAG_CMD_FINAL;
+ 	}
+@@ -1311,10 +1311,10 @@ iscsi_solicit_data_cont(struct iscsi_conn *conn, struct iscsi_task *task,
+ 	new_offset = r2t->data_offset + r2t->sent;
+ 	hdr->offset = cpu_to_be32(new_offset);
+ 	if (left > conn->max_xmit_dlength) {
+-		hton24(hdr->dlength, conn->max_xmit_dlength);
++		hdr->dlength = hton24(conn->max_xmit_dlength);
+ 		r2t->data_count = conn->max_xmit_dlength;
+ 	} else {
+-		hton24(hdr->dlength, left);
++		hdr->dlength = hton24(left);
+ 		r2t->data_count = left;
+ 		hdr->flags = ISCSI_FLAG_CMD_FINAL;
+ 	}
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 299e075..8432318 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -105,12 +105,12 @@ void iscsi_prep_unsolicit_data_pdu(struct iscsi_task *task,
+ 	hdr->offset = cpu_to_be32(task->unsol_offset);
  
-+#undef __cpu_to_le24
-+#undef __le24_to_cpu
-+
- #if (defined(__KERNEL__) && defined(__LITTLE_ENDIAN)) || (defined(__BYTE_ORDER) && (__BYTE_ORDER == __LITTLE_ENDIAN))
- 	#define __cpu_to_le24(x) ((__u32)(x))
- 	#define __le24_to_cpu(x) ((__u32)(x))
-@@ -42,6 +45,8 @@
- #endif
- 
- #ifdef __KERNEL__
-+	#undef cpu_to_le24
-+	#undef le24_to_cpu
- 	#define cpu_to_le24 __cpu_to_le24
- 	#define le24_to_cpu __le24_to_cpu
- #endif
-diff --git a/include/linux/byteorder.h b/include/linux/byteorder.h
-index 29f002d..2334e3f 100644
---- a/include/linux/byteorder.h
-+++ b/include/linux/byteorder.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/types.h>
- #include <linux/swab.h>
-+#include <linux/endian24.h>
- 
- #if defined(__LITTLE_ENDIAN) && defined(__BIG_ENDIAN)
- # error Fix asm/byteorder.h to define one endianness
-@@ -280,15 +281,19 @@ static inline __be64 __cpu_to_be64p(const __u64 *p)
- #ifdef __KERNEL__
- 
- # define le16_to_cpu __le16_to_cpu
-+# define le24_to_cpu __le24_to_cpu
- # define le32_to_cpu __le32_to_cpu
- # define le64_to_cpu __le64_to_cpu
- # define be16_to_cpu __be16_to_cpu
-+# define be24_to_cpu __be24_to_cpu
- # define be32_to_cpu __be32_to_cpu
- # define be64_to_cpu __be64_to_cpu
- # define cpu_to_le16 __cpu_to_le16
-+# define cpu_to_le24 __cpu_to_le24
- # define cpu_to_le32 __cpu_to_le32
- # define cpu_to_le64 __cpu_to_le64
- # define cpu_to_be16 __cpu_to_be16
-+# define cpu_to_be24 __cpu_to_be24
- # define cpu_to_be32 __cpu_to_be32
- # define cpu_to_be64 __cpu_to_be64
- 
-@@ -332,11 +337,15 @@ static inline __be64 __cpu_to_be64p(const __u64 *p)
- # define ___htons(x) __cpu_to_be16(x)
- # define ___ntohl(x) __be32_to_cpu(x)
- # define ___ntohs(x) __be16_to_cpu(x)
-+# define ___hton24(x) __cpu_to_be24(x)
-+# define ___ntoh24(x) __be24_to_cpu(x)
- 
- # define htonl(x) ___htonl(x)
- # define ntohl(x) ___ntohl(x)
- # define htons(x) ___htons(x)
- # define ntohs(x) ___ntohs(x)
-+# define hton24(x) ___hton24(x)
-+# define ntoh24(x) ___ntoh24(x)
- 
- static inline void le16_add_cpu(__le16 *var, u16 val)
- {
-diff --git a/include/linux/byteorder/generic.h b/include/linux/byteorder/generic.h
-index 0846e6b..87cbec2 100644
---- a/include/linux/byteorder/generic.h
-+++ b/include/linux/byteorder/generic.h
-@@ -1,6 +1,8 @@
- #ifndef _LINUX_BYTEORDER_GENERIC_H
- #define _LINUX_BYTEORDER_GENERIC_H
- 
-+#include <linux/endian24.h>
-+
- /*
-  * linux/byteorder_generic.h
-  * Generic Byte-reordering support
-@@ -86,12 +88,16 @@
- #define le64_to_cpu __le64_to_cpu
- #define cpu_to_le32 __cpu_to_le32
- #define le32_to_cpu __le32_to_cpu
-+#define cpu_to_le24 __cpu_to_le24
-+#define le24_to_cpu __le24_to_cpu
- #define cpu_to_le16 __cpu_to_le16
- #define le16_to_cpu __le16_to_cpu
- #define cpu_to_be64 __cpu_to_be64
- #define be64_to_cpu __be64_to_cpu
- #define cpu_to_be32 __cpu_to_be32
- #define be32_to_cpu __be32_to_cpu
-+#define cpu_to_be24 __cpu_to_be24
-+#define be24_to_cpu __be24_to_cpu
- #define cpu_to_be16 __cpu_to_be16
- #define be16_to_cpu __be16_to_cpu
- #define cpu_to_le64p __cpu_to_le64p
-@@ -134,11 +140,15 @@
- #define ___htons(x) __cpu_to_be16(x)
- #define ___ntohl(x) __be32_to_cpu(x)
- #define ___ntohs(x) __be16_to_cpu(x)
-+#define ___hton24(x) __cpu_to_be24(x)
-+#define ___ntoh24(x) __be24_to_cpu(x)
- 
- #define htonl(x) ___htonl(x)
- #define ntohl(x) ___ntohl(x)
- #define htons(x) ___htons(x)
- #define ntohs(x) ___ntohs(x)
-+#define hton24(x) ___hton24(x)
-+#define ntoh24(x) ___ntoh24(x)
- 
- static inline void le16_add_cpu(__le16 *var, u16 val)
- {
-diff --git a/include/linux/endian24.h b/include/linux/endian24.h
-new file mode 100644
-index 0000000..beffa57
---- /dev/null
-+++ b/include/linux/endian24.h
-@@ -0,0 +1,44 @@
-+#ifndef _LINUX_ENDIAN24_H
-+#define _LINUX_ENDIAN24_H
-+
-+#if !defined(_LINUX_BYTEORDER_H) && !defined(_LINUX_BYTEORDER_GENERIC_H)
-+#error "do not include linux/endian24.h directly, use asm/byteorder.h instead"
-+#endif
-+
-+/**
-+ * __le24_to_cpu - read a 3-byte array as a 24-bit little-endian integer
-+ * @x: __le24, a structure wrapper around a 3-byte array
-+ */
-+static __always_inline __u32 __le24_to_cpu(const __le24 x)
-+{
-+	return (__u32) ((x.b[2] << 16) | (x.b[1] << 8) | (x.b[0]));
-+}
-+
-+/**
-+ * __cpu_to_le24 - store a value in a 3-byte array in little-endian format
-+ * @x: __u32, there is no checking to ensure only the lower 24 bits are set
-+ */
-+static __always_inline __le24 __cpu_to_le24(const __u32 x)
-+{
-+	return (__le24) { { x & 0xff, (x >> 8) & 0xff, (x >> 16) & 0xff } };
-+}
-+
-+/**
-+ * __be24_to_cpu - read a 3-byte array as a 24-bit big-endian integer
-+ * @x: __be24, a structure wrapper around a 3-byte array
-+ */
-+static __always_inline __u32 __be24_to_cpu(const __be24 x)
-+{
-+	return (__u32) ((x.b[0] << 16) | (x.b[1] << 8) | (x.b[2]));
-+}
-+
-+/**
-+ * __cpu_to_be24 - store a value in a 3-byte array in big-endian format
-+ * @x: __u32, there is no checking to ensure only the lower 24 bits are set
-+ */
-+static __always_inline __be24 __cpu_to_be24(const __u32 x)
-+{
-+	return (__be24) { { (x >> 16) & 0xff, (x >> 8) & 0xff, x & 0xff } };
-+}
-+
-+#endif /* _LINUX_ENDIAN24_H */
-diff --git a/include/linux/types.h b/include/linux/types.h
-index d4a9ce6..85fcff7 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -188,6 +188,8 @@ typedef __u64 __bitwise __be64;
- typedef __u16 __bitwise __sum16;
- typedef __u32 __bitwise __wsum;
- 
-+typedef struct { __u8 b[3]; } __be24, __le24;
-+
- #ifdef __KERNEL__
- typedef unsigned __bitwise__ gfp_t;
+ 	if (task->unsol_count > conn->max_xmit_dlength) {
+-		hton24(hdr->dlength, conn->max_xmit_dlength);
++		hdr->dlength = hton24(conn->max_xmit_dlength);
+ 		task->data_count = conn->max_xmit_dlength;
+ 		task->unsol_offset += task->data_count;
+ 		hdr->flags = 0;
+ 	} else {
+-		hton24(hdr->dlength, task->unsol_count);
++		hdr->dlength = hton24(task->unsol_count);
+ 		task->data_count = task->unsol_count;
+ 		hdr->flags = ISCSI_FLAG_CMD_FINAL;
+ 	}
+@@ -269,7 +269,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 			else
+ 				task->imm_count = min(out_len,
+ 							conn->max_xmit_dlength);
+-			hton24(hdr->dlength, task->imm_count);
++			hdr->dlength = hton24(task->imm_count);
+ 		} else
+ 			zero_data(hdr->dlength);
  
 diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index f2a2c11..429c5ff 100644
+index 429c5ff..a778097 100644
 --- a/include/scsi/iscsi_proto.h
 +++ b/include/scsi/iscsi_proto.h
-@@ -35,6 +35,8 @@
+@@ -35,15 +35,7 @@
  /*
   * useful common(control and data pathes) macro
   */
-+#undef ntoh24
-+#undef hton24
- #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
- #define hton24(p, v) { \
-         p[0] = (((v) >> 16) & 0xFF); \
+-#undef ntoh24
+-#undef hton24
+-#define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
+-#define hton24(p, v) { \
+-        p[0] = (((v) >> 16) & 0xFF); \
+-        p[1] = (((v) >> 8) & 0xFF); \
+-        p[2] = ((v) & 0xFF); \
+-}
+-#define zero_data(p) {p[0]=0;p[1]=0;p[2]=0;}
++#define zero_data(x) (x) = (__be24) { .b = { 0, 0, 0 } }
+ 
+ /* initiator tags; opaque for target */
+ typedef uint32_t __bitwise__ itt_t;
+@@ -61,7 +53,7 @@ struct iscsi_hdr {
+ 	uint8_t		flags;		/* Final bit */
+ 	uint8_t		rsvd2[2];
+ 	uint8_t		hlength;	/* AHSs total length */
+-	uint8_t		dlength[3];	/* Data length */
++	__be24		dlength;	/* Data length */
+ 	uint8_t		lun[8];
+ 	itt_t		itt;		/* Initiator Task Tag, opaque for target */
+ 	__be32		ttt;		/* Target Task Tag */
+@@ -123,7 +115,7 @@ struct iscsi_cmd {
+ 	uint8_t flags;
+ 	__be16 rsvd2;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32 data_length;
+@@ -169,7 +161,7 @@ struct iscsi_cmd_rsp {
+ 	uint8_t response;
+ 	uint8_t cmd_status;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32	rsvd1;
+@@ -199,7 +191,7 @@ struct iscsi_async {
+ 	uint8_t flags;
+ 	uint8_t rsvd2[2];
+ 	uint8_t rsvd3;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	uint8_t rsvd4[8];
+ 	__be32	statsn;
+@@ -227,7 +219,7 @@ struct iscsi_nopout {
+ 	uint8_t flags;
+ 	__be16	rsvd2;
+ 	uint8_t rsvd3;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32	ttt;	/* Target Transfer Tag */
+@@ -242,7 +234,7 @@ struct iscsi_nopin {
+ 	uint8_t flags;
+ 	__be16	rsvd2;
+ 	uint8_t rsvd3;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32	ttt;	/* Target Transfer Tag */
+@@ -258,7 +250,7 @@ struct iscsi_tm {
+ 	uint8_t flags;
+ 	uint8_t rsvd1[2];
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	itt_t	 rtt;	/* Reference Task Tag */
+@@ -288,7 +280,7 @@ struct iscsi_tm_rsp {
+ 	uint8_t response;	/* see Response values below */
+ 	uint8_t qualifier;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd2[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	itt_t	 rtt;	/* Reference Task Tag */
+@@ -314,7 +306,7 @@ struct iscsi_r2t_rsp {
+ 	uint8_t flags;
+ 	uint8_t rsvd2[2];
+ 	uint8_t	hlength;
+-	uint8_t	dlength[3];
++	__be24	dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32	ttt;	/* Target Transfer Tag */
+@@ -332,7 +324,7 @@ struct iscsi_data {
+ 	uint8_t flags;
+ 	uint8_t rsvd2[2];
+ 	uint8_t rsvd3;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;
+ 	__be32	ttt;
+@@ -352,7 +344,7 @@ struct iscsi_data_rsp {
+ 	uint8_t rsvd2;
+ 	uint8_t cmd_status;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t lun[8];
+ 	itt_t	 itt;
+ 	__be32	ttt;
+@@ -376,7 +368,7 @@ struct iscsi_text {
+ 	uint8_t flags;
+ 	uint8_t rsvd2[2];
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd4[8];
+ 	itt_t	 itt;
+ 	__be32	ttt;
+@@ -394,7 +386,7 @@ struct iscsi_text_rsp {
+ 	uint8_t flags;
+ 	uint8_t rsvd2[2];
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd4[8];
+ 	itt_t	 itt;
+ 	__be32	ttt;
+@@ -412,7 +404,7 @@ struct iscsi_login {
+ 	uint8_t max_version;	/* Max. version supported */
+ 	uint8_t min_version;	/* Min. version supported */
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t isid[6];	/* Initiator Session ID */
+ 	__be16	tsih;	/* Target Session Handle */
+ 	itt_t	 itt;	/* Initiator Task Tag */
+@@ -441,7 +433,7 @@ struct iscsi_login_rsp {
+ 	uint8_t max_version;	/* Max. version supported */
+ 	uint8_t active_version;	/* Active version */
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t isid[6];	/* Initiator Session ID */
+ 	__be16	tsih;	/* Target Session Handle */
+ 	itt_t	 itt;	/* Initiator Task Tag */
+@@ -499,7 +491,7 @@ struct iscsi_logout {
+ 	uint8_t flags;
+ 	uint8_t rsvd1[2];
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd2[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be16	cid;
+@@ -526,7 +518,7 @@ struct iscsi_logout_rsp {
+ 	uint8_t response;	/* see Logout response values below */
+ 	uint8_t rsvd2;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd3[8];
+ 	itt_t	 itt;	/* Initiator Task Tag */
+ 	__be32	rsvd4;
+@@ -570,7 +562,7 @@ struct iscsi_reject {
+ 	uint8_t reason;
+ 	uint8_t rsvd2;
+ 	uint8_t hlength;
+-	uint8_t dlength[3];
++	__be24 dlength;
+ 	uint8_t rsvd3[8];
+ 	__be32  ffffffff;
+ 	uint8_t rsvd4[4];
 
