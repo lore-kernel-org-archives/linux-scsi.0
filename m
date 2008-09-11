@@ -1,59 +1,32 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: disable interrupts inside sg_copy_buffer
-Date: Thu, 11 Sep 2008 23:52:29 +0900
-Message-ID: <20080911235215U.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Block timeouts seem not to be working
+Date: Thu, 11 Sep 2008 10:05:21 -0500
+Message-ID: <1221145521.3330.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:53640 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491AbYIKOwp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2008 10:52:45 -0400
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40762 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755530AbYIKPFY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Sep 2008 11:05:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
+To: Jens Axboe <Jens.Axboe@oracle.com>, Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-The callers of sg_copy_buffer must disable interrupts before calling
-it (since it uses kmap_atomic). Some callers use it on
-interrupt-disabled code but some need to take the trouble to disable
-interrupts just for this. No wonder they forget about it and we hit a
-bug like:
+I just noticed this with a rather finickey SAS system I have.  It's got
+a SATA DVD attached over an expander.  Periodically the DVD just hangs
+up, so we wait for the timeout and then send a phy reset which clears
+it.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11529
+What I'm seeing with the new block timer code is that the timer never
+expires.  I can dig some more into this, but if you wanted to test it as
+well, the timer code is easy to excite.  Just throw away one command in
+every 128 or so in the queuecommand routine of your favourite HBA
+driver.
 
-James said that it might be better to disable interrupts inside the
-function rather than risk the callers getting it wrong.
+James
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- lib/scatterlist.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index 876ba6d..dd52cd5 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -422,6 +422,9 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
- {
- 	unsigned int offset = 0;
- 	struct sg_mapping_iter miter;
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
- 
- 	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC);
- 
-@@ -442,6 +445,8 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
- 
- 	sg_miter_stop(&miter);
- 
-+	local_irq_restore(flags);
-+
- 	return offset;
- }
- 
--- 
-1.5.4.2
 
