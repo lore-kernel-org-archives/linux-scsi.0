@@ -1,93 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: ConfigFS + Target Mode Engine API discussion
-Date: Wed, 10 Sep 2008 18:42:46 -0700
-Message-ID: <1221097366.27831.216.camel@haakon2.linux-iscsi.org>
-References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org>
-	 <20080910233107.GC23864@mail.oracle.com>
+From: "Chris Leech" <christopher.leech@intel.com>
+Subject: Re: [PATCH 1/3] 24-bit types: typedef and macros for accessing 3-byte arrays as integers
+Date: Wed, 10 Sep 2008 18:51:37 -0700
+Message-ID: <41b516cb0809101851p79f73499vbd10dec4f6bdeccb@mail.gmail.com>
+References: <20080905165732.16689.50256.stgit@localhost.localdomain>
+	 <20080910140712.GA12280@infradead.org>
+	 <1221061241.27385.14.camel@norville.austin.ibm.com>
+	 <48C7F19D.3080507@panasas.com>
+Reply-To: chris.leech@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:28823 "HELO
-	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750818AbYIKBmt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2008 21:42:49 -0400
-In-Reply-To: <20080910233107.GC23864@mail.oracle.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:8331 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848AbYIKBvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2008 21:51:39 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so52319yxm.1
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2008 18:51:38 -0700 (PDT)
+In-Reply-To: <48C7F19D.3080507@panasas.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Dave Kleikamp <shaggy@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, jfs-discussion@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Wed, 2008-09-10 at 16:31 -0700, Joel Becker wrote:
-> On Wed, Sep 10, 2008 at 03:59:07PM -0700, Nicholas A. Bellinger wrote:
-> > Whoops, forgot to CC you boss. :-)
-> 
-> 	FYI, I'll be at both KSummit and Plumbers.
-> 
-> Joel
-> 
+On Wed, Sep 10, 2008 at 9:11 AM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> Chris you might want to change the definitions at linux/types.h
+> to:
+>
+> typedef struct { __u8 b[3]; } __be24, __le24 __packed;
+>
+> With gcc it will not help with the proceeding fields, and the
+> containing struct will need it's own "__packed" declaration
+> but it will keep it packed with previous fields.
 
-Great, I look forward to catching up.. :-)
+I haven't seen padding added simply because of a nested structure
+boundary, but I'm not up on all the ABIs for the different
+architectures.  Obviously a containing structure would want to have
+the 24-bit type adjacent to an 8-bit type, or have it's own packed
+attribute if needed.
 
-Btw, I started working on the target related configfs this past weekend,
-and stuck on one particular item wrt the API of a target mode fabric
-plugin with a configfs enabled target engine under
-$CONFIGFS/target/$FABRIC
+It shouldn't hurt, in this case the members shouldn't be expected to
+have more than byte alignment anyway, but I can't see how it would
+help.
 
-I am making a default group under $CONFIGFS/target/core that will be
-used for the generic target engine for storage object registration and
-device object tuning related to target mode export, etc.  From there, I
-expect the target fabric modules that are being loaded to call the
-following API routines at modprobe time from a previously allocated
-struct configfs_subsystem:
+If there's a particular arch that might be a problem I'm happy to look
+into it, but I don't want to start throwing packed attributes around
+just in case.
 
-extern struct config_group *target_fabric_configfs_init (void)
-{
-        struct configfs_subsystem *subsys;
-
-        subsys = &target_core_subsystem[0];
-        return(&subsys->su_group);
-}
-
-extern struct config_group *target_fabric_configfs_register (
-        struct config_group *su_cg,
-        char *name,
-        struct config_item_type *fabric_cit)
-{
-
-	if (!(fabric_cg = kzalloc(struct config_group, GFP_NORMAL))) {
-                printk(KERN_ERR "Unable to allocate fabric_cg\n");
-                ERR_PTR(-ENOMEM);
-        }
-
-        config_group_init_type_name(fabric_cg, name, fabric_cit);
-
-}
-
-So I am thinking about the following question:  What would be the
-preferred method for calling ct_group_ops->make_group() in order to
-create the $CONFIGFS/target/$FABRIC struct config_item directly from
-target_fabric_configfs_register() call?  From there, the config group
-hanging off $CONFIGFS/target/$FABRIC will be fabric dependent and
-providing their own groups, items, depends, from the passed *fabric_cit.
-How do I "simulate" a mkdir(2) configfs -> make_group() call coming from
-the fabric module itself..?   This would be assuming that both mkdir(2)
-and rmdir(2) would be *NOT* be able to be called directly on
-$CONFIGFS/target/$FABRIC, and only the rmmod $FABRIC_MOD will call
-target_fabric_configfs_unregister() and -> drop_item() to remove the
-$FABRIC plugin from $CONFIGFS/target/
-
-The configfs enabled generic target engine will need similar
-functionality to simulate mkdir(2) -> make_group() and rmdir(2) ->
-drop_item() in order for autoregistration of storage objects using echo
-$STORAGE_OBJECT > $CONFIGFS/target/$FABRIC/$FABRIC_ENDPOINT/lun_0 to
-setup the mapping as I envision.
-
-Thanks Joel!
-
---nab
-
-
-
-
+Chris
