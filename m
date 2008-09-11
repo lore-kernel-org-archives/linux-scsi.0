@@ -1,40 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] mptfc: do not return host busy in queuecommand
-Date: Thu, 11 Sep 2008 11:46:54 -0500
-Message-ID: <1221151614.3330.10.camel@localhost.localdomain>
-References: <1220906519-17649-1-git-send-email-michaelc@cs.wisc.edu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Block timeouts seem not to be working
+Date: Thu, 11 Sep 2008 20:35:09 +0200
+Message-ID: <20080911183509.GX20055@kernel.dk>
+References: <1221145521.3330.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38369 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751380AbYIKQq6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2008 12:46:58 -0400
-In-Reply-To: <1220906519-17649-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:58094 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756625AbYIKSfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Sep 2008 14:35:18 -0400
+Content-Disposition: inline
+In-Reply-To: <1221145521.3330.2.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-09-08 at 15:41 -0500, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <mchristi@redhat.com>
+On Thu, Sep 11 2008, James Bottomley wrote:
+> I just noticed this with a rather finickey SAS system I have.  It's got
+> a SATA DVD attached over an expander.  Periodically the DVD just hangs
+> up, so we wait for the timeout and then send a phy reset which clears
+> it.
 > 
-> This reverts
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-post-merge-2.6.git;a=commitdiff;h=d2dee934ea40e45135715d2d6ecc863af5620148
-> 
-> I goofed and meant to return SCSI_MLQUEUE_TARGET_BUSY but
-> wrote SCSI_MLQUEUE_HOST_BUSY. And actually when we are starting
-> up IO we do not want to reutrn either, because there will probably
-> not be any IO in the queue and we will have to wait for
-> the host/target_blocked counter to hit zero, before we can send IO.
-> 
-> This patch was made over scsi-post.
+> What I'm seeing with the new block timer code is that the timer never
+> expires.  I can dig some more into this, but if you wanted to test it as
+> well, the timer code is easy to excite.  Just throw away one command in
+> every 128 or so in the queuecommand routine of your favourite HBA
+> driver.
 
-Since it's not upstream, and this tree will rebase, I just pulled the
-original commit out.
+James, I've seen a few oddities as well, I'll be beating on it tomorrow
+again to shake out the last bug(s).
 
-James
-
+-- 
+Jens Axboe
 
