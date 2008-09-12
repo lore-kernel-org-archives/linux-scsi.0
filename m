@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 06/13] dm: remove unused DM_WQ_FLUSH_ALL
-Date: Fri, 12 Sep 2008 10:44:30 -0400 (EDT)
-Message-ID: <20080912.104430.48801726.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 07/13] dm: tidy local_init
+Date: Fri, 12 Sep 2008 10:44:55 -0400 (EDT)
+Message-ID: <20080912.104455.27955868.k-ueda@ct.jp.nec.com>
 References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -22,71 +22,80 @@ To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes dead codes for the noflush suspend.
+This patch tidies local_init() as preparation for another patch
+(PATCH 08), which creates some kmem_cache for request-based dm.
 No functional change.
 
 This patch is just a clean up of the codes and not functionally
 related to request-based dm.  But included here due to literal
 dependency.
 
-The dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL) in dm_suspend()
-is never invoked because:
-  - The 'goto flush_and_out' is same as 'goto out', because
-    the 'goto flush_and_out' is called only when '!noflush'
-  - If the 'r && noflush' is true, the interrupt check code above
-    is invoked and 'goto out'
-
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Signed-off-by: Milan Broz <mbroz@redhat.com>
 Cc: Alasdair G Kergon <agk@redhat.com>
 ---
- drivers/md/dm.c |   14 +-------------
- 1 files changed, 1 insertion(+), 13 deletions(-)
+ drivers/md/dm.c |   34 +++++++++++++++++-----------------
+ 1 files changed, 17 insertions(+), 17 deletions(-)
 
 Index: 2.6.27-rc6/drivers/md/dm.c
 ===================================================================
 --- 2.6.27-rc6.orig/drivers/md/dm.c
 +++ 2.6.27-rc6/drivers/md/dm.c
-@@ -76,7 +76,6 @@ union map_info *dm_get_mapinfo(struct bi
-  */
- struct dm_wq_req {
- 	enum {
--		DM_WQ_FLUSH_ALL,
- 		DM_WQ_FLUSH_DEFERRED,
- 	} type;
- 	struct work_struct work;
-@@ -1384,9 +1383,6 @@ static void dm_wq_work(struct work_struc
+@@ -150,40 +150,40 @@ static struct kmem_cache *_tio_cache;
  
- 	down_write(&md->io_lock);
- 	switch (req->type) {
--	case DM_WQ_FLUSH_ALL:
--		__merge_pushback_list(md);
--		/* pass through */
- 	case DM_WQ_FLUSH_DEFERRED:
- 		__flush_deferred_io(md);
- 		break;
-@@ -1516,7 +1512,7 @@ int dm_suspend(struct mapped_device *md,
- 		if (!md->suspended_bdev) {
- 			DMWARN("bdget failed in dm_suspend");
- 			r = -ENOMEM;
--			goto flush_and_out;
-+			goto out;
- 		}
+ static int __init local_init(void)
+ {
+-	int r;
++	int r = -ENOMEM;
  
- 		/*
-@@ -1567,14 +1563,6 @@ int dm_suspend(struct mapped_device *md,
+ 	/* allocate a slab for the dm_ios */
+ 	_io_cache = KMEM_CACHE(dm_io, 0);
+ 	if (!_io_cache)
+-		return -ENOMEM;
++		return r;
  
- 	set_bit(DMF_SUSPENDED, &md->flags);
+ 	/* allocate a slab for the target ios */
+ 	_tio_cache = KMEM_CACHE(dm_target_io, 0);
+-	if (!_tio_cache) {
+-		kmem_cache_destroy(_io_cache);
+-		return -ENOMEM;
+-	}
++	if (!_tio_cache)
++		goto out_free_io_cache;
  
--flush_and_out:
--	if (r && noflush)
--		/*
--		 * Because there may be already I/Os in the pushback list,
--		 * flush them before return.
--		 */
--		dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL);
--
- out:
- 	if (r && md->suspended_bdev) {
- 		bdput(md->suspended_bdev);
+ 	r = dm_uevent_init();
+-	if (r) {
+-		kmem_cache_destroy(_tio_cache);
+-		kmem_cache_destroy(_io_cache);
+-		return r;
+-	}
++	if (r)
++		goto out_free_tio_cache;
+ 
+ 	_major = major;
+ 	r = register_blkdev(_major, _name);
+-	if (r < 0) {
+-		kmem_cache_destroy(_tio_cache);
+-		kmem_cache_destroy(_io_cache);
+-		dm_uevent_exit();
+-		return r;
+-	}
++	if (r < 0)
++		goto out_uevent_exit;
+ 
+ 	if (!_major)
+ 		_major = r;
+ 
+ 	return 0;
++
++out_uevent_exit:
++	dm_uevent_exit();
++out_free_tio_cache:
++	kmem_cache_destroy(_tio_cache);
++out_free_io_cache:
++	kmem_cache_destroy(_io_cache);
++
++	return r;
+ }
+ 
+ static void local_exit(void)
