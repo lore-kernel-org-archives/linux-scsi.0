@@ -1,17 +1,17 @@
 From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 4/5] fusion prevent DV deadlock
-Date: Fri, 12 Sep 2008 21:02:16 +0200
-Message-ID: <200809122102.17306.bs@q-leap.de>
+Subject: [PATCH 5/5] fusion disable scsi hard resets
+Date: Fri, 12 Sep 2008 21:03:20 +0200
+Message-ID: <200809122103.20995.bs@q-leap.de>
 References: <200809122057.41565.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:41666 "EHLO mail.q-leap.de"
+Received: from ns1.q-leap.de ([153.94.51.193]:41685 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755034AbYILTCW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2008 15:02:22 -0400
+	id S1753693AbYILTD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Sep 2008 15:03:26 -0400
 In-Reply-To: <200809122057.41565.bs@q-leap.de>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,44 +19,80 @@ List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 Cc: Eric Moore <Eric.Moore@lsi.com>, Sathya Prakash <Sathya.Prakash@lsi.com>
 
-The mpt fusion driver will do a domain revalidation on an ion reset, this
-DV might cause a live deadlock. The problem has been entirely analyzed in
-this thread, but so far no real solution has been implemented.
-This patch simply disables the domain revalidation, if it will run into
-the deadlock.
+For 53C1030 based dual port HBAs the hard reset handler will still cause
+trouble on the second channel with innocent devices. It is then better
+to fail the device which activated the error handler than to fail
+entirely innocent devices. Real solutions would be of course to figure out
+why the hard reset handler cause trouble on the second channel. Probably
+only LSI can do, though. Is it o.k. to do this for all mpt fusion based HBAs,
+thus, are all of these 53C1030 based?
 
 Signed-off-by: Bernd Schubert <bs@q-leap.de>
 
- drivers/message/fusion/mptspi.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/message/fusion/mptscsih.c |   45 ++++++++++++++++++++++++++--
+ 1 file changed, 43 insertions(+), 2 deletions(-)
 
 
-Index: linux-2.6.26/drivers/message/fusion/mptspi.c
+Index: linux-2.6.26/drivers/message/fusion/mptscsih.c
 ===================================================================
---- linux-2.6.26.orig/drivers/message/fusion/mptspi.c
-+++ linux-2.6.26/drivers/message/fusion/mptspi.c
-@@ -672,12 +672,24 @@ static void mptspi_dv_device(struct _MPT
- {
- 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
- 	MPT_ADAPTER *ioc = hd->ioc;
-+	unsigned long nr_requests = sdev->request_queue->nr_requests;
-+	struct request_list *rl = &sdev->request_queue->rq;
+--- linux-2.6.26.orig/drivers/message/fusion/mptscsih.c
++++ linux-2.6.26/drivers/message/fusion/mptscsih.c
+@@ -1890,6 +1890,33 @@ mptscsih_bus_reset(struct scsi_cmnd * SC
+ 		return FAILED;
+ }
  
- 	/* no DV on RAID devices */
- 	if (sdev->channel == 0 &&
- 	    mptspi_is_raid(hd, sdev->id))
- 		return;
- 
-+	if (rl->count[0] + 1 >= nr_requests
-+	||  rl->count[1] + 1 >= nr_requests) {
-+		/* we must NOT do a DV after an error recovery, when we
-+		 * don't have left a space in the request list, since
-+		 * this will cause a live dead lock */
-+		starget_printk(KERN_INFO, scsi_target(sdev), MYIOC_s_FMT
-+		    "Skipping DV, to prevent dead lock!\n", ioc->name);
-+		return;
++/**
++  * Check if there are devices connected to the second (alt) ioc.
++  * Return 1 if there is at least on device and 0 if there are
++  * none or no alt_ioc.
++  */
++static int
++alt_ioc_with_dev(MPT_ADAPTER *ioc)
++{
++	struct Scsi_Host	*shost;
++	struct scsi_device	*sdev;
++	int 			have_devices = 0;
++
++	if (!ioc->alt_ioc)
++		return 0;
++
++	shost = ioc->alt_ioc->sh;
++
++	shost_for_each_device(sdev, shost) {
++		/* when we are here, we know there is is a device
++		 * attached to this host, which is all we need to know */
++		have_devices = 1;
++		break;
 +	}
 +
- 	/* If this is a piece of a RAID, then quiesce first */
- 	if (sdev->channel == 1 &&
- 	    mptscsih_quiesce_raid(hd, 1, vtarget->channel, vtarget->id) < 0) {
++	return have_devices ? 1 : 0;
++}
++
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
+  *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
+@@ -1922,8 +1949,22 @@ mptscsih_host_reset(struct scsi_cmnd *SC
+ 	 *  status.  The host will be taken off line by the SCSI mid-layer.
+ 	 */
+ 	retval = mpt_SoftResetHandler(ioc, CAN_SLEEP);
+-	if (retval != 0)
+-		retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
++	if (retval != 0) {
++		if (alt_ioc_with_dev(ioc) == 0) {
++			/* On dual port HBAs based on the 53C1030 chip the
++			* hard reset handler will cause DID_SOFT_ERROR on
++			* the second (in principle independent) port.
++			* Almost always this error cannot be recovered
++			* causing entire device failures. So it better not
++			* to call the hard reset handler at all in order to
++			* prevent failures of independent devices */
++			retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
++		} else {
++			printk(MYIOC_s_INFO_FMT "Skipping hard reset in "
++				"order to prevent failures on %s.\n",
++				ioc->name, ioc->alt_ioc->name);
++		}
++	}
+ 
+ 	if (retval < 0)
+ 		status = FAILED;
