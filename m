@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 03/13] mm: lld busy status exporting interface
-Date: Fri, 12 Sep 2008 10:42:28 -0400 (EDT)
-Message-ID: <20080912.104228.30188313.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 04/13] scsi: exports busy status
+Date: Fri, 12 Sep 2008 10:43:06 -0400 (EDT)
+Message-ID: <20080912.104306.11596001.k-ueda@ct.jp.nec.com>
 References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -18,98 +18,111 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
+To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds an interface to check lld's busy status
-from the block layer.  (scsi patch is also included.)
-This resolves a performance problem on request stacking devices below.
-
-
-Some drivers like scsi mid layer stop dispatching request when
-they detect busy state on its low-level device like host/bus/device.
-It allows other requests to stay in the I/O scheduler's queue
-for a chance of merging.
-
-Request stacking drivers like request-based dm should follow
-the same logic.
-However, there is no generic interface for the stacked device
-to check if the underlying device(s) are busy.
-If the request stacking driver dispatches and submits requests to
-the busy underlying device, the requests will stay in
-the underlying device's queue without a chance of merging.
-This causes performance problem on burst I/O load.
-
-With this patch, busy state of the underlying device is exported
-via the state flag of queue's backing_dev_info.  So the request
-stacking driver can check it and stop dispatching requests if busy.
-
-The underlying device driver must set/clear the flag appropriately:
-   ON:  when the device driver can't process requests immediately.
-   OFF: when the device driver can process requests immediately,
-        including abnormal situations where the device driver needs
-        to kill all requests.
+This patch change scsi mid-layer to export its busy status.
+Not set the busy flag, when scsi can't dispatch I/Os anymore and
+needs to kill I/Os.  Otherwise, request stacking drivers may hold
+requests forever.
 
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/backing-dev.h |    8 ++++++++
- mm/backing-dev.c            |   13 +++++++++++++
- 2 files changed, 21 insertions(+)
+ drivers/scsi/scsi.c     |    4 ++--
+ drivers/scsi/scsi_lib.c |   23 ++++++++++++++++++++++-
+ 2 files changed, 24 insertions(+), 3 deletions(-)
 
-Index: 2.6.27-rc6/include/linux/backing-dev.h
+Index: 2.6.27-rc6/drivers/scsi/scsi_lib.c
 ===================================================================
---- 2.6.27-rc6.orig/include/linux/backing-dev.h
-+++ 2.6.27-rc6/include/linux/backing-dev.h
-@@ -26,6 +26,7 @@ enum bdi_state {
- 	BDI_pdflush,		/* A pdflush thread is working this device */
- 	BDI_write_congested,	/* The write queue is getting full */
- 	BDI_read_congested,	/* The read queue is getting full */
-+	BDI_lld_congested,	/* The device/host is busy */
- 	BDI_unused,		/* Available bits start here */
- };
+--- 2.6.27-rc6.orig/drivers/scsi/scsi_lib.c
++++ 2.6.27-rc6/drivers/scsi/scsi_lib.c
+@@ -459,17 +459,30 @@ static void scsi_init_cmd_errh(struct sc
  
-@@ -226,8 +227,15 @@ static inline int bdi_rw_congested(struc
- 				  (1 << BDI_write_congested));
+ void scsi_device_unbusy(struct scsi_device *sdev)
+ {
++	int host_congested;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->host_busy--;
++	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
++	    shost->host_blocked || shost->host_self_blocked ||
++	    scsi_host_in_recovery(shost))
++		host_congested = 1;
++	else
++		host_congested = 0;
++
+ 	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     (shost->host_failed || shost->host_eh_scheduled)))
+ 		scsi_eh_wakeup(shost);
+ 	spin_unlock(shost->host_lock);
++
+ 	spin_lock(sdev->request_queue->queue_lock);
+ 	sdev->device_busy--;
++	if (bdi_lld_congested(&sdev->request_queue->backing_dev_info) &&
++	    !host_congested && !(sdev->device_busy >= sdev->queue_depth) &&
++	    !sdev->device_blocked)
++		clear_bdi_lld_congested(&sdev->request_queue->backing_dev_info);
+ 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
  }
  
-+static inline int bdi_lld_congested(struct backing_dev_info *bdi)
-+{
-+	return bdi_congested(bdi, 1 << BDI_lld_congested);
-+}
+@@ -1495,9 +1508,14 @@ static void scsi_request_fn(struct reque
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
+ 			break;
+ 
++		if (!scsi_dev_queue_ready(q, sdev)) {
++			set_bdi_lld_congested(&q->backing_dev_info);
++			break;
++		}
 +
- void clear_bdi_congested(struct backing_dev_info *bdi, int rw);
- void set_bdi_congested(struct backing_dev_info *bdi, int rw);
-+void clear_bdi_lld_congested(struct backing_dev_info *bdi);
-+void set_bdi_lld_congested(struct backing_dev_info *bdi);
- long congestion_wait(int rw, long timeout);
- 
- 
-Index: 2.6.27-rc6/mm/backing-dev.c
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to offline device\n");
+@@ -1568,6 +1586,8 @@ static void scsi_request_fn(struct reque
+ 		rtn = scsi_dispatch_cmd(cmd);
+ 		spin_lock_irq(q->queue_lock);
+ 		if(rtn) {
++			set_bdi_lld_congested(&q->backing_dev_info);
++
+ 			/* we're refusing the command; because of
+ 			 * the way locks get dropped, we need to 
+ 			 * check here if plugging is required */
+@@ -1592,6 +1612,7 @@ static void scsi_request_fn(struct reque
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
++	set_bdi_lld_congested(&q->backing_dev_info);
+ 	blk_requeue_request(q, req);
+ 	sdev->device_busy--;
+ 	if(sdev->device_busy == 0)
+Index: 2.6.27-rc6/drivers/scsi/scsi.c
 ===================================================================
---- 2.6.27-rc6.orig/mm/backing-dev.c
-+++ 2.6.27-rc6/mm/backing-dev.c
-@@ -279,6 +279,19 @@ void set_bdi_congested(struct backing_de
- }
- EXPORT_SYMBOL(set_bdi_congested);
+--- 2.6.27-rc6.orig/drivers/scsi/scsi.c
++++ 2.6.27-rc6/drivers/scsi/scsi.c
+@@ -861,8 +861,6 @@ void scsi_finish_command(struct scsi_cmn
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
  
-+void clear_bdi_lld_congested(struct backing_dev_info *bdi)
-+{
-+	clear_bit(BDI_lld_congested, &bdi->state);
-+	smp_mb__after_clear_bit();
-+}
-+EXPORT_SYMBOL_GPL(clear_bdi_lld_congested);
+-	scsi_device_unbusy(sdev);
+-
+         /*
+          * Clear the flags which say that the device/host is no longer
+          * capable of accepting new commands.  These are set in scsi_queue.c
+@@ -874,6 +872,8 @@ void scsi_finish_command(struct scsi_cmn
+         shost->host_blocked = 0;
+         sdev->device_blocked = 0;
+ 
++	scsi_device_unbusy(sdev);
 +
-+void set_bdi_lld_congested(struct backing_dev_info *bdi)
-+{
-+	set_bit(BDI_lld_congested, &bdi->state);
-+}
-+EXPORT_SYMBOL_GPL(set_bdi_lld_congested);
-+
- /**
-  * congestion_wait - wait for a backing_dev to become uncongested
-  * @rw: READ or WRITE
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
+ 	 * must have taken place.  Make a note of this.
