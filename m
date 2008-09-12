@@ -1,47 +1,64 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: kernel 2.6.26.3 qla2xxx oopsing on Fire 280R
-Date: Thu, 11 Sep 2008 15:15:43 -0700
-Message-ID: <20080911221543.GQ66567@plap4-2.local>
-References: <20080909143932.GA27117@orion.carnet.hr> <20080911113727.GA24487@orion.carnet.hr> <20080911215727.GA12885@orion.carnet.hr> <20080911.150150.256816031.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080911.150150.256816031.davem@davemloft.net>
-Sender: sparclinux-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: joy@entuzijast.net, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
+Subject: [PATCH] sd: Fix handling of NO_SENSE check condition
+Date: Thu, 11 Sep 2008 21:39:36 -0400
+Message-ID: <1221183576-11724-1-git-send-email-Jamie.Wellnitz@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:38483 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbYILBji (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2008 21:39:38 -0400
+Received: from shrimp.ma.emulex.com (shrimp.ma.emulex.com [138.239.78.42])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m8C1dbJH029744
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2008 18:39:37 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
 
-On Thu, 11 Sep 2008, David Miller wrote:
+The current handling of NO_SENSE check condition is the same as
+RECOVERED_ERROR, and assumes that in both cases, the I/O was fully
+transferred.
 
-> From: Josip Rodin <joy@entuzijast.net>
-> Date: Thu, 11 Sep 2008 23:57:27 +0200
-> 
-> > On Thu, Sep 11, 2008 at 01:37:27PM +0200, Josip Rodin wrote:
-> > > So I reviewed my steps and concluded that the only other thing different was
-> > > adding ql2xextended_error_logging=1. I undid that change, rebuilt the
-> > > initramfs image, and then the machine booted fine!
-> > > 
-> > > So, um, please fix the debugging code so that it doesn't cause more bugs... :/
-> > > 
-> > > In the meantime, I'll go back up to bed475c4cde5d12f537f445bdd0a5a3bb5684481
-> > > and see how it does with the debugging patch.
-> > 
-> > The patch made it work, it seems.
-> > 
-> > I can also try it with the fully up to date git tree, or try new patches...?
-> 
-> Thanks for testing Josip.
+We have seen cases of arrays returning with NO_SENSE (no error), but
+the I/O was not completely transferred, thus residual set.  Thus,
+rather than return good_bytes as the entire transfer, set good_bytes
+to 0, so that the midlayer then applies the residual in calculating
+the transfer, and for sd, will fail the I/O and fall into a retry
+path.
 
-Yes, thanks much, Josip!
+Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
+---
+ drivers/scsi/sd.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-> Andrew, please try to resolve the ql2xextended_error_logging problem Josip
-> ran into,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index af9e406..2a5fe5e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1048,7 +1048,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 		good_bytes = sd_completed_bytes(SCpnt);
+ 		break;
+ 	case RECOVERED_ERROR:
+-	case NO_SENSE:
+ 		/* Inform the user, but make sure that it's not treated
+ 		 * as a hard error.
+ 		 */
+@@ -1057,6 +1056,15 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 		good_bytes = scsi_bufflen(SCpnt);
+ 		break;
++	case NO_SENSE:
++		/* This indicates a false check condition, so ignore it.  An
++		 * unknown amount of data was transferred so treat it as an
++		 * error.
++		 */
++		scsi_print_sense("sd", SCpnt);
++		SCpnt->result = 0;
++		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
++		break;
+ 	case ABORTED_COMMAND:
+ 		if (sshdr.asc == 0x10) { /* DIF: Disk detected corruption */
+ 			scsi_print_result(SCpnt);
+-- 
+1.6.0.1.308.gede4c
 
-I'll continue to look into this...
-
-> as well as merge this IRQ enabling bug fix.
-
-A candidate for rc-fixes, yes, as well as stable.  I'll post this fix
-shortly...
