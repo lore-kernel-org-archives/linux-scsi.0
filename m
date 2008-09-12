@@ -1,98 +1,60 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 5/5] fusion disable scsi hard resets
-Date: Fri, 12 Sep 2008 21:03:20 +0200
-Message-ID: <200809122103.20995.bs@q-leap.de>
-References: <200809122057.41565.bs@q-leap.de>
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: ConfigFS + Target Mode Engine API discussion
+Date: Fri, 12 Sep 2008 13:15:41 -0700
+Message-ID: <20080912201541.GA26469@mail.oracle.com>
+References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org> <20080910233107.GC23864@mail.oracle.com> <1221097366.27831.216.camel@haakon2.linux-iscsi.org> <20080911021331.GA12902@mail.oracle.com> <1221107358.27831.289.camel@haakon2.linux-iscsi.org> <20080911063846.GB16583@mail.oracle.com> <1221123529.27831.343.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:41685 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753693AbYILTD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2008 15:03:26 -0400
-In-Reply-To: <200809122057.41565.bs@q-leap.de>
+Received: from agminet01.oracle.com ([141.146.126.228]:34967 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392AbYILURx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2008 16:17:53 -0400
 Content-Disposition: inline
+In-Reply-To: <1221123529.27831.343.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Eric Moore <Eric.Moore@lsi.com>, Sathya Prakash <Sathya.Prakash@lsi.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
 
-For 53C1030 based dual port HBAs the hard reset handler will still cause
-trouble on the second channel with innocent devices. It is then better
-to fail the device which activated the error handler than to fail
-entirely innocent devices. Real solutions would be of course to figure out
-why the hard reset handler cause trouble on the second channel. Probably
-only LSI can do, though. Is it o.k. to do this for all mpt fusion based HBAs,
-thus, are all of these 53C1030 based?
+On Thu, Sep 11, 2008 at 01:58:49AM -0700, Nicholas A. Bellinger wrote:
+> *) $CONFIGFS/target is created with configfs_register_subsystem()
+> 
+> *) $CONFIGFS/target/core is created as a default group under struct
+> configfs_subsystem->su_group to interact with generic target mode
+> engine's storage objects (eg: SCSI HCTL referenced devices, LVM UUID, MD
+> UUID). 
+> 
+> ...........
+> 
+>  # Load LIO-Target using function symbols from target_core_configfs
+> modprobe iscsi_target_mod
+> 
+> module_init() from iscsi_target_mod (eg: the fabric module) calls
+> target_fabric_configfs_register() in target_core_configfs.ko, which is a
+> small wrapper for calling sys_mkdir($CONFIGFS/target/$FABRIC) to kick
+> off the struct config_group_operations->make_group() to create a struct
+> config_item for /sys/kernel/config/target/iscsi (or whatever the fabric
+> is called).
 
-Signed-off-by: Bernd Schubert <bs@q-leap.de>
+	No, you don't do this.  Like I said, configfs clients let
+userspace create and destroy items.  Not kernelspace.  Do not call
+sys_mkdir()/sys_rmdir() from your modules.
+	If you don't do this, you also don't need your lookup_hash()
+export.  Your code should be behaving as if it didn't know the
+filesystem view existed.
+	I'm trying to understand what you're actually doing.  Not the
+"I want iscsi_target_mod to appear under target/iscsi" part, but why it
+needs to be there in the first place.  how it all connects together.
 
- drivers/message/fusion/mptscsih.c |   45 ++++++++++++++++++++++++++--
- 1 file changed, 43 insertions(+), 2 deletions(-)
+Joel
 
+-- 
 
-Index: linux-2.6.26/drivers/message/fusion/mptscsih.c
-===================================================================
---- linux-2.6.26.orig/drivers/message/fusion/mptscsih.c
-+++ linux-2.6.26/drivers/message/fusion/mptscsih.c
-@@ -1890,6 +1890,33 @@ mptscsih_bus_reset(struct scsi_cmnd * SC
- 		return FAILED;
- }
- 
-+/**
-+  * Check if there are devices connected to the second (alt) ioc.
-+  * Return 1 if there is at least on device and 0 if there are
-+  * none or no alt_ioc.
-+  */
-+static int
-+alt_ioc_with_dev(MPT_ADAPTER *ioc)
-+{
-+	struct Scsi_Host	*shost;
-+	struct scsi_device	*sdev;
-+	int 			have_devices = 0;
-+
-+	if (!ioc->alt_ioc)
-+		return 0;
-+
-+	shost = ioc->alt_ioc->sh;
-+
-+	shost_for_each_device(sdev, shost) {
-+		/* when we are here, we know there is is a device
-+		 * attached to this host, which is all we need to know */
-+		have_devices = 1;
-+		break;
-+	}
-+
-+	return have_devices ? 1 : 0;
-+}
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- /**
-  *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
-@@ -1922,8 +1949,22 @@ mptscsih_host_reset(struct scsi_cmnd *SC
- 	 *  status.  The host will be taken off line by the SCSI mid-layer.
- 	 */
- 	retval = mpt_SoftResetHandler(ioc, CAN_SLEEP);
--	if (retval != 0)
--		retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
-+	if (retval != 0) {
-+		if (alt_ioc_with_dev(ioc) == 0) {
-+			/* On dual port HBAs based on the 53C1030 chip the
-+			* hard reset handler will cause DID_SOFT_ERROR on
-+			* the second (in principle independent) port.
-+			* Almost always this error cannot be recovered
-+			* causing entire device failures. So it better not
-+			* to call the hard reset handler at all in order to
-+			* prevent failures of independent devices */
-+			retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
-+		} else {
-+			printk(MYIOC_s_INFO_FMT "Skipping hard reset in "
-+				"order to prevent failures on %s.\n",
-+				ioc->name, ioc->alt_ioc->name);
-+		}
-+	}
- 
- 	if (retval < 0)
- 		status = FAILED;
+"Every new beginning comes from some other beginning's end."
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
