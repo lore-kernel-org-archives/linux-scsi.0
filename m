@@ -1,12 +1,14 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 00/13] request-based dm-multipath
-Date: Fri, 12 Sep 2008 10:38:14 -0400 (EDT)
-Message-ID: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 01/13] block: add request update interface
+Date: Fri, 12 Sep 2008 10:40:45 -0400 (EDT)
+Message-ID: <20080912.104045.41628978.k-ueda@ct.jp.nec.com>
+References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -17,130 +19,145 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com
-Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stefan.bader@canonical.com, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, akpm@linux-foundation.org
+Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jens, James and Alasdair,
+This patch adds blk_update_request(), which updates struct request
+with completing its data part, but doesn't complete the struct
+request itself.
+Though it looks like end_that_request_first() of older kernels,
+blk_update_request() should be used only by request stacking drivers.
 
-This is a new version of request-based dm-multipath patches.
-The patches are created on top of 2.6.27-rc6 + Alasdair's dm patches
-for linux-next below:
-    dm-mpath-use-more-error-codes.patch
-    dm-mpath-remove-is_active-from-struct-dm_path.patch
+Request-based dm will use it in bio->bi_end_io callback to update
+the original request when a data part of a cloned request completes.
+Followings are additional background information of why request-based
+dm needs this interface.
 
-Major changes from the previous version (*) are:
-    - Moved busy state information for device/host to
-      q->backing_dev_info from q->queue_flags, since backing_dev_info
-      seems to be more appropriate location. (PATCH 03)
-      And corresponding changes to the scsi driver. (PATCH 04)
+  - Request stacking drivers can't use blk_end_request() directly from
+    the lower driver's completion context (bio->bi_end_io or rq->end_io),
+    because some device drivers (e.g. ide) may try to complete
+    their request with queue lock held, and it may cause deadlock.
+    See below for detailed description of possible deadlock:
+    <http://marc.info/?l=linux-kernel&m=120311479108569&w=2>
 
-    - Added a queue flag to indicate whether the block device is
-      request stackable or not, so that request stacking drivers
-      can avoid to stack request-based device on bio-based device.
-      (PATCH 05)
+  - To solve that, request-based dm offloads the completion of
+    cloned struct request to softirq context (i.e. using
+    blk_complete_request() from rq->end_io).  See PATCH 10.
 
-    - Fixed the problem that requests are not flushed on flush suspend.
-      (PATCH 10)
+  - Though it is possible to use the same solution from bio->bi_end_io,
+    it will delay the notification of bio completion to the original
+    submitter.  Also, it will cause inefficient partial completion,
+    because the lower driver can't perform the cloned request anymore
+    and request-based dm needs to requeue and redispatch it to
+    the lower driver again later.  That's not good.
 
-    - Changed queue initialization method for bio-based dm devices
-      from blk_alloc_queue() to blk_init_queue(). (PATCH 11)
-
-    - Changed congestion check method in dm-multipath not to invoke
-      __choose_pgpath(). (PATCH 13)
-
-    (*) http://lkml.org/lkml/2008/3/19/478
-
-Some basic function/performance testings are done with NEC iStorage
-(active-active multipath), and no problem was found.
-Please review and apply if no problem.
-
-
-Summary of the patch-set:
-  01/13: block: add request data completion interface
-  02/13: block: add request submission interface
-  03/13: mm: export driver's busy state via backing_dev_info
-  04/13: scsi: export busy status
-  05/13: block: add a queue flag for request stacking support
-  06/13: dm: remove unused code (preparation for request-based dm)
-  07/13: dm: tidy local_init (preparation for request-based dm)
-  08/13: dm: prepare mempools on module init for request-based dm
-  09/13: dm: add target interface for request-based dm
-  10/13: dm: add core functions for request-based dm
-  11/13: dm: add a switch to enable request-based dm if target is ready
-  12/13: dm: reject requests violating limits for request-based dm
-  13/13: dm-mpath: convert to request-based from bio-based
+  - So request-based dm needs blk_update_request() to perform the bio
+    completion in the lower driver's completion context, which is more
+    efficient.
 
 
-Summary of the design and request-based dm-multipath are below.
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/blk-core.c       |   59 +++++++++++++++++++++++++++++++++++++++++--------
+ include/linux/blkdev.h |    2 +
+ 2 files changed, 52 insertions(+), 9 deletions(-)
 
-BACKGROUND
-==========
-Currently, device-mapper (dm) is implemented as a stacking block device
-at bio level.  This bio-based implementation has an issue below
-on dm-multipath.
-
-    Because hook for I/O mapping is above block layer __make_request(),
-    contiguous bios can be mapped to different underlying devices
-    and these bios aren't merged into a request.
-    Dynamic load balancing could happen this situation, though
-    it has not been implemented yet.
-    Therefore, I/O mapping after bio merging is needed for better
-    dynamic load balancing.
-
-The basic idea to resolve the issue is to move multipathing layer
-down below the I/O scheduler, and it was proposed from Mike Christie
-as the block layer (request-based) multipath:
-    http://marc.info/?l=linux-scsi&m=115520444515914&w=2
-
-Mike's patch added new block layer device for multipath and didn't
-have dm interface.  So I modified his patch to be used from dm.
-It is request-based dm-multipath.
-
-
-DESIGN OVERVIEW
-===============
-While currently dm and md stacks block devices at bio level,
-request-based dm stacks at request level and submits/completes
-struct request instead of struct bio.
-
-
-Overview of the request-based dm patch:
-  - Mapping is done in a unit of struct request, instead of struct bio
-  - Hook for I/O mapping is at q->request_fn() after merging and
-    sorting by I/O scheduler, instead of q->make_request_fn().
-  - Hook for I/O completion is at bio->bi_end_io() and rq->end_io(),
-    instead of only bio->bi_end_io()
-                  bio-based (current)     request-based (this patch)
-      ------------------------------------------------------------------
-      submission  q->make_request_fn()    q->request_fn()
-      completion  bio->bi_end_io()        bio->bi_end_io(), rq->end_io()
-  - Whether the dm device is bio-based or request-based is determined
-    at table loading time
-  - Keep user interface same (table/message/status/ioctl)
-  - Any bio-based devices (like dm/md) can be stacked on request-based
-    dm device.
-    Request-based dm device *cannot* be stacked on any bio-based device.
-
-
-Expected benefit:
-  - better load balancing
-
-
-Additional explanations:
-
-Why does request-based dm use bio->bi_end_io(), too?
-Because:
-  - dm needs to keep not only the request but also bios of the request,
-    if dm target drivers want to retry or do something on the request.
-    For example, dm-multipath has to check errors and retry with other
-    paths if necessary before returning the I/O result to the upper layer.
-
-  - But rq->end_io() is called at the very late stage of completion
-    handling where all bios in the request have been completed and
-    the I/O results are already visible to the upper layer.
-So request-based dm hooks bio->bi_end_io() and doesn't complete the bio
-in error cases, and gives over the error handling to rq->end_io() hook.
-
-
-Thanks,
-Kiyoshi Ueda
+Index: 2.6.27-rc6/block/blk-core.c
+===================================================================
+--- 2.6.27-rc6.orig/block/blk-core.c
++++ 2.6.27-rc6/block/blk-core.c
+@@ -1862,6 +1862,22 @@ void end_request(struct request *req, in
+ }
+ EXPORT_SYMBOL(end_request);
+ 
++static int end_that_request_data(struct request *rq, int error,
++				 unsigned int nr_bytes, unsigned int bidi_bytes)
++{
++	if (blk_fs_request(rq) || blk_pc_request(rq)) {
++		if (__end_that_request_first(rq, error, nr_bytes))
++			return 1;
++
++		/* Bidi request must be completed as a whole */
++		if (blk_bidi_rq(rq) &&
++		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
++			return 1;
++	}
++
++	return 0;
++}
++
+ /**
+  * blk_end_io - Generic end_io function to complete a request.
+  * @rq:           the request being processed
+@@ -1888,15 +1904,8 @@ static int blk_end_io(struct request *rq
+ 	struct request_queue *q = rq->q;
+ 	unsigned long flags = 0UL;
+ 
+-	if (blk_fs_request(rq) || blk_pc_request(rq)) {
+-		if (__end_that_request_first(rq, error, nr_bytes))
+-			return 1;
+-
+-		/* Bidi request must be completed as a whole */
+-		if (blk_bidi_rq(rq) &&
+-		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
+-			return 1;
+-	}
++	if (end_that_request_data(rq, error, nr_bytes, bidi_bytes))
++		return 1;
+ 
+ 	/* Special feature for tricky drivers */
+ 	if (drv_callback && drv_callback(rq))
+@@ -1981,6 +1990,38 @@ int blk_end_bidi_request(struct request 
+ EXPORT_SYMBOL_GPL(blk_end_bidi_request);
+ 
+ /**
++ * blk_update_request - Special helper function for request stacking drivers
++ * @rq:           the request being processed
++ * @error:        0 for success, < 0 for error
++ * @nr_bytes:     number of bytes to complete @rq
++ *
++ * Description:
++ *     Ends I/O on a number of bytes attached to @rq, but doesn't complete
++ *     the request structure even if @rq doesn't have leftover.
++ *     If @rq has leftover, sets it up for the next range of segments.
++ *
++ *     This special helper function is only for request stacking drivers
++ *     (e.g. request-based dm) so that they can handle partial completion.
++ *     Actual device drivers should use blk_end_request instead.
++ */
++void blk_update_request(struct request *rq, int error, unsigned int nr_bytes)
++{
++	if (!end_that_request_data(rq, error, nr_bytes, 0)) {
++		/*
++		 * All bios in the request have been completed.
++		 * Then, members of the request are not updated.
++		 * Update those members to avoid double charge of diskstat
++		 * when the stacking driver calls blk_end_request()
++		 * to complete the request actually.
++		 */
++		rq->nr_sectors = rq->hard_nr_sectors = 0;
++		rq->current_nr_sectors = rq->hard_cur_sectors = 0;
++		rq->nr_phys_segments = rq->nr_hw_segments = 0;
++	}
++}
++EXPORT_SYMBOL_GPL(blk_update_request);
++
++/**
+  * blk_end_request_callback - Special helper function for tricky drivers
+  * @rq:           the request being processed
+  * @error:        0 for success, < 0 for error
+Index: 2.6.27-rc6/include/linux/blkdev.h
+===================================================================
+--- 2.6.27-rc6.orig/include/linux/blkdev.h
++++ 2.6.27-rc6/include/linux/blkdev.h
+@@ -756,6 +756,8 @@ extern int blk_end_request_callback(stru
+ 				unsigned int nr_bytes,
+ 				int (drv_callback)(struct request *));
+ extern void blk_complete_request(struct request *);
++extern void blk_update_request(struct request *rq, int error,
++			       unsigned int nr_bytes);
+ 
+ /*
+  * blk_end_request() takes bytes instead of sectors as a complete size.
