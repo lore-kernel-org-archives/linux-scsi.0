@@ -1,8 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 05/13] block: add a queue flag for request
-	stacking support
-Date: Fri, 12 Sep 2008 10:43:35 -0400 (EDT)
-Message-ID: <20080912.104335.88699296.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 06/13] dm: remove unused DM_WQ_FLUSH_ALL
+Date: Fri, 12 Sep 2008 10:44:30 -0400 (EDT)
+Message-ID: <20080912.104430.48801726.k-ueda@ct.jp.nec.com>
 References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -23,86 +22,71 @@ To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds a queue flag to indicate the block device can be
-used for request stacking.
+This patch removes dead codes for the noflush suspend.
+No functional change.
 
-Request stacking drivers need to stack their devices on top of
-only devices of which q->request_fn is functional.
-Since bio stacking drivers (e.g. md, loop) basically initialize
-their queue using blk_alloc_queue() and don't set q->request_fn,
-the check of (q->request_fn == NULL) looks enough for that purpose.
+This patch is just a clean up of the codes and not functionally
+related to request-based dm.  But included here due to literal
+dependency.
 
-However, dm becomes both types of stacking driver (bio-based and
-request-based) with this patch-set.  And dm always sets q->request_fn
-even if the dm device is bio-based of which q->request_fn is not
-functional actually.
-So we need something else to distinguish the type of the device.
-Adding a queue flag is a solution for that.
-
-
-The reason why dm always sets q->request_fn is to keep
-the compatibility of dm user-space tools.
-Currently, all dm user-space tools are using bio-based dm without
-specifying the type of the dm device they use.
-To use request-based dm without changing such tools, the kernel
-must decide the type of the dm device automatically.
-The automatic type decision can't be done at the device creation time
-and needs to be deferred until such tools load a mapping table,
-since the actual type is decided by dm target type included in
-the mapping table.
-
-So a dm device has to be initialized using blk_init_queue()
-so that we can load either type of table.
-Then, all queue stuffs are set (e.g. q->request_fn) and we have
-no element to distinguish that it is bio-based or request-based,
-even after a table is loaded and the type of the device is decided.
-
-By the way, some stuffs of the queue (e.g. request_list, elevator)
-are needless when the dm device is used as bio-based.
-But the memory size is not so large (about 20[KB] per queue on ia64),
-so I hope the memory loss can be acceptable for bio-based dm users.
-
+The dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL) in dm_suspend()
+is never invoked because:
+  - The 'goto flush_and_out' is same as 'goto out', because
+    the 'goto flush_and_out' is called only when '!noflush'
+  - If the 'r && noflush' is true, the interrupt check code above
+    is invoked and 'goto out'
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Signed-off-by: Milan Broz <mbroz@redhat.com>
+Cc: Alasdair G Kergon <agk@redhat.com>
 ---
- block/blk-core.c       |    3 ++-
- include/linux/blkdev.h |    3 +++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/md/dm.c |   14 +-------------
+ 1 files changed, 1 insertion(+), 13 deletions(-)
 
-Index: 2.6.27-rc6/block/blk-core.c
+Index: 2.6.27-rc6/drivers/md/dm.c
 ===================================================================
---- 2.6.27-rc6.orig/block/blk-core.c
-+++ 2.6.27-rc6/block/blk-core.c
-@@ -569,7 +569,8 @@ blk_init_queue_node(request_fn_proc *rfn
- 	q->request_fn		= rfn;
- 	q->prep_rq_fn		= NULL;
- 	q->unplug_fn		= generic_unplug_device;
--	q->queue_flags		= (1 << QUEUE_FLAG_CLUSTER);
-+	q->queue_flags		= (1 << QUEUE_FLAG_CLUSTER |
-+				   1 << QUEUE_FLAG_STACKABLE);
- 	q->queue_lock		= lock;
+--- 2.6.27-rc6.orig/drivers/md/dm.c
++++ 2.6.27-rc6/drivers/md/dm.c
+@@ -76,7 +76,6 @@ union map_info *dm_get_mapinfo(struct bi
+  */
+ struct dm_wq_req {
+ 	enum {
+-		DM_WQ_FLUSH_ALL,
+ 		DM_WQ_FLUSH_DEFERRED,
+ 	} type;
+ 	struct work_struct work;
+@@ -1384,9 +1383,6 @@ static void dm_wq_work(struct work_struc
  
- 	blk_queue_segment_boundary(q, 0xffffffff);
-Index: 2.6.27-rc6/include/linux/blkdev.h
-===================================================================
---- 2.6.27-rc6.orig/include/linux/blkdev.h
-+++ 2.6.27-rc6/include/linux/blkdev.h
-@@ -421,6 +421,7 @@ struct request_queue
- #define QUEUE_FLAG_ELVSWITCH	8	/* don't use elevator, just do FIFO */
- #define QUEUE_FLAG_BIDI		9	/* queue supports bidi requests */
- #define QUEUE_FLAG_NOMERGES    10	/* disable merge attempts */
-+#define QUEUE_FLAG_STACKABLE   11	/* supports request stacking */
+ 	down_write(&md->io_lock);
+ 	switch (req->type) {
+-	case DM_WQ_FLUSH_ALL:
+-		__merge_pushback_list(md);
+-		/* pass through */
+ 	case DM_WQ_FLUSH_DEFERRED:
+ 		__flush_deferred_io(md);
+ 		break;
+@@ -1516,7 +1512,7 @@ int dm_suspend(struct mapped_device *md,
+ 		if (!md->suspended_bdev) {
+ 			DMWARN("bdget failed in dm_suspend");
+ 			r = -ENOMEM;
+-			goto flush_and_out;
++			goto out;
+ 		}
  
- static inline int queue_is_locked(struct request_queue *q)
- {
-@@ -527,6 +528,8 @@ enum {
- #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
- #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
- #define blk_queue_flushing(q)	((q)->ordseq)
-+#define blk_queue_stackable(q)	\
-+	test_bit(QUEUE_FLAG_STACKABLE, &(q)->queue_flags)
+ 		/*
+@@ -1567,14 +1563,6 @@ int dm_suspend(struct mapped_device *md,
  
- #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
- #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
+ 	set_bit(DMF_SUSPENDED, &md->flags);
+ 
+-flush_and_out:
+-	if (r && noflush)
+-		/*
+-		 * Because there may be already I/Os in the pushback list,
+-		 * flush them before return.
+-		 */
+-		dm_queue_flush(md, DM_WQ_FLUSH_ALL, NULL);
+-
+ out:
+ 	if (r && md->suspended_bdev) {
+ 		bdput(md->suspended_bdev);
