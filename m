@@ -1,103 +1,146 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sg: disable interrupts inside sg_copy_buffer
-Date: Fri, 12 Sep 2008 09:11:51 -0500
-Message-ID: <1221228712.3265.3.camel@localhost.localdomain>
-References: <20080912060544.GF20055@kernel.dk>
-	 <20080912152554R.fujita.tomonori@lab.ntt.co.jp>
-	 <1221227319.3265.1.camel@localhost.localdomain>
-	 <20080912231254I.fujita.tomonori@lab.ntt.co.jp>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 00/13] request-based dm-multipath
+Date: Fri, 12 Sep 2008 10:38:14 -0400 (EDT)
+Message-ID: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57701 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752478AbYILOLy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2008 10:11:54 -0400
-In-Reply-To: <20080912231254I.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jens.axboe@oracle.com, agk@redhat.com, James.Bottomley@HansenPartnership.com
+Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stefan.bader@canonical.com, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-On Fri, 2008-09-12 at 23:12 +0900, FUJITA Tomonori wrote:
-> On Fri, 12 Sep 2008 08:48:39 -0500
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Fri, 2008-09-12 at 15:26 +0900, FUJITA Tomonori wrote:
-> > > On Fri, 12 Sep 2008 08:05:46 +0200
-> > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > 
-> > > > On Fri, Sep 12 2008, FUJITA Tomonori wrote:
-> > > > > On Thu, 11 Sep 2008 18:33:03 +0200
-> > > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > > 
-> > > > > > On Thu, Sep 11 2008, FUJITA Tomonori wrote:
-> > > > > > > The callers of sg_copy_buffer must disable interrupts before calling
-> > > > > > > it (since it uses kmap_atomic). Some callers use it on
-> > > > > > > interrupt-disabled code but some need to take the trouble to disable
-> > > > > > > interrupts just for this. No wonder they forget about it and we hit a
-> > > > > > > bug like:
-> > > > > > > 
-> > > > > > > http://bugzilla.kernel.org/show_bug.cgi?id=11529
-> > > > > > > 
-> > > > > > > James said that it might be better to disable interrupts inside the
-> > > > > > > function rather than risk the callers getting it wrong.
-> > > > > > > 
-> > > > > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > > > > ---
-> > > > > > >  lib/scatterlist.c |    5 +++++
-> > > > > > >  1 files changed, 5 insertions(+), 0 deletions(-)
-> > > > > > > 
-> > > > > > > diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-> > > > > > > index 876ba6d..dd52cd5 100644
-> > > > > > > --- a/lib/scatterlist.c
-> > > > > > > +++ b/lib/scatterlist.c
-> > > > > > > @@ -422,6 +422,9 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
-> > > > > > >  {
-> > > > > > >  	unsigned int offset = 0;
-> > > > > > >  	struct sg_mapping_iter miter;
-> > > > > > > +	unsigned long flags;
-> > > > > > > +
-> > > > > > > +	local_irq_save(flags);
-> > > > > > >  
-> > > > > > >  	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC);
-> > > > > > >  
-> > > > > > > @@ -442,6 +445,8 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
-> > > > > > >  
-> > > > > > >  	sg_miter_stop(&miter);
-> > > > > > >  
-> > > > > > > +	local_irq_restore(flags);
-> > > > > > > +
-> > > > > > >  	return offset;
-> > > > > > >  }
-> > > > > > 
-> > > > > > Agreed and applied.
-> > > > > 
-> > > > > Jens, this won't go to 2.6.27 (goes to 2.6.28)?
-> > > > > 
-> > > > > If so, I need to ask James to apply this workaround to 2.6.27:
-> > > > > 
-> > > > > http://marc.info/?l=linux-scsi&m=122106973807028&w=2
-> > > > 
-> > > > It will go into 2.6.27, it's already upstream since ~10 hours or so.
-> > > 
-> > > Thanks, I've just found it.
-> > 
-> > You forgot to add the cc: stable@kernel.org tag.  You'll have to send
-> > this to stable manually quoting the upsream commit id.
-> 
-> You forgot that Tejun rewrote the sg copy code after 2.6.26. This
-> patch can't be applied to 2.6.26.X.
-> 
-> I need to push a patch that is not in mainline to stable trees. Can I
-> do that ?
+Hi Jens, James and Alasdair,
 
-Yes, if we're absolutely sure it's necessary.  You'll have to quote the
-upstream commit ID, explain why the backport has to be different and add
-the patch.
+This is a new version of request-based dm-multipath patches.
+The patches are created on top of 2.6.27-rc6 + Alasdair's dm patches
+for linux-next below:
+    dm-mpath-use-more-error-codes.patch
+    dm-mpath-remove-is_active-from-struct-dm_path.patch
 
-James
+Major changes from the previous version (*) are:
+    - Moved busy state information for device/host to
+      q->backing_dev_info from q->queue_flags, since backing_dev_info
+      seems to be more appropriate location. (PATCH 03)
+      And corresponding changes to the scsi driver. (PATCH 04)
+
+    - Added a queue flag to indicate whether the block device is
+      request stackable or not, so that request stacking drivers
+      can avoid to stack request-based device on bio-based device.
+      (PATCH 05)
+
+    - Fixed the problem that requests are not flushed on flush suspend.
+      (PATCH 10)
+
+    - Changed queue initialization method for bio-based dm devices
+      from blk_alloc_queue() to blk_init_queue(). (PATCH 11)
+
+    - Changed congestion check method in dm-multipath not to invoke
+      __choose_pgpath(). (PATCH 13)
+
+    (*) http://lkml.org/lkml/2008/3/19/478
+
+Some basic function/performance testings are done with NEC iStorage
+(active-active multipath), and no problem was found.
+Please review and apply if no problem.
 
 
+Summary of the patch-set:
+  01/13: block: add request data completion interface
+  02/13: block: add request submission interface
+  03/13: mm: export driver's busy state via backing_dev_info
+  04/13: scsi: export busy status
+  05/13: block: add a queue flag for request stacking support
+  06/13: dm: remove unused code (preparation for request-based dm)
+  07/13: dm: tidy local_init (preparation for request-based dm)
+  08/13: dm: prepare mempools on module init for request-based dm
+  09/13: dm: add target interface for request-based dm
+  10/13: dm: add core functions for request-based dm
+  11/13: dm: add a switch to enable request-based dm if target is ready
+  12/13: dm: reject requests violating limits for request-based dm
+  13/13: dm-mpath: convert to request-based from bio-based
+
+
+Summary of the design and request-based dm-multipath are below.
+
+BACKGROUND
+==========
+Currently, device-mapper (dm) is implemented as a stacking block device
+at bio level.  This bio-based implementation has an issue below
+on dm-multipath.
+
+    Because hook for I/O mapping is above block layer __make_request(),
+    contiguous bios can be mapped to different underlying devices
+    and these bios aren't merged into a request.
+    Dynamic load balancing could happen this situation, though
+    it has not been implemented yet.
+    Therefore, I/O mapping after bio merging is needed for better
+    dynamic load balancing.
+
+The basic idea to resolve the issue is to move multipathing layer
+down below the I/O scheduler, and it was proposed from Mike Christie
+as the block layer (request-based) multipath:
+    http://marc.info/?l=linux-scsi&m=115520444515914&w=2
+
+Mike's patch added new block layer device for multipath and didn't
+have dm interface.  So I modified his patch to be used from dm.
+It is request-based dm-multipath.
+
+
+DESIGN OVERVIEW
+===============
+While currently dm and md stacks block devices at bio level,
+request-based dm stacks at request level and submits/completes
+struct request instead of struct bio.
+
+
+Overview of the request-based dm patch:
+  - Mapping is done in a unit of struct request, instead of struct bio
+  - Hook for I/O mapping is at q->request_fn() after merging and
+    sorting by I/O scheduler, instead of q->make_request_fn().
+  - Hook for I/O completion is at bio->bi_end_io() and rq->end_io(),
+    instead of only bio->bi_end_io()
+                  bio-based (current)     request-based (this patch)
+      ------------------------------------------------------------------
+      submission  q->make_request_fn()    q->request_fn()
+      completion  bio->bi_end_io()        bio->bi_end_io(), rq->end_io()
+  - Whether the dm device is bio-based or request-based is determined
+    at table loading time
+  - Keep user interface same (table/message/status/ioctl)
+  - Any bio-based devices (like dm/md) can be stacked on request-based
+    dm device.
+    Request-based dm device *cannot* be stacked on any bio-based device.
+
+
+Expected benefit:
+  - better load balancing
+
+
+Additional explanations:
+
+Why does request-based dm use bio->bi_end_io(), too?
+Because:
+  - dm needs to keep not only the request but also bios of the request,
+    if dm target drivers want to retry or do something on the request.
+    For example, dm-multipath has to check errors and retry with other
+    paths if necessary before returning the I/O result to the upper layer.
+
+  - But rq->end_io() is called at the very late stage of completion
+    handling where all bios in the request have been completed and
+    the I/O results are already visible to the upper layer.
+So request-based dm hooks bio->bi_end_io() and doesn't complete the bio
+in error cases, and gives over the error handling to rq->end_io() hook.
+
+
+Thanks,
+Kiyoshi Ueda
