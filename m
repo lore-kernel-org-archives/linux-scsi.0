@@ -1,8 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [RFC PATCH 3/4] dm-mpath: interface change for
- service-time oriented dynamic load balancer
-Date: Fri, 12 Sep 2008 10:53:17 -0400 (EDT)
-Message-ID: <20080912.105317.70224046.k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 4/4] dm-mpath: add service-time oriented
+ dynamic load balancer
+Date: Fri, 12 Sep 2008 10:53:53 -0400 (EDT)
+Message-ID: <20080912.105353.98559723.k-ueda@ct.jp.nec.com>
 References: <20080912.105038.102581623.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -23,210 +23,344 @@ To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, stefan.bader@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch changes path selector interfaces for service-time oriented
-dynamic load balancer.
-
-To calculate the service time for an incoming I/O correctly,
-the load balancer needs the size of the incoming I/O when selecting
-the next path.
+This patch adds a service time oriented dynamic load balancer,
+dm-service-time.
 
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/md/dm-mpath.c         |   27 ++++++++++++++++-----------
- drivers/md/dm-path-selector.h |    9 ++++++---
- drivers/md/dm-queue-length.c  |    8 +++++---
- drivers/md/dm-round-robin.c   |    2 +-
- 4 files changed, 28 insertions(+), 18 deletions(-)
+ drivers/md/Makefile          |    2 
+ drivers/md/dm-service-time.c |  312 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 313 insertions(+), 1 deletion(-)
 
-Index: 2.6.27-rc6/drivers/md/dm-mpath.c
+Index: 2.6.27-rc6/drivers/md/dm-service-time.c
 ===================================================================
---- 2.6.27-rc6.orig/drivers/md/dm-mpath.c
-+++ 2.6.27-rc6/drivers/md/dm-mpath.c
-@@ -97,6 +97,7 @@ struct multipath {
-  */
- struct dm_mpath_io {
- 	struct pgpath *pgpath;
-+	size_t nr_bytes;
- };
- 
- typedef int (*action_fn) (struct pgpath *pgpath);
-@@ -230,11 +231,12 @@ static void __switch_pg(struct multipath
- 	m->pg_init_count = 0;
- }
- 
--static int __choose_path_in_pg(struct multipath *m, struct priority_group *pg)
-+static int __choose_path_in_pg(struct multipath *m, struct priority_group *pg,
-+			       size_t nr_bytes)
- {
- 	struct dm_path *path;
- 
--	path = pg->ps.type->select_path(&pg->ps, &m->repeat_count);
-+	path = pg->ps.type->select_path(&pg->ps, &m->repeat_count, nr_bytes);
- 	if (!path)
- 		return -ENXIO;
- 
-@@ -246,7 +248,7 @@ static int __choose_path_in_pg(struct mu
- 	return 0;
- }
- 
--static void __choose_pgpath(struct multipath *m)
-+static void __choose_pgpath(struct multipath *m, size_t nr_bytes)
- {
- 	struct priority_group *pg;
- 	unsigned bypassed = 1;
-@@ -258,12 +260,12 @@ static void __choose_pgpath(struct multi
- 	if (m->next_pg) {
- 		pg = m->next_pg;
- 		m->next_pg = NULL;
--		if (!__choose_path_in_pg(m, pg))
-+		if (!__choose_path_in_pg(m, pg, nr_bytes))
- 			return;
- 	}
- 
- 	/* Don't change PG until it has no remaining paths */
--	if (m->current_pg && !__choose_path_in_pg(m, m->current_pg))
-+	if (m->current_pg && !__choose_path_in_pg(m, m->current_pg, nr_bytes))
- 		return;
- 
- 	/*
-@@ -275,7 +277,7 @@ static void __choose_pgpath(struct multi
- 		list_for_each_entry(pg, &m->priority_groups, list) {
- 			if (pg->bypassed == bypassed)
- 				continue;
--			if (!__choose_path_in_pg(m, pg))
-+			if (!__choose_path_in_pg(m, pg, nr_bytes))
- 				return;
- 		}
- 	} while (bypassed--);
-@@ -306,6 +308,7 @@ static int map_io(struct multipath *m, s
- 		  struct dm_mpath_io *mpio, unsigned was_queued)
- {
- 	int r = DM_MAPIO_REMAPPED;
-+	size_t nr_bytes = blk_rq_bytes(clone);
- 	unsigned long flags;
- 	struct pgpath *pgpath;
- 	struct block_device *bdev;
-@@ -315,7 +318,7 @@ static int map_io(struct multipath *m, s
- 	/* Do we need to select a new pgpath? */
- 	if (!m->current_pgpath ||
- 	    (!m->queue_io && (m->repeat_count && --m->repeat_count == 0)))
--		__choose_pgpath(m);
-+		__choose_pgpath(m, nr_bytes);
- 
- 	pgpath = m->current_pgpath;
- 
-@@ -342,9 +345,11 @@ static int map_io(struct multipath *m, s
- 		r = -EIO;	/* Failed */
- 
- 	mpio->pgpath = pgpath;
-+	mpio->nr_bytes = nr_bytes;
- 
- 	if (r == DM_MAPIO_REMAPPED && pgpath->pg->ps.type->start_io)
--		pgpath->pg->ps.type->start_io(&pgpath->pg->ps, &pgpath->path);
-+		pgpath->pg->ps.type->start_io(&pgpath->pg->ps, &pgpath->path,
-+					      nr_bytes);
- 
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
-@@ -424,7 +429,7 @@ static void process_queued_ios(struct wo
- 		goto out;
- 
- 	if (!m->current_pgpath)
--		__choose_pgpath(m);
-+		__choose_pgpath(m, 1 << 19); /* Assume 512 KB */
- 
- 	pgpath = m->current_pgpath;
- 
-@@ -1160,7 +1165,7 @@ static int multipath_end_io(struct dm_ta
- 	if (pgpath) {
- 		ps = &pgpath->pg->ps;
- 		if (ps->type->end_io)
--			ps->type->end_io(ps, &pgpath->path);
-+			ps->type->end_io(ps, &pgpath->path, mpio->nr_bytes);
- 	}
- 	mempool_free(mpio, m->mpio_pool);
- 
-@@ -1379,7 +1384,7 @@ static int multipath_ioctl(struct dm_tar
- 	spin_lock_irqsave(&m->lock, flags);
- 
- 	if (!m->current_pgpath)
--		__choose_pgpath(m);
-+		__choose_pgpath(m, 1 << 19); /* Assume 512KB */
- 
- 	if (m->current_pgpath) {
- 		bdev = m->current_pgpath->path.dev->bdev;
-Index: 2.6.27-rc6/drivers/md/dm-path-selector.h
-===================================================================
---- 2.6.27-rc6.orig/drivers/md/dm-path-selector.h
-+++ 2.6.27-rc6/drivers/md/dm-path-selector.h
-@@ -56,7 +56,8 @@ struct path_selector_type {
- 	 * the path fails.
- 	 */
- 	struct dm_path *(*select_path) (struct path_selector *ps,
--				     unsigned *repeat_count);
-+					unsigned *repeat_count,
-+					size_t nr_bytes);
- 
- 	/*
- 	 * Notify the selector that a path has failed.
-@@ -75,8 +76,10 @@ struct path_selector_type {
- 	int (*status) (struct path_selector *ps, struct dm_path *path,
- 		       status_type_t type, char *result, unsigned int maxlen);
- 
--	int (*start_io) (struct path_selector *ps, struct dm_path *path);
--	int (*end_io) (struct path_selector *ps, struct dm_path *path);
-+	int (*start_io) (struct path_selector *ps, struct dm_path *path,
-+			 size_t nr_bytes);
-+	int (*end_io) (struct path_selector *ps, struct dm_path *path,
-+		       size_t nr_bytes);
- };
- 
- /* Register a path selector */
-Index: 2.6.27-rc6/drivers/md/dm-round-robin.c
-===================================================================
---- 2.6.27-rc6.orig/drivers/md/dm-round-robin.c
-+++ 2.6.27-rc6/drivers/md/dm-round-robin.c
-@@ -160,7 +160,7 @@ static int rr_reinstate_path(struct path
- }
- 
- static struct dm_path *rr_select_path(struct path_selector *ps,
--				   unsigned *repeat_count)
+--- /dev/null
++++ 2.6.27-rc6/drivers/md/dm-service-time.c
+@@ -0,0 +1,312 @@
++/*
++ * Copyright (C) 2007-2008 NEC Corporation.  All Rights Reserved.
++ *
++ * Module Author: Kiyoshi Ueda
++ *
++ * This file is released under the GPL.
++ *
++ * Throughput oriented path selector.
++ */
++
++#include "dm.h"
++#include "dm-path-selector.h"
++
++#define DM_MSG_PREFIX	"multipath service-time"
++#define ST_MIN_IO	2
++#define ST_VERSION	"0.1.0"
++
++struct selector {
++	struct list_head valid_paths;
++	struct list_head failed_paths;
++};
++
++struct path_info {
++	struct list_head list;
++	struct dm_path *path;
++	unsigned int repeat_count;
++
++	atomic_t in_flight;	/* Total size of in-flight I/Os */
++	size_t perf;		/* Recent performance of the path */
++	sector_t last_sectors;	/* Total sectors of the last disk_stat_read */
++	size_t last_io_ticks;	/* io_ticks of the last disk_stat_read */
++};
++
++static struct selector *alloc_selector(void)
++{
++	struct selector *s = kzalloc(sizeof(*s), GFP_KERNEL);
++
++	if (s) {
++		INIT_LIST_HEAD(&s->valid_paths);
++		INIT_LIST_HEAD(&s->failed_paths);
++	}
++
++	return s;
++}
++
++static int st_create(struct path_selector *ps, unsigned argc, char **argv)
++{
++	struct selector *s = alloc_selector();
++
++	if (!s)
++		return -ENOMEM;
++
++	ps->context = s;
++	return 0;
++}
++
++static void free_paths(struct list_head *paths)
++{
++	struct path_info *pi, *next;
++
++	list_for_each_entry_safe(pi, next, paths, list) {
++		list_del(&pi->list);
++		pi->path->pscontext = NULL;
++		kfree(pi);
++	}
++}
++
++static void st_destroy(struct path_selector *ps)
++{
++	struct selector *s = (struct selector *) ps->context;
++
++	free_paths(&s->valid_paths);
++	free_paths(&s->failed_paths);
++	kfree(s);
++	ps->context = NULL;
++}
++
++static int st_status(struct path_selector *ps, struct dm_path *path,
++		     status_type_t type, char *result, unsigned int maxlen)
++{
++	int sz = 0;
++	struct path_info *pi;
++
++	if (!path)
++		DMEMIT("0 ");
++	else {
++		pi = path->pscontext;
++
++		switch (type) {
++		case STATUSTYPE_INFO:
++			DMEMIT("if:%08lu pf:%06lu ",
++			       (unsigned long) atomic_read(&pi->in_flight),
++			       pi->perf);
++			break;
++		case STATUSTYPE_TABLE:
++			DMEMIT("%u ", pi->repeat_count);
++			break;
++		}
++	}
++
++	return sz;
++}
++
++static int st_add_path(struct path_selector *ps, struct dm_path *path,
++		       int argc, char **argv, char **error)
++{
++	struct selector *s = (struct selector *) ps->context;
++	struct path_info *pi;
++	unsigned int repeat_count = ST_MIN_IO;
++	struct gendisk *disk = path->dev->bdev->bd_disk;
++
++	if (argc > 1) {
++		*error = "service-time ps: incorrect number of arguments";
++		return -EINVAL;
++	}
++
++	/* First path argument is number of I/Os before switching path. */
++	if ((argc == 1) && (sscanf(argv[0], "%u", &repeat_count) != 1)) {
++		*error = "service-time ps: invalid repeat count";
++		return -EINVAL;
++	}
++
++	/* allocate the path */
++	pi = kmalloc(sizeof(*pi), GFP_KERNEL);
++	if (!pi) {
++		*error = "service-time ps: Error allocating path context";
++		return -ENOMEM;
++	}
++
++	pi->path = path;
++	pi->repeat_count = repeat_count;
++
++	pi->perf = 0;
++	pi->last_sectors = disk_stat_read(disk, sectors[READ])
++			   + disk_stat_read(disk, sectors[WRITE]);
++	pi->last_io_ticks = disk_stat_read(disk, io_ticks);
++	atomic_set(&pi->in_flight, 0);
++
++	path->pscontext = pi;
++
++	list_add_tail(&pi->list, &s->valid_paths);
++
++	return 0;
++}
++
++static void st_fail_path(struct path_selector *ps, struct dm_path *path)
++{
++	struct selector *s = (struct selector *) ps->context;
++	struct path_info *pi = path->pscontext;
++
++	list_move(&pi->list, &s->failed_paths);
++}
++
++static int st_reinstate_path(struct path_selector *ps, struct dm_path *path)
++{
++	struct selector *s = (struct selector *) ps->context;
++	struct path_info *pi = path->pscontext;
++
++	list_move_tail(&pi->list, &s->valid_paths);
++
++	return 0;
++}
++
++static void stats_update(struct path_info *pi)
++{
++	sector_t sectors;
++	size_t io_ticks, tmp;
++	struct gendisk *disk = pi->path->dev->bdev->bd_disk;
++
++	sectors = disk_stat_read(disk, sectors[READ])
++		  + disk_stat_read(disk, sectors[WRITE]);
++	io_ticks = disk_stat_read(disk, io_ticks);
++
++	if ((sectors != pi->last_sectors) && (io_ticks != pi->last_io_ticks)) {
++		tmp = (sectors - pi->last_sectors) << 9;
++		do_div(tmp, jiffies_to_msecs((io_ticks - pi->last_io_ticks)));
++		pi->perf = tmp;
++
++		pi->last_sectors = sectors;
++		pi->last_io_ticks = io_ticks;
++	}
++}
++
++static int st_compare_load(struct path_info *pi1, struct path_info *pi2,
++			   size_t new_io)
++{
++	size_t if1, if2;
++
++	if1 = atomic_read(&pi1->in_flight);
++	if2 = atomic_read(&pi2->in_flight);
++
++	/*
++	 * Case 1: No performace data available. Choose less loaded path.
++	 */
++	if (!pi1->perf || !pi2->perf)
++		return if1 - if2;
++
++	/*
++	 * Case 2: Calculate service time. Choose faster path.
++	 *           if ((if1+new_io)/pi1->perf < (if2+new_io)/pi2->perf) pi1.
++	 *           if ((if1+new_io)/pi1->perf > (if2+new_io)/pi2->perf) pi2.
++	 *         To avoid do_div(), use
++	 *           if ((if1+new_io)*pi2->perf < (if2+new_io)*pi1->perf) pi1.
++	 *           if ((if1+new_io)*pi2->perf > (if2+new_io)*pi1->perf) pi2.
++	 */
++	if1 = (if1 + new_io) << 10;
++	if2 = (if2 + new_io) << 10;
++	do_div(if1, pi1->perf);
++	do_div(if2, pi2->perf);
++
++	if (if1 != if2)
++		return if1 - if2;
++
++	/*
++	 * Case 3: Service time is equal. Choose faster path.
++	 */
++	return pi2->perf - pi1->perf;
++}
++
++static struct dm_path *st_select_path(struct path_selector *ps,
 +				      unsigned *repeat_count, size_t nr_bytes)
- {
- 	struct selector *s = (struct selector *) ps->context;
- 	struct path_info *pi = NULL;
-Index: 2.6.27-rc6/drivers/md/dm-queue-length.c
-===================================================================
---- 2.6.27-rc6.orig/drivers/md/dm-queue-length.c
-+++ 2.6.27-rc6/drivers/md/dm-queue-length.c
-@@ -142,7 +142,7 @@ static inline int ql_compare_qlen(struct
- }
- 
- static struct dm_path *ql_select_path(struct path_selector *ps,
--				      unsigned *repeat_count)
-+				      unsigned *repeat_count, size_t nr_bytes)
- {
- 	struct selector *s = (struct selector *) ps->context;
- 	struct path_info *cpi = NULL, *spi = NULL;
-@@ -166,7 +166,8 @@ static struct dm_path *ql_select_path(st
- 	return spi ? spi->path : NULL;
- }
- 
--static int ql_start_io(struct path_selector *ps, struct dm_path *path)
-+static int ql_start_io(struct path_selector *ps, struct dm_path *path,
++{
++	struct selector *s = (struct selector *) ps->context;
++	struct path_info *pi = NULL, *best = NULL;
++
++	if (list_empty(&s->valid_paths))
++		return NULL;
++
++	/* Change preferred (first in list) path to evenly balance. */
++	list_move_tail(s->valid_paths.next, &s->valid_paths);
++
++	/* Update performance information before best path selection */
++	list_for_each_entry(pi, &s->valid_paths, list)
++		stats_update(pi);
++
++	list_for_each_entry(pi, &s->valid_paths, list) {
++		if (!best)
++			best = pi;
++		else if (st_compare_load(pi, best, nr_bytes) < 0)
++			best = pi;
++	}
++
++	if (best) {
++		*repeat_count = best->repeat_count;
++		return best->path;
++	}
++
++	return NULL;
++}
++
++static int st_start_io(struct path_selector *ps, struct dm_path *path,
 +		       size_t nr_bytes)
- {
- 	struct path_info *pi = path->pscontext;
- 
-@@ -175,7 +176,8 @@ static int ql_start_io(struct path_selec
- 	return 0;
- }
- 
--static int ql_end_io(struct path_selector *ps, struct dm_path *path)
-+static int ql_end_io(struct path_selector *ps, struct dm_path *path,
++{
++	struct path_info *pi = path->pscontext;
++
++	atomic_add(nr_bytes, &pi->in_flight);
++
++	return 0;
++}
++
++static int st_end_io(struct path_selector *ps, struct dm_path *path,
 +		     size_t nr_bytes)
- {
- 	struct path_info *pi = path->pscontext;
- 
++{
++	struct path_info *pi = path->pscontext;
++
++	atomic_sub(nr_bytes, &pi->in_flight);
++
++	return 0;
++}
++
++static struct path_selector_type st_ps = {
++	.name		= "service-time",
++	.module		= THIS_MODULE,
++	.table_args	= 1,
++	.info_args	= 2,
++	.create		= st_create,
++	.destroy	= st_destroy,
++	.status		= st_status,
++	.add_path	= st_add_path,
++	.fail_path	= st_fail_path,
++	.reinstate_path	= st_reinstate_path,
++	.select_path	= st_select_path,
++	.start_io	= st_start_io,
++	.end_io		= st_end_io,
++};
++
++static int __init dm_st_init(void)
++{
++	int r = dm_register_path_selector(&st_ps);
++
++	if (r < 0)
++		DMERR("register failed %d", r);
++
++	DMINFO("version " ST_VERSION " loaded");
++
++	return r;
++}
++
++static void __exit dm_st_exit(void)
++{
++	int r = dm_unregister_path_selector(&st_ps);
++
++	if (r < 0)
++		DMERR("unregister failed %d", r);
++}
++
++module_init(dm_st_init);
++module_exit(dm_st_exit);
++
++MODULE_DESCRIPTION(DM_NAME " throughput oriented path selector");
++MODULE_AUTHOR("Kiyoshi Ueda <k-ueda@ct.jp.nec.com>");
++MODULE_LICENSE("GPL");
+Index: 2.6.27-rc6/drivers/md/Makefile
+===================================================================
+--- 2.6.27-rc6.orig/drivers/md/Makefile
++++ 2.6.27-rc6/drivers/md/Makefile
+@@ -33,7 +33,7 @@ obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
+ obj-$(CONFIG_DM_CRYPT)		+= dm-crypt.o
+ obj-$(CONFIG_DM_DELAY)		+= dm-delay.o
+ obj-$(CONFIG_DM_MULTIPATH)	+= dm-multipath.o dm-round-robin.o \
+-				   dm-queue-length.o
++				   dm-queue-length.o dm-service-time.o
+ obj-$(CONFIG_DM_SNAPSHOT)	+= dm-snapshot.o
+ obj-$(CONFIG_DM_MIRROR)		+= dm-mirror.o dm-log.o
+ obj-$(CONFIG_DM_ZERO)		+= dm-zero.o
