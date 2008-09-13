@@ -1,119 +1,154 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: ConfigFS + Target Mode Engine API discussion
-Date: Fri, 12 Sep 2008 15:27:57 -0700
-Message-ID: <1221258477.3401.81.camel@haakon2.linux-iscsi.org>
-References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org>
-	 <20080910233107.GC23864@mail.oracle.com>
-	 <1221097366.27831.216.camel@haakon2.linux-iscsi.org>
-	 <20080911021331.GA12902@mail.oracle.com>
-	 <1221107358.27831.289.camel@haakon2.linux-iscsi.org>
-	 <20080911063846.GB16583@mail.oracle.com>
-	 <1221123529.27831.343.camel@haakon2.linux-iscsi.org>
-	 <20080912201541.GA26469@mail.oracle.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: [PATCH 0/5] mpt fusion error handler patches
+Date: Fri, 12 Sep 2008 20:32:26 -0800 (AKDT)
+Message-ID: <alpine.LNX.2.00.0809122019420.21907@filesrv1.baby-dragons.com>
+References: <200809122057.41565.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:28662 "HELO
-	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752558AbYILWyj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2008 18:54:39 -0400
-In-Reply-To: <20080912201541.GA26469@mail.oracle.com>
+Received: from ns3.baby-dragons.com ([204.91.156.41]:42082 "EHLO
+	ns3.baby-dragons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbYIMEiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Sep 2008 00:38:04 -0400
+In-Reply-To: <200809122057.41565.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Eric Moore <Eric.Moore@lsi.com>, Sathya Prakash <Sathya.Prakash@lsi.com>
 
-On Fri, 2008-09-12 at 13:15 -0700, Joel Becker wrote:
-> On Thu, Sep 11, 2008 at 01:58:49AM -0700, Nicholas A. Bellinger wrote:
-> > *) $CONFIGFS/target is created with configfs_register_subsystem()
-> > 
-> > *) $CONFIGFS/target/core is created as a default group under struct
-> > configfs_subsystem->su_group to interact with generic target mode
-> > engine's storage objects (eg: SCSI HCTL referenced devices, LVM UUID, MD
-> > UUID). 
-> > 
-> > ...........
-> > 
-> >  # Load LIO-Target using function symbols from target_core_configfs
-> > modprobe iscsi_target_mod
-> > 
-> > module_init() from iscsi_target_mod (eg: the fabric module) calls
-> > target_fabric_configfs_register() in target_core_configfs.ko, which is a
-> > small wrapper for calling sys_mkdir($CONFIGFS/target/$FABRIC) to kick
-> > off the struct config_group_operations->make_group() to create a struct
-> > config_item for /sys/kernel/config/target/iscsi (or whatever the fabric
-> > is called).
-> 
-> 	No, you don't do this.  Like I said, configfs clients let
-> userspace create and destroy items.  Not kernelspace.  Do not call
-> sys_mkdir()/sys_rmdir() from your modules.
-> 	If you don't do this, you also don't need your lookup_hash()
-> export.  Your code should be behaving as if it didn't know the
-> filesystem view existed.
-> 	I'm trying to understand what you're actually doing.  Not the
-> "I want iscsi_target_mod to appear under target/iscsi" part, but why it
-> needs to be there in the first place.  how it all connects together.
-> 
+ 	Hello Bernd & All ,
 
-Well, the startup 'fabric registration' is only case where I figured
-vfs_mkdir($CONFIGFS/target/$FABRIC) being called in order to have the
-fabric struct config_item appear at modprobe $FABRIC_MOD *BEFORE* the
-user did anything would be beneficial at all.   If vfs_mkdir() was not
-called from transport_fabric_register_configfs(), it only means user
-would have call mkdir $CONFIGFS/target/$FABRIC and/or mkdir -p
-$CONFIGFS/target/$FABRIC/endpoint to kick off one common make_group()
-for $FABRIC (that lives in target_core_configfs.c) and then make_group()
-that likes inside of $FABRIC_MOD who's parent is $CONFIGFS/target.  In
-LIO-Target's case, this would be creating a new iSCSI Qualified Name
-with mkdir $CONFIGFS/target/iscsi/iqn.superturobdiskarry
+On Fri, 12 Sep 2008, Bernd Schubert wrote:
+> Hello,
+> I'm going to submit several error handler patches for the MPT fusion
+> driver. The purpose of these patches is mainly to fix errors happening
+> on the second port of dual port 53C1030 based HBAs.
+> As I complained some time ago on this list, a device failure on one of the
+> ports of LSI22320R HBAs, will also cause device failures of innocent devices
+> on the other port of this HBA. In order to debug this Eric Moore sent me a
+> fusion-tip version of this driver, which we have been using ever since. However,
+> this version has issues with SAS HBAs and probably also won't work for recent kernel
+> versions. So I spent quite some amount of time to figure out why fusion-tip
+> version (4.x) of the driver doesn't have the issue.
+>
+> Below I will provide the some examples of these issues. Errors on one of the attached
+> scsi devices have been simulated using lsiutil by doing target of one of the attached
+> devices on one of the port (5 0 4 0).
+>
+> Unpatched 2.6.26 + a few scsi diagnostics and error handler patches:
+>
+> [  224.819697] sd 5:0:4:0: last recovery: 4294911483, now: 4294948403
+> [  224.826142] sd 5:0:4:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_OK,SUGGEST_OK
+> [  224.831676] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 0c 27 2e 98 00 00 04 00 00 00
+> [  224.842803] sd 5:0:4:0: Activating scsi error recovery (1)
+> [  224.857824] sd 5:0:4:0: trying to abort command
+> [  224.865697] mptscsih: ioc1: attempting task abort! (sc=ffff8100f8f10000)
+> [  224.870572] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 0c 27 2e 98 00 00 04 00 00 00
+> [  227.047968] mptbase: ioc1: Initiating recovery
+> [  229.481849] sd 5:0:4:0: mptscsih: ioc1: completing cmds: fw_channel 0, fw_id 4, sc=ffff8100f8fbb180, mf = ffff8100
+> [...]
+> [  364.322013] mptscsih: ioc1: bus reset: SUCCESS (sc=ffff8100f8f11b80)
+> [  371.924342] sd 4:0:2:0: scmd retry 6/6
+> [  371.928364] sd 4:0:2:0: last recovery: 0, now: 4294985148
+> [  371.932924] sd 4:0:2:0: [sda] Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK,SUGGEST_OK
+> [  371.932924] sd 4:0:2:0: [sda] CDB: Write(16): 8a 00 00 00 00 01 31 8b 4a 4e 00 00 00 39 00 00
+> [  371.932924] sd 4:0:2:0: Activating scsi error recovery (1)
+> [  371.960382] sd 4:0:2:0: Sending BDR 0xffff81007eaf2538
+> [  371.984936] sd 4:0:2:0: trying device reset
+> [  371.989426] mptscsih: ioc0: attempting target reset! (sc=ffff81007eb7c780)
+>
+> As you can see, suddenly also target 4 0 2 0 fails, which is ioc0. In the end:
+>
+> [  398.596119] sd 4:0:2:0: [sda] Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK,SUGGEST_OK
+> [  398.605291] end_request: I/O error, dev sda, sector 5126179406
+> [  398.612360] end_request: I/O error, dev sda, sector 5126179406
+> [  398.617818]  target4:0:2: Beginning Domain Validation
+>
+> So the innocent device sda (which is really another device) failed.
+>
+> Now the same with patches applied, but with the soft reset-handler deactivated:
+>
+> [  912.861708] sd 5:0:4:0: last recovery: 4295082734, now: 4295120387
+> [  912.868130] sd 5:0:4:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_OK,SUGGEST_
+>
+> [  912.873757] sd 5:0:4:0: [sdc] CDB: Write(10): 2a 00 73 11 33 08 00 04 00 00
+> [  912.873757] sd 5:0:4:0: Activating scsi error recovery (2)
+> [  912.889492] sd 5:0:4:0: trying to abort command
+> [  912.894118] mptscsih: ioc1: attempting task abort! (sc=ffff8100e361d180)
+> [  912.900951] sd 5:0:4:0: [sdc] CDB: Write(10): 2a 00 73 11 33 08 00 04 00 00
+> [  913.025771] mptscsih: ioc1: task abort: FAILED (sc=ffff8100e361d180)
+> [  913.032269] sd 5:0:4:0: Sending BDR 0xffff8100f99e1428
+> [  913.040264] sd 5:0:4:0: trying device reset
+> [  913.044597] mptscsih: ioc1: attempting target reset! (sc=ffff8100e361d180)
+> [  913.049955] sd 5:0:4:0: [sdc] CDB: Write(10): 2a 00 73 11 33 08 00 04 00 00
+> [  913.177284] mptscsih: ioc1: target reset: FAILED (sc=ffff8100e361d180)
+> [  913.181946] Sending BRST chan: 0
+> [  913.185945] sd 5:0:4:0: trying bus reset
+> [  913.189974] mptscsih: ioc1: attempting bus reset! (sc=ffff8100e361d180)
+> [  913.197310] sd 5:0:4:0: [sdc] CDB: Write(10): 2a 00 73 11 33 08 00 04 00 00
+> [  913.325079] mptscsih: ioc1: bus reset: FAILED (sc=ffff8100e361d180)
+> [  913.329668] sd 5:0:4:0: trying host reset
+> [  913.333864] mptscsih: ioc1: attempting host reset! (sc=ffff8100e361d180)
+> [  913.341832] mptscsih: ioc1: Skipping hard reset in order to prevent failures on ioc
+>
+> [  913.349821] mptscsih: ioc1: host reset: FAILED (sc=ffff8100e361d180)
+> [  913.356704] sd 5:0:4:0: Device offlined - not ready after error recovery
+> [  913.363199] sd 5:0:4:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT,SUGGEST_OK
+>
+> => The device was not recovered, but at least 4 0 2 0 didn't fail :)
+>
+> Now with all patches applied:
+>
+> [  214.903699] sd 5:0:4:0: last recovery: 0, now: 4294945953
+> [  214.910652] sd 5:0:4:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_OK,SUGGEST_OK
+> [  214.918652] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 31 8b 9c e7 00 00 00 39 00 00
+> [  214.918652] sd 5:0:4:0: Activating scsi error recovery (1)
+> [  214.934655] sd 5:0:4:0: trying to abort command
+> [  214.939581] mptscsih: ioc1: attempting task abort! (sc=ffff8100f9be0c80)
+> [  214.947581] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 31 8b 9c e7 00 00 00 39 00 00
+> [  215.077430] mptscsih: ioc1: task abort: FAILED (sc=ffff8100f9be0c80)
+> [  215.083645] sd 5:0:4:0: Sending BDR 0xffff81007eb51428
+> [  215.090298] sd 5:0:4:0: trying device reset
+> [  215.094810] mptscsih: ioc1: attempting target reset! (sc=ffff8100f9be0c80)
+> [  215.101917] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 31 8b 9c e7 00 00 00 39 00 00
+> [  215.229659] mptscsih: ioc1: target reset: FAILED (sc=ffff8100f9be0c80)
+> [  215.236367] Sending BRST chan: 0
+> [  215.240173] sd 5:0:4:0: trying bus reset
+> [  215.244313] mptscsih: ioc1: attempting bus reset! (sc=ffff8100f9be0c80)
+> [  215.251731] sd 5:0:4:0: [sdc] CDB: Write(16): 8a 00 00 00 00 01 31 8b 9c e7 00 00 00 39 00 00
+> [  215.382449] mptscsih: ioc1: bus reset: FAILED (sc=ffff8100f9be0c80)
+> [  215.388946] sd 5:0:4:0: trying host reset
+> [  215.393162] mptscsih: ioc1: attempting host reset! (sc=ffff8100f9be0c80)
+> [  215.400489] sd 5:0:4:0: mptscsih: ioc1: completing cmds: fw_channel 0, fw_id 4, sc=ffff8100f9be0c80, mf = ffff8105
+> [  217.317914] mptbase: ioc1: SoftResetHandler: completed (1 seconds): SUCCESS
+> [  217.324924] mptscsih: ioc1: host reset: SUCCESS (sc=ffff8100f9be0c80)
+> [  227.546452]  target5:0:4: Beginning Domain Validation
+> [  227.578775]  target5:0:4: Ending Domain Validation
+> [  227.584099]  target5:0:4: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS PCOMP (6.25 ns, offset 127)
+> [  227.596959]  target5:0:5: Beginning Domain Validation
+> [  227.651196]  target5:0:5: Ending Domain Validation
+> [  227.656977]  target5:0:5: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS PCOMP (6.25 ns, offset 127)
 
-The only real reason I am stuck on this is so that the modprobe $FABRIC
-does not need to be followed by a user *REQUIRED* mkdir -p
-$CONFIGFS/target/$FABRIC, before a normal operation like: mkdir
-$CONFIGFS/target/$FABRIC/endpoint to kick off the expected two
-make_groups() and the attributes in $CONFIGFS/target/$FABRIC to be
-possibily tuned *BEFORE* the $FABRIC/$endpoint before the userspace
-mkdir -p.  Which is not a big deal I suppose, as everything will be
-there after mkdir -p $CONFIGFS/target/iscsi/iqn.superturobdiskarry
-anyways, but I thought it could be useful.
+ 	Thank you Bernd for tracking this down .  I have run into this very 
+issue every time one of my drives starts going bad on me & I reboot to see if 
+the errors are actually just a bad firmware that requires a power reset to clear 
+up .  But when it is a trully failing drive (or I am testing a new type of 
+cabling which shows to be inferior) then these rolling resets of the controller 
+-> channel -> device itself ,  caused me no end of impatient waiting for them to 
+end ,  So far they do eventually end .  In some earlier driver versions they did 
+NOT timeout ,  This usually told me that something was amiss & I had to just hit 
+an dmiss change things out trying to find the actual culrpit ,  There always was 
+a culprit in the chain someplace .
 
-Anyways, once the $FABRIC's struct config_item appears, everything from
-that point is done in userspace as you (as the configfs author) would
-expect with configfs structs located in $FABRIC_MOD driven by userspace
-ops.  It is this method of automatic ops at modprobe $FABRIC_MOD for
-struct config_item's particular struct target_fabric_configfs hanging of
-the generic target's struct configfs_subsystem where any possible
-benefit for automation of setup for a configfs enabled Generic Target
-Engine many lie.  Same with the shutdown case for $FABRIC_MOD and
-calling transport_fabric_deregister_configfs() at rmmod $FABRIC_MID.  If
-vfs_rmdir() was NOT called, the user would be expected to call rmdir
-$CONFIGFS/target/$FABRIC before rmmod $FABRIC_MOD.  It could be thought
-of as:
+ 	I would also like to Thank "The LSI team" for creating this in kernel (& 
+module) driver for their line of fusion cards (& fixing atto's as well) ,  as 
+well as for maintaining it & putting up with my pissing and moaning about this 
+and some other issues that had cropped up .
 
-A special case where vfs_mkdir() or vfs_rmdir() being called in order to
-create the "multi-module" configfs subsystem containing struct
-config_item_types() and struct config_*_operations in different kernel
-modules..  As I don't believe the examples in
-Documentation/filesystems/configfs or working code in
-fs/ocfs2/cluster/nodemanager.c have this requirement AFAICT, it could be
-considered a new use for configfs... :-)
-
-I will be working on filling in target-ctl IOCTL parts in
-iscsi_target_configfs.c, which look like expected configfs (not the
-special case above) until you get to that other special case mentioned
-earlier:  Wanting to creat a LUN mapping from a storage object from a
-T10 EVPD Unit Serial to a registered
-$CONFIGFS/target/$FABRIC/endpoint/lun when the
-$CONFIGFS/target/core/$T10_EVPD_UNIT_SERIAL does not exist..
-
-Thanks Joel!
-
---nab
-
-
-
-> Joel
-> 
-
+ 	Again Thank you all ,  JimL
+-- 
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
++------------------------------------------------------------------+
