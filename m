@@ -1,54 +1,72 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: ConfigFS + Target Mode Engine API discussion
-Date: Fri, 12 Sep 2008 21:49:48 -0700
-Message-ID: <20080913044948.GA31135@mail.oracle.com>
-References: <1221087547.27831.165.camel@haakon2.linux-iscsi.org> <20080910233107.GC23864@mail.oracle.com> <1221097366.27831.216.camel@haakon2.linux-iscsi.org> <20080911021331.GA12902@mail.oracle.com> <1221107358.27831.289.camel@haakon2.linux-iscsi.org> <20080911063846.GB16583@mail.oracle.com> <1221123529.27831.343.camel@haakon2.linux-iscsi.org> <20080912201541.GA26469@mail.oracle.com> <1221258477.3401.81.camel@haakon2.linux-iscsi.org>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: [PATCH 4/5] fusion prevent DV deadlock
+Date: Sat, 13 Sep 2008 14:24:31 +0200
+Message-ID: <20080913122431.GA32325@lanczos.q-leap.de>
+References: <200809122057.41565.bs@q-leap.de> <200809122102.17306.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:27820 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756883AbYIMEuV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Sep 2008 00:50:21 -0400
+Received: from ns1.q-leap.de ([153.94.51.193]:56452 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751975AbYIMMYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Sep 2008 08:24:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1221258477.3401.81.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <200809122102.17306.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.sourceforge.net>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Eric Moore <Eric.Moore@lsi.com>, Sathya Prakash <Sathya.Prakash@lsi.com>, Andrew Patterson <andrew.patterson@hp.com>
 
-On Fri, Sep 12, 2008 at 03:27:57PM -0700, Nicholas A. Bellinger wrote:
-> On Fri, 2008-09-12 at 13:15 -0700, Joel Becker wrote:
-> > 	No, you don't do this.  Like I said, configfs clients let
-> > userspace create and destroy items.  Not kernelspace.  Do not call
-> > sys_mkdir()/sys_rmdir() from your modules.
+On Fri, Sep 12, 2008 at 09:02:16PM +0200, Bernd Schubert wrote:
+> The mpt fusion driver will do a domain revalidation on an ion reset, this
+
+s/ion/ioc/
+
+> DV might cause a live deadlock. The problem has been entirely analyzed in
+> this thread, but so far no real solution has been implemented.
+> This patch simply disables the domain revalidation, if it will run into
+> the deadlock.
+
+Forgot to paste the thread: http://marc.info/?t=118039577800004
+
 > 
-> Well, the startup 'fabric registration' is only case where I figured
-> vfs_mkdir($CONFIGFS/target/$FABRIC) being called in order to have the
-> fabric struct config_item appear at modprobe $FABRIC_MOD *BEFORE* the
-> user did anything would be beneficial at all.   If vfs_mkdir() was not
-> called from transport_fabric_register_configfs(), it only means user
-> would have call mkdir $CONFIGFS/target/$FABRIC and/or mkdir -p
-> $CONFIGFS/target/$FABRIC/endpoint to kick off one common make_group()
-> for $FABRIC (that lives in target_core_configfs.c) and then make_group()
-> that likes inside of $FABRIC_MOD who's parent is $CONFIGFS/target.  In
-> LIO-Target's case, this would be creating a new iSCSI Qualified Name
-> with mkdir $CONFIGFS/target/iscsi/iqn.superturobdiskarry
-
-	I'm still totally unclear as to why $FABRIC has to live under
-target/.  I'm not clear if there can be more than one $FABRIC at a time.
-etc.  That's what I'm trying to understand so I can help you out.
-
-Joel
-
--- 
-
-Life's Little Instruction Book #20
-
-	"Be forgiving of yourself and others."
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+> Signed-off-by: Bernd Schubert <bs@q-leap.de>
+> 
+>  drivers/message/fusion/mptspi.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> 
+> Index: linux-2.6.26/drivers/message/fusion/mptspi.c
+> ===================================================================
+> --- linux-2.6.26.orig/drivers/message/fusion/mptspi.c
+> +++ linux-2.6.26/drivers/message/fusion/mptspi.c
+> @@ -672,12 +672,24 @@ static void mptspi_dv_device(struct _MPT
+>  {
+>  	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
+>  	MPT_ADAPTER *ioc = hd->ioc;
+> +	unsigned long nr_requests = sdev->request_queue->nr_requests;
+> +	struct request_list *rl = &sdev->request_queue->rq;
+>  
+>  	/* no DV on RAID devices */
+>  	if (sdev->channel == 0 &&
+>  	    mptspi_is_raid(hd, sdev->id))
+>  		return;
+>  
+> +	if (rl->count[0] + 1 >= nr_requests
+> +	||  rl->count[1] + 1 >= nr_requests) {
+> +		/* we must NOT do a DV after an error recovery, when we
+> +		 * don't have left a space in the request list, since
+> +		 * this will cause a live dead lock */
+> +		starget_printk(KERN_INFO, scsi_target(sdev), MYIOC_s_FMT
+> +		    "Skipping DV, to prevent dead lock!\n", ioc->name);
+> +		return;
+> +	}
+> +
+>  	/* If this is a piece of a RAID, then quiesce first */
+>  	if (sdev->channel == 1 &&
+>  	    mptscsih_quiesce_raid(hd, 1, vtarget->channel, vtarget->id) < 0) {
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
