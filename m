@@ -1,135 +1,86 @@
-From: Arne Redlich <agr@powerkom-dd.de>
-Subject: Re: [PATCH] Allow more than 255 LUNs to
-	be	reported.
-Date: Mon, 15 Sep 2008 20:17:19 +0200
-Message-ID: <1221502639.7703.112.camel@blackadder>
-References: <20080912020830.GA14037@andromeda.dapyr.net>
-	<1221197906.28571.42.camel@blackadder>
-	<20080912134733.GB20527@andromeda.dapyr.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/2] FC pass through support via bsg interface
+Date: Tue, 16 Sep 2008 05:06:57 +0900
+Message-ID: <20080916050551A.fujita.tomonori@lab.ntt.co.jp>
+References: <56AAA08B-4276-4CA2-92E2-D539AD1AB769@qlogic.com>
+	<48CA9DB3.20005@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080912134733.GB20527@andromeda.dapyr.net>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: Konrad Rzeszutek <konrad@darnok.org>
-Cc: iscsitarget-devel@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:56954 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753960AbYIOUHa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2008 16:07:30 -0400
+In-Reply-To: <48CA9DB3.20005@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: seokmann.ju@qlogic.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, bharrosh@panasas.com, robert.w.love@intel.com
 
-CC'ing linux-scsi.
+On Fri, 12 Sep 2008 12:49:55 -0400
+James Smart <James.Smart@Emulex.Com> wrote:
 
-Am Freitag, den 12.09.2008, 09:47 -0400 schrieb Konrad Rzeszutek: 
-> On Fri, Sep 12, 2008 at 07:38:26AM +0200, Arne Redlich wrote:
-> > Am Donnerstag, den 11.09.2008, 22:08 -0400 schrieb Konrad Rzeszutek:
-> > > Allow more than 255 LUNs to be reported. The logic would
-> > > make LUNs above 255 start at the 16k number.
-> > > 
-> > >  target_disk.c |    3 +--
-> > >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > > 
-> > > Signed-off-by: Konrad Rzeszutek <ketuzsezr@darnok.org>
-> > > 
-> > > Index: kernel/target_disk.c
-> > > ===================================================================
-> > > --- kernel/target_disk.c	(revision 171)
-> > > +++ kernel/target_disk.c	(working copy)
-> > > @@ -279,8 +279,7 @@
-> > >  		if (lun->l_state != IDEV_RUNNING)
-> > >  			continue;
-> > >  
-> > > -		*data++ = cpu_to_be32((0x3ff & lun->lun) << 16 |
-> > > -				      ((lun->lun > 0xff) ? (0x1 << 30) : 0));
-> > > +		*data++ = cpu_to_be32((0x3ff & lun->lun) << 16);
-> > 
-> > Thanks, but I'm afraid this patch isn't correct.
-> > 
-> > Did you actually see this behaviour or did you stumble across it while
+> Seokmann,
 > 
-> > iscsiadm -m discovery -t st -p 192.168.100.1
-> 192.168.100.1:3260,1 iqn.2009.com.test:konrad
+> There are number of fundamental issues with this patch that need to be 
+> corrected. I'll be at plumbers conference next week, and will be able to 
+> work through this. Please look me up if you will be there. Otherwise, 
+> I'll just post a revised patch.
 > 
-> 09:43:15 # 7 :/etc/iscsi/ 
-> > iscsiadm -m node -L all
-> Logging in to [iface: default, target: iqn.2009.com.test:konrad, portal:
-> 192.168.100.1,3260]
-> Login to [iface: default, target: iqn.2009.com.test:konrad, portal:
-> 192.168.100.1,3260]: successful
+> Here are the issues as I see them:
 > 
-> 09:43:20 # 8 :/etc/iscsi/ 
-> > lsscsi
-> [1:0:0:0]    disk    MAXTOR   ATLAS10K5_73SCA  JNZH  /dev/sda
-> [1:0:6:0]    process ESG-SHV  SCA HSBP M35     1.06  -       
-> [4:0:6:0]    process ESG-SHV  SCA HSBP M35     1.06  -       
-> [4:0:10:0]   disk    MAXTOR   ATLAS10K5_73SCA  JNZH  /dev/sdb
-> [8:0:0:0]    disk    IET      VIRTUAL-DISK     0     /dev/sdc
-> [8:0:0:255]  disk    IET      VIRTUAL-DISK     0     /dev/sdd
+> - There is no concept of a Request Structure, that supplies the type of
+>    request and other parameters (such as a timeout). This should have
+>    come from the cdb bytes.  Over time, we can expand this request
+>    structure for other types of requests, not just els/ct passthru.
 > 
-> 09:43:22 # 9 :/etc/iscsi/ 
-> > /root/sg_luns /dev/sdc
-> Lun list length = 48 which imples 6 lun entries
-> Report luns [select_report=0]:
->     0000000000000000
->     00ff000000000000
->     4100000000000000
->     4200000000000000
->     4201000000000000
->     4300000000000000
-
-Yes, this is absolutely ok - the highest two bits indicate the address
-method.
-
-Looking at the kernel's scsi_scan.c, scsilun_to_int()'s documentation
-mentions this as well, but the code doesn't take any measures to handle
-it. Syncing the code with the comment would be trivial, but then it
-still would break on the inverse operation or extended logical unit
-addressing formats. So I guess the issue needs to be fixed differently -
-in particular the conversion to unsigned int when using extended
-addressing formats with more than 4 bytes.
-
-Is this already on someone's TODO list?
-
-Cheers,
-Arne
-
-> 09:43:34 # 10 :/etc/iscsi/ 
-> > dmesg | tail
-> sdd: Write Protect is off
-> sdd: Mode Sense: 77 00 00 08
-> SCSI device sdd: drive cache: write through
->  sdd: unknown partition table
-> sd 8:0:0:255: Attached scsi disk sdd
-> sd 8:0:0:255: Attached scsi generic sg4 type 0
-> scsi: host 8 channel 0 id 0 lun16640 has a LUN larger than allowed by
-> the host adapter
-> scsi: host 8 channel 0 id 0 lun16896 has a LUN larger than allowed by
-> the host adapter
-> scsi: host 8 channel 0 id 0 lun16897 has a LUN larger than allowed by
-> the host adapter
-> scsi: host 8 channel 0 id 0 lun17152 has a LUN larger than allowed by
-> the host adapter
+> - There is no true definition of what the request payload should be.
+>    It's implied that it should be a fully built frame header, followed by
+>    payload.  We should be striking the frame header, and just stating
+>    that for els/ct, the request payload is the tx sequence payload.
 > 
-> And on the 192.168.100.1:
+> - There is no definition of what the response payload should be. Does
+>    it contain a header too ? or what ? If the request is rejected,
+>    could it also contain other frame types ? We should simply state
+>    that it is the rx sequence payload, and only if successful.
 > 
-> Target iqn.2009.com.test:konrad
->         Lun  0  Path=/dev/VolGroupData/a000,Type=fileio
->         Lun  255  Path=/dev/VolGroupData/a255,Type=fileio
->         Lun  256  Path=/dev/VolGroupData/a256,Type=fileio
->         Lun  512  Path=/dev/VolGroupData_1/b256,Type=fileio
->         Lun  513  Path=/dev/VolGroupData_2/c01,Type=fileio
->         Lun  768  Path=/dev/VolGroupData_2/c256,Type=fileio
+> - There is no concept or definition of a Reply structure, which should
+>    be stuffed into the request sense area.  This should be well defined,
+>    and matched to the request structure. We whould supply status values,
+>    or response data from RJT's, BSY's, aborted status's, etc.
+
+If fc needs to handle several types of requests, I think that it would
+be make sense to define fc request/response structure. But the timeout
+is in bsg's header so I'm not sure adding the timeout to fc request
+structure.
 
 
+> - Have you tested how large of a single buffer you can supply and get
+>    by on the single sg vector ?  For nameserver payloads we should
+>    support bigger buffers - 4k as a minimum.
 
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
+bsg uses blk_rq_map_user to map the user pages, so you can handle much
+bigger buffers than 4k.
+
+But the above part in the current patch needs to be fixed:
+
++fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
++			  struct request *req)
++{
+
+...
+
++	/* ELS doesn't support multiple SG */
++	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
++		printk(KERN_WARNING "ERROR: multiple segments req %u,"
++		    " rsp %u  are not supported for ELS services\n",
++		    req->bio->bi_vcnt, rsp->bio->bi_vcnt);
++		return -EINVAL;
++	}
++
++	ret = issue_fc_service(rport, bio_data(req->bio), req->data_len,
++			bio_data(rsp->bio), rsp->data_len, req->sense);
+
+This works for SMP that handles only small buffers but it doesn't work
+for large buffers.
