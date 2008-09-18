@@ -1,152 +1,51 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [ANNAUNCE] OSC's OSD project hosted on open-osd.org
-Date: Thu, 18 Sep 2008 17:29:17 +0300
-Message-ID: <48D265BD.4070808@panasas.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 0/3] block changes for request-based dm-multipath
+Date: Thu, 18 Sep 2008 10:43:56 -0400 (EDT)
+Message-ID: <20080918.104356.74754407.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:10385 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752418AbYIRO3b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Sep 2008 10:29:31 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jens.axboe@oracle.com
+Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ananth Devulapalli <ananth@osc.edu>, Pete Wyckoff <pw@padd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, open-osd mailing-list <osd-dev@open-osd.org>
-Cc: Benny Halevy <bhalevy@panasas.com>, pvfs-osd mailing list <pvfs-osd@osc.edu>, linux-scsi <linux-scsi@vger.kernel.org>
 
-I am happy to announce the availability of OSC's OSD project
-in a git Mirror of the internal svn repository. As expected
-it only contains the GPL parts of OSC's OSD project.
+Hi Jens,
 
-Thanks to Ananth Devulapalli, the maintainer of the project
-at OSC, for letting us do this.
+The following patches are changes of the block layer for
+request-based dm-multipath.
+The patches are created on the following commit of for-2.6.28
+in linux-2.6-block.
+---------------------------------------------------------------
+commit 1fd75f9b2e1c273ab145c9bf3e7a8afcbd8be87a
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Tue Sep 16 15:09:28 2008 -0700
 
-I have also tied the project with TOMO's tgt git-tree as
-a submodule, so a user that needs an OSD2 target need only
-clone one head and everything will sync automatically.
+    block: cleanup some of the integrity stuff in blkdev.h
+---------------------------------------------------------------
 
-The git tree is here:
-  git-clone git://git.open-osd.org/osc-osd
-  or viewed
-  http://git.open-osd.org/gitweb.cgi?p=osc-osd/.git;a=summary
+No major changes since the last post (http://lkml.org/lkml/2008/9/12/100),
+except for following up the differences from 2.6.27-rc6.
+(As I said, I don't include patches for refactoring of similar
+ interfaces at this time.  The refactoring patches will be posted
+ after the request-based dm-multipath work is done.)
 
-The tgt submodule can also be accessed at:
-  git://git.open-osd.org/osc-osd/tgt
-  or viewed
-  http://git.open-osd.org/gitweb.cgi?p=osc-osd/tgt/.git;a=summary
+Summary of the patches:
+  1/3: block: add a request data completion interface
+  2/3: block: add a request submission interface
+  3/3: block: add a queue flag for request stacking support
 
-  But please don't clone directly. Use the git-submodule command
-  from osc-osd project to sync everything automatically. (See README
-  for how)
+Please review and apply.
 
-GIT Structure
-~~~~~~~~~~~~~~
-
-For most users the osc-osd/master branch is all they need and
-with a small help from git-submodule update they should get
-a compilable/working OSD2 target/Initiator.
-
-The git structure is as follows:
-
-osc-old-git - branch: Historic git-tree
-  This is the dead git tree that is still available at:
-  web - http://git.osc.edu/?p=osd.git
-  or git://git.osc.edu/osd.git
-  It is no longer updated and won't even compile at current state.
-  But it has the longest available history of the project.
-
-osc - branch: OSC's svn Mirror
-  Is a branch I manually rebase-merged between the osc-old-git
-  and a git-branch I made with the help of the svn_fetch3.sh
-  script. OSC would let me have a read-only access to their GPL
-  parts of the SVN repository, with the help of a script I import
-  this repository into git. The script is incremental and is run from
-  time-to-time to update on OSC's progress. From today on all commits
-  to this branch will be made only by the svn_fetch3.sh script.
-
-SVN_FETCH - tag
-  This tags the patch that adds the first version of svn_fetch3.sh
-  script and friends, from here on the tree branches from the original
-  git tree and starts the SVN import.
-
-master - branch
-  At this branch I keep open-osd patches to the OSC project, as well
-  as the integration with the tgt submodule. Checking out this branch
-  should give a user working results. Other branches might not compile
-  and/or need farther manual configuration. Here I will try to keep a
-  working version.
-
-Currently "master" is a superset of "osc". But in the future the "osc"
-branch might advance faster then master. I will try to only cut master
-at points that compiles and pass my tests, so users have a good chance
-of a working set. Needless to say that osc-old-git is frozen.
-
-"osc" will never rebase, and will only advance forward. Other then
-exact commits from svn it will contain updates to the svn_fetch*
-script if needed.
-
-"master" will rebase, with open-osd pending patches flouting above
-"osc" branch. When/if some of the patches get accepted by Ananth
-or are fixed in some other way, they will get dropped. So for
-users, they should "git-remote update" plus "git-checkout -b ..."
-and not just "git-pull" from "master"
-
-
-[README]
-~~~~~~~~~
-
-all a user need is to follow these steps:
-- at some parent folder do
-  $ git clone git://git.open-osd.org/osc-osd 
-    (Please use relatively new git version)
-  $ cd osc-osd/
-- At this point we need one additional step
-  $ git submodule init
-  $ git submodule update
-  This last command will auto clone the tgt git tree and will
-  checkout the exact point of the tree needed at that point of
-  the osc-osd tree.
-- That's it we are ready you should now do
-  $ make
-  And it should all compile. See the osd-initiator/README and
-  osd-target/README for additional *-devel packages you might
-  need, but I don't remember any.
-
-- For running the target also read osd-target/README and
-  tgt/doc/. But basically you should run ./up for a debug
-  load of an OSD2 target. The backing store of the target
-  will be at the default /tmp/...
-
-- For farther instructions on how to run the Initiator please
-  read osd-initiator/README and so on. You might need Kernel
-  patches or new Linux versions, for proper bsg support.
-
-- Up-to-date (or not) information should also be viewable
-  at our web-site: http://open-osd.org
-
->From time to time if you want to update on osc-osd progress
-you might do:
-
-- Save a working merge point:
-  $ git tag WORKS_FOR_ME master
-  This can later be removed if you're happy with the new stuff. I might keep
-  these tagged as well.
-- Update with new version
-  $ git remote update
-  if you are on your own branch then
-  $ git branch -f master origin/master
-  this will not work if you're on master. In that case do:
-  $ git-reset --hard origin/master
-  and one extra step
-  $ git-submodule update
-  This will sync tgt to the proper point
-
-  That's it make and test
-
-I want to thank Pete Wyckoff, Ananth Devulapalli, FUJITA Tomonori and their
-teems for the help and hard work put into these projects, and their advise.
-We hope to stay true to these projects and provide users a good public
-place to come collect these things needed for a workable OSD setup.
-
-The open-osd teem
+Thanks,
+Kiyoshi Ueda
