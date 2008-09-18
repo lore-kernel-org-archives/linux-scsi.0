@@ -1,24 +1,27 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: fix printk format warnings
-Date: Thu, 18 Sep 2008 09:09:40 -0700
-Message-ID: <20080918160940.GB30136@host-240-237.pubnet.pdx.edu>
-References: <20080918000957.GE29966@orion>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/3] block changes for request-based dm-multipath
+Date: Thu, 18 Sep 2008 18:25:06 +0200
+Message-ID: <20080918162505.GL20055@kernel.dk>
+References: <20080918.104356.74754407.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:52926 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753646AbYIRQJn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Sep 2008 12:09:43 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756503AbYIRQZr@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080918000957.GE29966@orion>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20080918.104356.74754407.k-ueda@ct.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 18 Sep 2008, Alexander Beregalov wrote:
+On Thu, Sep 18 2008, Kiyoshi Ueda wrote:
+> Hi Jens,
+> 
+> The following patches are changes of the block layer for
+> request-based dm-multipath.
+> The patches are created on the following commit of for-2.6.28
+> in linux-2.6-block.
 
-> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+Thank you, I've merged these three patches.
 
-Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+-- 
+Jens Axboe
