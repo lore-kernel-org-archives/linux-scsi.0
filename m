@@ -1,7 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 2/3] block: add request submission interface
-Date: Thu, 18 Sep 2008 10:45:38 -0400 (EDT)
-Message-ID: <20080918.104538.130242234.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 3/3] block: add a queue flag for request stacking
+	support
+Date: Thu, 18 Sep 2008 10:46:13 -0400 (EDT)
+Message-ID: <20080918.104613.104028583.k-ueda@ct.jp.nec.com>
 References: <20080918.104356.74754407.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -22,130 +23,85 @@ To: jens.axboe@oracle.com
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds blk_insert_cloned_request(), a generic request
-submission interface for request stacking drivers.
-Request-based dm will use it to submit their clones to underlying
-devices.
+This patch adds a queue flag to indicate the block device can be
+used for request stacking.
 
-blk_rq_check_limits() is also added because it is possible that
-the lower queue has stronger limitations than the upper queue
-if multiple drivers are stacking at request-level.
-Not only for blk_insert_cloned_request()'s internal use, the function
-will be used by request-based dm when the queue limitation is
-modified (e.g. by replacing dm's table).
+Request stacking drivers need to stack their devices on top of
+only devices of which q->request_fn is functional.
+Since bio stacking drivers (e.g. md, loop) basically initialize
+their queue using blk_alloc_queue() and don't set q->request_fn,
+the check of (q->request_fn == NULL) looks enough for that purpose.
+
+However, dm will become both types of stacking driver (bio-based and
+request-based).  And dm will always set q->request_fn even if the dm
+device is bio-based of which q->request_fn is not functional actually.
+So we need something else to distinguish the type of the device.
+Adding a queue flag is a solution for that.
+
+
+The reason why dm always sets q->request_fn is to keep
+the compatibility of dm user-space tools.
+Currently, all dm user-space tools are using bio-based dm without
+specifying the type of the dm device they use.
+To use request-based dm without changing such tools, the kernel
+must decide the type of the dm device automatically.
+The automatic type decision can't be done at the device creation time
+and needs to be deferred until such tools load a mapping table,
+since the actual type is decided by dm target type included in
+the mapping table.
+
+So a dm device has to be initialized using blk_init_queue()
+so that we can load either type of table.
+Then, all queue stuffs are set (e.g. q->request_fn) and we have
+no element to distinguish that it is bio-based or request-based,
+even after a table is loaded and the type of the device is decided.
+
+By the way, some stuffs of the queue (e.g. request_list, elevator)
+are needless when the dm device is used as bio-based.
+But the memory size is not so large (about 20[KB] per queue on ia64),
+so I hope the memory loss can be acceptable for bio-based dm users.
 
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- block/blk-core.c       |   81 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    3 +
- 2 files changed, 84 insertions(+)
+ block/blk-core.c       |    3 ++-
+ include/linux/blkdev.h |    3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 Index: linux-2.6-block/block/blk-core.c
 ===================================================================
 --- linux-2.6-block.orig/block/blk-core.c
 +++ linux-2.6-block/block/blk-core.c
-@@ -1522,6 +1522,87 @@ void submit_bio(int rw, struct bio *bio)
- EXPORT_SYMBOL(submit_bio);
+@@ -566,7 +566,8 @@ blk_init_queue_node(request_fn_proc *rfn
+ 	q->request_fn		= rfn;
+ 	q->prep_rq_fn		= NULL;
+ 	q->unplug_fn		= generic_unplug_device;
+-	q->queue_flags		= (1 << QUEUE_FLAG_CLUSTER);
++	q->queue_flags		= (1 << QUEUE_FLAG_CLUSTER |
++				   1 << QUEUE_FLAG_STACKABLE);
+ 	q->queue_lock		= lock;
  
- /**
-+ * blk_rq_check_limits - Helper function to check a request for the queue limit
-+ * @q:  the queue
-+ * @rq: the request being checked
-+ *
-+ * Description:
-+ *    @rq may have been made based on weaker limitations of upper-level queues
-+ *    in request stacking drivers, and it may violate the limitation of @q.
-+ *    Since the block layer and the underlying device driver trust @rq
-+ *    after it is inserted to @q, it should be checked against @q before
-+ *    the insertion using this generic function.
-+ *
-+ *    This function should also be useful for request stacking drivers
-+ *    in some cases below, so export this fuction.
-+ *    Request stacking drivers like request-based dm may change the queue
-+ *    limits while requests are in the queue (e.g. dm's table swapping).
-+ *    Such request stacking drivers should check those requests agaist
-+ *    the new queue limits again when they dispatch those requests,
-+ *    although such checkings are also done against the old queue limits
-+ *    when submitting requests.
-+ */
-+int blk_rq_check_limits(struct request_queue *q, struct request *rq)
-+{
-+	if (rq->nr_sectors > q->max_sectors ||
-+	    rq->data_len > q->max_hw_sectors << 9) {
-+		printk(KERN_ERR "%s: over max size limit.\n", __func__);
-+		return -EIO;
-+	}
-+
-+	/*
-+	 * queue's settings related to segment counting like q->bounce_pfn
-+	 * may differ from that of other stacking queues.
-+	 * Recalculate it to check the request correctly on this queue's
-+	 * limitation.
-+	 */
-+	blk_recalc_rq_segments(rq);
-+	if (rq->nr_phys_segments > q->max_phys_segments ||
-+	    rq->nr_phys_segments > q->max_hw_segments) {
-+		printk(KERN_ERR "%s: over max segments limit.\n", __func__);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(blk_rq_check_limits);
-+
-+/**
-+ * blk_insert_cloned_request - Helper for stacking drivers to submit a request
-+ * @q:  the queue to submit the request
-+ * @rq: the request being queued
-+ */
-+int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
-+{
-+	unsigned long flags;
-+
-+	if (blk_rq_check_limits(q, rq))
-+		return -EIO;
-+
-+#ifdef CONFIG_FAIL_MAKE_REQUEST
-+	if (rq->rq_disk && rq->rq_disk->part0.make_it_fail &&
-+	    should_fail(&fail_make_request, blk_rq_bytes(rq)))
-+		return -EIO;
-+#endif
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+
-+	/*
-+	 * Submitting request must be dequeued before calling this function
-+	 * because it will be linked to another request_queue
-+	 */
-+	BUG_ON(blk_queued_rq(rq));
-+
-+	drive_stat_acct(rq, 1);
-+	__elv_add_request(q, rq, ELEVATOR_INSERT_BACK, 0);
-+
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
-+
-+/**
-  * __end_that_request_first - end I/O on a request
-  * @req:      the request being processed
-  * @error:    %0 for success, < %0 for error
+ 	blk_queue_segment_boundary(q, 0xffffffff);
 Index: linux-2.6-block/include/linux/blkdev.h
 ===================================================================
 --- linux-2.6-block.orig/include/linux/blkdev.h
 +++ linux-2.6-block/include/linux/blkdev.h
-@@ -693,6 +693,9 @@ extern void __blk_put_request(struct req
- extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
-+extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
-+extern int blk_insert_cloned_request(struct request_queue *q,
-+				     struct request *rq);
- extern void blk_plug_device(struct request_queue *);
- extern void blk_plug_device_unlocked(struct request_queue *);
- extern int blk_remove_plug(struct request_queue *);
+@@ -441,6 +441,7 @@ struct request_queue
+ #define QUEUE_FLAG_NOMERGES    10	/* disable merge attempts */
+ #define QUEUE_FLAG_SAME_COMP   11	/* force complete on same CPU */
+ #define QUEUE_FLAG_FAIL_IO     12	/* fake timeout */
++#define QUEUE_FLAG_STACKABLE   13	/* supports request stacking */
+ 
+ static inline int queue_is_locked(struct request_queue *q)
+ {
+@@ -547,6 +548,8 @@ enum {
+ #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
+ #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
+ #define blk_queue_flushing(q)	((q)->ordseq)
++#define blk_queue_stackable(q)	\
++	test_bit(QUEUE_FLAG_STACKABLE, &(q)->queue_flags)
+ 
+ #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
