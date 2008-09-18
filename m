@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 1/3] block: add request update interface
-Date: Thu, 18 Sep 2008 10:45:09 -0400 (EDT)
-Message-ID: <20080918.104509.41628894.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 2/3] block: add request submission interface
+Date: Thu, 18 Sep 2008 10:45:38 -0400 (EDT)
+Message-ID: <20080918.104538.130242234.k-ueda@ct.jp.nec.com>
 References: <20080918.104356.74754407.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -22,140 +22,130 @@ To: jens.axboe@oracle.com
 Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds blk_update_request(), which updates struct request
-with completing its data part, but doesn't complete the struct
-request itself.
-Though it looks like end_that_request_first() of older kernels,
-blk_update_request() should be used only by request stacking drivers.
+This patch adds blk_insert_cloned_request(), a generic request
+submission interface for request stacking drivers.
+Request-based dm will use it to submit their clones to underlying
+devices.
 
-Request-based dm will use it in bio->bi_end_io callback to update
-the original request when a data part of a cloned request completes.
-Followings are additional background information of why request-based
-dm needs this interface.
-
-  - Request stacking drivers can't use blk_end_request() directly from
-    the lower driver's completion context (bio->bi_end_io or rq->end_io),
-    because some device drivers (e.g. ide) may try to complete
-    their request with queue lock held, and it may cause deadlock.
-    See below for detailed description of possible deadlock:
-    <http://marc.info/?l=linux-kernel&m=120311479108569&w=2>
-
-  - To solve that, request-based dm offloads the completion of
-    cloned struct request to softirq context (i.e. using
-    blk_complete_request() from rq->end_io).
-
-  - Though it is possible to use the same solution from bio->bi_end_io,
-    it will delay the notification of bio completion to the original
-    submitter.  Also, it will cause inefficient partial completion,
-    because the lower driver can't perform the cloned request anymore
-    and request-based dm needs to requeue and redispatch it to
-    the lower driver again later.  That's not good.
-
-  - So request-based dm needs blk_update_request() to perform the bio
-    completion in the lower driver's completion context, which is more
-    efficient.
+blk_rq_check_limits() is also added because it is possible that
+the lower queue has stronger limitations than the upper queue
+if multiple drivers are stacking at request-level.
+Not only for blk_insert_cloned_request()'s internal use, the function
+will be used by request-based dm when the queue limitation is
+modified (e.g. by replacing dm's table).
 
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- block/blk-core.c       |   57 +++++++++++++++++++++++++++++++++++++++++--------
- include/linux/blkdev.h |    2 +
- 2 files changed, 50 insertions(+), 9 deletions(-)
+ block/blk-core.c       |   81 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |    3 +
+ 2 files changed, 84 insertions(+)
 
 Index: linux-2.6-block/block/blk-core.c
 ===================================================================
 --- linux-2.6-block.orig/block/blk-core.c
 +++ linux-2.6-block/block/blk-core.c
-@@ -1798,6 +1798,22 @@ void end_request(struct request *req, in
- }
- EXPORT_SYMBOL(end_request);
+@@ -1522,6 +1522,87 @@ void submit_bio(int rw, struct bio *bio)
+ EXPORT_SYMBOL(submit_bio);
  
-+static int end_that_request_data(struct request *rq, int error,
-+				 unsigned int nr_bytes, unsigned int bidi_bytes)
+ /**
++ * blk_rq_check_limits - Helper function to check a request for the queue limit
++ * @q:  the queue
++ * @rq: the request being checked
++ *
++ * Description:
++ *    @rq may have been made based on weaker limitations of upper-level queues
++ *    in request stacking drivers, and it may violate the limitation of @q.
++ *    Since the block layer and the underlying device driver trust @rq
++ *    after it is inserted to @q, it should be checked against @q before
++ *    the insertion using this generic function.
++ *
++ *    This function should also be useful for request stacking drivers
++ *    in some cases below, so export this fuction.
++ *    Request stacking drivers like request-based dm may change the queue
++ *    limits while requests are in the queue (e.g. dm's table swapping).
++ *    Such request stacking drivers should check those requests agaist
++ *    the new queue limits again when they dispatch those requests,
++ *    although such checkings are also done against the old queue limits
++ *    when submitting requests.
++ */
++int blk_rq_check_limits(struct request_queue *q, struct request *rq)
 +{
-+	if (rq->bio) {
-+		if (__end_that_request_first(rq, error, nr_bytes))
-+			return 1;
++	if (rq->nr_sectors > q->max_sectors ||
++	    rq->data_len > q->max_hw_sectors << 9) {
++		printk(KERN_ERR "%s: over max size limit.\n", __func__);
++		return -EIO;
++	}
 +
-+		/* Bidi request must be completed as a whole */
-+		if (blk_bidi_rq(rq) &&
-+		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
-+			return 1;
++	/*
++	 * queue's settings related to segment counting like q->bounce_pfn
++	 * may differ from that of other stacking queues.
++	 * Recalculate it to check the request correctly on this queue's
++	 * limitation.
++	 */
++	blk_recalc_rq_segments(rq);
++	if (rq->nr_phys_segments > q->max_phys_segments ||
++	    rq->nr_phys_segments > q->max_hw_segments) {
++		printk(KERN_ERR "%s: over max segments limit.\n", __func__);
++		return -EIO;
 +	}
 +
 +	return 0;
 +}
-+
- /**
-  * blk_end_io - Generic end_io function to complete a request.
-  * @rq:           the request being processed
-@@ -1824,15 +1840,8 @@ static int blk_end_io(struct request *rq
- 	struct request_queue *q = rq->q;
- 	unsigned long flags = 0UL;
- 
--	if (rq->bio) {
--		if (__end_that_request_first(rq, error, nr_bytes))
--			return 1;
--
--		/* Bidi request must be completed as a whole */
--		if (blk_bidi_rq(rq) &&
--		    __end_that_request_first(rq->next_rq, error, bidi_bytes))
--			return 1;
--	}
-+	if (end_that_request_data(rq, error, nr_bytes, bidi_bytes))
-+		return 1;
- 
- 	/* Special feature for tricky drivers */
- 	if (drv_callback && drv_callback(rq))
-@@ -1915,6 +1924,36 @@ int blk_end_bidi_request(struct request 
- EXPORT_SYMBOL_GPL(blk_end_bidi_request);
- 
- /**
-+ * blk_update_request - Special helper function for request stacking drivers
-+ * @rq:           the request being processed
-+ * @error:        %0 for success, < %0 for error
-+ * @nr_bytes:     number of bytes to complete @rq
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @rq, but doesn't complete
-+ *     the request structure even if @rq doesn't have leftover.
-+ *     If @rq has leftover, sets it up for the next range of segments.
-+ *
-+ *     This special helper function is only for request stacking drivers
-+ *     (e.g. request-based dm) so that they can handle partial completion.
-+ *     Actual device drivers should use blk_end_request instead.
-+ */
-+void blk_update_request(struct request *rq, int error, unsigned int nr_bytes)
-+{
-+	if (!end_that_request_data(rq, error, nr_bytes, 0)) {
-+		/*
-+		 * These members are not updated in end_that_request_data()
-+		 * when all bios are completed.
-+		 * Update them so that the request stacking driver can find
-+		 * how many bytes remain in the request later.
-+		 */
-+		rq->nr_sectors = rq->hard_nr_sectors = 0;
-+		rq->current_nr_sectors = rq->hard_cur_sectors = 0;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(blk_update_request);
++EXPORT_SYMBOL_GPL(blk_rq_check_limits);
 +
 +/**
-  * blk_end_request_callback - Special helper function for tricky drivers
-  * @rq:           the request being processed
-  * @error:        %0 for success, < %0 for error
++ * blk_insert_cloned_request - Helper for stacking drivers to submit a request
++ * @q:  the queue to submit the request
++ * @rq: the request being queued
++ */
++int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
++{
++	unsigned long flags;
++
++	if (blk_rq_check_limits(q, rq))
++		return -EIO;
++
++#ifdef CONFIG_FAIL_MAKE_REQUEST
++	if (rq->rq_disk && rq->rq_disk->part0.make_it_fail &&
++	    should_fail(&fail_make_request, blk_rq_bytes(rq)))
++		return -EIO;
++#endif
++
++	spin_lock_irqsave(q->queue_lock, flags);
++
++	/*
++	 * Submitting request must be dequeued before calling this function
++	 * because it will be linked to another request_queue
++	 */
++	BUG_ON(blk_queued_rq(rq));
++
++	drive_stat_acct(rq, 1);
++	__elv_add_request(q, rq, ELEVATOR_INSERT_BACK, 0);
++
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
++
++/**
+  * __end_that_request_first - end I/O on a request
+  * @req:      the request being processed
+  * @error:    %0 for success, < %0 for error
 Index: linux-2.6-block/include/linux/blkdev.h
 ===================================================================
 --- linux-2.6-block.orig/include/linux/blkdev.h
 +++ linux-2.6-block/include/linux/blkdev.h
-@@ -791,6 +791,8 @@ extern void blk_complete_request(struct 
- extern void __blk_complete_request(struct request *);
- extern void blk_abort_request(struct request *);
- extern void blk_abort_queue(struct request_queue *);
-+extern void blk_update_request(struct request *rq, int error,
-+			       unsigned int nr_bytes);
- 
- /*
-  * blk_end_request() takes bytes instead of sectors as a complete size.
+@@ -693,6 +693,9 @@ extern void __blk_put_request(struct req
+ extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
+ extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
++extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
++extern int blk_insert_cloned_request(struct request_queue *q,
++				     struct request *rq);
+ extern void blk_plug_device(struct request_queue *);
+ extern void blk_plug_device_unlocked(struct request_queue *);
+ extern int blk_remove_plug(struct request_queue *);
