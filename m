@@ -1,33 +1,25 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11589] Mass-storage USB Device does not show up when CONFIG_SCSI_MULTI_LUN is set
-Date: Thu, 18 Sep 2008 19:12:42 -0700 (PDT)
-Message-ID: <20080919021242.C266E108059@picon.linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 11589] New: Mass-storage USB Device does not show up when
+ CONFIG_SCSI_MULTI_LUN is set
+Date: Thu, 18 Sep 2008 19:12:31 -0700
+Message-ID: <20080918191231.f714eb04.akpm@linux-foundation.org>
 References: <bug-11589-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34937 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47964 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755944AbYISCMo (ORCPT
+	by vger.kernel.org with ESMTP id S1755691AbYISCMm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Sep 2008 22:12:44 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8J2CgHw002512
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2008 19:12:44 -0700
+	Thu, 18 Sep 2008 22:12:42 -0400
 In-Reply-To: <bug-11589-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, nico@lifeisabug.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11589
-
-
-
-
-
-------- Comment #3 from anonymous@kernel-bugs.osdl.org  2008-09-18 19:12 -------
-Reply-To: akpm@linux-foundation.org
-
-On Thu, 18 Sep 2008 18:22:23 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
-wrote:
+On Thu, 18 Sep 2008 18:22:23 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
 
 > http://bugzilla.kernel.org/show_bug.cgi?id=11589
 > 
@@ -77,8 +69,3 @@ wrote:
 Another of those might-be-usb, might-be-scsi bugs.  Apparently a
 regression, too.
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
