@@ -1,80 +1,186 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 2/2] scsi: exports busy status via
-	bdi_lld_congested
-Date: Fri, 19 Sep 2008 13:28:45 -0400 (EDT)
-Message-ID: <20080919.132845.59649006.k-ueda@ct.jp.nec.com>
-References: <20080919.104756.41628866.k-ueda@ct.jp.nec.com>
-	<20080919.104922.97297160.k-ueda@ct.jp.nec.com>
-	<48D3CDEC.9060407@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Kernel Level Generic Target Mode control path
+Date: Fri, 19 Sep 2008 21:50:08 +0400
+Message-ID: <48D3E650.7050506@vlnb.net>
+References: <48ADC53B.6090501@vlnb.net>  <48ADFAB7.5010201@cs.wisc.edu>	 <1219701570.13470.156.camel@haakon2.linux-iscsi.org>	 <48B59556.7050108@vlnb.net>	 <1219875219.13470.380.camel@haakon2.linux-iscsi.org>	 <48B6E5C8.2000306@vlnb.net>	 <1219964919.13470.505.camel@haakon2.linux-iscsi.org>	 <48B823C4.7010803@vlnb.net>	 <1220040606.13470.585.camel@haakon2.linux-iscsi.org>	 <48B9B33C.2060106@vlnb.net> <1220390729.13470.738.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <48D3CDEC.9060407@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: michaelc@cs.wisc.edu
-Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-relay-03.mailcluster.net ([77.221.130.215]:54978 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751536AbYISRu2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Sep 2008 13:50:28 -0400
+In-Reply-To: <1220390729.13470.738.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@gmail.com>, Greg KH <greg@kroah.com>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, Jerome Martin <tramjoe.merin@gmail.com>
 
-Hi Mike,
-
-On Fri, 19 Sep 2008 11:06:04 -0500, Mike Christie wrote:
-> Kiyoshi Ueda wrote:
-> > This patch change scsi mid layer to export its busy status.
-> > Not set the busy flag, when scsi can't dispatch I/Os anymore and
-> > needs to kill I/Os.  Otherwise, request stacking drivers may hold
-> > requests forever.
-> > 
-> > 
-> > Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> > Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > ---
-> >  drivers/scsi/scsi.c     |    4 ++--
-> >  drivers/scsi/scsi_lib.c |   23 ++++++++++++++++++++++-
-> >  2 files changed, 24 insertions(+), 3 deletions(-)
-> > 
-> > Index: scsi-misc-2.6/drivers/scsi/scsi_lib.c
-> > ===================================================================
-> > --- scsi-misc-2.6.orig/drivers/scsi/scsi_lib.c
-> > +++ scsi-misc-2.6/drivers/scsi/scsi_lib.c
-> > @@ -459,17 +459,30 @@ static void scsi_init_cmd_errh(struct sc
-> >  
-> >  void scsi_device_unbusy(struct scsi_device *sdev)
-> >  {
-> > +	int host_congested;
-> >  	struct Scsi_Host *shost = sdev->host;
-> >  	unsigned long flags;
-> >  
-> >  	spin_lock_irqsave(shost->host_lock, flags);
-> >  	shost->host_busy--;
-> > +	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
-> > +	    shost->host_blocked || shost->host_self_blocked ||
-> > +	    scsi_host_in_recovery(shost))
-> > +		host_congested = 1;
-> > +	else
-> > +		host_congested = 0;
-> > +
+Nicholas A. Bellinger wrote:
+> On Sun, 2008-08-31 at 00:53 +0400, Vladislav Bolkhovitin wrote:
+>> Nicholas A. Bellinger wrote:
+>>> On Fri, 2008-08-29 at 20:28 +0400, Vladislav Bolkhovitin wrote:
+>>>> Nicholas A. Bellinger wrote:
+>>> Vlad, they are atomic.  No iSCSI Initiator are allowed to login to the
+>>> TargetName+TPGT until:
+>>>
+>>>> # This is the atomic part, once we throw this flag iSCSI Initiatorswill
+>>>>> be allowed to login to this TPGT
+>>>>> echo 1 > $MY_TARGETIQN/tpgt_1/enable_tpg
+>>> Each TargetName+TPGT is protected when a 'target-ctl' IOCTL op related
+>>> to TargetName+TPGT is called.  The same is true for configfs, any time
+>>> anything under $MY_TARGETIQN is accessed or created, we take the
+>>> iscsi_tiqn_t mutex to protect it.    When anything under
+>>> $MY_TARGETIQN/tpgt_# is accessed, the iscsi_portal_group_t mutex is
+>>> protecting it.
+>>>
+>>> With until enable_tpg to let initiators login to that TargetName+TPGT, I
+>>> honestly do not see your concern here.
+>>>
+>>>> and on the target driver's start 
+>>>> configuration of *all* targets as a whole should be atomic as well. How 
+>>>> are you going to solve this issue?
+>>>>
+>>> In what example would ALL iSCSI TargetName context configuration need to
+>>> be atomic to each other..?  Having the LIO-Target design above I have
+>>> never ran into a requirement like this, what requirement do you have in
+>>> mind..?  
+>> I've already written it: when target restarted. Disconnected initiators 
+>> can reconnect on the wrong time and can see "no target", then consider 
+>> it dead.
 > 
-> You might want to check if the starget busy too (scsi-misc has this but 
-> Jens's tree and linus do not)? The code below that I snipped from 
-> scsi_request_fn will set the congested bits if scsi_target_queue_ready 
-> returns 0, so above here you would want to clear it if it not congested 
-> anymore.
+> Yes, this case you describe is exactly what I am talking about with the
+> "enable_tpg" flag for LIO-Target under configfs.  Each fabric can define
+> it's own configfs groups and items to fit its own requirements, which
+> means, that a global "allow initiators to login" flag would like look:
+> 
+> FABRIC=pscsi
+> 
+> # Allow all initiators to login to all Parallel SCSI endpoints
+> echo 1 > /sys/kernel/config/target/$FABRIC/allow_initiators_to_login
+> 
+> Or, just enable one endpoint on another fabric:
+> 
+> FABRIC=sas
+> 
+> # Only allow initiators to login to sas_endpoint_name 
+> echo 1 > /sys/kernel/config/target/$FABRIC/sas_endpoint_name/enable_login
+> 
+> Anyways, you get the idea.  The great part of course is that this
+> requires zero changes to userspace code!!
+> 
+>>  The same is true for target shutdown: it should be atomic too.
+>>
+> 
+> I am not debating these fundementals, I am mearly saying that depending
+> upon configfs for target configuration would entail the same types of
+> logic and mutual exclusion requirements in procfs, sysfs, or an IOCTL.
 
-Yes, thank you for noticing that.
-Since I was looking at scsi-misc and your target patch is in
-scsi-post-merge, I overlooked it.
-I'll rebase my patches and repost again.
+Basically, yes, but there are small differences, which *might* be 
+important.
 
-Thanks,
-Kiyoshi Ueda
+1. If an application, holding IOCTL device fd, dies, the IOCTL handler 
+receives notification, on which it can clean all associated resources. 
+This seems isn't possible with configfs. Or do I miss something?
+
+2. In IOCTL you can make a bigger piece of work at once, i.e. atomically.
+
+>>>> 2. The high level interface needs to lock somehow the low level 
+>>>> interface during updates to protect from simultaneous actions. I don't 
+>>>> see a simple way to do that in configfs.
+>>>>
+>>> Not having problem locking/mutex are in place is going to cause problems
+>>> regardless of configfs is used.  Converting LIO-Target from IOCTL ->
+>>> configfs is really easy because all of the target-ctl IOCTL ops are
+>>> already protected, so using things like a configfs trigger are simple
+>>> because I do not have to add any additional locking considerations
+>>> because the ops are already protected in the IOCTL context.
+>> What would be if a program, who taken that mutex get dead before 
+>> releasing it? You wouldn't receive a notification about its death, 
+>> although with IOCTL's you would receive it. Will you invent a motex 
+>> revoking mechanism for that.
+>>
+> 
+> Hrrmm, why would an IOCTL process context be any different than a
+> configfs process context..?  Just because a userspace process is running
+> kernel code and user hits CTRL-C, or the userspace code segfaults, does
+> not mean the kernel code stops running, it just means that those SIGINT
+> or SIGSEGVs are pending for that process and down_interruptible()
+> semaphores will not sleep and signal_pending(current) will return TRUE,
+> etc.
+> 
+> I still don't see how the case of a userspace process accessing kernel
+> code would be different between an IOCTL and configfs process context..?
+
+See (1) above.
+
+Anyway, as I wrote before, if you like configfs and there are no 
+objections from other people, let's go with configfs.
+
+>>>>>> Sysfs as well as configfs have one big disadvantage. They limit each 
+>>>>>> file to only 4KB. This would force us for to create a subdirectory for 
+>>>>>> each device and for each connected initiator. I don't like seeing 
+>>>>>> thousands subdirectories. Additionally, such layout is a lot less 
+>>>>>> convenient for parsing for the high level configuration tool, which 
+>>>>>> needs to find out the difference between the current configuration and 
+>>>>>> content of the corresponding config file.
+>>>>>>
+>>>>> So yeah, the output with configfs is limited to PAGE_SIZE as well, but
+>>>>> for the R/W cases we don't expect that data sets to exceed this per
+>>>>> configfs mkdir invocation.. 
+>>>>>
+>>>>>> Currently, with procfs SCST can list in /proc/scst/sessions virtually 
+>>>>>> unlimited amount of connected initiators in a simple for parsing manner. 
+>>>>>> It was done using seq interface well and simply. Neither sysfs, nor 
+>>>>>> configfs support seq interface. This would introduce significant effort 
+>>>>>> in both kernel and user spaces.
+>>>>>>
+>>>>> Same for me with all of the target-ctl IOCTL commands.   No one ever
+>>>>> said upstream target code was not going to require significant
+>>>>> effort. :-)
+>>>> I don't think we should create the additional one :-)
+>>>>
+>>> We are not creating a new one, we are using one that already exists
+>>> upstream that was made for exactly the type of problem we are looking to
+>>> solve.  Using procfs or and IOCTL for anything serious upstream is not
+>>> an option, not because they upstream maintainers like to make our life
+>>> hard, but because they are poor interfaces for what we want to do.
+>>>
+>>> Vlad, please consider configfs.  After evaluating my requirements with
+>>> LIO-Target, there is no technical hangups or major gotchas I can see for
+>>> implementing the above example.  I know that LIO-Target with the example
+>>> above there are *NO* "atomicity of changes" issues I have from simply
+>>> converting IOCTL -> configfs, because the LIO-Target code called from
+>>> IOCTL already does the protection for the different contexts provided
+>>> for the example, and $MY_TARGETIQN/tpgt_#/enable_tpg protects iSCSI
+>>> Initiators from logging into that endpoint to access storage object
+>>> LUNs.
+>>>
+>>> How you give an problem case where you think a generic target engine
+>>> configuration scenario would not work with configfs, and I will explain
+>>> how with LIO-Target/LIO-Core it would and does work..?
+>> I have the only thing against configfs: I feel that using it could be 
+>> harder than using well thought IOCTL interface. What's definite, that 
+>> amount of in-kernel code for configfs will be considerably bigger, than 
+>> for IOCTLs, but this is thing about what kernel developers do carefully 
+>> care. In my observations
+> 
+> I think the kernel code would be a bit larger using configfs, but equal
+> logic and complexity with an IOCTL.  The great benefit with configfs of
+> course is that you never have to break compatibility from having to
+> change your struct foo that is passed with the IOCTL between
+> kernel/user.  Also, not having to maintain a mess of C userspace code is
+> always a benefit.  With configfs the target CLI that I have in mind
+> would basically be all shell scripts reference admin defined human
+> readable aliases mapped to targetname, target portals, storage objects,
+> LUNs, etc.
+
+Have you considered an application, like scstadmin, which needs to parse 
+all existing configuration to figure out the difference between it and 
+the corresponding config file? The layout should be friendly for such 
+applications.
+
+Vlad
+
