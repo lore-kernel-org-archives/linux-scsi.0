@@ -1,54 +1,134 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: FW: E200i controllers on BL465C Blades - kernel fails to boot
-Date: Fri, 19 Sep 2008 19:20:48 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884136A027EA@GVW0547EXC.americas.hpqcorp.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] lld busy status exporting interface
+Date: Fri, 19 Sep 2008 14:33:44 -0700
+Message-ID: <20080919143344.44d1a83e.akpm@linux-foundation.org>
+References: <20080919.104756.41628866.k-ueda@ct.jp.nec.com>
+	<20080919.104854.71084447.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:20020 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486AbYISTVp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Sep 2008 15:21:45 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20080919.104854.71084447.k-ueda@ct.jp.nec.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 
-Jens,
-This user is complaining of kernels >2.6.24 misbehaving. After 100 or more days all IO gets blocked. Are you aware of any regressions in the block layer? The driver changes that have gone in since 2.6.23-x _shouldn't_ affect the IO path.
+On Fri, 19 Sep 2008 10:48:54 -0400 (EDT)
+Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
 
-Any ideas or thought's are appreciated.
+> This patch adds an interface to check lld's busy status
+> from the block layer.
+> This resolves a performance problem on request stacking devices below.
+> 
+> 
+> Some drivers like scsi mid layer stop dispatching request when
+> they detect busy state on its low-level device like host/bus/device.
+> It allows other requests to stay in the I/O scheduler's queue
+> for a chance of merging.
+> 
+> Request stacking drivers like request-based dm should follow
+> the same logic.
+> However, there is no generic interface for the stacked device
+> to check if the underlying device(s) are busy.
+> If the request stacking driver dispatches and submits requests to
+> the busy underlying device, the requests will stay in
+> the underlying device's queue without a chance of merging.
+> This causes performance problem on burst I/O load.
+> 
+> With this patch, busy state of the underlying device is exported
+> via the state flag of queue's backing_dev_info.  So the request
+> stacking driver can check it and stop dispatching requests if busy.
+> 
+> The underlying device driver must set/clear the flag appropriately:
+>    ON:  when the device driver can't process requests immediately.
+>    OFF: when the device driver can process requests immediately,
+>         including abnormal situations where the device driver needs
+>         to kill all requests.
+> 
+> 
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  include/linux/backing-dev.h |    8 ++++++++
+>  mm/backing-dev.c            |   12 ++++++++++++
+>  2 files changed, 20 insertions(+)
+> 
+> Index: scsi-misc-2.6/include/linux/backing-dev.h
+> ===================================================================
+> --- scsi-misc-2.6.orig/include/linux/backing-dev.h
+> +++ scsi-misc-2.6/include/linux/backing-dev.h
+> @@ -26,6 +26,7 @@ enum bdi_state {
+>  	BDI_pdflush,		/* A pdflush thread is working this device */
+>  	BDI_write_congested,	/* The write queue is getting full */
+>  	BDI_read_congested,	/* The read queue is getting full */
+> +	BDI_lld_congested,	/* The device/host is busy */
+>  	BDI_unused,		/* Available bits start here */
+>  };
+>  
+> @@ -226,8 +227,15 @@ static inline int bdi_rw_congested(struc
+>  				  (1 << BDI_write_congested));
+>  }
+>  
+> +static inline int bdi_lld_congested(struct backing_dev_info *bdi)
+> +{
+> +	return bdi_congested(bdi, 1 << BDI_lld_congested);
+> +}
+> +
+>  void clear_bdi_congested(struct backing_dev_info *bdi, int rw);
+>  void set_bdi_congested(struct backing_dev_info *bdi, int rw);
+> +void clear_bdi_lld_congested(struct backing_dev_info *bdi);
+> +void set_bdi_lld_congested(struct backing_dev_info *bdi);
+>  long congestion_wait(int rw, long timeout);
+>  
+>  
+> Index: scsi-misc-2.6/mm/backing-dev.c
+> ===================================================================
+> --- scsi-misc-2.6.orig/mm/backing-dev.c
+> +++ scsi-misc-2.6/mm/backing-dev.c
+> @@ -279,6 +279,18 @@ void set_bdi_congested(struct backing_de
+>  }
+>  EXPORT_SYMBOL(set_bdi_congested);
+>  
+> +void clear_bdi_lld_congested(struct backing_dev_info *bdi)
+> +{
+> +	clear_bit(BDI_lld_congested, &bdi->state);
+> +}
+> +EXPORT_SYMBOL_GPL(clear_bdi_lld_congested);
+> +
+> +void set_bdi_lld_congested(struct backing_dev_info *bdi)
+> +{
+> +	set_bit(BDI_lld_congested, &bdi->state);
+> +}
+> +EXPORT_SYMBOL_GPL(set_bdi_lld_congested);
+> +
+>  /**
+>   * congestion_wait - wait for a backing_dev to become uncongested
+>   * @rw: READ or WRITE
 
--- mikem
+Is this really the right way to do it?
 
------Original Message-----
-From: Fabio Coatti [mailto:fabio.coatti@gmail.com]
-Sent: Tuesday, September 16, 2008 7:32 AM
-To: Miller, Mike (OS Dev)
-Subject: E200i controllers on BL465C Blades - kernel fails to boot
+Back in the days when we first did the backing_dev_info.congested_fn()
+logic it was decided that there basically was no single place in which
+the congested state could be stored.
 
-Hi,
-I've spotted your address on lkml and I'm writing to you because we are hit by a very critical bug (or at least we think that it can be  a bug...) I'm referring to the behaviour reported here:
+So we ended up deciding that whenever a caller wants to know a
+backing_dev's congested status, it has to call in to the
+->congested_fn() and that congested_fn would then call down into all
+the constituent low-level drivers/queues/etc asking each one if it is
+congested.
 
-http://lkml.org/lkml/2008/9/14/118
-
-and here:
-http://bugzilla.kernel.org/show_bug.cgi?id=9859
-
-
-I've seen that you looked at this issue in the past (february, lkml mail report by one of my coworkers), but we are still facing tjis issue and we are unable to upgrade our machines (bl465c).
-
-We are in a uncomfortable situation, as we need to upgrade our kernels (for instance, we are seeingd ba behaviour after more or less 100/150 days uptime, with all disk related process in D status, even kjournald -> machine crashes due to load avg skyrocketing. We want to try latest kernel).
-Since we have more or less 2 hundreds of BL465C a kernel issue like this can be a bit annoying :) I don't know if we are doing something wrong, but with exactly the same config the older kernel works.
-We don't have any problem in trying patches, providing full config or in doing nything useful to get out from this situation. (maybe this is our fault, bu I hardly can imagine how).
-Dunno if there are better ways to report this: wa can even try to contact our HP representative, but I'm not convinced that this will be a better solution than reporting the issue on lkml :)
-
-Many thanks for any answer.
-
-
---
-Fabio "Cova" Coatti    http://members.ferrara.linux.it/cova
-Ferrara Linux Users Group           http://ferrara.linux.it
-GnuPG fp:9765 A5B6 6843 17BC A646  BE8C FA56 373A 5374 C703 Old SysOps never die... they simply forget their password.
+I mean, as a simple example which is probably wrong - what happens if a
+single backing_dev is implemented via two different disks and
+controllers, and they both become congested and then one of them comes
+uncongested.  Is there no way in which the above implemention can
+incorrectly flag the backing_dev as being uncongested?
