@@ -1,134 +1,73 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/2] lld busy status exporting interface
-Date: Fri, 19 Sep 2008 14:33:44 -0700
-Message-ID: <20080919143344.44d1a83e.akpm@linux-foundation.org>
-References: <20080919.104756.41628866.k-ueda@ct.jp.nec.com>
-	<20080919.104854.71084447.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 2 of 3] sd: Always print actual protection_type
+Date: Fri, 19 Sep 2008 18:47:20 -0400
+Message-ID: <cc6088963c66d955725d.1221864440@sermon.lab.mkp.net>
+References: <patchbomb.1221864438@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20080919.104854.71084447.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jaguar.mkp.net ([192.139.46.146]:48240 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752539AbYISW6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Sep 2008 18:58:55 -0400
+In-Reply-To: <patchbomb.1221864438@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Fri, 19 Sep 2008 10:48:54 -0400 (EDT)
-Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+Now that we no longer use protection_type as trigger for preparing
+protected CDBs we can remove the places that set it to zero.  This
+allows userland to see which protection type the device is formatted
+with regardless of whether the HBA supports DIF or not.
 
-> This patch adds an interface to check lld's busy status
-> from the block layer.
-> This resolves a performance problem on request stacking devices below.
-> 
-> 
-> Some drivers like scsi mid layer stop dispatching request when
-> they detect busy state on its low-level device like host/bus/device.
-> It allows other requests to stay in the I/O scheduler's queue
-> for a chance of merging.
-> 
-> Request stacking drivers like request-based dm should follow
-> the same logic.
-> However, there is no generic interface for the stacked device
-> to check if the underlying device(s) are busy.
-> If the request stacking driver dispatches and submits requests to
-> the busy underlying device, the requests will stay in
-> the underlying device's queue without a chance of merging.
-> This causes performance problem on burst I/O load.
-> 
-> With this patch, busy state of the underlying device is exported
-> via the state flag of queue's backing_dev_info.  So the request
-> stacking driver can check it and stop dispatching requests if busy.
-> 
-> The underlying device driver must set/clear the flag appropriately:
->    ON:  when the device driver can't process requests immediately.
->    OFF: when the device driver can process requests immediately,
->         including abnormal situations where the device driver needs
->         to kill all requests.
-> 
-> 
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  include/linux/backing-dev.h |    8 ++++++++
->  mm/backing-dev.c            |   12 ++++++++++++
->  2 files changed, 20 insertions(+)
-> 
-> Index: scsi-misc-2.6/include/linux/backing-dev.h
-> ===================================================================
-> --- scsi-misc-2.6.orig/include/linux/backing-dev.h
-> +++ scsi-misc-2.6/include/linux/backing-dev.h
-> @@ -26,6 +26,7 @@ enum bdi_state {
->  	BDI_pdflush,		/* A pdflush thread is working this device */
->  	BDI_write_congested,	/* The write queue is getting full */
->  	BDI_read_congested,	/* The read queue is getting full */
-> +	BDI_lld_congested,	/* The device/host is busy */
->  	BDI_unused,		/* Available bits start here */
->  };
->  
-> @@ -226,8 +227,15 @@ static inline int bdi_rw_congested(struc
->  				  (1 << BDI_write_congested));
->  }
->  
-> +static inline int bdi_lld_congested(struct backing_dev_info *bdi)
-> +{
-> +	return bdi_congested(bdi, 1 << BDI_lld_congested);
-> +}
-> +
->  void clear_bdi_congested(struct backing_dev_info *bdi, int rw);
->  void set_bdi_congested(struct backing_dev_info *bdi, int rw);
-> +void clear_bdi_lld_congested(struct backing_dev_info *bdi);
-> +void set_bdi_lld_congested(struct backing_dev_info *bdi);
->  long congestion_wait(int rw, long timeout);
->  
->  
-> Index: scsi-misc-2.6/mm/backing-dev.c
-> ===================================================================
-> --- scsi-misc-2.6.orig/mm/backing-dev.c
-> +++ scsi-misc-2.6/mm/backing-dev.c
-> @@ -279,6 +279,18 @@ void set_bdi_congested(struct backing_de
->  }
->  EXPORT_SYMBOL(set_bdi_congested);
->  
-> +void clear_bdi_lld_congested(struct backing_dev_info *bdi)
-> +{
-> +	clear_bit(BDI_lld_congested, &bdi->state);
-> +}
-> +EXPORT_SYMBOL_GPL(clear_bdi_lld_congested);
-> +
-> +void set_bdi_lld_congested(struct backing_dev_info *bdi)
-> +{
-> +	set_bit(BDI_lld_congested, &bdi->state);
-> +}
-> +EXPORT_SYMBOL_GPL(set_bdi_lld_congested);
-> +
->  /**
->   * congestion_wait - wait for a backing_dev to become uncongested
->   * @rw: READ or WRITE
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Is this really the right way to do it?
+---
+2 files changed, 2 insertions(+), 6 deletions(-)
+drivers/scsi/sd.c     |    7 ++-----
+drivers/scsi/sd_dif.c |    1 -
 
-Back in the days when we first did the backing_dev_info.congested_fn()
-logic it was decided that there basically was no single place in which
-the congested state could be stored.
 
-So we ended up deciding that whenever a caller wants to know a
-backing_dev's congested status, it has to call in to the
-->congested_fn() and that congested_fn would then call down into all
-the constituent low-level drivers/queues/etc asking each one if it is
-congested.
 
-I mean, as a simple example which is probably wrong - what happens if a
-single backing_dev is implemented via two different disks and
-controllers, and they both become congested and then one of them comes
-uncongested.  Is there no way in which the above implemention can
-incorrectly flag the backing_dev as being uncongested?
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1248,14 +1248,12 @@ void sd_read_protection_type(struct scsi
+ 	else
+ 		type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
+ 
++	sdkp->protection_type = type;
++
+ 	switch (type) {
+ 	case SD_DIF_TYPE0_PROTECTION:
+-		sdkp->protection_type = 0;
+-		break;
+-
+ 	case SD_DIF_TYPE1_PROTECTION:
+ 	case SD_DIF_TYPE3_PROTECTION:
+-		sdkp->protection_type = type;
+ 		break;
+ 
+ 	case SD_DIF_TYPE2_PROTECTION:
+@@ -1273,7 +1271,6 @@ void sd_read_protection_type(struct scsi
+ 	return;
+ 
+ disable:
+-	sdkp->protection_type = 0;
+ 	sdkp->capacity = 0;
+ }
+ 
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -321,7 +321,6 @@ void sd_dif_config_host(struct scsi_disk
+ 		if (scsi_host_dif_capable(sdp->host, type) == 0) {
+ 			sd_printk(KERN_INFO, sdkp, "Type %d protection " \
+ 				  "unsupported by HBA. Disabling DIF.\n", type);
+-			sdkp->protection_type = 0;
+ 			return;
+ 		}
+ 
+
+
