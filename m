@@ -1,73 +1,63 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2 of 3] sd: Always print actual protection_type
-Date: Fri, 19 Sep 2008 18:47:20 -0400
-Message-ID: <cc6088963c66d955725d.1221864440@sermon.lab.mkp.net>
+Subject: [PATCH 1 of 3] sd: Issue correct protection operation
+Date: Fri, 19 Sep 2008 18:47:19 -0400
+Message-ID: <7254e25b30fb2f0ba12a.1221864439@sermon.lab.mkp.net>
 References: <patchbomb.1221864438@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:48240 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:48234 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752539AbYISW6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Sep 2008 18:58:55 -0400
+	id S1751734AbYISW6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Sep 2008 18:58:54 -0400
 In-Reply-To: <patchbomb.1221864438@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Now that we no longer use protection_type as trigger for preparing
-protected CDBs we can remove the places that set it to zero.  This
-allows userland to see which protection type the device is formatted
-with regardless of whether the HBA supports DIF or not.
+Use the same logic to prepare RD/WRPROTECT and the protection
+operation.  Fixes a corner case where we could issue an unprotected
+CDB and yet tell the HBA to do DIF to the drive.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-2 files changed, 2 insertions(+), 6 deletions(-)
-drivers/scsi/sd.c     |    7 ++-----
-drivers/scsi/sd_dif.c |    1 -
+1 file changed, 4 insertions(+), 3 deletions(-)
+drivers/scsi/sd.c |    7 ++++---
 
 
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1248,14 +1248,12 @@ void sd_read_protection_type(struct scsi
+@@ -378,7 +378,7 @@ static int sd_prep_fn(struct request_que
+ 	sector_t threshold;
+ 	unsigned int this_count = rq->nr_sectors;
+ 	unsigned int timeout = sdp->timeout;
+-	int ret;
++	int ret, host_dif;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+@@ -509,7 +509,8 @@ static int sd_prep_fn(struct request_que
+ 					rq->nr_sectors));
+ 
+ 	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+-	if (scsi_host_dif_capable(sdp->host, sdkp->protection_type))
++	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
++	if (host_dif)
+ 		SCpnt->cmnd[1] = 1 << 5;
  	else
- 		type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
+ 		SCpnt->cmnd[1] = 0;
+@@ -567,7 +568,7 @@ static int sd_prep_fn(struct request_que
+ 	SCpnt->sdb.length = this_count * sdp->sector_size;
  
-+	sdkp->protection_type = type;
-+
- 	switch (type) {
- 	case SD_DIF_TYPE0_PROTECTION:
--		sdkp->protection_type = 0;
--		break;
--
- 	case SD_DIF_TYPE1_PROTECTION:
- 	case SD_DIF_TYPE3_PROTECTION:
--		sdkp->protection_type = type;
- 		break;
+ 	/* If DIF or DIX is enabled, tell HBA how to handle request */
+-	if (sdkp->protection_type || scsi_prot_sg_count(SCpnt))
++	if (host_dif || scsi_prot_sg_count(SCpnt))
+ 		sd_dif_op(SCpnt, sdkp->protection_type, scsi_prot_sg_count(SCpnt));
  
- 	case SD_DIF_TYPE2_PROTECTION:
-@@ -1273,7 +1271,6 @@ void sd_read_protection_type(struct scsi
- 	return;
- 
- disable:
--	sdkp->protection_type = 0;
- 	sdkp->capacity = 0;
- }
- 
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -321,7 +321,6 @@ void sd_dif_config_host(struct scsi_disk
- 		if (scsi_host_dif_capable(sdp->host, type) == 0) {
- 			sd_printk(KERN_INFO, sdkp, "Type %d protection " \
- 				  "unsupported by HBA. Disabling DIF.\n", type);
--			sdkp->protection_type = 0;
- 			return;
- 		}
- 
+ 	/*
 
 
