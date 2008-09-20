@@ -1,97 +1,109 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/2] lld busy status exporting interface
-Date: Fri, 19 Sep 2008 16:45:24 -0700
-Message-ID: <20080919164524.295e1f9a.akpm@linux-foundation.org>
-References: <20080919.104756.41628866.k-ueda@ct.jp.nec.com>
-	<20080919.104854.71084447.k-ueda@ct.jp.nec.com>
-	<20080919143344.44d1a83e.akpm@linux-foundation.org>
-	<20080919.191122.102582872.k-ueda@ct.jp.nec.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Fix handling of failed requests in scsi_io_completion
+Date: Sat, 20 Sep 2008 00:31:50 +0000
+Message-ID: <1221870710.3428.25.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0809191152200.2429-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37281 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752897AbYISXpt (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48374 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751128AbYITPR3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Sep 2008 19:45:49 -0400
-In-Reply-To: <20080919.191122.102582872.k-ueda@ct.jp.nec.com>
+	Sat, 20 Sep 2008 11:17:29 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0809191152200.2429-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Antonio Ospite <ospite@studenti.unina.it>, USB list <linux-usb@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Alan Jenkins <alan-jenkins@tuffmail.co.uk>, Hans de Goede <j.w.r.degoede@hhs.nl>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 19 Sep 2008 19:11:22 -0400 (EDT)
-Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-
-> > Back in the days when we first did the backing_dev_info.congested_fn()
-> > logic it was decided that there basically was no single place in which
-> > the congested state could be stored.
+On Fri, 2008-09-19 at 11:53 -0400, Alan Stern wrote:
+> On Fri, 19 Sep 2008, Antonio Ospite wrote:
+> 
+> > On Fri, 5 Sep 2008 15:35:13 -0400 (EDT)
+> > Alan Stern <stern@rowland.harvard.edu> wrote:
 > > 
-> > So we ended up deciding that whenever a caller wants to know a
-> > backing_dev's congested status, it has to call in to the
-> > ->congested_fn() and that congested_fn would then call down into all
-> > the constituent low-level drivers/queues/etc asking each one if it is
-> > congested.
+> > > On Wed, 27 Aug 2008, Alan Stern wrote:
+> > > 
+> > > > This patch (as1133) fixes a bug in the interaction between
+> > > > scsi_end_request() and scsi_io_completion().  The bug was triggered by
+> > > > recent changes to accomodate USB drives can't access their last few
+> > > > sectors using multi-sector transfers (the so-called last_sector_bug
+> > > > flag).
+> > > > 
+> > > > The bug shows up when a multi-sector I/O request has been broken up
+> > > > into single-sector commands.  If one of those commands gets an error,
+> > > > the remainder of the request never gets completed.  This is because
+> > > > the "bytes" value passed to scsi_end_request() is completely wrong; it
+> > > > is the transfer size of the current command, not the total transfer
+> > > > size of the request.
+> > > 
+> > > There hasn't been any reply to this patch submission.  For reference,
+> > > the original message is at
+> > > 
+> > > 	http://marc.info/?l=linux-scsi&m=121986305201166&w=2
+> > > 
+> > > Has it been accepted, rejected, or did it fall through the cracks?
+> > > 
+> > > Alan Stern
+> > >
+> > 
+> > Hi again,
+> > 
+> > anything new about this patch? Alan, I'll keep reminding about it from
+> > time to time, until it is accepted or rejected.
 > 
-> bdi_lld_congested() also does that using bdi_congested(), which calls
-> ->congested_fn().
-> And only real device drivers (e.g. scsi, ide) set/clear the flag.
-> Stacking drivers like request-based dm don't.
+> All I can tell you is that I asked James Bottomley at the Linux Kernel
+> Summit, and he said he has been too busy to look at it but it's got an
+> "!" on his to-do list.
 
-umm, OK, that should work.
+OK, I looked at it.  Sorry about the delay; I wanted to audit the users
+to make sure we didn't over complete.  There's lots more than just the
+last sector bug that relies on partial completions doing request
+chunking.  I don't like your bytes == 0 micro optimisation, but other
+than that, it looks fine.
 
-> So stacking drivers always check the BDI_lld_congested flag of
-> the bottom device of the device stack.
+However, there's too much code movement in this for a bug fix that has
+to go into a late -rc and the stable series.  I think the patch below
+represents the smallest and simplest (and thus least error prone) fix,
+doesn't it (the rest can go into scsi-misc as an enhancement)?
 
-How does a stacking driver know that the backing_device which it is
-looking at is a "lowest level" device?
+With regard to what the mid-layer is doing, for the error cases where we
+send enough bytes to complete the request fully, I think the requeue
+looks superfluous (it's never going to get into that code in
+scsi_end_request), The other strange bit is that I can't find any error
+cases where we don't complete everything ... i.e. the partial complete
+and requeue never applies, so we should probably just be using
+end_dequeued_request().  I also think we could junk scsi_end_request()
+in faviour of blk_end_request and do the blk_noretry_request() check
+inline in scsi_io_completion, after we try to complete but before we
+might retry.
 
-I don't think it does - only the code which implements that device
-knows this, so the stacking driver has to call into that device's
-congested_fn(), yes?
+James
 
-In which case one wonders why the state was stored in the
-backing_dev_info at all.  Why not store it in the device-private data
-to avoid confusion and abuse?
+---
 
-> BDI_[write|read]_congested flags have been using for queue's
-> congestion, so that I/O queueing/merging can be proceeded even if
-> the lld is congested.  So I added a new flag.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ff5d56b..62307bd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -852,7 +852,7 @@ static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ {
+ 	int result = cmd->result;
+-	int this_count = scsi_bufflen(cmd);
++	int this_count;
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+@@ -908,6 +908,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	 */
+ 	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
++	this_count = blk_rq_bytes(req);
+ 
+ 	/* good_bytes = 0, or (inclusive) there were leftovers and
+ 	 * result = 0, so scsi_end_request couldn't retry.
 
-iirc, BDI_read/write_congested predated the introduction of the
-congested_fn() and perhaps should have been removed once we went to the
-congested_fn approach.  But it's been a while since I spent a lot of
-time looking in there.
 
-> 
-> > I mean, as a simple example which is probably wrong - what happens if a
-> > single backing_dev is implemented via two different disks and
-> > controllers, and they both become congested and then one of them comes
-> > uncongested.  Is there no way in which the above implemention can
-> > incorrectly flag the backing_dev as being uncongested?
-> 
-> Do you mean that "a single backing_dev via two disks/controllers" is
-> a dm device (e.g. a dm-multipath device having 2 paths, a dm-mirror
-> device having 2 disks)?
-
-Something along those lines, sure.
-
-> If so, dm doesn't set/clear the flag, and the decision, whether
-> the dm device itself is congested or not, depends on dm's target driver.
-> 
-> For example of dm-multipath,
->   o call bdi_lld_congested() for each path.
->   o if one of the paths are uncongested, dm-multipath will decide
->     the dm device is uncongested and dispatch incoming I/Os to
->     the uncongested path.
-
-hm, OK.
-
-> For example of dm-mirror,
->   o call bdi_lld_congested() for each disk.
->   o if the incoming I/O is READ, same logic as dm-multipath above.
->     if the incoming I/O is WRITE, dm-mirror will decide the dm device
->     is uncongested only when all disks are uncongested.
-> 
-> Thanks,
-> Kiyoshi Ueda
