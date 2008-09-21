@@ -1,88 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH] Fix handling of failed requests in scsi_io_completion
-Date: Sat, 20 Sep 2008 16:09:15 -0500
-Message-ID: <1221944955.3152.58.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0809201640160.16873-100000@netrider.rowland.org>
+Date: Sun, 21 Sep 2008 15:55:53 +0300
+Message-ID: <48D64459.2010802@panasas.com>
+References: <Pine.LNX.4.44L0.0809201640160.16873-100000@netrider.rowland.org> <1221944955.3152.58.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41485 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751387AbYITVJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Sep 2008 17:09:29 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0809201640160.16873-100000@netrider.rowland.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:24393 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751413AbYIUM4E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Sep 2008 08:56:04 -0400
+In-Reply-To: <1221944955.3152.58.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Antonio Ospite <ospite@studenti.unina.it>, USB list <linux-usb@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Alan Jenkins <alan-jenkins@tuffmail.co.uk>, Hans de Goede <j.w.r.degoede@hhs.nl>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Antonio Ospite <ospite@studenti.unina.it>, USB list <linux-usb@vger.kernel.org>, Alan Jenkins <alan-jenkins@tuffmail.co.uk>, Hans de Goede <j.w.r.degoede@hhs.nl>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2008-09-20 at 16:49 -0400, Alan Stern wrote:
-> On Sat, 20 Sep 2008, James Bottomley wrote:
+James Bottomley wrote:
+>>>
+>>> In none of these cases do we want any form of requeuing, we want to kill
+>>> the entire request.
+>> I take your point.  Which leads to the question: Why was the code ever 
+>> calling scsi_end_request(cmd, -EIO, this_count, 1) in the first place?  
+>> Apparently all of these paths should be setting the last argument to 0, 
+>> always.
 > 
-> > What I mean is that I can't find an error case that's currently shown
-> > scsi_end_request(cmd, -EIO, this_count, 1) where requeuing after
-> > completing only the currently attempted transfer is valid.  If this had
-> > all been done as a single transaction, we'd have killed everything at
-> > this point.  Just because we split the request into multiple
-> > transactions doesn't mean we should go back around and try a new
-> > transaction after we hit an error.
+> Yes, that was the question I asked in my first reply (where I said the
+> requeue looks superfluous).  I think the answer is that there's no
+> point ... that's why I advocated simply eliminating scsi_end_request()
+> in favour of either scsi_requeue_request/blk_run_queue or
+> end_dequeued_request().
 > 
-> Yes, that makes sense.
+> So are you happy with the simple fix proposal ... I think rearranging
+> this code needs more debate and discussion.
 > 
-> > > They end up doing this:
-> > > 
-> > > 		scsi_end_request(cmd, -EIO, this_count, 1);
-> > > 
-> > > when in fact they should do this:
-> > > 
-> > > 		scsi_end_request(cmd, -EIO, 0, 1);
-> > > 
-> > > (where the -EIO value is ignored).
-> > 
-> > Actually, no ... that's just equivalent to scsi_requeue_command(q, cmd)
-> > which is done at several places in the code (correctly) for sense errors
-> > that imply the whole lot should be retried (actually, it's assuming
-> > good_bytes is zero).
+> James
 > 
-> Except that those places don't do the blk_noretry_request test.  Should 
-> they?  And even if they do, what's to prevent an infinite retry loop?
 
-Well, that's another oddity ... the retries occur at a lower level
-(scsi_decide_disposition) ... there's no reason to make that check if
-all the error paths complete everything.  Now if we find an error where
-we should be moving on to the next transaction, then we'd need to do
-that test.  However, I think I've demonstrated so far that there isn't
-one.  I also don't think we want to make the test for the obviously
-retryable conditions like UNIT_ATTENTION because that will cause paths
-to flip on irrelevant AEN conditions.
+It looks to me that your 2-liners is a much deeper change then Alen's
+original patch, with it's big code movements. So it might be a candidate
+for a next release but not as a late -rc bug fix. This is because Allen's
+patch is just a mechanical code change, that we can carefully follow and
+verify to be equivalent code, minus the bug. Your patch changes behavior
+of existing code and should be tested more carefully. What changes is your
+retry behavior. I am pretty convinced of what you said, about all these retrys
+been impossible/not-wanted, and I think your final deep proposal is the right
+one, I wanted to clean this code up and get rid of scsi_end_request lots of
+times in the passed. But for a late -rc bug fix it feels very dangerous. I have
+observed more then one situation where retrys are a part of a normal IO and
+I would like more time to test all the implications.
 
-> > OK, so look at the current code in scsi_io_completion where we call
-> > scsi_end_request(cmd, -EIO, this_count, 1):
-> > 
-> > UNIT ATTENTION for removable medium (means medium changed)
-> > ILLEGAL REQUEST where there's no command resize fallback
-> > NOT READY for unknown (non retryable) reasons
-> > VOLUME OVERFLOW
-> > 
-> > In none of these cases do we want any form of requeuing, we want to kill
-> > the entire request.
-> 
-> I take your point.  Which leads to the question: Why was the code ever 
-> calling scsi_end_request(cmd, -EIO, this_count, 1) in the first place?  
-> Apparently all of these paths should be setting the last argument to 0, 
-> always.
+I have reviewed Allen's patch very carefully several times, and have been running
+with it since he posted it. So:
+ Reviewed-by: Boaz Harrosh <bharrosh@panasas.com> 
+ Tested-by: Boaz Harrosh <bharrosh@panasas.com>
 
-Yes, that was the question I asked in my first reply (where I said the
-requeue looks superfluous).  I think the answer is that there's no
-point ... that's why I advocated simply eliminating scsi_end_request()
-in favour of either scsi_requeue_request/blk_run_queue or
-end_dequeued_request().
+If you'll dig into the email-thread You'll see that I sent something
+exactly like yours, at the very beginning, but Alen convinced me that it
+is more dangerous, and should be in a following patch.
 
-So are you happy with the simple fix proposal ... I think rearranging
-this code needs more debate and discussion.
-
-James
-
-
+Thanks
+Boaz
+ 
