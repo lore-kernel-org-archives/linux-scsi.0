@@ -1,22 +1,22 @@
 From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 08/13] scsi: convert other scsi_check_sense users to new error codes
-Date: Mon, 22 Sep 2008 09:33:37 -0700
-Message-ID: <1222101222-15079-9-git-send-email-andmike@linux.vnet.ibm.com>
+Subject: [PATCH 07/13] scsi: have device handlers return SCSI_MLQUEUE error value
+Date: Mon, 22 Sep 2008 09:33:36 -0700
+Message-ID: <1222101222-15079-8-git-send-email-andmike@linux.vnet.ibm.com>
 References: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:50158 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbYIVQeG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:06 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:49566 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbYIVQeD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:03 -0400
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY6HI011523
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:06 -0400
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY1cp020657
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:01 -0400
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY6Ye203754
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:06 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY15u130238
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:01 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY1kt005120
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:05 -0600
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY0OF005087
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:01 -0600
 In-Reply-To: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,93 +25,200 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-scsi_eh_completed_normally are expecting a old style FAILED/SUCCESS
-type of error code, but scsi_check_sense returns the new SCSI_MLQUEUE
-ones. This converted scsi_check_sense users to the new codes.
+This has the scsi device handlers return SCSI_MLQUEUE error
+values instead of the old values.
+
+One change is that if the handler does not care we return 0
+instead of SCSI_RETURN_NOT_HANDLED.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
 ---
- drivers/scsi/scsi_error.c |   27 ++++++++++++---------------
- 1 files changed, 12 insertions(+), 15 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c |   16 ++++++++--------
+ drivers/scsi/device_handler/scsi_dh_emc.c  |    8 ++++----
+ drivers/scsi/device_handler/scsi_dh_rdac.c |   10 +++++-----
+ drivers/scsi/scsi_error.c                  |    9 +++++----
+ 4 files changed, 22 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 0505883..9a539dd 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -370,13 +370,13 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		return scsi_check_sense(scmd);
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 6bc55a6..b98d531 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -426,45 +426,45 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			/*
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
+ 			/*
+ 			 * LUN Not Accessible -- Target port in standby state
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c)
+ 			/*
+ 			 * LUN Not Accessible -- Target port in unavailable state
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x12)
+ 			/*
+ 			 * LUN Not Ready -- Offline
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		break;
+ 	case UNIT_ATTENTION:
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
+ 			/*
+ 			 * Power On, Reset, or Bus Device Reset, just retry.
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
+ 			/*
+ 			 * ALUA state changed
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		}
+ 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
+ 			/*
+ 			 * Implicit ALUA state transition failed
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		}
+ 		break;
  	}
- 	if (host_byte(scmd->result) != DID_OK)
--		return FAILED;
-+		return SCSI_MLQUEUE_DIS_FAIL;
  
- 	/*
- 	 * next, check the message byte.
- 	 */
- 	if (msg_byte(scmd->result) != COMMAND_COMPLETE)
--		return FAILED;
-+		return SCSI_MLQUEUE_DIS_FAIL;
- 
- 	/*
- 	 * now, check the status byte to see if this indicates
-@@ -385,7 +385,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	switch (status_byte(scmd->result)) {
- 	case GOOD:
- 	case COMMAND_TERMINATED:
--		return SUCCESS;
-+		return SCSI_MLQUEUE_DIS_FINISH;
- 	case CHECK_CONDITION:
- 		return scsi_check_sense(scmd);
- 	case CONDITION_GOOD:
-@@ -394,14 +394,14 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		/*
- 		 * who knows?  FIXME(eric)
- 		 */
--		return SUCCESS;
-+		return SCSI_MLQUEUE_DIS_FINISH;
- 	case BUSY:
- 	case QUEUE_FULL:
- 	case RESERVATION_CONFLICT:
- 	default:
--		return FAILED;
-+		return SCSI_MLQUEUE_DIS_FAIL;
- 	}
--	return FAILED;
-+	return SCSI_MLQUEUE_DIS_FAIL;
+-	return SCSI_RETURN_NOT_HANDLED;
++	return 0;
  }
  
- /**
-@@ -729,15 +729,12 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 			printk("%s: scsi_eh_completed_normally %x\n",
- 			       __func__, rtn));
+ /*
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index 247b1d1..0721b85 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -417,7 +417,7 @@ static int clariion_check_sense(struct scsi_device *sdev,
+ 			 * Can return FAILED only when we want the error
+ 			 * recovery process to kick in.
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		break;
+ 	case ILLEGAL_REQUEST:
+ 		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
+@@ -431,7 +431,7 @@ static int clariion_check_sense(struct scsi_device *sdev,
+ 			 * Can return FAILED only when we want the error
+ 			 * recovery process to kick in.
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		break;
+ 	case UNIT_ATTENTION:
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
+@@ -439,11 +439,11 @@ static int clariion_check_sense(struct scsi_device *sdev,
+ 			 * Unit Attention Code. This is the first IO
+ 			 * to the new path, so just retry.
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		break;
+ 	}
  
--		switch (rtn) {
--		case SUCCESS:
--		case NEEDS_RETRY:
--		case FAILED:
--			break;
--		default:
-+		if (scsi_disposition_finish(rtn))
-+			rtn = SUCCESS;
-+		else if (scsi_disposition_retry(rtn))
-+			rtn = NEEDS_RETRY;
-+		else
- 			rtn = FAILED;
--			break;
--		}
- 	} else {
- 		scsi_abort_eh_cmnd(scmd);
- 		rtn = FAILED;
-@@ -965,7 +962,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 		stu_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
--			    scsi_check_sense(scmd) == FAILED ) {
-+			    scsi_check_sense(scmd) == SCSI_MLQUEUE_DIS_FAIL) {
- 				stu_scmd = scmd;
- 				break;
- 			}
+-	return SCSI_RETURN_NOT_HANDLED;
++	return 0;
+ }
+ 
+ static int clariion_prep_fn(struct scsi_device *sdev, struct request *req)
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 6e31572..1055c62 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -544,13 +544,13 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 			 *
+ 			 * Nothing we can do here. Try to bypass the path.
+ 			 */
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0xA1)
+ 			/* LUN Not Ready - Quiescense in progress
+ 			 *
+ 			 * Just retry and wait.
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		break;
+ 	case ILLEGAL_REQUEST:
+ 		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01) {
+@@ -559,7 +559,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 			 * Fail the path, so that the other path be used.
+ 			 */
+ 			h->state = RDAC_STATE_PASSIVE;
+-			return SUCCESS;
++			return SCSI_MLQUEUE_DIS_FINISH;
+ 		}
+ 		break;
+ 	case UNIT_ATTENTION:
+@@ -567,11 +567,11 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 			/*
+ 			 * Power On, Reset, or Bus Device Reset, just retry.
+ 			 */
+-			return NEEDS_RETRY;
++			return SCSI_MLQUEUE_IMM_RETRY;
+ 		break;
+ 	}
+ 	/* success just means we do not care what scsi-ml does */
+-	return SCSI_RETURN_NOT_HANDLED;
++	return 0;
+ }
+ 
+ static const struct scsi_dh_devlist rdac_dev_list[] = {
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 02f999b..0505883 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -253,7 +253,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		int rc;
+ 
+ 		rc = sdev->scsi_dh_data->scsi_dh->check_sense(sdev, &sshdr);
+-		if (rc != SCSI_RETURN_NOT_HANDLED)
++		if (rc)
+ 			return rc;
+ 		/* handler does not care. Drop down to default handling */
+ 	}
+@@ -1321,8 +1321,9 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 	case DID_SOFT_ERROR:
+ 		return SCSI_MLQUEUE_DIS_RETRY;
+ 	case DID_IMM_RETRY:
+-	case DID_REQUEUE:
+ 		return SCSI_MLQUEUE_IMM_RETRY;
++	case DID_REQUEUE:
++		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	case DID_TRANSPORT_DISRUPTED:
+ 		/*
+ 		 * LLD/transport was disrupted during processing of the IO.
+@@ -1330,7 +1331,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 * and the transport will decide what to do with the IO
+ 		 * based on its timers and recovery capablilities.
+ 		 */
+-		return SCSI_MLQUEUE_IMM_RETRY;
++		return SCSI_MLQUEUE_TARGET_BUSY;
+ 	case DID_TRANSPORT_FAILFAST:
+ 		/*
+ 		 * The transport decided to failfast the IO (most likely
+@@ -1390,7 +1391,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 * the empty queue handling to trigger a stall in the
+ 		 * device.
+ 		 */
+-		return SCSI_MLQUEUE_IMM_RETRY;
++		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	case GOOD:
+ 	case COMMAND_TERMINATED:
+ 	case TASK_ABORTED:
 -- 
 1.5.5.1
 
