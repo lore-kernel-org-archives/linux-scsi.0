@@ -1,67 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] Fix handling of failed requests in scsi_io_completion
-Date: Mon, 22 Sep 2008 10:24:40 +0300
-Message-ID: <48D74838.9090009@panasas.com>
-References: <Pine.LNX.4.44L0.0809211658310.4210-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11619] New: Hotplug doesn't work with SAS1064
+Date: Mon, 22 Sep 2008 02:49:03 -0700 (PDT)
+Message-ID: <bug-11619-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:26938 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751393AbYIVHYp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 03:24:45 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0809211658310.4210-100000@netrider.rowland.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33173 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751686AbYIVJtH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2008 05:49:07 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8M9n39g026011
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 02:49:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Antonio Ospite <ospite@studenti.unina.it>, USB list <linux-usb@vger.kernel.org>, Alan Jenkins <alan-jenkins@tuffmail.co.uk>, Hans de Goede <j.w.r.degoede@hhs.nl>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> On Sun, 21 Sep 2008, James Bottomley wrote:
-> 
->>> For example, suppose a buggy device (without removable media) always
->>> replies with UNIT ATTENTION without making any forward progress.  
->>> We'll just call scsi_requeue_command each time and get stuck.
->> That's a separate bug from the current one ... fortunately one I don't
->> think we've actually seen manifest.
-> 
->>> But I'm still concerned about the possibility of getting stuck doing
->>> the same command or request over and over.  Both structures have a
->>> "retries" field, but I'm not clear on how/where they get used.
->> Block relies on the lower layers for retry ... it just transmits the
->> status, so we get to fix it.
-> 
-> Okay -- I'll keep it in the back of my mind for later...
-> 
->>> To be honest, I don't know what sort of requests get marked as
->>> non-retryable in the block layer.  Maybe you're right and we don't need 
->>> to worry about them.
->> They tend to be device mapper ones.  Anything that wants a fast failure
->> to do path switch over for instance.
-> 
-> If all the retry paths in scsi_io_completion jump to a common location, 
-> it will be easy to add the test there.
-> 
->>> I tested your simple fix, and it does indeed solve the problem of tasks
->>> hanging because of an uncompleted request.  In view of Boaz's concerns,
->>> should this change be postponed until 2.6.27.stable so that it can get
->>> wider testing?
->> We can ... I think it's safe enough though given it only affects
->> multiple transaction commands.
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=11619
 
-James, I see your point. Thanks. I have one small request. Please kill
-the comment Just below the: "this_count = blk_rq_bytes(req);"
+           Summary: Hotplug doesn't work with SAS1064
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.27-rc6
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: vseliverstov@yandex-team.ru
 
-Now it is totally wrong, it used to be mostly wrong before.
 
-(See here: http://www.spinics.net/lists/linux-scsi/msg28763.html)
+Latest working kernel version: 2.6.20
+Earliest failing kernel version: 2.6.22
+Hardware Environment: Any Intel-powered server with SAS1064 PCI-X SAS
+controller
+Problem Description: I have linux-box with SAS1064 PCI-X SAS Controller, and
+I'm experiencing problems with hotswapping. When I detach disk from system,
+replace it with another one, and trying to attach it again, nothing happens.
+After reboot, it's OK - I have this disk attached and functioning. Interesting,
+that if I try to attach old disk just after detaching it's OK too. 
+I've tried following Vanilla kernel builds from linux git tree: 2.6.20, 2.6.22,
+2.6.24, 2.6.26, 2.6.27-rc6 and it's worked only with 2.6.20. So, I tried to
+bisect buggy commit between 2.6.20 and 2.6.22 versions.
+Here is bad commit: df9e062ad994c4db683377b108c0dbed4690e4b0 
 
-> The decision's yours.  Let me know when and in which tree it is merged,
-> so I can start writing some patches for a more-complete fix.
-> 
-> Alan Stern
-> 
+Steps to reproduce: 
+- detach disk with:
+# echo "scsi remove-single-device x y z k" > /proc/scsi/scsi
+- physically remove it and insert another one;
+- try to attach disk with:
+# echo "scsi add-single-device x y z k" > /proc/scsi/scsi
+or with
+echo "- - -" > /sys/class/scsi_host/hostN/scan
 
-Boaz
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
