@@ -1,22 +1,30 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bug 11619] New: Hotplug doesn't work with SAS1064
-Date: Mon, 22 Sep 2008 16:10:28 -0700
-Message-ID: <20080922161028.d519bffd.akpm@linux-foundation.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11619] Hotplug doesn't work with SAS1064
+Date: Mon, 22 Sep 2008 16:11:21 -0700 (PDT)
+Message-ID: <20080922231121.EAB4610806C@picon.linux-foundation.org>
 References: <bug-11619-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34876 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35318 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753740AbYIVXLV (ORCPT
+	by vger.kernel.org with ESMTP id S1753242AbYIVXMx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2008 19:11:21 -0400
+	Mon, 22 Sep 2008 19:12:53 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8MNC3s5025704
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:12:04 -0700
 In-Reply-To: <bug-11619-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, vseliverstov@yandex-team.ru, Eric Moore <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11619
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-09-22 16:11 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
@@ -75,3 +83,8 @@ Date:   Mon Jan 29 09:46:21 2007 -0700
 
     [SCSI] fusion - serialize target resets in mptsas.c
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
