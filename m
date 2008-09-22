@@ -1,85 +1,115 @@
 From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 01/13] scsi: Move wait_for check
-Date: Mon, 22 Sep 2008 09:33:30 -0700
-Message-ID: <1222101222-15079-2-git-send-email-andmike@linux.vnet.ibm.com>
+Subject: [PATCH 12/13] scsi: update scsi_log_completion disposition decoding
+Date: Mon, 22 Sep 2008 09:33:41 -0700
+Message-ID: <1222101222-15079-13-git-send-email-andmike@linux.vnet.ibm.com>
 References: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:34455 "EHLO
+Received: from e33.co.us.ibm.com ([32.97.110.151]:35014 "EHLO
 	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbYIVQd5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:33:57 -0400
+	with ESMTP id S1751424AbYIVQeJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:09 -0400
 Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGXvse005614
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:33:57 -0400
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY9sc006088
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:09 -0400
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGXuSc160496
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:33:56 -0600
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY89I191646
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:08 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMXuvC004674
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:33:56 -0600
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY8XS005493
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:08 -0600
 Received: from localhost.localdomain (desktop-andmike.beaverton.ibm.com [9.47.22.92])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m8MMXlYJ003971
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:33:51 -0600
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m8MMXlYU003971
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:07 -0600
 In-Reply-To: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Move wait_for check to scsi_queue_insert.
+Update scsi_log_completion to decode new disposition codes.
 
 Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
 Acked-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi_lib.c |   17 +++++++++--------
- 1 files changed, 9 insertions(+), 8 deletions(-)
+ drivers/scsi/scsi.c |   41 ++++++++++++++++++++++-------------------
+ include/scsi/scsi.h |    1 +
+ 2 files changed, 23 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 517fd90..83a8aae 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -116,11 +116,20 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- 	struct scsi_device *device = cmd->device;
- 	struct scsi_target *starget = scsi_target(device);
- 	struct request_queue *q = device->request_queue;
-+	unsigned long wait_for = (cmd->allowed + 1) * cmd->request->timeout;
- 	unsigned long flags;
- 
- 	SCSI_LOG_MLQUEUE(1,
- 		 printk("Inserting command %p into mlqueue\n", cmd));
- 
-+	if (time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-+		sdev_printk(KERN_ERR, cmd->device, "timing out command, "
-+			    "waited %lus\n", wait_for/HZ);
-+		set_driver_byte(cmd, DRIVER_TIMEOUT);
-+		scsi_finish_command(cmd);
-+		return 0;
-+	}
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 5c116d9..c0023e3 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -577,37 +577,40 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 	if (unlikely(scsi_logging_level)) {
+ 		level = SCSI_LOG_LEVEL(SCSI_LOG_MLCOMPLETE_SHIFT,
+ 				       SCSI_LOG_MLCOMPLETE_BITS);
+-		if (((level > 0) && (cmd->result || disposition != SUCCESS)) ||
++		if (((level > 0) &&
++		    (cmd->result || !scsi_disposition_finish(disposition))) ||
+ 		    (level > 1)) {
+ 			scmd_printk(KERN_INFO, cmd, "Done: ");
+ 			if (level > 2)
+ 				printk("0x%p ", cmd);
 +
- 	/*
- 	 * Set the appropriate busy bit for the device/host.
- 	 *
-@@ -1494,7 +1503,6 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- static void scsi_softirq_done(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = rq->special;
--	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
- 	int disposition;
+ 			/*
+ 			 * Dump truncated values, so we usually fit within
+ 			 * 80 chars.
+ 			 */
+-			switch (disposition) {
+-			case SUCCESS:
++			if (scsi_disposition_finish(disposition))
+ 				printk("SUCCESS\n");
+-				break;
+-			case NEEDS_RETRY:
++			else if (scsi_disposition_retry(disposition))
+ 				printk("RETRY\n");
+-				break;
+-			case ADD_TO_MLQUEUE:
+-				printk("MLQUEUE\n");
+-				break;
+-			case FAILED:
++			else if (scsi_disposition_fail(disposition))
+ 				printk("FAILED\n");
+-				break;
+-			case TIMEOUT_ERROR:
+-				/* 
+-				 * If called via scsi_times_out.
+-				 */
+-				printk("TIMEOUT\n");
+-				break;
+-			default:
+-				printk("UNKNOWN\n");
++			else {
++				switch (disposition) {
++				case SUCCESS:
++					printk("SUCCESS\n");
++					break;
++				case TIMEOUT_ERROR:
++					/*
++					 * If called via scsi_times_out.
++					 */
++					printk("TIMEOUT\n");
++					break;
++				default:
++					printk("UNKNOWN: 0x%x\n",
++					       disposition);
++				}
+ 			}
++
+ 			scsi_print_result(cmd);
+ 			scsi_print_command(cmd);
+ 			if (status_byte(cmd->result) & CHECK_CONDITION)
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 09751e4..2d8f00e 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -449,6 +449,7 @@ enum {
+ };
  
- 	INIT_LIST_HEAD(&cmd->eh_entry);
-@@ -1509,13 +1517,6 @@ static void scsi_softirq_done(struct request *rq)
- 		atomic_inc(&cmd->device->ioerr_cnt);
- 
- 	disposition = scsi_decide_disposition(cmd);
--	if (disposition != SUCCESS &&
--	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
--		sdev_printk(KERN_ERR, cmd->device,
--			    "timing out command, waited %lus\n",
--			    wait_for/HZ);
--		disposition = SUCCESS;
--	}
- 			
- 	scsi_log_completion(cmd, disposition);
- 
+ #define scsi_disposition_finish(dis) (dis & SCSI_MLQUEUE_DIS_FINISH)
++#define scsi_disposition_fail(dis) (dis & SCSI_MLQUEUE_DIS_FAIL)
+ #define scsi_disposition_retry(dis)			\
+ 	((dis & SCSI_MLQUEUE_DIS_RETRY)		||	\
+ 	 (dis & SCSI_MLQUEUE_DIS_XPT_RETRY)	||	\
 -- 
 1.5.5.1
 
