@@ -1,93 +1,35 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 04/13] scsi: remove maybe_retry
-Date: Mon, 22 Sep 2008 09:33:33 -0700
-Message-ID: <1222101222-15079-5-git-send-email-andmike@linux.vnet.ibm.com>
-References: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9422] Direct manipulation of PCI ROM in drivers/scsi/qla2xxx/qla_init.c
+Date: Mon, 22 Sep 2008 10:46:34 -0700 (PDT)
+Message-ID: <20080922174634.0A194108058@picon.linux-foundation.org>
+References: <bug-9422-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:49656 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbYIVQeG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:06 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY5Fs020778
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:05 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY4DV176500
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:04 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY2Qo005142
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:04 -0600
-Received: from localhost.localdomain (desktop-andmike.beaverton.ibm.com [9.47.22.92])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m8MMXlYM003971
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:33:58 -0600
-In-Reply-To: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45837 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751515AbYIVRqf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2008 13:46:35 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8MHkYGZ028652
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:46:35 -0700
+In-Reply-To: <bug-9422-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Remove maybe_retry from scsi_decide_disposition.
+http://bugzilla.kernel.org/show_bug.cgi?id=9422
 
-Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_error.c |   16 +++-------------
- 1 files changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 4eabb1a..b092089 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1268,7 +1268,6 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
-  */
- int scsi_decide_disposition(struct scsi_cmnd *scmd)
- {
--	int rtn;
- 
- 	/*
- 	 * if the device is offline, then we clearly just pass the result back
-@@ -1318,7 +1317,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * and not get stuck in a loop.
- 		 */
- 	case DID_SOFT_ERROR:
--		goto maybe_retry;
-+		return NEEDS_RETRY;
- 	case DID_IMM_RETRY:
- 	case DID_REQUEUE:
- 		return ADD_TO_MLQUEUE;
-@@ -1348,7 +1347,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 
- 	case DID_BUS_BUSY:
- 	case DID_PARITY:
--		goto maybe_retry;
-+		return NEEDS_RETRY;
- 	case DID_TIME_OUT:
- 		/*
- 		 * when we scan the bus, we get timeout messages for
-@@ -1395,14 +1394,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	case TASK_ABORTED:
- 		return SUCCESS;
- 	case CHECK_CONDITION:
--		rtn = scsi_check_sense(scmd);
--		if (rtn == NEEDS_RETRY)
--			goto maybe_retry;
--		/* if rtn == FAILED, we have no sense information;
--		 * returning FAILED will wake the error handler thread
--		 * to collect the sense and redo the decide
--		 * disposition */
--		return rtn;
-+		return scsi_check_sense(scmd);
- 	case CONDITION_GOOD:
- 	case INTERMEDIATE_GOOD:
- 	case INTERMEDIATE_C_GOOD:
-@@ -1421,8 +1413,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	}
- 	return FAILED;
- 
--      maybe_retry:
--		return NEEDS_RETRY;
- }
- 
- /**
+alan@lxorguk.ukuu.org.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+      KernelVersion|2.6.24-rc3                  |2.6.27-rc7
+
+
+
+
 -- 
-1.5.5.1
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
