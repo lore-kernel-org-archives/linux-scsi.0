@@ -1,145 +1,62 @@
 From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 06/13] scsi: rename scsi_queue_insert to scsi_attempt_requeue_command
-Date: Mon, 22 Sep 2008 09:33:35 -0700
-Message-ID: <1222101222-15079-7-git-send-email-andmike@linux.vnet.ibm.com>
+Subject: [PATCH 11/13] scsi: remove scsi_device_online from scsi_decide_disposition
+Date: Mon, 22 Sep 2008 09:33:40 -0700
+Message-ID: <1222101222-15079-12-git-send-email-andmike@linux.vnet.ibm.com>
 References: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:39306 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbYIVQeD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:03 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:52111 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbYIVQeI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 12:34:08 -0400
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY1pY008329
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:01 -0400
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8MGY7RU014095
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 12:34:07 -0400
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY0GE138166
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:00 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8MGY6Kh203756
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 10:34:06 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY0HM005052
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:00 -0600
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8MMY64W005414
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:06 -0600
+Received: from localhost.localdomain (desktop-andmike.beaverton.ibm.com [9.47.22.92])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id m8MMXlYT003971
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:34:06 -0600
 In-Reply-To: <1222101222-15079-1-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Remove scsi_device_online from scsi_decide_disposition as the
+check is now performed in scsi_attempt_requeue_command if a
+retry is attempted.
 
-This renames scsi_queue_insert to scsi_attempt_requeue_command, because
-it may not be able to requeue the command if there are not retries left
-or if failfast is set. The naming is also meant to better match
-the other requeue function, scsi_requeue_command, which will always
-requeue a command.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
+Acked-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi.c       |    4 ++--
- drivers/scsi/scsi_error.c |    3 ++-
- drivers/scsi/scsi_lib.c   |   22 ++++++++++++++--------
- drivers/scsi/scsi_priv.h  |    2 +-
- 4 files changed, 19 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_error.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index f8b79d4..5c116d9 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -678,7 +678,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		 * suspend state.
- 		 */
- 
--		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
-+		scsi_attempt_requeue_command(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
- 
- 		SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked \n"));
- 
-@@ -758,7 +758,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
- 			rtn = SCSI_MLQUEUE_HOST_BUSY;
- 
--		scsi_queue_insert(cmd, rtn);
-+		scsi_attempt_requeue_command(cmd, rtn);
- 
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae46cb0..02f999b 100644
+index 4fbc28a..a0f4123 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -1536,7 +1536,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
- 							  " retry cmd: %p\n",
- 							  current->comm,
- 							  scmd));
--			scsi_queue_insert(scmd, SCSI_MLQUEUE_DIS_RETRY);
-+			scsi_attempt_requeue_command(scmd,
-+						     SCSI_MLQUEUE_DIS_RETRY);
- 		} else {
- 			/*
- 			 * If just we got sense for the device (called
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d78147a..34a50e0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -92,9 +92,9 @@ static void scsi_unprep_request(struct request *req)
- }
- 
- /*
-- * Function:    scsi_queue_insert()
-+ * Function:    scsi_attempt_requeue_command()
-  *
-- * Purpose:     Insert a command in the midlevel queue.
-+ * Purpose:     Attempt to insert a command in the midlevel queue.
-  *
-  * Arguments:   cmd    - command that we are adding to queue.
-  *              reason - why we are inserting command to queue.
-@@ -103,14 +103,20 @@ static void scsi_unprep_request(struct request *req)
-  *
-  * Returns:     Nothing.
-  *
-- * Notes:       We do this for one of two cases.  Either the host is busy
-- *              and it cannot accept any more commands for the time being,
-- *              or the device returned QUEUE_FULL and can accept no more
-- *              commands.
-+ * Notes:       We do this for multiple cases.
-+ *
-+ *		Host or device queueing:
-+ *		Either the host or device is busy and it cannot accept any more
-+ *		commands for the time being.
-+ *
-+ * 		SCSI error processing:
-+ * 		The scsi-eh has decided to requeue a command after getting
-+ * 		a command it believes ir retryable.
-+ *
-  * Notes:       This could be called either from an interrupt context or a
-  *              normal process context.
-  */
--int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
-+int scsi_attempt_requeue_command(struct scsi_cmnd *cmd, int reason)
+@@ -1271,17 +1271,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
  {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct scsi_device *device = cmd->device;
-@@ -1539,7 +1545,7 @@ static void scsi_softirq_done(struct request *rq)
- 	if (scsi_disposition_finish(disposition))
- 		scsi_finish_command(cmd);
- 	else if (scsi_disposition_retry(disposition))
--		scsi_queue_insert(cmd, disposition);
-+		scsi_attempt_requeue_command(cmd, disposition);
- 	else
- 		if (!scsi_eh_scmd_add(cmd, 0))
- 			scsi_finish_command(cmd);
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index e185090..0de6769 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -64,7 +64,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
- /* scsi_lib.c */
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_device_unbusy(struct scsi_device *sdev);
--extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-+extern int scsi_attempt_requeue_command(struct scsi_cmnd *cmd, int reason);
- extern void scsi_next_command(struct scsi_cmnd *cmd);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
- extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ 
+ 	/*
+-	 * if the device is offline, then we clearly just pass the result back
+-	 * up to the top level.
+-	 */
+-	if (!scsi_device_online(scmd->device)) {
+-		SCSI_LOG_ERROR_RECOVERY(5, printk("%s: device offline - report"
+-						  " as SUCCESS\n",
+-						  __func__));
+-		return SCSI_MLQUEUE_DIS_FINISH;
+-	}
+-
+-	/*
+ 	 * first check the host byte, to see if there is anything in there
+ 	 * that would indicate what we need to do.
+ 	 */
 -- 
 1.5.5.1
 
