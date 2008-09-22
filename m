@@ -1,72 +1,100 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/17] drivers/scsi/a2091.c: make 2 functions static
-Date: Mon, 22 Sep 2008 14:56:50 -0700
-Message-ID: <200809222156.m8MLuoDe032300@imap1.linux-foundation.org>
+Subject: [patch 07/17] scsi: aic79xx_core fix shadowed variables, add statics
+Date: Mon, 22 Sep 2008 14:56:45 -0700
+Message-ID: <200809222156.m8MLukig032282@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57892 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56416 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753286AbYIVWGr (ORCPT
+	by vger.kernel.org with ESMTP id S1754572AbYIVWHH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:06:47 -0400
+	Mon, 22 Sep 2008 18:07:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-a2091_{detect,release}() can become static.
+Redeclared within different if/else blocks, safe to reuse the
+original from beginning of function.
+drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
+drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Use caminfo for the outer declaration, the redeclared version is
+iterating over all initiator/target pairs (devices) which.
+drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo' shadows an earlier one
+drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
+
+Forward declaration was already marked static, make the definition match.
+drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devlimited_syncrate' was not declared. Should it be static?
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c |   13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
- 
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
- 
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -227,7 +229,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-aic79xx_core-fix-shadowed-variables-add-statics
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -2472,8 +2472,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		if ((ahd->bugs & AHD_CLRLQO_AUTOCLR_BUG) != 0)
+ 			ahd_outb(ahd, CLRLQOINT1, 0);
+ 	} else if ((status & SELTO) != 0) {
+-		u_int  scbid;
 -
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ 		/* Stop the selection */
+ 		ahd_outb(ahd, SCSISEQ0, 0);
+ 
+@@ -2583,9 +2581,6 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		case BUSFREE_DFF0:
+ 		case BUSFREE_DFF1:
+ 		{
+-			u_int	scbid;
+-			struct	scb *scb;
+-
+ 			mode = busfreetime == BUSFREE_DFF0
+ 			     ? AHD_MODE_DFF0 : AHD_MODE_DFF1;
+ 			ahd_set_modes(ahd, mode, mode);
+@@ -3689,7 +3684,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u
+  * by the capabilities of the bus connectivity of and sync settings for
+  * the target.
+  */
+-void
++static void
+ ahd_devlimited_syncrate(struct ahd_softc *ahd,
+ 			struct ahd_initiator_tinfo *tinfo,
+ 			u_int *period, u_int *ppr_options, role_t role)
+@@ -8708,7 +8703,7 @@ ahd_reset_current_bus(struct ahd_softc *
+ int
+ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ {
+-	struct	ahd_devinfo devinfo;
++	struct	ahd_devinfo caminfo;
+ 	u_int	initiator;
+ 	u_int	target;
+ 	u_int	max_scsiid;
+@@ -8729,7 +8724,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ 
+ 	ahd->pending_device = NULL;
+ 
+-	ahd_compile_devinfo(&devinfo,
++	ahd_compile_devinfo(&caminfo,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_TARGET_WILDCARD,
+ 			    CAM_LUN_WILDCARD,
+@@ -8868,7 +8863,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
+ 	}
+ 
+ 	/* Notify the XPT that a bus reset occurred */
+-	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
++	ahd_send_async(ahd, caminfo.channel, CAM_TARGET_WILDCARD,
+ 		       CAM_LUN_WILDCARD, AC_BUS_RESET);
+ 
+ 	ahd_restart(ahd);
 _
