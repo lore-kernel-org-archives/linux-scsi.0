@@ -1,34 +1,47 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9422] Direct manipulation of PCI ROM in drivers/scsi/qla2xxx/qla_init.c
-Date: Mon, 22 Sep 2008 14:10:52 -0700 (PDT)
-Message-ID: <20080922211052.0D5D0108056@picon.linux-foundation.org>
-References: <bug-9422-11613@http.bugzilla.kernel.org/>
+From: akpm@linux-foundation.org
+Subject: [patch 04/17] #if 0 ses_match_host()
+Date: Mon, 22 Sep 2008 14:56:42 -0700
+Message-ID: <200809222156.m8MLuhkJ032273@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33777 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54296 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753192AbYIVVLW (ORCPT
+	by vger.kernel.org with ESMTP id S1753636AbYIVV5V (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:11:22 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8MLAqjt014645
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 14:10:53 -0700
-In-Reply-To: <bug-9422-11613@http.bugzilla.kernel.org/>
+	Mon, 22 Sep 2008 17:57:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9422
+From: Adrian Bunk <bunk@kernel.org>
 
+#if 0 the unused ses_match_host()
 
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
+ drivers/scsi/ses.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-
-------- Comment #1 from andrew.vasquez@qlogic.com  2008-09-22 14:10 -------
-Sure.  We can queue patches which use pci_disable_rom() for
-the next merge window. 
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+diff -puN drivers/scsi/ses.c~if-0-ses_match_host drivers/scsi/ses.c
+--- a/drivers/scsi/ses.c~if-0-ses_match_host
++++ a/drivers/scsi/ses.c
+@@ -264,6 +264,7 @@ struct ses_host_edev {
+ 	struct enclosure_device *edev;
+ };
+ 
++#if 0
+ int ses_match_host(struct enclosure_device *edev, void *data)
+ {
+ 	struct ses_host_edev *sed = data;
+@@ -280,6 +281,7 @@ int ses_match_host(struct enclosure_devi
+ 	sed->edev = edev;
+ 	return 1;
+ }
++#endif  /*  0  */
+ 
+ static void ses_process_descriptor(struct enclosure_component *ecomp,
+ 				   unsigned char *desc)
+_
