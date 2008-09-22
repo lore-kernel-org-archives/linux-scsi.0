@@ -1,945 +1,2200 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/17] scsi: replace __inline with inline
-Date: Mon, 22 Sep 2008 14:56:43 -0700
-Message-ID: <200809222156.m8MLuijE032276@imap1.linux-foundation.org>
+Subject: [patch 02/17] aic7xxx: update .reg files
+Date: Mon, 22 Sep 2008 14:56:41 -0700
+Message-ID: <200809222156.m8MLuf0T032267@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57631 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40188 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753496AbYIVWL3 (ORCPT
+	by vger.kernel.org with ESMTP id S1753499AbYIVWLu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:11:29 -0400
+	Mon, 22 Sep 2008 18:11:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, jgarzik@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, vda.linux@googlemail.com, James.Bottomley@HansenPartnership.com, hare@suse.de
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Denys Vlasenko <vda.linux@googlemail.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+Update .reg files, marking unused registers with dont_generate_debug_code.
+Comment explains how to use it.
+
+Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_core.c   |   12 +-
- drivers/scsi/aic7xxx/aic79xx_inline.h |   32 +++----
- drivers/scsi/aic7xxx/aic79xx_osm.h    |  102 +++++++++++------------
- drivers/scsi/aic7xxx/aic79xx_pci.c    |    2 
- drivers/scsi/aic7xxx/aic7xxx_inline.h |    5 -
- drivers/scsi/aic7xxx/aic7xxx_osm.h    |  104 ++++++++++++------------
- drivers/scsi/aic7xxx/aic7xxx_pci.c    |    2 
- drivers/scsi/aic7xxx/aiclib.h         |    4 
- drivers/scsi/sym53c8xx_2/sym_glue.h   |    6 -
- drivers/scsi/sym53c8xx_2/sym_hipd.c   |    2 
- drivers/scsi/sym53c8xx_2/sym_hipd.h   |    6 -
- drivers/scsi/sym53c8xx_2/sym_malloc.c |    2 
- drivers/scsi/sym53c8xx_2/sym_misc.h   |   18 ++--
- 13 files changed, 146 insertions(+), 151 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.reg |  185 +++++++++++++++++++++++++++++
+ drivers/scsi/aic7xxx/aic7xxx.reg |  124 +++++++++++++++++++
+ 2 files changed, 309 insertions(+)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -1034,7 +1034,7 @@ ahd_intr(struct ahd_softc *ahd)
+diff -puN drivers/scsi/aic7xxx/aic79xx.reg~aic7xxx-update-reg-files drivers/scsi/aic7xxx/aic79xx.reg
+--- a/drivers/scsi/aic7xxx/aic79xx.reg~aic7xxx-update-reg-files
++++ a/drivers/scsi/aic7xxx/aic79xx.reg
+@@ -80,6 +80,17 @@ VERSION = "$Id: //depot/aic7xxx/aic7xxx/
+ 	}
+ 
+ /*
++ * Registers marked "dont_generate_debug_code" are not (yet) referenced
++ * from the driver code, and this keyword inhibit generation
++ * of debug code for them.
++ *
++ * REG_PRETTY_PRINT config will complain if dont_generate_debug_code
++ * is added to the register which is referenced in the driver.
++ * Unreferenced register with no dont_generate_debug_code will result
++ * in dead code. No warning is issued.
++ */
++
++/*
+  * Mode Pointer
+  * Controls which of the 5, 512byte, address spaces should be used
+  * as the source and destination of any register accesses in our
+@@ -91,6 +102,7 @@ register MODE_PTR {
+ 	field	DST_MODE	0x70
+ 	field	SRC_MODE	0x07
+ 	mode_pointer
++	dont_generate_debug_code
  }
  
- /******************************** Private Inlines *****************************/
--static __inline void
-+static inline void
- ahd_assert_atn(struct ahd_softc *ahd)
- {
- 	ahd_outb(ahd, SCSISIGO, ATNO);
-@@ -1069,7 +1069,7 @@ ahd_currently_packetized(struct ahd_soft
- 	return (packetized);
+ const SRC_MODE_SHIFT	0
+@@ -190,6 +202,7 @@ register SEQINTCODE {
+ 		SAW_HWERR,
+ 		BAD_SCB_STATUS
+ 	}
++	dont_generate_debug_code
  }
  
--static __inline int
-+static inline int
- ahd_set_active_fifo(struct ahd_softc *ahd)
- {
- 	u_int active_fifo;
-@@ -1086,7 +1086,7 @@ ahd_set_active_fifo(struct ahd_softc *ah
+ /*
+@@ -207,6 +220,7 @@ register CLRINT {
+ 	field	CLRSEQINT	0x04
+ 	field	CLRCMDINT	0x02
+ 	field	CLRSPLTINT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -222,6 +236,7 @@ register ERROR {
+ 	field	SQPARERR	0x08
+ 	field	ILLOPCODE	0x04
+ 	field	DSCTMOUT	0x02
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -255,6 +270,7 @@ register HCNTRL {
+ 	field	INTEN		0x02
+ 	field	CHIPRST		0x01
+ 	field	CHIPRSTACK	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -265,6 +281,7 @@ register HNSCB_QOFF {
+ 	access_mode	RW
+ 	size		2
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -274,6 +291,7 @@ register HESCB_QOFF {
+ 	address			0x008
+ 	access_mode	RW
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -311,6 +329,7 @@ register CLRSEQINTSTAT {
+ 	field	CLRSEQ_SCSIINT	0x04
+ 	field	CLRSEQ_PCIINT	0x02
+ 	field	CLRSEQ_SPLTINT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -320,6 +339,7 @@ register SWTIMER {
+ 	address			0x00E
+ 	access_mode	RW
+ 	size		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -330,6 +350,7 @@ register SNSCB_QOFF {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -340,6 +361,7 @@ register SESCB_QOFF {
+ 	count		2
+ 	access_mode	RW
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -350,6 +372,7 @@ register SDSCB_QOFF {
+ 	access_mode	RW
+ 	modes		M_CCHAN
+ 	size		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -378,6 +401,7 @@ register QOFF_CTLSTA {
+ 		SCB_QSIZE_8192,
+ 		SCB_QSIZE_16384
+ 	}
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -431,6 +455,7 @@ register DSCOMMAND0 {
+ 	field	EXTREQLCK	0x10	/* External Request Lock */
+ 	field	DISABLE_TWATE	0x02	/* Rev B or greater */
+ 	field	CIOPARCKEN	0x01	/* Internal bus parity error enable */
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -459,6 +484,7 @@ register SG_CACHE_PRE {
+ 	field	SG_ADDR_MASK	0xf8
+ 	field	ODD_SEG		0x04
+ 	field	LAST_SEG	0x02
++	dont_generate_debug_code
+ }
+ 
+ register SG_CACHE_SHADOW {
+@@ -491,6 +517,7 @@ register HADDR {
+ 	access_mode	RW
+ 	size		8
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -522,6 +549,7 @@ register HCNT {
+ 	access_mode	RW
+ 	size		3
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -551,6 +579,7 @@ register SGHADDR {
+ 	access_mode	RW
+ 	size		8
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -561,6 +590,7 @@ register SCBHADDR {
+ 	access_mode	RW
+ 	size		8
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -570,6 +600,7 @@ register SGHCNT {
+ 	address			0x084
+ 	access_mode	RW
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -579,6 +610,7 @@ register SCBHCNT {
+ 	address			0x084
+ 	access_mode	RW
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -609,6 +641,7 @@ register DFF_THRSH {
+ 		RD_DFTHRSH_90,
+ 		RD_DFTHRSH_MAX
+ 	}
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -817,6 +850,7 @@ register PCIXCTL {
+ 	field	SRSPDPEEN	0x04
+ 	field	TSCSERREN	0x02
+ 	field	CMPABCDIS	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -863,6 +897,7 @@ register DCHSPLTSTAT0 {
+ 	field	RXOVRUN		0x04
+ 	field	RXSCEMSG	0x02
+ 	field	RXSPLTRSP	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -908,6 +943,7 @@ register DCHSPLTSTAT1 {
+ 	modes		M_DFF0, M_DFF1
+ 	count		2
+ 	field	RXDATABUCKET	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1069,6 +1105,7 @@ register SGSPLTSTAT0 {
+ 	field	RXOVRUN		0x04
+ 	field	RXSCEMSG	0x02
+ 	field	RXSPLTRSP	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1080,6 +1117,7 @@ register SGSPLTSTAT1 {
+ 	modes		M_DFF0, M_DFF1
+ 	count		2
+ 	field	RXDATABUCKET	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1091,6 +1129,7 @@ register SFUNCT {
+ 	modes		M_CFG
+ 	field	TEST_GROUP	0xF0
+ 	field	TEST_NUM	0x0F
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1109,6 +1148,7 @@ register DF0PCISTAT {
+ 	field	RDPERR		0x04
+ 	field	TWATERR		0x02
+ 	field	DPR		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1204,6 +1244,7 @@ register TARGPCISTAT {
+ 	field	SSE		0x40
+ 	field	STA		0x08
+ 	field	TWATERR		0x02
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1216,6 +1257,7 @@ register LQIN {
+ 	size		20
+ 	count		2
+ 	modes		M_DFF0, M_DFF1, M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1247,6 +1289,7 @@ register LUNPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1278,6 +1321,7 @@ register CMDLENPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1290,6 +1334,7 @@ register ATTRPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1302,6 +1347,7 @@ register FLAGPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1313,6 +1359,7 @@ register CMDPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1324,6 +1371,7 @@ register QNEXTPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1347,6 +1395,7 @@ register ABRTBYTEPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1358,6 +1407,7 @@ register ABRTBITPTR {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1398,6 +1448,7 @@ register LUNLEN {
+ 	count		2
+ 	mask		ILUNLEN	0x0F
+ 	mask		TLUNLEN	0xF0
++	dont_generate_debug_code
+ }
+ const LUNLEN_SINGLE_LEVEL_LUN 0xF
+ 
+@@ -1410,6 +1461,7 @@ register CDBLIMIT {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1422,6 +1474,7 @@ register MAXCMD {
+ 	access_mode	RW
+ 	modes		M_CFG
+ 	count		9
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1432,6 +1485,7 @@ register MAXCMDCNT {
+ 	address			0x033
+ 	access_mode	RW
+ 	modes		M_CFG
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1490,6 +1544,7 @@ register LQCTL1 {
+ 	field	PCI2PCI		0x04
+ 	field	SINGLECMD	0x02
+ 	field	ABORTPENDING	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1508,6 +1563,7 @@ register LQCTL2 {
+ 	field	LQOCONTINUE	0x04
+ 	field	LQOTOIDLE	0x02
+ 	field	LQOPAUSE	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1578,6 +1634,7 @@ register SXFRCTL0 {
+ 	field	DFPEXP		0x40
+ 	field	BIOSCANCELEN	0x10
+ 	field	SPIOEN		0x08
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1594,6 +1651,7 @@ register SXFRCTL1 {
+ 	field	ENSTIMER	0x04
+ 	field	ACTNEGEN	0x02
+ 	field	STPWEN		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1696,6 +1754,7 @@ register SCSISIGO {
+ 		P_STATUS	CDO|IOO,
+ 		P_MESGIN	CDO|IOO|MSGO
+ 	}
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1738,6 +1797,7 @@ register MULTARGID {
+ 	modes		M_CFG
+ 	size		2
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1774,6 +1834,7 @@ register SCSIDAT {
+ 	access_mode	RW
+ 	modes		M_DFF0, M_DFF1, M_SCSI
+ 	size		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1796,6 +1857,7 @@ register TARGIDIN {
+ 	count		2
+ 	field	CLKOUT		0x80
+ 	field	TARGID		0x0F
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1825,6 +1887,7 @@ register SBLKCTL {
+ 	field	ENAB40		0x08	/* LVD transceiver active */
+ 	field	ENAB20		0x04	/* SE/HVD transceiver active */
+ 	field	SELWIDE		0x02
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1842,6 +1905,7 @@ register OPTIONMODE {
+ 	field	ENDGFORMCHK		0x04
+ 	field	AUTO_MSGOUT_DE		0x02
+ 	mask	OPTIONMODE_DEFAULTS	AUTO_MSGOUT_DE
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1876,6 +1940,7 @@ register CLRSINT0 {
+ 	field	CLROVERRUN	0x04
+ 	field	CLRSPIORDY	0x02
+ 	field	CLRARBDO	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1929,6 +1994,7 @@ register CLRSINT1 {
+ 	field	CLRSCSIPERR	0x04
+ 	field	CLRSTRB2FAST	0x02
+ 	field	CLRREQINIT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1962,6 +2028,7 @@ register CLRSINT2 {
+ 	field	CLRWIDE_RES	0x04	/* Modes 0 and 1 only */
+ 	field	CLRSDONE	0x02	/* Modes 0 and 1 only */
+ 	field	CLRDMADONE	0x01	/* Modes 0 and 1 only */
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2002,6 +2069,7 @@ register LQISTATE {
+ 	access_mode	RO
+ 	modes		M_CFG
+ 	count		6
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2022,6 +2090,7 @@ register LQOSTATE {
+ 	access_mode	RO
+ 	modes		M_CFG
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2054,6 +2123,7 @@ register CLRLQIINT0 {
+ 	field	CLRLQIBADLQT	0x04
+ 	field	CLRLQIATNLQ	0x02
+ 	field	CLRLQIATNCMD	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2070,6 +2140,7 @@ register LQIMODE0 {
+ 	field	ENLQIBADLQT	0x04
+ 	field	ENLQIATNLQ	0x02
+ 	field	ENLQIATNCMD	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2106,6 +2177,7 @@ register CLRLQIINT1 {
+ 	field	CLRLQIBADLQI	0x04
+ 	field	CLRLQIOVERI_LQ	0x02
+ 	field	CLRLQIOVERI_NLQ	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2124,6 +2196,7 @@ register LQIMODE1 {
+ 	field	ENLQIBADLQI	0x04
+ 	field	ENLQIOVERI_LQ	0x02	/* LQIOVERI1 */
+ 	field	ENLQIOVERI_NLQ	0x01	/* LQIOVERI2 */
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2165,6 +2238,7 @@ register CLRSINT3 {
+ 	count		3
+ 	field	CLRNTRAMPERR	0x02
+ 	field	CLROSRAMPERR	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2177,6 +2251,7 @@ register SIMODE3 {
+ 	count		4
+ 	field	ENNTRAMPERR	0x02
+ 	field	ENOSRAMPERR	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2207,6 +2282,7 @@ register CLRLQOINT0 {
+ 	field	CLRLQOATNLQ		0x04
+ 	field	CLRLQOATNPKT		0x02
+ 	field	CLRLQOTCRC		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2222,6 +2298,7 @@ register LQOMODE0 {
+ 	field	ENLQOATNLQ		0x04
+ 	field	ENLQOATNPKT		0x02
+ 	field	ENLQOTCRC		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2251,6 +2328,7 @@ register CLRLQOINT1 {
+ 	field	CLRLQOBADQAS		0x04
+ 	field	CLRLQOBUSFREE		0x02
+ 	field	CLRLQOPHACHGINPKT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2266,6 +2344,7 @@ register LQOMODE1 {
+ 	field	ENLQOBADQAS		0x04
+ 	field	ENLQOBUSFREE		0x02
+ 	field	ENLQOPHACHGINPKT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2289,6 +2368,7 @@ register OS_SPACE_CNT {
+ 	access_mode	RO
+ 	modes		M_CFG
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2318,6 +2398,7 @@ register GSFIFO {
+ 	access_mode	RO
+ 	size		2
+ 	modes		M_DFF0, M_DFF1, M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2341,6 +2422,7 @@ register NEXTSCB {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2357,6 +2439,7 @@ register LQOSCSCTL {
+ 	field		LQOBUSETDLY	0x40
+ 	field		LQONOHOLDLACK	0x02
+ 	field		LQONOCHKOVER	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2389,6 +2472,7 @@ register CLRSEQINTSRC {
+ 	field	CLRCFG4TSTAT	0x04
+ 	field	CLRCFG4ICMD	0x02
+ 	field	CLRCFG4TCMD	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2415,6 +2499,7 @@ register CURRSCB {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2472,6 +2557,7 @@ register LASTSCB {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2494,6 +2580,7 @@ register SHADDR {
+ 	access_mode	RO
+ 	size		8
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2513,6 +2600,7 @@ register NEGOADDR {
+ 	address			0x060
+ 	access_mode	RW
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2523,6 +2611,7 @@ register NEGPERIOD {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2543,6 +2632,7 @@ register NEGOFFSET {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2557,6 +2647,7 @@ register NEGPPROPTS {
+ 	field	PPROPT_QAS	0x04
+ 	field	PPROPT_DT	0x02
+ 	field	PPROPT_IUT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2573,6 +2664,7 @@ register NEGCONOPTS {
+ 	field	ENAUTOATNI	0x04
+ 	field	ENAUTOATNO	0x02
+ 	field	WIDEXFER	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2583,6 +2675,7 @@ register ANNEXCOL {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		7
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2602,6 +2695,7 @@ register SCSCHKN {
+ 	field	DFFACTCLR	0x04
+ 	field	SHVALIDSTDIS	0x02
+ 	field	LSTSGCLRDIS	0x01
++	dont_generate_debug_code
+ }
+ 
+ const AHD_ANNEXCOL_PER_DEV0	4
+@@ -2635,6 +2729,7 @@ register ANNEXDAT {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		3
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2645,6 +2740,7 @@ register IOWNID {
+ 	address			0x067
+ 	access_mode	RW
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2671,6 +2767,7 @@ register TOWNID {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2702,6 +2799,7 @@ register SHCNT {
+ 	access_mode	RW
+ 	size		3
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2789,6 +2887,7 @@ register SCBPTR {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_DFF0, M_DFF1, M_CCHAN, M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2816,6 +2915,7 @@ register SCBAUTOPTR {
+ 	field	AUSCBPTR_EN	0x80
+ 	field	SCBPTR_ADDR	0x38
+ 	field	SCBPTR_OFF	0x07
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2825,6 +2925,7 @@ register CCSGADDR {
+ 	address			0x0AC
+ 	access_mode	RW
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2834,6 +2935,7 @@ register CCSCBADDR {
+ 	address			0x0AC
+ 	access_mode	RW
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2899,6 +3001,7 @@ register CCSGRAM {
+ 	address			0x0B0
+ 	access_mode	RW
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2908,6 +3011,7 @@ register CCSCBRAM {
+ 	address			0x0B0
+ 	access_mode	RW
+ 	modes		M_CCHAN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2958,6 +3062,7 @@ register BRDDAT {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2974,6 +3079,7 @@ register BRDCTL {
+ 	field	BRDEN		0x04
+ 	field	BRDRW		0x02
+ 	field	BRDSTB		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2984,6 +3090,7 @@ register SEEADR {
+ 	access_mode	RW
+ 	modes		M_SCSI
+ 	count		4
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -2995,6 +3102,7 @@ register SEEDAT {
+ 	size		2
+ 	modes		M_SCSI
+ 	count		4
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3011,6 +3119,7 @@ register SEESTAT {
+ 	field	SEEARBACK	0x04
+ 	field	SEEBUSY		0x02
+ 	field	SEESTART	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3036,6 +3145,7 @@ register SEECTL {
+ 	mask	SEEOP_EWDS	0x40
+ 	field	SEERST		0x02
+ 	field	SEESTART	0x01
++	dont_generate_debug_code
+ }
+ 
+ const SEEOP_ERAL_ADDR	0x80
+@@ -3050,6 +3160,7 @@ register SCBCNT {
+ 	address			0x0BF
+ 	access_mode	RW
+ 	modes		M_SCSI
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3061,6 +3172,7 @@ register DFWADDR {
+ 	access_mode	RW
+ 	size		2
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3087,6 +3199,7 @@ register DSPDATACTL {
+ 	field	DESQDIS		0x10
+ 	field	RCVROFFSTDIS	0x04
+ 	field	XMITOFFSTDIS	0x02
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3132,6 +3245,7 @@ register DFDAT {
+ 	address			0x0C4
+ 	access_mode	RW
+ 	modes		M_DFF0, M_DFF1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3144,6 +3258,7 @@ register DSPSELECT {
+ 	count		1
+ 	field	AUTOINCEN	0x80
+ 	field	DSPSEL		0x1F
++	dont_generate_debug_code
+ }
+ 
+ const NUMDSPS 0x14
+@@ -3158,6 +3273,7 @@ register WRTBIASCTL {
+ 	count		3
+ 	field	AUTOXBCDIS	0x80
+ 	field	XMITMANVAL	0x3F
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3316,6 +3432,7 @@ register FLAGS {
+ 	count		23
+ 	field	ZERO		0x02
+ 	field	CARRY		0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3344,6 +3461,7 @@ register SEQRAM {
+ 	address			0x0DA
+ 	access_mode 	RW
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3355,6 +3473,7 @@ register PRGMCNT {
+ 	access_mode	RW
+ 	size		2
+ 	count		5
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3364,6 +3483,7 @@ register ACCUM {
+ 	address			0x0E0
+ 	access_mode 	RW
+ 	accumulator
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3380,6 +3500,7 @@ register SINDEX	{
+ 	access_mode	RW
+ 	size		2
+ 	sindex
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3390,6 +3511,7 @@ register DINDEX {
+ 	address			0x0E4
+ 	access_mode	RW
+ 	size		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3415,6 +3537,7 @@ register ALLONES {
+ 	address			0x0E8
+ 	access_mode RO
+ 	allones
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3425,6 +3548,7 @@ register ALLZEROS {
+ 	address			0x0EA
+ 	access_mode RO
+ 	allzeros
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3435,6 +3559,7 @@ register NONE {
+ 	address			0x0EA
+ 	access_mode WO
+ 	none
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3445,6 +3570,7 @@ register NONE {
+ register SINDIR	{
+ 	address			0x0EC
+ 	access_mode RO
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3455,6 +3581,7 @@ register SINDIR	{
+ register DINDIR	 {
+ 	address			0x0ED
+ 	access_mode WO
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3479,6 +3606,7 @@ register FUNCTION1 {
+ register STACK {
+ 	address			0x0F2
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3491,6 +3619,7 @@ register INTVEC1_ADDR {
+ 	size		2
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3503,6 +3632,7 @@ register CURADDR {
+ 	size		2
+ 	modes		M_SCSI
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3515,6 +3645,7 @@ register INTVEC2_ADDR {
+ 	size		2
+ 	modes		M_CFG
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -3543,12 +3674,14 @@ scratch_ram {
+ 	modes	0, 1, 2, 3
+ 	REG0 {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	REG1 {
+ 		size		2
+ 	}
+ 	REG_ISR {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	SG_STATE {
+ 		size		1
+@@ -3572,9 +3705,11 @@ scratch_ram {
+ 	modes	0, 1, 2, 3
+ 	LONGJMP_ADDR {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	ACCUM_SAVE {
+ 		size		1
++		dont_generate_debug_code
  	}
  }
  
--static __inline void
-+static inline void
- ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
- {
- 	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
-@@ -1096,7 +1096,7 @@ ahd_unbusy_tcl(struct ahd_softc *ahd, u_
-  * Determine whether the sequencer reported a residual
-  * for this SCB/transaction.
-  */
--static __inline void
-+static inline void
- ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
- {
- 	uint32_t sgptr;
-@@ -1106,7 +1106,7 @@ ahd_update_residual(struct ahd_softc *ah
- 		ahd_calc_residual(ahd, scb);
- }
- 
--static __inline void
-+static inline void
- ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
- {
- 	uint32_t sgptr;
-@@ -7992,7 +7992,7 @@ ahd_resume(struct ahd_softc *ahd)
-  * scbid that should be restored once manipualtion
-  * of the TCL entry is complete.
-  */
--static __inline u_int
-+static inline u_int
- ahd_index_busy_tcl(struct ahd_softc *ahd, u_int *saved_scbid, u_int tcl)
- {
- 	/*
-diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_inline.h
---- a/drivers/scsi/aic7xxx/aic79xx_inline.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic79xx_inline.h
-@@ -46,21 +46,20 @@
- #define _AIC79XX_INLINE_H_
- 
- /******************************** Debugging ***********************************/
--static __inline char *ahd_name(struct ahd_softc *ahd);
-+static inline char *ahd_name(struct ahd_softc *ahd);
- 
--static __inline char *
--ahd_name(struct ahd_softc *ahd)
-+static inline char *ahd_name(struct ahd_softc *ahd)
- {
- 	return (ahd->name);
- }
- 
- /************************ Sequencer Execution Control *************************/
--static __inline void ahd_known_modes(struct ahd_softc *ahd,
-+static inline void ahd_known_modes(struct ahd_softc *ahd,
- 				     ahd_mode src, ahd_mode dst);
--static __inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
-+static inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
- 						    ahd_mode src,
- 						    ahd_mode dst);
--static __inline void ahd_extract_mode_state(struct ahd_softc *ahd,
-+static inline void ahd_extract_mode_state(struct ahd_softc *ahd,
- 					    ahd_mode_state state,
- 					    ahd_mode *src, ahd_mode *dst);
- 
-@@ -73,7 +72,7 @@ int  ahd_is_paused(struct ahd_softc *ahd
- void ahd_pause(struct ahd_softc *ahd);
- void ahd_unpause(struct ahd_softc *ahd);
- 
--static __inline void
-+static inline void
- ahd_known_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
- {
- 	ahd->src_mode = src;
-@@ -82,13 +81,13 @@ ahd_known_modes(struct ahd_softc *ahd, a
- 	ahd->saved_dst_mode = dst;
- }
- 
--static __inline ahd_mode_state
-+static inline ahd_mode_state
- ahd_build_mode_state(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
- {
- 	return ((src << SRC_MODE_SHIFT) | (dst << DST_MODE_SHIFT));
- }
- 
--static __inline void
-+static inline void
- ahd_extract_mode_state(struct ahd_softc *ahd, ahd_mode_state state,
- 		       ahd_mode *src, ahd_mode *dst)
- {
-@@ -102,13 +101,12 @@ void	*ahd_sg_setup(struct ahd_softc *ahd
- 		      bus_size_t len, int last);
- 
- /************************** Memory mapping routines ***************************/
--static __inline size_t	ahd_sg_size(struct ahd_softc *ahd);
-+static inline size_t	ahd_sg_size(struct ahd_softc *ahd);
- 
- void	ahd_sync_sglist(struct ahd_softc *ahd,
- 			struct scb *scb, int op);
- 
--static __inline size_t
--ahd_sg_size(struct ahd_softc *ahd)
-+static inline size_t ahd_sg_size(struct ahd_softc *ahd)
- {
- 	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0)
- 		return (sizeof(struct ahd_dma64_seg));
-@@ -141,11 +139,9 @@ struct scb *
- 	ahd_lookup_scb(struct ahd_softc *ahd, u_int tag);
- void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
- 
--static __inline uint8_t *
--			ahd_get_sense_buf(struct ahd_softc *ahd,
-+static inline uint8_t *ahd_get_sense_buf(struct ahd_softc *ahd,
- 					  struct scb *scb);
--static __inline uint32_t
--			ahd_get_sense_bufaddr(struct ahd_softc *ahd,
-+static inline uint32_t ahd_get_sense_bufaddr(struct ahd_softc *ahd,
- 					      struct scb *scb);
- 
- #if 0 /* unused */
-@@ -158,13 +154,13 @@ do {								\
- 
- #endif
- 
--static __inline uint8_t *
-+static inline uint8_t *
- ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (scb->sense_data);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_get_sense_bufaddr(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (scb->sense_busaddr);
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_osm.h
---- a/drivers/scsi/aic7xxx/aic79xx_osm.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
-@@ -395,19 +395,19 @@ struct info_str {
- };
- 
- /******************************** Locking *************************************/
--static __inline void
-+static inline void
- ahd_lockinit(struct ahd_softc *ahd)
- {
- 	spin_lock_init(&ahd->platform_data->spin_lock);
- }
- 
--static __inline void
-+static inline void
- ahd_lock(struct ahd_softc *ahd, unsigned long *flags)
- {
- 	spin_lock_irqsave(&ahd->platform_data->spin_lock, *flags);
- }
- 
--static __inline void
-+static inline void
- ahd_unlock(struct ahd_softc *ahd, unsigned long *flags)
- {
- 	spin_unlock_irqrestore(&ahd->platform_data->spin_lock, *flags);
-@@ -490,29 +490,29 @@ void			 ahd_pci_write_config(ahd_dev_sof
- 					  int reg, uint32_t value,
- 					  int width);
- 
--static __inline int ahd_get_pci_function(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_function(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_function(ahd_dev_softc_t pci)
- {
- 	return (PCI_FUNC(pci->devfn));
- }
- 
--static __inline int ahd_get_pci_slot(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_slot(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_slot(ahd_dev_softc_t pci)
- {
- 	return (PCI_SLOT(pci->devfn));
- }
- 
--static __inline int ahd_get_pci_bus(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_bus(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_bus(ahd_dev_softc_t pci)
- {
- 	return (pci->bus->number);
- }
- 
--static __inline void ahd_flush_device_writes(struct ahd_softc *);
--static __inline void
-+static inline void ahd_flush_device_writes(struct ahd_softc *);
-+static inline void
- ahd_flush_device_writes(struct ahd_softc *ahd)
- {
- 	/* XXX Is this sufficient for all architectures??? */
-@@ -524,81 +524,81 @@ int	ahd_linux_proc_info(struct Scsi_Host
- 			    off_t, int, int);
- 
- /*********************** Transaction Access Wrappers **************************/
--static __inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahd_set_transaction_status(struct scb *, uint32_t);
--static __inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahd_set_scsi_status(struct scb *, uint32_t);
--static __inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahd_get_transaction_status(struct scb *);
--static __inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahd_get_scsi_status(struct scb *);
--static __inline void ahd_set_transaction_tag(struct scb *, int, u_int);
--static __inline u_long ahd_get_transfer_length(struct scb *);
--static __inline int ahd_get_transfer_dir(struct scb *);
--static __inline void ahd_set_residual(struct scb *, u_long);
--static __inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
--static __inline u_long ahd_get_residual(struct scb *);
--static __inline u_long ahd_get_sense_residual(struct scb *);
--static __inline int ahd_perform_autosense(struct scb *);
--static __inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
-+static inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahd_set_transaction_status(struct scb *, uint32_t);
-+static inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahd_set_scsi_status(struct scb *, uint32_t);
-+static inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahd_get_transaction_status(struct scb *);
-+static inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahd_get_scsi_status(struct scb *);
-+static inline void ahd_set_transaction_tag(struct scb *, int, u_int);
-+static inline u_long ahd_get_transfer_length(struct scb *);
-+static inline int ahd_get_transfer_dir(struct scb *);
-+static inline void ahd_set_residual(struct scb *, u_long);
-+static inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
-+static inline u_long ahd_get_residual(struct scb *);
-+static inline u_long ahd_get_sense_residual(struct scb *);
-+static inline int ahd_perform_autosense(struct scb *);
-+static inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
- 					       struct scb *);
--static __inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
-+static inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
- 						     struct ahd_devinfo *);
--static __inline void ahd_platform_scb_free(struct ahd_softc *ahd,
-+static inline void ahd_platform_scb_free(struct ahd_softc *ahd,
- 					   struct scb *scb);
--static __inline void ahd_freeze_scb(struct scb *scb);
-+static inline void ahd_freeze_scb(struct scb *scb);
- 
--static __inline
-+static inline
- void ahd_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~(CAM_STATUS_MASK << 16);
- 	cmd->result |= status << 16;
- }
- 
--static __inline
-+static inline
- void ahd_set_transaction_status(struct scb *scb, uint32_t status)
- {
- 	ahd_cmd_set_transaction_status(scb->io_ctx,status);
- }
- 
--static __inline
-+static inline
- void ahd_cmd_set_scsi_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~0xFFFF;
- 	cmd->result |= status;
- }
- 
--static __inline
-+static inline
- void ahd_set_scsi_status(struct scb *scb, uint32_t status)
- {
- 	ahd_cmd_set_scsi_status(scb->io_ctx, status);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd)
- {
- 	return ((cmd->result >> 16) & CAM_STATUS_MASK);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_get_transaction_status(struct scb *scb)
- {
- 	return (ahd_cmd_get_transaction_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd)
- {
- 	return (cmd->result & 0xFFFF);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_get_scsi_status(struct scb *scb)
- {
- 	return (ahd_cmd_get_scsi_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- void ahd_set_transaction_tag(struct scb *scb, int enabled, u_int type)
- {
- 	/*
-@@ -607,43 +607,43 @@ void ahd_set_transaction_tag(struct scb 
+@@ -3591,18 +3726,22 @@ scratch_ram {
  	 */
- }
- 
--static __inline
-+static inline
- u_long ahd_get_transfer_length(struct scb *scb)
- {
- 	return (scb->platform_data->xfer_len);
- }
- 
--static __inline
-+static inline
- int ahd_get_transfer_dir(struct scb *scb)
- {
- 	return (scb->io_ctx->sc_data_direction);
- }
- 
--static __inline
-+static inline
- void ahd_set_residual(struct scb *scb, u_long resid)
- {
- 	scsi_set_resid(scb->io_ctx, resid);
- }
- 
--static __inline
-+static inline
- void ahd_set_sense_residual(struct scb *scb, u_long resid)
- {
- 	scb->platform_data->sense_resid = resid;
- }
- 
--static __inline
-+static inline
- u_long ahd_get_residual(struct scb *scb)
- {
- 	return scsi_get_resid(scb->io_ctx);
- }
- 
--static __inline
-+static inline
- u_long ahd_get_sense_residual(struct scb *scb)
- {
- 	return (scb->platform_data->sense_resid);
- }
- 
--static __inline
-+static inline
- int ahd_perform_autosense(struct scb *scb)
- {
+ 	WAITING_SCB_TAILS {
+ 		size		32
++		dont_generate_debug_code
+ 	}
+ 	WAITING_TID_HEAD {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	WAITING_TID_TAIL {
+ 		size		2
++		dont_generate_debug_code
+ 	}
  	/*
-@@ -654,20 +654,20 @@ int ahd_perform_autosense(struct scb *sc
- 	return (1);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_get_sense_bufsize(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (sizeof(struct scsi_sense_data));
- }
- 
--static __inline void
-+static inline void
- ahd_notify_xfer_settings_change(struct ahd_softc *ahd,
- 				struct ahd_devinfo *devinfo)
- {
- 	/* Nothing to do here for linux */
- }
- 
--static __inline void
-+static inline void
- ahd_platform_scb_free(struct ahd_softc *ahd, struct scb *scb)
- {
- 	ahd->flags &= ~AHD_RESOURCE_SHORTAGE;
-@@ -678,7 +678,7 @@ void	ahd_platform_free(struct ahd_softc 
- void	ahd_platform_init(struct ahd_softc *ahd);
- void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
- 
--static __inline void
-+static inline void
- ahd_freeze_scb(struct scb *scb)
- {
- 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic79xx_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -51,7 +51,7 @@
- 
- #include "aic79xx_pci.h"
- 
--static __inline uint64_t
-+static inline uint64_t
- ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
- {
- 	uint64_t id;
-diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_inline.h
---- a/drivers/scsi/aic7xxx/aic7xxx_inline.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic7xxx_inline.h
-@@ -55,10 +55,9 @@ void	ahc_sync_sglist(struct ahc_softc *a
- 			struct scb *scb, int op);
- 
- /******************************** Debugging ***********************************/
--static __inline char *ahc_name(struct ahc_softc *ahc);
-+static inline char *ahc_name(struct ahc_softc *ahc);
- 
--static __inline char *
--ahc_name(struct ahc_softc *ahc)
-+static inline char *ahc_name(struct ahc_softc *ahc)
- {
- 	return (ahc->name);
- }
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_osm.h
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -230,7 +230,7 @@ int	ahc_dmamap_unload(struct ahc_softc *
- #include "aic7xxx.h"
- 
- /***************************** Timer Facilities *******************************/
--static __inline void
-+static inline void
- ahc_scb_timer_reset(struct scb *scb, u_int usec)
- {
- }
-@@ -401,19 +401,19 @@ struct info_str {
- /******************************** Locking *************************************/
- /* Lock protecting internal data structures */
- 
--static __inline void
-+static inline void
- ahc_lockinit(struct ahc_softc *ahc)
- {
- 	spin_lock_init(&ahc->platform_data->spin_lock);
- }
- 
--static __inline void
-+static inline void
- ahc_lock(struct ahc_softc *ahc, unsigned long *flags)
- {
- 	spin_lock_irqsave(&ahc->platform_data->spin_lock, *flags);
- }
- 
--static __inline void
-+static inline void
- ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
- {
- 	spin_unlock_irqrestore(&ahc->platform_data->spin_lock, *flags);
-@@ -493,22 +493,22 @@ void			 ahc_pci_write_config(ahc_dev_sof
- 					      int reg, uint32_t value,
- 					      int width);
- 
--static __inline int ahc_get_pci_function(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_function(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_function(ahc_dev_softc_t pci)
- {
- 	return (PCI_FUNC(pci->devfn));
- }
- 
--static __inline int ahc_get_pci_slot(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_slot(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_slot(ahc_dev_softc_t pci)
- {
- 	return (PCI_SLOT(pci->devfn));
- }
- 
--static __inline int ahc_get_pci_bus(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_bus(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_bus(ahc_dev_softc_t pci)
- {
- 	return (pci->bus->number);
-@@ -521,8 +521,8 @@ static inline void ahc_linux_pci_exit(vo
- }
- #endif
- 
--static __inline void ahc_flush_device_writes(struct ahc_softc *);
--static __inline void
-+static inline void ahc_flush_device_writes(struct ahc_softc *);
-+static inline void
- ahc_flush_device_writes(struct ahc_softc *ahc)
- {
- 	/* XXX Is this sufficient for all architectures??? */
-@@ -535,81 +535,81 @@ int	ahc_linux_proc_info(struct Scsi_Host
- 
- /*************************** Domain Validation ********************************/
- /*********************** Transaction Access Wrappers *************************/
--static __inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahc_set_transaction_status(struct scb *, uint32_t);
--static __inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahc_set_scsi_status(struct scb *, uint32_t);
--static __inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahc_get_transaction_status(struct scb *);
--static __inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahc_get_scsi_status(struct scb *);
--static __inline void ahc_set_transaction_tag(struct scb *, int, u_int);
--static __inline u_long ahc_get_transfer_length(struct scb *);
--static __inline int ahc_get_transfer_dir(struct scb *);
--static __inline void ahc_set_residual(struct scb *, u_long);
--static __inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
--static __inline u_long ahc_get_residual(struct scb *);
--static __inline u_long ahc_get_sense_residual(struct scb *);
--static __inline int ahc_perform_autosense(struct scb *);
--static __inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
-+static inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahc_set_transaction_status(struct scb *, uint32_t);
-+static inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahc_set_scsi_status(struct scb *, uint32_t);
-+static inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahc_get_transaction_status(struct scb *);
-+static inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahc_get_scsi_status(struct scb *);
-+static inline void ahc_set_transaction_tag(struct scb *, int, u_int);
-+static inline u_long ahc_get_transfer_length(struct scb *);
-+static inline int ahc_get_transfer_dir(struct scb *);
-+static inline void ahc_set_residual(struct scb *, u_long);
-+static inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
-+static inline u_long ahc_get_residual(struct scb *);
-+static inline u_long ahc_get_sense_residual(struct scb *);
-+static inline int ahc_perform_autosense(struct scb *);
-+static inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
- 					       struct scb *);
--static __inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
-+static inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
- 						     struct ahc_devinfo *);
--static __inline void ahc_platform_scb_free(struct ahc_softc *ahc,
-+static inline void ahc_platform_scb_free(struct ahc_softc *ahc,
- 					   struct scb *scb);
--static __inline void ahc_freeze_scb(struct scb *scb);
-+static inline void ahc_freeze_scb(struct scb *scb);
- 
--static __inline
-+static inline
- void ahc_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~(CAM_STATUS_MASK << 16);
- 	cmd->result |= status << 16;
- }
- 
--static __inline
-+static inline
- void ahc_set_transaction_status(struct scb *scb, uint32_t status)
- {
- 	ahc_cmd_set_transaction_status(scb->io_ctx,status);
- }
- 
--static __inline
-+static inline
- void ahc_cmd_set_scsi_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~0xFFFF;
- 	cmd->result |= status;
- }
- 
--static __inline
-+static inline
- void ahc_set_scsi_status(struct scb *scb, uint32_t status)
- {
- 	ahc_cmd_set_scsi_status(scb->io_ctx, status);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd)
- {
- 	return ((cmd->result >> 16) & CAM_STATUS_MASK);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_get_transaction_status(struct scb *scb)
- {
- 	return (ahc_cmd_get_transaction_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd)
- {
- 	return (cmd->result & 0xFFFF);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_get_scsi_status(struct scb *scb)
- {
- 	return (ahc_cmd_get_scsi_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- void ahc_set_transaction_tag(struct scb *scb, int enabled, u_int type)
- {
- 	/*
-@@ -618,43 +618,43 @@ void ahc_set_transaction_tag(struct scb 
+ 	 * SCBID of the next SCB in the new SCB queue.
  	 */
- }
- 
--static __inline
-+static inline
- u_long ahc_get_transfer_length(struct scb *scb)
- {
- 	return (scb->platform_data->xfer_len);
- }
- 
--static __inline
-+static inline
- int ahc_get_transfer_dir(struct scb *scb)
- {
- 	return (scb->io_ctx->sc_data_direction);
- }
- 
--static __inline
-+static inline
- void ahc_set_residual(struct scb *scb, u_long resid)
- {
- 	scsi_set_resid(scb->io_ctx, resid);
- }
- 
--static __inline
-+static inline
- void ahc_set_sense_residual(struct scb *scb, u_long resid)
- {
- 	scb->platform_data->sense_resid = resid;
- }
- 
--static __inline
-+static inline
- u_long ahc_get_residual(struct scb *scb)
- {
- 	return scsi_get_resid(scb->io_ctx);
- }
- 
--static __inline
-+static inline
- u_long ahc_get_sense_residual(struct scb *scb)
- {
- 	return (scb->platform_data->sense_resid);
- }
- 
--static __inline
-+static inline
- int ahc_perform_autosense(struct scb *scb)
- {
+ 	NEXT_QUEUED_SCB_ADDR {
+ 		size		4
++		dont_generate_debug_code
+ 	}
  	/*
-@@ -665,20 +665,20 @@ int ahc_perform_autosense(struct scb *sc
- 	return (1);
- }
+ 	 * head of list of SCBs that have
+@@ -3611,6 +3750,7 @@ scratch_ram {
+ 	 */
+ 	COMPLETE_SCB_HEAD {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * The list of completed SCBs in
+@@ -3618,6 +3758,7 @@ scratch_ram {
+ 	 */
+ 	COMPLETE_SCB_DMAINPROG_HEAD {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * head of list of SCBs that have
+@@ -3626,6 +3767,7 @@ scratch_ram {
+ 	 */
+ 	COMPLETE_DMA_SCB_HEAD {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * tail of list of SCBs that have
+@@ -3634,6 +3776,7 @@ scratch_ram {
+ 	 */
+ 	COMPLETE_DMA_SCB_TAIL {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * head of list of SCBs that have
+@@ -3643,6 +3786,7 @@ scratch_ram {
+ 	 */
+ 	COMPLETE_ON_QFREEZE_HEAD {
+ 		size		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Counting semaphore to prevent new select-outs
+@@ -3667,6 +3811,7 @@ scratch_ram {
+ 	 */
+ 	MSG_OUT {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/* Parameters for DMA Logic */
+ 	DMAPARAMS {
+@@ -3682,6 +3827,7 @@ scratch_ram {
+ 		field	DIRECTION	0x04	/* Set indicates PCI->SCSI */
+ 		field	FIFOFLUSH	0x02
+ 		field	FIFORESET	0x01
++		dont_generate_debug_code
+ 	}
+ 	SEQ_FLAGS {
+ 		size		1
+@@ -3703,9 +3849,11 @@ scratch_ram {
+ 	 */
+ 	SAVED_SCSIID {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	SAVED_LUN {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * The last bus phase as seen by the sequencer. 
+@@ -3733,6 +3881,7 @@ scratch_ram {
+ 	 */
+ 	QOUTFIFO_ENTRY_VALID_TAG {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Kernel and sequencer offsets into the queue of
+@@ -3742,10 +3891,12 @@ scratch_ram {
+ 	KERNEL_TQINPOS {
+ 		size		1
+ 		count		1
++		dont_generate_debug_code
+ 	}
+ 	TQINPOS {
+ 		size		1
+ 		count		8
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Base address of our shared data with the kernel driver in host
+@@ -3754,6 +3905,7 @@ scratch_ram {
+ 	 */
+ 	SHARED_DATA_ADDR {
+ 		size		4
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Pointer to location in host memory for next
+@@ -3761,6 +3913,7 @@ scratch_ram {
+ 	 */
+ 	QOUTFIFO_NEXT_ADDR {
+ 		size		4
++		dont_generate_debug_code
+ 	}
+ 	ARG_1 {
+ 		size		1
+@@ -3773,11 +3926,13 @@ scratch_ram {
+ 		mask	CONT_MSG_LOOP_READ	0x03
+ 		mask	CONT_MSG_LOOP_TARG	0x02
+ 		alias	RETURN_1
++		dont_generate_debug_code
+ 	}
+ 	ARG_2 {
+ 		size		1
+ 		count		1
+ 		alias	RETURN_2
++		dont_generate_debug_code
+ 	}
  
--static __inline uint32_t
-+static inline uint32_t
- ahc_get_sense_bufsize(struct ahc_softc *ahc, struct scb *scb)
- {
- 	return (sizeof(struct scsi_sense_data));
- }
+ 	/*
+@@ -3785,6 +3940,7 @@ scratch_ram {
+ 	 */
+ 	LAST_MSG {
+ 		size		1
++		dont_generate_debug_code
+ 	}
  
--static __inline void
-+static inline void
- ahc_notify_xfer_settings_change(struct ahc_softc *ahc,
- 				struct ahc_devinfo *devinfo)
- {
- 	/* Nothing to do here for linux */
- }
+ 	/*
+@@ -3801,6 +3957,7 @@ scratch_ram {
+ 		field	MANUALP		0x0C
+ 		field	ENAUTOATNP	0x02
+ 		field	ALTSTIM		0x01
++		dont_generate_debug_code
+ 	}
  
--static __inline void
-+static inline void
- ahc_platform_scb_free(struct ahc_softc *ahc, struct scb *scb)
- {
- }
-@@ -687,7 +687,7 @@ int	ahc_platform_alloc(struct ahc_softc 
- void	ahc_platform_free(struct ahc_softc *ahc);
- void	ahc_platform_freeze_devq(struct ahc_softc *ahc, struct scb *scb);
+ 	/*
+@@ -3809,6 +3966,7 @@ scratch_ram {
+ 	INITIATOR_TAG {
+ 		size		1
+ 		count		1
++		dont_generate_debug_code
+ 	}
  
--static __inline void
-+static inline void
- ahc_freeze_scb(struct scb *scb)
- {
- 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
-diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aic7xxx_pci.c
---- a/drivers/scsi/aic7xxx/aic7xxx_pci.c~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aic7xxx_pci.c
-@@ -54,7 +54,7 @@
+ 	SEQ_FLAGS2 {
+@@ -3820,6 +3978,7 @@ scratch_ram {
  
- #include "aic7xxx_pci.h"
+ 	ALLOCFIFO_SCBPTR {
+ 		size		2
++		dont_generate_debug_code
+ 	}
  
--static __inline uint64_t
-+static inline uint64_t
- ahc_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
- {
- 	uint64_t id;
-diff -puN drivers/scsi/aic7xxx/aiclib.h~scsi-replace-__inline-with-inline drivers/scsi/aic7xxx/aiclib.h
---- a/drivers/scsi/aic7xxx/aiclib.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/aic7xxx/aiclib.h
-@@ -133,7 +133,7 @@ struct scsi_sense_data
- #define SCSI_STATUS_TASK_ABORTED	0x40
+ 	/*
+@@ -3829,6 +3988,7 @@ scratch_ram {
+ 	 */
+ 	INT_COALESCING_TIMER {
+ 		size		2
++		dont_generate_debug_code
+ 	}
  
- /************************* Large Disk Handling ********************************/
--static __inline int
-+static inline int
- aic_sector_div(sector_t capacity, int heads, int sectors)
- {
- 	/* ugly, ugly sector_div calling convention.. */
-@@ -141,7 +141,7 @@ aic_sector_div(sector_t capacity, int he
- 	return (int)capacity;
- }
+ 	/*
+@@ -3838,6 +3998,7 @@ scratch_ram {
+ 	 */
+ 	INT_COALESCING_MAXCMDS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
  
--static __inline uint32_t
-+static inline uint32_t
- scsi_4btoul(uint8_t *bytes)
- {
- 	uint32_t rv;
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_glue.h
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
-@@ -234,7 +234,7 @@ static inline struct sym_hcb * sym_get_h
- /*
-  *  Set the status field of a CAM CCB.
-  */
--static __inline void 
-+static inline void
- sym_set_cam_status(struct scsi_cmnd *cmd, int status)
- {
- 	cmd->result &= ~(0xff  << 16);
-@@ -244,7 +244,7 @@ sym_set_cam_status(struct scsi_cmnd *cmd
- /*
-  *  Get the status field of a CAM CCB.
-  */
--static __inline int 
-+static inline int
- sym_get_cam_status(struct scsi_cmnd *cmd)
- {
- 	return host_byte(cmd->result);
-@@ -253,7 +253,7 @@ sym_get_cam_status(struct scsi_cmnd *cmd
- /*
-  *  Build CAM result for a successful IO and for a failed IO.
-  */
--static __inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
-+static inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
- {
- 	scsi_set_resid(cmd, resid);
- 	cmd->result = (((DID_OK) << 16) + ((cp->ssss_status) & 0x7f));
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_hipd.c
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -602,7 +602,7 @@ sym_getsync(struct sym_hcb *np, u_char d
- /*
-  *  Set initial io register bits from burst code.
-  */
--static __inline void sym_init_burst(struct sym_hcb *np, u_char bc)
-+static inline void sym_init_burst(struct sym_hcb *np, u_char bc)
- {
- 	np->rv_ctest4	&= ~0x80;
- 	np->rv_dmode	&= ~(0x3 << 6);
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_hipd.h
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/sym53c8xx_2/sym_hipd.h
-@@ -1092,7 +1092,7 @@ do {									\
- #elif SYM_CONF_DMA_ADDRESSING_MODE == 2
- #define DMA_DAC_MASK	DMA_64BIT_MASK
- int sym_lookup_dmap(struct sym_hcb *np, u32 h, int s);
--static __inline void 
-+static inline void
- sym_build_sge(struct sym_hcb *np, struct sym_tblmove *data, u64 badd, int len)
- {
- 	u32 h = (badd>>32);
-@@ -1197,7 +1197,7 @@ dma_addr_t __vtobus(m_pool_ident_t dev_d
+ 	/*
+@@ -3846,6 +4007,7 @@ scratch_ram {
+ 	 */
+ 	INT_COALESCING_MINCMDS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
  
- #define sym_m_pool_match(mp_id1, mp_id2)	(mp_id1 == mp_id2)
+ 	/*
+@@ -3853,6 +4015,7 @@ scratch_ram {
+ 	 */
+ 	CMDS_PENDING {
+ 		size		2
++		dont_generate_debug_code
+ 	}
  
--static __inline void *sym_m_get_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
-+static inline void *sym_m_get_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
- {
- 	void *vaddr = NULL;
- 	dma_addr_t baddr = 0;
-@@ -1211,7 +1211,7 @@ static __inline void *sym_m_get_dma_mem_
- 	return vaddr;
- }
+ 	/*
+@@ -3860,6 +4023,7 @@ scratch_ram {
+ 	 */
+ 	INT_COALESCING_CMDCOUNT {
+ 		size		1
++		dont_generate_debug_code
+ 	}
  
--static __inline void sym_m_free_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
-+static inline void sym_m_free_dma_mem_cluster(m_pool_p mp, m_vtob_p vbp)
- {
- 	dma_free_coherent(mp->dev_dmat, SYM_MEM_CLUSTER_SIZE, vbp->vaddr,
- 			vbp->baddr);
-diff -puN drivers/scsi/sym53c8xx_2/sym_malloc.c~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_malloc.c
---- a/drivers/scsi/sym53c8xx_2/sym_malloc.c~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/sym53c8xx_2/sym_malloc.c
-@@ -262,7 +262,7 @@ static void ___free_dma_mem_cluster(m_po
- #endif
- 
- /* Fetch the memory pool for a given pool id (i.e. DMA constraints) */
--static __inline m_pool_p ___get_dma_pool(m_pool_ident_t dev_dmat)
-+static inline m_pool_p ___get_dma_pool(m_pool_ident_t dev_dmat)
- {
- 	m_pool_p mp;
- 	for (mp = mp0.next;
-diff -puN drivers/scsi/sym53c8xx_2/sym_misc.h~scsi-replace-__inline-with-inline drivers/scsi/sym53c8xx_2/sym_misc.h
---- a/drivers/scsi/sym53c8xx_2/sym_misc.h~scsi-replace-__inline-with-inline
-+++ a/drivers/scsi/sym53c8xx_2/sym_misc.h
-@@ -52,17 +52,17 @@ typedef struct sym_quehead {
- 	(ptr)->flink = (ptr); (ptr)->blink = (ptr); \
- } while (0)
- 
--static __inline struct sym_quehead *sym_que_first(struct sym_quehead *head)
-+static inline struct sym_quehead *sym_que_first(struct sym_quehead *head)
- {
- 	return (head->flink == head) ? 0 : head->flink;
- }
- 
--static __inline struct sym_quehead *sym_que_last(struct sym_quehead *head)
-+static inline struct sym_quehead *sym_que_last(struct sym_quehead *head)
- {
- 	return (head->blink == head) ? 0 : head->blink;
- }
- 
--static __inline void __sym_que_add(struct sym_quehead * new,
-+static inline void __sym_que_add(struct sym_quehead * new,
- 	struct sym_quehead * blink,
- 	struct sym_quehead * flink)
- {
-@@ -72,19 +72,19 @@ static __inline void __sym_que_add(struc
- 	blink->flink	= new;
- }
- 
--static __inline void __sym_que_del(struct sym_quehead * blink,
-+static inline void __sym_que_del(struct sym_quehead * blink,
- 	struct sym_quehead * flink)
- {
- 	flink->blink = blink;
- 	blink->flink = flink;
- }
- 
--static __inline int sym_que_empty(struct sym_quehead *head)
-+static inline int sym_que_empty(struct sym_quehead *head)
- {
- 	return head->flink == head;
- }
- 
--static __inline void sym_que_splice(struct sym_quehead *list,
-+static inline void sym_que_splice(struct sym_quehead *list,
- 	struct sym_quehead *head)
- {
- 	struct sym_quehead *first = list->flink;
-@@ -101,7 +101,7 @@ static __inline void sym_que_splice(stru
+ 	/*
+@@ -3868,6 +4032,7 @@ scratch_ram {
+ 	 */
+ 	LOCAL_HS_MAILBOX {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Target-mode CDB type to CDB length table used
+@@ -3876,6 +4041,7 @@ scratch_ram {
+ 	CMDSIZE_TABLE {
+ 		size		8
+ 		count		8
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * When an SCB with the MK_MESSAGE flag is
+@@ -3908,25 +4074,31 @@ scb {
+ 		size	4
+ 		alias	SCB_CDB_STORE
+ 		alias	SCB_HOST_CDB_PTR
++		dont_generate_debug_code
+ 	}
+ 	SCB_RESIDUAL_SGPTR {
+ 		size	4
+ 		field	SG_ADDR_MASK		0xf8	/* In the last byte */
+ 		field	SG_OVERRUN_RESID	0x02	/* In the first byte */
+ 		field	SG_LIST_NULL		0x01	/* In the first byte */
++		dont_generate_debug_code
+ 	}
+ 	SCB_SCSI_STATUS {
+ 		size	1
+ 		alias	SCB_HOST_CDB_LEN
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_PHASES {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_DATA_DIR {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_ITAG {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_SENSE_BUSADDR {
+ 		/*
+@@ -3936,10 +4108,12 @@ scb {
+ 		 */
+ 		size	4
+ 		alias	SCB_NEXT_COMPLETE
++		dont_generate_debug_code
+ 	}
+ 	SCB_TAG {
+ 		alias	SCB_FIFO_USE_COUNT
+ 		size	2
++		dont_generate_debug_code
+ 	}
+ 	SCB_CONTROL {
+ 		size	1
+@@ -3959,6 +4133,7 @@ scb {
+ 	SCB_LUN {
+ 		size	1
+ 		field	LID	0xff
++		dont_generate_debug_code
+ 	}
+ 	SCB_TASK_ATTRIBUTE {
+ 		size	1
+@@ -3967,16 +4142,20 @@ scb {
+ 		 * ignore wide residue message handling.
+ 		 */
+ 		field	SCB_XFERLEN_ODD	0x01
++		dont_generate_debug_code
+ 	}
+ 	SCB_CDB_LEN {
+ 		size	1
+ 		field	SCB_CDB_LEN_PTR	0x80	/* CDB in host memory */
++		dont_generate_debug_code
+ 	}
+ 	SCB_TASK_MANAGEMENT {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_DATAPTR {
+ 		size	8
++		dont_generate_debug_code
+ 	}
+ 	SCB_DATACNT {
+ 		/*
+@@ -3986,22 +4165,27 @@ scb {
+ 		size	4
+ 		field	SG_LAST_SEG		0x80	/* In the fourth byte */
+ 		field	SG_HIGH_ADDR_BITS	0x7F	/* In the fourth byte */
++		dont_generate_debug_code
+ 	}
+ 	SCB_SGPTR {
+ 		size	4
+ 		field	SG_STATUS_VALID	0x04	/* In the first byte */
+ 		field	SG_FULL_RESID	0x02	/* In the first byte */
+ 		field	SG_LIST_NULL	0x01	/* In the first byte */
++		dont_generate_debug_code
+ 	}
+ 	SCB_BUSADDR {
+ 		size	4
++		dont_generate_debug_code
+ 	}
+ 	SCB_NEXT {
+ 		alias	SCB_NEXT_SCB_BUSADDR
+ 		size	2
++		dont_generate_debug_code
+ 	}
+ 	SCB_NEXT2 {
+ 		size	2
++		dont_generate_debug_code
+ 	}
+ 	SCB_SPARE {
+ 		size	8
+@@ -4009,6 +4193,7 @@ scb {
+ 	}
+ 	SCB_DISCONNECTED_LISTS {
+ 		size	8
++		dont_generate_debug_code
  	}
  }
  
--static __inline void sym_que_move(struct sym_quehead *orig,
-+static inline void sym_que_move(struct sym_quehead *orig,
- 	struct sym_quehead *dest)
- {
- 	struct sym_quehead *first, *last;
-@@ -129,7 +129,7 @@ static __inline void sym_que_move(struct
+diff -puN drivers/scsi/aic7xxx/aic7xxx.reg~aic7xxx-update-reg-files drivers/scsi/aic7xxx/aic7xxx.reg
+--- a/drivers/scsi/aic7xxx/aic7xxx.reg~aic7xxx-update-reg-files
++++ a/drivers/scsi/aic7xxx/aic7xxx.reg
+@@ -51,6 +51,17 @@ VERSION = "$Id: //depot/aic7xxx/aic7xxx/
+  */
  
- #define sym_insque_head(new, head)	__sym_que_add(new, head, (head)->flink)
+ /*
++ * Registers marked "dont_generate_debug_code" are not (yet) referenced
++ * from the driver code, and this keyword inhibit generation
++ * of debug code for them.
++ *
++ * REG_PRETTY_PRINT config will complain if dont_generate_debug_code
++ * is added to the register which is referenced in the driver.
++ * Unreferenced register with no dont_generate_debug_code will result
++ * in dead code. No warning is issued.
++ */
++
++/*
+  * SCSI Sequence Control (p. 3-11).
+  * Each bit, when set starts a specific SCSI sequence on the bus
+  */
+@@ -97,6 +108,7 @@ register SXFRCTL1 {
+ 	field	ENSTIMER	0x04
+ 	field	ACTNEGEN	0x02
+ 	field	STPWEN		0x01	/* Powered Termination */
++	dont_generate_debug_code
+ }
  
--static __inline struct sym_quehead *sym_remque_head(struct sym_quehead *head)
-+static inline struct sym_quehead *sym_remque_head(struct sym_quehead *head)
- {
- 	struct sym_quehead *elem = head->flink;
+ /*
+@@ -155,6 +167,7 @@ register SCSISIGO {
+ 	mask	P_MESGOUT	CDI|MSGI
+ 	mask	P_STATUS	CDI|IOI
+ 	mask	P_MESGIN	CDI|IOI|MSGI
++	dont_generate_debug_code
+ }
  
-@@ -142,7 +142,7 @@ static __inline struct sym_quehead *sym_
+ /* 
+@@ -194,6 +207,7 @@ register SCSIID	{
+ 	 */
+ 	alias	SCSIOFFSET
+ 	mask	SOFS_ULTRA2	0x7f		/* Sync offset U2 chips */
++	dont_generate_debug_code
+ }
  
- #define sym_insque_tail(new, head)	__sym_que_add(new, (head)->blink, head)
+ /*
+@@ -205,6 +219,7 @@ register SCSIID	{
+ register SCSIDATL {
+ 	address			0x006
+ 	access_mode RW
++	dont_generate_debug_code
+ }
  
--static __inline struct sym_quehead *sym_remque_tail(struct sym_quehead *head)
-+static inline struct sym_quehead *sym_remque_tail(struct sym_quehead *head)
- {
- 	struct sym_quehead *elem = head->blink;
+ register SCSIDATH {
+@@ -223,6 +238,7 @@ register STCNT {
+ 	address			0x008
+ 	size	3
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ /* ALT_MODE registers (Ultra2 and Ultra160 chips) */
+@@ -248,6 +264,7 @@ register OPTIONMODE {
+ 	field	AUTO_MSGOUT_DE		0x02
+ 	field	DIS_MSGIN_DUALEDGE	0x01
+ 	mask	OPTIONMODE_DEFAULTS	AUTO_MSGOUT_DE|DIS_MSGIN_DUALEDGE
++	dont_generate_debug_code
+ }
+ 
+ /* ALT_MODE register on Ultra160 chips */
+@@ -256,6 +273,7 @@ register TARGCRCCNT {
+ 	size	2
+ 	access_mode RW
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -271,6 +289,7 @@ register CLRSINT0 {
+ 	field	CLRSWRAP	0x08
+ 	field	CLRIOERR	0x08	/* Ultra2 Only */
+ 	field	CLRSPIORDY	0x02
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -306,6 +325,7 @@ register CLRSINT1 {
+ 	field	CLRSCSIPERR	0x04
+ 	field	CLRPHASECHG	0x02
+ 	field	CLRREQINIT	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -360,6 +380,7 @@ register SCSIID_ULTRA2 {
+ 	access_mode RW
+ 	mask	TID		0xf0		/* Target ID mask */
+ 	mask	OID		0x0f		/* Our ID mask */
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -425,6 +446,7 @@ register SHADDR {
+ 	address			0x014
+ 	size	4
+ 	access_mode RO
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -441,6 +463,7 @@ register SELTIMER {
+ 	field	STAGE2		0x02
+ 	field	STAGE1		0x01
+ 	alias	TARGIDIN
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -453,6 +476,7 @@ register SELID {
+ 	access_mode RW
+ 	mask	SELID_MASK	0xf0
+ 	field	ONEBIT		0x08
++	dont_generate_debug_code
+ }
+ 
+ register SCAMCTL {
+@@ -473,6 +497,7 @@ register TARGID {
+ 	size			2
+ 	access_mode RW
+ 	count		14
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -495,6 +520,7 @@ register SPIOCAP {
+ 	field	EEPROM		0x04	/* Writable external BIOS ROM */
+ 	field	ROM		0x02	/* Logic for accessing external ROM */
+ 	field	SSPIOCPS	0x01	/* Termination and cable detection */
++	dont_generate_debug_code
+ }
+ 
+ register BRDCTL	{
+@@ -514,6 +540,7 @@ register BRDCTL	{
+ 	field	BRDDAT2		0x04
+ 	field	BRDRW_ULTRA2	0x02
+ 	field	BRDSTB_ULTRA2	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -551,6 +578,7 @@ register SEECTL {
+ 	field	SEECK		0x04
+ 	field	SEEDO		0x02
+ 	field	SEEDI		0x01
++	dont_generate_debug_code
+ }
+ /*
+  * SCSI Block Control (p. 3-32)
+@@ -601,6 +629,7 @@ register SEQRAM {
+ 	address			0x061
+ 	access_mode RW
+ 	count		2
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -610,6 +639,7 @@ register SEQRAM {
+ register SEQADDR0 {
+ 	address			0x062
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ register SEQADDR1 {
+@@ -617,6 +647,7 @@ register SEQADDR1 {
+ 	access_mode RW
+ 	count		8
+ 	mask	SEQADDR1_MASK	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -627,35 +658,41 @@ register ACCUM {
+ 	address			0x064
+ 	access_mode RW
+ 	accumulator
++	dont_generate_debug_code
+ }
+ 
+ register SINDEX	{
+ 	address			0x065
+ 	access_mode RW
+ 	sindex
++	dont_generate_debug_code
+ }
+ 
+ register DINDEX {
+ 	address			0x066
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ register ALLONES {
+ 	address			0x069
+ 	access_mode RO
+ 	allones
++	dont_generate_debug_code
+ }
+ 
+ register ALLZEROS {
+ 	address			0x06a
+ 	access_mode RO
+ 	allzeros
++	dont_generate_debug_code
+ }
+ 
+ register NONE {
+ 	address			0x06a
+ 	access_mode WO
+ 	none
++	dont_generate_debug_code
+ }
+ 
+ register FLAGS {
+@@ -664,16 +701,19 @@ register FLAGS {
+ 	count		18
+ 	field	ZERO		0x02
+ 	field	CARRY		0x01
++	dont_generate_debug_code
+ }
+ 
+ register SINDIR	{
+ 	address			0x06c
+ 	access_mode RO
++	dont_generate_debug_code
+ }
+ 
+ register DINDIR	 {
+ 	address			0x06d
+ 	access_mode WO
++	dont_generate_debug_code
+ }
+ 
+ register FUNCTION1 {
+@@ -685,6 +725,7 @@ register STACK {
+ 	address			0x06f
+ 	access_mode RO
+ 	count		5
++	dont_generate_debug_code
+ }
+ 
+ const	STACK_SIZE	4
+@@ -716,6 +757,7 @@ register DSCOMMAND0 {
+ 	field	RAMPS		0x04	/* External SCB RAM Present */
+ 	field	USCBSIZE32	0x02	/* Use 32byte SCB Page Size */
+ 	field	CIOPARCKEN	0x01	/* Internal bus parity error enable */
++	dont_generate_debug_code
+ }
+ 
+ register DSCOMMAND1 {
+@@ -724,6 +766,7 @@ register DSCOMMAND1 {
+ 	mask	DSLATT		0xfc	/* PCI latency timer (non-ultra2) */
+ 	field	HADDLDSEL1	0x02	/* Host Address Load Select Bits */
+ 	field	HADDLDSEL0	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -735,6 +778,7 @@ register BUSTIME {
+ 	count		2
+ 	mask	BOFF		0xf0
+ 	mask	BON		0x0f
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -749,6 +793,7 @@ register BUSSPD {
+ 	mask	STBON		0x07
+ 	mask	DFTHRSH_100	0xc0
+ 	mask	DFTHRSH_75	0x80
++	dont_generate_debug_code
+ }
+ 
+ /* aic7850/55/60/70/80/95 only */
+@@ -756,6 +801,7 @@ register DSPCISTATUS {
+ 	address			0x086
+ 	count		4
+ 	mask	DFTHRSH_100	0xc0
++	dont_generate_debug_code
+ }
+ 
+ /* aic7890/91/96/97 only */
+@@ -764,6 +810,7 @@ register HS_MAILBOX {
+ 	mask	HOST_MAILBOX	0xF0
+ 	mask	SEQ_MAILBOX	0x0F
+ 	mask	HOST_TQINPOS	0x80	/* Boundary at either 0 or 128 */
++	dont_generate_debug_code
+ }
+ 
+ const	HOST_MAILBOX_SHIFT	4
+@@ -784,6 +831,7 @@ register HCNTRL {
+ 	field	INTEN		0x02
+ 	field	CHIPRST		0x01
+ 	field	CHIPRSTACK	0x01
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -795,12 +843,14 @@ register HADDR {
+ 	address			0x088
+ 	size	4
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ register HCNT {
+ 	address			0x08c
+ 	size	3
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -810,6 +860,7 @@ register HCNT {
+ register SCBPTR {
+ 	address			0x090
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -878,6 +929,7 @@ register INTSTAT {
+ 
+ 	mask	SEQINT_MASK	0xf0|SEQINT	/* SEQINT Status Codes */
+ 	mask	INT_PEND  (BRKADRINT|SEQINT|SCSIINT|CMDCMPLT)
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -911,6 +963,7 @@ register CLRINT {
+ 	field	CLRSCSIINT      0x04
+ 	field	CLRCMDINT 	0x02
+ 	field	CLRSEQINT 	0x01
++	dont_generate_debug_code
+ }
+ 
+ register DFCNTRL {
+@@ -944,6 +997,7 @@ register DFSTATUS {
+ register DFWADDR {
+ 	address			0x95
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ register DFRADDR {
+@@ -954,6 +1008,7 @@ register DFRADDR {
+ register DFDAT {
+ 	address			0x099
+ 	access_mode RW
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -967,6 +1022,7 @@ register SCBCNT {
+ 	count		1
+ 	field	SCBAUTO		0x80
+ 	mask	SCBCNT_MASK	0x1f
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -977,6 +1033,7 @@ register QINFIFO {
+ 	address			0x09b
+ 	access_mode RW
+ 	count		12
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -996,6 +1053,7 @@ register QOUTFIFO {
+ 	address			0x09d
+ 	access_mode WO
+ 	count		7
++	dont_generate_debug_code
+ }
+ 
+ register CRCCONTROL1 {
+@@ -1008,6 +1066,7 @@ register CRCCONTROL1 {
+ 	field	CRCREQCHKEN		0x10
+ 	field	TARGCRCENDEN		0x08
+ 	field	TARGCRCCNTEN		0x04
++	dont_generate_debug_code
+ }
+ 
+ 
+@@ -1040,6 +1099,7 @@ register SFUNCT {
+ 	access_mode RW
+ 	count	    4
+ 	field	ALT_MODE	0x80
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1053,24 +1113,31 @@ scb {
+ 		size	4
+ 		alias	SCB_RESIDUAL_DATACNT
+ 		alias	SCB_CDB_STORE
++		dont_generate_debug_code
+ 	}
+ 	SCB_RESIDUAL_SGPTR {
+ 		size	4
++		dont_generate_debug_code
+ 	}
+ 	SCB_SCSI_STATUS {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_PHASES {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_DATA_DIR {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_TARGET_ITAG {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_DATAPTR {
+ 		size	4
++		dont_generate_debug_code
+ 	}
+ 	SCB_DATACNT {
+ 		/*
+@@ -1080,12 +1147,14 @@ scb {
+ 		size	4
+ 		field	SG_LAST_SEG		0x80	/* In the fourth byte */
+ 		mask	SG_HIGH_ADDR_BITS	0x7F	/* In the fourth byte */
++		dont_generate_debug_code
+ 	}
+ 	SCB_SGPTR {
+ 		size	4
+ 		field	SG_RESID_VALID	0x04	/* In the first byte */
+ 		field	SG_FULL_RESID	0x02	/* In the first byte */
+ 		field	SG_LIST_NULL	0x01	/* In the first byte */
++		dont_generate_debug_code
+ 	}
+ 	SCB_CONTROL {
+ 		size	1
+@@ -1115,22 +1184,27 @@ scb {
+ 	}
+ 	SCB_CDB_LEN {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_SCSIRATE {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_SCSIOFFSET {
+ 		size	1
+ 		count	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_NEXT {
+ 		size	1
++		dont_generate_debug_code
+ 	}
+ 	SCB_64_SPARE {
+ 		size	16
+ 	}
+ 	SCB_64_BTT {
+ 		size	16
++		dont_generate_debug_code
+ 	}
+ }
+ 
+@@ -1149,6 +1223,7 @@ register SEECTL_2840 {
+ 	field	CS_2840		0x04
+ 	field	CK_2840		0x02
+ 	field	DO_2840		0x01
++	dont_generate_debug_code
+ }
+ 
+ register STATUS_2840 {
+@@ -1159,6 +1234,7 @@ register STATUS_2840 {
+ 	mask	BIOS_SEL	0x60
+ 	mask	ADSEL		0x1e
+ 	field	DI_2840		0x01
++	dont_generate_debug_code
+ }
+ 
+ /* --------------------- AIC-7870-only definitions -------------------- */
+@@ -1166,18 +1242,22 @@ register STATUS_2840 {
+ register CCHADDR {
+ 	address			0x0E0
+ 	size 8
++	dont_generate_debug_code
+ }
+ 
+ register CCHCNT {
+ 	address			0x0E8
++	dont_generate_debug_code
+ }
+ 
+ register CCSGRAM {
+ 	address			0x0E9
++	dont_generate_debug_code
+ }
+ 
+ register CCSGADDR {
+ 	address			0x0EA
++	dont_generate_debug_code
+ }
+ 
+ register CCSGCTL {
+@@ -1186,11 +1266,13 @@ register CCSGCTL {
+ 	field	CCSGEN		0x08
+ 	field	SG_FETCH_NEEDED 0x02	/* Bit used for software state */
+ 	field	CCSGRESET	0x01
++	dont_generate_debug_code
+ }
+ 
+ register CCSCBCNT {
+ 	address			0xEF
+ 	count		1
++	dont_generate_debug_code
+ }
+ 
+ register CCSCBCTL {
+@@ -1201,14 +1283,17 @@ register CCSCBCTL {
+ 	field	CCSCBEN		0x08
+ 	field	CCSCBDIR	0x04
+ 	field	CCSCBRESET	0x01
++	dont_generate_debug_code
+ }
+ 
+ register CCSCBADDR {
+ 	address			0x0ED
++	dont_generate_debug_code
+ }
+ 
+ register CCSCBRAM {
+ 	address			0xEC
++	dont_generate_debug_code
+ }
+ 
+ /*
+@@ -1218,23 +1303,28 @@ register SCBBADDR {
+ 	address			0x0F0
+ 	access_mode RW
+ 	count		3
++	dont_generate_debug_code
+ }
+ 
+ register CCSCBPTR {
+ 	address			0x0F1
++	dont_generate_debug_code
+ }
+ 
+ register HNSCB_QOFF {
+ 	address			0x0F4
+ 	count		4
++	dont_generate_debug_code
+ }
+ 
+ register SNSCB_QOFF {
+ 	address			0x0F6
++	dont_generate_debug_code
+ }
+ 
+ register SDSCB_QOFF {
+ 	address			0x0F8
++	dont_generate_debug_code
+ }
+ 
+ register QOFF_CTLSTA {
+@@ -1244,6 +1334,7 @@ register QOFF_CTLSTA {
+ 	field	SDSCB_ROLLOVER	0x10
+ 	mask	SCB_QSIZE	0x07
+ 	mask	SCB_QSIZE_256	0x06
++	dont_generate_debug_code
+ }
+ 
+ register DFF_THRSH {
+@@ -1267,6 +1358,7 @@ register DFF_THRSH {
+ 	mask	WR_DFTHRSH_90	0x60
+ 	mask	WR_DFTHRSH_MAX	0x70
+ 	count	4
++	dont_generate_debug_code
+ }
+ 
+ register SG_CACHE_PRE {
+@@ -1275,6 +1367,7 @@ register SG_CACHE_PRE {
+ 	mask	SG_ADDR_MASK	0xf8
+ 	field	LAST_SEG	0x02
+ 	field	LAST_SEG_DONE	0x01
++	dont_generate_debug_code
+ }
+ 
+ register SG_CACHE_SHADOW {
+@@ -1283,6 +1376,7 @@ register SG_CACHE_SHADOW {
+ 	mask	SG_ADDR_MASK	0xf8
+ 	field	LAST_SEG	0x02
+ 	field	LAST_SEG_DONE	0x01
++	dont_generate_debug_code
+ }
+ /* ---------------------- Scratch RAM Offsets ------------------------- */
+ /* These offsets are either to values that are initialized by the board's
+@@ -1309,6 +1403,7 @@ scratch_ram {
+ 	BUSY_TARGETS {
+ 		alias		TARG_SCSIRATE
+ 		size		16
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Bit vector of targets that have ULTRA enabled as set by
+@@ -1321,6 +1416,7 @@ scratch_ram {
+ 		alias		CMDSIZE_TABLE
+ 		size		2
+ 		count		2
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Bit vector of targets that have disconnection disabled as set by
+@@ -1331,6 +1427,7 @@ scratch_ram {
+ 	DISC_DSB {
+ 		size		2
+ 		count		6
++		dont_generate_debug_code
+ 	}
+ 	CMDSIZE_TABLE_TAIL {
+ 		size		4
+@@ -1341,12 +1438,14 @@ scratch_ram {
+ 	 */
+ 	MWI_RESIDUAL {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * SCBID of the next SCB to be started by the controller.
+ 	 */
+ 	NEXT_QUEUED_SCB {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Single byte buffer used to designate the type or message
+@@ -1354,6 +1453,7 @@ scratch_ram {
+ 	 */
+ 	MSG_OUT {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/* Parameters for DMA Logic */
+ 	DMAPARAMS {
+@@ -1369,6 +1469,7 @@ scratch_ram {
+ 		field	DIRECTION	0x04	/* Set indicates PCI->SCSI */
+ 		field	FIFOFLUSH	0x02
+ 		field	FIFORESET	0x01
++		dont_generate_debug_code
+ 	}
+ 	SEQ_FLAGS {
+ 		size		1
+@@ -1390,9 +1491,11 @@ scratch_ram {
+ 	 */
+ 	SAVED_SCSIID {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	SAVED_LUN {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * The last bus phase as seen by the sequencer. 
+@@ -1417,6 +1520,7 @@ scratch_ram {
+ 	 */
+ 	WAITING_SCBH {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * head of list of SCBs that are
+@@ -1425,6 +1529,7 @@ scratch_ram {
+ 	 */
+ 	DISCONNECTED_SCBH {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * head of list of SCBs that are
+@@ -1432,6 +1537,7 @@ scratch_ram {
+ 	 */
+ 	FREE_SCBH {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * head of list of SCBs that have
+@@ -1446,6 +1552,7 @@ scratch_ram {
+ 	 */
+ 	HSCB_ADDR {
+ 		size		4
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Base address of our shared data with the kernel driver in host
+@@ -1454,15 +1561,19 @@ scratch_ram {
+ 	 */
+ 	SHARED_DATA_ADDR {
+ 		size		4
++		dont_generate_debug_code
+ 	}
+ 	KERNEL_QINPOS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	QINPOS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	QOUTPOS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	/*
+ 	 * Kernel and sequencer offsets into the queue of
+@@ -1471,9 +1582,11 @@ scratch_ram {
+ 	 */
+ 	KERNEL_TQINPOS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	TQINPOS {
+ 		size		1
++		dont_generate_debug_code
+ 	}
+ 	ARG_1 {
+ 		size		1
+@@ -1486,10 +1599,12 @@ scratch_ram {
+ 		mask	CONT_MSG_LOOP		0x04
+ 		mask	CONT_TARG_SESSION	0x02
+ 		alias	RETURN_1
++		dont_generate_debug_code
+ 	}
+ 	ARG_2 {
+ 		size		1
+ 		alias	RETURN_2
++		dont_generate_debug_code
+ 	}
+ 
+ 	/*
+@@ -1498,6 +1613,7 @@ scratch_ram {
+ 	LAST_MSG {
+ 		size		1
+ 		alias	TARG_IMMEDIATE_SCB
++		dont_generate_debug_code
+ 	}
+ 
+ 	/*
+@@ -1513,6 +1629,7 @@ scratch_ram {
+ 		field	ENAUTOATNO	0x08
+ 		field	ENAUTOATNI	0x04
+ 		field	ENAUTOATNP	0x02
++		dont_generate_debug_code
+ 	}
+ }
+ 
+@@ -1533,12 +1650,14 @@ scratch_ram {
+ 		field	HA_274_EXTENDED_TRANS	0x01
+ 		alias	INITIATOR_TAG
+ 		count		1
++		dont_generate_debug_code
+ 	}
+ 
+ 	SEQ_FLAGS2 {
+ 		size	1
+ 		field	SCB_DMA			0x01
+ 		field	TARGET_MSG_PENDING	0x02
++		dont_generate_debug_code
+ 	}
+ }
+ 
+@@ -1562,6 +1681,7 @@ scratch_ram {
+ 		field	ENSPCHK		0x20
+ 		mask	HSCSIID		0x07	/* our SCSI ID */
+ 		mask	HWSCSIID	0x0f	/* our SCSI ID if Wide Bus */
++		dont_generate_debug_code
+ 	}
+ 	INTDEF {
+ 		address		0x05c
+@@ -1569,11 +1689,13 @@ scratch_ram {
+ 		count		1
+ 		field	EDGE_TRIG	0x80
+ 		mask	VECTOR		0x0f
++		dont_generate_debug_code
+ 	}
+ 	HOSTCONF {
+ 		address		0x05d
+ 		size		1
+ 		count		1
++		dont_generate_debug_code
+ 	}
+ 	HA_274_BIOSCTRL	{
+ 		address		0x05f
+@@ -1582,6 +1704,7 @@ scratch_ram {
+ 		mask	BIOSMODE		0x30
+ 		mask	BIOSDISABLED		0x30	
+ 		field	CHANNEL_B_PRIMARY	0x08
++		dont_generate_debug_code
+ 	}
+ }
+ 
+@@ -1595,6 +1718,7 @@ scratch_ram {
+ 	TARG_OFFSET {
+ 		size		16
+ 		count		1
++		dont_generate_debug_code
+ 	}
+ }
  
 _
