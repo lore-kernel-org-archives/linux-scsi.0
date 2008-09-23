@@ -1,50 +1,88 @@
-From: Levy_Jerome@emc.com
-Subject: [PATCH 1/1] scsi_dh: add ALUA notification for EMC Clariion devices
-Date: Tue, 23 Sep 2008 10:46:18 -0400
-Message-ID: <6416EE16C1AF1E4C86882867E4DD0FF6026D1BF1@CORPUSMX40B.corp.emc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 17/17] drivers/scsi/device_handler/scsi_dh_emc.c:
+	suppress warning
+Date: Tue, 23 Sep 2008 07:58:59 -0700
+Message-ID: <1222181939.3301.9.camel@localhost.localdomain>
+References: <200809222156.m8MLur8U032313@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:28508 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbYIWOrB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2008 10:47:01 -0400
-Content-class: urn:content-classes:message
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58325 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751467AbYIWO7j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2008 10:59:39 -0400
+In-Reply-To: <200809222156.m8MLur8U032313@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, schwidefsky@de.ibm.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
-Adding sense code data decode and notification for optimal/non-optimal
-path changeover on Clariion devices. Unfortunately in the read sense
-code we can't do another inquiry, so we can't tell the user whether we
-are on the optimal or non-optimal path, only that a change has occurred.
+On Mon, 2008-09-22 at 14:56 -0700, akpm@linux-foundation.org wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
+> 
+> s390:
+> 
+> drivers/scsi/device_handler/scsi_dh_emc.c: In function 'parse_sp_info_reply':
+> drivers/scsi/device_handler/scsi_dh_emc.c:179: warning: comparison is always false due to limited range of data type
+> 
+> because chars are unsigned, I assume.
 
+Actually, no, they're architecture implementation defined (another
+cockup of the C standard) ... which must be why we don't see this on any
+of the other architectures I compile on.
 
-Signed-off-by: Jerry Levy <levy_jerome@emc.com>
----------------------
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/device_handler/scsi_dh_emc.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff -puN drivers/scsi/device_handler/scsi_dh_emc.c~drivers-scsi-device_handler-scsi_dh_emcc-suppress-warning drivers/scsi/device_handler/scsi_dh_emc.c
+> --- a/drivers/scsi/device_handler/scsi_dh_emc.c~drivers-scsi-device_handler-scsi_dh_emcc-suppress-warning
+> +++ a/drivers/scsi/device_handler/scsi_dh_emc.c
+> @@ -176,7 +176,7 @@ static int parse_sp_info_reply(struct sc
+>  		err = SCSI_DH_DEV_TEMP_BUSY;
+>  		goto out;
+>  	}
+> -	if (csdev->buffer[4] < 0 || csdev->buffer[4] > 2) {
+> +	if (csdev->buffer[4] & ~3) {
 
---- ./drivers/scsi/device_handler/scsi_dh_emc.original.c
-2008-09-17 14:50:18.000000000 -0400
-+++ ./drivers/scsi/device_handler/scsi_dh_emc.c 2008-09-17
-14:54:38.000000000 -0400
-@@ -435,6 +435,16 @@
-                        return SUCCESS;
-                break;
-        case UNIT_ATTENTION:
-+                if (sense_hdr->asc == 0x2A && sense_hdr->ascq == 0x06)
-+                        /*
-+                         * ALUA status has changed. Report to host,
-+                         * no further action required... jml
-+                         */
-+                        sdev_printk(KERN_NOTICE, sdev,
-+                                    "%s: Asymmetric access state has
-changed.\n",
-+                                    CLARIION_NAME);
-+                        return SUCCESS;
-+                break;
-                if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-                        /*
-                         * Unit Attention Code. This is the first IO
+I'm afraid this isn't quite correct: ~3 will pass if csdev->buffer[4] ==
+3 which is beyond the range of the original comparison.
+
+How about this: it doesn't depend on the architecture to define the
+signedness and it covers the original range?
+
+James
+
+---
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index ef693e8..a4055c4 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -84,7 +84,7 @@ struct clariion_dh_data {
+ 	/*
+ 	 * I/O buffer for both MODE_SELECT and INQUIRY commands.
+ 	 */
+-	char buffer[CLARIION_BUFFER_SIZE];
++	unsigned char buffer[CLARIION_BUFFER_SIZE];
+ 	/*
+ 	 * SCSI sense buffer for commands -- assumes serial issuance
+ 	 * and completion sequence of all commands for same multipath.
+@@ -176,7 +176,7 @@ static int parse_sp_info_reply(struct scsi_device *sdev,
+ 		err = SCSI_DH_DEV_TEMP_BUSY;
+ 		goto out;
+ 	}
+-	if (csdev->buffer[4] < 0 || csdev->buffer[4] > 2) {
++	if (csdev->buffer[4] > 2) {
+ 		/* Invalid buffer format */
+ 		sdev_printk(KERN_NOTICE, sdev,
+ 			    "%s: invalid VPD page 0xC0 format\n",
+
 
