@@ -1,40 +1,48 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 5921] AIC7xxx: SCSI bus crash when formating CDRW
-Date: Tue, 23 Sep 2008 01:16:51 -0700 (PDT)
-Message-ID: <20080923081651.5D777108059@picon.linux-foundation.org>
-References: <bug-5921-11613@http.bugzilla.kernel.org/>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: [PATCH 0/4 V2] mpt fusion error handler patches
+Date: Tue, 23 Sep 2008 15:16:47 +0200
+Message-ID: <200809231516.48197.bs@q-leap.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58249 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751422AbYIWIQx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2008 04:16:53 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8N8GpwS026186
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2008 01:16:52 -0700
-In-Reply-To: <bug-5921-11613@http.bugzilla.kernel.org/>
+Received: from ns1.q-leap.de ([153.94.51.193]:37053 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313AbYIWNQz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2008 09:16:55 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Eric Moore <Eric.Moore@lsi.com>, Sathya Prakash <Sathya.Prakash@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: DL-MPTFusionLinux@lsi.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=5921
+Hello,
+
+here is version 2 of the patches, version 1 may be found here: 
+http://kerneltrap.org/mailarchive/linux-scsi/2008/9/12/3279954
+
+In difference to the previous series I skipped the removal of 
+mptscsih_TMHandler(), since it actually does the right thing, it only cause 
+the HardReset function to be activated, which caused the real trouble.
+
+I also made the soft/hard reset calls into one main call. From this main call 
+it is then also generally possible to avoid calling the hard reset handler.
+
+There is still one issue left, while in the 4.x series of the driver the 
+mptscsih_IssueTaskMgmt() succeeds for task aborts, this still fails in the in 
+kernel version. My guess is the this is related to the completion calls. 
+While the in-kernel driver uses mptscsih_tm_wait_for_completion(), the 4.x 
+series uses just like the in kernel mptsas the generic 
+wait_for_completion_timeout() handler. 
+But switching to that actually means a lot of work. Without to be sure this is 
+really the cause of the trouble, I won't spend my time on it.
 
 
-emmanuel.fuste@laposte.net changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-      KernelVersion|2.6.22                      |2.6.25
-
-
-
-
-------- Comment #20 from emmanuel.fuste@laposte.net  2008-09-23 01:16 -------
-Latest tested kernel is 2.6.25
-Will retry with 2.6.27.
+Cheers,
+Bernd
 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Bernd Schubert
+Q-Leap Networks GmbH
