@@ -1,40 +1,52 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9426] drivers/scsi/gdth.c and PCI ROMs
-Date: Tue, 23 Sep 2008 08:12:40 -0700 (PDT)
-Message-ID: <20080923151240.6262C108058@picon.linux-foundation.org>
-References: <bug-9426-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/1] scsi_dh: add ALUA notification for EMC Clariion devices
+Date: Tue, 23 Sep 2008 09:57:28 -0600
+Message-ID: <20080923155728.GD27204@parisc-linux.org>
+References: <6416EE16C1AF1E4C86882867E4DD0FF6026D1BF1@CORPUSMX40B.corp.emc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33581 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752012AbYIWPNM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2008 11:13:12 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8NFCeuq021696
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2008 08:12:41 -0700
-In-Reply-To: <bug-9426-11613@http.bugzilla.kernel.org/>
+Received: from palinux.external.hp.com ([192.25.206.14]:45068 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbYIWP5o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2008 11:57:44 -0400
+Content-Disposition: inline
+In-Reply-To: <6416EE16C1AF1E4C86882867E4DD0FF6026D1BF1@CORPUSMX40B.corp.emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Levy_Jerome@emc.com
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9426
+On Tue, Sep 23, 2008 at 10:46:18AM -0400, Levy_Jerome@emc.com wrote:
+> Adding sense code data decode and notification for optimal/non-optimal
+> path changeover on Clariion devices. Unfortunately in the read sense
+> code we can't do another inquiry, so we can't tell the user whether we
+> are on the optimal or non-optimal path, only that a change has occurred.
 
+I'm not sure that printk is the optimal user notification here.
 
-alan@lxorguk.ukuu.org.uk changed:
+What if we had a uevent so that udev could take action, such as issuing
+an inquiry?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |REJECTED
-         Resolution|                            |WILL_NOT_FIX
+What if we scheduled some work so we could issue an inquiry and take
+appropriate action?
 
-
-
-
-------- Comment #1 from alan@lxorguk.ukuu.org.uk  2008-09-23 08:12 -------
-Actually there isn't. This is chip specific magic
-
+>         case UNIT_ATTENTION:
+> +                if (sense_hdr->asc == 0x2A && sense_hdr->ascq == 0x06)
+> +                        /*
+> +                         * ALUA status has changed. Report to host,
+> +                         * no further action required... jml
+> +                         */
+> +                        sdev_printk(KERN_NOTICE, sdev,
+> +                                    "%s: Asymmetric access state has
+> changed.\n",
+> +                                    CLARIION_NAME);
+> +                        return SUCCESS;
+> +                break;
+>                 if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
