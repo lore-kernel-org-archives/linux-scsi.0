@@ -1,23 +1,23 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 6722] second device open() (by periodic hal polling loop!) kills ongoing transfer (CD burner underruns, HDD hard resets)
-Date: Mon, 22 Sep 2008 16:41:07 -0700 (PDT)
-Message-ID: <20080922234107.882FD10807D@picon.linux-foundation.org>
-References: <bug-6722-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 7130] loading driver eat all CPU and since some time may block all system disk IO (even can not reboot)
+Date: Mon, 22 Sep 2008 17:02:39 -0700 (PDT)
+Message-ID: <20080923000239.6B045108097@picon.linux-foundation.org>
+References: <bug-7130-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34372 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50634 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754889AbYIVXll (ORCPT
+	by vger.kernel.org with ESMTP id S1752751AbYIWAM6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2008 19:41:41 -0400
+	Mon, 22 Sep 2008 20:12:58 -0400
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8MNf7le028877
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 16:41:08 -0700
-In-Reply-To: <bug-6722-11613@http.bugzilla.kernel.org/>
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8N0CTlp032355
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2008 17:12:30 -0700
+In-Reply-To: <bug-7130-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6722
+http://bugzilla.kernel.org/show_bug.cgi?id=7130
 
 
 alan@lxorguk.ukuu.org.uk changed:
