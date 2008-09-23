@@ -1,41 +1,87 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 15/17] drivers/scsi: Use DIV_ROUND_UP
-Date: Mon, 22 Sep 2008 18:43:45 -0600
-Message-ID: <20080923004345.GC27204@parisc-linux.org>
-References: <200809222156.m8MLupx2032307@imap1.linux-foundation.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [patch 10/17] scsi: gdth.c use unaligned access helpers
+Date: Tue, 23 Sep 2008 10:08:17 +0300
+Message-ID: <48D895E1.7040705@panasas.com>
+References: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52936 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620AbYIWAoG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2008 20:44:06 -0400
-Content-Disposition: inline
-In-Reply-To: <200809222156.m8MLupx2032307@imap1.linux-foundation.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:17541 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753081AbYIWHIW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2008 03:08:22 -0400
+In-Reply-To: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, julia@diku.dk
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
 
-On Mon, Sep 22, 2008 at 02:56:51PM -0700, akpm@linux-foundation.org wrote:
+akpm@linux-foundation.org wrote:
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> Remove two now unnecessary local vars.
+> 
+> [akpm@linux-foundation.org: coding-style fixes]
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/gdth.c |   23 ++++++++++-------------
+>  1 file changed, 10 insertions(+), 13 deletions(-)
+> 
+> diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
+> --- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
+> +++ a/drivers/scsi/gdth.c
+> @@ -131,6 +131,7 @@
+>  #include <asm/system.h>
+>  #include <asm/io.h>
+>  #include <asm/uaccess.h>
+> +#include <asm/unaligned.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/blkdev.h>
+>  #include <linux/scatterlist.h>
+> @@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+>  {
+>      register gdth_cmd_str *cmdp;
+>      struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+> -    ulong32 cnt, blockcnt;
+> -    ulong64 no, blockno;
+> +    ulong32 blockcnt;
+> +    ulong64 blockno;
+>      int i, cmd_index, read_write, sgcnt, mode64;
 >  
->  		one_clock = esp->ccycle / 1000;
->  		rounded_up = (period << 2);
-> -		rounded_up = (rounded_up + one_clock - 1) / one_clock;
-> +		rounded_up = DIV_ROUND_UP(rounded_up, one_clock);
->  		stp = rounded_up;
->  		if (stp && esp->rev >= FAS236) {
->  			if (stp >= 50)
+>      cmdp = ha->pccb;
+> @@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+>  
+>      if (read_write) {
+>          if (scp->cmd_len == 16) {
+> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
+> -            blockno = be64_to_cpu(no);
+> -            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
+> -            blockcnt = be32_to_cpu(cnt);
+> +		blockno = get_unaligned_be64(&scp->cmnd[2]);
+> +		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
++		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
+64 => 32
+>          } else if (scp->cmd_len == 10) {
+> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
+> -            blockno = be32_to_cpu(no);
+> -            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
+> -            blockcnt = be16_to_cpu(cnt);
+> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
+> +		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
+>          } else {
+> -            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
+> -            blockno = be32_to_cpu(no) & 0x001fffffUL;
+> -            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
+> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
+> +		blockno &= 0x001fffffUL;
+> +		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
+>          }
+>          if (mode64) {
+>              cmdp->u.cache64.BlockNo = blockno;
+> _
 
-Is this not exactly equivalent to:
-
-		one_clock = esp->ccycle / 1000;
-		stp = DIV_ROUND_UP(period << 2, one_clock);
-
-(rounded_up is local to this if condition).
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
