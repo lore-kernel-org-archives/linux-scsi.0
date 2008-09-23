@@ -1,88 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 17/17] drivers/scsi/device_handler/scsi_dh_emc.c:
-	suppress warning
-Date: Tue, 23 Sep 2008 07:58:59 -0700
-Message-ID: <1222181939.3301.9.camel@localhost.localdomain>
-References: <200809222156.m8MLur8U032313@imap1.linux-foundation.org>
+From: Meelis Roos <mroos@linux.ee>
+Subject: qlogicpti driver hangs the machine
+Date: Tue, 23 Sep 2008 18:06:03 +0300 (EEST)
+Message-ID: <Pine.SOC.4.64.0809231753570.14966@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58325 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751467AbYIWO7j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2008 10:59:39 -0400
-In-Reply-To: <200809222156.m8MLur8U032313@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <sparclinux-owner@vger.kernel.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, hare@suse.de, schwidefsky@de.ibm.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
-On Mon, 2008-09-22 at 14:56 -0700, akpm@linux-foundation.org wrote:
-> From: Andrew Morton <akpm@linux-foundation.org>
-> 
-> s390:
-> 
-> drivers/scsi/device_handler/scsi_dh_emc.c: In function 'parse_sp_info_reply':
-> drivers/scsi/device_handler/scsi_dh_emc.c:179: warning: comparison is always false due to limited range of data type
-> 
-> because chars are unsigned, I assume.
+I tried to use Qlogic wide SE SCSI SBus controllers. First tied one in 
+Sparcstation 5 (sparc32) with etch and sarge installers, then tried 
+another in E3500. Both tries on SS5 hung when loadin qlogicpti module. 
+E3500 conf doesn't autoload SBus drivers and the card was properly 
+inserted only after installation, so I tried to modprobe qlogicpti after 
+booting up. This also results in a hang but outputs that much on console 
+before hanging. Maybe the error handling spinlock lockup gives a clue to 
+someone...
 
-Actually, no, they're architecture implementation defined (another
-cockup of the C standard) ... which must be why we don't see this on any
-of the other architectures I compile on.
+[ 3570.576359] qlogicpti0: IRQ 12 SCSI ID 7 (Firmware v1.31.32)(FCode 1.21 95/05/18)
+[ 3571.002975] qlogicpti0: [Fast Wide, using single ended interface]
+[ 3571.078001] scsi2 : PTI Qlogic,ISP SBUS SCSI irq 12 regs at 000001c520010000
+[ 3571.667582] scsi 2:0:2:0: Direct-Access     FUJITSU  M2954ESP SUN4.2G 2545 PQ: 0 ANSI: 2
+[ 3571.768584] sd 2:0:2:0: [sdg] 8385121 512-byte hardware sectors (4293 MB)
+[ 3571.852563] sd 2:0:2:0: [sdg] Write Protect is off
+[ 3571.907932] sd 2:0:2:0: [sdg] Mode Sense: 9f 00 00 08
+[ 3571.973016] sd 2:0:2:0: [sdg] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 3572.082467] sd 2:0:2:0: [sdg] 8385121 512-byte hardware sectors (4293 MB)
+[ 3572.166373] sd 2:0:2:0: [sdg] Write Protect is off
+[ 3572.221718] sd 2:0:2:0: [sdg] Mode Sense: 9f 00 00 08
+[ 3572.286814] sd 2:0:2:0: [sdg] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 3572.394250]  sdg: unknown partition table
+[ 3572.455839] sd 2:0:2:0: [sdg] Attached SCSI disk
+[ 3572.511006] sd 2:0:2:0: Attached scsi generic sg7 type 0
+[ 3578.075788] qlogicpti0: Aborting cmd for tgt[2] lun[0]
+[ 3578.137633] qlogicpti0: Aborting cmd for tgt[2] lun[1]
+[ 3696.467069] BUG: spinlock lockup on CPU#7, scsi_eh_2/1737, fffff8004d0f8060
+[ 3696.548319] Call Trace:
+[ 3696.577498]  [0000000000590e5c] _raw_spin_lock+0xfc/0x160
+[ 3696.642105]  [000000000069dc5c] _spin_lock_irqsave+0x1c/0x40
+[ 3696.709816]  [00000000005d5090] scsi_send_eh_cmnd+0x70/0x280
+[ 3696.777530]  [00000000005d52c4] scsi_eh_tur+0x24/0xa0
+[ 3696.837958]  [00000000005d5f8c] scsi_error_handler+0x2cc/0x3c0
+[ 3696.907783]  [000000000047676c] kthread+0x4c/0x80
+[ 3696.964032]  [000000000042707c] kernel_thread+0x3c/0x60
+[ 3697.026543]  [0000000000476694] kthreadd+0x174/0x200
+[ 3697.086064]   CPU[  6]: TSTATE[0000009980009602] TPC[000000000069dc40] TNPC[000000000069dc44] TASK[NULL:-1]
+[ 3697.202709]              TPC[_spin_lock_irqsave+0x0/0x40] O7[complete+0x14/0x60] I7[scsi_eh_done+0x24/0x40] RPC[qpti_intr+0]
+[ 3697.359973] * CPU[  7]: TSTATE[0000000080009625] TPC[0000000000427074] TNPC[0000000000427078] TASK[scsi_eh_2:1737]
+[ 3697.483975]              TPC[kernel_thread+0x34/0x60] O7[kernel_thread+0x8/0x60] I7[kthreadd+0x174/0x200] RPC[0x0]
 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/device_handler/scsi_dh_emc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff -puN drivers/scsi/device_handler/scsi_dh_emc.c~drivers-scsi-device_handler-scsi_dh_emcc-suppress-warning drivers/scsi/device_handler/scsi_dh_emc.c
-> --- a/drivers/scsi/device_handler/scsi_dh_emc.c~drivers-scsi-device_handler-scsi_dh_emcc-suppress-warning
-> +++ a/drivers/scsi/device_handler/scsi_dh_emc.c
-> @@ -176,7 +176,7 @@ static int parse_sp_info_reply(struct sc
->  		err = SCSI_DH_DEV_TEMP_BUSY;
->  		goto out;
->  	}
-> -	if (csdev->buffer[4] < 0 || csdev->buffer[4] > 2) {
-> +	if (csdev->buffer[4] & ~3) {
-
-I'm afraid this isn't quite correct: ~3 will pass if csdev->buffer[4] ==
-3 which is beyond the range of the original comparison.
-
-How about this: it doesn't depend on the architecture to define the
-signedness and it covers the original range?
-
-James
-
----
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index ef693e8..a4055c4 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -84,7 +84,7 @@ struct clariion_dh_data {
- 	/*
- 	 * I/O buffer for both MODE_SELECT and INQUIRY commands.
- 	 */
--	char buffer[CLARIION_BUFFER_SIZE];
-+	unsigned char buffer[CLARIION_BUFFER_SIZE];
- 	/*
- 	 * SCSI sense buffer for commands -- assumes serial issuance
- 	 * and completion sequence of all commands for same multipath.
-@@ -176,7 +176,7 @@ static int parse_sp_info_reply(struct scsi_device *sdev,
- 		err = SCSI_DH_DEV_TEMP_BUSY;
- 		goto out;
- 	}
--	if (csdev->buffer[4] < 0 || csdev->buffer[4] > 2) {
-+	if (csdev->buffer[4] > 2) {
- 		/* Invalid buffer format */
- 		sdev_printk(KERN_NOTICE, sdev,
- 			    "%s: invalid VPD page 0xC0 format\n",
-
-
+-- 
+Meelis Roos (mroos@ut.ee)      http://www.cs.ut.ee/~mroos/
