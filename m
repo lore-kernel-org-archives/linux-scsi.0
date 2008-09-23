@@ -1,87 +1,40 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch 10/17] scsi: gdth.c use unaligned access helpers
-Date: Tue, 23 Sep 2008 10:08:17 +0300
-Message-ID: <48D895E1.7040705@panasas.com>
-References: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 5921] AIC7xxx: SCSI bus crash when formating CDRW
+Date: Tue, 23 Sep 2008 01:16:51 -0700 (PDT)
+Message-ID: <20080923081651.5D777108059@picon.linux-foundation.org>
+References: <bug-5921-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:17541 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753081AbYIWHIW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2008 03:08:22 -0400
-In-Reply-To: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58249 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751422AbYIWIQx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2008 04:16:53 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8N8GpwS026186
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2008 01:16:52 -0700
+In-Reply-To: <bug-5921-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
+To: linux-scsi@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Remove two now unnecessary local vars.
-> 
-> [akpm@linux-foundation.org: coding-style fixes]
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/gdth.c |   23 ++++++++++-------------
->  1 file changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
-> --- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-> +++ a/drivers/scsi/gdth.c
-> @@ -131,6 +131,7 @@
->  #include <asm/system.h>
->  #include <asm/io.h>
->  #include <asm/uaccess.h>
-> +#include <asm/unaligned.h>
->  #include <linux/spinlock.h>
->  #include <linux/blkdev.h>
->  #include <linux/scatterlist.h>
-> @@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
->  {
->      register gdth_cmd_str *cmdp;
->      struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-> -    ulong32 cnt, blockcnt;
-> -    ulong64 no, blockno;
-> +    ulong32 blockcnt;
-> +    ulong64 blockno;
->      int i, cmd_index, read_write, sgcnt, mode64;
->  
->      cmdp = ha->pccb;
-> @@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
->  
->      if (read_write) {
->          if (scp->cmd_len == 16) {
-> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
-> -            blockno = be64_to_cpu(no);
-> -            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
-> -            blockcnt = be32_to_cpu(cnt);
-> +		blockno = get_unaligned_be64(&scp->cmnd[2]);
-> +		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
-+		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
-64 => 32
->          } else if (scp->cmd_len == 10) {
-> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
-> -            blockno = be32_to_cpu(no);
-> -            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
-> -            blockcnt = be16_to_cpu(cnt);
-> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
-> +		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
->          } else {
-> -            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
-> -            blockno = be32_to_cpu(no) & 0x001fffffUL;
-> -            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
-> +		blockno &= 0x001fffffUL;
-> +		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
->          }
->          if (mode64) {
->              cmdp->u.cache64.BlockNo = blockno;
-> _
+http://bugzilla.kernel.org/show_bug.cgi?id=5921
 
+
+emmanuel.fuste@laposte.net changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+      KernelVersion|2.6.22                      |2.6.25
+
+
+
+
+------- Comment #20 from emmanuel.fuste@laposte.net  2008-09-23 01:16 -------
+Latest tested kernel is 2.6.25
+Will retry with 2.6.27.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
