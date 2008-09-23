@@ -1,70 +1,82 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] scsi_error: Fix idempotent command handling
-Date: Tue, 23 Sep 2008 15:31:58 -0500
-Message-ID: <1222201918-6753-1-git-send-email-michaelc@cs.wisc.edu>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH 1/2] scsi: gdth.c use unaligned access helpers
+Date: Tue, 23 Sep 2008 13:38:26 -0700
+Message-ID: <1222202306.16003.11.camel@brick>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:32804 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbYIWUcD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2008 16:32:03 -0400
+Received: from wf-out-1314.google.com ([209.85.200.174]:21641 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbYIWUia (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2008 16:38:30 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2387587wfd.4
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2008 13:38:29 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Remove two now unnecessary local vars.
 
-Drivers want to be able to return DID_TRANSPORT_DISRUPTED and
-have it do the right thing for commands like tape and passthrouh
-as far as retries go. The LLDs previously used DID_BUS_BUSY or DID_ERROR
-which followed the cmd->retries limit, but DID_TRANSPORT_DISRUPTED
-was skipping that check so it could have caused a problem with tape
-commands.
-
-This patch has DID_TRANSPORT_DISRUPTED check the cmd->retries/cmd->allowed.
-It also removes the target blocking behavior for now because it is not needed
-as drivers are checking for this scenario.
-
-The patch was made over scsi-post and Mike Anderson's patchset:
-"[PATCH 0/13] scsi: scsi_decide_disposition update"
-http://marc.info/?l=linux-scsi&m=122210133628085&w=2
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/scsi/scsi_error.c |    5 +++--
- include/scsi/scsi.h       |    2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+akpm: replacement patch for that which had the incorrect be64.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 32a624c..6e8034e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1294,9 +1294,10 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * LLD/transport was disrupted during processing of the IO.
- 		 * The transport class is now blocked/blocking,
- 		 * and the transport will decide what to do with the IO
--		 * based on its timers and recovery capablilities.
-+		 * based on its timers and recovery capablilities if
-+		 * cmd->retries permits.
- 		 */
--		return SCSI_MLQUEUE_TARGET_BUSY;
-+		return SCSI_MLQUEUE_TARGET_COM_ERR;
- 	case DID_TRANSPORT_FAILFAST:
- 		/*
- 		 * The transport decided to failfast the IO (most likely
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 2d8f00e..255f5ee 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -446,6 +446,8 @@ enum {
- 	SCSI_MLQUEUE_IMM_RETRY		= (0x08 << SCSI_MLQUEUE_BUSY_SHIFT) |
- 		SCSI_MLQUEUE_DIS_RETRY | SCSI_IGN_BLK_FAILFAST |
- 		SCSI_IGN_ALLOWED,
-+	SCSI_MLQUEUE_TARGET_COM_ERR	= (0x10 << SCSI_MLQUEUE_BUSY_SHIFT) |
-+		SCSI_MLQUEUE_DIS_RETRY | SCSI_IGN_BLK_FAILFAST,
- };
+ drivers/scsi/gdth.c |   23 ++++++++++-------------
+ 1 files changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index c387c15..a788aa1 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -131,6 +131,7 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ #include <asm/uaccess.h>
++#include <asm/unaligned.h>
+ #include <linux/spinlock.h>
+ #include <linux/blkdev.h>
+ #include <linux/scatterlist.h>
+@@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, ushort hdrive)
+ {
+     register gdth_cmd_str *cmdp;
+     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+-    ulong32 cnt, blockcnt;
+-    ulong64 no, blockno;
++    ulong32 blockcnt;
++    ulong64 blockno;
+     int i, cmd_index, read_write, sgcnt, mode64;
  
- #define scsi_disposition_finish(dis) (dis & SCSI_MLQUEUE_DIS_FINISH)
+     cmdp = ha->pccb;
+@@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, ushort hdrive)
+ 
+     if (read_write) {
+         if (scp->cmd_len == 16) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
+-            blockno = be64_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
+-            blockcnt = be32_to_cpu(cnt);
++		blockno = get_unaligned_be64(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
+         } else if (scp->cmd_len == 10) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
+-            blockno = be32_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
+-            blockcnt = be16_to_cpu(cnt);
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
+         } else {
+-            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
+-            blockno = be32_to_cpu(no) & 0x001fffffUL;
+-            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockno &= 0x001fffffUL;
++		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
+         }
+         if (mode64) {
+             cmdp->u.cache64.BlockNo = blockno;
 -- 
-1.5.4.1
+1.6.0.2.450.gdb265
+
 
