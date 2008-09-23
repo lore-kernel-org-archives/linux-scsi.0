@@ -1,77 +1,70 @@
-From: Nikanth Karthikesan <knikanth@suse.de>
-Subject: [PATCH] BUG: ll_merge_requests_fn() updates req->nr_phys_segments wrongly
-Date: Tue, 23 Sep 2008 23:58:02 +0530
-Message-ID: <200809232358.02810.knikanth@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH] scsi_error: Fix idempotent command handling
+Date: Tue, 23 Sep 2008 15:31:58 -0500
+Message-ID: <1222201918-6753-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:50198 "EHLO mx1.suse.de"
+Received: from mx2.redhat.com ([66.187.237.31]:32804 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752254AbYIWS2u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2008 14:28:50 -0400
-Content-Disposition: inline
+	id S1751924AbYIWUcD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2008 16:32:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Nikanth Karthikesan <knikanth@suse.de>
+Drivers want to be able to return DID_TRANSPORT_DISRUPTED and
+have it do the right thing for commands like tape and passthrouh
+as far as retries go. The LLDs previously used DID_BUS_BUSY or DID_ERROR
+which followed the cmd->retries limit, but DID_TRANSPORT_DISRUPTED
+was skipping that check so it could have caused a problem with tape
+commands.
 
-ll_merge_requests_fn() decreases the req->nr_phys_segments if 
-blk_phys_contig_segment() returns true, but it is perfectly possible that 
-blk_hw_contig_segment() is false. A new hw_segment implies a new phys_segment. 
-So decrementing nr_phys_segments wrongly here triggers the BUG_ON() in 
-scsi_init_sgtable(), as blk_rq_map_sg() would map 1 phys_segment more than  
-req->nr_phys_segment. This is easily reproducible. Other callers of 
-blk_rq_map_sg() should also be affected by this bug.
+This patch has DID_TRANSPORT_DISRUPTED check the cmd->retries/cmd->allowed.
+It also removes the target blocking behavior for now because it is not needed
+as drivers are checking for this scenario.
 
-Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
+The patch was made over scsi-post and Mike Anderson's patchset:
+"[PATCH 0/13] scsi: scsi_decide_disposition update"
+http://marc.info/?l=linux-scsi&m=122210133628085&w=2
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
+ drivers/scsi/scsi_error.c |    5 +++--
+ include/scsi/scsi.h       |    2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
- block/blk-merge.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 5efc9e7..6e6d04b 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -392,11 +392,6 @@ static int ll_merge_requests_fn(struct request_queue *q, 
-struct request *req,
- 		return 0;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 32a624c..6e8034e 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1294,9 +1294,10 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 * LLD/transport was disrupted during processing of the IO.
+ 		 * The transport class is now blocked/blocking,
+ 		 * and the transport will decide what to do with the IO
+-		 * based on its timers and recovery capablilities.
++		 * based on its timers and recovery capablilities if
++		 * cmd->retries permits.
+ 		 */
+-		return SCSI_MLQUEUE_TARGET_BUSY;
++		return SCSI_MLQUEUE_TARGET_COM_ERR;
+ 	case DID_TRANSPORT_FAILFAST:
+ 		/*
+ 		 * The transport decided to failfast the IO (most likely
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 2d8f00e..255f5ee 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -446,6 +446,8 @@ enum {
+ 	SCSI_MLQUEUE_IMM_RETRY		= (0x08 << SCSI_MLQUEUE_BUSY_SHIFT) |
+ 		SCSI_MLQUEUE_DIS_RETRY | SCSI_IGN_BLK_FAILFAST |
+ 		SCSI_IGN_ALLOWED,
++	SCSI_MLQUEUE_TARGET_COM_ERR	= (0x10 << SCSI_MLQUEUE_BUSY_SHIFT) |
++		SCSI_MLQUEUE_DIS_RETRY | SCSI_IGN_BLK_FAILFAST,
+ };
  
- 	total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
--	if (blk_phys_contig_segment(q, req->biotail, next->bio))
--		total_phys_segments--;
--
--	if (total_phys_segments > q->max_phys_segments)
--		return 0;
- 
- 	total_hw_segments = req->nr_hw_segments + next->nr_hw_segments;
- 	if (blk_hw_contig_segment(q, req->biotail, next->bio)) {
-@@ -410,9 +405,12 @@ static int ll_merge_requests_fn(struct request_queue *q, 
-struct request *req,
- 		if (next->nr_hw_segments == 1)
- 			next->biotail->bi_hw_back_size = len;
- 		total_hw_segments--;
-+		if (blk_phys_contig_segment(q, req->biotail, next->bio))
-+			total_phys_segments--;
- 	}
- 
--	if (total_hw_segments > q->max_hw_segments)
-+	if (total_phys_segments > q->max_phys_segments ||
-+	    total_hw_segments > q->max_hw_segments)
- 		return 0;
- 
- 	/* Merge is OK... */
-
-
-
-
-
-
-
-
+ #define scsi_disposition_finish(dis) (dis & SCSI_MLQUEUE_DIS_FINISH)
+-- 
+1.5.4.1
 
