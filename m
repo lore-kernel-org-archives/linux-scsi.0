@@ -1,14 +1,16 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/7] libiscsi: fix data corruption when target has to resend data-in packets
-Date: Wed, 24 Sep 2008 11:46:09 -0500
-Message-ID: <1222274775-8834-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/7] iscsi class: fix endpoint id handling
+Date: Wed, 24 Sep 2008 11:46:11 -0500
+Message-ID: <1222274775-8834-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1222274775-8834-1-git-send-email-michaelc@cs.wisc.edu>
+ <1222274775-8834-2-git-send-email-michaelc@cs.wisc.edu>
+ <1222274775-8834-3-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:53699 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:53701 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbYIXQq1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2008 12:46:27 -0400
-In-Reply-To: <1222274775-8834-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1752662AbYIXQq2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2008 12:46:28 -0400
+In-Reply-To: <1222274775-8834-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -16,147 +18,69 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-iscsi_tcp was updating the exp_statsn (exp_statsn acknowledges
-status and tells the target it is ok to let the resources for
-a iscsi pdu to be reused) before it got all the data for pdu read
-into OS buffers. Data corruption was occuring if something happens
-to a packet and the network layer requests a retransmit, and the
-initiator has told the target about the udpated exp_statsn ack,
-then the target may be sending data from a buffer it has reused
-for a new iscsi pdu. This fixes the problem by having the LLD
-(iscsi_tcp in this case) just handle the transferring of data, and
-has libiscsi handle the processing of status (libiscsi completion
-processing is done after LLD data transfers are complete).
+Some endpoint code was using unsigned int and some
+was using uint64_t. This converts it all to uint64_t.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/iscsi_tcp.c |   29 +++++------------------------
- drivers/scsi/libiscsi.c  |   41 +++++++++++++++++++++++++++++++++++------
- 2 files changed, 40 insertions(+), 30 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |    9 +++++----
+ include/scsi/scsi_transport_iscsi.h |    2 +-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 2a2f009..e960f00 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -523,22 +523,20 @@ iscsi_tcp_cleanup_task(struct iscsi_conn *conn, struct iscsi_task *task)
- }
- 
- /**
-- * iscsi_data_rsp - SCSI Data-In Response processing
-+ * iscsi_data_in - SCSI Data-In Response processing
-  * @conn: iscsi connection
-  * @task: scsi command task
-  **/
- static int
--iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_task *task)
-+iscsi_data_in(struct iscsi_conn *conn, struct iscsi_task *task)
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index f9e45f8..4a803eb 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -138,7 +138,7 @@ static ssize_t
+ show_ep_handle(struct device *dev, struct device_attribute *attr, char *buf)
  {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_tcp_task *tcp_task = task->dd_data;
- 	struct iscsi_data_rsp *rhdr = (struct iscsi_data_rsp *)tcp_conn->in.hdr;
--	struct iscsi_session *session = conn->session;
--	struct scsi_cmnd *sc = task->sc;
- 	int datasn = be32_to_cpu(rhdr->datasn);
--	unsigned total_in_length = scsi_in(sc)->length;
-+	unsigned total_in_length = scsi_in(task->sc)->length;
- 
--	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
-+	iscsi_update_cmdsn(conn->session, (struct iscsi_nopin*)rhdr);
- 	if (tcp_conn->in.datalen == 0)
- 		return 0;
- 
-@@ -558,23 +556,6 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_task *task)
- 		return ISCSI_ERR_DATA_OFFSET;
- 	}
- 
--	if (rhdr->flags & ISCSI_FLAG_DATA_STATUS) {
--		sc->result = (DID_OK << 16) | rhdr->cmd_status;
--		conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
--		if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
--		                   ISCSI_FLAG_DATA_OVERFLOW)) {
--			int res_count = be32_to_cpu(rhdr->residual_count);
--
--			if (res_count > 0 &&
--			    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
--			     res_count <= total_in_length))
--				scsi_in(sc)->resid = res_count;
--			else
--				sc->result = (DID_BAD_TARGET << 16) |
--					rhdr->cmd_status;
--		}
--	}
--
- 	conn->datain_pdus_cnt++;
- 	return 0;
+ 	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+-	return sprintf(buf, "%u\n", ep->id);
++	return sprintf(buf, "%llu\n", (unsigned long long) ep->id);
  }
-@@ -774,7 +755,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 		if (!task)
- 			rc = ISCSI_ERR_BAD_ITT;
- 		else
--			rc = iscsi_data_rsp(conn, task);
-+			rc = iscsi_data_in(conn, task);
- 		if (rc) {
- 			spin_unlock(&conn->session->lock);
- 			break;
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 0e8f26b..f9539af 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -633,6 +633,40 @@ out:
- 	__iscsi_put_task(task);
- }
+ static ISCSI_ATTR(ep, handle, S_IRUGO, show_ep_handle, NULL);
  
-+/**
-+ * iscsi_data_in_rsp - SCSI Data-In Response processing
-+ * @conn: iscsi connection
-+ * @hdr:  iscsi pdu
-+ * @task: scsi command task
-+ **/
-+static void
-+iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+		  struct iscsi_task *task)
-+{
-+	struct iscsi_data_rsp *rhdr = (struct iscsi_data_rsp *)hdr;
-+	struct scsi_cmnd *sc = task->sc;
-+
-+	if (!(rhdr->flags & ISCSI_FLAG_DATA_STATUS))
-+		return;
-+
-+	sc->result = (DID_OK << 16) | rhdr->cmd_status;
-+	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
-+	if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
-+	                   ISCSI_FLAG_DATA_OVERFLOW)) {
-+		int res_count = be32_to_cpu(rhdr->residual_count);
-+
-+		if (res_count > 0 &&
-+		    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
-+		     res_count <= scsi_in(sc)->length))
-+			scsi_in(sc)->resid = res_count;
-+		else
-+			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
-+	}
-+
-+	conn->scsirsp_pdus_cnt++;
-+	__iscsi_put_task(task);
-+}
-+
- static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+@@ -156,7 +156,7 @@ static struct attribute_group iscsi_endpoint_group = {
+ static int iscsi_match_epid(struct device *dev, void *data)
  {
- 	struct iscsi_tm_rsp *tmf = (struct iscsi_tm_rsp *)hdr;
-@@ -818,12 +852,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 		iscsi_scsi_cmd_rsp(conn, hdr, task, data, datalen);
- 		break;
- 	case ISCSI_OP_SCSI_DATA_IN:
--		if (hdr->flags & ISCSI_FLAG_DATA_STATUS) {
--			conn->scsirsp_pdus_cnt++;
--			iscsi_update_cmdsn(session,
--					   (struct iscsi_nopin*) hdr);
--			__iscsi_put_task(task);
--		}
-+		iscsi_data_in_rsp(conn, hdr, task);
- 		break;
- 	case ISCSI_OP_LOGOUT_RSP:
- 		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
+ 	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+-	unsigned int *epid = (unsigned int *) data;
++	uint64_t *epid = (uint64_t *) data;
+ 
+ 	return *epid == ep->id;
+ }
+@@ -166,7 +166,7 @@ iscsi_create_endpoint(int dd_size)
+ {
+ 	struct device *dev;
+ 	struct iscsi_endpoint *ep;
+-	unsigned int id;
++	uint64_t id;
+ 	int err;
+ 
+ 	for (id = 1; id < ISCSI_MAX_EPID; id++) {
+@@ -187,7 +187,8 @@ iscsi_create_endpoint(int dd_size)
+ 
+ 	ep->id = id;
+ 	ep->dev.class = &iscsi_endpoint_class;
+-	snprintf(ep->dev.bus_id, BUS_ID_SIZE, "ep-%u", id);
++	snprintf(ep->dev.bus_id, BUS_ID_SIZE, "ep-%llu",
++		 (unsigned long long) id);
+ 	err = device_register(&ep->dev);
+         if (err)
+                 goto free_ep;
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 8749d4d..c667cc3 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -208,7 +208,7 @@ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+ struct iscsi_endpoint {
+ 	void *dd_data;			/* LLD private data */
+ 	struct device dev;
+-	unsigned int id;
++	uint64_t id;
+ };
+ 
+ /*
 -- 
 1.5.4.1
 
