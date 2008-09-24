@@ -1,65 +1,80 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Wed, 24 Sep 2008 14:17:20 -0500
-Message-ID: <48DA9240.5090407@cs.wisc.edu>
-References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu>
+From: Julia Lawall <julia@diku.dk>
+Subject: Re: [patch 15/17] drivers/scsi: Use DIV_ROUND_UP
+Date: Wed, 24 Sep 2008 21:26:48 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0809242125450.19914@ask.diku.dk>
+References: <200809222156.m8MLupx2032307@imap1.linux-foundation.org>
+ <20080923004345.GC27204@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51286 "EHLO sabe.cs.wisc.edu"
+Received: from mgw2.diku.dk ([130.225.96.92]:60783 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752395AbYIXTXv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2008 15:23:51 -0400
-In-Reply-To: <48DA9163.9070209@cs.wisc.edu>
+	id S1752393AbYIXT0v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2008 15:26:51 -0400
+In-Reply-To: <20080923004345.GC27204@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@novell.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> James Smart wrote:
->> This patch, discussed in the initial thread on target can_queue limits
->> (see  http://marc.info/?l=linux-scsi&m=120944296225094&w=2 )
->> allows the target can_queue limit to be obtained from the device list 
->> based on
->> Inquiry data obtained during scan.
->>
->> I have pinged several of the array vendors to supply target-port level 
->> values
->> for their arrays. Hopefully, we will see them populate the device list 
->> with some
->> real values shortly.
->>
->> This patch was cut against scsi-misc-2.6, and depends on Mike 
->> Christies patches
->> contained in the original thread.
->>
->> -- james s
->>
->> PS: This sure desires the promoting of the starget in sysfs, with an 
->> attribute
->>     for the can_queue value.
->>
-> 
-> I was thinking that for the QUEUE_FULL ramp back up problem, I would do 
-> a userspace daemon that after some algorithm decided when it was time, 
-> we could start increasing the queue depth.
-> 
-> And then I was thinking that because it needed to know when devices were 
-> getting QUEUE_FULLs so it could figure out when to ramp back up, it 
-> could be based off of a userspace daemon Hannes was talking about that 
-> would pass scsi info/errors to userspace so it could be handled there 
-> (this was originally to handle the sense data that indicated that the 
-> lun data changed and so we were going to kick off a scan and delete old 
-> deices from userspace).
-> 
-> Then I was thinking that I could extend the daemon to handle the problem 
-> that this patch was handling too. The daemon would listen for starget or 
-> port kobject addition events. Then it would do a inquiry to get the 
-> target info and match it with some table, then it could write to a 
-> straget->can_queue sysfs file to set the can_queue value.
-> 
+On Mon, 22 Sep 2008, Matthew Wilcox wrote:
 
-Oh yeah, I guess it would not need to be in the error handler userspace 
-daemon and we could just do a udev callout for it.
+> On Mon, Sep 22, 2008 at 02:56:51PM -0700, akpm@linux-foundation.org wrote:
+> >  
+> >  		one_clock = esp->ccycle / 1000;
+> >  		rounded_up = (period << 2);
+> > -		rounded_up = (rounded_up + one_clock - 1) / one_clock;
+> > +		rounded_up = DIV_ROUND_UP(rounded_up, one_clock);
+> >  		stp = rounded_up;
+> >  		if (stp && esp->rev >= FAS236) {
+> >  			if (stp >= 50)
+> 
+> Is this not exactly equivalent to:
+> 
+> 		one_clock = esp->ccycle / 1000;
+> 		stp = DIV_ROUND_UP(period << 2, one_clock);
+> 
+> (rounded_up is local to this if condition).
+
+Agreed.  An updated patch is below.
+
+julia
+
+--------------------
+
+From: Julia Lawall <julia@diku.dk>
+
+Use the macro DIV_ROUND_UP and eliminate the variable rounded_up, as
+suggested by Matthew Wilcox.
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+
+ drivers/scsi/esp_scsi.c       |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 62a4618..a680e18 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -1453,7 +1453,7 @@ static void esp_msgin_sdtr(struct esp *esp, struct esp_target_data *tp)
+ 		offset = 0;
+ 
+ 	if (offset) {
+-		int rounded_up, one_clock;
++		int one_clock;
+ 
+ 		if (period > esp->max_period) {
+ 			period = offset = 0;
+@@ -1463,9 +1463,7 @@ static void esp_msgin_sdtr(struct esp *esp, struct esp_target_data *tp)
+ 			goto do_reject;
+ 
+ 		one_clock = esp->ccycle / 1000;
+-		rounded_up = (period << 2);
+-		rounded_up = (rounded_up + one_clock - 1) / one_clock;
+-		stp = rounded_up;
++		stp = DIV_ROUND_UP(period << 2, one_clock);
+ 		if (stp && esp->rev >= FAS236) {
+ 			if (stp >= 50)
+ 				stp--;
