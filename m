@@ -1,39 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: lpfc warnings on sparc64
-Date: Thu, 25 Sep 2008 08:36:48 -0700
-Message-ID: <1222357008.3610.12.camel@localhost.localdomain>
-References: <Pine.SOC.4.64.0809251006540.6342@math.ut.ee>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 0/2] Export lld busy state for request
+	stacking drivers
+Date: Thu, 25 Sep 2008 11:53:55 -0400 (EDT)
+Message-ID: <20080925.115355.71085765.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42796 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752729AbYIYPhF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2008 11:37:05 -0400
-In-Reply-To: <Pine.SOC.4.64.0809251006540.6342@math.ut.ee>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: akpm@linux-foundation.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
-On Thu, 2008-09-25 at 11:14 +0300, Meelis Roos wrote:
-> Noticed this wgile compiling 2.6.27-rc7+git on sparc64 - maybe it is of 
-> interest.
-> 
->   CC [M]  drivers/scsi/lpfc/lpfc_sli.o
-> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_sli_poll_fcp_ring':
-> drivers/scsi/lpfc/lpfc_sli.c:1365: warning: array subscript is above array bounds
-> drivers/scsi/lpfc/lpfc_sli.c:1365: warning: array subscript is above array bounds
-> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_sli_handle_fast_ring_event':
-> drivers/scsi/lpfc/lpfc_sli.c:1541: warning: array subscript is above array bounds
-> drivers/scsi/lpfc/lpfc_sli.c:1541: warning: array subscript is above array bounds
+Hi Andrew, Jens, James,
 
-As best I can tell this is a bogus warning ... it triggers on x86 as
-well, but I can't find any reason gcc should think there's an array
-bounds error.
+The following patches are the revised version to use lld's private data
+instead of backing_dev_info.state for exporting lld busy state.
 
-James
+Please review and give me your opinion.
+If all of you have no problem, I'll re-send the patches separately
+to each maintainer, Jens and James.
+
+The patches are created on the following commit of for-2.6.28
+in linux-2.6-block, but the scsi part can be also applied to
+scsi-post-merge-2.6.
+---------------------------------------------------------------
+commit c5062758edbe59286d7d8e718a59e4d4347ef541
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Wed Sep 24 13:05:10 2008 +0200
+
+    libata: set queue SSD flag for SSD devices
+---------------------------------------------------------------
 
 
+Previous post and discussions about the interface:
+    http://lkml.org/lkml/2008/9/19/138
+
+
+Summary of the patches:
+    1/2: block: add lld busy state exporting interface
+    2/2: scsi: export busy state via q->lld_busy_fn()
+
+Thanks,
+Kiyoshi Ueda
