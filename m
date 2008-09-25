@@ -1,56 +1,43 @@
-From: "Jing Huang" <huangj@Brocade.COM>
-Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
-Date: Thu, 25 Sep 2008 09:56:20 -0700
-Message-ID: <4C94DE2070B172459E4F1EE14BD2364E01F27DDD@HQ-EXCH-5.corp.brocade.com>
-References: <4C94DE2070B172459E4F1EE14BD2364E01F27D19@HQ-EXCH-5.corp.brocade.com> <20080925044923.GA4310@kroah.com> <1222319644.3602.1.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E01F27D49@HQ-EXCH-5.corp.brocade.com> <20080925055725.GC66712@sgi.com> <4C94DE2070B172459E4F1EE14BD2364E01F27D54@HQ-EXCH-5.corp.brocade.com> <1222356879.3610.9.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
+Date: Thu, 25 Sep 2008 13:15:26 -0500
+Message-ID: <48DBD53E.4040604@cs.wisc.edu>
+References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9746.9090003@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx30.brocade.com ([144.49.194.4]:59475 "EHLO mx30.brocade.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35353 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755150AbYIYQ4q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 12:56:46 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1222356879.3610.9.camel@localhost.localdomain>
+	id S1754376AbYIYSPk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 14:15:40 -0400
+In-Reply-To: <48DA9746.9090003@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@novell.com>
 
-Thanks James. I am trying unix mail command. It seems to be working
-fine. I will resubmit once I make sure everything is ok. 
+James Smart wrote:
+> This sounds reasonable, but I wouldn't eliminate this can_queue limit. 
 
-Again, sorry about the trouble.
+I was not going to elimitate it. It is all muddled in the one mail, so 
+it is confusing.
 
-Jing
+I was just going to set it based on target vendor info table in 
+userspace from a scsi daemon that was going to handle this issue and 
+handle ramp ups due to QUEUE_FULL ramp downs and other scsi issues like 
+the handling of sense that indicates disks changes size or report lun 
+data changes.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Thursday, September 25, 2008 8:35 AM
-To: Jing Huang
-Cc: Jeremy Higdon; Greg KH; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Ramkumar Vadivelu; Vinodh Ravindran;
-Srikanth Rayas (CW)
-Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
+Hannes had mentioned he was making some event infrastructure to handle 
+the sense, and I thought I could extend his userspce code to handle the 
+ramp up issue and handle setting this value. So for just the 
+starget->can_queue issue, the daemon would listen for target hotplug 
+events, then it would do sg io to device on it and get the vendor info 
+and look up the target in a table and then if found would write to a 
+starget->can_queue sysfs file to set the value.
 
-On Wed, 2008-09-24 at 23:09 -0700, Jing Huang wrote:
-> Hi James,
-> 
-> I looked at Documentation/email-clients.txt. There is no info about
-> outlook. So I believe Jeremy is right. 
-> 
-> Is attachment acceptable for my first submission? Meanwhile I will
-find
-> out if I can use other email client in my company.
-
-Yes ... attachments can be tolerated for people who are forced to use
-outlook.  We had a similar issue with Adaptec engineers.  There are
-rumours that outlook can be persuaded not to mangle text, but everyone
-who claims to be able to do it has been unable to reproduce under
-laboratory conditions.
-
-James
-
-
+The same daemon could also handle the sense handling and handle other 
+errors like when to ramp up from when we ramp down due to QUEUE_FULLs. 
+So it is basically a scsi-ml/lib in userpsace that could be easily 
+packaged for distros to carry.
