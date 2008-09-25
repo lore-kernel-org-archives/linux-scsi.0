@@ -1,59 +1,52 @@
-From: "Jing Huang" <huangj@Brocade.COM>
-Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
-Date: Wed, 24 Sep 2008 23:09:54 -0700
-Message-ID: <4C94DE2070B172459E4F1EE14BD2364E01F27D54@HQ-EXCH-5.corp.brocade.com>
-References: <4C94DE2070B172459E4F1EE14BD2364E01F27D19@HQ-EXCH-5.corp.brocade.com> <20080925044923.GA4310@kroah.com> <1222319644.3602.1.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E01F27D49@HQ-EXCH-5.corp.brocade.com> <20080925055725.GC66712@sgi.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] BUG: ll_merge_requests_fn() updates
+ req->nr_phys_segments wrongly
+Date: Thu, 25 Sep 2008 16:35:31 +0900
+Message-ID: <20080925163351G.fujita.tomonori@lab.ntt.co.jp>
+References: <200809232358.02810.knikanth@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx10.brocade.com ([208.185.105.18]:58195 "EHLO mx10.brocade.com"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:44041 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955AbYIYGTq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 02:19:46 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20080925055725.GC66712@sgi.com>
+	id S1752511AbYIYHge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 03:36:34 -0400
+In-Reply-To: <200809232358.02810.knikanth@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>
+To: knikanth@suse.de
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Hi James,
+On Tue, 23 Sep 2008 23:58:02 +0530
+Nikanth Karthikesan <knikanth@suse.de> wrote:
 
-I looked at Documentation/email-clients.txt. There is no info about
-outlook. So I believe Jeremy is right. 
-
-Is attachment acceptable for my first submission? Meanwhile I will find
-out if I can use other email client in my company.
-
-Jing
-
------Original Message-----
-From: Jeremy Higdon [mailto:jeremy@sgi.com] 
-Sent: Wednesday, September 24, 2008 10:57 PM
-To: Jing Huang
-Cc: James Bottomley; Greg KH; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Ramkumar Vadivelu; Vinodh Ravindran;
-Srikanth Rayas (CW)
-Subject: Re: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
-
-On Wed, Sep 24, 2008 at 10:33:26PM -0700, Jing Huang wrote:
-> Thanks James and Greg for the quick check on the patches.
 > 
-> I check the original patch, it is correct. I need to check the outlook
-> setting to see how to prevent this issue.
+> From: Nikanth Karthikesan <knikanth@suse.de>
 > 
-> This is my first time sending a patch, is there any trick to prevent
-> line-wrap? I did send it using plain text and I tried to send to
-myself
-> before sending to lkml, and I did't see this problem.
+> ll_merge_requests_fn() decreases the req->nr_phys_segments if 
+> blk_phys_contig_segment() returns true, but it is perfectly possible that 
+> blk_hw_contig_segment() is false.
+
+Yeah, in fact, blk_hw_contig_segment() is always false on the majority
+of architectures (on only PARISC and Alpha, it could be true).
+
+Your patch doesn't look correct. Virtually, the patch always disables
+physical merging.
 
 
-The fix is not to use Outlook -- I've never known anyone to be able
-to get it not to mangle email.  If you're stuck with that, try attaching
-the patch as a text document, if that's acceptable to James.
+> A new hw_segment implies a new phys_segment. 
+> So decrementing nr_phys_segments wrongly here triggers the BUG_ON() in 
+> scsi_init_sgtable(), as blk_rq_map_sg() would map 1 phys_segment more than  
+> req->nr_phys_segment. This is easily reproducible. Other callers of 
+> blk_rq_map_sg() should also be affected by this bug.
 
-I know someone that uses mutt on Windows, and it seems to work fine.
+I have no idea how BUG_ON() in scsi_init_sgtable() is triggered.
 
-jeremy
+Can you give more information, HBA, IOMMU (if you use), and the values
+of req->nr_phys_segment, req->nr_hw_segment, count, etc in in
+scsi_init_sgtable() when you hit the bug?
+
+
+BTW, blk_hw_contig_segment() will be removed for 2.6.28 (virtual
+merging account in the block layer will be removed).
