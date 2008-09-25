@@ -1,58 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] sd: remove command-size switching code
-Date: Thu, 25 Sep 2008 15:03:12 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0809251500180.2184-100000@iolanthe.rowland.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
+Date: Thu, 25 Sep 2008 15:03:47 -0400
+Message-ID: <48DBE093.5090804@emulex.com>
+References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9240.5090407@cs.wisc.edu> <48DBDB33.3050206@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43843 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752466AbYIYTDN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 15:03:13 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:49304 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbYIYTEJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 15:04:09 -0400
+In-Reply-To: <48DBDB33.3050206@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
-
-This patch (as1138) removes from sd.c some old code for switching from
-10-byte commands to 6-byte commands.  This code is redundant -- the
-switching for READ and WRITE is already handled in
-scsi_io_completion() and the switching for MODE SENSE is already
-handled in scsi_mode_sense().  (There is no comparable switch for MODE
-SELECT, but I doubt one is needed.)
-
-Furthermore the other handlers do a better job; they check for
-appropriate ASC and ASCQ values before blindly switching the size.
-The code in sd.c is known to cause problems with some devices by
-switching when it shouldn't.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-What is the point of that strange test against scsi_device_protection?  
-It's not present in the comparable part of scsi_io_completion().
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@novell.com>
 
 
+Mike Christie wrote:
+> So what I am asking is we can do the setting of starget->can_queue from:
+> 
+> 1. kernel devinfo table like in this patch.
+> 
+> 2. udev rule.
+> 
+> 3. userspace scsi daemon that handles lots of junk scsi-ml in the kernel
+> does not want to handle.
 
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1069,15 +1069,6 @@ static int sd_done(struct scsi_cmnd *SCp
- 			scsi_print_sense("sd", SCpnt);
- 			good_bytes = sd_completed_bytes(SCpnt);
- 		}
--		if (!scsi_device_protection(SCpnt->device) &&
--		    SCpnt->device->use_10_for_rw &&
--		    (SCpnt->cmnd[0] == READ_10 ||
--		     SCpnt->cmnd[0] == WRITE_10))
--			SCpnt->device->use_10_for_rw = 0;
--		if (SCpnt->device->use_10_for_ms &&
--		    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
--		     SCpnt->cmnd[0] == MODE_SELECT_10))
--			SCpnt->device->use_10_for_ms = 0;
- 		break;
- 	default:
- 		break;
+Sure. all can work.
 
+My preferences:
+- I prefer to set max's before we start to send i/o that checks against 
+them, meaning I like the kernel devinfo table better. But, I can't see a 
+scenario where any max would likely be exceeded (unless the max is 
+really really low) before a user-space thing could set it.
+
+- Queue depth handling - giving the headaches, the closer to the 
+hardware the better.  The ramp-down should be in the kernel/driver and 
+not userspace. Ramp-up can be in user-space. Note: queue depth should be 
+per lun, and thus never touch target can_queue limits.  So queue_depths 
+and tgt can_queue shouldn't be discussed together. (Yes, even with jbods 
+  where the tgt and lun are the same - there will be a relationship, but 
+I still wouldn't marry the two).
+
+-- james
