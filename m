@@ -1,43 +1,75 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Thu, 25 Sep 2008 13:15:26 -0500
-Message-ID: <48DBD53E.4040604@cs.wisc.edu>
-References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9746.9090003@emulex.com>
+Date: Thu, 25 Sep 2008 13:40:51 -0500
+Message-ID: <48DBDB33.3050206@cs.wisc.edu>
+References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9240.5090407@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35353 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47791 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754376AbYIYSPk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2008 14:15:40 -0400
-In-Reply-To: <48DA9746.9090003@emulex.com>
+	id S1753239AbYIYSlG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 14:41:06 -0400
+In-Reply-To: <48DA9240.5090407@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@novell.com>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@novell.com>
 
-James Smart wrote:
-> This sounds reasonable, but I wouldn't eliminate this can_queue limit. 
+Mike Christie wrote:
+> Mike Christie wrote:
+>> James Smart wrote:
+>>> This patch, discussed in the initial thread on target can_queue limits
+>>> (see  http://marc.info/?l=linux-scsi&m=120944296225094&w=2 )
+>>> allows the target can_queue limit to be obtained from the device list 
+>>> based on
+>>> Inquiry data obtained during scan.
+>>>
+>>> I have pinged several of the array vendors to supply target-port 
+>>> level values
+>>> for their arrays. Hopefully, we will see them populate the device 
+>>> list with some
+>>> real values shortly.
+>>>
+>>> This patch was cut against scsi-misc-2.6, and depends on Mike 
+>>> Christies patches
+>>> contained in the original thread.
+>>>
+>>> -- james s
+>>>
+>>> PS: This sure desires the promoting of the starget in sysfs, with an 
+>>> attribute
+>>>     for the can_queue value.
+>>>
+>>
+>> I was thinking that for the QUEUE_FULL ramp back up problem, I would 
+>> do a userspace daemon that after some algorithm decided when it was 
+>> time, we could start increasing the queue depth.
+>>
+>> And then I was thinking that because it needed to know when devices 
+>> were getting QUEUE_FULLs so it could figure out when to ramp back up, 
+>> it could be based off of a userspace daemon Hannes was talking about 
+>> that would pass scsi info/errors to userspace so it could be handled 
+>> there (this was originally to handle the sense data that indicated 
+>> that the lun data changed and so we were going to kick off a scan and 
+>> delete old deices from userspace).
+>>
+>> Then I was thinking that I could extend the daemon to handle the 
+>> problem that this patch was handling too. The daemon would listen for 
+>> starget or port kobject addition events. Then it would do a inquiry to 
+>> get the target info and match it with some table, then it could write 
+>> to a straget->can_queue sysfs file to set the can_queue value.
+>>
+> 
+> Oh yeah, I guess it would not need to be in the error handler userspace 
+> daemon and we could just do a udev callout for it.
 
-I was not going to elimitate it. It is all muddled in the one mail, so 
-it is confusing.
+So what I am asking is we can do the setting of starget->can_queue from:
 
-I was just going to set it based on target vendor info table in 
-userspace from a scsi daemon that was going to handle this issue and 
-handle ramp ups due to QUEUE_FULL ramp downs and other scsi issues like 
-the handling of sense that indicates disks changes size or report lun 
-data changes.
+1. kernel devinfo table like in this patch.
 
-Hannes had mentioned he was making some event infrastructure to handle 
-the sense, and I thought I could extend his userspce code to handle the 
-ramp up issue and handle setting this value. So for just the 
-starget->can_queue issue, the daemon would listen for target hotplug 
-events, then it would do sg io to device on it and get the vendor info 
-and look up the target in a table and then if found would write to a 
-starget->can_queue sysfs file to set the value.
+2. udev rule.
 
-The same daemon could also handle the sense handling and handle other 
-errors like when to ramp up from when we ramp down due to QUEUE_FULLs. 
-So it is basically a scsi-ml/lib in userpsace that could be easily 
-packaged for distros to carry.
+3. userspace scsi daemon that handles lots of junk scsi-ml in the kernel 
+does not want to handle.
