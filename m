@@ -1,64 +1,56 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: lpfc warnings on sparc64
-Date: Thu, 25 Sep 2008 12:14:56 -0400
-Message-ID: <48DBB900.3000903@emulex.com>
-References: <Pine.SOC.4.64.0809251006540.6342@math.ut.ee> <1222357008.3610.12.camel@localhost.localdomain>
+From: "Jing Huang" <huangj@Brocade.COM>
+Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
+Date: Thu, 25 Sep 2008 09:56:20 -0700
+Message-ID: <4C94DE2070B172459E4F1EE14BD2364E01F27DDD@HQ-EXCH-5.corp.brocade.com>
+References: <4C94DE2070B172459E4F1EE14BD2364E01F27D19@HQ-EXCH-5.corp.brocade.com> <20080925044923.GA4310@kroah.com> <1222319644.3602.1.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E01F27D49@HQ-EXCH-5.corp.brocade.com> <20080925055725.GC66712@sgi.com> <4C94DE2070B172459E4F1EE14BD2364E01F27D54@HQ-EXCH-5.corp.brocade.com> <1222356879.3610.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:61552 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061AbYIYQPO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 12:15:14 -0400
-In-Reply-To: <1222357008.3610.12.camel@localhost.localdomain>
+Received: from mx30.brocade.com ([144.49.194.4]:59475 "EHLO mx30.brocade.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755150AbYIYQ4q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 12:56:46 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1222356879.3610.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jeremy Higdon <jeremy@sgi.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>
 
-Interesting:
-   Here's the code lines:
-      ...
-      irsp->un.ulpWord[5],
-      *(((uint32_t *)irsp) + 6),
-      ...
+Thanks James. I am trying unix mail command. It seems to be working
+fine. I will resubmit once I make sure everything is ok. 
 
-it's not tripping on the ulpWord[5] line - which is what you would
-think, but rather the "+6" line.  Given that the structure size for
-irsp is certainly big enough, this has to be some loss of "object"
-context in the compiler.
+Again, sorry about the trouble.
 
-E.g:  it wouldn't surprise me if there's a base register that
-   contains the address of irsp (%reg) and that the un.ulpWord[5]
-   results in a displacement on the pointer (e.g. "20(%reg)" ),
-   and that the ptr+6 also results in something similar
-   (e.g. "24(%reg)") - and the range checking code assumed the
-   context un.ulpWord meant ?(%reg), and lost track of the type
-   or object difference between the next instruction that happened
-   to have a ? that was too big for the array.
+Jing
 
--- james s
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Thursday, September 25, 2008 8:35 AM
+To: Jing Huang
+Cc: Jeremy Higdon; Greg KH; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; Ramkumar Vadivelu; Vinodh Ravindran;
+Srikanth Rayas (CW)
+Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
 
-
-James Bottomley wrote:
-> On Thu, 2008-09-25 at 11:14 +0300, Meelis Roos wrote:
->> Noticed this wgile compiling 2.6.27-rc7+git on sparc64 - maybe it is of
->> interest.
->>
->>   CC [M]  drivers/scsi/lpfc/lpfc_sli.o
->> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_sli_poll_fcp_ring':
->> drivers/scsi/lpfc/lpfc_sli.c:1365: warning: array subscript is above array bounds
->> drivers/scsi/lpfc/lpfc_sli.c:1365: warning: array subscript is above array bounds
->> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_sli_handle_fast_ring_event':
->> drivers/scsi/lpfc/lpfc_sli.c:1541: warning: array subscript is above array bounds
->> drivers/scsi/lpfc/lpfc_sli.c:1541: warning: array subscript is above array bounds
+On Wed, 2008-09-24 at 23:09 -0700, Jing Huang wrote:
+> Hi James,
 > 
-> As best I can tell this is a bogus warning ... it triggers on x86 as
-> well, but I can't find any reason gcc should think there's an array
-> bounds error.
+> I looked at Documentation/email-clients.txt. There is no info about
+> outlook. So I believe Jeremy is right. 
 > 
-> James
-> 
-> 
-> 
+> Is attachment acceptable for my first submission? Meanwhile I will
+find
+> out if I can use other email client in my company.
+
+Yes ... attachments can be tolerated for people who are forced to use
+outlook.  We had a similar issue with Adaptec engineers.  There are
+rumours that outlook can be persuaded not to mangle text, but everyone
+who claims to be able to do it has been unable to reproduce under
+laboratory conditions.
+
+James
+
+
