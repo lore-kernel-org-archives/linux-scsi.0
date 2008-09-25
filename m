@@ -1,59 +1,37 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] BUG: ll_merge_requests_fn() updates req->nr_phys_segments wrongly
-Date: Thu, 25 Sep 2008 15:55:26 +0200
-Message-ID: <20080925135526.GO2677@kernel.dk>
-References: <200809232358.02810.knikanth@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755422AbYIYNzr@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200809232358.02810.knikanth@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nikanth Karthikesan <knikanth@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11645] qla2xxx.ko can't load firmware binary code
+Date: Thu, 25 Sep 2008 06:56:00 -0700 (PDT)
+Message-ID: <20080925135600.6F69E11D107@picon.linux-foundation.org>
+References: <bug-11645-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57776 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753430AbYIYN4c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 09:56:32 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8PDu0F0013858
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2008 06:56:01 -0700
+In-Reply-To: <bug-11645-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Sep 23 2008, Nikanth Karthikesan wrote:
-> 
-> From: Nikanth Karthikesan <knikanth@suse.de>
-> 
-> ll_merge_requests_fn() decreases the req->nr_phys_segments if 
-> blk_phys_contig_segment() returns true, but it is perfectly possible that 
-> blk_hw_contig_segment() is false. A new hw_segment implies a new phys_segment. 
-> So decrementing nr_phys_segments wrongly here triggers the BUG_ON() in 
-> scsi_init_sgtable(), as blk_rq_map_sg() would map 1 phys_segment more than  
-> req->nr_phys_segment. This is easily reproducible. Other callers of 
-> blk_rq_map_sg() should also be affected by this bug.
-> 
-> Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
-> ---
-> 
->  block/blk-merge.c |   10 ++++------
->  1 files changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 5efc9e7..6e6d04b 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -392,11 +392,6 @@ static int ll_merge_requests_fn(struct request_queue *q, 
-> struct request *req,
->  		return 0;
->  
->  	total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
-> -	if (blk_phys_contig_segment(q, req->biotail, next->bio))
-> -		total_phys_segments--;
+http://bugzilla.kernel.org/show_bug.cgi?id=11645
 
-This is totally broken, I gather you are thinking the bug is fixed since
-the counts always match up. Well that's mainly because you know don't do
-ANY merging.
 
-> -	if (total_phys_segments > q->max_phys_segments)
-> -		return 0;
 
-Hmm?
 
-I think you should try and describe the problem you are seeing instead,
-then we can perhaps find the real issue.
+
+------- Comment #2 from seokmann.ju@qlogic.com  2008-09-25 06:56 -------
+Created an attachment (id=18034)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=18034&action=view)
+.config file for the platform tested
+
+This is a .config file for the H/W platform that has been used for the test.
+
 
 -- 
-Jens Axboe
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
