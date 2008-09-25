@@ -1,75 +1,58 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
-Date: Thu, 25 Sep 2008 13:40:51 -0500
-Message-ID: <48DBDB33.3050206@cs.wisc.edu>
-References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9240.5090407@cs.wisc.edu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] sd: remove command-size switching code
+Date: Thu, 25 Sep 2008 15:03:12 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0809251500180.2184-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47791 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753239AbYIYSlG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2008 14:41:06 -0400
-In-Reply-To: <48DA9240.5090407@cs.wisc.edu>
+Received: from iolanthe.rowland.org ([192.131.102.54]:43843 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752466AbYIYTDN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 15:03:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@novell.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> Mike Christie wrote:
->> James Smart wrote:
->>> This patch, discussed in the initial thread on target can_queue limits
->>> (see  http://marc.info/?l=linux-scsi&m=120944296225094&w=2 )
->>> allows the target can_queue limit to be obtained from the device list 
->>> based on
->>> Inquiry data obtained during scan.
->>>
->>> I have pinged several of the array vendors to supply target-port 
->>> level values
->>> for their arrays. Hopefully, we will see them populate the device 
->>> list with some
->>> real values shortly.
->>>
->>> This patch was cut against scsi-misc-2.6, and depends on Mike 
->>> Christies patches
->>> contained in the original thread.
->>>
->>> -- james s
->>>
->>> PS: This sure desires the promoting of the starget in sysfs, with an 
->>> attribute
->>>     for the can_queue value.
->>>
->>
->> I was thinking that for the QUEUE_FULL ramp back up problem, I would 
->> do a userspace daemon that after some algorithm decided when it was 
->> time, we could start increasing the queue depth.
->>
->> And then I was thinking that because it needed to know when devices 
->> were getting QUEUE_FULLs so it could figure out when to ramp back up, 
->> it could be based off of a userspace daemon Hannes was talking about 
->> that would pass scsi info/errors to userspace so it could be handled 
->> there (this was originally to handle the sense data that indicated 
->> that the lun data changed and so we were going to kick off a scan and 
->> delete old deices from userspace).
->>
->> Then I was thinking that I could extend the daemon to handle the 
->> problem that this patch was handling too. The daemon would listen for 
->> starget or port kobject addition events. Then it would do a inquiry to 
->> get the target info and match it with some table, then it could write 
->> to a straget->can_queue sysfs file to set the can_queue value.
->>
-> 
-> Oh yeah, I guess it would not need to be in the error handler userspace 
-> daemon and we could just do a udev callout for it.
+This patch (as1138) removes from sd.c some old code for switching from
+10-byte commands to 6-byte commands.  This code is redundant -- the
+switching for READ and WRITE is already handled in
+scsi_io_completion() and the switching for MODE SENSE is already
+handled in scsi_mode_sense().  (There is no comparable switch for MODE
+SELECT, but I doubt one is needed.)
 
-So what I am asking is we can do the setting of starget->can_queue from:
+Furthermore the other handlers do a better job; they check for
+appropriate ASC and ASCQ values before blindly switching the size.
+The code in sd.c is known to cause problems with some devices by
+switching when it shouldn't.
 
-1. kernel devinfo table like in this patch.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-2. udev rule.
+---
 
-3. userspace scsi daemon that handles lots of junk scsi-ml in the kernel 
-does not want to handle.
+What is the point of that strange test against scsi_device_protection?  
+It's not present in the comparable part of scsi_io_completion().
+
+
+
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1069,15 +1069,6 @@ static int sd_done(struct scsi_cmnd *SCp
+ 			scsi_print_sense("sd", SCpnt);
+ 			good_bytes = sd_completed_bytes(SCpnt);
+ 		}
+-		if (!scsi_device_protection(SCpnt->device) &&
+-		    SCpnt->device->use_10_for_rw &&
+-		    (SCpnt->cmnd[0] == READ_10 ||
+-		     SCpnt->cmnd[0] == WRITE_10))
+-			SCpnt->device->use_10_for_rw = 0;
+-		if (SCpnt->device->use_10_for_ms &&
+-		    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
+-		     SCpnt->cmnd[0] == MODE_SELECT_10))
+-			SCpnt->device->use_10_for_ms = 0;
+ 		break;
+ 	default:
+ 		break;
+
