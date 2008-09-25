@@ -1,156 +1,161 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [RFC PATCH 1/2] block: add lld busy state exporting
-	interface
-Date: Thu, 25 Sep 2008 11:54:58 -0400 (EDT)
-Message-ID: <20080925.115458.104029926.k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 2/2] scsi: export busy state via q->lld_busy_fn()
+Date: Thu, 25 Sep 2008 11:55:33 -0400 (EDT)
+Message-ID: <20080925.115533.122620313.k-ueda@ct.jp.nec.com>
 References: <20080925.115355.71085765.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:49307 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753196AbYIYP6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 11:58:17 -0400
 In-Reply-To: <20080925.115355.71085765.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: akpm@linux-foundation.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-This patch adds an new interface, blk_lld_busy(), to check lld's
-busy state from the block layer.
-blk_lld_busy() calls down into low-level drivers for the checking
-if the drivers set q->lld_busy_fn() using blk_queue_lld_busy().
+This patch implements q->lld_busy_fn() for scsi mid layer to export
+its busy state.
 
-This resolves a performance problem on request stacking devices below.
+Please note that it checks the cached information (sdev->lld_busy)
+for efficiency, instead of checking the actual state of
+sdev/starget/shost everytime.
 
-Some drivers like scsi mid layer stop dispatching request when
-they detect busy state on its low-level device like host/target/device.
-It allows other requests to stay in the I/O scheduler's queue
-for a chance of merging.
+So the care must be taken not to leave sdev->lld_busy = 1 for
+the following cases:
+    - when there is no request in the sdev queue
+    - when scsi can't dispatch I/Os anymore and needs to kill I/Os
+Otherwise, request stacking drivers may not submit any request,
+and then, nobody sets back lld_busy = 0 and that causes deadlock.
 
-Request stacking drivers like request-based dm should follow
-the same logic.
-However, there is no generic interface for the stacked device
-to check if the underlying device(s) are busy.
-If the request stacking driver dispatches and submits requests to
-the busy underlying device, the requests will stay in
-the underlying device's queue without a chance of merging.
-This causes performance problem on burst I/O load.
-
-With this patch, busy state of the underlying device is exported
-via q->lld_busy_fn().  So the request stacking driver can check it
-and stop dispatching requests if busy.
-
-The underlying device driver must return the busy state appropriately:
-    1: when the device driver can't process requests immediately.
-    0: when the device driver can process requests immediately,
-       including abnormal situations where the device driver needs
-       to kill all requests.
+OTOH, it has no major problem in setting sdev->lld_busy = 0 even when
+the starget/shost is actually busy, because newly submitted request
+will soon turn it to 1 in scsi_request_fn().
 
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- block/blk-core.c       |   25 +++++++++++++++++++++++++
- block/blk-settings.c   |    6 ++++++
- include/linux/blkdev.h |    4 ++++
- 3 files changed, 35 insertions(+)
+ drivers/scsi/scsi.c        |    4 ++--
+ drivers/scsi/scsi_lib.c    |   20 +++++++++++++++++++-
+ include/scsi/scsi_device.h |   13 +++++++++++++
+ 3 files changed, 34 insertions(+), 3 deletions(-)
 
-Index: linux-2.6-block/block/blk-settings.c
+Index: linux-2.6-block/drivers/scsi/scsi_lib.c
 ===================================================================
---- linux-2.6-block.orig/block/blk-settings.c
-+++ linux-2.6-block/block/blk-settings.c
-@@ -89,6 +89,12 @@ void blk_queue_rq_timed_out(struct reque
+--- linux-2.6-block.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6-block/drivers/scsi/scsi_lib.c
+@@ -470,6 +470,8 @@ void scsi_device_unbusy(struct scsi_devi
+ 	spin_unlock(shost->host_lock);
+ 	spin_lock(sdev->request_queue->queue_lock);
+ 	sdev->device_busy--;
++	if (sdev->device_busy < sdev->queue_depth && !sdev->device_blocked)
++		sdev->lld_busy = 0;
+ 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
  }
- EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
  
-+void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn)
+@@ -1461,6 +1463,13 @@ static void scsi_softirq_done(struct req
+ 	}
+ }
+ 
++static int scsi_lld_busy(struct request_queue *q)
 +{
-+	q->lld_busy_fn = fn;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_lld_busy);
++	struct scsi_device *sdev = q->queuedata;
 +
- /**
-  * blk_queue_make_request - define an alternate make_request function for a device
-  * @q:  the request queue for the device to be affected
-Index: linux-2.6-block/include/linux/blkdev.h
++	return sdev ? sdev->lld_busy : 0;
++}
++
+ /*
+  * Function:    scsi_request_fn()
+  *
+@@ -1503,9 +1512,14 @@ static void scsi_request_fn(struct reque
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
+ 			break;
+ 
++		if (!scsi_dev_queue_ready(q, sdev)) {
++			sdev->lld_busy = 1;
++			break;
++		}
++
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to offline device\n");
+@@ -1576,6 +1590,8 @@ static void scsi_request_fn(struct reque
+ 		rtn = scsi_dispatch_cmd(cmd);
+ 		spin_lock_irq(q->queue_lock);
+ 		if(rtn) {
++			sdev->lld_busy = 1;
++
+ 			/* we're refusing the command; because of
+ 			 * the way locks get dropped, we need to 
+ 			 * check here if plugging is required */
+@@ -1600,6 +1616,7 @@ static void scsi_request_fn(struct reque
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
++	sdev->lld_busy = 1;
+ 	blk_requeue_request(q, req);
+ 	sdev->device_busy--;
+ 	if(sdev->device_busy == 0)
+@@ -1683,6 +1700,7 @@ struct request_queue *scsi_alloc_queue(s
+ 	blk_queue_prep_rq(q, scsi_prep_fn);
+ 	blk_queue_softirq_done(q, scsi_softirq_done);
+ 	blk_queue_rq_timed_out(q, scsi_times_out);
++	blk_queue_lld_busy(q, scsi_lld_busy);
+ 	return q;
+ }
+ 
+Index: linux-2.6-block/drivers/scsi/scsi.c
 ===================================================================
---- linux-2.6-block.orig/include/linux/blkdev.h
-+++ linux-2.6-block/include/linux/blkdev.h
-@@ -269,6 +269,7 @@ typedef int (merge_bvec_fn) (struct requ
- typedef void (prepare_flush_fn) (struct request_queue *, struct request *);
- typedef void (softirq_done_fn)(struct request *);
- typedef int (dma_drain_needed_fn)(struct request *);
-+typedef int (lld_busy_fn) (struct request_queue *q);
+--- linux-2.6-block.orig/drivers/scsi/scsi.c
++++ linux-2.6-block/drivers/scsi/scsi.c
+@@ -803,8 +803,6 @@ void scsi_finish_command(struct scsi_cmn
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
  
- enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
-@@ -325,6 +326,7 @@ struct request_queue
- 	softirq_done_fn		*softirq_done_fn;
- 	rq_timed_out_fn		*rq_timed_out_fn;
- 	dma_drain_needed_fn	*dma_drain_needed;
-+	lld_busy_fn		*lld_busy_fn;
+-	scsi_device_unbusy(sdev);
+-
+         /*
+          * Clear the flags which say that the device/host is no longer
+          * capable of accepting new commands.  These are set in scsi_queue.c
+@@ -816,6 +814,8 @@ void scsi_finish_command(struct scsi_cmn
+         shost->host_blocked = 0;
+         sdev->device_blocked = 0;
  
++	scsi_device_unbusy(sdev);
++
  	/*
- 	 * Dispatch queue sorting
-@@ -699,6 +701,7 @@ extern struct request *blk_get_request(s
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
-+extern int blk_lld_busy(struct request_queue *q);
- extern int blk_insert_cloned_request(struct request_queue *q,
- 				     struct request *rq);
- extern void blk_plug_device(struct request_queue *);
-@@ -835,6 +838,7 @@ extern void blk_queue_update_dma_pad(str
- extern int blk_queue_dma_drain(struct request_queue *q,
- 			       dma_drain_needed_fn *dma_drain_needed,
- 			       void *buf, unsigned int size);
-+extern void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn);
- extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
-Index: linux-2.6-block/block/blk-core.c
+ 	 * If we have valid sense information, then some kind of recovery
+ 	 * must have taken place.  Make a note of this.
+Index: linux-2.6-block/include/scsi/scsi_device.h
 ===================================================================
---- linux-2.6-block.orig/block/blk-core.c
-+++ linux-2.6-block/block/blk-core.c
-@@ -2098,6 +2098,31 @@ void blk_rq_bio_prep(struct request_queu
- 		rq->rq_disk = bio->bi_bdev->bd_disk;
- }
+--- linux-2.6-block.orig/include/scsi/scsi_device.h
++++ linux-2.6-block/include/scsi/scsi_device.h
+@@ -143,6 +143,19 @@ struct scsi_device {
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+ 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
+ 					   SD_LAST_BUGGY_SECTORS */
++	unsigned lld_busy:1;		/* Exporting busy state for stacking
++					 * drivers.
++					 *
++					 * 1 - There is one or more requests
++					 *     in the device's queue,
++					 *     and the device (or target/host)
++					 *     can not dispatch any request
++					 *     immediately.
++					 * 0 - The device can dispatch
++					 *     (or kill) requests immediately,
++					 *     or there is no request in
++					 *     the device's queue even though
++					 *     target/host may busy. */
  
-+/**
-+ * blk_lld_busy - Check if underlying low-level drivers of a device are busy
-+ * @q : the queue of the device being checked
-+ *
-+ * Description:
-+ *    Check if underlying low-level drivers of a device are busy.
-+ *    If the drivers want to export their busy state, they must set own
-+ *    exporting function using blk_queue_lld_busy() first.
-+ *
-+ *    Basically, this function is used only by request stacking drivers
-+ *    to stop dispatching requests to underlying devices when underlying
-+ *    devices are busy.  This behavior helps more I/O merging on the queue
-+ *    of the request stacking driver and prevents I/O throughput regression
-+ *    on burst I/O load.
-+ *
-+ * Return:
-+ *    0 - Not busy (The request stacking driver should dispatch request)
-+ *    1 - Busy (The request stacking driver should stop dispatching request)
-+ */
-+int blk_lld_busy(struct request_queue *q)
-+{
-+	return q->lld_busy_fn ? q->lld_busy_fn(q) : 0;
-+}
-+EXPORT_SYMBOL_GPL(blk_lld_busy);
-+
- int kblockd_schedule_work(struct request_queue *q, struct work_struct *work)
- {
- 	return queue_work(kblockd_workqueue, work);
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
