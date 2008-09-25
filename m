@@ -1,51 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11645] qla2xxx.ko can't load firmware binary code
-Date: Thu, 25 Sep 2008 08:26:13 -0700 (PDT)
-Message-ID: <20080925152613.86D0B11D107@picon.linux-foundation.org>
-References: <bug-11645-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH 1/6] bfa: Brocade BFA FC SCSI Driver submission
+Date: Thu, 25 Sep 2008 08:34:39 -0700
+Message-ID: <1222356879.3610.9.camel@localhost.localdomain>
+References: <4C94DE2070B172459E4F1EE14BD2364E01F27D19@HQ-EXCH-5.corp.brocade.com>
+	 <20080925044923.GA4310@kroah.com>
+	 <1222319644.3602.1.camel@localhost.localdomain>
+	 <4C94DE2070B172459E4F1EE14BD2364E01F27D49@HQ-EXCH-5.corp.brocade.com>
+	 <20080925055725.GC66712@sgi.com>
+	 <4C94DE2070B172459E4F1EE14BD2364E01F27D54@HQ-EXCH-5.corp.brocade.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60771 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752868AbYIYP0o (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42761 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753289AbYIYPfA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2008 11:26:44 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8PFQDrh019921
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2008 08:26:14 -0700
-In-Reply-To: <bug-11645-11613@http.bugzilla.kernel.org/>
+	Thu, 25 Sep 2008 11:35:00 -0400
+In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E01F27D54@HQ-EXCH-5.corp.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@Brocade.COM>
+Cc: Jeremy Higdon <jeremy@sgi.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11645
+On Wed, 2008-09-24 at 23:09 -0700, Jing Huang wrote:
+> Hi James,
+> 
+> I looked at Documentation/email-clients.txt. There is no info about
+> outlook. So I believe Jeremy is right. 
+> 
+> Is attachment acceptable for my first submission? Meanwhile I will find
+> out if I can use other email client in my company.
 
+Yes ... attachments can be tolerated for people who are forced to use
+outlook.  We had a similar issue with Adaptec engineers.  There are
+rumours that outlook can be persuaded not to mangle text, but everyone
+who claims to be able to do it has been unable to reproduce under
+laboratory conditions.
 
-
-
-
-------- Comment #6 from andrew.vasquez@qlogic.com  2008-09-25 08:26 -------
-Nerijus,
-
-I'm not very familiar with Debian and their support for a
-driver's use of the request_firmware() interface.  Looking at
-the codes 2.6.24 debian-sources, the qla2xxx driver is in fact 
-already using request_firmware().
-
-Loading of firmware is handled behind the scenes for driver, a
-call is made within the driver and the requisite kernel-space/user-space
-dialogue occurs via kobject messages and reading/writing to sysfs
-nodes.  You can see that being done here (2.6.25):
-
-   Sep 25 13:08:12 ameba kernel: [72135.637331] firmware: requesting
-ql2300_fw.bin
-   Sep 25 13:08:22 ameba kernel: [72145.634358] qla2xxx 0000:04:04.0: Firmware
-image unavailable.
-
-Is the driver being loaded from an initramfs image?  Has the firmware
-been built into that image?
+James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
