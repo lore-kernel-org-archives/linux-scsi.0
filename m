@@ -1,40 +1,42 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 5/6] bfa: Brocade BFA FC SCSI driver submission (2ndtry)
-Date: Fri, 26 Sep 2008 07:07:48 -0400
-Message-ID: <48DCC284.3040408@emulex.com>
-References: <200809260106.m8Q160kj028501@swe37.brocade.com> <20080926025514.GD9480@kroah.com> <4C94DE2070B172459E4F1EE14BD2364E01F28079@HQ-EXCH-5.corp.brocade.com> <1222408937.3265.17.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E01F280A3@HQ-EXCH-5.corp.brocade.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11645] qla2xxx.ko can't load firmware binary code
+Date: Fri, 26 Sep 2008 05:14:34 -0700 (PDT)
+Message-ID: <20080926121434.7D45611D11A@picon.linux-foundation.org>
+References: <bug-11645-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:54773 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbYIZLIT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2008 07:08:19 -0400
-In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E01F280A3@HQ-EXCH-5.corp.brocade.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33672 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751318AbYIZMPM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2008 08:15:12 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8QCEehu008698
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2008 05:14:41 -0700
+In-Reply-To: <bug-11645-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
+To: linux-scsi@vger.kernel.org
 
-We are finally finishing up CT/ELS passthru in the FC transport; SCSI 
-passthru exists, but via the scsi_generic driver (so it's not part of 
-the transport or LLDD); and async event notification is already present 
-in the fc transport.
+http://bugzilla.kernel.org/show_bug.cgi?id=11645
 
--- james s
 
-Jing Huang wrote:
-> Hi James,
-> 
-> It is encouraging to know that we can discuss and add new feature into
-> existing fc transport. I guess this is opensource all about. I didn't
-> have linux opensource experience before, so I was not quite sure how
-> easy to request new features in fc transport such as mechanism to create
-> multiple subdirectories for different level of statistics info in
-> addition to the snia fc statitistics we already have, and other features
-> such as CT/SCSI passthru and asynchronous event notification etc.
-> 
-> Thanks
-> 
-> Jing
+
+
+
+------- Comment #7 from nerijus.kislauskas@ktu.lt  2008-09-26 05:14 -------
+Hi guys,
+
+Andrew, thanks for pointing me to right direction. The problem was my kernel
+configuration. I enabled this option:
+
+CONFIG_TMPFS=y
+
+in 2.6.24.5, and everything works fine. tmpfs somehow related to udev and
+uevents. No doubt, that it will work in other versions too. Thanks again. You
+may now close this ticket.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
