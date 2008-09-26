@@ -1,117 +1,67 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 1/6] bfa: Brocade BFA FC SCSI driver submission (2nd try)
-Date: Fri, 26 Sep 2008 08:41:31 +0200
-Message-ID: <200809260841.39433.eike-kernel@sf-tec.de>
-References: <200809260054.m8Q0slEL027478@swe37.brocade.com>
+From: Hannes Reinecke <hare@novell.com>
+Subject: Re: [PATCH] scsi : set target can_queue from devinfo flags
+Date: Fri, 26 Sep 2008 09:46:47 +0200
+Message-ID: <48DC9367.6050402@novell.com>
+References: <1210700704.16304.1.camel@localhost.localdomain> <48DA9163.9070209@cs.wisc.edu> <48DA9746.9090003@emulex.com> <48DBD53E.4040604@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7597654.u251fTYhS1";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:40107 "EHLO mail.sf-mail.de"
+Received: from mx2.suse.de ([195.135.220.15]:34332 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652AbYIZGlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2008 02:41:47 -0400
-In-Reply-To: <200809260054.m8Q0slEL027478@swe37.brocade.com>
+	id S1750902AbYIZHqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2008 03:46:49 -0400
+In-Reply-To: <48DBD53E.4040604@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, srayas@brocade.com, vravindr@brocade.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Smart <James.Smart@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---nextPart7597654.u251fTYhS1
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi Mike,
 
-Jing Huang wrote:
-> From: Jing Huang <huangj@brocade.com>
->
-> This patch contains code that interfaces to upper layer linux kernel,
-> such as PCI, SCSI mid-layer and sysfs etc. It is created using 2.6.27-rc7
-> kernel.
->
-> Signed-off-by: Jing Huang <huangj@brocade.com>
+Mike Christie wrote:
+> James Smart wrote:
+>> This sounds reasonable, but I wouldn't eliminate this can_queue limit. 
+> 
+> I was not going to elimitate it. It is all muddled in the one mail, so 
+> it is confusing.
+> 
+> I was just going to set it based on target vendor info table in 
+> userspace from a scsi daemon that was going to handle this issue and 
+> handle ramp ups due to QUEUE_FULL ramp downs and other scsi issues like 
+> the handling of sense that indicates disks changes size or report lun 
+> data changes.
+> 
+> Hannes had mentioned he was making some event infrastructure to handle 
+> the sense, and I thought I could extend his userspce code to handle the 
+> ramp up issue and handle setting this value. So for just the 
+> starget->can_queue issue, the daemon would listen for target hotplug 
+> events, then it would do sg io to device on it and get the vendor info 
+> and look up the target in a table and then if found would write to a 
+> starget->can_queue sysfs file to set the value.
+> 
+Currently I've implemented another scsi netlink event, which just
+transports the sense code to the outside world. Next step will be
+a daemon which listens to the SCSI netlink events and reacts upon
+that; will work largely along the lines udev does.
+So we'll be getting a sysfs patch for the device, the message class,
+and some payload for the message.
+Configuration will quite simple, probably just something like:
 
-> +int
-> +bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
-> +{
-> +	unsigned long   bar0_len;
-> +	int             rc =3D -ENODEV;
-> +
-> +	if (pci_enable_device(pdev)) {
-> +		BFA_PRINTF(BFA_ERR, "pci_enable_device fail %p\n", pdev);
-> +		goto out;
-> +	}
+[message class]
+	[payload regex]	[command]
+	[payload regex] [command]
 
-You should use pcim_enable_device(). This would help you by simplifying you=
-r=20
-error and release code as it keeps track of freeing a bunch of resources. S=
-ee=20
-Documentation/driver-model/devres.txt.
+etc.
+I'll probably implementing some pre-defined commands like rescan,
+but will also add a simple callout for executing commands directly.
 
-> +
-> +	if (pci_request_regions(pdev, BFAD_DRIVER_NAME))
-> +		goto out_disable_device;
-> +
-> +	pci_set_master(pdev);
-> +
-> +
-> +	if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) !=3D 0)
-> +		if (pci_set_dma_mask(pdev, DMA_32BIT_MASK) !=3D 0) {
-> +			BFA_PRINTF(BFA_ERR, "pci_set_dma_mask fail %p\n", pdev);
-> +			goto out_release_region;
-> +		}
-> +#ifdef SUPPORT_PCI_AER
-> +	/*
-> +	 * Enable PCIE Advanced Error Recovery (AER) if the kernel version
-> +	 * supports.
-> +	 */
-> +	BFAD_ENABLE_PCIE_AER(pdev);
-> +#endif
-> +
-> +	bfad->pci_bar0_map =3D pci_resource_start(pdev, 0);
-> +	bar0_len =3D pci_resource_len(pdev, 0);
-> +	bfad->pci_bar0_kva =3D ioremap(bfad->pci_bar0_map, bar0_len);
+> The same daemon could also handle the sense handling and handle other 
+> errors like when to ramp up from when we ramp down due to QUEUE_FULLs. 
+> So it is basically a scsi-ml/lib in userpsace that could be easily 
+> packaged for distros to carry.
+Quite easily. Actually, that was the point of that program.
 
-bfad->pci_bar0_kva =3D pcim_iomap(pdev, 0, 0);
+Cheers,
 
-> +
-> +	if (bfad->pci_bar0_kva =3D=3D NULL) {
-> +		BFA_DEV_PRINTF(bfad, BFA_ERR, "Fail to map bar0\n");
-> +		goto out_release_region;
-> +	}
-> +
-> +	bfad->hal_pcidev.pci_slot =3D PCI_SLOT(pdev->devfn);
-> +	bfad->hal_pcidev.pci_func =3D PCI_FUNC(pdev->devfn);
-> +	bfad->hal_pcidev.pci_bar_kva =3D bfad->pci_bar0_kva;
-> +	bfad->hal_pcidev.device_id =3D pdev->device;
-> +	bfad->pci_name =3D pci_name(pdev);
-> +
-> +	bfad->pci_attr.vendor_id =3D pdev->vendor;
-> +	bfad->pci_attr.device_id =3D pdev->device;
-> +	bfad->pci_attr.ssid =3D pdev->subsystem_device;
-> +	bfad->pci_attr.ssvid =3D pdev->subsystem_vendor;
-> +	bfad->pci_attr.pcifn =3D PCI_FUNC(pdev->devfn);
-
-Why duplicate all this information?
-
-Greetings,
-
-Eike
-
---nextPart7597654.u251fTYhS1
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkjchCMACgkQXKSJPmm5/E46QwCfY1VV+yPJjmL5p/15IxcyN5tH
-PfMAnRocaSPFgBp4tVd1NX3BcYUlMA8Q
-=SusH
------END PGP SIGNATURE-----
-
---nextPart7597654.u251fTYhS1--
+Hannes
