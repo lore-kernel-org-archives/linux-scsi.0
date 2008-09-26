@@ -1,44 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH git latest] drivers/scsi: fixing wrong comment before
- new_buffer_tape()
-Date: Fri, 26 Sep 2008 11:13:00 +0100
-Message-ID: <20080926111300.1dd34009@lxorguk.ukuu.org.uk>
-References: <20080925174948.GA14180@carmen.cs.uiuc.edu>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 5/6] bfa: Brocade BFA FC SCSI driver submission (2ndtry)
+Date: Fri, 26 Sep 2008 07:07:48 -0400
+Message-ID: <48DCC284.3040408@emulex.com>
+References: <200809260106.m8Q160kj028501@swe37.brocade.com> <20080926025514.GD9480@kroah.com> <4C94DE2070B172459E4F1EE14BD2364E01F28079@HQ-EXCH-5.corp.brocade.com> <1222408937.3265.17.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E01F280A3@HQ-EXCH-5.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48321 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751138AbYIZKNC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2008 06:13:02 -0400
-In-Reply-To: <20080925174948.GA14180@carmen.cs.uiuc.edu>
+Received: from emulex.emulex.com ([138.239.112.1]:54773 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbYIZLIT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2008 07:08:19 -0400
+In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E01F280A3@HQ-EXCH-5.corp.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lin Tan <tammy000@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@Brocade.COM>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-On Thu, 25 Sep 2008 12:49:48 -0500
-Lin Tan <tammy000@gmail.com> wrote:
+We are finally finishing up CT/ELS passthru in the FC transport; SCSI 
+passthru exists, but via the scsi_generic driver (so it's not part of 
+the transport or LLDD); and async event notification is already present 
+in the fc transport.
 
-> (I would wish to be personally CC'ed the answers/comments posted to the list in response to my posting.)
+-- james s
+
+Jing Huang wrote:
+> Hi James,
 > 
-> ---
+> It is encouraging to know that we can discuss and add new feature into
+> existing fc transport. I guess this is opensource all about. I didn't
+> have linux opensource experience before, so I was not quite sure how
+> easy to request new features in fc transport such as mechanism to create
+> multiple subdirectories for different level of statistics info in
+> addition to the snia fc statitistics we already have, and other features
+> such as CT/SCSI passthru and asynchronous event notification etc.
 > 
-> Removing the wrong comment.
-> The lock is needed before calling new_tape_buffer(), at least in some cases.
-> So the comment above new_tape_buffer() is inconsistent with the code and
-> may mislead developers.
+> Thanks
 > 
-> I simply removed the wrong comment, as I am not sure if the lock is required
-> in all situations. If so, we should add "Caller must hold os_scsi_tapes_lock".
-> 
-> Signed-off-by: Lin Tan <tammy000@gmail.com>
-
-Looks true to me for the current versions of the code. In fact it is only
-ever called from the initialisation function that I can see so chunks of
-the code could simply go away as well as bits of the comment. Ditto the
-one in drivers/scsi/st.c
-
-Acked-by: Alan Cox <alan@redhat.com>
-
+> Jing
