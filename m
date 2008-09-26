@@ -1,109 +1,45 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Thu, 25 Sep 2008 20:56:20 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884BFF5D1F76@GVW0547EXC.americas.hpqcorp.net>
-References: <20080821091514.8f56e2d5.randy.dunlap@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A778835118100D6@GVW0547EXC.americas.hpqcorp.net>
-	<20080821172653.3e3e855c.randy.dunlap@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A77883511810706@GVW0547EXC.americas.hpqcorp.net>
-	<1219420487.3339.22.camel@localhost.localdomain>
-	<48AEEE0A.1010900@oracle.com>
-	<1219424538.3339.51.camel@localhost.localdomain>
-	<0F5B06BAB751E047AB5C87D1F77A77883511810894@GVW0547EXC.americas.hpqcorp.net>
-	<48C013D9.7060309@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A7788413663D229@GVW0547EXC.americas.hpqcorp.net>
-	<20080905092838.GS20055@kernel.dk>	<48DBF583.3050307@oracle.com>
- <20080925134000.9b133f8c.randy.dunlap@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 0/6] bfa: Brocade BFA FC SCSI driver submission (2nd try)
+Date: Thu, 25 Sep 2008 17:50:47 -0700
+Message-ID: <200809260050.m8Q0oltC027096@swe37.brocade.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:37437 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510AbYIYU5I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2008 16:57:08 -0400
-In-Reply-To: <20080925134000.9b133f8c.randy.dunlap@oracle.com>
-Content-Language: en-US
+Received: from mx10.brocade.com ([208.185.105.18]:63830 "EHLO mx10.brocade.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752164AbYIZAuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2008 20:50:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: huangj@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, srayas@brocade.com, vravindr@brocade.com
 
+From: Jing Huang <huangj@brocade.com>
 
+This is the initial submission of Brocade BFA FC SCSI Driver to the
+upstream kernel. The following 1-6 patches contain the driver source for
+Brocade 8G Fibre Channel to PCIe HBA and other supporting files for kernel
+inclusion. Brocade Fibre Channel HBA driver, also called as BFA driver, is
+a SCSI lower layer driver. It interfaces with SCSI mid layer, and controls
+Brocade FC controller through its firmware API. BFA driver supports fabric,
+P2P and autotopolgy. It runs at 1/2/4/8G and auto link speed. It also
+supports features such as sysfs interface, NPIV, and PCI hotplug etc.     
 
-> -----Original Message-----
-> From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
-> Sent: Thursday, September 25, 2008 3:40 PM
-> To: scsi
-> Cc: Jens Axboe; Miller, Mike (OS Dev); James Bottomley; lkml; akpm
-> Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
->
-> On Thu, 25 Sep 2008 13:33:07 -0700 Randy Dunlap wrote:
->
-> > Jens Axboe wrote:
-> > > On Thu, Sep 04 2008, Miller, Mike (OS Dev) wrote:
-> > >>>>>> 0x3bb2 <do_cciss_intr+1649>:    mov    0x2(%r8),%dx
-> > >>>>>> 0x3bb7 <do_cciss_intr+1654>:    test   %dx,%dx
-> > >>>>>> 0x3bba <do_cciss_intr+1657>:    je     0x3f0e
-> <do_cciss_intr+2509>
-> > >>>>>>
-> > >>>>>>
-> > >>>>>> $ addr2line -e cciss.o -f  do_cciss_intr+0x627 SA5_fifo_full
-> > >>>>>>
-> > >>>
-> /home/rdunlap/linsrc/linux-2.6.27-rc3-git7/drivers/block/cciss.h:2
-> > >>> 06
-> > >>>>> OK ...that's confusing.  It seems to be saying that
-> ctrlr_info_t
-> > >>>>> * was NULL.  However, I can't see a way of getting into the
-> > >>> fifo_full
-> > >>>>> callback from do_cciss_intr ..
-> > >>>>> especially not with an NULL host.
-> > >>>>>
-> > >>>>> James
-> > >>>> That is weird. Even if we could get there fifo_full doesn't
-> > >>> do anything but wait for a bit.
-> > >>>
-> > >>> Hi,
-> > >>>
-> > >>> This just happened again.  This time it's on 2.6.27-rc5-git3.
-> > >>>
-> > >>> ~Randy
-> > >> Thanks Randy. I think. :)
-> > >>
-> > >> I'll try to recreate in my lab.
-> > >
-> > > This looks somewhat strange, mostly like 'c' is NULL and it's
-> > > oopsing in in removeQ (I don't think Randy's analysis is
-> correct in
-> > > assuming it's 'h' and it's in fifo_full). Given that 'c'
-> cannot be
-> > > NULL, it's c->prev or c->next that are NULL.
-> >
-> > Yes, correct IMO.  I checked my daily test logs and I have had this
-> > problem in do_cciss_intr() 3 times, all at the same location, which
-> > appears to be in removeQ(), as Jens says.
->
-> Mike, also notice this:  it's always during driver init, as
-> indicated by the (+) in the dump ('+' means that the module
-> is in the process of being loaded, but module load has not completed):
->
-> calling  cciss_init+0x0/0x2e [cciss]
-> HP CISS Driver (v 3.6.20)
-> ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss
-> 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high)
-> -> IRQ 54
-> cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 503 using DAC
-> BUG: unable to handle kernel NULL pointer dereference at
-> 0000000000000248
-> IP: [<ffffffffa001bb68>] do_cciss_intr+0x627/0xa6c [cciss]
-> PGD 17e422067 PUD 17e423067 PMD 0
-> Oops: 0002 [1] SMP
-> CPU 2
-> Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
-> Pid: 0, comm: swapper Not tainted 2.6.27-rc3-git7 #1
-> RIP: 0010:[<ffffffffa001bb68>]  [<ffffffffa001bb68>]
-> do_cciss_intr+0x627/0xa6c [cciss]
+Here is a brief description of the patches included in this submission:
 
-Thanks, Randy
->
+[PATCH 1/6]: Linux driver specific code, things such as module load/unload,
+PCI probe/release, interrupt handler, and sysfs interface etc. All the files
+start with "bfad_" prefix.
+
+[PATCH 2/6]: Hardware/FW access code. All files start with "bfa_" prefix.
+
+[PATCH 3/6]: Common header files shared by linux driver specific and
+hardware/FW access code.
+
+[PATCH 4/6]: Updated Kconfig and Makefile for driver/scsi, and new Makefile
+and Kconfig file for bfa driver 
+
+[PATCH 5/6]: Document for Brocade specific sysfs interface for HBA management.
+
+[PATCH 6/6]: Update MAINTAINER file.
+
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
