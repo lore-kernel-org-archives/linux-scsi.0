@@ -1,85 +1,117 @@
-From: "Jing Huang" <huangj@Brocade.COM>
-Subject: RE: [PATCH 5/6] bfa: Brocade BFA FC SCSI driver submission (2ndtry)
-Date: Thu, 25 Sep 2008 23:30:27 -0700
-Message-ID: <4C94DE2070B172459E4F1EE14BD2364E01F280A3@HQ-EXCH-5.corp.brocade.com>
-References: <200809260106.m8Q160kj028501@swe37.brocade.com> <20080926025514.GD9480@kroah.com> <4C94DE2070B172459E4F1EE14BD2364E01F28079@HQ-EXCH-5.corp.brocade.com> <1222408937.3265.17.camel@localhost.localdomain>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/6] bfa: Brocade BFA FC SCSI driver submission (2nd try)
+Date: Fri, 26 Sep 2008 08:41:31 +0200
+Message-ID: <200809260841.39433.eike-kernel@sf-tec.de>
+References: <200809260054.m8Q0slEL027478@swe37.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed;
+  boundary="nextPart7597654.u251fTYhS1";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx40.brocade.com ([144.49.195.4]:23406 "EHLO mx40.brocade.com"
+Received: from mail.sf-mail.de ([62.27.20.61]:40107 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752316AbYIZGab convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2008 02:30:31 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1222408937.3265.17.camel@localhost.localdomain>
+	id S1751652AbYIZGlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2008 02:41:47 -0400
+In-Reply-To: <200809260054.m8Q0slEL027478@swe37.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, "Srikanth Rayas (CW)" <srayas@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, srayas@brocade.com, vravindr@brocade.com
 
-Hi James,
+--nextPart7597654.u251fTYhS1
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-It is encouraging to know that we can discuss and add new feature into
-existing fc transport. I guess this is opensource all about. I didn't
-have linux opensource experience before, so I was not quite sure how
-easy to request new features in fc transport such as mechanism to create
-multiple subdirectories for different level of statistics info in
-addition to the snia fc statitistics we already have, and other features
-such as CT/SCSI passthru and asynchronous event notification etc.
+Jing Huang wrote:
+> From: Jing Huang <huangj@brocade.com>
+>
+> This patch contains code that interfaces to upper layer linux kernel,
+> such as PCI, SCSI mid-layer and sysfs etc. It is created using 2.6.27-rc7
+> kernel.
+>
+> Signed-off-by: Jing Huang <huangj@brocade.com>
 
-Thanks
+> +int
+> +bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+> +{
+> +	unsigned long   bar0_len;
+> +	int             rc =3D -ENODEV;
+> +
+> +	if (pci_enable_device(pdev)) {
+> +		BFA_PRINTF(BFA_ERR, "pci_enable_device fail %p\n", pdev);
+> +		goto out;
+> +	}
 
-Jing 
+You should use pcim_enable_device(). This would help you by simplifying you=
+r=20
+error and release code as it keeps track of freeing a bunch of resources. S=
+ee=20
+Documentation/driver-model/devres.txt.
 
+> +
+> +	if (pci_request_regions(pdev, BFAD_DRIVER_NAME))
+> +		goto out_disable_device;
+> +
+> +	pci_set_master(pdev);
+> +
+> +
+> +	if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) !=3D 0)
+> +		if (pci_set_dma_mask(pdev, DMA_32BIT_MASK) !=3D 0) {
+> +			BFA_PRINTF(BFA_ERR, "pci_set_dma_mask fail %p\n", pdev);
+> +			goto out_release_region;
+> +		}
+> +#ifdef SUPPORT_PCI_AER
+> +	/*
+> +	 * Enable PCIE Advanced Error Recovery (AER) if the kernel version
+> +	 * supports.
+> +	 */
+> +	BFAD_ENABLE_PCIE_AER(pdev);
+> +#endif
+> +
+> +	bfad->pci_bar0_map =3D pci_resource_start(pdev, 0);
+> +	bar0_len =3D pci_resource_len(pdev, 0);
+> +	bfad->pci_bar0_kva =3D ioremap(bfad->pci_bar0_map, bar0_len);
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Thursday, September 25, 2008 11:02 PM
-To: Jing Huang
-Cc: Greg KH; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
-Ramkumar Vadivelu; Srikanth Rayas (CW); Vinodh Ravindran
-Subject: RE: [PATCH 5/6] bfa: Brocade BFA FC SCSI driver submission
-(2ndtry)
+bfad->pci_bar0_kva =3D pcim_iomap(pdev, 0, 0);
 
-On Thu, 2008-09-25 at 21:49 -0700, Jing Huang wrote:
-> The reason we creating our own sysfs directory under /sys/devices path
-> was we felt the fc transport and scsi host attributes are not enough
-for
-> all the HBA management features we want to have.
+> +
+> +	if (bfad->pci_bar0_kva =3D=3D NULL) {
+> +		BFA_DEV_PRINTF(bfad, BFA_ERR, "Fail to map bar0\n");
+> +		goto out_release_region;
+> +	}
+> +
+> +	bfad->hal_pcidev.pci_slot =3D PCI_SLOT(pdev->devfn);
+> +	bfad->hal_pcidev.pci_func =3D PCI_FUNC(pdev->devfn);
+> +	bfad->hal_pcidev.pci_bar_kva =3D bfad->pci_bar0_kva;
+> +	bfad->hal_pcidev.device_id =3D pdev->device;
+> +	bfad->pci_name =3D pci_name(pdev);
+> +
+> +	bfad->pci_attr.vendor_id =3D pdev->vendor;
+> +	bfad->pci_attr.device_id =3D pdev->device;
+> +	bfad->pci_attr.ssid =3D pdev->subsystem_device;
+> +	bfad->pci_attr.ssvid =3D pdev->subsystem_vendor;
+> +	bfad->pci_attr.pcifn =3D PCI_FUNC(pdev->devfn);
 
-This isn't really a valid reason.  We use the fc transport class to
-share infrastructure and provide a common interface for users.  If you
-need more, we can discuss adding features to the fc transport class if
-they would be useful to fibre drivers in general.  If they're not useful
-to other drivers, then you can add pieces specific to your driver for
-them, but the functionality that's already in the fc transport shouldn't
-be duplicated by that.
+Why duplicate all this information?
 
->  We have ioctl in our
-> non opensource driver, and we want to have something to emulate
-all/most
-> of the IOCTL functionality we have in the opensource driver. We
-provide
-> multi-level of driver/fw statistics info to the user, and we want to
-put
-> those info under a separate directory instead of throw them all under
-> scsi_host.
+Greetings,
 
-That's how the fc transport class currently operates.  It's statistics
-all appear in a "statistics" directory under the host.  If you use it
-(and add the ones you need that are missing) everyone will be happy and
-you won't need to worry about creating the directories.
+Eike
 
->  I just didn't know how to create a subdirectory under scsi/fc
-> host. Currently, we only implement a small portion of all the IOCTL
-> functionalities. We want to know if this is acceptable in the upstream
-> kernel. 
-> 
-> I agree that there are a lot of redundancy with the attributes we
-> created under scsi_host. We will clean them up.
+--nextPart7597654.u251fTYhS1
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-James
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
+iEYEABECAAYFAkjchCMACgkQXKSJPmm5/E46QwCfY1VV+yPJjmL5p/15IxcyN5tH
+PfMAnRocaSPFgBp4tVd1NX3BcYUlMA8Q
+=SusH
+-----END PGP SIGNATURE-----
 
+--nextPart7597654.u251fTYhS1--
