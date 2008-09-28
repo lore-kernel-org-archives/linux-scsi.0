@@ -1,104 +1,124 @@
-From: Brad Boyer <flar@allandria.com>
-Subject: Re: mac scsi, ncr5380
-Date: Sun, 28 Sep 2008 11:03:41 -0700
-Message-ID: <20080928180341.GA28413@cynthia.pants.nu>
-References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au> <alpine.DEB.1.00.0809270439470.19669@zirkon.biophys.uni-duesseldorf.de> <Pine.LNX.4.64.0809271359460.2612@loopy.telegraphics.com.au> <20080927191221.GA15755@cynthia.pants.nu> <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Oops/Warning report for the week of September 28th, 2008
+Date: Sun, 28 Sep 2008 13:12:50 -0700
+Message-ID: <20080928131250.112f2a08@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [76.245.85.235] ([76.245.85.235]:58793 "EHLO cynthia.pants.nu"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752162AbYI1SEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Sep 2008 14:04:11 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, tglx@tglx.de, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.orgm
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>
 
-On Sun, Sep 28, 2008 at 09:28:38PM +1000, Finn Thain wrote:
-> On Sat, 27 Sep 2008, Brad Boyer wrote:
-> > .. the ideal situation would be to get the real DMA working (the IIfx is 
-> > the only Mac using a 5380 chip that has real DMA) which would mean 
-> > treating it as a separate machine anyway. If you want the details, doing 
-> > PDMA on the IIfx requires poking the DMA engine to get it out of the 
-> > way. I have the docs someplace.
-> 
-> Docs would be nice... although I can't test anything as I don't have that 
-> hardware. But aside from yourself, there's a user on the debian-68k list 
-> who has a IIfx.
+The http://www.kerneloops.org website collects kernel oops and
+warning reports from various mailing lists and bugzillas as well as
+with a client users can install to auto-submit oopses.
+Below is a list of the top traces collected in the last 7 days.
+(Reports for version 2.6.25 or earlier have been omitted in collecting the top 10)
 
-The document on the SCSI-DMA chip for the IIfx is a pdf file that is
-almost 3Meg. I can send you a copy if you want. I have a IIfx to test,
-just not the time to spend writing the code.
+This week, a total of 3357 oopses and warnings have been reported,
+compared to 2712 reports in the previous week.
 
-> > > The schematics say that only the NCR5380 drives that VIA input (VIA2 
-> > > CB2 aka IRQ_MAC_SCSI), so IRQ 19 is definitely the IRQ line from the 
-> > > chip (and not the DRQ line). The DRQ interrupt was/is never registered 
-> > > (BTW, I found that it doesn't fire on one of the PowerBooks).
-> > 
-> > I don't think we really know where the DRQ line is connected, if at all.
-> 
-> The Guide to Mac Family Hardware says that IRQ and DRQ are connected to 
-> the OSS. AFAICT, DRQ is wired to VIA2 CA2 on all machines that have 
-> VIA2/RBV.
 
-The Guide also says that the PCR bits 1-3 on VIA2 are related to DRQ. Do
-we know if we're setting the right values there? It doesn't document
-what the individual settings of the bits do, but the Rockwell R6522 VIA
-chip document has a chart for what the bits mean. It basically sets
-if the line is really treated as an interrupt, and what type if so.
-The comments in the code (via.c) suggest that different models use
-different trigger types for these lines.
+Per file statistics
+639	net/sched/sch_generic.c
+424	drivers/ata/libata-sff.c
+410	external/utrace
+157	fs/jbd/journal.c
+143	drivers/parport/procfs.c
+134	external/fireglx/binary (P)
+105	net/core/dev.c
+103	kernel/timer.c
+81	drivers/base/power/main.c
+70	kernel/sched.c
+42	drivers/char/random.c
+38	drivers/gpu/drm/radeon/radeon_cp.c
 
-The odd thing about the DRQ on the IIfx going to OSS is that the list
-in mac_oss.h has defines for all 16 interrupt bits, and there's only
-one for SCSI. My understanding is that the list was based on the A/UX
-headers from Apple and should be accurate. I never tried to request
-one of the IRQs in the set that we don't have claimed by any driver
-to see if one of them really is the DRQ.
 
-> From looking at the NetBSD driver and The Guide, I think perhaps we're 
-> using the wrong address for PDMA I/O on the particular powerbook that 
-> didn't raise a DRQ interrupt. (The IIci memory map in The Guide shows 
-> several different SCSI memory regions including "pseudo-DMA with DRQ" and 
-> "pseudo-DMA, no DRQ".) Worst case, we'd have to poll DRQ in the status 
-> register as per existing code.
+Unfixed
+-------
 
-Quite possible. We have 3 memory ranges for the 5380 chip on all systems.
-Maybe they switched which one asserted DRQ on some models.
+Rank 1: dev_watchdog (oops)
+	Reported 639 times (1496 total reports)
+	Various device timeouts. Patch to report the driver name is in -rc7; per driver data is now
+	coming in but has not made the top 10 yet.
+	This oops was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.26-rc3.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog
 
-> > That's actually the problem I had with getting the DMA on the IIfx 
-> > working. I never got the EOT interrupt from the DMA engine.
-> 
-> ... that doesn't sound very promising.
-> 
-> The Guide says, "Using the SCSI DMA IC, only data transfers are handled by 
-> the DMA channel; SCSI bus protocol is under the control of software 
-> running on the main processor, just as it is on other Macintosh models. 
-> The SCSI DMA IC on the Macintosh IIfx can also function as a conventional 
-> SCSI interface and transfer data under the control of the main processor 
-> ... Existing drivers that don't use hardware handshaking will run on the 
-> Macintosh IIfx as is. Drivers that do use hardware handshaking must be 
-> modified to set up the SCSI DMA for hardware handshaking in order to run 
-> on the Macintosh IIfx ... To initiate a DMA transfer, the SCSI driver 
-> writes control information to the DMA address counter and DMA Byte Count 
-> register on the SCSI DMA IC and then writes to one of the IC's start 
-> registers."
-> 
-> There is no detailed programming information unfortunately. But to me, it 
-> sounds like PDMA is not possible on the IIfx (there's also a comment in 
-> mac_scsi.c to that effect) so it seems we either attempt DMA again or use 
-> PIO (yuck).
+Rank 3: utrace_control (oops)
+	Reported 409 times (775 total reports)
+	[fedora] Fedora merged a broken utrace patch
+	This oops was last seen in version 2.6.26.5, and first seen in 2.6.26.1.
+	More info: http://www.kerneloops.org/searchweek.php?search=utrace_control
 
-Everything I've read says that regular MacOS uses PDMA on the IIfx. Only
-A/UX had a proper driver to use the DMA. The document I have is pretty
-detailed, although it's hard to be sure how complete it is. There definitely
-are parts of the document that mention PDMA, so it should be possible with
-some IIfx specific code. It might be easier to get the real DMA working
-since finding the DRQ is likely to be the real issue either way.
+Rank 4: journal_update_superblock (warning)
+	Reported 156 times (4183 total reports)
+	Caused by the user removing a USB stick while mounted
+	Ted has a patch to fix this, but isn't merged in Linus' tree yet.
+	This warning was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.24-rc6-git1.
+	More info: http://www.kerneloops.org/searchweek.php?search=journal_update_superblock
 
-	Brad Boyer
-	flar@allandria.com
+Rank 6: firegl_ioctl (warning)
+	Reported 105 times (2694 total reports)
+	[external] Bug in the proprietary fireglx driver
+	warning only shows up in tainted kernels
+	This warning was last seen in version 2.6.26.5, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=firegl_ioctl
 
+Rank 9: finish_task_switch (lockup)
+	Reported 58 times (139 total reports)
+	This oops was last seen in version 2.6.27-rc2-git1, and first seen in 2.6.24.
+	Potentially fixed by Thomas' timer patches, the jury is still out on this one
+	More info: http://www.kerneloops.org/searchweek.php?search=finish_task_switch
+
+Rank 10: device_pm_add (warning)
+	Reported 56 times (231 total reports)
+	Bug in the Suspend/Resume code of drivers. Patch to report the actual driver involved is pending for .28
+	This warning was last seen in version 2.6.27-rc4, and first seen in 2.6.26-rc5.
+	More info: http://www.kerneloops.org/searchweek.php?search=device_pm_add
+
+Rank 11: account (oops)
+	Reported 42 times (74 total reports)
+	Bug in the /dev/random driver
+	This oops was last seen in version 2.6.26.3, and first seen in 2.6.26.
+	More info: http://www.kerneloops.org/searchweek.php?search=account
+
+Rank 12: rs_get_rate (warning)
+	Reported 34 times (361 total reports)
+	Bug in the Intel IWL wireless drivers
+	This warning was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.25-rc2-git5.
+	More info: http://www.kerneloops.org/searchweek.php?search=rs_get_rate
+
+Rank 13: ext3_commit_super (warning)
+	Reported 27 times (1069 total reports)
+	Likely caused by the user removing a USB stick while mounted
+	Ted has a patch to fix this, not merged yet.
+	This warning was last seen in version 2.6.27, and first seen in 2.6.24.
+	More info: http://www.kerneloops.org/searchweek.php?search=ext3_commit_super
+
+
+Fixed in Linus' tree
+--------------------
+Rank 2: ata_sff_hsm_move (warning)
+	Reported 420 times (1019 total reports)
+	[fixed] redundant WARN_ON; fixed in 9c2676b61a5a4b6d99e65fb2f438fb3914302eda
+	This warning was last seen in version 2.6.27-rc2-git1, and first seen in 2.6.25.4.
+	More info: http://www.kerneloops.org/searchweek.php?search=ata_sff_hsm_move
+
+Rank 7: run_timer_softirq (oops)
+	Reported 90 times (205 total reports)
+	softlockup that got fixed by Thomas' timer fixes
+	This oops was last seen in version 2.6.27-rc1-git4, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=run_timer_softirq
+
+Rank 8: __netif_schedule (warning)
+	Reported 88 times (694 total reports)
+	[fixed] issue as a result of the multiqueue feature, fixed for 2.6.27-rc1
+	This warning was last seen in version 2.6.27-rc0-git11, and first seen in 2.6.26-rc8-git.
+	More info: http://www.kerneloops.org/searchweek.php?search=__netif_schedule
+
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
