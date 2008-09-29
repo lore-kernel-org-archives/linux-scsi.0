@@ -1,34 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 0/3] SCSI: eliminate scsi_end_request()
-Date: Mon, 29 Sep 2008 17:10:37 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0809291703480.4420-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Riccardo <riccardo@kaffe.org>
+Subject: Re: mac scsi, ncr5380
+Date: Mon, 29 Sep 2008 23:03:42 +0200
+Message-ID: <188FEA88-8E6A-11DD-814D-00050249ADE1@kaffe.org>
+References: <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
+Mime-Version: 1.0 (Apple Message framework v553)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56798 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751477AbYI2VKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2008 17:10:38 -0400
+Received: from cp-out7.libero.it ([212.52.84.107]:52716 "EHLO
+	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbYI2VKK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2008 17:10:10 -0400
+In-Reply-To: <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Brad Boyer <flar@allandria.com>, Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>
 
-The following series of three patches simplifies scsi_io_completion() 
-and eliminates scsi_end_request() -- its code is moved into 
-scsi_io_completion() and streamlined.
 
-The changes made here are based on an observation made by James, that
-all the valid "retry" paths in scsi_io_completion() work by calling 
-scsi_requeue_command().  The paths which call scsi_end_request() with 
-the requeue argument set are all wrong; they should simply allow the 
-request to fail.
+On Sunday, September 28, 2008, at 01:28  PM, Finn Thain wrote:
 
-When a request fails, whether or not it had to be broken up into
-several low-level commands is immaterial.  If a request that isn't
-broken up fails, the whole thing is over and done with.  So if an
-intermediate command for a request that was broken up fails, it
-likewise should cause the entire remaining part of the request to end.
+> Docs would be nice... although I can't test anything as I don't have 
+> that
+> hardware. But aside from yourself, there's a user on the debian-68k 
+> list
+> who has a IIfx.
 
-Alan Stern
+That woule be me I guess?
+
+Out of curisoity I started my faitfhul box again. It was off for months.
+
+uname -a
+Linux fangorn 2.2.25 #1 Fri Sep 5 17:57:09 EDT 2003 m68k GNU/Linux
+
+I never got a usable newer kernel. Problems are usually scsi, keyboard, 
+RTC... or not even booting at all (not getting past the b&w penguin)
+
+but no problems, I can test kernels.
+
+Riccardo
 
