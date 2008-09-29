@@ -1,178 +1,188 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 1/1] block: add lld busy state exporting interface
-Date: Mon, 29 Sep 2008 11:35:58 -0400 (EDT)
-Message-ID: <20080929.113558.112628070.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [ANNOUNCE]: ConfigFS enabled Generic Target Mode and iSCSI Target
+	Stack on v2.6.27-rc7
+Date: Mon, 29 Sep 2008 12:21:41 -0700
+Message-ID: <1222716101.4296.41.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jens.axboe@oracle.com
-Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, akpm@linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp124.sbc.mail.sp1.yahoo.com ([69.147.64.97]:35339 "HELO
+	smtp124.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751772AbYI2TVs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2008 15:21:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, SCST-Devel <scst-devel@lists.so>
+Cc: Joel Becker <joel.becker@oracle.com>, Jerome Martin <tramjoe.merin@gmail.com>, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "H. Peter Anvin" <hpa@zytor.com>, Ming Zhang <blackmagic02881@gmail.com>
 
-Hi Jens,
+Greetings all,
 
-I hope the previous RFC patch(*) would be no problem, since I haven't
-gotten any negative comment.
-    (*) http://lkml.org/lkml/2008/9/25/262
+I am happy to announce that the first ConfigFS configurable generic
+target engine (target_core_mod) and iSCSI Target Stack
+(iscsi_target_mod) are now able to use ConfigFS symlinks for the
+creation of Linux Storage Objects from drivers/scsi, block, or fs/
+storage objects to iSCSI Target Port Endpoints.
 
-So could you take this patch for 2.6.28 additionally?
-This patch adds a new interface for request stacking drivers.
-There should be no regression risk.
+The code is available currently running on v2.6.27-rc7 and has been
+broken up into a number of commits at:
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-This patch was created on top of the commit below of for-2.6.28.
----------------------------------------------------------------------
-commit e857b07acc3f1352224f380fcbf26ef985116cc8
-Author: Sven Schuetz <sven@linux.vnet.ibm.com>
-Date:   Fri Sep 26 10:58:02 2008 +0200
+Now that the primary configfs functionality is up and allowing iSCSI
+Initiator Traffic to the symlinked storage objects from a generic target
+engine, I will be continuing work on the complete logic for configfs
+enabled iscsi_target_mod, as well as removing the legacy IOCTL control
+path as equivalent functionality is added with ConfigFS.  
 
-    include blktrace_api.h in headers_install
----------------------------------------------------------------------
+Also, one of the next major steps for the upstream generic target engine
+and iSCSI target stack is to include SCST's target mode API between
+Engine / Fabric to give target_core_mod a proper Fabric API to allow
+other SCST fabric modules to access target_core_mod's configfs enabled
+storage objects.  Also, allowing STGT to use the configfs interface to
+allow for userspace fabrics to the same target_core_mod storage objects
+is also on the list, but I imagine interest from those communities will
+certainly help drive those efforts.  
 
-Thanks,
-Kiyoshi Ueda
+Here are the shell variables required to make it all go:
+
+export CONFIGFS=/sys/kernel/config/
+export TARGET=/sys/kernel/config/target/core/
+export FABRIC=/sys/kernel/config/target/iscsi/
+
+The storage objects registered with target_core_mod via $TARGET may be
+mapped from $TARGET/$HBA/$STORAGE_OBJECT any number of times to:
+
+$FABRIC/$IQN/tpgt_1/lun/lun_0/$PORT_LINK
+$FABRIC/$IQN/tpgt_1/lun/lun_1/$PORT_LINK
+$FABRIC/$IQN/tpgt_2/lun/lun_0/$PORT_LINK
+$FABRIC/$ANOTHER_IQN/tpgt_1/lun_0/$PORT_LINK
+....
+....
+
+Here are the shell commands to bring storage objects online..
+
+# Create a IBLOCK HBA and virtual storage object
+mkdir -p $TARGET/iblock_0/lvm_test0
+# Tell the virtual storage object what struct block_device we want
+echo iblock_major=254,iblock_minor=2 > $TARGET/iblock_0/lvm_test0/dev_control
+# Enable the virtual storage object and call bd_claim()
+echo 1 > $TARGET/iblock_0/lvm_test0/dev_enable
+
+DEF_IQN="iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0"
+
+# Create the network portal on $DEF_IQN/tpgt_1
+mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/np/172.16.201.137:3260"
+# Create LUN 0 on $DEF_IQN/tpgt_1
+mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_0"
+# Create the iSCSI Target Port Mapping for $DEF_IN/tpgt_1 LUN 0
+# to lvm_test0 and give it the port symbolic name of lio_west_port
+ln -s $TARGET/iblock_0/lvm_test0 "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_0/lio_west_port"
+
+# Allow iSCSI Initiators to login to $DEF_IQN/tpgt_1
+#warning Currently uses generate_node_acls=1,cache_dynamic_acls=1,demo_mode_lun_access=1
+echo 1 > $FABRIC/$DEF_IQN/tpgt_1/tpg_enable
+
+target:~# tree $CONFIGFS
+/sys/kernel/config/
+`-- target
+    |-- core
+    |   `-- iblock_0
+    |       |-- hba_info
+    |       `-- lvm_test0
+    |           |-- dev_control
+    |           |-- dev_enable
+    |           `-- dev_info
+    |-- iscsi
+    |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+    |   |   `-- tpgt_1
+    |   |       |-- lun
+    |   |       |   `-- lun_0
+    |   |       |       |-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
+    |   |       |       |-- port_control
+    |   |       |       `-- port_info
+    |   |       |-- np
+    |   |       |   `-- 172.16.201.137:3260
+    |   |       |       `-- portal_info
+    |   |       |-- tpg_control
+    |   |       `-- tpg_enable
+    |   `-- lio_version
+    `-- version
 
 
-Subject: [PATCH 1/1] block: add lld busy state exporting interface
+----------------------------------------------------------
 
-This patch adds an new interface, blk_lld_busy(), to check lld's
-busy state from the block layer.
-blk_lld_busy() calls down into low-level drivers for the checking
-if the drivers set q->lld_busy_fn() using blk_queue_lld_busy().
+# Add some more HBA and storage Objects
+target:~# mkdir -p $TARGET/fileio_0/file_object
+target:~# mkdir -p $TARGET/rd_mcp_0/ramdisk0
+target:~# mkdir -p $TARGET/rd_dr_0/ramdisk0
 
-This resolves a performance problem on request stacking devices below.
+target:~# mkdir -p $TARGET/pscsi_0/sdd
+target:~# echo scsi_channel_id=0,scsi_target_id=3,scsi_lun_id=0 > $TARGET/pscsi_0/sdd/dev_control   
+target:~# echo 1 > $TARGET/pscsi_0/sdd/dev_enable 
 
-Some drivers like scsi mid layer stop dispatching request when
-they detect busy state on its low-level device like host/target/device.
-It allows other requests to stay in the I/O scheduler's queue
-for a chance of merging.
+# Now, create LUN 1 and another Port Symlink to a new device on the same $IQN/tpgt_1
+mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1"
+# Create the iSCSI Target Port Mapping for $DEF_IN/tpgt_1 LUN 1
+# to lvm_test0 and give it the port symbolic name of lio_east_port
+ln -s $TARGET/pscsi_0/sdd/ "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1/lio_east_port"
 
-Request stacking drivers like request-based dm should follow
-the same logic.
-However, there is no generic interface for the stacked device
-to check if the underlying device(s) are busy.
-If the request stacking driver dispatches and submits requests to
-the busy underlying device, the requests will stay in
-the underlying device's queue without a chance of merging.
-This causes performance problem on burst I/O load.
+target:~# tree $CONFIGFS
+/sys/kernel/config/
+`-- target
+    |-- core
+    |   |-- fileio_0
+    |   |   |-- file_object
+    |   |   |   |-- dev_control
+    |   |   |   |-- dev_enable
+    |   |   |   `-- dev_info
+    |   |   `-- hba_info
+    |   |-- iblock_0
+    |   |   |-- hba_info
+    |   |   `-- lvm_test0
+    |   |       |-- dev_control
+    |   |       |-- dev_enable
+    |   |       `-- dev_info
+    |   |-- pscsi_0
+    |   |   |-- hba_info
+    |   |   `-- sdd
+    |   |       |-- dev_control
+    |   |       |-- dev_enable
+    |   |       `-- dev_info
+    |   |-- rd_dr_0
+    |   |   |-- hba_info
+    |   |   `-- ramdisk0
+    |   |       |-- dev_control
+    |   |       |-- dev_enable
+    |   |       `-- dev_info
+    |   `-- rd_mcp_0
+    |       |-- hba_info
+    |       `-- ramdisk0
+    |           |-- dev_control
+    |           |-- dev_enable
+    |           `-- dev_info
+    |-- iscsi
+    |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+    |   |   `-- tpgt_1
+    |   |       |-- lun
+    |   |       |   |-- lun_0
+    |   |       |   |   |-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
+    |   |       |   |   |-- port_control
+    |   |       |   |   `-- port_info
+    |   |       |   `-- lun_1
+    |   |       |       |-- lio_east_port -> ../../../../../../target/core/pscsi_0/sdd
+    |   |       |       |-- port_control
+    |   |       |       `-- port_info
+    |   |       |-- np
+    |   |       |   `-- 172.16.201.137:3260
+    |   |       |       `-- portal_info
+    |   |       |-- tpg_control
+    |   |       `-- tpg_enable
+    |   `-- lio_version
+    `-- version
 
-With this patch, busy state of the underlying device is exported
-via q->lld_busy_fn().  So the request stacking driver can check it
-and stop dispatching requests if busy.
+22 directories, 29 files
 
-The underlying device driver must return the busy state appropriately:
-    1: when the device driver can't process requests immediately.
-    0: when the device driver can process requests immediately,
-       including abnormal situations where the device driver needs
-       to kill all requests.
+--nab
 
 
-Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>
----
- block/blk-core.c       |   25 +++++++++++++++++++++++++
- block/blk-settings.c   |    6 ++++++
- include/linux/blkdev.h |    4 ++++
- 3 files changed, 35 insertions(+)
-
-Index: linux-2.6-block/block/blk-settings.c
-===================================================================
---- linux-2.6-block.orig/block/blk-settings.c
-+++ linux-2.6-block/block/blk-settings.c
-@@ -89,6 +89,12 @@ void blk_queue_rq_timed_out(struct reque
- }
- EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
- 
-+void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn)
-+{
-+	q->lld_busy_fn = fn;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_lld_busy);
-+
- /**
-  * blk_queue_make_request - define an alternate make_request function for a device
-  * @q:  the request queue for the device to be affected
-Index: linux-2.6-block/include/linux/blkdev.h
-===================================================================
---- linux-2.6-block.orig/include/linux/blkdev.h
-+++ linux-2.6-block/include/linux/blkdev.h
-@@ -269,6 +269,7 @@ typedef int (merge_bvec_fn) (struct requ
- typedef void (prepare_flush_fn) (struct request_queue *, struct request *);
- typedef void (softirq_done_fn)(struct request *);
- typedef int (dma_drain_needed_fn)(struct request *);
-+typedef int (lld_busy_fn) (struct request_queue *q);
- 
- enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
-@@ -325,6 +326,7 @@ struct request_queue
- 	softirq_done_fn		*softirq_done_fn;
- 	rq_timed_out_fn		*rq_timed_out_fn;
- 	dma_drain_needed_fn	*dma_drain_needed;
-+	lld_busy_fn		*lld_busy_fn;
- 
- 	/*
- 	 * Dispatch queue sorting
-@@ -699,6 +701,7 @@ extern struct request *blk_get_request(s
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
-+extern int blk_lld_busy(struct request_queue *q);
- extern int blk_insert_cloned_request(struct request_queue *q,
- 				     struct request *rq);
- extern void blk_plug_device(struct request_queue *);
-@@ -835,6 +838,7 @@ extern void blk_queue_update_dma_pad(str
- extern int blk_queue_dma_drain(struct request_queue *q,
- 			       dma_drain_needed_fn *dma_drain_needed,
- 			       void *buf, unsigned int size);
-+extern void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn);
- extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
-Index: linux-2.6-block/block/blk-core.c
-===================================================================
---- linux-2.6-block.orig/block/blk-core.c
-+++ linux-2.6-block/block/blk-core.c
-@@ -2098,6 +2098,31 @@ void blk_rq_bio_prep(struct request_queu
- 		rq->rq_disk = bio->bi_bdev->bd_disk;
- }
- 
-+/**
-+ * blk_lld_busy - Check if underlying low-level drivers of a device are busy
-+ * @q : the queue of the device being checked
-+ *
-+ * Description:
-+ *    Check if underlying low-level drivers of a device are busy.
-+ *    If the drivers want to export their busy state, they must set own
-+ *    exporting function using blk_queue_lld_busy() first.
-+ *
-+ *    Basically, this function is used only by request stacking drivers
-+ *    to stop dispatching requests to underlying devices when underlying
-+ *    devices are busy.  This behavior helps more I/O merging on the queue
-+ *    of the request stacking driver and prevents I/O throughput regression
-+ *    on burst I/O load.
-+ *
-+ * Return:
-+ *    0 - Not busy (The request stacking driver should dispatch request)
-+ *    1 - Busy (The request stacking driver should stop dispatching request)
-+ */
-+int blk_lld_busy(struct request_queue *q)
-+{
-+	return q->lld_busy_fn ? q->lld_busy_fn(q) : 0;
-+}
-+EXPORT_SYMBOL_GPL(blk_lld_busy);
-+
- int kblockd_schedule_work(struct request_queue *q, struct work_struct *work)
- {
- 	return queue_work(kblockd_workqueue, work);
