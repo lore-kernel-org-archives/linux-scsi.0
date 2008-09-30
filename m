@@ -1,24 +1,49 @@
-From: "terrence blowfan" <tblowfan@gmail.com>
-Subject: Does the LSI 1068 work
-Date: Tue, 30 Sep 2008 04:24:53 -0400
-Message-ID: <b6e694de0809300124n4bdd6865g2fd69065d2911bde@mail.gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: mac scsi, ncr5380
+Date: Tue, 30 Sep 2008 18:40:25 +1000 (EST)
+Message-ID: <Pine.LNX.4.64.0809301618510.22728@loopy.telegraphics.com.au>
+References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au>
+ <alpine.DEB.1.00.0809270439470.19669@zirkon.biophys.uni-duesseldorf.de>
+ <Pine.LNX.4.64.0809271359460.2612@loopy.telegraphics.com.au>
+ <20080927191221.GA15755@cynthia.pants.nu> <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
+ <20080928180341.GA28413@cynthia.pants.nu> <Pine.LNX.4.64.0809292253510.8870@loopy.telegraphics.com.au>
+ <20080929231826.GB12252@cynthia.pants.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.157]:62277 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbYI3IYz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 04:24:55 -0400
-Received: by po-out-1718.google.com with SMTP id y22so1684778pof.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 01:24:54 -0700 (PDT)
-Content-Disposition: inline
+Received: from loopy.telegraphics.com.au ([202.45.126.152]:37555 "EHLO
+	loopy.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbYI3Ik1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 04:40:27 -0400
+In-Reply-To: <20080929231826.GB12252@cynthia.pants.nu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brad Boyer <flar@allandria.com>
+Cc: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>
 
-Does the LSI 1068 work with Linux? Searching for it, I find old
-reports of it not being supported, but nothing recent either
-mentioning that support was added or that it is still lacking.
 
-In particular I want to run Linux on a filled out ASUS TS700-E4/RX8 system.
+
+On Mon, 29 Sep 2008, Brad Boyer wrote:
+
+> It's possible that macsbug isn't generating the right size load request 
+> to make the chip happy. The 6522 is really just an 8 bit chip, and I 
+> think the address decoder gets unhappy if you do a 16 or 32 bit 
+> load/store.
+
+I see.
+
+> If [IRQ and DRQ] are really are wired to the same IRQ line on OSS, it 
+> should have worked.
+
+Right. From looking at the SCSI DMA ASIC datasheet, it's clear that DRQ 
+never leaves the chip. So for PDMA we'd have to poll the status register 
+in the NCR5380 logic cell. Same for models where IRQ_MAC_SCSIDRQ can't be 
+made to work.
+
+> ...I would have thought that using DMA without the DRQ would be 
+> pointless.
+
+The DRQ signal is wired internally to the DMA state machine. But yeah, if 
+you couldn't get it to raise an EOP interrupt, it is pointless.
+
+Finn
