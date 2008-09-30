@@ -1,49 +1,38 @@
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: mac scsi, ncr5380
-Date: Tue, 30 Sep 2008 18:40:25 +1000 (EST)
-Message-ID: <Pine.LNX.4.64.0809301618510.22728@loopy.telegraphics.com.au>
-References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au>
- <alpine.DEB.1.00.0809270439470.19669@zirkon.biophys.uni-duesseldorf.de>
- <Pine.LNX.4.64.0809271359460.2612@loopy.telegraphics.com.au>
- <20080927191221.GA15755@cynthia.pants.nu> <Pine.LNX.4.64.0809281231120.15326@loopy.telegraphics.com.au>
- <20080928180341.GA28413@cynthia.pants.nu> <Pine.LNX.4.64.0809292253510.8870@loopy.telegraphics.com.au>
- <20080929231826.GB12252@cynthia.pants.nu>
+Date: Tue, 30 Sep 2008 04:45:37 -0400
+Message-ID: <20080930084536.GA28524@infradead.org>
+References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au> <48DF8398.30000@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from loopy.telegraphics.com.au ([202.45.126.152]:37555 "EHLO
-	loopy.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbYI3Ik1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 04:40:27 -0400
-In-Reply-To: <20080929231826.GB12252@cynthia.pants.nu>
+Received: from bombadil.infradead.org ([18.85.46.34]:51018 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbYI3Ipp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 04:45:45 -0400
+Content-Disposition: inline
+In-Reply-To: <48DF8398.30000@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brad Boyer <flar@allandria.com>
-Cc: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, Christoph Hellwig <hch@infradead.org>
 
+On Sun, Sep 28, 2008 at 04:16:08PM +0300, Boaz Harrosh wrote:
+> >From a SCSI generic point of view. The current xxx_NCR5380 remind me allot
+> of the old ESP drivers stack. At-least at the surface level of the patches
+> I sent for both these drivers. I was lucky, at the end, to only send the
+> xxx_NCR5380 patches, because, as strongly recommended by Christoph Hellwig
+> (CCed), the old ESP stack was brilliantly replaced by a new one. That is 1/10
+> the size of the old one, and currently supports most of the interesting devices
+> out there. My unsent patches was a catalyst, for the now broken old-driver-stack,
+> to be removed quickly. And it seems every one is happy.
+> 
+> My point being, If you are looking to do a major cleanup work, on all these
+> 1/2 forks. Maybe give a hard thought on just trashing the all thing and crafting
+> a completely new stack, 1/10 the size and much simpler, modern, and maintainable.
 
+That would we very nice.  All 5380 drivers are in a really sorry state,
+and a new one even if only working for sun3 and atari for now would be a
+great change.  I'm not even sure if we have any users left for the PC
+and arm 5380 drivers.
 
-On Mon, 29 Sep 2008, Brad Boyer wrote:
-
-> It's possible that macsbug isn't generating the right size load request 
-> to make the chip happy. The 6522 is really just an 8 bit chip, and I 
-> think the address decoder gets unhappy if you do a 16 or 32 bit 
-> load/store.
-
-I see.
-
-> If [IRQ and DRQ] are really are wired to the same IRQ line on OSS, it 
-> should have worked.
-
-Right. From looking at the SCSI DMA ASIC datasheet, it's clear that DRQ 
-never leaves the chip. So for PDMA we'd have to poll the status register 
-in the NCR5380 logic cell. Same for models where IRQ_MAC_SCSIDRQ can't be 
-made to work.
-
-> ...I would have thought that using DMA without the DRQ would be 
-> pointless.
-
-The DRQ signal is wired internally to the DMA state machine. But yeah, if 
-you couldn't get it to raise an EOP interrupt, it is pointless.
-
-Finn
