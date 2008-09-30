@@ -1,142 +1,107 @@
-From: <Yanqing_Liu@Dell.com>
-Subject: Patch: add Dell product information into rdac device
-	handler
-Date: Tue, 30 Sep 2008 12:01:33 -0500
-Message-ID: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] SCSI: rearrange code in scsi_io_completion
+Date: Tue, 30 Sep 2008 10:11:53 -0700
+Message-ID: <20080930171153.GB4007@linux.vnet.ibm.com>
+References: <Pine.LNX.4.44L0.0809301101000.2451-100000@iolanthe.rowland.org> <1222789380.3232.33.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0420246862=="
-Return-path: <dm-devel-bounces@redhat.com>
-Content-class: urn:content-classes:message
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: Charles_Rose@Dell.com, mchristi@redhat.com, Shyam_Iyer@Dell.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:58257 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751171AbYI3RMK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2008 13:12:10 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8UHC7QM007270
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:12:07 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8UHC1Ax241312
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:12:01 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8UHC1FC023545
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:12:01 -0400
+Content-Disposition: inline
+In-Reply-To: <1222789380.3232.33.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Tue, 2008-09-30 at 11:08 -0400, Alan Stern wrote:
+> > On Tue, 30 Sep 2008, James Bottomley wrote:
+> > 
+> > > I don't really think this is the right approach, since the retry case
+> > > needs to be split apart again.
+> > > 
+> > > The only time scsi_requeue_command() needs to be called is if the
+> > > request completes successfully but has leftovers.  The reason is that
+> > > the command will be different next time around, so it has to be
+> > > re-prepared.  In all the other cases, the same command can be reused.
+> > > This will have the knock on effect of not resetting the timers or the
+> > > counters, so it has to be done carefully.
+> > 
+> > All right.  (Incidentally, do you happen to know the derivation of 
+> > "knock on effect"?  The American form, "side effect", seems more 
+> > self-explanatory.)
+> 
+> The etymology is probably from Rugby: a knock on takes the ball further
+> than allowed by the rules, usually as an unintended consequence of some
+> other action.
+> 
+> > > Of the three requeue cases:
+> > > 
+> > > UNIT_ATTENTION needs immediate retry
+> > > NOT_READY needs delayed retry
+> > > ILLEGAL_REQUEST with cmd switch (assuming we still do it) needs
+> > > immediate retry
+> > 
+> > If the command is switched from 10-byte to 6-byte form, won't it need 
+> > to be re-prepared?
+> 
+> Yes, sorry, that one needs a re-prepare requeue.
+> 
+> > > DID_RESET is arguable either way, but probably needs delayed.
+> > > 
+> > > immediate requeue is done by:
+> > > 
+> > > scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
+> > > 
+> > > And delayed by
+> > > 
+> > > scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+> > 
+> > Easily fixed.  And it looks like neither of these needs a call to
+> > scsi_next_command(), right?
+> 
+> Right, which is a nice side effect.
 
---===============0420246862==
-Content-class: urn:content-classes:message
-Content-Type: multipart/alternative;
-	boundary="----_=_NextPart_001_01C9231E.30F48F89"
+scsi_finish_command is only called from scsi_eh_flush_done_q (newer
+patches moves this to scsi_attempt_requeue_command) and scsi_softirq_done.
+scsi_io_completion is only called from scsi_finish_command. In
+scsi_softirq_done we just called scsi_decide_disposition to map the
+result. Could some (or all) of the sense mapping be moved to
+scsi_decide_disposition? It seems incorrect to decode this same data in
+more than one location plus in some cases could prevent device handlers
+from the full control they need. Is there some path or behavior that I am
+missing?
 
-This is a multi-part message in MIME format.
+Also since previous mid retry changes are related to retry behavior borrowing
+this thread for a related request....
 
-------_=_NextPart_001_01C9231E.30F48F89
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
+James, It would be good if you have time to look at the repost of mid
+retry changes and if they are ok would you consider applying them plus
+these changes.  It would be good to also have a refresh of
+scsi-post-merge-2.6 tree with Jens tree. I am running testing now, but my
+tree needed a lot of merging assistance and it would be good to know what
+others are testing is the same.
+http://thread.gmane.org/gmane.linux.scsi/44715
 
-Hi all,=20
-
-This patch is to add Dell Powervault storage arrays into device list for
-rdac device handler.
-
-
---- linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
-2008-09-29 02:31:26.000000000 -0400
-+++ linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c
-2008-09-30 02:06:26.000000000 -0400
-@@ -590,6 +590,8 @@
- 	{"STK", "OPENstorage D280"},
- 	{"SUN", "CSM200_R"},
- 	{"SUN", "LCSM100_F"},
-+	{"DELL", "MD3000"},
-+	{"DELL", "MD3000i"},
- 	{NULL, NULL},
- };
-=20
+Since this change plus Mike C's and mine effect retry / completion
+behavior it would be good to test these changes all together.
 
 Thanks,
-Yanqing
 
-------_=_NextPart_001_01C9231E.30F48F89
-Content-Type: text/html;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
-charset=3Dus-ascii">
-<META NAME=3D"Generator" CONTENT=3D"MS Exchange Server version =
-6.5.7653.38">
-<TITLE>Patch: add Dell product information into rdac device =
-handler</TITLE>
-</HEAD>
-<BODY>
-<!-- Converted from text/rtf format -->
-
-<P><FONT SIZE=3D2 FACE=3D"Arial">Hi all, </FONT>
-</P>
-
-<P><FONT SIZE=3D2 FACE=3D"Arial">This patch is to add Dell Powervault =
-storage arrays into device list for rdac device handler.</FONT>
-</P>
-<BR>
-
-<P><FONT SIZE=3D2 FACE=3D"Courier New">--- =
-linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c.orig&nbsp;&nb=
-sp;&nbsp; 2008-09-29 02:31:26.000000000 -0400</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier New">+++ =
-linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c 2008-09-30 =
-02:06:26.000000000 -0400</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier New">@@ -590,6 +590,8 @@</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&quot;STK&quot;, =
-&quot;OPENstorage D280&quot;},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&quot;SUN&quot;, =
-&quot;CSM200_R&quot;},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&quot;SUN&quot;, =
-&quot;LCSM100_F&quot;},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&quot;DELL&quot;, =
-&quot;MD3000&quot;},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&quot;DELL&quot;, =
-&quot;MD3000i&quot;},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier =
-New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {NULL, NULL},</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier New">&nbsp;};</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier New">&nbsp;</FONT>
-</P>
-
-<P><FONT SIZE=3D2 FACE=3D"Courier New">Thanks,</FONT>
-
-<BR><FONT SIZE=3D2 FACE=3D"Courier New">Yanqing</FONT>
-</P>
-
-</BODY>
-</HTML>
-------_=_NextPart_001_01C9231E.30F48F89--
-
-
---===============0420246862==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============0420246862==--
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
