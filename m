@@ -1,74 +1,57 @@
-From: "Monty Montgomery" <monty@xiph.org>
-Subject: Re: [regression] CD-DA delay needed after insertion (http://bugzilla.kernel.org/show_bug.cgi?id=10974)
-Date: Tue, 30 Sep 2008 14:10:56 -0400
-Message-ID: <806dafc20809301110h2817e9e8g42ba031220763e9d@mail.gmail.com>
-References: <Pine.LNX.4.64.0806131352360.2141@vixen.sonytel.be>
-	 <1214925487.3316.12.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0809171701330.21347@vixen.sonytel.be>
-	 <806dafc20809300117u2806e37bx986b54543862f358@mail.gmail.com>
-	 <Pine.LNX.4.64.0809301430370.5818@vixen.sonytel.be>
-	 <806dafc20809300548y4af5f10bs8a80caa24f176c79@mail.gmail.com>
-	 <806dafc20809300551i7678660aq5e4fd6e8080382a0@mail.gmail.com>
-	 <Pine.LNX.4.64.0809301648490.5818@vixen.sonytel.be>
-	 <806dafc20809300807h6d38bbeex2f2b4e496b0d155c@mail.gmail.com>
-	 <Pine.LNX.4.64.0809301719000.5818@vixen.sonytel.be>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] SCSI: don't do bogus retries
+Date: Tue, 30 Sep 2008 20:39:51 +0200
+Message-ID: <20080930183950.GM17573@kernel.dk>
+References: <Pine.LNX.4.44L0.0809291711440.4420-100000@iolanthe.rowland.org> <20080930.101418.74753689.k-ueda@ct.jp.nec.com> <1222785998.3232.23.camel@localhost.localdomain> <20080930.114106.74753887.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:35305 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752739AbYI3SK6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 14:10:58 -0400
-Received: by gxk9 with SMTP id 9so12124658gxk.13
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 11:10:56 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0809301719000.5818@vixen.sonytel.be>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:57029 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752971AbYI3SkI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2008 14:40:08 -0400
 Content-Disposition: inline
+In-Reply-To: <20080930.114106.74753887.k-ueda@ct.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: James.Bottomley@HansenPartnership.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org
 
-> It happens on anything after 2.6.24 (cfr.
-> http://bugzilla.kernel.org/show_bug.cgi?id=10974).
-> E.g. mainline 2.6.27-rc8.
+On Tue, Sep 30 2008, Kiyoshi Ueda wrote:
+> Hi James, Jens,
+> 
+> On Tue, 30 Sep 2008 09:46:38 -0500, James Bottomley wrote:
+> > On Tue, 2008-09-30 at 10:14 -0400, Kiyoshi Ueda wrote:
+> > > I think you should use blk_end_request(req, -EIO, blk_rq_bytes(rq))
+> > > here instead of end_dequeued_request(req, -EIO).
+> > > 
+> > > end_dequeued_request() needs to be called with queue lock held,
+> > > but I can't see any queue lock in your patches.
+> > > Also, if you add the queue lock and still use end_dequeued_request(),
+> > > __end_that_request_first(), which completes BIOs in the request,
+> > > is called with the queue lock held, though it doesn't require queue
+> > > lock actually.  So that might cause some performance regressions.
+> > 
+> > Yes, I was just getting around to noticing this.  Several other issues
+> > spring immediately to mind
+> > 
+> >      1. Why are there both end_dequeued_request and end_queued_request?
+> >         They both (by design since we tried to make the end cases the
+> >         same) do the same thing
+> 
+> They originally differed a little bit, but when blk_end_request
+> interfaces were introduced, they became exactly same:
+>     http://marc.info/?t=120008891100007&r=1&w=2
+> 
+> So I tried to kill them:
+>     http://marc.info/?t=120008891100007&r=1&w=2
+> But Jens suggested keep them for a while at the time.
+> 
+> Is it the time now to kill them, Jens?
 
-Ah.
+We can kill them for 2.6.28. If you feel like it, send me a patch
+against the for-2.6.28 branch of the block git repo.
 
-Geert, I'm sorry this has come up and thanks for bringing it to my attention.
+-- 
+Jens Axboe
 
-I'm relying on 15 year old behavior.  It has always been the case that
-the packet pass-through interfaces treat O_NONBLOCK as 'don't wait for
-commands' (ie, classic async communication or, in the case of SGIO,
-don't block on mandatory locks) not 'change how you mediate the
-communication'.  The whole point of the passthrough interface is
-'please don't fuck with the packet stream.  My userspace application
-knows better than the kernel in this case'.  If the kernel has
-suddenly changed that, it is responsible for the loss of
-functionality, not cdparanoia.
-
-It is also the case that the kernel randomly interspersing its own
-packets, commands and setup would be yanking setup state out from
-under cdparanoia.  What am I supposed to do if I set density and
-completely change the data mode of a cdrom drive (persistent across
-disc changes), or change the block descriptor caching extents, only to
-have the kernel decide to change them back without warning? If you
-eject media with one of these new kernels, do I still get any
-meaningful sense state, or is the sense key and all subsequent
-commands merely intercepted and refused?  What happens on a timeout?
-A media error?  A bus reset?  Does any 'CHECK CONDITION' status
-completely yank the rug out from under the passthrough?
-
-The kernel must not interfere with the pass-through or cdparanoia is
-castrated. Or... I'm back to the era of enacting workarounds based on
-kernel dot-version.  Regardless, this is a change to a longstanding
-behavior.  Is it on purpose, unintentional or 'intentional but without
-realizing it was actually important'?  Would be interesting to know.
-
-> In this case, sg means scatter/gather, and it's a purely internal
-> interface.  It does not start/stop the drive, nor the scsi interface.
-
-Ah, I confused it with a much older utility that would up/down an SG
-device entirely.
-
-Monty
