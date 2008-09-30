@@ -1,39 +1,55 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [regression] CD-DA delay needed after insertion (http://bugzilla.kernel.org/show_bug.cgi?id=10974)
-Date: Tue, 30 Sep 2008 11:45:05 -0600
-Message-ID: <20080930174505.GC13822@parisc-linux.org>
-References: <Pine.LNX.4.64.0809171701330.21347@vixen.sonytel.be> <806dafc20809300117u2806e37bx986b54543862f358@mail.gmail.com> <Pine.LNX.4.64.0809301430370.5818@vixen.sonytel.be> <806dafc20809300548y4af5f10bs8a80caa24f176c79@mail.gmail.com> <806dafc20809300551i7678660aq5e4fd6e8080382a0@mail.gmail.com> <Pine.LNX.4.64.0809301648490.5818@vixen.sonytel.be> <806dafc20809300807h6d38bbeex2f2b4e496b0d155c@mail.gmail.com> <Pine.LNX.4.64.0809301719000.5818@vixen.sonytel.be> <806dafc20809301032n559832et45f3bf5e3f7c495c@mail.gmail.com> <20080930174151.GB13822@parisc-linux.org>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: Patch: add Dell product information into rdac device handler
+Date: Tue, 30 Sep 2008 10:57:16 -0700
+Message-ID: <1222797436.14830.533.camel@chandra-ubuntu>
+References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49499 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753072AbYI3RpH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 13:45:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20080930174151.GB13822@parisc-linux.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:49714 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752892AbYI3R6D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2008 13:58:03 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8UHw26i002868
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:58:02 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8UHw21Q210472
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:58:02 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8UHw1EC007119
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2008 13:58:02 -0400
+In-Reply-To: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Monty Montgomery <monty@xiph.org>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+To: Yanqing_Liu@Dell.com
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, mchristi@redhat.com, Shyam_Iyer@Dell.com, Charles_Rose@Dell.com
 
-On Tue, Sep 30, 2008 at 11:41:51AM -0600, Matthew Wilcox wrote:
-> On Tue, Sep 30, 2008 at 01:32:15PM -0400, Monty Montgomery wrote:
-> > On Tue, Sep 30, 2008 at 11:21 AM, Geert Uytterhoeven
-> > <Geert.Uytterhoeven@sonycom.com> wrote:
-> > 
-> > >> (May I ask-- why the hard starting/stopping of the interface?  Power saving?]
-> > why the calls to sg_start?
+Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
+On Tue, 2008-09-30 at 12:01 -0500, Yanqing_Liu@Dell.com wrote:
+> Hi all, 
 > 
-> In this case, sg means scatter/gather, and it's a purely internal
-> interface.  It does not start/stop the drive, nor the scsi interface.
+> This patch is to add Dell Powervault storage arrays into device list
+> for rdac device handler.
+> 
+> 
+> --- linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
+> 2008-09-29 02:31:26.000000000 -0400 
+> +++ linux-2.6.27-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c
+> 2008-09-30 02:06:26.000000000 -0400 
+> @@ -590,6 +590,8 @@ 
+>         {"STK", "OPENstorage D280"}, 
+>         {"SUN", "CSM200_R"}, 
+>         {"SUN", "LCSM100_F"}, 
+> +       {"DELL", "MD3000"}, 
+> +       {"DELL", "MD3000i"}, 
+>         {NULL, NULL}, 
+>  }; 
+>  
+> 
+> Thanks, 
+> Yanqing
+> 
 
-That'll teach me to comment before reading the entire thread.  Please
-ignore this mistaken explanation; I thought you were commenting on a
-patch, not on the commands used at the command line.
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
