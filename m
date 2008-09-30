@@ -1,54 +1,37 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH] SCSI: don't do bogus retries
-Date: Tue, 30 Sep 2008 11:41:06 -0400 (EDT)
-Message-ID: <20080930.114106.74753887.k-ueda@ct.jp.nec.com>
-References: <Pine.LNX.4.44L0.0809291711440.4420-100000@iolanthe.rowland.org>
-	<20080930.101418.74753689.k-ueda@ct.jp.nec.com>
-	<1222785998.3232.23.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi: Disable advansys on ARM and MIPS
+Date: Tue, 30 Sep 2008 10:13:00 -0600
+Message-ID: <20080930161259.GA13822@parisc-linux.org>
+References: <20080930072354.GA24133@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51265 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889AbYI3Pot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2008 11:44:49 -0400
-In-Reply-To: <1222785998.3232.23.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:42813 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbYI3QNR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2008 12:13:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20080930072354.GA24133@deprecation.cyrius.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
-Cc: stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, k-ueda@ct.jp.nec.com
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi James, Jens,
+On Tue, Sep 30, 2008 at 10:23:54AM +0300, Martin Michlmayr wrote:
+> Commit 9d511a4b29de6764931343d03e493f2e04df0271 ("advansys: Changes to
+> work on parisc") removed the "depends on BROKEN || X86_32" line from
+> advansys' Kconfig entry.  Unfortunately, this led to compilation errors
+> on ARM and MIPS (that are not related).  Since nobody looked into this
+> issue since I reported it in January 2008 and Russell King said that
+> the driver is completely broken on ARM, let's undo some of the damage
+> caused by the removal of the "BROKEN" Kconfig depends by disabling the
+> driver on ARM and MIPS.
 
-On Tue, 30 Sep 2008 09:46:38 -0500, James Bottomley wrote:
-> On Tue, 2008-09-30 at 10:14 -0400, Kiyoshi Ueda wrote:
-> > I think you should use blk_end_request(req, -EIO, blk_rq_bytes(rq))
-> > here instead of end_dequeued_request(req, -EIO).
-> > 
-> > end_dequeued_request() needs to be called with queue lock held,
-> > but I can't see any queue lock in your patches.
-> > Also, if you add the queue lock and still use end_dequeued_request(),
-> > __end_that_request_first(), which completes BIOs in the request,
-> > is called with the queue lock held, though it doesn't require queue
-> > lock actually.  So that might cause some performance regressions.
-> 
-> Yes, I was just getting around to noticing this.  Several other issues
-> spring immediately to mind
-> 
->      1. Why are there both end_dequeued_request and end_queued_request?
->         They both (by design since we tried to make the end cases the
->         same) do the same thing
+Huh?  I've looked into it.  ARM and MIPS provide half of an API but not
+the other half.  These architectures are broken.
 
-They originally differed a little bit, but when blk_end_request
-interfaces were introduced, they became exactly same:
-    http://marc.info/?t=120008891100007&r=1&w=2
-
-So I tried to kill them:
-    http://marc.info/?t=120008891100007&r=1&w=2
-But Jens suggested keep them for a while at the time.
-
-Is it the time now to kill them, Jens?
-
-Thanks,
-Kiyoshi Ueda
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
