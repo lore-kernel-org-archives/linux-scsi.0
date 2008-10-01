@@ -1,39 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/3] SCSI: rearrange code in scsi_io_completion
-Date: Wed, 1 Oct 2008 09:50:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0810010948580.2421-100000@iolanthe.rowland.org>
-References: <yq1od25jjyj.fsf@sermon.lab.mkp.net>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 2/5] memstick: change to use __blk_end_request()
+Date: Wed, 01 Oct 2008 10:12:15 -0400 (EDT)
+Message-ID: <20081001.101215.71084348.k-ueda@ct.jp.nec.com>
+References: <20081001.100942.74754500.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60513 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751516AbYJANuT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2008 09:50:19 -0400
-In-Reply-To: <yq1od25jjyj.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753825AbYJAOO4@vger.kernel.org>
+In-Reply-To: <20081001.100942.74754500.k-ueda@ct.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: rusty@rustcorp.com.au, oakad@yahoo.com, adrian@mcmen.demon.co.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 30 Sep 2008, Martin K. Petersen wrote:
+This patch converts memstick to use __blk_end_request() directly
+so that end_{queued|dequeued}_request() can be removed.
 
-> >>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
-> 
-> Alan> Are there types of failure for which we really don't want to
-> Alan> print anything?  For example, what about UNIT ATTENTION for
-> Alan> media changes or the DIX/DIF failures (should those both be
-> Alan> DIF?)?
-> 
-> ILLEGAL REQUEST + 10/[123] indicates that the HBA rejected the request
-> (DIX).
-> 
-> ABORTED COMMAND + 10/[123] indicates that the device found a
-> corruption error (DIF).
 
-That answer the parenthetical question.  Do you know the answer to the 
-main question?  That is, when either of these events occurs do we want 
-to skip adding an error message to the system log?
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Alex Dubov <oakad@yahoo.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ drivers/memstick/core/mspro_block.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-Alan Stern
-
+Index: linux-2.6-block/drivers/memstick/core/mspro_block.c
+===================================================================
+--- linux-2.6-block.orig/drivers/memstick/core/mspro_block.c
++++ linux-2.6-block/drivers/memstick/core/mspro_block.c
+@@ -828,7 +828,7 @@ static void mspro_block_submit_req(struc
+ 
+ 	if (msb->eject) {
+ 		while ((req = elv_next_request(q)) != NULL)
+-			end_queued_request(req, -ENODEV);
++			__blk_end_request(req, -ENODEV, blk_rq_bytes(req));
+ 
+ 		return;
+ 	}
