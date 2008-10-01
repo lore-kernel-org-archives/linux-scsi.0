@@ -1,72 +1,169 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: mac scsi, ncr5380
-Date: Wed, 1 Oct 2008 18:04:07 +1000 (EST)
-Message-ID: <Pine.LNX.4.64.0810011725330.19896@loopy.telegraphics.com.au>
-References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au>
- <48DF8398.30000@panasas.com> <20080930084536.GA28524@infradead.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 01/13] zfcp: add queue_full sysfs attribute
+Date: Wed, 01 Oct 2008 12:42:14 +0200
+Message-ID: <20081001104757.042186000@de.ibm.com>
+References: <20081001104213.585200000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from loopy.telegraphics.com.au ([202.45.126.152]:38698 "EHLO
-	loopy.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbYJAIEJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2008 04:04:09 -0400
-In-Reply-To: <20080930084536.GA28524@infradead.org>
+Received: from mtagate2.de.ibm.com ([195.212.17.162]:33015 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452AbYJAKsD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2008 06:48:03 -0400
+Content-Disposition: inline; filename=queue_full_sysfs.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Stefan Raspl <raspl@linux.vnet.ibm.com>, Martin Peschke <mp3@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
 
+Adds a new sysfs attribute queue_full for adapters that records the number
+of incidents where a requests could not be submitted due to insufficient
+free space on the request queue.
 
-On Tue, 30 Sep 2008, Christoph Hellwig wrote:
+Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_def.h   |    1 +
+ drivers/s390/scsi/zfcp_fsf.c   |   24 +++++++++++++++++-------
+ drivers/s390/scsi/zfcp_qdio.c  |    1 +
+ drivers/s390/scsi/zfcp_sysfs.c |   13 +++++++++++++
+ 4 files changed, 32 insertions(+), 7 deletions(-)
 
-> On Sun, Sep 28, 2008 at 04:16:08PM +0300, Boaz Harrosh wrote:
-> > From a SCSI generic point of view. The current xxx_NCR5380 remind me 
-> > allot of the old ESP drivers stack. At-least at the surface level of 
-> > the patches I sent for both these drivers. I was lucky, at the end, to 
-> > only send the xxx_NCR5380 patches, because, as strongly recommended by 
-> > Christoph Hellwig (CCed), the old ESP stack was brilliantly replaced 
-> > by a new one. That is 1/10 the size of the old one, and currently 
-> > supports most of the interesting devices out there. My unsent patches 
-> > was a catalyst, for the now broken old-driver-stack, to be removed 
-> > quickly. And it seems every one is happy.
-> > 
-> > My point being, If you are looking to do a major cleanup work, on all 
-> > these 1/2 forks. Maybe give a hard thought on just trashing the all 
-> > thing and crafting a completely new stack, 1/10 the size and much 
-> > simpler, modern, and maintainable.
-> 
-> That would we very nice.  All 5380 drivers are in a really sorry state, 
-> and a new one even if only working for sun3 and atari for now would be a 
-> great change.  I'm not even sure if we have any users left for the PC 
-> and arm 5380 drivers.
+--- a/drivers/s390/scsi/zfcp_def.h	2008-09-12 13:16:25.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_def.h	2008-09-12 13:16:59.000000000 +0200
+@@ -568,6 +568,7 @@ struct zfcp_adapter {
+ 	struct fsf_qtcb_bottom_port *stats_reset_data;
+ 	unsigned long		stats_reset;
+ 	struct work_struct	scan_work;
++	atomic_t		qdio_outb_full;	   /* queue full incidents */
+ };
+ 
+ struct zfcp_port {
+--- a/drivers/s390/scsi/zfcp_qdio.c	2008-09-12 13:16:25.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_qdio.c	2008-09-12 13:16:59.000000000 +0200
+@@ -282,6 +282,7 @@ static int zfcp_qdio_fill_sbals(struct z
+ 	     addr += length, remaining -= length) {
+ 		sbale = zfcp_qdio_sbale_next(fsf_req, sbtype);
+ 		if (!sbale) {
++			atomic_inc(&fsf_req->adapter->qdio_outb_full);
+ 			zfcp_qdio_undo_sbals(fsf_req);
+ 			return -EINVAL;
+ 		}
+--- a/drivers/s390/scsi/zfcp_fsf.c	2008-09-12 13:16:25.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2008-09-12 13:22:30.000000000 +0200
+@@ -717,6 +717,14 @@ static int zfcp_fsf_sbal_check(struct zf
+ 	return 0;
+ }
+ 
++static int zfcp_fsf_sbal_available(struct zfcp_adapter *adapter)
++{
++	unsigned int count = atomic_read(&adapter->req_q.count);
++	if (!count)
++		atomic_inc(&adapter->qdio_outb_full);
++	return count > 0;
++}
++
+ static int zfcp_fsf_req_sbal_get(struct zfcp_adapter *adapter)
+ {
+ 	long ret;
+@@ -727,6 +735,8 @@ static int zfcp_fsf_req_sbal_get(struct 
+ 					zfcp_fsf_sbal_check(req_q), 5 * HZ);
+ 	if (ret > 0)
+ 		return 0;
++	if (!ret)
++		atomic_inc(&adapter->qdio_outb_full);
+ 
+ 	spin_lock_bh(&req_q->lock);
+ 	return -EIO;
+@@ -984,7 +994,7 @@ struct zfcp_fsf_req *zfcp_fsf_abort_fcp_
+ 	struct zfcp_fsf_req *req = NULL;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_ABORT_FCP_CMND,
+ 				  req_flags, adapter->pool.fsf_req_abort);
+@@ -1219,7 +1229,7 @@ int zfcp_fsf_send_els(struct zfcp_send_e
+ 		return -EBUSY;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_ELS,
+ 				  ZFCP_REQ_AUTO_CLEANUP, NULL);
+@@ -1264,7 +1274,7 @@ int zfcp_fsf_exchange_config_data(struct
+ 	int retval = -EIO;
+ 
+ 	spin_lock_bh(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter,
+ 				  FSF_QTCB_EXCHANGE_CONFIG_DATA,
+@@ -1360,7 +1370,7 @@ int zfcp_fsf_exchange_port_data(struct z
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_bh(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA,
+ 				  ZFCP_REQ_AUTO_CLEANUP,
+@@ -1406,7 +1416,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_bh(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA, 0,
+@@ -2224,7 +2234,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 		return -EBUSY;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, req_flags,
+ 				  adapter->pool.fsf_req_scsi);
+@@ -2347,7 +2357,7 @@ struct zfcp_fsf_req *zfcp_fsf_send_fcp_c
+ 		return NULL;
+ 
+ 	spin_lock(&adapter->req_q.lock);
+-	if (!atomic_read(&adapter->req_q.count))
++	if (!zfcp_fsf_sbal_available(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, req_flags,
+ 				  adapter->pool.fsf_req_scsi);
+--- a/drivers/s390/scsi/zfcp_sysfs.c	2008-09-12 13:16:25.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_sysfs.c	2008-09-12 13:16:59.000000000 +0200
+@@ -487,10 +487,23 @@ ZFCP_SHOST_ATTR(megabytes, "%llu %llu\n"
+ ZFCP_SHOST_ATTR(seconds_active, "%llu\n",
+ 		(unsigned long long) stat_info.seconds_act);
+ 
++static ssize_t zfcp_sysfs_adapter_q_full_show(struct device *dev,
++					      struct device_attribute *attr,
++					      char *buf)
++{
++	struct Scsi_Host *scsi_host = class_to_shost(dev);
++	struct zfcp_adapter *adapter =
++		(struct zfcp_adapter *) scsi_host->hostdata[0];
++
++	return sprintf(buf, "%d\n", atomic_read(&adapter->qdio_outb_full));
++}
++static DEVICE_ATTR(queue_full, S_IRUGO, zfcp_sysfs_adapter_q_full_show, NULL);
++
+ struct device_attribute *zfcp_sysfs_shost_attrs[] = {
+ 	&dev_attr_utilization,
+ 	&dev_attr_requests,
+ 	&dev_attr_megabytes,
+ 	&dev_attr_seconds_active,
++	&dev_attr_queue_full,
+ 	NULL
+ };
 
-Me neither. And I'd prefer not to worry about the PC and arm drivers. I've 
-bitten off more than enough already.
-
-If I follow the ESP model, we'd get something like this:
-
--atari_NCR5380.c
--atari_scsi.c
--atari_scsi.h
--mac_scsi.c
--mac_scsi.h
--sun3_NCR5380.c
--sun3_scsi.c
--sun3_scsi.c 
--sun3_scsi.h
--sun3_scsi_vme.c
-+ncr5380_scsi.c
-+ncr5380_scsi.h
-+mac_ncr5380.c
-+atari_ncr5380.c
-+sun3_ncr5380.c
-+sun3_vme_ncr5380.c
-
-Which would eliminate some of the duplication. I'd leave the other files 
-untouched and let someone else worry about what to do with them -- in the 
-hope that a rewrite that meets the needs of atari/sun/mac will at least 
-approximate an alternative for the others.
-
-Finn
+-- 
