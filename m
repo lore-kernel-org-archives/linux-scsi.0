@@ -1,52 +1,58 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 1/3] SCSI: rearrange code in scsi_io_completion
-Date: Wed, 01 Oct 2008 16:08:37 +0200
-Message-ID: <48E38465.1070101@interlog.com>
-References: <Pine.LNX.4.44L0.0810010948580.2421-100000@iolanthe.rowland.org>
-Reply-To: dgilbert@interlog.com
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 4/5] block: change elevator to use __blk_end_request()
+Date: Wed, 01 Oct 2008 10:13:44 -0400 (EDT)
+Message-ID: <20081001.101344.78703914.k-ueda@ct.jp.nec.com>
+References: <20081001.100942.74754500.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elrond2.infotech.no ([82.134.31.41]:46463 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbYJAOQZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2008 10:16:25 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0810010948580.2421-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753965AbYJAOQ1@vger.kernel.org>
+In-Reply-To: <20081001.100942.74754500.k-ueda@ct.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: rusty@rustcorp.com.au, oakad@yahoo.com, adrian@mcmen.demon.co.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Tue, 30 Sep 2008, Martin K. Petersen wrote:
-> 
->>>>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
->> Alan> Are there types of failure for which we really don't want to
->> Alan> print anything?  For example, what about UNIT ATTENTION for
->> Alan> media changes or the DIX/DIF failures (should those both be
->> Alan> DIF?)?
->>
->> ILLEGAL REQUEST + 10/[123] indicates that the HBA rejected the request
->> (DIX).
->>
->> ABORTED COMMAND + 10/[123] indicates that the device found a
->> corruption error (DIF).
-> 
-> That answer the parenthetical question.  Do you know the answer to the 
-> main question?  That is, when either of these events occurs do we want 
-> to skip adding an error message to the system log?
+This patch converts elevator to use __blk_end_request() directly
+so that end_{queued|dequeued}_request() can be removed.
+Related 'uptodate' arguments is converted to 'error'.
 
-I know that SAS maps certain types of transport errors to
-"ABORTED COMMAND" (see
-http://www.t10.org/ftp/t10/drafts/sas2/sas2r14e.pdf
-section 10.2.3) and they should be retried, especially the
-timeouts.
 
-For example, if there are 20 disks hanging off a SAS expander
-with a 4 wide link back to the host, then issuing big and
-very frequent READs to those 20 disks should see some
-"ABORTED COMMAND"s.
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/elevator.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Doug Gilbert
-
+Index: linux-2.6-block/block/elevator.c
+===================================================================
+--- linux-2.6-block.orig/block/elevator.c
++++ linux-2.6-block/block/elevator.c
+@@ -754,7 +754,7 @@ struct request *elv_next_request(struct 
+ 		 * not ever see it.
+ 		 */
+ 		if (blk_empty_barrier(rq)) {
+-			end_queued_request(rq, 1);
++			__blk_end_request(rq, 0, blk_rq_bytes(rq));
+ 			continue;
+ 		}
+ 		if (!(rq->cmd_flags & REQ_STARTED)) {
+@@ -825,7 +825,7 @@ struct request *elv_next_request(struct 
+ 			break;
+ 		} else if (ret == BLKPREP_KILL) {
+ 			rq->cmd_flags |= REQ_QUIET;
+-			end_queued_request(rq, 0);
++			__blk_end_request(rq, -EIO, blk_rq_bytes(rq));
+ 		} else {
+ 			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
+ 			break;
+@@ -922,7 +922,7 @@ void elv_abort_queue(struct request_queu
+ 		rq = list_entry_rq(q->queue_head.next);
+ 		rq->cmd_flags |= REQ_QUIET;
+ 		blk_add_trace_rq(q, rq, BLK_TA_ABORT);
+-		end_queued_request(rq, 0);
++		__blk_end_request(rq, -EIO, blk_rq_bytes(rq));
+ 	}
+ }
+ EXPORT_SYMBOL(elv_abort_queue);
