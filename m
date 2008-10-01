@@ -1,196 +1,192 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 1/1] scsi: export busy state via q->lld_busy_fn()
-Date: Wed, 01 Oct 2008 14:50:39 -0400 (EDT)
-Message-ID: <20081001.145039.39152159.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [RFC] Rearrange code in scsi_io_completion
+Date: Wed, 1 Oct 2008 17:00:40 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810011639340.2182-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James.Bottomley@HansenPartnership.com
-Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, akpm@linux-foundation.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:56055 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751037AbYJAVAm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2008 17:00:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi James,
+Here's a new patch to rework scsi_io_completion.  I tried to take into 
+account comments on the old patch set.
 
-I hope the previous RFC patch(*) would be no problem, since I haven't
-gotten any negative comment.
-    (*) http://lkml.org/lkml/2008/9/25/262
+A lot of the old code turned out to be redundant and got removed.  And 
+some of the remaining code is present only to add some error messages 
+to the log; I'm not at all sure they are really needed.
 
-So could you take this patch for 2.6.28 additionally?
-This patch implements a new interface of the block layer for
-request stacking drivers.
-There should be no effect on existing drivers' behavior.
+Perhaps most significantly, the test for host_byte(result) == DID_RESET
+was moved in front of the other analysis code.  This seemed to be the
+proper place for it; please tell me if it isn't.
 
-This patch was created on top of the commit below of scsi-post-merge-2.6.
----------------------------------------------------------------------
-commit e49f03f37104c0e7cae7c455480069bada00932f
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Fri Sep 12 16:46:51 2008 -0500
+This has hardly been tested at all.  All I can say for sure is that it 
+works if no commands fail...  :-)
 
-    [SCSI] scsi_error: fix target reset handling
----------------------------------------------------------------------
-
-And this patch depends on the following block layer patch, which
-is in Jens' for-2.6.28 of linux-2.6-block.
-    http://lkml.org/lkml/2008/9/29/142
-
-Thanks,
-Kiyoshi Ueda
+Alan Stern
 
 
-Subject: [PATCH 1/1] scsi: export busy state via q->lld_busy_fn()
-
-This patch implements q->lld_busy_fn() for scsi mid layer to export
-its busy state.
-
-Please note that it checks the cached information (sdev->lld_busy)
-for efficiency, instead of checking the actual state of
-sdev/starget/shost everytime.
-
-So the care must be taken not to leave sdev->lld_busy = 1 for
-the following cases:
-    - when there is no request in the sdev queue
-    - when scsi can't dispatch I/Os anymore and needs to kill I/Os
-Otherwise, request stacking drivers may not submit any request,
-and then, nobody sets back lld_busy = 0 and that causes deadlock.
-
-OTOH, it has no major problem in setting sdev->lld_busy = 0 even when
-the starget/shost is actually busy, because newly submitted request
-will soon turn it to 1 in scsi_request_fn().
-
-
-Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/scsi.c        |    4 ++--
- drivers/scsi/scsi_lib.c    |   20 +++++++++++++++++++-
- include/scsi/scsi_device.h |   13 +++++++++++++
- 3 files changed, 34 insertions(+), 3 deletions(-)
-
-Index: scsi-post-merge-2.6/drivers/scsi/scsi_lib.c
+Index: usb-2.6/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-post-merge-2.6.orig/drivers/scsi/scsi_lib.c
-+++ scsi-post-merge-2.6/drivers/scsi/scsi_lib.c
-@@ -480,6 +480,8 @@ void scsi_device_unbusy(struct scsi_devi
- 	spin_unlock(shost->host_lock);
- 	spin_lock(sdev->request_queue->queue_lock);
- 	sdev->device_busy--;
-+	if (sdev->device_busy < sdev->queue_depth && !sdev->device_blocked)
-+		sdev->lld_busy = 0;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- }
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -859,6 +859,8 @@ void scsi_io_completion(struct scsi_cmnd
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
++	enum {ACTION_FAIL, ACTION_REQUEUE, ACTION_RETRY,
++			ACTION_DELAYED_RETRY} action;
  
-@@ -1535,6 +1537,13 @@ static void scsi_softirq_done(struct req
- 	}
- }
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -909,11 +911,15 @@ void scsi_io_completion(struct scsi_cmnd
+ 	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
+ 	this_count = blk_rq_bytes(req);
++	action = ACTION_FAIL;
  
-+static int scsi_lld_busy(struct request_queue *q)
-+{
-+	struct scsi_device *sdev = q->queuedata;
-+
-+	return sdev ? sdev->lld_busy : 0;
-+}
-+
- /*
-  * Function:    scsi_request_fn()
-  *
-@@ -1577,9 +1586,14 @@ static void scsi_request_fn(struct reque
- 		 * accept it.
- 		 */
- 		req = elv_next_request(q);
--		if (!req || !scsi_dev_queue_ready(q, sdev))
-+		if (!req)
+-	/* good_bytes = 0, or (inclusive) there were leftovers and
+-	 * result = 0, so scsi_end_request couldn't retry.
+-	 */
+-	if (sense_valid && !sense_deferred) {
++	if (host_byte(result) == DID_RESET) {
++		/* Third party bus reset or reset for error recovery
++		 * reasons.  Just retry the command and see what
++		 * happens.
++		 */
++		action = ACTION_RETRY;
++	} else if (sense_valid && !sense_deferred) {
+ 		switch (sshdr.sense_key) {
+ 		case UNIT_ATTENTION:
+ 			if (cmd->device->removable) {
+@@ -921,16 +927,13 @@ void scsi_io_completion(struct scsi_cmnd
+ 				 * and quietly refuse further access.
+ 				 */
+ 				cmd->device->changed = 1;
+-				scsi_end_request(cmd, -EIO, this_count, 1);
+-				return;
+ 			} else {
+ 				/* Must have been a power glitch, or a
+ 				 * bus reset.  Could not have been a
+ 				 * media change, so we just retry the
+-				 * request and see what happens.
++				 * command and see what happens.
+ 				 */
+-				scsi_requeue_command(q, cmd);
+-				return;
++				action = ACTION_RETRY;
+ 			}
  			break;
- 
-+		if (!scsi_dev_queue_ready(q, sdev)) {
-+			sdev->lld_busy = 1;
+ 		case ILLEGAL_REQUEST:
+@@ -946,22 +949,13 @@ void scsi_io_completion(struct scsi_cmnd
+ 			    sshdr.asc == 0x20 && sshdr.ascq == 0x00) &&
+ 			    (cmd->cmnd[0] == READ_10 ||
+ 			     cmd->cmnd[0] == WRITE_10)) {
++				/* This will issue a new 6-byte command. */
+ 				cmd->device->use_10_for_rw = 0;
+-				/* This will cause a retry with a
+-				 * 6-byte command.
+-				 */
+-				scsi_requeue_command(q, cmd);
+-			} else if (sshdr.asc == 0x10) /* DIX */
+-				scsi_end_request(cmd, -EIO, this_count, 0);
+-			else
+-				scsi_end_request(cmd, -EIO, this_count, 1);
+-			return;
+-		case ABORTED_COMMAND:
+-			if (sshdr.asc == 0x10) { /* DIF */
+-				scsi_end_request(cmd, -EIO, this_count, 0);
+-				return;
++				action = ACTION_REQUEUE;
+ 			}
+ 			break;
++		case ABORTED_COMMAND:
 +			break;
+ 		case NOT_READY:
+ 			/* If the device is in the process of becoming
+ 			 * ready, or has a temporary blockage, retry.
+@@ -975,19 +969,16 @@ void scsi_io_completion(struct scsi_cmnd
+ 				case 0x07: /* operation in progress */
+ 				case 0x08: /* Long write in progress */
+ 				case 0x09: /* self test in progress */
+-					scsi_requeue_command(q, cmd);
+-					return;
+-				default:
++					action = ACTION_DELAYED_RETRY;
+ 					break;
+ 				}
+ 			}
+-			if (!(req->cmd_flags & REQ_QUIET))
++			if (!(req->cmd_flags & REQ_QUIET) &&
++					action == ACTION_FAIL)
+ 				scsi_cmd_print_sense_hdr(cmd,
+ 							 "Device not ready",
+ 							 &sshdr);
+-
+-			scsi_end_request(cmd, -EIO, this_count, 1);
+-			return;
++			break;
+ 		case VOLUME_OVERFLOW:
+ 			if (!(req->cmd_flags & REQ_QUIET)) {
+ 				scmd_printk(KERN_INFO, cmd,
+@@ -996,28 +987,38 @@ void scsi_io_completion(struct scsi_cmnd
+ 				scsi_print_sense("", cmd);
+ 			}
+ 			/* See SSC3rXX or current. */
+-			scsi_end_request(cmd, -EIO, this_count, 1);
+-			return;
+-		default:
+ 			break;
+ 		}
+ 	}
+-	if (host_byte(result) == DID_RESET) {
+-		/* Third party bus reset or reset for error recovery
+-		 * reasons.  Just retry the request and see what
+-		 * happens.
++
++	switch (action) {
++	case ACTION_FAIL:
++		/* Give up and fail the remainder of the request */
++		if (result) {
++			if (!(req->cmd_flags & REQ_QUIET)) {
++				scsi_print_result(cmd);
++				if (driver_byte(result) & DRIVER_SENSE)
++					scsi_print_sense("", cmd);
++			}
 +		}
-+
- 		if (unlikely(!scsi_device_online(sdev))) {
- 			sdev_printk(KERN_ERR, sdev,
- 				    "rejecting I/O to offline device\n");
-@@ -1649,6 +1663,8 @@ static void scsi_request_fn(struct reque
- 		rtn = scsi_dispatch_cmd(cmd);
- 		spin_lock_irq(q->queue_lock);
- 		if(rtn) {
-+			sdev->lld_busy = 1;
-+
- 			/* we're refusing the command; because of
- 			 * the way locks get dropped, we need to 
- 			 * check here if plugging is required */
-@@ -1673,6 +1689,7 @@ static void scsi_request_fn(struct reque
- 	 * later time.
- 	 */
- 	spin_lock_irq(q->queue_lock);
-+	sdev->lld_busy = 1;
- 	blk_requeue_request(q, req);
- 	sdev->device_busy--;
- 	if(sdev->device_busy == 0)
-@@ -1756,6 +1773,7 @@ struct request_queue *scsi_alloc_queue(s
- 	blk_queue_prep_rq(q, scsi_prep_fn);
- 	blk_queue_softirq_done(q, scsi_softirq_done);
- 	blk_queue_rq_timed_out(q, scsi_times_out);
-+	blk_queue_lld_busy(q, scsi_lld_busy);
- 	return q;
++		blk_end_request(req, -EIO, blk_rq_bytes(req));
++		scsi_next_command(cmd);
++		break;
++	case ACTION_REQUEUE:
++		/* Put the request back at the head of the queue.
++		 * A new command will be prepared and issued.
+ 		 */
+ 		scsi_requeue_command(q, cmd);
+-		return;
+-	}
+-	if (result) {
+-		if (!(req->cmd_flags & REQ_QUIET)) {
+-			scsi_print_result(cmd);
+-			if (driver_byte(result) & DRIVER_SENSE)
+-				scsi_print_sense("", cmd);
+-		}
++		break;
++	case ACTION_RETRY:
++		/* Retry the same command immediately */
++		scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
++		break;
++	case ACTION_DELAYED_RETRY:
++		/* Retry the same command after a delay */
++		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
++		break;
+ 	}
+-	scsi_end_request(cmd, -EIO, this_count, !result);
  }
  
-Index: scsi-post-merge-2.6/drivers/scsi/scsi.c
-===================================================================
---- scsi-post-merge-2.6.orig/drivers/scsi/scsi.c
-+++ scsi-post-merge-2.6/drivers/scsi/scsi.c
-@@ -809,8 +809,6 @@ void scsi_finish_command(struct scsi_cmn
- 	struct scsi_driver *drv;
- 	unsigned int good_bytes;
- 
--	scsi_device_unbusy(sdev);
--
-         /*
-          * Clear the flags which say that the device/host is no longer
-          * capable of accepting new commands.  These are set in scsi_queue.c
-@@ -823,6 +821,8 @@ void scsi_finish_command(struct scsi_cmn
- 	starget->target_blocked = 0;
-         sdev->device_blocked = 0;
- 
-+	scsi_device_unbusy(sdev);
-+
- 	/*
- 	 * If we have valid sense information, then some kind of recovery
- 	 * must have taken place.  Make a note of this.
-Index: scsi-post-merge-2.6/include/scsi/scsi_device.h
-===================================================================
---- scsi-post-merge-2.6.orig/include/scsi/scsi_device.h
-+++ scsi-post-merge-2.6/include/scsi/scsi_device.h
-@@ -145,6 +145,19 @@ struct scsi_device {
- 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
- 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
- 					   SD_LAST_BUGGY_SECTORS */
-+	unsigned lld_busy:1;		/* Exporting busy state for stacking
-+					 * drivers.
-+					 *
-+					 * 1 - There is one or more requests
-+					 *     in the device's queue,
-+					 *     and the device (or target/host)
-+					 *     can not dispatch any request
-+					 *     immediately.
-+					 * 0 - The device can dispatch
-+					 *     (or kill) requests immediately,
-+					 *     or there is no request in
-+					 *     the device's queue even though
-+					 *     target/host may busy. */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+
