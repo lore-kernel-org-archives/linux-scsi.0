@@ -1,191 +1,212 @@
-From: Gerry.Houlder@seagate.com
-Subject: Re: Alternative TRIM proposal
-Date: Thu, 2 Oct 2008 15:07:34 -0500
-Message-ID: <OF93179061.8BBD23CF-ON862574D6.006C600D-862574D6.006E8EBB@seagate.com>
-References: <200810021732.m92HW7qL015836@coles02.co.lsil.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [ANNOUNCE]: ConfigFS enabled Generic Target Mode and iSCSI
+	Target Stack on v2.6.27-rc7
+Date: Thu, 02 Oct 2008 14:29:32 -0700
+Message-ID: <1222982972.15764.118.camel@haakon2.linux-iscsi.org>
+References: <1222716101.4296.41.camel@haakon2.linux-iscsi.org>
+	 <48E3B529.4060406@vlnb.net>
+	 <1222907050.15764.56.camel@haakon2.linux-iscsi.org>
+	 <48E4FE3F.2080707@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pps0.ok-ext.mailhost.seagate.com ([192.55.20.54]:34070 "EHLO
-	pps0.ok-ext.mailhost.seagate.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754153AbYJBVAQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 17:00:16 -0400
-In-Reply-To: <200810021732.m92HW7qL015836@coles02.co.lsil.com>
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:35372 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754871AbYJBV3h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 17:29:37 -0400
+In-Reply-To: <48E4FE3F.2080707@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: dougg@torque.net, "Knight, Frederick" <Frederick.Knight@netapp.com>, linux-scsi@vger.kernel.org, owner-t10@t10.orgt10@t10.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-iscsi-target-dev@googlegroups.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, Greg KH <greg@kroah.com>, Jerome Martin <tramjoe.merin@gmail.com>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Joel Becker <joel.becker@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>
 
-I will not be able to attend the call tomorrow, so I will offer my opinions
-on the T10 reflector.
+On Thu, 2008-10-02 at 21:00 +0400, Vladislav Bolkhovitin wrote:
+> Nicholas A. Bellinger wrote:
+> >>> # Add some more HBA and storage Objects
+> >>> target:~# mkdir -p $TARGET/fileio_0/file_object
+> >>> target:~# mkdir -p $TARGET/rd_mcp_0/ramdisk0
+> >>> target:~# mkdir -p $TARGET/rd_dr_0/ramdisk0
+> >>>
+> >>> target:~# mkdir -p $TARGET/pscsi_0/sdd
+> >>> target:~# echo scsi_channel_id=0,scsi_target_id=3,scsi_lun_id=0 > $TARGET/pscsi_0/sdd/dev_control   
+> >>> target:~# echo 1 > $TARGET/pscsi_0/sdd/dev_enable 
+> >>>
+> >>> # Now, create LUN 1 and another Port Symlink to a new device on the same $IQN/tpgt_1
+> >>> mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1"
+> >>> # Create the iSCSI Target Port Mapping for $DEF_IN/tpgt_1 LUN 1
+> >>> # to lvm_test0 and give it the port symbolic name of lio_east_port
+> >>> ln -s $TARGET/pscsi_0/sdd/ "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1/lio_east_port"
+> >>>
+> >>> target:~# tree $CONFIGFS
+> >>> /sys/kernel/config/
+> >>> `-- target
+> >>>     |-- core
+> >>>     |   |-- fileio_0
+> >>>     |   |   |-- file_object
+> >>>     |   |   |   |-- dev_control
+> >>>     |   |   |   |-- dev_enable
+> >>>     |   |   |   `-- dev_info
+> >>>     |   |   `-- hba_info
+> >>>     |   |-- iblock_0
+> >>>     |   |   |-- hba_info
+> >>>     |   |   `-- lvm_test0
+> >>>     |   |       |-- dev_control
+> >>>     |   |       |-- dev_enable
+> >>>     |   |       `-- dev_info
+> >>>     |   |-- pscsi_0
+> >>>     |   |   |-- hba_info
+> >>>     |   |   `-- sdd
+> >>>     |   |       |-- dev_control
+> >>>     |   |       |-- dev_enable
+> >>>     |   |       `-- dev_info
+> >>>     |   |-- rd_dr_0
+> >>>     |   |   |-- hba_info
+> >>>     |   |   `-- ramdisk0
+> >>>     |   |       |-- dev_control
+> >>>     |   |       |-- dev_enable
+> >>>     |   |       `-- dev_info
+> >>>     |   `-- rd_mcp_0
+> >>>     |       |-- hba_info
+> >>>     |       `-- ramdisk0
+> >>>     |           |-- dev_control
+> >>>     |           |-- dev_enable
+> >>>     |           `-- dev_info
+> >>>     |-- iscsi
+> >>>     |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+> >>>     |   |   `-- tpgt_1
+> >>>     |   |       |-- lun
+> >>>     |   |       |   |-- lun_0
+> >>>     |   |       |   |   |-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
+> >>>     |   |       |   |   |-- port_control
+> >>>     |   |       |   |   `-- port_info
+> >>>     |   |       |   `-- lun_1
+> >>>     |   |       |       |-- lio_east_port -> ../../../../../../target/core/pscsi_0/sdd
+> >>>     |   |       |       |-- port_control
+> >>>     |   |       |       `-- port_info
+> >>>     |   |       |-- np
+> >>>     |   |       |   `-- 172.16.201.137:3260
+> >>>     |   |       |       `-- portal_info
+> >>>     |   |       |-- tpg_control
+> >>>     |   |       `-- tpg_enable
+> >>>     |   `-- lio_version
+> >>>     `-- version
+> >>>
+> >>> 22 directories, 29 files
+> >> It's good, I like it. The only thing concerns me that, considering how 
+> >> much time *I* spent to understand it, for an average user understanding 
+> >> it can be an unbearable nightmare ;)
+> >>
+> > 
+> > Well, the idea is not necessarily making the configfs interface the
+> > easiest to use in the world by user directly through $CONFIGFS, but to
+> > make the CLI scripts that speak $CONFIGFS/target CLI, and of course the
+> > actual UIs for user that interact with generic target core and
+> > $FABRIC_MODs be as simple and elegent as possible.  
+> > 
+> > That is what I believe the balance that a configfs enabled generic
+> > target core provides to both the $CONFIGFS/target API and to $FABRIC_MOD
+> > maintainers looking to port their code to use a generic control
+> > infrastructure.  :-)
+> > 
+> >> In a few days I'll write a proposed configfs hierarchy for existing SCST 
+> >> /proc interface.
+> > 
+> > Sounds good!  Please let me know if you have questions.
+> 
+> There's one unsolved problem. As I've already written, SCST core needs 
+> an ability to provide to user space a large amount of data, which may 
+> not fit to a single page.
+>
+> A list of connected initiators ("sessions" 
+> file in /proc), for instance. Each initiator in that list has a number 
+> of attributes: initiator name, target template name, count of 
+> outstanding commands, etc. The logical way for that would be to create a 
+> subdirectory for each initiator, like:
+> 
+> /sys/kernel/config/
+> `-- target
+>      `-- sessions
+>          `-- session1
+>          |   |-- initiator_name
+>          |   |-- template_name
+>          |   `-- commands
+>          |
+>          `-- session2
+>              |-- initiator_name
+>              `-- template_name
+>              `-- commands
+>
 
-(a) I don't see any point to doing a 12 byte TRIM command. The 16 byte
-command is more future proof and any SCSI system (except maybe ATAPI) that
-can do 10 and 12 byte commands can also do 16 byte commands.
+The the Initiator Port ACLs need to go
+under /sys/kernel/config/target/$FABRIC because the struct fabric_acl *
+will always contain fabric dependent config items.  For example, Since
+these struct fabric_acl_t do *NOT* symlink directly back to
+target_core_mod under /sys/kernel/config/target/core/$HBA/$DEV, but to
+fabric_lun_t (iscsi_lun_t in my case) to Symlink to
+a /sys/kernel/config/target/core/$HBA/$DEV that has been registered with
+the generic target configfs infrastructure.
 
-(b) Likewise I don't see any point to a 32 byte TRIM command. The extra
-fields in the CDB are for checking Protection Information fields attached
-to user data; since the trim command won't transfer any user data these
-fields add no value.
+Here is what I am thinking wrt /sys/kernel/config/target/iscsi and iSCSI
+Initiator Node ACLs to iSCSI Portal Groups and iSCSI LUNs attached to
+those Portal Groups.  There are two cases:
 
-(c) You mention things like "checking protection information data before
-trimming" or doing a verify operation before trimming? This is a pointless
-waste of time for a bunch of blocks that you wish to delete. All you really
-care about is that only good blocks are reused in the future, when new
-information is written. Let the storage device's scrubbing or wear leveling
-algorithms take care of that.
+*) The production case with with user creating those ACLs under $FABRIC
+(which is what I will focus on now).
 
-(d) I'm not sure why you don't like the T13 approach, where multiple
-extents can be trimmed in one command instead of having to send a separate
-command for each extent to be trimmed. If you tell me that when a person
-goes to the GUI file manager and marks 10 files for deletion, some of which
-might be fragmented into several extends, the operating system will only
-trim one extent at a time (waiting for each to be trimmed before doing the
-next) rather than combining multiple extents into one interface command
-then perhaps there is no advantage to being able to do multiple extents.
-The advantage of multiple extents in one command is using less interface
-bus bandwidth. The only disadvantage is error recovery; if the command
-fails or is aborted for other reasons it is messier because the host has to
-figure out which (if any) of the extents were done and which have to be
-retried. I hope you will expound on your reason(s) for liking the one
-extent at a time approach.
+* And "Demo Mode" case where any Initiator logging into
+$FABRIC/$ENDPOINT/$PORTAL can have access to all
+$FABRIC/$ENDPOINT/lun/lun_*/*my_ports*
 
+The production ACL case would look like:
 
+export CONFIGFS=/sys/kernel/config/
+export TARGET=/sys/kernel/config/target/core/
+export FABRIC=/sys/kernel/config/target/iscsi/
 
-                                                                           
-             Matthew Wilcox                                                
-             <matthew@wil.cx>                                              
-             Sent by:                                                   To 
-             owner-t10@t10.org         "Knight, Frederick"                 
-             No Phone Info             <Frederick.Knight@netapp.com>       
-             Available                                                  cc 
-                                       t10@t10.org,                        
-                                       linux-scsi@vger.kernel.org,         
-             10/02/2008 10:24          dougg@torque.net                    
-             AM                                                    Subject 
-                                       Alternative TRIM proposal           
-                                                                           
-                                                                           
-                                                                           
-                                                                           
-                                                                           
-                                                                           
+TARGET_IQN=iqn.2003-01.org.linux-iscsi.ps3-cell.ppc64:sn.f8f651bd5fec
+INITIATOR_IQN=iqn.1993-08.org.debian:01.f82074ca555f
 
+<Setup $STORAGE_OBJECTs under $TARGET>
 
+# Create the LIO-target endpoint
+mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/np/172.16.201.137:3260"
+mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0"
 
+<Setup Port Symlinks from $TARGET to $TARGET_IQN/tpgt_1/lun/lun_0>
 
-* From the T10 Reflector (t10@t10.org), posted by:
-* Matthew Wilcox <matthew@wil.cx>
-*
+# Create the Initiator ACL under $TARGET_IQN/tpgt_1
+mkdir -p $"FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN"
+# Allow $INITIATOR_IQN access to tpgt_1/lun/lun_0/
+ln -s "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0" \
+	"$FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN/lun_0"
 
-There's a meeting tomorrow to discuss the T10 TRIM command.  The current
-proposal can be seen at http://t10.org/ftp/t10/document.08/08-149r2.pdf
-A related document (discussing READ after TRIM) can be found at
-http://t10.org/ftp/t10/document.08/08-347r1.pdf
+>From there, you don't have to worry about PAGE_SIZE limitiations w/o, I
+can simply use use:
 
-I'm not keen on the 'pass a list of blocks to be trimmed' model.  I would
-prefer TRIM to be a real command like READ or WRITE.  To that end, here
-are my notes on creating such commands, followed by an actual proposal.
-I would welcome feedback on this, and it'd be most useful if such feedback
-occurred within the next 24 hours so I can refine the proposal before
-the meeting.
+cat $FABRIC/iqn*/tpgt*/initiators/*/session
 
-Notes
-=====
+to see which acl'ed iSCSI Initiators are logged in on all iSCSI Target
+Ports.
 
-SBC-3 specifies 6, 10, 12, 16 and 32 byte commands for each of READ and
-WRITE as well as 10, 12, 16 and 32 byte commands for VERIFY.  While it
-is tempting to only define a 32-byte TRIM command, that would prevent
-older controllers from supporting TRIM, as well as being wasteful in the
-on-wire encoding.  All drivers in Linux support at least 12-byte commands,
-so I think we can avoid defining 6 and 10 byte variants of TRIM in order
-to conserve the number of operation codes required for this proposal.
+Also I should add that I am currently using /proc/scsi_target/mib
+and /proc/iscsi_target_mib for READ-ONLY data with target_core_mod.ko
+and iscsi_target_mod.ko respectively.  For the other "Demo Mode" case
+mentioned above, I am currently using /proc/iscsi_target/mib/sess_attr
+to see the active sessions for LIO-Target.
 
-The 12-byte commands allow 32 bits for LBA and 32 bits for transfer length
-(remember these are specified in sectors (normally 512 bytes), so support
-drives up to 2TB in size).  The 16-byte commands expand the LBA size
-to 64-bit, supporting drive sizes over 9000 Exabytes (8192 exbibytes,
-I suppose).  The 32-byte commands add support for application tags.
+I will be implementing this model over the next days..  I will post the
+commit once its up and you can have a look..
 
-The commands also include various fields which may or may not make sense
-for TRIM.  Here's a list:
+--nab
 
-WRPROTECT       | The application may want the device to check protection
-RDPROTECT       | information before allowing the TRIM to succeed.  This is
-VRPROTECT       | the same case as VERIFY with BYTCHK=0.  See table 67 in
-                | SAM 3 r14.
-
-DPO             | Disable Page Out is not relevant to TRIM since the blocks
-                | are being discarded.  Checking application tags may
-require
-                | the blocks to be accessed, but they can always be
-discarded
-                | immediately.  Recommend this bit be reserved.
-
-FUA             | I don't see a reason to force unit access, recommend
-these
-FUA_NV          | bits be reserved.
-
-BYTCHK          | There might be a case to be made for allowing the device
-                | to discard only if the data is still what it used to be,
-                | but this would add additional complexity and I don't know
-                | if it's worth it.  Reserve this bit.
-
-GROUP NUMBER    | I can see it being useful to account TRIMs to different
-                | groups and produce statistics about them, so recommend
-that
-                | GROUP NUMBER be specified as it is for other commands.
-
-CONTROL         | All commands shall contain the CONTROL byte as specified
-by
-                | SAM 4.
-
-
-Proposal
-========
-
-Define three new commands, TRIM (12), TRIM (16) and TRIM (32):
-
-TRIM (12)
-byte 0          OPERATION CODE (to be assigned)
-byte 1          bits 7-5: VRPROTECT, bits 4-0: Reserved
-byte 2-5        LOGICAL BLOCK ADDRESS
-byte 6-9        TRANSFER LENGTH
-byte 10         bits 7-5: Reserved, bits 4-0: GROUP NUMBER
-byte 11         CONTROL
-
-TRIM (16)
-byte 0          OPERATION CODE (to be assigned)
-byte 1          bits 7-5: VRPROTECT, bits 4-0: Reserved
-byte 2-9        LOGICAL BLOCK ADDRESS
-byte 10-13      TRANSFER LENGTH
-byte 14         bits 7-5: Reserved, bits 4-0: GROUP NUMBER
-byte 15         CONTROL
-
-TRIM (32)
-byte 0          OPERATION CODE (7Fh)
-byte 1          CONTROL
-byte 2-5        Reserved
-byte 6          bits 7-5: Reserved, bits 4-0: GROUP NUMBER
-byte 7          ADDITIONAL CDB LENGTH (18h)
-byte 8-9        SERVICE ACTION (to be assigned)
-byte 10         bits 7-5: VRPROTECT, bits 4-0: Reserved
-byte 11         Reserved
-byte 12-19      LOGICAL BLOCK ADDRESS
-byte 20-23      EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
-byte 24-25      EXPECTED LOGICAL BLOCK APPLICATION TAG
-byte 26-27      LOGICAL BLOCK APPLICATION TAG MASK
-byte 28-31      TRANSFER LENGTH
-
-
---
-Matthew Wilcox                          Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
-
-*
-* For T10 Reflector information, send a message with
-* 'info t10' (no quotes) in the message body to majordomo@t10.org
-
+>
+>
+> But looks like configfs requires each subdirectory to be created 
+> manually by user via, e.g., mkdir command. It would be really strange if 
+> we require user to manually create "sessions" subdirectory to be able to 
+> see a list of connected initiators. Do I miss anything?
+> 
+> Vlad
+> 
 
