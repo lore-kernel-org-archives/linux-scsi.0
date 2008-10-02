@@ -1,173 +1,245 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [3/21] SCSI-ISA-DMA: Pass gfp to scsi_allocate_command
-Date: Thu,  2 Oct 2008 09:58:41 +0200 (CEST)
-Message-ID: <20081002075841.234593E6A09@basil.firstfloor.org>
+Subject: [PATCH] [5/21] SCSI-ISA-DMA: Remove unchecked_isa in BusLogic
+Date: Thu,  2 Oct 2008 09:58:43 +0200 (CEST)
+Message-ID: <20081002075843.2D4D63E6A09@basil.firstfloor.org>
 References: <20081002958.641114646@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:57081 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:57087 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752508AbYJBH6n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 03:58:43 -0400
+	with ESMTP id S1752541AbYJBH6p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 03:58:45 -0400
 In-Reply-To: <20081002958.641114646@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, axboe@kernel.dk
 
 
-Instead of deciding low level based on unchecked_isa_dma pass in the GFP.
-This makes it easier to remove unchecked_isa_dma later and also simplifies some code.
+- ->cmnd handling audited and does always copy
+- Allocate hostdata separately
+- Enable sense_buffer isa bounce buffering
+- Remove unchecked_isa_dma
+- Enable block layer bouncing explicitely for isa adapters
 
+Untested due to lack of hardware
+
+Signed-off-by: Andi Kleen <ak@suse.de>
 Signed-off-by: Andi Kleen <andi@firstfloor.org>
 Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 ---
- drivers/scsi/scsi.c      |   45 +++++++++++++++++++++++++++++----------------
- include/scsi/scsi_cmnd.h |    5 +++--
- 2 files changed, 32 insertions(+), 18 deletions(-)
+ drivers/scsi/BusLogic.c |   77 ++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 59 insertions(+), 18 deletions(-)
 
-Index: linux/include/scsi/scsi_cmnd.h
+Index: linux/drivers/scsi/BusLogic.c
 ===================================================================
---- linux.orig/include/scsi/scsi_cmnd.h
-+++ linux/include/scsi/scsi_cmnd.h
-@@ -151,8 +151,9 @@ extern void scsi_release_buffers(struct 
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+--- linux.orig/drivers/scsi/BusLogic.c
++++ linux/drivers/scsi/BusLogic.c
+@@ -62,6 +62,13 @@
  
--struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask);
--void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd);
-+struct scsi_cmnd *scsi_allocate_command(struct Scsi_Host *shost,
-+					gfp_t gfp_mask);
-+void scsi_free_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
+ static struct scsi_host_template Bus_Logic_template;
  
- static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
- {
-Index: linux/drivers/scsi/scsi.c
-===================================================================
---- linux.orig/drivers/scsi/scsi.c
-+++ linux/drivers/scsi/scsi.c
-@@ -353,7 +353,8 @@ void scsi_put_command(struct scsi_cmnd *
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
--static struct scsi_host_cmd_pool *scsi_get_host_cmd_pool(gfp_t gfp_mask)
-+static struct scsi_host_cmd_pool *
-+scsi_get_host_cmd_pool(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
- 	struct scsi_host_cmd_pool *retval = NULL, *pool;
- 	/*
-@@ -361,8 +362,9 @@ static struct scsi_host_cmd_pool *scsi_g
- 	 * yet existent.
- 	 */
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = &scsi_cmd_pool;
-+	if (shost && shost->unchecked_isa_dma)
-+		pool = &scsi_cmd_dma_pool;
- 	if (!pool->users) {
- 		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
- 						   sizeof(struct scsi_cmnd), 0,
-@@ -386,12 +388,12 @@ static struct scsi_host_cmd_pool *scsi_g
- 	return retval;
- }
- 
--static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-+static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
- {
- 	struct scsi_host_cmd_pool *pool;
- 
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
-+	pool = (shost && shost->unchecked_isa_dma) ? &scsi_cmd_dma_pool :
- 		&scsi_cmd_pool;
- 	/*
- 	 * This may happen if a driver has a mismatched get and put
-@@ -409,6 +411,10 @@ static void scsi_put_host_cmd_pool(gfp_t
- 
- /**
-  * scsi_allocate_command - get a fully allocated SCSI command
-+ * @shost:	SCSI host. Can be NULL, then we assume you have no
-+ *		special DMA address requirements for command/sense buffer.
-+ *		If you have special DMA requirements you must record
-+ *		them in the shost before calling this.
-  * @gfp_mask:	allocation mask
-  *
-  * This function is for use outside of the normal host based pools.
-@@ -420,9 +426,16 @@ static void scsi_put_host_cmd_pool(gfp_t
-  * This function should *only* be used by drivers that need a static
-  * command allocation at start of day for internal functions.
-  */
--struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
-+struct scsi_cmnd *scsi_allocate_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
--	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
-+	struct scsi_host_cmd_pool *pool;
++struct host_ptr {
++	struct BusLogic_HostAdapter *host;
++	dma_addr_t dma;
++};
++#define bl_shost_priv(shost) (((struct host_ptr *)shost_priv(shost))->host)
++#define bl_shost_dma(shost) (((struct host_ptr *)shost_priv(shost))->dma)
 +
-+	/*
-+	 * ISA-DMAness should be only decided by flags in shost. Only use the gfp for
-+	 * sleeping vs non sleeping if at all.
-+	 */
-+	BUG_ON(gfp_mask & __GFP_DMA);
-+	pool = scsi_get_host_cmd_pool(shost, gfp_mask);
+ /*
+   BusLogic_DriverOptionsCount is a count of the number of BusLogic Driver
+   Options specifications provided via the Linux Kernel Command Line or via
+@@ -124,6 +131,12 @@ static int BusLogic_ProbeInfoCount;
  
- 	if (!pool)
- 		return NULL;
-@@ -433,16 +446,16 @@ EXPORT_SYMBOL(scsi_allocate_command);
+ static struct BusLogic_ProbeInfo *BusLogic_ProbeInfoList;
  
- /**
-  * scsi_free_command - free a command allocated by scsi_allocate_command
-- * @gfp_mask:	mask used in the original allocation
-+ * @shost:	shost used in the original allocation or NULL
-  * @cmd:	command to free
-  *
-- * Note: using the original allocation mask is vital because that's
-+ * Note: using the original shost is vital because that's
-  * what determines which command pool we use to free the command.  Any
-  * mismatch will cause the system to BUG eventually.
-  */
--void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd)
-+void scsi_free_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
++static int buslogic_adjust_queue(struct scsi_device *device)
++{
++	if (device->host->sense_buffer_isa)
++		blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
++	return 0;
++}
+ 
+ /*
+   BusLogic_CommandFailureReason holds a string identifying the reason why a
+@@ -152,7 +165,7 @@ static void BusLogic_AnnounceDriver(stru
+ 
+ static const char *BusLogic_DriverInfo(struct Scsi_Host *Host)
  {
--	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
-+	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(shost, 0);
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Host);
+ 	return HostAdapter->FullModelName;
+ }
  
+@@ -1610,9 +1623,6 @@ static bool __init BusLogic_ReadHostAdap
+ 	   BIOS_Address is 0.
+ 	 */
+ 	HostAdapter->BIOS_Address = ExtendedSetupInformation.BIOS_Address << 12;
+-	/*
+-	   ISA Host Adapters require Bounce Buffers if there is more than 16MB memory.
+-	 */
+ 	if (HostAdapter->HostAdapterBusType == BusLogic_ISA_Bus && (void *) high_memory > (void *) MAX_DMA_ADDRESS)
+ 		HostAdapter->BounceBuffersRequired = true;
  	/*
- 	 * this could trigger if the mask to scsi_allocate_command
-@@ -458,8 +471,8 @@ void scsi_free_command(gfp_t gfp_mask, s
- 	 * reference we took above, and once to release the reference
- 	 * originally taken by scsi_allocate_command
- 	 */
--	scsi_put_host_cmd_pool(gfp_mask);
--	scsi_put_host_cmd_pool(gfp_mask);
-+	scsi_put_host_cmd_pool(shost);
-+	scsi_put_host_cmd_pool(shost);
- }
- EXPORT_SYMBOL(scsi_free_command);
- 
-@@ -481,7 +494,7 @@ int scsi_setup_command_freelist(struct S
- 	spin_lock_init(&shost->free_list_lock);
- 	INIT_LIST_HEAD(&shost->free_list);
- 
--	shost->cmd_pool = scsi_get_host_cmd_pool(gfp_mask);
-+	shost->cmd_pool = scsi_get_host_cmd_pool(shost, 0);
- 
- 	if (!shost->cmd_pool)
- 		return -ENOMEM;
-@@ -491,7 +504,7 @@ int scsi_setup_command_freelist(struct S
- 	 */
- 	cmd = scsi_host_alloc_command(shost, gfp_mask);
- 	if (!cmd) {
--		scsi_put_host_cmd_pool(gfp_mask);
-+		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
- 		return -ENOMEM;
- 	}
-@@ -520,7 +533,7 @@ void scsi_destroy_command_freelist(struc
- 		scsi_pool_free_command(shost->cmd_pool, cmd);
- 	}
- 	shost->cmd_pool = NULL;
--	scsi_put_host_cmd_pool(shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL);
-+	scsi_put_host_cmd_pool(shost);
+@@ -2131,7 +2141,9 @@ static void __init BusLogic_InitializeHo
+ 	Host->this_id = HostAdapter->SCSI_ID;
+ 	Host->can_queue = HostAdapter->DriverQueueDepth;
+ 	Host->sg_tablesize = HostAdapter->DriverScatterGatherLimit;
+-	Host->unchecked_isa_dma = HostAdapter->BounceBuffersRequired;
++	if (HostAdapter->BounceBuffersRequired)
++		Host->sense_buffer_isa = 1;
++
+ 	Host->cmd_per_lun = HostAdapter->UntaggedQueueDepth;
  }
  
- #ifdef CONFIG_SCSI_LOGGING
+@@ -2145,7 +2157,7 @@ static void __init BusLogic_InitializeHo
+ */
+ static int BusLogic_SlaveConfigure(struct scsi_device *Device)
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Device->host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Device->host);
+ 	int TargetID = Device->id;
+ 	int QueueDepth = HostAdapter->QueueDepth[TargetID];
+ 
+@@ -2170,6 +2182,35 @@ static int BusLogic_SlaveConfigure(struc
+ 	return 0;
+ }
+ 
++static struct Scsi_Host *buslogic_host_alloc(gfp_t gfp)
++{
++	struct BusLogic_HostAdapter *board;
++	struct Scsi_Host *shost;
++
++
++	shost = scsi_host_alloc(&Bus_Logic_template, sizeof(struct host_ptr));
++	if (!shost)
++		return NULL;
++
++	board = dma_alloc_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
++					&bl_shost_dma(shost), GFP_KERNEL);
++	if (!board) {
++		scsi_host_put(shost);
++		return NULL;
++	}
++
++	bl_shost_priv(shost) = board;
++
++	return shost;
++}
++
++static void buslogic_free_host(struct Scsi_Host *shost)
++{
++	dma_free_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
++			  bl_shost_priv(shost), bl_shost_dma(shost));
++	scsi_host_put(shost);
++}
++
+ /*
+   BusLogic_DetectHostAdapter probes for BusLogic Host Adapters at the standard
+   I/O Addresses where they may be located, initializing, registering, and
+@@ -2270,12 +2311,12 @@ static int __init BusLogic_init(void)
+ 		   Register the SCSI Host structure.
+ 		 */
+ 
+-		Host = scsi_host_alloc(&Bus_Logic_template, sizeof(struct BusLogic_HostAdapter));
++		Host = buslogic_host_alloc(PrototypeHostAdapter->BounceBuffersRequired ? GFP_DMA : 0);
+ 		if (Host == NULL) {
+ 			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
+ 		}
+-		HostAdapter = (struct BusLogic_HostAdapter *) Host->hostdata;
++		HostAdapter = bl_shost_priv(Host);
+ 		memcpy(HostAdapter, PrototypeHostAdapter, sizeof(struct BusLogic_HostAdapter));
+ 		HostAdapter->SCSI_Host = Host;
+ 		HostAdapter->HostNumber = Host->host_no;
+@@ -2321,7 +2362,7 @@ static int __init BusLogic_init(void)
+ 				BusLogic_DestroyCCBs(HostAdapter);
+ 				BusLogic_ReleaseResources(HostAdapter);
+ 				list_del(&HostAdapter->host_list);
+-				scsi_host_put(Host);
++				buslogic_free_host(Host);
+ 				ret = -ENOMEM;
+ 			} else {
+ 				BusLogic_InitializeHostStructure(HostAdapter,
+@@ -2335,7 +2376,7 @@ static int __init BusLogic_init(void)
+ 					BusLogic_DestroyCCBs(HostAdapter);
+ 					BusLogic_ReleaseResources(HostAdapter);
+ 					list_del(&HostAdapter->host_list);
+-					scsi_host_put(Host);
++					buslogic_free_host(Host);
+ 					ret = -ENODEV;
+ 				} else {
+ 					scsi_scan_host(Host);
+@@ -2354,7 +2395,7 @@ static int __init BusLogic_init(void)
+ 			BusLogic_DestroyCCBs(HostAdapter);
+ 			BusLogic_ReleaseResources(HostAdapter);
+ 			list_del(&HostAdapter->host_list);
+-			scsi_host_put(Host);
++			buslogic_free_host(Host);
+ 			ret = -ENODEV;
+ 		}
+ 	}
+@@ -2398,7 +2439,7 @@ static int __exit BusLogic_ReleaseHostAd
+ 	 */
+ 	list_del(&HostAdapter->host_list);
+ 
+-	scsi_host_put(Host);
++	buslogic_free_host(Host);
+ 	return 0;
+ }
+ 
+@@ -2786,7 +2827,7 @@ static bool BusLogic_WriteOutgoingMailbo
+ 
+ static int BusLogic_host_reset(struct scsi_cmnd * SCpnt)
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) SCpnt->device->host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(SCpnt->device->host);
+ 
+ 	unsigned int id = SCpnt->device->id;
+ 	struct BusLogic_TargetStatistics *stats = &HostAdapter->TargetStatistics[id];
+@@ -2808,7 +2849,7 @@ static int BusLogic_host_reset(struct sc
+ 
+ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRoutine) (struct scsi_cmnd *))
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Command->device->host);
+ 	struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[Command->device->id];
+ 	struct BusLogic_TargetStatistics *TargetStatistics = HostAdapter->TargetStatistics;
+ 	unsigned char *CDB = Command->cmnd;
+@@ -3001,7 +3042,7 @@ static int BusLogic_QueueCommand(struct 
+ 
+ static int BusLogic_AbortCommand(struct scsi_cmnd *Command)
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(Command->device->host);
+ 
+ 	int TargetID = Command->device->id;
+ 	struct BusLogic_CCB *CCB;
+@@ -3131,7 +3172,7 @@ static int BusLogic_ResetHostAdapter(str
+ 
+ static int BusLogic_BIOSDiskParameters(struct scsi_device *sdev, struct block_device *Device, sector_t capacity, int *Parameters)
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) sdev->host->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(sdev->host);
+ 	struct BIOS_DiskParameters *DiskParameters = (struct BIOS_DiskParameters *) Parameters;
+ 	unsigned char *buf;
+ 	if (HostAdapter->ExtendedTranslationEnabled && capacity >= 2 * 1024 * 1024 /* 1 GB in 512 byte sectors */ ) {
+@@ -3202,7 +3243,7 @@ static int BusLogic_BIOSDiskParameters(s
+ 
+ static int BusLogic_ProcDirectoryInfo(struct Scsi_Host *shost, char *ProcBuffer, char **StartPointer, off_t Offset, int BytesAvailable, int WriteFlag)
+ {
+-	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) shost->hostdata;
++	struct BusLogic_HostAdapter *HostAdapter = bl_shost_priv(shost);
+ 	struct BusLogic_TargetStatistics *TargetStatistics;
+ 	int TargetID, Length;
+ 	char *Buffer;
+@@ -3575,9 +3616,9 @@ static struct scsi_host_template Bus_Log
+ #if 0
+ 	.eh_abort_handler = BusLogic_AbortCommand,
+ #endif
+-	.unchecked_isa_dma = 1,
+ 	.max_sectors = 128,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.slave_alloc = buslogic_adjust_queue,
+ };
+ 
+ /*
