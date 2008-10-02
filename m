@@ -1,287 +1,252 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [11/21] SCSI-ISA-DMA: Remove GFP_DMA uses in st/osst
-Date: Thu,  2 Oct 2008 09:58:49 +0200 (CEST)
-Message-ID: <20081002075849.4D7643E6A09@basil.firstfloor.org>
+Subject: [PATCH] [7/21] SCSI-ISA-DMA: Remove unchecked_isa_dma in gdth
+Date: Thu,  2 Oct 2008 09:58:45 +0200 (CEST)
+Message-ID: <20081002075845.36E453E6A09@basil.firstfloor.org>
 References: <20081002958.641114646@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:57101 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:57081 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbYJBH6v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 03:58:51 -0400
+	with ESMTP id S1752508AbYJBH6q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 03:58:46 -0400
 In-Reply-To: <20081002958.641114646@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, axboe@kernel.dk
 
 
-Parts of it were already dead code: the ->dma member was only set, but not read.
+- Audited ->cmnd use and it always copies
+- Allocate hostdata separately with GFP_DMA for the ISA case
+- Tell scsi layer to bounce sense_buffer for ISA case
+- Tell block layer to bounce for isa case
+- Remove unchecked_isa_dma
 
-Then also remove the code to allocate buffers with GFP_DMA, because this
-goes all through the block layer which bounces anyways.
-
-Also remove code to disable direct sg for unchecked_isa_dma
+Untested due to lack of hardware
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 Signed-off-by: Andi Kleen <andi@firstfloor.org>
 Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 ---
- drivers/scsi/osst.c |   24 ++++++++++--------------
- drivers/scsi/osst.h |    2 --
- drivers/scsi/st.c   |   35 ++++++++++++++++-------------------
- drivers/scsi/st.h   |    2 --
- 4 files changed, 26 insertions(+), 37 deletions(-)
+ drivers/scsi/gdth.c |   81 +++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 62 insertions(+), 19 deletions(-)
 
-Index: linux/drivers/scsi/osst.c
+Index: linux/drivers/scsi/gdth.c
 ===================================================================
---- linux.orig/drivers/scsi/osst.c
-+++ linux/drivers/scsi/osst.c
-@@ -158,8 +158,8 @@ static DEFINE_RWLOCK(os_scsi_tapes_lock)
+--- linux.orig/drivers/scsi/gdth.c
++++ linux/drivers/scsi/gdth.c
+@@ -139,6 +139,15 @@
+ #include <scsi/scsi_host.h>
+ #include "gdth.h"
  
- static int modes_defined = 0;
- 
--static struct osst_buffer *new_tape_buffer(int, int, int);
--static int enlarge_buffer(struct osst_buffer *, int);
-+static struct osst_buffer *new_tape_buffer(int, int);
-+static int enlarge_buffer(struct osst_buffer *);
- static void normalize_buffer(struct osst_buffer *);
- static int append_to_buffer(const char __user *, struct osst_buffer *, int);
- static int from_buffer(struct osst_buffer *, char __user *, int);
-@@ -4431,7 +4431,7 @@ static int __os_scsi_tape_open(struct in
- 		STp->header_ok = 0;
- 
- 	/* Allocate data segments for this device's tape buffer */
--	if (!enlarge_buffer(STp->buffer, STp->restr_dma)) {
-+	if (!enlarge_buffer(STp->buffer)) {
- 		printk(KERN_ERR "%s:E: Unable to allocate memory segments for tape buffer.\n", name);
- 		retval = (-EOVERFLOW);
- 		goto err_out;
-@@ -5210,7 +5210,7 @@ static long osst_compat_ioctl(struct fil
- /* Memory handling routines */
- 
- /* Try to allocate a new tape buffer skeleton. Caller must not hold os_scsi_tapes_lock */
--static struct osst_buffer * new_tape_buffer( int from_initialization, int need_dma, int max_sg )
-+static struct osst_buffer * new_tape_buffer( int from_initialization, int max_sg )
++
++struct host_ptr {
++	gdth_ha_str *host_ptr;
++	dma_addr_t dma;
++};
++
++#define gdth_shost_priv(host) (((struct host_ptr *)shost_priv(host))->host_ptr)
++#define gdth_shost_dma(host) (((struct host_ptr *)shost_priv(host))->dma)
++
+ static void gdth_delay(int milliseconds);
+ static void gdth_eval_mapping(ulong32 size, ulong32 *cyls, int *heads, int *secs);
+ static irqreturn_t gdth_interrupt(int irq, void *dev_id);
+@@ -443,7 +452,7 @@ static void gdth_scsi_done(struct scsi_c
+ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+                    int timeout, u32 *info)
  {
- 	int i;
- 	gfp_t priority;
-@@ -5231,19 +5231,18 @@ static struct osst_buffer * new_tape_buf
- 	tb->sg_segs = tb->orig_sg_segs = 0;
- 	tb->use_sg = max_sg;
- 	tb->in_use = 1;
--	tb->dma = need_dma;
- 	tb->buffer_size = 0;
- #if DEBUG
- 	if (debugging) 
- 		printk(OSST_DEB_MSG
--			"osst :D: Allocated tape buffer skeleton (%d bytes, %d segments, dma: %d).\n",
--			   i, max_sg, need_dma);
-+			"osst :D: Allocated tape buffer skeleton (%d bytes, %d segments).\n",
-+			   i, max_sg);
- #endif
- 	return tb;
+-    gdth_ha_str *ha = shost_priv(sdev->host);
++    gdth_ha_str *ha = gdth_shost_priv(sdev->host);
+     Scsi_Cmnd *scp;
+     struct gdth_cmndinfo cmndinfo;
+     DECLARE_COMPLETION_ONSTACK(wait);
+@@ -3893,7 +3902,7 @@ static const char *gdth_ctr_name(gdth_ha
+ 
+ static const char *gdth_info(struct Scsi_Host *shp)
+ {
+-    gdth_ha_str *ha = shost_priv(shp);
++    gdth_ha_str *ha = gdth_shost_priv(shp);
+ 
+     TRACE2(("gdth_info()\n"));
+     return ((const char *)ha->binfo.type_string);
+@@ -3901,7 +3910,7 @@ static const char *gdth_info(struct Scsi
+ 
+ static int gdth_eh_bus_reset(Scsi_Cmnd *scp)
+ {
+-    gdth_ha_str *ha = shost_priv(scp->device->host);
++    gdth_ha_str *ha = gdth_shost_priv(scp->device->host);
+     int i;
+     ulong flags;
+     Scsi_Cmnd *cmnd;
+@@ -3954,7 +3963,7 @@ static int gdth_eh_bus_reset(Scsi_Cmnd *
+ static int gdth_bios_param(struct scsi_device *sdev,struct block_device *bdev,sector_t cap,int *ip)
+ {
+     unchar b, t;
+-    gdth_ha_str *ha = shost_priv(sdev->host);
++    gdth_ha_str *ha = gdth_shost_priv(sdev->host);
+     struct scsi_device *sd;
+     unsigned capacity;
+ 
+@@ -3983,7 +3992,7 @@ static int gdth_bios_param(struct scsi_d
+ static int gdth_queuecommand(struct scsi_cmnd *scp,
+ 				void (*done)(struct scsi_cmnd *))
+ {
+-    gdth_ha_str *ha = shost_priv(scp->device->host);
++    gdth_ha_str *ha = gdth_shost_priv(scp->device->host);
+     struct gdth_cmndinfo *cmndinfo;
+ 
+     TRACE(("gdth_queuecommand() cmd 0x%x\n", scp->cmnd[0]));
+@@ -4636,6 +4645,13 @@ static int gdth_slave_configure(struct s
+     return 0;
  }
  
- /* Try to allocate a temporary (while a user has the device open) enlarged tape buffer */
--static int enlarge_buffer(struct osst_buffer *STbuffer, int need_dma)
-+static int enlarge_buffer(struct osst_buffer *STbuffer)
++static int gdth_adjust_queue(struct scsi_device *device)
++{
++	if (device->host->sense_buffer_isa)
++		blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
++	return 0;
++}
++
+ static struct scsi_host_template gdth_template = {
+         .name                   = "GDT SCSI Disk Array Controller",
+         .info                   = gdth_info, 
+@@ -4649,10 +4665,38 @@ static struct scsi_host_template gdth_te
+         .this_id                = -1,
+         .sg_tablesize           = GDTH_MAXSG,
+         .cmd_per_lun            = GDTH_MAXC_P_L,
+-        .unchecked_isa_dma      = 1,
+         .use_clustering         = ENABLE_CLUSTERING,
++	.slave_alloc		= gdth_adjust_queue,
+ };
+ 
++static struct Scsi_Host *gdth_host_alloc(struct device *dev)
++{
++	struct Scsi_Host *shost;
++	gdth_ha_str *board;
++	shost = scsi_host_alloc(&gdth_template, sizeof(struct host_ptr));
++	if (!shost)
++		return NULL;
++
++	board = dma_alloc_coherent(dev, sizeof(gdth_ha_str),
++				&gdth_shost_dma(shost), GFP_KERNEL);
++	if (!board) {
++		scsi_host_put(shost);
++		return NULL;
++	}
++
++	gdth_shost_priv(shost) = board;
++
++	return shost;
++}
++
++static void gdth_free_host(struct Scsi_Host *shost)
++{
++	gdth_ha_str *h = gdth_shost_priv(shost);
++	dma_free_coherent(h->pdev ? &h->pdev->dev : NULL, sizeof(gdth_ha_str),
++			  h, gdth_shost_dma(shost));
++	scsi_host_put(shost);
++}
++
+ #ifdef CONFIG_ISA
+ static int __init gdth_isa_probe_one(ulong32 isa_bios)
  {
- 	int segs, nbr, max_segs, b_size, order, got;
- 	gfp_t priority;
-@@ -5261,8 +5260,6 @@ static int enlarge_buffer(struct osst_bu
- 		return 0;
+@@ -4664,10 +4708,10 @@ static int __init gdth_isa_probe_one(ulo
+ 	if (!gdth_search_isa(isa_bios))
+ 		return -ENXIO;
  
- 	priority = GFP_KERNEL /* | __GFP_NOWARN */;
--	if (need_dma)
--		priority |= GFP_DMA;
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	shp = gdth_host_alloc(NULL);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
  
- 	/* Try to allocate the first segment up to OS_DATA_SIZE and the others
- 	   big enough to reach the goal (code assumes no segments in place) */
-@@ -5307,8 +5304,8 @@ static int enlarge_buffer(struct osst_bu
- #if DEBUG
- 	if (debugging) {
- 		printk(OSST_DEB_MSG
--			   "osst :D: Expanded tape buffer (%d bytes, %d->%d segments, dma: %d, at: %p).\n",
--			   got, STbuffer->orig_sg_segs, STbuffer->sg_segs, need_dma, STbuffer->b_data);
-+			   "osst :D: Expanded tape buffer (%d bytes, %d->%d segments, at: %p).\n",
-+			   got, STbuffer->orig_sg_segs, STbuffer->sg_segs, STbuffer->b_data);
- 		printk(OSST_DEB_MSG
- 			   "osst :D: segment sizes: first %d at %p, last %d bytes at %p.\n",
- 			   STbuffer->sg[0].length, page_address(STbuffer->sg[0].page),
-@@ -5805,7 +5802,7 @@ static int osst_probe(struct device *dev
- 	i = SDp->host->sg_tablesize;
- 	if (osst_max_sg_segs < i)
- 		i = osst_max_sg_segs;
--	buffer = new_tape_buffer(1, SDp->host->unchecked_isa_dma, i);
-+	buffer = new_tape_buffer(1, i);
- 	if (buffer == NULL) {
- 		write_unlock(&os_scsi_tapes_lock);
- 		printk(KERN_ERR "osst :E: Unable to allocate a tape buffer, device not attached.\n");
-@@ -5823,7 +5820,6 @@ static int osst_probe(struct device *dev
- 	tpnt->capacity = 0xfffff;
- 	tpnt->dirty = 0;
- 	tpnt->drv_buffer = 1;  /* Try buffering if no mode sense */
--	tpnt->restr_dma = (SDp->host)->unchecked_isa_dma;
- 	tpnt->density = 0;
- 	tpnt->do_auto_lock = OSST_AUTO_LOCK;
- 	tpnt->can_bsr = OSST_IN_FILE_POS;
-Index: linux/drivers/scsi/osst.h
-===================================================================
---- linux.orig/drivers/scsi/osst.h
-+++ linux/drivers/scsi/osst.h
-@@ -510,7 +510,6 @@ typedef struct os_header_s {
- /* The OnStream tape buffer descriptor. */
- struct osst_buffer {
-   unsigned char in_use;
--  unsigned char dma;	/* DMA-able buffer */
-   int buffer_size;
-   int buffer_blocks;
-   int buffer_bytes;
-@@ -544,7 +543,6 @@ struct osst_tape {
-   unsigned char can_partitions;
-   unsigned char two_fm;
-   unsigned char fast_mteom;
--  unsigned char restr_dma;
-   unsigned char scsi2_logical;
-   unsigned char default_drvbuffer;  /* 0xff = don't touch, value 3 bits */
-   unsigned char pos_unknown;        /* after reset position unknown */
-Index: linux/drivers/scsi/st.c
-===================================================================
---- linux.orig/drivers/scsi/st.c
-+++ linux/drivers/scsi/st.c
-@@ -182,8 +182,8 @@ static struct scsi_tape **scsi_tapes = N
+ 	error = -ENODEV;
+ 	if (!gdth_init_isa(isa_bios,ha))
+@@ -4691,7 +4735,7 @@ static int __init gdth_isa_probe_one(ulo
  
- static int modes_defined;
+ 	set_dma_mode(ha->drq,DMA_MODE_CASCADE);
+ 	enable_dma(ha->drq);
+-	shp->unchecked_isa_dma = 1;
++	shp->sense_buffer_isa = 1;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = ha->drq;
  
--static struct st_buffer *new_tape_buffer(int, int, int);
--static int enlarge_buffer(struct st_buffer *, int, int);
-+static struct st_buffer *new_tape_buffer(int, int);
-+static int enlarge_buffer(struct scsi_tape *t, struct st_buffer *, int);
- static void clear_buffer(struct st_buffer *);
- static void normalize_buffer(struct st_buffer *);
- static int append_to_buffer(const char __user *, struct st_buffer *, int);
-@@ -1155,7 +1155,7 @@ static int st_open(struct inode *inode, 
+@@ -4780,7 +4824,7 @@ static int __init gdth_isa_probe_one(ulo
+  out_free_irq:
+ 	free_irq(ha->irq, ha);
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_ISA */
+@@ -4796,10 +4840,11 @@ static int __init gdth_eisa_probe_one(us
+ 	if (!gdth_search_eisa(eisa_slot))
+ 		return -ENXIO;
+ 
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	/* RED-PEN NULL device ISA mask is 24bit, but EISA 32bit */
++	shp = gdth_host_alloc(NULL);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
+ 
+ 	error = -ENODEV;
+ 	if (!gdth_init_eisa(eisa_slot,ha))
+@@ -4815,7 +4860,6 @@ static int __init gdth_eisa_probe_one(us
+ 		goto out_host_put;
  	}
  
- 	/* See that we have at least a one page buffer available */
--	if (!enlarge_buffer(STp->buffer, PAGE_SIZE, STp->restr_dma)) {
-+	if (!enlarge_buffer(STp, STp->buffer, PAGE_SIZE)) {
- 		printk(KERN_WARNING "%s: Can't allocate one page tape buffer.\n",
- 		       name);
- 		retval = (-EOVERFLOW);
-@@ -1447,7 +1447,7 @@ static int setup_buffering(struct scsi_t
- 		}
+-	shp->unchecked_isa_dma = 0;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = 0xff;
  
- 		if (bufsize > STbp->buffer_size &&
--		    !enlarge_buffer(STbp, bufsize, STp->restr_dma)) {
-+		    !enlarge_buffer(STp, STbp, bufsize)) {
- 			printk(KERN_WARNING "%s: Can't allocate %d byte tape buffer.\n",
- 			       tape_name(STp), bufsize);
- 			retval = (-EOVERFLOW);
-@@ -3605,7 +3605,7 @@ static long st_compat_ioctl(struct file 
- /* Try to allocate a new tape buffer. Calling function must not hold
-    dev_arr_lock. */
- static struct st_buffer *
-- new_tape_buffer(int from_initialization, int need_dma, int max_sg)
-+ new_tape_buffer(int from_initialization, int max_sg)
- {
- 	int i, got = 0;
- 	gfp_t priority;
-@@ -3627,7 +3627,6 @@ static struct st_buffer *
- 	tb->use_sg = max_sg;
- 	tb->frp = (struct st_buf_fragment *)(&(tb->sg[0]) + max_sg);
+@@ -4913,7 +4957,7 @@ static int __init gdth_eisa_probe_one(us
+ 	free_irq(ha->irq, ha);
+ 	gdth_ctr_count--;
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_EISA */
+@@ -4930,10 +4974,10 @@ static int gdth_pci_probe_one(gdth_pci_s
  
--	tb->dma = need_dma;
- 	tb->buffer_size = got;
- 	sg_init_table(tb->sg, max_sg);
+ 	*ha_out = NULL;
  
-@@ -3636,9 +3635,11 @@ static struct st_buffer *
+-	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
++	shp = gdth_host_alloc(&pcistr->pdev->dev);
+ 	if (!shp)
+ 		return -ENOMEM;
+-	ha = shost_priv(shp);
++	ha = gdth_shost_priv(shp);
  
- 
- /* Try to allocate enough space in the tape buffer */
--static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dma)
-+static int enlarge_buffer(struct scsi_tape *t, struct st_buffer * STbuffer,
-+			  int new_size)
- {
--	int segs, nbr, max_segs, b_size, order, got;
-+	struct request_queue *q = t->device->request_queue;
-+	int segs, nbr, max_segs, b_size, got;
- 	gfp_t priority;
- 
- 	if (new_size <= STbuffer->buffer_size)
-@@ -3653,20 +3654,18 @@ static int enlarge_buffer(struct st_buff
- 		return 0;
- 
- 	priority = GFP_KERNEL | __GFP_NOWARN;
--	if (need_dma)
--		priority |= GFP_DMA;
--	for (b_size = PAGE_SIZE, order=0; order <= 6 &&
-+	for (b_size = PAGE_SIZE; b_size <= (PAGE_SIZE << 6) &&
- 	     b_size < new_size - STbuffer->buffer_size;
--	     order++, b_size *= 2)
-+	     b_size *= 2)
- 		;  /* empty */
- 
- 	for (segs = STbuffer->frp_segs, got = STbuffer->buffer_size;
- 	     segs < max_segs && got < new_size;) {
--		STbuffer->frp[segs].page = alloc_pages(priority, order);
-+		STbuffer->frp[segs].page = alloc_pages_mask(priority,
-+					b_size, blk_q_mask(q));
- 		if (STbuffer->frp[segs].page == NULL) {
- 			if (new_size - got <= (max_segs - segs) * b_size / 2) {
- 				b_size /= 2; /* Large enough for the rest of the buffers */
--				order--;
- 				continue;
- 			}
- 			DEB(STbuffer->buffer_size = got);
-@@ -3701,11 +3700,10 @@ static void clear_buffer(struct st_buffe
- /* Release the extra buffer */
- static void normalize_buffer(struct st_buffer * STbuffer)
- {
--	int i, order;
-+	int i;
- 
- 	for (i = STbuffer->orig_frp_segs; i < STbuffer->frp_segs; i++) {
--		order = get_order(STbuffer->frp[i].length);
--		__free_pages(STbuffer->frp[i].page, order);
-+		__free_pages_mask(STbuffer->frp[i].page, STbuffer->frp[i].length);
- 		STbuffer->buffer_size -= STbuffer->frp[i].length;
+ 	error = -ENODEV;
+ 	if (!gdth_init_pci(pdev, pcistr, ha))
+@@ -4952,7 +4996,6 @@ static int gdth_pci_probe_one(gdth_pci_s
+ 		goto out_host_put;
  	}
- 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
-@@ -3934,7 +3932,7 @@ static int st_probe(struct device *dev)
- 		SDp->request_queue->max_phys_segments);
- 	if (st_max_sg_segs < i)
- 		i = st_max_sg_segs;
--	buffer = new_tape_buffer(1, (SDp->host)->unchecked_isa_dma, i);
-+	buffer = new_tape_buffer(1, i);
- 	if (buffer == NULL) {
- 		printk(KERN_ERR
- 		       "st: Can't allocate new tape buffer. Device not attached.\n");
-@@ -4013,7 +4011,6 @@ static int st_probe(struct device *dev)
- 	tpnt->dirty = 0;
- 	tpnt->in_use = 0;
- 	tpnt->drv_buffer = 1;	/* Try buffering if no mode sense */
--	tpnt->restr_dma = (SDp->host)->unchecked_isa_dma;
- 	tpnt->use_pf = (SDp->scsi_level >= SCSI_2);
- 	tpnt->density = 0;
- 	tpnt->do_auto_lock = ST_AUTO_LOCK;
-Index: linux/drivers/scsi/st.h
-===================================================================
---- linux.orig/drivers/scsi/st.h
-+++ linux/drivers/scsi/st.h
-@@ -33,7 +33,6 @@ struct st_request {
  
- /* The tape buffer descriptor. */
- struct st_buffer {
--	unsigned char dma;	/* DMA-able buffer */
- 	unsigned char do_dio;   /* direct i/o set up? */
- 	unsigned char cleared;  /* internal buffer cleared after open? */
- 	int buffer_size;
-@@ -113,7 +112,6 @@ struct scsi_tape {
- 	unsigned char two_fm;
- 	unsigned char fast_mteom;
- 	unsigned char immediate;
--	unsigned char restr_dma;
- 	unsigned char scsi2_logical;
- 	unsigned char default_drvbuffer;	/* 0xff = don't touch, value 3 bits */
- 	unsigned char cln_mode;			/* 0 = none, otherwise sense byte nbr */
+-	shp->unchecked_isa_dma = 0;
+ 	shp->irq = ha->irq;
+ 	shp->dma_channel = 0xff;
+ 
+@@ -5059,7 +5102,7 @@ static int gdth_pci_probe_one(gdth_pci_s
+ 	free_irq(ha->irq, ha);
+ 	gdth_ctr_count--;
+  out_host_put:
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_PCI */
+@@ -5101,7 +5144,7 @@ static void gdth_remove_one(gdth_ha_str 
+ 		pci_unmap_single(ha->pdev,ha->ccb_phys,
+ 			sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
+ 
+-	scsi_host_put(shp);
++	gdth_free_host(shp);
+ }
+ 
+ static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
