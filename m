@@ -1,91 +1,62 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [21/21] SCSI-ISA-DMA: Convert DMA buffers in ch.c to allocate via the block layer
-Date: Thu,  2 Oct 2008 09:58:59 +0200 (CEST)
-Message-ID: <20081002075859.83EFE3E6A09@basil.firstfloor.org>
-References: <20081002958.641114646@firstfloor.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: mac scsi, ncr5380
+Date: Thu, 02 Oct 2008 11:33:42 +0300
+Message-ID: <48E48766.4010903@panasas.com>
+References: <Pine.LNX.4.64.0809240019001.3458@loopy.telegraphics.com.au> <48DF8398.30000@panasas.com> <Pine.LNX.4.64.0810011703120.13318@loopy.telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:57129 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbYJBH7A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 03:59:00 -0400
-In-Reply-To: <20081002958.641114646@firstfloor.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:5999 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752669AbYJBIdr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2008 04:33:47 -0400
+In-Reply-To: <Pine.LNX.4.64.0810011703120.13318@loopy.telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, axboe@kernel.dk
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, Christoph Hellwig <hch@infradead.org>
 
+Finn Thain wrote:
+> 
+> On Sun, 28 Sep 2008, Boaz Harrosh wrote:
+> 
+>> From what I understand, (And again I do not), the ESP sounds a lot like 
+>> the NCR5380. I would craft a very similar copy of the new ESP stack, 
+>> with it's central library and function-vector registration, The 
+>> scsi-generic part is all there, in full glory. Then one concentrated 
+>> effort should go into the basic/general chip programing, which lots of 
+>> it could be ripped from current code, and the different platform 
+>> implementation becomes one liners, if the new ESP stack is any 
+>> indication.
+> 
+> I still do not understand the whole ESP driver but when I wrote mac_esp.c 
+> I learned the value of the layered structure it provided.
+> 
+> I still have a lot to learn about the SCSI layers and the APIs too. I'm 
+> reading Documentation/scsi at the moment. If you know of any other 
+> introductory reading material, that would be a help.
+> 
 
-Instead of specifying GFP_DMA always ask the block layer to get 
-some dma'able memory
+I don't know anything about the ESP driver, You should contact
+David S. Miller, Perhaps he will have some time to help you.
 
-Signed-off-by: Andi Kleen <ak@suse.de>
-Signed-off-by: Andi Kleen <andi@firstfloor.org>
-Signed-off-by: Andi Kleen <ak@linux.intel.com>
+The SCSI-API I know more about. Please don't hesitate to ask 
+any question, I will be glad to answer.
 
----
- drivers/scsi/ch.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+>> From my passed experience, there becomes a source code state when a 
+>> rewrite is less effort then any cleanup or enhancements. From the small 
+>> changes I had to do to the xxx_NCR5380 family of drivers, my guts 
+>> feeling scream "rewrite", so here I voice them. In the mid/long-term you 
+>> will work much less. And be much more satisfied from the results.
+> 
+> This makes sense. Thanks for your feedback.
+> 
+> Finn
+> 
+>> Good lock
+>> Boaz
+>> --
 
-Index: linux/drivers/scsi/ch.c
-===================================================================
---- linux.orig/drivers/scsi/ch.c
-+++ linux/drivers/scsi/ch.c
-@@ -232,7 +232,8 @@ ch_read_element_status(scsi_changer *ch,
- 	u_char  *buffer;
- 	int     result;
- 
--	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-+	buffer = get_pages_mask(GFP_KERNEL, 512,
-+				blk_q_mask(ch->device->request_queue));
- 	if(!buffer)
- 		return -ENOMEM;
- 
-@@ -262,7 +263,7 @@ ch_read_element_status(scsi_changer *ch,
- 		}
- 		dprintk("READ ELEMENT STATUS for element 0x%x failed\n",elem);
- 	}
--	kfree(buffer);
-+	free_pages_mask(buffer, 512);
- 	return result;
- }
- 
-@@ -289,9 +290,11 @@ ch_readconfig(scsi_changer *ch)
- 	int     result,id,lun,i;
- 	u_int   elem;
- 
--	buffer = kzalloc(512, GFP_KERNEL | GFP_DMA);
-+	buffer = get_pages_mask(GFP_KERNEL, 512,
-+				blk_q_mask(ch->device->request_queue));
- 	if (!buffer)
- 		return -ENOMEM;
-+	memset(buffer, 0, 512);
- 
- 	memset(cmd,0,sizeof(cmd));
- 	cmd[0] = MODE_SENSE;
-@@ -402,7 +405,7 @@ ch_readconfig(scsi_changer *ch)
- 		}
- 	}
- 	ch->voltags = 1;
--	kfree(buffer);
-+	free_pages_mask(buffer, 512);
- 
- 	return 0;
- }
-@@ -737,7 +740,8 @@ static long ch_ioctl(struct file *file,
- 			return -EINVAL;
- 		elem = ch->firsts[cge.cge_type] + cge.cge_unit;
- 
--		buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-+		buffer = get_pages_mask(GFP_KERNEL, 512,
-+					blk_q_mask(ch->device->request_queue));
- 		if (!buffer)
- 			return -ENOMEM;
- 		mutex_lock(&ch->lock);
-@@ -791,7 +795,7 @@ static long ch_ioctl(struct file *file,
- 			vprintk("device has no volume tag support\n");
- 			goto voltag_retry;
- 		}
--		kfree(buffer);
-+		free_pages_mask(buffer, 512);
- 		mutex_unlock(&ch->lock);
- 
- 		if (copy_to_user(argp, &cge, sizeof (cge)))
+Thanks for looking into this. We are here for any assistance
+Boaz
