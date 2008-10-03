@@ -1,96 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Harvey Harrison" <harvey.harrison@gmail.com>
 Subject: Re: [patch 10/17] scsi: gdth.c use unaligned access helpers
-Date: Fri, 03 Oct 2008 11:23:01 -0500
-Message-ID: <1223050981.3230.21.camel@localhost.localdomain>
+Date: Fri, 3 Oct 2008 10:24:22 -0700
+Message-ID: <590657100810031024r48b6d52ctce83fb81a41f758@mail.gmail.com>
 References: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
+	 <1223050981.3230.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34408 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752564AbYJCQXd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 12:23:33 -0400
-In-Reply-To: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
+Received: from wf-out-1314.google.com ([209.85.200.174]:25869 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753190AbYJCRYX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 13:24:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1726848wfd.4
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2008 10:24:22 -0700 (PDT)
+In-Reply-To: <1223050981.3230.21.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, harvey.harrison@gmail.com, bharrosh@panasas.com, Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, bharrosh@panasas.com, Matthew Wilcox <matthew@wil.cx>
 
-OK, there are two ways to go on this.  Either we eliminate the current
-SCSI wrappers for this, or we extend them and use them.  Matthew Wilcox
-already has a patch for the extensions, so do we have a consensus?
+On Fri, Oct 3, 2008 at 9:23 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> OK, there are two ways to go on this.  Either we eliminate the current
+> SCSI wrappers for this, or we extend them and use them.  Matthew Wilcox
+> already has a patch for the extensions, so do we have a consensus?
+>
 
-James
+Pointers to the extensions please.
 
-
-On Mon, 2008-09-22 at 14:56 -0700, akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Remove two now unnecessary local vars.
-> 
-> [akpm@linux-foundation.org: coding-style fixes]
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/gdth.c |   23 ++++++++++-------------
->  1 file changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
-> --- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-> +++ a/drivers/scsi/gdth.c
-> @@ -131,6 +131,7 @@
->  #include <asm/system.h>
->  #include <asm/io.h>
->  #include <asm/uaccess.h>
-> +#include <asm/unaligned.h>
->  #include <linux/spinlock.h>
->  #include <linux/blkdev.h>
->  #include <linux/scatterlist.h>
-> @@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
->  {
->      register gdth_cmd_str *cmdp;
->      struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-> -    ulong32 cnt, blockcnt;
-> -    ulong64 no, blockno;
-> +    ulong32 blockcnt;
-> +    ulong64 blockno;
->      int i, cmd_index, read_write, sgcnt, mode64;
->  
->      cmdp = ha->pccb;
-> @@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
->  
->      if (read_write) {
->          if (scp->cmd_len == 16) {
-> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
-> -            blockno = be64_to_cpu(no);
-> -            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
-> -            blockcnt = be32_to_cpu(cnt);
-> +		blockno = get_unaligned_be64(&scp->cmnd[2]);
-> +		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
->          } else if (scp->cmd_len == 10) {
-> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
-> -            blockno = be32_to_cpu(no);
-> -            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
-> -            blockcnt = be16_to_cpu(cnt);
-> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
-> +		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
->          } else {
-> -            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
-> -            blockno = be32_to_cpu(no) & 0x001fffffUL;
-> -            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
-> +		blockno &= 0x001fffffUL;
-> +		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
->          }
->          if (mode64) {
->              cmdp->u.cache64.BlockNo = blockno;
-> _
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Harvey
