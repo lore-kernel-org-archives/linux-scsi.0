@@ -1,147 +1,231 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [dm-devel] Re: [PATCH 1/1] scsi: export busy state via
-	q->lld_busy_fn()
-Date: Fri, 03 Oct 2008 16:51:46 -0500
-Message-ID: <1223070706.3230.54.camel@localhost.localdomain>
-References: <20081001.145039.39152159.k-ueda@ct.jp.nec.com>
-	 <1223057696.3230.38.camel@localhost.localdomain>
-	 <20081003.160623.48532879.k-ueda@ct.jp.nec.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [ANNOUNCE]: ConfigFS enabled Generic Target Mode and iSCSI
+	Target Stack on v2.6.27-rc7
+Date: Fri, 03 Oct 2008 16:14:17 -0700
+Message-ID: <1223075657.15764.178.camel@haakon2.linux-iscsi.org>
+References: <1222716101.4296.41.camel@haakon2.linux-iscsi.org>
+	 <48E3B529.4060406@vlnb.net>
+	 <1222907050.15764.56.camel@haakon2.linux-iscsi.org>
+	 <48E4FE3F.2080707@vlnb.net>
+	 <1222982972.15764.118.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39878 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752649AbYJCVwT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 17:52:19 -0400
-In-Reply-To: <20081003.160623.48532879.k-ueda@ct.jp.nec.com>
+Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:31981 "HELO
+	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752110AbYJCXOV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 19:14:21 -0400
+In-Reply-To: <1222982972.15764.118.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, j-nomura@ce.jp.nec.com, akpm@linux-foundation.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, Greg KH <greg@kroah.com>, Jerome Martin <tramjoe.merin@gmail.com>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Joel Becker <joel.becker@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Fri, 2008-10-03 at 16:06 -0400, Kiyoshi Ueda wrote:
-> Hi James,
-> 
-> On Fri, 03 Oct 2008 13:14:56 -0500, James Bottomley wrote:
-> > On Wed, 2008-10-01 at 14:50 -0400, Kiyoshi Ueda wrote:
-> > > Hi James,
+On Thu, 2008-10-02 at 14:29 -0700, Nicholas A. Bellinger wrote:
+> On Thu, 2008-10-02 at 21:00 +0400, Vladislav Bolkhovitin wrote:
+> > Nicholas A. Bellinger wrote:
+> > >>> # Add some more HBA and storage Objects
+> > >>> target:~# mkdir -p $TARGET/fileio_0/file_object
+> > >>> target:~# mkdir -p $TARGET/rd_mcp_0/ramdisk0
+> > >>> target:~# mkdir -p $TARGET/rd_dr_0/ramdisk0
+> > >>>
+> > >>> target:~# mkdir -p $TARGET/pscsi_0/sdd
+> > >>> target:~# echo scsi_channel_id=0,scsi_target_id=3,scsi_lun_id=0 > $TARGET/pscsi_0/sdd/dev_control   
+> > >>> target:~# echo 1 > $TARGET/pscsi_0/sdd/dev_enable 
+> > >>>
+> > >>> # Now, create LUN 1 and another Port Symlink to a new device on the same $IQN/tpgt_1
+> > >>> mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1"
+> > >>> # Create the iSCSI Target Port Mapping for $DEF_IN/tpgt_1 LUN 1
+> > >>> # to lvm_test0 and give it the port symbolic name of lio_east_port
+> > >>> ln -s $TARGET/pscsi_0/sdd/ "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1/lio_east_port"
+> > >>>
+> > >>> target:~# tree $CONFIGFS
+> > >>> /sys/kernel/config/
+> > >>> `-- target
+> > >>>     |-- core
+> > >>>     |   |-- fileio_0
+> > >>>     |   |   |-- file_object
+> > >>>     |   |   |   |-- dev_control
+> > >>>     |   |   |   |-- dev_enable
+> > >>>     |   |   |   `-- dev_info
+> > >>>     |   |   `-- hba_info
+> > >>>     |   |-- iblock_0
+> > >>>     |   |   |-- hba_info
+> > >>>     |   |   `-- lvm_test0
+> > >>>     |   |       |-- dev_control
+> > >>>     |   |       |-- dev_enable
+> > >>>     |   |       `-- dev_info
+> > >>>     |   |-- pscsi_0
+> > >>>     |   |   |-- hba_info
+> > >>>     |   |   `-- sdd
+> > >>>     |   |       |-- dev_control
+> > >>>     |   |       |-- dev_enable
+> > >>>     |   |       `-- dev_info
+> > >>>     |   |-- rd_dr_0
+> > >>>     |   |   |-- hba_info
+> > >>>     |   |   `-- ramdisk0
+> > >>>     |   |       |-- dev_control
+> > >>>     |   |       |-- dev_enable
+> > >>>     |   |       `-- dev_info
+> > >>>     |   `-- rd_mcp_0
+> > >>>     |       |-- hba_info
+> > >>>     |       `-- ramdisk0
+> > >>>     |           |-- dev_control
+> > >>>     |           |-- dev_enable
+> > >>>     |           `-- dev_info
+> > >>>     |-- iscsi
+> > >>>     |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+> > >>>     |   |   `-- tpgt_1
+> > >>>     |   |       |-- lun
+> > >>>     |   |       |   |-- lun_0
+> > >>>     |   |       |   |   |-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
+> > >>>     |   |       |   |   |-- port_control
+> > >>>     |   |       |   |   `-- port_info
+> > >>>     |   |       |   `-- lun_1
+> > >>>     |   |       |       |-- lio_east_port -> ../../../../../../target/core/pscsi_0/sdd
+> > >>>     |   |       |       |-- port_control
+> > >>>     |   |       |       `-- port_info
+> > >>>     |   |       |-- np
+> > >>>     |   |       |   `-- 172.16.201.137:3260
+> > >>>     |   |       |       `-- portal_info
+> > >>>     |   |       |-- tpg_control
+> > >>>     |   |       `-- tpg_enable
+> > >>>     |   `-- lio_version
+> > >>>     `-- version
+> > >>>
+> > >>> 22 directories, 29 files
+> > >> It's good, I like it. The only thing concerns me that, considering how 
+> > >> much time *I* spent to understand it, for an average user understanding 
+> > >> it can be an unbearable nightmare ;)
+> > >>
 > > > 
-> > > I hope the previous RFC patch(*) would be no problem, since I haven't
-> > > gotten any negative comment.
-> > >     (*) http://lkml.org/lkml/2008/9/25/262
+> > > Well, the idea is not necessarily making the configfs interface the
+> > > easiest to use in the world by user directly through $CONFIGFS, but to
+> > > make the CLI scripts that speak $CONFIGFS/target CLI, and of course the
+> > > actual UIs for user that interact with generic target core and
+> > > $FABRIC_MODs be as simple and elegent as possible.  
 > > > 
-> > > So could you take this patch for 2.6.28 additionally?
-> > > This patch implements a new interface of the block layer for
-> > > request stacking drivers.
-> > > There should be no effect on existing drivers' behavior.
+> > > That is what I believe the balance that a configfs enabled generic
+> > > target core provides to both the $CONFIGFS/target API and to $FABRIC_MOD
+> > > maintainers looking to port their code to use a generic control
+> > > infrastructure.  :-)
 > > > 
-> > > This patch was created on top of the commit below of scsi-post-merge-2.6.
-> > > ---------------------------------------------------------------------
-> > > commit e49f03f37104c0e7cae7c455480069bada00932f
-> > > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > Date:   Fri Sep 12 16:46:51 2008 -0500
+> > >> In a few days I'll write a proposed configfs hierarchy for existing SCST 
+> > >> /proc interface.
 > > > 
-> > >     [SCSI] scsi_error: fix target reset handling
-> > > ---------------------------------------------------------------------
-> > > 
-> > > And this patch depends on the following block layer patch, which
-> > > is in Jens' for-2.6.28 of linux-2.6-block.
-> > >     http://lkml.org/lkml/2008/9/29/142
-> > > 
-> > > Thanks,
-> > > Kiyoshi Ueda
-> > > 
-> > > 
-> > > Subject: [PATCH 1/1] scsi: export busy state via q->lld_busy_fn()
-> > > 
-> > > This patch implements q->lld_busy_fn() for scsi mid layer to export
-> > > its busy state.
-> > > 
-> > > Please note that it checks the cached information (sdev->lld_busy)
-> > > for efficiency, instead of checking the actual state of
-> > > sdev/starget/shost everytime.
-> > > 
-> > > So the care must be taken not to leave sdev->lld_busy = 1 for
-> > > the following cases:
-> > >     - when there is no request in the sdev queue
-> > >     - when scsi can't dispatch I/Os anymore and needs to kill I/Os
-> > > Otherwise, request stacking drivers may not submit any request,
-> > > and then, nobody sets back lld_busy = 0 and that causes deadlock.
-> > > 
-> > > OTOH, it has no major problem in setting sdev->lld_busy = 0 even when
-> > > the starget/shost is actually busy, because newly submitted request
-> > > will soon turn it to 1 in scsi_request_fn().
-> > > 
-> > > 
-> > > Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> > > Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > Cc: Mike Christie <michaelc@cs.wisc.edu>
-> > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > ---
-> > >  drivers/scsi/scsi.c        |    4 ++--
-> > >  drivers/scsi/scsi_lib.c    |   20 +++++++++++++++++++-
-> > >  include/scsi/scsi_device.h |   13 +++++++++++++
-> > >  3 files changed, 34 insertions(+), 3 deletions(-)
-> > > 
-> > > Index: scsi-post-merge-2.6/drivers/scsi/scsi_lib.c
-> > > ===================================================================
-> > > --- scsi-post-merge-2.6.orig/drivers/scsi/scsi_lib.c
-> > > +++ scsi-post-merge-2.6/drivers/scsi/scsi_lib.c
-> > > @@ -480,6 +480,8 @@ void scsi_device_unbusy(struct scsi_devi
-> > >  	spin_unlock(shost->host_lock);
-> > >  	spin_lock(sdev->request_queue->queue_lock);
-> > >  	sdev->device_busy--;
-> > > +	if (sdev->device_busy < sdev->queue_depth && !sdev->device_blocked)
-> > > +		sdev->lld_busy = 0;
-> > >  	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-> > >  }
-> > >  
-> > > @@ -1535,6 +1537,13 @@ static void scsi_softirq_done(struct req
-> > >  	}
-> > >  }
-> > >  
-> > > +static int scsi_lld_busy(struct request_queue *q)
-> > > +{
-> > > +	struct scsi_device *sdev = q->queuedata;
-> > > +
-> > > +	return sdev ? sdev->lld_busy : 0;
-> > > +}
+> > > Sounds good!  Please let me know if you have questions.
 > > 
-> > Since you've moved to a functional approach, why is this lld_busy flag
-> > still necessary?  Surely this function can just check the three blocked
-> > conditions and the two overqueue ones at this point without ever having
-> > to reach into any of the SCSI internals?
+> > There's one unsolved problem. As I've already written, SCST core needs 
+> > an ability to provide to user space a large amount of data, which may 
+> > not fit to a single page.
+> >
+> > A list of connected initiators ("sessions" 
+> > file in /proc), for instance. Each initiator in that list has a number 
+> > of attributes: initiator name, target template name, count of 
+> > outstanding commands, etc. The logical way for that would be to create a 
+> > subdirectory for each initiator, like:
+> > 
+> > /sys/kernel/config/
+> > `-- target
+> >      `-- sessions
+> >          `-- session1
+> >          |   |-- initiator_name
+> >          |   |-- template_name
+> >          |   `-- commands
+> >          |
+> >          `-- session2
+> >              |-- initiator_name
+> >              `-- template_name
+> >              `-- commands
+> >
 > 
-> This flag is not necessary for the functionality, it's for efficiency.
-> I could take the "everytime checking" approach above, but I think
-> caching the busy state into the flag is more efficient, since:
+> The the Initiator Port ACLs need to go
+> under /sys/kernel/config/target/$FABRIC because the struct fabric_acl *
+> will always contain fabric dependent config items.  For example, Since
+> these struct fabric_acl_t do *NOT* symlink directly back to
+> target_core_mod under /sys/kernel/config/target/core/$HBA/$DEV, but to
+> fabric_lun_t (iscsi_lun_t in my case) to Symlink to
+> a /sys/kernel/config/target/core/$HBA/$DEV that has been registered with
+> the generic target configfs infrastructure.
 > 
->   - The check function will be called from request stacking drivers
->     frequently (e.g. request-based dm calls it everytime before
->     an request is dispatched from the dm device.)
+> Here is what I am thinking wrt /sys/kernel/config/target/iscsi and iSCSI
+> Initiator Node ACLs to iSCSI Portal Groups and iSCSI LUNs attached to
+> those Portal Groups.  There are two cases:
+> 
+> *) The production case with with user creating those ACLs under $FABRIC
+> (which is what I will focus on now).
+> 
+> * And "Demo Mode" case where any Initiator logging into
+> $FABRIC/$ENDPOINT/$PORTAL can have access to all
+> $FABRIC/$ENDPOINT/lun/lun_*/*my_ports*
+> 
+> The production ACL case would look like:
+> 
+> export CONFIGFS=/sys/kernel/config/
+> export TARGET=/sys/kernel/config/target/core/
+> export FABRIC=/sys/kernel/config/target/iscsi/
+> 
+> TARGET_IQN=iqn.2003-01.org.linux-iscsi.ps3-cell.ppc64:sn.f8f651bd5fec
+> INITIATOR_IQN=iqn.1993-08.org.debian:01.f82074ca555f
+> 
+> <Setup $STORAGE_OBJECTs under $TARGET>
+> 
+> # Create the LIO-target endpoint
+> mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/np/172.16.201.137:3260"
+> mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0"
+> 
+> <Setup Port Symlinks from $TARGET to $TARGET_IQN/tpgt_1/lun/lun_0>
+> 
+> # Create the Initiator ACL under $TARGET_IQN/tpgt_1
+> mkdir -p $"FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN"
+> # Allow $INITIATOR_IQN access to tpgt_1/lun/lun_0/
+> ln -s "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0" \
+> 	"$FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN/lun_0"
+> 
+> >From there, you don't have to worry about PAGE_SIZE limitiations w/o, I
+> can simply use use:
+> 
+> cat $FABRIC/iqn*/tpgt*/initiators/*/session
+> 
+> to see which acl'ed iSCSI Initiators are logged in on all iSCSI Target
+> Ports.
+> 
+> Also I should add that I am currently using /proc/scsi_target/mib
+> and /proc/iscsi_target_mib for READ-ONLY data with target_core_mod.ko
+> and iscsi_target_mod.ko respectively.  For the other "Demo Mode" case
+> mentioned above, I am currently using /proc/iscsi_target/mib/sess_attr
+> to see the active sessions for LIO-Target.
+> 
+> I will be implementing this model over the next days..  I will post the
+> commit once its up and you can have a look..
+> 
 
-Hmm, well, so will the operations you've put into the stack, but for
-every request, not just for stacked drivers.
+Ok, here is the commit diff for adding Initiator ACLS to
+iscsi/$IQN/$TPGT/ under the acls/ subdirectory (instead of "initiators"
+in the example above).
 
->   - The scsi busy state checking needs queue lock and host lock
->     even while the scsi busy state doesn't changed from the previous
->     checking.
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=0a451affbe236b5538e5de06242372715e3ac52c;hp=374e8ace84ca58490be22d881f017d48c6742b50
 
-You don't need the locks ... you don't care if the values change as you
-read them because this is just heuristic.  You do care that you get an
-architectural guarantee that you read a consistent value (as in if the
-variable is altering you read either the before or after) but this isn't
-necessary as the algorithm is statistical: as long as it gets bogus
-values infrequently the effects won't be noticeable different.
+Other than the name change, everything is functioning in the commit as
+described in the example above.  I am able to successfully mkdir(2) and
+rmdir(2) iscsi/$IQN/$TPGT/acls/$INITIATOR_IQN, as well as create the
+SymLinks from iscsi/$IQN/$TPGT/lun/lun_* to
+iscsi/$IQN/$TPGT/acls/$INITIATOR_IQN/lun_* to create the Initiator TPGT
+LUN Mappings.
 
-> Actually, I don't get any performance problem by some simple testings
-> of the "everytime checking" approach.
-> Do you prefer the "everytime checking" approach to simplify the patch?
+There are a couple of remaining items that I am still working on WRT the
+Initiator ACL code.  One is that the CmdSN Queue Depth for the Initiator
+is hardcoded.  This needs to be a configfs attribute under
+iscsi/$IQN/$TPGT/acls/$INITIATOR_NAME/, and then enabled with a
+attribute under the same $INITIATOR_NAME directory.  Another is
+assigning READ-ONLY (its hardcoded to R/W for now) access to one of the
+initiator's TPG LUN mappings.  I was thinking name in the TPG LUN
+Symlink destination name, we could include "lun_0:RO" in order to make
+this Initiator's LUN be READ-ONLY.
 
-I think so, thanks.
+Anyways, this are pretty minor and I should be commiting the remaining
+pieces over the weekend.
 
-James
-
+--nab
 
