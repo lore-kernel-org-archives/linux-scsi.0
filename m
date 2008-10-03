@@ -1,90 +1,96 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Alternative TRIM proposal
-Date: Fri, 3 Oct 2008 09:42:37 -0600
-Message-ID: <20081003154237.GT13822@parisc-linux.org>
-References: <200810021732.m92HW7qL015836@coles02.co.lsil.com> <OF93179061.8BBD23CF-ON862574D6.006C600D-862574D6.006E8EBB@seagate.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 10/17] scsi: gdth.c use unaligned access helpers
+Date: Fri, 03 Oct 2008 11:23:01 -0500
+Message-ID: <1223050981.3230.21.camel@localhost.localdomain>
+References: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53446 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789AbYJCPmj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 11:42:39 -0400
-Content-Disposition: inline
-In-Reply-To: <OF93179061.8BBD23CF-ON862574D6.006C600D-862574D6.006E8EBB@seagate.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34408 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752564AbYJCQXd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 12:23:33 -0400
+In-Reply-To: <200809222156.m8MLum2c032291@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerry.Houlder@seagate.com
-Cc: dougg@torque.net, "Knight, Frederick" <Frederick.Knight@netapp.com>, linux-scsi@vger.kernel.org, t10@t10.org, David Woodhouse <dwmw2@infradead.org>
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, harvey.harrison@gmail.com, bharrosh@panasas.com, Matthew Wilcox <matthew@wil.cx>
 
-On Thu, Oct 02, 2008 at 03:07:34PM -0500, Gerry.Houlder@seagate.com wrote:
-> I will not be able to attend the call tomorrow, so I will offer my opinions
-> on the T10 reflector.
+OK, there are two ways to go on this.  Either we eliminate the current
+SCSI wrappers for this, or we extend them and use them.  Matthew Wilcox
+already has a patch for the extensions, so do we have a consensus?
 
-Thanks, Gerry.
+James
 
-> (a) I don't see any point to doing a 12 byte TRIM command. The 16 byte
-> command is more future proof and any SCSI system (except maybe ATAPI) that
-> can do 10 and 12 byte commands can also do 16 byte commands.
 
-Unfortunately, that's not true.  A survey of the SCSI host adapters in
-Linux shows that many only support 12-byte commands.  A reasonable
-person might decide that it's not worth supporting these adapters any
-more, but I don't want to see support disappear because we didn't know
-about it.
+On Mon, 2008-09-22 at 14:56 -0700, akpm@linux-foundation.org wrote:
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> Remove two now unnecessary local vars.
+> 
+> [akpm@linux-foundation.org: coding-style fixes]
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/gdth.c |   23 ++++++++++-------------
+>  1 file changed, 10 insertions(+), 13 deletions(-)
+> 
+> diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
+> --- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
+> +++ a/drivers/scsi/gdth.c
+> @@ -131,6 +131,7 @@
+>  #include <asm/system.h>
+>  #include <asm/io.h>
+>  #include <asm/uaccess.h>
+> +#include <asm/unaligned.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/blkdev.h>
+>  #include <linux/scatterlist.h>
+> @@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+>  {
+>      register gdth_cmd_str *cmdp;
+>      struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+> -    ulong32 cnt, blockcnt;
+> -    ulong64 no, blockno;
+> +    ulong32 blockcnt;
+> +    ulong64 blockno;
+>      int i, cmd_index, read_write, sgcnt, mode64;
+>  
+>      cmdp = ha->pccb;
+> @@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+>  
+>      if (read_write) {
+>          if (scp->cmd_len == 16) {
+> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
+> -            blockno = be64_to_cpu(no);
+> -            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
+> -            blockcnt = be32_to_cpu(cnt);
+> +		blockno = get_unaligned_be64(&scp->cmnd[2]);
+> +		blockcnt = get_unaligned_be64(&scp->cmnd[10]);
+>          } else if (scp->cmd_len == 10) {
+> -            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
+> -            blockno = be32_to_cpu(no);
+> -            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
+> -            blockcnt = be16_to_cpu(cnt);
+> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
+> +		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
+>          } else {
+> -            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
+> -            blockno = be32_to_cpu(no) & 0x001fffffUL;
+> -            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
+> +		blockno = get_unaligned_be32(&scp->cmnd[2]);
+> +		blockno &= 0x001fffffUL;
+> +		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
+>          }
+>          if (mode64) {
+>              cmdp->u.cache64.BlockNo = blockno;
+> _
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> (b) Likewise I don't see any point to a 32 byte TRIM command. The extra
-> fields in the CDB are for checking Protection Information fields attached
-> to user data; since the trim command won't transfer any user data these
-> fields add no value.
-
-I may well have been mistaken in my understanding of the protection
-information.  I thought there was potential for the drive to check the
-protection information currently written to the media and to fail the
-TRIM if it wasn't there.  It would be just a verification step.
-
-> (d) I'm not sure why you don't like the T13 approach, where multiple
-> extents can be trimmed in one command instead of having to send a separate
-> command for each extent to be trimmed. If you tell me that when a person
-> goes to the GUI file manager and marks 10 files for deletion, some of which
-> might be fragmented into several extends, the operating system will only
-> trim one extent at a time (waiting for each to be trimmed before doing the
-> next) rather than combining multiple extents into one interface command
-> then perhaps there is no advantage to being able to do multiple extents.
-> The advantage of multiple extents in one command is using less interface
-> bus bandwidth. The only disadvantage is error recovery; if the command
-> fails or is aborted for other reasons it is messier because the host has to
-> figure out which (if any) of the extents were done and which have to be
-> retried. I hope you will expound on your reason(s) for liking the one
-> extent at a time approach.
-
-The most recent version of the T13 proposal I've seen is e07154r6 and
-that only allows for a single extent per command.  If T13 have changed
-their proposal to allow multiple extents in a single command, then I
-withdraw my opposition because synchronising the capabilities between
-T10 and T13 is my main goal.
-
-I don't think it's necessary for each TRIM to be completed before sending
-the next; I think it's entirely reasonable to use tags to send multiple
-TRIMs at a time.
-
-Filesystems already do their best to avoid fragmentation (as I'm sure
-we're all aware of the performance penalties for fragmented files on
-rotating media), so I suspect there are not too many extents per file
-already.
-
-It is today the case in Linux that each extent will be sent from the
-filesystem to the block layer individually.  I can't speak to other
-operating systems, maybe some of them allow filesystems to send a list
-of extents to the SCSI layer, maybe their SCSI layer can take extents
-out of the queue and bundle them together into a single command.
-
-Are there devices that would operate more efficiently if given a list of
-(discontiguous) extents to trim rather than getting several consecutive
-commands each with a single trim extent in it?
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
