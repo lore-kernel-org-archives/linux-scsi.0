@@ -1,70 +1,66 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH] scsi: remove private implementation of get_unaligned_be32
-Date: Fri, 03 Oct 2008 13:49:35 -0700
-Message-ID: <1223066975.6512.34.camel@brick>
+From: thomas schorpp <thomas.schorpp@googlemail.com>
+Subject: [PATCH]aic7xxx: Take the LED out of diagnostic mode on PM resume,
+ too.
+Date: Fri, 03 Oct 2008 23:45:29 +0200
+Message-ID: <48E69279.2000507@gmail.com>
+Reply-To: thomas.schorpp@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020306090600020306080309"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:63524 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbYJCUth (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 16:49:37 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1801484wfd.4
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2008 13:49:36 -0700 (PDT)
+Received: from ug-out-1314.google.com ([66.249.92.174]:57698 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753331AbYJCVpf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2008 17:45:35 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so1343539ugf.37
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2008 14:45:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/scsi/libsas/sas_expander.c |    9 +++++----
- include/scsi/scsi.h                |    6 ------
- 2 files changed, 5 insertions(+), 10 deletions(-)
+This is a multi-part message in MIME format.
+--------------020306090600020306080309
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 3da02e4..d8a34b5 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -24,6 +24,7 @@
- 
- #include <linux/scatterlist.h>
- #include <linux/blkdev.h>
-+#include <asm/unaligned.h>
- 
- #include "sas_internal.h"
- 
-@@ -541,10 +542,10 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
- 	if (!res)
- 		goto out;
- 
--	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
--	phy->running_disparity_error_count = scsi_to_u32(&resp[16]);
--	phy->loss_of_dword_sync_count = scsi_to_u32(&resp[20]);
--	phy->phy_reset_problem_count = scsi_to_u32(&resp[24]);
-+	phy->invalid_dword_count = get_unaligned_be32(&resp[12]);
-+	phy->running_disparity_error_count = get_unaligned_be32(&resp[16]);
-+	phy->loss_of_dword_sync_count = get_unaligned_be32(&resp[20]);
-+	phy->phy_reset_problem_count = get_unaligned_be32(&resp[24]);
- 
-  out:
- 	kfree(resp);
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 192f871..66be589 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -521,10 +521,4 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI		0x5387
- 
--/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
--static inline __u32 scsi_to_u32(__u8 *ptr)
--{
--	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
--}
--
- #endif /* _SCSI_SCSI_H */
--- 
-1.6.0.2.471.g47a76
+Take the Diag/Activity-LED of the HBA out of diagnostic mode on PM resume after successful PM resume from standby and HBA restart, 
+it remained always on before. If something fails before complete recovery, it should remain on, since it is a diagnostics LED, 
+reason for the used higher layer for the clear. 
 
+Signed-off-by: thomas.schorpp@gmail.com
+
+
+
+
+--------------020306090600020306080309
+Content-Type: text/x-diff;
+ name="aic7xxx_PM_fixled.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="aic7xxx_PM_fixled.patch"
+
+--- drivers/scsi/aic7xxx/aic7xxx_core.c	2008-10-03 13:53:39.000000000 +0200
++++ drivers/scsi/aic7xxx/aic7xxx_core.c	2008-10-03 14:26:04.000000000 +0200
+@@ -814,6 +814,7 @@
+ static void
+ ahc_restart(struct ahc_softc *ahc)
+ {
++	uint8_t	sblkctl;
+ 
+ 	ahc_pause(ahc);
+ 
+@@ -868,6 +869,12 @@
+ 	ahc_outb(ahc, SEQADDR0, 0);
+ 	ahc_outb(ahc, SEQADDR1, 0);
+ 
++	/*
++	 * Take the LED out of diagnostic mode on PM resume, too
++	 */
++	sblkctl = ahc_inb(ahc, SBLKCTL);
++	ahc_outb(ahc, SBLKCTL, (sblkctl & ~(DIAGLEDEN|DIAGLEDON)));
++
+ 	ahc_unpause(ahc);
+ }
+ 
+
+--------------020306090600020306080309--
