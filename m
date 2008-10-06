@@ -1,32 +1,191 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after 2.6.20
-Date: Mon,  6 Oct 2008 12:21:06 -0700 (PDT)
-Message-ID: <20081006192106.1BE0A108047@picon.linux-foundation.org>
-References: <bug-11646-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34275 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752970AbYJFTVI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2008 15:21:08 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m96JL6oN005247
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2008 12:21:07 -0700
-In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: failover does not work with rdac device handler
+Date: Mon, 6 Oct 2008 13:26:31 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BBBCCF2@cosmail01.lsi.com>
+References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
+	<E463DF2B2E584B4A82673F53D62C2EF45BB4E86E@cosmail01.lsi.com>
+	<E463DF2B2E584B4A82673F53D62C2EF45BBBC908@cosmail01.lsi.com>,
+	<1223081419.14830.585.camel@chandra-ubuntu>
+	<E463DF2B2E584B4A82673F53D62C2EF45BB949D3@cosmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45BB949D3@cosmail01.lsi.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "Moger, Babu" <Babu.Moger@lsi.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11646
+Hi Chandra,
+
+All the dh_state values show "rdac".  I have cut pasted the output below.
+
+I am seeing the following error messages when I tried to failover.
+
+        Oct  6 13:50:01 localhost multipathd: 8:96: reinstated
+        Oct  6 13:50:01 localhost kernel: device-mapper: multipath: Canno=
+t              failover device because scsi_dh_rdac was not loaded.
+        Oct  6 13:50:01 localhost kernel: device-mapper: multipath: Faili=
+ng             path 8:96.
+        Oct  6 13:50:01 localhost kernel: device-mapper: multipath: Could=
+ not           failover device. Error 15.
+        Oct  6 13:50:01 localhost multipathd: 8:96: mark as failed
 
 
+Output of # multipath -ll
+
+        mpath2 (3600a0b80000f6a7d000080454714d058) dm-2 LSI,INF-01-00
+        [size=3D10G][features=3D1 queue_if_no_path][hwhandler=3D1 rdac][r=
+w]
+        \_ round-robin 0 [prio=3D6][active]
+         \_ 3:0:0:2 sdf 8:80  [active][ready]
+         \_ 3:0:2:2 sdl 8:176 [active][ready]
+        \_ round-robin 0 [prio=3D0][enabled]
+         \_ 3:0:1:2 sdi 8:128 [active][ghost]
+         \_ 3:0:3:2 sdo 8:224 [active][ghost]
 
 
+dh_state values.
 
-------- Comment #10 from grin@grin.hu  2008-10-06 12:21 -------
-Sent by email.
+        #cat /sys/block/sdf/device/dh_state
+        rdac
 
+        #cat /sys/block/sdl/device/dh_state
+        rdac
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+        #cat /sys/block/sdi/device/dh_state
+        rdac
+
+        # cat /sys/block/sdo/device/dh_state
+        rdac
+
+ Please let me know what you think.
+ Note (Kernel version 2.6.27-rc7 and multipath-tools v0.4.8)
+
+Thanks
+Babu Moger
+
+-----Original Message-----
+From: Moger, Babu
+Sent: Friday, October 03, 2008 10:35 PM
+To: sekharan@us.ibm.com
+Cc: device-mapper development; linux-scsi@vger.kernel.org
+Subject: RE: [dm-devel] failover does not work with rdac device handler
+
+Thanks Chandra for the response..
+
+That is the good news. So, we do not have to change the kernel  code ever=
+ytime we want to support the new product.
+
+I will do the steps you mentioned first thing on Monday and reply your ba=
+ck.
+
+Thanks
+Babu Moger
+
+________________________________________
+From: Chandra Seetharaman [sekharan@us.ibm.com]
+Sent: Friday, October 03, 2008 7:50 PM
+To: Moger, Babu
+Cc: device-mapper development; linux-scsi@vger.kernel.org
+Subject: Re: [dm-devel] failover does not work with rdac device handler
+
+It is supposed to work. I will look into it and respond.
+
+Can you try one thing
+
+for all your devices, do
+        echo rdac > /sys/block/sd?/dh_state
+
+(first you can read the files and see if they all show rdac or not)
+
+and then do your fail over. Let me know what happens.
+
+chandra
+On Fri, 2008-10-03 at 18:12 -0600, Moger, Babu wrote:
+> Hi,
+>
+> I have quick question.
+>
+> I am trying to configure device mapper for my FC array (on my Linux box=
+). I have passed all the arguments from /etc/multipath.conf(like vendor, =
+model etc ..).
+>
+> Discovery seems fine. But, failover is not working.  I am seeing the fo=
+llowing error.
+>
+> "device-mapper: multipath: Cannot failover device because scsi_dh_rdac =
+was not loaded."
+>
+> Is it required to add vendor id and model id anywhere else to support t=
+his device?
+>
+> Thanks
+> Babu Moger
+>
+>
+> -----Original Message-----
+> From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com] =
+On Behalf Of Moger, Babu
+> Sent: Wednesday, October 01, 2008 4:48 PM
+> To: device-mapper development; linux-scsi@vger.kernel.org
+> Subject: [dm-devel] failover does not work with rdac device handler
+>
+> Hi All,
+>
+> I am new to the device mapper and just thought I will set-up device map=
+per on our arrays. I am using the latest kernel 2.6.27.rc6 and got the la=
+test multipath-tools from upstream.
+>
+> I updated /etc/multipath.conf with all the information (vendor, product=
+, hardware_handler, prio etc  ...). Note that my device is not part of rd=
+ac_dev_list.
+>
+> Discovery worked fine. "multipath -ll" displays all the information. I =
+can see that it is picking up rdac device handler.
+>
+> But I found that for some reason failover/failback is not working.  I a=
+m seeing following these messages.
+>
+> "device-mapper: multipath: Cannot failover device because scsi_dh_rdac =
+was not loaded."
+>
+> I can see that scsi_dh_rdac driver is already loaded.
+>
+> I did some more investigation. Found that failover works fine if I add =
+vendor, model in rdac_dev_list (in file scsi_dh_rdac.c).
+>
+> My question - is it required to add all the supported vendor and model =
+names in rdac_dev_list?
+>
+> Appreciate your responses.
+>
+> Thanks
+> Babu Moger
+>
+>
+>
+>
+>
+>
+>
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
