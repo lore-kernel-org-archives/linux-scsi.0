@@ -1,208 +1,67 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: [ PATCH 2/4 ] mpt fusion disable hard resets for 53C1030 based devices
-Date: Mon, 6 Oct 2008 11:32:26 +0200
-Message-ID: <200810061132.28176.bs@q-leap.de>
-References: <6A4D764DC1BDE14495DA8DC60A3D69531E967A0642@hkgmail01.lsi.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] BUG: nr_phys_segments cannot be less than
+ nr_hw_segments
+Date: Tue, 7 Oct 2008 02:24:29 +0900
+Message-ID: <20081007022358N.fujita.tomonori@lab.ntt.co.jp>
+References: <20081002165857.GL19428@kernel.dk>
+	<1222967563.3222.30.camel@localhost.localdomain>
+	<20081002171356.GO19428@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:59525 "EHLO mail.q-leap.de"
+Received: from sh.osrg.net ([192.16.179.4]:58328 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbYJFJcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Oct 2008 05:32:33 -0400
-In-Reply-To: <6A4D764DC1BDE14495DA8DC60A3D69531E967A0642@hkgmail01.lsi.com>
-Content-Disposition: inline
+	id S1752979AbYJFRY6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2008 13:24:58 -0400
+In-Reply-To: <20081002171356.GO19428@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: jens.axboe@oracle.com
+Cc: James.Bottomley@HansenPartnership.com, knikanth@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Hello Sathya,
+On Thu, 2 Oct 2008 19:13:57 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-On Monday 06 October 2008 11:07:00 Prakash, Sathya wrote:
-> Hi Bernd,
-> There are some cases where we MUST need hardreset for the firmware to
-> recover. So we can not completely avoid SoftReset, That is the main purpose
-> of our design of first to try softreset and if it is failing then to go for
-> hard reset.
->
-> So I would suggest it is better not to remove the hard reset. If you think
-> the latest LSI provided driver has some cases of avoiding hard reset like
-> the one in this patch. Please let me know I will check and revert back.
+> On Thu, Oct 02 2008, James Bottomley wrote:
+> > On Thu, 2008-10-02 at 18:58 +0200, Jens Axboe wrote:
+> > > On Thu, Oct 02 2008, James Bottomley wrote:
+> > > > The bug would appear to be that we sometimes only look at q->max_sectors
+> > > > when deciding on mergability.  Either we have to insist on max_sectors
+> > > > <= hw_max_sectors, or we have to start using min(q->max_sectors,
+> > > > q->max_hw_sectors) for this.
+> > > 
+> > > q->max_sectors MUST always be <= q->max_hw_sectors, otherwise we could
+> > > be sending down requests that are too large for the device to handle. So
+> > > that condition would be a big bug. The sysfs interface checks for this,
+> > > and blk_queue_max_sectors() makes sure that is true as well.
+> > 
+> > Yes, that seems always to be enforced.  Perhaps there are other ways of
+> > tripping this problem ... I'm still sure if it occurs it's because we do
+> > a physical merge where a virtual merge is forbidden.
+> > 
+> > > The fixes proposed still look weird. There is no phys vs hw segment
+> > > constraints, the request must adhere to the limits set by both. It's
+> > > mostly a moot point anyway, as 2.6.28 will get rid of the hw accounting
+> > > anyway.
+> > 
+> > Agree all three proposed fixes look wrong.  However, if it's what I
+> > think, just getting rid of hw accounting won't fix the problem because
+> > we'll still have the case where a physical merge is forbidden by iommu
+> > constraints ... this still needs to be accounted for.
+> > 
+> > What we really need is a demonstration of what actually is going
+> > wrong ...
+> 
+> Yep, IIRC we both asked for that the last time as well... Nikanth?
 
-yes I can understand that, however, it only skips the hard reset, when it 
-knows it will cause even more trouble than without it. Primary rule really 
-MUST be "Do not kill innocent unrelated devices!".
+Possibly, blk_phys_contig_segment might miscalculate
+q->max_segment_size?
 
-What are the requirements for a hard reset? When BOTH IOCs are in trouble, a 
-single hard reset wouldn't make the situation worse. 
-I didn't check yet and maybe you know immediately, is ioc->alt_ioc a pointer 
-to the real IOC structure? If so, we could use it to check if this IOC also 
-is in deep trouble.
+blk_phys_contig_segment does:
 
+req->biotail->bi_size + next_req->bio->bi_size > q->max_segment_size;
 
-Cheers,
-Bernd
-
-
->
-> Thanks
-> Sathya
->
->
-> -----Original Message-----
-> From: Bernd Schubert [mailto:bs@q-leap.de]
-> Sent: Tuesday, September 23, 2008 7:00 PM
-> To: Linux SCSI Mailing List
-> Cc: Moore, Eric; Prakash, Sathya; James Bottomley; DL-MPT Fusion Linux
-> Subject: Re: [ PATCH 2/4 ] mpt fusion disable hard resets for 53C1030 based
-> devices
->
-> This is patch 2/4 ...
->
-> On Tuesday 23 September 2008 15:26:30 Bernd Schubert wrote:
-> > For 53C1030 based dual port HBAs the hard reset handler will cause
-> > trouble on the second channel with innocent devices. It is then better
-> > to fail the device which activated the error handler than to fail
-> > cause errors on unrelated devices. Of course, the real solutions would
-> > be to figure out why the hard reset handler cause trouble on the
-> > second channel. Probably only LSI can do, though.
-> >
-> > Signed-off-by: Bernd Schubert <bs@q-leap.de>
-> >
-> >  drivers/message/fusion/mptbase.c |   42 ++++++++++++++++++++++++++++-
-> >  drivers/message/fusion/mptspi.c  |   31 +++++++++++++++++++++
-> >  2 files changed, 72 insertions(+), 1 deletion(-)
-> >
-> > Index: linux-2.6.26/drivers/message/fusion/mptbase.c
-> > ===================================================================
-> > --- linux-2.6.26.orig/drivers/message/fusion/mptbase.c
-> > +++ linux-2.6.26/drivers/message/fusion/mptbase.c
-> > @@ -59,6 +59,7 @@
-> >  #include <linux/interrupt.h>         /* needed for in_interrupt() proto
-> > */ #include <linux/dma-mapping.h>
-> >  #include <asm/io.h>
-> > +#include <scsi/scsi_device.h>
-> >  #ifdef CONFIG_MTRR
-> >  #include <asm/mtrr.h>
-> >  #endif
-> > @@ -6452,6 +6453,33 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, i  }
-> >
-> >  /**
-> > +  * Check if there are devices connected to the second (alt) ioc.
-> > +  * Return 1 if there is at least on device and 0 if there are
-> > +  * none or no alt_ioc.
-> > +  */
-> > +static int
-> > +alt_ioc_with_dev(MPT_ADAPTER *ioc)
-> > +{
-> > +     struct Scsi_Host        *shost;
-> > +     struct scsi_device      *sdev;
-> > +     int                     have_devices = 0;
-> > +
-> > +     if (!ioc->alt_ioc)
-> > +             return 0;
-> > +
-> > +     shost = ioc->alt_ioc->sh;
-> > +
-> > +     shost_for_each_device(sdev, shost) {
-> > +             /* when we are here, we know there is is a device
-> > +              * attached to this host, which is all we need to know */
-> > +             have_devices = 1;
-> > +             break;
-> > +     }
-> > +
-> > +     return have_devices;
-> > +}
-> > +
-> > +/**
-> >   *   mpt_SoftHardResetHandler - Generic reset handler
-> >   *   @ioc: Pointer to MPT_ADAPTER structure
-> >   *   @sleepFlag: Indicates if sleep or schedule must be called.
-> > @@ -6466,7 +6494,19 @@ mpt_SoftHardResetHandler(MPT_ADAPTER *io
-> >
-> >       rc = mpt_SoftResetHandler(ioc, sleepFlag);
-> >       if (rc) {
-> > -             rc = mpt_HardResetHandler(ioc, sleepFlag);
-> > +             if (ioc->no_hard_reset && alt_ioc_with_dev(ioc)) {
-> > +                     /* On dual port HBAs based on the 53C1030 chip the
-> > +                     * hard reset handler will cause DID_SOFT_ERROR on
-> > +                     * the second (in principle independent) port.
-> > +                     * Almost always this error cannot be recovered
-> > +                     * causing entire device failures. So it better not
-> > +                     * to call the hard reset handler at all in order to
-> > +                     * prevent failures of independent devices */
-> > +                     printk(MYIOC_s_INFO_FMT "Skipping hard reset in "
-> > +                             "order to prevent failures on %s.\n",
-> > +                             ioc->name, ioc->alt_ioc->name);
-> > +             } else
-> > +                     rc = mpt_HardResetHandler(ioc, sleepFlag);
-> >       }
-> >
-> >       return rc;
-> > Index: linux-2.6.26/drivers/message/fusion/mptspi.c
-> > ===================================================================
-> > --- linux-2.6.26.orig/drivers/message/fusion/mptspi.c
-> > +++ linux-2.6.26/drivers/message/fusion/mptspi.c
-> > @@ -1301,6 +1301,33 @@ mptspi_resume(struct pci_dev *pdev)  #endif
-> >
-> >
-> > /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-> >-= -=*/ +/**
-> > +  * avoid_hard_reset - check if hard resets should be avoided
-> > +  * @pdev: Pointer to pci_dev structure
-> > +  *
-> > +  * Hard resets will cause trouble on the the secondary IOC of
-> > +  * 53C1030 based devices.
-> > +  *
-> > +  * Returns 1 if affected chip is found and 1 for unaffected chips
-> > +  */
-> > +static int
-> > +avoid_hard_reset(struct pci_dev *pdev)
-> > +{
-> > +     int avoid;
-> > +
-> > +     switch (pdev->device) {
-> > +     case MPI_MANUFACTPAGE_DEVID_53C1030:
-> > +     case MPI_MANUFACTPAGE_DEVID_53C1030ZC:
-> > +             /* TODO: which chips are affected as well? */
-> > +             avoid = 1;
-> > +             break;
-> > +     default:
-> > +             avoid = 0;
-> > +     }
-> > +
-> > +     return avoid;
-> > +}
-> > +
-> >
-> > /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-> >-= -=*/ /*
-> >   *   mptspi_probe - Installs scsi devices per bus.
-> > @@ -1509,6 +1536,10 @@ mptspi_probe(struct pci_dev *pdev, const
-> >               goto out_mptspi_probe;
-> >       }
-> >
-> > +     /* hard resets on 53C1030 HBAs will cause trouble on secondaray
-> > (alt) +      * IOCs, so better no hard reset on these */
-> > +     ioc->no_hard_reset = avoid_hard_reset(pdev);
-> > +
-> >       /*
-> >        * issue internal bus reset
-> >        */
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Bernd Schubert
-> Q-Leap Networks GmbH
-
-
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+But it's possible that req->biotail and the previous bio are supposed
+be merged into one segment? Then we could create too large segment
+here.
