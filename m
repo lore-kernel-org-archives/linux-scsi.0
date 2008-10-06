@@ -1,7 +1,7 @@
 From: "Moger, Babu" <Babu.Moger@lsi.com>
 Subject: RE: failover does not work with rdac device handler
-Date: Mon, 6 Oct 2008 13:59:47 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BBBCD31@cosmail01.lsi.com>
+Date: Mon, 6 Oct 2008 16:26:54 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BBBCE37@cosmail01.lsi.com>
 References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
 	<E463DF2B2E584B4A82673F53D62C2EF45BB4E86E@cosmail01.lsi.com>
 	<E463DF2B2E584B4A82673F53D62C2EF45BBBC908@cosmail01.lsi.com>
@@ -9,12 +9,13 @@ References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.co
 	<E463DF2B2E584B4A82673F53D62C2EF45BB949D3@cosmail01.lsi.com>
 	<E463DF2B2E584B4A82673F53D62C2EF45BBBCCF2@cosmail01.lsi.com>
 	<1223322817.14830.593.camel@chandra-ubuntu>
+	<E463DF2B2E584B4A82673F53D62C2EF45BBBCD31@cosmail01.lsi.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1223322817.14830.593.camel@chandra-ubuntu>
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45BBBCD31@cosmail01.lsi.com>
 Content-Language: en-US
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
@@ -25,9 +26,25 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: "sekharan@us.ibm.com" <sekharan@us.ibm.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: device-mapper development <dm-devel@redhat.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+Hi Chandra,
+
+Please note that failover works fine if I add vendor and model ids("LSI",=
+ "INF-01-00")in rdac_dev_list(in the file scsi_dh_rdac.c).
+
+Thanks
+Babu Moger
+
+-----Original Message-----
+From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com] On=
+ Behalf Of Moger, Babu
+Sent: Monday, October 06, 2008 3:00 PM
+To: sekharan@us.ibm.com
+Cc: device-mapper development; linux-scsi@vger.kernel.org
+Subject: RE: [dm-devel] failover does not work with rdac device handler
 
 
 I have configured two Luns.
@@ -242,3 +259,9 @@ l names in rdac_dev_list?
  in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--
+dm-devel mailing list
+dm-devel@redhat.com
+https://www.redhat.com/mailman/listinfo/dm-devel
