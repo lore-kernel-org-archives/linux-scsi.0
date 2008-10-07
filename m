@@ -1,52 +1,327 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Normalizing byteorder/unaligned access API
-Date: Tue, 7 Oct 2008 17:55:34 -0600
-Message-ID: <20081007235533.GN25780@parisc-linux.org>
-References: <1223416391.8195.22.camel@brick> <20081007232807.GL25780@parisc-linux.org> <1223422542.8195.42.camel@brick>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [ANNOUNCE]: ConfigFS enabled Generic Target Mode and
+	iSCSI	Target Stack on v2.6.27-rc7
+Date: Tue, 07 Oct 2008 13:50:58 -0700
+Message-ID: <1223412658.15764.306.camel@haakon2.linux-iscsi.org>
+References: <1222716101.4296.41.camel@haakon2.linux-iscsi.org>
+	 <48E3B529.4060406@vlnb.net>
+	 <1222907050.15764.56.camel@haakon2.linux-iscsi.org>
+	 <48E4FE3F.2080707@vlnb.net>
+	 <1222982972.15764.118.camel@haakon2.linux-iscsi.org>
+	 <48EB325E.6050907@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39120 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754597AbYJGXzf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 19:55:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1223422542.8195.42.camel@brick>
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:47336 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757400AbYJHABf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 20:01:35 -0400
+In-Reply-To: <48EB325E.6050907@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-iscsi-target-dev@googlegroups.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, Greg KH <greg@kroah.com>, Jerome Martin <tramjoe.merin@gmail.com>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Joel Becker <joel.becker@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Tue, Oct 07, 2008 at 04:35:42PM -0700, Harvey Harrison wrote:
-> On Tue, 2008-10-07 at 17:28 -0600, Matthew Wilcox wrote:
-> > On Tue, Oct 07, 2008 at 02:53:11PM -0700, Harvey Harrison wrote:
-> > > In addition, there are some subsystems (scsi) that are looking into some
-> > > differently sized endian helpers (be24) and it may be worthwhile to have
-> > > some agreement whether it is worth making them common infrastructure and
-> > > whether they should present a similar API to the common byteorder/unaligned
-> > > API.
+On Tue, 2008-10-07 at 13:56 +0400, Vladislav Bolkhovitin wrote:
+> Nicholas A. Bellinger wrote:
+> > On Thu, 2008-10-02 at 21:00 +0400, Vladislav Bolkhovitin wrote:
+> >> Nicholas A. Bellinger wrote:
+> >>>>> # Add some more HBA and storage Objects
+> >>>>> target:~# mkdir -p $TARGET/fileio_0/file_object
+> >>>>> target:~# mkdir -p $TARGET/rd_mcp_0/ramdisk0
+> >>>>> target:~# mkdir -p $TARGET/rd_dr_0/ramdisk0
+> >>>>>
+> >>>>> target:~# mkdir -p $TARGET/pscsi_0/sdd
+> >>>>> target:~# echo scsi_channel_id=0,scsi_target_id=3,scsi_lun_id=0 > $TARGET/pscsi_0/sdd/dev_control   
+> >>>>> target:~# echo 1 > $TARGET/pscsi_0/sdd/dev_enable 
+> >>>>>
+> >>>>> # Now, create LUN 1 and another Port Symlink to a new device on the same $IQN/tpgt_1
+> >>>>> mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1"
+> >>>>> # Create the iSCSI Target Port Mapping for $DEF_IN/tpgt_1 LUN 1
+> >>>>> # to lvm_test0 and give it the port symbolic name of lio_east_port
+> >>>>> ln -s $TARGET/pscsi_0/sdd/ "$FABRIC/$DEF_IQN/tpgt_1/lun/lun_1/lio_east_port"
+> >>>>>
+> >>>>> target:~# tree $CONFIGFS
+> >>>>> /sys/kernel/config/
+> >>>>> `-- target
+> >>>>>     |-- core
+> >>>>>     |   |-- fileio_0
+> >>>>>     |   |   |-- file_object
+> >>>>>     |   |   |   |-- dev_control
+> >>>>>     |   |   |   |-- dev_enable
+> >>>>>     |   |   |   `-- dev_info
+> >>>>>     |   |   `-- hba_info
+> >>>>>     |   |-- iblock_0
+> >>>>>     |   |   |-- hba_info
+> >>>>>     |   |   `-- lvm_test0
+> >>>>>     |   |       |-- dev_control
+> >>>>>     |   |       |-- dev_enable
+> >>>>>     |   |       `-- dev_info
+> >>>>>     |   |-- pscsi_0
+> >>>>>     |   |   |-- hba_info
+> >>>>>     |   |   `-- sdd
+> >>>>>     |   |       |-- dev_control
+> >>>>>     |   |       |-- dev_enable
+> >>>>>     |   |       `-- dev_info
+> >>>>>     |   |-- rd_dr_0
+> >>>>>     |   |   |-- hba_info
+> >>>>>     |   |   `-- ramdisk0
+> >>>>>     |   |       |-- dev_control
+> >>>>>     |   |       |-- dev_enable
+> >>>>>     |   |       `-- dev_info
+> >>>>>     |   `-- rd_mcp_0
+> >>>>>     |       |-- hba_info
+> >>>>>     |       `-- ramdisk0
+> >>>>>     |           |-- dev_control
+> >>>>>     |           |-- dev_enable
+> >>>>>     |           `-- dev_info
+> >>>>>     |-- iscsi
+> >>>>>     |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+> >>>>>     |   |   `-- tpgt_1
+> >>>>>     |   |       |-- lun
+> >>>>>     |   |       |   |-- lun_0
+> >>>>>     |   |       |   |   |-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
+> >>>>>     |   |       |   |   |-- port_control
+> >>>>>     |   |       |   |   `-- port_info
+> >>>>>     |   |       |   `-- lun_1
+> >>>>>     |   |       |       |-- lio_east_port -> ../../../../../../target/core/pscsi_0/sdd
+> >>>>>     |   |       |       |-- port_control
+> >>>>>     |   |       |       `-- port_info
+> >>>>>     |   |       |-- np
+> >>>>>     |   |       |   `-- 172.16.201.137:3260
+> >>>>>     |   |       |       `-- portal_info
+> >>>>>     |   |       |-- tpg_control
+> >>>>>     |   |       `-- tpg_enable
+> >>>>>     |   `-- lio_version
+> >>>>>     `-- version
+> >>>>>
+> >>>>> 22 directories, 29 files
+> >>>> It's good, I like it. The only thing concerns me that, considering how 
+> >>>> much time *I* spent to understand it, for an average user understanding 
+> >>>> it can be an unbearable nightmare ;)
+> >>>>
+> >>> Well, the idea is not necessarily making the configfs interface the
+> >>> easiest to use in the world by user directly through $CONFIGFS, but to
+> >>> make the CLI scripts that speak $CONFIGFS/target CLI, and of course the
+> >>> actual UIs for user that interact with generic target core and
+> >>> $FABRIC_MODs be as simple and elegent as possible.  
+> >>>
+> >>> That is what I believe the balance that a configfs enabled generic
+> >>> target core provides to both the $CONFIGFS/target API and to $FABRIC_MOD
+> >>> maintainers looking to port their code to use a generic control
+> >>> infrastructure.  :-)
+> >>>
+> >>>> In a few days I'll write a proposed configfs hierarchy for existing SCST 
+> >>>> /proc interface.
+> >>> Sounds good!  Please let me know if you have questions.
+> >> There's one unsolved problem. As I've already written, SCST core needs 
+> >> an ability to provide to user space a large amount of data, which may 
+> >> not fit to a single page.
+> >>
+> >> A list of connected initiators ("sessions" 
+> >> file in /proc), for instance. Each initiator in that list has a number 
+> >> of attributes: initiator name, target template name, count of 
+> >> outstanding commands, etc. The logical way for that would be to create a 
+> >> subdirectory for each initiator, like:
+> >>
+> >> /sys/kernel/config/
+> >> `-- target
+> >>      `-- sessions
+> >>          `-- session1
+> >>          |   |-- initiator_name
+> >>          |   |-- template_name
+> >>          |   `-- commands
+> >>          |
+> >>          `-- session2
+> >>              |-- initiator_name
+> >>              `-- template_name
+> >>              `-- commands
+> >>
 > > 
-> > I still think SCSI should have its own accessors, even if they're
-> > just wrappers around the common BE code.
+> > The the Initiator Port ACLs need to go
+> > under /sys/kernel/config/target/$FABRIC because the struct fabric_acl *
+> > will always contain fabric dependent config items.  For example, Since
+> > these struct fabric_acl_t do *NOT* symlink directly back to
+> > target_core_mod under /sys/kernel/config/target/core/$HBA/$DEV, but to
+> > fabric_lun_t (iscsi_lun_t in my case) to Symlink to
+> > a /sys/kernel/config/target/core/$HBA/$DEV that has been registered with
+> > the generic target configfs infrastructure.
 > > 
+> > Here is what I am thinking wrt /sys/kernel/config/target/iscsi and iSCSI
+> > Initiator Node ACLs to iSCSI Portal Groups and iSCSI LUNs attached to
+> > those Portal Groups.  There are two cases:
+> > 
+> > *) The production case with with user creating those ACLs under $FABRIC
+> > (which is what I will focus on now).
+> > 
+> > * And "Demo Mode" case where any Initiator logging into
+> > $FABRIC/$ENDPOINT/$PORTAL can have access to all
+> > $FABRIC/$ENDPOINT/lun/lun_*/*my_ports*
+> > 
+> > The production ACL case would look like:
+> > 
+> > export CONFIGFS=/sys/kernel/config/
+> > export TARGET=/sys/kernel/config/target/core/
+> > export FABRIC=/sys/kernel/config/target/iscsi/
+> > 
+> > TARGET_IQN=iqn.2003-01.org.linux-iscsi.ps3-cell.ppc64:sn.f8f651bd5fec
+> > INITIATOR_IQN=iqn.1993-08.org.debian:01.f82074ca555f
+> > 
+> > <Setup $STORAGE_OBJECTs under $TARGET>
+> > 
+> > # Create the LIO-target endpoint
+> > mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/np/172.16.201.137:3260"
+> > mkdir -p "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0"
+> > 
+> > <Setup Port Symlinks from $TARGET to $TARGET_IQN/tpgt_1/lun/lun_0>
+> > 
+> > # Create the Initiator ACL under $TARGET_IQN/tpgt_1
+> > mkdir -p $"FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN"
+> > # Allow $INITIATOR_IQN access to tpgt_1/lun/lun_0/
+> > ln -s "$FABRIC/$TARGET_IQN/tpgt_1/lun/lun_0" \
+> > 	"$FABRIC/$TARGET_IQN/tpgt_1/initiators/$INITIATOR_IQN/lun_0"
+> > 
+> >>From there, you don't have to worry about PAGE_SIZE limitiations w/o, I
+> > can simply use use:
+> > 
+> > cat $FABRIC/iqn*/tpgt*/initiators/*/session
+> > 
+> > to see which acl'ed iSCSI Initiators are logged in on all iSCSI Target
+> > Ports.
+> > 
+> > Also I should add that I am currently using /proc/scsi_target/mib
+> > and /proc/iscsi_target_mib for READ-ONLY data with target_core_mod.ko
+> > and iscsi_target_mod.ko respectively.  For the other "Demo Mode" case
+> > mentioned above, I am currently using /proc/iscsi_target/mib/sess_attr
+> > to see the active sessions for LIO-Target.
 > 
-> I thought it was generally discouraged that subsystems have trivial
-> wrappers like that, otherwise you wind up with:
+> Sorry for the delay. I didn't have a chance to look at it sufficiently 
+> close.
 > 
-> scsi_get_u32
-> usb_get_u32
-> v4l_get_u32
-> 
-> ... and so on, where as if they all used the common names, people more
-> used to other areas of the kernel can still recognize what the code
-> is doing without having the lookup another define.
+> Basically the idea about how to manage ACLs is good, but I don't like, 
+> that with it *ALL* the target drivers would have to implement the 
+> necessary code. It shouldn't be so, management of all security stuff 
+> should be purely duty of the mid-layer.
 
-My point is that they don't have to recognise what the code is doing.
-They don't have to know if the protocol is BE or LE, only that USB code
-is accessing the data in the appropriate way for USB.
+By the "mid-layer" I assume you mean the generic target mode engine, and
+not the SCSI mid layer, yes..?
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Point taken however that $TARGET_MOD could, and probably should have
+some manner of generic ACL infrastructure available through FABRIC <->
+TARGET API.  I will have a look at scst_register() and
+scst_register_session() and see where it should be adapted to
+target_core_mod.
+
+Btw, saying that "management of all security stuff should be purely duty
+of the mid-layer" is incorrect however.  The generic target engine needs
+to make it *EASIER* for $FABRIC to allow those initiator ports access to
+Mapped LUNs through fabric *DEPENDENT* endpoints, but trying to put all
+fabric depepdent ACL endpoint logic in target_core_mod is IMHO a bad
+idea.  
+
+Since each SCSI fabric's method of attaching SCSI LUN to Initiator Port
+Endpoints in $FABRIC_MOD to SCSI Device (I have been calling
+this /sys/kernel/config/target/core/$STORAGE_OBJECT for target_core_mod)
+to create the SCSI Target Port is different.  The reference I use for
+iscsi_target_mod (and hence wrt target_core_mod) is proper T10/SCSI
+terminlogy AFAIK.  Lets reference the objects in
+http://www.haifa.il.ibm.com/satran/ips/EddyQuicksall-iSCSI-in-diagrams/portal_groups.pdf 
+for the discussion so we can make sure we are on the same page..
+
+For example, just because iSCSI uses TargetName + TargetPortalGroupTag
+to attach target_core_mod's $STORAGE_OBJECTs at iSCSI Logical Units to,
+does not mean that SAS, or another SCSI based target fabric know
+anything about TargetName or TargetPortalGroupTag.  In iSCSI, this is
+defined in Section 2.1: 
+
+     The I_T nexus can be identified by the conjunction of the SCSI port
+     names; that is, the I_T nexus identifier is the tuple (iSCSI
+     Initiator Name + ',i,'+ ISID, iSCSI Target Name + ',t,'+ Portal 
+     Group Tag).
+
+Obviously the Initiator and Target Ports wrt iSCSI fabric are more
+"symbolic" than devices attached to say a legacy Parallel SCSI bus
+because of IP storage having multiple IP network portals across multiple
+independent backbone providers and subnets (if you are using MC/S or
+SCTP), etc, etc.  This is this reason I think it does not make sense to
+try to locate fabric dependent ACLs
+under /sys/kernel/config/target/core/$STORAGE_OBJECT.  
+
+The type of things that need to be under $STORAGE_OBJECT, and that do
+have a direct effect for $FABRIC mapped LUN endpoints are things like
+device_type, max_sectors, sector_size, queue_depth and global READ-ONLY.
+Of course, we want to be able to see *ALL* of
+the /sys/kernel/config/target/$FABRIC dependent ACLs that have been
+symlinked to said $STORAGE_OBJECT (this is one of the items on my list,
+but not implemented in my current work).
+
+>  And this is exactly implemented 
+> in SCST. All what target drivers should do with it is to pass target's 
+> name on its registration in scst_register() and then while registering a 
+> session with remote initiator using scst_register_session() pass to it 
+> the initiator's name. Everything else is done by the SCST core.
+> 
+
+At registration, I assume you mean admin wants to add an endpoint ACL
+for a Initiator Port through $FABRIC/endpoint through $FABRIC_MOD..?
+
+> Thus, I believe, all the ACL management should be done not in $FABRIC/, 
+> but in $TARGET/. It would remove all the corresponding configfs 
+> headaches from the target drivers writers.
+> 
+
+I am not sure what "corresponding configfs headaches" you have in mind,
+but please be specific and I will address them. :-)
+
+> But, in fact, I asked about completely different thing. SCSI target 
+> mid-layer in some cases needs to export in user space amount of data, 
+> which doesn't fit one page. /proc/scsi_tgt/sessions is one example. What 
+> should we do for it?
+> 
+
+I did address point above in my work, and my commits
+under /sys/kernel/config/target/iscsi implement how I get around the
+PAGE_SIZE limitiations, which was something that I ran into (moving from
+IOCTL and all, which requires overly complex kernel level information
+code to get lots of output), to using ConfigFS, which has the same as
+procfs and sysfs limits that you need to use seq_file() for > PAGE_SIZE.
+Anyways, I did not end up using seq_file() for iscsi_target_mod current
+configfs code, here is what I am using to address your above example wrt
+getting all of session output:
+
+>>From there, you don't have to worry about PAGE_SIZE limitiations w/o >
+> > I can simply use use:
+> > 
+> > cat $FABRIC/iqn*/tpgt*/initiators/*/session
+> > 
+
+This ended up being `cat $FABRIC/iqn*/tpgt*/acls/*/info` to view all of
+the active iSCSI Sessions on all iSCSI Target fabric endpoints..
+
+The point is that regardless of kernel <-> user information output
+method, it makes sense to break up large pieces of kernel level
+information code and rely upon access through the VFS and cat to obtain
+bulk output.
+
+However, Joel has discussed removing the > PAGE_SIZE limitation for all
+of the virtual filesystems, so I am sure he would be more than happy to
+take a  patch that addressed your concern if it is really that big of a
+deal for the SCSI control path.  With my current work with
+target_core_mod and iscsi_target_mod wrt configfs I am not running into
+this problem, so me producing this patch is not very high on my list..
+
+> > I will be implementing this model over the next days..  I will post the
+> > commit once its up and you can have a look..
+> > 
+
+Ok, I ended up using a slightly different model for ACLs
+under /sys/kernel/config/target/iscsi that the one I mentioned from last
+week to get things up and running.  I will be posting the commit and
+info shortly.
+
+Thanks for your comments Vlad!
+
+--nab
+
+
