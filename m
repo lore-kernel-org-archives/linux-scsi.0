@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [patch 02/17] aic7xxx: update .reg files
-Date: Tue, 07 Oct 2008 14:33:02 +0200
-Message-ID: <48EB56FE.8020207@suse.de>
-References: <200809222156.m8MLuf0T032267@imap1.linux-foundation.org>
+Subject: Re: [patch 03/17] aic7xxx: update *_shipped files
+Date: Tue, 07 Oct 2008 14:34:04 +0200
+Message-ID: <48EB573C.8080403@suse.de>
+References: <200809222156.m8MLugRG032270@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:51470 "EHLO mx1.suse.de"
+Received: from mail.suse.de ([195.135.220.2]:51644 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753244AbYJGMdE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2008 08:33:04 -0400
-In-Reply-To: <200809222156.m8MLuf0T032267@imap1.linux-foundation.org>
+	id S1753272AbYJGMeG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2008 08:34:06 -0400
+In-Reply-To: <200809222156.m8MLugRG032270@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org
@@ -21,9 +21,7 @@ Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, vda.linux
 akpm@linux-foundation.org wrote:
 > From: Denys Vlasenko <vda.linux@googlemail.com>
 >=20
-> Update .reg files, marking unused registers with dont_generate_debug_=
-code.
-> Comment explains how to use it.
+> Update *_shipped files
 >=20
 > Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
 > Cc: Hannes Reinecke <hare@suse.de>
