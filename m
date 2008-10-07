@@ -1,32 +1,52 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [0/21] Remove SCSI unchecked_isa_dma try 3
-Date: Wed, 08 Oct 2008 01:53:12 +0200
-Message-ID: <87vdw4klnb.fsf@basil.nowhere.org>
-References: <20081002958.641114646@firstfloor.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] Normalizing byteorder/unaligned access API
+Date: Tue, 7 Oct 2008 17:55:34 -0600
+Message-ID: <20081007235533.GN25780@parisc-linux.org>
+References: <1223416391.8195.22.camel@brick> <20081007232807.GL25780@parisc-linux.org> <1223422542.8195.42.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:34618 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754372AbYJGXxP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 19:53:15 -0400
-In-Reply-To: <20081002958.641114646@firstfloor.org> (Andi Kleen's message of "Thu,  2 Oct 2008 09:58:38 +0200 (CEST)")
+Received: from palinux.external.hp.com ([192.25.206.14]:39120 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754597AbYJGXzf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 19:55:35 -0400
+Content-Disposition: inline
+In-Reply-To: <1223422542.8195.42.camel@brick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, axboe@kernel.dk
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 
-Andi Kleen <andi@firstfloor.org> writes:
+On Tue, Oct 07, 2008 at 04:35:42PM -0700, Harvey Harrison wrote:
+> On Tue, 2008-10-07 at 17:28 -0600, Matthew Wilcox wrote:
+> > On Tue, Oct 07, 2008 at 02:53:11PM -0700, Harvey Harrison wrote:
+> > > In addition, there are some subsystems (scsi) that are looking into some
+> > > differently sized endian helpers (be24) and it may be worthwhile to have
+> > > some agreement whether it is worth making them common infrastructure and
+> > > whether they should present a similar API to the common byteorder/unaligned
+> > > API.
+> > 
+> > I still think SCSI should have its own accessors, even if they're
+> > just wrappers around the common BE code.
+> > 
+> 
+> I thought it was generally discouraged that subsystems have trivial
+> wrappers like that, otherwise you wind up with:
+> 
+> scsi_get_u32
+> usb_get_u32
+> v4l_get_u32
+> 
+> ... and so on, where as if they all used the common names, people more
+> used to other areas of the kernel can still recognize what the code
+> is doing without having the lookup another define.
 
-> This reposts the patchkit to remove unchecked_isa_dma which was already
-> discussed some time ago. Instead it replaces it with interfaces
-> that declare the mask. Right now those interfaces map back to GFP_DMA
-> eventually, but it is a preparation for using the DMA mask allocator
-> eventually.
-
-ping? Any comments please?
-
--Andi
+My point is that they don't have to recognise what the code is doing.
+They don't have to know if the protocol is BE or LE, only that USB code
+is accessing the data in the appropriate way for USB.
 
 -- 
-ak@linux.intel.com
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
