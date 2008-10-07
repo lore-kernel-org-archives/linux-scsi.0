@@ -1,129 +1,88 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] scsi_lib_dma.c : fix bug w/ dma maps on virtual fc ports
-Date: Tue, 7 Oct 2008 09:35:18 -0400
-Message-ID: <1223386518.3082.9.camel@ogier>
-Reply-To: <James.Smart@Emulex.Com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: aacraid: Adaptec 2200S support broken on x86_64 by commit 94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+Date: Tue, 07 Oct 2008 15:37:04 +0200
+Message-ID: <48EB6600.9020204@redhat.com>
+References: <48D10E1A.8030804@siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33471 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753548AbYJGNfQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 09:35:16 -0400
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m97DZFKV025164
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Oct 2008 06:35:15 -0700 (PDT)
+Received: from mx2.redhat.com ([66.187.237.31]:36389 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753352AbYJGNhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2008 09:37:09 -0400
+In-Reply-To: <48D10E1A.8030804@siemens.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Hillier, Gernot" <gernot.hillier@siemens.com>
+Cc: aacraid@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mark_salyzyn@adaptec.com
 
-=EF=BB=BFWhen the updated scsi dma code was introduced recently, it ass=
-umed the
-physical host/adapter was the parent of the scsi host. Unfortunately,
-on FC virtual ports, the parent of the scsi host is the virtual port,
-which does not have dma information.
+Hillier, Gernot wrote:
+> Hi there!
+>
+> On our AMD64 machines equipped with old Adaptec 2200S controllers, we
+> experienced a regression when updating to 2.6.25. The machines won't
+> boot anymore (in a reasonable time), but instead spit out tons of those
+> messages:
+> aac_srb: aac_fib_send failed with status: 8195
+>
+> This is already reported in quite some places including LKML:
+> http://lkml.org/lkml/2008/5/12/365
+> https://bugzilla.redhat.com/show_bug.cgi?id=450444
+> https://bugzilla.redhat.com/show_bug.cgi?id=453472
+> http://www.linuxquestions.org/questions/red-hat-31/aacsrb-aacfibsend-failed-with-status-8195-651078/
+> http://forums.gentoo.org/viewtopic-p-5077382.html?sid=a51c3a0fba6aa854c0b49b8fae5cc15a
+>
+> We found that this regression seems to be introduced by the bugfix
+> "aacraid: fix driver failure with Dell PowerEdge
+> Expandable RAID Controller 3/Di":
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+>
+> By simply removing the quirk flag for our controller, we could boot again.
+>
+> We did some quick stress tests on an AMD64bit machine with 16GB of RAM 
+> and saw no problems after this change:
+>
+> diff -ur linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c
+> --- linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c	2008-09-15 16:07:14.000000000 +0100
+> +++ linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c	2008-09-15 16:09:26.000000000 +0100
+> @@ -176,7 +176,7 @@
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
+> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Adaptec 2200S (Vulcan) */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+>
+> Can this be safely changed/merged? Or is this the wrong way to fix it?
+>
+> Please note that we also have machines equipped with newer Adaptec 2230S
+> controllers (PCI ID 9005:0286) which run perfectly with the current driver.
+>
+>   
+Hi,
+from what I read about this it seems to me that people are complaining also about issues with the 2120S Controller.
+So if the patch is taken in this form the original patch should be extended to cover both controllers.
 
-I have updated the dma map routines to use a function that finds the
-top-most scsi host, then use the parent of that host.  This is a bit
-ugly as every dma request does this walking, to the top of the object
-tree.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-A different option that was considered was taking the parent dev, then
-walking the dev list backward to find the first device with a dma mask,
-then using that device.
-  Eg:   while (!dev->dma_mask)  dev=3Ddev->parent;
-
-If there is a better solution, please let me know.
-
--- james s
-
-
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- drivers/scsi/scsi_lib_dma.c |   13 +++++++++----
- include/scsi/scsi_host.h    |   21 +++++++++++++++++++++
- 2 files changed, 30 insertions(+), 4 deletions(-)
-
-
-diff -upNr a/drivers/scsi/scsi_lib_dma.c b2/drivers/scsi/scsi_lib_dma.c
---- a/drivers/scsi/scsi_lib_dma.c	2008-09-23 15:12:13.000000000 -0400
-+++ b2/drivers/scsi/scsi_lib_dma.c	2008-10-03 12:19:39.000000000 -0400
-@@ -23,9 +23,11 @@ int scsi_dma_map(struct scsi_cmnd *cmd)
- 	int nseg =3D 0;
-=20
- 	if (scsi_sg_count(cmd)) {
--		struct device *dev =3D cmd->device->host->shost_gendev.parent;
-+		struct Scsi_Host *shost;
-=20
--		nseg =3D dma_map_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
-+		shost =3D dev_to_phys_shost(&cmd->device->sdev_gendev);
-+		nseg =3D dma_map_sg(shost->shost_gendev.parent,
-+				  scsi_sglist(cmd), scsi_sg_count(cmd),
- 				  cmd->sc_data_direction);
- 		if (unlikely(!nseg))
- 			return -ENOMEM;
-@@ -41,10 +43,13 @@ EXPORT_SYMBOL(scsi_dma_map);
- void scsi_dma_unmap(struct scsi_cmnd *cmd)
- {
- 	if (scsi_sg_count(cmd)) {
--		struct device *dev =3D cmd->device->host->shost_gendev.parent;
-+		struct Scsi_Host *shost;
-=20
--		dma_unmap_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
-+		shost =3D dev_to_phys_shost(&cmd->device->sdev_gendev);
-+		dma_unmap_sg(shost->shost_gendev.parent,
-+			     scsi_sglist(cmd), scsi_sg_count(cmd),
- 			     cmd->sc_data_direction);
- 	}
- }
- EXPORT_SYMBOL(scsi_dma_unmap);
-+
-diff -upNr a/include/scsi/scsi_host.h b2/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	2008-09-23 15:12:20.000000000 -0400
-+++ b2/include/scsi/scsi_host.h	2008-10-03 12:16:46.000000000 -0400
-@@ -696,6 +696,10 @@ static inline void *shost_priv(struct Sc
-=20
- int scsi_is_host_device(const struct device *);
-=20
-+/*
-+ * walks object list backward, to find the first shost object.
-+ * Skips over transport objects that may not be stargets, etc
-+ */
- static inline struct Scsi_Host *dev_to_shost(struct device *dev)
- {
- 	while (!scsi_is_host_device(dev)) {
-@@ -706,6 +710,23 @@ static inline struct Scsi_Host *dev_to_s
- 	return container_of(dev, struct Scsi_Host, shost_gendev);
- }
-=20
-+/*
-+ * walks object list backward, to find the top-most shost object.
-+ * Skips over transport objects that may be vports, shosts under
-vports, etc=20
-+ */
-+static inline struct Scsi_Host *dev_to_phys_shost(struct device *dev)
-+{
-+	struct Scsi_Host *shost_new =3D dev_to_shost(dev);
-+	struct Scsi_Host *shost =3D shost_new;
-+
-+	while (shost_new) {
-+		shost_new =3D dev_to_shost(shost->shost_gendev.parent);
-+		if (shost_new)
-+			shost =3D shost_new;
-+	}
-+	return shost;
-+}
-+
- static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- {
- 	return shost->shost_state =3D=3D SHOST_RECOVERY ||
+---
+diff -Naurp linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c
+--- linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c	2008-09-25 18:06:23.000000000 +0200
++++ linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c	2008-10-03 12:12:06.000000000 +0200
+@@ -175,8 +175,8 @@ static struct aac_driver_ident aac_drive
+ 	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* PERC 3/Di (Boxster/PERC3DiB) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2120S (Crusader) */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2200S (Vulcan) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+ 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+ 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
