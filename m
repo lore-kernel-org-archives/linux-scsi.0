@@ -1,32 +1,74 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Alternative TRIM proposal
-Date: Tue, 7 Oct 2008 13:39:31 +0200
-Message-ID: <20081007113931.GU19428@kernel.dk>
-References: <200810021732.m92HW7qL015836@coles02.co.lsil.com> <OF93179061.8BBD23CF-ON862574D6.006C600D-862574D6.006E8EBB@seagate.com> <20081003154237.GT13822@parisc-linux.org>
+Subject: Re: [PATCH] scsi: sr.c use unaligned access helpers
+Date: Tue, 7 Oct 2008 14:10:26 +0200
+Message-ID: <20081007121025.GY19428@kernel.dk>
+References: <1223081173.6778.4.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:36757 "EHLO pasmtpB.tele.dk"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:58925 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753007AbYJGLkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2008 07:40:01 -0400
+	id S1752857AbYJGMKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2008 08:10:55 -0400
 Content-Disposition: inline
-In-Reply-To: <20081003154237.GT13822@parisc-linux.org>
+In-Reply-To: <1223081173.6778.4.camel@brick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Gerry.Houlder@seagate.com, dougg@torque.net, "Knight, Frederick" <Frederick.Knight@netapp.com>, linux-scsi@vger.kernel.org, t10@t10.org, David Woodhouse <dwmw2@infradead.org>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 03 2008, Matthew Wilcox wrote:
-> It is today the case in Linux that each extent will be sent from the
-> filesystem to the block layer individually.  I can't speak to other
-> operating systems, maybe some of them allow filesystems to send a list
-> of extents to the SCSI layer, maybe their SCSI layer can take extents
-> out of the queue and bundle them together into a single command.
+On Fri, Oct 03 2008, Harvey Harrison wrote:
+> Preserve the cd->capacity indentation near the #if 0'd if() statement.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  drivers/scsi/sr.c |   26 ++++++++------------------
+>  1 files changed, 8 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 27f5bfd..f1b650e 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -45,6 +45,7 @@
+>  #include <linux/blkdev.h>
+>  #include <linux/mutex.h>
+>  #include <asm/uaccess.h>
+> +#include <asm/unaligned.h>
+>  
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_dbg.h>
+> @@ -280,10 +281,7 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+>  		case ILLEGAL_REQUEST:
+>  			if (!(SCpnt->sense_buffer[0] & 0x90))
+>  				break;
+> -			error_sector = (SCpnt->sense_buffer[3] << 24) |
+> -				(SCpnt->sense_buffer[4] << 16) |
+> -				(SCpnt->sense_buffer[5] << 8) |
+> -				SCpnt->sense_buffer[6];
+> +			error_sector = get_unaligned_be32(SCpnt->sense_buffer + 3);
+>  			if (SCpnt->request->bio != NULL)
+>  				block_sectors =
+>  					bio_sectors(SCpnt->request->bio);
+> @@ -445,13 +443,9 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+>  		SCpnt->sdb.length = this_count * s_size;
+>  	}
+>  
+> -	SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+> -	SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+> -	SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+> -	SCpnt->cmnd[5] = (unsigned char) block & 0xff;
+> +	put_unaligned_be32(block, SCpnt->cmnd + 2);
+>  	SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
+> -	SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
+> -	SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
+> +	put_unaligned_be16(this_count, SCpnt->cmnd + 7);
+>  
+>  	/*
+>  	 * We shouldn't disconnect in the middle of a sector, so with a dumb
 
-We do that for lots of regular IO as well, but still support merging
-them into a single command - the same could be done for trim, basically
-making any of them mergable into a single command.
+Lets not please, it reduces readability a lot when you are used to SCSI
+cdb filling.
+
 
 -- 
 Jens Axboe
