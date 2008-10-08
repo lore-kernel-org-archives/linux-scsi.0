@@ -1,51 +1,93 @@
-From: Marcel Holtmann <holtmann@linux.intel.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 Subject: Re: [RFC] Normalizing byteorder/unaligned access API
-Date: Wed, 08 Oct 2008 09:31:24 +0200
-Message-ID: <1223451084.11272.250.camel@violet.holtmann.net>
+Date: Wed, 08 Oct 2008 00:34:34 -0700
+Message-ID: <1223451274.8195.87.camel@brick>
 References: <1223416391.8195.22.camel@brick>
-	 <20081007232807.GL25780@parisc-linux.org> <1223422542.8195.42.camel@brick>
-	 <20081007235533.GN25780@parisc-linux.org>
+	 <Pine.LNX.4.64.0810080908480.19202@anakin>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <20081007235533.GN25780@parisc-linux.org>
+In-Reply-To: <Pine.LNX.4.64.0810080908480.19202@anakin>
 Sender: linux-arch-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Harvey Harrison <harvey.harrison@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Matthew,
-
-> > > On Tue, Oct 07, 2008 at 02:53:11PM -0700, Harvey Harrison wrote:
-> > > > In addition, there are some subsystems (scsi) that are looking into some
-> > > > differently sized endian helpers (be24) and it may be worthwhile to have
-> > > > some agreement whether it is worth making them common infrastructure and
-> > > > whether they should present a similar API to the common byteorder/unaligned
-> > > > API.
-> > > 
-> > > I still think SCSI should have its own accessors, even if they're
-> > > just wrappers around the common BE code.
-> > > 
+On Wed, 2008-10-08 at 09:13 +0200, Geert Uytterhoeven wrote:
+> On Tue, 7 Oct 2008, Harvey Harrison wrote:
+> > [related question regarding the SCSI-private endian helper needs at the end]
 > > 
-> > I thought it was generally discouraged that subsystems have trivial
-> > wrappers like that, otherwise you wind up with:
+> > Currently on the read side, we have (le16 as an example endianness)
 > > 
-> > scsi_get_u32
-> > usb_get_u32
-> > v4l_get_u32
+> > le16_to_cpup(__le16 *)
+> > get_unaligned_le16(void *)
 > > 
-> > ... and so on, where as if they all used the common names, people more
-> > used to other areas of the kernel can still recognize what the code
-> > is doing without having the lookup another define.
+> > And on the write side:
+> > 
+> > *(__le16)ptr = cpu_to_le16(u16)
+> > put_unaligned_le16(u16, void *);
+> > 
+> > On the read side, Al said he would have preferred the unaligned version
+> > take the same types as the aligned, rather than void *.  AKPM didn't think
 > 
-> My point is that they don't have to recognise what the code is doing.
-> They don't have to know if the protocol is BE or LE, only that USB code
-> is accessing the data in the appropriate way for USB.
+> As I said before, me too (take the same types as the aligned). I like to
+> rely on sparse for:
+> 
+>     struct {
+> 	...
+> 	__le32 x;
+> 	...
+>     } s __attribute__ ((packed));
+> 
+> get_unaligned_le16(&s.x);
 
-nice idea, but in the real world some stacks mix big and little endian
-in their protocols. Take Bluetooth as an example ;)
+Agreed.
 
-Regards
+> 
+> > the use of get_ was that great as get/put generally implies some kind of reference
+> > taking in the kernel.
+> 
+> OK.
+> 
+> > As the le16_to_cpup has been around for so long and is more recognizable, let's
+> > make it the same for the unaligned case and typesafe:
+> > 
+> > le16_to_cpup(__le16 *)
+> > unaligned_le16_to_cpup(__le16 *)
+> 
+> I always hated that naming...
 
-Marcel
+True, but there are already lots of places that use them...and I didn't want to
+introduce an identical name for something that already exists, so I worked using
+the existing name.  I think load_le16/load_unaligned_le16 is the best so far,
+but I can see people being unhappy with the duplication of le16_to_cpup.
+
+But it is trivial to move existing users over if that's the way the decision
+goes.
+
+> 
+> > On the write side, the above get/put and type issues are still there, in addition AKPM felt
+> > that the ordering of the put_unaligned parameters was opposite what was intuitive and that
+> > the pointer should come first.
+> > 
+> > In this case, as there is currently no aligned helper (other than in some drivers defining macros)
+> > define the api thusly:
+> > 
+> > Aligned:
+> > write_le16(__le16 *ptr, u16 val)
+> > 
+> > Unaligned:
+> > unaligned_write_le16(__le16 *ptr, u16 val)
+> 
+> Does it write to MMIO I/O space? No? Then please don't use write (like
+> in writeb()).
+> 
+> What about load_{unaligned_,}le16() and store_{unaligned_,}le16()?
+
+OK, will stay away from write as well.  I think store looks good, with
+load_ there is still a question of duplicating existing functionality.
+
+Thanks for the feedback.
+
+Harvey
