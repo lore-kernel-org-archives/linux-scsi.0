@@ -1,61 +1,82 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 Subject: Re: [RFC] Normalizing byteorder/unaligned access API
-Date: Tue, 07 Oct 2008 17:02:18 -0700
-Message-ID: <1223424138.8195.47.camel@brick>
+Date: Wed, 8 Oct 2008 09:13:09 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0810080908480.19202@anakin>
 References: <1223416391.8195.22.camel@brick>
-	 <20081007232807.GL25780@parisc-linux.org> <1223422542.8195.42.camel@brick>
-	 <20081007235533.GN25780@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:29202 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758744AbYJHACW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2008 20:02:22 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3708529wfd.4
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2008 17:02:21 -0700 (PDT)
-In-Reply-To: <20081007235533.GN25780@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754371AbYJHHNX@vger.kernel.org>
+In-Reply-To: <1223416391.8195.22.camel@brick>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Tue, 2008-10-07 at 17:55 -0600, Matthew Wilcox wrote:
-> On Tue, Oct 07, 2008 at 04:35:42PM -0700, Harvey Harrison wrote:
-> > On Tue, 2008-10-07 at 17:28 -0600, Matthew Wilcox wrote:
-> > > On Tue, Oct 07, 2008 at 02:53:11PM -0700, Harvey Harrison wrote:
-> > > > In addition, there are some subsystems (scsi) that are looking into some
-> > > > differently sized endian helpers (be24) and it may be worthwhile to have
-> > > > some agreement whether it is worth making them common infrastructure and
-> > > > whether they should present a similar API to the common byteorder/unaligned
-> > > > API.
-> > > 
-> > > I still think SCSI should have its own accessors, even if they're
-> > > just wrappers around the common BE code.
-> > > 
-> > 
-> > I thought it was generally discouraged that subsystems have trivial
-> > wrappers like that, otherwise you wind up with:
-> > 
-> > scsi_get_u32
-> > usb_get_u32
-> > v4l_get_u32
-> > 
-> > ... and so on, where as if they all used the common names, people more
-> > used to other areas of the kernel can still recognize what the code
-> > is doing without having the lookup another define.
+On Tue, 7 Oct 2008, Harvey Harrison wrote:
+> [related question regarding the SCSI-private endian helper needs at the end]
 > 
-> My point is that they don't have to recognise what the code is doing.
-> They don't have to know if the protocol is BE or LE, only that USB code
-> is accessing the data in the appropriate way for USB.
+> Currently on the read side, we have (le16 as an example endianness)
 > 
+> le16_to_cpup(__le16 *)
+> get_unaligned_le16(void *)
+> 
+> And on the write side:
+> 
+> *(__le16)ptr = cpu_to_le16(u16)
+> put_unaligned_le16(u16, void *);
+> 
+> On the read side, Al said he would have preferred the unaligned version
+> take the same types as the aligned, rather than void *.  AKPM didn't think
 
-Or you go the packed-struct route and use the common helpers, and sparse tells
-you if you use the wrong endianness.  Even better, the structs act as decent
-documentation of the data being worked on.
+As I said before, me too (take the same types as the aligned). I like to
+rely on sparse for:
 
-YMMV,
+    struct {
+	...
+	__le32 x;
+	...
+    } s __attribute__ ((packed));
 
-Harvey
+get_unaligned_le16(&s.x);
 
+> the use of get_ was that great as get/put generally implies some kind of reference
+> taking in the kernel.
+
+OK.
+
+> As the le16_to_cpup has been around for so long and is more recognizable, let's
+> make it the same for the unaligned case and typesafe:
+> 
+> le16_to_cpup(__le16 *)
+> unaligned_le16_to_cpup(__le16 *)
+
+I always hated that naming...
+
+> On the write side, the above get/put and type issues are still there, in addition AKPM felt
+> that the ordering of the put_unaligned parameters was opposite what was intuitive and that
+> the pointer should come first.
+> 
+> In this case, as there is currently no aligned helper (other than in some drivers defining macros)
+> define the api thusly:
+> 
+> Aligned:
+> write_le16(__le16 *ptr, u16 val)
+> 
+> Unaligned:
+> unaligned_write_le16(__le16 *ptr, u16 val)
+
+Does it write to MMIO I/O space? No? Then please don't use write (like
+in writeb()).
+
+What about load_{unaligned_,}le16() and store_{unaligned_,}le16()?
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
