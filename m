@@ -1,19 +1,18 @@
 From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [lm-sensors] [PATCH 06/12] adt7470: Load automatically on
- IntelliStation Z30 via DMI
-Date: Wed, 8 Oct 2008 13:08:08 +0200
-Message-ID: <20081008130808.3384d650@hyperion.delvare>
+Subject: Re: [lm-sensors] [PATCH 07/12] ics932s401: New driver
+Date: Wed, 8 Oct 2008 13:09:59 +0200
+Message-ID: <20081008130959.174cc38a@hyperion.delvare>
 References: <20081007011824.12701.39532.stgit@elm3a70.beaverton.ibm.com>
-	<20081007011854.12701.39465.stgit@elm3a70.beaverton.ibm.com>
+	<20081007011859.12701.8929.stgit@elm3a70.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zone0.gcu-squad.org ([212.85.147.21]:40507 "EHLO
+Received: from zone0.gcu-squad.org ([212.85.147.21]:48458 "EHLO
 	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753287AbYJHLIZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2008 07:08:25 -0400
-In-Reply-To: <20081007011854.12701.39465.stgit@elm3a70.beaverton.ibm.com>
+	with ESMTP id S1754075AbYJHLKO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2008 07:10:14 -0400
+In-Reply-To: <20081007011859.12701.8929.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Darrick J. Wong" <djwong@us.ibm.com>
@@ -21,35 +20,50 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-scsi@vger.ker
 
 Hi Darrick,
 
-On Mon, 06 Oct 2008 18:18:54 -0700, Darrick J. Wong wrote:
+On Mon, 06 Oct 2008 18:18:59 -0700, Darrick J. Wong wrote:
 > 
 > Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 > ---
 > 
->  drivers/hwmon/adt7470.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
+>  Documentation/hwmon/ics932s401 |   31 ++
+>  drivers/hwmon/Kconfig          |   10 +
+>  drivers/hwmon/Makefile         |    1 
+>  drivers/hwmon/ics932s401.c     |  516 ++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 558 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/hwmon/adt7470.c b/drivers/hwmon/adt7470.c
-> index 656bf3d..ef26014 100644
-> --- a/drivers/hwmon/adt7470.c
-> +++ b/drivers/hwmon/adt7470.c
-> @@ -1114,3 +1114,6 @@ MODULE_LICENSE("GPL");
->  
->  module_init(adt7470_init);
->  module_exit(adt7470_exit);
+> diff --git a/Documentation/hwmon/ics932s401 b/Documentation/hwmon/ics932s401
+> new file mode 100644
+> index 0000000..c2e2c4a
+> --- /dev/null
+> +++ b/Documentation/hwmon/ics932s401
+> @@ -0,0 +1,31 @@
+> +Kernel driver ics932s401
+> +======================
 > +
-> +MODULE_ALIAS("dmi:bvnIBM:*:rn9228:*");
-> +MODULE_ALIAS("dmi:bvnIBM:*:rn9232:*");
+> +Supported chips:
+> +  * Analog Devices ICS932S401
+> +    Prefix: 'ics932s401'
+> +    Addresses scanned: I2C 0x69
+> +    Datasheet: Publicly available at the Integrated Circuits website
+> +
+> +Author: Darrick J. Wong
+> +
+> +Description
+> +-----------
+> +
+> +This driver implements support for the Integrated Circuits ICS932S401 chip family.
+> +
+> +This chip has 4 clock outputs--a base clock for the CPU (which is likely
+> +multiplied to get the real CPU clock), a system clock, a PCI clock, a USB
+> +clock, and a reference clock.  The driver reports selected and actual
+> +frequency.  If spread spectrum mode is enabled, the driver also reports by what
+> +percent the clock signal is being spread, which should be between 0 and -0.5%.
+> +All frequencies are reported in KHz.
+> +
+> +The ICS932S401 monitors all inputs continuously. The driver will not read
+> +the registers more often than once every other second.
 
-Nack. We have a user-space script to detect hardware monitoring chips
-and load the corresponding drivers. We aren't going to add 2000+
-DMI-based module aliases to handle all motherboards out there in the
-kernel directly, this simply doesn't scale. And you need some
-user-space configuration in almost all cases, so even DMI-based module
-aliases wouldn't give you an automatic setup.
-
-On top of that, in cases where detection doesn't work, there are better
-ways to instantiate specific I2C devices now.
+I fail to see how this has anything to do with hardware monitoring.
 
 -- 
 Jean Delvare
