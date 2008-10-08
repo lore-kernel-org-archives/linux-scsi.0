@@ -1,93 +1,71 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [RFC] Normalizing byteorder/unaligned access API
-Date: Wed, 08 Oct 2008 00:34:34 -0700
-Message-ID: <1223451274.8195.87.camel@brick>
-References: <1223416391.8195.22.camel@brick>
-	 <Pine.LNX.4.64.0810080908480.19202@anakin>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: Re: [lm-sensors] [PATCH 01/12] hwmon: Define sysfs interface for
+ energy  consumption register.
+Date: Wed, 8 Oct 2008 10:09:57 +0200
+Message-ID: <20081008100957.258d1e80@hyperion.delvare>
+References: <20081007011824.12701.39532.stgit@elm3a70.beaverton.ibm.com>
+	<20081007011829.12701.29034.stgit@elm3a70.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0810080908480.19202@anakin>
-Sender: linux-arch-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-arch <linux-arch@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zone0.gcu-squad.org ([212.85.147.21]:23040 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754019AbYJHIKW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2008 04:10:22 -0400
+In-Reply-To: <20081007011829.12701.29034.stgit@elm3a70.beaverton.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-scsi@vger.kernel.org>, lm-sensors <lm-sensors@lm-sensors.org>
 
-On Wed, 2008-10-08 at 09:13 +0200, Geert Uytterhoeven wrote:
-> On Tue, 7 Oct 2008, Harvey Harrison wrote:
-> > [related question regarding the SCSI-private endian helper needs at the end]
-> > 
-> > Currently on the read side, we have (le16 as an example endianness)
-> > 
-> > le16_to_cpup(__le16 *)
-> > get_unaligned_le16(void *)
-> > 
-> > And on the write side:
-> > 
-> > *(__le16)ptr = cpu_to_le16(u16)
-> > put_unaligned_le16(u16, void *);
-> > 
-> > On the read side, Al said he would have preferred the unaligned version
-> > take the same types as the aligned, rather than void *.  AKPM didn't think
-> 
-> As I said before, me too (take the same types as the aligned). I like to
-> rely on sparse for:
-> 
->     struct {
-> 	...
-> 	__le32 x;
-> 	...
->     } s __attribute__ ((packed));
-> 
-> get_unaligned_le16(&s.x);
+Hi Darrick,
 
-Agreed.
-
+On Mon, 06 Oct 2008 18:18:29 -0700, Darrick J. Wong wrote:
 > 
-> > the use of get_ was that great as get/put generally implies some kind of reference
-> > taking in the kernel.
+> Describe the sysfs files that were introduced in the ibmaem driver.
 > 
-> OK.
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
 > 
-> > As the le16_to_cpup has been around for so long and is more recognizable, let's
-> > make it the same for the unaligned case and typesafe:
-> > 
-> > le16_to_cpup(__le16 *)
-> > unaligned_le16_to_cpup(__le16 *)
+>  Documentation/hwmon/sysfs-interface |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
 > 
-> I always hated that naming...
-
-True, but there are already lots of places that use them...and I didn't want to
-introduce an identical name for something that already exists, so I worked using
-the existing name.  I think load_le16/load_unaligned_le16 is the best so far,
-but I can see people being unhappy with the duplication of le16_to_cpup.
-
-But it is trivial to move existing users over if that's the way the decision
-goes.
-
+> diff --git a/Documentation/hwmon/sysfs-interface b/Documentation/hwmon/sysfs-interface
+> index 2d84573..6d47cb2 100644
+> --- a/Documentation/hwmon/sysfs-interface
+> +++ b/Documentation/hwmon/sysfs-interface
+> @@ -321,6 +321,14 @@ curr[1-*]_input	Current input value
+>  		Unit: milliampere
+>  		RO
+>  
+> +**********
+> +* Energy *
+> +**********
+> +
+> +energy[1-*]_input		Cumulative energy use
+> +				Unit: microJoule
+> +				RO
+> +
+>  *********
+>  * Power *
+>  *********
+> @@ -329,6 +337,10 @@ power[1-*]_average		Average power use
+>  				Unit: microWatt
+>  				RO
+>  
+> +power[1-*]_average_interval	Power use averaging interval
+> +				Unit: milliseconds
+> +				RW
+> +
+>  power[1-*]_average_highest	Historical average maximum power use
+>  				Unit: microWatt
+>  				RO
 > 
-> > On the write side, the above get/put and type issues are still there, in addition AKPM felt
-> > that the ordering of the put_unaligned parameters was opposite what was intuitive and that
-> > the pointer should come first.
-> > 
-> > In this case, as there is currently no aligned helper (other than in some drivers defining macros)
-> > define the api thusly:
-> > 
-> > Aligned:
-> > write_le16(__le16 *ptr, u16 val)
-> > 
-> > Unaligned:
-> > unaligned_write_le16(__le16 *ptr, u16 val)
 > 
-> Does it write to MMIO I/O space? No? Then please don't use write (like
-> in writeb()).
-> 
-> What about load_{unaligned_,}le16() and store_{unaligned_,}le16()?
 
-OK, will stay away from write as well.  I think store looks good, with
-load_ there is still a question of duplicating existing functionality.
+I'm taking this in my tree, thanks (with a minor change: moving Energy
+after Power for consistency.)
 
-Thanks for the feedback.
-
-Harvey
+-- 
+Jean Delvare
