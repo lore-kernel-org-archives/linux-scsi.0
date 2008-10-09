@@ -1,64 +1,31 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: lpfc sleeps while holding a spinlock
-Date: Thu, 9 Oct 2008 12:50:11 -0400
-Message-ID: <48EE3643.9040607@emulex.com>
-References: <20081009164101.GX25780@parisc-linux.org>
+Date: Thu, 9 Oct 2008 11:19:52 -0600
+Message-ID: <20081009171951.GY25780@parisc-linux.org>
+References: <20081009164101.GX25780@parisc-linux.org> <48EE3643.9040607@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:52970 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754213AbYJIQuW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2008 12:50:22 -0400
-In-Reply-To: <20081009164101.GX25780@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:42913 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753701AbYJIRUI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2008 13:20:08 -0400
+Content-Disposition: inline
+In-Reply-To: <48EE3643.9040607@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: James Smart <James.Smart@Emulex.Com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-We already fixed this in the 8.2.8 patches that were sent and are 
-sitting in James's git pools. Specifically, see patch8:
-http://marc.info/?l=linux-scsi&m=121962902731358&w=2
+On Thu, Oct 09, 2008 at 12:50:11PM -0400, James Smart wrote:
+> We already fixed this in the 8.2.8 patches that were sent and are 
+> sitting in James's git pools. Specifically, see patch8:
+> http://marc.info/?l=linux-scsi&m=121962902731358&w=2
 
--- james s
+Looks like a fine way to avoid the problem.
 
-Matthew Wilcox wrote:
-> This is with 2.6.27-rc9; most recent non-janitorial commit to the lpfc
-> directory is ff0f4cb5ea322dcc32d08bab2d758c050ba1ab07 (Update lpfc driver
-> version to 8.2.7).  The janitorial commits do not affect the code in
-> question.
-> 
-> 
-> This bug gets reported by lockdep as a mismatch between holding the
-> hbalock with interrupts on vs acquiring it in interrupt context, but
-> actually the problem is a GFP_KERNEL allocation while holding a spinlock:
-> 
-> lpfc_sli_hbqbuf_fill_hbqs(struct lpfc_hba *phba, uint32_t hbqno,
-> uint32_t count)
-> {
-> ...
->         spin_lock_irqsave(&phba->hbalock, flags);
-> ...
->         for (i = start; i < end; i++) {
->                 hbq_buffer = (phba->hbqs[hbqno].hbq_alloc_buffer)(phba);
-> 
-> where previously:
-> drivers/scsi/lpfc/lpfc_init.c: phba->hbqs[LPFC_ELS_HBQ].hbq_alloc_buffer = lpfc_els_hbq_alloc;
-> 
-> and:
-> lpfc_els_hbq_alloc(struct lpfc_hba *phba)
-> {
->         struct hbq_dmabuf *hbqbp;
->         hbqbp = kmalloc(sizeof(struct hbq_dmabuf), GFP_KERNEL);
-> 
-> Presumably these GFP_KERNEL should become GFP_ATOMIC, or the spinlock
-> shouldn't be taken at this point, but I haven't looked deeply enough
-> into the driver to determine which course of action is correct.
-> 
-> --
-> Matthew Wilcox                          Intel Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours.  We can't possibly take such
-> a retrograde step."
-> 
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
