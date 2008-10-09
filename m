@@ -1,31 +1,27 @@
 From: Meelis Roos <mroos@linux.ee>
 Subject: Re: panic while doing lots of IO on lpfc
-Date: Thu, 9 Oct 2008 18:06:09 +0300 (EEST)
-Message-ID: <Pine.SOC.4.64.0810091804290.5106@math.ut.ee>
+Date: Thu, 9 Oct 2008 19:21:19 +0300 (EEST)
+Message-ID: <Pine.SOC.4.64.0810091919260.5106@math.ut.ee>
 References: <Pine.SOC.4.64.0810091714230.5106@math.ut.ee>
- <200810101233.18726.nickpiggin@yahoo.com.au> <Pine.SOC.4.64.0810091737430.5106@math.ut.ee>
+ <200810101233.18726.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:53972 "EHLO smtp2.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753436AbYJIPGK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Oct 2008 11:06:10 -0400
-In-Reply-To: <Pine.SOC.4.64.0810091737430.5106@math.ut.ee>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759803AbYJIQVq@vger.kernel.org>
+In-Reply-To: <200810101233.18726.nickpiggin@yahoo.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Nick Piggin <nickpiggin@yahoo.com.au>
 Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-> Will try netconsole after haveing finished the same test with Qlogic 
-> HBA.
+> Tried to lock a free page. Is the address of the page always the same,
+> and the first bit in flags always set after each reboot? Does the
+> machine pass a memtest?
 
-With qla2100 it has problems too - the 'cat' that reads from SATA 
-partitsion hangs in R state and is not killable with kill -9.
+No, the machine does not pass memtest :(
+Thanks for the reminder.
 
-So it does not seem to be lpfc specific.
-
-Will try netconsole next to capture more information.
+So please ignore this thread - if I find any errors with good RAM, I 
+will open a new thread.
 
 -- 
 Meelis Roos (mroos@linux.ee)
