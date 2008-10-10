@@ -1,96 +1,55 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] BUG: nr_phys_segments cannot be less than
- nr_hw_segments
-Date: Fri, 10 Oct 2008 21:49:12 +0900
-Message-ID: <20081010214852Y.fujita.tomonori@lab.ntt.co.jp>
-References: <20081010120344.GC19428@kernel.dk>
-	<20081010213226J.fujita.tomonori@lab.ntt.co.jp>
-	<20081010123719.GE19428@kernel.dk>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: pass through support: question: blk_rq_map_sg() usage...
+Date: Fri, 10 Oct 2008 06:26:38 -0700
+Message-ID: <CD8CD8F6-4762-43D0-BC96-6D0695C5DB76@qlogic.com>
+References: <F86BE6EA-AE56-4780-96A4-01C67625C0D5@qlogic.com> <20081010100102W.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47976 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755506AbYJJM52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2008 08:57:28 -0400
-In-Reply-To: <20081010123719.GE19428@kernel.dk>
+Received: from avexch2.qlogic.com ([198.70.193.116]:18297 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756179AbYJJN0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2008 09:26:40 -0400
+In-Reply-To: <20081010100102W.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, knikanth@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Smart@Emulex.Com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Fri, 10 Oct 2008 14:37:19 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
 
-> On Fri, Oct 10 2008, FUJITA Tomonori wrote:
-> > On Fri, 10 Oct 2008 14:03:44 +0200
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > On Tue, Oct 07 2008, FUJITA Tomonori wrote:
-> > > > On Thu, 2 Oct 2008 19:13:57 +0200
-> > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > 
-> > > > > On Thu, Oct 02 2008, James Bottomley wrote:
-> > > > > > On Thu, 2008-10-02 at 18:58 +0200, Jens Axboe wrote:
-> > > > > > > On Thu, Oct 02 2008, James Bottomley wrote:
-> > > > > > > > The bug would appear to be that we sometimes only look at q->max_sectors
-> > > > > > > > when deciding on mergability.  Either we have to insist on max_sectors
-> > > > > > > > <= hw_max_sectors, or we have to start using min(q->max_sectors,
-> > > > > > > > q->max_hw_sectors) for this.
-> > > > > > > 
-> > > > > > > q->max_sectors MUST always be <= q->max_hw_sectors, otherwise we could
-> > > > > > > be sending down requests that are too large for the device to handle. So
-> > > > > > > that condition would be a big bug. The sysfs interface checks for this,
-> > > > > > > and blk_queue_max_sectors() makes sure that is true as well.
-> > > > > > 
-> > > > > > Yes, that seems always to be enforced.  Perhaps there are other ways of
-> > > > > > tripping this problem ... I'm still sure if it occurs it's because we do
-> > > > > > a physical merge where a virtual merge is forbidden.
-> > > > > > 
-> > > > > > > The fixes proposed still look weird. There is no phys vs hw segment
-> > > > > > > constraints, the request must adhere to the limits set by both. It's
-> > > > > > > mostly a moot point anyway, as 2.6.28 will get rid of the hw accounting
-> > > > > > > anyway.
-> > > > > > 
-> > > > > > Agree all three proposed fixes look wrong.  However, if it's what I
-> > > > > > think, just getting rid of hw accounting won't fix the problem because
-> > > > > > we'll still have the case where a physical merge is forbidden by iommu
-> > > > > > constraints ... this still needs to be accounted for.
-> > > > > > 
-> > > > > > What we really need is a demonstration of what actually is going
-> > > > > > wrong ...
-> > > > > 
-> > > > > Yep, IIRC we both asked for that the last time as well... Nikanth?
-> > > > 
-> > > > Possibly, blk_phys_contig_segment might miscalculate
-> > > > q->max_segment_size?
-> > > > 
-> > > > blk_phys_contig_segment does:
-> > > > 
-> > > > req->biotail->bi_size + next_req->bio->bi_size > q->max_segment_size;
-> > > > 
-> > > > But it's possible that req->biotail and the previous bio are supposed
-> > > > be merged into one segment? Then we could create too large segment
-> > > > here.
-> > > 
-> > > Hmm yes, that looks like it could indeed be a problem!
-> > 
-> > I think so.
-> > 
-> > 
-> > > We could fix this
-> > > with similar logic to what we used to do for the hw merging, keep track
-> > > of the current segment size that this bio belongs to, so it would end up
-> > > ala
-> > 
-> > Yeah, exactly.
-> > 
-> > You want a fix for this 2.6.28? Or disable this feature for 2.6.28?
-> 
-> Lets fix it. It wont be part of the initial merge, since it'll need some
-> dedicated testing, but we can get it there for 2.6.28. Shall I interpret
-> your message as willingness to write up the fix? :)
+On Oct 9, 2008, at 6:28 PM, FUJITA Tomonori wrote:
 
-Yeah, it's on this weekend todo list. :) I want to look at the code
-again and make sure I correctly understand the problem.
+> On Thu, 9 Oct 2008 11:08:37 -0700
+> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+>
+>> I've got a quick question on the blk_rq_map_sg() API usage.
+>> In an efforts of implementing pass through support on FC transport
+>> layer, the transport would call blk_rq_map_sg() API to map the pages
+>> in the bio structure so that the LLD could DMA to/from the mapped
+>> addresses - as specified in the section 2.2 of the ~/Documentation/
+>> block/biodoc.txt.
+>> To me, it seems like a right way to do..., could anyone comment on
+>> this approach?
+>
+> Sounds reasonable for me.
+>
+> fc transport calls blk_rq_map_sg() and then llds easily call
+> dma_map_sg and do DMA transfer.
+Yes,  figured out that it needs to call dma_map_sg() after the  
+blk_rq_map_sg().
+
+>
+>
+>
+>> Also, I couldn't find symmetric counter-part for the API (i.e.,
+>> blk_rq_unmap_sg() or similar).
+>> Does this means that we don't need to unmap those addresses?
+>
+> There is no symmetric counterpart for blk_rq_unmap_sg. All you need to
+> do is to free scatter lists. dma_map_sg maps addresses in scatter
+> lists to DMA-capable addresses. So you need to call its symmetric
+> counterpart, dma_unmap_sg after the completion of DMA transfer.
+OK. Thanks for the clarification.
+
+Seokmann
