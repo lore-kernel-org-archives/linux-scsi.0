@@ -1,34 +1,56 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: [PATCH] 3w-xxxx: remove unnecessary local_irq_save/restore for scsi sg copy API
-Date: Fri, 10 Oct 2008 12:43:09 -0700
-Message-ID: <b1bc6a000810101243n59644f4cqfdc8b702ece2c765@mail.gmail.com>
-References: <20081009112510D.fujita.tomonori@lab.ntt.co.jp>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] sd: remove command-size switching code
+Date: Fri, 10 Oct 2008 16:03:20 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810101559440.14173-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:58388 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760676AbYJJTnL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2008 15:43:11 -0400
-Received: by gxk9 with SMTP id 9so1239681gxk.13
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2008 12:43:09 -0700 (PDT)
-In-Reply-To: <20081009112510D.fujita.tomonori@lab.ntt.co.jp>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:60881 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1761802AbYJJUDV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2008 16:03:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, Adam Radford <linuxraid@amcc.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 8, 2008 at 7:25 PM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
-> Since the commit 50bed2e2862a8f3a4f7d683d0d27292e71ef18b9 (sg: disable
-> interrupts inside sg_copy_buffer), no need to disable interrupts
-> before calling scsi_sg_copy_from_buffer. So we can simplify
-> tw_transfer_internal, which disables interrupts just for
-> scsi_sg_copy_from_buffer.
+[Resending because of lack of response to original posting two weeks 
+ago.]
 
-Thanks for the patch.  Looks like we will need a similar one for the 3w-9xxx
-driver.
+This patch (as1138) removes from sd.c some old code for switching from
+10-byte commands to 6-byte commands.  This code is redundant -- the
+switching for READ and WRITE is already handled in
+scsi_io_completion() and the switching for MODE SENSE is already
+handled in scsi_mode_sense().  (There is no comparable switch for MODE
+SELECT, but I doubt one is needed.)
 
--Adam
+Furthermore the other handlers do a better job; they check for
+appropriate ASC and ASCQ values before blindly switching the size.
+The code in sd.c is known to cause problems with some devices by
+switching when it shouldn't.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1069,15 +1069,6 @@ static int sd_done(struct scsi_cmnd *SCp
+ 			scsi_print_sense("sd", SCpnt);
+ 			good_bytes = sd_completed_bytes(SCpnt);
+ 		}
+-		if (!scsi_device_protection(SCpnt->device) &&
+-		    SCpnt->device->use_10_for_rw &&
+-		    (SCpnt->cmnd[0] == READ_10 ||
+-		     SCpnt->cmnd[0] == WRITE_10))
+-			SCpnt->device->use_10_for_rw = 0;
+-		if (SCpnt->device->use_10_for_ms &&
+-		    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
+-		     SCpnt->cmnd[0] == MODE_SELECT_10))
+-			SCpnt->device->use_10_for_ms = 0;
+ 		break;
+ 	default:
+ 		break;
+
