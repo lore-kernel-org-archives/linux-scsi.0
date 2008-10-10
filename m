@@ -1,56 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] sd: remove command-size switching code
-Date: Fri, 10 Oct 2008 16:03:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0810101559440.14173-100000@iolanthe.rowland.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] sd: remove command-size switching code
+Date: Fri, 10 Oct 2008 14:10:38 -0600
+Message-ID: <20081010201037.GK25780@parisc-linux.org>
+References: <Pine.LNX.4.44L0.0810101559440.14173-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60881 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1761802AbYJJUDV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2008 16:03:21 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:35767 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761042AbYJJUKj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2008 16:10:39 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0810101559440.14173-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-[Resending because of lack of response to original posting two weeks 
-ago.]
+On Fri, Oct 10, 2008 at 04:03:20PM -0400, Alan Stern wrote:
+> This patch (as1138) removes from sd.c some old code for switching from
+> 10-byte commands to 6-byte commands.  This code is redundant -- the
+> switching for READ and WRITE is already handled in
+> scsi_io_completion() and the switching for MODE SENSE is already
+> handled in scsi_mode_sense().  (There is no comparable switch for MODE
+> SELECT, but I doubt one is needed.)
 
-This patch (as1138) removes from sd.c some old code for switching from
-10-byte commands to 6-byte commands.  This code is redundant -- the
-switching for READ and WRITE is already handled in
-scsi_io_completion() and the switching for MODE SENSE is already
-handled in scsi_mode_sense().  (There is no comparable switch for MODE
-SELECT, but I doubt one is needed.)
+I noticed this odd duplication a few months ago and meant to ask about
+it then, but forgot.  Thanks for cleaning this up.
 
-Furthermore the other handlers do a better job; they check for
-appropriate ASC and ASCQ values before blindly switching the size.
-The code in sd.c is known to cause problems with some devices by
-switching when it shouldn't.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1069,15 +1069,6 @@ static int sd_done(struct scsi_cmnd *SCp
- 			scsi_print_sense("sd", SCpnt);
- 			good_bytes = sd_completed_bytes(SCpnt);
- 		}
--		if (!scsi_device_protection(SCpnt->device) &&
--		    SCpnt->device->use_10_for_rw &&
--		    (SCpnt->cmnd[0] == READ_10 ||
--		     SCpnt->cmnd[0] == WRITE_10))
--			SCpnt->device->use_10_for_rw = 0;
--		if (SCpnt->device->use_10_for_ms &&
--		    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
--		     SCpnt->cmnd[0] == MODE_SELECT_10))
--			SCpnt->device->use_10_for_ms = 0;
- 		break;
- 	default:
- 		break;
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
