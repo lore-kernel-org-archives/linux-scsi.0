@@ -1,66 +1,77 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9133] aacraid driver fails with Dell PowerEdge Expandable RAID Controller 3/Di
-Date: Fri, 10 Oct 2008 03:11:29 -0700 (PDT)
-Message-ID: <20081010101129.B7F13108059@picon.linux-foundation.org>
-References: <bug-9133-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33245 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751414AbYJJKL7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2008 06:11:59 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9AABTR8026113
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2008 03:11:30 -0700
-In-Reply-To: <bug-9133-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] BUG: nr_phys_segments cannot be less than nr_hw_segments
+Date: Fri, 10 Oct 2008 14:03:44 +0200
+Message-ID: <20081010120344.GC19428@kernel.dk>
+References: <20081002165857.GL19428@kernel.dk> <1222967563.3222.30.camel@localhost.localdomain> <20081002171356.GO19428@kernel.dk> <20081007022358N.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758492AbYJJMEh@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20081007022358N.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, knikanth@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9133
+On Tue, Oct 07 2008, FUJITA Tomonori wrote:
+> On Thu, 2 Oct 2008 19:13:57 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > On Thu, Oct 02 2008, James Bottomley wrote:
+> > > On Thu, 2008-10-02 at 18:58 +0200, Jens Axboe wrote:
+> > > > On Thu, Oct 02 2008, James Bottomley wrote:
+> > > > > The bug would appear to be that we sometimes only look at q->max_sectors
+> > > > > when deciding on mergability.  Either we have to insist on max_sectors
+> > > > > <= hw_max_sectors, or we have to start using min(q->max_sectors,
+> > > > > q->max_hw_sectors) for this.
+> > > > 
+> > > > q->max_sectors MUST always be <= q->max_hw_sectors, otherwise we could
+> > > > be sending down requests that are too large for the device to handle. So
+> > > > that condition would be a big bug. The sysfs interface checks for this,
+> > > > and blk_queue_max_sectors() makes sure that is true as well.
+> > > 
+> > > Yes, that seems always to be enforced.  Perhaps there are other ways of
+> > > tripping this problem ... I'm still sure if it occurs it's because we do
+> > > a physical merge where a virtual merge is forbidden.
+> > > 
+> > > > The fixes proposed still look weird. There is no phys vs hw segment
+> > > > constraints, the request must adhere to the limits set by both. It's
+> > > > mostly a moot point anyway, as 2.6.28 will get rid of the hw accounting
+> > > > anyway.
+> > > 
+> > > Agree all three proposed fixes look wrong.  However, if it's what I
+> > > think, just getting rid of hw accounting won't fix the problem because
+> > > we'll still have the case where a physical merge is forbidden by iommu
+> > > constraints ... this still needs to be accounted for.
+> > > 
+> > > What we really need is a demonstration of what actually is going
+> > > wrong ...
+> > 
+> > Yep, IIRC we both asked for that the last time as well... Nikanth?
+> 
+> Possibly, blk_phys_contig_segment might miscalculate
+> q->max_segment_size?
+> 
+> blk_phys_contig_segment does:
+> 
+> req->biotail->bi_size + next_req->bio->bi_size > q->max_segment_size;
+> 
+> But it's possible that req->biotail and the previous bio are supposed
+> be merged into one segment? Then we could create too large segment
+> here.
 
+Hmm yes, that looks like it could indeed be a problem! We could fix this
+with similar logic to what we used to do for the hw merging, keep track
+of the current segment size that this bio belongs to, so it would end up
+ala
 
-martin.wilck@fujitsu-siemens.com changed:
+        if (blk_phys_contig_segment(q, req->biotail, next->bio) &&
+            rq->biotail->bi_seg_size + next->bio->bi_size <= q->max_segment_size) {
+                total_phys_segments--;
+                next->bio->bi_seg_size = rq->biotail->bi_seg_size + next->bio->bi_size;
+        }
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |martin.wilck@fujitsu-
-                   |                            |siemens.com
-
-
-
-
-------- Comment #9 from martin.wilck@fujitsu-siemens.com  2008-10-10 03:11 -------
-(I am copying this from https://bugzilla.redhat.com/show_bug.cgi?id=457552)
-
-Thie discussion here resulted in the following patch:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=94cf6ba11b
-
-Unless overridden by module dac_mode=0, aac_scsi_32_64 is used for
-aac_adapter_scsi() on 64bit-DMA-capable systems for all contollers with
-AAC_QUIRK_SCSI_32 and AAC_OPT_SGMAP_HOST64 set.
-
-aac_scsi_32_64() always returns FAILED on 64bit DMA-capable systems if the
-adapter has the AAC_OPT_SGMAP_HOST64 flag set , and  if the physical memory is
->4GB.
-
-Thus, on every system with 64bit DMA and >4GB memory, aac_adapter_scsi() will
-always fail (!) for each controller with AC_QUIRK_SCSI_32 and
-AAC_OPT_SGMAP_HOST64. In practice, that means to me that AC_QUIRK_SCSI_32
-implies that you can't use >4GB memory (that agrees with the findings in
-comment #17).
-
-Perhaps the Perc 3/Di has this limitation, but the 2120S and 2200S certainly
-don't. In the above-mentioned Red Hat bugzilla, the patch was modified by
-removing 2120S and 2200S from the list of controllers with AC_QUIRK_SCSI_32.
-Most probably, that isn't even sufficient. I would suggest to remove
-AC_QUIRK_SCSI_32 for all controllers except the Perc 3/Di.
-
-Mark, how did you generate the list of controllers that you assigned
-AC_QUIRK_SCSI_32 to? Why did you include 2120S and 2200s?
-
+for the merge part.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Jens Axboe
