@@ -1,107 +1,57 @@
-From: Giuliano Pochini <pochini@shiny.it>
-Subject: Re: removable device: can't detect disk changes
-Date: Mon, 13 Oct 2008 22:40:16 +0200
-Message-ID: <20081013224016.e425b6dc.pochini@shiny.it>
-References: <20080812150814.a2fd58cd.pochini@shiny.it>
-	<20080818215257.e1d7700c.pochini@shiny.it>
-	<1219093095.3261.68.camel@localhost.localdomain>
-	<20080820005813.da5424bb.pochini@shiny.it>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PATCH] intermediate SCSI updates
+Date: Mon, 13 Oct 2008 14:22:13 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.0810131416410.3288@nehalem.linux-foundation.org>
+References: <1223909115.5566.13.camel@localhost.localdomain>  <alpine.LFD.2.00.0810131017030.3288@nehalem.linux-foundation.org> <1223925606.5566.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out112.alice.it ([85.37.17.112]:3448 "EHLO
-	smtp-out112.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754701AbYJMUhp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 16:37:45 -0400
-In-Reply-To: <20080820005813.da5424bb.pochini@shiny.it>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46916 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759670AbYJMVWr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Oct 2008 17:22:47 -0400
+In-Reply-To: <1223925606.5566.20.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
-
-On Wed, 20 Aug 2008 00:58:13 +0200
-Giuliano Pochini <pochini@shiny.it> wrote:
-
-> On Mon, 18 Aug 2008 15:58:14 -0500
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Mon, 2008-08-18 at 21:52 +0200, Giuliano Pochini wrote:
-> > > On Tue, 12 Aug 2008 15:08:14 +0200
-> > > Giuliano Pochini <pochini@shiny.it> wrote:
-> > > 
-> > > > 
-> > > > Fujitsu magneto-optical drive, Adaptec 29160 and 
-> > > > Linux Jay 2.6.26 #7 SMP Sun Aug 10 18:34:22 CEST 2008 ppc 7455, altivec supported PowerMac3,6 GNU/Linux
-> > > > 
-> > > > When I insert a disk and I mount it, scsi_test_unit_ready() is called and
-> > > > the do-while loop gets sshdr->sense_key == UNIT_ATTENTION in the first
-> > > > cycle and 0 in the second one. So the if below misses the UNIT_ATTENTION
-> > > > and sdev->changed = 1 is not executed. At this point bad things can
-> > > > happen... I'm not sure how to fix this. Any clue ?
-> > > 
-> > > Ok... what about this patch ?  The while() condition also checks for
-> > > NOT_READY. For removable devices sdev->changed is set when not_ready is
-> > > detected (not only if it occurs in the last cycle).
-> > > If works fine here, but since I don't know the SCSI subsystem this patch
-> > > may be wrong.
-> > 
-> > Well done! Almost ... apparently what needs to happen is what we're
-> > currently doing in sr_test_unit_ready.  There's no need to keep checking
-> > for NOT_READY ... that isn't a volatile condition like UNIT ATTENTION
-> > and driver_byte(result) & DRIVER_SENSE is equivalent to
-> > scsi_sense_valid(sshdr) in most cases.  Also, the while loop should exit
-> > on a non-UNIT ATTENTION condition (like NOT READY).
-> >
-> > Does this work?
-> 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> [...]
-> 
-> Yes, it works fine. This is your patch without the check for sshdr!=NULL
-> because it is already in scsi_sense_valid().
-> 
-> 
-> --- drivers/scsi/scsi_lib.c__orig	2008-08-18 21:11:45.000000000 +0200
-> +++ drivers/scsi/scsi_lib.c	2008-08-19 22:31:41.000000000 +0200
-> @@ -1972,22 +1972,21 @@ scsi_test_unit_ready(struct scsi_device 
->  	do {
->  		result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
->  					  timeout, retries);
-> -	} while ((driver_byte(result) & DRIVER_SENSE) &&
-> -		 sshdr && sshdr->sense_key == UNIT_ATTENTION &&
-> -		 --retries);
-> +		if (sdev->removable && scsi_sense_valid(sshdr) &&
-> +		    sshdr->sense_key == UNIT_ATTENTION)
-> +			sdev->changed = 1;
-> +	} while (scsi_sense_valid(sshdr) &&
-> +		 sshdr->sense_key == UNIT_ATTENTION && --retries);
->  
->  	if (!sshdr)
->  		/* could not allocate sense buffer, so can't process it */
->  		return result;
->  
-> -	if ((driver_byte(result) & DRIVER_SENSE) && sdev->removable) {
-> -
-> -		if ((scsi_sense_valid(sshdr)) &&
-> -		    ((sshdr->sense_key == UNIT_ATTENTION) ||
-> -		     (sshdr->sense_key == NOT_READY))) {
-> -			sdev->changed = 1;
-> -			result = 0;
-> -		}
-> +	if (sdev->removable && scsi_sense_valid(sshdr) &&
-> +	    (sshdr->sense_key == UNIT_ATTENTION ||
-> +	     sshdr->sense_key == NOT_READY)) {
-> +		sdev->changed = 1;
-> +		result = 0;
->  	}
->  	if (!sshdr_external)
->  		kfree(sshdr);
-
-Will you merge this patch ? If you think there is something wrong, please
-send me a new patch ASAP. I'm going to sell my removable drive, thus I'll
-not be able to test it anymore.
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
 
---
-Giuliano.
+
+On Mon, 13 Oct 2008, James Bottomley wrote:
+> 
+> Not exactly.  It has to be rebased to run as a postmerge tree, but it
+> does get tested by me (admittedly on my limited set of machines, which
+> don't include any actual devices that do block integrity) every time I
+> rebase.
+
+What I'm upset about is that this has apparently gotten not even some 
+trivial testing of the _default_ build. I'm not talking about any odd 
+config options here. I'm literally talking about the only _sane_ config 
+option case.
+
+You yourself admit that even you don't have any actual devices that can 
+support the block integrity stuff, yet you have apparently only compile- 
+tested the insane case of still enabling that thing and apparently nobody 
+else has bothered either.
+
+Was this in linux-next?
+
+Is linux-next coverage REALLY so weak that it doesn't even test the 
+default config options, much less any random options? What's the point of 
+linux-next then?
+
+Again, the date on that thing is claimed to be September 19th, although it 
+was obviously committed later.
+
+> However, does this work for you?  It fixes the problem for me.
+
+I could trivially have fixed the compile issue. That's not what upsets me. 
+What upsets me is that this set of patches apparently had almost nobody 
+looking at them at all before they got sent to me.
+
+If it was some odd and unusual config option, I'd be less upset. hey, 
+stuff happens. But it sure as heck was nothing of the sort!
+
+			Linus
