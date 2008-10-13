@@ -1,582 +1,377 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [PATCH 06/49] pcmcia: use pcmcia_loop_config in scsi pcmcia drivers
-Date: Mon, 13 Oct 2008 19:47:51 +0200
-Message-ID: <1223920114-19788-6-git-send-email-linux@dominikbrodowski.net>
-References: <20081013173803.GA18569@comet.dominikbrodowski.net>
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: [PATCH 2/2] qla2xxx: FC pass through support via bsg interface - revised
+Date: Mon, 13 Oct 2008 10:53:27 -0700
+Message-ID: <79DBFEDF-091E-4B2F-8692-B68037DC0BF8@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:58619 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753488AbYJMRvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Oct 2008 13:51:18 -0400
-In-Reply-To: <20081013173803.GA18569@comet.dominikbrodowski.net>
+Received: from avexch2.qlogic.com ([198.70.193.116]:9229 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754571AbYJMRxb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 13:53:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-pcmcia@lists.infradead.org
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Robert W Love <robert.w.love@intel.com>
 
-Use the config loop helper in scsi pcmcia drivers.
-
-CC: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-CC: linux-scsi@vger.kernel.org
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
 ---
- drivers/scsi/pcmcia/aha152x_stub.c |   57 +++++------
- drivers/scsi/pcmcia/fdomain_stub.c |   36 +++----
- drivers/scsi/pcmcia/nsp_cs.c       |  197 ++++++++++++++++++------------------
- drivers/scsi/pcmcia/qlogic_stub.c  |   46 ++++-----
- drivers/scsi/pcmcia/sym53c500_cs.c |   45 ++++-----
- 5 files changed, 183 insertions(+), 198 deletions(-)
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
+scsi_transport_fc.c
+index cb971f0..dda12e0 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -43,6 +43,11 @@ static void fc_vport_sched_delete(struct  
+work_struct *work);
+  static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+  	struct device *pdev, struct fc_vport_identifiers  *ids,
+  	struct fc_vport **vport);
++static void fc_service_timeout(unsigned long);
++static void fc_service_done(struct fc_service *);
++static int fc_service_handler(struct Scsi_Host *, struct fc_rport *,
++    struct request *, struct request_queue *);
++static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
 
-diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
-index 2dd0dc9..bbcc20f 100644
---- a/drivers/scsi/pcmcia/aha152x_stub.c
-+++ b/drivers/scsi/pcmcia/aha152x_stub.c
-@@ -140,44 +140,40 @@ static void aha152x_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int aha152x_config_check(struct pcmcia_device *p_dev,
-+			   cistpl_cftable_entry_t *cfg,
-+			   void *priv_data)
+  /*
+   * Redefine so that we can have same named attributes in the
+@@ -2406,12 +2411,194 @@ fc_rport_final_delete(struct work_struct *work)
+
+  	transport_remove_device(dev);
+  	device_del(dev);
++	fc_bsg_remove(shost, rport);
+  	transport_destroy_device(dev);
+  	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
+  	put_device(dev);			/* for self-reference */
+  }
+
+
++static void fc_service_timeout(unsigned long _service)
 +{
-+	/* For New Media T&J, look for a SCSI window */
-+	if (cfg->io.win[0].len >= 0x20)
-+		p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	else if ((cfg->io.nwin > 1) &&
-+		 (cfg->io.win[1].len >= 0x20))
-+		p_dev->io.BasePort1 = cfg->io.win[1].base;
-+	if ((cfg->io.nwin > 0) &&
-+	    (p_dev->io.BasePort1 < 0xffff)) {
-+		p_dev->conf.ConfigIndex = cfg->index;
-+		if (!pcmcia_request_io(p_dev, &p_dev->io))
-+			return 0;
++	struct fc_service *service = (void *) _service;
++	unsigned long flags;
++
++	spin_lock_irqsave(&service->service_state_lock, flags);
++	if (!(service->service_state_flag & FC_SERVICE_STATE_DONE))
++		service->service_state_flag |= FC_SERVICE_STATE_TIMEOUT;
++	spin_unlock_irqrestore(&service->service_state_lock, flags);
++}
++
++static void fc_service_done(struct fc_service *service)
++{
++	if (service->service_state_flag != FC_SERVICE_STATE_DONE) {
++		if (service->service_state_flag == FC_SERVICE_STATE_TIMEOUT) {
++			printk(KERN_ERR "ERROR: FC service timed out\n");
++			/* expect abort to be issued by the application */
++			return;
++		} else
++			printk(KERN_ERR "ERROR: FC service not finished\n");
 +	}
-+	return -EINVAL;
-+}
 +
- static int aha152x_config_cs(struct pcmcia_device *link)
- {
-     scsi_info_t *info = link->priv;
-     struct aha152x_setup s;
--    tuple_t tuple;
--    cisparse_t parse;
--    int i, last_ret, last_fn;
--    u_char tuple_data[64];
-+    int last_ret, last_fn;
-     struct Scsi_Host *host;
--    
-+
-     DEBUG(0, "aha152x_config(0x%p)\n", link);
- 
--    tuple.TupleData = tuple_data;
--    tuple.TupleDataMax = 64;
--    tuple.TupleOffset = 0;
--    tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--    tuple.Attributes = 0;
--    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--    while (1) {
--	if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--	    goto next_entry;
--	/* For New Media T&J, look for a SCSI window */
--	if (parse.cftable_entry.io.win[0].len >= 0x20)
--	    link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--	else if ((parse.cftable_entry.io.nwin > 1) &&
--		 (parse.cftable_entry.io.win[1].len >= 0x20))
--	    link->io.BasePort1 = parse.cftable_entry.io.win[1].base;
--	if ((parse.cftable_entry.io.nwin > 0) &&
--	    (link->io.BasePort1 < 0xffff)) {
--	    link->conf.ConfigIndex = parse.cftable_entry.index;
--	    i = pcmcia_request_io(link, &link->io);
--	    if (i == CS_SUCCESS) break;
--	}
--    next_entry:
--	CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+    last_ret = pcmcia_loop_config(link, aha152x_config_check, NULL);
-+    if (last_ret) {
-+	cs_error(link, RequestIO, last_ret);
-+	goto failed;
-     }
--    
-+
-     CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-     CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
-     
-@@ -208,6 +204,7 @@ static int aha152x_config_cs(struct pcmcia_device *link)
- 
- cs_failed:
-     cs_error(link, last_fn, last_ret);
-+failed:
-     aha152x_release_cs(link);
-     return -ENODEV;
- }
-diff --git a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
-index d8b9935..fefef7d 100644
---- a/drivers/scsi/pcmcia/fdomain_stub.c
-+++ b/drivers/scsi/pcmcia/fdomain_stub.c
-@@ -123,34 +123,29 @@ static void fdomain_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int fdomain_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
-+{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	return pcmcia_request_io(p_dev, &p_dev->io);
-+}
-+
-+
- static int fdomain_config(struct pcmcia_device *link)
- {
-     scsi_info_t *info = link->priv;
--    tuple_t tuple;
--    cisparse_t parse;
--    int i, last_ret, last_fn;
--    u_char tuple_data[64];
-+    int last_ret, last_fn;
-     char str[22];
-     struct Scsi_Host *host;
- 
-     DEBUG(0, "fdomain_config(0x%p)\n", link);
- 
--    tuple.TupleData = tuple_data;
--    tuple.TupleDataMax = 64;
--    tuple.TupleOffset = 0;
--
--    tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--    while (1) {
--	if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--	    goto next_entry;
--	link->conf.ConfigIndex = parse.cftable_entry.index;
--	link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--	i = pcmcia_request_io(link, &link->io);
--	if (i == CS_SUCCESS) break;
--    next_entry:
--	CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+    last_ret = pcmcia_loop_config(link, fdomain_config_check, NULL);
-+    if (last_ret) {
-+	    cs_error(link, RequestIO, last_ret);
-+	    goto failed;
-     }
- 
-     CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -181,6 +176,7 @@ static int fdomain_config(struct pcmcia_device *link)
- 
- cs_failed:
-     cs_error(link, last_fn, last_ret);
-+failed:
-     fdomain_release(link);
-     return -ENODEV;
- } /* fdomain_config */
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index a221b6e..a29a6f2 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1607,133 +1607,136 @@ static void nsp_cs_detach(struct pcmcia_device *link)
-     is received, to configure the PCMCIA socket, and to make the
-     ethernet device available to the system.
- ======================================================================*/
--#define CS_CHECK(fn, ret) \
--do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
--/*====================================================================*/
--static int nsp_cs_config(struct pcmcia_device *link)
--{
--	int		  ret;
--	scsi_info_t	 *info	 = link->priv;
--	tuple_t		  tuple;
--	cisparse_t	  parse;
--	int		  last_ret, last_fn;
--	unsigned char	  tuple_data[64];
--	config_info_t	  conf;
--	win_req_t         req;
--	memreq_t          map;
--	cistpl_cftable_entry_t dflt = { 0 };
--	struct Scsi_Host *host;
--	nsp_hw_data      *data = &nsp_data_base;
--
--	nsp_dbg(NSP_DEBUG_INIT, "in");
- 
--	tuple.Attributes      = 0;
--	tuple.TupleData	      = tuple_data;
--	tuple.TupleDataMax    = sizeof(tuple_data);
--	tuple.TupleOffset     = 0;
--
--	/* Look up the current Vcc */
--	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(link, &conf));
-+struct nsp_cs_configdata {
-+	nsp_hw_data		*data;
-+	win_req_t		req;
-+	config_info_t		conf;
-+	cistpl_cftable_entry_t	dflt;
-+};
- 
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		cistpl_cftable_entry_t *cfg = &(parse.cftable_entry);
-+static int nsp_cs_config_check(struct pcmcia_device *p_dev,
-+			       cistpl_cftable_entry_t *cfg,
-+			       void *priv_data)
-+{
-+	struct nsp_cs_configdata *cfg_mem = priv_data;
- 
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--				pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
-+	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
-+		memcpy(&cfg_mem->dflt, cfg, sizeof(cistpl_cftable_entry_t));
-+	if (cfg->index == 0)
-+		return -ENODEV;
- 
--		if (cfg->flags & CISTPL_CFTABLE_DEFAULT) { dflt = *cfg; }
--		if (cfg->index == 0) { goto next_entry; }
--		link->conf.ConfigIndex = cfg->index;
-+	p_dev->conf.ConfigIndex = cfg->index;
- 
--		/* Does this card need audio output? */
--		if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
--			link->conf.Attributes |= CONF_ENABLE_SPKR;
--			link->conf.Status = CCSR_AUDIO_ENA;
--		}
-+	/* Does this card need audio output? */
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
-+		p_dev->conf.Status = CCSR_AUDIO_ENA;
++	if (service->srv_reply.status != FC_SERVICE_COMPLETE) {
++		printk(KERN_ERR "ERROR: FC service to rport %p failed with"
++		    " status 0x%x\n", service->rport,
++		    service->srv_reply.status);
 +	}
- 
--		/* Use power settings for Vcc and Vpp if present */
--		/*  Note that the CIS values need to be rescaled */
--		if (cfg->vcc.present & (1<<CISTPL_POWER_VNOM)) {
--			if (conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM]/10000) {
--				goto next_entry;
--			}
--		} else if (dflt.vcc.present & (1<<CISTPL_POWER_VNOM)) {
--			if (conf.Vcc != dflt.vcc.param[CISTPL_POWER_VNOM]/10000) {
--				goto next_entry;
--			}
-+	/* Use power settings for Vcc and Vpp if present */
-+	/*  Note that the CIS values need to be rescaled */
-+	if (cfg->vcc.present & (1<<CISTPL_POWER_VNOM)) {
-+		if (cfg_mem->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM]/10000)
-+			return -ENODEV;
-+		else if (cfg_mem->dflt.vcc.present & (1<<CISTPL_POWER_VNOM)) {
-+			if (cfg_mem->conf.Vcc != cfg_mem->dflt.vcc.param[CISTPL_POWER_VNOM]/10000)
-+				return -ENODEV;
- 		}
- 
- 		if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM)) {
--			link->conf.Vpp =
-+			p_dev->conf.Vpp =
- 				cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
--		} else if (dflt.vpp1.present & (1 << CISTPL_POWER_VNOM)) {
--			link->conf.Vpp =
--				dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
-+		} else if (cfg_mem->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM)) {
-+			p_dev->conf.Vpp =
-+				cfg_mem->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
- 		}
- 
- 		/* Do we need to allocate an interrupt? */
--		if (cfg->irq.IRQInfo1 || dflt.irq.IRQInfo1) {
--			link->conf.Attributes |= CONF_ENABLE_IRQ;
-+		if (cfg->irq.IRQInfo1 || cfg_mem->dflt.irq.IRQInfo1) {
-+			p_dev->conf.Attributes |= CONF_ENABLE_IRQ;
- 		}
- 
- 		/* IO window settings */
--		link->io.NumPorts1 = link->io.NumPorts2 = 0;
--		if ((cfg->io.nwin > 0) || (dflt.io.nwin > 0)) {
--			cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &dflt.io;
--			link->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
-+		p_dev->io.NumPorts1 = p_dev->io.NumPorts2 = 0;
-+		if ((cfg->io.nwin > 0) || (cfg_mem->dflt.io.nwin > 0)) {
-+			cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &cfg_mem->dflt.io;
-+			p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
- 			if (!(io->flags & CISTPL_IO_8BIT))
--				link->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
-+				p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
- 			if (!(io->flags & CISTPL_IO_16BIT))
--				link->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
--			link->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
--			link->io.BasePort1 = io->win[0].base;
--			link->io.NumPorts1 = io->win[0].len;
-+				p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
-+			p_dev->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
-+			p_dev->io.BasePort1 = io->win[0].base;
-+			p_dev->io.NumPorts1 = io->win[0].len;
- 			if (io->nwin > 1) {
--				link->io.Attributes2 = link->io.Attributes1;
--				link->io.BasePort2 = io->win[1].base;
--				link->io.NumPorts2 = io->win[1].len;
-+				p_dev->io.Attributes2 = p_dev->io.Attributes1;
-+				p_dev->io.BasePort2 = io->win[1].base;
-+				p_dev->io.NumPorts2 = io->win[1].len;
- 			}
- 			/* This reserves IO space but doesn't actually enable it */
--			if (pcmcia_request_io(link, &link->io) != 0)
-+			if (pcmcia_request_io(p_dev, &p_dev->io) != 0)
- 				goto next_entry;
- 		}
- 
--		if ((cfg->mem.nwin > 0) || (dflt.mem.nwin > 0)) {
--			cistpl_mem_t *mem =
--				(cfg->mem.nwin) ? &cfg->mem : &dflt.mem;
--			req.Attributes = WIN_DATA_WIDTH_16|WIN_MEMORY_TYPE_CM;
--			req.Attributes |= WIN_ENABLE;
--			req.Base = mem->win[0].host_addr;
--			req.Size = mem->win[0].len;
--			if (req.Size < 0x1000) {
--				req.Size = 0x1000;
--			}
--			req.AccessSpeed = 0;
--			if (pcmcia_request_window(&link, &req, &link->win) != 0)
-+		if ((cfg->mem.nwin > 0) || (cfg_mem->dflt.mem.nwin > 0)) {
-+			memreq_t	map;
-+			cistpl_mem_t	*mem =
-+				(cfg->mem.nwin) ? &cfg->mem : &cfg_mem->dflt.mem;
-+			cfg_mem->req.Attributes = WIN_DATA_WIDTH_16|WIN_MEMORY_TYPE_CM;
-+			cfg_mem->req.Attributes |= WIN_ENABLE;
-+			cfg_mem->req.Base = mem->win[0].host_addr;
-+			cfg_mem->req.Size = mem->win[0].len;
-+			if (cfg_mem->req.Size < 0x1000)
-+				cfg_mem->req.Size = 0x1000;
-+			cfg_mem->req.AccessSpeed = 0;
-+			if (pcmcia_request_window(&p_dev, &cfg_mem->req, &p_dev->win) != 0)
- 				goto next_entry;
- 			map.Page = 0; map.CardOffset = mem->win[0].card_addr;
--			if (pcmcia_map_mem_page(link->win, &map) != 0)
-+			if (pcmcia_map_mem_page(p_dev->win, &map) != 0)
- 				goto next_entry;
- 
--			data->MmioAddress = (unsigned long)ioremap_nocache(req.Base, req.Size);
--			data->MmioLength  = req.Size;
-+			cfg_mem->data->MmioAddress = (unsigned long) ioremap_nocache(cfg_mem->req.Base, cfg_mem->req.Size);
-+			cfg_mem->data->MmioLength  = cfg_mem->req.Size;
- 		}
- 		/* If we got this far, we're cool! */
--		break;
--
--	next_entry:
--		nsp_dbg(NSP_DEBUG_INIT, "next");
--		pcmcia_disable_device(link);
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+		return 0;
- 	}
- 
-+next_entry:
-+	nsp_dbg(NSP_DEBUG_INIT, "next");
-+	pcmcia_disable_device(p_dev);
-+	return -ENODEV;
++
++	if (service->srv_reply.residual) {
++		service->req->data_len = 0;
++		service->req->next_rq->data_len = service->srv_reply.residual;
++	} else {
++		service->req->data_len = 0;
++		service->req->next_rq->data_len = 0;
++	}
++
++	service->req->end_io(service->req, 0);
++	kfree(service);
 +}
 +
-+static int nsp_cs_config(struct pcmcia_device *link)
++static int
++issue_fc_service(struct fc_rport *rport, struct request *req,
++    struct request *rsp, struct request_queue *q)
 +{
-+	int		  ret;
-+	scsi_info_t	 *info	 = link->priv;
-+	struct nsp_cs_configdata *cfg_mem;
-+	struct Scsi_Host *host;
-+	nsp_hw_data      *data = &nsp_data_base;
++	int res = -ECOMM;
++	struct fc_service *service;
++	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++	struct fc_service_request *srv_request = (struct fc_service_request *)
++	    req->cmd;
 +
-+	nsp_dbg(NSP_DEBUG_INIT, "in");
-+
-+	cfg_mem = kzalloc(sizeof(cfg_mem), GFP_KERNEL);
-+	if (!cfg_mem)
++	service = kzalloc(sizeof (struct fc_service), GFP_KERNEL);
++	if (!service)
 +		return -ENOMEM;
-+	cfg_mem->data = data;
 +
-+	/* Look up the current Vcc */
-+	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(link, &cfg_mem->conf));
-+	ret = pcmcia_loop_config(link, nsp_cs_config_check, cfg_mem);
-+		goto cs_failed;
++	service->rport = rport;
++	service->req = req;
++	service->q = q;
++	service->srv_request = srv_request;
 +
- 	if (link->conf.Attributes & CONF_ENABLE_IRQ) {
--		CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-+		if (pcmcia_request_irq(link, &link->irq))
-+			goto cs_failed;
- 	}
--	CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
++	sg_init_table(service->payload_dma, FC_SERVICE_MAX_SG);
++	service->payload_sg_cnt =
++	    blk_rq_map_sg(q, req, service->payload_dma);
++	service->payload = (void *) bio_data(req->bio);
++	service->payload_size = req->data_len;
 +
-+	ret = pcmcia_request_configuration(link, &link->conf);
-+	if (ret)
-+		goto cs_failed;
- 
- 	if (free_ports) {
- 		if (link->io.BasePort1) {
-@@ -1791,20 +1794,20 @@ static int nsp_cs_config(struct pcmcia_device *link)
- 		printk(" & 0x%04x-0x%04x", link->io.BasePort2,
- 		       link->io.BasePort2+link->io.NumPorts2-1);
- 	if (link->win)
--		printk(", mem 0x%06lx-0x%06lx", req.Base,
--		       req.Base+req.Size-1);
-+		printk(", mem 0x%06lx-0x%06lx", cfg_mem->req.Base,
-+		       cfg_mem->req.Base+cfg_mem->req.Size-1);
- 	printk("\n");
- 
-+	kfree(cfg_mem);
- 	return 0;
- 
-  cs_failed:
- 	nsp_dbg(NSP_DEBUG_INIT, "config fail");
--	cs_error(link, last_fn, last_ret);
- 	nsp_cs_release(link);
-+	kfree(cfg_mem);
- 
- 	return -ENODEV;
- } /* nsp_cs_config */
--#undef CS_CHECK
- 
- 
- /*======================================================================
-diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-index 67c5a58..aa9b9e0 100644
---- a/drivers/scsi/pcmcia/qlogic_stub.c
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c
-@@ -195,39 +195,32 @@ static void qlogic_detach(struct pcmcia_device *link)
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int qlogic_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
-+{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	p_dev->io.NumPorts1 = cfg->io.win[0].len;
++	sg_init_table(service->response_dma, FC_SERVICE_MAX_SG);
++	service->response_sg_cnt =
++	    blk_rq_map_sg(q, rsp, service->response_dma);
++	service->response = bio_data(rsp->bio);
++	service->response_size = rsp->data_len;
 +
-+	if (p_dev->io.BasePort1 == 0)
-+		return -ENODEV;
++	/* sense area of the request structure */
++	service->reply_seq = req->sense;
++	service->service_done = fc_service_done;
++	service->service_state_flag = FC_SERVICE_STATE_PENDING;
 +
-+	return pcmcia_request_io(p_dev, &p_dev->io);
++	if (i->f->execute_fc_service)
++		res = i->f->execute_fc_service(service);
++
++	if (res) {
++		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
++		"failed with status %d\n", res);
++		fc_service_done(service);
++		return res;
++	}
++
++	return 0;
 +}
 +
- static int qlogic_config(struct pcmcia_device * link)
- {
- 	scsi_info_t *info = link->priv;
--	tuple_t tuple;
--	cisparse_t parse;
--	int i, last_ret, last_fn;
--	unsigned short tuple_data[32];
-+	int last_ret, last_fn;
- 	struct Scsi_Host *host;
- 
- 	DEBUG(0, "qlogic_config(0x%p)\n", link);
- 
--	info->manf_id = link->manf_id;
--
--	tuple.TupleData = (cisdata_t *) tuple_data;
--	tuple.TupleDataMax = 64;
--	tuple.TupleOffset = 0;
--
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--				pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
--		link->conf.ConfigIndex = parse.cftable_entry.index;
--		link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--		link->io.NumPorts1 = parse.cftable_entry.io.win[0].len;
--		if (link->io.BasePort1 != 0) {
--			i = pcmcia_request_io(link, &link->io);
--			if (i == CS_SUCCESS)
--				break;
--		}
--	      next_entry:
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+	last_ret = pcmcia_loop_config(link, qlogic_config_check, NULL);
-+	if (last_ret) {
-+		cs_error(link, RequestIO, last_ret);
-+		goto failed;
- 	}
- 
- 	CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -262,6 +255,7 @@ static int qlogic_config(struct pcmcia_device * link)
- cs_failed:
- 	cs_error(link, last_fn, last_ret);
- 	pcmcia_disable_device(link);
-+failed:
- 	return -ENODEV;
- 
- }				/* qlogic_config */
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index 0be232b..15369d9 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -700,15 +700,26 @@ static struct scsi_host_template sym53c500_driver_template = {
- #define CS_CHECK(fn, ret) \
- do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
- 
-+static int SYM53C500_config_check(struct pcmcia_device *p_dev,
-+				  cistpl_cftable_entry_t *cfg,
-+				  void *priv_data)
++static int
++fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
++			  struct request *req, struct request_queue *q)
 +{
-+	p_dev->conf.ConfigIndex = cfg->index;
-+	p_dev->io.BasePort1 = cfg->io.win[0].base;
-+	p_dev->io.NumPorts1 = cfg->io.win[0].len;
++	int ret;
++	struct request *rsp = req->next_rq;
 +
-+	if (p_dev->io.BasePort1 == 0)
-+		return -ENODEV;
++	if (!rsp) {
++		printk(KERN_ERR "ERROR: space for a FC service"
++		   " response is missing\n");
++		return -EINVAL;
++	}
 +
-+	return pcmcia_request_io(p_dev, &p_dev->io);
++	if ((req->bio->bi_vcnt > FC_SERVICE_MAX_SG) ||
++	    (rsp->bio->bi_vcnt > FC_SERVICE_MAX_SG)) {
++		printk(KERN_ERR "ERROR: a FC service"
++		    " supports no more than %d SGs\n", FC_SERVICE_MAX_SG);
++		return -EINVAL;
++	}
++
++	ret = issue_fc_service(rport, req, rsp, q);
++
++	return ret;
 +}
 +
- static int
- SYM53C500_config(struct pcmcia_device *link)
- {
- 	struct scsi_info_t *info = link->priv;
--	tuple_t tuple;
--	cisparse_t parse;
--	int i, last_ret, last_fn;
-+	int last_ret, last_fn;
- 	int irq_level, port_base;
--	unsigned short tuple_data[32];
- 	struct Scsi_Host *host;
- 	struct scsi_host_template *tpnt = &sym53c500_driver_template;
- 	struct sym53c500_data *data;
-@@ -717,27 +728,10 @@ SYM53C500_config(struct pcmcia_device *link)
- 
- 	info->manf_id = link->manf_id;
- 
--	tuple.TupleData = (cisdata_t *)tuple_data;
--	tuple.TupleDataMax = 64;
--	tuple.TupleOffset = 0;
--
--	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
--	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
--	while (1) {
--		if (pcmcia_get_tuple_data(link, &tuple) != 0 ||
--		    pcmcia_parse_tuple(link, &tuple, &parse) != 0)
--			goto next_entry;
--		link->conf.ConfigIndex = parse.cftable_entry.index;
--		link->io.BasePort1 = parse.cftable_entry.io.win[0].base;
--		link->io.NumPorts1 = parse.cftable_entry.io.win[0].len;
--
--		if (link->io.BasePort1 != 0) {
--			i = pcmcia_request_io(link, &link->io);
--			if (i == CS_SUCCESS)
--				break;
--		}
--next_entry:
--		CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
-+	last_ret = pcmcia_loop_config(link, SYM53C500_config_check, NULL);
-+	if (last_ret) {
-+		cs_error(link, RequestIO, last_ret);
-+		goto failed;
- 	}
- 
- 	CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
-@@ -831,6 +825,7 @@ err_release:
- 
- cs_failed:
- 	cs_error(link, last_fn, last_ret);
-+failed:
- 	SYM53C500_release(link);
- 	return -ENODEV;
- } /* SYM53C500_config */
--- 
-1.5.4.3
++static void fc_service_dispatch(struct request_queue *q)
++{
++	struct request *req;
++	struct fc_rport *rport = q->queuedata;
++	struct Scsi_Host *shost = rport_to_shost(rport);
++
++	while (!blk_queue_plugged(q)) {
++		req = elv_next_request(q);
++		if (!req)
++			break;
++
++		blkdev_dequeue_request(req);
++		spin_unlock_irq(q->queue_lock);
++
++		fc_service_handler(shost, rport, req, q);
++
++		spin_lock_irq(q->queue_lock);
++	}
++}
++
++static int
++fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
++{
++	struct request_queue *q;
++	int error;
++	struct device *dev;
++	const char *name;
++	void (*release)(struct device *);
++
++	if (!rport) {
++		printk(KERN_ERR "ERROR: rport is NULL\n");
++		return -ENOMEM;
++	}
++
++	q = blk_init_queue(fc_service_dispatch, NULL);
++	if (!q)
++		return -ENOMEM;
++
++	dev = &rport->dev;
++	name = dev->bus_id;
++	release = NULL;
++
++	error = bsg_register_queue(q, dev, name, release);
++	if (error) {
++		blk_cleanup_queue(q);
++		return -ENOMEM;
++	}
++
++	rport->q = q;
++	q->queuedata = rport;
++	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++
++	return 0;
++}
++
++static void
++fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
++{
++	struct request_queue *q = rport->q;
++
++	if (!q)
++		return;
++
++	bsg_unregister_queue(q);
++}
++
+  /**
+   * fc_rport_create - allocates and creates a remote FC port.
+   * @shost:	scsi host the remote port is connected to.
+@@ -2471,8 +2658,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
+channel,
+  	else
+  		rport->scsi_target_id = -1;
+  	list_add_tail(&rport->peers, &fc_host->rports);
+-	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
 
++	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
+  	spin_unlock_irqrestore(shost->host_lock, flags);
+
+  	dev = &rport->dev;
+@@ -2491,6 +2678,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
+channel,
+  	transport_add_device(dev);
+  	transport_configure_device(dev);
+
++	fc_bsg_initialize(shost, rport);
++
+  	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
+  		/* initiate a scan of the target */
+  		rport->flags |= FC_RPORT_SCAN_PENDING;
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/ 
+scsi_transport_fc.h
+index 21018a4..6c6809a 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -33,7 +33,6 @@
+
+  struct scsi_transport_template;
+
+-
+  /*
+   * FC Port definitions - Following FC HBAAPI guidelines
+   *
+@@ -352,6 +351,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
+   	struct delayed_work fail_io_work;
+   	struct work_struct stgt_delete_work;
+  	struct work_struct rport_delete_work;
++	struct request_queue *q;
+  } __attribute__((aligned(sizeof(unsigned long))));
+
+  /* bit field values for struct fc_rport "flags" field: */
+@@ -514,6 +514,81 @@ struct fc_host_attrs {
+  	struct workqueue_struct *devloss_work_q;
+  };
+
++#define FC_STATUS_BUF_SIZE 96
++
++enum fc_frame_type {
++	FC_FRAME_TYPE_BS,
++	FC_FRAME_TYPE_ELS,
++	FC_FRAME_TYPE_IEC = 4,
++	FC_FRAME_TYPE_IP,
++	FC_FRAME_TYPE_FCP = 8,
++	FC_FRAME_TYPE_GPP,
++	FC_FRAME_TYPE_FC_CT = 0x20,
++};
++
++enum fc_service_status {
++	FC_SERVICE_COMPLETE,
++	FC_SERVICE_TIMEOUT,
++	FC_SERVICE_ABORT,
++	FC_SERVICE_UNSUPPORTED,
++	FC_SERVICE_ERROR = -1,
++};
++
++#define FC_SERVICE_STATE_PENDING      1
++#define FC_SERVICE_STATE_DONE         2
++#define FC_SERVICE_STATE_ABORTED      4
++#define FC_SERVICE_STATE_TIMEOUT      8
++
++#define FC_SERVICE_TIMEOUT 10
++#define FC_SERVICE_MAX_SG             16
++
++/* request (CDB) structure of the sg_io_v4 */
++struct fc_service_request {
++	u8   request_type;
++	u8   timeout;
++	u8   reserved0;
++	u8   reserved1;
++};
++
++/* response  (request sense data) structure of the sg_io_v4 */
++struct fc_service_reply {
++	enum fc_service_status status;
++	u16  error_code;
++	u16  additional_error_code;
++	u32  residual;
++};
++
++struct fc_service {
++	struct fc_rport  *rport;
++	struct list_head list;
++
++	spinlock_t   service_state_lock;
++	unsigned     service_state_flag;
++
++	struct request *req;
++	struct request_queue *q;
++
++	/* Used by the discovery code. */
++	struct timer_list  timer;
++	struct completion  completion;
++
++	struct fc_service_request *srv_request;
++	void  *payload;
++	struct scatterlist payload_dma[FC_SERVICE_MAX_SG];
++	int   payload_sg_cnt;
++	int   payload_size;
++	void  *response;
++	struct scatterlist response_dma[FC_SERVICE_MAX_SG];
++	int   response_sg_cnt;
++	int   response_size;
++
++	struct fc_service_reply srv_reply;
++	void  *reply_seq;   /* pointer to sense area of request */
++	void  (*service_done)(struct fc_service *);
++
++	void *lld_pkt;
++};
++
+  #define shost_to_fc_host(x) \
+  	((struct fc_host_attrs *)(x)->shost_data)
+
+@@ -612,6 +687,10 @@ struct fc_function_template {
+  	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
+  	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+
++	/* fc service handler */
++	int	(*execute_fc_service)(struct fc_service *);
++	int	(*abort_fc_service)(struct fc_service *);
++
+  	/* allocation lengths for host-specific data */
+  	u32	 			dd_fcrport_size;
+  	u32	 			dd_fcvport_size;
+@@ -732,7 +811,6 @@ fc_vport_set_state(struct fc_vport *vport, enum  
+fc_vport_state new_state)
+  	vport->vport_state = new_state;
+  }
+
+-
+  struct scsi_transport_template *fc_attach_transport(
+  			struct fc_function_template *);
+  void fc_release_transport(struct scsi_transport_template *);
+---
