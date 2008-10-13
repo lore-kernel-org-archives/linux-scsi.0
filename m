@@ -1,476 +1,593 @@
 From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: [PATCH 0/2] FC pass through support via bsg interface - revised
-Date: Mon, 13 Oct 2008 10:53:18 -0700
-Message-ID: <B5FBFF85-C7C0-44F7-905F-9029C54F4F56@qlogic.com>
+Subject: [PATCH 1/2] scsi_transport_fc: FC pass through support via bsg interface - revised
+Date: Mon, 13 Oct 2008 10:53:23 -0700
+Message-ID: <9131BBA9-66C3-4ADB-88EC-077367BC7EFB@qlogic.com>
 Mime-Version: 1.0 (Apple Message framework v929.2)
-Content-Type: multipart/mixed; boundary=Apple-Mail-5-800062317
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:9203 "EHLO
+Received: from avexch2.qlogic.com ([198.70.193.116]:9215 "EHLO
 	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754048AbYJMRxW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 13:53:22 -0400
+	with ESMTP id S1754430AbYJMRx0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 13:53:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Robert W Love <robert.w.love@intel.com>
 
-
---Apple-Mail-5-800062317
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
-
-Hi,
-
-Base on feedback as below, here is revised one for pass through support.
-http://marc.info/?l=linux-scsi&m=122123825918741&w=2
-http://marc.info/?t=121908849700001&r=1&w=2
-
-Also, the attached file is updated sample application along with GPL  
-license.
-
---Apple-Mail-5-800062317
-Content-Disposition: attachment;
-	filename=issue-service.c
-Content-Type: application/octet-stream;
-	x-unix-mode=0755;
-	name="issue-service.c"
-Content-Transfer-Encoding: 7bit
-
-/*
- * QLogic Fibre Channel HBA Driver
- * Copyright (c) 2008 QLogic Corporation
- *
- * issue-service.c -- sample utility to issue ELS/CT pass through services
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
-
-#include <linux/module.h>
-#include <linux/moduleparam.h>
-#include <linux/dma-mapping.h>
-#include <linux/dmapool.h>
-#include <linux/delay.h>
-#include <linux/interrupt.h>
-#include <linux/kthread.h>
-#include <linux/of.h>
-#include <linux/stringify.h>
- */
-typedef signed int __s32;
-typedef unsigned short __u16;
-typedef unsigned int __u32;
-typedef unsigned long __u64;
-typedef unsigned char __u8;
-typedef __u32 __be32;
-typedef __u16 __be16;
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <scsi/scsi.h>
-#include <scsi/sg.h>
-#include "/lib/modules/2.6.27-rc4/source/include/linux/bsg.h"
-
-/* NOTE - fc_els_hdr to move to ~/include/scsi/fc/fc_els.h */
-struct fc_els_hdr {
-	__u8	els_cmd;
-	__u8	els_param[3];
-};
-
-/* NOTE - fc_ct_hdr is already defined in open-fcoe-upstream branch */
-/*
- * Fibre Channel Services - Common Transport.
- * From T11.org FC-GS-2 Rev 5.3 November 1998.
- */
-
-struct fc_ct_hdr {
-	__u8		ct_rev;		/* revision */
-	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
-	__u8		ct_fs_type;	/* type of fibre channel service */
-	__u8		ct_fs_subtype;	/* subtype */
-	__u8		ct_options;
-	__u8		_ct_resvd1;
-	__be16		ct_cmd;		/* command / response code */
-	__be16		ct_mr_size;	/* maximum / residual size */
-	__u8		_ct_resvd2;
-	__u8		ct_reason;	/* reject reason */
-	__u8		ct_explan;	/* reason code explanation */
-	__u8		ct_vendor;	/* vendor unique data */
-};
-
-struct fc_ct_frame {
-	struct fc_ct_hdr ct_hdr;
-	unsigned int ct_cmd[1];
-};
-
-struct fc_els_frame {
-	struct fc_els_hdr els_hdr;
-	unsigned int els_srv_param[4];
-};
-
-#define FC_SERVICE_TIMEOUT 10
-
-void
-els_echo(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char request_sense[18];
-	// char response[0x8192];
-	char response[64];
-	struct sg_io_v4 sg_io;
-	struct fc_els_frame els;
-	int res;
-
-	els.els_hdr.els_cmd = 0x10; /* ELS cmd - echo */
-	els.els_hdr.els_param[2] = 0;
-	els.els_hdr.els_param[1] = 0;
-	els.els_hdr.els_param[0] = 0;
-
-	els.els_srv_param[0] = 0xcafecafe;
-	els.els_srv_param[1] = 0xc8c8c8c8;
-	els.els_srv_param[2] = 0xdeaddead;
-	els.els_srv_param[3] = 0xaceaceac;
-
-	cdb[0] = 0x01; /* ELS type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = sizeof (struct fc_els_frame);
-	sg_io.dout_xferp = (__u64) &els;
-
-
-	/******************* to test multiple SG feature ********************/
-	// sg_io.din_xfer_len = 0x8192;
-	sg_io.din_xfer_len = sizeof(struct fc_els_frame);
-
-
-
-	sg_io.din_xferp = (__u64) response;
-	sg_io.max_response_len = sizeof(request_sense);
-	sg_io.response = (__u64) request_sense;
-
-	sg_io.timeout = 20000;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-void
-els_rnid(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char response[68];
-	struct sg_io_v4 sg_io;
-	struct fc_els_frame els;
-	int res;
-
-	els.els_hdr.els_cmd = 0x78; /* ELS cmd - rnid */
-	els.els_hdr.els_param[2] = 0;
-	els.els_hdr.els_param[1] = 0;
-	els.els_hdr.els_param[0] = 0;
-
-	els.els_srv_param[0] = 0x00000000; /* common node-identification data */
-
-	cdb[0] = 0x01; /* ELS type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = 8; /* size of request = 8 */
-	sg_io.dout_xferp = (__u64) &els;
-	sg_io.din_xfer_len = sizeof(response); /* common node-identification data + 4 */
-	sg_io.din_xferp = (__u64) response;
-
-	sg_io.timeout = 100;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-void
-els_read_timeout_value(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char response[16];
-	struct sg_io_v4 sg_io;
-	struct fc_els_frame els;
-	int res;
-
-	els.els_hdr.els_cmd = 0x0e; /* ELS cmd - read timeout value */
-	els.els_hdr.els_param[2] = 0;
-	els.els_hdr.els_param[1] = 0;
-	els.els_hdr.els_param[0] = 0;
-
-	cdb[0] = 0x01; /* ELS type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = 4;
-	sg_io.dout_xferp = (__u64) &els;
-	sg_io.din_xfer_len = sizeof(response);
-	sg_io.din_xferp = (__u64) response;
-
-	sg_io.timeout = 100;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-void
-els_loop_status(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char response[168];
-	struct sg_io_v4 sg_io;
-	struct fc_els_frame els;
-	int res;
-
-	els.els_hdr.els_cmd = 0x72; /* ELS cmd - loop_status*/
-	els.els_hdr.els_param[2] = 0;
-	els.els_hdr.els_param[1] = 0;
-	els.els_hdr.els_param[0] = 0;
-
-	cdb[0] = 0x01; /* ELS type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = 4;
-	sg_io.dout_xferp = (__u64) &els;
-	sg_io.din_xfer_len = sizeof(response);
-	sg_io.din_xferp = (__u64) response;
-
-	sg_io.timeout = 100;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-int
-ct_ga_nxt(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char response[632];
-	struct sg_io_v4 sg_io;
-	struct fc_ct_frame ct;
-	int res;
-
-	ct.ct_hdr.ct_rev = 1;
-	ct.ct_hdr.ct_in_id[2] = 0x00;
-	ct.ct_hdr.ct_in_id[1] = 0x00;
-	ct.ct_hdr.ct_in_id[0] = 0x00;
-	ct.ct_hdr.ct_fs_type = 0xFC;
-	ct.ct_hdr.ct_fs_subtype = 0x02;
-	ct.ct_hdr.ct_options = 0x0;
-	ct.ct_hdr.ct_cmd = 0x1;          /* GA_NXT = 0x100 in BE */
-	ct.ct_hdr.ct_mr_size = 0x7802;   /* 0x278 in BE */
-
-	cdb[0] = 0x20; /* CT type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = 20;
-	sg_io.dout_xferp = (__u64) &ct;
-	sg_io.din_xfer_len = sizeof(response);
-	sg_io.din_xferp = (__u64) response;
-
-	sg_io.timeout = 100;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-int
-ct_gfpn_id(int fd, char *dev)
-{
-	int i;
-	char cdb[16];
-	char response[24];
-	struct sg_io_v4 sg_io;
-	struct fc_ct_frame ct;
-	int res;
-
-	ct.ct_hdr.ct_rev = 1;
-	ct.ct_hdr.ct_in_id[2] = 0x00;
-	ct.ct_hdr.ct_in_id[1] = 0x00;
-	ct.ct_hdr.ct_in_id[0] = 0x00;
-	ct.ct_hdr.ct_fs_type = 0xFC;
-	ct.ct_hdr.ct_fs_subtype = 0x02;
-	ct.ct_hdr.ct_options = 0x0;
-	ct.ct_hdr.ct_cmd = 0x1c01;       /* GFPN_ID = 0x011c in BE */
-	ct.ct_hdr.ct_mr_size = 0x1800;   /* 0x18 in BE */
-
-	cdb[0] = 0x20; /* CT type */
-
-	sg_io.guard = 'Q';
-	sg_io.protocol = BSG_PROTOCOL_SCSI;
-	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-
-	sg_io.request_len = sizeof(cdb);
-	sg_io.request = (__u64) cdb;
-	sg_io.dout_xfer_len = 20;
-	sg_io.dout_xferp = (__u64) &ct;
-	sg_io.din_xfer_len = sizeof(response);
-	sg_io.din_xferp = (__u64) response;
-
-	sg_io.timeout = 100;
-
-	memset(response, 0x0, sizeof (response));
-
-	res = ioctl(fd, SG_IO, &sg_io);
-	if (res < 0) {
-		printf("ERROR: nothing could be written to %s, error = %d\n",
-		    dev, res);
-	}
-
-	printf("result of IOCTL:\n");
-	for (i=0;i<sizeof (response); i++) {
-		printf("%2x ", response[i]);
-		if ((i % 4) == 3)
-			printf("\n");
-	}
-}
-
-int
-main(int argc, char **argv)
-{
-	int i;
-	int fd;
-	char cdb[] = "FC Service CDB";
-	char inq_data[] = "FC Service DATA OUT";
-	char sense_data[] = "FC Service DATA IN";
-	char response[16];
-
-	if (argc < 2) {
-		printf("ERROR: specify rport (f.e. /dev/rport-6:0-0\n");
-		return 1;
-	}
-	fd = open(argv[1], O_RDWR);
-	if (fd < 0) {
-		printf("ERROR: failed opening %s\n", argv[1]);
-		return;
-	}
-
-	els_echo(fd, argv[1]);
-	// els_rnid(fd, argv[1]);
-	// els_read_timeout_value(fd, argv[1]);
-	// els_loop_status(fd, argv[1]);
-	ct_ga_nxt(fd, argv[1]);
-	// ct_gfpn_id(fd, argv[1]);
-
-	close(fd);
-}
-
---Apple-Mail-5-800062317
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-Thank you,
-Seokmann
-
-
---Apple-Mail-5-800062317--
+Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
+---
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/ 
+qla_attr.c
+index 45e7dcb..d240da9 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1230,6 +1230,234 @@ qla24xx_vport_disable(struct fc_vport  
+*fc_vport, bool disable)
+  	return 0;
+  }
+
++static int
++qla2x00_execute_fc_service(struct fc_service *service)
++{
++	struct fc_rport *rport = service->rport;
++	fc_port_t *fcport = *(fc_port_t **) rport->dd_data;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct els_entry_24xx *els_iocb;
++	struct ct_entry_24xx *ct_iocb;
++	request_t *iocb;
++	srb_t *sp;
++	unsigned long flags;
++	uint32_t  handle;
++	int  index, sg_cnt;
++	uint8_t  *els_pkt = service->payload;
++	uint16_t avail_dsds;
++	uint32_t *cur_dsd;
++
++	if (rport->port_state != FC_PORTSTATE_ONLINE || !fcport)
++		goto pt_error0;
++
++	if ((service->srv_request->request_type != FC_FRAME_TYPE_ELS) &&
++	    (service->srv_request->request_type != FC_FRAME_TYPE_FC_CT))
++		goto pt_error0;
++
++	/* ELS doesn't support multiple SG */
++	if ((service->srv_request->request_type == FC_FRAME_TYPE_ELS) &&
++	    (service->payload_sg_cnt > 1 || service->response_sg_cnt > 1)) {
++		printk(KERN_WARNING "ERROR: multiple SG of payload/response "
++		    "[%u/%u]  are not supported for ELS services\n",
++		    service->payload_sg_cnt, service->response_sg_cnt);
++		service->srv_reply.status = FC_SERVICE_UNSUPPORTED;
++		goto pt_error0;
++	}
++
++	sp = mempool_alloc(ha->srb_mempool, GFP_ATOMIC);
++	if (!sp)
++		goto pt_error0;
++
++	sp->ha = ha;
++	sp->fcport = fcport;
++	sp->cmd = (struct scsi_cmnd *)service;
++	sp->flags = SRB_ELS_CT;
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	iocb = qla2x00_req_pkt(ha);
++	if (iocb == NULL) {
++		qla_printk(KERN_WARNING, ha,
++		    "Passthru request failed to get request packet\n");
++		goto pt_error1;
++	}
++
++	/* Check for room in outstanding command list. */
++	handle = ha->current_outstanding_cmd;
++	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++		handle++;
++		if (handle == MAX_OUTSTANDING_COMMANDS)
++			handle = 1;
++		if (!ha->outstanding_cmds[handle])
++			break;
++	}
++
++	ha->current_outstanding_cmd = handle;
++	ha->outstanding_cmds[handle] = (srb_t *) sp;
++
++	iocb->handle = handle;
++
++	service->payload_sg_cnt = dma_map_sg(&rport->dev,
++	    service->payload_dma, service->payload_sg_cnt, DMA_TO_DEVICE);
++	service->response_sg_cnt = dma_map_sg(&rport->dev,
++	    service->response_dma, service->response_sg_cnt, DMA_FROM_DEVICE);
++
++	if (service->srv_request->request_type == FC_FRAME_TYPE_ELS) {
++		els_iocb = (struct els_entry_24xx *)iocb;
++		els_iocb->entry_type = ELS_IOCB_TYPE;
++		els_iocb->entry_count = 1;
++		els_iocb->sys_define = 0;
++		els_iocb->entry_status = 0;
++		els_iocb->nport_handle = cpu_to_le16(fcport->loop_id);
++		els_iocb->tx_dsd_count = __constant_cpu_to_le16(1);
++		els_iocb->vp_index = ha->vp_idx;
++		els_iocb->sof_type = EST_SOFI3;
++		els_iocb->rx_dsd_count = __constant_cpu_to_le16(1);
++		els_iocb->opcode = els_pkt[0];
++		els_iocb->port_id[0] = fcport->d_id.b.al_pa;
++		els_iocb->port_id[1] = fcport->d_id.b.area;
++		els_iocb->port_id[2] = fcport->d_id.b.domain;
++		els_iocb->control_flags = 0;
++		els_iocb->rx_byte_count = cpu_to_le32(service->response_size);
++		els_iocb->tx_byte_count = cpu_to_le32(service->payload_size);
++		els_iocb->tx_address[0] = cpu_to_le32(LSD(sg_dma_address
++		    (&service->payload_dma[0])));
++		els_iocb->tx_address[1] = cpu_to_le32(MSD(sg_dma_address
++		    (&service->payload_dma[0])));
++
++		els_iocb->tx_len = cpu_to_le32(sg_dma_len
++		    (&service->payload_dma[0]));
++
++		els_iocb->rx_address[0] = cpu_to_le32(LSD(sg_dma_address
++		    (&service->response_dma[0])));
++		els_iocb->rx_address[1] = cpu_to_le32(MSD(sg_dma_address
++		    (&service->response_dma[0])));
++
++		els_iocb->rx_len = cpu_to_le32(sg_dma_len
++		    (&service->response_dma[0]));
++	
++		/* lld_pkt is only for ELS services in case of abort */
++		service->lld_pkt = (void *) els_iocb;
++	} else {
++		ct_iocb = (struct ct_entry_24xx *)iocb;
++		ct_iocb->entry_type = CT_IOCB_TYPE;
++		ct_iocb->entry_count = 1;
++		ct_iocb->entry_status = 0;
++		ct_iocb->comp_status = __constant_cpu_to_le16(0);
++		if (IS_FWI2_CAPABLE(ha))
++			ct_iocb->nport_handle = cpu_to_le16(NPH_SNS);
++		else
++			ct_iocb->nport_handle =
++			    cpu_to_le16(SIMPLE_NAME_SERVER);
++		ct_iocb->cmd_dsd_count =
++		    __constant_cpu_to_le16(service->payload_sg_cnt);
++		ct_iocb->vp_index = ha->vp_idx;
++		ct_iocb->timeout =
++		    __constant_cpu_to_le16(service->timer.expires);
++		ct_iocb->rsp_dsd_count =
++		    __constant_cpu_to_le16(service->response_sg_cnt);
++		ct_iocb->rsp_byte_count =
++		    cpu_to_le32(service->response_size);
++		ct_iocb->cmd_byte_count =
++		    cpu_to_le32(service->payload_size);
++		ct_iocb->dseg_0_address[0] = cpu_to_le32(LSD(sg_dma_address
++		    (&service->payload_dma[0])));
++		ct_iocb->dseg_0_address[1] = cpu_to_le32(MSD(sg_dma_address
++		    (&service->payload_dma[0])));
++
++		ct_iocb->dseg_0_len = cpu_to_le32(sg_dma_len
++		    (&service->payload_dma[0]));
++
++		sg_cnt = service->response_sg_cnt;
++		avail_dsds = 1;
++		cur_dsd = (uint32_t *)ct_iocb->dseg_1_address;
++		index = 0;
++		while (sg_cnt) {
++			cont_a64_entry_t *cont_pkt;
++
++			/* Allocate additional continuation packets? */
++			if (avail_dsds == 0) {
++				/*
++				 * Five DSDs are available in the Continuation
++				 * Type 1 IOCB.
++				 */
++				cont_pkt = qla2x00_prep_cont_type1_iocb(ha);
++				cur_dsd =
++				    (uint32_t *) cont_pkt->dseg_0_address;
++				avail_dsds = 5;
++			}
++
++			*cur_dsd++ = cpu_to_le32(LSD(sg_dma_address
++			    (&service->response_dma[index])));
++			*cur_dsd++ = cpu_to_le32(MSD(sg_dma_address
++			    (&service->response_dma[index])));
++			*cur_dsd++ = cpu_to_le32(sg_dma_len
++			    (&service->response_dma[index]));
++			avail_dsds--;
++			sg_cnt--;
++			index++;
++		}
++{
++	int i;
++	ushort *tmp = ct_iocb;
++	for (i=0;i<sizeof (struct ct_entry_24xx) / 2; i++)
++		printk("%4x\n", tmp[i]);
++}
++	}
++
++	wmb();
++	qla2x00_isp_cmd(ha);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	return 0;
++pt_error1:
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++pt_error0:
++	qla_printk(KERN_WARNING, ha, "Passthru ELS failed\n");
++
++	return -EINVAL;
++}
++
++static int
++qla2x00_abort_fc_service(struct fc_service *service)
++{
++	unsigned long flags;
++	struct fc_rport *rport = service->rport;
++	struct Scsi_Host *host = rport_to_shost(rport);
++	scsi_qla_host_t *ha = shost_priv(host);
++	struct abort_entry_24xx *abort_iocb;
++	struct els_entry_24xx *els_iocb = service->lld_pkt;
++
++	printk("ELS/CT: DEBUG: %s is called...\n", __func__);
++	if (service->srv_request->request_type != FC_FRAME_TYPE_ELS) {
++		printk(KERN_ERR "abort frame is not supported\n");
++		return -EINVAL;
++	}
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	abort_iocb = (struct abort_entry_24xx *)qla2x00_req_pkt(ha);
++
++	abort_iocb->entry_type = ABORT_IOCB_TYPE;
++	abort_iocb->entry_count = 1;
++	abort_iocb->handle_count = 0;
++	abort_iocb->entry_status = 0;
++	abort_iocb->options = 0;
++	abort_iocb->handle_to_abort = els_iocb->handle;
++	abort_iocb->port_id[0] = els_iocb->port_id[0];
++	abort_iocb->port_id[1] = els_iocb->port_id[1];
++	abort_iocb->port_id[2] = els_iocb->port_id[2];
++	abort_iocb->vp_index = ha->vp_idx;
++
++	wmb();
++	qla2x00_isp_cmd(ha);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	service->service_state_flag = FC_SERVICE_STATE_ABORTED;
++
++	return 0;
++}
++
+  struct fc_function_template qla2xxx_transport_functions = {
+
+  	.show_host_node_name = 1,
+@@ -1273,6 +1501,9 @@ struct fc_function_template  
+qla2xxx_transport_functions = {
+  	.vport_create = qla24xx_vport_create,
+  	.vport_disable = qla24xx_vport_disable,
+  	.vport_delete = qla24xx_vport_delete,
++
++	.execute_fc_service = qla2x00_execute_fc_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
+  };
+
+  struct fc_function_template qla2xxx_transport_vport_functions = {
+@@ -1313,6 +1544,9 @@ struct fc_function_template  
+qla2xxx_transport_vport_functions = {
+  	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
+  	.terminate_rport_io = qla2x00_terminate_rport_io,
+  	.get_fc_host_stats = qla2x00_get_fc_host_stats,
++
++	.execute_fc_service = qla2x00_execute_fc_service,
++	.abort_fc_service = qla2x00_abort_fc_service,
+  };
+
+  void
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/ 
+qla_def.h
+index 431c19e..c5510db 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -93,6 +93,10 @@
+  #define LSD(x)	((uint32_t)((uint64_t)(x)))
+  #define MSD(x)	((uint32_t)((((uint64_t)(x)) >> 16) >> 16))
+
++/* ELS PT request buffer = 32 bytes */
++#define EXT_ELS_PT_REQ_WWPN_VALID	0x1
++#define EXT_ELS_PT_REQ_WWNN_VALID	0x2
++#define EXT_ELS_PT_REQ_PID_VALID	0x4
+
+  /*
+   * I/O register
+@@ -213,6 +217,7 @@ typedef struct srb {
+  #define SRB_FO_CANCEL		BIT_9	/* Command don't need to do failover */
+  #define SRB_IOCTL		BIT_10	/* IOCTL command. */
+  #define SRB_TAPE		BIT_11	/* FCP2 (Tape) command. */
++#define SRB_ELS_CT		BIT_12	/* Link/Generic Service requests */
+
+  /*
+   * ISP I/O Register Set structure definitions.
+@@ -2422,6 +2427,8 @@ typedef struct scsi_qla_host {
+  	/* SNS command interfaces for 2200. */
+  	struct sns_cmd_pkt	*sns_cmd;
+  	dma_addr_t		sns_cmd_dma;
++	char			*pass_thru;
++	dma_addr_t		pass_thru_dma;
+
+  #define SFP_DEV_SIZE	256
+  #define SFP_BLOCK_SIZE	64
+@@ -2463,6 +2470,7 @@ typedef struct scsi_qla_host {
+  	struct mutex vport_lock;	/* Virtual port synchronization */
+  	struct completion mbx_cmd_comp;	/* Serialize mbx access */
+  	struct completion mbx_intr_comp;  /* Used for completion  
+notification */
++	struct completion pass_thru_intr_comp;
+
+  	uint32_t	mbx_flags;
+  #define  MBX_IN_PROGRESS	BIT_0
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/ 
+qla_fw.h
+index cf19451..481ab56 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -625,6 +625,41 @@ struct els_entry_24xx {
+  	uint32_t rx_len;		/* Data segment 1 length. */
+  };
+
++struct els_status_24xx {
++	uint8_t entry_type;		/* Entry type. */
++	uint8_t entry_count;		/* Entry count. */
++	uint8_t sys_define;		/* System Defined. */
++	uint8_t entry_status;		/* Entry Status. */
++
++	uint32_t handle;		/* System handle. */
++
++	uint16_t comp_status;
++
++	uint16_t nport_handle;		/* N_PORT handle. */
++
++	uint16_t tx_dsd_count;
++
++	uint8_t vp_index;
++	uint8_t sof_type;
++
++	uint32_t rx_xchg_address;	/* Receive exchange address. */
++	uint16_t rx_dsd_count;
++
++	uint8_t opcode;
++	uint8_t reserved_2;
++
++	uint8_t port_id[3];
++	uint8_t reserved_3;
++
++	uint16_t reserved_4;
++
++	uint16_t control_flags;		/* Control flags. */
++
++	uint32_t total_byte_count;
++	uint32_t err_subcode1;
++	uint32_t err_subcode2;
++};
++
+  /*
+   * ISP queue - Mailbox Command entry structure definition.
+   */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/ 
+qla_gbl.h
+index 0b15673..0295d39 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -121,6 +121,9 @@ extern int qla2x00_start_scsi(srb_t *sp);
+  extern int qla24xx_start_scsi(srb_t *sp);
+  int qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
+  int __qla2x00_marker(scsi_qla_host_t *, uint16_t, uint16_t, uint8_t);
++extern request_t * qla2x00_req_pkt(scsi_qla_host_t *);
++extern void qla2x00_isp_cmd(scsi_qla_host_t *ha);
++extern cont_a64_entry_t *qla2x00_prep_cont_type1_iocb(scsi_qla_host_t  
+*);
+
+  /*
+   * Global Function Prototypes in qla_mbx.c source file.
+@@ -345,6 +348,7 @@ extern int qla2x00_fdmi_register(scsi_qla_host_t *);
+  extern int qla2x00_gfpn_id(scsi_qla_host_t *, sw_info_t *);
+  extern int qla2x00_gpsc(scsi_qla_host_t *, sw_info_t *);
+  extern void qla2x00_get_sym_node_name(scsi_qla_host_t *, uint8_t *);
++extern int qla2x00_mgmt_svr_login(scsi_qla_host_t *);
+
+  /*
+   * Global Function Prototypes in qla_attr.c source file.
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/ 
+qla_gs.c
+index c2a4bfb..ceef231 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1093,7 +1093,7 @@ qla2x00_sns_rnn_id(scsi_qla_host_t *ha)
+   *
+   * Returns 0 on success.
+   */
+-static int
++int
+  qla2x00_mgmt_svr_login(scsi_qla_host_t *ha)
+  {
+  	int ret;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/ 
+qla_init.c
+index ee89ddd..4956a9b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2386,6 +2386,18 @@ qla2x00_configure_fabric(scsi_qla_host_t *ha)
+  			return (QLA_SUCCESS);
+  		}
+
++		/* allocate fc_port_t structure for name/directory server */
++		fcptemp = qla2x00_alloc_fcport(ha, GFP_KERNEL);
++		fcptemp->flags |= (FCF_FABRIC_DEVICE | FCF_LOGIN_NEEDED);
++		fcptemp->loop_id = loop_id;
++		fcptemp->d_id.b.domain = 0xff;
++		fcptemp->d_id.b.area = 0xff;
++		fcptemp->d_id.b.al_pa = 0xfc;
++		list_add_tail(&fcptemp->list, &pha->fcports);
++		atomic_set(&fcptemp->state, FCS_ONLINE);
++		qla2x00_reg_remote_port(ha, fcptemp);
++
++
+  		if (test_and_clear_bit(REGISTER_FC4_NEEDED, &ha->dpc_flags)) {
+  			if (qla2x00_rft_id(ha)) {
+  				/* EMPTY */
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/ 
+qla_iocb.c
+index d57669a..45e227e 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -11,8 +11,6 @@
+
+  #include <scsi/scsi_tcq.h>
+
+-static request_t *qla2x00_req_pkt(scsi_qla_host_t *ha);
+-static void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+
+  /**
+   * qla2x00_get_cmd_direction() - Determine control_flag data  
+direction.
+@@ -114,7 +112,7 @@ qla2x00_prep_cont_type0_iocb(scsi_qla_host_t *ha)
+   *
+   * Returns a pointer to the continuation type 1 IOCB packet.
+   */
+-static inline cont_a64_entry_t *
++inline cont_a64_entry_t *
+  qla2x00_prep_cont_type1_iocb(scsi_qla_host_t *ha)
+  {
+  	cont_a64_entry_t *cont_pkt;
+@@ -471,7 +469,7 @@ qla2x00_marker(scsi_qla_host_t *ha, uint16_t  
+loop_id, uint16_t lun,
+   *
+   * Returns NULL if function failed, else, a pointer to the request  
+packet.
+   */
+-static request_t *
++request_t *
+  qla2x00_req_pkt(scsi_qla_host_t *ha)
+  {
+  	device_reg_t __iomem *reg = ha->iobase;
+@@ -541,7 +539,7 @@ qla2x00_req_pkt(scsi_qla_host_t *ha)
+   *
+   * Note: The caller must hold the hardware lock before calling this  
+routine.
+   */
+-static void
++void
+  qla2x00_isp_cmd(scsi_qla_host_t *ha)
+  {
+  	device_reg_t __iomem *reg = ha->iobase;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/ 
+qla_isr.c
+index 45a3b93..1b11358 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1398,6 +1398,9 @@ qla24xx_process_response_queue(struct  
+scsi_qla_host *ha)
+  {
+  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+  	struct sts_entry_24xx *pkt;
++	struct els_status_24xx *els_status;
++	struct fc_service *service;
++	srb_t *sp;
+
+  	if (!ha->flags.online)
+  		return;
+@@ -1430,10 +1433,72 @@ qla24xx_process_response_queue(struct  
+scsi_qla_host *ha)
+  		case STATUS_CONT_TYPE:
+  			qla2x00_status_cont_entry(ha, (sts_cont_entry_t *)pkt);
+  			break;
++ 		case MS_IOCB_TYPE:
++		case ELS_IOCB_TYPE:
++			if (pkt->handle < MAX_OUTSTANDING_COMMANDS) {
++				sp = ha->outstanding_cmds[pkt->handle];
++				service = (struct fc_service *) sp->cmd;
++				ha->outstanding_cmds[pkt->handle] = NULL;
++			} else {
++				service = NULL;
++				break;
++			}
++
++			service->service_state_flag = FC_SERVICE_STATE_DONE;
++			service->srv_reply.status = FC_SERVICE_COMPLETE;
++			service->srv_reply.error_code = pkt->comp_status;
++
++			if (pkt->comp_status) {
++				printk("ELS/CT: comp_status = %x\n", pkt->comp_status);
++				els_status = (struct els_status_24xx *)pkt;
++				service->srv_reply.residual = 0;
++				if (pkt->comp_status == CS_DATA_UNDERRUN)
++					service->srv_reply.residual =
++					    els_status->total_byte_count;
++				else if (pkt->comp_status == CS_ABORTED) {
++					service->service_state_flag =
++					    FC_SERVICE_STATE_ABORTED;
++					service->srv_reply.status =
++					    FC_SERVICE_ABORT;
++				} else
++				service->srv_reply.status = FC_SERVICE_ERROR;
++			}
++
++			dma_unmap_sg(&ha->pdev->dev, service->payload_dma,
++			    service->payload_sg_cnt, DMA_TO_DEVICE);
++			dma_unmap_sg(&ha->pdev->dev, service->response_dma,
++			    service->response_sg_cnt, DMA_FROM_DEVICE);
++
++			mempool_free(sp, ha->srb_mempool);
++			service->service_done(service);
++ 			break;
+  		case VP_RPT_ID_IOCB_TYPE:
+  			qla24xx_report_id_acquisition(ha,
+  			    (struct vp_rpt_id_entry_24xx *)pkt);
+  			break;
++		case ABORT_IOCB_TYPE:
++			if (pkt->comp_status) {
++				if (pkt->handle < MAX_OUTSTANDING_COMMANDS) {
++					sp = ha->outstanding_cmds[pkt->handle];
++					ha->outstanding_cmds[pkt->handle] =
++					    NULL;
++					if (sp->flags & SRB_ELS_CT) {
++						service = (struct fc_service *)
++						    sp->cmd;
++						qla_printk(KERN_ERR, ha,
++						    "failed to abort"
++						    " FC service %p\n",
++						    service);
++
++					} else
++						qla_printk(KERN_ERR, ha,
++						    "failed to abort"
++						    " SCSI CMD[0] = %2x\n",
++						    sp->cmd->cmnd[0]);
++				}
++			}
++			
++			break;
+  		default:
+  			/* Type Not Supported. */
+  			DEBUG4(printk(KERN_WARNING
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
+qla_os.c
+index 26afe44..7e1f027 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1672,6 +1672,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+struct pci_device_id *id)
+  	init_completion(&ha->mbx_cmd_comp);
+  	complete(&ha->mbx_cmd_comp);
+  	init_completion(&ha->mbx_intr_comp);
++	init_completion(&ha->pass_thru_intr_comp);
++
+
+  	INIT_LIST_HEAD(&ha->list);
+  	INIT_LIST_HEAD(&ha->fcports);
+@@ -2020,6 +2022,8 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+  		    sizeof(struct ct_sns_pkt), &ha->ct_sns_dma, GFP_KERNEL);
+  		if (!ha->ct_sns)
+  			goto fail_free_ms_iocb;
++		ha->pass_thru = dma_alloc_coherent(&ha->pdev->dev,
++		    PAGE_SIZE, &ha->pass_thru_dma, GFP_KERNEL);
+  	}
+
+  	return 0;
+---
