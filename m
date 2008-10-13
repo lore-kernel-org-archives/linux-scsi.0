@@ -1,377 +1,476 @@
 From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: [PATCH 2/2] qla2xxx: FC pass through support via bsg interface - revised
-Date: Mon, 13 Oct 2008 10:53:27 -0700
-Message-ID: <79DBFEDF-091E-4B2F-8692-B68037DC0BF8@qlogic.com>
+Subject: [PATCH 0/2] FC pass through support via bsg interface - revised
+Date: Mon, 13 Oct 2008 10:53:18 -0700
+Message-ID: <B5FBFF85-C7C0-44F7-905F-9029C54F4F56@qlogic.com>
 Mime-Version: 1.0 (Apple Message framework v929.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=Apple-Mail-5-800062317
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:9229 "EHLO
+Received: from avexch2.qlogic.com ([198.70.193.116]:9203 "EHLO
 	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754571AbYJMRxb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 13:53:31 -0400
+	with ESMTP id S1754048AbYJMRxW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2008 13:53:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Robert W Love <robert.w.love@intel.com>
 
-Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
----
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
-scsi_transport_fc.c
-index cb971f0..dda12e0 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -43,6 +43,11 @@ static void fc_vport_sched_delete(struct  
-work_struct *work);
-  static int fc_vport_setup(struct Scsi_Host *shost, int channel,
-  	struct device *pdev, struct fc_vport_identifiers  *ids,
-  	struct fc_vport **vport);
-+static void fc_service_timeout(unsigned long);
-+static void fc_service_done(struct fc_service *);
-+static int fc_service_handler(struct Scsi_Host *, struct fc_rport *,
-+    struct request *, struct request_queue *);
-+static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
 
-  /*
-   * Redefine so that we can have same named attributes in the
-@@ -2406,12 +2411,194 @@ fc_rport_final_delete(struct work_struct *work)
+--Apple-Mail-5-800062317
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed;
+	delsp=yes
+Content-Transfer-Encoding: 7bit
 
-  	transport_remove_device(dev);
-  	device_del(dev);
-+	fc_bsg_remove(shost, rport);
-  	transport_destroy_device(dev);
-  	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
-  	put_device(dev);			/* for self-reference */
-  }
+Hi,
+
+Base on feedback as below, here is revised one for pass through support.
+http://marc.info/?l=linux-scsi&m=122123825918741&w=2
+http://marc.info/?t=121908849700001&r=1&w=2
+
+Also, the attached file is updated sample application along with GPL  
+license.
+
+--Apple-Mail-5-800062317
+Content-Disposition: attachment;
+	filename=issue-service.c
+Content-Type: application/octet-stream;
+	x-unix-mode=0755;
+	name="issue-service.c"
+Content-Transfer-Encoding: 7bit
+
+/*
+ * QLogic Fibre Channel HBA Driver
+ * Copyright (c) 2008 QLogic Corporation
+ *
+ * issue-service.c -- sample utility to issue ELS/CT pass through services
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/dma-mapping.h>
+#include <linux/dmapool.h>
+#include <linux/delay.h>
+#include <linux/interrupt.h>
+#include <linux/kthread.h>
+#include <linux/of.h>
+#include <linux/stringify.h>
+ */
+typedef signed int __s32;
+typedef unsigned short __u16;
+typedef unsigned int __u32;
+typedef unsigned long __u64;
+typedef unsigned char __u8;
+typedef __u32 __be32;
+typedef __u16 __be16;
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <scsi/scsi.h>
+#include <scsi/sg.h>
+#include "/lib/modules/2.6.27-rc4/source/include/linux/bsg.h"
+
+/* NOTE - fc_els_hdr to move to ~/include/scsi/fc/fc_els.h */
+struct fc_els_hdr {
+	__u8	els_cmd;
+	__u8	els_param[3];
+};
+
+/* NOTE - fc_ct_hdr is already defined in open-fcoe-upstream branch */
+/*
+ * Fibre Channel Services - Common Transport.
+ * From T11.org FC-GS-2 Rev 5.3 November 1998.
+ */
+
+struct fc_ct_hdr {
+	__u8		ct_rev;		/* revision */
+	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
+	__u8		ct_fs_type;	/* type of fibre channel service */
+	__u8		ct_fs_subtype;	/* subtype */
+	__u8		ct_options;
+	__u8		_ct_resvd1;
+	__be16		ct_cmd;		/* command / response code */
+	__be16		ct_mr_size;	/* maximum / residual size */
+	__u8		_ct_resvd2;
+	__u8		ct_reason;	/* reject reason */
+	__u8		ct_explan;	/* reason code explanation */
+	__u8		ct_vendor;	/* vendor unique data */
+};
+
+struct fc_ct_frame {
+	struct fc_ct_hdr ct_hdr;
+	unsigned int ct_cmd[1];
+};
+
+struct fc_els_frame {
+	struct fc_els_hdr els_hdr;
+	unsigned int els_srv_param[4];
+};
+
+#define FC_SERVICE_TIMEOUT 10
+
+void
+els_echo(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char request_sense[18];
+	// char response[0x8192];
+	char response[64];
+	struct sg_io_v4 sg_io;
+	struct fc_els_frame els;
+	int res;
+
+	els.els_hdr.els_cmd = 0x10; /* ELS cmd - echo */
+	els.els_hdr.els_param[2] = 0;
+	els.els_hdr.els_param[1] = 0;
+	els.els_hdr.els_param[0] = 0;
+
+	els.els_srv_param[0] = 0xcafecafe;
+	els.els_srv_param[1] = 0xc8c8c8c8;
+	els.els_srv_param[2] = 0xdeaddead;
+	els.els_srv_param[3] = 0xaceaceac;
+
+	cdb[0] = 0x01; /* ELS type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = sizeof (struct fc_els_frame);
+	sg_io.dout_xferp = (__u64) &els;
 
 
-+static void fc_service_timeout(unsigned long _service)
-+{
-+	struct fc_service *service = (void *) _service;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&service->service_state_lock, flags);
-+	if (!(service->service_state_flag & FC_SERVICE_STATE_DONE))
-+		service->service_state_flag |= FC_SERVICE_STATE_TIMEOUT;
-+	spin_unlock_irqrestore(&service->service_state_lock, flags);
-+}
-+
-+static void fc_service_done(struct fc_service *service)
-+{
-+	if (service->service_state_flag != FC_SERVICE_STATE_DONE) {
-+		if (service->service_state_flag == FC_SERVICE_STATE_TIMEOUT) {
-+			printk(KERN_ERR "ERROR: FC service timed out\n");
-+			/* expect abort to be issued by the application */
-+			return;
-+		} else
-+			printk(KERN_ERR "ERROR: FC service not finished\n");
-+	}
-+
-+	if (service->srv_reply.status != FC_SERVICE_COMPLETE) {
-+		printk(KERN_ERR "ERROR: FC service to rport %p failed with"
-+		    " status 0x%x\n", service->rport,
-+		    service->srv_reply.status);
-+	}
-+
-+	if (service->srv_reply.residual) {
-+		service->req->data_len = 0;
-+		service->req->next_rq->data_len = service->srv_reply.residual;
-+	} else {
-+		service->req->data_len = 0;
-+		service->req->next_rq->data_len = 0;
-+	}
-+
-+	service->req->end_io(service->req, 0);
-+	kfree(service);
-+}
-+
-+static int
-+issue_fc_service(struct fc_rport *rport, struct request *req,
-+    struct request *rsp, struct request_queue *q)
-+{
-+	int res = -ECOMM;
-+	struct fc_service *service;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+	struct fc_service_request *srv_request = (struct fc_service_request *)
-+	    req->cmd;
-+
-+	service = kzalloc(sizeof (struct fc_service), GFP_KERNEL);
-+	if (!service)
-+		return -ENOMEM;
-+
-+	service->rport = rport;
-+	service->req = req;
-+	service->q = q;
-+	service->srv_request = srv_request;
-+
-+	sg_init_table(service->payload_dma, FC_SERVICE_MAX_SG);
-+	service->payload_sg_cnt =
-+	    blk_rq_map_sg(q, req, service->payload_dma);
-+	service->payload = (void *) bio_data(req->bio);
-+	service->payload_size = req->data_len;
-+
-+	sg_init_table(service->response_dma, FC_SERVICE_MAX_SG);
-+	service->response_sg_cnt =
-+	    blk_rq_map_sg(q, rsp, service->response_dma);
-+	service->response = bio_data(rsp->bio);
-+	service->response_size = rsp->data_len;
-+
-+	/* sense area of the request structure */
-+	service->reply_seq = req->sense;
-+	service->service_done = fc_service_done;
-+	service->service_state_flag = FC_SERVICE_STATE_PENDING;
-+
-+	if (i->f->execute_fc_service)
-+		res = i->f->execute_fc_service(service);
-+
-+	if (res) {
-+		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
-+		"failed with status %d\n", res);
-+		fc_service_done(service);
-+		return res;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
-+			  struct request *req, struct request_queue *q)
-+{
-+	int ret;
-+	struct request *rsp = req->next_rq;
-+
-+	if (!rsp) {
-+		printk(KERN_ERR "ERROR: space for a FC service"
-+		   " response is missing\n");
-+		return -EINVAL;
-+	}
-+
-+	if ((req->bio->bi_vcnt > FC_SERVICE_MAX_SG) ||
-+	    (rsp->bio->bi_vcnt > FC_SERVICE_MAX_SG)) {
-+		printk(KERN_ERR "ERROR: a FC service"
-+		    " supports no more than %d SGs\n", FC_SERVICE_MAX_SG);
-+		return -EINVAL;
-+	}
-+
-+	ret = issue_fc_service(rport, req, rsp, q);
-+
-+	return ret;
-+}
-+
-+static void fc_service_dispatch(struct request_queue *q)
-+{
-+	struct request *req;
-+	struct fc_rport *rport = q->queuedata;
-+	struct Scsi_Host *shost = rport_to_shost(rport);
-+
-+	while (!blk_queue_plugged(q)) {
-+		req = elv_next_request(q);
-+		if (!req)
-+			break;
-+
-+		blkdev_dequeue_request(req);
-+		spin_unlock_irq(q->queue_lock);
-+
-+		fc_service_handler(shost, rport, req, q);
-+
-+		spin_lock_irq(q->queue_lock);
-+	}
-+}
-+
-+static int
-+fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
-+{
-+	struct request_queue *q;
-+	int error;
-+	struct device *dev;
-+	const char *name;
-+	void (*release)(struct device *);
-+
-+	if (!rport) {
-+		printk(KERN_ERR "ERROR: rport is NULL\n");
-+		return -ENOMEM;
-+	}
-+
-+	q = blk_init_queue(fc_service_dispatch, NULL);
-+	if (!q)
-+		return -ENOMEM;
-+
-+	dev = &rport->dev;
-+	name = dev->bus_id;
-+	release = NULL;
-+
-+	error = bsg_register_queue(q, dev, name, release);
-+	if (error) {
-+		blk_cleanup_queue(q);
-+		return -ENOMEM;
-+	}
-+
-+	rport->q = q;
-+	q->queuedata = rport;
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
-+
-+	return 0;
-+}
-+
-+static void
-+fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
-+{
-+	struct request_queue *q = rport->q;
-+
-+	if (!q)
-+		return;
-+
-+	bsg_unregister_queue(q);
-+}
-+
-  /**
-   * fc_rport_create - allocates and creates a remote FC port.
-   * @shost:	scsi host the remote port is connected to.
-@@ -2471,8 +2658,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-channel,
-  	else
-  		rport->scsi_target_id = -1;
-  	list_add_tail(&rport->peers, &fc_host->rports);
--	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
+	/******************* to test multiple SG feature ********************/
+	// sg_io.din_xfer_len = 0x8192;
+	sg_io.din_xfer_len = sizeof(struct fc_els_frame);
 
-+	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
-  	spin_unlock_irqrestore(shost->host_lock, flags);
 
-  	dev = &rport->dev;
-@@ -2491,6 +2678,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-channel,
-  	transport_add_device(dev);
-  	transport_configure_device(dev);
 
-+	fc_bsg_initialize(shost, rport);
-+
-  	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
-  		/* initiate a scan of the target */
-  		rport->flags |= FC_RPORT_SCAN_PENDING;
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/ 
-scsi_transport_fc.h
-index 21018a4..6c6809a 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -33,7 +33,6 @@
+	sg_io.din_xferp = (__u64) response;
+	sg_io.max_response_len = sizeof(request_sense);
+	sg_io.response = (__u64) request_sense;
 
-  struct scsi_transport_template;
+	sg_io.timeout = 20000;
 
--
-  /*
-   * FC Port definitions - Following FC HBAAPI guidelines
-   *
-@@ -352,6 +351,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
-   	struct delayed_work fail_io_work;
-   	struct work_struct stgt_delete_work;
-  	struct work_struct rport_delete_work;
-+	struct request_queue *q;
-  } __attribute__((aligned(sizeof(unsigned long))));
+	memset(response, 0x0, sizeof (response));
 
-  /* bit field values for struct fc_rport "flags" field: */
-@@ -514,6 +514,81 @@ struct fc_host_attrs {
-  	struct workqueue_struct *devloss_work_q;
-  };
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
 
-+#define FC_STATUS_BUF_SIZE 96
-+
-+enum fc_frame_type {
-+	FC_FRAME_TYPE_BS,
-+	FC_FRAME_TYPE_ELS,
-+	FC_FRAME_TYPE_IEC = 4,
-+	FC_FRAME_TYPE_IP,
-+	FC_FRAME_TYPE_FCP = 8,
-+	FC_FRAME_TYPE_GPP,
-+	FC_FRAME_TYPE_FC_CT = 0x20,
-+};
-+
-+enum fc_service_status {
-+	FC_SERVICE_COMPLETE,
-+	FC_SERVICE_TIMEOUT,
-+	FC_SERVICE_ABORT,
-+	FC_SERVICE_UNSUPPORTED,
-+	FC_SERVICE_ERROR = -1,
-+};
-+
-+#define FC_SERVICE_STATE_PENDING      1
-+#define FC_SERVICE_STATE_DONE         2
-+#define FC_SERVICE_STATE_ABORTED      4
-+#define FC_SERVICE_STATE_TIMEOUT      8
-+
-+#define FC_SERVICE_TIMEOUT 10
-+#define FC_SERVICE_MAX_SG             16
-+
-+/* request (CDB) structure of the sg_io_v4 */
-+struct fc_service_request {
-+	u8   request_type;
-+	u8   timeout;
-+	u8   reserved0;
-+	u8   reserved1;
-+};
-+
-+/* response  (request sense data) structure of the sg_io_v4 */
-+struct fc_service_reply {
-+	enum fc_service_status status;
-+	u16  error_code;
-+	u16  additional_error_code;
-+	u32  residual;
-+};
-+
-+struct fc_service {
-+	struct fc_rport  *rport;
-+	struct list_head list;
-+
-+	spinlock_t   service_state_lock;
-+	unsigned     service_state_flag;
-+
-+	struct request *req;
-+	struct request_queue *q;
-+
-+	/* Used by the discovery code. */
-+	struct timer_list  timer;
-+	struct completion  completion;
-+
-+	struct fc_service_request *srv_request;
-+	void  *payload;
-+	struct scatterlist payload_dma[FC_SERVICE_MAX_SG];
-+	int   payload_sg_cnt;
-+	int   payload_size;
-+	void  *response;
-+	struct scatterlist response_dma[FC_SERVICE_MAX_SG];
-+	int   response_sg_cnt;
-+	int   response_size;
-+
-+	struct fc_service_reply srv_reply;
-+	void  *reply_seq;   /* pointer to sense area of request */
-+	void  (*service_done)(struct fc_service *);
-+
-+	void *lld_pkt;
-+};
-+
-  #define shost_to_fc_host(x) \
-  	((struct fc_host_attrs *)(x)->shost_data)
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
 
-@@ -612,6 +687,10 @@ struct fc_function_template {
-  	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
-  	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+void
+els_rnid(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char response[68];
+	struct sg_io_v4 sg_io;
+	struct fc_els_frame els;
+	int res;
 
-+	/* fc service handler */
-+	int	(*execute_fc_service)(struct fc_service *);
-+	int	(*abort_fc_service)(struct fc_service *);
-+
-  	/* allocation lengths for host-specific data */
-  	u32	 			dd_fcrport_size;
-  	u32	 			dd_fcvport_size;
-@@ -732,7 +811,6 @@ fc_vport_set_state(struct fc_vport *vport, enum  
-fc_vport_state new_state)
-  	vport->vport_state = new_state;
-  }
+	els.els_hdr.els_cmd = 0x78; /* ELS cmd - rnid */
+	els.els_hdr.els_param[2] = 0;
+	els.els_hdr.els_param[1] = 0;
+	els.els_hdr.els_param[0] = 0;
 
--
-  struct scsi_transport_template *fc_attach_transport(
-  			struct fc_function_template *);
-  void fc_release_transport(struct scsi_transport_template *);
----
+	els.els_srv_param[0] = 0x00000000; /* common node-identification data */
+
+	cdb[0] = 0x01; /* ELS type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = 8; /* size of request = 8 */
+	sg_io.dout_xferp = (__u64) &els;
+	sg_io.din_xfer_len = sizeof(response); /* common node-identification data + 4 */
+	sg_io.din_xferp = (__u64) response;
+
+	sg_io.timeout = 100;
+
+	memset(response, 0x0, sizeof (response));
+
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
+
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
+
+void
+els_read_timeout_value(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char response[16];
+	struct sg_io_v4 sg_io;
+	struct fc_els_frame els;
+	int res;
+
+	els.els_hdr.els_cmd = 0x0e; /* ELS cmd - read timeout value */
+	els.els_hdr.els_param[2] = 0;
+	els.els_hdr.els_param[1] = 0;
+	els.els_hdr.els_param[0] = 0;
+
+	cdb[0] = 0x01; /* ELS type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = 4;
+	sg_io.dout_xferp = (__u64) &els;
+	sg_io.din_xfer_len = sizeof(response);
+	sg_io.din_xferp = (__u64) response;
+
+	sg_io.timeout = 100;
+
+	memset(response, 0x0, sizeof (response));
+
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
+
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
+
+void
+els_loop_status(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char response[168];
+	struct sg_io_v4 sg_io;
+	struct fc_els_frame els;
+	int res;
+
+	els.els_hdr.els_cmd = 0x72; /* ELS cmd - loop_status*/
+	els.els_hdr.els_param[2] = 0;
+	els.els_hdr.els_param[1] = 0;
+	els.els_hdr.els_param[0] = 0;
+
+	cdb[0] = 0x01; /* ELS type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = 4;
+	sg_io.dout_xferp = (__u64) &els;
+	sg_io.din_xfer_len = sizeof(response);
+	sg_io.din_xferp = (__u64) response;
+
+	sg_io.timeout = 100;
+
+	memset(response, 0x0, sizeof (response));
+
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
+
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
+
+int
+ct_ga_nxt(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char response[632];
+	struct sg_io_v4 sg_io;
+	struct fc_ct_frame ct;
+	int res;
+
+	ct.ct_hdr.ct_rev = 1;
+	ct.ct_hdr.ct_in_id[2] = 0x00;
+	ct.ct_hdr.ct_in_id[1] = 0x00;
+	ct.ct_hdr.ct_in_id[0] = 0x00;
+	ct.ct_hdr.ct_fs_type = 0xFC;
+	ct.ct_hdr.ct_fs_subtype = 0x02;
+	ct.ct_hdr.ct_options = 0x0;
+	ct.ct_hdr.ct_cmd = 0x1;          /* GA_NXT = 0x100 in BE */
+	ct.ct_hdr.ct_mr_size = 0x7802;   /* 0x278 in BE */
+
+	cdb[0] = 0x20; /* CT type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = 20;
+	sg_io.dout_xferp = (__u64) &ct;
+	sg_io.din_xfer_len = sizeof(response);
+	sg_io.din_xferp = (__u64) response;
+
+	sg_io.timeout = 100;
+
+	memset(response, 0x0, sizeof (response));
+
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
+
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
+
+int
+ct_gfpn_id(int fd, char *dev)
+{
+	int i;
+	char cdb[16];
+	char response[24];
+	struct sg_io_v4 sg_io;
+	struct fc_ct_frame ct;
+	int res;
+
+	ct.ct_hdr.ct_rev = 1;
+	ct.ct_hdr.ct_in_id[2] = 0x00;
+	ct.ct_hdr.ct_in_id[1] = 0x00;
+	ct.ct_hdr.ct_in_id[0] = 0x00;
+	ct.ct_hdr.ct_fs_type = 0xFC;
+	ct.ct_hdr.ct_fs_subtype = 0x02;
+	ct.ct_hdr.ct_options = 0x0;
+	ct.ct_hdr.ct_cmd = 0x1c01;       /* GFPN_ID = 0x011c in BE */
+	ct.ct_hdr.ct_mr_size = 0x1800;   /* 0x18 in BE */
+
+	cdb[0] = 0x20; /* CT type */
+
+	sg_io.guard = 'Q';
+	sg_io.protocol = BSG_PROTOCOL_SCSI;
+	sg_io.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
+
+	sg_io.request_len = sizeof(cdb);
+	sg_io.request = (__u64) cdb;
+	sg_io.dout_xfer_len = 20;
+	sg_io.dout_xferp = (__u64) &ct;
+	sg_io.din_xfer_len = sizeof(response);
+	sg_io.din_xferp = (__u64) response;
+
+	sg_io.timeout = 100;
+
+	memset(response, 0x0, sizeof (response));
+
+	res = ioctl(fd, SG_IO, &sg_io);
+	if (res < 0) {
+		printf("ERROR: nothing could be written to %s, error = %d\n",
+		    dev, res);
+	}
+
+	printf("result of IOCTL:\n");
+	for (i=0;i<sizeof (response); i++) {
+		printf("%2x ", response[i]);
+		if ((i % 4) == 3)
+			printf("\n");
+	}
+}
+
+int
+main(int argc, char **argv)
+{
+	int i;
+	int fd;
+	char cdb[] = "FC Service CDB";
+	char inq_data[] = "FC Service DATA OUT";
+	char sense_data[] = "FC Service DATA IN";
+	char response[16];
+
+	if (argc < 2) {
+		printf("ERROR: specify rport (f.e. /dev/rport-6:0-0\n");
+		return 1;
+	}
+	fd = open(argv[1], O_RDWR);
+	if (fd < 0) {
+		printf("ERROR: failed opening %s\n", argv[1]);
+		return;
+	}
+
+	els_echo(fd, argv[1]);
+	// els_rnid(fd, argv[1]);
+	// els_read_timeout_value(fd, argv[1]);
+	// els_loop_status(fd, argv[1]);
+	ct_ga_nxt(fd, argv[1]);
+	// ct_gfpn_id(fd, argv[1]);
+
+	close(fd);
+}
+
+--Apple-Mail-5-800062317
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+Thank you,
+Seokmann
+
+
+--Apple-Mail-5-800062317--
