@@ -1,91 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Checkin 7404ad3b6d04efbd918e9e2e776bf560fbedf47d breaks boot
-	on KVM
-Date: Tue, 14 Oct 2008 09:23:29 -0400
-Message-ID: <1223990609.12440.8.camel@localhost.localdomain>
-References: <48F3E1C9.6030007@zytor.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support via bsg
+ interface - revised
+Date: Tue, 14 Oct 2008 22:34:50 +0900
+Message-ID: <20081014215239E.fujita.tomonori@lab.ntt.co.jp>
+References: <45109B57-BBED-47A8-8183-4F4464D1DBEC@qlogic.com>
+	<20081014112148W.fujita.tomonori@lab.ntt.co.jp>
+	<1FF7A5F2-7B3B-4862-8435-15E3C666D166@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56324 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750929AbYJNNXf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Oct 2008 09:23:35 -0400
-In-Reply-To: <48F3E1C9.6030007@zytor.com>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:38595 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796AbYJNNfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Oct 2008 09:35:23 -0400
+In-Reply-To: <1FF7A5F2-7B3B-4862-8435-15E3C666D166@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jejb@steeleye.com>
+To: seokmann.ju@qlogic.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, bharrosh@panasas.com, robert.w.love@intel.com
 
-On Mon, 2008-10-13 at 17:03 -0700, H. Peter Anvin wrote:
-> I just tried a top of tree i386 kernel under KVM, and found that it 
-> fails to boot with a hang during initialization, right after:
-> 
-> console [netcon0] enabled 
-> 
-> netconsole: network logging started 
-> 
-> Uniform Multi-Platform E-IDE driver 
-> 
-> ide-floppy driver 1.00 
-> 
-> Driver 'sd' needs updating - please use bus_type methods 
-> 
-> scsi0 : ata_piix 
-> 
-> scsi1 : ata_piix 
-> 
-> ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xc000 irq 14 
-> 
-> ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xc008 irq 15 
-> 
-> ata1.00: ATA-7: QEMU HARDDISK, 0.9.1, max UDMA/100 
-> 
-> ata1.00: 16777216 sectors, multi 16: LBA48 
-> 
-> ata1.00: configured for MWDMA2 
-> 
-> ata2.00: ATAPI: QEMU DVD-ROM, 0.9.1, max UDMA/100 
-> 
-> ata2.00: configured for MWDMA2 
-> 
-> scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    0.9. PQ: 0 
-> ANSI: 5
-> 
-> Bisection fingered the following commit:
-> 
-> 7404ad3b6d04efbd918e9e2e776bf560fbedf47d is first bad commit 
-> 
-> commit 7404ad3b6d04efbd918e9e2e776bf560fbedf47d 
-> 
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com> 
-> 
-> Date:   Sun Aug 31 10:41:52 2008 -0500 
-> 
-> 
->      [SCSI] sd: use generic helper to print capacities in both binary
-> and SI
-> 
->      Signed-off-by: James Bottomley
-> <James.Bottomley@HansenPartnership.com>
-> 
-> :040000 040000 98fc7ae95211b8d16e2e8ca46997be660ad9ba93 
-> 2d35d0a2b6232411b840a9ccf6a52b946172566e M      drivers
-> 
-> However, simply reverting this commit caused a panic on boot (not 
-> entirely surprising.)
+On Tue, 14 Oct 2008 04:44:17 -0700
+Seokmann Ju <seokmann.ju@qlogic.com> wrote:
 
-Actually, it is surprising.  That patch takes the default arithmetic for
-calculating the disk size out of sd and uses a routine to do it more
-efficiently in lib/string_helpers.c
+> >> +static int
+> >> +fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
+> >> +			  struct request *req, struct request_queue *q)
+> >> +{
+> >> +	int ret;
+> >> +	struct request *rsp = req->next_rq;
+> >> +
+> >> +	if (!rsp) {
+> >> +		printk(KERN_ERR "ERROR: space for a FC service"
+> >> +		   " response is missing\n");
+> >> +		return -EINVAL;
+> >> +	}
+> >> +
+> >> +	if ((req->bio->bi_vcnt > FC_SERVICE_MAX_SG) ||
+> >> +	    (rsp->bio->bi_vcnt > FC_SERVICE_MAX_SG)) {
+> >> +		printk(KERN_ERR "ERROR: a FC service"
+> >> +		    " supports no more than %d SGs\n", FC_SERVICE_MAX_SG);
+> >> +		return -EINVAL;
+> >> +	}
+> >
+> > This doesn't look correct. bi_vcnt is not related with the number of
+> > sg. You use scatter-gather for large data transfer. You don't need to
+> > worry about bi_vcnt.
+> I see...
+> Is there is a way to check, then, how many SG entries the service  
+> needs before the blk_rq_map_sg()?
 
-So there are two problems:  Why does it panic on revert (could you post
-the oops) and what does kvm object to in string_get_size ... it's a
-fairly innocuous routine as I read it ... your symptoms sound like the
-for loop isn't terminating.
-
-James
-
-
+As I wrote in the previous mail, via blk_queue_max_hw_segments() and
+blk_queue_max_phys_segments(), you can tell the block layer the number
+of sg segments you can handle.
