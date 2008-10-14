@@ -1,74 +1,32 @@
-From: Sam Creasey <sammy@sammy.net>
-Subject: Re: [PATCH 2/2] drivers/scsi/sun3x_esp.c: Convert && to ||
-Date: Tue, 14 Oct 2008 12:40:43 -0400
-Message-ID: <20081014164043.GS10918@sammy.net>
-References: <Pine.LNX.4.64.0810141759520.20451@pc-004.diku.dk>
+From: Abhijit Paithankar <apaithan@akamai.com>
+Subject: Re: LSISAS1068 ioerr_cnt 0x1 on clean boot up
+Date: Tue, 14 Oct 2008 10:49:24 -0700
+Message-ID: <20081014174924.GA20297@akamai.com>
+References: <20081014025504.GA10518@akamai.com> <6A4D764DC1BDE14495DA8DC60A3D69531F8DA650E9@hkgmail01.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from anhedonia.sammy.net ([72.46.127.32]:58530 "EHLO
-	anhedonia.sammy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbYJNQks (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Oct 2008 12:40:48 -0400
+Received: from prod-mail-xrelay01.akamai.com ([72.246.2.12]:40561 "EHLO
+	prod-mail-xrelay01.akamai.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750766AbYJNRt0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Oct 2008 13:49:26 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0810141759520.20451@pc-004.diku.dk>
+In-Reply-To: <6A4D764DC1BDE14495DA8DC60A3D69531F8DA650E9@hkgmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Douglas Gilbert <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 14, 2008 at 06:00:19PM +0200, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> The pattern !E && !E->fld is nonsensical.  The patch below updates this
-> according to the assumption that && should be ||.  But perhaps another
-> solution was intended.
-> 
-> The semantic patch that makes this change is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @disable and_comm@
-> expression E;
-> identifier fld;
-> @@
-> 
-> - !E && !E->fld
-> + !E || !E->fld
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-Acked-By: Sam Creasey <sammy@sammy.net>
+* Prakash, Sathya (Sathya.Prakash@lsi.com) wrote:
+> This patch will avoid sending the  port mode page request for SSP device also so NACK. Try to use the patch provided by Eric, which modifies the driver to send the port mode page request only for SSP device.
 
-I doubt this code would have been likely to execute, but you're
-certainly right.  It's a bug, and this looks like the fix.
+We shouldn't be sending the port mode page request for SATA devices as
+well.
 
--- Sam
+That was clear from the tests I ran yesterday.
 
+So I think (SAS_PROTOCOL_SATA | SAS_PROTOCOL_SSP) is required.
 
-> 
-> ---
->  drivers/scsi/sun3x_esp.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -u -p a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
-> --- a/drivers/scsi/sun3x_esp.c
-> +++ b/drivers/scsi/sun3x_esp.c
-> @@ -213,7 +213,7 @@ static int __devinit esp_sun3x_probe(str
->  	esp->ops = &sun3x_esp_ops;
->  
->  	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
-> -	if (!res && !res->start)
-> +	if (!res || !res->start)
->  		goto fail_unlink;
->  
->  	esp->regs = ioremap_nocache(res->start, 0x20);
-> @@ -221,7 +221,7 @@ static int __devinit esp_sun3x_probe(str
->  		goto fail_unmap_regs;
->  
->  	res = platform_get_resource(dev, IORESOURCE_MEM, 1);
-> -	if (!res && !res->start)
-> +	if (!res || !res->start)
->  		goto fail_unmap_regs;
->  
->  	esp->dma_regs = ioremap_nocache(res->start, 0x10);
+Thanks!
+Abhijit
