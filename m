@@ -1,82 +1,85 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] intermediate SCSI updates
-Date: Tue, 14 Oct 2008 08:49:11 -0400
-Message-ID: <1223988551.12440.1.camel@localhost.localdomain>
-References: <1223909115.5566.13.camel@localhost.localdomain>
-	 <alpine.LFD.2.00.0810131017030.3288@nehalem.linux-foundation.org>
-	 <1223925606.5566.20.camel@localhost.localdomain>
-	 <alpine.LFD.2.00.0810131416410.3288@nehalem.linux-foundation.org>
+From: Vlad Seliverstov <vseliverstov@yandex-team.ru>
+Subject: Re: [Bug 11619] New: Hotplug doesn't work with SAS1064
+Date: Tue, 14 Oct 2008 17:11:19 +0400
+Message-ID: <48F49A77.6030804@yandex-team.ru>
+References: <bug-11619-11613@http.bugzilla.kernel.org/> <20080922161028.d519bffd.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757516AbYJNM6Y@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.0810131416410.3288@nehalem.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cavolo.yandex.ru ([87.250.244.45]:54960 "EHLO cavolo.yandex.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750970AbYJNNLp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Oct 2008 09:11:45 -0400
+In-Reply-To: <20080922161028.d519bffd.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>
 
-On Mon, 2008-10-13 at 14:22 -0700, Linus Torvalds wrote: 
+Can I request progress status of this bug? I have more than 100 boxes with this controller, and I can't change faulty hard drives without reboot. And I can't use 2.6.20 on them too. :(
+
+Andrew Morton wrote:
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
 > 
-> On Mon, 13 Oct 2008, James Bottomley wrote:
-> > 
-> > Not exactly.  It has to be rebased to run as a postmerge tree, but it
-> > does get tested by me (admittedly on my limited set of machines, which
-> > don't include any actual devices that do block integrity) every time I
-> > rebase.
+> On Mon, 22 Sep 2008 02:49:03 -0700 (PDT)
+> bugme-daemon@bugzilla.kernel.org wrote:
 > 
-> What I'm upset about is that this has apparently gotten not even some 
-> trivial testing of the _default_ build. I'm not talking about any odd 
-> config options here. I'm literally talking about the only _sane_ config 
-> option case.
+>> http://bugzilla.kernel.org/show_bug.cgi?id=11619
+>>
+>>            Summary: Hotplug doesn't work with SAS1064
+>>            Product: IO/Storage
+>>            Version: 2.5
+>>      KernelVersion: 2.6.27-rc6
+>>           Platform: All
+>>         OS/Version: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: high
+>>           Priority: P1
+>>          Component: SCSI
+>>         AssignedTo: linux-scsi@vger.kernel.org
+>>         ReportedBy: vseliverstov@yandex-team.ru
+>>
+>>
+>> Latest working kernel version: 2.6.20
+>> Earliest failing kernel version: 2.6.22
+>> Hardware Environment: Any Intel-powered server with SAS1064 PCI-X SAS
+>> controller
+>> Problem Description: I have linux-box with SAS1064 PCI-X SAS Controller, and
+>> I'm experiencing problems with hotswapping. When I detach disk from system,
+>> replace it with another one, and trying to attach it again, nothing happens.
+>> After reboot, it's OK - I have this disk attached and functioning. Interesting,
+>> that if I try to attach old disk just after detaching it's OK too. 
+>> I've tried following Vanilla kernel builds from linux git tree: 2.6.20, 2.6.22,
+>> 2.6.24, 2.6.26, 2.6.27-rc6 and it's worked only with 2.6.20. So, I tried to
+>> bisect buggy commit between 2.6.20 and 2.6.22 versions.
+>> Here is bad commit: df9e062ad994c4db683377b108c0dbed4690e4b0 
+>>
+>> Steps to reproduce: 
+>> - detach disk with:
+>> # echo "scsi remove-single-device x y z k" > /proc/scsi/scsi
+>> - physically remove it and insert another one;
+>> - try to attach disk with:
+>> # echo "scsi add-single-device x y z k" > /proc/scsi/scsi
+>> or with
+>> echo "- - -" > /sys/class/scsi_host/hostN/scan
+>>
+>>
 > 
-> You yourself admit that even you don't have any actual devices that can 
-> support the block integrity stuff, yet you have apparently only compile- 
-> tested the insane case of still enabling that thing and apparently nobody 
-> else has bothered either.
-
-Um, well, I wanted to compile the code to make sure it actually did
-compile and that it didn't interfere with the normal operation of sd, so
-for me it's a justifiable option.
-
-> Was this in linux-next?
-
-Yes ... all my trees feed into linux-next.  We just seem to have been
-having a few teething problems with it recently.  Usually this type of
-thing gets picked up by Ingo's random config checker which feeds from
-linux-next.  However, I don't think linux-next has been built for a
-while (Since 19 September according to the logs)
-
-> Is linux-next coverage REALLY so weak that it doesn't even test the 
-> default config options, much less any random options? What's the point of 
-> linux-next then?
+> Eric, df9e062ad994c4db683377b108c0dbed4690e4b0 was your
 > 
-> Again, the date on that thing is claimed to be September 19th, although it 
-> was obviously committed later.
-
-Right, which is, unfortunately, how it managed to avoid being in
-anyone's test bed.
-
-> > However, does this work for you?  It fixes the problem for me.
+> commit df9e062ad994c4db683377b108c0dbed4690e4b0
+> Author: Eric Moore <eric.moore@lsi.com>
+> Date:   Mon Jan 29 09:46:21 2007 -0700
 > 
-> I could trivially have fixed the compile issue. That's not what upsets me. 
-> What upsets me is that this set of patches apparently had almost nobody 
-> looking at them at all before they got sent to me.
+>     [SCSI] fusion - serialize target resets in mptsas.c
+> 
 
-I agree, but unfortunately our infrastructure is all wrapped around
-linux-next now ... even Andrew doesn't pull my trees directly, he gets
-them from linux-next.  I can and do publish them on kernel.org, but it
-takes a fairly superhuman effort to pull in all the kernel.org trees and
-compile them.
 
-> If it was some odd and unusual config option, I'd be less upset. hey, 
-> stuff happens. But it sure as heck was nothing of the sort!
 
-So I do test the trees, but I'm looking for unusual breakage, so my
-three configs are ia64 (3hr build) parisc (6hr build) and x86 dual core
-(about 40min) with all the options enabled.  However, my testing is
-mostly runtime rather than compile/config time.  Sorry.  Once I get this
-terrasoft box integrated (i.e. when benh gets remote power working) I
-might be able to build faster and try different config options.
-
-James
+-- 
+Vlad Seliverstov
++7 (495) 739-7000 ext. 7132
+www.yandex.ru
