@@ -1,53 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [patch 08/17] scsi: aic79xx aic79xx_pci.c fix shadowed variables
-Date: Tue, 14 Oct 2008 09:39:57 +0200
-Message-ID: <48F44CCD.4020807@suse.de>
-References: <200809222156.m8MLukEN032285@imap1.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 0/2] FC pass through support via bsg interface - revised
+Date: Tue, 14 Oct 2008 04:26:04 -0700
+Message-ID: <8820625E-A0C1-4EBC-AAF4-7F763BEB399E@qlogic.com>
+References: <B5FBFF85-C7C0-44F7-905F-9029C54F4F56@qlogic.com> <20081014112308T.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:45528 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754619AbYJNHj6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Oct 2008 03:39:58 -0400
-In-Reply-To: <200809222156.m8MLukEN032285@imap1.linux-foundation.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:16272 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755284AbYJNL0I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Oct 2008 07:26:08 -0400
+In-Reply-To: <20081014112308T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, harvey.harrison@gmail.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, bharrosh@panasas.com, robert.w.love@intel.com
 
-Hi Andrew,
 
-akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
->=20
-> OK to just reuse the outer declaration as it is never used again.
-> drivers/scsi/aic7xxx/aic79xx_pci.c:340:12: warning: symbol 'devconfig=
-' shadows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_pci.c:299:12: originally declared here
->=20
-> targpcistat is always assigned just before use, remove the inner decl=
-aration.
-> drivers/scsi/aic7xxx/aic79xx_pci.c:486:9: warning: symbol 'targpcista=
-t' shadows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_pci.c:429:9: originally declared here
->=20
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Acked-by: Hannes Reinecke <hare@suse.de>
+On Oct 13, 2008, at 7:23 PM, FUJITA Tomonori wrote:
 
-Cheers,
+> On Mon, 13 Oct 2008 10:53:18 -0700
+> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+>
+>> Base on feedback as below, here is revised one for pass through  
+>> support.
+>> http://marc.info/?l=linux-scsi&m=122123825918741&w=2
+>> http://marc.info/?t=121908849700001&r=1&w=2
+>>
+>> Also, the attached file is updated sample application along with GPL
+>> license.
+>
+> Can you summarize what changes you made since the previous version
+> (based on the feedback)?
+Here is a list of changes since last submission,
+- in the fc_service structure,
+	= payload/response has defined
+	= srv_request/srv_reply has defined
+- asynchronous nature of he service handling - in the LLD at this time  
+- has added
+- multiple SG support added
+- timeout value has included part of the service request
+- and some cleanups have been done
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There are many other things to be done, among them, I'm looking at  
+following as follow up,
+- abort mechanism is not in place, not sure what is right approach,  
+please comment on this
+- timeout feature in fc transport layer
+
+Thanks,
+Seokmann
+
