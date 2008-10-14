@@ -1,19 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [patch 07/17] scsi: aic79xx_core fix shadowed variables, add
- statics
-Date: Tue, 14 Oct 2008 09:39:16 +0200
-Message-ID: <48F44CA4.7000502@suse.de>
-References: <200809222156.m8MLukig032282@imap1.linux-foundation.org>
+Subject: Re: [patch 08/17] scsi: aic79xx aic79xx_pci.c fix shadowed variables
+Date: Tue, 14 Oct 2008 09:39:57 +0200
+Message-ID: <48F44CCD.4020807@suse.de>
+References: <200809222156.m8MLukEN032285@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:57528 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:45528 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753768AbYJNHjS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Oct 2008 03:39:18 -0400
-In-Reply-To: <200809222156.m8MLukig032282@imap1.linux-foundation.org>
+	id S1754619AbYJNHj6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Oct 2008 03:39:58 -0400
+In-Reply-To: <200809222156.m8MLukEN032285@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org
@@ -24,28 +23,16 @@ Hi Andrew,
 akpm@linux-foundation.org wrote:
 > From: Harvey Harrison <harvey.harrison@gmail.com>
 >=20
-> Redeclared within different if/else blocks, safe to reuse the
-> original from beginning of function.
-> drivers/scsi/aic7xxx/aic79xx_core.c:2475:10: warning: symbol 'scbid' =
-shadows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-> drivers/scsi/aic7xxx/aic79xx_core.c:2586:10: warning: symbol 'scbid' =
-shadows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_core.c:2399:10: originally declared here
-> drivers/scsi/aic7xxx/aic79xx_core.c:2587:15: warning: symbol 'scb' sh=
-adows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_core.c:2393:13: originally declared here
->=20
-> Use caminfo for the outer declaration, the redeclared version is
-> iterating over all initiator/target pairs (devices) which.
-> drivers/scsi/aic7xxx/aic79xx_core.c:8857:23: warning: symbol 'devinfo=
+> OK to just reuse the outer declaration as it is never used again.
+> drivers/scsi/aic7xxx/aic79xx_pci.c:340:12: warning: symbol 'devconfig=
 ' shadows an earlier one
-> drivers/scsi/aic7xxx/aic79xx_core.c:8711:21: originally declared here
+> drivers/scsi/aic7xxx/aic79xx_pci.c:299:12: originally declared here
 >=20
-> Forward declaration was already marked static, make the definition ma=
-tch.
-> drivers/scsi/aic7xxx/aic79xx_core.c:3693:1: warning: symbol 'ahd_devl=
-imited_syncrate' was not declared. Should it be static?
+> targpcistat is always assigned just before use, remove the inner decl=
+aration.
+> drivers/scsi/aic7xxx/aic79xx_pci.c:486:9: warning: symbol 'targpcista=
+t' shadows an earlier one
+> drivers/scsi/aic7xxx/aic79xx_pci.c:429:9: originally declared here
 >=20
 > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
