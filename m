@@ -1,81 +1,64 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] sd: Fix handling of NO_SENSE check condition
-Date: Wed, 15 Oct 2008 12:37:40 -0400
-Message-ID: <48F61C54.1030504@emulex.com>
-References: <1221183576-11724-1-git-send-email-Jamie.Wellnitz@emulex.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 2/1] cciss regression: firmware version not displayed in procfs
+Date: Wed, 15 Oct 2008 15:44:13 -0500
+Message-ID: <20081015204413.GA19110@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:60180 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbYJOQhf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Oct 2008 12:37:35 -0400
-In-Reply-To: <1221183576-11724-1-git-send-email-Jamie.Wellnitz@emulex.com>
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:38866 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735AbYJOUoO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Oct 2008 16:44:14 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Wellnitz, Jamie" <Jamie.Wellnitz@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, JensAxboejens.axboe@oracle.com
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-James,
+Patch 2 of 1
 
-What is the status of this patch ?  It's been outstanding, with no 
-comment, for over a month. When will it be pulled into your git tree ?
+This patch fixes another regression introduced by commit
+6ae5ce8e8d4de666f31286808d2285aa6a50fa40. The fiwmware version is no longer
+being displayed in procfs. Please consider this for inclusion.
 
--- james s
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-
-
-Wellnitz, Jamie wrote:
-> The current handling of NO_SENSE check condition is the same as
-> RECOVERED_ERROR, and assumes that in both cases, the I/O was fully
-> transferred.
-> 
-> We have seen cases of arrays returning with NO_SENSE (no error), but
-> the I/O was not completely transferred, thus residual set.  Thus,
-> rather than return good_bytes as the entire transfer, set good_bytes
-> to 0, so that the midlayer then applies the residual in calculating
-> the transfer, and for sd, will fail the I/O and fall into a retry
-> path.
-> 
-> Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-> ---
->  drivers/scsi/sd.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index af9e406..2a5fe5e 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1048,7 +1048,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->                 good_bytes = sd_completed_bytes(SCpnt);
->                 break;
->         case RECOVERED_ERROR:
-> -       case NO_SENSE:
->                 /* Inform the user, but make sure that it's not treated
->                  * as a hard error.
->                  */
-> @@ -1057,6 +1056,15 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->                 memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->                 good_bytes = scsi_bufflen(SCpnt);
->                 break;
-> +       case NO_SENSE:
-> +               /* This indicates a false check condition, so ignore it.  An
-> +                * unknown amount of data was transferred so treat it as an
-> +                * error.
-> +                */
-> +               scsi_print_sense("sd", SCpnt);
-> +               SCpnt->result = 0;
-> +               memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-> +               break;
->         case ABORTED_COMMAND:
->                 if (sshdr.asc == 0x10) { /* DIF: Disk detected corruption */
->                         scsi_print_result(SCpnt);
-> --
-> 1.6.0.1.308.gede4c
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 1e1f915..09b27d5 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1631,6 +1632,7 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time)
+ 	int ctlr = h->ctlr;
+ 	int num_luns;
+ 	ReportLunData_struct *ld_buff = NULL;
++	InquiryData_struct *inq_buff = NULL;
+ 	int return_code;
+ 	int listlength = 0;
+ 	int i;
+@@ -1651,6 +1653,26 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time)
+ 	h->busy_configuring = 1;
+ 	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+ 
++	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
++        if (inq_buff == NULL) {
++                printk(KERN_ERR "cciss: out of memory\n");
++                return ENOMEM;
++        }
++
++	/* Get the firmware version */ 
++	return_code = sendcmd_withirq(CISS_INQUIRY, ctlr, inq_buff, 
++		sizeof(InquiryData_struct), 0, 0 ,0, TYPE_CMD);
++	if (return_code == IO_OK) {
++		h->firm_ver[0] = inq_buff->data_byte[32];
++		h->firm_ver[1] = inq_buff->data_byte[33];
++		h->firm_ver[2] = inq_buff->data_byte[34];
++		h->firm_ver[3] = inq_buff->data_byte[35];
++	} else {	 /* send command failed */
++		printk(KERN_WARNING "cciss: unable to determine firmware"
++			" version of controller\n");
++	}
++
++	/* Get the number of logical volumes */ 
+ 	ld_buff = kzalloc(sizeof(ReportLunData_struct), GFP_KERNEL);
+ 	if (ld_buff == NULL)
+ 		goto mem_msg;
