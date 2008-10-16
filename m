@@ -1,32 +1,68 @@
-From: CaT <cat@zip.com.au>
-Subject: Re: [PATCH 4/5] scsi: megaraid_sas - preallocate memory for ioctl processing
-Date: Fri, 17 Oct 2008 08:51:12 +1100
-Message-ID: <20081016215112.GX19077@zip.com.au>
-References: <20081016001721.GW19077@zip.com.au> <4B6A08C587958942AA3002690DD4F8C32D24DF36@cosmail02.lsi.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 2/2] cciss: fix regression firmware version not displayed in procfs (again)
+Date: Thu, 16 Oct 2008 17:48:58 -0500
+Message-ID: <20081016224858.GB26564@roadking.ldev.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from CPE-124-189-54-71.nsw.bigpond.net.au ([124.189.54.71]:49765
-	"EHLO bunyip.billabong.weebeastie.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754708AbYJPWg7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2008 18:36:59 -0400
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:44493 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755924AbYJPWs7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 18:48:59 -0400
 Content-Disposition: inline
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C32D24DF36@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Oct 16, 2008 at 07:54:07AM -0600, Yang, Bo wrote:
-> What MegaCli cmds did you using (DCMD or DCDB?).
+Patch 2 of 2
 
-MegaCli -LdPdInfo -a0 -NoLog
+The regression was introduced by commit
+6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
+This patch fixes a regression where the controller firmware version is not
+displayed in procfs. The previous patch would be called anytime something
+changed. This will get called only once for each controller.
+Please consider this for inclusion.
 
-Forgot to mention that this is the 64bit version of the command.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
--- 
-  "Police noticed some rustling sounds from Linn's bottom area
-  and on closer inspection a roll of cash was found protruding
-  from Linn's anus, the full amount of cash taken in the robbery."
-    - http://www.smh.com.au/news/world/robber-hides-loot-up-his-booty/2008/05/09/1210131248617.html
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 0f367b1..1c830bd 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3404,7 +3404,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 	int i;
+ 	int j = 0;
+ 	int rc;
+-	int dac;
++	int dac, return_code;
++	InquiryData_struct *inq_buff = NULL;
+ 
+ 	i = alloc_cciss_hba();
+ 	if (i < 0)
+@@ -3510,6 +3511,25 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 	/* Turn the interrupts on so we can service requests */
+ 	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
+ 
++	/* Get the firmware version */
++	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
++	if (inq_buff == NULL) {
++		printk(KERN_ERR "cciss: out of memory\n");
++		return -ENOMEM;
++	}
++
++	return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
++		sizeof(InquiryData_struct), 0, 0 , 0, TYPE_CMD);
++	if (return_code == IO_OK) {
++		hba[i]->firm_ver[0] = inq_buff->data_byte[32];
++		hba[i]->firm_ver[1] = inq_buff->data_byte[33];
++		hba[i]->firm_ver[2] = inq_buff->data_byte[34];
++		hba[i]->firm_ver[3] = inq_buff->data_byte[35];
++	} else {	 /* send command failed */
++		printk(KERN_WARNING "cciss: unable to determine firmware"
++			" version of controller\n");
++	}
++
+ 	cciss_procinit(i);
+ 
+ 	hba[i]->cciss_max_sectors = 2048;
