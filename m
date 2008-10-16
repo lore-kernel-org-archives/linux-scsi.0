@@ -1,140 +1,89 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Subject: Re: [PATCH 1/1] cciss: fix regression, sysfs symlink missing
-Date: Thu, 16 Oct 2008 11:21:52 -0400
-Message-ID: <48F75C10.2000904@hp.com>
-References: <20081014184649.GA12212@roadking.ldev.net>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: qla2xxx: NULL pointer dereference in 2.6.26.6 on module load
+Date: Thu, 16 Oct 2008 16:56:44 +0200
+Message-ID: <87prm0ziz7.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:33495 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753587AbYJPPWc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 11:22:32 -0400
-In-Reply-To: <20081014184649.GA12212@roadking.ldev.net>
+Received: from tac.ki.iif.hu ([193.6.222.43]:38910 "EHLO tac.ki.iif.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753421AbYJPPaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2008 11:30:39 -0400
+Received: from wferi by tac.ki.iif.hu with local (Exim 4.63)
+	(envelope-from <wferi@niif.hu>)
+	id 1KqUHM-0008BZ-IU
+	for linux-scsi@vger.kernel.org; Thu, 16 Oct 2008 16:56:44 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, JensAxboejens.axboe@oracle.com, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, dchapman@redhat.com, hare@novell.com, sandy.garza@hp.com, karen.skweres@hp.com
+To: linux-scsi@vger.kernel.org
 
-Mike Miller wrote:
-> Patch 1 of 1
-> 
-> This patch fixes a regression where the device symlink to the pci address is
-> not created. Offending commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40,
-> cciss: rmove redundant code.
-> 
-> Please consider this for inclusion.
-> 
-> signed-off-by: Mike Miller <mike.miller@hp.com>
-> 
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 1e1f915..44fb98e 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
->  	disk->first_minor = drv_index << NWD_SHIFT;
->  	disk->fops = &cciss_fops;
->  	disk->private_data = &h->drv[drv_index];
-> +	disk->driverfs_dev = &(hba[drv_index]->pdev->dev);
->  
->  	/* Set up queue information */
->  	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Hi,
 
-Hi Mike -
+This problem is not present in 2.6.18 nor 2.6.27, but I'd like to see
+it fixed in the kernel of Debian Lenny, so came here with a couple of
+questions.
 
-I'm finding that
+In driver versions: 8.01.07-k1 good, 8.02.01-k4 bad, 8.02.01-k7 good.
 
-hba[drv_index]
+Console log of the failure:
 
-(for any index) is NULL, and I'm getting the NULL pointer dereference
-bug shown below.
+qla2xxx 0000:01:06.0: Found an ISP2200, irq 16, iobase 0xd102c000
+qla2xxx 0000:01:06.0: Configuring PCI space...
+qla2xxx 0000:01:06.0: Configure NVRAM parameters...
+udev: renamed network interface eth0 to eth-gb1
+qla2xxx 0000:01:06.0: Verifying loaded RISC code...
+udev: renamed network interface eth1 to eth-gb2
+firmware: requesting ql2200_fw.bin
+qla2xxx 0000:01:06.0: Allocated (252 KB) for firmware dump...
+scsi1 : qla2xxx
+qla2xxx 0000:01:06.0: 
+ QLogic Fibre Channel HBA Driver: 8.02.01-k4
+  QLogic QLA22xx - 
+  ISP2200: PCI (66 MHz) @ 0000:01:06.0 hdma-, host#=1, fw=2.02.08 TP
+qla2xxx 0000:01:06.0: LIP reset occured (f7f7).
+qla2xxx 0000:01:06.0: LOOP UP detected (1 Gbps).
+BUG: unable to handle kernel NULL pointer dereference at 00000000
+IP: [<d113fd3e>] :qla2xxx:qla2x00_prep_ms_fdmi_iocb+0x1d/0xa4
+*pdpt = 0000000000000000 
+Oops: 0002 [#1] SMP 
+Modules linked in: ata_generic(+) libata dock floppy aic7xxx(+) qla2xxx firmware_class scsi_transport_fc scsi_transport_spi scsi_tgt ohci_hcd tg3 scsi_mod usbcore serverworks ide_pci_generic ide_core thermal processor fan thermal_sys
 
-I'm using Linus' tree up to:
-
-6c5e51dae2c37127e00be392f40842e08077e96a
-
-patched with your patch here.
-
-To determine this, I simply did:
-
-        if (hba[drv_index] == NULL)
-                printk("cciss_add_disk(%d) hba null\n", drv_index);
-        else if (hba[drv_index]->pdev == NULL)
-                printk("cciss_add_disk(%d) hba->pdev null\n", drv_index);
-        else
-                disk->driverfs_dev = &(hba[drv_index]->pdev->dev);
-
-and find:
-
-cciss_add_disk(1) hba null
-cciss_add_disk(2) hba null
-cciss_add_disk(3) hba null
-cciss_add_disk(4) hba null
-cciss_add_disk(5) hba null
-cciss_add_disk(6) hba null
-cciss_add_disk(7) hba null
-
-in the dmesg log after boot...
-
-Regards,
-Alan
-
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
-IP: [<ffffffffa00ae506>] cciss_add_disk+0x80/0x10f [cciss]
-PGD 87b069067 PUD 87b06a067 PMD 0
-Oops: 0000 [1] SMP
-CPU 0
-Modules linked in: cciss(+) sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd
-ehci_hcd
-Pid: 1852, comm: insmod Not tainted 2.6.27 #1
-RIP: 0010:[<ffffffffa00ae506>]  [<ffffffffa00ae506>]
-cciss_add_disk+0x80/0x10f [cciss]
-RSP: 0018:ffff88087b03fc38  EFLAGS: 00010282
-RAX: 0000000000000000 RBX: ffff88087b005000 RCX: 00000000fffffffb
-RDX: ffff88087b03f967 RSI: 00000000ffffffff RDI: ffff88087b0027c0
-RBP: ffff88087b140000 R08: 0000000000000000 R09: ffff88087b03f900
-R10: 0000000000000000 R11: ffffffffa00ae74a R12: 0000000000000001
-R13: ffff88087b140000 R14: ffff88087b140040 R15: ffff88087b140000
-FS:  0000000000682850(0063) GS:ffffffff80703a80(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000020 CR3: 000000087b010000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process insmod (pid: 1852, threadinfo ffff88087b03e000, task
-ffff88087b94c2c0)
-Stack:  ffff88087b980680 ffff88087bc45170 ffff88087b1400f0 ffff88107cf88000
- ffff88087bc45140 ffffffffa00af3da ffff880800000083 0000000000000000
- 0000000100000040 0000000800000000 ffff88087b110000 00000001802d0c5d
+Pid: 979, comm: qla2xxx_1_dpc Not tainted (2.6.26-1-xen-686 #1)
+EIP: 0061:[<d113fd3e>] EFLAGS: 00010246 CPU: 1
+EIP is at qla2x00_prep_ms_fdmi_iocb+0x1d/0xa4 [qla2xxx]
+EAX: 00000000 EBX: 00000000 ECX: 00000010 EDX: 00000000
+ESI: ce2bc34c EDI: 00000000 EBP: 00000000 ESP: cfd5be68
+ DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0069
+Process qla2xxx_1_dpc (pid: 979, ti=cfd5a000 task=ceb93a80 task.ti=cfd5a000)
+Stack: 00000010 d1155ac0 ce2bc34c 00000000 ce2bc34c d113f099 86c6071e 00000200 
+       ffff0a19 c0126498 ceb93a80 00000000 ce2bc34c 00000000 ce2bc34c d113f45d 
+       00000063 0000001e ce2bd500 ce2bc34c 00000100 0000001e ce2bc300 ce2bd42c 
 Call Trace:
- [<ffffffffa00af3da>] ? rebuild_lun_table+0x5b8/0x6c7 [cciss]
- [<ffffffffa00b188d>] ? cciss_init_one+0x988/0xb3d [cciss]
- [<ffffffff8032e84c>] ? pci_device_probe+0xb6/0x105
- [<ffffffff80398ae0>] ? driver_probe_device+0xd0/0x14d
- [<ffffffff80398ba3>] ? __driver_attach+0x46/0x6d
- [<ffffffff80398b5d>] ? __driver_attach+0x0/0x6d
- [<ffffffff80398283>] ? bus_for_each_dev+0x44/0x6f
- [<ffffffff803986b9>] ? bus_add_driver+0xb4/0x203
- [<ffffffff80398dff>] ? driver_register+0x8d/0x101
- [<ffffffffa00c3000>] ? cciss_init+0x0/0x2e [cciss]
- [<ffffffff8032eaab>] ? __pci_register_driver+0x5a/0x8b
- [<ffffffffa00c3000>] ? cciss_init+0x0/0x2e [cciss]
- [<ffffffff80209041>] ? _stext+0x41/0x110
- [<ffffffff8025428f>] ? sys_init_module+0x9e/0x1ab
- [<ffffffff8020be0b>] ? system_call_fastpath+0x16/0x1b
+ [<d113f099>] qla2x00_fdmi_rhba+0x19/0x3be [qla2xxx]
+ [<c0126498>] process_timeout+0x0/0x5
+ [<d113f45d>] qla2x00_fdmi_register+0x1f/0x3c1 [qla2xxx]
+ [<d1134ab7>] qla2x00_configure_loop+0x5ea/0xfab [qla2xxx]
+ [<d1138e2f>] qla2x00_mailbox_command+0x4cb/0x515 [qla2xxx]
+ [<d1139ea3>] qla2x00_get_retry_cnt+0x3c/0xb7 [qla2xxx]
+ [<c0116839>] __wake_up+0x29/0x39
+ [<d11354cd>] qla2x00_loop_resync+0x55/0x9e [qla2xxx]
+ [<d11326d0>] qla2x00_do_dpc+0x433/0x4bf [qla2xxx]
+ [<d113229d>] qla2x00_do_dpc+0x0/0x4bf [qla2xxx]
+ [<c012eb85>] kthread+0x38/0x5f
+ [<c012eb4d>] kthread+0x0/0x5f
+ [<c0104267>] kernel_thread_helper+0x7/0x10
+ =======================
+Code: 10 88 41 0e 83 c4 18 89 c8 5b 5e 5f 5d c3 55 89 d5 57 56 89 c6 53 83 ec 04 89 0c 24 8b 98 6c 11 00 00 b9 10 00 00 00 31 c0 89 df <f3> ab c6 03 29 c6 43 01 01 8b
 
+EIP: [<d113fd3e>] qla2x00_prep_ms_fdmi_iocb+0x1d/0xa4 [qla2xxx] SS:ESP 0069:cfd5be68
+---[ end trace 7ae2fc3608e49da2 ]---
 
-Code: 03 44 89 e0 4d 63 e4 4d 89 e6 c1 e0 04 49 c1 e6 06 89 43 04 4b 8d
-84 2e 90 00 00 00 4d 01 ee 48 89 43 48 4a 8b 04 e5 80 13 0c a0 <48> 8b
-40 20 48 83 e8 80 48 89 43 60 49 8b 45 20 48 8b 70 58 e8
-RIP  [<ffffffffa00ae506>] cciss_add_disk+0x80/0x10f [cciss]
- RSP <ffff88087b03fc38>
-CR2: 0000000000000020
----[ end trace 12ad011b32e7c85e ]---
+I hoped that it'll be fixed by 048feec5, but that didn't happen.
+Looking through git log v2.6.26..v2.6.27 drivers/scsi/qla2xxx nothing
+jumped at me, but I'm not a kernel hacker.
 
+Can you perhaps tell if the fix could be backported to 2.6.26?
+Or maybe it was, just haven't yet made it into a 2.6.26.y release?
+-- 
+Thanks,
+Feri.
