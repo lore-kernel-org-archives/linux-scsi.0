@@ -1,53 +1,46 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] scsi: Fix bad use of udelay in atp870u.c
-Date: Thu, 16 Oct 2008 15:51:35 -0700
-Message-ID: <20081016155135.8fc411ae.akpm@linux-foundation.org>
-References: <20081016082146.GA18535@deprecation.cyrius.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 2/2] cciss: fix regression in procfs display fw	version,
+ obsoletes previous patch 2 of 2
+Date: Thu, 16 Oct 2008 22:56:58 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884C019B4CEF@GVW0547EXC.americas.hpqcorp.net>
+References: <20081016215016.GB25704@roadking.ldev.net>
+ <20081016145642.2ba2adba.akpm@linux-foundation.org>
+ <0F5B06BAB751E047AB5C87D1F77A77884C019B4CBE@GVW0547EXC.americas.hpqcorp.net>
+ <20081016223251.GA10270@x200.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59208 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755072AbYJPWw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2008 18:52:29 -0400
-In-Reply-To: <20081016082146.GA18535@deprecation.cyrius.com>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:7693 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754950AbYJPW6W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 18:58:22 -0400
+In-Reply-To: <20081016223251.GA10270@x200.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, linux-arm-kernel@lists.arm.linux.org.uk
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 16 Oct 2008 10:21:46 +0200
-Martin Michlmayr <tbm@cyrius.com> wrote:
-
-> The ACARD driver calls udelay() with a value > 2000, which leads to
-> to the following compilation error on ARM:
->   ERROR: "__bad_udelay" [drivers/scsi/atp870u.ko] undefined!
->   make[1]: *** [__modpost] Error 1
-> Fix this by using a combination of mdelay and udelay.
-> 
-> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-> 
-> --- a/drivers/scsi/atp870u.c
-> +++ b/drivers/scsi/atp870u.c
-> @@ -1171,7 +1171,8 @@ wait_io1:
->  	outw(val, tmport);
->  	outb(2, 0x80);
->  TCM_SYNC:
-> -	udelay(0x800);
-> +	mdelay(2);
-> +	udelay(48);
->  	if ((inb(tmport) & 0x80) == 0x00) {	/* bsy ? */
->  		outw(0, tmport--);
->  		outb(0, tmport);
-> 
-
-hum.  The code has been like that for many years - why was the
-error only discovered now.  Is that check in arm new?
-
-If so, was it present in 2.6.27?
-  If so, does anyone actually use this driver on arm?
-    If so, we'll need this patch in 2.6.27.x as well.
-
-?
+> > > +     return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
+> > > > +             sizeof(InquiryData_struct), 0, 0 ,0, TYPE_CMD);
+> > > > +     if (return_code == IO_OK) {
+> > > > +             hba[i]->firm_ver[0] = inq_buff->data_byte[32];
+> > > > +             hba[i]->firm_ver[1] = inq_buff->data_byte[33];
+> > > > +             hba[i]->firm_ver[2] = inq_buff->data_byte[34];
+> > > > +             hba[i]->firm_ver[3] = inq_buff->data_byte[35];
+> > > > +     } else {         /* send command failed */
+> > > > +             printk(KERN_WARNING "cciss: unable to
+> > > determine firmware"
+> > > > +                     " version of controller\n");
+> > > > +     }
+> > > > +
+> > > >       cciss_procinit(i);
+> > > >
+> > > >       hba[i]->cciss_max_sectors = 2048;
+> >
+> > Sorry, in too much of a hurry. I'll fix (again).
+>
+> And inq_buff is leaked, if I'm not missing simething.
+>
+Sorry, Alexy, I can't see the leak. Is it in the failure case?
