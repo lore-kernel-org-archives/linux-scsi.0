@@ -1,80 +1,68 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 2/2] cciss: fix regression firmware version not
- displayed in procfs (again)
-Date: Thu, 16 Oct 2008 16:06:00 -0700
-Message-ID: <20081016160600.685e53cd.akpm@linux-foundation.org>
-References: <20081016224858.GB26564@roadking.ldev.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [ANNOUNCE]: LIO-Target/ConfigFS for v2.6.27
+Date: Thu, 16 Oct 2008 16:11:13 -0700
+Message-ID: <1224198674.5556.255.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36646 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758651AbYJPXG7 (ORCPT
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:24854 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756506AbYJPXLR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:06:59 -0400
-In-Reply-To: <20081016224858.GB26564@roadking.ldev.net>
+	Thu, 16 Oct 2008 19:11:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, SCST-Devel <scst-devel@lists.so>
+Cc: Jerome Martin <tramjoe.merin@gmail.com>, Greg KH <greg@kroah.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alasdair G Kergon <agk@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@osdl.org>, "H. Peter Anvin" <hpa@zytor.com>, Pete Wyckoff <pw@osc.edu>
 
-On Thu, 16 Oct 2008 17:48:58 -0500
-Mike Miller <mike.miller@hp.com> wrote:
+Greetings all,
 
-> Patch 2 of 2
-> 
-> The regression was introduced by commit
-> 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-> This patch fixes a regression where the controller firmware version is not
-> displayed in procfs. The previous patch would be called anytime something
-> changed. This will get called only once for each controller.
-> Please consider this for inclusion.
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-> 
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 0f367b1..1c830bd 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -3404,7 +3404,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	int i;
->  	int j = 0;
->  	int rc;
-> -	int dac;
-> +	int dac, return_code;
-> +	InquiryData_struct *inq_buff = NULL;
+I am happy to announce the release of LIO-Target/ConfigFS for v2.6.27.
 
-unneeded initialisation is still there.
+http://linux-iscsi.org/index.php/LIO-Target/ConfigFS
 
->  	i = alloc_cciss_hba();
->  	if (i < 0)
-> @@ -3510,6 +3511,25 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	/* Turn the interrupts on so we can service requests */
->  	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
->  
-> +	/* Get the firmware version */
-> +	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
+Using ConfigFS it is now possible to create generic storage objects from
+Linux/SCSI using struct scsi_device, Linux/BLOCK using struct
+block_device and Linux/VFS using struct file into a generic target
+infrastructure under /sys/kernel/config/target/core (target_core_mod).
+>From there, one can create ConfigFS symbolic links to destinations
+under /sys/kernel/config/target/iscsi/ (iscsi_target_mod).  The idea is
+that any $FABRIC module can access the same storage objects under the
+generic target_core_mod configfs infrastracture.
 
-Does this ever get freed?
+I have primarly been working on completing the configfs conversion for
+iscsi_target_mod, and as that work wraps up, I will next be focusing on
+target_core_mod and the generic kernel target infrastructure in Linux.
+This involves quite a few different things, merging existing in-tree
+STGT code into so it can use /sys/kernel/config/target/core, merging out
+of tree SCST code for multiple existing fabric modules and hardware
+target mode drivers, the Target API, etc.  This work will definately
+take lots of time and effort, but the end result will be a complete
+target infrastructure under Linux that all manner of folks can use and
+take advantage of and to build upon.
 
-> +	if (inq_buff == NULL) {
-> +		printk(KERN_ERR "cciss: out of memory\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
-> +		sizeof(InquiryData_struct), 0, 0 , 0, TYPE_CMD);
-> +	if (return_code == IO_OK) {
-> +		hba[i]->firm_ver[0] = inq_buff->data_byte[32];
-> +		hba[i]->firm_ver[1] = inq_buff->data_byte[33];
-> +		hba[i]->firm_ver[2] = inq_buff->data_byte[34];
-> +		hba[i]->firm_ver[3] = inq_buff->data_byte[35];
-> +	} else {	 /* send command failed */
-> +		printk(KERN_WARNING "cciss: unable to determine firmware"
-> +			" version of controller\n");
-> +	}
-> +
->  	cciss_procinit(i);
->  
->  	hba[i]->cciss_max_sectors = 2048;
+Thanks to the many folks you have made suggestions and comments in order
+to get packets across the network and blocks down to storage up as
+quickly as possible.  It was only ~7 weeks ago that Ming Zhang made the
+recommendation to start using configfs, and now 6k new lines of code in
+target_core_config.[c,h] and iscsi_target_configfs.[c.h]..  Wow..
+
+As work continues on both fronts:  making iscsi_target_mod upstream
+ready, and creating a generic target engine using configfs for
+iscsi_target_mod and *ALL* fabric modules, the Linux-iSCSI.org team
+invites anyone who is interested to start looking at the code.  You can
+do this online at:
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=tree;f=drivers/lio-core;hb=HEAD
+
+or checkout your own git tree and start posting patching to the
+LIO-Target devleopment list.  Instructions for git clone can be found
+on:
+
+http://linux-iscsi.org/index.php/LIO-Target
+
+Please feel free to ask questions!
+
+--nab
+
