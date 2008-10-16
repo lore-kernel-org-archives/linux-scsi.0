@@ -1,39 +1,79 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: qla2xxx: NULL pointer dereference in 2.6.26.6 on module load
-Date: Fri, 17 Oct 2008 01:15:02 +0200
-Message-ID: <87bpxkt9mx.fsf@tac.ki.iif.hu>
-References: <87prm0ziz7.fsf@tac.ki.iif.hu>
-	<20081016154943.GF55003@plap4-2.local>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 2/2] cciss: fix regression firmware version not displayed in procfs (again and again)
+Date: Thu, 16 Oct 2008 18:17:30 -0500
+Message-ID: <20081016231730.GA26824@roadking.ldev.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tac.ki.iif.hu ([193.6.222.43]:44061 "EHLO tac.ki.iif.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757229AbYJPXPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:15:06 -0400
-In-Reply-To: <20081016154943.GF55003@plap4-2.local> (Andrew Vasquez's message
-	of "Thu, 16 Oct 2008 08:49:43 -0700")
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:22858 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759184AbYJPXRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 19:17:31 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, adobriyan@gmail.com
 
-Andrew Vasquez <andrew.vasquez@qlogic.com> writes:
+Patch 2 of 2
 
-> On Thu, 16 Oct 2008, Ferenc Wagner wrote:
->
->> This problem is not present in 2.6.18 nor 2.6.27, but I'd like to see
->> it fixed in the kernel of Debian Lenny, so came here with a couple of
->> questions.
->
-> You'll want to backport the following commit to your 2.6.26.6 kernel:
->
-> [SCSI] qla2xxx: Skip FDMI registration on ISP21xx/22xx parts.
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=031e134e5f95233d80fb1b62fdaf5e1be587597c
+The regression was introduced by commit
+6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
+This patch fixes a regression where the controller firmware version is not
+displayed in procfs. The previous patch would be called anytime something
+changed. This will get called only once for each controller.
 
-Thanks, that indeed fixed it.  And backporting was trivial, the patch
-applied without any change. :)  Is there a special reason why it
-wasn't incorporated into 2.6.26.6?
--- 
-Regards,
-Feri.
+This one addresses the un-needed initialization and the freeing of inq_buf.
+
+Please consider this for inclusion.
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 0f367b1..c3f0c17 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3404,7 +3404,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 	int i;
+ 	int j = 0;
+ 	int rc;
+-	int dac;
++	int dac, return_code;
++	InquiryData_struct *inq_buff;
+ 
+ 	i = alloc_cciss_hba();
+ 	if (i < 0)
+@@ -3510,6 +3511,25 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 	/* Turn the interrupts on so we can service requests */
+ 	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
+ 
++	/* Get the firmware version */
++	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
++	if (inq_buff == NULL) {
++		printk(KERN_ERR "cciss: out of memory\n");
++		return -ENOMEM;
++	}
++
++	return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
++		sizeof(InquiryData_struct), 0, 0 , 0, TYPE_CMD);
++	if (return_code == IO_OK) {
++		hba[i]->firm_ver[0] = inq_buff->data_byte[32];
++		hba[i]->firm_ver[1] = inq_buff->data_byte[33];
++		hba[i]->firm_ver[2] = inq_buff->data_byte[34];
++		hba[i]->firm_ver[3] = inq_buff->data_byte[35];
++	} else {	 /* send command failed */
++		printk(KERN_WARNING "cciss: unable to determine firmware"
++			" version of controller\n");
++	}
++
+ 	cciss_procinit(i);
+ 
+ 	hba[i]->cciss_max_sectors = 2048;
+@@ -3520,6 +3540,7 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 	return 1;
+ 
+ clean4:
++	kfree(inq_buff);
+ #ifdef CONFIG_CISS_SCSI_TAPE
+ 	kfree(hba[i]->scsi_rejects.complete);
+ #endif
