@@ -1,104 +1,140 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 4/5] scsi: megaraid_sas - preallocate memory for ioctl
- processing
-Date: Thu, 16 Oct 2008 07:54:07 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C32D24DF36@cosmail02.lsi.com>
-References: <20081016001721.GW19077@zip.com.au>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Subject: Re: [PATCH 1/1] cciss: fix regression, sysfs symlink missing
+Date: Thu, 16 Oct 2008 11:21:52 -0400
+Message-ID: <48F75C10.2000904@hp.com>
+References: <20081014184649.GA12212@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:42251 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751585AbYJPNyY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 09:54:24 -0400
-In-Reply-To: <20081016001721.GW19077@zip.com.au>
-Content-Language: en-US
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:33495 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753587AbYJPPWc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Oct 2008 11:22:32 -0400
+In-Reply-To: <20081014184649.GA12212@roadking.ldev.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: CaT <cat@zip.com.au>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Kolli, Neela" <Neela.Kolli@lsi.com>"Patro, Sumant" <Sumant.Patro@lsi.com>
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, JensAxboejens.axboe@oracle.com, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, dchapman@redhat.com, hare@novell.com, sandy.garza@hp.com, karen.skweres@hp.com
 
-What MegaCli cmds did you using (DCMD or DCDB?).
+Mike Miller wrote:
+> Patch 1 of 1
+> 
+> This patch fixes a regression where the device symlink to the pci address is
+> not created. Offending commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40,
+> cciss: rmove redundant code.
+> 
+> Please consider this for inclusion.
+> 
+> signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 1e1f915..44fb98e 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
+>  	disk->first_minor = drv_index << NWD_SHIFT;
+>  	disk->fops = &cciss_fops;
+>  	disk->private_data = &h->drv[drv_index];
+> +	disk->driverfs_dev = &(hba[drv_index]->pdev->dev);
+>  
+>  	/* Set up queue information */
+>  	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-Thanks,
+Hi Mike -
 
-Bo Yang
+I'm finding that
 
------Original Message-----
-From: CaT [mailto:cat@zip.com.au]
-Sent: Wednesday, October 15, 2008 8:17 PM
-To: James Bottomley
-Cc: Andrew Morton; Patro, Sumant; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Kolli, Neela; Yang, Bo; Patro, Sumant
-Subject: Re: [PATCH 4/5] scsi: megaraid_sas - preallocate memory for ioctl processing
+hba[drv_index]
 
-With hope that resurrecting a 1.5yr old thread is not a wrong thing to
-do...
+(for any index) is NULL, and I'm getting the NULL pointer dereference
+bug shown below.
 
-On Wed, Feb 07, 2007 at 05:02:13PM -0500, James Bottomley wrote:
-> On Wed, 2007-02-07 at 13:30 -0800, Andrew Morton wrote:
-> > I suspect all this horror is due to stupidity in the DMA API.
-> >
-> > pci_alloc_consistent() just goes and assumes GFP_ATOMIC, whereas
-> > the caller (megasas_mgmt_fw_ioctl) would have been perfectly happy
-> > to use GFP_KERNEL.
-> >
-> > I bet this fixes it
->
-> It does, but the DMA API was expanded to cope with this exact case, so
-> use dma_alloc_coherent() directly in the megaraid code instead.  The dev
-> is just &pci_dev->dev.
+I'm using Linus' tree up to:
 
-I'm wondering if this was meant to lay this issue to rest. The reason
-being that I just got this error last night during a period of high disk
-and network IO (there was an over-the-network backup happening). dmesg
-gives:
+6c5e51dae2c37127e00be392f40842e08077e96a
 
-MegaCli: page allocation failure. order:0, mode:0x10d4
+patched with your patch here.
 
+To determine this, I simply did:
+
+        if (hba[drv_index] == NULL)
+                printk("cciss_add_disk(%d) hba null\n", drv_index);
+        else if (hba[drv_index]->pdev == NULL)
+                printk("cciss_add_disk(%d) hba->pdev null\n", drv_index);
+        else
+                disk->driverfs_dev = &(hba[drv_index]->pdev->dev);
+
+and find:
+
+cciss_add_disk(1) hba null
+cciss_add_disk(2) hba null
+cciss_add_disk(3) hba null
+cciss_add_disk(4) hba null
+cciss_add_disk(5) hba null
+cciss_add_disk(6) hba null
+cciss_add_disk(7) hba null
+
+in the dmesg log after boot...
+
+Regards,
+Alan
+
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+IP: [<ffffffffa00ae506>] cciss_add_disk+0x80/0x10f [cciss]
+PGD 87b069067 PUD 87b06a067 PMD 0
+Oops: 0000 [1] SMP
+CPU 0
+Modules linked in: cciss(+) sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd
+ehci_hcd
+Pid: 1852, comm: insmod Not tainted 2.6.27 #1
+RIP: 0010:[<ffffffffa00ae506>]  [<ffffffffa00ae506>]
+cciss_add_disk+0x80/0x10f [cciss]
+RSP: 0018:ffff88087b03fc38  EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffff88087b005000 RCX: 00000000fffffffb
+RDX: ffff88087b03f967 RSI: 00000000ffffffff RDI: ffff88087b0027c0
+RBP: ffff88087b140000 R08: 0000000000000000 R09: ffff88087b03f900
+R10: 0000000000000000 R11: ffffffffa00ae74a R12: 0000000000000001
+R13: ffff88087b140000 R14: ffff88087b140040 R15: ffff88087b140000
+FS:  0000000000682850(0063) GS:ffffffff80703a80(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000020 CR3: 000000087b010000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process insmod (pid: 1852, threadinfo ffff88087b03e000, task
+ffff88087b94c2c0)
+Stack:  ffff88087b980680 ffff88087bc45170 ffff88087b1400f0 ffff88107cf88000
+ ffff88087bc45140 ffffffffa00af3da ffff880800000083 0000000000000000
+ 0000000100000040 0000000800000000 ffff88087b110000 00000001802d0c5d
 Call Trace:
- [<ffffffff80232c55>] printk_ratelimit+0x15/0x20
- [<ffffffff8026306f>] __alloc_pages+0x2ff/0x320
- [<ffffffff80212920>] dma_alloc_pages+0x20/0x90
- [<ffffffff80212a29>] dma_alloc_coherent+0x99/0x200
- [<ffffffff8043b859>] megasas_mgmt_ioctl_fw+0x1c9/0x450
- [<ffffffff8043bce8>] megasas_mgmt_ioctl+0x28/0x40
- [<ffffffff8028eff1>] do_ioctl+0x31/0x90
- [<ffffffff8028f0c3>] vfs_ioctl+0x73/0x2d0
- [<ffffffff8028f36a>] sys_ioctl+0x4a/0x80
- [<ffffffff8020bb3e>] system_call+0x7e/0x83
+ [<ffffffffa00af3da>] ? rebuild_lun_table+0x5b8/0x6c7 [cciss]
+ [<ffffffffa00b188d>] ? cciss_init_one+0x988/0xb3d [cciss]
+ [<ffffffff8032e84c>] ? pci_device_probe+0xb6/0x105
+ [<ffffffff80398ae0>] ? driver_probe_device+0xd0/0x14d
+ [<ffffffff80398ba3>] ? __driver_attach+0x46/0x6d
+ [<ffffffff80398b5d>] ? __driver_attach+0x0/0x6d
+ [<ffffffff80398283>] ? bus_for_each_dev+0x44/0x6f
+ [<ffffffff803986b9>] ? bus_add_driver+0xb4/0x203
+ [<ffffffff80398dff>] ? driver_register+0x8d/0x101
+ [<ffffffffa00c3000>] ? cciss_init+0x0/0x2e [cciss]
+ [<ffffffff8032eaab>] ? __pci_register_driver+0x5a/0x8b
+ [<ffffffffa00c3000>] ? cciss_init+0x0/0x2e [cciss]
+ [<ffffffff80209041>] ? _stext+0x41/0x110
+ [<ffffffff8025428f>] ? sys_init_module+0x9e/0x1ab
+ [<ffffffff8020be0b>] ? system_call_fastpath+0x16/0x1b
 
-Mem-info:
-DMA per-cpu:
-CPU    0: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-CPU    1: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-DMA32 per-cpu:
-CPU    0: Hot: hi:  186, btch:  31 usd: 128   Cold: hi:   62, btch:  15 usd:  14
-CPU    1: Hot: hi:  186, btch:  31 usd: 183   Cold: hi:   62, btch:  15 usd:  59
-Active:322989 inactive:1073 dirty:168 writeback:7 unstable:0
- free:3894 slab:171815 mapped:3457 pagetables:4277 bounce:0
-DMA free:6788kB min:16kB low:20kB high:24kB active:0kB inactive:0kB present:6148kB pages_scanned:0 all_unreclaimable? yes
-lowmem_reserve[]: 0 1988 1988 1988
-DMA32 free:8788kB min:5692kB low:7112kB high:8536kB active:1291956kB inactive:4292kB present:2035720kB pages_scanned:0 all_unreclaimable? no
-lowmem_reserve[]: 0 0 0 0
-DMA: 3*4kB 5*8kB 3*16kB 1*32kB 4*64kB 2*128kB 2*256kB 1*512kB 1*1024kB 0*2048kB 1*4096kB = 6788kB
-DMA32: 804*4kB 19*8kB 34*16kB 37*32kB 0*64kB 1*128kB 0*256kB 1*512kB 1*1024kB 1*2048kB 0*4096kB = 8808kB
-Swap cache: add 132711, delete 132711, find 496226/496957, race 0+0
-Free swap  = 979400kB
-Total swap = 979924kB
-Free swap:       979400kB
-524200 pages of RAM
-14486 reserved pages
-93705 pages shared
-0 pages swap cached
-megasas: Failed to alloc kernel SGL buffer for IOCTL
-MegaCli[18889]: segfault at 0000000000000000 rip 00000000004ab9b5 rsp 00007fff48802c30 error 4
 
-I was attempting to get the state of the raid array (monitoring for downed
-drives, etc) with MegaCLI 2.00.11. This is with kernel 2.6.23.16.
+Code: 03 44 89 e0 4d 63 e4 4d 89 e6 c1 e0 04 49 c1 e6 06 89 43 04 4b 8d
+84 2e 90 00 00 00 4d 01 ee 48 89 43 48 4a 8b 04 e5 80 13 0c a0 <48> 8b
+40 20 48 83 e8 80 48 89 43 60 49 8b 45 20 48 8b 70 58 e8
+RIP  [<ffffffffa00ae506>] cciss_add_disk+0x80/0x10f [cciss]
+ RSP <ffff88087b03fc38>
+CR2: 0000000000000020
+---[ end trace 12ad011b32e7c85e ]---
 
---
-  "Police noticed some rustling sounds from Linn's bottom area
-  and on closer inspection a roll of cash was found protruding
-  from Linn's anus, the full amount of cash taken in the robbery."
-    - http://www.smh.com.au/news/world/robber-hides-loot-up-his-booty/2008/05/09/1210131248617.html
