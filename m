@@ -1,36 +1,51 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 0/5] qla2xxx: Code Refactoring
-Date: Thu, 16 Oct 2008 14:52:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0810161450340.14604@shark.he.net>
-References: <alpine.OSX.1.00.0810152210280.24642@ac-mac.local>
- <86327215-E6E8-43BD-8DF1-2E352E99074D@qlogic.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] cciss: fix sysfs regression, obsoletes previous
+ patch
+Date: Thu, 16 Oct 2008 14:53:01 -0700
+Message-ID: <20081016145301.0d117cdf.akpm@linux-foundation.org>
+References: <20081016212956.GA25704@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:44373 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755226AbYJPVwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2008 17:52:38 -0400
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2008 14:52:33 -0700
-In-Reply-To: <86327215-E6E8-43BD-8DF1-2E352E99074D@qlogic.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42528 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755079AbYJPVx5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2008 17:53:57 -0400
+In-Reply-To: <20081016212956.GA25704@roadking.ldev.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Cc: James.Bottomley@HansenPartnership.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org, linux-driver@qlogic.com
+To: Mike Miller <mike.miller@hp.com>
+Cc: JensAxboejens.axboe@oracle.com, alan.brunelle@hp.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 16 Oct 2008, Anirban Chakraborty wrote:
+On Thu, 16 Oct 2008 16:29:56 -0500
+Mike Miller <mike.miller@hp.com> wrote:
 
-> Please note that the "From" address in these patches was set incorrectly as
-> anirban@qlogic.com. It should be anirban.chakraborty@qlogic.com. I am sorry if
-> this has caused any inconvenience to anyone.
-> Thanks a lot.
-> Anirban
+> 
+> Patch 1 of 2
+> 
+> This patch obsoletes the one I sent yesterday. It fixes a broken symlink in
+> sysfs. The previous patch appeared to work but was wrong as reported by Alan
+> Brunelle.
+> Please consider this for inclusion.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 1e1f915..0f367b1 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
+>  	disk->first_minor = drv_index << NWD_SHIFT;
+>  	disk->fops = &cciss_fops;
+>  	disk->private_data = &h->drv[drv_index];
+> +	disk->driverfs_dev = &h->pdev->dev;
+>  
+>  	/* Set up queue information */
+>  	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
 
-Also please note that the Subject: line of each patch was the same
-(except for the patch number).  :(
+Without knowing what caused this regression nor when it occurred, I am
+unable to determine whether this fix is needed in 2.6.27.x.  Or indeed
+2.6.26.x, etc.
 
-Please read/study "The Perfect Patch" at
-  http://userweb.kernel.org/~akpm/stuff/tpp.txt
-
--- 
-~Randy
