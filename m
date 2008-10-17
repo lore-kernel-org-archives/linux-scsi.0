@@ -1,44 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: [PATCH] [ConfigFS]: Allow symbolic links from a SysFS struct
 	kobject source.
-Date: Fri, 17 Oct 2008 12:50:44 -0700
-Message-ID: <1224273044.5556.353.camel@haakon2.linux-iscsi.org>
-References: <1224226555.5556.279.camel@haakon2.linux-iscsi.org>
-	 <20081017193947.GC5633@mail.oracle.com>
+Date: Fri, 17 Oct 2008 12:48:57 -0700
+Message-ID: <20081017194857.GD5633@mail.oracle.com>
+References: <1224226555.5556.279.camel@haakon2.linux-iscsi.org> <20081017074453.GA4850@kroah.com> <1224231739.5556.303.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp124.sbc.mail.sp1.yahoo.com ([69.147.64.97]:42608 "HELO
-	smtp124.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751090AbYJQTuq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Oct 2008 15:50:46 -0400
-In-Reply-To: <20081017193947.GC5633@mail.oracle.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:12566 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755668AbYJQTvp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2008 15:51:45 -0400
+Content-Disposition: inline
+In-Reply-To: <1224231739.5556.303.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Alan Stern <stern@rowland.harvard.edu>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, 2008-10-17 at 12:39 -0700, Joel Becker wrote:
-> On Thu, Oct 16, 2008 at 11:55:55PM -0700, Nicholas A. Bellinger wrote:
-> > Hi Joel, Greg and Co,
+On Fri, Oct 17, 2008 at 01:22:18AM -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2008-10-17 at 00:44 -0700, Greg KH wrote:
+> > What is the problem you are attempting to solve here?
 > > 
-> > Here is the the first working code for allowing configfs to handle
-> > symlinks from sysfs struct kobject based code.  Here is the commit:
-> > passing struct kobject into generic target_core_mod subsystem plugins
-> > for locating struct block_device and struct scsi_device..  
 > 
-> NAK.
+> So, the generic target_core_mod engine that lives
+> under /sys/kernel/config/target/core needs a method to locate struct
+> block_device and struct scsi_device for access via bio_submit() and
+> scsi_execute_() respectively.
 > 
-> As Greg said, this just doesn't work.  Don't go down this path.
+> Originally, target_core_mod used key echoed through configfs attributes
+> like so:
 > 
+> export TARGET=/sys/kernel/config/target/core/
+> 
+> # Create $STORAGE_OBJECT of type Linux/BLOCK in generic target_core_mod
+> mkdir -p $TARGET/iblock_0/lvm_test0
+> # OLD METHOD to reference struct block_device
+> echo iblock_major=254,iblock_minor=2 > $TARGET/iblock_0/lvm_test0/control
+> echo 1 > $TARGET/iblock_0/lvm_test0/enable
+> # NEW METHOD using sysfs ->configfs symlinks to reference struct block_device
+> ln -s /sys/block/dm-2 $TARGET/iblock_0/lvm_test0/dm-2
 
-Fair enough, I will kill it from my tree. :-)
+	Pass an open file descriptor.  In bash(1):
 
-Thanks for your comments!
+    exec 3<>/dev/dm-7
+    echo 3 >$TARGET/iblock_0/lvm_test0/control  # I'd call it 'fd'
 
---nab
+In kernel, in the ->store() function of 'control':
 
+	p = (char *)page;
+	fd = simple_strtol(p, &p, 0);
+	filp = fget(fd);
+	inode = igrab(filp->f_mapping->host);
+	dev = I_BDEV(filp->f_mapping->host);
+	blkdev_get(dev, FMODE_WRITE | FMODE_READ, 0);
 
+Error handling is left up to you (validate the strtol, fd range, ISBLK,
+etc).  This assumes you want the struct block_device and want to pin it
+in memory.  I assume you do.
 
+Joel
+
+-- 
+
+Life's Little Instruction Book #450
+
+	"Don't be afraid to say, 'I need help.'"
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
