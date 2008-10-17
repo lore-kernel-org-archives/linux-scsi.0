@@ -1,362 +1,190 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [ConfigFS]: Allow symbolic links from a SysFS struct
-	kobject source.
-Date: Thu, 16 Oct 2008 23:55:55 -0700
-Message-ID: <1224226555.5556.279.camel@haakon2.linux-iscsi.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [BUG] linux-next: Tree for October 16 - softlockup detected at blk_invoke_request_fn
+Date: Fri, 17 Oct 2008 08:55:59 +0200
+Message-ID: <20081017065558.GD19428@kernel.dk>
+References: <20081016211811.a523c8f2.sfr@canb.auug.org.au> <20081016204212.GC7534@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-62ut5yn8Rk951cQbD2id"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Joel Becker <joel.becker@oracle.com>, Greg KH <greg@kroah.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Alan Stern <stern@rowland.harvard.edu>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:42875 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212AbYJQG4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Oct 2008 02:56:48 -0400
+Content-Disposition: inline
+In-Reply-To: <20081016204212.GC7534@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Fri, Oct 17 2008, Kamalesh Babulal wrote:
+> Hi Stephen,
+> 
+> 	with the next-20081016 kernel, softlockup is detected while creating ext2 
+> filesystem.
+> 
+> BUG: soft lockup - CPU#3 stuck for 61s! [mkfs.ext2:3399]
+> Modules linked in: nfsd lockd nfs_acl auth_rpcgss exportfs autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 acpi_cpufreq dm_mirror dm_log dm_mod video output rfkill input_polldev sbs sbshc battery acpi_memhotplug ac parport_pc lp parport sg floppy ide_cd_mod tg3 cdrom libphy serio_raw button i2c_i801 e752x_edac edac_core shpchp i2c_core pcspkr aic79xx scsi_transport_spi sd_mod scsi_mod ext3 jbd ehci_hcd ohci_hcd uhci_hcd [last unloaded: microcode]
+> Modules linked in: nfsd lockd nfs_acl auth_rpcgss exportfs autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 acpi_cpufreq dm_mirror dm_log dm_mod video output rfkill input_polldev sbs sbshc battery acpi_memhotplug ac parport_pc lp parport sg floppy ide_cd_mod tg3 cdrom libphy serio_raw button i2c_i801 e752x_edac edac_core shpchp i2c_core pcspkr aic79xx scsi_transport_spi sd_mod scsi_mod ext3 jbd ehci_hcd ohci_hcd uhci_hcd [last unloaded: microcode]
+> Call Trace:
+>  <IRQ>  [<ffffffff80319770>] blk_invoke_request_fn+0x69/0x109
+>  [<ffffffffa006ffe3>] scsi_run_queue+0x2b5/0x2ba [scsi_mod]
+>  [<ffffffffa00706db>] scsi_next_command+0x2d/0x39 [scsi_mod]
+>  [<ffffffffa007090f>] scsi_end_request+0x86/0x97 [scsi_mod]
+>  [<ffffffffa0071659>] scsi_io_completion+0x1b6/0x3cd [scsi_mod]
+>  [<ffffffff8031d589>] blk_done_softirq+0x5c/0x6b
+>  [<ffffffff8023cb50>] __do_softirq+0x7a/0x13d
+>  [<ffffffff8021f9bd>] ack_apic_level+0x58/0xdc
+>  [<ffffffff8020d09c>] call_softirq+0x1c/0x28
+>  [<ffffffff8020decd>] do_softirq+0x2c/0x68
+>  [<ffffffff8020e1f1>] do_IRQ+0x145/0x168
+>  [<ffffffff8020c356>] ret_from_intr+0x0/0xa
+>  <EOI>  [<ffffffff80261cd5>] audit_syscall_entry+0xb6/0x160
+>  [<ffffffff8020be94>] auditsys+0x19/0x4a
+> ..
+> ..
+> <above call trace was printed 8 times>
+> ..
+> INFO: task kjournald:578 blocked for more than 480 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  ffff8801e50e1d30 0000000000000046 ffff8801e50e1cf8 ffffffff8031833d
+>  ffff8801e5058c58 ffff8801e7360100 ffff8801e70f3470 ffff8801e7360458
+>  00000001e596c500 00000000fffd66c8 ffffffffffffffff ffffffffffffffff
+> Call Trace:
+>  [<ffffffff8031833d>] elv_next_request+0x155/0x220
+>  [<ffffffff802b26ab>] sync_buffer+0x0/0x3f
+>  [<ffffffff8048f5ee>] io_schedule+0x5d/0x9f
+>  [<ffffffff802b26e6>] sync_buffer+0x3b/0x3f
+>  [<ffffffff8048f849>] __wait_on_bit+0x40/0x6f
+>  [<ffffffff802b26ab>] sync_buffer+0x0/0x3f
+>  [<ffffffff8048f8e4>] out_of_line_wait_on_bit+0x6c/0x78
+>  [<ffffffff80249620>] wake_bit_function+0x0/0x23
+>  [<ffffffffa003125c>] journal_commit_transaction+0x7e4/0xc64 [jbd]
+>  [<ffffffff80240857>] lock_timer_base+0x26/0x4c
+>  [<ffffffffa0033c97>] kjournald+0xc1/0x1fb [jbd]
+>  [<ffffffff802495f2>] autoremove_wake_function+0x0/0x2e
+>  [<ffffffffa0033bd6>] kjournald+0x0/0x1fb [jbd]
+>  [<ffffffff802494c4>] kthread+0x47/0x73
+>  [<ffffffff80234192>] schedule_tail+0x27/0x6e
+>  [<ffffffff8020cd39>] child_rip+0xa/0x11
+>  [<ffffffff8024947d>] kthread+0x0/0x73
+>  [<ffffffff8020cd2f>] child_rip+0x0/0x11
+> INFO: task syslogd:2650 blocked for more than 480 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  ffff8801e1587da8 0000000000000082 0000000000000000 0000000000000000
+>  00000000003fbfc4 ffff8801e3926fe0 ffff8801e38c6f60 ffff8801e3927338
+>  0000000100000000 ffff8801e59444c0 0000000000000000 0000000000000001
+> Call Trace:
+>  [<ffffffffa0033577>] log_wait_commit+0x9f/0xed [jbd]
+>  [<ffffffff802495f2>] autoremove_wake_function+0x0/0x2e
+>  [<ffffffffa002f4f9>] journal_stop+0x165/0x18d [jbd]
+>  [<ffffffff802adf7b>] __writeback_single_inode+0x17f/0x282
+>  [<ffffffff802948d9>] do_readv_writev+0x176/0x18b
+>  [<ffffffff802ae867>] sync_inode+0x24/0x31
+>  [<ffffffffa00463ba>] ext3_sync_file+0x9e/0xb0 [ext3]
+>  [<ffffffff802b0c92>] do_fsync+0x52/0xa4
+>  [<ffffffff802b0d07>] __do_fsync+0x23/0x36
+>  [<ffffffff8020bddb>] system_call_fastpath+0x16/0x1b
+> INFO: task lamb-payload:3400 blocked for more than 480 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  ffff8801b186daa8 0000000000000082 ffff8801b186da70 0000000000000000
+>  0000000000000000 ffff8801e3834ee0 ffffffff805ad360 ffff8801e3835238
+>  0000000000000000 00000000fffd50dd ffffffffffffffff ffffffffffffffff
+> Call Trace:
+>  [<ffffffffa002f6fd>] do_get_write_access+0x1dc/0x3c3 [jbd]
+>  [<ffffffff80249620>] wake_bit_function+0x0/0x23
+>  [<ffffffff802b1e79>] __getblk+0x25/0x211
+>  [<ffffffffa002f906>] journal_get_write_access+0x22/0x33 [jbd]
+>  [<ffffffffa0053fa9>] __ext3_journal_get_write_access+0x1e/0x47 [ext3]
+>  [<ffffffffa0047bf7>] ext3_reserve_inode_write+0x3d/0x76 [ext3]
+>  [<ffffffffa0047c51>] ext3_mark_inode_dirty+0x21/0x3c [ext3]
+>  [<ffffffffa004a74c>] ext3_dirty_inode+0x63/0x7b [ext3]
+>  [<ffffffff802ae65f>] __mark_inode_dirty+0x29/0x16b
+>  [<ffffffff802a55db>] touch_atime+0x109/0x112
+>  [<ffffffff8026cba6>] generic_file_aio_read+0x4b8/0x515
+>  [<ffffffff8029442c>] do_sync_read+0xc9/0x10c
+>  [<ffffffff802495f2>] autoremove_wake_function+0x0/0x2e
+>  [<ffffffff8027cf56>] __vma_link+0x42/0x4b
+>  [<ffffffff8032a3d4>] __up_write+0x27/0xf3
+>  [<ffffffff80294b4f>] vfs_read+0xaa/0x133
+>  [<ffffffff80297f65>] kernel_read+0x38/0x4e
+>  [<ffffffff802990a1>] do_execve+0x121/0x256
+>  [<ffffffff8020a495>] sys_execve+0x35/0x4c
+>  [<ffffffff8020c1fa>] stub_execve+0x6a/0xc0
+> INFO: task crond:3055 blocked for more than 480 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  ffff8801d8197d08 0000000000000086 ffff8801d8197cd0 ffff8801da800700
+>  ffff8801da810a40 ffff8801e68481c0 ffff8801e70f3470 ffff8801e6848518
+>  00000001da8aeaf0 00000000fffdf3b6 ffffffffffffffff ffffffffffffffff
+> Call Trace:
+>  [<ffffffffa002f6fd>] do_get_write_access+0x1dc/0x3c3 [jbd]
+>  [<ffffffff80249620>] wake_bit_function+0x0/0x23
+>  [<ffffffff802b1e79>] __getblk+0x25/0x211
+>  [<ffffffff802a014c>] filldir+0x0/0xb1
+>  [<ffffffffa002f906>] journal_get_write_access+0x22/0x33 [jbd]
+>  [<ffffffffa0053fa9>] __ext3_journal_get_write_access+0x1e/0x47 [ext3]
+>  [<ffffffffa0047bf7>] ext3_reserve_inode_write+0x3d/0x76 [ext3]
+>  [<ffffffffa0047c51>] ext3_mark_inode_dirty+0x21/0x3c [ext3]
+>  [<ffffffffa004a74c>] ext3_dirty_inode+0x63/0x7b [ext3]
+>  [<ffffffff802ae65f>] __mark_inode_dirty+0x29/0x16b
+>  [<ffffffff802a014c>] filldir+0x0/0xb1
+>  [<ffffffff802a55db>] touch_atime+0x109/0x112
+>  [<ffffffff802a0287>] vfs_readdir+0x8a/0xa7
+>  [<ffffffff802a04f1>] sys_getdents+0x75/0xc4
+>  [<ffffffff8020bddb>] system_call_fastpath+0x16/0x1b
+> BUG: soft lockup - CPU#3 stuck for 61s! [mkfs.ext2:3399]
+> Modules linked in: nfsd lockd nfs_acl auth_rpcgss exportfs autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 acpi_cpufreq dm_mirror dm_log dm_mod video output rfkill input_polldev sbs sbshc battery acpi_memhotplug ac parport_pc lp parport sg floppy ide_cd_mod tg3 cdrom libphy serio_raw button i2c_i801 e752x_edac edac_core shpchp i2c_core pcspkr aic79xx scsi_transport_spi sd_mod scsi_mod ext3 jbd ehci_hcd ohci_hcd uhci_hcd [last unloaded: microcode]
+> Modules linked in: nfsd lockd nfs_acl auth_rpcgss exportfs autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 acpi_cpufreq dm_mirror dm_log dm_mod video output rfkill input_polldev sbs sbshc battery acpi_memhotplug ac parport_pc lp parport sg floppy ide_cd_mod tg3 cdrom libphy serio_raw button i2c_i801 e752x_edac edac_core shpchp i2c_core pcspkr aic79xx scsi_transport_spi sd_mod scsi_mod ext3 jbd ehci_hcd ohci_hcd uhci_hcd [last unloaded: microcode]
+> Call Trace:
+>  <IRQ>  [<ffffffff80319770>] blk_invoke_request_fn+0x69/0x109
+>  [<ffffffffa006ffe3>] scsi_run_queue+0x2b5/0x2ba [scsi_mod]
+>  [<ffffffffa00706db>] scsi_next_command+0x2d/0x39 [scsi_mod]
+>  [<ffffffffa007090f>] scsi_end_request+0x86/0x97 [scsi_mod]
+>  [<ffffffffa0071659>] scsi_io_completion+0x1b6/0x3cd [scsi_mod]
+>  [<ffffffff8031d589>] blk_done_softirq+0x5c/0x6b
+>  [<ffffffff8023cb50>] __do_softirq+0x7a/0x13d
+>  [<ffffffff8021f9bd>] ack_apic_level+0x58/0xdc
+>  [<ffffffff8020d09c>] call_softirq+0x1c/0x28
+>  [<ffffffff8020decd>] do_softirq+0x2c/0x68
+>  [<ffffffff8020e1f1>] do_IRQ+0x145/0x168
+>  [<ffffffff8020c356>] ret_from_intr+0x0/0xa
+>  <EOI>  [<ffffffff80261cd5>] audit_syscall_entry+0xb6/0x160
+> [<ffffffff8020be94>] auditsys+0x19/0x4a
+> ..
+> ..
+> <snip>
+> 
+> 0xffffffff80319770 is in blk_invoke_request_fn (include/linux/blkdev.h:456).
+> 451     #define QUEUE_FLAG_NONROT      14       /* non-rotational device (SSD) */
+> 452
+> 453     static inline int queue_is_locked(struct request_queue *q)
+> 454     {
+> 455     #ifdef CONFIG_SMP
+> 456             spinlock_t *lock = q->queue_lock;
+> 457             return lock && spin_is_locked(lock);
+> 458     #else
+> 459             return 1;
+> 460     #endif
+> 
+> 0x4fe3 is in scsi_run_queue (drivers/scsi/scsi_lib.c:604).
+> 599			flagset = test_bit(QUEUE_FLAG_REENTER, &q->queue_flags) &&
+> 600					!test_bit(QUEUE_FLAG_REENTER,
+> 601						&sdev->request_queue->queue_flags);
+> 602			if (flagset)
+> 603				queue_flag_set(QUEUE_FLAG_REENTER, sdev->request_queue);
+> 604			__blk_run_queue(sdev->request_queue);
+> 605			if (flagset)
+> 606				queue_flag_clear(QUEUE_FLAG_REENTER, sdev->request_queue);
+> 607			spin_unlock(sdev->request_queue->queue_lock);
+> 608	
 
---=-62ut5yn8Rk951cQbD2id
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Huh, this makes very little sense to me... Can I talk you into trying
+the for-linus branch of the block tree?
 
-Hi Joel, Greg and Co,
+git://git.kernel.dk/linux-2.6-block.git for-linus
 
-Here is the the first working code for allowing configfs to handle
-symlinks from sysfs struct kobject based code.  Here is the commit:
-passing struct kobject into generic target_core_mod subsystem plugins
-for locating struct block_device and struct scsi_device..  
+just to see if it reproduces with that. I'm assuming 2.6-git is fine?
 
--------------------------------------------------------------------------
-
-In struct configfs_item_operations, added allow_link_kobject() and
-drop_link_kobject() to allow struct kobject to be passed through
-the configfs API.  The code for kobject symlink source sits along side
-the exist configfs symlink code, and does not break existing apps that use
-allow_link() or drop_link().
-
-Also, there is two large FIXMEs with the first commit,  in
-fs/configfs/symlink.c:configfs_symlink() related to comparing
-struct nameidata nd.path.dentry->d_sb == sysfs_sb.
-
-The 2nd is when doing a 'ls -la' inside of the config group directory
-containg the symlink source from sysfs, the source link does not currently
-appear..  I will be following up these two items..
-
-Signed-off-by: Nicholas A. Bellinger
----
- fs/configfs/configfs_internal.h |    3 +-
- fs/configfs/symlink.c           |  168 +++++++++++++++++++++++++++------------
- include/linux/configfs.h        |    6 +-
- 3 files changed, 123 insertions(+), 54 deletions(-)
-
-the following commit can be found at:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commit;h=317aefe74354c0140dc8aebff1ef9467b6f0c9ba
-
-Comments..?  I will send along my patch to
-drivers/lio-core/target_core_configfs.c in a moment to demonstrate how
-to pull it all together with struct config_item_operations
-allow_link_kobject() and drop_link_kobject()..
-
---=-62ut5yn8Rk951cQbD2id
-Content-Disposition: attachment; filename=0001-ConfigFS-Allow-symbolic-links-from-a-SysFS-struct.patch
-Content-Type: application/mbox; name=0001-ConfigFS-Allow-symbolic-links-from-a-SysFS-struct.patch
-Content-Transfer-Encoding: 7bit
-
->From 317aefe74354c0140dc8aebff1ef9467b6f0c9ba Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Thu, 16 Oct 2008 22:46:16 -0700
-Subject: [PATCH] [ConfigFS]: Allow symbolic links from a SysFS struct kobject source.
-
-In struct configfs_item_operations, added allow_link_kobject() and
-drop_link_kobject() to allow struct kobject to be passed through
-the configfs API.  The code for kobject symlink source sits along side
-the exist configfs symlink code, and does not break existing apps that use
-allow_link() or drop_link().
-
-Also, there is two large FIXMEs with the first commit,  in
-fs/configfs/symlink.c:configfs_symlink() related to comparing
-struct nameidata nd.path.dentry->d_sb == sysfs_sb.
-
-The 2nd is when doing a 'ls -la' inside of the config group directory
-containg the symlink source from sysfs, the source link does not currently
-appear..  I will be following up these two items..
-
-Signed-off-by: Nicholas A. Bellinger
----
- fs/configfs/configfs_internal.h |    3 +-
- fs/configfs/symlink.c           |  168 +++++++++++++++++++++++++++------------
- include/linux/configfs.h        |    6 +-
- 3 files changed, 123 insertions(+), 54 deletions(-)
-
-diff --git a/fs/configfs/configfs_internal.h b/fs/configfs/configfs_internal.h
-index 762d287..3e310d9 100644
---- a/fs/configfs/configfs_internal.h
-+++ b/fs/configfs/configfs_internal.h
-@@ -94,7 +94,8 @@ extern int configfs_unlink(struct inode *dir, struct dentry *dentry);
- 
- struct configfs_symlink {
- 	struct list_head sl_list;
--	struct config_item *sl_target;
-+	struct config_item *sl_target; /* Symlink source of ConfigFS */
-+	struct kobject *sl_kobject; /* Symlink source of SysFS */
- };
- 
- extern int configfs_create_link(struct configfs_symlink *sl,
-diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
-index bf74973..15c0e48 100644
---- a/fs/configfs/symlink.c
-+++ b/fs/configfs/symlink.c
-@@ -22,18 +22,26 @@
-  * 	sysfs is Copyright (C) 2001, 2002, 2003 Patrick Mochel
-  *
-  * configfs Copyright (C) 2005 Oracle.  All rights reserved.
-+ *
-+ * Added ConfigFS <-> SysFS Symlink support for Linux-ISCSI.org
-+ * Copyright (C) 2008 Nicholas A. Bellinger <nab@kernel.org>
-  */
- 
- #include <linux/fs.h>
- #include <linux/module.h>
- #include <linux/namei.h>
--
-+#include <linux/sysfs.h>
-+#include <linux/kobject.h>
- #include <linux/configfs.h>
- #include "configfs_internal.h"
-+#include "../sysfs/sysfs.h" // SysFS Internal
- 
- /* Protects attachments of new symlinks */
- DEFINE_MUTEX(configfs_symlink_mutex);
- 
-+/* Used for sysfs kobject symlinks */
-+extern struct super_block *sysfs_sb;
-+
- static int item_depth(struct config_item * item)
- {
- 	struct config_item * p = item;
-@@ -80,7 +88,7 @@ static int create_link(struct config_item *parent_item,
- 	if (!configfs_dirent_is_ready(target_sd))
- 		goto out;
- 	ret = -ENOMEM;
--	sl = kmalloc(sizeof(struct configfs_symlink), GFP_KERNEL);
-+	sl = kzalloc(sizeof(struct configfs_symlink), GFP_KERNEL);
- 	if (sl) {
- 		sl->sl_target = config_item_get(item);
- 		spin_lock(&configfs_dirent_lock);
-@@ -107,34 +115,37 @@ out:
- 	return ret;
- }
- 
--
--static int get_target(const char *symname, struct nameidata *nd,
--		      struct config_item **target)
-+static int create_link_sysfs(struct config_item *parent_item,
-+			     struct kobject *kobj,
-+			     struct dentry *dentry)
- {
--	int ret;
-+	struct configfs_symlink *sl;
-+	int ret = -ENOMEM;
- 
--	ret = path_lookup(symname, LOOKUP_FOLLOW|LOOKUP_DIRECTORY, nd);
--	if (!ret) {
--		if (nd->path.dentry->d_sb == configfs_sb) {
--			*target = configfs_get_config_item(nd->path.dentry);
--			if (!*target) {
--				ret = -ENOENT;
--				path_put(&nd->path);
--			}
--		} else
--			ret = -EPERM;
-+	sl = kzalloc(sizeof(struct configfs_symlink), GFP_KERNEL);
-+	if (sl) {
-+		/*
-+		 * Grab the reference to sysfs's struct kobject.
-+		 * It will be released in configfs_unlink().
-+		 */
-+		sl->sl_kobject = kobject_get(kobj);
-+
-+		ret = configfs_create_link(sl, parent_item->ci_dentry, dentry);
-+		if (ret) { 
-+			kobject_put(kobj);
-+			kfree(sl);
-+		}
- 	}
- 
- 	return ret;
- }
- 
--
- int configfs_symlink(struct inode *dir, struct dentry *dentry, const char *symname)
- {
- 	int ret;
- 	struct nameidata nd;
- 	struct configfs_dirent *sd;
--	struct config_item *parent_item;
-+	struct config_item *parent_item = NULL;
- 	struct config_item *target_item;
- 	struct config_item_type *type;
- 
-@@ -156,30 +167,73 @@ int configfs_symlink(struct inode *dir, struct dentry *dentry, const char *symna
- 
- 	ret = -EPERM;
- 	if (!type || !type->ct_item_ops ||
--	    !type->ct_item_ops->allow_link)
-+	    (!(type->ct_item_ops->allow_link) &&
-+	     !(type->ct_item_ops->allow_link_kobject)))
-+		goto out;
-+	/*
-+	 * Populate struct nameidata nd with Symlink SOURCE fs/ pointers..
-+	 */
-+	if ((ret = path_lookup(symname, LOOKUP_FOLLOW|LOOKUP_DIRECTORY, &nd)) < 0)
- 		goto out_put;
--
--	ret = get_target(symname, &nd, &target_item);
--	if (ret)
-+	/*
-+	 * First check if the symlink destination is coming from a configfs
-+	 * struct config_item..
-+	 */
-+	if (nd.path.dentry->d_sb == configfs_sb) {
-+		if (!(type->ct_item_ops->allow_link)) {
-+			ret = -EPERM;
-+			goto out_put;
-+		}
-+		if (!(target_item = configfs_get_config_item(nd.path.dentry))) {
-+			ret = -ENOENT;
-+			goto out_put;
-+		}
-+		if (!(ret = type->ct_item_ops->allow_link(parent_item, target_item))) {
-+			mutex_lock(&configfs_symlink_mutex);
-+			ret = create_link(parent_item, target_item, dentry);
-+			mutex_unlock(&configfs_symlink_mutex);
-+			if (ret && type->ct_item_ops->drop_link)
-+				type->ct_item_ops->drop_link(parent_item,
-+							     target_item);
-+		}
-+		/*
-+		 * Release reference to ConfigFS Symlink SOURCE from 
-+		 * configfs_get_config_item()
-+		 */
-+		config_item_put(target_item);
-+//	} else if (nd.path.dentry->d_sb == sysfs_sb) {
-+#warning FIXME: How to determine which nameidata is from sysfs..?
-+	} else if (1) {
-+		struct sysfs_dirent *sd = (struct sysfs_dirent *)nd.path.dentry->d_fsdata;
-+		struct kobject *kobj = sd->s_dir.kobj;
-+
-+		if (!(type->ct_item_ops->allow_link_kobject)) {
-+			ret = -EPERM;
-+			goto out_put;
-+		}
-+		/*
-+		 * Now from a sysfs struct kobject..
-+		 */
-+		printk("Using struct kobject: %s for symlink source, %s configfs destination\n",
-+				kobject_name(kobj), config_item_name(parent_item));
-+
-+		if (!(ret = type->ct_item_ops->allow_link_kobject(parent_item, kobj))) {
-+			mutex_lock(&configfs_symlink_mutex);
-+			ret = create_link_sysfs(parent_item, kobj, dentry);
-+			mutex_unlock(&configfs_symlink_mutex);
-+			if (ret && type->ct_item_ops->drop_link_kobject)
-+				type->ct_item_ops->drop_link_kobject(parent_item,
-+								     kobj);
-+		}
-+	} else {
-+		ret = -EPERM;
- 		goto out_put;
--
--	ret = type->ct_item_ops->allow_link(parent_item, target_item);
--	if (!ret) {
--		mutex_lock(&configfs_symlink_mutex);
--		ret = create_link(parent_item, target_item, dentry);
--		mutex_unlock(&configfs_symlink_mutex);
--		if (ret && type->ct_item_ops->drop_link)
--			type->ct_item_ops->drop_link(parent_item,
--						     target_item);
- 	}
- 
--	config_item_put(target_item);
--	path_put(&nd.path);
--
- out_put:
--	config_item_put(parent_item);
--
-+	path_put(&nd.path);
- out:
-+	config_item_put(parent_item);
- 	return ret;
- }
- 
-@@ -209,22 +263,34 @@ int configfs_unlink(struct inode *dir, struct dentry *dentry)
- 	dput(dentry);
- 	configfs_put(sd);
- 
--	/*
--	 * drop_link() must be called before
--	 * list_del_init(&sl->sl_list), so that the order of
--	 * drop_link(this, target) and drop_item(target) is preserved.
--	 */
--	if (type && type->ct_item_ops &&
--	    type->ct_item_ops->drop_link)
--		type->ct_item_ops->drop_link(parent_item,
--					       sl->sl_target);
--
--	spin_lock(&configfs_dirent_lock);
--	list_del_init(&sl->sl_list);
--	spin_unlock(&configfs_dirent_lock);
-+	if (sl->sl_target) {
-+		/*
-+		 * drop_link() must be called before list_del_init(&sl->sl_list),
-+		 * so that the order of drop_link(this, target) and drop_item(target)
-+		 * is preserved.
-+		 */
-+		if (type && type->ct_item_ops &&
-+		    type->ct_item_ops->drop_link)
-+			type->ct_item_ops->drop_link(parent_item, sl->sl_target);
- 
--	/* Put reference from create_link() */
--	config_item_put(sl->sl_target);
-+		spin_lock(&configfs_dirent_lock);
-+		list_del_init(&sl->sl_list);
-+		spin_unlock(&configfs_dirent_lock);
-+		/*
-+		 * Put reference from create_link()
-+		 */
-+		config_item_put(sl->sl_target);
-+		sl->sl_target = NULL;
-+	} else if (sl->sl_kobject) {
-+		if (type && type->ct_item_ops &&
-+		   type->ct_item_ops->drop_link_kobject)
-+			type->ct_item_ops->drop_link_kobject(parent_item, sl->sl_kobject);
-+		/*
-+		 * Put reference from create_link_sysfs()
-+		 */
-+		kobject_put(sl->sl_kobject);
-+		sl->sl_kobject = NULL;
-+	}
- 	kfree(sl);
- 
- 	config_item_put(parent_item);
-diff --git a/include/linux/configfs.h b/include/linux/configfs.h
-index 7f62777..7b4e8ec 100644
---- a/include/linux/configfs.h
-+++ b/include/linux/configfs.h
-@@ -225,8 +225,10 @@ struct configfs_item_operations {
- 	void (*release)(struct config_item *);
- 	ssize_t	(*show_attribute)(struct config_item *, struct configfs_attribute *,char *);
- 	ssize_t	(*store_attribute)(struct config_item *,struct configfs_attribute *,const char *, size_t);
--	int (*allow_link)(struct config_item *src, struct config_item *target);
--	int (*drop_link)(struct config_item *src, struct config_item *target);
-+	int (*allow_link)(struct config_item *dst, struct config_item *src);
-+	int (*drop_link)(struct config_item *dst, struct config_item *src);
-+	int (*allow_link_kobject)(struct config_item *dst, struct kobject *src_kobj);
-+	int (*drop_link_kobject)(struct config_item *dst, struct kobject *src_kobj);
- };
- 
- struct configfs_group_operations {
 -- 
-1.5.4.1
-
-
---=-62ut5yn8Rk951cQbD2id--
+Jens Axboe
 
