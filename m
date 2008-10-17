@@ -1,63 +1,78 @@
-From: Levy_Jerome@emc.com
-Subject: RE: [PATCH 1/1] scsi_dh: fix boot oops with EMC Clariion
-Date: Fri, 17 Oct 2008 14:35:17 -0400
-Message-ID: <6416EE16C1AF1E4C86882867E4DD0FF65CFD10@CORPUSMX40B.corp.emc.com>
-References: <6416EE16C1AF1E4C86882867E4DD0FF6026D1BF1@CORPUSMX40B.corp.emc.com><6416EE16C1AF1E4C86882867E4DD0FF602B1F971@CORPUSMX40B.corp.emc.com><1224264890.3368.24.camel@localhost.localdomain><6416EE16C1AF1E4C86882867E4DD0FF65CFD0F@CORPUSMX40B.corp.emc.com> <1224268412.3368.27.camel@localhost.localdomain>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] [ConfigFS]: Allow symbolic links from a SysFS struct
+	kobject source.
+Date: Fri, 17 Oct 2008 10:39:59 -0700
+Message-ID: <20081017173959.GC2221@kroah.com>
+References: <1224226555.5556.279.camel@haakon2.linux-iscsi.org> <20081017074453.GA4850@kroah.com> <1224231739.5556.303.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:11628 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbYJQShd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2008 14:37:33 -0400
-Content-class: urn:content-classes:message
+Received: from kroah.org ([198.145.64.141]:38521 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754748AbYJQSsn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Oct 2008 14:48:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1224231739.5556.303.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Joel Becker <joel.becker@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, SCST-Devel <scst-devel@lists.sourceforge.net>, Alan Stern <stern@rowland.harvard.edu>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>
 
-Ah! Fair enough. I was working off of .105, so I'll check for a newer release. Seen something very similar in scsi_dh_alua, perhaps that is fixed too.
+On Fri, Oct 17, 2008 at 01:22:18AM -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2008-10-17 at 00:44 -0700, Greg KH wrote:
+> > On Thu, Oct 16, 2008 at 11:55:55PM -0700, Nicholas A. Bellinger wrote:
+> > > Hi Joel, Greg and Co,
+> > > 
+> > > Here is the the first working code for allowing configfs to handle
+> > > symlinks from sysfs struct kobject based code.  Here is the commit:
+> > > passing struct kobject into generic target_core_mod subsystem plugins
+> > > for locating struct block_device and struct scsi_device..  
+> > 
+> > Um, no.
+> > 
+> > You are trying to create symlinks dynamically across superblocks and
+> > mount points?  As one of your #warning states, this isn't possible to do
+> > correctly, nor is it even a good idea.
+> > 
+> > So I'd have to reject this patch, sorry.
+> > 
+> > What is the problem you are attempting to solve here?
+> > 
+> 
+> So, the generic target_core_mod engine that lives
+> under /sys/kernel/config/target/core needs a method to locate struct
+> block_device and struct scsi_device for access via bio_submit() and
+> scsi_execute_() respectively.
 
-Thanks...
+Then just pass the "name" of the block device into a configfs file,
+nothing more is needed, right?
 
-Jerry
+> Originally, target_core_mod used key echoed through configfs attributes
+> like so:
+> 
+> export TARGET=/sys/kernel/config/target/core/
+> 
+> # Create $STORAGE_OBJECT of type Linux/BLOCK in generic target_core_mod
+> mkdir -p $TARGET/iblock_0/lvm_test0
+> # OLD METHOD to reference struct block_device
+> echo iblock_major=254,iblock_minor=2 > $TARGET/iblock_0/lvm_test0/control
+> echo 1 > $TARGET/iblock_0/lvm_test0/enable
+> # NEW METHOD using sysfs ->configfs symlinks to reference struct block_device
+> ln -s /sys/block/dm-2 $TARGET/iblock_0/lvm_test0/dm-2
 
+No, you can't do a symlink across superblocks and expect it to work like
+you are thinking internally.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-Sent: Fri 10/17/2008 2:33 PM
-To: Levy, Jerome
-Cc: linux-scsi@vger.kernel.org
-Subject: RE: [PATCH 1/1] scsi_dh: fix boot oops with EMC Clariion
- 
-On Fri, 2008-10-17 at 14:17 -0400, Levy_Jerome@emc.com wrote:
-> The change was the addition of rq->flags = 0; the memset isn't mine.
-> Sorry about the whitespace -- I'm still a bit new at this. 
+> The other point is that since configfs is based on sysfs code, it only
+> makes sense to provide a API through configfs to take advantage of
+> kernel data structures that can be referenced using wrappers to
+> container_of() in include/linux/ in a common way.
 
-That's OK.
+No, just because configfs looks like sysfs internally, does not mean
+they are related in any manner.  We have been down this argument many
+times in the past, please don't bring it up again, it has no bearing on
+this at all.
 
-Documentation/SubmittingPatches
-Documentation/email-clients.txt
+thanks,
 
-contain useful information.
-
-> As to why it's necessary, I've had boot-time oopses on two completely
-> different hosts -- one iSCSI, one FC -- which both resolved to exactly
-> the same code; bizarre values in rq->flags. The source seems to OR the
-> desired values in but never actually initializes rq->flags (the memset
-> initializes the CDB, not the flags variable), so I added the line to
-> do so. After testing the old module to confirm the oops still occurred
-> regularly, I installed the new code and have since (in over 100
-> reboots) been unable to reproduce the oops. 
-
-No, my point is that this was fixed by a memset to zero of the request
-in blk_rq_init() in 2.6.26 (so it fixed every other problem, not just
-the one in dm_emc).  I think the kernel you're testing is too old to see
-the generic fix (based on what the diff contained).
-
-James
-
-
-
-
+greg k-h
