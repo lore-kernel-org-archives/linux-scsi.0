@@ -1,274 +1,70 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: Infinite retries
-Date: Sun, 19 Oct 2008 11:28:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0810191119190.17760-300000@netrider.rowland.org>
-References: <48FB105B.20409@panasas.com>
+Date: Sun, 19 Oct 2008 12:47:55 +0200
+Message-ID: <48FB105B.20409@panasas.com>
+References: <Pine.LNX.4.44L0.0810161359560.2180-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1609956864-525787686-1224430106=:17760"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:2520 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751090AbYJSP22 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Oct 2008 11:28:28 -0400
-In-Reply-To: <48FB105B.20409@panasas.com>
+Received: from gw-ca.panasas.com ([66.104.249.162]:12388 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751024AbYJSKsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Oct 2008 06:48:00 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0810161359560.2180-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+Alan Stern wrote:
+> We do have a problem with infinite retry loops.  I'm not sure which 
+> kernels are affected, but there's a good chance 2.6.27 is and an 
+> excellent chance that 2.6.28-rc1 will be.
+> 
+> The problem is caused by buggy USB devices that return the number of 
+> sectors in response to READ CAPACITY, rather than the highest sector 
+> number.  Thus they appear to have one more sector than they really do.  
+> We can create blacklist entries for these devices, but they constantly 
+> appear and the list is never up-to-date.  So we need to handle them 
+> robustly even when they aren't on the blacklist.
+> 
+> When the system tries to read the non-existent last sector, the devices
+> send back no data.  In addition, the stupid devices return no sense
+> information (even though they often do return Check Condition status).
+> 
+> The question is: What should usb-storage report to the midlayer when
+> this happens?  Setting scmd->result to DID_ERROR doesn't help, because
+> sd_done() sets it back to 0 in the NO_SENSE case.  We end up calling
+> scsi_end_request() with error = 0 and bytes = 0, thereby requeuing the
+> request.  There's no counter to limit the number of times the same
+> request can be requeued.
+> 
+> I actually saw this happen to somebody in the log accompanying a bug
+> report a few days ago (Bugzilla #11768).
+> 
+> What's the proper solution?  Should usb-storage make up some bogus 
+> sense data (HARDWARE_ERROR sense key maybe)?
+> 
+> Alan Stern
+> 
+> P.S.: What about my proposed changes to scsi_io_completion()?  There 
+> hasn't been any response.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Alan Hi
 
----1609956864-525787686-1224430106=:17760
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Do you have the scsi_io_completion patchset on a public git somewhere?
+I would like to re-test them and review them again.
 
-On Sun, 19 Oct 2008, Boaz Harrosh wrote:
+Did you try them with above problem and do they solve the issue?
+Also have you looked farther into the retries/timeout issues from
+block layer?
 
-> Alan Stern wrote:
-> > We do have a problem with infinite retry loops.  I'm not sure which 
-> > kernels are affected, but there's a good chance 2.6.27 is and an 
-> > excellent chance that 2.6.28-rc1 will be.
-...
+Thanks
+Boaz
 
-> Do you have the scsi_io_completion patchset on a public git somewhere?
-> I would like to re-test them and review them again.
-
-They aren't in any git repositories, so I am including the two patches
-as attachments to this message.  The first patch changes the failure
-analysis logic in scsi_io_completion() along the lines suggested by
-James, and the second gets rid of scsi_end_request().  They are based
-roughly on 2.6.27, so they might not apply cleanly after the merge
-window.
-
-Neither patch addresses the infinite-retry problem; I wanted to keep 
-the issues separate.
-
-> Did you try them with above problem and do they solve the issue?
-
-At this point I can't remember exactly which combinations I tried!  :-)  
-However I don't think these patches will have any effect on the retry 
-loop.
-
-> Also have you looked farther into the retries/timeout issues from
-> block layer?
-
-Not yet.  I'm waiting for 2.6.28-rc1 to appear.
-
-Alan Stern
-
----1609956864-525787686-1224430106=:17760
-Content-Type: TEXT/plain; name="scsi-comp-1.txt"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.0810191128260.17760@netrider.rowland.org>
-Content-Description: 
-Content-Disposition: attachment; filename="scsi-comp-1.txt"
-
-SW5kZXg6IHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmMNCisrKyB1c2ItMi42L2RyaXZlcnMvc2NzaS9zY3Np
-X2xpYi5jDQpAQCAtODU5LDYgKzg1OSw4IEBAIHZvaWQgc2NzaV9pb19jb21w
-bGV0aW9uKHN0cnVjdCBzY3NpX2NtbmQNCiAJc3RydWN0IHNjc2lfc2Vuc2Vf
-aGRyIHNzaGRyOw0KIAlpbnQgc2Vuc2VfdmFsaWQgPSAwOw0KIAlpbnQgc2Vu
-c2VfZGVmZXJyZWQgPSAwOw0KKwllbnVtIHtBQ1RJT05fRkFJTCwgQUNUSU9O
-X1JFUVVFVUUsIEFDVElPTl9SRVRSWSwNCisJCQlBQ1RJT05fREVMQVlFRF9S
-RVRSWX0gYWN0aW9uOw0KIA0KIAlpZiAocmVzdWx0KSB7DQogCQlzZW5zZV92
-YWxpZCA9IHNjc2lfY29tbWFuZF9ub3JtYWxpemVfc2Vuc2UoY21kLCAmc3No
-ZHIpOw0KQEAgLTkwOSwxMSArOTExLDE1IEBAIHZvaWQgc2NzaV9pb19jb21w
-bGV0aW9uKHN0cnVjdCBzY3NpX2NtbmQNCiAJaWYgKHNjc2lfZW5kX3JlcXVl
-c3QoY21kLCBlcnJvciwgZ29vZF9ieXRlcywgcmVzdWx0ID09IDApID09IE5V
-TEwpDQogCQlyZXR1cm47DQogCXRoaXNfY291bnQgPSBibGtfcnFfYnl0ZXMo
-cmVxKTsNCisJYWN0aW9uID0gQUNUSU9OX0ZBSUw7DQogDQotCS8qIGdvb2Rf
-Ynl0ZXMgPSAwLCBvciAoaW5jbHVzaXZlKSB0aGVyZSB3ZXJlIGxlZnRvdmVy
-cyBhbmQNCi0JICogcmVzdWx0ID0gMCwgc28gc2NzaV9lbmRfcmVxdWVzdCBj
-b3VsZG4ndCByZXRyeS4NCi0JICovDQotCWlmIChzZW5zZV92YWxpZCAmJiAh
-c2Vuc2VfZGVmZXJyZWQpIHsNCisJaWYgKGhvc3RfYnl0ZShyZXN1bHQpID09
-IERJRF9SRVNFVCkgew0KKwkJLyogVGhpcmQgcGFydHkgYnVzIHJlc2V0IG9y
-IHJlc2V0IGZvciBlcnJvciByZWNvdmVyeQ0KKwkJICogcmVhc29ucy4gIEp1
-c3QgcmV0cnkgdGhlIGNvbW1hbmQgYW5kIHNlZSB3aGF0DQorCQkgKiBoYXBw
-ZW5zLg0KKwkJICovDQorCQlhY3Rpb24gPSBBQ1RJT05fUkVUUlk7DQorCX0g
-ZWxzZSBpZiAoc2Vuc2VfdmFsaWQgJiYgIXNlbnNlX2RlZmVycmVkKSB7DQog
-CQlzd2l0Y2ggKHNzaGRyLnNlbnNlX2tleSkgew0KIAkJY2FzZSBVTklUX0FU
-VEVOVElPTjoNCiAJCQlpZiAoY21kLT5kZXZpY2UtPnJlbW92YWJsZSkgew0K
-QEAgLTkyMSwxNiArOTI3LDEzIEBAIHZvaWQgc2NzaV9pb19jb21wbGV0aW9u
-KHN0cnVjdCBzY3NpX2NtbmQNCiAJCQkJICogYW5kIHF1aWV0bHkgcmVmdXNl
-IGZ1cnRoZXIgYWNjZXNzLg0KIAkJCQkgKi8NCiAJCQkJY21kLT5kZXZpY2Ut
-PmNoYW5nZWQgPSAxOw0KLQkJCQlzY3NpX2VuZF9yZXF1ZXN0KGNtZCwgLUVJ
-TywgdGhpc19jb3VudCwgMSk7DQotCQkJCXJldHVybjsNCiAJCQl9IGVsc2Ug
-ew0KIAkJCQkvKiBNdXN0IGhhdmUgYmVlbiBhIHBvd2VyIGdsaXRjaCwgb3Ig
-YQ0KIAkJCQkgKiBidXMgcmVzZXQuICBDb3VsZCBub3QgaGF2ZSBiZWVuIGEN
-CiAJCQkJICogbWVkaWEgY2hhbmdlLCBzbyB3ZSBqdXN0IHJldHJ5IHRoZQ0K
-LQkJCQkgKiByZXF1ZXN0IGFuZCBzZWUgd2hhdCBoYXBwZW5zLg0KKwkJCQkg
-KiBjb21tYW5kIGFuZCBzZWUgd2hhdCBoYXBwZW5zLg0KIAkJCQkgKi8NCi0J
-CQkJc2NzaV9yZXF1ZXVlX2NvbW1hbmQocSwgY21kKTsNCi0JCQkJcmV0dXJu
-Ow0KKwkJCQlhY3Rpb24gPSBBQ1RJT05fUkVUUlk7DQogCQkJfQ0KIAkJCWJy
-ZWFrOw0KIAkJY2FzZSBJTExFR0FMX1JFUVVFU1Q6DQpAQCAtOTQ2LDIyICs5
-NDksMTMgQEAgdm9pZCBzY3NpX2lvX2NvbXBsZXRpb24oc3RydWN0IHNjc2lf
-Y21uZA0KIAkJCSAgICBzc2hkci5hc2MgPT0gMHgyMCAmJiBzc2hkci5hc2Nx
-ID09IDB4MDApICYmDQogCQkJICAgIChjbWQtPmNtbmRbMF0gPT0gUkVBRF8x
-MCB8fA0KIAkJCSAgICAgY21kLT5jbW5kWzBdID09IFdSSVRFXzEwKSkgew0K
-KwkJCQkvKiBUaGlzIHdpbGwgaXNzdWUgYSBuZXcgNi1ieXRlIGNvbW1hbmQu
-ICovDQogCQkJCWNtZC0+ZGV2aWNlLT51c2VfMTBfZm9yX3J3ID0gMDsNCi0J
-CQkJLyogVGhpcyB3aWxsIGNhdXNlIGEgcmV0cnkgd2l0aCBhDQotCQkJCSAq
-IDYtYnl0ZSBjb21tYW5kLg0KLQkJCQkgKi8NCi0JCQkJc2NzaV9yZXF1ZXVl
-X2NvbW1hbmQocSwgY21kKTsNCi0JCQl9IGVsc2UgaWYgKHNzaGRyLmFzYyA9
-PSAweDEwKSAvKiBESVggKi8NCi0JCQkJc2NzaV9lbmRfcmVxdWVzdChjbWQs
-IC1FSU8sIHRoaXNfY291bnQsIDApOw0KLQkJCWVsc2UNCi0JCQkJc2NzaV9l
-bmRfcmVxdWVzdChjbWQsIC1FSU8sIHRoaXNfY291bnQsIDEpOw0KLQkJCXJl
-dHVybjsNCi0JCWNhc2UgQUJPUlRFRF9DT01NQU5EOg0KLQkJCWlmIChzc2hk
-ci5hc2MgPT0gMHgxMCkgeyAvKiBESUYgKi8NCi0JCQkJc2NzaV9lbmRfcmVx
-dWVzdChjbWQsIC1FSU8sIHRoaXNfY291bnQsIDApOw0KLQkJCQlyZXR1cm47
-DQorCQkJCWFjdGlvbiA9IEFDVElPTl9SRVFVRVVFOw0KIAkJCX0NCiAJCQli
-cmVhazsNCisJCWNhc2UgQUJPUlRFRF9DT01NQU5EOg0KKwkJCWJyZWFrOw0K
-IAkJY2FzZSBOT1RfUkVBRFk6DQogCQkJLyogSWYgdGhlIGRldmljZSBpcyBp
-biB0aGUgcHJvY2VzcyBvZiBiZWNvbWluZw0KIAkJCSAqIHJlYWR5LCBvciBo
-YXMgYSB0ZW1wb3JhcnkgYmxvY2thZ2UsIHJldHJ5Lg0KQEAgLTk3NSwxOSAr
-OTY5LDE2IEBAIHZvaWQgc2NzaV9pb19jb21wbGV0aW9uKHN0cnVjdCBzY3Np
-X2NtbmQNCiAJCQkJY2FzZSAweDA3OiAvKiBvcGVyYXRpb24gaW4gcHJvZ3Jl
-c3MgKi8NCiAJCQkJY2FzZSAweDA4OiAvKiBMb25nIHdyaXRlIGluIHByb2dy
-ZXNzICovDQogCQkJCWNhc2UgMHgwOTogLyogc2VsZiB0ZXN0IGluIHByb2dy
-ZXNzICovDQotCQkJCQlzY3NpX3JlcXVldWVfY29tbWFuZChxLCBjbWQpOw0K
-LQkJCQkJcmV0dXJuOw0KLQkJCQlkZWZhdWx0Og0KKwkJCQkJYWN0aW9uID0g
-QUNUSU9OX0RFTEFZRURfUkVUUlk7DQogCQkJCQlicmVhazsNCiAJCQkJfQ0K
-IAkJCX0NCi0JCQlpZiAoIShyZXEtPmNtZF9mbGFncyAmIFJFUV9RVUlFVCkp
-DQorCQkJaWYgKCEocmVxLT5jbWRfZmxhZ3MgJiBSRVFfUVVJRVQpICYmDQor
-CQkJCQlhY3Rpb24gPT0gQUNUSU9OX0ZBSUwpDQogCQkJCXNjc2lfY21kX3By
-aW50X3NlbnNlX2hkcihjbWQsDQogCQkJCQkJCSAiRGV2aWNlIG5vdCByZWFk
-eSIsDQogCQkJCQkJCSAmc3NoZHIpOw0KLQ0KLQkJCXNjc2lfZW5kX3JlcXVl
-c3QoY21kLCAtRUlPLCB0aGlzX2NvdW50LCAxKTsNCi0JCQlyZXR1cm47DQor
-CQkJYnJlYWs7DQogCQljYXNlIFZPTFVNRV9PVkVSRkxPVzoNCiAJCQlpZiAo
-IShyZXEtPmNtZF9mbGFncyAmIFJFUV9RVUlFVCkpIHsNCiAJCQkJc2NtZF9w
-cmludGsoS0VSTl9JTkZPLCBjbWQsDQpAQCAtOTk2LDI4ICs5ODcsMzggQEAg
-dm9pZCBzY3NpX2lvX2NvbXBsZXRpb24oc3RydWN0IHNjc2lfY21uZA0KIAkJ
-CQlzY3NpX3ByaW50X3NlbnNlKCIiLCBjbWQpOw0KIAkJCX0NCiAJCQkvKiBT
-ZWUgU1NDM3JYWCBvciBjdXJyZW50LiAqLw0KLQkJCXNjc2lfZW5kX3JlcXVl
-c3QoY21kLCAtRUlPLCB0aGlzX2NvdW50LCAxKTsNCi0JCQlyZXR1cm47DQot
-CQlkZWZhdWx0Og0KIAkJCWJyZWFrOw0KIAkJfQ0KIAl9DQotCWlmIChob3N0
-X2J5dGUocmVzdWx0KSA9PSBESURfUkVTRVQpIHsNCi0JCS8qIFRoaXJkIHBh
-cnR5IGJ1cyByZXNldCBvciByZXNldCBmb3IgZXJyb3IgcmVjb3ZlcnkNCi0J
-CSAqIHJlYXNvbnMuICBKdXN0IHJldHJ5IHRoZSByZXF1ZXN0IGFuZCBzZWUg
-d2hhdA0KLQkJICogaGFwcGVucy4NCisNCisJc3dpdGNoIChhY3Rpb24pIHsN
-CisJY2FzZSBBQ1RJT05fRkFJTDoNCisJCS8qIEdpdmUgdXAgYW5kIGZhaWwg
-dGhlIHJlbWFpbmRlciBvZiB0aGUgcmVxdWVzdCAqLw0KKwkJaWYgKHJlc3Vs
-dCkgew0KKwkJCWlmICghKHJlcS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVUKSkg
-ew0KKwkJCQlzY3NpX3ByaW50X3Jlc3VsdChjbWQpOw0KKwkJCQlpZiAoZHJp
-dmVyX2J5dGUocmVzdWx0KSAmIERSSVZFUl9TRU5TRSkNCisJCQkJCXNjc2lf
-cHJpbnRfc2Vuc2UoIiIsIGNtZCk7DQorCQkJfQ0KKwkJfQ0KKwkJYmxrX2Vu
-ZF9yZXF1ZXN0KHJlcSwgLUVJTywgYmxrX3JxX2J5dGVzKHJlcSkpOw0KKwkJ
-c2NzaV9uZXh0X2NvbW1hbmQoY21kKTsNCisJCWJyZWFrOw0KKwljYXNlIEFD
-VElPTl9SRVFVRVVFOg0KKwkJLyogUHV0IHRoZSByZXF1ZXN0IGJhY2sgYXQg
-dGhlIGhlYWQgb2YgdGhlIHF1ZXVlLg0KKwkJICogQSBuZXcgY29tbWFuZCB3
-aWxsIGJlIHByZXBhcmVkIGFuZCBpc3N1ZWQuDQogCQkgKi8NCiAJCXNjc2lf
-cmVxdWV1ZV9jb21tYW5kKHEsIGNtZCk7DQotCQlyZXR1cm47DQotCX0NCi0J
-aWYgKHJlc3VsdCkgew0KLQkJaWYgKCEocmVxLT5jbWRfZmxhZ3MgJiBSRVFf
-UVVJRVQpKSB7DQotCQkJc2NzaV9wcmludF9yZXN1bHQoY21kKTsNCi0JCQlp
-ZiAoZHJpdmVyX2J5dGUocmVzdWx0KSAmIERSSVZFUl9TRU5TRSkNCi0JCQkJ
-c2NzaV9wcmludF9zZW5zZSgiIiwgY21kKTsNCi0JCX0NCisJCWJyZWFrOw0K
-KwljYXNlIEFDVElPTl9SRVRSWToNCisJCS8qIFJldHJ5IHRoZSBzYW1lIGNv
-bW1hbmQgaW1tZWRpYXRlbHkgKi8NCisJCXNjc2lfcXVldWVfaW5zZXJ0KGNt
-ZCwgU0NTSV9NTFFVRVVFX0VIX1JFVFJZKTsNCisJCWJyZWFrOw0KKwljYXNl
-IEFDVElPTl9ERUxBWUVEX1JFVFJZOg0KKwkJLyogUmV0cnkgdGhlIHNhbWUg
-Y29tbWFuZCBhZnRlciBhIGRlbGF5ICovDQorCQlzY3NpX3F1ZXVlX2luc2Vy
-dChjbWQsIFNDU0lfTUxRVUVVRV9ERVZJQ0VfQlVTWSk7DQorCQlicmVhazsN
-CiAJfQ0KLQlzY3NpX2VuZF9yZXF1ZXN0KGNtZCwgLUVJTywgdGhpc19jb3Vu
-dCwgIXJlc3VsdCk7DQogfQ0KIA0KIHN0YXRpYyBpbnQgc2NzaV9pbml0X3Nn
-dGFibGUoc3RydWN0IHJlcXVlc3QgKnJlcSwgc3RydWN0IHNjc2lfZGF0YV9i
-dWZmZXIgKnNkYiwNCg==
----1609956864-525787686-1224430106=:17760
-Content-Type: TEXT/plain; name="scsi-comp-2.txt"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.0810191128261.17760@netrider.rowland.org>
-Content-Description: 
-Content-Disposition: attachment; filename="scsi-comp-2.txt"
-
-SW5kZXg6IHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmMNCisrKyB1c2ItMi42L2RyaXZlcnMvc2NzaS9zY3Np
-X2xpYi5jDQpAQCAtNjQyLDY5ICs2NDIsNiBAQCB2b2lkIHNjc2lfcnVuX2hv
-c3RfcXVldWVzKHN0cnVjdCBTY3NpX0hvDQogCQlzY3NpX3J1bl9xdWV1ZShz
-ZGV2LT5yZXF1ZXN0X3F1ZXVlKTsNCiB9DQogDQotLyoNCi0gKiBGdW5jdGlv
-bjogICAgc2NzaV9lbmRfcmVxdWVzdCgpDQotICoNCi0gKiBQdXJwb3NlOiAg
-ICAgUG9zdC1wcm9jZXNzaW5nIG9mIGNvbXBsZXRlZCBjb21tYW5kcyAodXN1
-YWxseSBpbnZva2VkIGF0IGVuZA0KLSAqCQlvZiB1cHBlciBsZXZlbCBwb3N0
-LXByb2Nlc3NpbmcgYW5kIHNjc2lfaW9fY29tcGxldGlvbikuDQotICoNCi0g
-KiBBcmd1bWVudHM6ICAgY21kCSAtIGNvbW1hbmQgdGhhdCBpcyBjb21wbGV0
-ZS4NCi0gKiAgICAgICAgICAgICAgZXJyb3IgICAgLSAwIGlmIEkvTyBpbmRp
-Y2F0ZXMgc3VjY2VzcywgPCAwIGZvciBJL08gZXJyb3IuDQotICogICAgICAg
-ICAgICAgIGJ5dGVzICAgIC0gbnVtYmVyIG9mIGJ5dGVzIG9mIGNvbXBsZXRl
-ZCBJL08NCi0gKgkJcmVxdWV1ZSAgLSBpbmRpY2F0ZXMgd2hldGhlciB3ZSBz
-aG91bGQgcmVxdWV1ZSBsZWZ0b3ZlcnMuDQotICoNCi0gKiBMb2NrIHN0YXR1
-czogQXNzdW1lZCB0aGF0IGxvY2sgaXMgbm90IGhlbGQgdXBvbiBlbnRyeS4N
-Ci0gKg0KLSAqIFJldHVybnM6ICAgICBjbWQgaWYgcmVxdWV1ZSByZXF1aXJl
-ZCwgTlVMTCBvdGhlcndpc2UuDQotICoNCi0gKiBOb3RlczogICAgICAgVGhp
-cyBpcyBjYWxsZWQgZm9yIGJsb2NrIGRldmljZSByZXF1ZXN0cyBpbiBvcmRl
-ciB0bw0KLSAqICAgICAgICAgICAgICBtYXJrIHNvbWUgbnVtYmVyIG9mIHNl
-Y3RvcnMgYXMgY29tcGxldGUuDQotICogDQotICoJCVdlIGFyZSBndWFyYW50
-ZWVpbmcgdGhhdCB0aGUgcmVxdWVzdCBxdWV1ZSB3aWxsIGJlIGdvb3NlZA0K
-LSAqCQlhdCBzb21lIHBvaW50IGR1cmluZyB0aGlzIGNhbGwuDQotICogTm90
-ZXM6CUlmIGNtZCB3YXMgcmVxdWV1ZWQsIHVwb24gcmV0dXJuIGl0IHdpbGwg
-YmUgYSBzdGFsZSBwb2ludGVyLg0KLSAqLw0KLXN0YXRpYyBzdHJ1Y3Qgc2Nz
-aV9jbW5kICpzY3NpX2VuZF9yZXF1ZXN0KHN0cnVjdCBzY3NpX2NtbmQgKmNt
-ZCwgaW50IGVycm9yLA0KLQkJCQkJICBpbnQgYnl0ZXMsIGludCByZXF1ZXVl
-KQ0KLXsNCi0Jc3RydWN0IHJlcXVlc3RfcXVldWUgKnEgPSBjbWQtPmRldmlj
-ZS0+cmVxdWVzdF9xdWV1ZTsNCi0Jc3RydWN0IHJlcXVlc3QgKnJlcSA9IGNt
-ZC0+cmVxdWVzdDsNCi0NCi0JLyoNCi0JICogSWYgdGhlcmUgYXJlIGJsb2Nr
-cyBsZWZ0IG92ZXIgYXQgdGhlIGVuZCwgc2V0IHVwIHRoZSBjb21tYW5kDQot
-CSAqIHRvIHF1ZXVlIHRoZSByZW1haW5kZXIgb2YgdGhlbS4NCi0JICovDQot
-CWlmIChibGtfZW5kX3JlcXVlc3QocmVxLCBlcnJvciwgYnl0ZXMpKSB7DQot
-CQlpbnQgbGVmdG92ZXIgPSAocmVxLT5oYXJkX25yX3NlY3RvcnMgPDwgOSk7
-DQotDQotCQlpZiAoYmxrX3BjX3JlcXVlc3QocmVxKSkNCi0JCQlsZWZ0b3Zl
-ciA9IHJlcS0+ZGF0YV9sZW47DQotDQotCQkvKiBraWxsIHJlbWFpbmRlciBp
-ZiBubyByZXRyeXMgKi8NCi0JCWlmIChlcnJvciAmJiBibGtfbm9yZXRyeV9y
-ZXF1ZXN0KHJlcSkpDQotCQkJYmxrX2VuZF9yZXF1ZXN0KHJlcSwgZXJyb3Is
-IGxlZnRvdmVyKTsNCi0JCWVsc2Ugew0KLQkJCWlmIChyZXF1ZXVlKSB7DQot
-CQkJCS8qDQotCQkJCSAqIEJsZWFoLiAgTGVmdG92ZXJzIGFnYWluLiAgU3Rp
-Y2sgdGhlDQotCQkJCSAqIGxlZnRvdmVycyBpbiB0aGUgZnJvbnQgb2YgdGhl
-DQotCQkJCSAqIHF1ZXVlLCBhbmQgZ29vc2UgdGhlIHF1ZXVlIGFnYWluLg0K
-LQkJCQkgKi8NCi0JCQkJc2NzaV9yZXF1ZXVlX2NvbW1hbmQocSwgY21kKTsN
-Ci0JCQkJY21kID0gTlVMTDsNCi0JCQl9DQotCQkJcmV0dXJuIGNtZDsNCi0J
-CX0NCi0JfQ0KLQ0KLQkvKg0KLQkgKiBUaGlzIHdpbGwgZ29vc2UgdGhlIHF1
-ZXVlIHJlcXVlc3QgZnVuY3Rpb24gYXQgdGhlIGVuZCwgc28gd2UgZG9uJ3QN
-Ci0JICogbmVlZCB0byB3b3JyeSBhYm91dCBsYXVuY2hpbmcgYW5vdGhlciBj
-b21tYW5kLg0KLQkgKi8NCi0Jc2NzaV9uZXh0X2NvbW1hbmQoY21kKTsNCi0J
-cmV0dXJuIE5VTEw7DQotfQ0KLQ0KIHN0YXRpYyBpbmxpbmUgdW5zaWduZWQg
-aW50IHNjc2lfc2d0YWJsZV9pbmRleCh1bnNpZ25lZCBzaG9ydCBuZW50cykN
-CiB7DQogCXVuc2lnbmVkIGludCBpbmRleDsNCkBAIC04NTIsNyArNzg5LDYg
-QEAgc3RhdGljIHZvaWQgc2NzaV9lbmRfYmlkaV9yZXF1ZXN0KHN0cnVjdA0K
-IHZvaWQgc2NzaV9pb19jb21wbGV0aW9uKHN0cnVjdCBzY3NpX2NtbmQgKmNt
-ZCwgdW5zaWduZWQgaW50IGdvb2RfYnl0ZXMpDQogew0KIAlpbnQgcmVzdWx0
-ID0gY21kLT5yZXN1bHQ7DQotCWludCB0aGlzX2NvdW50Ow0KIAlzdHJ1Y3Qg
-cmVxdWVzdF9xdWV1ZSAqcSA9IGNtZC0+ZGV2aWNlLT5yZXF1ZXN0X3F1ZXVl
-Ow0KIAlzdHJ1Y3QgcmVxdWVzdCAqcmVxID0gY21kLT5yZXF1ZXN0Ow0KIAlp
-bnQgZXJyb3IgPSAwOw0KQEAgLTkwMywyMiArODM5LDI4IEBAIHZvaWQgc2Nz
-aV9pb19jb21wbGV0aW9uKHN0cnVjdCBzY3NpX2NtbmQNCiAJU0NTSV9MT0df
-SExDT01QTEVURSgxLCBwcmludGsoIiVsZCBzZWN0b3JzIHRvdGFsLCAiDQog
-CQkJCSAgICAgICIlZCBieXRlcyBkb25lLlxuIiwNCiAJCQkJICAgICAgcmVx
-LT5ucl9zZWN0b3JzLCBnb29kX2J5dGVzKSk7DQotDQotCS8qIEEgbnVtYmVy
-IG9mIGJ5dGVzIHdlcmUgc3VjY2Vzc2Z1bGx5IHJlYWQuICBJZiB0aGVyZQ0K
-LQkgKiBhcmUgbGVmdG92ZXJzIGFuZCB0aGVyZSBpcyBzb21lIGtpbmQgb2Yg
-ZXJyb3INCi0JICogKHJlc3VsdCAhPSAwKSwgcmV0cnkgdGhlIHJlc3QuDQot
-CSAqLw0KLQlpZiAoc2NzaV9lbmRfcmVxdWVzdChjbWQsIGVycm9yLCBnb29k
-X2J5dGVzLCByZXN1bHQgPT0gMCkgPT0gTlVMTCkNCisJaWYgKGJsa19lbmRf
-cmVxdWVzdChyZXEsIGVycm9yLCBnb29kX2J5dGVzKSA9PSAwKSB7DQorCQkv
-KiBUaGlzIHJlcXVlc3QgaXMgY29tcGxldGVseSBmaW5pc2hlZDsgc3RhcnQg
-dGhlIG5leHQgb25lICovDQorCQlzY3NpX25leHRfY29tbWFuZChjbWQpOw0K
-IAkJcmV0dXJuOw0KLQl0aGlzX2NvdW50ID0gYmxrX3JxX2J5dGVzKHJlcSk7
-DQorCX0NCisNCisJLyogVGhlIHJlcXVlc3QgaXNuJ3QgZmluaXNoZWQgeWV0
-LiAgRmlndXJlIG91dCB3aGF0IHRvIGRvIG5leHQuICovDQogCWFjdGlvbiA9
-IEFDVElPTl9GQUlMOw0KKwlpZiAocmVzdWx0ID09IDApIHsNCisJCS8qIE5v
-IGVycm9yLCBzbyBjYXJyeSBvdXQgdGhlIHJlbWFpbmRlciBvZiB0aGUgcmVx
-dWVzdC4gKi8NCisJCWFjdGlvbiA9IEFDVElPTl9SRVFVRVVFOw0KIA0KLQlp
-ZiAoaG9zdF9ieXRlKHJlc3VsdCkgPT0gRElEX1JFU0VUKSB7DQorCX0gZWxz
-ZSBpZiAoZXJyb3IgJiYgYmxrX25vcmV0cnlfcmVxdWVzdChyZXEpKSB7DQor
-CQkvKiBSZXRyeXMgYXJlIGRpc2FsbG93ZWQsIHNvIGtpbGwgdGhlIHJlbWFp
-bmRlci4gKi8NCisNCisJfSBlbHNlIGlmIChob3N0X2J5dGUocmVzdWx0KSA9
-PSBESURfUkVTRVQpIHsNCiAJCS8qIFRoaXJkIHBhcnR5IGJ1cyByZXNldCBv
-ciByZXNldCBmb3IgZXJyb3IgcmVjb3ZlcnkNCiAJCSAqIHJlYXNvbnMuICBK
-dXN0IHJldHJ5IHRoZSBjb21tYW5kIGFuZCBzZWUgd2hhdA0KIAkJICogaGFw
-cGVucy4NCiAJCSAqLw0KIAkJYWN0aW9uID0gQUNUSU9OX1JFVFJZOw0KKw0K
-IAl9IGVsc2UgaWYgKHNlbnNlX3ZhbGlkICYmICFzZW5zZV9kZWZlcnJlZCkg
-ew0KIAkJc3dpdGNoIChzc2hkci5zZW5zZV9rZXkpIHsNCiAJCWNhc2UgVU5J
-VF9BVFRFTlRJT046DQo=
----1609956864-525787686-1224430106=:17760--
