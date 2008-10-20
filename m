@@ -1,99 +1,95 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] cciss: fix regression firmware version not
- displayed in procfs (again and again)
-Date: Mon, 20 Oct 2008 20:27:24 +0900
-Message-ID: <20081020202744Y.fujita.tomonori@lab.ntt.co.jp>
-References: <20081016231730.GA26824@roadking.ldev.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support via bsg interface - revised
+Date: Mon, 20 Oct 2008 05:46:22 -0700
+Message-ID: <51A5EBA1-15ED-4568-98B1-824B52D6F4F6@qlogic.com>
+References: <20081014215239E.fujita.tomonori@lab.ntt.co.jp> <B6F25B51-7CF2-470E-8358-25E3E436593B@qlogic.com> <D5161DF5-A488-4E02-A4D4-74F5E96CC43A@qlogic.com> <20081020204604A.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753112AbYJTL2X@vger.kernel.org>
-In-Reply-To: <20081016231730.GA26824@roadking.ldev.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mike.miller@hp.com
-Cc: akpm@linux-foundation.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, adobriyan@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:22973 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbYJTMqZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Oct 2008 08:46:25 -0400
+In-Reply-To: <20081020204604A.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Thu, 16 Oct 2008 18:17:30 -0500
-Mike Miller <mike.miller@hp.com> wrote:
-
-> Patch 2 of 2
-> 
-> The regression was introduced by commit
-> 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-> This patch fixes a regression where the controller firmware version is not
-> displayed in procfs. The previous patch would be called anytime something
-> changed. This will get called only once for each controller.
-> 
-> This one addresses the un-needed initialization and the freeing of inq_buf.
-> 
-> Please consider this for inclusion.
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-> 
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 0f367b1..c3f0c17 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -3404,7 +3404,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	int i;
->  	int j = 0;
->  	int rc;
-> -	int dac;
-> +	int dac, return_code;
-> +	InquiryData_struct *inq_buff;
-
-Needs to be:
-
-> +	InquiryData_struct *inq_buff = NULL;
-
-The driver uses 'goto clean4' before calling kzalloc for inq_buff
-(e.g. in the case of cmd_pool_bits allocation failure). It means that
-you could kfree with an uninitialized address?
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, bharrosh@panasas.com, robert.w.love@intel.com
 
 
->  	i = alloc_cciss_hba();
->  	if (i < 0)
-> @@ -3510,6 +3511,25 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	/* Turn the interrupts on so we can service requests */
->  	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
->  
-> +	/* Get the firmware version */
-> +	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
-> +	if (inq_buff == NULL) {
-> +		printk(KERN_ERR "cciss: out of memory\n");
-> +		return -ENOMEM;
+On Oct 20, 2008, at 4:45 AM, FUJITA Tomonori wrote:
 
-Needs to use 'goto clean4' instead of just return -ENOMEM here? The
-driver needs to clean up the allocated resource.
+> On Mon, 20 Oct 2008 03:59:18 -0700
+> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+>
+>>
+>> On Oct 14, 2008, at 7:13 AM, Seokmann Ju wrote:
+>>
+>>>
+>>> On Oct 14, 2008, at 6:34 AM, FUJITA Tomonori wrote:
+>>>
+>>>> On Tue, 14 Oct 2008 04:44:17 -0700
+>>>> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+>>>>
+>>>>>>> +static int
+>>>>>>> +fc_service_handler(struct Scsi_Host *shost, struct fc_rport
+>>>>>>> *rport,
+>>>>>>> +			  struct request *req, struct request_queue *q)
+>>>>>>> +{
+>>>>>>> +	int ret;
+>>>>>>> +	struct request *rsp = req->next_rq;
+>>>>>>> +
+>>>>>>> +	if (!rsp) {
+>>>>>>> +		printk(KERN_ERR "ERROR: space for a FC service"
+>>>>>>> +		   " response is missing\n");
+>>>>>>> +		return -EINVAL;
+>>>>>>> +	}
+>>>>>>> +
+>>>>>>> +	if ((req->bio->bi_vcnt > FC_SERVICE_MAX_SG) ||
+>>>>>>> +	    (rsp->bio->bi_vcnt > FC_SERVICE_MAX_SG)) {
+>>>>>>> +		printk(KERN_ERR "ERROR: a FC service"
+>>>>>>> +		    " supports no more than %d SGs\n", FC_SERVICE_MAX_SG);
+>>>>>>> +		return -EINVAL;
+>>>>>>> +	}
+>>>>>>
+>>>>>> This doesn't look correct. bi_vcnt is not related with the number
+>>>>>> of
+>>>>>> sg. You use scatter-gather for large data transfer. You don't
+>>>>>> need to
+>>>>>> worry about bi_vcnt.
+>>>>> I see...
+>>>>> Is there is a way to check, then, how many SG entries the service
+>>>>> needs before the blk_rq_map_sg()?
+>>>>
+>>>> As I wrote in the previous mail, via blk_queue_max_hw_segments()  
+>>>> and
+>>>> blk_queue_max_phys_segments(), you can tell the block layer the
+>>>> number
+>>>> of sg segments you can handle.
+>> One more question here...
+>> With addition of a timer into the FC transport layer for fc_service
+>> handing, the
+>> system seems getting locked up, as below trace shows.
+>> I've been trying to figure out the reasons but not able to do.
+>> It seems like that there is something that I don't know,  
+>> fundamentally
+>> about
+>> the timer usage...
+>> Could you please comments on what might be the things causing the
+>> problem?
+>
+> Hmm, why do you need to invent the own timeout mechanism?
+I was trying to have similar timeout mechanism as in the SCSI I/O,  
+just like 'scsi_add_timer()' in scsi.c:scsi_dispatch_cmd()....
+I assume this is not right approach...?
 
+> I think that you can use the block layer timeout feature. It doesn't
+> work for fc transport pass through? You can just remove struct
+> timer_list in struct fc_service. Check out how scsi-ml uses
+> blk_queue_rq_timed_out and blk_queue_rq_timeout.
+OK. Thanks, I will try out this.
+What are the exact name of those APIs, again?
+It seems like that none of them are available in the source tree....
 
-> +	}
-> +
-> +	return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
-> +		sizeof(InquiryData_struct), 0, 0 , 0, TYPE_CMD);
-> +	if (return_code == IO_OK) {
-> +		hba[i]->firm_ver[0] = inq_buff->data_byte[32];
-> +		hba[i]->firm_ver[1] = inq_buff->data_byte[33];
-> +		hba[i]->firm_ver[2] = inq_buff->data_byte[34];
-> +		hba[i]->firm_ver[3] = inq_buff->data_byte[35];
-> +	} else {	 /* send command failed */
-> +		printk(KERN_WARNING "cciss: unable to determine firmware"
-> +			" version of controller\n");
-> +	}
-> +
->  	cciss_procinit(i);
->  
->  	hba[i]->cciss_max_sectors = 2048;
-> @@ -3520,6 +3540,7 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	return 1;
->  
->  clean4:
-> +	kfree(inq_buff);
->  #ifdef CONFIG_CISS_SCSI_TAPE
->  	kfree(hba[i]->scsi_rejects.complete);
->  #endif
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Seokmann
