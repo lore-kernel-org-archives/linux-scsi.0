@@ -1,83 +1,58 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 2/2] cciss:fix regression firmware not displayed in procfs (again and again)
-Date: Tue, 21 Oct 2008 16:23:22 -0500
-Message-ID: <20081021212322.GA6421@roadking.ldev.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] firewire: fw-sbp2: extend failure check after SCSI probe
+Date: Tue, 21 Oct 2008 23:46:13 +0200
+Message-ID: <48FE4DA5.3050706@s5r6.in-berlin.de>
+References: <tkrat.35d7de3b2ee2ecfc@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:3091 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbYJUVXW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 17:23:22 -0400
-Content-Disposition: inline
+Received: from einhorn.in-berlin.de ([192.109.42.8]:57360 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbYJUVqK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 17:46:10 -0400
+In-Reply-To: <tkrat.35d7de3b2ee2ecfc@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, fujita.tomonori@lab.ntt.co.jp, adobriyan@gmail.com
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-Patch 2 of 2
+I wrote on 2008-10-15:
+> https://bugzilla.redhat.com/show_bug.cgi?id=466679 indicates that the
+> SCSI stack's probe may fail (with the sdev offlined) even if no 1394 bus
+> generation update happened.  It's cheap to check for offline status,
+> hence add this check to initiate a logout/ login/ SCSI probe retry.
+> 
+> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> ---
+>  drivers/firewire/fw-sbp2.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> Index: linux/drivers/firewire/fw-sbp2.c
+> ===================================================================
+> --- linux.orig/drivers/firewire/fw-sbp2.c
+> +++ linux/drivers/firewire/fw-sbp2.c
+> @@ -930,7 +930,8 @@ static void sbp2_login(struct work_struc
+>  
+>  	/* Unreported error during __scsi_add_device() */
+>  	smp_rmb(); /* get current card generation */
+> -	if (generation != device->card->generation) {
+> +	if (generation != device->card->generation ||
+> +	    !scsi_device_online(sdev)) {
+>  		scsi_remove_device(sdev);
+>  		scsi_device_put(sdev);
+>  		goto out_logout_login;
 
-Sorry for the delay. I've been out of the office and the network has been
-down since before lunch CDT. This regression was introduced by commit
-6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-This patch fixes a regression where the controller firmware version is not
-displayed in procfs. The previous patch would be called anytime something
-changed. This will get called only once for each controller.
+Wrong.  I was mislead by missing info in the bug report.  The generation 
+check /is/ most certainly sufficient after all.
 
-In this patch I again initialize *inq_buff to NULL per Tomo's comments. I
-also use a goto clean 4 instead of returning -ENOMEM if the kzalloc fails.
-
-I hope this finally meets everyones expectations.
-
-Please consider this for inclusion.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 0f367b1..eb68f39 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -3404,7 +3404,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	int i;
- 	int j = 0;
- 	int rc;
--	int dac;
-+	int dac, return_code;
-+	InquiryData_struct *inq_buff = NULL;
- 
- 	i = alloc_cciss_hba();
- 	if (i < 0)
-@@ -3510,6 +3511,25 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	/* Turn the interrupts on so we can service requests */
- 	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
- 
-+	/* Get the firmware version */
-+	inq_buff = kzalloc(sizeof(InquiryData_struct), GFP_KERNEL);
-+	if (inq_buff == NULL) {
-+		printk(KERN_ERR "cciss: out of memory\n");
-+		goto clean4;
-+	}
-+
-+	return_code = sendcmd_withirq(CISS_INQUIRY, i, inq_buff,
-+		sizeof(InquiryData_struct), 0, 0 , 0, TYPE_CMD);
-+	if (return_code == IO_OK) {
-+		hba[i]->firm_ver[0] = inq_buff->data_byte[32];
-+		hba[i]->firm_ver[1] = inq_buff->data_byte[33];
-+		hba[i]->firm_ver[2] = inq_buff->data_byte[34];
-+		hba[i]->firm_ver[3] = inq_buff->data_byte[35];
-+	} else {	 /* send command failed */
-+		printk(KERN_WARNING "cciss: unable to determine firmware"
-+			" version of controller\n");
-+	}
-+
- 	cciss_procinit(i);
- 
- 	hba[i]->cciss_max_sectors = 2048;
-@@ -3520,6 +3540,7 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	return 1;
- 
- clean4:
-+	kfree(inq_buff);
- #ifdef CONFIG_CISS_SCSI_TAPE
- 	kfree(hba[i]->scsi_rejects.complete);
- #endif
+And adding the scsi_device_online check does not fix 
+https://bugzilla.redhat.com/show_bug.cgi?id=466679 at all.  To fix that 
+bug, we have to tweak fw-sbp2 so that the SCSI probe succeeds in the 
+very first attempt in the specific scenario which is relevant to the 
+reporter.  (The scenario is basically:  The firewire-sbp2 module was 
+initialized before the firewire-ohci module.)
+-- 
+Stefan Richter
+-=====-==--- =-=- =-=-=
+http://arcgraph.de/sr/
