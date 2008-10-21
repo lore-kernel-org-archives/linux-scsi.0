@@ -1,35 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [Bugme-new] [Bug 11792] New: Oops when reading /proc/megaraid/hba0/diskdrives-ch*
-Date: Tue, 21 Oct 2008 13:54:20 -0600
-Message-ID: <20081021195419.GR26184@parisc-linux.org>
-References: <bug-11792-10286@http.bugzilla.kernel.org/> <20081021124701.3d639c4e.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Chuck Lever <chuck.lever@oracle.com>
+Subject: Re: Problems with new block device size reporting
+Date: Tue, 21 Oct 2008 16:20:27 -0400
+Message-ID: <49EC1EBE-B970-4FEA-B899-9BD07A0006F2@oracle.com>
+References: <3F0757B4-6310-4EB7-9E2B-C51101BCC41A@oracle.com> <1224540525.3586.26.camel@localhost.localdomain>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48313 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbYJUTyV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 15:54:21 -0400
-Content-Disposition: inline
-In-Reply-To: <20081021124701.3d639c4e.akpm@linux-foundation.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:28405 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbYJUUUs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 16:20:48 -0400
+In-Reply-To: <1224540525.3586.26.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, sumantp@lsil.com, bo.yang@lsi.com, bugme-daemon@bugzilla.kernel.org, pterjan@gmail.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Chuck Lever <chuck.lever@oracle.com>
 
-On Tue, Oct 21, 2008 at 12:47:01PM -0700, Andrew Morton wrote:
-> > Latest working kernel version: 2.6.24
-> > Earliest failing kernel version: 2.6.27-rc8
-> 
-> It's a regression.
-> 
-> > Pid: 2319, comm: diff Not tainted (2.6.27-server-0.rc8.2mnb #1)
+On Oct 20, 2008, at Oct 20, 2008, 6:08 PM, James Bottomley wrote:
+> On Mon, 2008-10-20 at 17:58 -0400, Chuck Lever wrote:
+>> [ Cc'ing myself because I'm not subscribed to linux-scsi ]
+>>
+>> Hi James-
+>>
+>> I found two problems in 2.6.27:
+>>
+>> 1.  If CONFIG_LBD is not set on 32-bit platforms, the computation
+>> added in sd_read_capacity() by commit 7404ad3b computes sz
+>> incorrectly.  On my system (a Fedora 9 VMware guest with an 8GB  
+>> disk),
+>> sz is computed as zero.
+>>
+>> 2.  The new string helper string_get_size() added by commit 3c9f3681
+>> goes into an infinite loop if it is passed a "size" of zero.  the  
+>> "for
+>> (j=0;" loop never terminates because 0*10 is always less than 1000.
+>
+> Actually, both reported with patches:
+>
+> http://marc.info/?l=linux-scsi&m=122400928411030
+> http://marc.info/?l=linux-scsi&m=122400928511033
 
-It's also a distro kernel by the looks of things.  Can it be reproduced
-with an upstream kernel?
+Confirmed fix.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Chuck Lever
+chuck[dot]lever[at]oracle[dot]com
