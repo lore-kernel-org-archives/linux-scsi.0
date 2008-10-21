@@ -1,58 +1,36 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] firewire: fw-sbp2: extend failure check after SCSI probe
-Date: Tue, 21 Oct 2008 23:46:13 +0200
-Message-ID: <48FE4DA5.3050706@s5r6.in-berlin.de>
-References: <tkrat.35d7de3b2ee2ecfc@s5r6.in-berlin.de>
+From: Christophe Varoqui <christophe.varoqui@free.fr>
+Subject: [BUG] dm-mpath and scsi persistent reservation
+Date: Tue, 21 Oct 2008 23:19:10 +0200
+Message-ID: <20081021231910.0fdbeb75@plop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:57360 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbYJUVqK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 17:46:10 -0400
-In-Reply-To: <tkrat.35d7de3b2ee2ecfc@s5r6.in-berlin.de>
+Received: from smtp4-g19.free.fr ([212.27.42.30]:54524 "EHLO smtp4-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756354AbYJUW3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Oct 2008 18:29:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, alasdair.kergon@redhat.com
+Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-I wrote on 2008-10-15:
-> https://bugzilla.redhat.com/show_bug.cgi?id=466679 indicates that the
-> SCSI stack's probe may fail (with the sdev offlined) even if no 1394 bus
-> generation update happened.  It's cheap to check for offline status,
-> hence add this check to initiate a logout/ login/ SCSI probe retry.
-> 
-> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> ---
->  drivers/firewire/fw-sbp2.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> Index: linux/drivers/firewire/fw-sbp2.c
-> ===================================================================
-> --- linux.orig/drivers/firewire/fw-sbp2.c
-> +++ linux/drivers/firewire/fw-sbp2.c
-> @@ -930,7 +930,8 @@ static void sbp2_login(struct work_struc
->  
->  	/* Unreported error during __scsi_add_device() */
->  	smp_rmb(); /* get current card generation */
-> -	if (generation != device->card->generation) {
-> +	if (generation != device->card->generation ||
-> +	    !scsi_device_online(sdev)) {
->  		scsi_remove_device(sdev);
->  		scsi_device_put(sdev);
->  		goto out_logout_login;
+Hi,
 
-Wrong.  I was mislead by missing info in the bug report.  The generation 
-check /is/ most certainly sufficient after all.
+the dm-mpath multipathing driver enqueues write ios returned by
+the scsi layer with a "reservation conflict" error (on assymetric
+storage controllers, like Clariion, where queue_if_no_path is enabled).
 
-And adding the scsi_device_online check does not fix 
-https://bugzilla.redhat.com/show_bug.cgi?id=466679 at all.  To fix that 
-bug, we have to tweak fw-sbp2 so that the SCSI probe succeeds in the 
-very first attempt in the specific scenario which is relevant to the 
-reporter.  (The scenario is basically:  The firewire-sbp2 module was 
-initialized before the firewire-ohci module.)
--- 
-Stefan Richter
--=====-==--- =-=- =-=-=
-http://arcgraph.de/sr/
+This is wrong, and a potent data-corrupter : wio sent to a reserved
+scsi device should never be retried on this same device.
+
+Can someone advise on a viable solution for this problem ? I
+understand the Device Mapper being a block remapper, it is not expected
+to receive scsi errors directly ... but maybe some kind of translation
+might be acceptable. Or is there hope in the request-based remapper ?
+
+Jens, James, Alasdair, ... as maintainers of the involved subsystems,
+would you care to give some advise on the issue.
+
+Regards,
+cvaroqui
