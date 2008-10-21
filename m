@@ -1,42 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after 2.6.20
-Date: Tue, 21 Oct 2008 00:13:52 -0700 (PDT)
-Message-ID: <20081021071352.B1012108042@picon.linux-foundation.org>
-References: <bug-11646-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54479 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751243AbYJUHOF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Oct 2008 03:14:05 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9L7DqGa017062
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2008 00:13:54 -0700
-In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 03/22] sata_mv: remove unnecessary initialization
+Date: Tue, 21 Oct 2008 18:17:41 +0900
+Message-ID: <1224580680-13698-4-git-send-email-tj@kernel.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11646
+sata_mv initializes unused ioports fields including bmdma_addr to
+NULL.  As later changes will conditionalize BMDMA, this makes sata_mv
+unnecessarily dependent on BMDMA.  Remove the unnecessary
+initialization.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/sata_mv.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-
-
-
-------- Comment #15 from grin@grin.hu  2008-10-21 00:13 -------
-Just to note that I segmented one live server from the others in question and
-it did not help [the separated one keeps crashing / locking up], now I am
-trying to freeze the test server (which runs a stock kernel instead of the
-openvz one), but probably due to the lack of real server load it's hard, and so
-far the freezes were total. I am about to create a crashdump kernel, maybe I
-can catch a glimpse of what happens. Stand by...
-
-By the way I have some weird "RISC paused / firmware dumped" case on the live
-machine, where it happens right after reboot, the system goes on just fine but
-it shouldn't happen anyway I guess. I'll send the dumps by email.
-
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 2b24ae5..92f3ad8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2861,9 +2861,6 @@ static void mv_port_init(struct ata_ioports *port,  void __iomem *port_mmio)
+ 	/* special case: control/altstatus doesn't have ATA_REG_ address */
+ 	port->altstatus_addr = port->ctl_addr = shd_base + SHD_CTL_AST_OFS;
+ 
+-	/* unused: */
+-	port->cmd_addr = port->bmdma_addr = port->scr_addr = NULL;
+-
+ 	/* Clear any currently outstanding port interrupt conditions */
+ 	serr_ofs = mv_scr_offset(SCR_ERROR);
+ 	writelfl(readl(port_mmio + serr_ofs), port_mmio + serr_ofs);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.4.5
+
