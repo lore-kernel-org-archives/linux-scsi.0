@@ -1,770 +1,988 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 10/22] libata-sff: clean up BMDMA initialization
-Date: Tue, 21 Oct 2008 18:17:48 +0900
-Message-ID: <1224580680-13698-11-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/22] libata: kill ATA_FLAG_DISABLED
+Date: Tue, 21 Oct 2008 18:17:44 +0900
+Message-ID: <1224580680-13698-7-git-send-email-tj@kernel.org>
 References: <1224580680-13698-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46063 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752130AbYJUJU4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Oct 2008 05:20:56 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-When BMDMA initialization failed or BMDMA was not available for
-whatever reason, bmdma_addr was left at zero and used as indication
-that BMDMA shouldn't be used.  This leads to the following problems.
+ATA_FLAG_DISABLED is only used by drivers which don't use
+->error_handler framework and is largely broken.  Its only meaningful
+function is to make irq handlers skip processing if the flag is set,
+which is largely useless and even harmful as it makes those ports more
+likely to cause IRQ storms.
 
-p1. For BMDMA drivers which don't use traditional BMDMA register,
-    ata_bmdma_mode_filter() incorrectly inhibits DMA modes.  Those
-    drivers either have to inherit from ata_sff_port_ops or clear
-    ->mode_filter explicitly.
+Kill ATA_FLAG_DISABLED and makes the callers disable attached devices
+instead.  ata_port_probe() and ata_port_disable() which manipulate the
+flag are also killed.
 
-p2. non-BMDMA drivers call into BMDMA PRD table allocation.  It
-    doesn't actually allocate PRD table if bmdma_addr is not
-    initialized but is still confusing.
-
-p3. For BMDMA drivers which don't use traditional BMDMA register, some
-    methods might not be invoked as expected (e.g. bmdma_stop from
-    ata_sff_post_internal_cmd()).
-
-p4. SFF drivers w/ custom DMA interface implement noop BMDMA ops
-    worrying libata core might call into one of them.
-
-These problems are caused by the muddy line between SFF and BMDMA and
-the assumption that all BMDMA controllers initialize bmdma_addr.
-
-This patch fixes #1 and #2 by removing the bmdma_addr assumption and
-moving prd allocation to BMDMA port start.  Following patches will fix
-the remaining issues.
-
-This patch improves BMDMA initialization such that
-
-* When BMDMA register initialization fails, falls back to PIO instead
-  of failing.  ata_pci_bmdma_init() never fails now.
-
-* When ata_pci_bmdma_init() falls back to PIO, it clears
-  ap->mwdma_mask and udma_mask instead of depending on
-  ata_bmdma_mode_filter().  This makes ata_bmdma_mode_filter()
-  unnecessary and p1 is removed.
-
-* ata_port_start() which actually is BMDMA specific is moved to
-  ata_bmdma_port_start().  ata_port_start() and ata_sff_port_start()
-  are killed.
-
-Drivers which no longer calls into PRD table allocation are...
-
-  pdc_adma, sata_inic162x, sata_qstor, sata_sx4, pata_cmd640 and all
-  drivers which inherit from ata_sff_port_ops.
-
-pata_icside sets ->port_start to ATA_OP_NULL as it doesn't need PRD
-but is a BMDMA controller and doesn't have custom port_start like
-other such controllers.
-
-Note that with the previous patch which makes all and only BMDMA
-drivers inherit from ata_bmdma_port_ops, this change doesn't break
-drivers which need PRD table.
+This simplifies condition check in IRQ handlers.  While updating IRQ
+handlers, remove ap NULL check as libata guarantees consecutive port
+allocation (unoccupied ports are initialized with dummies) and
+long-obsolete ATA_QCFLAG_ACTIVE check (checked by ata_qc_from_tag()).
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-core.c       |   25 --------
- drivers/ata/libata-sff.c        |  122 +++++++++++++++++++--------------------
- drivers/ata/pata_acpi.c         |    4 +-
- drivers/ata/pata_ali.c          |    2 +-
- drivers/ata/pata_bf54x.c        |    2 -
- drivers/ata/pata_cmd640.c       |    6 +--
- drivers/ata/pata_hpt366.c       |    2 +-
- drivers/ata/pata_hpt37x.c       |    4 +-
- drivers/ata/pata_icside.c       |    2 +-
- drivers/ata/pata_it821x.c       |    2 +-
- drivers/ata/pata_pdc2027x.c     |    4 +-
- drivers/ata/pata_pdc202xx_old.c |    2 +-
- drivers/ata/pata_platform.c     |    1 -
- drivers/ata/pata_scc.c          |    6 +-
- drivers/ata/pata_serverworks.c  |    6 +-
- drivers/ata/pdc_adma.c          |    4 -
- drivers/ata/sata_inic162x.c     |    5 --
- drivers/ata/sata_nv.c           |    6 +-
- drivers/ata/sata_promise.c      |    3 +-
- drivers/ata/sata_qstor.c        |    4 -
- drivers/ata/sata_sx4.c          |    5 --
- drivers/ata/sata_uli.c          |    4 +-
- include/linux/libata.h          |    7 +--
- 23 files changed, 87 insertions(+), 141 deletions(-)
+ drivers/ata/libata-core.c           |   66 +----------
+ drivers/ata/libata-scsi.c           |    3 -
+ drivers/ata/libata-sff.c            |   24 ++---
+ drivers/ata/pata_bf54x.c            |   16 +--
+ drivers/ata/pdc_adma.c              |   66 +++++------
+ drivers/ata/sata_inic162x.c         |   17 +--
+ drivers/ata/sata_mv.c               |    8 +-
+ drivers/ata/sata_nv.c               |  234 +++++++++++++++++------------------
+ drivers/ata/sata_promise.c          |    6 +-
+ drivers/ata/sata_qstor.c            |   79 ++++++------
+ drivers/ata/sata_sil.c              |    3 -
+ drivers/ata/sata_sil24.c            |    9 +-
+ drivers/ata/sata_sx4.c              |    4 +-
+ drivers/ata/sata_vsc.c              |   10 +--
+ drivers/scsi/ipr.c                  |    7 +-
+ drivers/scsi/libsas/sas_scsi_host.c |    2 +-
+ include/linux/libata.h              |    8 --
+ 17 files changed, 207 insertions(+), 355 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 231e967..05e31c2 100644
+index bbb3cae..231e967 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5148,30 +5148,6 @@ void ata_host_resume(struct ata_host *host)
- #endif
+@@ -1821,22 +1821,6 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	ap->qc_active = preempted_qc_active;
+ 	ap->nr_active_links = preempted_nr_active_links;
+ 
+-	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
+-	 * Until those drivers are fixed, we detect the condition
+-	 * here, fail the command with AC_ERR_SYSTEM and reenable the
+-	 * port.
+-	 *
+-	 * Note that this doesn't change any behavior as internal
+-	 * command failure results in disabling the device in the
+-	 * higher layer for LLDDs without new reset/EH callbacks.
+-	 *
+-	 * Kill the following code as soon as those drivers are fixed.
+-	 */
+-	if (ap->flags & ATA_FLAG_DISABLED) {
+-		err_mask |= AC_ERR_SYSTEM;
+-		ata_port_probe(ap);
+-	}
+-
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	if ((err_mask & AC_ERR_TIMEOUT) && auto_timeout)
+@@ -2582,8 +2566,6 @@ int ata_bus_probe(struct ata_port *ap)
+ 	int rc;
+ 	struct ata_device *dev;
+ 
+-	ata_port_probe(ap);
+-
+ 	ata_link_for_each_dev(dev, &ap->link)
+ 		tries[dev->devno] = ATA_PROBE_MAX_TRIES;
+ 
+@@ -2611,8 +2593,7 @@ int ata_bus_probe(struct ata_port *ap)
+ 	ap->ops->phy_reset(ap);
+ 
+ 	ata_link_for_each_dev(dev, &ap->link) {
+-		if (!(ap->flags & ATA_FLAG_DISABLED) &&
+-		    dev->class != ATA_DEV_UNKNOWN)
++		if (dev->class != ATA_DEV_UNKNOWN)
+ 			classes[dev->devno] = dev->class;
+ 		else
+ 			classes[dev->devno] = ATA_DEV_NONE;
+@@ -2620,8 +2601,6 @@ int ata_bus_probe(struct ata_port *ap)
+ 		dev->class = ATA_DEV_UNKNOWN;
+ 	}
+ 
+-	ata_port_probe(ap);
+-
+ 	/* read IDENTIFY page and configure devices. We have to do the identify
+ 	   specific sequence bass-ackwards so that PDIAG- is released by
+ 	   the slave device */
+@@ -2677,8 +2656,6 @@ int ata_bus_probe(struct ata_port *ap)
+ 		if (ata_dev_enabled(dev))
+ 			return 0;
+ 
+-	/* no device present, disable port */
+-	ata_port_disable(ap);
+ 	return -ENODEV;
+ 
+  fail:
+@@ -2710,22 +2687,6 @@ int ata_bus_probe(struct ata_port *ap)
+ }
  
  /**
-- *	ata_port_start - Set port up for dma.
-- *	@ap: Port to initialize
+- *	ata_port_probe - Mark port as enabled
+- *	@ap: Port for which we indicate enablement
 - *
-- *	Called just after data structures for each port are
-- *	initialized.  Allocates space for PRD table.
+- *	Modify @ap data structure such that the system
+- *	thinks that the entire port is enabled.
 - *
-- *	May be used as the port_start() entry in ata_port_operations.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
+- *	LOCKING: host lock, or some other form of
+- *	serialization.
 - */
--int ata_port_start(struct ata_port *ap)
+-
+-void ata_port_probe(struct ata_port *ap)
 -{
--	struct device *dev = ap->dev;
--
--	ap->prd = dmam_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma,
--				      GFP_KERNEL);
--	if (!ap->prd)
--		return -ENOMEM;
--
--	return 0;
+-	ap->flags &= ~ATA_FLAG_DISABLED;
 -}
 -
 -/**
-  *	ata_dev_init - Initialize an ata_device structure
-  *	@dev: Device structure to initialize
+  *	sata_print_link_status - Print SATA link status
+  *	@link: SATA link to printk link status about
   *
-@@ -6403,7 +6379,6 @@ EXPORT_SYMBOL_GPL(ata_xfer_mode2mask);
- EXPORT_SYMBOL_GPL(ata_xfer_mode2shift);
- EXPORT_SYMBOL_GPL(ata_mode_string);
- EXPORT_SYMBOL_GPL(ata_id_xfermask);
--EXPORT_SYMBOL_GPL(ata_port_start);
+@@ -2772,26 +2733,6 @@ struct ata_device *ata_dev_pair(struct ata_device *adev)
+ }
+ 
+ /**
+- *	ata_port_disable - Disable port.
+- *	@ap: Port to be disabled.
+- *
+- *	Modify @ap data structure such that the system
+- *	thinks that the entire port is disabled, and should
+- *	never attempt to probe or communicate with devices
+- *	on this port.
+- *
+- *	LOCKING: host lock, or some other form of
+- *	serialization.
+- */
+-
+-void ata_port_disable(struct ata_port *ap)
+-{
+-	ap->link.device[0].class = ATA_DEV_NONE;
+-	ap->link.device[1].class = ATA_DEV_NONE;
+-	ap->flags |= ATA_FLAG_DISABLED;
+-}
+-
+-/**
+  *	sata_down_spd_limit - adjust SATA spd limit downward
+  *	@link: Link to adjust SATA spd limit for
+  *
+@@ -5355,7 +5296,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 
+ 	ap->pflags |= ATA_PFLAG_INITIALIZING;
+ 	ap->lock = &host->lock;
+-	ap->flags = ATA_FLAG_DISABLED;
+ 	ap->print_id = -1;
+ 	ap->ctl = ATA_DEVCTL_OBS;
+ 	ap->host = host;
+@@ -5848,8 +5788,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			struct ata_eh_info *ehi = &ap->link.eh_info;
+ 			unsigned long flags;
+ 
+-			ata_port_probe(ap);
+-
+ 			/* kick EH for boot probing */
+ 			spin_lock_irqsave(ap->lock, flags);
+ 
+@@ -6469,7 +6407,6 @@ EXPORT_SYMBOL_GPL(ata_port_start);
  EXPORT_SYMBOL_GPL(ata_do_set_mode);
  EXPORT_SYMBOL_GPL(ata_std_qc_defer);
  EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
+-EXPORT_SYMBOL_GPL(ata_port_probe);
+ EXPORT_SYMBOL_GPL(ata_dev_disable);
+ EXPORT_SYMBOL_GPL(sata_set_spd);
+ EXPORT_SYMBOL_GPL(ata_wait_after_reset);
+@@ -6481,7 +6418,6 @@ EXPORT_SYMBOL_GPL(sata_std_hardreset);
+ EXPORT_SYMBOL_GPL(ata_std_postreset);
+ EXPORT_SYMBOL_GPL(ata_dev_classify);
+ EXPORT_SYMBOL_GPL(ata_dev_pair);
+-EXPORT_SYMBOL_GPL(ata_port_disable);
+ EXPORT_SYMBOL_GPL(ata_ratelimit);
+ EXPORT_SYMBOL_GPL(ata_wait_register);
+ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 5d312dc..fd77fcd 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3224,9 +3224,6 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 
+-	if (ap->flags & ATA_FLAG_DISABLED)
+-		return;
+-
+  repeat:
+ 	ata_port_for_each_link(link, ap) {
+ 		ata_link_for_each_dev(dev, link) {
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 2c5ebd1..0e4814b 100644
+index edcd72c..dbb8695 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -63,8 +63,6 @@ const struct ata_port_operations ata_sff_port_ops = {
- 	.sff_data_xfer		= ata_sff_data_xfer,
- 	.sff_irq_on		= ata_sff_irq_on,
- 	.sff_irq_clear		= ata_sff_irq_clear,
+@@ -1640,18 +1640,12 @@ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+ 	spin_lock_irqsave(&host->lock, flags);
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap;
 -
--	.port_start		= ata_sff_port_start,
- };
+-		ap = host->ports[i];
+-		if (ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
+-			struct ata_queued_cmd *qc;
++		struct ata_port *ap = host->ports[i];
++		struct ata_queued_cmd *qc;
  
- /**
-@@ -2152,26 +2150,6 @@ void ata_sff_post_internal_cmd(struct ata_queued_cmd *qc)
- }
- 
- /**
-- *	ata_sff_port_start - Set port up for dma.
-- *	@ap: Port to initialize
-- *
-- *	Called just after data structures for each port are
-- *	initialized.  Allocates space for PRD table if the device
-- *	is DMA capable SFF.
-- *
-- *	May be used as the port_start() entry in ata_port_operations.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--int ata_sff_port_start(struct ata_port *ap)
--{
--	if (ap->ioaddr.bmdma_addr)
--		return ata_port_start(ap);
--	return 0;
--}
--
--/**
-  *	ata_sff_std_ports - initialize ioaddr with standard port offsets.
-  *	@ioaddr: IO address structure to be initialized
-  *
-@@ -2328,21 +2306,12 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
- 		goto err_out;
- 
- 	/* init DMA related stuff */
--	rc = ata_pci_bmdma_init(host);
--	if (rc)
--		goto err_bmdma;
-+	ata_pci_bmdma_init(host);
- 
- 	devres_remove_group(&pdev->dev, NULL);
- 	*r_host = host;
- 	return 0;
- 
-- err_bmdma:
--	/* This is necessary because PCI and iomap resources are
--	 * merged and releasing the top group won't release the
--	 * acquired resources if some of those have been acquired
--	 * before entering this function.
--	 */
--	pcim_iounmap_regions(pdev, 0xf);
-  err_out:
- 	devres_release_group(&pdev->dev, NULL);
- 	return rc;
-@@ -2610,24 +2579,13 @@ err_out:
- const struct ata_port_operations ata_bmdma_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
- 
--	.mode_filter		= ata_bmdma_mode_filter,
--
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
--};
- 
--unsigned long ata_bmdma_mode_filter(struct ata_device *adev,
--				    unsigned long xfer_mask)
--{
--	/* Filter out DMA modes if the device has been configured by
--	   the BIOS as PIO only */
--
--	if (adev->link->ap->ioaddr.bmdma_addr == NULL)
--		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
--	return xfer_mask;
--}
-+	.port_start		= ata_bmdma_port_start,
-+};
- 
- /**
-  *	ata_bmdma_setup - Set up PCI IDE BMDMA transaction
-@@ -2729,6 +2687,30 @@ u8 ata_bmdma_status(struct ata_port *ap)
- 	return ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
- }
- 
-+/**
-+ *	ata_bmdma_port_start - Set port up for bmdma.
-+ *	@ap: Port to initialize
-+ *
-+ *	Called just after data structures for each port are
-+ *	initialized.  Allocates space for PRD table.
-+ *
-+ *	May be used as the port_start() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+int ata_bmdma_port_start(struct ata_port *ap)
-+{
-+	if (ap->mwdma_mask || ap->udma_mask) {
-+		ap->prd = dmam_alloc_coherent(ap->host->dev, ATA_PRD_TBL_SZ,
-+					      &ap->prd_dma, GFP_KERNEL);
-+		if (!ap->prd)
-+			return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_PCI
- 
- /**
-@@ -2756,6 +2738,19 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
- 	return 0;
- }
- 
-+static void ata_bmdma_nodma(struct ata_host *host, const char *reason)
-+{
-+	int i;
-+
-+	dev_printk(KERN_ERR, host->dev, "BMDMA: %s, falling back to PIO\n",
-+		   reason);
-+
-+	for (i = 0; i < 2; i++) {
-+		host->ports[i]->mwdma_mask = 0;
-+		host->ports[i]->udma_mask = 0;
-+	}
-+}
-+
- /**
-  *	ata_pci_bmdma_init - acquire PCI BMDMA resources and init ATA host
-  *	@host: target ATA host
-@@ -2764,33 +2759,39 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
-  *
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-- *
-- *	RETURNS:
-- *	0 on success, -errno otherwise.
-  */
--int ata_pci_bmdma_init(struct ata_host *host)
-+void ata_pci_bmdma_init(struct ata_host *host)
- {
- 	struct device *gdev = host->dev;
- 	struct pci_dev *pdev = to_pci_dev(gdev);
- 	int i, rc;
- 
- 	/* No BAR4 allocation: No DMA */
--	if (pci_resource_start(pdev, 4) == 0)
--		return 0;
-+	if (pci_resource_start(pdev, 4) == 0) {
-+		ata_bmdma_nodma(host, "BAR4 is zero");
-+		return;
-+	}
- 
--	/* TODO: If we get no DMA mask we should fall back to PIO */
-+	/* Some controllers require BMDMA region to be initialized
-+	 * even if DMA is not in use to clear IRQ status via
-+	 * ->sff_irq_clear method.  Try to initialize bmdma_addr
-+	 * regardless of dma masks.
-+	 */
- 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
- 	if (rc)
--		return rc;
--	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
--	if (rc)
--		return rc;
-+		ata_bmdma_nodma(host, "failed to set dma mask");
-+	if (!rc) {
-+		rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
-+		if (rc)
-+			ata_bmdma_nodma(host,
-+					"failed to set consistent dma mask");
-+	}
- 
- 	/* request and iomap DMA region */
- 	rc = pcim_iomap_regions(pdev, 1 << 4, dev_driver_string(gdev));
- 	if (rc) {
--		dev_printk(KERN_ERR, gdev, "failed to request/iomap BAR4\n");
--		return -ENOMEM;
-+		ata_bmdma_nodma(host, "failed to request/iomap BAR4");
-+		return;
+-			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
+-			    (qc->flags & ATA_QCFLAG_ACTIVE))
+-				handled |= ata_sff_host_intr(ap, qc);
+-		}
++		qc = ata_qc_from_tag(ap, ap->link.active_tag);
++		if (qc && !(qc->tf.flags & ATA_TFLAG_POLLING))
++			handled |= ata_sff_host_intr(ap, qc);
  	}
- 	host->iomap = pcim_iomap_table(pdev);
  
-@@ -2809,8 +2810,6 @@ int ata_pci_bmdma_init(struct ata_host *host)
- 		ata_port_desc(ap, "bmdma 0x%llx",
- 			(unsigned long long)pci_resource_start(pdev, 4) + 8 * i);
- 	}
--
--	return 0;
+ 	spin_unlock_irqrestore(&host->lock, flags);
+@@ -2340,9 +2334,6 @@ u8 ata_bmdma_status(struct ata_port *ap)
+  *	PCI/etc. bus probe sem.
+  *	Obtains host lock.
+  *
+- *	SIDE EFFECTS:
+- *	Sets ATA_FLAG_DISABLED if bus reset fails.
+- *
+  *	DEPRECATED:
+  *	This function is only for drivers which still use old EH and
+  *	will be removed soon.
+@@ -2410,8 +2401,9 @@ void ata_bus_reset(struct ata_port *ap)
+ 	return;
+ 
+ err_out:
+-	ata_port_printk(ap, KERN_ERR, "disabling port\n");
+-	ata_port_disable(ap);
++	device[0].class = ATA_DEV_NONE;
++	device[1].class = ATA_DEV_NONE;
++	ata_port_printk(ap, KERN_ERR, "giving up port\n");
+ 
+ 	DPRINTK("EXIT\n");
  }
- 
- #endif /* CONFIG_PCI */
-@@ -2846,7 +2845,6 @@ EXPORT_SYMBOL_GPL(sata_sff_hardreset);
- EXPORT_SYMBOL_GPL(ata_sff_postreset);
- EXPORT_SYMBOL_GPL(ata_sff_error_handler);
- EXPORT_SYMBOL_GPL(ata_sff_post_internal_cmd);
--EXPORT_SYMBOL_GPL(ata_sff_port_start);
- EXPORT_SYMBOL_GPL(ata_sff_std_ports);
- #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(ata_pci_sff_init_host);
-@@ -2856,11 +2854,11 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
- #endif /* CONFIG_PCI */
- EXPORT_SYMBOL_GPL(ata_bus_reset);
- EXPORT_SYMBOL_GPL(ata_bmdma_port_ops);
--EXPORT_SYMBOL_GPL(ata_bmdma_mode_filter);
- EXPORT_SYMBOL_GPL(ata_bmdma_setup);
- EXPORT_SYMBOL_GPL(ata_bmdma_start);
- EXPORT_SYMBOL_GPL(ata_bmdma_stop);
- EXPORT_SYMBOL_GPL(ata_bmdma_status);
-+EXPORT_SYMBOL_GPL(ata_bmdma_port_start);
- #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
-diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index eb919c1..d701e28 100644
---- a/drivers/ata/pata_acpi.c
-+++ b/drivers/ata/pata_acpi.c
-@@ -106,7 +106,7 @@ static unsigned long pacpi_discover_modes(struct ata_port *ap, struct ata_device
- static unsigned long pacpi_mode_filter(struct ata_device *adev, unsigned long mask)
- {
- 	struct pata_acpi *acpi = adev->link->ap->private_data;
--	return ata_bmdma_mode_filter(adev, mask & acpi->mask[adev->devno]);
-+	return mask & acpi->mask[adev->devno];
- }
- 
- /**
-@@ -210,7 +210,7 @@ static int pacpi_port_start(struct ata_port *ap)
- 		return -ENOMEM;
- 	acpi->mask[0] = pacpi_discover_modes(ap, &ap->link.device[0]);
- 	acpi->mask[1] = pacpi_discover_modes(ap, &ap->link.device[1]);
--	ret = ata_sff_port_start(ap);
-+	ret = ata_bmdma_port_start(ap);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 5ca70fa..171a49e 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -121,7 +121,7 @@ static unsigned long ali_20_filter(struct ata_device *adev, unsigned long mask)
- 	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
- 	if (strstr(model_num, "WDC"))
- 		return mask &= ~ATA_MASK_UDMA;
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
 diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 27cd40a..de3e45f 100644
+index 1266924..b833328 100644
 --- a/drivers/ata/pata_bf54x.c
 +++ b/drivers/ata/pata_bf54x.c
-@@ -1490,8 +1490,6 @@ static struct ata_port_operations bfin_pata_ops = {
+@@ -1439,18 +1439,12 @@ static irqreturn_t bfin_ata_interrupt(int irq, void *dev_instance)
+ 	spin_lock_irqsave(&host->lock, flags);
  
- 	.port_start		= bfin_port_start,
- 	.port_stop		= bfin_port_stop,
+ 	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap;
++		struct ata_port *ap = host->ports[i];
++		struct ata_queued_cmd *qc;
+ 
+-		ap = host->ports[i];
+-		if (ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
+-			struct ata_queued_cmd *qc;
 -
--	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
- };
- 
- static struct ata_port_info bfin_port_info[] = {
-diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
-index 4b2612b..32f0602 100644
---- a/drivers/ata/pata_cmd640.c
-+++ b/drivers/ata/pata_cmd640.c
-@@ -153,16 +153,12 @@ static int cmd640_port_start(struct ata_port *ap)
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	struct cmd640_reg *timing;
- 
--	int ret = ata_sff_port_start(ap);
--	if (ret < 0)
--		return ret;
--
- 	timing = devm_kzalloc(&pdev->dev, sizeof(struct cmd640_reg), GFP_KERNEL);
- 	if (timing == NULL)
- 		return -ENOMEM;
- 	timing->last = -1;	/* Force a load */
- 	ap->private_data = timing;
--	return ret;
-+	return 0;
- }
- 
- static struct scsi_host_template cmd640_sht = {
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index f2b83ea..d7b0bc5 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -184,7 +184,7 @@ static unsigned long hpt366_filter(struct ata_device *adev, unsigned long mask)
- 		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
- 			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
+-			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
+-			    (qc->flags & ATA_QCFLAG_ACTIVE))
+-				handled |= bfin_ata_host_intr(ap, qc);
+-		}
++		qc = ata_qc_from_tag(ap, ap->link.active_tag);
++		if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
++			handled |= bfin_ata_host_intr(ap, qc);
  	}
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
  
- /**
-diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 4216399..b380d57 100644
---- a/drivers/ata/pata_hpt37x.c
-+++ b/drivers/ata/pata_hpt37x.c
-@@ -283,7 +283,7 @@ static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
- 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
- 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
- 	}
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
-@@ -299,7 +299,7 @@ static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
- 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
- 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
- 	}
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index f2623c6..4485e86 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -347,7 +347,7 @@ static struct ata_port_operations pata_icside_port_ops = {
- 	.postreset		= pata_icside_postreset,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
- 
--	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
-+	.port_start		= ATA_OP_NULL,	/* don't need PRD table */
- };
- 
- static void __devinit
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 0221c9a..27c5968 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -740,7 +740,7 @@ static int it821x_port_start(struct ata_port *ap)
- 	struct it821x_dev *itdev;
- 	u8 conf;
- 
--	int ret = ata_sff_port_start(ap);
-+	int ret = ata_bmdma_port_start(ap);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index 0e1c2c1..dfecd1a 100644
---- a/drivers/ata/pata_pdc2027x.c
-+++ b/drivers/ata/pata_pdc2027x.c
-@@ -265,7 +265,7 @@ static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long
- 	struct ata_device *pair = ata_dev_pair(adev);
- 
- 	if (adev->class != ATA_DEV_ATA || adev->devno == 0 || pair == NULL)
--		return ata_bmdma_mode_filter(adev, mask);
-+		return mask;
- 
- 	/* Check for slave of a Maxtor at UDMA6 */
- 	ata_id_c_string(pair->id, model_num, ATA_ID_PROD,
-@@ -274,7 +274,7 @@ static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long
- 	if (strstr(model_num, "Maxtor") == NULL && pair->dma_mode == XFER_UDMA_6)
- 		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
- 
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index d267306..b452e4a 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -240,7 +240,7 @@ static int pdc2026x_port_start(struct ata_port *ap)
- 		u8 burst = ioread8(bmdma + 0x1f);
- 		iowrite8(burst | 0x01, bmdma + 0x1f);
- 	}
--	return ata_sff_port_start(ap);
-+	return ata_bmdma_port_start(ap);
- }
- 
- /**
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 8f65ad6..ddf315a 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -55,7 +55,6 @@ static struct ata_port_operations pata_platform_port_ops = {
- 	.sff_data_xfer		= ata_sff_data_xfer_noirq,
- 	.cable_detect		= ata_cable_unknown,
- 	.set_mode		= pata_platform_set_mode,
--	.port_start		= ATA_OP_NULL,
- };
- 
- static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 16673d1..12b9f43 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -266,7 +266,7 @@ unsigned long scc_mode_filter(struct ata_device *adev, unsigned long mask)
- 		printk(KERN_INFO "%s: limit ATAPI UDMA to UDMA4\n", DRV_NAME);
- 		mask &= ~(0xE0 << ATA_SHIFT_UDMA);
- 	}
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
-@@ -931,7 +931,7 @@ static void scc_irq_clear (struct ata_port *ap)
-  *	scc_port_start - Set port up for dma.
-  *	@ap: Port to initialize
-  *
-- *	Allocate space for PRD table using ata_port_start().
-+ *	Allocate space for PRD table using ata_bmdma_port_start().
-  *	Set PRD table address for PTERADD. (PRD Transfer End Read)
-  */
- 
-@@ -940,7 +940,7 @@ static int scc_port_start (struct ata_port *ap)
- 	void __iomem *mmio = ap->ioaddr.bmdma_addr;
- 	int rc;
- 
--	rc = ata_port_start(ap);
-+	rc = ata_bmdma_port_start(ap);
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index ffd26d0..d1be370 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -199,7 +199,7 @@ static unsigned long serverworks_osb4_filter(struct ata_device *adev, unsigned l
- {
- 	if (adev->class == ATA_DEV_ATA)
- 		mask &= ~ATA_MASK_UDMA;
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- 
-@@ -219,7 +219,7 @@ static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned lo
- 
- 	/* Disk, UDMA */
- 	if (adev->class != ATA_DEV_ATA)
--		return ata_bmdma_mode_filter(adev, mask);
-+		return mask;
- 
- 	/* Actually do need to check */
- 	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
-@@ -228,7 +228,7 @@ static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned lo
- 		if (!strcmp(p, model_num))
- 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
- 	}
--	return ata_bmdma_mode_filter(adev, mask);
-+	return mask;
- }
- 
- /**
+ 	spin_unlock_irqrestore(&host->lock, flags);
 diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index b8cc349..943f204 100644
+index be53545..b8cc349 100644
 --- a/drivers/ata/pdc_adma.c
 +++ b/drivers/ata/pdc_adma.c
-@@ -553,11 +553,7 @@ static int adma_port_start(struct ata_port *ap)
- {
- 	struct device *dev = ap->host->dev;
- 	struct adma_port_priv *pp;
--	int rc;
+@@ -439,8 +439,6 @@ static inline unsigned int adma_intr_pkt(struct ata_host *host)
+ 			continue;
+ 		handled = 1;
+ 		adma_enter_reg_mode(ap);
+-		if (ap->flags & ATA_FLAG_DISABLED)
+-			continue;
+ 		pp = ap->private_data;
+ 		if (!pp || pp->state != adma_state_pkt)
+ 			continue;
+@@ -481,42 +479,38 @@ static inline unsigned int adma_intr_mmio(struct ata_host *host)
+ 	unsigned int handled = 0, port_no;
  
--	rc = ata_port_start(ap);
--	if (rc)
--		return rc;
- 	adma_enter_reg_mode(ap);
- 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
- 	if (!pp)
+ 	for (port_no = 0; port_no < host->n_ports; ++port_no) {
+-		struct ata_port *ap;
+-		ap = host->ports[port_no];
+-		if (ap && (!(ap->flags & ATA_FLAG_DISABLED))) {
+-			struct ata_queued_cmd *qc;
+-			struct adma_port_priv *pp = ap->private_data;
+-			if (!pp || pp->state != adma_state_mmio)
++		struct ata_port *ap = host->ports[port_no];
++		struct adma_port_priv *pp = ap->private_data;
++		struct ata_queued_cmd *qc;
++
++		if (!pp || pp->state != adma_state_mmio)
++			continue;
++		qc = ata_qc_from_tag(ap, ap->link.active_tag);
++		if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
++
++			/* check main status, clearing INTRQ */
++			u8 status = ata_sff_check_status(ap);
++			if ((status & ATA_BUSY))
+ 				continue;
+-			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
+-
+-				/* check main status, clearing INTRQ */
+-				u8 status = ata_sff_check_status(ap);
+-				if ((status & ATA_BUSY))
+-					continue;
+-				DPRINTK("ata%u: protocol %d (dev_stat 0x%X)\n",
+-					ap->print_id, qc->tf.protocol, status);
+-
+-				/* complete taskfile transaction */
+-				pp->state = adma_state_idle;
+-				qc->err_mask |= ac_err_mask(status);
+-				if (!qc->err_mask)
+-					ata_qc_complete(qc);
+-				else {
+-					struct ata_eh_info *ehi =
+-						&ap->link.eh_info;
+-					ata_ehi_clear_desc(ehi);
+-					ata_ehi_push_desc(ehi,
+-						"status 0x%02X", status);
+-
+-					if (qc->err_mask == AC_ERR_DEV)
+-						ata_port_abort(ap);
+-					else
+-						ata_port_freeze(ap);
+-				}
+-				handled = 1;
++			DPRINTK("ata%u: protocol %d (dev_stat 0x%X)\n",
++				ap->print_id, qc->tf.protocol, status);
++
++			/* complete taskfile transaction */
++			pp->state = adma_state_idle;
++			qc->err_mask |= ac_err_mask(status);
++			if (!qc->err_mask)
++				ata_qc_complete(qc);
++			else {
++				struct ata_eh_info *ehi = &ap->link.eh_info;
++				ata_ehi_clear_desc(ehi);
++				ata_ehi_push_desc(ehi, "status 0x%02X", status);
++
++				if (qc->err_mask == AC_ERR_DEV)
++					ata_port_abort(ap);
++				else
++					ata_port_freeze(ap);
+ 			}
++			handled = 1;
+ 		}
+ 	}
+ 	return handled;
 diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index e87349d..eabf7dd 100644
+index fbbd87c..9dd7559 100644
 --- a/drivers/ata/sata_inic162x.c
 +++ b/drivers/ata/sata_inic162x.c
-@@ -681,7 +681,6 @@ static int inic_port_start(struct ata_port *ap)
- {
- 	struct device *dev = ap->host->dev;
- 	struct inic_port_priv *pp;
--	int rc;
+@@ -414,22 +414,11 @@ static irqreturn_t inic_interrupt(int irq, void *dev_instance)
  
- 	/* alloc and initialize private data */
- 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
-@@ -690,10 +689,6 @@ static int inic_port_start(struct ata_port *ap)
- 	ap->private_data = pp;
+ 	spin_lock(&host->lock);
  
- 	/* Alloc resources */
--	rc = ata_port_start(ap);
--	if (rc)
--		return rc;
+-	for (i = 0; i < NR_PORTS; i++) {
+-		struct ata_port *ap = host->ports[i];
 -
- 	pp->pkt = dmam_alloc_coherent(dev, sizeof(struct inic_pkt),
- 				      &pp->pkt_dma, GFP_KERNEL);
- 	if (!pp->pkt)
+-		if (!(host_irq_stat & (HIRQ_PORT0 << i)))
+-			continue;
+-
+-		if (likely(ap && !(ap->flags & ATA_FLAG_DISABLED))) {
+-			inic_host_intr(ap);
++	for (i = 0; i < NR_PORTS; i++)
++		if (host_irq_stat & (HIRQ_PORT0 << i)) {
++			inic_host_intr(host->ports[i]);
+ 			handled++;
+-		} else {
+-			if (ata_ratelimit())
+-				dev_printk(KERN_ERR, host->dev, "interrupt "
+-					   "from disabled port %d (0x%x)\n",
+-					   i, host_irq_stat);
+ 		}
+-	}
+ 
+ 	spin_unlock(&host->lock);
+ 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 92f3ad8..13368cb 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -1818,9 +1818,7 @@ static void mv_unexpected_intr(struct ata_port *ap, int edma_was_enabled)
+ 	char *when = "idle";
+ 
+ 	ata_ehi_clear_desc(ehi);
+-	if (!ap || (ap->flags & ATA_FLAG_DISABLED)) {
+-		when = "disabled";
+-	} else if (edma_was_enabled) {
++	if (edma_was_enabled) {
+ 		when = "EDMA enabled";
+ 	} else {
+ 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->link.active_tag);
+@@ -2055,10 +2053,6 @@ static void mv_port_intr(struct ata_port *ap, u32 port_cause)
+ 	struct mv_port_priv *pp;
+ 	int edma_was_enabled;
+ 
+-	if (!ap || (ap->flags & ATA_FLAG_DISABLED)) {
+-		mv_unexpected_intr(ap, 0);
+-		return;
+-	}
+ 	/*
+ 	 * Grab a snapshot of the EDMA_EN flag setting,
+ 	 * so that we have a consistent view for this port,
 diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 521dcd3..1a9b8e6 100644
+index fae3841..521dcd3 100644
 --- a/drivers/ata/sata_nv.c
 +++ b/drivers/ata/sata_nv.c
-@@ -1101,7 +1101,8 @@ static int nv_adma_port_start(struct ata_port *ap)
- 	if (rc)
- 		return rc;
+@@ -879,107 +879,107 @@ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
  
--	rc = ata_port_start(ap);
-+	/* we might fallback to bmdma, allocate bmdma resources */
-+	rc = ata_bmdma_port_start(ap);
- 	if (rc)
- 		return rc;
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
++		struct nv_adma_port_priv *pp = ap->private_data;
++		void __iomem *mmio = pp->ctl_block;
++		u16 status;
++		u32 gen_ctl;
++		u32 notifier, notifier_error;
++
+ 		notifier_clears[i] = 0;
  
-@@ -1910,7 +1911,8 @@ static int nv_swncq_port_start(struct ata_port *ap)
- 	struct nv_swncq_port_priv *pp;
- 	int rc;
+-		if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-			struct nv_adma_port_priv *pp = ap->private_data;
+-			void __iomem *mmio = pp->ctl_block;
+-			u16 status;
+-			u32 gen_ctl;
+-			u32 notifier, notifier_error;
+-
+-			/* if ADMA is disabled, use standard ata interrupt handler */
+-			if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
+-				u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
+-					>> (NV_INT_PORT_SHIFT * i);
+-				handled += nv_host_intr(ap, irq_stat);
+-				continue;
+-			}
++		/* if ADMA is disabled, use standard ata interrupt handler */
++		if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
++			u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
++				>> (NV_INT_PORT_SHIFT * i);
++			handled += nv_host_intr(ap, irq_stat);
++			continue;
++		}
  
--	rc = ata_port_start(ap);
-+	/* we might fallback to bmdma, allocate bmdma resources */
-+	rc = ata_bmdma_port_start(ap);
- 	if (rc)
- 		return rc;
+-			/* if in ATA register mode, check for standard interrupts */
+-			if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
+-				u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
+-					>> (NV_INT_PORT_SHIFT * i);
+-				if (ata_tag_valid(ap->link.active_tag))
+-					/** NV_INT_DEV indication seems unreliable at times
+-					    at least in ADMA mode. Force it on always when a
+-					    command is active, to prevent losing interrupts. */
+-					irq_stat |= NV_INT_DEV;
+-				handled += nv_host_intr(ap, irq_stat);
+-			}
++		/* if in ATA register mode, check for standard interrupts */
++		if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
++			u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
++				>> (NV_INT_PORT_SHIFT * i);
++			if (ata_tag_valid(ap->link.active_tag))
++				/** NV_INT_DEV indication seems unreliable
++				    at times at least in ADMA mode. Force it
++				    on always when a command is active, to
++				    prevent losing interrupts. */
++				irq_stat |= NV_INT_DEV;
++			handled += nv_host_intr(ap, irq_stat);
++		}
++
++		notifier = readl(mmio + NV_ADMA_NOTIFIER);
++		notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
++		notifier_clears[i] = notifier | notifier_error;
++
++		gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
++
++		if (!NV_ADMA_CHECK_INTR(gen_ctl, ap->port_no) && !notifier &&
++		    !notifier_error)
++			/* Nothing to do */
++			continue;
++
++		status = readw(mmio + NV_ADMA_STAT);
++
++		/* Clear status. Ensure the controller sees the clearing
++		   before we start looking at any of the CPB statuses, so
++		   that any CPB completions after this point in the handler
++		   will raise another interrupt. */
++		writew(status, mmio + NV_ADMA_STAT);
++		readw(mmio + NV_ADMA_STAT); /* flush posted write */
++		rmb();
++
++		handled++; /* irq handled if we got here */
++
++		/* freeze if hotplugged or controller error */
++		if (unlikely(status & (NV_ADMA_STAT_HOTPLUG |
++				       NV_ADMA_STAT_HOTUNPLUG |
++				       NV_ADMA_STAT_TIMEOUT |
++				       NV_ADMA_STAT_SERROR))) {
++			struct ata_eh_info *ehi = &ap->link.eh_info;
  
+-			notifier = readl(mmio + NV_ADMA_NOTIFIER);
+-			notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
+-			notifier_clears[i] = notifier | notifier_error;
+-
+-			gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
+-
+-			if (!NV_ADMA_CHECK_INTR(gen_ctl, ap->port_no) && !notifier &&
+-			    !notifier_error)
+-				/* Nothing to do */
+-				continue;
+-
+-			status = readw(mmio + NV_ADMA_STAT);
+-
+-			/* Clear status. Ensure the controller sees the clearing before we start
+-			   looking at any of the CPB statuses, so that any CPB completions after
+-			   this point in the handler will raise another interrupt. */
+-			writew(status, mmio + NV_ADMA_STAT);
+-			readw(mmio + NV_ADMA_STAT); /* flush posted write */
+-			rmb();
+-
+-			handled++; /* irq handled if we got here */
+-
+-			/* freeze if hotplugged or controller error */
+-			if (unlikely(status & (NV_ADMA_STAT_HOTPLUG |
+-					       NV_ADMA_STAT_HOTUNPLUG |
+-					       NV_ADMA_STAT_TIMEOUT |
+-					       NV_ADMA_STAT_SERROR))) {
+-				struct ata_eh_info *ehi = &ap->link.eh_info;
+-
+-				ata_ehi_clear_desc(ehi);
+-				__ata_ehi_push_desc(ehi, "ADMA status 0x%08x: ", status);
+-				if (status & NV_ADMA_STAT_TIMEOUT) {
+-					ehi->err_mask |= AC_ERR_SYSTEM;
+-					ata_ehi_push_desc(ehi, "timeout");
+-				} else if (status & NV_ADMA_STAT_HOTPLUG) {
+-					ata_ehi_hotplugged(ehi);
+-					ata_ehi_push_desc(ehi, "hotplug");
+-				} else if (status & NV_ADMA_STAT_HOTUNPLUG) {
+-					ata_ehi_hotplugged(ehi);
+-					ata_ehi_push_desc(ehi, "hot unplug");
+-				} else if (status & NV_ADMA_STAT_SERROR) {
+-					/* let libata analyze SError and figure out the cause */
+-					ata_ehi_push_desc(ehi, "SError");
+-				} else
+-					ata_ehi_push_desc(ehi, "unknown");
+-				ata_port_freeze(ap);
+-				continue;
++			ata_ehi_clear_desc(ehi);
++			__ata_ehi_push_desc(ehi, "ADMA status 0x%08x: ", status);
++			if (status & NV_ADMA_STAT_TIMEOUT) {
++				ehi->err_mask |= AC_ERR_SYSTEM;
++				ata_ehi_push_desc(ehi, "timeout");
++			} else if (status & NV_ADMA_STAT_HOTPLUG) {
++				ata_ehi_hotplugged(ehi);
++				ata_ehi_push_desc(ehi, "hotplug");
++			} else if (status & NV_ADMA_STAT_HOTUNPLUG) {
++				ata_ehi_hotplugged(ehi);
++				ata_ehi_push_desc(ehi, "hot unplug");
++			} else if (status & NV_ADMA_STAT_SERROR) {
++				/* let libata analyze SError and figure out
++				   the cause */
++				ata_ehi_push_desc(ehi, "SError");
++			} else
++				ata_ehi_push_desc(ehi, "unknown");
++			ata_port_freeze(ap);
++			continue;
++		}
++
++		if (status & (NV_ADMA_STAT_DONE |
++			      NV_ADMA_STAT_CPBERR |
++			      NV_ADMA_STAT_CMD_COMPLETE)) {
++			u32 check_commands = notifier_clears[i];
++			int pos, error = 0;
++
++			if (status & NV_ADMA_STAT_CPBERR) {
++				/* Check all active commands */
++				if (ata_tag_valid(ap->link.active_tag))
++					check_commands = 1 <<
++						ap->link.active_tag;
++				else
++					check_commands = ap->link.sactive;
+ 			}
+ 
+-			if (status & (NV_ADMA_STAT_DONE |
+-				      NV_ADMA_STAT_CPBERR |
+-				      NV_ADMA_STAT_CMD_COMPLETE)) {
+-				u32 check_commands = notifier_clears[i];
+-				int pos, error = 0;
+-
+-				if (status & NV_ADMA_STAT_CPBERR) {
+-					/* Check all active commands */
+-					if (ata_tag_valid(ap->link.active_tag))
+-						check_commands = 1 <<
+-							ap->link.active_tag;
+-					else
+-						check_commands = ap->
+-							link.sactive;
+-				}
+-
+-				/** Check CPBs for completed commands */
+-				while ((pos = ffs(check_commands)) && !error) {
+-					pos--;
+-					error = nv_adma_check_cpb(ap, pos,
++			/** Check CPBs for completed commands */
++			while ((pos = ffs(check_commands)) && !error) {
++				pos--;
++				error = nv_adma_check_cpb(ap, pos,
+ 						notifier_error & (1 << pos));
+-					check_commands &= ~(1 << pos);
+-				}
++				check_commands &= ~(1 << pos);
+ 			}
+ 		}
+ 	}
+@@ -1444,22 +1444,16 @@ static irqreturn_t nv_generic_interrupt(int irq, void *dev_instance)
+ 	spin_lock_irqsave(&host->lock, flags);
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap;
+-
+-		ap = host->ports[i];
+-		if (ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
+-			struct ata_queued_cmd *qc;
+-
+-			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+-				handled += ata_sff_host_intr(ap, qc);
+-			else
+-				// No request pending?  Clear interrupt status
+-				// anyway, in case there's one pending.
+-				ap->ops->sff_check_status(ap);
+-		}
++		struct ata_port *ap = host->ports[i];
++		struct ata_queued_cmd *qc;
+ 
++		qc = ata_qc_from_tag(ap, ap->link.active_tag);
++		if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
++			handled += ata_sff_host_intr(ap, qc);
++		else
++			// No request pending?  Clear interrupt status
++			// anyway, in case there's one pending.
++			ap->ops->sff_check_status(ap);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&host->lock, flags);
+@@ -1472,11 +1466,7 @@ static irqreturn_t nv_do_interrupt(struct ata_host *host, u8 irq_stat)
+ 	int i, handled = 0;
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap = host->ports[i];
+-
+-		if (ap && !(ap->flags & ATA_FLAG_DISABLED))
+-			handled += nv_host_intr(ap, irq_stat);
+-
++		handled += nv_host_intr(host->ports[i], irq_stat);
+ 		irq_stat >>= NV_INT_PORT_SHIFT;
+ 	}
+ 
+@@ -2309,16 +2299,14 @@ static irqreturn_t nv_swncq_interrupt(int irq, void *dev_instance)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 
+-		if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-			if (ap->link.sactive) {
+-				nv_swncq_host_interrupt(ap, (u16)irq_stat);
+-				handled = 1;
+-			} else {
+-				if (irq_stat)	/* reserve Hotplug */
+-					nv_swncq_irq_clear(ap, 0xfff0);
++		if (ap->link.sactive) {
++			nv_swncq_host_interrupt(ap, (u16)irq_stat);
++			handled = 1;
++		} else {
++			if (irq_stat)	/* reserve Hotplug */
++				nv_swncq_irq_clear(ap, 0xfff0);
+ 
+-				handled += nv_host_intr(ap, (u8)irq_stat);
+-			}
++			handled += nv_host_intr(ap, (u8)irq_stat);
+ 		}
+ 		irq_stat >>= NV_INT_PORT_SHIFT_MCP55;
+ 	}
 diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 3c440e5..d65b5a6 100644
+index 750d8cd..3c440e5 100644
 --- a/drivers/ata/sata_promise.c
 +++ b/drivers/ata/sata_promise.c
-@@ -310,7 +310,8 @@ static int pdc_common_port_start(struct ata_port *ap)
- 	struct pdc_port_priv *pp;
- 	int rc;
+@@ -844,8 +844,7 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
+ 		/* check for a plug or unplug event */
+ 		ata_no = pdc_port_no_to_ata_no(i, is_sataii_tx4);
+ 		tmp = hotplug_status & (0x11 << ata_no);
+-		if (tmp && ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
++		if (tmp) {
+ 			struct ata_eh_info *ehi = &ap->link.eh_info;
+ 			ata_ehi_clear_desc(ehi);
+ 			ata_ehi_hotplugged(ehi);
+@@ -857,8 +856,7 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
  
--	rc = ata_port_start(ap);
-+	/* we use the same prd table as bmdma, allocate it */
-+	rc = ata_bmdma_port_start(ap);
- 	if (rc)
- 		return rc;
+ 		/* check for a packet interrupt */
+ 		tmp = mask & (1 << (i + 1));
+-		if (tmp && ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
++		if (tmp) {
+ 			struct ata_queued_cmd *qc;
  
+ 			qc = ata_qc_from_tag(ap, ap->link.active_tag);
 diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 48a3756..62403a8 100644
+index a000c86..48a3756 100644
 --- a/drivers/ata/sata_qstor.c
 +++ b/drivers/ata/sata_qstor.c
-@@ -502,11 +502,7 @@ static int qs_port_start(struct ata_port *ap)
- 	void __iomem *mmio_base = qs_mmio_base(ap->host);
- 	void __iomem *chan = mmio_base + (ap->port_no * 0x4000);
- 	u64 addr;
--	int rc;
+@@ -402,26 +402,24 @@ static inline unsigned int qs_intr_pkt(struct ata_host *host)
+ 			u8 sHST = sff1 & 0x3f;	/* host status */
+ 			unsigned int port_no = (sff1 >> 8) & 0x03;
+ 			struct ata_port *ap = host->ports[port_no];
++			struct qs_port_priv *pp = ap->private_data;
++			struct ata_queued_cmd *qc;
  
--	rc = ata_port_start(ap);
--	if (rc)
--		return rc;
- 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
- 	if (!pp)
- 		return -ENOMEM;
+ 			DPRINTK("SFF=%08x%08x: sCHAN=%u sHST=%d sDST=%02x\n",
+ 					sff1, sff0, port_no, sHST, sDST);
+ 			handled = 1;
+-			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-				struct ata_queued_cmd *qc;
+-				struct qs_port_priv *pp = ap->private_data;
+-				if (!pp || pp->state != qs_state_pkt)
+-					continue;
+-				qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
+-					switch (sHST) {
+-					case 0: /* successful CPB */
+-					case 3: /* device error */
+-						qs_enter_reg_mode(qc->ap);
+-						qs_do_or_die(qc, sDST);
+-						break;
+-					default:
+-						break;
+-					}
++			if (!pp || pp->state != qs_state_pkt)
++				continue;
++			qc = ata_qc_from_tag(ap, ap->link.active_tag);
++			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
++				switch (sHST) {
++				case 0: /* successful CPB */
++				case 3: /* device error */
++					qs_enter_reg_mode(qc->ap);
++					qs_do_or_die(qc, sDST);
++					break;
++				default:
++					break;
+ 				}
+ 			}
+ 		}
+@@ -434,33 +432,30 @@ static inline unsigned int qs_intr_mmio(struct ata_host *host)
+ 	unsigned int handled = 0, port_no;
+ 
+ 	for (port_no = 0; port_no < host->n_ports; ++port_no) {
+-		struct ata_port *ap;
+-		ap = host->ports[port_no];
+-		if (ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
+-			struct ata_queued_cmd *qc;
+-			struct qs_port_priv *pp;
+-			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-			if (!qc || !(qc->flags & ATA_QCFLAG_ACTIVE)) {
+-				/*
+-				 * The qstor hardware generates spurious
+-				 * interrupts from time to time when switching
+-				 * in and out of packet mode.
+-				 * There's no obvious way to know if we're
+-				 * here now due to that, so just ack the irq
+-				 * and pretend we knew it was ours.. (ugh).
+-				 * This does not affect packet mode.
+-				 */
+-				ata_sff_check_status(ap);
+-				handled = 1;
+-				continue;
+-			}
+-			pp = ap->private_data;
+-			if (!pp || pp->state != qs_state_mmio)
+-				continue;
+-			if (!(qc->tf.flags & ATA_TFLAG_POLLING))
+-				handled |= ata_sff_host_intr(ap, qc);
++		struct ata_port *ap = host->ports[port_no];
++		struct qs_port_priv *pp = ap->private_data;
++		struct ata_queued_cmd *qc;
++
++		qc = ata_qc_from_tag(ap, ap->link.active_tag);
++		if (!qc) {
++			/*
++			 * The qstor hardware generates spurious
++			 * interrupts from time to time when switching
++			 * in and out of packet mode.  There's no
++			 * obvious way to know if we're here now due
++			 * to that, so just ack the irq and pretend we
++			 * knew it was ours.. (ugh).  This does not
++			 * affect packet mode.
++			 */
++			ata_sff_check_status(ap);
++			handled = 1;
++			continue;
+ 		}
++
++		if (!pp || pp->state != qs_state_mmio)
++			continue;
++		if (!(qc->tf.flags & ATA_TFLAG_POLLING))
++			handled |= ata_sff_host_intr(ap, qc);
+ 	}
+ 	return handled;
+ }
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 031d7b7..dce3b91 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -439,9 +439,6 @@ static irqreturn_t sil_interrupt(int irq, void *dev_instance)
+ 		struct ata_port *ap = host->ports[i];
+ 		u32 bmdma2 = readl(mmio_base + sil_port[ap->port_no].bmdma2);
+ 
+-		if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
+-			continue;
+-
+ 		/* turn off SATA_IRQ if not supported */
+ 		if (ap->flags & SIL_FLAG_NO_SATA_IRQ)
+ 			bmdma2 &= ~SIL_DMA_SATA_IRQ;
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 4621807..e9e66e2 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -1151,13 +1151,8 @@ static irqreturn_t sil24_interrupt(int irq, void *dev_instance)
+ 
+ 	for (i = 0; i < host->n_ports; i++)
+ 		if (status & (1 << i)) {
+-			struct ata_port *ap = host->ports[i];
+-			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-				sil24_host_intr(ap);
+-				handled++;
+-			} else
+-				printk(KERN_ERR DRV_NAME
+-				       ": interrupt from disabled port %d\n", i);
++			sil24_host_intr(host->ports[i]);
++			handled++;
+ 		}
+ 
+ 	spin_unlock(&host->lock);
 diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 8027f64..1a6ab4c 100644
+index ec04b8d..8027f64 100644
 --- a/drivers/ata/sata_sx4.c
 +++ b/drivers/ata/sata_sx4.c
-@@ -291,11 +291,6 @@ static int pdc_port_start(struct ata_port *ap)
+@@ -314,7 +314,6 @@ static void pdc_20621_phy_reset(struct ata_port *ap)
  {
- 	struct device *dev = ap->host->dev;
- 	struct pdc_port_priv *pp;
--	int rc;
+ 	VPRINTK("ENTER\n");
+ 	ap->cbl = ATA_CBL_SATA;
+-	ata_port_probe(ap);
+ 	ata_bus_reset(ap);
+ }
+ 
+@@ -839,8 +838,7 @@ static irqreturn_t pdc20621_interrupt(int irq, void *dev_instance)
+ 			ap = host->ports[port_no];
+ 		tmp = mask & (1 << i);
+ 		VPRINTK("seq %u, port_no %u, ap %p, tmp %x\n", i, port_no, ap, tmp);
+-		if (tmp && ap &&
+-		    !(ap->flags & ATA_FLAG_DISABLED)) {
++		if (tmp && ap) {
+ 			struct ata_queued_cmd *qc;
+ 
+ 			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index c57cdff..45bd21c 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -284,14 +284,8 @@ static irqreturn_t vsc_sata_interrupt(int irq, void *dev_instance)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		u8 port_status = (status >> (8 * i)) & 0xff;
+ 		if (port_status) {
+-			struct ata_port *ap = host->ports[i];
 -
--	rc = ata_port_start(ap);
--	if (rc)
--		return rc;
+-			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-				vsc_port_intr(port_status, ap);
+-				handled++;
+-			} else
+-				dev_printk(KERN_ERR, host->dev,
+-					"interrupt from disabled port %d\n", i);
++			vsc_port_intr(port_status, host->ports[i]);
++			handled++;
+ 		}
+ 	}
  
- 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
- 	if (!pp)
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index 019575b..4801689 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -180,9 +180,7 @@ static int uli_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 098739d..8ca7bd4 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3637,7 +3637,7 @@ static void ipr_slave_destroy(struct scsi_device *sdev)
+ 	res = (struct ipr_resource_entry *) sdev->hostdata;
+ 	if (res) {
+ 		if (res->sata_port)
+-			ata_port_disable(res->sata_port->ap);
++			res->sata_port->ap->link.device[0].class = ATA_DEV_NONE;
+ 		sdev->hostdata = NULL;
+ 		res->sdev = NULL;
+ 		res->sata_port = NULL;
+@@ -5001,7 +5001,7 @@ static void ipr_ata_phy_reset(struct ata_port *ap)
+ 	rc = ipr_device_reset(ioa_cfg, res);
  
--	rc = ata_pci_bmdma_init(host);
--	if (rc)
--		return rc;
-+	ata_pci_bmdma_init(host);
+ 	if (rc) {
+-		ata_port_disable(ap);
++		ap->link.device[0].class = ATA_DEV_NONE;
+ 		goto out_unlock;
+ 	}
  
- 	iomap = host->iomap;
+@@ -5015,8 +5015,7 @@ static void ipr_ata_phy_reset(struct ata_port *ap)
+ 		ap->link.device[0].class = ATA_DEV_ATAPI;
+ 		break;
+ 	default:
+-		ap->link.device[0].class = ATA_DEV_UNKNOWN;
+-		ata_port_disable(ap);
++		ap->link.device[0].class = ATA_DEV_NONE;
+ 		break;
+ 	};
  
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 7448387..cca1f1e 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -817,7 +817,7 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
+ 	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
+ 
+ 	if (dev_is_sata(dev))
+-		ata_port_disable(dev->sata_dev.ap);
++		dev->sata_dev.ap->link.device[0].class = ATA_DEV_NONE;
+ }
+ 
+ int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth)
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c7fb1a2..ea415aa 100644
+index c261aa0..e0b8c24 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -949,7 +949,6 @@ extern unsigned long ata_xfer_mode2mask(u8 xfer_mode);
- extern int ata_xfer_mode2shift(unsigned long xfer_mode);
- extern const char *ata_mode_string(unsigned long xfer_mask);
- extern unsigned long ata_id_xfermask(const u16 *id);
--extern int ata_port_start(struct ata_port *ap);
- extern int ata_std_qc_defer(struct ata_queued_cmd *qc);
- extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
-@@ -1521,7 +1520,6 @@ extern int sata_sff_hardreset(struct ata_link *link, unsigned int *class,
- extern void ata_sff_postreset(struct ata_link *link, unsigned int *classes);
- extern void ata_sff_error_handler(struct ata_port *ap);
- extern void ata_sff_post_internal_cmd(struct ata_queued_cmd *qc);
--extern int ata_sff_port_start(struct ata_port *ap);
- extern void ata_sff_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
- extern int ata_pci_sff_init_host(struct ata_host *host);
-@@ -1538,16 +1536,15 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+@@ -199,12 +199,6 @@ enum {
+ 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+ 					      * led */
  
- extern void ata_bus_reset(struct ata_port *ap);		/* deprecated */
+-	/* The following flag belongs to ap->pflags but is kept in
+-	 * ap->flags because it's referenced in many LLDs and will be
+-	 * removed in not-too-distant future.
+-	 */
+-	ATA_FLAG_DISABLED	= (1 << 23), /* port is disabled, ignore it */
+-
+ 	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
  
--extern unsigned long ata_bmdma_mode_filter(struct ata_device *dev,
--					   unsigned long xfer_mask);
- extern void ata_bmdma_setup(struct ata_queued_cmd *qc);
- extern void ata_bmdma_start(struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
- extern u8 ata_bmdma_status(struct ata_port *ap);
-+extern int ata_bmdma_port_start(struct ata_port *ap);
+ 	/* struct ata_port pflags */
+@@ -888,7 +882,6 @@ static inline int ata_port_is_dummy(struct ata_port *ap)
+ 	return ap->ops == &ata_dummy_port_ops;
+ }
  
- #ifdef CONFIG_PCI
- extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
--extern int ata_pci_bmdma_init(struct ata_host *host);
-+extern void ata_pci_bmdma_init(struct ata_host *host);
- #endif /* CONFIG_PCI */
+-extern void ata_port_probe(struct ata_port *);
+ extern int sata_set_spd(struct ata_link *link);
+ extern int ata_std_prereset(struct ata_link *link, unsigned long deadline);
+ extern int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
+@@ -903,7 +896,6 @@ extern int sata_link_hardreset(struct ata_link *link,
+ extern int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+ 			      unsigned long deadline);
+ extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
+-extern void ata_port_disable(struct ata_port *);
  
- /**
+ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
+ extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
 -- 
 1.5.4.5
 
