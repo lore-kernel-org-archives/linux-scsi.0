@@ -1,48 +1,53 @@
-From: Chuck Lever <chuck.lever@oracle.com>
-Subject: Re: Problems with new block device size reporting
-Date: Tue, 21 Oct 2008 16:20:27 -0400
-Message-ID: <49EC1EBE-B970-4FEA-B899-9BD07A0006F2@oracle.com>
-References: <3F0757B4-6310-4EB7-9E2B-C51101BCC41A@oracle.com> <1224540525.3586.26.camel@localhost.localdomain>
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: "Pascal Terjan" <pterjan@gmail.com>
+Subject: Re: [Bugme-new] [Bug 11792] New: Oops when reading /proc/megaraid/hba0/diskdrives-ch*
+Date: Tue, 21 Oct 2008 22:22:37 +0200
+Message-ID: <e8ca35370810211322s42f87392o5259353af8a25323@mail.gmail.com>
+References: <bug-11792-10286@http.bugzilla.kernel.org/>
+	 <20081021124701.3d639c4e.akpm@linux-foundation.org>
+	 <20081021195419.GR26184@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:28405 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbYJUUUs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 16:20:48 -0400
-In-Reply-To: <1224540525.3586.26.camel@localhost.localdomain>
+Received: from wf-out-1314.google.com ([209.85.200.170]:63433 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148AbYJUUWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2008 16:22:38 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2663720wfd.4
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2008 13:22:37 -0700 (PDT)
+In-Reply-To: <20081021195419.GR26184@parisc-linux.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Chuck Lever <chuck.lever@oracle.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, sumantp@lsil.com, bo.yang@lsi.com, bugme-daemon@bugzilla.kernel.org
 
-On Oct 20, 2008, at Oct 20, 2008, 6:08 PM, James Bottomley wrote:
-> On Mon, 2008-10-20 at 17:58 -0400, Chuck Lever wrote:
->> [ Cc'ing myself because I'm not subscribed to linux-scsi ]
+On Tue, Oct 21, 2008 at 9:54 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Tue, Oct 21, 2008 at 12:47:01PM -0700, Andrew Morton wrote:
+>> > Latest working kernel version: 2.6.24
+>> > Earliest failing kernel version: 2.6.27-rc8
 >>
->> Hi James-
+>> It's a regression.
 >>
->> I found two problems in 2.6.27:
->>
->> 1.  If CONFIG_LBD is not set on 32-bit platforms, the computation
->> added in sd_read_capacity() by commit 7404ad3b computes sz
->> incorrectly.  On my system (a Fedora 9 VMware guest with an 8GB  
->> disk),
->> sz is computed as zero.
->>
->> 2.  The new string helper string_get_size() added by commit 3c9f3681
->> goes into an infinite loop if it is passed a "size" of zero.  the  
->> "for
->> (j=0;" loop never terminates because 0*10 is always less than 1000.
+>> > Pid: 2319, comm: diff Not tainted (2.6.27-server-0.rc8.2mnb #1)
 >
-> Actually, both reported with patches:
->
-> http://marc.info/?l=linux-scsi&m=122400928411030
-> http://marc.info/?l=linux-scsi&m=122400928511033
+> It's also a distro kernel by the looks of things.  Can it be reproduced
+> with an upstream kernel?
 
-Confirmed fix.
+I will try booting the server on vanilla kernel but I'm not sure when
+(we already rebooted it 2 times recently and users won't enjoy it).
 
--- 
-Chuck Lever
-chuck[dot]lever[at]oracle[dot]com
+This is a distro kernel but I don't see patches that could impact this :
+http://svn.mandriva.com/cgi-bin/viewvc.cgi/packages/cooker/kernel/current/PATCHES/patches/
+
+Machine is a old HP NetServer LT 6000
+
+04:03.1 I2O: Intel Corporation 80960RP (i960RP) Microprocessor (rev
+09) (prog-if 01)
+	Subsystem: Hewlett-Packard Company MegaRAID, Integrated NetRAID
+	Flags: bus master, fast Back2Back, medium devsel, latency 64, IRQ 11
+	Memory at f4000000 (32-bit, prefetchable) [size=64M]
+	[virtual] Expansion ROM at a8130000 [disabled] [size=32K]
+	Capabilities: [80] Power Management version 2
+	Kernel driver in use: megaraid_legacy
+	Kernel modules: i2o_core, megaraid
