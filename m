@@ -1,22 +1,30 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bug 11800] New: building SES support fails w/ gcc-3.4.5
-Date: Tue, 21 Oct 2008 15:52:40 -0700
-Message-ID: <20081021155240.851b69c3.akpm@linux-foundation.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
+Date: Tue, 21 Oct 2008 15:52:44 -0700 (PDT)
+Message-ID: <20081021225244.068DD108047@picon.linux-foundation.org>
 References: <bug-11800-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33813 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51682 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751894AbYJUWwn (ORCPT
+	by vger.kernel.org with ESMTP id S1752065AbYJUWwp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Oct 2008 18:52:43 -0400
+	Tue, 21 Oct 2008 18:52:45 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9LMqisN019672
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2008 15:52:45 -0700
 In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, bugzilla.kernel.org@beej.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11800
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-10-21 15:52 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
@@ -75,10 +83,16 @@ bustage - we've seen that before.
 
 Please do
 
-	make drivers/scsi/ses.s
+        make drivers/scsi/ses.s
 
 then have a look in drivers/scsi/ses.s and see which function is
 emitting a call to __you_cannot_kmalloc_that_much.  Or email me
 drivers/scsi/ses.s and I'll take a look.
 
 Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
