@@ -1,44 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Problems with new block device size reporting
-Date: Mon, 20 Oct 2008 18:08:45 -0400
-Message-ID: <1224540525.3586.26.camel@localhost.localdomain>
-References: <3F0757B4-6310-4EB7-9E2B-C51101BCC41A@oracle.com>
+From: roel kluin <roel.kluin@gmail.com>
+Subject: [PATCH] U14-34F: fix scsi_dma_map failure case
+Date: Tue, 21 Oct 2008 01:08:18 -0400
+Message-ID: <48FD63C2.40400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:33903 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751706AbYJTWIu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2008 18:08:50 -0400
-In-Reply-To: <3F0757B4-6310-4EB7-9E2B-C51101BCC41A@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755858AbYJTXIm@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ballabio_dario@emc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2008-10-20 at 17:58 -0400, Chuck Lever wrote:
-> [ Cc'ing myself because I'm not subscribed to linux-scsi ]
-> 
-> Hi James-
-> 
-> I found two problems in 2.6.27:
-> 
-> 1.  If CONFIG_LBD is not set on 32-bit platforms, the computation  
-> added in sd_read_capacity() by commit 7404ad3b computes sz  
-> incorrectly.  On my system (a Fedora 9 VMware guest with an 8GB disk),  
-> sz is computed as zero.
-> 
-> 2.  The new string helper string_get_size() added by commit 3c9f3681  
-> goes into an infinite loop if it is passed a "size" of zero.  the "for  
-> (j=0;" loop never terminates because 0*10 is always less than 1000.
+When unsigned, scsi_dma_map may return -ENOMEM without triggering BUG_ON()
 
-Actually, both reported with patches:
-
-http://marc.info/?l=linux-scsi&m=122400928411030
-http://marc.info/?l=linux-scsi&m=122400928511033
-
-James
-
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
+index 329eb87..601e951 100644
+--- a/drivers/scsi/u14-34f.c
++++ b/drivers/scsi/u14-34f.c
+@@ -1111,7 +1111,8 @@ static int u14_34f_detect(struct scsi_host_template *tpnt) {
+ 
+ static void map_dma(unsigned int i, unsigned int j) {
+    unsigned int data_len = 0;
+-   unsigned int k, count, pci_dir;
++   unsigned int k, pci_dir;
++   int count;
+    struct scatterlist *sg;
+    struct mscp *cpp;
+    struct scsi_cmnd *SCpnt;
