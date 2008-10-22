@@ -1,36 +1,42 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Bugme-new] [Bug 11792] New: Oops when reading /proc/megaraid/hba0/diskdrives-ch*
-Date: Wed, 22 Oct 2008 19:31:11 +0200
-Message-ID: <48FF635F.8060207@panasas.com>
-References: <4B6A08C587958942AA3002690DD4F8C32D2C5EFE@cosmail02.lsi.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Smart plugging of multiple devices connected to a single controller
+Date: Wed, 22 Oct 2008 20:24:27 +0200
+Message-ID: <87y70gpjxg.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:20951 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752328AbYJVRbZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2008 13:31:25 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C32D2C5EFE@cosmail02.lsi.com>
+Received: from nebensachen.de ([195.34.83.29]:46029 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752607AbYJVSYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2008 14:24:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "pterjan@gmail.com" <pterjan@gmail.com>, "matthew@wil.cx" <matthew@wil.cx>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Yang, Bo wrote:
-> Thanks Boaz, the name for SAS is megaraid_sas and MPT is fusion.
-> 
-> Regards,
-> 
-> Bo Yang
-> 
+Hi Jens,
 
-I have also reviewed megaraid_mbox.c and megaraid_mm.c. and all files
-in drivers/message/fusion/* (See other mail for megaraid_sas.c).
-I do not see any problems with these drivers. They do not allocate
-private scsi_cmnd structures.
+in an effort to avoid calling the ->request_fn() from hard irq context
+in ide, a patch like the one attached below would seem convenient (not
+even compile tested yet). However, before implementing this or, indeed,
+in case you should outright reject this patch, I'd like to ask for your
+opinion about a more general approach: Since ide, scsi and libata (once
+it has moved out of scsi) have very similar issues with devices that
+cannot process the request queue in parallel (typically because they are
+connected to the same controller), would it be appropriate to deal with
+that in the block layer directly? Currently, I'm mainly concerned with
+the problem that devices connected to the same controller are served
+without too much discrimination due to races in the (un)plug logic,
+which is currently being dealt with more or less cleverly in scsi / ide.
+Generally though, there might be other shared resources (like a tag map,
+etc.) that could be maintained in a in a block layer structure similar to
+struct Scsi_Host. All request queues belonging to such a group could be
+added to a circular link list rooted at the structure containing the
+shared resources, i.e. the unplug_timer and whatever you deem adequate
+to be moved there.
 
-Anything else to review?
+What do you think about it?
 
-Thanks
-Boaz
+Regards,
+
+Elias
