@@ -1,99 +1,38 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [Bugme-new] [Bug 11792] New: Oops when reading
- /proc/megaraid/hba0/diskdrives-ch*
-Date: Wed, 22 Oct 2008 07:59:28 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C32D2C5E4A@cosmail02.lsi.com>
-References: <20081022223901S.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9010] SCSI device is not offlined properly and tries to cache data from previous device
+Date: Wed, 22 Oct 2008 07:07:14 -0700 (PDT)
+Message-ID: <20081022140714.3C88911D108@picon.linux-foundation.org>
+References: <bug-9010-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:37573 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751980AbYJVOAy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2008 10:00:54 -0400
-In-Reply-To: <20081022223901S.fujita.tomonori@lab.ntt.co.jp>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59823 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752425AbYJVOIO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2008 10:08:14 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9ME7hUw011307
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2008 07:07:44 -0700
+In-Reply-To: <bug-9010-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "bharrosh@panasas.com" <bharrosh@panasas.com>, "pterjan@gmail.com" <pterjan@gmail.com>, "matthew@wil.cx" <matthew@wil.cx>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-Thanks TOMM.  If this is the case, it may affect some of other drivers like our MPT and SAS driver.  Is there a way kernel can fix it?
-
-Thanks,
-
-Bo Yang
-
------Original Message-----
-From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-Sent: Wednesday, October 22, 2008 9:39 AM
-To: Yang, Bo
-Cc: fujita.tomonori@lab.ntt.co.jp; bharrosh@panasas.com; pterjan@gmail.com; matthew@wil.cx; akpm@linux-foundation.org; linux-scsi@vger.kernel.org; Patro, Sumant; bugme-daemon@bugzilla.kernel.org; Austria, Winston
-Subject: RE: [Bugme-new] [Bug 11792] New: Oops when reading /proc/megaraid/hba0/diskdrives-ch*
-
-On Wed, 22 Oct 2008 07:03:03 -0600
-"Yang, Bo" <Bo.Yang@lsi.com> wrote:
-
-> I saw the latest working kernel: 2.6.24 and first failing kernel
-> version: 2.6.27-rc8.  I understand there are lots of changes between
-> those two kernels.  Can you take a look the changes from kernels to
-> find out the root cause?
-
-Sorry, I didn't explain the possible root cause.
-
-struct scsi_cmnd in 2.6.25:
-
-unsigned char cmnd[MAX_COMMAND_SIZE];
+http://bugzilla.kernel.org/show_bug.cgi?id=9010
 
 
-struct scsi_cmnd in 2.6.26:
-
-unsigned char *cmnd;
 
 
-In short, struct scsi_cmnd doesn't have static array for cdb. You need
-to allocate memory for it (the scsi midlayer does for common usage).
 
-So
+------- Comment #31 from lkmlist@gmail.com  2008-10-22 07:07 -------
+Did anyone take care of this?
 
-static int
-mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-{
-...
-        scb = &adapter->int_scb;
-        memset(scb, 0, sizeof(scb_t));
+If you want't I can try to reproduce it with 2.6.27.*
 
-        scmd = &adapter->int_scmd;
-        memset(scmd, 0, sizeof(Scsi_Cmnd));
-
-        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-        scmd->device = sdev;
-
-        scmd->device->host = adapter->host;
-        scmd->host_scribble = (void *)scb;
-        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
-
-I suspect that the driver crashes here. My patch adds array to
-adapter_t and use it here.
-
-After 2.6.25, sense_buffer also is converted from static array to
-pointer. In general, using scsi_allocate_command/scsi_free_command is
-the recommended way to use struct scsi_cmnd.
-
-So my latest patch removes struct scsi_cmnd in adapter_t and uses the
-API in mega_internal_command().
+Kind regards
+Bjoern
 
 
-> Also if you believe this is the driver issue and need LSI to help,
-> can you report this issue to LSI?
-
-Yeah, I think that we need to update this driver because of the
-changes to SCSI mid-layer.
-
-It would be appreciated if you can test my latest path:
-
-http://marc.info/?l=linux-scsi&m=122467887502481&w=2
-
-
-Can you think of this thread as a bug report to LSI?
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
