@@ -1,144 +1,151 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: PATCH] [ConfigFS]: Extend CONFIGFS_ATTR_STRUCT() and
-	CONFIGFS_ATTR_OPS() macros
-Date: Wed, 22 Oct 2008 15:06:29 -0700
-Message-ID: <1224713189.24358.111.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [LIO-Target/ConfigFS]: Convert TPG and Node attributes to
+	use updated ConfigFS macros
+Date: Wed, 22 Oct 2008 15:07:29 -0700
+Message-ID: <1224713249.24358.113.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:26141 "HELO
-	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752980AbYJVWGc (ORCPT
+Received: from smtp121.sbc.mail.sp1.yahoo.com ([69.147.64.94]:47326 "HELO
+	smtp121.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751770AbYJVWHc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2008 18:06:32 -0400
+	Wed, 22 Oct 2008 18:07:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <joel.becker@oracle.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Joel,
-
-What do you think..?
-
-Also, here is the drivers/lio-core/iscsi_target_configfs.c commit to
-convert to use to new parameters for CONFIGFS_ATTR_STRUCT() and
-CONFIGFS_ATTR_OPS():
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=e305460ebaa92ce1f8542a55bd62648904fb2fd6
-
-I don't see anyone except for drivers/lio-core and
-Documentation/filesystems/configfs/ using these macros..  If I can get
-an ACK I would be happy to update the examples.
-
---nab
-
-
->From 71fc659e337dcc5941f6f64f6c8abfb6b477fd7c Mon Sep 17 00:00:00 2001
+>From e305460ebaa92ce1f8542a55bd62648904fb2fd6 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Wed, 22 Oct 2008 14:49:01 -0700
-Subject: [PATCH] [ConfigFS]: Extend CONFIGFS_ATTR_STRUCT() and CONFIGFS_ATTR_OPS() macros
+Date: Wed, 22 Oct 2008 14:54:36 -0700
+Subject: [PATCH] [LIO-Target/ConfigFS]: Convert TPG and Node attributes to use updated ConfigFS macros
 
-Extend CONFIGFS_ATTR_STRUCT() and CONFIGFS_ATTR_OPS() macros to allow
-multiple struct config_item or struct config_group to hang off the same
-structure.  This means the previous '_item' arguement gets split into
-'_name' (for function and attribute structure names) and '_item' (the
-struct _item used throughout the macros that contains
-struct _item->my_config_group.
+Use updated include/linux/configfs.h macros from commit 71fc659e337dcc5941f6f64f6c8abfb6b477fd7c
 
-This patch also removed the requirement for code using these macros to
-provide their own 'to_<name>()' function, which is now defined by
-CONFIGFS_ATTR_OPS() by passing the '_item_member' argument which is
-used inside of to_##_name() for locating struct _item *_item = container_of().
+This commit removed the need for our internal 'to_<name>()' functions, and renames
+the TPG and Node attribute code to not be dependent on structure name.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- include/linux/configfs.h |   51 ++++++++++++++++++++++++++++------------------
- 1 files changed, 31 insertions(+), 20 deletions(-)
+ drivers/lio-core/iscsi_target_configfs.c |   64 ++++++++++++------------------
+ 1 files changed, 26 insertions(+), 38 deletions(-)
 
-diff --git a/include/linux/configfs.h b/include/linux/configfs.h
-index 7f62777..2eab7ef 100644
---- a/include/linux/configfs.h
-+++ b/include/linux/configfs.h
-@@ -132,11 +132,13 @@ struct configfs_attribute {
-  * attributes, containing a configfs_attribute member and function pointers
-  * for the show() and store() operations on that attribute. If they don't
-  * need anything else on the extended attribute structure, they can use
-- * this macro to define it  The argument _item is the name of the
-- * config_item structure.
-+ * this macro to define it.  The argument _name isends up as
-+ * 'struct _name_attribute, as well as names of to CONFIGFS_ATTR_OPS() below.
-+ * The argument _item is the name of the structure containing the
-+ * struct config_item or struct config_group structure members
-  */
--#define CONFIGFS_ATTR_STRUCT(_item)					\
--struct _item##_attribute {						\
-+#define CONFIGFS_ATTR_STRUCT(_name, _item)				\
-+struct _name##_attribute {						\
- 	struct configfs_attribute attr;					\
- 	ssize_t (*show)(struct _item *, char *);			\
- 	ssize_t (*store)(struct _item *, const char *, size_t);		\
-@@ -175,35 +177,44 @@ struct _item##_attribute {						\
-  * With these extended attributes, the simple show_attribute() and
-  * store_attribute() operations need to call the show() and store() of the
-  * attributes.  This is a common pattern, so we provide a macro to define
-- * them.  The argument _item is the name of the config_item structure.
-- * This macro expects the attributes to be named "struct <name>_attribute"
-- * and the function to_<name>() to exist;
-+ * them.  The argument _name is the name of the attribute defined by
-+ * CONFIGFS_ATTR_STRUCT(). The argument _item is the name of the structure
-+ * containing the struct config_item or struct config_group structure member.
-+ * The argument _item_member is the actual name of the struct config_* struct
-+ * in your _item structure.  Meaning  my_structure->some_config_group.
-+ *		                      ^^_item^^^^^  ^^_item_member^^^
-+ * This macro expects the attributes to be named "struct <name>_attribute".
-  */
--#define CONFIGFS_ATTR_OPS(_item)					\
--static ssize_t _item##_attr_show(struct config_item *item,		\
-+#define CONFIGFS_ATTR_OPS(_name, _item, _item_member)			\
-+static struct _item *to_##_name(struct config_item *ci)			\
-+{									\
-+	return((ci) ? container_of(to_config_group(ci), struct _item,	\
-+		_item_member) : NULL);					\
-+}									\
-+static ssize_t _name##_attr_show(struct config_item *item,		\
- 				 struct configfs_attribute *attr,	\
- 				 char *page)				\
- {									\
--	struct _item *_item = to_##_item(item);				\
--	struct _item##_attribute *_item##_attr =			\
--		container_of(attr, struct _item##_attribute, attr);	\
-+	struct _item *_item = to_##_name(item);				\
-+	struct _name##_attribute *_name##_attr =			\
-+		container_of(attr, struct _name##_attribute, attr);	\
- 	ssize_t ret = 0;						\
- 									\
--	if (_item##_attr->show)						\
--		ret = _item##_attr->show(_item, page);			\
-+	if (_name##_attr->show)						\
-+		ret = _name##_attr->show(_item, page);			\
- 	return ret;							\
- }									\
--static ssize_t _item##_attr_store(struct config_item *item,		\
-+static ssize_t _name##_attr_store(struct config_item *item,		\
- 				  struct configfs_attribute *attr,	\
- 				  const char *page, size_t count)	\
- {									\
--	struct _item *_item = to_##_item(item);				\
--	struct _item##_attribute *_item##_attr =			\
--		container_of(attr, struct _item##_attribute, attr);	\
-+	struct _item *_item = to_##_name(item);				\
-+	struct _name##_attribute *_name##_attr =			\
-+		container_of(attr, struct _name##_attribute, attr);	\
- 	ssize_t ret = -EINVAL;						\
- 									\
--	if (_item##_attr->store)					\
--		ret = _item##_attr->store(_item, page, count);		\
-+	if (_name##_attr->store)					\
-+		ret = _name##_attr->store(_item, page, count);		\
- 	return ret;							\
+diff --git a/drivers/lio-core/iscsi_target_configfs.c b/drivers/lio-core/iscsi_target_configfs.c
+index bdcd981..9d5319c 100644
+--- a/drivers/lio-core/iscsi_target_configfs.c
++++ b/drivers/lio-core/iscsi_target_configfs.c
+@@ -722,18 +722,12 @@ static ssize_t lio_target_store_nacl_attrib_##name (			\
+ 	return(count);							\
  }
  
+-static struct iscsi_node_attrib_s *to_iscsi_node_attrib_s (struct config_item *item)
+-{
+-	return((item) ? container_of(to_config_group(item), struct iscsi_node_attrib_s,
+-		acl_attrib_group) : NULL);
+-}
+-
+ /*
+  * Define the iSCSI Node attributes using hybrid wrappers from include/linux/configfs.h
+  */
+-CONFIGFS_ATTR_STRUCT(iscsi_node_attrib_s);
+-#define NACL_ATTR(_name, _mode, _show, _store)					\
+-static struct iscsi_node_attrib_s_attribute iscsi_node_attrib_s_##_name =	\
++CONFIGFS_ATTR_STRUCT(iscsi_node_attrib, iscsi_node_attrib_s);
++#define NACL_ATTR(_name, _mode, _show, _store)				\
++static struct iscsi_node_attrib_attribute iscsi_node_attrib_##_name =	\
+ 		__CONFIGFS_ATTR(_name, _mode, _show, _store)
+ /*
+  * Define iscsi_node_attrib_s_dataout_timeout
+@@ -796,23 +790,23 @@ NACL_ATTR(random_r2t_offsets, S_IRUGO | S_IWUSR,
+  * Finally, define functions iscsi_node_attrib_s_attr_show() and
+  * iscsi_node_attrib_s_attr_store() for lio_target_nacl_attrib_ops below..
+  */
+-CONFIGFS_ATTR_OPS(iscsi_node_attrib_s);
++CONFIGFS_ATTR_OPS(iscsi_node_attrib, iscsi_node_attrib_s, acl_attrib_group);
+ 
+ static struct configfs_attribute *lio_target_nacl_attrib_attrs[] = {
+-	&iscsi_node_attrib_s_dataout_timeout.attr,
+-	&iscsi_node_attrib_s_dataout_timeout_retries.attr,
+-	&iscsi_node_attrib_s_default_erl.attr,
+-	&iscsi_node_attrib_s_nopin_timeout.attr,
+-	&iscsi_node_attrib_s_nopin_response_timeout.attr,
+-	&iscsi_node_attrib_s_random_datain_pdu_offsets.attr,
+-	&iscsi_node_attrib_s_random_datain_seq_offsets.attr,
+-	&iscsi_node_attrib_s_random_r2t_offsets.attr,
++	&iscsi_node_attrib_dataout_timeout.attr,
++	&iscsi_node_attrib_dataout_timeout_retries.attr,
++	&iscsi_node_attrib_default_erl.attr,
++	&iscsi_node_attrib_nopin_timeout.attr,
++	&iscsi_node_attrib_nopin_response_timeout.attr,
++	&iscsi_node_attrib_random_datain_pdu_offsets.attr,
++	&iscsi_node_attrib_random_datain_seq_offsets.attr,
++	&iscsi_node_attrib_random_r2t_offsets.attr,
+ 	NULL,
+ };
+ 
+ static struct configfs_item_operations lio_target_nacl_attrib_ops = {
+-	.show_attribute		= iscsi_node_attrib_s_attr_show,
+-	.store_attribute	= iscsi_node_attrib_s_attr_store,
++	.show_attribute		= iscsi_node_attrib_attr_show,
++	.store_attribute	= iscsi_node_attrib_attr_store,
+ };
+ 
+ static struct config_item_type lio_target_nacl_attrib_cit = {
+@@ -1519,18 +1513,12 @@ out:									\
+ 	return(ret);							\
+ }
+ 
+-static struct iscsi_tpg_attrib_s *to_iscsi_tpg_attrib_s (struct config_item *item)
+-{
+-	return((item) ? container_of(to_config_group(item), struct iscsi_tpg_attrib_s,
+-		tpg_attrib_group) : NULL);	
+-}
+-
+ /*
+  * Define the iSCSI TPG attributes using hybrid wrappers from include/linux/configfs.h
+  */
+-CONFIGFS_ATTR_STRUCT(iscsi_tpg_attrib_s);
++CONFIGFS_ATTR_STRUCT(iscsi_tpg_attrib, iscsi_tpg_attrib_s);
+ #define TPG_ATTR(_name, _mode, _show, _store)				\
+-static struct iscsi_tpg_attrib_s_attribute iscsi_tpg_attrib_s_##_name =	\
++static struct iscsi_tpg_attrib_attribute iscsi_tpg_attrib_##_name =	\
+ 	__CONFIGFS_ATTR(_name, _mode, _show, _store)
+ 
+ /*
+@@ -1587,21 +1575,21 @@ TPG_ATTR(demo_mode_lun_access, S_IRUGO | S_IWUSR,
+  * Finally, define functions iscsi_tpg_attrib_s_attr_show() and
+  * iscsi_tpg_attrib_s_attr_store() for lio_target_tpg_attrib_ops below..
+  */
+-CONFIGFS_ATTR_OPS(iscsi_tpg_attrib_s);
++CONFIGFS_ATTR_OPS(iscsi_tpg_attrib, iscsi_tpg_attrib_s, tpg_attrib_group);
+ 
+ static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
+-	&iscsi_tpg_attrib_s_authentication.attr,
+-	&iscsi_tpg_attrib_s_login_timeout.attr,
+-	&iscsi_tpg_attrib_s_netif_timeout.attr,
+-	&iscsi_tpg_attrib_s_generate_node_acls.attr,
+-	&iscsi_tpg_attrib_s_default_cmdsn_depth.attr,
+-	&iscsi_tpg_attrib_s_cache_dynamic_acls.attr,
+-	&iscsi_tpg_attrib_s_demo_mode_lun_access.attr,
++	&iscsi_tpg_attrib_authentication.attr,
++	&iscsi_tpg_attrib_login_timeout.attr,
++	&iscsi_tpg_attrib_netif_timeout.attr,
++	&iscsi_tpg_attrib_generate_node_acls.attr,
++	&iscsi_tpg_attrib_default_cmdsn_depth.attr,
++	&iscsi_tpg_attrib_cache_dynamic_acls.attr,
++	&iscsi_tpg_attrib_demo_mode_lun_access.attr,
+ };
+ 
+ static struct configfs_item_operations lio_target_tpg_attrib_ops = {
+-	.show_attribute		= iscsi_tpg_attrib_s_attr_show,
+-	.store_attribute	= iscsi_tpg_attrib_s_attr_store,
++	.show_attribute		= iscsi_tpg_attrib_attr_show,
++	.store_attribute	= iscsi_tpg_attrib_attr_store,
+ };
+ 
+ static struct config_item_type lio_target_tpg_attrib_cit = {
 -- 
 1.5.4.1
 
