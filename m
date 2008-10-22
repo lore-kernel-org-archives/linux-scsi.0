@@ -1,97 +1,106 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
-Date: Wed, 22 Oct 2008 12:43:28 -0700 (PDT)
-Message-ID: <20081022194328.DF458108043@picon.linux-foundation.org>
-References: <bug-11800-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Possible bug in SCSI Kconfig
+Date: Wed, 22 Oct 2008 13:44:19 -0600
+Message-ID: <1224704659.6851.28.camel@localhost.localdomain>
+References: <b637ec0b0810220929r2c889423ma92bef0ec7f9b3b0@mail.gmail.com>
+	 <1224702340.6851.20.camel@localhost.localdomain>
+	 <b637ec0b0810221225q589ed071i75f559d6fa76d96b@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49515 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752016AbYJVToA (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:54179 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752064AbYJVTo1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:44:00 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9MJhS3l007982
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2008 12:43:29 -0700
-In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
+	Wed, 22 Oct 2008 15:44:27 -0400
+In-Reply-To: <b637ec0b0810221225q589ed071i75f559d6fa76d96b@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, sam@ravnborg.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11800
+On Wed, 2008-10-22 at 21:25 +0200, Fabio Comolli wrote:
+> Hi.
+> 
+> On Wed, Oct 22, 2008 at 9:05 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Wed, 2008-10-22 at 18:29 +0200, Fabio Comolli wrote:
+> >> Hi.
+> >> In kernel 2.6.27.2 - drivers/scsi/Kconfig we have:
+> >>
+> >> config SCSI_WAIT_SCAN
+> >>         tristate
+> >>         default m
+> >>         depends on SCSI
+> >>         depends on MODULES
+> >>
+> >> The tristate field is empty. This has the effect that this option is
+> >> not visible in menuconfig and so it's always selected. The default is
+> >> "m" for all architectures and so this module is always compiled if
+> >> SCSI and MODULES are both enabled.
+> >>
+> >> I'm using a patch like this one:
+> >>
+> >>  config SCSI_WAIT_SCAN
+> >> -     tristate
+> >> +     tristate "Wait until all the async scans are complete"
+> >>       default m
+> >>       depends on SCSI
+> >>       depends on MODULES
+> >>
+> >> to get rid of that module.
+> >>
+> >> Of course, I have no idea if this is correct or the current behavior
+> >> is the expected one.
+> >
+> > The point of all of this is that if you enable async scanning, you need
+> > a method of waiting for the scans to complete, which is all this module
+> > does (you insert it and it doesn't come back from the insertion until
+> > all the pending async scans are complete).  It's tristate because really
+> > it only makes sense to be M or N.  The consensus is that, given async
+> > scanning is always an option, this function should always be built as a
+> > module *if* modules and SCSI are enabled ... because you might have a
+> > HBA module you enabled async scanning for and you need to wait.
+> 
+> OK, I see your point.
+> 
+> But in my case I have SCSI enabled only because it's SELECTed by ATA
+> (it's just a laptop) and I don't have any hba's and never will. So no
+> async scan.
+
+Presumably you have a laptop hard disk.  That's currently SCSI if you
+use ATA ... although when ATA moves out of SCSI it will no longer be, so
+you could regard this as a temporary condition.
+
+> Maybe this module should be enabled if async scan is.
+
+But that's the point: async scan is always "enabled" it just might not
+be the default, that's what the CONFIG_SCSI_SCAN_ASYNC controls: the
+default value (but you can always turn it on with the kernel boot or
+SCSI module option).  Async scan is also functional for /drivers/ata and
+other hot plug type busses, so it still makes sense for them as well.
+
+> > There's really not much point giving the user the choice, since this
+> > module is part of the initrd sequence ... it's not really anything a
+> > user would want to use stand alone, hence there's no point giving a
+> > choice about it.
+> >
+> 
+> I don't use initrd at all. I just noticed the existence of this module
+> while trying to have a non modular kernel. This failed because of
+> ipw2200 and after having enabled modules again I just found this
+> scsi_wait_scan.ko.
+
+Well, we do use CONFIG_MODULES to try to discern whether the user wants
+modules or not.  However, if you enable modules, we'd need some
+telepathic configurator to tell us if you plan to use SCSI HBA modules
+or not, so the safest course is always to enable it.  The real point is
+that you have to be a real power user to answer N correctly to this, so
+it's better not to confuse the remaining 97% with the option because
+they could easily get wrong ... the 3% who're sure they don't want it
+can simply delete it.
+
+James
 
 
-
-
-
-------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-10-22 12:43 -------
-Reply-To: beej@alum.mit.edu
-
-At 18:52 10/21/2008, Andrew Morton wrote:
- >On Tue, 21 Oct 2008 11:36:12 -0700 (PDT)
- >bugme-daemon@bugzilla.kernel.org wrote:
- >
- >> http://bugzilla.kernel.org/show_bug.cgi?id=11800
- >>
- >>            Summary: building SES support fails w/ gcc-3.4.5
- >>            Product: SCSI Drivers
- >>            Version: 2.5
- >>      KernelVersion: 2.6.27.1
- >>           Platform: All
- >>         OS/Version: Linux
- >>               Tree: Mainline
- >>             Status: NEW
- >>           Severity: normal
- >>           Priority: P1
- >>          Component: Other
- >>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
- >>         ReportedBy: bugzilla.kernel.org@beej.org
- >>
- >>
- >> [beej@dell ~]$ cat /etc/redhat-release
- >> CentOS release 4.3 (Final)
- >> [beej@dell ~]$ rpm -qf `which gcc`
- >> gcc-3.4.5-2
- >> [beej@dell linux-2.6.27.1]$ diff .config .config.old
- >> 4c4
- >> < # Tue Oct 21 14:07:00 2008
- >> ---
- >> > # Thu Oct 16 17:54:42 2008
- >> 1006c1006
- >> < # CONFIG_SCSI_ENCLOSURE is not set
- >> ---
- >> > CONFIG_SCSI_ENCLOSURE=m
- >>
- >> using .config.old,
- >> [beej@dell linux-2.6.27.1]$ make
- >> <snip>
- >> Kernel: arch/x86/boot/bzImage is ready  (#2)
- >>   Building modules, stage 2.
- >>   MODPOST 668 modules
- >> ERROR: "__you_cannot_kmalloc_that_much" [drivers/scsi/ses.ko] undefined!
- >> make[1]: *** [__modpost] Error 1
- >> make: *** [modules] Error 2
- >>
- >
- >That's weird.  It means that we did a kmalloc(N, ...) where the value
- >of N is known at compile time, and N is too large.
- >
- >But I can find no such kmalloc/kzalloc calls in ses.c.  It might be gcc
- >bustage - we've seen that before.
- >
- >Please do
- >
- >      make drivers/scsi/ses.s
- >
- >then have a look in drivers/scsi/ses.s and see which function is
- >emitting a call to __you_cannot_kmalloc_that_much.  Or email me
- >drivers/scsi/ses.s and I'll take a look.
-
-attached
-
-marc
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
