@@ -1,115 +1,94 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 2/2] cciss:fix regression firmware not displayed in
- procfs (again and again)
-Date: Wed, 22 Oct 2008 15:38:13 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884C01AB25E5@GVW0547EXC.americas.hpqcorp.net>
-References: <20081021212322.GA6421@roadking.ldev.net>
- <20081021154408.ed96c9b3.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11803] New: sr_mod: CDROM_DRIVE_STATUS ioctl causes tray
+	to be closed
+Date: Wed, 22 Oct 2008 08:57:13 -0700
+Message-ID: <1224691033.6851.14.camel@localhost.localdomain>
+References: <bug-11803-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:17940 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752616AbYJVPiw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2008 11:38:52 -0400
-In-Reply-To: <20081021154408.ed96c9b3.akpm@linux-foundation.org>
-Content-Language: en-US
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40744 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751675AbYJVP5V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2008 11:57:21 -0400
+In-Reply-To: <bug-11803-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "adobriyan@gmail.com" <adobriyan@gmail.com>
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
+
+On Tue, 2008-10-21 at 15:37 -0700, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=11803
+> 
+>            Summary: sr_mod: CDROM_DRIVE_STATUS ioctl causes tray to be
+>                     closed
+>            Product: SCSI Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.27-2
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: martin.pitt@ubuntu.com
+> 
+> 
+> Latest working kernel version: 2.6.24 (maybe later)
+> Earliest failing kernel version: 2.6.27 (maybe earlier)
+> Distribution: Ubuntu 8.10
+> Hardware Environment:
+>  - standard ATAPI CD-ROM drive which works through sr_mod (e. g. PIONEER DVD-RW
+> DVR-212)
+>  - not using IDE drivers, but libata and pata (PATA_AMD in my case)
+> Software Environment:
+>  - single user mode
+> Problem Description:
+> 
+> As reported in https://launchpad.net/bugs/283316 and a couple of duplicates,
+> CD-ROM drives which are opened/ejected immediately close again. This is due to
+> hal polling the device every 2 seconds for an inserted medium for automounting.
+> 
+> The reason is that the CDROM_DRIVE_STATUS ioctl now causes an open CD tray to
+> get closed, instead of just returning CDS_TRAY_OPEN and leaving the tray alone
+> (as in earlier kernel releases).
+> 
+> Unfortunately I cannot precisely tell at which kernel version it regressed,
+> since the CD drive of my workstation doesn't support mechanical closing (one of
+> those external Dell drives).
+> 
+> I built a minimal upstream 2.7.27.2 vanilla kernel with just enough PATA_AMD
+> and SCSI stuff to boot and reproduce this. Given the reported duplicates, it is
+> not specific to a CD ROM drive model or architecture (I reproduced it on
+> x86_64, many reporters are on i386).
+> 
+> IANAKD, but a cursory glance at
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=history;f=drivers/scsi/sr_ioctl.c
+> revealed that there weren't any changes since about 2.6.24 (where it still
+> worked fine). So I'm afraid I'm lost where to look.
+> 
+> Steps to reproduce:
+>  - Open CD tray (CD drive must support mechanical closing)
+>  - perl -e 'open F, "/dev/scd0"; ioctl (F, 0x5326, 0x7fffffff);'
+
+I'd finger this commit:
+
+commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734
+Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date:   Sat Jan 5 10:39:51 2008 -0600
+
+    [SCSI] sr: update to follow tray status correctly
+
+It's actually a gentoo patch trying to make tray status report with
+finer detail.  Can you revert it and see if the problem goes away?
+
+Thanks,
+
+James
 
 
-
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> Sent: Tuesday, October 21, 2008 5:44 PM
-> To: Miller, Mike (OS Dev)
-> Cc: jens.axboe@oracle.com; linux-kernel@vger.kernel.org;
-> linux-scsi@vger.kernel.org; fujita.tomonori@lab.ntt.co.jp;
-> adobriyan@gmail.com
-> Subject: Re: [PATCH 2/2] cciss:fix regression firmware not
-> displayed in procfs (again and again)
->
-> On Tue, 21 Oct 2008 16:23:22 -0500
-> Mike Miller <mike.miller@hp.com> wrote:
->
-> > Patch 2 of 2
->
-> What happened with "1 of 2"?
-
-Andrew,
-That was the patch to fix the sysfs symlink. You merged it and then superceded with my later patch.
-
---- snip -----
-
-The patch titled
-     cciss: fix sysfs regression
-has been removed from the -mm tree.  Its filename was
-     cciss-fix-sysfs-regression.patch
-
-This patch was dropped because an updated version will be merged
-
-The current -mm tree may be found at http://userweb.kernel.org/~akpm/mmotm/
-
-------------------------------------------------------
-Subject: cciss: fix sysfs regression
-From: Mike Miller <mike.miller@hp.com>
-
-Fix a broken symlink in sysfs.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/block/cciss.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff -puN drivers/block/cciss.c~cciss-fix-sysfs-regression drivers/block/cciss.c
---- a/drivers/block/cciss.c~cciss-fix-sysfs-regression
-+++ a/drivers/block/cciss.c
-@@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *
-        disk->first_minor = drv_index << NWD_SHIFT;
-        disk->fops = &cciss_fops;
-        disk->private_data = &h->drv[drv_index];
-+       disk->driverfs_dev = &h->pdev->dev;
-
-        /* Set up queue information */
-        blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask); _
-
-Patches currently in -mm which might be from mike.miller@hp.com are
-
-origin.patch
-cciss-fix-sysfs-regression.patch
-
-----snip-----
-
-Actually, this looks like the right one.
-
--- mikem
-
->
-> > Sorry for the delay. I've been out of the office and the
-> network has
-> > been down since before lunch CDT. This regression was introduced by
-> > commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-> > This patch fixes a regression where the controller firmware
-> version is
-> > not displayed in procfs. The previous patch would be called anytime
-> > something changed. This will get called only once for each
-> controller.
-> >
-> > In this patch I again initialize *inq_buff to NULL per Tomo's
-> > comments. I also use a goto clean 4 instead of returning
-> -ENOMEM if the kzalloc fails.
-> >
-> > I hope this finally meets everyones expectations.
-> >
-> > Please consider this for inclusion.
-> >
-> > Signed-off-by: Mike Miller <mike.miller@hp.com>
->
-> So this fix is needed in 2.6.27.x, yes?
->
