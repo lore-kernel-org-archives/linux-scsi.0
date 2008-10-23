@@ -1,51 +1,59 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [dm-devel] Re: [BUG] dm-mpath and scsi persistent reservation
-Date: Wed, 22 Oct 2008 21:53:08 -0500
-Message-ID: <48FFE714.7010308@cs.wisc.edu>
-References: <20081021231910.0fdbeb75@plop>	<1224629283.14830.838.camel@chandra-ubuntu>	<20081022215402.214a4ef8@plop> <1224707416.6851.33.camel@localhost.localdomain>
+From: "Mark Nelson" <mdnelson8@gmail.com>
+Subject: [PATCH] ahci: Add support for Promise PDC42819
+Date: Thu, 23 Oct 2008 14:08:16 +1100
+Message-ID: <65a6ef750810222008o139600e3o8d7c7cf50a4e4ea0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52638 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751746AbYJWCy7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2008 22:54:59 -0400
-In-Reply-To: <1224707416.6851.33.camel@localhost.localdomain>
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:57609 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbYJWDIS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2008 23:08:18 -0400
+Received: by gxk9 with SMTP id 9so626373gxk.13
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2008 20:08:17 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: agk@redhat.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, Christophe Varoqui <christophe.varoqui@free.fr>
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, mikpe@it.uu.se, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->> I don't see how we could use a device handler to translate an scsi error
->> code from a write io submitted to the multipath device map. Do you ?
-> 
-> Well, there is a problem.  Reservation Conflict should be treated as a
-> device error and passed straight up ... it shouldn't really have any
-> effect on dm mp because a path switch is unlikely to fix any issues.  So
-> dm mp shouldn't be intercepting this type of error at all.
-> 
+Add an appropriate entry for the Promise PDC42819 controller. It has an
+AHCI mode and so far works correctly with board_ahci.
 
-I think what Christophe was asking for is something like this:
+This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650 (4 port)
+software-based RAID cards (for which there is a binary driver, t3sas) and
+can be found on some motherboards, for example the MSI K9A2 Platinum,
+which calls the chip a Promise T3 controller.
 
-[RFC PATCH 1/4] convert block layer drivers to blkerr
-http://marc.info/?l=linux-scsi&m=112487427230642&w=2
-[RFC PATCH 2/4] convert dm to blkerr error values
-http://marc.info/?l=linux-scsi&m=112487427306501&w=2
-[RFC PATCH 3/4] convert dm-multipath to blkerr error
-http://marc.info/?l=linux-scsi&m=112487431524436&w=2
-[RFC PATCH 4/4] convert scsi to blkerr error values
-http://marc.info/?l=linux-scsi&m=112487431524350&w=2
+Although this controller also supports SAS devices, its default bootup mode
+is AHCI and the binary driver has to do some magic to get the chip into the
+appropriate mode to drive SAS disks.
 
-something that allows lower layers to give the upper layers some extra 
-info. In the patches the scsi layer would return a fatal device error, 
-and device mapper multipath would see that and just fail the IO instead 
-of retrying on a new path.
+Seeing as no documentation is provided by Promise, adding this entry to the
+ahci driver allows the controller to be useful to people as a SATA
+controller (with no ill effects on the system if a SAS disk is connected -
+probing of the port just times out with "link online but device
+misclassified"), without having to resort to using the binary driver. Users
+who require SAS or the proprietary software raid can get this functionality
+using the binary driver.
 
-I do not like my implementation in those patches, but I did not have 
-time in the past to rework them. I can now though if you guys have any 
-comments. I am really struggling on the definition of the block layer 
-errors codes and what info they should convey. For example I was not 
-sure if they should they give a hint about if the error is fatal or 
-retryable like in the patches above or should they describe what happened?
+Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
+---
+ drivers/ata/ahci.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: libata-dev/drivers/ata/ahci.c
+===================================================================
+--- libata-dev.orig/drivers/ata/ahci.c
++++ libata-dev/drivers/ata/ahci.c
+@@ -588,6 +588,9 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+ 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+
++	/* Promise */
++	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
++
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
