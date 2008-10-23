@@ -1,36 +1,35 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
-Date: Thu, 23 Oct 2008 09:15:12 -0700 (PDT)
-Message-ID: <20081023161512.AED1711D107@picon.linux-foundation.org>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: [Bug 11800] New: building SES support fails w/ gcc-3.4.5
+Date: Thu, 23 Oct 2008 12:14:39 -0400
+Message-ID: <200810231614.m9NGEg1p019191@colby.verdasys.com>
 References: <bug-11800-11613@http.bugzilla.kernel.org/>
+ <20081021155240.851b69c3.akpm@linux-foundation.org>
+ <200810221943.m9MJh8bR031381@colby.verdasys.com>
+ <20081022133046.0fa7de8a.akpm@linux-foundation.org>
+ <1224710227.6851.50.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60198 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752897AbYJWQPO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2008 12:15:14 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9NGFC3O015177
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2008 09:15:13 -0700
-In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
+Received: from colby.verdasys.com ([69.20.67.85]:40985 "EHLO
+	colby.verdasys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbYJWQPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2008 12:15:14 -0400
+In-Reply-To: <1224710227.6851.50.camel@localhost.localdomain>
+References: <bug-11800-11613@http.bugzilla.kernel.org/>
+ <20081021155240.851b69c3.akpm@linux-foundation.org>
+ <200810221943.m9MJh8bR031381@colby.verdasys.com>
+ <20081022133046.0fa7de8a.akpm@linux-foundation.org>
+ <1224710227.6851.50.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11800
-
-
-
-
-
-------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-10-23 09:15 -------
-Reply-To: beej@alum.mit.edu
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
 At 17:17 10/22/2008, James Bottomley wrote:
  >On Wed, 2008-10-22 at 13:30 -0700, Andrew Morton wrote:
  >> OK, it's here:
  >>
- >>     buf = kmalloc(vpd_len, GFP_KERNEL);
+ >> 	buf = kmalloc(vpd_len, GFP_KERNEL);
  >>
  >> it's a gcc bug.
  >>
@@ -57,7 +56,7 @@ looks to me like -Os:
 beej@dell linux-2.6.27.1]$ make V=1 drivers/scsi/ses.s
 rm -f include/config/kernel.release
 echo 2.6.27.1 > include/config/kernel.release
-set -e; :; mkdir -p include/linux/;     (echo \#define 
+set -e; :; mkdir -p include/linux/; 	(echo \#define 
 LINUX_VERSION_CODE 132635; echo '#define KERNEL_VERSION(a,b,c) (((a) 
 << 16) + ((b) << 8) + (c))';) < 
 /usr/local/src/kernel/linux-2.6.27.1/Makefile > 
@@ -65,7 +64,7 @@ include/linux/version.h.tmp; if [ -r include/linux/version.h ] && cmp
 -s include/linux/version.h include/linux/version.h.tmp; then rm -f 
 include/linux/version.h.tmp; else :; mv -f 
 include/linux/version.h.tmp include/linux/version.h; fi
-set -e; :; mkdir -p include/linux/;     if [ `echo -n "2.6.27.1" | wc -c 
+set -e; :; mkdir -p include/linux/; 	if [ `echo -n "2.6.27.1" | wc -c 
 ` -gt 64 ]; then echo '"2.6.27.1" exceeds 64 characters' >&2; exit 1; 
 fi; (echo \#define UTS_RELEASE \"2.6.27.1\";) < 
 include/config/kernel.release > include/linux/utsrelease.h.tmp; if [ 
@@ -128,8 +127,3 @@ else that does.
 cheers,
 marc
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
