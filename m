@@ -1,33 +1,27 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
-Date: Thu, 23 Oct 2008 09:35:26 -0700 (PDT)
-Message-ID: <20081023163526.15B94108047@picon.linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11800] New: building SES support fails w/ gcc-3.4.5
+Date: Thu, 23 Oct 2008 11:35:13 -0500
+Message-ID: <1224779713.3330.13.camel@localhost.localdomain>
 References: <bug-11800-11613@http.bugzilla.kernel.org/>
+	 <20081021155240.851b69c3.akpm@linux-foundation.org>
+	 <200810221943.m9MJh8bR031381@colby.verdasys.com>
+	 <20081022133046.0fa7de8a.akpm@linux-foundation.org>
+	 <1224710227.6851.50.camel@localhost.localdomain>
+	 <200810231614.m9NGEg1p019191@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38706 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757268AbYJWQf2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2008 12:35:28 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9NGZQE8016693
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2008 09:35:27 -0700
-In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40768 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754976AbYJWQfQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Oct 2008 12:35:16 -0400
+In-Reply-To: <200810231614.m9NGEg1p019191@colby.verdasys.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11800
-
-
-
-
-
-------- Comment #6 from anonymous@kernel-bugs.osdl.org  2008-10-23 09:35 -------
-Reply-To: James.Bottomley@HansenPartnership.com
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
 On Thu, 2008-10-23 at 12:14 -0400, Marc Bejarano wrote:
 > At 17:17 10/22/2008, James Bottomley wrote:
@@ -72,7 +66,3 @@ might consider making the default for that option N if gcc version is <
 James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
