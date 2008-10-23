@@ -1,61 +1,131 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] aacraid: check pci_alloc_consistent errors
-Date: Thu, 23 Oct 2008 17:36:08 +0900
-Message-ID: <20081023173626T.fujita.tomonori@lab.ntt.co.jp>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [dm-devel] failover does not work with rdac device handler
+Date: Thu, 23 Oct 2008 08:12:43 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BCE45E0@cosmail01.lsi.com>
+References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BB4E86E@cosmail01.lsi.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BBBC908@cosmail01.lsi.com>
+	 ,<1223081419.14830.585.camel@chandra-ubuntu>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BB949D3@cosmail01.lsi.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCCF2@cosmail01.lsi.com>
+	 <1223322817.14830.593.camel@chandra-ubuntu>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCD31@cosmail01.lsi.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCE37@cosmail01.lsi.com>
+	 <1223345074.14830.601.camel@chandra-ubuntu>
+	 <E463DF2B2E584B4A82673F53D62C2EF45BBBD142@cosmail01.lsi.com>
+ <1223407146.14830.617.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:44166 "EHLO sh.osrg.net"
+Received: from mail0.lsil.com ([147.145.40.20]:60916 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323AbYJWIgR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2008 04:36:17 -0400
+	id S1752496AbYJWOM6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2008 10:12:58 -0400
+In-Reply-To: <1223407146.14830.617.camel@chandra-ubuntu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: Mark_Salyzyn@adaptec.com, linux-scsi@vger.kernel.org
+To: "sekharan@us.ibm.com" <sekharan@us.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-We need to check the address that pci_alloc_consistent() returns since
-it might fail.
+Hello Chandra,
+   I have not seen this patch being submitted to mainstream kernel. When are you planning to submit this patch? Should I open a bugzilla for tracking purposes?
 
-When pci_alloc_consistent() fails, some IOMMUs set the dma_handle
-argument to zero. So we can't use fibptr->hw_fib_pa directly here.
+Thanks
+Babu Moger
+-----Original Message-----
+From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
+Sent: Tuesday, October 07, 2008 2:19 PM
+To: Moger, Babu
+Cc: device-mapper development; linux-scsi@vger.kernel.org
+Subject: RE: [dm-devel] failover does not work with rdac device handler
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+Sorry, I sent an imcomplete patch. Here is the correct one.
+
+BTW, The panic you saw is caused by the line (one of the lines you
+added):
+
+dev = container_of(&scsi_dh_data, struct scsi_device, scsi_dh_data);
+
+in scsi_dh_release(). We cannot use pointer in a structure to get the
+parent structure.
+
+chandra
+
+Keep a reference count of attaches, so that same number of detaches are allowed.
+-----------
+
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- drivers/scsi/aacraid/commctrl.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+Index: linux-2.6.27-rc8-git5/drivers/scsi/device_handler/scsi_dh.c
+===================================================================
+--- linux-2.6.27-rc8-git5.orig/drivers/scsi/device_handler/scsi_dh.c
++++ linux-2.6.27-rc8-git5/drivers/scsi/device_handler/scsi_dh.c
+@@ -153,12 +153,28 @@ static int scsi_dh_handler_attach(struct
+        if (sdev->scsi_dh_data) {
+                if (sdev->scsi_dh_data->scsi_dh != scsi_dh)
+                        err = -EBUSY;
+-       } else if (scsi_dh->attach)
++               else
++                       kref_get(&sdev->scsi_dh_data->kref);
++       } else if (scsi_dh->attach) {
+                err = scsi_dh->attach(sdev);
++               if (!err) {
++                       kref_init(&sdev->scsi_dh_data->kref);
++                       sdev->scsi_dh_data->sdev = sdev;
++               }
++       }
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index a735526..a5ebf8f 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -90,14 +90,24 @@ static int ioctl_send_fib(struct aac_dev * dev, void __user *arg)
- 	if (size < le16_to_cpu(kfib->header.SenderSize))
- 		size = le16_to_cpu(kfib->header.SenderSize);
- 	if (size > dev->max_fib_size) {
-+		dma_addr_t daddr;
+        return err;
+ }
+
++static void scsi_dh_release(struct kref *kref)
++{
++       struct scsi_dh_data *scsi_dh_data;
++       scsi_dh_data = container_of(kref, struct scsi_dh_data, kref);
 +
- 		if (size > 2048) {
- 			retval = -EINVAL;
- 			goto cleanup;
- 		}
++       if (scsi_dh_data->scsi_dh && scsi_dh_data->scsi_dh->detach)
++               scsi_dh_data->scsi_dh->detach(scsi_dh_data->sdev);
++}
 +
-+		kfib = pci_alloc_consistent(dev->pdev, size, &daddr);
-+		if (!kfib) {
-+			retval = -ENOMEM;
-+			goto cleanup;
-+		}
-+
- 		/* Highjack the hw_fib */
- 		hw_fib = fibptr->hw_fib_va;
- 		hw_fib_pa = fibptr->hw_fib_pa;
--		fibptr->hw_fib_va = kfib = pci_alloc_consistent(dev->pdev, size, &fibptr->hw_fib_pa);
-+		fibptr->hw_fib_va = kfib;
-+		fibptr->hw_fib_pa = daddr;
- 		memset(((char *)kfib) + dev->max_fib_size, 0, size - dev->max_fib_size);
- 		memcpy(kfib, hw_fib, dev->max_fib_size);
- 	}
--- 
-1.5.5.GIT
+ /*
+  * scsi_dh_handler_detach - Detach a device handler from a device
+  * @sdev - SCSI device the device handler should be detached from
+@@ -176,11 +192,7 @@ static void scsi_dh_handler_detach(struc
+        if (scsi_dh && scsi_dh != sdev->scsi_dh_data->scsi_dh)
+                return;
+
+-       if (!scsi_dh)
+-               scsi_dh = sdev->scsi_dh_data->scsi_dh;
+-
+-       if (scsi_dh && scsi_dh->detach)
+-               scsi_dh->detach(sdev);
++       kref_put(&sdev->scsi_dh_data->kref, scsi_dh_release);
+ }
+
+ /*
+Index: linux-2.6.27-rc8-git5/include/scsi/scsi_device.h
+===================================================================
+--- linux-2.6.27-rc8-git5.orig/include/scsi/scsi_device.h
++++ linux-2.6.27-rc8-git5/include/scsi/scsi_device.h
+@@ -6,6 +6,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/workqueue.h>
+ #include <linux/blkdev.h>
++#include <linux/kref.h>
+ #include <scsi/scsi.h>
+ #include <asm/atomic.h>
+
+@@ -191,6 +192,8 @@ struct scsi_device_handler {
+
+ struct scsi_dh_data {
+        struct scsi_device_handler *scsi_dh;
++       struct kref kref;
++       struct scsi_device *sdev; /* back reference */
+        char buf[0];
+ };
+
+
 
