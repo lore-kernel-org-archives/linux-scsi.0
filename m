@@ -1,131 +1,135 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [dm-devel] failover does not work with rdac device handler
-Date: Thu, 23 Oct 2008 08:12:43 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BCE45E0@cosmail01.lsi.com>
-References: <00FE57DD11E3A94893D5BD54C3358BE884BF36@AUSX3MPC128.aus.amer.dell.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BB4E86E@cosmail01.lsi.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BBBC908@cosmail01.lsi.com>
-	 ,<1223081419.14830.585.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BB949D3@cosmail01.lsi.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCCF2@cosmail01.lsi.com>
-	 <1223322817.14830.593.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCD31@cosmail01.lsi.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BBBCE37@cosmail01.lsi.com>
-	 <1223345074.14830.601.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BBBD142@cosmail01.lsi.com>
- <1223407146.14830.617.camel@chandra-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
+Date: Thu, 23 Oct 2008 09:15:12 -0700 (PDT)
+Message-ID: <20081023161512.AED1711D107@picon.linux-foundation.org>
+References: <bug-11800-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60916 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752496AbYJWOM6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2008 10:12:58 -0400
-In-Reply-To: <1223407146.14830.617.camel@chandra-ubuntu>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60198 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752897AbYJWQPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Oct 2008 12:15:14 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9NGFC3O015177
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2008 09:15:13 -0700
+In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "sekharan@us.ibm.com" <sekharan@us.ibm.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hello Chandra,
-   I have not seen this patch being submitted to mainstream kernel. When are you planning to submit this patch? Should I open a bugzilla for tracking purposes?
-
-Thanks
-Babu Moger
------Original Message-----
-From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
-Sent: Tuesday, October 07, 2008 2:19 PM
-To: Moger, Babu
-Cc: device-mapper development; linux-scsi@vger.kernel.org
-Subject: RE: [dm-devel] failover does not work with rdac device handler
+http://bugzilla.kernel.org/show_bug.cgi?id=11800
 
 
-Sorry, I sent an imcomplete patch. Here is the correct one.
 
-BTW, The panic you saw is caused by the line (one of the lines you
-added):
 
-dev = container_of(&scsi_dh_data, struct scsi_device, scsi_dh_data);
 
-in scsi_dh_release(). We cannot use pointer in a structure to get the
-parent structure.
+------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-10-23 09:15 -------
+Reply-To: beej@alum.mit.edu
 
-chandra
+At 17:17 10/22/2008, James Bottomley wrote:
+ >On Wed, 2008-10-22 at 13:30 -0700, Andrew Morton wrote:
+ >> OK, it's here:
+ >>
+ >>     buf = kmalloc(vpd_len, GFP_KERNEL);
+ >>
+ >> it's a gcc bug.
+ >>
+ >> Please see if you can find some way to make it go away - perhaps change
+ >> vpd_len's type to `int', things like that.
+ >>
+ >> Or use a different compiler version :(
 
-Keep a reference count of attaches, so that same number of detaches are allowed.
------------
+i'm not worried about compiling this.  i already did a compilation 
+without it and i'll be fine without SES.  i just selected it on the 
+off chance i'd find time to play with it.  i was just doing my duty 
+of reporting this to save others the trouble.
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+ >Could it be an optimisation issue?  The static oversize test relies on
+ >the compiler optimising away a leg that can never be reached if the size
+ >is under the max. If you do a make V=1 you'll see what optimisation
+ >flags the compiler is using ... if it's -O2 then yes, the compiler
+ >should be optimising stuff away and it's a clear compiler problem.  If
+ >it's anything else, we might have a mis setting of the optimisation
+ >level in the kernel build.
+
+looks to me like -Os:
 ---
-Index: linux-2.6.27-rc8-git5/drivers/scsi/device_handler/scsi_dh.c
-===================================================================
---- linux-2.6.27-rc8-git5.orig/drivers/scsi/device_handler/scsi_dh.c
-+++ linux-2.6.27-rc8-git5/drivers/scsi/device_handler/scsi_dh.c
-@@ -153,12 +153,28 @@ static int scsi_dh_handler_attach(struct
-        if (sdev->scsi_dh_data) {
-                if (sdev->scsi_dh_data->scsi_dh != scsi_dh)
-                        err = -EBUSY;
--       } else if (scsi_dh->attach)
-+               else
-+                       kref_get(&sdev->scsi_dh_data->kref);
-+       } else if (scsi_dh->attach) {
-                err = scsi_dh->attach(sdev);
-+               if (!err) {
-+                       kref_init(&sdev->scsi_dh_data->kref);
-+                       sdev->scsi_dh_data->sdev = sdev;
-+               }
-+       }
+beej@dell linux-2.6.27.1]$ make V=1 drivers/scsi/ses.s
+rm -f include/config/kernel.release
+echo 2.6.27.1 > include/config/kernel.release
+set -e; :; mkdir -p include/linux/;     (echo \#define 
+LINUX_VERSION_CODE 132635; echo '#define KERNEL_VERSION(a,b,c) (((a) 
+<< 16) + ((b) << 8) + (c))';) < 
+/usr/local/src/kernel/linux-2.6.27.1/Makefile > 
+include/linux/version.h.tmp; if [ -r include/linux/version.h ] && cmp 
+-s include/linux/version.h include/linux/version.h.tmp; then rm -f 
+include/linux/version.h.tmp; else :; mv -f 
+include/linux/version.h.tmp include/linux/version.h; fi
+set -e; :; mkdir -p include/linux/;     if [ `echo -n "2.6.27.1" | wc -c 
+` -gt 64 ]; then echo '"2.6.27.1" exceeds 64 characters' >&2; exit 1; 
+fi; (echo \#define UTS_RELEASE \"2.6.27.1\";) < 
+include/config/kernel.release > include/linux/utsrelease.h.tmp; if [ 
+-r include/linux/utsrelease.h ] && cmp -s include/linux/utsrelease.h 
+include/linux/utsrelease.h.tmp; then rm -f 
+include/linux/utsrelease.h.tmp; else :; mv -f 
+include/linux/utsrelease.h.tmp include/linux/utsrelease.h; fi
+set -e; if [ -L include/asm ]; then asmlink=`readlink include/asm | 
+cut -d '-' -f 2`; if [ "$asmlink" != "x86" ]; then echo "ERROR: the 
+symlink include/asm points to asm-$asmlink but asm-x86 was expected"; 
+echo "       set ARCH or save .config and run 'make mrproper' to fix 
+it"; exit 1; fi; fi
+if [ ! -L include/asm ]; then echo '  SYMLINK include/asm -> 
+include/asm-x86'; if [ ! -d include/asm-x86 ]; then mkdir -p 
+include/asm-x86; fi; ln -fsn asm-x86 include/asm; fi
+mkdir -p .tmp_versions
+make -f scripts/Makefile.build obj=scripts/basic
+make -f scripts/Makefile.build obj=.
+mkdir -p kernel/
+mkdir -p arch/x86/kernel/
+make -f scripts/Makefile.build obj=. missing-syscalls
+   /bin/sh scripts/checksyscalls.sh gcc 
+-Wp,-MD,./.missing-syscalls.d  -nostdinc -isystem 
+/usr/lib/gcc/x86_64-redhat-linux/3.4.5/include -D__KERNEL__ 
+-Iinclude  -I/usr/local/src/kernel/linux-2.6.27.1/arch/x86/include 
+-include include/linux/autoconf.h -Wall -Wundef -Wstrict-prototypes 
+-Wno-trigraphs -fno-strict-aliasing -fno-common 
+-Werror-implicit-function-declaration -Os -m64 -mno-red-zone 
+-mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args 
+-DCONFIG_AS_CFI=1 -pipe -Wno-sign-compare 
+-fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 
+-mno-3dnow -Iinclude/asm-x86/mach-default -fomit-frame-pointer -g 
+-Wdeclaration-after-statement  -D"KBUILD_STR(s)=#s" 
+-D"KBUILD_BASENAME=KBUILD_STR(missing_syscalls)" 
+-D"KBUILD_MODNAME=KBUILD_STR(missing_syscalls)"
+make -f scripts/Makefile.build obj=scripts
+make -f scripts/Makefile.build obj=scripts/genksyms
+make -f scripts/Makefile.build obj=scripts/mod
+make -f scripts/Makefile.build obj=drivers/scsi drivers/scsi/ses.s
+   gcc -Wp,-MD,drivers/scsi/.ses.s.d  -nostdinc -isystem 
+/usr/lib/gcc/x86_64-redhat-linux/3.4.5/include -D__KERNEL__ 
+-Iinclude  -I/usr/local/src/kernel/linux-2.6.27.1/arch/x86/include 
+-include include/linux/autoconf.h -Wall -Wundef -Wstrict-prototypes 
+-Wno-trigraphs -fno-strict-aliasing -fno-common 
+-Werror-implicit-function-declaration -Os -m64 -mno-red-zone 
+-mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args 
+-DCONFIG_AS_CFI=1 -pipe -Wno-sign-compare 
+-fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-sse2 
+-mno-3dnow -Iinclude/asm-x86/mach-default -fomit-frame-pointer -g 
+-Wdeclaration-after-statement  -D"KBUILD_STR(s)=#s" 
+-D"KBUILD_BASENAME=KBUILD_STR(ses)" 
+-D"KBUILD_MODNAME=KBUILD_STR(ses)" -fverbose-asm -S -o 
+drivers/scsi/ses.s drivers/scsi/ses.c
+---
 
-        return err;
- }
+i'm happy to run any other easy-to-do tests in case you don't have 
+access to a CentOS 4 box, but it should be easy to repro for anybody 
+else that does.
 
-+static void scsi_dh_release(struct kref *kref)
-+{
-+       struct scsi_dh_data *scsi_dh_data;
-+       scsi_dh_data = container_of(kref, struct scsi_dh_data, kref);
-+
-+       if (scsi_dh_data->scsi_dh && scsi_dh_data->scsi_dh->detach)
-+               scsi_dh_data->scsi_dh->detach(scsi_dh_data->sdev);
-+}
-+
- /*
-  * scsi_dh_handler_detach - Detach a device handler from a device
-  * @sdev - SCSI device the device handler should be detached from
-@@ -176,11 +192,7 @@ static void scsi_dh_handler_detach(struc
-        if (scsi_dh && scsi_dh != sdev->scsi_dh_data->scsi_dh)
-                return;
-
--       if (!scsi_dh)
--               scsi_dh = sdev->scsi_dh_data->scsi_dh;
--
--       if (scsi_dh && scsi_dh->detach)
--               scsi_dh->detach(sdev);
-+       kref_put(&sdev->scsi_dh_data->kref, scsi_dh_release);
- }
-
- /*
-Index: linux-2.6.27-rc8-git5/include/scsi/scsi_device.h
-===================================================================
---- linux-2.6.27-rc8-git5.orig/include/scsi/scsi_device.h
-+++ linux-2.6.27-rc8-git5/include/scsi/scsi_device.h
-@@ -6,6 +6,7 @@
- #include <linux/spinlock.h>
- #include <linux/workqueue.h>
- #include <linux/blkdev.h>
-+#include <linux/kref.h>
- #include <scsi/scsi.h>
- #include <asm/atomic.h>
-
-@@ -191,6 +192,8 @@ struct scsi_device_handler {
-
- struct scsi_dh_data {
-        struct scsi_device_handler *scsi_dh;
-+       struct kref kref;
-+       struct scsi_device *sdev; /* back reference */
-        char buf[0];
- };
+cheers,
+marc
 
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
