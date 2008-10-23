@@ -1,59 +1,61 @@
-From: "Mark Nelson" <mdnelson8@gmail.com>
-Subject: [PATCH] ahci: Add support for Promise PDC42819
-Date: Thu, 23 Oct 2008 14:08:16 +1100
-Message-ID: <65a6ef750810222008o139600e3o8d7c7cf50a4e4ea0@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] aacraid: check pci_alloc_consistent errors
+Date: Thu, 23 Oct 2008 17:36:08 +0900
+Message-ID: <20081023173626T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:57609 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbYJWDIS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2008 23:08:18 -0400
-Received: by gxk9 with SMTP id 9so626373gxk.13
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2008 20:08:17 -0700 (PDT)
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:44166 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751323AbYJWIgR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Oct 2008 04:36:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, mikpe@it.uu.se, linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com
+Cc: Mark_Salyzyn@adaptec.com, linux-scsi@vger.kernel.org
 
-Add an appropriate entry for the Promise PDC42819 controller. It has an
-AHCI mode and so far works correctly with board_ahci.
+We need to check the address that pci_alloc_consistent() returns since
+it might fail.
 
-This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650 (4 port)
-software-based RAID cards (for which there is a binary driver, t3sas) and
-can be found on some motherboards, for example the MSI K9A2 Platinum,
-which calls the chip a Promise T3 controller.
+When pci_alloc_consistent() fails, some IOMMUs set the dma_handle
+argument to zero. So we can't use fibptr->hw_fib_pa directly here.
 
-Although this controller also supports SAS devices, its default bootup mode
-is AHCI and the binary driver has to do some magic to get the chip into the
-appropriate mode to drive SAS disks.
-
-Seeing as no documentation is provided by Promise, adding this entry to the
-ahci driver allows the controller to be useful to people as a SATA
-controller (with no ill effects on the system if a SAS disk is connected -
-probing of the port just times out with "link online but device
-misclassified"), without having to resort to using the binary driver. Users
-who require SAS or the proprietary software raid can get this functionality
-using the binary driver.
-
-Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/ata/ahci.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/aacraid/commctrl.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-Index: libata-dev/drivers/ata/ahci.c
-===================================================================
---- libata-dev.orig/drivers/ata/ahci.c
-+++ libata-dev/drivers/ata/ahci.c
-@@ -588,6 +588,9 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
- 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
-
-+	/* Promise */
-+	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index a735526..a5ebf8f 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -90,14 +90,24 @@ static int ioctl_send_fib(struct aac_dev * dev, void __user *arg)
+ 	if (size < le16_to_cpu(kfib->header.SenderSize))
+ 		size = le16_to_cpu(kfib->header.SenderSize);
+ 	if (size > dev->max_fib_size) {
++		dma_addr_t daddr;
 +
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+ 		if (size > 2048) {
+ 			retval = -EINVAL;
+ 			goto cleanup;
+ 		}
++
++		kfib = pci_alloc_consistent(dev->pdev, size, &daddr);
++		if (!kfib) {
++			retval = -ENOMEM;
++			goto cleanup;
++		}
++
+ 		/* Highjack the hw_fib */
+ 		hw_fib = fibptr->hw_fib_va;
+ 		hw_fib_pa = fibptr->hw_fib_pa;
+-		fibptr->hw_fib_va = kfib = pci_alloc_consistent(dev->pdev, size, &fibptr->hw_fib_pa);
++		fibptr->hw_fib_va = kfib;
++		fibptr->hw_fib_pa = daddr;
+ 		memset(((char *)kfib) + dev->max_fib_size, 0, size - dev->max_fib_size);
+ 		memcpy(kfib, hw_fib, dev->max_fib_size);
+ 	}
+-- 
+1.5.5.GIT
+
