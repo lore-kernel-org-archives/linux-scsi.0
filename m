@@ -1,30 +1,21 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11817] SCSI: timing out command for dvd drive
-Date: Fri, 24 Oct 2008 09:45:02 -0700 (PDT)
-Message-ID: <20081024164502.DCE8311D108@picon.linux-foundation.org>
-References: <bug-11817-11613@http.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Bug 11817] New: SCSI: timing out command for dvd drive
+Date: Fri, 24 Oct 2008 11:44:47 -0500
+Message-ID: <4901FB7F.7000905@cs.wisc.edu>
+References: <bug-11817-11613@http.bugzilla.kernel.org/> <4901FA0F.5000707@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32954 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753259AbYJXQpF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2008 12:45:05 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9OGj2ZH031552
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2008 09:45:03 -0700
-In-Reply-To: <bug-11817-11613@http.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57625 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753436AbYJXQqj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2008 12:46:39 -0400
+In-Reply-To: <4901FA0F.5000707@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11817
-
-
-
-
-
-------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-10-24 09:45 -------
-Reply-To: michaelc@cs.wisc.edu
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, Mike Anderson <andmike@linux.vnet.ibm.com>
 
 Mike Christie wrote:
 > bugme-daemon@bugzilla.kernel.org wrote:
@@ -175,9 +166,3 @@ Mike Christie wrote:
 > 
 
 Ignore this. In RHEL it was slightly different problem.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
