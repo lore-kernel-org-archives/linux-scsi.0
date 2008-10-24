@@ -1,30 +1,21 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11817] SCSI: timing out command for dvd drive
-Date: Fri, 24 Oct 2008 09:38:56 -0700 (PDT)
-Message-ID: <20081024163856.DA0C1108048@picon.linux-foundation.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Bug 11817] New: SCSI: timing out command for dvd drive
+Date: Fri, 24 Oct 2008 11:38:39 -0500
+Message-ID: <4901FA0F.5000707@cs.wisc.edu>
 References: <bug-11817-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51386 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753334AbYJXQjA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2008 12:39:00 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9OGcu0d031195
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2008 09:38:57 -0700
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:40413 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753239AbYJXQjn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2008 12:39:43 -0400
 In-Reply-To: <bug-11817-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11817
-
-
-
-
-
-------- Comment #6 from anonymous@kernel-bugs.osdl.org  2008-10-24 09:38 -------
-Reply-To: michaelc@cs.wisc.edu
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, Mike Anderson <andmike@linux.vnet.ibm.com>
 
 bugme-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=11817
@@ -152,7 +143,3 @@ merged? If so that will fix the problem. If not then I will make a
 different patch.
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
