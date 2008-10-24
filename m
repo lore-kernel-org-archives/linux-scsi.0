@@ -1,200 +1,67 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [Bugme-new] [Bug 11792] New: Oops when reading
- /proc/megaraid/hba0/diskdrives-ch*
-Date: Fri, 24 Oct 2008 07:31:27 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C32D34135E@cosmail02.lsi.com>
-References: <20081024092127D.fujita.tomonori@lab.ntt.co.jp>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [RFC PATCH] HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Fri, 24 Oct 2008 15:10:57 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884C01B0C584@GVW0547EXC.americas.hpqcorp.net>
+References: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:49183 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbYJXNdD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Oct 2008 09:33:03 -0400
-In-Reply-To: <20081024092127D.fujita.tomonori@lab.ntt.co.jp>
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:16131 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbYJXPLl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Oct 2008 11:11:41 -0400
+In-Reply-To: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "pterjan@gmail.com" <pterjan@gmail.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
-Cc: "bharrosh@panasas.com" <bharrosh@panasas.com>, "matthew@wil.cx" <matthew@wil.cx>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Lawler, Tom" <Tom.Lawler@hp.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Jens.Axboe@oracle.com" <Jens.Axboe@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Tom,
+Tomo wrote:
 
-I will update you as soon as LSI verifies it.  Not today, next week will be safe.
-
-Regards,
-
-Bo Yang
-
------Original Message-----
-From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-Sent: Thursday, October 23, 2008 8:21 PM
-To: pterjan@gmail.com; James.Bottomley@hansenpartnership.com
-Cc: fujita.tomonori@lab.ntt.co.jp; bharrosh@panasas.com; matthew@wil.cx; akpm@linux-foundation.org; linux-scsi@vger.kernel.org; Patro, Sumant; Yang, Bo; bugme-daemon@bugzilla.kernel.org
-Subject: Re: [Bugme-new] [Bug 11792] New: Oops when reading /proc/megaraid/hba0/diskdrives-ch*
-
-On Fri, 24 Oct 2008 00:49:07 +0200
-"Pascal Terjan" <pterjan@gmail.com> wrote:
-
-> On Wed, Oct 22, 2008 at 2:33 PM, FUJITA Tomonori
-> <fujita.tomonori@lab.ntt.co.jp> wrote:
-> >
-> > diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-> > index 28c9da7..7dc62de 100644
-> > --- a/drivers/scsi/megaraid.c
-> > +++ b/drivers/scsi/megaraid.c
-> > @@ -4402,6 +4402,10 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-> >        scb_t   *scb;
-> >        int     rval;
-> >
-> > +       scmd = scsi_allocate_command(GFP_KERNEL);
-> > +       if (!scmd)
-> > +               return -ENOMEM;
-> > +
-> >        /*
-> >         * The internal commands share one command id and hence are
-> >         * serialized. This is so because we want to reserve maximum number of
-> > @@ -4412,12 +4416,11 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-> >        scb = &adapter->int_scb;
-> >        memset(scb, 0, sizeof(scb_t));
-> >
-> > -       scmd = &adapter->int_scmd;
-> > -       memset(scmd, 0, sizeof(Scsi_Cmnd));
-> > -
-> >        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-> >        scmd->device = sdev;
-> >
-> > +       memset(adapter->int_cdb, 0, sizeof(adapter->int_cdb));
-> > +       scmd->cmnd = adapter->int_cdb;
-> >        scmd->device->host = adapter->host;
-> >        scmd->host_scribble = (void *)scb;
-> >        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
-> > @@ -4456,6 +4459,8 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-> >
-> >        mutex_unlock(&adapter->int_mtx);
-> >
-> > +       scsi_free_command(GFP_KERNEL, scmd);
-> > +
-> >        return rval;
-> >  }
-> >
-> > diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-> > index ee70bd4..795201f 100644
-> > --- a/drivers/scsi/megaraid.h
-> > +++ b/drivers/scsi/megaraid.h
-> > @@ -888,8 +888,8 @@ typedef struct {
-> >
-> >        u8      sglen;  /* f/w supported scatter-gather list length */
-> >
-> > +       unsigned char int_cdb[MAX_COMMAND_SIZE];
-> >        scb_t                   int_scb;
-> > -       Scsi_Cmnd               int_scmd;
-> >        struct mutex            int_mtx;        /* To synchronize the internal
-> >                                                commands */
-> >        struct completion       int_waitq;      /* wait queue for internal
-> >
 >
-> I confirm that this patch fixes the oops and I can now read the usual info
+> My scsi driver is still in an early stage (I tried to keep
+> the changes minimum). I can detect logical units, mount a
+> file system, do lots of I/Os, however, there are lots of
+> TODOs in the management features.
+>
+> If I can get an ACK from HP about the long-term migration of
+> cciss to SCSI, I'm happy to keep working on the SCSI cciss
+> driver and maintain it until HP takes over the driver.
 
-Thanks!
+Just a brief update. HP has developed a scsi version of cciss. It was originally done for another environment but we have decided to use it as the base for Linux. It was authored by Tom Lawler of HP. We are currently in the process of getting the Open Source Review Board approval to release the code to the community.
 
-LSI people, can I get the ack on this?
+It's unclear right now as to who will be the maintainer.
 
+-- mikem
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] megaraid: fix mega_internal_command oops
-
-scsi_cmnd->cmnd was changed from a static array to a pointer post
-2.6.25. It breaks mega_internal_command():
-
-static int
-mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-{
-...
-        scb = &adapter->int_scb;
-        memset(scb, 0, sizeof(scb_t));
-
-        scmd = &adapter->int_scmd;
-        memset(scmd, 0, sizeof(Scsi_Cmnd));
-
-        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-        scmd->device = sdev;
-
-        scmd->device->host = adapter->host;
-        scmd->host_scribble = (void *)scb;
-        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
-
-mega_internal_command() uses scsi_cmnd allocated internally so
-scmd->cmnd is NULL here. This patch adds a static array for cdb to
-adapter_t and uses it here. This also uses
-scsi_allocate_command/scsi_free_command, the recommended way to
-allocate struct scsi_cmnd since the driver might use sense_buffer in
-struct scsi_cmnd.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
-Tested-by: Pascal Terjan <pterjan@gmail.com>
-Reported-by: Pascal Terjan <pterjan@gmail.com>
----
- drivers/scsi/megaraid.c |   11 ++++++++---
- drivers/scsi/megaraid.h |    2 +-
- 2 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 28c9da7..7dc62de 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -4402,6 +4402,10 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-        scb_t   *scb;
-        int     rval;
-
-+       scmd = scsi_allocate_command(GFP_KERNEL);
-+       if (!scmd)
-+               return -ENOMEM;
-+
-        /*
-         * The internal commands share one command id and hence are
-         * serialized. This is so because we want to reserve maximum number of
-@@ -4412,12 +4416,11 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-        scb = &adapter->int_scb;
-        memset(scb, 0, sizeof(scb_t));
-
--       scmd = &adapter->int_scmd;
--       memset(scmd, 0, sizeof(Scsi_Cmnd));
--
-        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-        scmd->device = sdev;
-
-+       memset(adapter->int_cdb, 0, sizeof(adapter->int_cdb));
-+       scmd->cmnd = adapter->int_cdb;
-        scmd->device->host = adapter->host;
-        scmd->host_scribble = (void *)scb;
-        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
-@@ -4456,6 +4459,8 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-
-        mutex_unlock(&adapter->int_mtx);
-
-+       scsi_free_command(GFP_KERNEL, scmd);
-+
-        return rval;
- }
-
-diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-index ee70bd4..795201f 100644
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -888,8 +888,8 @@ typedef struct {
-
-        u8      sglen;  /* f/w supported scatter-gather list length */
-
-+       unsigned char int_cdb[MAX_COMMAND_SIZE];
-        scb_t                   int_scb;
--       Scsi_Cmnd               int_scmd;
-        struct mutex            int_mtx;        /* To synchronize the internal
-                                                commands */
-        struct completion       int_waitq;      /* wait queue for internal
---
-1.5.5.GIT
-
+>
+>
+> The patch is available at:
+>
+> http://www.kernel.org/pub/linux/kernel/people/tomo/ciss/0001-a
+> dd-HP-Compaq-Smart-Array-5xxx-controller-SCSI-dri.patch
+>
+> clover:/home/fujita# insmod ciss.ko
+> clover:/home/fujita# lsscsi
+> (snip)
+> [1:0:0:0]    disk    HP       LOGICAL VOLUME   1.66  /dev/sde
+> [1:0:0:1]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdf
+> [1:0:0:2]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdg
+> [1:0:0:3]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdh
+>
+> Yeah, it just works as SCSI disk, the dmesg says:
+>
+> sd 1:0:0:0: [sde] Attached SCSI disk
+> sd 1:0:0:1: [sdf] 143305920 512-byte hardware sectors (73373
+> MB) sd 1:0:0:1: [sdf] Write Protect is off sd 1:0:0:1: [sdf]
+> Mode Sense: 5b 00 00 08 sd 1:0:0:1: [sdf] Write cache:
+> disabled, read cache: enabled, doesn't support DPO or FUA
+>
+> I needed a different name and just stole 'ciss' from *BSD.
+> But any names (like hpciss) works for me.
+>
+>
+> Thanks,
+>
