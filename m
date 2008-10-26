@@ -1,55 +1,64 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Sun, 26 Oct 2008 03:58:05 -0700 (PDT)
-Message-ID: <20081026105805.2426E108057@picon.linux-foundation.org>
-References: <bug-11404-11613@http.bugzilla.kernel.org/>
+From: Luciano Rocha <luciano@eurotux.com>
+Subject: Re: usb hdd problems with 2.6.27.2
+Date: Sun, 26 Oct 2008 14:05:29 +0000
+Message-ID: <20081026140529.GA4614@bit.office.eurotux.com>
+References: <Pine.LNX.4.44L0.0810251548300.7245-100000@netrider.rowland.org> <1224965493.3449.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39896 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752541AbYJZK6h convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Oct 2008 06:58:37 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9QAw54p029372
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Oct 2008 03:58:06 -0700
-In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755246AbYJZOFs@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1224965493.3449.7.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-Kernel <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11404
 
 
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, Oct 25, 2008 at 03:11:33PM -0500, James Bottomley wrote:
+> On Sat, 2008-10-25 at 15:50 -0400, Alan Stern wrote:
+> > On Sat, 25 Oct 2008, Rafael J. Wysocki wrote:
+> >=20
+> > > [Adding CCs]
+> > >=20
+> > > On Wednesday, 22 of October 2008, Luciano Rocha wrote:
+> > > >=20
+> > > > Hello,
+> > > >=20
+> > > > An external HDD, usb-encased, works fine under 2.6.26.5, but under
+> > > > 2.6.27.2 I get hundreds of errors per second, of 'No Sense [current=
+]'.
+> >=20
+> > You can use usbmon to capture the details of what happens when you plug
+> > in the drive.  Instructions are in the kernel source file
+> > Documentation/usb/usbmon.txt.
+>=20
+> Try reversing this patch (apply with patch -p1 -R)
 
+I'll try it tomorrow.
 
-------- Comment #4 from rjw@sisk.pl  2008-10-26 03:58 -------
-On Sunday, 26 of October 2008, Randy Dunlap wrote:
-> On Sat, 25 Oct 2008 23:07:47 +0200 (CEST) Rafael J. Wysocki wrote:
-> 
-> > This message has been generated automatically as a part of a report
-> > of regressions introduced between 2.6.26 and 2.6.27.
-> > 
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.26 and 2.6.27.  Please verify if it still should
-> > be listed and let me know (either way).
-> 
-> Yes, it should still be listed.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11404
-> > Subject		: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-> > Submitter	: rdunlap <randy.dunlap@oracle.com>
-> > Date		: 2008-08-21 5:52 (66 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=121929819616273&w=4
-> > 		  http://marc.info/?l=linux-kernel&m=121932889105368&w=4
-> > Handled-By	: Miller, Mike (OS Dev) <Mike.Miller@hp.com>
-> > 		  James Bottomley <James.Bottomley@hansenpartnership.com>
+Thanks,
+Luciano Rocha
 
+--=20
+Luciano Rocha <luciano@eurotux.com>
+Eurotux Inform=E1tica, S.A. <http://www.eurotux.com/>
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkEeSkACgkQinSul6a7oB9UGwCdEZtTS3op9DBnac+k7giz1OI5
+nb0AoJ0bC8NiqOBqzzQbSi8i/eSggUwu
+=bL7H
+-----END PGP SIGNATURE-----
+
+--W/nzBZO5zC0uMSeA--
