@@ -1,44 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Timeout regression introduced by
-	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Sun, 26 Oct 2008 10:15:05 -0500
-Message-ID: <1225034105.3958.4.camel@localhost.localdomain>
-References: <49043C7C.8050207@kernel.org>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: [PATCH] [SCSI] qla2xxx: Fix documentation of ql2xfdmienable module parameter
+Date: Sun, 26 Oct 2008 23:52:42 +0100
+Message-ID: <874p2zq891.fsf@szonett.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49043C7C.8050207@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tac.ki.iif.hu ([193.6.222.43]:42588 "EHLO tac.ki.iif.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752738AbYJZWws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Oct 2008 18:52:48 -0400
+Received: from [10.0.0.3] (helo=szonett.ki.iif.hu)
+	by tac.ki.iif.hu with esmtpsa (TLS-1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <wferi@niif.hu>)
+	id 1KuETV-0007vp-Lx
+	for linux-scsi@vger.kernel.org; Sun, 26 Oct 2008 23:52:46 +0100
+Received: from wferi by szonett.ki.iif.hu with local (Exim 4.63)
+	(envelope-from <wferi@szonett.ki.iif.hu>)
+	id 1KuETS-0007tJ-Ad
+	for linux-scsi@vger.kernel.org; Sun, 26 Oct 2008 23:52:42 +0100
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
-> Hello, Jens.
-> 
-> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
-> regression for libata.  The second timeout gives puts different
-> pointer from the issued command onto eh_cmd_q breaking libata EH
-> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
-> command processing or causes oops later depending on circumstances.
-> 
-> Here are logs with induced timeouts (patch attached).  In commit
-> 242f9dcb8, the XXX messages for the second timeout shows different
-> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
-> ata_scsi_qc_new() during command translation.
+The default is enabled since 7e47e5ca184548341a82eeb2238ee3622c43cae1.
 
-I can't see a way we could be getting a different command passed in from
-the actual one, since the only way to lose the command from the request
-is to go through the command completion routines which free it (and end
-the request).
+Signed-off-by: Ferenc Wagner <wferi@niif.hu>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-However, since the WARN_ON is specifically comparing the command with
-the one found by the active tag, could this actually be a problem caused
-by block tags?  I note that libata still uses its own array of
-outstanding tags (ap->qcmd[tag]) instead of finding them using
-blk_queue_find_tag() (or scsi_find_tag()).
-
-James
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3433441..764ef8d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -70,8 +70,8 @@ static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
+ int ql2xfdmienable=1;
+ module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xfdmienable,
+-		"Enables FDMI registratons "
+-		"Default is 0 - no FDMI. 1 - perfom FDMI.");
++		"Enables FDMI registrations. "
++		"0 - no FDMI. Default is 1 - perform FDMI.");
+ 
+ #define MAX_Q_DEPTH    32
+ static int ql2xmaxqdepth = MAX_Q_DEPTH;
+-- 
+1.5.6.5
