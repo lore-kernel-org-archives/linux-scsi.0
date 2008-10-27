@@ -1,7 +1,7 @@
 From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 16:10:02 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0810271605190.2190-100000@iolanthe.rowland.org>
+Date: Mon, 27 Oct 2008 16:36:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271625420.2190-100000@iolanthe.rowland.org>
 References: <20081027165306.GA3875@bit.office.eurotux.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -14,52 +14,39 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Mon, 27 Oct 2008, Luciano Rocha wrote:
 
-> > The patches are here:
+> On Mon, Oct 27, 2008 at 11:38:13AM -0400, Alan Stern wrote:
+> > On Mon, 27 Oct 2008, Luciano Rocha wrote:
 > > 
-> > 	http://marc.info/?l=linux-scsi&m=122443015406309&w=2
+> > > Hm, where in the code can I change it to return less that what it thinks
+> > > is the last sector?
 > > 
-> > They are based on 2.6.27, not 2.6.28-rc.
-> 
-> I've tested them (on 2.6.27.4), but I still get the bug. That email mentions:
-> "Neither patch addresses the infinite-retry problem; I wanted
-> to keep the issues separate."
-> 
-> So am I missing some other patch?
-> 
-> 2.6.28-rc2 is also buggy.
+> > I can write a patch to do that for you.  However I'm more interested in 
+> > solving the "infinite-retry" problem first.
 
-Okay, I tried the same sort of experiment in 2.6.27.4 and got the same
-result as you did.  I was able to fix it by applying the 8bfa24727
-commit mentioned earlier together with the patch below.
-
-Now, I'm pretty sure this is not the ideal solution.  Fixing the block 
-core would be better.  Still, it does indicate for sure that there's a 
-real problem.
-
-It's worth noting that the test added to scsi_requeue_command() 
-succeeds every time, that is, req->retries is always 0.  Clearly more 
-work is needed.
+Here's the promised patch.
 
 Alan Stern
 
 
 
-Index: 2.6.27.4/drivers/scsi/scsi_lib.c
+Index: usb-2.6/drivers/usb/storage/unusual_devs.h
 ===================================================================
---- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
-+++ 2.6.27.4/drivers/scsi/scsi_lib.c
-@@ -611,6 +611,11 @@ static void scsi_requeue_command(struct 
- 	struct request *req = cmd->request;
- 	unsigned long flags;
+--- usb-2.6.orig/drivers/usb/storage/unusual_devs.h
++++ usb-2.6/drivers/usb/storage/unusual_devs.h
+@@ -1251,6 +1251,13 @@ UNUSUAL_DEV( 0x0839, 0x000a, 0x0001, 0x0
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+ 		US_FL_FIX_INQUIRY),
  
-+	if (--req->retries <= 0) {
-+		blk_end_request(req, -EIO, blk_rq_bytes(req));
-+		scsi_next_command(cmd);
-+		return;
-+	}
- 	scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_requeue_request(q, req);
++/* Reported by Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org> */
++UNUSUAL_DEV( 0x0840, 0x0082, 0x0001, 0x0001,
++		"Argosy",
++		"Storage",
++		US_SC_DEVICE, US_PR_DEVICE, NULL,
++		US_FL_FIX_CAPACITY),
++
+ /* Entry and supporting patch by Theodore Kilgore <kilgota-7KF8pGZKO2M3uPMLIKxrzw@public.gmane.org>.
+  * Flag will support Bulk devices which use a standards-violating 32-byte
+  * Command Block Wrapper. Here, the "DC2MEGA" cameras (several brands) with
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
