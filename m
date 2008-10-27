@@ -1,33 +1,30 @@
-From: Marc Bejarano <beej@alum.mit.edu>
-Subject: Re: [Bug 11800] New: building SES support fails w/ gcc-3.4.5
-Date: Mon, 27 Oct 2008 13:48:20 -0400
-Message-ID: <200810271748.m9RHmKuP005185@colby.verdasys.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
+Date: Mon, 27 Oct 2008 10:48:31 -0700 (PDT)
+Message-ID: <20081027174831.CA037108042@picon.linux-foundation.org>
 References: <bug-11800-11613@http.bugzilla.kernel.org/>
- <20081021155240.851b69c3.akpm@linux-foundation.org>
- <200810221943.m9MJh8bR031381@colby.verdasys.com>
- <20081022133046.0fa7de8a.akpm@linux-foundation.org>
- <1224710227.6851.50.camel@localhost.localdomain>
- <200810231614.m9NGEg1p019191@colby.verdasys.com>
- <1224779713.3330.13.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colby.verdasys.com ([69.20.67.85]:41418 "EHLO
-	colby.verdasys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbYJ0Rsd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 13:48:33 -0400
-In-Reply-To: <1224779713.3330.13.camel@localhost.localdomain>
-References: <bug-11800-11613@http.bugzilla.kernel.org/>
- <20081021155240.851b69c3.akpm@linux-foundation.org>
- <200810221943.m9MJh8bR031381@colby.verdasys.com>
- <20081022133046.0fa7de8a.akpm@linux-foundation.org>
- <1224710227.6851.50.camel@localhost.localdomain>
- <200810231614.m9NGEg1p019191@colby.verdasys.com>
- <1224779713.3330.13.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58227 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751674AbYJ0Rsf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Oct 2008 13:48:35 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9RHmVkm003751
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2008 10:48:33 -0700
+In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11800
+
+
+
+
+
+------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-10-27 10:48 -------
+Reply-To: beej@alum.mit.edu
 
 At 12:35 10/23/2008, James Bottomley wrote:
  >On Thu, 2008-10-23 at 12:14 -0400, Marc Bejarano wrote:
@@ -35,7 +32,7 @@ At 12:35 10/23/2008, James Bottomley wrote:
  >>  >On Wed, 2008-10-22 at 13:30 -0700, Andrew Morton wrote:
  >>  >> OK, it's here:
  >>  >>
- >>  >> 	buf = kmalloc(vpd_len, GFP_KERNEL);
+ >>  >>         buf = kmalloc(vpd_len, GFP_KERNEL);
  >>  >>
  >>  >> it's a gcc bug.
  >>  >>
@@ -77,3 +74,8 @@ be compiled by gcc 3.4.5 from the CentOS 4 gcc-3.4.5-2 RPM.
 
 marc
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
