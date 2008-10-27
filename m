@@ -1,57 +1,50 @@
-From: Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 16:53:06 +0000
-Message-ID: <20081027165306.GA3875@bit.office.eurotux.com>
-References: <20081027151818.GA4044@bit.office.eurotux.com> <Pine.LNX.4.44L0.0810271134530.15462-100000@iolanthe.rowland.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: detect missing data for INQUIRY
+Date: Mon, 27 Oct 2008 13:00:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271258200.2296-100000@iolanthe.rowland.org>
+References: <1225125475.5146.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0810271134530.15462-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52791 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751193AbYJ0RA2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 13:00:28 -0400
+In-Reply-To: <1225125475.5146.24.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: =?ISO-8859-1?Q?=D6rjan?= Nordlund <orjan.nordlund@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 11:38:13AM -0400, Alan Stern wrote:
-> On Mon, 27 Oct 2008, Luciano Rocha wrote:
->=20
-> > Hm, where in the code can I change it to return less that what it t=
-hinks
-> > is the last sector?
->=20
-> I can write a patch to do that for you.  However I'm more interested =
-in=20
-> solving the "infinite-retry" problem first.
->=20
-> I did write some patches which might help.  They weren't meant as bug=
-=20
-> fixes exactly, more as infrastructure cleanup.  But you ought to try=20
-> them out, because they do affect the logic in this area.
->=20
-> The patches are here:
->=20
-> 	http://marc.info/?l=3Dlinux-scsi&m=3D122443015406309&w=3D2
->=20
-> They are based on 2.6.27, not 2.6.28-rc.
+On Mon, 27 Oct 2008, James Bottomley wrote:
 
-I've tested them (on 2.6.27.4), but I still get the bug. That email men=
-tions:
-"Neither patch addresses the infinite-retry problem; I wanted
-to keep the issues separate."
+> > --- usb-2.6.orig/drivers/scsi/scsi_scan.c
+> > +++ usb-2.6/drivers/scsi/scsi_scan.c
+> > @@ -602,6 +602,13 @@ static int scsi_probe_lun(struct scsi_de
+> >  				    (sshdr.ascq == 0))
+> >  					continue;
+> >  			}
+> > +		} else {
+> > +			/*
+> > +			 * Additional Length and Vendor fields missing
+> > +			 * probably means nothing was transferred.  Try again.
+> > +			 */
+> > +			if (inq_result[4] == 0 && inq_result[8] == 0)
+> > +				continue;
+> 
+> Really, no.
+> 
+> A legitimate minimal response from a device is zero in the additional
+> length field.  If it does that, then the vendor field is bound to be
+> zero as well.
+> 
+> About the best we can do is check the first four fields.  For them to be
+> all zero, it would have to be a minimal response SCSI-1 device (RDF of
+> zero) ... hopefully they're all dead by now.
 
-So am I missing some other patch?
+Then you're saying that the patch should everything up to
+inq_result[8]?  Or maybe even beyond?  I can do that.  Would that be 
+acceptable?
 
-2.6.28-rc2 is also buggy.
+Alan Stern
 
-Thanks,
-Luciano Rocha
-
---=20
-Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>
-Eurotux Inform=E1tica, S.A. <http://www.eurotux.com/>
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
