@@ -1,81 +1,53 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11800] building SES support fails w/ gcc-3.4.5
-Date: Mon, 27 Oct 2008 10:48:31 -0700 (PDT)
-Message-ID: <20081027174831.CA037108042@picon.linux-foundation.org>
-References: <bug-11800-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2] SCSI: detect missing data for INQUIRY
+Date: Mon, 27 Oct 2008 14:53:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271452540.2296-100000@iolanthe.rowland.org>
+References: <1225128573.5146.34.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58227 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751674AbYJ0Rsf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2008 13:48:35 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9RHmVkm003751
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2008 10:48:33 -0700
-In-Reply-To: <bug-11800-11613@http.bugzilla.kernel.org/>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52322 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751603AbYJ0Sxs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 14:53:48 -0400
+In-Reply-To: <1225128573.5146.34.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: =?ISO-8859-1?Q?=D6rjan?= Nordlund <orjan.nordlund@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11800
+This patch (as1154b) fixes a problem in scsi_probe_lun(): The function
+doesn't check whether the device has actually sent back any INQUIRY
+data!  The patch adds a test to see if the result buffer is still
+empty after the command has been executed.
 
+This enables the Thecus N2050 storage device to work.  The firmware on
+that device starts up strangely; it sends no data in response to the
+initial INQUIRY, and it sends the INQUIRY information in response to
+the followup REQUEST SENSE!  But after that it works better, so
+retrying the INQUIRY is enough to get it going.
 
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
+---
 
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -602,6 +602,14 @@ static int scsi_probe_lun(struct scsi_de
+ 				    (sshdr.ascq == 0))
+ 					continue;
+ 			}
++		} else {
++			/*
++			 * If the first four bytes are all 0 then probably
++			 * nothing was transferred.  Try again.
++			 */
++			if ((inq_result[0] | inq_result[1] |
++					inq_result[2] | inq_result[3]) == 0)
++				continue;
+ 		}
+ 		break;
+ 	}
 
-------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-10-27 10:48 -------
-Reply-To: beej@alum.mit.edu
-
-At 12:35 10/23/2008, James Bottomley wrote:
- >On Thu, 2008-10-23 at 12:14 -0400, Marc Bejarano wrote:
- >> At 17:17 10/22/2008, James Bottomley wrote:
- >>  >On Wed, 2008-10-22 at 13:30 -0700, Andrew Morton wrote:
- >>  >> OK, it's here:
- >>  >>
- >>  >>         buf = kmalloc(vpd_len, GFP_KERNEL);
- >>  >>
- >>  >> it's a gcc bug.
- >>  >>
- >>  >> Please see if you can find some way to make it go away - perhaps change
- >>  >> vpd_len's type to `int', things like that.
- >>  >>
- >>  >> Or use a different compiler version :(
- >>
- >> i'm not worried about compiling this.  i already did a compilation
- >> without it and i'll be fine without SES.  i just selected it on the
- >> off chance i'd find time to play with it.  i was just doing my duty
- >> of reporting this to save others the trouble.
- >>
- >>  >Could it be an optimisation issue?  The static oversize test relies on
- >>  >the compiler optimising away a leg that can never be reached if the size
- >>  >is under the max. If you do a make V=1 you'll see what optimisation
- >>  >flags the compiler is using ... if it's -O2 then yes, the compiler
- >>  >should be optimising stuff away and it's a clear compiler problem.  If
- >>  >it's anything else, we might have a mis setting of the optimisation
- >>  >level in the kernel build.
- >>
- >> looks to me like -Os:
- >
- >I think we have a winner: -Os is rather less well implemented in older
- >versions of gcc.  Could you retry with -O2?
- >
- >You do this by setting the config option
- >
- >CONFIG_CC_OPTIMIZE_FOR_SIZE
-
-verified.
-
-setting CONFIG_CC_OPTIMIZE_FOR_SIZE=n in .config does allow ses.c to 
-be compiled by gcc 3.4.5 from the CentOS 4 gcc-3.4.5-2 RPM.
-
- >If we verify this to be the root cause, we
- >might consider making the default for that option N if gcc version is <
- >4.
-
-marc
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
