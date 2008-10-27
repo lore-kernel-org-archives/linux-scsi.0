@@ -1,45 +1,50 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/2] cciss: fix sysfs broken symlink regression
-Date: Mon, 27 Oct 2008 16:01:36 -0500
-Message-ID: <20081027210136.GA9438@roadking.ldev.net>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: Timeout regression introduced by
+	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Mon, 27 Oct 2008 14:30:06 -0700
+Message-ID: <20081027213006.GB17946@linux.vnet.ibm.com>
+References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:11808 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbYJ0VB0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 17:01:26 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <49051EA4.3040403@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-Patch 1 of 2
+Tejun Heo <tj@kernel.org> wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+> >> Hello, Jens.
+> >>
+> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+> >> regression for libata.  The second timeout gives puts different
+> >> pointer from the issued command onto eh_cmd_q breaking libata EH
+> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+> >> command processing or causes oops later depending on circumstances.
+> >>
+> >> Here are logs with induced timeouts (patch attached).  In commit
+> >> 242f9dcb8, the XXX messages for the second timeout shows different
+> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+> >> ata_scsi_qc_new() during command translation.
+> > 
+> > I can't see a way we could be getting a different command passed in from
+> > the actual one, since the only way to lose the command from the request
+> > is to go through the command completion routines which free it (and end
+> > the request).
+> 
+> I have no idea either.  It's something in the timeout logic because on
+> the issue path the scmd pointer is identical but on tiemout pointer
+> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+> 
 
-Regression introduced by commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-This patch fixes a broken symlink in sysfs that was introduced by the above
-commit also called "cciss: remove redundant code." We broke it in 2.6.27-rc
-on or about 20080804. Some installers are broken if this symlink does not
-exist and they may not detect the logical drives configured on the
-controller.
-It does not require being backported into 2.6.26.x or earlier kernels.
+I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
+Currently I am not able to see this error on timeout recovery using this
+setup. Does IO load (or other factors) effect the error being seen?
 
-Please consider this for inclusion.
-
-Andrew, do I need to resubmit 2 of 2? Or is that one still in your queue?
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 1e1f915..0f367b1 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
- 	disk->first_minor = drv_index << NWD_SHIFT;
- 	disk->fops = &cciss_fops;
- 	disk->private_data = &h->drv[drv_index];
-+	disk->driverfs_dev = &h->pdev->dev;
- 
- 	/* Set up queue information */
- 	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
