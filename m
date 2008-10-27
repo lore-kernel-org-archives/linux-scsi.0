@@ -1,50 +1,48 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: Timeout regression introduced by
-	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Mon, 27 Oct 2008 14:30:06 -0700
-Message-ID: <20081027213006.GB17946@linux.vnet.ibm.com>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] cciss: fix sysfs broken symlink regression
+Date: Mon, 27 Oct 2008 14:29:54 -0700
+Message-ID: <20081027142954.d63b4590.akpm@linux-foundation.org>
+References: <20081027210136.GA9438@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49051EA4.3040403@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53270 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752136AbYJ0VaI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Oct 2008 17:30:08 -0400
+In-Reply-To: <20081027210136.GA9438@roadking.ldev.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Miller <mike.miller@hp.com>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> wrote:
-> James Bottomley wrote:
-> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
-> >> Hello, Jens.
-> >>
-> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
-> >> regression for libata.  The second timeout gives puts different
-> >> pointer from the issued command onto eh_cmd_q breaking libata EH
-> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
-> >> command processing or causes oops later depending on circumstances.
-> >>
-> >> Here are logs with induced timeouts (patch attached).  In commit
-> >> 242f9dcb8, the XXX messages for the second timeout shows different
-> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
-> >> ata_scsi_qc_new() during command translation.
-> > 
-> > I can't see a way we could be getting a different command passed in from
-> > the actual one, since the only way to lose the command from the request
-> > is to go through the command completion routines which free it (and end
-> > the request).
+On Mon, 27 Oct 2008 16:01:36 -0500
+Mike Miller <mike.miller@hp.com> wrote:
+
+> Patch 1 of 2
 > 
-> I have no idea either.  It's something in the timeout logic because on
-> the issue path the scmd pointer is identical but on tiemout pointer
-> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+> Regression introduced by commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
+> This patch fixes a broken symlink in sysfs that was introduced by the above
+> commit also called "cciss: remove redundant code." We broke it in 2.6.27-rc
+> on or about 20080804. Some installers are broken if this symlink does not
+> exist and they may not detect the logical drives configured on the
+> controller.
+> It does not require being backported into 2.6.26.x or earlier kernels.
+
+OK, thanks, I tagged it for 2.6.27.x.
+
+> Please consider this for inclusion.
+> 
+> Andrew, do I need to resubmit 2 of 2? Or is that one still in your queue?
 > 
 
-I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
-Currently I am not able to see this error on timeout recovery using this
-setup. Does IO load (or other factors) effect the error being seen?
+What's 2 of 2?
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+cciss patches which I presently have queued are:
+
+cciss-fix-regression-firmware-not-displayed-in-procfs-again-and-again.patch
+cciss-new-hardware-support.patch
+cciss-fix-sysfs-broken-symlink-regression.patch
+
