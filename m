@@ -1,54 +1,45 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 16:36:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0810271625420.2190-100000@iolanthe.rowland.org>
-References: <20081027165306.GA3875@bit.office.eurotux.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/2] cciss: fix sysfs broken symlink regression
+Date: Mon, 27 Oct 2008 16:01:36 -0500
+Message-ID: <20081027210136.GA9438@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20081027165306.GA3875-oEplIgxCSygGFt9iVWuREaMaJEuR8uiQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:11808 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbYJ0VB0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 17:01:26 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 27 Oct 2008, Luciano Rocha wrote:
+Patch 1 of 2
 
-> On Mon, Oct 27, 2008 at 11:38:13AM -0400, Alan Stern wrote:
-> > On Mon, 27 Oct 2008, Luciano Rocha wrote:
-> > 
-> > > Hm, where in the code can I change it to return less that what it thinks
-> > > is the last sector?
-> > 
-> > I can write a patch to do that for you.  However I'm more interested in 
-> > solving the "infinite-retry" problem first.
+Regression introduced by commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
+This patch fixes a broken symlink in sysfs that was introduced by the above
+commit also called "cciss: remove redundant code." We broke it in 2.6.27-rc
+on or about 20080804. Some installers are broken if this symlink does not
+exist and they may not detect the logical drives configured on the
+controller.
+It does not require being backported into 2.6.26.x or earlier kernels.
 
-Here's the promised patch.
+Please consider this for inclusion.
 
-Alan Stern
+Andrew, do I need to resubmit 2 of 2? Or is that one still in your queue?
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-
-Index: usb-2.6/drivers/usb/storage/unusual_devs.h
-===================================================================
---- usb-2.6.orig/drivers/usb/storage/unusual_devs.h
-+++ usb-2.6/drivers/usb/storage/unusual_devs.h
-@@ -1251,6 +1251,13 @@ UNUSUAL_DEV( 0x0839, 0x000a, 0x0001, 0x0
- 		US_SC_DEVICE, US_PR_DEVICE, NULL,
- 		US_FL_FIX_INQUIRY),
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 1e1f915..0f367b1 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
+ 	disk->first_minor = drv_index << NWD_SHIFT;
+ 	disk->fops = &cciss_fops;
+ 	disk->private_data = &h->drv[drv_index];
++	disk->driverfs_dev = &h->pdev->dev;
  
-+/* Reported by Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org> */
-+UNUSUAL_DEV( 0x0840, 0x0082, 0x0001, 0x0001,
-+		"Argosy",
-+		"Storage",
-+		US_SC_DEVICE, US_PR_DEVICE, NULL,
-+		US_FL_FIX_CAPACITY),
-+
- /* Entry and supporting patch by Theodore Kilgore <kilgota-7KF8pGZKO2M3uPMLIKxrzw@public.gmane.org>.
-  * Flag will support Bulk devices which use a standards-violating 32-byte
-  * Command Block Wrapper. Here, the "DC2MEGA" cameras (several brands) with
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	/* Set up queue information */
+ 	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
