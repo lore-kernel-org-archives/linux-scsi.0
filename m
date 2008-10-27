@@ -1,32 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 10:33:12 -0500
-Message-ID: <1225121592.5146.9.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0810271117530.4059-100000@iolanthe.rowland.org>
+Date: Mon, 27 Oct 2008 11:38:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271134530.15462-100000@iolanthe.rowland.org>
+References: <20081027151818.GA4044@bit.office.eurotux.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753266AbYJ0Pdd@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0810271117530.4059-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, Luciano Rocha <luciano@eurotux.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-Kernel <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:48078 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750936AbYJ0PiP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 11:38:15 -0400
+In-Reply-To: <20081027151818.GA4044@bit.office.eurotux.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luciano Rocha <luciano@eurotux.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-Kernel <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2008-10-27 at 11:25 -0400, Alan Stern wrote:
-> On Mon, 27 Oct 2008, Douglas Gilbert wrote:
-> > BTW a single disk in RAID 0 (seen on a HP E200 controller)
-> > has a shortened capacity value seen in the midlevel on the
-> > corresponding logical drive. That missing chunk is probably
-> > where the RAID controller puts its control information.
-> > Anyway, playing with the capacity value returned by READ
-> > CAPACITY certainly has a precedent.
-> 
-> usb-storage isn't in the business of altering the data it gets from a 
-> device.  It's just a transport.  That's why the sdev->fix_capacity flag 
-> exists; we tell the upper layer that the data it gets is going to be 
-> wrong and let the upper layer worry about fixing things up.
+On Mon, 27 Oct 2008, Luciano Rocha wrote:
 
-And you do this by setting US_FL_FIX_CAPACITY in unusual_devs.h
+> Hm, where in the code can I change it to return less that what it thinks
+> is the last sector?
 
-James
+I can write a patch to do that for you.  However I'm more interested in 
+solving the "infinite-retry" problem first.
+
+I did write some patches which might help.  They weren't meant as bug 
+fixes exactly, more as infrastructure cleanup.  But you ought to try 
+them out, because they do affect the logic in this area.
+
+The patches are here:
+
+	http://marc.info/?l=linux-scsi&m=122443015406309&w=2
+
+They are based on 2.6.27, not 2.6.28-rc.
+
+Alan Stern
+
