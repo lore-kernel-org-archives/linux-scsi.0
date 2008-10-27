@@ -1,138 +1,65 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 10:56:13 -0400
-Message-ID: <4905D68D.7030407@interlog.com>
-References: <Pine.LNX.4.44L0.0810271007030.4059-100000@iolanthe.rowland.org>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Timeout regression introduced
+	by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Mon, 27 Oct 2008 10:03:09 -0500
+Message-ID: <1225119789.5146.5.camel@localhost.localdomain>
+References: <49043C7C.8050207@kernel.org>
+	 <1225034105.3958.4.camel@localhost.localdomain>
+	 <49051EA4.3040403@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49329 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbYJ0O4T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 10:56:19 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0810271007030.4059-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49051EA4.3040403@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Luciano Rocha <luciano@eurotux.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-Kernel <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Mon, 27 Oct 2008, Luciano Rocha wrote:
+On Mon, 2008-10-27 at 10:51 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+> >> Hello, Jens.
+> >>
+> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+> >> regression for libata.  The second timeout gives puts different
+> >> pointer from the issued command onto eh_cmd_q breaking libata EH
+> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+> >> command processing or causes oops later depending on circumstances.
+> >>
+> >> Here are logs with induced timeouts (patch attached).  In commit
+> >> 242f9dcb8, the XXX messages for the second timeout shows different
+> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+> >> ata_scsi_qc_new() during command translation.
+> > 
+> > I can't see a way we could be getting a different command passed in from
+> > the actual one, since the only way to lose the command from the request
+> > is to go through the command completion routines which free it (and end
+> > the request).
 > 
->> On Sat, Oct 25, 2008 at 03:50:07PM -0400, Alan Stern wrote:
->>> On Sat, 25 Oct 2008, Rafael J. Wysocki wrote:
->>>
->>>> [Adding CCs]
->>>>
->>>> On Wednesday, 22 of October 2008, Luciano Rocha wrote:
->>>>> Hello,
->>>>>
->>>>> An external HDD, usb-encased, works fine under 2.6.26.5, but under
->>>>> 2.6.27.2 I get hundreds of errors per second, of 'No Sense [current]'.
->>> You can use usbmon to capture the details of what happens when you plug
->>> in the drive.  Instructions are in the kernel source file
->>> Documentation/usb/usbmon.txt.
->>>
->> Now in 2.6.27.4, same problem. The usb traffic is:
-> 
-> This looks exactly like the "infinite retry" problem I warned about 
-> earlier.  Here are the important parts of the log.  For people who 
-> don't know how to interpret these messages, the CDB starts in the 16th 
-> byte of the 31-byte messages.  For example, the first command here 
-> starts with 0x25 and so it is READ CAPACITY:
-> 
->> f21e7cc0 3570408174 S Bo:1:008:1 -115 31 = 55534243 06000000 08000000 80000a25 00000000 00000000 00000000 000000
->> f21e7cc0 3570408264 C Bo:1:008:1 0 31 >
->> f21e72c0 3570408280 S Bi:1:008:2 -115 8 <
->> f21e72c0 3570408389 C Bi:1:008:2 0 8 = 2e9390b0 00000200
->> f21e7cc0 3570408400 S Bi:1:008:2 -115 13 <
->> f21e7cc0 3570408513 C Bi:1:008:2 0 13 = 55534253 06000000 00000000 00
-> 
-> The response is 0x2e9390b0.  In typical broken fashion, that is 
-> undoubtedly the total number of sectors rather than the highest sector 
-> number.
+> I have no idea either.  It's something in the timeout logic because on
+> the issue path the scmd pointer is identical but on tiemout pointer
+> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
 
-Since the READ CAPACITY "off by one" error is so common,
-perhaps drivers such as usb-storage could have a hook to
-do a pseudo READ CAPACITY. Then if the capacity value
-looked odd (in both senses) the driver could do an IO to
-the suspect block and if that failed decrement the capacity
-value passed back to the mid level.
-Put another way, why don't these defective devices trip up
-another OS?
+OK, so if we take the first trace as definitive, since it shows the same
+command going around twice (being freed and reallocated from the slab in
+between), it does tend to imply the one on eh_cmd_q is bogus.
 
-BTW a single disk in RAID 0 (seen on a HP E200 controller)
-has a shortened capacity value seen in the midlevel on the
-corresponding logical drive. That missing chunk is probably
-where the RAID controller puts its control information.
-Anyway, playing with the capacity value returned by READ
-CAPACITY certainly has a precedent.
+Could you print out all scsi commands going into ata_qc_issue so we can
+see if there's a clue in where this one is coming from?
 
-> Later on the system tries to read the contents of what it thinks is the 
-> last sector:
+> > However, since the WARN_ON is specifically comparing the command with
+> > the one found by the active tag, could this actually be a problem caused
+> > by block tags?  I note that libata still uses its own array of
+> > outstanding tags (ap->qcmd[tag]) instead of finding them using
+> > blk_queue_find_tag() (or scsi_find_tag()).
+> 
+> Nope, the tested commits are before the block queue tag transition and
+> I tested two consecutive commits.  242f9dcb^ is okay.  242f9dcb is
+> not.
 
-I know that happens but it seems strange that upper levels
-are reading a block that has never been written to. Read ahead?
+Well, it was worth a shot.
 
-Doug Gilbert
+James
 
-
->> f21e7cc0 3570515635 S Bo:1:008:1 -115 31 = 55534243 0c000000 00020000 80000a28 002e9390 b0000001 00000000 000000
->> f21e7cc0 3570515762 C Bo:1:008:1 0 31 >
->> f21e76c0 3570515776 S Bi:1:008:2 -115 512 <
->> f21e76c0 3570516261 C Bi:1:008:2 -32 0
->> f21e7cc0 3570516281 S Co:1:008:0 s 02 01 0000 0082 0000 0
->> f21e7cc0 3570516387 C Co:1:008:0 0 0
->> f21e7cc0 3570516399 S Bi:1:008:2 -115 13 <
->> f21e7cc0 3570516511 C Bi:1:008:2 0 13 = 55534253 0c000000 00020000 01
-> 
-> There's no data in the response, and the 01 on the line above 
-> indicates Check Condition status.
-> 
->> f21e7cc0 3570516524 S Bo:1:008:1 -115 31 = 55534243 0d000000 12000000 80000603 00000012 00000000 00000000 000000
->> f21e7cc0 3570516636 C Bo:1:008:1 0 31 >
->> f21e76c0 3570516649 S Bi:1:008:2 -115 18 <
->> f21e76c0 3570516762 C Bi:1:008:2 0 18 = 70000000 0000000a 00000000 00000000 0000
->> f21e7cc0 3570516779 S Bi:1:008:2 -115 13 <
->> f21e7cc0 3570516886 C Bi:1:008:2 0 13 = 55534253 0d000000 00000000 00
-> 
-> The automatically-generated REQUEST SENSE gets the 18-byte response you 
-> see above.  It is entirely empty (No Sense).
-> 
-> The remainder of the trace shows the same command being repeated over 
-> and over again, with the same result each time.
-> 
->> f21e7cc0 3570516936 S Bo:1:008:1 -115 31 = 55534243 0e000000 00020000 80000a28 002e9390 b0000001 00000000 000000
->> f21e7cc0 3570517012 C Bo:1:008:1 0 31 >
->> f21e76c0 3570517031 S Bi:1:008:2 -115 512 <
->> f21e76c0 3570517511 C Bi:1:008:2 -32 0
->> f21e7cc0 3570517533 S Co:1:008:0 s 02 01 0000 0082 0000 0
->> f21e7cc0 3570517637 C Co:1:008:0 0 0
->> f21e7cc0 3570517648 S Bi:1:008:2 -115 13 <
->> f21e7cc0 3570517762 C Bi:1:008:2 0 13 = 55534253 0e000000 00020000 01
->> f21e7cc0 3570517775 S Bo:1:008:1 -115 31 = 55534243 0f000000 12000000 80000603 00000012 00000000 00000000 000000
->> f21e7cc0 3570517886 C Bo:1:008:1 0 31 >
->> f21e76c0 3570517897 S Bi:1:008:2 -115 18 <
->> f21e76c0 3570518011 C Bi:1:008:2 0 18 = 70000000 0000000a 00000000 00000000 0000
->> f21e7cc0 3570518027 S Bi:1:008:2 -115 13 <
->> f21e7cc0 3570518136 C Bi:1:008:2 0 13 = 55534253 0f000000 00000000 00
-> etc...
-> 
-> There's a patch which might help resolve this problem:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8bfa24727087d7252f9ecfb5fea2dfc92d797fbd
-> 
-> It is already present in 2.6.28-rc1, so it's worth a try.  If it does
-> fix things, let me know so I can submit it for a future 2.6.27.stable
-> release.
-> 
-> Alan Stern
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
