@@ -1,68 +1,68 @@
-From: "Kay Sievers" <kay.sievers-tD+1rO4QERM@public.gmane.org>
-Subject: Re: usb hdd problems with 2.6.27.2
-Date: Mon, 27 Oct 2008 17:26:17 +0100
-Message-ID: <ac3eb2510810270926m2e47bdb2ra8ff38282a8a9ed0@mail.gmail.com>
-References: <Pine.LNX.4.44L0.0810271007030.4059-100000@iolanthe.rowland.org>
-	 <4905D68D.7030407@interlog.com> <4905D986.6050001@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI: detect missing data for INQUIRY
+Date: Mon, 27 Oct 2008 11:37:55 -0500
+Message-ID: <1225125475.5146.24.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0810271212130.2296-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4905D986.6050001-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Content-Disposition: inline
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Cc: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47712 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751133AbYJ0Qh7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Oct 2008 12:37:59 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0810271212130.2296-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: =?ISO-8859-1?Q?=D6rjan?= Nordlund <orjan.nordlund@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 16:08, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org> wrote:
-> Douglas Gilbert wrote:
->>
->> Since the READ CAPACITY "off by one" error is so common,
->> perhaps drivers such as usb-storage could have a hook to
->> do a pseudo READ CAPACITY. Then if the capacity value
->> looked odd (in both senses) the driver could do an IO to
->> the suspect block and if that failed decrement the capacity
->> value passed back to the mid level.
->> Put another way, why don't these defective devices trip up
->> another OS?
->>
->
-> Window$ never reads the last sector unless it is actually written
-> to. I had such a device it got stuck when I wrote to the
-> last sector.
->
->> BTW a single disk in RAID 0 (seen on a HP E200 controller)
->> has a shortened capacity value seen in the midlevel on the
->> corresponding logical drive. That missing chunk is probably
->> where the RAID controller puts its control information.
->> Anyway, playing with the capacity value returned by READ
->> CAPACITY certainly has a precedent.
->>
->>> Later on the system tries to read the contents of what it thinks is the
->>> last sector:
->>
->> I know that happens but it seems strange that upper levels
->> are reading a block that has never been written to. Read ahead?
->>
->
-> That would be udev or hald, I can't remember which. It is a special Linux
-> fixture. ;)
+On Mon, 2008-10-27 at 12:18 -0400, Alan Stern wrote:
+> This patch (as1154) fixes a problem in scsi_probe_lun(): The function
+> doesn't check whether the device has actually sent back any INQUIRY
+> data!  The patch adds a test to see if the result buffer is still
+> empty after the command has been executed.
+> 
+> This enables the Thecus N2050 storage device to work.  The firmware on
+> that device starts up strangely; it sends no data in response to the
+> initial INQUIRY, and it sends the INQUIRY information in response to
+> the followup REQUEST SENSE!  But after that it works better, so
+> retrying the INQUIRY is enough to get it going.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ---
+> 
+> This should get into 2.6.28.
+> 
+> 
+> Index: usb-2.6/drivers/scsi/scsi_scan.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_scan.c
+> +++ usb-2.6/drivers/scsi/scsi_scan.c
+> @@ -602,6 +602,13 @@ static int scsi_probe_lun(struct scsi_de
+>  				    (sshdr.ascq == 0))
+>  					continue;
+>  			}
+> +		} else {
+> +			/*
+> +			 * Additional Length and Vendor fields missing
+> +			 * probably means nothing was transferred.  Try again.
+> +			 */
+> +			if (inq_result[4] == 0 && inq_result[8] == 0)
+> +				continue;
 
-It's vol_id from udev. To auto-detect raid setups, LVM, MD metadata, ...
+Really, no.
 
-Such devices carry their magic sequence at the "end" of the device,
-usually the last sector or a few sectors before the last sector. The
-"last" sector is obviously determined by the capacity the device
-reports.
+A legitimate minimal response from a device is zero in the additional
+length field.  If it does that, then the vendor field is bound to be
+zero as well.
 
-There is no way around looking at all block devices' last sector on a
-Linux box, as long as people expect auto-setup, auto-mounting,
-anything that is not put in /etc/fstab to work, as long as any "meta
-device" format puts a magic number at the end of the device.
+About the best we can do is check the first four fields.  For them to be
+all zero, it would have to be a minimal response SCSI-1 device (RDF of
+zero) ... hopefully they're all dead by now.
 
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
