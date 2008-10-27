@@ -1,32 +1,67 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Mon, 27 Oct 2008 15:43:27 -0400
-Message-ID: <490619DF.6020804@rtr.ca>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: usb hdd problems with 2.6.27.2
+Date: Mon, 27 Oct 2008 16:10:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271605190.2190-100000@iolanthe.rowland.org>
+References: <20081027165306.GA3875@bit.office.eurotux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20081027165306.GA3875-oEplIgxCSygGFt9iVWuREaMaJEuR8uiQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-..
-> This patchset further separates SFF/BMDMA support from the rest of the
-> libata and separate out BMDMA from SFF.  This patchset contains the
-> following 22 patches.
-..
+On Mon, 27 Oct 2008, Luciano Rocha wrote:
 
-Heh.. I wonder how this will fit with an upcoming task on my list:
-adding ATAPI support to sata_mv..
+> > The patches are here:
+> > 
+> > 	http://marc.info/?l=linux-scsi&m=122443015406309&w=2
+> > 
+> > They are based on 2.6.27, not 2.6.28-rc.
+> 
+> I've tested them (on 2.6.27.4), but I still get the bug. That email mentions:
+> "Neither patch addresses the infinite-retry problem; I wanted
+> to keep the issues separate."
+> 
+> So am I missing some other patch?
+> 
+> 2.6.28-rc2 is also buggy.
 
-Currently sata_mv is a more-or-less purely FIS-based driver,
-with little need for SFF and no need for BMDMA.
+Okay, I tried the same sort of experiment in 2.6.27.4 and got the same
+result as you did.  I was able to fix it by applying the 8bfa24727
+commit mentioned earlier together with the patch below.
 
-But ATAPI on those chips uses BMDMA, as does target-mode (also on the list).
-It'll be interesting.
+Now, I'm pretty sure this is not the ideal solution.  Fixing the block 
+core would be better.  Still, it does indicate for sure that there's a 
+real problem.
 
-Cheers
+It's worth noting that the test added to scsi_requeue_command() 
+succeeds every time, that is, req->retries is always 0.  Clearly more 
+work is needed.
+
+Alan Stern
+
+
+
+Index: 2.6.27.4/drivers/scsi/scsi_lib.c
+===================================================================
+--- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
++++ 2.6.27.4/drivers/scsi/scsi_lib.c
+@@ -611,6 +611,11 @@ static void scsi_requeue_command(struct 
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
++	if (--req->retries <= 0) {
++		blk_end_request(req, -EIO, blk_rq_bytes(req));
++		scsi_next_command(cmd);
++		return;
++	}
+ 	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	blk_requeue_request(q, req);
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
