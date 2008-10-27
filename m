@@ -1,100 +1,110 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [ep93xx] Oops when inserting USB storage in 2.6.27
-Date: Mon, 27 Oct 2008 09:19:16 -0500
-Message-ID: <1225117156.5146.1.camel@localhost.localdomain>
-References: <490173D1.80308@e2s.net>
-	 <1224887446.3307.43.camel@localhost.localdomain> <4905A794.7000806@e2s.net>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: usb hdd problems with 2.6.27.2
+Date: Mon, 27 Oct 2008 10:24:14 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0810271007030.4059-100000@iolanthe.rowland.org>
+References: <20081027112803.GA4398@bit.office.eurotux.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49454 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750713AbYJ0OTV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2008 10:19:21 -0400
-In-Reply-To: <4905A794.7000806@e2s.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20081027112803.GA4398-oEplIgxCSygGFt9iVWuREaMaJEuR8uiQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Kaehlcke <mkaehlcke@e2s.net>
-Cc: linux-scsi@vger.kernel.org, kernel@wantstofly.org
 
-On Mon, 2008-10-27 at 12:35 +0100, Matthias Kaehlcke wrote:
-> hi,
-> 
-> James Bottomley wrote:
-> > On Fri, 2008-10-24 at 09:05 +0200, Matthias Kaehlcke wrote:
-> >> hi,
-> >>
-> >> inserting a Verbatim 4GB USB stick in a ep9307 based device running 
-> >> kernel 2.6.27 results in the following Oops:
-> >>
-> >> [42949395.050000] usb 1-3: new full speed USB device using ep93xx-ohci
-> >> and address 2
-> >> [42949395.250000] usb 1-3: configuration #1 chosen from 1 choice
-> >> [42949395.260000] scsi0 : SCSI emulation for USB Mass Storage devices
-> >> [42949395.270000] usb 1-3: New USB device found, idVendor=13fe,
-> >> idProduct=1f23
-> >> [42949395.280000] usb 1-3: New USB device strings: Mfr=1, Product=2,
-> >> SerialNumber=3
-> >> [42949395.280000] usb 1-3: Product: STORE N GO
-> >> [42949395.300000] usb 1-3: Manufacturer: Verbatim
-> >> [42949395.310000] usb 1-3: SerialNumber: 078813D90478
-> >> [42949400.280000] Unable to handle kernel NULL pointer dereference at
-> >> virtual address 00000003
-> >> [42949400.280000] pgd = c0648000
-> >> [42949400.300000] [00000003] *pgd=c0647031, *pte=00000000, *ppte=00000000
-> >> [42949400.300000] Internal error: Oops: 13 [#1] PREEMPT
-> >> [42949400.300000] Modules linked in:
-> >> [42949400.300000] CPU: 0    Not tainted  (2.6.27 #3)
-> >> [42949400.300000] PC is at scsi_calculate_bounce_limit+0x3c/0x44
+On Mon, 27 Oct 2008, Luciano Rocha wrote:
+
+> On Sat, Oct 25, 2008 at 03:50:07PM -0400, Alan Stern wrote:
+> > On Sat, 25 Oct 2008, Rafael J. Wysocki wrote:
 > > 
-> > Best guess is this line:
+> > > [Adding CCs]
+> > > 
+> > > On Wednesday, 22 of October 2008, Luciano Rocha wrote:
+> > > > 
+> > > > Hello,
+> > > > 
+> > > > An external HDD, usb-encased, works fine under 2.6.26.5, but under
+> > > > 2.6.27.2 I get hundreds of errors per second, of 'No Sense [current]'.
 > > 
-> > 	if (host_dev && host_dev->dma_mask)
-> > 		bounce_limit = *host_dev->dma_mask;
+> > You can use usbmon to capture the details of what happens when you plug
+> > in the drive.  Instructions are in the kernel source file
+> > Documentation/usb/usbmon.txt.
 > > 
-> > I'd guess host_dev->dma_mask contains 0x3 ... could this be some sort of
-> > ARM setup problem?
 > 
-> thanks for having a look!
-> 
-> i could figure out the difference between 2.6.26.3 and 2.6.27 that 
-> triggers the Oops:
-> 
-> diff -u linux-2.6.26.3/include/asm-arm/pci.h 
-> linux-2.6.27/arch/arm/include/asm/pci.h
-> 
-> ...
-> @@ -30,7 +30,7 @@
->    * The networking and block device layers use this boolean for bounce
->    * buffer decisions.
->    */
-> -#define PCI_DMA_BUS_IS_PHYS     (0)
-> +#define PCI_DMA_BUS_IS_PHYS     (1)
-> 
->   /*
->    * Whether pci_unmap_{single,page} is a nop depends upon the
-> ...
-> 
-> this change affects the following piece of code in 
-> scsi_calculate_bounce_limit():
-> 
-> if (!PCI_DMA_BUS_IS_PHYS)
->    return BLK_BOUNCE_ANY;
-> 
-> host_dev = scsi_get_device(shost);
-> if (host_dev && host_dev->dma_mask)
->    bounce_limit = *host_dev->dma_mask;
-> 
-> 
-> host_dev->dma_mask is 0xffffffff and we try to dereference the pointer
+> Now in 2.6.27.4, same problem. The usb traffic is:
 
-So the host_dev is some type of arm platform device?  If so, it's got
-it's dma_mask set up wrongly.  it's a pointer in struct device and is
-supposed to point to the real u64 quantity located within the actual
-enclosing device.
+This looks exactly like the "infinite retry" problem I warned about 
+earlier.  Here are the important parts of the log.  For people who 
+don't know how to interpret these messages, the CDB starts in the 16th 
+byte of the 31-byte messages.  For example, the first command here 
+starts with 0x25 and so it is READ CAPACITY:
 
-James
+> f21e7cc0 3570408174 S Bo:1:008:1 -115 31 = 55534243 06000000 08000000 80000a25 00000000 00000000 00000000 000000
+> f21e7cc0 3570408264 C Bo:1:008:1 0 31 >
+> f21e72c0 3570408280 S Bi:1:008:2 -115 8 <
+> f21e72c0 3570408389 C Bi:1:008:2 0 8 = 2e9390b0 00000200
+> f21e7cc0 3570408400 S Bi:1:008:2 -115 13 <
+> f21e7cc0 3570408513 C Bi:1:008:2 0 13 = 55534253 06000000 00000000 00
 
+The response is 0x2e9390b0.  In typical broken fashion, that is 
+undoubtedly the total number of sectors rather than the highest sector 
+number.
 
+Later on the system tries to read the contents of what it thinks is the 
+last sector:
+
+> f21e7cc0 3570515635 S Bo:1:008:1 -115 31 = 55534243 0c000000 00020000 80000a28 002e9390 b0000001 00000000 000000
+> f21e7cc0 3570515762 C Bo:1:008:1 0 31 >
+> f21e76c0 3570515776 S Bi:1:008:2 -115 512 <
+> f21e76c0 3570516261 C Bi:1:008:2 -32 0
+> f21e7cc0 3570516281 S Co:1:008:0 s 02 01 0000 0082 0000 0
+> f21e7cc0 3570516387 C Co:1:008:0 0 0
+> f21e7cc0 3570516399 S Bi:1:008:2 -115 13 <
+> f21e7cc0 3570516511 C Bi:1:008:2 0 13 = 55534253 0c000000 00020000 01
+
+There's no data in the response, and the 01 on the line above 
+indicates Check Condition status.
+
+> f21e7cc0 3570516524 S Bo:1:008:1 -115 31 = 55534243 0d000000 12000000 80000603 00000012 00000000 00000000 000000
+> f21e7cc0 3570516636 C Bo:1:008:1 0 31 >
+> f21e76c0 3570516649 S Bi:1:008:2 -115 18 <
+> f21e76c0 3570516762 C Bi:1:008:2 0 18 = 70000000 0000000a 00000000 00000000 0000
+> f21e7cc0 3570516779 S Bi:1:008:2 -115 13 <
+> f21e7cc0 3570516886 C Bi:1:008:2 0 13 = 55534253 0d000000 00000000 00
+
+The automatically-generated REQUEST SENSE gets the 18-byte response you 
+see above.  It is entirely empty (No Sense).
+
+The remainder of the trace shows the same command being repeated over 
+and over again, with the same result each time.
+
+> f21e7cc0 3570516936 S Bo:1:008:1 -115 31 = 55534243 0e000000 00020000 80000a28 002e9390 b0000001 00000000 000000
+> f21e7cc0 3570517012 C Bo:1:008:1 0 31 >
+> f21e76c0 3570517031 S Bi:1:008:2 -115 512 <
+> f21e76c0 3570517511 C Bi:1:008:2 -32 0
+> f21e7cc0 3570517533 S Co:1:008:0 s 02 01 0000 0082 0000 0
+> f21e7cc0 3570517637 C Co:1:008:0 0 0
+> f21e7cc0 3570517648 S Bi:1:008:2 -115 13 <
+> f21e7cc0 3570517762 C Bi:1:008:2 0 13 = 55534253 0e000000 00020000 01
+> f21e7cc0 3570517775 S Bo:1:008:1 -115 31 = 55534243 0f000000 12000000 80000603 00000012 00000000 00000000 000000
+> f21e7cc0 3570517886 C Bo:1:008:1 0 31 >
+> f21e76c0 3570517897 S Bi:1:008:2 -115 18 <
+> f21e76c0 3570518011 C Bi:1:008:2 0 18 = 70000000 0000000a 00000000 00000000 0000
+> f21e7cc0 3570518027 S Bi:1:008:2 -115 13 <
+> f21e7cc0 3570518136 C Bi:1:008:2 0 13 = 55534253 0f000000 00000000 00
+etc...
+
+There's a patch which might help resolve this problem:
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8bfa24727087d7252f9ecfb5fea2dfc92d797fbd
+
+It is already present in 2.6.28-rc1, so it's worth a try.  If it does
+fix things, let me know so I can submit it for a future 2.6.27.stable
+release.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
