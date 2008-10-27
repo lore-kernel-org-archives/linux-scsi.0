@@ -1,57 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Timeout regression introduced by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Mon, 27 Oct 2008 10:51:32 +0900
-Message-ID: <49051EA4.3040403@kernel.org>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [RFC PATCH] HP (Compaq) Smart Array 5xxx controller SCSI driver
+Date: Mon, 27 Oct 2008 00:09:14 -0400
+Message-ID: <49053EEA.2030601@interlog.com>
+References: <20080719195150Y.fujita.tomonori@lab.ntt.co.jp> <0F5B06BAB751E047AB5C87D1F77A77884C01B0C584@GVW0547EXC.americas.hpqcorp.net>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46931 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751724AbYJ0Bvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Oct 2008 21:51:45 -0400
-In-Reply-To: <1225034105.3958.4.camel@localhost.localdomain>
+Received: from smtp.infotech.no ([82.134.31.41]:46890 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbYJ0EJa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 00:09:30 -0400
+In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A77884C01B0C584@GVW0547EXC.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Lawler, Tom" <Tom.Lawler@hp.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Jens.Axboe@oracle.com" <Jens.Axboe@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-James Bottomley wrote:
-> On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
->> Hello, Jens.
->>
->> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
->> regression for libata.  The second timeout gives puts different
->> pointer from the issued command onto eh_cmd_q breaking libata EH
->> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
->> command processing or causes oops later depending on circumstances.
->>
->> Here are logs with induced timeouts (patch attached).  In commit
->> 242f9dcb8, the XXX messages for the second timeout shows different
->> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
->> ata_scsi_qc_new() during command translation.
+Miller, Mike (OS Dev) wrote:
+> Tomo wrote:
 > 
-> I can't see a way we could be getting a different command passed in from
-> the actual one, since the only way to lose the command from the request
-> is to go through the command completion routines which free it (and end
-> the request).
+>> My scsi driver is still in an early stage (I tried to keep
+>> the changes minimum). I can detect logical units, mount a
+>> file system, do lots of I/Os, however, there are lots of
+>> TODOs in the management features.
+>>
+>> If I can get an ACK from HP about the long-term migration of
+>> cciss to SCSI, I'm happy to keep working on the SCSI cciss
+>> driver and maintain it until HP takes over the driver.
+> 
+> Just a brief update. HP has developed a scsi version of cciss. It was originally done for another environment but we have decided to use it as the base for Linux. It was authored by Tom Lawler of HP. We are currently in the process of getting the Open Source Review Board approval to release the code to the community.
+> 
+> It's unclear right now as to who will be the maintainer.
+> 
+> -- mikem
+> 
+>>
+>> The patch is available at:
+>>
+>> http://www.kernel.org/pub/linux/kernel/people/tomo/ciss/0001-a
+>> dd-HP-Compaq-Smart-Array-5xxx-controller-SCSI-dri.patch
+>>
+>> clover:/home/fujita# insmod ciss.ko
+>> clover:/home/fujita# lsscsi
+>> (snip)
+>> [1:0:0:0]    disk    HP       LOGICAL VOLUME   1.66  /dev/sde
+>> [1:0:0:1]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdf
+>> [1:0:0:2]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdg
+>> [1:0:0:3]    disk    HP       LOGICAL VOLUME   1.66  /dev/sdh
+>>
+>> Yeah, it just works as SCSI disk, the dmesg says:
+>>
+>> sd 1:0:0:0: [sde] Attached SCSI disk
+>> sd 1:0:0:1: [sdf] 143305920 512-byte hardware sectors (73373
+>> MB) sd 1:0:0:1: [sdf] Write Protect is off sd 1:0:0:1: [sdf]
+>> Mode Sense: 5b 00 00 08 sd 1:0:0:1: [sdf] Write cache:
+>> disabled, read cache: enabled, doesn't support DPO or FUA
+>>
+>> I needed a different name and just stole 'ciss' from *BSD.
+>> But any names (like hpciss) works for me.
 
-I have no idea either.  It's something in the timeout logic because on
-the issue path the scmd pointer is identical but on tiemout pointer
-for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+My interest in SAS/SATA RAID controllers (e.g. cciss and megaraid)
+is to get to the physical drives and let smartmontools query
+them. The first difficulty is addressing physical drives within
+the logical drive presented to the OS. Then there are SATA drives:
+I have yet to see a SAT implementation good enough to fetch
+useful SMART data using "pure" SCSI commands; that leaves the
+SAT ATA PASS-THROUGH commands.
 
-> However, since the WARN_ON is specifically comparing the command with
-> the one found by the active tag, could this actually be a problem caused
-> by block tags?  I note that libata still uses its own array of
-> outstanding tags (ap->qcmd[tag]) instead of finding them using
-> blk_queue_find_tag() (or scsi_find_tag()).
+Testing I did today on a HP E200 controller with version 1.80
+firmware and the cciss driver in lk 2.6.27 showed this command
+failed (as it has in the past):
+     smartctl -a -d cciss,0 /dev/cciss/c0d0
+when c0d0 was a SATA disk.
 
-Nope, the tested commits are before the block queue tag transition and
-I tested two consecutive commits.  242f9dcb^ is okay.  242f9dcb is
-not.
+Yes, I know the documentation says it won't work and I've been told
+not to hold my breadth.
+So if a true SCSI cciss driver might appear, could SAT with
+ATA pass-through support be added to the wish list?
 
-Thanks.
 
--- 
-tejun
+BTW We now have the equivalent working on megaraid controllers.
+Whether to let "SCSI" commands through that alter the state
+of a SATA disk is an interesting dilemma for the driver.
+WRITEs are obviously a no-no but the current megaraid/smartctl
+code ignored my attempts to do a self-test.
+
+Doug Gilbert
+
