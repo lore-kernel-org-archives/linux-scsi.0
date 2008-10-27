@@ -1,65 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Timeout regression introduced
-	by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Mon, 27 Oct 2008 10:03:09 -0500
-Message-ID: <1225119789.5146.5.camel@localhost.localdomain>
-References: <49043C7C.8050207@kernel.org>
-	 <1225034105.3958.4.camel@localhost.localdomain>
-	 <49051EA4.3040403@kernel.org>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: usb hdd problems with 2.6.27.2
+Date: Mon, 27 Oct 2008 17:08:54 +0200
+Message-ID: <4905D986.6050001@panasas.com>
+References: <Pine.LNX.4.44L0.0810271007030.4059-100000@iolanthe.rowland.org> <4905D68D.7030407@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49051EA4.3040403@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4905D68D.7030407-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2008-10-27 at 10:51 +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
-> >> Hello, Jens.
-> >>
-> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
-> >> regression for libata.  The second timeout gives puts different
-> >> pointer from the issued command onto eh_cmd_q breaking libata EH
-> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
-> >> command processing or causes oops later depending on circumstances.
-> >>
-> >> Here are logs with induced timeouts (patch attached).  In commit
-> >> 242f9dcb8, the XXX messages for the second timeout shows different
-> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
-> >> ata_scsi_qc_new() during command translation.
-> > 
-> > I can't see a way we could be getting a different command passed in from
-> > the actual one, since the only way to lose the command from the request
-> > is to go through the command completion routines which free it (and end
-> > the request).
+Douglas Gilbert wrote:
 > 
-> I have no idea either.  It's something in the timeout logic because on
-> the issue path the scmd pointer is identical but on tiemout pointer
-> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
-
-OK, so if we take the first trace as definitive, since it shows the same
-command going around twice (being freed and reallocated from the slab in
-between), it does tend to imply the one on eh_cmd_q is bogus.
-
-Could you print out all scsi commands going into ata_qc_issue so we can
-see if there's a clue in where this one is coming from?
-
-> > However, since the WARN_ON is specifically comparing the command with
-> > the one found by the active tag, could this actually be a problem caused
-> > by block tags?  I note that libata still uses its own array of
-> > outstanding tags (ap->qcmd[tag]) instead of finding them using
-> > blk_queue_find_tag() (or scsi_find_tag()).
+> Since the READ CAPACITY "off by one" error is so common,
+> perhaps drivers such as usb-storage could have a hook to
+> do a pseudo READ CAPACITY. Then if the capacity value
+> looked odd (in both senses) the driver could do an IO to
+> the suspect block and if that failed decrement the capacity
+> value passed back to the mid level.
+> Put another way, why don't these defective devices trip up
+> another OS?
 > 
-> Nope, the tested commits are before the block queue tag transition and
-> I tested two consecutive commits.  242f9dcb^ is okay.  242f9dcb is
-> not.
 
-Well, it was worth a shot.
+Window$ never reads the last sector unless it is actually written
+to. I had such a device it got stuck when I wrote to the
+last sector.
 
-James
+> BTW a single disk in RAID 0 (seen on a HP E200 controller)
+> has a shortened capacity value seen in the midlevel on the
+> corresponding logical drive. That missing chunk is probably
+> where the RAID controller puts its control information.
+> Anyway, playing with the capacity value returned by READ
+> CAPACITY certainly has a precedent.
+> 
+>> Later on the system tries to read the contents of what it thinks is the 
+>> last sector:
+> 
+> I know that happens but it seems strange that upper levels
+> are reading a block that has never been written to. Read ahead?
+> 
 
+That would be udev or hald, I can't remember which. It is a special Linux
+fixture. ;)
 
+> Doug Gilbert
+> 
+> 
+
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
