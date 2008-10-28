@@ -1,64 +1,55 @@
-From: malahal@us.ibm.com
-Subject: [PATCH] block: optimizations in blk_rq_timed_out_timer()
-Date: Tue, 28 Oct 2008 11:22:43 -0700
-Message-ID: <20081028182243.GA6716@us.ibm.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 1/2] cciss: fix sysfs broken symlink regression
+Date: Wed, 29 Oct 2008 00:14:23 +0100
+Message-ID: <200810290014.24221.rjw@sisk.pl>
+References: <20081027210136.GA9438@roadking.ldev.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:39909 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745AbYJ1SW5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2008 14:22:57 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id m9SIMb2W005857
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2008 12:22:38 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m9SIMogj129746
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2008 12:22:52 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m9SIMkrn029799
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2008 12:22:46 -0600
+Received: from ogre.sisk.pl ([217.79.144.158]:39670 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752393AbYJ1XJt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2008 19:09:49 -0400
+In-Reply-To: <20081027210136.GA9438@roadking.ldev.net>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-Now the rq->deadline can't be zero if the request is in the
-timeout_list, so there is no need to have next_set. There is no need to
-access a request's deadline field if blk_rq_timed_out is called on it.
+On Monday, 27 of October 2008, Mike Miller wrote:
+> Patch 1 of 2
+> 
+> Regression introduced by commit 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
+> This patch fixes a broken symlink in sysfs that was introduced by the above
+> commit also called "cciss: remove redundant code." We broke it in 2.6.27-rc
+> on or about 20080804. Some installers are broken if this symlink does not
+> exist and they may not detect the logical drives configured on the
+> controller.
+> It does not require being backported into 2.6.26.x or earlier kernels.
+> 
+> Please consider this for inclusion.
+> 
+> Andrew, do I need to resubmit 2 of 2? Or is that one still in your queue?
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 1e1f915..0f367b1 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -1365,6 +1365,7 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
+>  	disk->first_minor = drv_index << NWD_SHIFT;
+>  	disk->fops = &cciss_fops;
+>  	disk->private_data = &h->drv[drv_index];
+> +	disk->driverfs_dev = &h->pdev->dev;
+>  
+>  	/* Set up queue information */
+>  	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
+> --
 
-Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+Is this a patch for bug #11404 or for another regression?
 
-diff -r a6ae42397ede block/blk-timeout.c
---- a/block/blk-timeout.c	Thu Oct 23 11:48:45 2008 -0700
-+++ b/block/blk-timeout.c	Fri Oct 24 17:08:24 2008 -0700
-@@ -118,7 +118,7 @@
- void blk_rq_timed_out_timer(unsigned long data)
- {
- 	struct request_queue *q = (struct request_queue *) data;
--	unsigned long flags, uninitialized_var(next), next_set = 0;
-+	unsigned long flags, next = 0;
- 	struct request *rq, *tmp;
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
-@@ -133,15 +133,13 @@
- 			if (blk_mark_rq_complete(rq))
- 				continue;
- 			blk_rq_timed_out(rq);
-+		} else {
-+			if (!next || time_after(next, rq->deadline))
-+				next = rq->deadline;
- 		}
--		if (!next_set) {
--			next = rq->deadline;
--			next_set = 1;
--		} else if (time_after(next, rq->deadline))
--			next = rq->deadline;
- 	}
- 
--	if (next_set && !list_empty(&q->timeout_list))
-+	if (next)
- 		mod_timer(&q->timeout, round_jiffies(next));
- 
- 	spin_unlock_irqrestore(q->queue_lock, flags);
+Rafael
