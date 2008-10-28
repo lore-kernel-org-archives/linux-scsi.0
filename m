@@ -1,48 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Timeout regression introduced by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Tue, 28 Oct 2008 10:11:50 +0900
-Message-ID: <490666D6.8090603@kernel.org>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org> <20081027213006.GB17946@linux.vnet.ibm.com>
+Subject: Re: possible bug related to wodim / scsi
+Date: Tue, 28 Oct 2008 10:52:09 +0900
+Message-ID: <49067049.5070005@kernel.org>
+References: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20081027213006.GB17946@linux.vnet.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:47920 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224AbYJ1BwO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Oct 2008 21:52:14 -0400
+In-Reply-To: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Steiner <mike65536@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Mike Anderson wrote:
-> Tejun Heo <tj@kernel.org> wrote:
->> James Bottomley wrote:
->>> On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
->>>> Hello, Jens.
->>>>
->>>> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
->>>> regression for libata.  The second timeout gives puts different
->>>> pointer from the issued command onto eh_cmd_q breaking libata EH
->>>> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
->>>> command processing or causes oops later depending on circumstances.
->>>>
->>>> Here are logs with induced timeouts (patch attached).  In commit
->>>> 242f9dcb8, the XXX messages for the second timeout shows different
->>>> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
->>>> ata_scsi_qc_new() during command translation.
->>> I can't see a way we could be getting a different command passed in from
->>> the actual one, since the only way to lose the command from the request
->>> is to go through the command completion routines which free it (and end
->>> the request).
->> I have no idea either.  It's something in the timeout logic because on
->> the issue path the scmd pointer is identical but on tiemout pointer
->> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
->>
+Mike Steiner wrote:
+> I'm running Ubuntu Hardy and get errors when burning a DVD+R but can
+> burn CD-R's fine. I ran wodim with -VV to get the detailed log of scsi
+> requests/responses (it's 83k).
 > 
-> I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
-> Currently I am not able to see this error on timeout recovery using this
-> setup. Does IO load (or other factors) effect the error being seen?
+> My question is: Is this the right list to report this (to find out if
+> it's a wodim or scsi driver bug)?
 
-Not at all.  That's the only write command I issued.
+I would much prefer if you ping the wodim guys first but I'm fairly sure
+they feel the same way in the other direction.
+
+> If so, I can post the log and more details of my hardware
+> configuration (or send it wherever it should go).
+
+Yeap, give it a go.
 
 -- 
 tejun
