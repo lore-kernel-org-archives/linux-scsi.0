@@ -1,38 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Tue, 28 Oct 2008 10:06:47 +0900
-Message-ID: <490665A7.9050002@kernel.org>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <490619DF.6020804@rtr.ca>
+Subject: Re: Timeout regression introduced by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Tue, 28 Oct 2008 10:11:50 +0900
+Message-ID: <490666D6.8090603@kernel.org>
+References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org> <20081027213006.GB17946@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <490619DF.6020804@rtr.ca>
+In-Reply-To: <20081027213006.GB17946@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
-> ..
->> This patchset further separates SFF/BMDMA support from the rest of the
->> libata and separate out BMDMA from SFF.  This patchset contains the
->> following 22 patches.
-> ..
+Mike Anderson wrote:
+> Tejun Heo <tj@kernel.org> wrote:
+>> James Bottomley wrote:
+>>> On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+>>>> Hello, Jens.
+>>>>
+>>>> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+>>>> regression for libata.  The second timeout gives puts different
+>>>> pointer from the issued command onto eh_cmd_q breaking libata EH
+>>>> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+>>>> command processing or causes oops later depending on circumstances.
+>>>>
+>>>> Here are logs with induced timeouts (patch attached).  In commit
+>>>> 242f9dcb8, the XXX messages for the second timeout shows different
+>>>> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+>>>> ata_scsi_qc_new() during command translation.
+>>> I can't see a way we could be getting a different command passed in from
+>>> the actual one, since the only way to lose the command from the request
+>>> is to go through the command completion routines which free it (and end
+>>> the request).
+>> I have no idea either.  It's something in the timeout logic because on
+>> the issue path the scmd pointer is identical but on tiemout pointer
+>> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+>>
 > 
-> Heh.. I wonder how this will fit with an upcoming task on my list:
-> adding ATAPI support to sata_mv..
-> 
-> Currently sata_mv is a more-or-less purely FIS-based driver,
-> with little need for SFF and no need for BMDMA.
-> 
-> But ATAPI on those chips uses BMDMA, as does target-mode (also on the
-> list).
-> It'll be interesting.
+> I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
+> Currently I am not able to see this error on timeout recovery using this
+> setup. Does IO load (or other factors) effect the error being seen?
 
-Nah... just move it to 'dependent on BMDMA' and inherit from
-ata_bmdma_port_ops.  There are other drivers which do the same thing.
+Not at all.  That's the only write command I issued.
 
 -- 
 tejun
