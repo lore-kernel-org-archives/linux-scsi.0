@@ -1,58 +1,71 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 11/13] dm: enable request-based dm
-Date: Tue, 28 Oct 2008 12:02:27 -0400 (EDT)
-Message-ID: <20081028.120227.104028516.k-ueda@ct.jp.nec.com>
-References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
-	<20080912.104634.08318008.k-ueda@ct.jp.nec.com>
-	<807b3a220810240052n6a8b41b0x1ea9c88124b3f5f8@mail.gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support via bsg interface - revised
+Date: Tue, 28 Oct 2008 09:03:50 -0700
+Message-ID: <D1992D36-6205-41FB-AE70-D6A836E24D8A@qlogic.com>
+References: <32C8BF3A-87D5-4F89-AF4B-7731548CCD4A@qlogic.com>	<20081024125449T.fujita.tomonori@lab.ntt.co.jp>	<49043A7C.8030105@panasas.com> <20081027131110Z.fujita.tomonori@lab.ntt.co.jp> <490579C5.5080102@panasas.com> <C411DA16-2D8D-4B06-91B4-EB2B2B1984E5@qlogic.com> <4906C5DB.1010402@panasas.com> <EE6A1268-D18E-497E-AF5F-FF78F4A837E4@qlogic.com> <490723E8.9050801@panasas.com> <490727E6.6010503@panasas.com> <490728BD.3080005@panasas.com>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <807b3a220810240052n6a8b41b0x1ea9c88124b3f5f8@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: nikanth@gmail.com
-Cc: k-ueda@ct.jp.nec.com, linux-scsi@vger.kernel.org, knikanth@suse.de, linux-kernel@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com, j-nomura@ce.jp.nec.com, agk@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:57483 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbYJ1QDx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2008 12:03:53 -0400
+In-Reply-To: <490728BD.3080005@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, James.Smart@Emulex.Com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, robert.w.love@intel.com
 
-Hi Nikanth,
 
-On Fri, 24 Oct 2008 13:22:46 +0530, "Nikanth K" wrote:
-> On Fri, Sep 12, 2008 at 8:16 PM, Kiyoshi Ueda wrote:
-> > This patch enables request-based dm.
-> >
-> > o Request-based dm and bio-based dm coexist, since there are
-> >  some target drivers which are more fitting to bio-based dm.
-> >  Also, there are other bio-based devices in the kernel
-> >  (e.g. md, loop).
-> >  Since bio-based device can't receive struct request,
-> >  there are some limitations on device stacking between
-> >  bio-based and request-based.
-> >
-> >                     type of underlying device
-> >                   bio-based      requeset-based
-> >   ----------------------------------------------
-> >    bio-based         OK                OK
-> >    request-based     NG                OK
-> >
-> 
-> So will some configurations would become impossible, if a target is
-> made request-based and bio-based one is removed. Hope both
-> types of targets would co-exist and would be selectable for sometime.
+On Oct 28, 2008, at 7:59 AM, Boaz Harrosh wrote:
 
-If the target is used anywhere in the device stack (e.g. linear),
-both types of the target are needed, and that is possible.
+> Boaz Harrosh wrote:
+>> Boaz Harrosh wrote:
+...
+[snip]
+...
+>>> if the attached file is the code you tested then it is wrong look  
+>>> here:
+>>>
+>>>> +
+>>>> +	if (service->srv_reply.residual) {
+>>>> +		service->req->data_len = 0;
+>>>> +		service->req->next_rq->data_len = service->srv_reply.residual;
+>>>> +	} else {
+>>>> +		service->req->data_len = 0;
+>>>> +		service->req->next_rq->data_len = 0;
+>>>> +	}
+>>>> +
+>>> Move above to after the blk_end_bidi_request call
+>>>
+>>>> +	blk_end_bidi_request(service->req, 0, blk_rq_bytes(service->req),
+>>>> +	    service->req->next_rq ? blk_rq_bytes(service->req- 
+>>>> >next_rq) : 0);
+>>> You must call blk_end_bidi_request before you change service->req- 
+>>> >data_len
+>>> to hold the residual (or 0). Otherwise you damage the request.
+>>>
+>>>> +	service->req->end_io(service->req, 0);
+>>
+>> Hmm, on re inspection req->end_io(...) called here has the same  
+>> problem.
+>> Are you sure it's needed?
+>>
+>
+> No you do not call req->end_io(..) directly. It eventual gets called
+> by blk_end_bidi_request() inside end_that_request_last(). (Once
+> all byte are completed)
+Yes, that is correct. Thank you for the correction - end_io() call has  
+removed.
+Other than setting req->errors field and req->next_rq->errors, there  
+are not
+many things to do in the callback prior to calling  
+blk_end_bidi_request().
 
-As for multipath, see my another reply to your comment for PATCH 13.
+With the clean-up, updated patch will be followed.
 
-Thanks,
-Kiyoshi Ueda
+Thank you,
+Seokmann
+
+
