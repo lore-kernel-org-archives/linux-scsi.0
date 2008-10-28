@@ -1,70 +1,38 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/2] cciss: fix sysfs broken symlink regression
-Date: Mon, 27 Oct 2008 21:32:22 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884C025E85D0@GVW0547EXC.americas.hpqcorp.net>
-References: <20081027210136.GA9438@roadking.ldev.net>
- <20081027142954.d63b4590.akpm@linux-foundation.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
+Date: Tue, 28 Oct 2008 10:06:47 +0900
+Message-ID: <490665A7.9050002@kernel.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <490619DF.6020804@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:25608 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbYJ0VdG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2008 17:33:06 -0400
-In-Reply-To: <20081027142954.d63b4590.akpm@linux-foundation.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <490619DF.6020804@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+Mark Lord wrote:
+> Tejun Heo wrote:
+> ..
+>> This patchset further separates SFF/BMDMA support from the rest of the
+>> libata and separate out BMDMA from SFF.  This patchset contains the
+>> following 22 patches.
+> ..
+> 
+> Heh.. I wonder how this will fit with an upcoming task on my list:
+> adding ATAPI support to sata_mv..
+> 
+> Currently sata_mv is a more-or-less purely FIS-based driver,
+> with little need for SFF and no need for BMDMA.
+> 
+> But ATAPI on those chips uses BMDMA, as does target-mode (also on the
+> list).
+> It'll be interesting.
 
+Nah... just move it to 'dependent on BMDMA' and inherit from
+ata_bmdma_port_ops.  There are other drivers which do the same thing.
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> Sent: Monday, October 27, 2008 4:30 PM
-> To: Miller, Mike (OS Dev)
-> Cc: jens.axboe@oracle.com; linux-kernel@vger.kernel.org;
-> linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/2] cciss: fix sysfs broken symlink regression
->
-> On Mon, 27 Oct 2008 16:01:36 -0500
-> Mike Miller <mike.miller@hp.com> wrote:
->
-> > Patch 1 of 2
-> >
-> > Regression introduced by commit
-> 6ae5ce8e8d4de666f31286808d2285aa6a50fa40.
-> > This patch fixes a broken symlink in sysfs that was
-> introduced by the
-> > above commit also called "cciss: remove redundant code." We
-> broke it
-> > in 2.6.27-rc on or about 20080804. Some installers are
-> broken if this
-> > symlink does not exist and they may not detect the logical drives
-> > configured on the controller.
-> > It does not require being backported into 2.6.26.x or
-> earlier kernels.
->
-> OK, thanks, I tagged it for 2.6.27.x.
->
-> > Please consider this for inclusion.
-> >
-> > Andrew, do I need to resubmit 2 of 2? Or is that one still
-> in your queue?
-> >
->
-> What's 2 of 2?
->
-> cciss patches which I presently have queued are:
->
-> cciss-fix-regression-firmware-not-displayed-in-procfs-again-an
-d-again.patch
-
-This is patch 2 of 2.
-
-> cciss-new-hardware-support.patch
-> cciss-fix-sysfs-broken-symlink-regression.patch
->
->
+-- 
+tejun
