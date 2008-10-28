@@ -1,168 +1,67 @@
-From: Matthias Kaehlcke <mkaehlcke@e2s.net>
-Subject: Re: [ep93xx] Oops when inserting USB storage in 2.6.27
-Date: Tue, 28 Oct 2008 08:56:19 +0100
-Message-ID: <4906C5A3.8080107@e2s.net>
-References: <4905A794.7000806@e2s.net>	<1225117156.5146.1.camel@localhost.localdomain>	<4905EAAE.20603@e2s.net> <20081028020454K.fujita.tomonori@lab.ntt.co.jp>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH v2] SCSI: detect missing data for INQUIRY
+Date: Tue, 28 Oct 2008 09:02:27 -0400
+Message-ID: <49070D63.6050706@emulex.com>
+References: <Pine.LNX.4.44L0.0810271452540.2296-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------060304070707010802070305"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound-wa4.frontbridge.com ([216.32.181.16]:25131 "EHLO
-	WA4EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbYJ1H6p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2008 03:58:45 -0400
-In-Reply-To: <20081028020454K.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, kernel@wantstofly.org
-
---------------060304070707010802070305
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:41622 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbYJ1NJs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2008 09:09:48 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0810271452540.2296-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, =?ISO-8859-1?Q?=D6rjan_Nordlund?= <orjan.nordlund@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-FUJITA Tomonori wrote:
-> On Mon, 27 Oct 2008 17:22:06 +0100
-> Matthias Kaehlcke <mkaehlcke@e2s.net> wrote:
+Checking the payload like this is really hokey - but probably works.
+Have we lost all notion from the LLDD on what the actual payload length 
+was (calculated by expected transfer length and resid) ?  Seems like a 
+much better idea than just checking contents.
+
+-- james s
+
+Alan Stern wrote:
+> This patch (as1154b) fixes a problem in scsi_probe_lun(): The function
+> doesn't check whether the device has actually sent back any INQUIRY
+> data!  The patch adds a test to see if the result buffer is still
+> empty after the command has been executed.
 > 
->> hi,
->>
->> James Bottomley wrote:
->>> On Mon, 2008-10-27 at 12:35 +0100, Matthias Kaehlcke wrote:
->>>> James Bottomley wrote:
->>>>> On Fri, 2008-10-24 at 09:05 +0200, Matthias Kaehlcke wrote:
->>>>>> inserting a Verbatim 4GB USB stick in a ep9307 based device running 
->>>>>> kernel 2.6.27 results in the following Oops:
->>>>>>
->>>>>> [42949395.050000] usb 1-3: new full speed USB device using ep93xx-ohci
->>>>>> and address 2
->>>>>> [42949395.250000] usb 1-3: configuration #1 chosen from 1 choice
->>>>>> [42949395.260000] scsi0 : SCSI emulation for USB Mass Storage devices
->>>>>> [42949395.270000] usb 1-3: New USB device found, idVendor=13fe,
->>>>>> idProduct=1f23
->>>>>> [42949395.280000] usb 1-3: New USB device strings: Mfr=1, Product=2,
->>>>>> SerialNumber=3
->>>>>> [42949395.280000] usb 1-3: Product: STORE N GO
->>>>>> [42949395.300000] usb 1-3: Manufacturer: Verbatim
->>>>>> [42949395.310000] usb 1-3: SerialNumber: 078813D90478
->>>>>> [42949400.280000] Unable to handle kernel NULL pointer dereference at
->>>>>> virtual address 00000003
->>>>>> [42949400.280000] pgd = c0648000
->>>>>> [42949400.300000] [00000003] *pgd=c0647031, *pte=00000000, *ppte=00000000
->>>>>> [42949400.300000] Internal error: Oops: 13 [#1] PREEMPT
->>>>>> [42949400.300000] Modules linked in:
->>>>>> [42949400.300000] CPU: 0    Not tainted  (2.6.27 #3)
->>>>>> [42949400.300000] PC is at scsi_calculate_bounce_limit+0x3c/0x44
->>>>> Best guess is this line:
->>>>>
->>>>> 	if (host_dev && host_dev->dma_mask)
->>>>> 		bounce_limit = *host_dev->dma_mask;
->>>>>
->>>>> I'd guess host_dev->dma_mask contains 0x3 ... could this be some sort of
->>>>> ARM setup problem?
->>>> thanks for having a look!
->>>>
->>>> i could figure out the difference between 2.6.26.3 and 2.6.27 that 
->>>> triggers the Oops:
->>>>
->>>> diff -u linux-2.6.26.3/include/asm-arm/pci.h 
->>>> linux-2.6.27/arch/arm/include/asm/pci.h
->>>>
->>>> ...
->>>> @@ -30,7 +30,7 @@
->>>>    * The networking and block device layers use this boolean for bounce
->>>>    * buffer decisions.
->>>>    */
->>>> -#define PCI_DMA_BUS_IS_PHYS     (0)
->>>> +#define PCI_DMA_BUS_IS_PHYS     (1)
->>>>
->>>>   /*
->>>>    * Whether pci_unmap_{single,page} is a nop depends upon the
->>>> ...
->>>>
->>>> this change affects the following piece of code in 
->>>> scsi_calculate_bounce_limit():
->>>>
->>>> if (!PCI_DMA_BUS_IS_PHYS)
->>>>    return BLK_BOUNCE_ANY;
->>>>
->>>> host_dev = scsi_get_device(shost);
->>>> if (host_dev && host_dev->dma_mask)
->>>>    bounce_limit = *host_dev->dma_mask;
->>>>
->>>>
->>>> host_dev->dma_mask is 0xffffffff and we try to dereference the pointer
->>> So the host_dev is some type of arm platform device?  If so, it's got
->>> it's dma_mask set up wrongly.  it's a pointer in struct device and is
->>> supposed to point to the real u64 quantity located within the actual
->>> enclosing device.
->> thanks a lot for the pointer, i think i fixed the problem:
->>
->> --- linux-2.6.27.org/arch/arm/mach-ep93xx/core.c        2008-10-10 
->> 00:13:53.000000000 +0200
->> +++ linux-2.6.27/arch/arm/mach-ep93xx/core.c    2008-10-27 
->> 17:00:42.000000000 +0100
->> @@ -26,6 +26,7 @@
->>   #include <linux/serial_core.h>
->>   #include <linux/device.h>
->>   #include <linux/mm.h>
->> +#include <linux/dma-mapping.h>
->>   #include <linux/time.h>
->>   #include <linux/timex.h>
->>   #include <linux/delay.h>
->> @@ -450,12 +451,14 @@
->>          },
->>   };
->>
->> +static u64 ep93xx_ohci_dmamask = DMA_BIT_MASK(32);
->> +
->>   static struct platform_device ep93xx_ohci_device = {
->>          .name           = "ep93xx-ohci",
->>          .id             = -1,
->>          .dev            = {
->> -               .dma_mask               = (void *)0xffffffff,
->> -               .coherent_dma_mask      = 0xffffffff,
->> +               .dma_mask               = &ep93xx_ohci_dmamask,
->> +               .coherent_dma_mask      = DMA_BIT_MASK(32),
->>          },
->>          .num_resources  = ARRAY_SIZE(ep93xx_ohci_resources),
->>          .resource       = ep93xx_ohci_resources,
+> This enables the Thecus N2050 storage device to work.  The firmware on
+> that device starts up strangely; it sends no data in response to the
+> initial INQUIRY, and it sends the INQUIRY information in response to
+> the followup REQUEST SENSE!  But after that it works better, so
+> retrying the INQUIRY is enough to get it going.
 > 
-> You can do this in a simpler way (it's the popular way to do this):
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 > 
-> @@ -453,8 +454,8 @@ static struct platform_device ep93xx_ohci_device = {
->  	.name		= "ep93xx-ohci",
->  	.id		= -1,
->  	.dev		= {
-> -		.dma_mask		= (void *)0xffffffff,
-> -		.coherent_dma_mask	= 0xffffffff,
-> +		.dma_mask = &ep93xx_ohci_device.dev.coherent_dma_mask,
-> +		.coherent_dma_mask = DMA_BIT_MASK(32),
->  	},
->  	.num_resources	= ARRAY_SIZE(ep93xx_ohci_resources),
->  	.resource	= ep93xx_ohci_resources,
+> ---
 > 
-
-thanks for the pointer!
-
---------------060304070707010802070305
-Content-Type: text/x-vcard; charset="utf-8"; name="mkaehlcke.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="mkaehlcke.vcf"
-
-begin:vcard
-fn:Matthias Kaehlcke
-n:Kaehlcke;Matthias
-org:Electronic Engineering Solutions;Dept. de Software
-adr:;;C/ Sant Ferran, 10-16 bajos;Barcelona;;08031;Spain
-email;internet:mkaehlcke@e2s.net
-title:Ingeniero de Firmware
-tel;work:93 407 30 80
-tel;fax:93 433 56 71
-x-mozilla-html:FALSE
-url:http://www.e2s.net
-version:2.1
-end:vcard
-
-
---------------060304070707010802070305--
+> Index: usb-2.6/drivers/scsi/scsi_scan.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_scan.c
+> +++ usb-2.6/drivers/scsi/scsi_scan.c
+> @@ -602,6 +602,14 @@ static int scsi_probe_lun(struct scsi_de
+>                                     (sshdr.ascq == 0))
+>                                         continue;
+>                         }
+> +               } else {
+> +                       /*
+> +                        * If the first four bytes are all 0 then probably
+> +                        * nothing was transferred.  Try again.
+> +                        */
+> +                       if ((inq_result[0] | inq_result[1] |
+> +                                       inq_result[2] | inq_result[3]) == 0)
+> +                               continue;
+>                 }
+>                 break;
+>         }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
