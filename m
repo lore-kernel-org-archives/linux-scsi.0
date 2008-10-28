@@ -1,62 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 04/22] libata-sff: clear IRQ from ata_sff_error_handler()
- only when necessary
-Date: Tue, 28 Oct 2008 00:10:52 -0400
-Message-ID: <490690CC.50500@garzik.org>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-5-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 10/22] libata-sff: clean up BMDMA initialization
+Date: Tue, 28 Oct 2008 00:16:04 -0400
+Message-ID: <49069204.4040502@garzik.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-11-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40088 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56563 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbYJ1EK4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2008 00:10:56 -0400
-In-Reply-To: <1224580680-13698-5-git-send-email-tj@kernel.org>
+	id S1750793AbYJ1EQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2008 00:16:08 -0400
+In-Reply-To: <1224580680-13698-11-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Tejun Heo wrote:
-> Clearing IRQ from ata_sff_error_handler() is necessary only when the
-> port is gonna be thawed before performing EH actions and some
-> controllers don't like being accessed after certain fail modes until
-> they're reset.  Clear IRQ iff the port is being thawed.  Also, remove
-> unnecessary ata_sff_sync() while at it.
+> This patch improves BMDMA initialization such that
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  drivers/ata/libata-sff.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
+> * When BMDMA register initialization fails, falls back to PIO instead
+>   of failing.  ata_pci_bmdma_init() never fails now.
 > 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 4b47394..b9fb068 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -2119,11 +2119,13 @@ void ata_sff_error_handler(struct ata_port *ap)
->  		}
->  
->  		ap->ops->bmdma_stop(qc);
-> -	}
->  
-> -	ata_sff_sync(ap);		/* FIXME: We don't need this */
-> -	ap->ops->sff_check_status(ap);
-> -	ap->ops->sff_irq_clear(ap);
-> +		/* if we're gonna thaw, make sure IRQ is clear */
-> +		if (thaw) {
-> +			ap->ops->sff_check_status(ap);
-> +			ap->ops->sff_irq_clear(ap);
-> +		}
-> +	}
+> * When ata_pci_bmdma_init() falls back to PIO, it clears
+>   ap->mwdma_mask and udma_mask instead of depending on
+>   ata_bmdma_mode_filter().  This makes ata_bmdma_mode_filter()
+>   unnecessary and p1 is removed.
+> 
+> * ata_port_start() which actually is BMDMA specific is moved to
+>   ata_bmdma_port_start().  ata_port_start() and ata_sff_port_start()
+>   are killed.
+> 
+> Drivers which no longer calls into PRD table allocation are...
+> 
+>   pdc_adma, sata_inic162x, sata_qstor, sata_sx4, pata_cmd640 and all
+>   drivers which inherit from ata_sff_port_ops.
+> 
+> pata_icside sets ->port_start to ATA_OP_NULL as it doesn't need PRD
+> but is a BMDMA controller and doesn't have custom port_start like
+> other such controllers.
 
-I'll allow it, but, this description is not strictly true.  This 
-clearing was done in the error handler unconditionally in an attempt to 
-catch outstanding conditions.  The logic being that it is safer (FSVO 
-safe) to clear on error just in case interrupts were screaming.
-
-	Jeff
-
-
+Nice!
 
 
