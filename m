@@ -1,72 +1,41 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/17] drivers/scsi/a2091.c: make 2 functions static
-Date: Wed, 29 Oct 2008 14:24:38 -0700
-Message-ID: <200810292124.m9TLOdrX021224@imap1.linux-foundation.org>
+Subject: [patch 15/17] U14-34F: fix scsi_dma_map failure case
+Date: Wed, 29 Oct 2008 14:24:47 -0700
+Message-ID: <200810292124.m9TLOlih021304@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51710 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60007 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755231AbYJ2VYu (ORCPT
+	by vger.kernel.org with ESMTP id S1755298AbYJ2VYu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 29 Oct 2008 17:24:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com
 
-From: Adrian Bunk <bunk@kernel.org>
+From: roel kluin <roel.kluin@gmail.com>
 
-a2091_{detect,release}() can become static.
+When unsigned, scsi_dma_map may return -ENOMEM without triggering BUG_ON()
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/u14-34f.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+diff -puN drivers/scsi/u14-34f.c~u14-34f-fix-scsi_dma_map-failure-case drivers/scsi/u14-34f.c
+--- a/drivers/scsi/u14-34f.c~u14-34f-fix-scsi_dma_map-failure-case
++++ a/drivers/scsi/u14-34f.c
+@@ -1111,7 +1111,8 @@ static int u14_34f_detect(struct scsi_ho
  
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
- 
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -227,7 +229,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ static void map_dma(unsigned int i, unsigned int j) {
+    unsigned int data_len = 0;
+-   unsigned int k, count, pci_dir;
++   unsigned int k, pci_dir;
++   int count;
+    struct scatterlist *sg;
+    struct mscp *cpp;
+    struct scsi_cmnd *SCpnt;
 _
