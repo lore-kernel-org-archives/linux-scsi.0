@@ -1,152 +1,81 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support - revised
- II
-Date: Wed, 29 Oct 2008 15:12:08 +0200
-Message-ID: <49086128.4090908@panasas.com>
-References: <E35CF40D-87CC-4AA2-91EC-31064F70198E@qlogic.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: optimizations in blk_rq_timed_out_timer()
+Date: Wed, 29 Oct 2008 14:26:15 +0100
+Message-ID: <20081029132614.GD31673@kernel.dk>
+References: <20081028182243.GA6716@us.ibm.com> <20081029130656G.fujita.tomonori@lab.ntt.co.jp> <20081029060625.GA5080@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:4364 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753480AbYJ2NMS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2008 09:12:18 -0400
-In-Reply-To: <E35CF40D-87CC-4AA2-91EC-31064F70198E@qlogic.com>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:43926 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753189AbYJ2NhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2008 09:37:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20081029060625.GA5080@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
-Cc: James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Robert W Love <robert.w.love@intel.com>
+To: malahal@us.ibm.com
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
 
-Seokmann Ju wrote:
->  From f32b386a61a23f408974f2289cd34200f59401e1 Mon Sep 17 00:00:00 2001
-> From: root <root@linux-atl-00.qlogic.com>
-> Date: Tue, 28 Oct 2008 19:27:15 -0700
-> Subject: [PATCH] scsi_transport_fc: FC pass through support
+On Tue, Oct 28 2008, malahal@us.ibm.com wrote:
+> FUJITA Tomonori [fujita.tomonori@lab.ntt.co.jp] wrote:
+> > On Tue, 28 Oct 2008 11:22:43 -0700
+> > malahal@us.ibm.com wrote:
+> > 
+> > > Now the rq->deadline can't be zero if the request is in the
+> > > timeout_list, so there is no need to have next_set. There is no need to
+> > > access a request's deadline field if blk_rq_timed_out is called on it.
+> > > 
+> > > Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+> > > 
+> > > diff -r a6ae42397ede block/blk-timeout.c
+> > > --- a/block/blk-timeout.c	Thu Oct 23 11:48:45 2008 -0700
+> > > +++ b/block/blk-timeout.c	Fri Oct 24 17:08:24 2008 -0700
+> > > @@ -118,7 +118,7 @@
+> > >  void blk_rq_timed_out_timer(unsigned long data)
+> > >  {
+> > >  	struct request_queue *q = (struct request_queue *) data;
+> > > -	unsigned long flags, uninitialized_var(next), next_set = 0;
+> > > +	unsigned long flags, next = 0;
+> > >  	struct request *rq, *tmp;
+> > >  
+> > >  	spin_lock_irqsave(q->queue_lock, flags);
+> > > @@ -133,15 +133,13 @@
+> > >  			if (blk_mark_rq_complete(rq))
+> > >  				continue;
+> > >  			blk_rq_timed_out(rq);
+> > > +		} else {
+> > > +			if (!next || time_after(next, rq->deadline))
+> > > +				next = rq->deadline;
+> > 
+> > Hmm, blk_rq_timed_out(rq) could put the rq back to q->timeout_list. We
+> > need to take care of the rq->deadline like this?
 > 
-> This patch will add FC pass through support.
-> The FC pass through support is service request handling mechanism
-> for FC specification defined services including,
-> - Link Services (Basic LS, Extended LS)
-> - Generic Services (FC-CT - Common Transport)
-> The support utilize BSG (Block layer SCSI Generic) interface with
-> bidi (bi-directional) nature in handling the service requests.
+> If it is put back on the list, it would be placed at the end of the list
+> so we will get to work on it again in the list traversal. There is no
+> need to access it now.
 > 
-> This patch added following featues in the support
-> - FC service structure has defined to transport service requests
-> - Handles the service request in asynchronous manner - LLD
-> - Timeout capability
-> - Abort capability
+> > 
+> > >  			if (blk_mark_rq_complete(rq))
+> > >  				continue;
+> > >  			blk_rq_timed_out(rq);
+> > > +		}
+> > >
+> > > +		if (!next || time_after(next, rq->deadline))
+> > > +			next = rq->deadline;
+> > 
+> > But if blk_rq_timed_out calls __blk_complete_request, we don't want to
+> > touch the rq here, I guess.
 > 
-> Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
-> ---
->   drivers/scsi/scsi_transport_fc.c |  216 +++++++++++++++++++++++++++++ 
-> ++++++++-
->   include/scsi/scsi_transport_fc.h |   81 ++++++++++++++-
->   2 files changed, 294 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
-> scsi_transport_fc.c
-> index 1e71abf..e26e8e0 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -43,6 +43,11 @@ static void fc_vport_sched_delete(struct  
-> work_struct *work);
->   static int fc_vport_setup(struct Scsi_Host *shost, int channel,
->   	struct device *pdev, struct fc_vport_identifiers  *ids,
->   	struct fc_vport **vport);
-> +static enum blk_eh_timer_return fc_service_timeout(struct request  
-> *req);
-> +static void fc_service_done(struct fc_service *);
-> +static int fc_service_handler(struct Scsi_Host *, struct fc_rport *,
-> +    struct request *, struct request_queue *);
-> +static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
-> 
->   /*
->    * Redefine so that we can have same named attributes in the
-> @@ -2413,11 +2418,218 @@ fc_rport_final_delete(struct work_struct *work)
-> 
->   	transport_remove_device(dev);
->   	device_del(dev);
-> +	fc_bsg_remove(shost, rport);
->   	transport_destroy_device(dev);
->   	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
->   	put_device(dev);			/* for self-reference */
->   }
-> 
-> +static enum blk_eh_timer_return fc_service_timeout(struct request *req)
-> +{
-> +	struct fc_service *service = (void *) req->special;
-> +	struct Scsi_Host *shost = rport_to_shost(service->rport);
-> +	struct fc_internal *i = to_fc_internal(shost->transportt);
-> +	unsigned long flags;
-> +	int res = 0;
-> +
-> +	if (service->rport->port_state == FC_PORTSTATE_BLOCKED)
-> +		return BLK_EH_RESET_TIMER;
-> +
-> +	spin_lock_irqsave(&service->service_state_lock, flags);
-> +	if (!(service->service_state_flag & FC_SERVICE_STATE_DONE))
-> +		service->service_state_flag |= FC_SERVICE_STATE_TIMEOUT;
-> +	spin_unlock_irqrestore(&service->service_state_lock, flags);
-> +
-> +	if (i->f->abort_fc_service)
-> +		res = i->f->abort_fc_service(service);
-> +
-> +	if (res) {
-> +		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
-> +		"failed with status %d\n", res);
-> +		fc_service_done(service);
-> +	}
-> +
-> +	/* the blk_end_sync_io() doesn't check the error */
-> +	return BLK_EH_NOT_HANDLED;
-> +}
-> +
-> +static void fc_service_done(struct fc_service *service)
-> +{
-> +
-> +	if (service->service_state_flag != FC_SERVICE_STATE_DONE) {
-> +		if (service->service_state_flag == FC_SERVICE_STATE_TIMEOUT)
-> +			printk(KERN_ERR "ERROR: FC service timed out\n");
-> +		else if (service->service_state_flag ==
-> +		    FC_SERVICE_STATE_ABORTED)
-> +			printk(KERN_ERR "ERROR: FC service aborted\n");
-> +		else
-> +			printk(KERN_ERR "ERROR: FC service not finished\n");
-> +	}
-> +
-> +	if (service->srv_reply.status != FC_SERVICE_COMPLETE) {
-> +		printk(KERN_ERR "ERROR: FC service to rport %p failed with"
-> +		    " status 0x%x\n", service->rport,
-> +		    service->srv_reply.status);
-> +	}
-> +
-> +	service->req->errors = service->srv_reply.status;
-> +	service->req->next_rq->errors = service->srv_reply.status;
-> +
+> Yes, we should not access it although I don't think the request can be
+> freed while the existing code is accessing the deadline field. What 
+> likely can happen is that we may call mod_timer with jiffies that is
+> older than current which would call the timer immediately...
 
-Just nit-picking. next_rq should not carry any other information but
-BIOs (sg-lists) and residual. Any global state information is carried
-on the main request only.
--	service->req->next_rq->errors = service->srv_reply.status;
+That would not call the timer immediately, that will not call it until
+jiffies reaches that value again. So you're looking at a minimum of 49
+days :-)
 
-Jens TOMO?
+-- 
+Jens Axboe
 
-I never understood the difference please explain:
-What is the difference between "req->errors =" and the error passed
-into blk_end_xxx_request(req, error,...)?
-
-> +	blk_end_bidi_request(service->req, service->srv_reply.status,
-> +	    blk_rq_bytes(service->req),
-> +	    service->req->next_rq ? blk_rq_bytes(service->req->next_rq) : 0);
-> +
-> +	kfree(service->payload_dma);
-> +	kfree(service->response_dma);
-> +	kfree(service);
-> +}
-> +
-<snip>
-
-Thanks
-Boaz
