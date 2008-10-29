@@ -1,79 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 10/17] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
-Date: Wed, 29 Oct 2008 14:24:42 -0700
-Message-ID: <200810292124.m9TLOhXc021245@imap1.linux-foundation.org>
+Subject: [patch 17/17] scsi ioctl: fix kernel-doc warning
+Date: Wed, 29 Oct 2008 14:24:48 -0700
+Message-ID: <200810292124.m9TLOnVQ021320@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48476 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45457 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755302AbYJ2VYx (ORCPT
+	by vger.kernel.org with ESMTP id S1754757AbYJ2VY6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:24:53 -0400
+	Wed, 29 Oct 2008 17:24:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-It would be easy to get rid of the typedefs too, but I kept this
-minimal.
+Fix kernel-doc parameter warning and correct the function name:
 
-Noticed by sparse:
-drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
-drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
-drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
-drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
+Warning(linux-next-20081022//drivers/scsi/scsi_ioctl.c:281): No description found for parameter 'ndelay'
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- drivers/scsi/gdth.h |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_ioctl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.c
-@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
-       case READ_CAPACITY:
-         TRACE2(("Read capacity hdrive %d\n",t));
-         if (ha->hdr[t].size > (ulong64)0xffffffff)
--            rdc.last_block_no = 0xffffffff;
-+            rdc.last_block_no = cpu_to_be32(0xffffffff);
-         else
-             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
-         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
-diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
---- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.h
-@@ -968,14 +968,14 @@ typedef struct {
+diff -puN drivers/scsi/scsi_ioctl.c~scsi-ioctl-fix-kernel-doc-warning drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c~scsi-ioctl-fix-kernel-doc-warning
++++ a/drivers/scsi/scsi_ioctl.c
+@@ -270,11 +270,11 @@ int scsi_ioctl(struct scsi_device *sdev,
+ EXPORT_SYMBOL(scsi_ioctl);
  
- /* READ_CAPACITY data format */
- typedef struct {
--    ulong32     last_block_no;
--    ulong32     block_length;
-+	__be32 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap_data;
- 
- /* READ_CAPACITY (16) data format */
- typedef struct {
--    ulong64     last_block_no;
--    ulong32     block_length;
-+	__be64 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap16_data;
- 
- /* REQUEST_SENSE data format */
+ /**
+- * scsi_nonblock_ioctl() - Handle SG_SCSI_RESET
++ * scsi_nonblockable_ioctl() - Handle SG_SCSI_RESET
+  * @sdev: scsi device receiving ioctl
+  * @cmd: Must be SC_SCSI_RESET
+  * @arg: pointer to int containing SG_SCSI_RESET_{DEVICE,BUS,HOST}
+- * @filp: either NULL or a &struct file which must have the O_NONBLOCK flag.
++ * @ndelay: file mode O_NDELAY flag
+  */
+ int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+ 			    void __user *arg, int ndelay)
 _
