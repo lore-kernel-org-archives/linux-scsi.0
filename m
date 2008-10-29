@@ -1,53 +1,78 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/17] drivers/scsi: Use DIV_ROUND_UP
-Date: Wed, 29 Oct 2008 14:24:40 -0700
-Message-ID: <200810292124.m9TLOeF6021232@imap1.linux-foundation.org>
+Subject: [patch 08/17] drivers/scsi/megaraid: Use DIV_ROUND_UP
+Date: Wed, 29 Oct 2008 14:24:41 -0700
+Message-ID: <200810292124.m9TLOf9J021235@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42629 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41604 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755230AbYJ2VYp (ORCPT
+	by vger.kernel.org with ESMTP id S1755249AbYJ2VYs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:24:45 -0400
+	Wed, 29 Oct 2008 17:24:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, willy@linux.intel.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, Bo.Yang@lsi.com
 
 From: Julia Lawall <julia@diku.dk>
 
-Use the macro DIV_ROUND_UP and eliminate the variable rounded_up, as
-suggested by Matthew Wilcox.
+The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
+(d)) but is perhaps more readable.
+
+An extract of the semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@haskernel@
+@@
+
+#include <linux/kernel.h>
+
+@depends on haskernel@
+expression n,d;
+@@
+
+(
+- (n + d - 1) / d
++ DIV_ROUND_UP(n,d)
+|
+- (n + (d - 1)) / d
++ DIV_ROUND_UP(n,d)
+)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP((n),d)
++ DIV_ROUND_UP(n,d)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP(n,(d))
++ DIV_ROUND_UP(n,d)
+// </smpl>
 
 Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: "Yang, Bo" <Bo.Yang@lsi.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/esp_scsi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/esp_scsi.c~drivers-scsi-use-div_round_up drivers/scsi/esp_scsi.c
---- a/drivers/scsi/esp_scsi.c~drivers-scsi-use-div_round_up
-+++ a/drivers/scsi/esp_scsi.c
-@@ -1453,7 +1453,7 @@ static void esp_msgin_sdtr(struct esp *e
- 		offset = 0;
+diff -puN drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up drivers/scsi/megaraid/megaraid_sas.c
+--- a/drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up
++++ a/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1718,7 +1718,7 @@ static int megasas_create_frame_pool(str
+ 	 * Calculated the number of 64byte frames required for SGL
+ 	 */
+ 	sgl_sz = sge_sz * instance->max_num_sge;
+-	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
++	frame_count = DIV_ROUND_UP(sgl_sz, MEGAMFI_FRAME_SIZE);
  
- 	if (offset) {
--		int rounded_up, one_clock;
-+		int one_clock;
- 
- 		if (period > esp->max_period) {
- 			period = offset = 0;
-@@ -1463,9 +1463,7 @@ static void esp_msgin_sdtr(struct esp *e
- 			goto do_reject;
- 
- 		one_clock = esp->ccycle / 1000;
--		rounded_up = (period << 2);
--		rounded_up = (rounded_up + one_clock - 1) / one_clock;
--		stp = rounded_up;
-+		stp = DIV_ROUND_UP(period << 2, one_clock);
- 		if (stp && esp->rev >= FAS236) {
- 			if (stp >= 50)
- 				stp--;
+ 	/*
+ 	 * We need one extra frame for the MFI command
 _
