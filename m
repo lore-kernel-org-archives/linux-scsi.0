@@ -1,50 +1,60 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi: fix uninitialized variable in iscsi
-Date: Wed, 29 Oct 2008 10:44:12 -0500
-Message-ID: <490884CC.9060106@cs.wisc.edu>
-References: <20081029170359.70682e02.sfr@canb.auug.org.au>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: 2.6.28-rc2 - strange (redundant) sysfs paths for SCSI
+Date: Wed, 29 Oct 2008 21:05:39 +0300
+Message-ID: <200810292105.40220.arvidjaar@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart4526605.sHybU53WzQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46374 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752819AbYJ2Po2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 11:44:28 -0400
-In-Reply-To: <20081029170359.70682e02.sfr@canb.auug.org.au>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754867AbYJ2SFz@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: open-iscsi@googlegroups.com, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Stephen Rothwell wrote:
-> [Resend to get through vger's filters, sorry]
-> 
-> drivers/scsi/scsi_transport_iscsi.c: In function 'iscsi_add_session':
-> drivers/scsi/scsi_transport_iscsi.c:704: warning: 'err' may be used uninitialized in this function
-> 
-> Indeed the error path can be taken without err being set.
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> I don't know if ENOMEM is the proper error code to return.
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 4a803eb..99855db 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -719,6 +719,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
->  						 "Too many iscsi targets. Max "
->  						 "number of targets is %d.\n",
->  						 ISCSI_MAX_TARGET - 1);
-> +			err = -ENOMEM;
->  			goto release_host;
->  		}
->  	}
+--nextPart4526605.sHybU53WzQ
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Thanks for the patch.
+Running with PATA driver:
 
-I have a patch for this from Benny Halevy already.
+/sys/devices/pci0000:00/0000:00:04.0/host0/scsi_host/host0
+/sys/devices/pci0000:00/0000:00:04.0/host0/target0:0:0/0:0:0:0
+
+well, in both cases at least one component is redundant? Also
+the intermediate nodes (scsi_host and target0:0:0) do not seem
+to contain any useful information at all?
+
+I noticed this because kernel installer in Mandriva started to
+complaint about host* and target* device nodes under /sys/bus/scsi/devices:
+
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 0:0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/target0:0:0/0:0:0:0/
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 1:0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host1/target1:0:0/1:0:0:0/
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 host0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 host1 -> ../../../devices/pci0000:00/0000:00:04.0/host1/
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 target0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/target0:0:0/
+lrwxrwxrwx 1 root root 0 2008-10-29 19:58 target1:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host1/target1:0:0/
+
+It is really not quite clear what use they have.
+
+TIA
+
+-andrey
+
+--nextPart4526605.sHybU53WzQ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkIpfQACgkQR6LMutpd94xTNACguJK4lS/+Dtxab+UYXbrgTLYX
+POgAnjFUVbw5ilSJ53+pi4ixgSD1stWH
+=fuif
+-----END PGP SIGNATURE-----
+
+--nextPart4526605.sHybU53WzQ--
