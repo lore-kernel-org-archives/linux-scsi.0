@@ -1,59 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/17] scsi: use the common hex_asc array rather than a private one
-Date: Wed, 29 Oct 2008 14:24:38 -0700
-Message-ID: <200810292124.m9TLOcQM021221@imap1.linux-foundation.org>
+Subject: [patch 01/17] #if 0 ses_match_host()
+Date: Wed, 29 Oct 2008 14:24:35 -0700
+Message-ID: <200810292124.m9TLOZfZ021178@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58158 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43633 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755197AbYJ2VYo (ORCPT
+	by vger.kernel.org with ESMTP id S1754717AbYJ2VYs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:24:44 -0400
+	Wed, 29 Oct 2008 17:24:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
 
-Also use the hi/lo helpers.
+#if 0 the unused ses_match_host()
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmmca.c    |    3 +--
- drivers/scsi/ultrastor.c |    4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/ses.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff -puN drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ibmmca.c
---- a/drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
-+++ a/drivers/scsi/ibmmca.c
-@@ -1002,12 +1002,11 @@ static char *ti_p(int dev)
- /* interpreter for logical device numbers (ldn) */
- static char *ti_l(int val)
- {
--	const char hex[16] = "0123456789abcdef";
- 	static char answer[2];
+diff -puN drivers/scsi/ses.c~if-0-ses_match_host drivers/scsi/ses.c
+--- a/drivers/scsi/ses.c~if-0-ses_match_host
++++ a/drivers/scsi/ses.c
+@@ -264,6 +264,7 @@ struct ses_host_edev {
+ 	struct enclosure_device *edev;
+ };
  
- 	answer[1] = (char) (0x0);
- 	if (val <= MAX_LOG_DEV)
--		answer[0] = hex[val];
-+		answer[0] = hex_asc[val];
- 	else
- 		answer[0] = '-';
- 	return (char *) &answer;
-diff -puN drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ultrastor.c
---- a/drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
-+++ a/drivers/scsi/ultrastor.c
-@@ -876,8 +876,8 @@ static int ultrastor_abort(struct scsi_c
- 	for (i = 0; i < 16; i++)
- 	  {
- 	    unsigned char p = inb(port0 + i);
--	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
--	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
-+	    out[28 + i * 3] = hex_asc_hi(p);
-+	    out[29 + i * 3] = hex_asc_lo(p);
- 	    out[30 + i * 3] = ' ';
- 	  }
- 	out[28 + i * 3] = '\n';
++#if 0
+ int ses_match_host(struct enclosure_device *edev, void *data)
+ {
+ 	struct ses_host_edev *sed = data;
+@@ -280,6 +281,7 @@ int ses_match_host(struct enclosure_devi
+ 	sed->edev = edev;
+ 	return 1;
+ }
++#endif  /*  0  */
+ 
+ static void ses_process_descriptor(struct enclosure_component *ecomp,
+ 				   unsigned char *desc)
 _
