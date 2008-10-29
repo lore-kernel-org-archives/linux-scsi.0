@@ -1,78 +1,67 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/17] drivers/scsi/megaraid: Use DIV_ROUND_UP
-Date: Wed, 29 Oct 2008 14:24:41 -0700
-Message-ID: <200810292124.m9TLOf9J021235@imap1.linux-foundation.org>
+Subject: [patch 13/17] scsi: remove private implementation of get_unaligned_be32
+Date: Wed, 29 Oct 2008 14:24:45 -0700
+Message-ID: <200810292124.m9TLOjl1021276@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41604 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46537 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755249AbYJ2VYs (ORCPT
+	by vger.kernel.org with ESMTP id S1754346AbYJ2VYt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:24:48 -0400
+	Wed, 29 Oct 2008 17:24:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, Bo.Yang@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
-(d)) but is perhaps more readable.
-
-An extract of the semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
-
-// <smpl>
-@haskernel@
-@@
-
-#include <linux/kernel.h>
-
-@depends on haskernel@
-expression n,d;
-@@
-
-(
-- (n + d - 1) / d
-+ DIV_ROUND_UP(n,d)
-|
-- (n + (d - 1)) / d
-+ DIV_ROUND_UP(n,d)
-)
-
-@depends on haskernel@
-expression n,d;
-@@
-
-- DIV_ROUND_UP((n),d)
-+ DIV_ROUND_UP(n,d)
-
-@depends on haskernel@
-expression n,d;
-@@
-
-- DIV_ROUND_UP(n,(d))
-+ DIV_ROUND_UP(n,d)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_sas.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_expander.c |    9 +++++----
+ include/scsi/scsi.h                |    6 ------
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up drivers/scsi/megaraid/megaraid_sas.c
---- a/drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up
-+++ a/drivers/scsi/megaraid/megaraid_sas.c
-@@ -1718,7 +1718,7 @@ static int megasas_create_frame_pool(str
- 	 * Calculated the number of 64byte frames required for SGL
- 	 */
- 	sgl_sz = sge_sz * instance->max_num_sge;
--	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
-+	frame_count = DIV_ROUND_UP(sgl_sz, MEGAMFI_FRAME_SIZE);
+diff -puN drivers/scsi/libsas/sas_expander.c~scsi-remove-private-implementation-of-get_unaligned_be32 drivers/scsi/libsas/sas_expander.c
+--- a/drivers/scsi/libsas/sas_expander.c~scsi-remove-private-implementation-of-get_unaligned_be32
++++ a/drivers/scsi/libsas/sas_expander.c
+@@ -24,6 +24,7 @@
  
- 	/*
- 	 * We need one extra frame for the MFI command
+ #include <linux/scatterlist.h>
+ #include <linux/blkdev.h>
++#include <asm/unaligned.h>
+ 
+ #include "sas_internal.h"
+ 
+@@ -541,10 +542,10 @@ int sas_smp_get_phy_events(struct sas_ph
+ 	if (!res)
+ 		goto out;
+ 
+-	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
+-	phy->running_disparity_error_count = scsi_to_u32(&resp[16]);
+-	phy->loss_of_dword_sync_count = scsi_to_u32(&resp[20]);
+-	phy->phy_reset_problem_count = scsi_to_u32(&resp[24]);
++	phy->invalid_dword_count = get_unaligned_be32(&resp[12]);
++	phy->running_disparity_error_count = get_unaligned_be32(&resp[16]);
++	phy->loss_of_dword_sync_count = get_unaligned_be32(&resp[20]);
++	phy->phy_reset_problem_count = get_unaligned_be32(&resp[24]);
+ 
+  out:
+ 	kfree(resp);
+diff -puN include/scsi/scsi.h~scsi-remove-private-implementation-of-get_unaligned_be32 include/scsi/scsi.h
+--- a/include/scsi/scsi.h~scsi-remove-private-implementation-of-get_unaligned_be32
++++ a/include/scsi/scsi.h
+@@ -527,10 +527,4 @@ static inline void set_driver_byte(struc
+ /* Used to obtain the PCI location of a device */
+ #define SCSI_IOCTL_GET_PCI		0x5387
+ 
+-/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
+-static inline __u32 scsi_to_u32(__u8 *ptr)
+-{
+-	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+-}
+-
+ #endif /* _SCSI_SCSI_H */
 _
