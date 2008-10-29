@@ -1,67 +1,55 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [patch 13/17] scsi: remove private implementation of
- get_unaligned_be32
-Date: Wed, 29 Oct 2008 15:29:28 -0700
-Message-ID: <1225319368.5496.3.camel@brick>
-References: <200810292124.m9TLOjl1021276@imap1.linux-foundation.org>
-	 <1225316894.3257.19.camel@localhost.localdomain>
-	 <20081029150702.1a20310a.akpm@linux-foundation.org>
-	 <1225318393.3257.24.camel@localhost.localdomain>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH] scsi: fix uninitialized variable in iscsi
+Date: Thu, 30 Oct 2008 09:38:07 +1100
+Message-ID: <20081030093807.cb564760.sfr@canb.auug.org.au>
+References: <20081029170359.70682e02.sfr@canb.auug.org.au>
+	<490884CC.9060106@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__30_Oct_2008_09_38_07_+1100_B2xWYG.NJqkv3_Ff"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:31273 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755077AbYJ2W3b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2008 18:29:31 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so98254ywe.1
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 15:29:30 -0700 (PDT)
-In-Reply-To: <1225318393.3257.24.camel@localhost.localdomain>
+Received: from chilli.pcug.org.au ([203.10.76.44]:59335 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754336AbYJ2WiP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2008 18:38:15 -0400
+In-Reply-To: <490884CC.9060106@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: open-iscsi@googlegroups.com, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Wed, 2008-10-29 at 17:13 -0500, James Bottomley wrote:
-> > > No ... as I've said several times now, there's a debate going on about
-> > > what we're supposed to be doing with all of this (either putting it in
-> > > SCSI, pulling it out or just using the inline notation.
-> > 
-> > If I knew what the terrible word "it" is replacing, I'd know what the
-> > above sentence means.
-> 
-> It being the correct way to handle multibyte SCSI problems.
-> 
-> > I'm kinda struggling to imagine why there's controversy, really.  scsi
-> > has a private implementation of something which core kernel provides. 
-> > Zap!
-> 
-> The main problems with the above are that a lot of people don't
-> necessarily think Big Endian when they see SCSI (even though it's a BE
-> bus), so the get_unaligned_beXX looks strange, and secondly most of the
-> arrays we operate on are simple u8 ones, so sparse gets annoyed about
-> sending a non BE quantity through a BE conversion ... I bet it even does
-> this for the above patch.
+--Signature=_Thu__30_Oct_2008_09_38_07_+1100_B2xWYG.NJqkv3_Ff
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It does not, the get_unaligned_* family is not typesafe (takes a void *)
-as lots of people have u8 arrays or similar.  Even though it probably
-should be.
+Hi Mike,
 
-> 
-> > >  I'm not putting
-> > > a patch like this in until we at least get some consensus.
-> > 
-> > I'll hang onto it, so there's nowhere to hide...
-> 
-> OK.
-> 
+On Wed, 29 Oct 2008 10:44:12 -0500 Mike Christie <michaelc@cs.wisc.edu> wro=
+te:
+>
+> I have a patch for this from Benny Halevy already.
 
-Did you ever have some time to think about my suggestion regarding
-defining some common packed structs for the different command formats
-taht could be endian-annotated, then use the unaligned helpers against
-pointers to these structs...so sparse would actually spot endian
-mixups in scsi thereafter?
+OK, good.
 
-Harvey
+BTW, the tree listed in the maintainers file "git
+kernel.org:/pub/scm/linux/kernel/mnc/linux-2.6-iscsi.git" doesn't work ...
 
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Thu__30_Oct_2008_09_38_07_+1100_B2xWYG.NJqkv3_Ff
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkI5c8ACgkQjjKRsyhoI8zl8gCeNx6CGvZt3sTHAZBfuUjJUQK9
+j/0An1ISky1TorxTemT5WtSRUa72BWB2
+=K24S
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__30_Oct_2008_09_38_07_+1100_B2xWYG.NJqkv3_Ff--
