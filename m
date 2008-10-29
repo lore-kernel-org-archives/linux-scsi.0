@@ -1,72 +1,52 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/17] drivers/scsi/a3000.c: make 2 functions static
-Date: Wed, 29 Oct 2008 14:24:39 -0700
-Message-ID: <200810292124.m9TLOd2B021229@imap1.linux-foundation.org>
+Subject: [patch 12/17] esp: fix section mismatch warning
+Date: Wed, 29 Oct 2008 14:24:44 -0700
+Message-ID: <200810292124.m9TLOjRQ021273@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40050 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59973 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754138AbYJ2VYw (ORCPT
+	by vger.kernel.org with ESMTP id S1752865AbYJ2VZF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:24:52 -0400
+	Wed, 29 Oct 2008 17:25:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, arobinso@nyx.net
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-a3000_{detect,release}() can become static.
+Not critical.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+WARNING: drivers/char/esp.o(.text+0x278): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_version
+The function show_serial_version() references
+the variable __initdata serial_version.
+This is often because show_serial_version lacks a __initdata
+annotation or the annotation of serial_version is wrong.
+
+WARNING: drivers/char/esp.o(.text+0x27d): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_name
+The function show_serial_version() references
+the variable __initdata serial_name.
+This is often because show_serial_version lacks a __initdata
+annotation or the annotation of serial_name is wrong.
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Andrew J. Robinson <arobinso@nyx.net>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a3000.c |    6 ++++--
- drivers/scsi/a3000.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/char/esp.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.c
---- a/drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.c
-@@ -25,6 +25,8 @@
+diff -puN drivers/char/esp.c~esp-fix-section-mismatch-warning drivers/char/esp.c
+--- a/drivers/char/esp.c~esp-fix-section-mismatch-warning
++++ a/drivers/char/esp.c
+@@ -2249,7 +2249,7 @@ static int esp_open(struct tty_struct *t
+  * driver.
+  */
  
- static struct Scsi_Host *a3000_host = NULL;
- 
-+static int a3000_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a3000_intr (int irq, void *dummy)
+-static void show_serial_version(void)
++static void __init show_serial_version(void)
  {
- 	unsigned long flags;
-@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
- 
--int __init a3000_detect(struct scsi_host_template *tpnt)
-+static int __init a3000_detect(struct scsi_host_template *tpnt)
- {
-     wd33c93_regs regs;
- 
-@@ -232,7 +234,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a3000_release(struct Scsi_Host *instance)
-+static int a3000_release(struct Scsi_Host *instance)
- {
-     wd33c93_release();
-     DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.h
---- a/drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a3000_detect(struct scsi_host_template *);
--int a3000_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ 	printk(KERN_INFO "%s version %s (DMA %u)\n",
+ 		serial_name, serial_version, dma);
 _
