@@ -1,57 +1,62 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Timeout regression introduced by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Wed, 29 Oct 2008 14:26:55 +0100
-Message-ID: <20081029132654.GE31673@kernel.dk>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org> <20081027213006.GB17946@linux.vnet.ibm.com> <490666D6.8090603@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 2/6] ibmvfc: Fix error reporting for some FC errors
+Date: Wed, 29 Oct 2008 08:46:36 -0500
+Message-ID: <200810291347.m9TDl4hx025236@d03av04.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:44327 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753194AbYJ2NhZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2008 09:37:25 -0400
-Content-Disposition: inline
-In-Reply-To: <490666D6.8090603@kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:47656 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929AbYJ2NrL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2008 09:47:11 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id m9TDkxCL015101
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 07:46:59 -0600
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m9TDl9Ig089342
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 07:47:09 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m9TDl88k025421
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 07:47:09 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Tue, Oct 28 2008, Tejun Heo wrote:
-> Mike Anderson wrote:
-> > Tejun Heo <tj@kernel.org> wrote:
-> >> James Bottomley wrote:
-> >>> On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
-> >>>> Hello, Jens.
-> >>>>
-> >>>> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
-> >>>> regression for libata.  The second timeout gives puts different
-> >>>> pointer from the issued command onto eh_cmd_q breaking libata EH
-> >>>> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
-> >>>> command processing or causes oops later depending on circumstances.
-> >>>>
-> >>>> Here are logs with induced timeouts (patch attached).  In commit
-> >>>> 242f9dcb8, the XXX messages for the second timeout shows different
-> >>>> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
-> >>>> ata_scsi_qc_new() during command translation.
-> >>> I can't see a way we could be getting a different command passed in from
-> >>> the actual one, since the only way to lose the command from the request
-> >>> is to go through the command completion routines which free it (and end
-> >>> the request).
-> >> I have no idea either.  It's something in the timeout logic because on
-> >> the issue path the scmd pointer is identical but on tiemout pointer
-> >> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
-> >>
-> > 
-> > I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
-> > Currently I am not able to see this error on timeout recovery using this
-> > setup. Does IO load (or other factors) effect the error being seen?
-> 
-> Not at all.  That's the only write command I issued.
 
-It's all extremely puzzling. Any chance I could talk you into stuffing
-some debug printks in there to see what the hell is going on?
+If either a "transport fault" or a "general transport" error is received
+and no other error information is available, the command is improperly
+returned as successful. Fix this to return DID_ERROR in this case.
 
--- 
-Jens Axboe
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
+ drivers/scsi/ibmvscsi/ibmvfc.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fc_mapped_fix drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fc_mapped_fix	2008-09-19 08:55:23.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-09-19 08:55:23.000000000 -0500
+@@ -278,13 +278,6 @@ static int ibmvfc_get_err_result(struct 
+ 	     rsp->data.info.rsp_code))
+ 		return DID_ERROR << 16;
+ 
+-	if (!vfc_cmd->status) {
+-		if (rsp->flags & FCP_RESID_OVER)
+-			return rsp->scsi_status | (DID_ERROR << 16);
+-		else
+-			return rsp->scsi_status | (DID_OK << 16);
+-	}
+-
+ 	err = ibmvfc_get_err_index(vfc_cmd->status, vfc_cmd->error);
+ 	if (err >= 0)
+ 		return rsp->scsi_status | (cmd_status[err].result << 16);
+@@ -1478,6 +1471,9 @@ static void ibmvfc_scsi_done(struct ibmv
+ 			if ((rsp->flags & FCP_SNS_LEN_VALID) && rsp->fcp_sense_len && rsp_len <= 8)
+ 				memcpy(cmnd->sense_buffer, rsp->data.sense + rsp_len, sense_len);
+ 
++			if (!cmnd->result && (!scsi_get_resid(cmnd) || (rsp->flags & FCP_RESID_OVER)))
++				cmnd->result = (DID_ERROR << 16);
++
+ 			ibmvfc_log_error(evt);
+ 		}
+ 
+_
