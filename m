@@ -1,60 +1,44 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: 2.6.28-rc2 - strange (redundant) sysfs paths for SCSI
-Date: Wed, 29 Oct 2008 21:05:39 +0300
-Message-ID: <200810292105.40220.arvidjaar@mail.ru>
+From: malahal@us.ibm.com
+Subject: Re: [PATCH] block: optimizations in blk_rq_timed_out_timer()
+Date: Wed, 29 Oct 2008 11:21:04 -0700
+Message-ID: <20081029182104.GA543@us.ibm.com>
+References: <20081028182243.GA6716@us.ibm.com> <20081029130656G.fujita.tomonori@lab.ntt.co.jp> <20081029060625.GA5080@us.ibm.com> <20081029132614.GD31673@kernel.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4526605.sHybU53WzQ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754867AbYJ2SFz@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
---nextPart4526605.sHybU53WzQ
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:39667 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310AbYJ2SVU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2008 14:21:20 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id m9TIKdc0011222
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 12:20:39 -0600
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m9TIL8Gv059848
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 12:21:09 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m9TIL78S031794
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2008 12:21:08 -0600
 Content-Disposition: inline
+In-Reply-To: <20081029132614.GD31673@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
 
-Running with PATA driver:
+Jens Axboe [jens.axboe@oracle.com] wrote:
+> > Yes, we should not access it although I don't think the request can be
+> > freed while the existing code is accessing the deadline field. What 
+> > likely can happen is that we may call mod_timer with jiffies that is
+> > older than current which would call the timer immediately...
+> 
+> That would not call the timer immediately, that will not call it until
+> jiffies reaches that value again. So you're looking at a minimum of 49
+> days :-)
 
-/sys/devices/pci0000:00/0000:00:04.0/host0/scsi_host/host0
-/sys/devices/pci0000:00/0000:00:04.0/host0/target0:0:0/0:0:0:0
+I remember the timer code treating "past" expiry times as special. If
+not, then we have a real bug! It is also hard to guarantee in
+blk_rq_timed_out_timer() that we always call mod_timer with future
+expiry time!
 
-well, in both cases at least one component is redundant? Also
-the intermediate nodes (scsi_host and target0:0:0) do not seem
-to contain any useful information at all?
-
-I noticed this because kernel installer in Mandriva started to
-complaint about host* and target* device nodes under /sys/bus/scsi/devices:
-
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 0:0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/target0:0:0/0:0:0:0/
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 1:0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host1/target1:0:0/1:0:0:0/
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 host0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 host1 -> ../../../devices/pci0000:00/0000:00:04.0/host1/
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 target0:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host0/target0:0:0/
-lrwxrwxrwx 1 root root 0 2008-10-29 19:58 target1:0:0 -> ../../../devices/pci0000:00/0000:00:04.0/host1/target1:0:0/
-
-It is really not quite clear what use they have.
-
-TIA
-
--andrey
-
---nextPart4526605.sHybU53WzQ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkkIpfQACgkQR6LMutpd94xTNACguJK4lS/+Dtxab+UYXbrgTLYX
-POgAnjFUVbw5ilSJ53+pi4ixgSD1stWH
-=fuif
------END PGP SIGNATURE-----
-
---nextPart4526605.sHybU53WzQ--
+--Malahal.
