@@ -1,155 +1,91 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod]: Updates for v2.6.28-rc2
-Date: Wed, 29 Oct 2008 22:39:13 -0700
-Message-ID: <1225345154.4387.228.camel@haakon2.linux-iscsi.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: add timer on blkdev_dequeue_request() not elv_next_request()
+Date: Thu, 30 Oct 2008 08:29:56 +0100
+Message-ID: <20081030072956.GL31673@kernel.dk>
+References: <490927CD.2010205@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp124.sbc.mail.sp1.yahoo.com ([69.147.64.97]:24974 "HELO
-	smtp124.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752726AbYJ3FjQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 01:39:16 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <490927CD.2010205@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From 92eaaa2d3fe569ec0654b44658504c8c75fa9a43 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Wed, 29 Oct 2008 22:30:00 -0700
-Subject: [PATCH] [Target_Core_Mod]: Updates for v2.6.28-rc2
+On Thu, Oct 30 2008, Tejun Heo wrote:
+> Block queue supports two usage models - one where block driver peeks
+> at the front of queue using elv_next_request(), processes it and
+> finishes it and the other where block driver peeks at the front of
+> queue, dequeue the request using blkdev_dequeue_request() and finishes
+> it.  The latter is more flexible as it allows the driver to process
+> multiple commands concurrently.
+> 
+> These two inconsistent usage models affect the block layer
+> implementation confusing.  For some, elv_next_request() is considered
+> the issue point while others consider blkdev_dequeue_request() the
+> issue point.
+> 
+> Till now the inconsistency mostly affect only accounting, so it didn't
+> really break anything seriously; however, with block layer timeout,
+> this inconsistency hits hard.  Block layer considers
+> elv_next_request() the issue point and adds timer but SCSI layer
+> thinks it was just peeking and when the request can't process the
+> command right away, it's just left there without further processing.
+> This makes the request dangling on the timer list and, when the timer
+> goes off, the request which the SCSI layer and below think is still on
+> the block queue ends up in the EH queue, causing various problems - EH
+> hang (failed count goes over busy count and EH never wakes up),
+> WARN_ON() and oopses as low level driver trying to handle the unknown
+> command, etc. depending on the timing.
+> 
+> As SCSI midlayer is the only user of block layer timer at the moment,
+> moving blk_add_timer() to elv_dequeue_request() fixes the problem;
+> however, this two usage models definitely need to be cleaned up in the
+> future.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  block/elevator.c |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> Index: work/block/elevator.c
+> ===================================================================
+> --- work.orig/block/elevator.c
+> +++ work/block/elevator.c
+> @@ -773,12 +773,6 @@ struct request *elv_next_request(struct
+>  			 */
+>  			rq->cmd_flags |= REQ_STARTED;
+>  			blk_add_trace_rq(q, rq, BLK_TA_ISSUE);
+> -
+> -			/*
+> -			 * We are now handing the request to the hardware,
+> -			 * add the timeout handler
+> -			 */
+> -			blk_add_timer(rq);
+>  		}
+>  
+>  		if (!q->boundary_rq || q->boundary_rq == rq) {
+> @@ -850,6 +844,12 @@ void elv_dequeue_request(struct request_
+>  	 */
+>  	if (blk_account_rq(rq))
+>  		q->in_flight++;
+> +
+> +	/*
+> +	 * We are now handing the request to the hardware, add the
+> +	 * timeout handler.
+> +	 */
+> +	blk_add_timer(rq);
+>  }
+>  EXPORT_SYMBOL(elv_dequeue_request);
 
-There are two updates to Target_Core_Mod code for v2.6.27 -> v2.6.28-rc2
+That's actually a pretty dumb error, I'm surprised it hasn't reared its
+ugly face in more ways. Presumably because the timeout is usually so
+long, that we'll get to actually issuing and completing it within the
+normal timeout anyway.
 
-*) blkdev_get() loses "unsigned flags" parameter
-*) blkdev_put() gains "fmode_t mode" parameter
+Thanks, applied!
 
-For the first two, updated linux_blockdevice_claim*() and linux_blockdevice_release()
-in drivers/lio-core/target_core_device.c, Also updated READ-ONLY cases for
-Target_Core_Mod/IBLOCK and Target_Core_Mod/FILEIO.
-
-*) struct genhd->capacity goes away
-
-Target_Core_Mod/IBLOCK had been using this to emulate READ_CAPACITY.  Changed
-iblock_emulate_read_cap() and iblock_emulate_read_cap16() to correctly use
-include/linux/genhd.h:get_capacity() macro
-
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/target_core_device.c |   12 ++++++------
- drivers/lio-core/target_core_file.c   |    2 +-
- drivers/lio-core/target_core_iblock.c |    8 ++++----
- 3 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/lio-core/target_core_device.c b/drivers/lio-core/target_core_device.c
-index 6891b54..11dc965 100644
---- a/drivers/lio-core/target_core_device.c
-+++ b/drivers/lio-core/target_core_device.c
-@@ -68,7 +68,7 @@ extern se_global_t *se_global;
- 
- extern struct block_device *linux_blockdevice_claim_bd (struct block_device *bd, void *claim_ptr)
- {
--	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ, O_RDWR) < 0)
-+	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ) < 0)
- 		return(NULL);	
- 	/*
- 	 * If no claim pointer was passed from claimee, use struct block_device.
-@@ -77,7 +77,7 @@ extern struct block_device *linux_blockdevice_claim_bd (struct block_device *bd,
- 		claim_ptr = (void *)bd;
- 
- 	if (bd_claim(bd, claim_ptr) < 0) {
--		blkdev_put(bd);
-+		blkdev_put(bd, FMODE_WRITE|FMODE_READ);
- 		return(NULL);
- 	}
- 	
-@@ -96,7 +96,7 @@ extern struct block_device *__linux_blockdevice_claim (int major, int minor, voi
- 		return(NULL);
- 	}
- 
--	if (blkdev_get(bd, FMODE_WRITE, O_RDWR) < 0) {
-+	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ) < 0) {
- 		*ret = -1;
- 		return(NULL);
- 	}
-@@ -129,7 +129,7 @@ extern struct block_device *linux_blockdevice_claim (int major, int minor, void
- 	if (!(bd = bdget(dev)))
- 		return(NULL);
- 
--	if (blkdev_get(bd, FMODE_WRITE, O_RDWR) < 0)
-+	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ) < 0)
- 		return(NULL);
- 	/*
- 	 * If no claim pointer was passed from claimee, use struct block_device.
-@@ -138,7 +138,7 @@ extern struct block_device *linux_blockdevice_claim (int major, int minor, void
- 		claim_ptr = (void *)bd;
- 
- 	if (bd_claim(bd, claim_ptr) < 0) {
--		blkdev_put(bd);
-+		blkdev_put(bd, FMODE_WRITE|FMODE_READ);
- 		return(NULL);
- 	}
- 	
-@@ -159,7 +159,7 @@ extern int linux_blockdevice_release (int major, int minor, struct block_device
- 		bd = bd_p;
- 
- 	bd_release(bd);
--	blkdev_put(bd);
-+	blkdev_put(bd, FMODE_WRITE|FMODE_READ);
- 
- 	return(0);
- }
-diff --git a/drivers/lio-core/target_core_file.c b/drivers/lio-core/target_core_file.c
-index 35c7665..1ea126f 100644
---- a/drivers/lio-core/target_core_file.c
-+++ b/drivers/lio-core/target_core_file.c
-@@ -159,7 +159,7 @@ extern int fd_release_phydevice (se_device_t *dev)
- 	if (dev->dev_flags & DF_READ_ONLY) {
- 		PYXPRINT("FILEIO: Calling blkdev_put() for Major:Minor - %d:%d\n",
- 			fd_dev->fd_major, fd_dev->fd_minor);
--		blkdev_put((struct block_device *)fd_dev->fd_bd);
-+		blkdev_put((struct block_device *)fd_dev->fd_bd, FMODE_READ);
- 	} else {	
- 		PYXPRINT("FILEIO: Releasing Major:Minor - %d:%d\n", fd_dev->fd_major,
- 			fd_dev->fd_minor);
-diff --git a/drivers/lio-core/target_core_iblock.c b/drivers/lio-core/target_core_iblock.c
-index f5beb70..8f5a442 100644
---- a/drivers/lio-core/target_core_iblock.c
-+++ b/drivers/lio-core/target_core_iblock.c
-@@ -159,7 +159,7 @@ extern int iblock_release_phydevice (se_device_t *dev)
- 	if (dev->dev_flags & DF_READ_ONLY) {
- 		PYXPRINT("IBLOCK: Calling blkdev_put() for Major:Minor - %d:%d\n",
- 			ib_dev->ibd_major, ib_dev->ibd_minor);
--		blkdev_put((struct block_device *)ib_dev->ibd_bd);
-+		blkdev_put((struct block_device *)ib_dev->ibd_bd, FMODE_READ);
- 	} else {
- 		PYXPRINT("IBLOCK: Releasing Major:Minor - %d:%d\n",
- 			ib_dev->ibd_major, ib_dev->ibd_minor);
-@@ -415,9 +415,9 @@ static int iblock_emulate_read_cap (se_task_t *task)
- {
- 	iblock_dev_t *ibd = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
- 	struct block_device *bd = ibd->ibd_bd;
--	u32 blocks = (bd->bd_disk->capacity - 1);
-+	u32 blocks = (get_capacity(bd->bd_disk) - 1);
- 
--	if ((bd->bd_disk->capacity - 1) >= 0x00000000ffffffff)
-+	if ((get_capacity(bd->bd_disk) - 1) >= 0x00000000ffffffff)
- 		blocks = 0xffffffff;
- 
- 	return(transport_generic_emulate_readcapacity(task->iscsi_cmd, blocks, IBLOCK_BLOCKSIZE));
-@@ -427,7 +427,7 @@ static int iblock_emulate_read_cap16 (se_task_t *task)
- {
- 	iblock_dev_t *ibd = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
- 	struct block_device *bd = ibd->ibd_bd;
--	unsigned long long blocks_long = (bd->bd_disk->capacity - 1);
-+	unsigned long long blocks_long = (get_capacity(bd->bd_disk) - 1);
- 
- 	return(transport_generic_emulate_readcapacity_16(task->iscsi_cmd, blocks_long, IBLOCK_BLOCKSIZE));;
- }
 -- 
-1.5.4.1
-
-
+Jens Axboe
 
