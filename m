@@ -1,42 +1,50 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: FC pass through support -
-	revised II
-Date: Thu, 30 Oct 2008 08:39:34 -0500
-Message-ID: <1225373974.3250.0.camel@localhost.localdomain>
-References: <E35CF40D-87CC-4AA2-91EC-31064F70198E@qlogic.com>
-	 <20081030131825M.fujita.tomonori@lab.ntt.co.jp>
-	 <4909678C.1010908@panasas.com>
-	 <20081030172537K.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [patch]liberal acceptance of 0x28 asc in sd.c
+Date: Thu, 30 Oct 2008 09:01:13 -0500
+Message-ID: <1225375273.3250.9.camel@localhost.localdomain>
+References: <200810301309.41705.oliver@neukum.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51681 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47025 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754531AbYJ3Njk (ORCPT
+	by vger.kernel.org with ESMTP id S1755206AbYJ3OBP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 09:39:40 -0400
-In-Reply-To: <20081030172537K.fujita.tomonori@lab.ntt.co.jp>
+	Thu, 30 Oct 2008 10:01:15 -0400
+In-Reply-To: <200810301309.41705.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, seokmann.ju@qlogic.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, robert.w.love@intel.com
+To: Oliver Neukum <oliver@neukum.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2008-10-30 at 17:29 +0900, FUJITA Tomonori wrote:
-> On Thu, 30 Oct 2008 09:51:40 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
-> > Do you know what is the difference between "req->error =" and the error
-> > passed to blk_end_xxx_request(req, error, ...) ?
-> 
-> I guess that blk_end_xxx_request(req, error, ...) is common Linux
-> error code, -EIO, etc. req->error carries protocol specific errors;
-> SAM_STAT_*, DID_*, etc in the case of SCSI. But I'm not confident.
+On Thu, 2008-10-30 at 13:09 +0100, Oliver Neukum wrote:
+> >From reading the SCSI spec it seems that having the valid bit 0 (0x70
+> checked in scsi_sense_valid) should does not invalidate the ASC or ASQ.
+> [See page 37 of spc4r02.pdf].
 
-Yes, that's it precisely.  The blk_end_request() carries a translated
-UNIX error code for the user (usually -EIO).  req->error carries the
-transport error in its full glory (although it may lack pieces that
-won't fit into 32 bits).
+That's a correct reading of the spec as regards the valid bit for non
+descriptor sense data, but not applicable to this situation. sense_valid
+is generated from (byte[0] & 0x70 == 0x70) (see scsi_sense_valid() in
+include/scsi/scsi_eh.h) not from the valid bit.  This test is *required*
+by the standard otherwise what we have isn't sense data.
+
+>   It should only invalidate the INFORMATION
+> field. Therefore remove the sense_valid check from the USB quirk.
+> 
+> This is needed for a strange USB storage device.
+
+Could you elaborate a bit more?  What's its problem (and what is it
+replying as byte 0 to a REQUEST_SENSE)?
+
+Also:
+
+> Signed-off-by: Brandon Philips <bphilips@suse.de>
+> Signed-off-by: Oliver Neukum <oneukum@suse.de>
+
+These signoffs don't make sense for what you sent ... this implies that
+its Brandon's patch which you altered, in which case it needs a From: at
+the beginning to make him the author.
 
 James
 
