@@ -1,49 +1,54 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] block: optimizations in blk_rq_timed_out_timer()
-Date: Thu, 30 Oct 2008 19:29:08 +0900
-Message-ID: <20081030192749E.fujita.tomonori@lab.ntt.co.jp>
-References: <20081030074907.GN31673@kernel.dk>
-	<20081030172918Z.fujita.tomonori@lab.ntt.co.jp>
-	<20081030085520.GP31673@kernel.dk>
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+Subject: [PATCH] scsi/tmscsim: fix indentation and braces disagreement - add
+ braces
+Date: Thu, 30 Oct 2008 12:58:38 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0810301257110.7072@wrl-59.cs.helsinki.fi>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-664936530-1225364318=:7072"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:50440 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752778AbYJ3KaJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 06:30:09 -0400
-In-Reply-To: <20081030085520.GP31673@kernel.dk>
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:38352 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbYJ3K6n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 06:58:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, malahal@us.ibm.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Nick Warne <nick@ukfsn.org>
 
-On Thu, 30 Oct 2008 09:55:20 +0100
-Jens Axboe <jens.axboe@oracle.com> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On Thu, Oct 30 2008, FUJITA Tomonori wrote:
-> > On Thu, 30 Oct 2008 08:49:07 +0100
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > > > What 
-> > > > > likely can happen is that we may call mod_timer with jiffies that is
-> > > > > older than current which would call the timer immediately...
-> > > > 
-> > > > Yeah, I think that the timer is called immediately here. It's
-> > > > unnecessary.
-> > > 
-> > > Hmm, just checked the code, and indeed it does. Have the timers always
-> > > behaved like that?
-> > 
-> > I guess so because it's unrealistic that the caller of mod_time makes
-> > sure that expires is future time, in particular if the caller wants
-> > short timeout?
-> 
-> It's all a little confusing, I think. When do you stop considering it a
-> little in the past and long into the future?
+---696208474-664936530-1225364318=:7072
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 
-After looking at internal_add_timer(), I guess, if the difference is
-less than the largest of signed long, it is considered to be the
-past. But I can say that it's not a good idea to ask me about the
-timer implementation details. ;)
+
+Lucky winner is 557cc476c04 ([SCSI] tmscsim: Fixup
+KERN_INFO in printk).
+
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
+Cc: Nick Warne <nick@ukfsn.org>
+---
+ drivers/scsi/tmscsim.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index 69ac6e5..9a42734 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -2572,9 +2572,10 @@ static struct pci_driver dc390_driver = {
+ 
+ static int __init dc390_module_init(void)
+ {
+-	if (!disable_clustering)
++	if (!disable_clustering) {
+ 		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n");
+ 		printk(KERN_INFO "       with \"disable_clustering=1\" and report to maintainers\n");
++	}
+ 
+ 	if (tmscsim[0] == -1 || tmscsim[0] > 15) {
+ 		tmscsim[0] = 7;
+-- 
+1.5.2.2
+
+---696208474-664936530-1225364318=:7072--
