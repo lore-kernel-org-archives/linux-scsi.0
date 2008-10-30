@@ -1,24 +1,28 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [patch 16/17] megaraid: fix mega_internal_command oops
-Date: Thu, 30 Oct 2008 07:05:09 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C32D3C5462@cosmail02.lsi.com>
-References: <200810292124.m9TLOmVu021317@imap1.linux-foundation.org>
+Subject: RE: [patch 08/17] drivers/scsi/megaraid: Use DIV_ROUND_UP
+Date: Thu, 30 Oct 2008 07:19:20 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C32D3C546B@cosmail02.lsi.com>
+References: <200810292124.m9TLOf9J021235@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60573 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:61275 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754003AbYJ3NFg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 09:05:36 -0400
-In-Reply-To: <200810292124.m9TLOmVu021317@imap1.linux-foundation.org>
+	id S1753800AbYJ3NUS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 09:20:18 -0400
+In-Reply-To: <200810292124.m9TLOf9J021235@imap1.linux-foundation.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "pterjan@gmail.com" <pterjan@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "julia@diku.dk" <julia@diku.dk>, "Austria, Winston" <Winston.Austria@lsi.com>
 
-ACK.
+NACK.
+
+As I mentioned before, frame_count is the parameter which used by both megaraid_sas driver and fw.  For the driver code constancy and more readable, please don't change the way we compute the frame_count.
+
+Thanks,
 
 Bo Yang
 
@@ -26,101 +30,69 @@ Bo Yang
 From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org]
 Sent: Wednesday, October 29, 2008 5:25 PM
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; fujita.tomonori@lab.ntt.co.jp; Yang, Bo; bharrosh@panasas.com; pterjan@gmail.com
-Subject: [patch 16/17] megaraid: fix mega_internal_command oops
+Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; julia@diku.dk; Yang, Bo
+Subject: [patch 08/17] drivers/scsi/megaraid: Use DIV_ROUND_UP
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Julia Lawall <julia@diku.dk>
 
-scsi_cmnd->cmnd was changed from a static array to a pointer post
-2.6.25. It breaks mega_internal_command():
+The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
+(d)) but is perhaps more readable.
 
-static int
-mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
-{
-...
-        scb = &adapter->int_scb;
-        memset(scb, 0, sizeof(scb_t));
+An extract of the semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-        scmd = &adapter->int_scmd;
-        memset(scmd, 0, sizeof(Scsi_Cmnd));
+// <smpl>
+@haskernel@
+@@
 
-        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-        scmd->device = sdev;
+#include <linux/kernel.h>
 
-        scmd->device->host = adapter->host;
-        scmd->host_scribble = (void *)scb;
-        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
+@depends on haskernel@
+expression n,d;
+@@
 
-mega_internal_command() uses scsi_cmnd allocated internally so
-scmd->cmnd is NULL here. This patch adds a static array for cdb to
-adapter_t and uses it here. This also uses
-scsi_allocate_command/scsi_free_command, the recommended way to
-allocate struct scsi_cmnd since the driver might use sense_buffer in
-struct scsi_cmnd.
+(
+- (n + d - 1) / d
++ DIV_ROUND_UP(n,d)
+|
+- (n + (d - 1)) / d
++ DIV_ROUND_UP(n,d)
+)
 
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=11792
+@depends on haskernel@
+expression n,d;
+@@
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
-Tested-by: Pascal Terjan <pterjan@gmail.com>
-Reported-by: Pascal Terjan <pterjan@gmail.com>
+- DIV_ROUND_UP((n),d)
++ DIV_ROUND_UP(n,d)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP(n,(d))
++ DIV_ROUND_UP(n,d)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
 Cc: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |   11 ++++++++---
- drivers/scsi/megaraid.h |    2 +-
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-fix-mega_internal_command-oops drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-fix-mega_internal_command-oops
-+++ a/drivers/scsi/megaraid.c
-@@ -4402,6 +4402,10 @@ mega_internal_command(adapter_t *adapter
-        scb_t   *scb;
-        int     rval;
+diff -puN drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up drivers/scsi/megaraid/megaraid_sas.c
+--- a/drivers/scsi/megaraid/megaraid_sas.c~drivers-scsi-megaraid-use-div_round_up
++++ a/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1718,7 +1718,7 @@ static int megasas_create_frame_pool(str
+         * Calculated the number of 64byte frames required for SGL
+         */
+        sgl_sz = sge_sz * instance->max_num_sge;
+-       frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
++       frame_count = DIV_ROUND_UP(sgl_sz, MEGAMFI_FRAME_SIZE);
 
-+       scmd = scsi_allocate_command(GFP_KERNEL);
-+       if (!scmd)
-+               return -ENOMEM;
-+
         /*
-         * The internal commands share one command id and hence are
-         * serialized. This is so because we want to reserve maximum number of
-@@ -4412,12 +4416,11 @@ mega_internal_command(adapter_t *adapter
-        scb = &adapter->int_scb;
-        memset(scb, 0, sizeof(scb_t));
-
--       scmd = &adapter->int_scmd;
--       memset(scmd, 0, sizeof(Scsi_Cmnd));
--
-        sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-        scmd->device = sdev;
-
-+       memset(adapter->int_cdb, 0, sizeof(adapter->int_cdb));
-+       scmd->cmnd = adapter->int_cdb;
-        scmd->device->host = adapter->host;
-        scmd->host_scribble = (void *)scb;
-        scmd->cmnd[0] = MEGA_INTERNAL_CMD;
-@@ -4456,6 +4459,8 @@ mega_internal_command(adapter_t *adapter
-
-        mutex_unlock(&adapter->int_mtx);
-
-+       scsi_free_command(GFP_KERNEL, scmd);
-+
-        return rval;
- }
-
-diff -puN drivers/scsi/megaraid.h~megaraid-fix-mega_internal_command-oops drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-fix-mega_internal_command-oops
-+++ a/drivers/scsi/megaraid.h
-@@ -888,8 +888,8 @@ typedef struct {
-
-        u8      sglen;  /* f/w supported scatter-gather list length */
-
-+       unsigned char int_cdb[MAX_COMMAND_SIZE];
-        scb_t                   int_scb;
--       Scsi_Cmnd               int_scmd;
-        struct mutex            int_mtx;        /* To synchronize the internal
-                                                commands */
-        struct completion       int_waitq;      /* wait queue for internal
+         * We need one extra frame for the MFI command
 _
