@@ -1,28 +1,37 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11898] New: mke2fs hang on AIC79 device.
-Date: Thu, 30 Oct 2008 01:53:46 -0700
-Message-ID: <20081030015346.ef341e4f.akpm@linux-foundation.org>
-References: <bug-11898-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Thu, 30 Oct 2008 01:53:51 -0700 (PDT)
+Message-ID: <20081030085351.6BB6711D108@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55510 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56254 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750764AbYJ3Ixv (ORCPT
+	by vger.kernel.org with ESMTP id S1751418AbYJ3Ixy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 04:53:51 -0400
-In-Reply-To: <bug-11898-10286@http.bugzilla.kernel.org/>
+	Thu, 30 Oct 2008 04:53:54 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9U8rpPU025149
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2008 01:53:52 -0700
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: alex.shi@intel.com
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-10-30 01:53 -------
+Reply-To: akpm@linux-foundation.org
 
 
 (switched to email.  Please respond via emailed reply-to-all, not via the
 bugzilla web interface).
 
-On Thu, 30 Oct 2008 01:17:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+On Thu, 30 Oct 2008 01:17:37 -0700 (PDT) bugme-daemon@bugzilla.kernel.org
+wrote:
 
 > http://bugzilla.kernel.org/show_bug.cgi?id=11898
 > 
@@ -752,3 +761,8 @@ Thanks.
 > eth0: no IPv6 routers present
 > 
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
