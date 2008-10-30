@@ -1,107 +1,98 @@
-From: eerov@welho.com
-Subject: old Vtrack 15100 problems
-Date: Thu, 30 Oct 2008 09:40:36 +0200
-Message-ID: <20081030094036.yge05ix9sswoosos@webmail.welho.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: optimizations in blk_rq_timed_out_timer()
+Date: Thu, 30 Oct 2008 08:49:07 +0100
+Message-ID: <20081030074907.GN31673@kernel.dk>
+References: <20081028182243.GA6716@us.ibm.com> <20081029130656G.fujita.tomonori@lab.ntt.co.jp> <20081029060625.GA5080@us.ibm.com> <20081030113309R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:60935 "EHLO smtp6.pp.htv.fi"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:35563 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbYJ3Hkh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 03:40:37 -0400
-Received: from localhost (webmail.welho.com [213.243.153.134])
-	by smtp6.pp.htv.fi (Postfix) with ESMTP id 5DDC35BC01B
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2008 09:40:36 +0200 (EET)
+	id S1752758AbYJ3HuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2008 03:50:20 -0400
 Content-Disposition: inline
+In-Reply-To: <20081030113309R.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: malahal@us.ibm.com, linux-scsi@vger.kernel.org
 
-I have mysterius problems with old promise Vtrack 15100 sata disk raid array.
+On Thu, Oct 30 2008, FUJITA Tomonori wrote:
+> On Tue, 28 Oct 2008 23:06:25 -0700
+> malahal@us.ibm.com wrote:
+> 
+> > FUJITA Tomonori [fujita.tomonori@lab.ntt.co.jp] wrote:
+> > > On Tue, 28 Oct 2008 11:22:43 -0700
+> > > malahal@us.ibm.com wrote:
+> > > 
+> > > > Now the rq->deadline can't be zero if the request is in the
+> > > > timeout_list, so there is no need to have next_set. There is no need to
+> > > > access a request's deadline field if blk_rq_timed_out is called on it.
+> > > > 
+> > > > Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+> > > > 
+> > > > diff -r a6ae42397ede block/blk-timeout.c
+> > > > --- a/block/blk-timeout.c	Thu Oct 23 11:48:45 2008 -0700
+> > > > +++ b/block/blk-timeout.c	Fri Oct 24 17:08:24 2008 -0700
+> > > > @@ -118,7 +118,7 @@
+> > > >  void blk_rq_timed_out_timer(unsigned long data)
+> > > >  {
+> > > >  	struct request_queue *q = (struct request_queue *) data;
+> > > > -	unsigned long flags, uninitialized_var(next), next_set = 0;
+> > > > +	unsigned long flags, next = 0;
+> > > >  	struct request *rq, *tmp;
+> > > >  
+> > > >  	spin_lock_irqsave(q->queue_lock, flags);
+> > > > @@ -133,15 +133,13 @@
+> > > >  			if (blk_mark_rq_complete(rq))
+> > > >  				continue;
+> > > >  			blk_rq_timed_out(rq);
+> > > > +		} else {
+> > > > +			if (!next || time_after(next, rq->deadline))
+> > > > +				next = rq->deadline;
+> > > 
+> > > Hmm, blk_rq_timed_out(rq) could put the rq back to q->timeout_list. We
+> > > need to take care of the rq->deadline like this?
+> > 
+> > If it is put back on the list, it would be placed at the end of the list
+> > so we will get to work on it again in the list traversal. There is no
+> > need to access it now.
+> 
+> Ah, I see.
+> 
+> 
+> > > >  			if (blk_mark_rq_complete(rq))
+> > > >  				continue;
+> > > >  			blk_rq_timed_out(rq);
+> > > > +		}
+> > > >
+> > > > +		if (!next || time_after(next, rq->deadline))
+> > > > +			next = rq->deadline;
+> > > 
+> > > But if blk_rq_timed_out calls __blk_complete_request, we don't want to
+> > > touch the rq here, I guess.
+> > 
+> > Yes, we should not access it although I don't think the request can be
+> > freed while the existing code is accessing the deadline field.
+> 
+> I don't think so too.
+> 
+> > What 
+> > likely can happen is that we may call mod_timer with jiffies that is
+> > older than current which would call the timer immediately...
+> 
+> Yeah, I think that the timer is called immediately here. It's
+> unnecessary.
 
-Size of array is about 7TB, but I can only access half of it?
+Hmm, just checked the code, and indeed it does. Have the timers always
+behaved like that?
 
-System is: Linux linux-o0ze 2.6.25.5-1.1-pae #1 SMP 2008-06-07  
-01:55:22 +0200 i686 i686 i386 GNU/Linux (opensuse)
+> The patch looks good to me.
 
+No further gried from me either, I've applied it. It does need a comment
+on why 'next' cannot be 0 validly, because ->deadline is always rounded
+one up if that happens.
 
-Disk /dev/sdb: 1499.9 GB, 1499985084416 bytes
-255 heads, 63 sectors/track, 91181 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0x560654c5
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1       91181  1464822702   83  Linux
-Note: sector size is 1024 (not 512)
-
-Disk /dev/sdc: 1499.9 GB, 1499985084416 bytes
-255 heads, 63 sectors/track, 91181 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0xfef607bd
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1       91181  1464822702   8e  Linux LVM
-Note: sector size is 1024 (not 512)
-
-Disk /dev/sdd: 886.9 GB, 886980476928 bytes
-255 heads, 63 sectors/track, 53917 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0x960ffbfc
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1               1       53917   866176542   83  Linux
-Note: sector size is 1024 (not 512)
-
-Disk /dev/sde: 1499.9 GB, 1499985084416 bytes
-255 heads, 63 sectors/track, 91181 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0x560654c5
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sde1               1       91181  1464822702   83  Linux
-Note: sector size is 1024 (not 512)
-
-Disk /dev/sdf: 1499.9 GB, 1499985084416 bytes
-255 heads, 63 sectors/track, 91181 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0xfef607bd
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdf1               1       91181  1464822702   8e  Linux LVM
-Note: sector size is 1024 (not 512)
-
-Disk /dev/sdg: 886.9 GB, 886980476928 bytes
-255 heads, 63 sectors/track, 53917 cylinders
-Units = cylinders of 16065 * 1024 = 16450560 bytes
-Disk identifier: 0x960ffbfc
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdg1               1       53917   866176542   83  Linux
-
-Fdisk -l shows this and looks like disk are some ways of duplicate,
-because there are same disk identified twice.
-
-Anyway, due to 1024 (not 512), I cannot access all of the space?
-For example parted says:
-
-Warning: Device /dev/sdb has a logical sector size of 1024.  Not all  
-parts of GNU Parted support this at the moment, and the working code  
-is HIGHLY EXPERIMENTAL.
-
-GNU Parted 1.8.8
-Using /dev/sdb
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) print
-Error: Can't have a partition outside the disk!
-(parted)
-
-How I can partition or access the full diskspace? Any clues?
-
-thanks,
-Eero
-
-
-
+-- 
+Jens Axboe
 
