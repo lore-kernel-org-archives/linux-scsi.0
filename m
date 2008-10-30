@@ -1,76 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 13/17] scsi: remove private implementation of
-	get_unaligned_be32
-Date: Thu, 30 Oct 2008 09:17:22 -0500
-Message-ID: <1225376242.3250.19.camel@localhost.localdomain>
-References: <200810292124.m9TLOjl1021276@imap1.linux-foundation.org>
-	 <1225316894.3257.19.camel@localhost.localdomain>
-	 <20081029150702.1a20310a.akpm@linux-foundation.org>
-	 <1225318393.3257.24.camel@localhost.localdomain>
-	 <1225319368.5496.3.camel@brick>  <1225328584.5496.7.camel@brick>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [patch]liberal acceptance of 0x28 asc in sd.c
+Date: Thu, 30 Oct 2008 15:23:13 +0100
+Message-ID: <200810301523.13569.oliver@neukum.org>
+References: <200810301309.41705.oliver@neukum.org> <1225375273.3250.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59428 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753852AbYJ3OR0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 10:17:26 -0400
-In-Reply-To: <1225328584.5496.7.camel@brick>
+Received: from smtp-out003.kontent.com ([81.88.40.217]:43945 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924AbYJ3OXM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 10:23:12 -0400
+In-Reply-To: <1225375273.3250.9.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2008-10-29 at 18:03 -0700, Harvey Harrison wrote: 
-> +/*
-> + * Opcode 0x28
-> + */
-> +struct scsi_read10 {
-> +	u8 op;
-> +	u8 flags;
-> +	__be32 lba;
-> +	u8 pad; /* reserved */
-> +	__be16 length;
-> +	u8 control;
-> +} __packed;
-> +
-> +/*
-> + * Opcode 0xa8
-> + */
-> +struct scsi_read12 {
-> +	u8 op;
-> +	u8 flags;
-> +	__be32 lba;
-> +	__be32 length;
-> +	u8 pad; /* reserved */
-> +	u8 control;
-> +} __packed;
-> +
-> +/*
-> + * Opcode 0x88
-> + */
-> +struct scsi_read16 {
-> +	u8 op;
-> +	u8 flags;
-> +	__be64 lba;
-> +	__be32 length;
-> +	u8 pad; /* MMC4, reserved, group number */
-> +	u8 control;
-> +} __packed;
+Am Donnerstag, 30. Oktober 2008 15:01:13 schrieb James Bottomley:
+> On Thu, 2008-10-30 at 13:09 +0100, Oliver Neukum wrote:
+> > >From reading the SCSI spec it seems that having the valid bit 0 (0x70
+> > checked in scsi_sense_valid) should does not invalidate the ASC or ASQ.
+> > [See page 37 of spc4r02.pdf].
+> 
+> That's a correct reading of the spec as regards the valid bit for non
+> descriptor sense data, but not applicable to this situation. sense_valid
+> is generated from (byte[0] & 0x70 == 0x70) (see scsi_sense_valid() in
+> include/scsi/scsi_eh.h) not from the valid bit.  This test is *required*
+> by the standard otherwise what we have isn't sense data.
+> 
+> >   It should only invalidate the INFORMATION
+> > field. Therefore remove the sense_valid check from the USB quirk.
+> > 
+> > This is needed for a strange USB storage device.
+> 
+> Could you elaborate a bit more?  What's its problem (and what is it
+> replying as byte 0 to a REQUEST_SENSE)?
 
-OK, so this is wrong: the commands, unfortunately, have several meanings
-for the bits depending on the version of the spec.  Also, it's not
-really the way the mid-layer thinks about commands.  We tend to use the
-generic groupings there.  Finally, this looks pretty ugly and it would
-get really horrible if we had to do unions for the bits as they changed
-meanings through the standards.
+I got a report about a storage device that reports 0x28 and scsi_sense_valid()
+returns false.
 
-So all in all, to try to solve a problem which doesn't really exist, I
-don't really think its a good idea.  There's no evidence of any
-confusion caused by the SCSI bus being BE in any of the drivers.
+> > Signed-off-by: Brandon Philips <bphilips@suse.de>
+> > Signed-off-by: Oliver Neukum <oneukum@suse.de>
+> 
+> These signoffs don't make sense for what you sent ... this implies that
+> its Brandon's patch which you altered, in which case it needs a From: at
+> the beginning to make him the author.
 
-James
+I wrote it.
 
-
+	Regards
+		Oliver
