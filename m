@@ -1,55 +1,79 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [patch]liberal acceptance of 0x28 asc in sd.c
-Date: Thu, 30 Oct 2008 15:23:13 +0100
-Message-ID: <200810301523.13569.oliver@neukum.org>
-References: <200810301309.41705.oliver@neukum.org> <1225375273.3250.9.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [RFC 0/9] osdfs
+Date: Thu, 30 Oct 2008 16:26:34 +0200
+Message-ID: <4909C41A.7000406@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:43945 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924AbYJ3OXM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 10:23:12 -0400
-In-Reply-To: <1225375273.3250.9.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from gw-ca.panasas.com ([66.104.249.162]:1887 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754784AbYJ3O0u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 10:26:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Avishay Traeger <avishay@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-Am Donnerstag, 30. Oktober 2008 15:01:13 schrieb James Bottomley:
-> On Thu, 2008-10-30 at 13:09 +0100, Oliver Neukum wrote:
-> > >From reading the SCSI spec it seems that having the valid bit 0 (0x70
-> > checked in scsi_sense_valid) should does not invalidate the ASC or ASQ.
-> > [See page 37 of spc4r02.pdf].
-> 
-> That's a correct reading of the spec as regards the valid bit for non
-> descriptor sense data, but not applicable to this situation. sense_valid
-> is generated from (byte[0] & 0x70 == 0x70) (see scsi_sense_valid() in
-> include/scsi/scsi_eh.h) not from the valid bit.  This test is *required*
-> by the standard otherwise what we have isn't sense data.
-> 
-> >   It should only invalidate the INFORMATION
-> > field. Therefore remove the sense_valid check from the USB quirk.
-> > 
-> > This is needed for a strange USB storage device.
-> 
-> Could you elaborate a bit more?  What's its problem (and what is it
-> replying as byte 0 to a REQUEST_SENSE)?
+Please review an OSD based file system. 
 
-I got a report about a storage device that reports 0x28 and scsi_sense_valid()
-returns false.
+Given that our OSD initiator library is accepted into Kernel, we would
+like to also submit an osdfs. This is the first iteration of this file system.
 
-> > Signed-off-by: Brandon Philips <bphilips@suse.de>
-> > Signed-off-by: Oliver Neukum <oneukum@suse.de>
-> 
-> These signoffs don't make sense for what you sent ... this implies that
-> its Brandon's patch which you altered, in which case it needs a From: at
-> the beginning to make him the author.
+The next stage is to make it exportable by the pNFS-over-objects Server.
+osdfs is one of the building blocks for a full, end-to-end open source
+reference implementation of a Server/Client pNFS-over-objects we
+want to have available in Linux. Other parts are the Generic pNFS
+client project with the objects-layout-driver, and the generic pNFS
+server plus osdfs once it is adapted to be exportable.
+(See all about pNFS in Linux at:
+http://wiki.linux-nfs.org/wiki/index.php/PNFS_prototype_design)
 
-I wrote it.
+osdfs was originally developed by Avishay Traeger <avishay@gmail.com>
+from IBM. A very old version of it is hosted on sourceforge as the osdfs
+project. It was originally developed for the 2.6.10 Kernel over the old
+IBM's osd-initiator Linux driver.
 
-	Regards
-		Oliver
+Since then it was picked by us, open-osd, and was both forward ported to
+current Kernel, as well as converted to run over our osd Kernel Library.
+The conversion effort, if anyone is interested, is also available as a
+patchset here:
+  git-clone git://git-open-osd.org/open-osd.git osdfs-devel
+or on the web at:
+  http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=refs/heads/osdfs-devel
+
+The Original code is based on ext2 code from the Kernel at the time.
+Further reading is available at the last patch in the osdfs.txt file.
+
+I have mechanically divided the code in parts, each introducing a
+group of vfs function vectors, all tied at the end into a full filesystem.
+Each patch can be compiled but it will only run at the very end.
+This was done for the hope of easier reviewing.
+
+Here is the list of patches
+[RFC 1/9] osdfs: osd Swiss army knife
+[RFC 2/9] osdfs: file and file_inode operations
+[RFC 3/9] osdfs: symlink_inode and fast_symlink_inode operations
+[RFC 4/9] osdfs: address_space_operations
+[RFC 5/9] osdfs: dir_inode and directory operations
+[RFC 6/9] osdfs: super_operations and file_system_type
+[RFC 7/9] osdfs: mkosdfs
+[RFC 8/9] osdfs: Documentation
+  Patches to be submitted
+
+[PATCH 9/9] [out-of-tree] open-osd: Global Makefile and do-osdfs test script
+  This patch will not be submitted. It is only needed if compiling
+  out-of-tree. One more patch that is missing from this patchset is the
+  patch to Kernel's fs/Makefile fs/Kconfig and Documentation/filesystems/00-INDEX.
+
+This patchset is also available on:
+  git-clone git://git-open-osd.org/open-osd.git osdfs
+or on the web at:
+  http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=refs/heads/osdfs
+ 
+If anyone wants to actually run this code and test it
+then please start here: http://open-osd.org
+and also the osdfs.txt file at last patch should help
+
+Thanks in advance
+Boaz
+
