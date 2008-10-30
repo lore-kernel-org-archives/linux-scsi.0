@@ -1,24 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [Bugme-new] [Bug 11898] New: mke2fs hang on AIC79 device.
-Date: Thu, 30 Oct 2008 09:05:26 -0500
-Message-ID: <1225375526.3250.15.camel@localhost.localdomain>
-References: <bug-11898-10286@http.bugzilla.kernel.org/>
-	 <20081030015346.ef341e4f.akpm@linux-foundation.org>
-	 <F7C8A4D3A9905B45A80E4C194793FA6501C05D627D@PDSMSX501.ccr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Thu, 30 Oct 2008 07:06:05 -0700 (PDT)
+Message-ID: <20081030140605.DEF73108056@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60268 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754172AbYJ3OFa (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41100 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753861AbYJ3OGh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 10:05:30 -0400
-In-Reply-To: <F7C8A4D3A9905B45A80E4C194793FA6501C05D627D@PDSMSX501.ccr.corp.intel.com>
+	Thu, 30 Oct 2008 10:06:37 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9UE65Ns016493
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2008 07:06:06 -0700
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Shi, Alex" <alex.shi@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yanming.zhang@intel.com" <yanming.zhang@intel.com>, "Chen, Tim C" <tim.c.chen@intel.com>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #3 from anonymous@kernel-bugs.osdl.org  2008-10-30 07:06 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2008-10-30 at 18:22 +0800, Shi, Alex wrote:
 > New panic output is attached after adding softlockup.  New found:
@@ -62,3 +68,7 @@ Should tell us (hoping you build with CONFIG_DEBUG_INFO).
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
