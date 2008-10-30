@@ -1,275 +1,336 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 2/9] osdfs: file and file_inode operations
-Date: Thu, 30 Oct 2008 16:31:33 +0200
-Message-ID: <1225377093-25261-1-git-send-email-bharrosh@panasas.com>
+Subject: [RFC 4/9] osdfs: address_space_operations
+Date: Thu, 30 Oct 2008 16:33:25 +0200
+Message-ID: <1225377205-25316-1-git-send-email-bharrosh@panasas.com>
 References: <4909C41A.7000406@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:52168 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755350AbYJ3PL0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 11:11:26 -0400
+	with ESMTP id S1755047AbYJ3PL3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 11:11:29 -0400
 In-Reply-To: <4909C41A.7000406@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Avishay Traeger <avishay@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-implementation of the file_operations and inode_operations for
-regular data files.
-
-All file_operations are generic vfs implementations except
-osdfs_truncate.
+OK Now we start to read and write from osd-objects, page-by-page.
+The page index is the object's offset.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- fs/osdfs/Kbuild  |    2 +-
- fs/osdfs/file.c  |   58 ++++++++++++++++++++++
- fs/osdfs/inode.c |  140 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/osdfs/osdfs.h |   11 ++++
- 4 files changed, 210 insertions(+), 1 deletions(-)
- create mode 100644 fs/osdfs/file.c
- create mode 100644 fs/osdfs/inode.c
+ fs/osdfs/inode.c |  284 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/osdfs/osdfs.h |    3 +
+ 2 files changed, 287 insertions(+), 0 deletions(-)
 
-diff --git a/fs/osdfs/Kbuild b/fs/osdfs/Kbuild
-index 19d709e..c8ca4ce 100644
---- a/fs/osdfs/Kbuild
-+++ b/fs/osdfs/Kbuild
-@@ -20,5 +20,5 @@ EXTRA_CFLAGS += -I$(OSD_INC)
- # EXTRA_CFLAGS += -DCONFIG_OSDFS_DEBUG
- endif
- 
--osdfs-objs := osd.o
-+osdfs-objs := osd.o inode.o file.o
- obj-$(CONFIG_OSDFS_FS) += osdfs.o
-diff --git a/fs/osdfs/file.c b/fs/osdfs/file.c
-new file mode 100644
-index 0000000..3442979
---- /dev/null
-+++ b/fs/osdfs/file.c
-@@ -0,0 +1,58 @@
-+/*
-+ * Copyright (C) 2005, 2006
-+ * Avishay Traeger (avishay@gmail.com) (avishay@il.ibm.com)
-+ * Copyright (C) 2005, 2006
-+ * International Business Machines
-+ *
-+ * Copyrights for code taken from ext2:
-+ *     Copyright (C) 1992, 1993, 1994, 1995
-+ *     Remy Card (card@masi.ibp.fr)
-+ *     Laboratoire MASI - Institut Blaise Pascal
-+ *     Universite Pierre et Marie Curie (Paris VI)
-+ *     from
-+ *     linux/fs/minix/inode.c
-+ *     Copyright (C) 1991, 1992  Linus Torvalds
-+ *
-+ * This file is part of osdfs.
-+ *
-+ * osdfs is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation.  Since it is based on ext2, and the only
-+ * valid version of GPL for the Linux kernel is version 2, the only valid
-+ * version of GPL for osdfs is version 2.
-+ *
-+ * osdfs is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with osdfs; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <linux/buffer_head.h>
-+
-+#include "osdfs.h"
-+
-+static int osdfs_release_file(struct inode *inode, struct file *filp)
-+{
-+	return 0;
-+}
-+
-+struct file_operations osdfs_file_operations = {
-+	.llseek		= generic_file_llseek,
-+	.read		= do_sync_read,
-+	.write		= do_sync_write,
-+	.aio_read	= generic_file_aio_read,
-+	.aio_write	= generic_file_aio_write,
-+	.mmap		= generic_file_mmap,
-+	.open		= generic_file_open,
-+	.release	= osdfs_release_file,
-+	.fsync		= file_fsync,
-+};
-+
-+struct inode_operations osdfs_file_inode_operations = {
-+	.truncate	= osdfs_truncate,
-+	.setattr	= osdfs_setattr,
-+};
 diff --git a/fs/osdfs/inode.c b/fs/osdfs/inode.c
-new file mode 100644
-index 0000000..e009eb0
---- /dev/null
+index e009eb0..bfd82b1 100644
+--- a/fs/osdfs/inode.c
 +++ b/fs/osdfs/inode.c
-@@ -0,0 +1,140 @@
+@@ -60,6 +60,290 @@ int osdfs_get_block(struct inode *inode, sector_t iblock,
+ 	return 0;
+ }
+ 
 +/*
-+ * Copyright (C) 2005, 2006
-+ * Avishay Traeger (avishay@gmail.com) (avishay@il.ibm.com)
-+ * Copyright (C) 2005, 2006
-+ * International Business Machines
-+ *
-+ * Copyrights for code taken from ext2:
-+ *     Copyright (C) 1992, 1993, 1994, 1995
-+ *     Remy Card (card@masi.ibp.fr)
-+ *     Laboratoire MASI - Institut Blaise Pascal
-+ *     Universite Pierre et Marie Curie (Paris VI)
-+ *     from
-+ *     linux/fs/minix/inode.c
-+ *     Copyright (C) 1991, 1992  Linus Torvalds
-+ *
-+ * This file is part of osdfs.
-+ *
-+ * osdfs is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation.  Since it is based on ext2, and the only
-+ * valid version of GPL for the Linux kernel is version 2, the only valid
-+ * version of GPL for osdfs is version 2.
-+ *
-+ * osdfs is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with osdfs; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Callback function when writepage finishes.  Check for errors, unlock, clean
++ * up, etc.
 + */
-+
-+#include <linux/writeback.h>
-+#include <linux/buffer_head.h>
-+
-+#include "osdfs.h"
-+
-+/*
-+ * Test whether an inode is a fast symlink.
-+ */
-+static inline int osdfs_inode_is_fast_symlink(struct inode *inode)
++void writepage_done(struct osd_request *req, void *p)
 +{
-+	struct osdfs_i_info *oi = OSDFS_I(inode);
-+
-+	return S_ISLNK(inode->i_mode) && (oi->i_data[0] != 0);
-+}
-+
-+/*
-+ * get_block_t - Fill in a buffer_head
-+ * An OSD takes care of block allocation so we just fake an allocation by
-+ * putting in the inode's sector_t in the buffer_head.
-+ * TODO: What about the case of create==0 and @iblock does not exist in the
-+ * object?
-+ */
-+int osdfs_get_block(struct inode *inode, sector_t iblock,
-+		    struct buffer_head *bh_result, int create)
-+{
-+	map_bh(bh_result, inode->i_sb, iblock);
-+	return 0;
-+}
-+
-+/******************************************************************************
-+ * INODE OPERATIONS
-+ *****************************************************************************/
-+
-+/*
-+ * Truncate a file to the specified size - all we have to do is set the size
-+ * attribute.  We make sure the object exists first.
-+ */
-+void osdfs_truncate(struct inode *inode)
-+{
-+	struct osdfs_sb_info *sbi = inode->i_sb->s_fs_info;
-+	struct osdfs_i_info *oi = OSDFS_I(inode);
-+	struct osd_request *req = NULL;
-+	loff_t isize = i_size_read(inode);
-+	uint64_t newsize;
 +	int ret;
++	struct page *page = (struct page *)p;
++	struct inode *inode = page->mapping->host;
++	struct osdfs_sb_info *sbi = inode->i_sb->s_fs_info;
 +
-+	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)
-+	     || S_ISLNK(inode->i_mode)))
-+		return;
-+	if (osdfs_inode_is_fast_symlink(inode))
-+		return;
-+	if (IS_APPEND(inode) || IS_IMMUTABLE(inode))
-+		return;
-+	inode->i_mtime = inode->i_ctime = CURRENT_TIME;
++	ret = check_ok(req);
++	free_osd_req(req);
++	atomic_dec(&sbi->s_curr_pending);
 +
-+	nobh_truncate_page(inode->i_mapping, isize, osdfs_get_block);
++	if (ret) {
++		if (ret == -ENOSPC)
++			set_bit(AS_ENOSPC, &page->mapping->flags);
++		else
++			set_bit(AS_EIO, &page->mapping->flags);
 +
-+	req = prepare_osd_set_attr(sbi->s_dev, sbi->s_pid,
-+				 inode->i_ino + OSDFS_OBJ_OFF);
-+	if (!req) {
-+		printk(KERN_ERR "ERROR: prepare set_attr failed.\n");
-+		goto fail;
++		SetPageError(page);
 +	}
 +
-+	newsize = cpu_to_be64((uint64_t) isize);
-+	prepare_set_attr_list_add_entry(req, OSD_APAGE_OBJECT_INFORMATION,
-+					OSD_ATTR_OI_LOGICAL_LENGTH, 8,
-+					(unsigned char *)(&newsize));
++	end_page_writeback(page);
++	unlock_page(page);
++}
 +
-+	/* if we are about to truncate an object, and it hasn't been
-+	 * created yet, wait
-+	 */
++/*
++ * Write a page to disk.  page->index gives us the page number.  The page is
++ * locked before this function is called.  We write asynchronously and then the
++ * callback function (writepage_done) is called.  We signify that the operation
++ * has completed by unlocking the page and calling end_page_writeback().
++ */
++static int osdfs_writepage(struct page *page, struct writeback_control *wbc)
++{
++	struct inode *inode = page->mapping->host;
++	struct osdfs_i_info *oi = OSDFS_I(inode);
++	loff_t i_size = i_size_read(inode);
++	unsigned long end_index = i_size >> PAGE_CACHE_SHIFT;
++	unsigned offset = 0;
++	struct osd_request *req = NULL;
++	struct osdfs_sb_info *sbi;
++	uint64_t start;
++	uint64_t len = PAGE_CACHE_SIZE;
++	unsigned char *kaddr;
++	int ret = 0;
++
++	if (!PageLocked(page))
++		BUG();
++
++	/* if the object has not been created, and we are not in sync mode,
++	 * just return.  otherwise, wait. */
 +	if (!ObjCreated(oi)) {
 +		if (!Obj2BCreated(oi))
 +			BUG();
-+		else
++
++		if (wbc->sync_mode == WB_SYNC_NONE) {
++			redirty_page_for_writepage(wbc, page);
++			unlock_page(page);
++			ret = 0;
++			goto out;
++		} else {
 +			wait_event(oi->i_wq, ObjCreated(oi));
++		}
 +	}
 +
-+	ret = osdfs_sync_op(req, sbi->s_timeout, oi->i_cred);
-+	free_osd_req(req);
-+	if (ret)
-+		goto fail;
++	/* in this case, the page is within the limits of the file */
++	if (page->index < end_index)
++		goto do_it;
 +
++	offset = i_size & (PAGE_CACHE_SIZE - 1);
++	len = offset;
++
++	/*in this case, the page is outside the limits (truncate in progress)*/
++	if (page->index >= end_index + 1 || !offset) {
++		unlock_page(page);
++		goto out;
++	}
++
++	/* otherwise, the page straddles i_size.  It must be zeroed out. */
++	kaddr = kmap_atomic(page, KM_USER0);
++	memset(kaddr + offset, 0, PAGE_CACHE_SIZE - offset);
++	flush_dcache_page(page);
++	kunmap_atomic(page, KM_USER0);
++
++do_it:
++	BUG_ON(PageWriteback(page));
++	set_page_writeback(page);
++	start = page->index << PAGE_CACHE_SHIFT;
++	sbi = inode->i_sb->s_fs_info;
++
++	kaddr = page_address(page);
++
++	req = prepare_osd_write(sbi->s_dev, sbi->s_pid,
++			      inode->i_ino + OSDFS_OBJ_OFF, len, start, 0,
++			      kaddr);
++	if (!req) {
++		printk(KERN_ERR "ERROR: writepage failed.\n");
++		ret = -ENOMEM;
++		goto fail;
++	}
++
++	ret = osdfs_async_op(req, writepage_done, (void *)page, oi->i_cred);
++	if (ret) {
++		free_osd_req(req);
++		goto fail;
++	}
++	atomic_inc(&sbi->s_curr_pending);
 +out:
-+	mark_inode_dirty(inode);
-+	return;
++	return ret;
 +fail:
-+	make_bad_inode(inode);
++	set_bit(AS_EIO, &page->mapping->flags);
++	end_page_writeback(page);
++	unlock_page(page);
 +	goto out;
 +}
 +
 +/*
-+ * Set inode attributes - just call generic functions.
++ * Callback for readpage
 + */
-+int osdfs_setattr(struct dentry *dentry, struct iattr *iattr)
++void readpage_done(struct osd_request *req, void *p)
 +{
-+	struct inode *inode = dentry->d_inode;
-+	int error;
++	struct page *page = (struct page *)p;
++	struct inode *inode = page->mapping->host;
++	struct osdfs_sb_info *sbi = inode->i_sb->s_fs_info;
++	char *kaddr;
++	int ret;
 +
-+	error = inode_change_ok(inode, iattr);
-+	if (error)
-+		return error;
++	ret = check_ok(req);
++	free_osd_req(req);
++	atomic_dec(&sbi->s_curr_pending);
 +
-+	error = inode_setattr(inode, iattr);
-+	return error;
++	if (ret == -EFAULT) {
++
++		/* In this case we were trying to read something that wasn't on
++		 * disk yet - return a page full of zeroes.  This should be OK,
++		 * because the object should be empty (if there was a write
++		 * before this read, the read would be waiting with the page
++		 * locked */
++		kaddr = page_address(page);
++		memset(kaddr, 0, PAGE_CACHE_SIZE);
++
++		SetPageUptodate(page);
++		if (PageError(page))
++			ClearPageError(page);
++	} else if (ret == 0) {
++
++		/* Everything is OK */
++		SetPageUptodate(page);
++		if (PageError(page))
++			ClearPageError(page);
++	} else {
++
++		/* Error */
++		SetPageError(page);
++	}
++
++	unlock_page(page);
 +}
++
++/*
++ * Read a page from the OSD
++ */
++static int readpage_filler(struct page *page)
++{
++	struct osd_request *req = NULL;
++	struct inode *inode = page->mapping->host;
++	struct osdfs_i_info *oi = OSDFS_I(inode);
++	ino_t ino = inode->i_ino;
++	loff_t i_size = i_size_read(inode);
++	unsigned long end_index = i_size >> PAGE_CACHE_SHIFT;
++	struct super_block *sb = inode->i_sb;
++	struct osdfs_sb_info *sbi = sb->s_fs_info;
++	uint64_t amount;
++	unsigned char *kaddr;
++	int ret = 0;
++
++	if (!PageLocked(page))
++		BUG();
++
++	if (PageUptodate(page))
++		goto out;
++
++	/* we are before the last page */
++	if (page->index < end_index) {
++		amount = PAGE_CACHE_SIZE;
++		goto do_it;
++	}
++
++	amount = i_size & (PAGE_CACHE_SIZE - 1);
++
++	/* this will be out of bounds, or doesn't exist yet */
++	if ((page->index >= end_index + 1 || !amount) || (!ObjCreated(oi))) {
++		kaddr = kmap_atomic(page, KM_USER0);
++		memset(kaddr, 0, PAGE_CACHE_SIZE);
++		flush_dcache_page(page);
++		kunmap_atomic(page, KM_USER0);
++		SetPageUptodate(page);
++		if (PageError(page))
++			ClearPageError(page);
++		unlock_page(page);
++		goto out;
++	}
++
++do_it:
++	kaddr = page_address(page);
++
++	req = prepare_osd_read(sbi->s_dev, sbi->s_pid, ino + OSDFS_OBJ_OFF,
++			amount, (uint64_t)(page->index << PAGE_CACHE_SHIFT), 0,
++			kaddr);
++	if (!req) {
++		printk(KERN_ERR "ERROR: readpage failed.\n");
++		ret = -ENOMEM;
++		unlock_page(page);
++		goto out;
++	}
++
++	ret = osdfs_async_op(req, readpage_done, (void *)page, oi->i_cred);
++	if (ret) {
++		free_osd_req(req);
++		unlock_page(page);
++		goto out;
++	}
++	atomic_inc(&sbi->s_curr_pending);
++out:
++	return ret;
++}
++
++/*
++ * We don't need the file
++ */
++static int osdfs_readpage(struct file *file, struct page *page)
++{
++	return readpage_filler(page);
++}
++
++/*
++ * We don't need the data
++ */
++static int readpage_strip(void *data, struct page *page)
++{
++	return readpage_filler(page);
++}
++
++/*
++ * read a bunch of pages - usually for readahead
++ */
++static int osdfs_readpages(struct file *file, struct address_space *mapping,
++			   struct list_head *pages, unsigned nr_pages)
++{
++	return read_cache_pages(mapping, pages, readpage_strip, NULL);
++}
++
++/* This was borrowed from fs/libfs.c it used to be exported but now it
++ * is not. FIXME: Is this at all right?
++ */
++static int osdfs_simple_commit_write(struct file *file, struct page *page,
++			       unsigned from, unsigned to)
++{
++	struct inode *inode = page->mapping->host;
++	loff_t pos = ((loff_t)page->index << PAGE_CACHE_SHIFT) + to;
++
++	if (!PageUptodate(page))
++		SetPageUptodate(page);
++	/*
++	 * No need to use i_size_read() here, the i_size
++	 * cannot change under us because we hold the i_mutex.
++	 */
++	if (pos > inode->i_size)
++		i_size_write(inode, pos);
++	set_page_dirty(page);
++	return 0;
++}
++
++struct address_space_operations osdfs_aops = {
++	.readpage		= osdfs_readpage,
++	.readpages		= osdfs_readpages,
++	.writepage		= osdfs_writepage,
++	.prepare_write		= simple_prepare_write,
++	.commit_write		= osdfs_simple_commit_write,
++	.writepages		= generic_writepages,
++};
++
+ /******************************************************************************
+  * INODE OPERATIONS
+  *****************************************************************************/
 diff --git a/fs/osdfs/osdfs.h b/fs/osdfs/osdfs.h
-index 30472b7..ea20411 100644
+index 7610ce3..29e7d7b 100644
 --- a/fs/osdfs/osdfs.h
 +++ b/fs/osdfs/osdfs.h
-@@ -177,4 +177,15 @@ int extract_list_from_req(struct osd_request *req,
+@@ -188,6 +188,9 @@ int osdfs_setattr(struct dentry *, struct iattr *);
+ extern struct inode_operations osdfs_file_inode_operations;
+ extern struct file_operations osdfs_file_operations;
  
- void free_osd_req(struct osd_request *req);
- 
-+/* inode.c               */
-+void osdfs_truncate(struct inode *inode);
-+int osdfs_setattr(struct dentry *, struct iattr *);
++/* inode.c           */
++extern struct address_space_operations osdfs_aops;
 +
-+/*********************
-+ * operation vectors *
-+ *********************/
-+/* file.c            */
-+extern struct inode_operations osdfs_file_inode_operations;
-+extern struct file_operations osdfs_file_operations;
-+
- #endif
+ /* symlink.c         */
+ extern struct inode_operations osdfs_symlink_inode_operations;
+ extern struct inode_operations osdfs_fast_symlink_inode_operations;
 -- 
 1.6.0.1
 
