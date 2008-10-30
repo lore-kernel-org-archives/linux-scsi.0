@@ -1,35 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Thu, 30 Oct 2008 01:54:16 -0700 (PDT)
-Message-ID: <20081030085416.03C6D108043@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: optimizations in blk_rq_timed_out_timer()
+Date: Thu, 30 Oct 2008 09:55:20 +0100
+Message-ID: <20081030085520.GP31673@kernel.dk>
+References: <20081029060625.GA5080@us.ibm.com> <20081030113309R.fujita.tomonori@lab.ntt.co.jp> <20081030074907.GN31673@kernel.dk> <20081030172918Z.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38026 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750968AbYJ3IyR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2008 04:54:17 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9U8sGsT025186
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2008 01:54:17 -0700
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:45372 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753070AbYJ3I4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2008 04:56:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20081030172918Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: malahal@us.ibm.com, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+On Thu, Oct 30 2008, FUJITA Tomonori wrote:
+> On Thu, 30 Oct 2008 08:49:07 +0100
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > > > What 
+> > > > likely can happen is that we may call mod_timer with jiffies that is
+> > > > older than current which would call the timer immediately...
+> > > 
+> > > Yeah, I think that the timer is called immediately here. It's
+> > > unnecessary.
+> > 
+> > Hmm, just checked the code, and indeed it does. Have the timers always
+> > behaved like that?
+> 
+> I guess so because it's unrealistic that the caller of mod_time makes
+> sure that expires is future time, in particular if the caller wants
+> short timeout?
 
-
-akpm@osdl.org changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         Regression|0                           |1
-
-
-
+It's all a little confusing, I think. When do you stop considering it a
+little in the past and long into the future?
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Jens Axboe
+
