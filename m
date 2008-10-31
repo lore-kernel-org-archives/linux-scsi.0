@@ -1,28 +1,33 @@
-From: "Shi, Alex" <alex.shi@intel.com>
-Subject: RE: [Bugme-new] [Bug 11898] New: mke2fs hang on AIC79 device.
-Date: Fri, 31 Oct 2008 11:12:00 +0800
-Message-ID: <F7C8A4D3A9905B45A80E4C194793FA6501C05D662B@PDSMSX501.ccr.corp.intel.com>
-References: <bug-11898-10286@http.bugzilla.kernel.org/>
-	 <20081030015346.ef341e4f.akpm@linux-foundation.org>
-	 <F7C8A4D3A9905B45A80E4C194793FA6501C05D627D@PDSMSX501.ccr.corp.intel.com>
- <1225375526.3250.15.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Thu, 30 Oct 2008 20:12:48 -0700 (PDT)
+Message-ID: <20081031031248.41111108048@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34603 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753011AbYJaDML convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2008 23:12:11 -0400
-In-Reply-To: <1225375526.3250.15.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34421 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753294AbYJaDNU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2008 23:13:20 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9V3CmnV009875
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2008 20:12:49 -0700
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Zhang, Yanmin" <yanmin.zhang@intel.com>, "Chen, Tim C" <tim.c.chen@intel.com>, "Wu, Fengguang" <fengguang.wu@intel.com>, "Zhu, Yi" <yi.zhu@intel.com>
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #4 from alex.shi@intel.com  2008-10-30 20:12 -------
 Thanks Yi's help. 
-After enable CONFIG_DEBUG_INFO, this bug can not reproduce on 2.6.28-rc1. but it still exists on 28-rc2 kernel. Soft lockup catchs several times lockup. And they are same as the following one. 
+After enable CONFIG_DEBUG_INFO, this bug can not reproduce on 2.6.28-rc1. but
+it still exists on 28-rc2 kernel. Soft lockup catchs several times lockup. And
+they are same as the following one. 
 
 
 BUG: soft lockup - CPU#7 stuck for 61s! [mke2fs:3918]
@@ -64,16 +69,17 @@ Call Trace:
  [<ffffffff802928bf>] ? sys_write+0x4c/0x74
  [<ffffffff8020b3db>] ? system_call_fastpath+0x16/0x1b
 
-                                                                           
+
 I do not know what addr2line show a strange output:
 Addr2line -e vmlinux -f blk_invoke_request_fn+0x76 | hexdump 
-0000000	3f3f 3f0a 3a3f 0a30
+0000000 3f3f 3f0a 3a3f 0a30
 0000008
 
 But seems gdb works for this. 
 (gdb) list *blk_invoke_request_fn+0x76 
 0xffffffff8033f311 is in blk_invoke_request_fn (include/linux/blkdev.h:456).
-451     #define QUEUE_FLAG_NONROT      14       /* non-rotational device (SSD) */
+451     #define QUEUE_FLAG_NONROT      14       /* non-rotational device (SSD)
+*/
 452
 453     static inline int queue_is_locked(struct request_queue *q)
 454     {
@@ -86,3 +92,8 @@ But seems gdb works for this.
 
 Alex 
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
