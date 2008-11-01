@@ -1,107 +1,106 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: RE: [dm-devel] i/o error due to all path failure with rdac
-Date: Fri, 31 Oct 2008 13:21:39 -0700
-Message-ID: <1225484499.14830.1057.camel@chandra-ubuntu>
-References: <49022078.6010700@datadirectnet.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BD3B893@cosmail01.lsi.com>
-	 <20081030173453.GB23948@linux.vnet.ibm.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BD9D049@cosmail01.lsi.com>
-	 <1225396981.14830.990.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BD9D0AD@cosmail01.lsi.com>
-	 <1225405417.14830.1001.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BD9D16B@cosmail01.lsi.com>
-	 <1225409729.14830.1005.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BD9D2E2@cosmail01.lsi.com>
-Reply-To: sekharan@us.ibm.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Problems with the block-layer timeouts
+Date: Sat, 1 Nov 2008 12:54:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0811011214470.21703-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:53109 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbYJaUWj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Oct 2008 16:22:39 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id m9VKM9D8003070
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2008 14:22:09 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m9VKMc25120340
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2008 14:22:38 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m9VKM9rr015093
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2008 14:22:09 -0600
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45BD9D2E2@cosmail01.lsi.com>
+Received: from netrider.rowland.org ([192.131.102.5]:3779 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751818AbYKAQyd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Nov 2008 12:54:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-That is good to know. I will push the patch upstream.
+James and Jens:
 
-BTW, Please be advised that you might see some unknown problems if you
-use the multipath tools from mainline on your distro releases.
+I spent most of the day yesterday debugging some tricky problems in the
+new block-layer timeout scheme.  Clearly it is in need of more work.
 
-The library in distro releases and the tools in mainline may not be
-totally compatible, which is the cause.
+A major reason for these problems was that there doesn't seem to be a 
+clear a idea of when the timeout period should begin.  In 
+blk_add_timer() a comment says:
 
-I would suggest you to use the tools from your distro itself. The kernel
-changes for SCSI_DH should work with no changes to the tools (in your
-distro). IOW, you do not need the latest multipath tools.
+ *    Each request has its own timer, and as it is added to the queue, we
+ *    set up the timer.
 
-chandra
-On Fri, 2008-10-31 at 10:05 -0600, Moger, Babu wrote:
-> Yes, It is working fine with this patch. Now my online/offline test is running fine. Thank you very much. That was really a quick fix.
-> 
-> I am still learning the device mapper. Hopefully I will be some help in the future.
-> 
-> Thanks
-> Babu Moger
-> 
-> -----Original Message-----
-> From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
-> Sent: Thursday, October 30, 2008 6:35 PM
-> To: Moger, Babu
-> Cc: device-mapper development; linux-scsi@vger.kernel.org
-> Subject: RE: [dm-devel] i/o error due to all path failure with rdac
-> 
-> Can you try this patch.
-> ---------
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> 
-> Index: linux-2.6.27/drivers/scsi/device_handler/scsi_dh_rdac.c
-> ===================================================================
-> --- linux-2.6.27.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ linux-2.6.27/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -386,6 +386,7 @@ static int check_ownership(struct scsi_d
->         struct c9_inquiry *inqp;
-> 
->         h->lun_state = RDAC_LUN_UNOWNED;
-> +       h->state = RDAC_STATE_ACTIVE;
->         err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry), h);
->         if (err == SCSI_DH_OK) {
->                 inqp = &h->inq.c9;
-> ---
-> 
-> On Thu, 2008-10-30 at 17:21 -0600, Moger, Babu wrote:
-> > Looks like eventually we get rport failure after the controller offline.
-> >
-> >
-> > I have attached the messages file.  I am running raw IO.
-> >
-> > Also, please note that I have added following lines in check_sense. This condition (quiescence) should be retried.
-> >
-> >
-> > case UNIT_ATTENTION:
-> >                 if ((sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) ||
-> >                     (sense_hdr->asc == 0x8b && sense_hdr->ascq == 0x02))
-> >                         /*
-> >                          * Power On, Reset, or Bus Device Reset, just retry.
-> >                          */
-> >                         return ADD_TO_MLQUEUE;
-> >
-> >
-> >
-> > Thanks
-> > Babu Moger
-> >
+On the other hand, elv_next_request() says:
+
+			 * We are now handing the request to the hardware,
+			 * add the timeout handler
+
+(Note that this comment is wrong for an additional reason.  
+elv_next_request() doesn't hand the request to the hardware; it hands 
+the request to a driver.  What the driver chooses to do with the 
+request is its own affair.)
+
+So when should the timeout begin?  The most logical time is when the 
+driver does send the request to the hardware.  Of course, the block 
+core has no way to know when that happens, so a suitable proxy might be 
+when the request is removed from the block queue.  (On the other hand, 
+are there drivers which don't bother to dequeue a request until it has 
+completed?)  Either way, both the comments above and the actual code 
+should be changed.
+
+
+The real source of the problems I encountered is in the SCSI midlayer.  
+scsi_request_fn() can call elv_next_request() long before it is ready
+to begin executing the request.  In particular, it does so before 
+checking scsi_dev_queue_ready().  So if the lower-level driver can 
+handle up to N simultaneous requests, the midlayer will call 
+elv_next_request() N+1 times.  The last request has to wait until one 
+of the first N completes.  Surely this waiting period doesn't deserve 
+to be counted as part of the last request's timeout.
+
+In my case N was 1, and request #1 ended up being requeued.  Requeuing
+restarts the timer; as a result, the timer for request #2 expired
+before request #1's second incarnation timed out.  And this was before
+request #2 had even begun!
+
+That's not so terribly bad in itself.  However the scsi_times_out()  
+routine is completely unprepared to handle timeouts for requests that
+haven't yet been dispatched to the LLD.  Or, for that matter, requests
+which have been returned by the LLD but were requeued and have not yet
+been sent back down.
+
+So what happened was that the midlayer tried to abort a request which
+hadn't started yet.  Or, depending on the exact timing, it found itself
+being asked to abort two requests when only one was running, so it gave
+up and did nothing.  One way leads to processes hanging, the other way
+leads to a system crash.
+
+How should this be fixed?  It would help to call scsi_dev_queue_ready()  
+before elv_next_request(), but that's not sufficient.  
+scsi_times_out() needs to recognize that a timeout for a non-running
+request can be handled by directly returning BLK_EH_HANDLED.  Right?
+
+
+While I'm on the subject, there are a few related items that could be 
+improved.  In my tests, I was generating I/O requests simply by doing
+
+	dd if=/dev/sda ...
+
+I don't know where the timeouts for these requests are determined, but
+they were set to 60 seconds.  That seems much too long.
+
+In blk_del_timer(), there's no reason to test q->rq_timed_out_fn.  If 
+the method pointer is NULL then req->deadline would be 0 anyway.  In 
+addition, req->deadline should be set to 0 and the end of the routine, 
+just in case req gets requeued.
+
+In blk_add_timer(), the line
+
+	expiry = round_jiffies(req->deadline);
+
+is not optimal.  round_jiffies() will sometimes round a value _down_ to
+the nearest second.  But blk_rq_timed_out_timer() tests whether
+req->deadline is in the past -- and if the deadline was rounded down
+then this won't be true the first time through.  You wind up getting an
+unnecessary timer interrupt.  Instead there should be a
+round_jiffies_up() utility routine, and it should be used in both
+blk_add_timer() and blk_rq_timed_out_timer().
+
+Alan Stern
 
