@@ -1,46 +1,67 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Problems with the block-layer timeouts
-Date: Mon, 3 Nov 2008 18:27:00 +0100
-Message-ID: <20081103172700.GW31673@kernel.dk>
-References: <Pine.LNX.4.44L0.0811031051210.2454-100000@iolanthe.rowland.org> <490F2953.30709@kernel.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: usb hdd problems with 2.6.27.2
+Date: Mon, 3 Nov 2008 14:46:38 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0811031444130.2194-100000@iolanthe.rowland.org>
+References: <20081103155254.GA3368@bit.office.eurotux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:58972 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbYKCR2U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Nov 2008 12:28:20 -0500
-Content-Disposition: inline
-In-Reply-To: <490F2953.30709@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20081103155254.GA3368-oEplIgxCSygGFt9iVWuREaMaJEuR8uiQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luciano Rocha <luciano-YWehAnL2kLNBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux-Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Tue, Nov 04 2008, Tejun Heo wrote:
-> I'm trying to convert all drivers to use the same command issue model -
-> elv_next_request() -> blkdev_dequeue_request() on actual issue ->
-> blk_end_request().  I have first draft of the conversion patchset but
-> it's gonna take me a few more days to review and test what I can as
-> several drivers (mostly legacy ones) are a bit tricky.
+On Mon, 3 Nov 2008, Luciano Rocha wrote:
 
-Don't do that, please. What we need to do is ensure that the model fits
-with whatever the driver wants to do there, and for some drivers it's
-actually a lot easier to rely on elv_next_request() returning the same
-requests again instead of keeping track of it yourself. So any patch
-that enforces the model that you must dequeue before starting the
-request, will get a big nak from me.
+> On Tue, Oct 28, 2008 at 01:38:11PM -0400, Alan Stern wrote:
+> > > Do you wish me to test anything else?
+> > 
+> > Yes.  Please post a usbmon trace for each of the last two tests.  That 
+> > is, with the unusual_devs update only, and with the unusual_devs update 
+> > plus the invoke_transport update and the scsi_requeue_command update.
+> 
+> I've updated the bugzilla entry with traces for some combinations of the
+> discussed patches:
+> http://bugzilla.kernel.org/show_bug.cgi?id=11843
 
-What we need to do is add a 'peek' mode only, which doesn't start the
-request. Along with something to mark it started that the driver can
-use, or it can just use elv_next_request() of course.
+Okay, thanks.  I see the problem.  This whole area is a mess, and it's 
+going to be different in 2.6.28.  But for now...
 
-> For the time being, SCSI layer is the only block layer timeout user and
-> completion w/o dequeuing is only for error cases in SCSI, so the
-> inefficiency there shouldn't matter too much.
+Please rerun the A+B and A+B+C tests, but this time using the B' patch
+below instead of B.
 
-Agree, for now we are ok since it's just SCSI.
+Alan Stern
 
--- 
-Jens Axboe
 
+
+Index: 2.6.27.4/drivers/scsi/scsi_lib.c
+===================================================================
+--- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
++++ 2.6.27.4/drivers/scsi/scsi_lib.c
+@@ -611,6 +611,11 @@ static void scsi_requeue_command(struct 
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
++	if (--req->retries <= 0) {
++		blk_end_request(req, -EIO, blk_rq_bytes(req));
++		scsi_next_command(cmd);
++		return;
++	}
+ 	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	blk_requeue_request(q, req);
+@@ -690,6 +695,8 @@ static struct scsi_cmnd *scsi_end_reques
+ 				 * leftovers in the front of the
+ 				 * queue, and goose the queue again.
+ 				 */
++				if (bytes > 0)		/* Made progress */
++					++req->retries;
+ 				scsi_requeue_command(q, cmd);
+ 				cmd = NULL;
+ 			}
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
