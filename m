@@ -1,36 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11943] Boot fails at scsi0:MESH with hde: lost interrupt, AEC6260
-Date: Mon,  3 Nov 2008 04:47:41 -0800 (PST)
-Message-ID: <20081103124741.AE77B108047@picon.linux-foundation.org>
-References: <bug-11943-11613@http.bugzilla.kernel.org/>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Problems with the block-layer timeouts
+Date: Mon, 3 Nov 2008 09:18:10 -0500
+Message-ID: <490F0822.6010406@emulex.com>
+References: <Pine.LNX.4.44L0.0811011214470.21703-100000@netrider.rowland.org> <20081103085247.GO31673@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37641 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754663AbYKCMro (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 07:47:44 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA3Clf3P024417
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Nov 2008 04:47:42 -0800
-In-Reply-To: <bug-11943-11613@http.bugzilla.kernel.org/>
+Received: from emulex.emulex.com ([138.239.112.1]:45618 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755699AbYKCORr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 09:17:47 -0500
+In-Reply-To: <20081103085247.GO31673@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11943
+Jens Axboe wrote:
+>> While I'm on the subject, there are a few related items that could be
+>> improved.  In my tests, I was generating I/O requests simply by doing
+>>
+>>       dd if=/dev/sda ...
+>>
+>> I don't know where the timeouts for these requests are determined, but
+>> they were set to 60 seconds.  That seems much too long.
+> 
+> Fully agreed, as Mike mentioned this actually looks like a dumb udev
+> rule that didn't have any effect until this generic timeout work. For
+> normal IO, something in the 10 second range is a lot more appropriate.
 
+Yes and no. For direct-attach storage with no other initiators, ok. But 
+for larger arrays, potentially with multiple initiators - no.  I can 
+name several arrays that depend on a 30 second timeout, and a few that, 
+underload, require 60 seconds.  I assume that there's usually "best 
+practices" guides for the integrators to ensure the defaults are set right.
 
-bzolnier@gmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|linux-scsi@vger.kernel.org  |bzolnier@gmail.com
-             Status|NEW                         |ASSIGNED
-
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+-- james s
