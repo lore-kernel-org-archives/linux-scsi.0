@@ -1,40 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: WARNING in 2.6.27.4 pci-dma::dma_free_coherent, during unload of sym53c8xx_2
-Date: Sun, 2 Nov 2008 20:33:18 -0700
-Message-ID: <20081103033318.GK24469@parisc-linux.org>
-References: <20081103013647.GA27549@merlin.emma.line.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH v5] cmdfilter: clean up sysfs interface
+Date: Mon, 3 Nov 2008 13:01:17 +0900
+Message-ID: <20081103130126I.fujita.tomonori@lab.ntt.co.jp>
+References: <20080809135520.GJ8618@parisc-linux.org>
+	<20080810163206X.fujita.tomonori@lab.ntt.co.jp>
+	<6cf6b73e0811011056w7f829f4fq485f6299122ed643@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33504 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754387AbYKCDdf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Nov 2008 22:33:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20081103013647.GA27549@merlin.emma.line.org>
+Received: from sh.osrg.net ([192.16.179.4]:39192 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754457AbYKCECY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Nov 2008 23:02:24 -0500
+In-Reply-To: <6cf6b73e0811011056w7f829f4fq485f6299122ed643@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: adel.gadllah@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, matthew@wil.cx, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, viro@zeniv.linux.org.uk, pjones@redhat.com, dougg@torque.net, dan.j.williams@intel.com, James.Bottomley@hansenpartnership.com
 
-On Mon, Nov 03, 2008 at 02:36:47AM +0100, Matthias Andree wrote:
-> Hi,
-> 
-> I killall -9'ed "taper" because my SCSI hardware was going haywire,
-> and tried to rmmod sym53c8xx, and got a nice warning from the kernel -
-> shown below.
-> 
-> [Please Cc: replies, I'm subscribed to linux-kernel@, but not linux-scsi@]
-> 
-> The machine had been suspended to disk before (via /sys/power/state).
-> 
-> ------------[ cut here ]------------
-> WARNING: at arch/x86/kernel/pci-dma.c:376 dma_free_coherent+0x80/0x90()
+On Sat, 1 Nov 2008 18:56:20 +0100
+"Adel Gadllah" <adel.gadllah@gmail.com> wrote:
 
-Nothing to worry about.  It's a warning on x86 because it's a bug on
-ARM.
+> The sysfs bits got disabled in 2.6.27 in commit
+> 2dc75d3c3b49c64fd26b4832a7efb75546cb3fc5 .
+> What are the remaining bugs that needs to get fixed to reenable it for
+> 2.6.28 (or if its too late .29) ?
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+cmdfilter has some design problems related with the way to use kobject
+(discussed several times on lkml during 2.6.27-rcX cycles). As far as
+I know, nobody tries to fix them.
