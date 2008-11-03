@@ -1,101 +1,96 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC 0/9] osdfs
-Date: Mon, 03 Nov 2008 16:07:53 -0500
-Message-ID: <490F6829.3020104@garzik.org>
-References: <4909C41A.7000406@panasas.com>
+From: Miquel van Smoorenburg <mikevs@xs4all.net>
+Subject: 2.6.27 and good_bytes -= scsi_get_resid(cmd)
+Date: Mon, 3 Nov 2008 22:50:18 +0100
+Message-ID: <20081103215014.GA20035@xs4all.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53569 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755091AbYKCVIF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Nov 2008 16:08:05 -0500
-In-Reply-To: <4909C41A.7000406@panasas.com>
+Received: from smtp-vbr4.xs4all.nl ([194.109.24.24]:3786 "EHLO
+	smtp-vbr4.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752875AbYKCWDz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 17:03:55 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Avishay Traeger <avishay@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, mikevs@xs4all.net
 
-Boaz Harrosh wrote:
-> Please review an OSD based file system. 
-> 
-> Given that our OSD initiator library is accepted into Kernel, we would
-> like to also submit an osdfs. This is the first iteration of this file system.
-> 
-> The next stage is to make it exportable by the pNFS-over-objects Server.
-> osdfs is one of the building blocks for a full, end-to-end open source
-> reference implementation of a Server/Client pNFS-over-objects we
-> want to have available in Linux. Other parts are the Generic pNFS
-> client project with the objects-layout-driver, and the generic pNFS
-> server plus osdfs once it is adapted to be exportable.
-> (See all about pNFS in Linux at:
-> http://wiki.linux-nfs.org/wiki/index.php/PNFS_prototype_design)
-> 
-> osdfs was originally developed by Avishay Traeger <avishay@gmail.com>
-> from IBM. A very old version of it is hosted on sourceforge as the osdfs
-> project. It was originally developed for the 2.6.10 Kernel over the old
-> IBM's osd-initiator Linux driver.
-> 
-> Since then it was picked by us, open-osd, and was both forward ported to
-> current Kernel, as well as converted to run over our osd Kernel Library.
-> The conversion effort, if anyone is interested, is also available as a
-> patchset here:
->   git-clone git://git-open-osd.org/open-osd.git osdfs-devel
-> or on the web at:
->   http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=refs/heads/osdfs-devel
-> 
-> The Original code is based on ext2 code from the Kernel at the time.
-> Further reading is available at the last patch in the osdfs.txt file.
-> 
-> I have mechanically divided the code in parts, each introducing a
-> group of vfs function vectors, all tied at the end into a full filesystem.
-> Each patch can be compiled but it will only run at the very end.
-> This was done for the hope of easier reviewing.
-> 
-> Here is the list of patches
-> [RFC 1/9] osdfs: osd Swiss army knife
-> [RFC 2/9] osdfs: file and file_inode operations
-> [RFC 3/9] osdfs: symlink_inode and fast_symlink_inode operations
-> [RFC 4/9] osdfs: address_space_operations
-> [RFC 5/9] osdfs: dir_inode and directory operations
-> [RFC 6/9] osdfs: super_operations and file_system_type
-> [RFC 7/9] osdfs: mkosdfs
-> [RFC 8/9] osdfs: Documentation
+I upgraded to 2.6.27 on a machine with the dpt_i2o scsi driver and
+I'm seeing some weird number from iostat -x 2. Basically it thinks
+that the size of every request is 32640 sectors (0xff0000 bytes),
+and that throws off the stats considerably.
 
-Pretty cool stuff.
+By using git-bisect I found out that the cause is this commit:
 
-I've been wondering when we would start seeing OSD filesystems make 
-their appearance.
+commit 427e59f09fdba387547106de7bab980b7fff77be
+Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date:   Sat Mar 8 18:24:17 2008 -0600
 
-Random, unordered comments:
+    [SCSI] make use of the residue value
+    
+    USB sometimes doesn't return an error but instead returns a residue
+    value indicating part (or all) of the command wasn't completed.  So if
+    the driver _done() error processing indicates the command was fully
+    processed, subtract off the residue so that this USB error gets
+    propagated.
+    
+    Cc: Alan Stern <stern@rowland.harvard.edu>
+    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-* This is important stuff.  Should have been posted to LKML.  Please CC 
-LKML in the future.
-
-* As discussed at the filesystem summit, OSD use implies a need for an 
-MD-like layer for OSD objects.  Has anyone even started the design work 
-for this?
-
-* I tend to think there is room for more than one OSD filesystem in the 
-Linux kernel.  Assuming all OSDs will use the same Linux filesystem 
-driver will lead to bloat, and you potentially "code yourself into a 
-corner."  Let's not rule out multiple filesystems.
-
-As such, "osdfs" seems like too-generic a name. How about boazfs?  :)
-
-* Get this into the kernel ASAP!  OSD stuff languishes outside the 
-kernel for _far_ too long.  OSD is a key storage technology that needs 
-to be developed in the full light of the Linux community, not off in a 
-dark corner somewhere, where few see progress or discussions.
-
-Object-based storage, and its SCSI incarnation OSD, is a MAJOR revision 
-of the block storage API, moving away from LBA-addressed linear APIs. 
-That's a big deal, and should be discussed on LKML, IMO...
-
-	Jeff
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 110e776..36c92f9 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -855,9 +855,18 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 
+ 	good_bytes = scsi_bufflen(cmd);
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		int old_good_bytes = good_bytes;
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
+ 			good_bytes = drv->done(cmd);
++		/*
++		 * USB may not give sense identifying bad sector and
++		 * simply return a residue instead, so subtract off the
++		 * residue if drv->done() error processing indicates no
++		 * change to the completion length.
++		 */
++		if (good_bytes == old_good_bytes)
++			good_bytes -= scsi_get_resid(cmd);
+ 	}
+ 	scsi_io_completion(cmd, good_bytes);
+ }
 
 
+Now the dpt_i2o driver calls scsi_set_resid unconditionally after
+a command completes and comments it as '// calculate resid for sg' .
+
+Reverting the above commit fixes my problem. Applying the following
+patch to dpt_i2o.c fixes it as well. If the patch below is
+actually considered the right way to fix this (I'm not really sure
+what I'm doing here) then I think there might be more drivers that
+need a similar fix.
+
+[PATCH] dpt_i2o.c: calculate resid for sg only
+
+dpt_i2o.c calls scsi_set_resid() unconditionally. But
+it should only do that for sg requests. This became apparent
+after commit 427e59f09fdba387547106de7bab980b7fff77be .
+
+Signed-off-by: Miquel vam Smoorenburg <mikevs@xs4all.net>
+
+--- linux-2.6.27.4/drivers/scsi/dpt_i2o.c.ORIG	2008-10-26 00:05:07.000000000 +0200
++++ linux-2.6.27.4/drivers/scsi/dpt_i2o.c	2008-11-03 22:17:21.000000000 +0100
+@@ -2445,7 +2445,8 @@
+ 	hba_status = detailed_status >> 8;
+ 
+ 	// calculate resid for sg 
+-	scsi_set_resid(cmd, scsi_bufflen(cmd) - readl(reply+5));
++	if (cmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
++		scsi_set_resid(cmd, scsi_bufflen(cmd) - readl(reply+5));
+ 
+ 	pHba = (adpt_hba*) cmd->device->host->hostdata[0];
+ 
 
 
-
+Mike.
