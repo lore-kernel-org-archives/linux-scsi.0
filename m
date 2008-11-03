@@ -1,20 +1,20 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 2/12] mpt2sas - config
-Date: Mon, 3 Nov 2008 01:35:38 -0700
-Message-ID: <20081103083536.GB3369@lsil.com>
+Subject: [PATCH 3/12] mpt2sas - ctl
+Date: Mon, 3 Nov 2008 01:36:15 -0700
+Message-ID: <20081103083613.GC3369@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:40439 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:40471 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827AbYKCW3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Nov 2008 17:29:24 -0500
+	id S1751828AbYKCW37 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Nov 2008 17:29:59 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id mA3MODH4019195
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Nov 2008 14:24:13 -0800 (PST)
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id mA3MOoLr019240
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Nov 2008 14:24:50 -0800 (PST)
 Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id mA3MTMAS006888
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Nov 2008 14:29:22 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id mA3MTwsX007078
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Nov 2008 14:29:59 -0800
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
