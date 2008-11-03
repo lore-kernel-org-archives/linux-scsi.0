@@ -1,58 +1,87 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Problems with the block-layer timeouts
-Date: Mon, 3 Nov 2008 10:59:08 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811031051210.2454-100000@iolanthe.rowland.org>
-References: <20081103085247.GO31673@kernel.dk>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 0/2] FC pass through support via bsg interface
+Date: Mon, 3 Nov 2008 11:00:19 -0500
+Message-ID: <490F2013.70507@emulex.com>
+References: <56AAA08B-4276-4CA2-92E2-D539AD1AB769@qlogic.com> <48CA9DB3.20005@emulex.com> <A5FD7683-581F-4F53-A86D-BFDEC10AFC5C@qlogic.com> <490EEB18.2060402@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51392 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755228AbYKCP7K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 10:59:10 -0500
-In-Reply-To: <20081103085247.GO31673@kernel.dk>
+Received: from emulex.emulex.com ([138.239.112.1]:58693 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755517AbYKCQAF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 11:00:05 -0500
+In-Reply-To: <490EEB18.2060402@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+To: Sven Schuetz <sven@linux.vnet.ibm.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Robert W Love <robert.w.love@intel.com>
 
-Hi, Tejun!  I ran across the same bug as you, but about a day later.
 
-On Mon, 3 Nov 2008, Jens Axboe wrote:
 
-> > So when should the timeout begin?  The most logical time is when the 
-> > driver does send the request to the hardware.  Of course, the block 
-> > core has no way to know when that happens, so a suitable proxy might be 
-> > when the request is removed from the block queue.  (On the other hand, 
-> > are there drivers which don't bother to dequeue a request until it has 
-> > completed?)  Either way, both the comments above and the actual code 
-> > should be changed.
-
-> We already discussed this issue with Tejun. There's a hack in my tree
-> now that just moves the activate call to dequeue time, which works ok
-> for SCSI (but wont work for eg IDE). The real fix is to have a peek and
-> fetch interface for retrieving requests. We've actually wanted that for
-> some time, since the current 'peek and mark active' approach doesn't
-> even work well now since it'll both force pushing of requests to the
-> dispatch list and mark it unmergeable, since the block layer does not
-> whether the driver has started handling the request or not.
+Sven Schuetz wrote:
+> Hi Seokmann,
 > 
-> So, in summary, a short term fix will be merged soon and a longer term
-> fix will be right after.
+> first of all, thanks for your efforts so far, good work!
 
-Even a "peek and fetch" interface might not be best, at least as far as
-timer issues are concerned.  Ideally, the timer shouldn't be started
-until the SCSI midlayer knows that the request has successfully been
-sent to the lower-level driver.
+I second this!
 
-Therefore the best approach would be to EXPORT blk_add_timer().  It 
-should be called at the end of scsi_dispatch_cmd(), when the return 
-value from the queuecommand method is known to be 0.
+> Regarding the following statement from James and your question to it:
+> 
+> Seokmann Ju wrote:
+>> On Sep 12, 2008, at 9:49 AM, James Smart wrote:
+>>
+>>> Seokmann,
+>>>
+>>> There are number of fundamental issues with this patch that need to be
+>>> corrected. I'll be at plumbers conference next week, and will be able
+>>> to work through this. Please look me up if you will be there.
+>>> Otherwise, I'll just post a revised patch.
+>>>
+>>> Here are the issues as I see them:
+>>>
+> 
+> <snip>
+> 
+>>> - We really should add support, for the initial merge, to talk to an
+>>>  address that doesn't exist via an rport (think fabric service).
+>>>  This means adding some request types to the fc_host too.
+>> This one too, please.
+>>> -- james s
+>>>
+> 
+> <snip>
+> 
+> 
+>  From what I have seen, that's still missing from your latest submission. What
+> James means by that (James, correct me when I am wrong) is that at the moment we
+> only have devices for rports under /dev.
+> That's good for ELS requests, but for CT requests that are not directed to
+> individual rports but to some well known address that's not appropriate. I think
+> there might also be situations when there are no rports available and yet you
+> still want to issue a CT request. In my opinion we would need devices for the
+> fc_hosts under /dev as well. I have not looked at it in detail yet but it
+> probably means to add a device struct to the fc_host_attrs struct similar as it
+> is done for rports and register them with the block layer as well. Maybe it's
+> feasible to have a dedicated ELS and CT handler in the transport layer instead
+> of a generic service handler than (CT requets come in via /dev/fc_hostx and are
+> handled by some fc_ct_service function and ELS requests come in via
+> /dev/rportxxx and are handled by sme fc_els_service function), but that's
+> something that needs to be looked at.
+> If you already have some ideas on how to do that, please let me know. I might
+> start some experiments as well if I find the time.
+> 
+> Sven
 
-With something like this, Mike's fix to end_that_request_last() 
-wouldn't be needed, since blkdev_dequeue_request() wouldn't 
-automatically start the timer.  It seems silly to start the timer when 
-you know you're just going to stop it immediately afterwards.
+I've started this work, and am merging it with Seokman's patches.  The 
+recent respins have reset it.  This work is also good for validating the 
+  request/response formats, as it extends the requests to target 
+transport handlers that do more than ELS/CT. So it's a good reference to 
+ensure things are partitioned correctly.
 
-Alan Stern
+Seokman:  I applied your last "revised III" patches - and the qla (2nd) 
+patch failed miserably against scsi-misc-2.6. What were the patches cut 
+against ?
+
+-- james s
 
