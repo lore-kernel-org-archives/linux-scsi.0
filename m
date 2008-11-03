@@ -1,150 +1,101 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 2/2] SCSI: remove scsi_end_request()
-Date: Mon, 3 Nov 2008 15:56:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811031555010.2186-100000@iolanthe.rowland.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC 0/9] osdfs
+Date: Mon, 03 Nov 2008 16:07:53 -0500
+Message-ID: <490F6829.3020104@garzik.org>
+References: <4909C41A.7000406@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57764 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754757AbYKCU4y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2008 15:56:54 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:53569 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755091AbYKCVIF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Nov 2008 16:08:05 -0500
+In-Reply-To: <4909C41A.7000406@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Avishay Traeger <avishay@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, LKML <linux-kernel@vger.kernel.org>
 
-This patch (as1144b) removes scsi_end_request().  The routine had only
-one caller, so it is moved inline and simplified.
+Boaz Harrosh wrote:
+> Please review an OSD based file system. 
+> 
+> Given that our OSD initiator library is accepted into Kernel, we would
+> like to also submit an osdfs. This is the first iteration of this file system.
+> 
+> The next stage is to make it exportable by the pNFS-over-objects Server.
+> osdfs is one of the building blocks for a full, end-to-end open source
+> reference implementation of a Server/Client pNFS-over-objects we
+> want to have available in Linux. Other parts are the Generic pNFS
+> client project with the objects-layout-driver, and the generic pNFS
+> server plus osdfs once it is adapted to be exportable.
+> (See all about pNFS in Linux at:
+> http://wiki.linux-nfs.org/wiki/index.php/PNFS_prototype_design)
+> 
+> osdfs was originally developed by Avishay Traeger <avishay@gmail.com>
+> from IBM. A very old version of it is hosted on sourceforge as the osdfs
+> project. It was originally developed for the 2.6.10 Kernel over the old
+> IBM's osd-initiator Linux driver.
+> 
+> Since then it was picked by us, open-osd, and was both forward ported to
+> current Kernel, as well as converted to run over our osd Kernel Library.
+> The conversion effort, if anyone is interested, is also available as a
+> patchset here:
+>   git-clone git://git-open-osd.org/open-osd.git osdfs-devel
+> or on the web at:
+>   http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=refs/heads/osdfs-devel
+> 
+> The Original code is based on ext2 code from the Kernel at the time.
+> Further reading is available at the last patch in the osdfs.txt file.
+> 
+> I have mechanically divided the code in parts, each introducing a
+> group of vfs function vectors, all tied at the end into a full filesystem.
+> Each patch can be compiled but it will only run at the very end.
+> This was done for the hope of easier reviewing.
+> 
+> Here is the list of patches
+> [RFC 1/9] osdfs: osd Swiss army knife
+> [RFC 2/9] osdfs: file and file_inode operations
+> [RFC 3/9] osdfs: symlink_inode and fast_symlink_inode operations
+> [RFC 4/9] osdfs: address_space_operations
+> [RFC 5/9] osdfs: dir_inode and directory operations
+> [RFC 6/9] osdfs: super_operations and file_system_type
+> [RFC 7/9] osdfs: mkosdfs
+> [RFC 8/9] osdfs: Documentation
 
-In addition, if no forward progress has been made then the patch
-decrements a request's retry counter before unpreparing and requeuing
-it, to avoid infinite retry loops.
+Pretty cool stuff.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+I've been wondering when we would start seeing OSD filesystems make 
+their appearance.
 
----
+Random, unordered comments:
 
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -680,69 +680,6 @@ void scsi_run_host_queues(struct Scsi_Ho
- 		scsi_run_queue(sdev->request_queue);
- }
- 
--/*
-- * Function:    scsi_end_request()
-- *
-- * Purpose:     Post-processing of completed commands (usually invoked at end
-- *		of upper level post-processing and scsi_io_completion).
-- *
-- * Arguments:   cmd	 - command that is complete.
-- *              error    - 0 if I/O indicates success, < 0 for I/O error.
-- *              bytes    - number of bytes of completed I/O
-- *		requeue  - indicates whether we should requeue leftovers.
-- *
-- * Lock status: Assumed that lock is not held upon entry.
-- *
-- * Returns:     cmd if requeue required, NULL otherwise.
-- *
-- * Notes:       This is called for block device requests in order to
-- *              mark some number of sectors as complete.
-- * 
-- *		We are guaranteeing that the request queue will be goosed
-- *		at some point during this call.
-- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
-- */
--static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
--					  int bytes, int requeue)
--{
--	struct request_queue *q = cmd->device->request_queue;
--	struct request *req = cmd->request;
--
--	/*
--	 * If there are blocks left over at the end, set up the command
--	 * to queue the remainder of them.
--	 */
--	if (blk_end_request(req, error, bytes)) {
--		int leftover = (req->hard_nr_sectors << 9);
--
--		if (blk_pc_request(req))
--			leftover = req->data_len;
--
--		/* kill remainder if no retrys */
--		if (error && scsi_noretry_cmd(cmd))
--			blk_end_request(req, error, leftover);
--		else {
--			if (requeue) {
--				/*
--				 * Bleah.  Leftovers again.  Stick the
--				 * leftovers in the front of the
--				 * queue, and goose the queue again.
--				 */
--				scsi_requeue_command(q, cmd);
--				cmd = NULL;
--			}
--			return cmd;
--		}
--	}
--
--	/*
--	 * This will goose the queue request function at the end, so we don't
--	 * need to worry about launching another command.
--	 */
--	scsi_next_command(cmd);
--	return NULL;
--}
--
- static inline unsigned int scsi_sgtable_index(unsigned short nents)
- {
- 	unsigned int index;
-@@ -898,7 +835,6 @@ static void scsi_end_bidi_request(struct
- void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- {
- 	int result = cmd->result;
--	int this_count;
- 	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
- 	int error = 0;
-@@ -949,22 +885,31 @@ void scsi_io_completion(struct scsi_cmnd
- 	SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, "
- 				      "%d bytes done.\n",
- 				      req->nr_sectors, good_bytes));
--
--	/* A number of bytes were successfully read.  If there
--	 * are leftovers and there is some kind of error
--	 * (result != 0), retry the rest.
--	 */
--	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
-+	if (blk_end_request(req, error, good_bytes) == 0) {
-+		/* This request is completely finished; start the next one */
-+		scsi_next_command(cmd);
- 		return;
--	this_count = blk_rq_bytes(req);
-+	}
-+
-+	/* The request isn't finished yet.  Figure out what to do next. */
- 	action = ACTION_FAIL;
-+	if (result == 0) {
-+		/* No error, so carry out the remainder of the request.
-+		 * Failure to make forward progress counts against the
-+		 * the number of retries.
-+		 */
-+		if (good_bytes > 0 || --req->retries >= 0)
-+			action = ACTION_REPREP;
-+	} else if (error && scsi_noretry_cmd(cmd)) {
-+		/* Retrys are disallowed, so kill the remainder. */
- 
--	if (host_byte(result) == DID_RESET) {
-+	} else if (host_byte(result) == DID_RESET) {
- 		/* Third party bus reset or reset for error recovery
- 		 * reasons.  Just retry the command and see what
- 		 * happens.
- 		 */
- 		action = ACTION_RETRY;
-+
- 	} else if (sense_valid && !sense_deferred) {
- 		switch (sshdr.sense_key) {
- 		case UNIT_ATTENTION:
+* This is important stuff.  Should have been posted to LKML.  Please CC 
+LKML in the future.
+
+* As discussed at the filesystem summit, OSD use implies a need for an 
+MD-like layer for OSD objects.  Has anyone even started the design work 
+for this?
+
+* I tend to think there is room for more than one OSD filesystem in the 
+Linux kernel.  Assuming all OSDs will use the same Linux filesystem 
+driver will lead to bloat, and you potentially "code yourself into a 
+corner."  Let's not rule out multiple filesystems.
+
+As such, "osdfs" seems like too-generic a name. How about boazfs?  :)
+
+* Get this into the kernel ASAP!  OSD stuff languishes outside the 
+kernel for _far_ too long.  OSD is a key storage technology that needs 
+to be developed in the full light of the Linux community, not off in a 
+dark corner somewhere, where few see progress or discussions.
+
+Object-based storage, and its SCSI incarnation OSD, is a MAJOR revision 
+of the block storage API, moving away from LBA-addressed linear APIs. 
+That's a big deal, and should be discussed on LKML, IMO...
+
+	Jeff
+
+
+
+
 
