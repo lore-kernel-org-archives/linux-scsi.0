@@ -1,145 +1,120 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 06/18] osd_uld: API for retrieving osd devices from Kernel
-Date: Tue,  4 Nov 2008 18:44:41 +0200
-Message-ID: <1225817081-6017-1-git-send-email-bharrosh@panasas.com>
-References: <491073BB.4000900@panasas.com>
+From: Arjan van de Ven <arjan@linux.intel.com>
+Subject: Oops/warning report for the week of November 4th, 2008
+Date: Tue, 04 Nov 2008 09:58:48 -0800
+Message-ID: <49108D58.1010908@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37576 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755522AbYKDQqG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:06 -0500
-In-Reply-To: <491073BB.4000900@panasas.com>
+Received: from mga12.intel.com ([143.182.124.36]:13963 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751639AbYKDR65 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 12:58:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.j>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: NetDev <netdev@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-scsi@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, tglx@tglx.de
 
-Kernel clients like osdfs can retrieve struct osd_dev(s)
-by means of below API.
+(Reports prior to 2.6.26 have been omitted in collecting the top 10)
 
-+ osduld_path_lookup() - given a path (e.g "/dev/osd0") locks and
-returns the corresponding struct osd_dev, which is then needed
-for subsequent libosd use.
+This week, a total of 3780 oopses and warnings have been reported,
+compared to 3157 reports in the previous week.
 
-+ osduld_put_device() - free up use of an osd_dev.
+Per file statistics
+277	drivers/net/r8169.c
+239	fs/jbd/journal.c
+190	drivers/parport/procfs.c
+189	drivers/net/sis900.c
+156	external/fireglx/binary (P)
+137	drivers/base/power/main.c
+124	kernel/timer.c
+115	net/sched/sch_generic.c
+90	include/linux/pagemap.h
+86	drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+80	kernel/power/main.c
+65	drivers/usb/serial/usb-serial.c
 
-Devices can be shared by multiple clients. The osd_uld_device's
-life time is governed by an embedded kref structure.
 
-The osd_uld_device holds an extra reference to both it's
-char-device and it's scsi_device, and will release these just
-before the final deallocation.
+Items with unmerged fix available
+---------------------------------
+Rank 2: journal_update_superblock (warning)
+	Reported 233 times (5565 total reports)
+	Fix is in the -mm tree but not yet in mainline
+	Likely caused by the user removing a USB stick while mounted
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24-rc6-git1.
+	More info: http://www.kerneloops.org/searchweek.php?search=journal_update_superblock
 
-There are three possible lock sources of the osd_uld_device
-1. First and for most is the probe() function called by
-  scsi-ml upon a successful login into a target. Released in release()
-  when logout.
-2. Second by user-mode file handles opened on the char-dev.
-3. Third is here by Kernel users.
-All three locks must be removed before the osd_uld_device is freed.
+Rank 14: ext3_commit_super (warning)
+	Reported 50 times (1425 total reports)
+	Fix is in the -mm tree but not yet in mainline
+	Likely caused by the user removing a USB stick while mounted
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24.
+	More info: http://www.kerneloops.org/searchweek.php?search=ext3_commit_super
 
-The MODULE has three lock sources as well:
-1. scsi-ml at probe() time, removed after release(). (login/logout)
-2. The user-mode file handles open/close.
-3. Import symbols by client modules like osdfs.
 
-TODO:
-  This API is not enough for the pNFS-objects LD. A more versatile
-  API will be needed. Proposed API could be:
-  struct osd_dev *osduld_sysid_lookup(const char id[OSD_SYSTEMID_LEN]);
+Unfixed items
+-------------
+Rank 1: dev_watchdog(r8169) (warning)
+	Reported 277 times (483 total reports)
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26.6.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(r8169)
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/osd/osd_uld.c   |   52 ++++++++++++++++++++++++++++++++++++++++++
- include/scsi/osd_initiator.h |    5 ++++
- 2 files changed, 57 insertions(+), 0 deletions(-)
+Rank 3: dev_watchdog(sis900) (warning)
+	Reported 189 times (987 total reports)
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26-rc4-git2.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(sis900)
 
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index 87b4540..0229301 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -42,6 +42,7 @@
-  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  */
- 
-+#include <linux/namei.h>
- #include <linux/cdev.h>
- #include <linux/fs.h>
- #include <linux/module.h>
-@@ -142,6 +143,57 @@ static const struct file_operations osd_fops = {
- 	.unlocked_ioctl = osd_uld_ioctl,
- };
- 
-+struct osd_dev *osduld_path_lookup(const char *path)
-+{
-+	struct nameidata nd;
-+	struct inode *inode;
-+	struct cdev *cdev;
-+	struct osd_uld_device *oud;
-+	int error;
-+
-+	if (!path || !*path)
-+		return ERR_PTR(-EINVAL);
-+
-+	error = path_lookup(path, LOOKUP_FOLLOW, &nd);
-+	if (error)
-+		return ERR_PTR(error);
-+
-+	inode = nd.path.dentry->d_inode;
-+	error = -EINVAL; /* Not the right device e.g osd_uld_device */
-+	if (!S_ISCHR(inode->i_mode))
-+		goto out;
-+
-+	cdev = inode->i_cdev;
-+	if (!cdev)
-+		goto out;
-+
-+	/* The Magic wand. Is it our char-dev */
-+	/* TODO: Support sg devices */
-+	if (cdev->owner != THIS_MODULE)
-+		goto out;
-+
-+	oud = container_of(cdev, struct osd_uld_device, cdev);
-+
-+	__uld_get(oud);
-+	error = 0;
-+
-+out:
-+	path_put(&nd.path);
-+	return error ? ERR_PTR(error) : &oud->od;
-+}
-+EXPORT_SYMBOL(osduld_path_lookup);
-+
-+void osduld_put_device(struct osd_dev *od)
-+{
-+	if (od) {
-+		struct osd_uld_device *oud = container_of(od,
-+						struct osd_uld_device, od);
-+
-+		__uld_put(oud);
-+	}
-+}
-+EXPORT_SYMBOL(osduld_put_device);
-+
- /*
-  * Scsi Device operations
-  */
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-index 24a70b7..0004df1 100644
---- a/include/scsi/osd_initiator.h
-+++ b/include/scsi/osd_initiator.h
-@@ -33,6 +33,11 @@ struct osd_dev {
- 	unsigned def_timeout;
- };
- 
-+/* Retrieve/return osd_dev(s) for use by Kernel clients */
-+struct osd_dev *osduld_path_lookup(const char *dev_name); /*Use IS_ERR/ERR_PTR*/
-+void osduld_put_device(struct osd_dev *od);
-+
-+/* These are called by uld at probe time */
- void osd_dev_init(struct osd_dev *, struct scsi_device *scsi_dev);
- void osd_dev_fini(struct osd_dev *);
- 
--- 
-1.6.0.1
+	Rank 5: kas_GetExecutionLevel (warning)
+	Reported 140 times (331 total reports)
+	[external] Bug in the proprietary fireglx driver
+	warning only shows up in tainted kernels
+	This warning was last seen in version 2.6.27, and first seen in 2.6.26.
+	More info: http://www.kerneloops.org/searchweek.php?search=kas_GetExecutionLevel
+
+Rank 6: run_timer_softirq (oops)
+	Reported 117 times (669 total reports)
+	softlockup
+	This oops was last seen in version 2.6.27.4, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=run_timer_softirq
+
+Rank 10: rs_get_rate (warning)
+	Reported 85 times (695 total reports)
+	Bug in the Intel IWL wireless drivers
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.25-rc2-git5.
+	More info: http://www.kerneloops.org/searchweek.php?search=rs_get_rate
+
+Rank 11: suspend_test_finish (warning)
+	Reported 80 times (321 total reports)
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.27-rc0-git14.
+	More info: http://www.kerneloops.org/searchweek.php?search=suspend_test_finish
+
+Rank 12: dev_watchdog(cdc_ether) (warning)
+	Reported 59 times (78 total reports)
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26.6.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(cdc_ether)
+
+Rank 13: ___free_dma_mem_cluster (warning)
+	Reported 55 times (242 total reports)
+	[known issue] bug in the sym53c8xx_2 scsi driver; harmless on x86
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24-rc8-git5.
+	More info: http://www.kerneloops.org/searchweek.php?search=___free_dma_mem_cluster
+
+
+Fixed items
+-----------
+Rank 8: device_pm_add (warning)
+	Reported 103 times (683 total reports)
+	This warning was last seen in version 2.6.27-rc4, and first seen in 2.6.26-rc5.
+	"Fixed" by removing the warning to hide the bug.
+	More info: http://www.kerneloops.org/searchweek.php?search=device_pm_add
+
+Rank 9: lock_page (warning)
+	Reported 90 times (362 total reports)
+	The hwclock program causes the kernel to fault due to disabling irqs in userspace
+	Fixed in 2.6.28-rc, should probably be backported to -stable
+	This warning was last seen in version 2.6.27.4, and first seen in 2.6.27-rc1-git2.
+	More info: http://www.kerneloops.org/searchweek.php?search=lock_page
+
+
+
 
