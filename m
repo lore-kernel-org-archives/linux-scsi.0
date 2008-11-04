@@ -1,172 +1,605 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 10/18] osd_ktests: Test Attribute lists
-Date: Tue,  4 Nov 2008 18:44:48 +0200
-Message-ID: <1225817088-6109-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 04/18] libosd: OSDv1 preliminary implementation
+Date: Tue,  4 Nov 2008 18:44:29 +0200
+Message-ID: <1225817069-5969-1-git-send-email-bharrosh__44505.2734380171$1225817405$gmane$org@panasas.com>
 References: <491073BB.4000900@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37587 "EHLO
+Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37555 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755691AbYKDQqP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:15 -0500
+	with ESMTP id S1750860AbYKDQqC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:02 -0500
 In-Reply-To: <491073BB.4000900@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.j>
 Cc: linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
 
-Add tests for setting/getting Attribute lists. All combinations
-of read/write with set/get attributes are tested.
-(6 possibilities), So all but data integrity request structure
-layouts are attempted.
+Implementation of the most basic OSD functionality and
+infrastructure. Mainly Format, Create/Remove Partition,
+Create/Remove Object, and read/write.
 
-This test passes against the IBM-OSD-SIM OSDv1 target.
+- Add Makefile and Kbuild to compile libosd.ko
+- osd_initiator.c Implementation file for osd_initiator.h
+  and osd_sec.h APIs
+- osd_debug.h - Some kprintf macro definitions
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Reviewed-by: Benny Halevy <bhalevy@panasas.com>
 ---
- drivers/scsi/osd/osd_ktests.c |  110 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 110 insertions(+), 0 deletions(-)
+ drivers/scsi/osd/Kbuild          |   26 +++
+ drivers/scsi/osd/Makefile        |   37 +++
+ drivers/scsi/osd/osd_debug.h     |   27 +++
+ drivers/scsi/osd/osd_initiator.c |  450 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 540 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/osd/Kbuild
+ create mode 100755 drivers/scsi/osd/Makefile
+ create mode 100644 drivers/scsi/osd/osd_debug.h
+ create mode 100644 drivers/scsi/osd/osd_initiator.c
 
-diff --git a/drivers/scsi/osd/osd_ktests.c b/drivers/scsi/osd/osd_ktests.c
-index f620915..f0a791f 100644
---- a/drivers/scsi/osd/osd_ktests.c
-+++ b/drivers/scsi/osd/osd_ktests.c
-@@ -43,6 +43,7 @@
- 
- #include <scsi/osd_initiator.h>
- #include <scsi/osd_sec.h>
-+#include <scsi/osd_attributes.h>
- 
- #include "osd_ktests.h"
- #include "osd_debug.h"
-@@ -260,6 +261,91 @@ int ktest_remove_par(struct osd_dev *osd_dev)
- 	return 0;
- }
- 
-+int ktest_write_read_attr(struct osd_dev *osd_dev, void *buff,
-+	bool doread, bool doset, bool doget)
+diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
+new file mode 100644
+index 0000000..b4678e0
+--- /dev/null
++++ b/drivers/scsi/osd/Kbuild
+@@ -0,0 +1,26 @@
++#
++# Kbuild for the OSD modules
++#
++# Copyright (C) 2008 Panasas Inc.  All rights reserved.
++#
++# Authors:
++#   Boaz Harrosh <bharrosh@panasas.com>
++#   Benny Halevy <bhalevy@panasas.com>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License version 2
++#
++
++ifneq ($(OSD_INC),)
++# we are built out-of-tree Kconfigure everything as on
++
++CONFIG_SCSI_OSD_INITIATOR=m
++EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_INITIATOR -DCONFIG_SCSI_OSD_INITIATOR_MODULE
++
++EXTRA_CFLAGS += -I$(OSD_INC)
++# EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_DEBUG
++
++endif
++
++libosd-objs := osd_initiator.o
++obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
+diff --git a/drivers/scsi/osd/Makefile b/drivers/scsi/osd/Makefile
+new file mode 100755
+index 0000000..d905344
+--- /dev/null
++++ b/drivers/scsi/osd/Makefile
+@@ -0,0 +1,37 @@
++#
++# Makefile for the OSD modules (out of tree)
++#
++# Copyright (C) 2008 Panasas Inc.  All rights reserved.
++#
++# Authors:
++#   Boaz Harrosh <bharrosh@panasas.com>
++#   Benny Halevy <bhalevy@panasas.com>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License version 2
++#
++# This Makefile is used to call the kernel Makefile in case of an out-of-tree
++# build.
++# $KSRC should point to a Kernel source tree otherwise host's default is
++# used. (eg. /lib/modules/`uname -r`/build)
++
++# include path for out-of-tree Headers
++OSD_INC ?= `pwd`/../../../include
++
++# allow users to override these
++# e.g. to compile for a kernel that you aren't currently running
++KSRC ?= /lib/modules/$(shell uname -r)/build
++KBUILD_OUTPUT ?=
++ARCH ?=
++V ?= 0
++
++# this is the basic Kbuild out-of-tree invocation, with the M= option
++KBUILD_BASE = +$(MAKE) -C $(KSRC) M=`pwd` KBUILD_OUTPUT=$(KBUILD_OUTPUT) ARCH=$(ARCH) V=$(V)
++
++all: libosd
++
++libosd: ;
++	$(KBUILD_BASE) OSD_INC=$(OSD_INC) modules
++
++clean:
++	$(KBUILD_BASE) clean
+diff --git a/drivers/scsi/osd/osd_debug.h b/drivers/scsi/osd/osd_debug.h
+new file mode 100644
+index 0000000..0bc65fa
+--- /dev/null
++++ b/drivers/scsi/osd/osd_debug.h
+@@ -0,0 +1,27 @@
++/*
++ * osd_debug.h - Some kprintf macros
++ *
++ * Copyright (C) 2008 Panasas Inc.  All rights reserved.
++ *
++ * Authors:
++ *   Boaz Harrosh <bharrosh@panasas.com>
++ *   Benny Halevy <bhalevy@panasas.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ *
++ */
++#ifndef __OSD_DEBUG_H__
++#define __OSD_DEBUG_H__
++
++#define OSD_ERR(fmt, a...) printk(KERN_ERR "osd: " fmt, ##a)
++#define OSD_INFO(fmt, a...) printk(KERN_NOTICE "osd: " fmt, ##a)
++
++#ifdef CONFIG_SCSI_OSD_DEBUG
++#define OSD_DEBUG(fmt, a...) \
++	printk(KERN_NOTICE "osd @%s:%d: " fmt, __func__, __LINE__, ##a)
++#else
++#define OSD_DEBUG(fmt, a...) do {} while (0)
++#endif
++
++#endif /* ndef __OSD_DEBUG_H__ */
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+new file mode 100644
+index 0000000..33450b8
+--- /dev/null
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -0,0 +1,450 @@
++/*
++ * osd_initiator - Main body of the osd initiator library.
++ *
++ * Note: The file does not contain the advanced security functionality which
++ * is only needed by the security_manager's initiators.
++ *
++ * Copyright (C) 2008 Panasas Inc.  All rights reserved.
++ *
++ * Authors:
++ *   Boaz Harrosh <bharrosh@panasas.com>
++ *   Benny Halevy <bhalevy@panasas.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the Panasas company nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
++ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
++ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <scsi/osd_initiator.h>
++#include <scsi/osd_sec.h>
++#include <scsi/scsi_device.h>
++
++#include "osd_debug.h"
++
++enum { OSD_REQ_RETRIES = 1 };
++
++#ifdef CONFIG_SCSI_OSD_INITIATOR_MODULE
++MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
++MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
++MODULE_LICENSE("GPL");
++#endif
++
++static inline void build_test(void)
 +{
-+	struct request_queue *req_q = osd_dev->scsi_dev->request_queue;
++	/* structures were not packed */
++	BUILD_BUG_ON(sizeof(struct osd_capability) != OSD_CAP_LEN);
++	BUILD_BUG_ON(sizeof(struct osdv1_cdb) != OSDv1_TOTAL_CDB_LEN);
++}
++
++static unsigned _osd_req_cdb_len(struct osd_request *or)
++{
++	return OSDv1_TOTAL_CDB_LEN;
++}
++
++void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_dev)
++{
++	memset(osdd, 0, sizeof(*osdd));
++	osdd->scsi_dev = scsi_dev;
++	osdd->def_timeout = BLK_DEFAULT_SG_TIMEOUT;
++	/* TODO: Allocate pools for osd_request attributes ... */
++}
++EXPORT_SYMBOL(osd_dev_init);
++
++void osd_dev_fini(struct osd_dev *osdd)
++{
++	/* TODO: De-allocate pools */
++
++	osdd->scsi_dev = NULL;
++}
++EXPORT_SYMBOL(osd_dev_fini);
++
++struct osd_request *_osd_request_alloc(gfp_t gfp)
++{
 +	struct osd_request *or;
-+	char g_caps[OSD_CAP_LEN];
-+	int ret;
++
++	/* TODO: Use mempool with one saved request */
++	or = kzalloc(sizeof(*or), gfp);
++	return or;
++}
++
++void _osd_request_free(struct osd_request *or)
++{
++	kfree(or);
++}
++
++struct osd_request *osd_start_request(struct osd_dev *dev, gfp_t gfp)
++{
++	struct osd_request *or;
++
++	or = _osd_request_alloc(gfp);
++	if (!or)
++		return NULL;
++
++	or->osd_dev = dev;
++	or->alloc_flags = gfp;
++	or->timeout = dev->def_timeout;
++	or->retries = OSD_REQ_RETRIES;
++
++	return or;
++}
++EXPORT_SYMBOL(osd_start_request);
++
++/*
++ * If osd_finalize_request() was called but the request was not executed through
++ * the block layer, then we must release BIOs.
++ */
++static void _abort_unexecuted_bios(struct request *rq)
++{
 +	struct bio *bio;
-+	char *domsg;
-+	/* set attrs */
-+	static char name[] = "ktest_write_read_attr";
-+	__be64 max_len = cpu_to_be64(0x80000000L);
-+	struct osd_obj_id obj = {
-+		.partition = first_par_id,
-+		.id = first_obj_id,
-+	};
-+	struct osd_attr set_attrs[] = {
-+		ATTR_SET(OSD_APAGE_OBJECT_QUOTAS, OSD_ATTR_OQ_MAXIMUM_LENGTH,
-+			sizeof(max_len), &max_len),
-+		ATTR_SET(OSD_APAGE_OBJECT_INFORMATION, OSD_ATTR_OI_USERNAME,
-+			sizeof(name), name),
-+	};
-+	struct osd_attr get_attrs[] = {
-+		ATTR_DEF(OSD_APAGE_OBJECT_INFORMATION,
-+			OSD_ATTR_OI_USED_CAPACITY, sizeof(__be64)),
-+		ATTR_DEF(OSD_APAGE_OBJECT_INFORMATION,
-+			OSD_ATTR_OI_LOGICAL_LENGTH, sizeof(__be64)),
-+	};
 +
-+	KTEST_START_REQ(osd_dev, or);
-+	bio = bio_map_kern(req_q, buff, BUFF_SIZE, GFP_KERNEL);
-+	if (!bio) {
-+		OSD_ERR("!!! Failed to allocate BIO\n");
-+		return -ENOMEM;
++	while ((bio = rq->bio) != NULL) {
++		rq->bio = bio->bi_next;
++		bio_endio(bio, 0);
 +	}
++}
 +
-+	if (doread) {
-+		osd_req_read(or, &obj, bio, 0);
-+		domsg = "Read-with-attr";
-+	} else {
-+		osd_req_write(or, &obj, bio, 0);
-+		domsg = "Write-with-attr";
++void osd_end_request(struct osd_request *or)
++{
++	struct request *rq = or->request;
++
++	if (rq) {
++		if (rq->next_rq) {
++			_abort_unexecuted_bios(rq->next_rq);
++			blk_put_request(rq->next_rq);
++		}
++
++		_abort_unexecuted_bios(rq);
++		blk_put_request(rq);
 +	}
++	_osd_request_free(or);
++}
++EXPORT_SYMBOL(osd_end_request);
 +
-+	if (doset)
-+		osd_req_add_set_attr_list(or, set_attrs, 2);
-+	if (doget)
-+		osd_req_add_get_attr_list(or, get_attrs, 2);
++int osd_execute_request(struct osd_request *or)
++{
++	return blk_execute_rq(or->request->q, NULL, or->request, 0);
++}
++EXPORT_SYMBOL(osd_execute_request);
 +
-+/*	KTEST_EXEC_END(or, &obj, "");*/
-+	ret = test_exec(or, g_caps, &obj);
-+	if (!ret && doget) {
-+		void *iter = NULL, *pFirst, *pSec;
-+		int nelem = 2;
-+		u64 capacity_len = ~0;
-+		u64 logical_len = ~0;
++static void osd_request_async_done(struct request *req, int error)
++{
++	struct osd_request *or = req->end_io_data;
 +
-+		osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
++	or->async_error = error;
 +
-+		/*FIXME: Std does not guaranty order of return attrs */
-+		pFirst = get_attrs[0].val_ptr;
-+		if (pFirst)
-+			capacity_len = get_unaligned_be64(pFirst);
-+		else
-+			OSD_ERR("failed to read capacity_used\n");
-+		pSec = get_attrs[1].val_ptr;
-+		if (pSec)
-+			logical_len = get_unaligned_be64(pSec);
-+		else
-+			OSD_ERR("failed to read logical_length\n");
-+		OSD_INFO("%s capacity=%llu len=%llu\n",
-+			domsg, capacity_len, logical_len);
-+	}
++	if (error)
++		OSD_DEBUG("osd_request_async_done error recieved %d\n", error);
 +
-+	osd_end_request(or);
++	if (or->async_done)
++		or->async_done(or, or->async_private);
++	else
++		osd_end_request(or);
++}
++
++int osd_execute_request_async(struct osd_request *or,
++	osd_req_done_fn *done, void *private)
++{
++	or->request->end_io_data = or;
++	or->async_private = private;
++	or->async_done = done;
++
++	blk_execute_rq_nowait(or->request->q, NULL, or->request, 0,
++			      osd_request_async_done);
++	return 0;
++}
++EXPORT_SYMBOL(osd_execute_request_async);
++
++/*
++ * Common to all OSD commands
++ */
++
++static void _osdv1_req_encode_common(struct osd_request *or,
++	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
++{
++	struct osdv1_cdb *ocdb = &or->cdb.v1;
++
++	/*
++	 * For speed, the commands
++	 *	OSD_ACT_PERFORM_SCSI_COMMAND	, V1 0x8F7E, V2 0x8F7C
++	 *	OSD_ACT_SCSI_TASK_MANAGEMENT	, V1 0x8F7F, V2 0x8F7D
++	 * are not supported here. Should pass zero and set after the call
++	 */
++	act &= __constant_cpu_to_be16(~0x0080); /* V1 action code */
++
++	OSD_DEBUG("OSDv1 execute opcode 0x%x\n", be16_to_cpu(act));
++
++	ocdb->h.varlen_cdb.opcode = VARIABLE_LENGTH_CMD;
++	ocdb->h.varlen_cdb.additional_cdb_length = OSD_ADDITIONAL_CDB_LENGTH;
++	ocdb->h.varlen_cdb.service_action = act;
++
++	ocdb->h.partition = cpu_to_be64(obj->partition);
++	ocdb->h.object = cpu_to_be64(obj->id);
++	ocdb->h.v1.length = cpu_to_be64(len);
++	ocdb->h.v1.start_address = cpu_to_be64(offset);
++}
++
++static void _osd_req_encode_common(struct osd_request *or,
++	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
++{
++	_osdv1_req_encode_common(or, act, obj, offset, len);
++}
++
++/*
++ * Device commands
++ */
++void osd_req_format(struct osd_request *or, u64 tot_capacity)
++{
++	_osd_req_encode_common(or, OSD_ACT_FORMAT_OSD, &osd_root_object, 0,
++				tot_capacity);
++}
++EXPORT_SYMBOL(osd_req_format);
++
++/*
++ * Partition commands
++ */
++static void _osd_req_encode_partition(struct osd_request *or,
++	__be16 act, osd_id partition)
++{
++	struct osd_obj_id par = {
++		.partition = partition,
++		.id = 0,
++	};
++
++	_osd_req_encode_common(or, act, &par, 0, 0);
++}
++
++void osd_req_create_partition(struct osd_request *or, osd_id partition)
++{
++	_osd_req_encode_partition(or, OSD_ACT_CREATE_PARTITION, partition);
++}
++EXPORT_SYMBOL(osd_req_create_partition);
++
++void osd_req_remove_partition(struct osd_request *or, osd_id partition)
++{
++	_osd_req_encode_partition(or, OSD_ACT_REMOVE_PARTITION, partition);
++}
++EXPORT_SYMBOL(osd_req_remove_partition);
++
++/*
++ * Object commands
++ */
++void osd_req_create_object(struct osd_request *or, struct osd_obj_id *obj)
++{
++	_osd_req_encode_common(or, OSD_ACT_CREATE, obj, 0, 0);
++}
++EXPORT_SYMBOL(osd_req_create_object);
++
++void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *obj)
++{
++	_osd_req_encode_common(or, OSD_ACT_REMOVE, obj, 0, 0);
++}
++EXPORT_SYMBOL(osd_req_remove_object);
++
++void osd_req_write(struct osd_request *or,
++	const struct osd_obj_id *obj, struct bio *bio, u64 offset)
++{
++	_osd_req_encode_common(or, OSD_ACT_WRITE, obj, offset, bio->bi_size);
++	WARN_ON(or->out.bio || or->out.total_bytes);
++	bio->bi_rw |= (1 << BIO_RW);
++	or->out.bio = bio;
++	or->out.total_bytes = bio->bi_size;
++}
++EXPORT_SYMBOL(osd_req_write);
++
++void osd_req_read(struct osd_request *or,
++	const struct osd_obj_id *obj, struct bio *bio, u64 offset)
++{
++	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, bio->bi_size);
++	WARN_ON(or->in.bio || or->in.total_bytes);
++	bio->bi_rw &= ~(1 << BIO_RW);
++	or->in.bio = bio;
++	or->in.total_bytes = bio->bi_size;
++}
++EXPORT_SYMBOL(osd_req_read);
++
++/*
++ * osd_finalize_request and helpers
++ */
++
++static int _init_blk_request(struct osd_request *or,
++	bool has_in, bool has_out)
++{
++	gfp_t flags = or->alloc_flags;
++	struct scsi_device *scsi_dev = or->osd_dev->scsi_dev;
++	struct request_queue *q = scsi_dev->request_queue;
++	struct request *req;
++	int ret = -ENOMEM;
++
++	req = blk_get_request(q, has_out, flags);
++	if (!req)
++		goto out;
++
++	or->request = req;
++	req->cmd_type = REQ_TYPE_BLOCK_PC;
++	req->timeout = or->timeout;
++	req->retries = or->retries;
++	req->sense = or->sense;
++	req->sense_len = 0;
++
++	if (has_out) {
++		or->out.req = req;
++		if (has_in) {
++			/* allocate bidi request */
++			req = blk_get_request(q, READ, flags);
++			if (!req) {
++				OSD_DEBUG("blk_get_request for bidi failed\n");
++				goto out;
++			}
++			req->cmd_type = REQ_TYPE_BLOCK_PC;
++			or->in.req = or->request->next_rq = req;
++		}
++	} else if (has_in)
++		or->in.req = req;
++
++	ret = 0;
++out:
++	OSD_DEBUG("or=%p has_in=%d has_out=%d => %d, %p\n",
++			or, has_in, has_out, ret, or->request);
++	return ret;
++}
++
++int osd_finalize_request(struct osd_request *or,
++	u8 options, const void *cap, const u8 *cap_key)
++{
++	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
++	bool has_in, has_out;
++	int ret;
++
++	if (options & OSD_REQ_FUA)
++		cdbh->options |= OSD_CDB_FUA;
++
++	if (options & OSD_REQ_DPO)
++		cdbh->options |= OSD_CDB_DPO;
++
++	if (options & OSD_REQ_BYPASS_TIMESTAMPS)
++		cdbh->timestamp_control = OSD_CDB_BYPASS_TIMESTAMPS;
++
++	osd_set_caps(&or->cdb, cap);
++
++	has_in = or->in.bio || or->get_attr.total_bytes;
++	has_out = or->out.bio || or->set_attr.total_bytes ||
++		or->enc_get_attr.total_bytes;
++
++	ret = _init_blk_request(or, has_in, has_out);
 +	if (ret) {
-+		OSD_ERR("!!! Error executing %s => %d doset=%d doget=%d\n",
-+			domsg, ret, doset, doget);
++		OSD_DEBUG("_init_blk_request failed\n");
 +		return ret;
 +	}
-+	OSD_DEBUG("%s\n", domsg);
++
++	if (or->out.bio) {
++		ret = blk_rq_append_bio(or->request->q, or->out.req,
++					or->out.bio);
++		if (ret) {
++			OSD_DEBUG("blk_rq_append_bio out failed\n");
++			return ret;
++		}
++		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
++			or->out.total_bytes, or->out.req->data_len);
++	}
++	if (or->in.bio) {
++		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
++		if (ret) {
++			OSD_DEBUG("blk_rq_append_bio in failed\n");
++			return ret;
++		}
++		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
++			or->in.total_bytes, or->in.req->data_len);
++	}
++
++	if (!or->attributes_mode)
++		or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
++	cdbh->command_specific_options |= or->attributes_mode;
++
++	or->request->cmd = or->cdb.buff;
++	or->request->cmd_len = _osd_req_cdb_len(or);
 +
 +	return 0;
 +}
++EXPORT_SYMBOL(osd_finalize_request);
 +
- int do_test_17(struct osd_dev *od)
- {
- 	void *write_buff = NULL;
-@@ -304,11 +390,35 @@ int do_test_17(struct osd_dev *od)
- /* List all objects */
- 
- /* Write with get_attr */
-+	ret = ktest_write_read_attr(od, write_buff, false, false, true);
-+	if (ret)
-+		goto dev_fini;
++/*
++ * Implementation of osd_sec.h API
++ * TODO: Move to a separate osd_sec.c file at a later stage.
++ */
 +
- /* Write with set_attr */
-+	ret = ktest_write_read_attr(od, write_buff, false, true, false);
-+	if (ret)
-+		goto dev_fini;
++enum { OSD_SEC_CAP_V1_ALL_CAPS =
++	OSD_SEC_CAP_APPEND | OSD_SEC_CAP_OBJ_MGMT | OSD_SEC_CAP_REMOVE   |
++	OSD_SEC_CAP_CREATE | OSD_SEC_CAP_SET_ATTR | OSD_SEC_CAP_GET_ATTR |
++	OSD_SEC_CAP_WRITE  | OSD_SEC_CAP_READ     | OSD_SEC_CAP_POL_SEC  |
++	OSD_SEC_CAP_GLOBAL | OSD_SEC_CAP_DEV_MGMT
++};
 +
- /* Write with set_attr + get_attr */
-+	ret = ktest_write_read_attr(od, write_buff, false, true, true);
-+	if (ret)
-+		goto dev_fini;
++void osd_sec_init_nosec_doall_caps(void *caps,
++	const struct osd_obj_id *obj, bool is_collection, const bool is_v1)
++{
++	struct osd_capability *cap = caps;
++	u8 type;
++	u8 descriptor_type;
 +
- /* Read with set_attr */
-+	ret = ktest_write_read_attr(od, write_buff, true, true, false);
-+	if (ret)
-+		goto dev_fini;
++	if (likely(obj->id)) {
++		if (unlikely(is_collection)) {
++			type = OSD_SEC_OBJ_COLLECTION;
++			descriptor_type = is_v1 ? OSD_SEC_OBJ_DESC_OBJ :
++						  OSD_SEC_OBJ_DESC_COL;
++		} else {
++			type = OSD_SEC_OBJ_USER;
++			descriptor_type = OSD_SEC_OBJ_DESC_OBJ;
++		}
++		WARN_ON(!obj->partition);
++	} else {
++		type = obj->partition ? OSD_SEC_OBJ_PARTITION :
++					OSD_SEC_OBJ_ROOT;
++		descriptor_type = OSD_SEC_OBJ_DESC_PAR;
++	}
 +
- /* Read with get_attr */
-+	ret = ktest_write_read_attr(od, write_buff, true, false, true);
-+	if (ret)
-+		goto dev_fini;
++	memset(cap, 0, sizeof(*cap));
 +
- /* Read with get_attr + set_attr */
-+	ret = ktest_write_read_attr(od, write_buff, true, true, true);
-+	if (ret)
-+		goto dev_fini;
++	cap->h.format = OSD_SEC_CAP_FORMAT_VER1;
++	cap->h.integrity_algorithm__key_version = 0; /* MAKE_BYTE(0, 0); */
++	cap->h.security_method = OSD_SEC_NOSEC;
++/*	cap->expiration_time;
++	cap->AUDIT[30-10];
++	cap->discriminator[42-30];
++	cap->object_created_time; */
++	cap->h.object_type = type;
++	osd_sec_set_caps(&cap->h, OSD_SEC_CAP_V1_ALL_CAPS);
++	cap->h.object_descriptor_type = descriptor_type;
++	cap->od.obj_desc.policy_access_tag = 0;
++	cap->od.obj_desc.allowed_partition_id = cpu_to_be64(obj->partition);
++	cap->od.obj_desc.allowed_object_id = cpu_to_be64(obj->id);
++}
++EXPORT_SYMBOL(osd_sec_init_nosec_doall_caps);
 +
- /* remove objects */
- 	ret = ktest_remove_obj(od);
- 	if (ret)
++void osd_set_caps(struct osd_cdb *cdb, const void *caps)
++{
++	memcpy(&cdb->v1.caps, caps, OSDv1_CAP_LEN);
++}
 -- 
 1.6.0.1
 
