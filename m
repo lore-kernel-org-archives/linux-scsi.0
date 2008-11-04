@@ -1,232 +1,145 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 16/18] osd: Documentation for OSD library
-Date: Tue,  4 Nov 2008 18:44:53 +0200
-Message-ID: <1225817093-6247-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 06/18] osd_uld: API for retrieving osd devices from Kernel
+Date: Tue,  4 Nov 2008 18:44:41 +0200
+Message-ID: <1225817081-6017-1-git-send-email-bharrosh@panasas.com>
 References: <491073BB.4000900@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37583 "EHLO
+Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37576 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755414AbYKDQqJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:09 -0500
+	with ESMTP id S1755522AbYKDQqG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:06 -0500
 In-Reply-To: <491073BB.4000900@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.j>
 Cc: linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
 
-Add osd.txt to Documentation/scsi/
+Kernel clients like osdfs can retrieve struct osd_dev(s)
+by means of below API.
+
++ osduld_path_lookup() - given a path (e.g "/dev/osd0") locks and
+returns the corresponding struct osd_dev, which is then needed
+for subsequent libosd use.
+
++ osduld_put_device() - free up use of an osd_dev.
+
+Devices can be shared by multiple clients. The osd_uld_device's
+life time is governed by an embedded kref structure.
+
+The osd_uld_device holds an extra reference to both it's
+char-device and it's scsi_device, and will release these just
+before the final deallocation.
+
+There are three possible lock sources of the osd_uld_device
+1. First and for most is the probe() function called by
+  scsi-ml upon a successful login into a target. Released in release()
+  when logout.
+2. Second by user-mode file handles opened on the char-dev.
+3. Third is here by Kernel users.
+All three locks must be removed before the osd_uld_device is freed.
+
+The MODULE has three lock sources as well:
+1. scsi-ml at probe() time, removed after release(). (login/logout)
+2. The user-mode file handles open/close.
+3. Import symbols by client modules like osdfs.
+
+TODO:
+  This API is not enough for the pNFS-objects LD. A more versatile
+  API will be needed. Proposed API could be:
+  struct osd_dev *osduld_sysid_lookup(const char id[OSD_SYSTEMID_LEN]);
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Reviewed-by: Benny Halevy <bhalevy@panasas.com>
 ---
- Documentation/scsi/osd.txt |  198 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 198 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/scsi/osd.txt
+ drivers/scsi/osd/osd_uld.c   |   52 ++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/osd_initiator.h |    5 ++++
+ 2 files changed, 57 insertions(+), 0 deletions(-)
 
-diff --git a/Documentation/scsi/osd.txt b/Documentation/scsi/osd.txt
-new file mode 100644
-index 0000000..a6735ae
---- /dev/null
-+++ b/Documentation/scsi/osd.txt
-@@ -0,0 +1,198 @@
-+The OSD Standard
-+================
-+OSD (Object-Based Storage Device) is a T10 SCSI command set that is designed
-+to provide efficient operation of input/output logical units that manage the
-+allocation, placement, and accessing of variable-size data-storage containers,
-+called objects. Objects are intended to contain operating system and application
-+constructs. Each object has associated attributes attached to it, which are
-+integral part of the object and provide metadata about the object. The standard
-+defines some common obligatory attributes, but user attributes can be added as
-+needed.
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 87b4540..0229301 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -42,6 +42,7 @@
+  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include <linux/namei.h>
+ #include <linux/cdev.h>
+ #include <linux/fs.h>
+ #include <linux/module.h>
+@@ -142,6 +143,57 @@ static const struct file_operations osd_fops = {
+ 	.unlocked_ioctl = osd_uld_ioctl,
+ };
+ 
++struct osd_dev *osduld_path_lookup(const char *path)
++{
++	struct nameidata nd;
++	struct inode *inode;
++	struct cdev *cdev;
++	struct osd_uld_device *oud;
++	int error;
 +
-+See: http://www.t10.org/ftp/t10/drafts/osd2/ for the latest draft for OSD 2
-+or search the web for "OSD SCSI"
++	if (!path || !*path)
++		return ERR_PTR(-EINVAL);
 +
-+OSD in the Linux Kernel
-+=======================
-+osd-initiator:
-+  The main component of OSD in Kernel is the osd-initiator library. Its main
-+user is intended to be the pNFS-over-objects layout driver, which uses objects
-+as its back-end data storage. Other clients are the other osd parts listed below.
++	error = path_lookup(path, LOOKUP_FOLLOW, &nd);
++	if (error)
++		return ERR_PTR(error);
 +
-+osd-uld:
-+  This is a SCSI ULD that registers for OSD type devices and provides a testing
-+platform, both for the in-kernel initiator as well as connected targets. It
-+currently has no useful user-mode API, though it could have if need be.
++	inode = nd.path.dentry->d_inode;
++	error = -EINVAL; /* Not the right device e.g osd_uld_device */
++	if (!S_ISCHR(inode->i_mode))
++		goto out;
 +
-+osdfs:
-+  Is an OSD based Linux file system. It uses the osd-initiator and osd-uld,
-+to export a usable file system for users.
-+See Documentation/filesystems/osdfs.txt for more details
++	cdev = inode->i_cdev;
++	if (!cdev)
++		goto out;
 +
-+osd target:
-+  There are no current plans for an OSD target implementation in kernel. For all
-+needs, a user-mode target that is based on the scsi tgt target framework is
-+available from Ohio Supercomputer Center (OSC) at:
-+http://www.open-osd.org/bin/view/Main/OscOsdProject
-+There are several other target implementations. See http://open-osd.org for more
-+links.
++	/* The Magic wand. Is it our char-dev */
++	/* TODO: Support sg devices */
++	if (cdev->owner != THIS_MODULE)
++		goto out;
 +
-+Files and Folders
-+=================
-+This is the complete list of files included in this work:
-+include/scsi/
-+	osd_initiator.h   Main API for the initiator library
-+	osd_types.h	  Common OSD types
-+	osd_sec.h	  Security Manager API
-+	osd_protocol.h	  Wire definitions of the OSD standard protocol
-+	osd_attributes.h  Wire definitions of OSD attributes
++	oud = container_of(cdev, struct osd_uld_device, cdev);
 +
-+drivers/scsi/osd/
-+	osd_initiator.c   OSD-Initiator library implementation
-+	osd_uld.c	  The OSD scsi ULD
-+	osd_ktest.{h,c}	  In-kernel test suite (called by osd_uld)
-+	osd_debug.h	  Some printk macros
-+	Makefile	  For both in-tree and out-of-tree compilation
-+	Kconfig		  Enables inclusion of the different pieces
-+	osd_test.c	  User-mode application to call the kernel tests
++	__uld_get(oud);
++	error = 0;
 +
-+The OSD-Initiator Library
-+=========================
-+osd_initiator is a low level implementation of an osd initiator encoder.
-+But even though, it should be intuitive and easy to use. Perhaps over time an
-+higher lever will form that automates some of the more common recipes.
++out:
++	path_put(&nd.path);
++	return error ? ERR_PTR(error) : &oud->od;
++}
++EXPORT_SYMBOL(osduld_path_lookup);
 +
-+init/fini:
-+- osd_dev_init() associates a scsi_device with an osd_dev structure
-+  and initializes some global pools. This should be done once per scsi_device
-+  (OSD LUN). The osd_dev structure is needed for calling osd_start_request().
++void osduld_put_device(struct osd_dev *od)
++{
++	if (od) {
++		struct osd_uld_device *oud = container_of(od,
++						struct osd_uld_device, od);
 +
-+- osd_dev_fini() cleans up before a osd_dev/scsi_device destruction.
++		__uld_put(oud);
++	}
++}
++EXPORT_SYMBOL(osduld_put_device);
 +
-+OSD commands encoding, execution, and decoding of results:
+ /*
+  * Scsi Device operations
+  */
+diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
+index 24a70b7..0004df1 100644
+--- a/include/scsi/osd_initiator.h
++++ b/include/scsi/osd_initiator.h
+@@ -33,6 +33,11 @@ struct osd_dev {
+ 	unsigned def_timeout;
+ };
+ 
++/* Retrieve/return osd_dev(s) for use by Kernel clients */
++struct osd_dev *osduld_path_lookup(const char *dev_name); /*Use IS_ERR/ERR_PTR*/
++void osduld_put_device(struct osd_dev *od);
 +
-+struct osd_request's is used to iteratively encode an OSD command and carry
-+its state throughout execution. Each request goes through these stages:
-+
-+a. osd_start_request() allocates the request.
-+
-+b. Any of the osd_req_* methods is used to encode a request of the specified
-+   type.
-+
-+c. osd_req_add_{get,set}_attr_* may be called to add get/set attributes to the
-+   CDB. "List" or "Page" mode can be used exclusively. The attribute-list API
-+   can be called multiple times on the same request. However, only one
-+   attribute-page can be read, as mandated by the OSD standard.
-+
-+d. osd_finalize_request() computes offsets into the data-in and data-out buffers
-+   and signs the request using the provided capability key and integrity-
-+   check parameters.
-+
-+e. osd_execute_request() may be called to execute the request via the block
-+   layer and wait for its completion.  The request can be executed
-+   asynchronously by calling the block layer API directly.
-+
-+f. After execution, osd_req_decode_sense() can be called to decode the request's
-+   sense information.
-+
-+g. osd_req_decode_get_attr() may be called to retrieve osd_add_get_attr_list()
-+   values.
-+
-+h. osd_end_request() must be called to deallocate the request and any resource
-+   associated with it. Note that osd_end_request cleans up the request at any
-+   stage and it must always be called after a successful osd_start_request().
-+
-+osd_request's structure:
-+
-+The OSD standard defines a complex structure of IO segments pointed to by
-+members in the CDB. Up to 3 segments can be deployed in the IN-Buffer and up to
-+4 in the OUT-Buffer. The ASCII illustration below depicts a secure-read with
-+associated get+set of attributes-lists. Other combinations very on the same
-+basic theme. From no-segments-used up to all-segments-used.
-+
-+|________OSD-CDB__________|
-+|                         |
-+|read_len (offset=0)     -|---------\
-+|                         |         |
-+|get_attrs_list_length    |         |
-+|get_attrs_list_offset   -|----\    |
-+|                         |    |    |
-+|retrieved_attrs_alloc_len|    |    |
-+|retrieved_attrs_offset  -|----|----|-\
-+|                         |    |    | |
-+|set_attrs_list_length    |    |    | |
-+|set_attrs_list_offset   -|-\  |    | |
-+|                         | |  |    | |
-+|in_data_integ_offset    -|-|--|----|-|-\
-+|out_data_integ_offset   -|-|--|--\ | | |
-+\_________________________/ |  |  | | | |
-+                            |  |  | | | |
-+|_______OUT-BUFFER________| |  |  | | | |
-+|      Set attr list      |</  |  | | | |
-+|                         |    |  | | | |
-+|-------------------------|    |  | | | |
-+|   Get attr descriptors  |<---/  | | | |
-+|                         |       | | | |
-+|-------------------------|       | | | |
-+|    Out-data integrity   |<------/ | | |
-+|                         |         | | |
-+\_________________________/         | | |
-+                                    | | |
-+|________IN-BUFFER________|         | | |
-+|      In-Data read       |<--------/ | |
-+|                         |           | |
-+|-------------------------|           | |
-+|      Get attr list      |<----------/ |
-+|                         |             |
-+|-------------------------|             |
-+|    In-data integrity    |<------------/
-+|                         |
-+\_________________________/
-+
-+A block device request can carry bidirectional payload by means of associating
-+a bidi_read request with a main write-request. Each in/out request is described
-+by a chain of BIOs associated with each request.
-+The CDB is of a SCSI VARLEN CDB format, as described by OSD standard.
-+The OSD standard also mandates alignment restrictions at start of each segment.
-+
-+In the code, in struct osd_request, there are two _osd_io_info structures to
-+describe the IN/OUT buffers above, two BIOs for the data payload and up to five
-+_osd_req_data_segment structures to hold the different segments allocation and
-+information.
-+
-+Important: We have chosen to disregard the assumption that a BIO-chain (and
-+the resulting sg-list) describes a linear memory buffer. Meaning only first and
-+last scatter chain can be incomplete and all the middle chains are of PAGE_SIZE.
-+For us, a scatter-gather-list, as its name implies and as used by the Networking
-+layer, is to describe a vector of buffers that will be transferred to/from the
-+wire. It works very well with current iSCSI transport. iSCSI is currently the
-+only deployed OSD transport. In the future we anticipate SAS and FC attached OSD
-+devices as well.
-+
-+The OSD Testing ULD
-+===================
-+TODO: More user-mode control on tests.
-+
-+Authors, Mailing list
-+=====================
-+Please communicate with us on any deployment of osd, whether using this code
-+or not.
-+
-+Any problems, questions, bug reports, lonely OSD nights, please email:
-+   OSD Dev List <osd-dev@open-osd.org>
-+
-+More up-to-date information can be found on:
-+http://open-osd.org
-+
-+Boaz Harrosh <bharrosh@panasas.com>
-+Benny Halevy <bhalevy@panasas.com>
-+
-+References
-+==========
-+Weber, R., "SCSI Object-Based Storage Device Commands",
-+T10/1355-D ANSI/INCITS 400-2004,
-+http://www.t10.org/ftp/t10/drafts/osd/osd-r10.pdf
-+
-+Weber, R., "SCSI Object-Based Storage Device Commands -2 (OSD-2)"
-+T10/1729-D, Working Draft, rev. 3
-+http://www.t10.org/ftp/t10/drafts/osd2/osd2r03.pdf
++/* These are called by uld at probe time */
+ void osd_dev_init(struct osd_dev *, struct scsi_device *scsi_dev);
+ void osd_dev_fini(struct osd_dev *);
+ 
 -- 
 1.6.0.1
 
