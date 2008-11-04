@@ -1,489 +1,214 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 05/18] osd_uld: OSD scsi ULD
-Date: Tue,  4 Nov 2008 18:44:39 +0200
-Message-ID: <1225817079-5992-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 15/18] libosd: OSDv2 auto detection
+Date: Tue,  4 Nov 2008 18:44:52 +0200
+Message-ID: <1225817092-6224-1-git-send-email-bharrosh@panasas.com>
 References: <491073BB.4000900@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37588 "EHLO
+Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37575 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198AbYKDQqO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:14 -0500
+	with ESMTP id S1755515AbYKDQqG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:46:06 -0500
 In-Reply-To: <491073BB.4000900@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.j>
 Cc: linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
 
-Add a Linux driver module that registers as a SCSI ULD and probes
-for OSD type SCSI devices.
+Auto detect an OSDv2 or OSDv1 target at run time. Note how none
+of the OSD API calls change. The tests do not know what device
+version it is.
 
-When an OSD-type SCSI device is found a character device is created
-in the form of /dev/osdX - where X goes from 0 up to hard coded 64.
-The Major character device number used is *260*, which is free
-(as of Linux v2.6.28-rc3).
-
-A single ioctl is currently supported that will invoke an in-kernel
-test on the specified OSD device (lun).
+This test now passes against both the IBM-OSD-SIM OSD1 target
+as well as OSC's OSD2 target.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Reviewed-by: Benny Halevy <bhalevy@panasas.com>
 ---
- drivers/scsi/osd/Kbuild       |    7 +
- drivers/scsi/osd/osd_ktests.h |   27 +++
- drivers/scsi/osd/osd_uld.c    |  388 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 422 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/osd/osd_ktests.h
- create mode 100644 drivers/scsi/osd/osd_uld.c
+ drivers/scsi/osd/osd_initiator.c |  125 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/osd/osd_uld.c       |    5 ++
+ include/scsi/osd_initiator.h     |    3 +
+ 3 files changed, 133 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
-index b4678e0..f39f82f 100644
---- a/drivers/scsi/osd/Kbuild
-+++ b/drivers/scsi/osd/Kbuild
-@@ -17,6 +17,9 @@ ifneq ($(OSD_INC),)
- CONFIG_SCSI_OSD_INITIATOR=m
- EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_INITIATOR -DCONFIG_SCSI_OSD_INITIATOR_MODULE
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index 9127fc4..8e59cdc 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -41,6 +41,7 @@
  
-+CONFIG_SCSI_OSD_ULD=m
-+EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_ULD -DCONFIG_SCSI_OSD_ULD_MODULE
-+
- EXTRA_CFLAGS += -I$(OSD_INC)
- # EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_DEBUG
+ #include <scsi/osd_initiator.h>
+ #include <scsi/osd_sec.h>
++#include <scsi/osd_attributes.h>
+ #include <scsi/scsi_device.h>
  
-@@ -24,3 +27,7 @@ endif
+ #include "osd_debug.h"
+@@ -61,6 +62,130 @@ static inline void build_test(void)
+ 	BUILD_BUG_ON(sizeof(struct osdv1_cdb) != OSDv1_TOTAL_CDB_LEN);
+ }
  
- libosd-objs := osd_initiator.o
- obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
-+
-+# osd.ko - SCSI ULD and char-device
-+osd-objs := osd_uld.o
-+obj-$(CONFIG_SCSI_OSD_ULD) += osd.o
-diff --git a/drivers/scsi/osd/osd_ktests.h b/drivers/scsi/osd/osd_ktests.h
-new file mode 100644
-index 0000000..a9e5e00
---- /dev/null
-+++ b/drivers/scsi/osd/osd_ktests.h
-@@ -0,0 +1,27 @@
-+/*
-+ * osd_ktests.h - Define the ktests.c API
-+ *
-+ * Copyright (C) 2008 Panasas Inc.  All rights reserved.
-+ *
-+ * Authors:
-+ *   Boaz Harrosh <bharrosh@panasas.com>
-+ *   Benny Halevy <bhalevy@panasas.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ *
-+ */
-+#ifndef __OSD_KTESTS_H__
-+#define __OSD_KTESTS_H__
-+
-+/* Tests from osd_ktests.c */
-+/* TODO: Only one simple test for now. Later I will add a test definition
-+ *	structure that will define what tests to preform and with some
-+ *	parametrization, so concurrent tests could be run on same OSD lun
-+ *	without stepping on each other. (E.g. Format called when other tests
-+ *	are in progress)
-+ */
-+
-+enum { OSD_TEST_ALL = 17 };
-+
-+#endif /*ndef __OSD_KTESTS_H__*/
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-new file mode 100644
-index 0000000..87b4540
---- /dev/null
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -0,0 +1,388 @@
-+/*
-+ * osd_uld.c - OSD Upper Layer Driver
-+ *
-+ * A Linux driver module that registers as a SCSI ULD and probes
-+ * for OSD type SCSI devices.
-+ * It's main function is to export osd devices to in-kernel users like
-+ * osdfs and pNFS-objects-LD. It also provides one ioctl for running
-+ * in Kernel tests.
-+ *
-+ * Copyright (C) 2008 Panasas Inc.  All rights reserved.
-+ *
-+ * Authors:
-+ *   Boaz Harrosh <bharrosh@panasas.com>
-+ *   Benny Halevy <bhalevy@panasas.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  1. Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *  2. Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in the
-+ *     documentation and/or other materials provided with the distribution.
-+ *  3. Neither the name of the Panasas company nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
-+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-+ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <linux/cdev.h>
-+#include <linux/fs.h>
-+#include <linux/module.h>
-+#include <linux/device.h>
-+#include <linux/idr.h>
-+#include <linux/major.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_ioctl.h>
-+
-+#include <scsi/osd_initiator.h>
-+#include <scsi/osd_sec.h>
-+
-+#include "osd_ktests.h"
-+#include "osd_debug.h"
-+
-+#ifndef TYPE_OSD
-+#  define TYPE_OSD 0x11
-+#endif
-+
-+#ifndef SCSI_OSD_MAJOR
-+#  define SCSI_OSD_MAJOR 260
-+#endif
-+#define SCSI_OSD_MAX_MINOR 64
-+
-+static const char osd_name[] = "osd";
-+static const char *osd_version_string = "open-osd 0.1.0";
-+const char osd_symlink[] = "scsi_osd";
-+
-+MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
-+MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS_CHARDEV_MAJOR(SCSI_OSD_MAJOR);
-+MODULE_ALIAS_SCSI_DEVICE(TYPE_OSD);
-+
-+struct osd_uld_device {
-+	int minor;
-+	struct kref kref;
-+	struct cdev cdev;
-+	struct osd_dev od;
-+	struct gendisk *disk;
-+	struct device *class_member;
-+};
-+
-+static void __uld_get(struct osd_uld_device *oud);
-+static void __uld_put(struct osd_uld_device *oud);
-+
-+/*
-+ * Char Device operations
-+ */
-+
-+static int osd_uld_open(struct inode *inode, struct file *file)
++static char *_osd_ver_desc(struct osd_request *or)
 +{
-+	struct osd_uld_device *oud = container_of(inode->i_cdev,
-+					struct osd_uld_device, cdev);
-+
-+	__uld_get(oud);
-+	/* cache osd_uld_device on file handle */
-+	file->private_data = oud;
-+	OSD_DEBUG("osd_uld_open %p\n", oud);
-+	return 0;
++	return osd_req_is_ver1(or) ? "OSD1" : "OSD2";
 +}
 +
-+static int osd_uld_release(struct inode *inode, struct file *file)
-+{
-+	struct osd_uld_device *oud = file->private_data;
++#define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
 +
-+	OSD_DEBUG("osd_uld_release %p\n", file->private_data);
-+	file->private_data = NULL;
-+	__uld_put(oud);
-+	return 0;
-+}
-+
-+static long osd_uld_ioctl(struct file *file, unsigned int cmd,
-+	unsigned long arg)
++static int _osd_print_system_info(struct osd_dev *od, void *caps)
 +{
-+	struct osd_uld_device *oud = file->private_data;
++	struct osd_request *or;
++	struct osd_attr get_attrs[] = {
++		ATTR_DEF_RI(OSD_ATTR_RI_VENDOR_IDENTIFICATION, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_IDENTIFICATION, 16),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_MODEL, 32),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_REVISION_LEVEL, 4),
++		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER, 64 /*variable*/),
++		ATTR_DEF_RI(OSD_ATTR_RI_OSD_NAME, 64 /*variable*/),
++		ATTR_DEF_RI(OSD_ATTR_RI_TOTAL_CAPACITY, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_USED_CAPACITY, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_NUMBER_OF_PARTITIONS, 8),
++		ATTR_DEF_RI(OSD_ATTR_RI_CLOCK, 6),
++		/* IBM-OSD-SIM Has a bug with this one put it last */
++		ATTR_DEF_RI(OSD_ATTR_RI_OSD_SYSTEM_ID, 20),
++	};
++	void *iter = NULL, *pFirst;
++	int nelem = ARRAY_SIZE(get_attrs), a = 0;
 +	int ret;
 +
-+	switch (cmd) {
-+	case OSD_TEST_ALL:
-+		OSD_DEBUG("Kernel test %d: osd_uld_device=%p\n", cmd, oud);
-+		ret = 0;
-+		break;
-+	default:
-+		OSD_ERR("Unknown osd_uld_ioctl %d\n", cmd);
-+		ret = -ENOIOCTLCMD;
++	or = osd_start_request(od, GFP_KERNEL);
++	if (!or)
++		return -ENOMEM;
++
++	/* get attrs */
++	osd_req_get_attributes(or, &osd_root_object);
++	osd_req_add_get_attr_list(or, get_attrs, ARRAY_SIZE(get_attrs));
++
++	ret = osd_finalize_request(or, 0, caps, NULL);
++	if (ret)
++		goto out;
++
++	ret = osd_execute_request(or);
++	if (ret) {
++		OSD_ERR("Failed to detect %s => %d\n", _osd_ver_desc(or), ret);
++		goto out;
 +	}
++
++	osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
++
++	OSD_INFO("Detected %s device\n",
++		_osd_ver_desc(or));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_VENDOR_IDENTIFICATION [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_IDENTIFICATION [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_MODEL [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_REVISION_LEVEL [%u]\n",
++		get_unaligned_be32(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER [%s]\n",
++		(char *)pFirst);
++
++	pFirst = get_attrs[a].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_OSD_NAME [%s]\n", (char *)pFirst);
++	a++;
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_TOTAL_CAPACITY [0x%llx]\n",
++		get_unaligned_be64(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_USED_CAPACITY [0x%llx]\n",
++		get_unaligned_be64(pFirst));
++
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_NUMBER_OF_PARTITIONS [%lld]\n",
++		get_unaligned_be64(pFirst));
++
++	/* FIXME: Where are the time utilities */
++	pFirst = get_attrs[a++].val_ptr;
++	OSD_INFO("OSD_ATTR_RI_CLOCK [0x%02x%02x%02x%02x%02x%02x]\n",
++		((char *)pFirst)[0], ((char *)pFirst)[1],
++		((char *)pFirst)[2], ((char *)pFirst)[3],
++		((char *)pFirst)[4], ((char *)pFirst)[5]);
++
++	if (a < nelem) { /* IBM-OSD-SIM bug, Might not have it */
++		int len = get_attrs[a].len;
++		u8 sid_dump[32*4 + 2]; /* 2nibbles+space+ASCII */
++
++		hex_dump_to_buffer(get_attrs[a].val_ptr, len, 32, 1,
++				   sid_dump, sizeof(sid_dump), true);
++		OSD_INFO("OSD_ATTR_RI_OSD_SYSTEM_ID(%d) [%s]\n", len, sid_dump);
++		a++;
++	}
++out:
++	osd_end_request(or);
 +	return ret;
 +}
 +
-+static const struct file_operations osd_fops = {
-+	.owner          = THIS_MODULE,
-+	.open           = osd_uld_open,
-+	.release        = osd_uld_release,
-+	.unlocked_ioctl = osd_uld_ioctl,
-+};
-+
-+/*
-+ * Scsi Device operations
-+ */
-+
-+static int __detect_osd(struct osd_uld_device *oud)
++int osd_auto_detect_ver(struct osd_dev *od, void *caps)
 +{
-+	struct scsi_device *scsi_dev = oud->od.scsi_dev;
-+	int error;
++	int ret;
 +
-+	/* sending a test_unit_ready as first command seems to be needed
-+	 * by some targets
-+	 */
-+	OSD_DEBUG("start scsi_test_unit_ready %p %p %p\n",
-+			oud, scsi_dev, scsi_dev->request_queue);
-+	error = scsi_test_unit_ready(scsi_dev, 10*HZ, 5, NULL);
-+	if (error)
-+		OSD_ERR("warning: scsi_test_unit_ready failed\n");
++	/* Auto-detect the osd version */
++	ret = _osd_print_system_info(od, caps);
++	if (ret) {
++		osd_dev_set_ver(od, OSD_VER1);
++		OSD_DEBUG("converting to OSD1\n");
++		ret = _osd_print_system_info(od, caps);
++	}
 +
-+	return 0;
++	return ret;
 +}
++EXPORT_SYMBOL(osd_auto_detect_ver);
 +
-+static struct class *osd_sysfs_class;
-+static DEFINE_IDA(osd_minor_ida);
-+
-+static int osd_probe(struct device *dev)
-+{
-+	struct scsi_device *scsi_dev = to_scsi_device(dev);
-+	struct gendisk *disk;
-+	struct osd_uld_device *oud;
-+	int minor;
-+	int error;
-+
-+	if (scsi_dev->type != TYPE_OSD)
+ static unsigned _osd_req_cdb_len(struct osd_request *or)
+ {
+ 	return osd_req_is_ver1(or) ? OSDv1_TOTAL_CDB_LEN : OSD_TOTAL_CDB_LEN;
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 1ce5eba..0f2bea7 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -201,6 +201,7 @@ EXPORT_SYMBOL(osduld_put_device);
+ static int __detect_osd(struct osd_uld_device *oud)
+ {
+ 	struct scsi_device *scsi_dev = oud->od.scsi_dev;
++	char caps[OSD_CAP_LEN];
+ 	int error;
+ 
+ 	/* sending a test_unit_ready as first command seems to be needed
+@@ -212,6 +213,10 @@ static int __detect_osd(struct osd_uld_device *oud)
+ 	if (error)
+ 		OSD_ERR("warning: scsi_test_unit_ready failed\n");
+ 
++	osd_sec_init_nosec_doall_caps(caps, &osd_root_object, false, true);
++	if (osd_auto_detect_ver(&oud->od, caps))
 +		return -ENODEV;
 +
-+	do {
-+		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
-+			return -ENODEV;
+ 	return 0;
+ }
+ 
+diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
+index 738312f..4fd5099 100644
+--- a/include/scsi/osd_initiator.h
++++ b/include/scsi/osd_initiator.h
+@@ -62,6 +62,9 @@ void osduld_put_device(struct osd_dev *od);
+ void osd_dev_init(struct osd_dev *, struct scsi_device *scsi_dev);
+ void osd_dev_fini(struct osd_dev *);
+ 
++/* some hi level device operations */
++int osd_auto_detect_ver(struct osd_dev *, void *caps);    /* GFP_KERNEL */
 +
-+		error = ida_get_new(&osd_minor_ida, &minor);
-+	} while (error == -EAGAIN);
-+
-+	if (error)
-+		return error;
-+	if (minor >= SCSI_OSD_MAX_MINOR) {
-+		error = -EBUSY;
-+		goto err_retract_minor;
-+	}
-+
-+	error = -ENOMEM;
-+	oud = kzalloc(sizeof(*oud), GFP_KERNEL);
-+	if (NULL == oud)
-+		goto err_retract_minor;
-+
-+	kref_init(&oud->kref);
-+	dev_set_drvdata(dev, oud);
-+	oud->minor = minor;
-+
-+	/* allocate a disk and set it up */
-+	/* FIXME: do we need this since sg has already done that */
-+	disk = alloc_disk(1);
-+	if (!disk) {
-+		OSD_ERR("alloc_disk failed\n");
-+		goto err_free_osd;
-+	}
-+	disk->major = SCSI_OSD_MAJOR;
-+	disk->first_minor = oud->minor;
-+	sprintf(disk->disk_name, "osd%d", oud->minor);
-+	oud->disk = disk;
-+
-+	/* hold one more reference to the scsi_dev that will get released
-+	 * in __release, in case a logout is happening while fs is mounted
-+	 */
-+	scsi_device_get(scsi_dev);
-+	osd_dev_init(&oud->od, scsi_dev);
-+
-+	/* Detect the OSD Version */
-+	error = __detect_osd(oud);
-+	if (error) {
-+		OSD_ERR("osd detection failed, non-compatible OSD device\n");
-+		goto err_put_disk;
-+	}
-+
-+	/* init the char-device for communication with user-mode */
-+	cdev_init(&oud->cdev, &osd_fops);
-+	oud->cdev.owner = THIS_MODULE;
-+	error = cdev_add(&oud->cdev,
-+			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
-+	if (error) {
-+		OSD_ERR("cdev_add failed\n");
-+		goto err_put_disk;
-+	}
-+	kobject_get(&oud->cdev.kobj); /* 2nd ref see osd_remove() */
-+
-+	/* class_member */
-+	oud->class_member = device_create(osd_sysfs_class, dev,
-+		MKDEV(SCSI_OSD_MAJOR, oud->minor), "%s", disk->disk_name);
-+	if (IS_ERR(oud->class_member)) {
-+		OSD_ERR("class_device_create failed\n");
-+		error = PTR_ERR(oud->class_member);
-+		goto err_put_cdev;
-+	}
-+
-+	dev_set_drvdata(oud->class_member, oud);
-+	error = sysfs_create_link(&scsi_dev->sdev_gendev.kobj,
-+				  &oud->class_member->kobj, osd_symlink);
-+	if (error)
-+		OSD_ERR("warning: unable to make symlink\n");
-+
-+	OSD_INFO("osd_probe %s\n", disk->disk_name);
-+	return 0;
-+
-+err_put_cdev:
-+	cdev_del(&oud->cdev);
-+err_put_disk:
-+	scsi_device_put(scsi_dev);
-+	put_disk(disk);
-+err_free_osd:
-+	dev_set_drvdata(dev, NULL);
-+	kfree(oud);
-+err_retract_minor:
-+	ida_remove(&osd_minor_ida, minor);
-+	return error;
-+}
-+
-+static int osd_remove(struct device *dev)
-+{
-+	struct scsi_device *scsi_dev = to_scsi_device(dev);
-+	struct osd_uld_device *oud = dev_get_drvdata(dev);
-+
-+	if (!oud || (oud->od.scsi_dev != scsi_dev)) {
-+		OSD_ERR("Half cooked osd-device %p,%p || %p!=%p",
-+			dev, oud, oud ? oud->od.scsi_dev : NULL,
-+			scsi_dev);
-+	}
-+
-+	sysfs_remove_link(&oud->od.scsi_dev->sdev_gendev.kobj, osd_symlink);
-+
-+	if (oud->class_member)
-+		device_destroy(osd_sysfs_class,
-+			       MKDEV(SCSI_OSD_MAJOR, oud->minor));
-+
-+	/* We have 2 references to the cdev. One is released here
-+	 * and also takes down the /dev/osdX mapping. The second
-+	 * Will be released in __remove() after all users have released
-+	 * the osd_uld_device.
-+	 */
-+	if (oud->cdev.owner)
-+		cdev_del(&oud->cdev);
-+
-+	__uld_put(oud);
-+	return 0;
-+}
-+
-+static void __remove(struct kref *kref)
-+{
-+	struct osd_uld_device *oud = container_of(kref,
-+					struct osd_uld_device, kref);
-+	struct scsi_device *scsi_dev = oud->od.scsi_dev;
-+
-+	/* now let delete the char_dev */
-+	kobject_put(&oud->cdev.kobj);
-+
-+	osd_dev_fini(&oud->od);
-+	scsi_device_put(scsi_dev);
-+
-+	OSD_INFO("osd_remove %s\n",
-+		 oud->disk ? oud->disk->disk_name : NULL);
-+
-+	if (oud->disk)
-+		put_disk(oud->disk);
-+
-+	ida_remove(&osd_minor_ida, oud->minor);
-+	kfree(oud);
-+}
-+
-+static void __uld_get(struct osd_uld_device *oud)
-+{
-+	kref_get(&oud->kref);
-+}
-+
-+static void __uld_put(struct osd_uld_device *oud)
-+{
-+	kref_put(&oud->kref, __remove);
-+}
-+
-+/*
-+ * Global driver and scsi registration
-+ */
-+
-+static struct scsi_driver osd_driver = {
-+	.owner			= THIS_MODULE,
-+	.gendrv = {
-+		.name		= osd_name,
-+		.probe		= osd_probe,
-+		.remove		= osd_remove,
-+	}
-+};
-+
-+static int __init osd_uld_init(void)
-+{
-+	int err;
-+
-+	osd_sysfs_class = class_create(THIS_MODULE, osd_symlink);
-+	if (IS_ERR(osd_sysfs_class)) {
-+		OSD_ERR("Unable to register sysfs class => %ld\n",
-+			PTR_ERR(osd_sysfs_class));
-+		return PTR_ERR(osd_sysfs_class);
-+	}
-+
-+	err = register_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0),
-+				     SCSI_OSD_MAX_MINOR, osd_name);
-+	if (err) {
-+		OSD_ERR("Unable to register major %d for osd ULD => %d\n",
-+			SCSI_OSD_MAJOR, err);
-+		goto err_out;
-+	}
-+
-+	err = scsi_register_driver(&osd_driver.gendrv);
-+	if (err) {
-+		OSD_ERR("scsi_register_driver failed => %d\n", err);
-+		goto err_out_chrdev;
-+	}
-+
-+	OSD_INFO("LOADED %s\n", osd_version_string);
-+	return 0;
-+
-+err_out_chrdev:
-+	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
-+err_out:
-+	class_destroy(osd_sysfs_class);
-+	return err;
-+}
-+
-+static void __exit osd_uld_exit(void)
-+{
-+	scsi_unregister_driver(&osd_driver.gendrv);
-+	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
-+	class_destroy(osd_sysfs_class);
-+	OSD_INFO("UNLOADED %s\n", osd_version_string);
-+}
-+
-+module_init(osd_uld_init);
-+module_exit(osd_uld_exit);
+ /* we might want to use function vector in the future */
+ static inline void osd_dev_set_ver(struct osd_dev *dev, enum osd_std_version v)
+ {
 -- 
 1.6.0.1
 
