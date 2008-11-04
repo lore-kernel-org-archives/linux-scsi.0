@@ -1,120 +1,99 @@
-From: Arjan van de Ven <arjan@linux.intel.com>
-Subject: Oops/warning report for the week of November 4th, 2008
-Date: Tue, 04 Nov 2008 09:58:48 -0800
-Message-ID: <49108D58.1010908@linux.intel.com>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH 04/18] libosd: OSDv1 preliminary implementation
+Date: Tue, 4 Nov 2008 19:03:47 +0100
+Message-ID: <20081104180347.GA9818@uranus.ravnborg.org>
+References: <491073BB.4000900@panasas.com> <1225817069-5969-1-git-send-email-bharrosh@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:13963 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751639AbYKDR65 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 12:58:57 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755349AbYKDSHm@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1225817069-5969-1-git-send-email-bharrosh@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, open-osd ml <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: NetDev <netdev@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-scsi@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, tglx@tglx.de
 
-(Reports prior to 2.6.26 have been omitted in collecting the top 10)
+On Tue, Nov 04, 2008 at 06:44:29PM +0200, Boaz Harrosh wrote:
+> Implementation of the most basic OSD functionality and
+> infrastructure. Mainly Format, Create/Remove Partition,
+> Create/Remove Object, and read/write.
+> 
+> - Add Makefile and Kbuild to compile libosd.ko
+> - osd_initiator.c Implementation file for osd_initiator.h
+>   and osd_sec.h APIs
+> - osd_debug.h - Some kprintf macro definitions
 
-This week, a total of 3780 oopses and warnings have been reported,
-compared to 3157 reports in the previous week.
+A few comments below.
 
-Per file statistics
-277	drivers/net/r8169.c
-239	fs/jbd/journal.c
-190	drivers/parport/procfs.c
-189	drivers/net/sis900.c
-156	external/fireglx/binary (P)
-137	drivers/base/power/main.c
-124	kernel/timer.c
-115	net/sched/sch_generic.c
-90	include/linux/pagemap.h
-86	drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-80	kernel/power/main.c
-65	drivers/usb/serial/usb-serial.c
+	Sam
 
 
-Items with unmerged fix available
----------------------------------
-Rank 2: journal_update_superblock (warning)
-	Reported 233 times (5565 total reports)
-	Fix is in the -mm tree but not yet in mainline
-	Likely caused by the user removing a USB stick while mounted
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24-rc6-git1.
-	More info: http://www.kerneloops.org/searchweek.php?search=journal_update_superblock
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
+> ---
+>  drivers/scsi/osd/Kbuild          |   26 +++
+>  drivers/scsi/osd/Makefile        |   37 +++
+>  drivers/scsi/osd/osd_debug.h     |   27 +++
+>  drivers/scsi/osd/osd_initiator.c |  450 ++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 540 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/osd/Kbuild
+>  create mode 100755 drivers/scsi/osd/Makefile
+>  create mode 100644 drivers/scsi/osd/osd_debug.h
+>  create mode 100644 drivers/scsi/osd/osd_initiator.c
+> 
+> diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
+> new file mode 100644
+> index 0000000..b4678e0
+> --- /dev/null
+> +++ b/drivers/scsi/osd/Kbuild
+> @@ -0,0 +1,26 @@
+> +#
+> +# Kbuild for the OSD modules
+> +#
+> +# Copyright (C) 2008 Panasas Inc.  All rights reserved.
+> +#
+> +# Authors:
+> +#   Boaz Harrosh <bharrosh@panasas.com>
+> +#   Benny Halevy <bhalevy@panasas.com>
+> +#
+> +# This program is free software; you can redistribute it and/or modify
+> +# it under the terms of the GNU General Public License version 2
+> +#
+> +
+> +ifneq ($(OSD_INC),)
+> +# we are built out-of-tree Kconfigure everything as on
+> +
+> +CONFIG_SCSI_OSD_INITIATOR=m
+> +EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_INITIATOR -DCONFIG_SCSI_OSD_INITIATOR_MODULE
+> +
+> +EXTRA_CFLAGS += -I$(OSD_INC)
+> +# EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_DEBUG
+> +
+> +endif
+> +
+> +libosd-objs := osd_initiator.o
+> +obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
 
-Rank 14: ext3_commit_super (warning)
-	Reported 50 times (1425 total reports)
-	Fix is in the -mm tree but not yet in mainline
-	Likely caused by the user removing a USB stick while mounted
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24.
-	More info: http://www.kerneloops.org/searchweek.php?search=ext3_commit_super
+When you submit for inclusion please clean this up.
+1) use ccflags-y as replacement for EXTRA_CFLAGS
+2) use libosd-y as replacement for libosd-objs
 
+> +
+> +#ifdef CONFIG_SCSI_OSD_INITIATOR_MODULE
+> +MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
+> +MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
+> +MODULE_LICENSE("GPL");
+> +#endif
 
-Unfixed items
--------------
-Rank 1: dev_watchdog(r8169) (warning)
-	Reported 277 times (483 total reports)
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26.6.
-	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(r8169)
+no ifdef around here.
 
-Rank 3: dev_watchdog(sis900) (warning)
-	Reported 189 times (987 total reports)
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26-rc4-git2.
-	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(sis900)
-
-	Rank 5: kas_GetExecutionLevel (warning)
-	Reported 140 times (331 total reports)
-	[external] Bug in the proprietary fireglx driver
-	warning only shows up in tainted kernels
-	This warning was last seen in version 2.6.27, and first seen in 2.6.26.
-	More info: http://www.kerneloops.org/searchweek.php?search=kas_GetExecutionLevel
-
-Rank 6: run_timer_softirq (oops)
-	Reported 117 times (669 total reports)
-	softlockup
-	This oops was last seen in version 2.6.27.4, and first seen in 2.6.25.
-	More info: http://www.kerneloops.org/searchweek.php?search=run_timer_softirq
-
-Rank 10: rs_get_rate (warning)
-	Reported 85 times (695 total reports)
-	Bug in the Intel IWL wireless drivers
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.25-rc2-git5.
-	More info: http://www.kerneloops.org/searchweek.php?search=rs_get_rate
-
-Rank 11: suspend_test_finish (warning)
-	Reported 80 times (321 total reports)
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.27-rc0-git14.
-	More info: http://www.kerneloops.org/searchweek.php?search=suspend_test_finish
-
-Rank 12: dev_watchdog(cdc_ether) (warning)
-	Reported 59 times (78 total reports)
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.26.6.
-	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(cdc_ether)
-
-Rank 13: ___free_dma_mem_cluster (warning)
-	Reported 55 times (242 total reports)
-	[known issue] bug in the sym53c8xx_2 scsi driver; harmless on x86
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.24-rc8-git5.
-	More info: http://www.kerneloops.org/searchweek.php?search=___free_dma_mem_cluster
-
-
-Fixed items
------------
-Rank 8: device_pm_add (warning)
-	Reported 103 times (683 total reports)
-	This warning was last seen in version 2.6.27-rc4, and first seen in 2.6.26-rc5.
-	"Fixed" by removing the warning to hide the bug.
-	More info: http://www.kerneloops.org/searchweek.php?search=device_pm_add
-
-Rank 9: lock_page (warning)
-	Reported 90 times (362 total reports)
-	The hwclock program causes the kernel to fault due to disabling irqs in userspace
-	Fixed in 2.6.28-rc, should probably be backported to -stable
-	This warning was last seen in version 2.6.27.4, and first seen in 2.6.27-rc1-git2.
-	More info: http://www.kerneloops.org/searchweek.php?search=lock_page
-
-
-
-
+> +void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_dev)
+> +{
+> +	memset(osdd, 0, sizeof(*osdd));
+> +	osdd->scsi_dev = scsi_dev;
+> +	osdd->def_timeout = BLK_DEFAULT_SG_TIMEOUT;
+> +	/* TODO: Allocate pools for osd_request attributes ... */
+> +}
+> +EXPORT_SYMBOL(osd_dev_init);
+kernel-doc comments for all exported funtions / variables.
