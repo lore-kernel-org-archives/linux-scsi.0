@@ -1,53 +1,77 @@
-From: "Avishay Traeger" <avishay@gmail.com>
-Subject: Re: [osd-dev] [RFC 0/9] osdfs
-Date: Tue, 4 Nov 2008 12:28:47 +0200
-Message-ID: <c41302d20811040228y23ce963fh39c27f79cb7711df@mail.gmail.com>
-References: <4909C41A.7000406@panasas.com> <490F6829.3020104@garzik.org>
-	 <49100213.6040307@panasas.com> <49101FE2.30109@panasas.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 10/13] dm: add core functions for request-based
+	dm
+Date: Tue, 04 Nov 2008 10:01:57 -0500
+Message-ID: <491063E5.9060805@ct.jp.nec.com>
+References: <20080912.103814.74754581.k-ueda@ct.jp.nec.com>
+	<20080912.104612.115643090.k-ueda@ct.jp.nec.com>
+	<807b3a220810240044v1b9f12e3xc3bd5a429b9d4c5@mail.gmail.com>
+	<490FB852.3FEE.00C5.1@novell.com>
+	<49102C03020000C50002E257@victor.provo.novell.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:16572 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988AbYKDK2w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 05:28:52 -0500
-In-Reply-To: <49101FE2.30109@panasas.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <49102C03020000C50002E257@victor.provo.novell.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Nikanth Karthikesan <KNikanth@novell.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-scsi@vger.kernel.org, knikanth@suse.de, linux-kernel@vger.kernel.org, dm-devel@redhat.com, "<Andi Kleen" <andi@firstfloor.org>, jens.axboe@oracle.com, j-nomura@ce.jp.nec.com, agk@redhat.com, "<Milan Broz" <mbroz@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 12:11 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+Hi Nikanth,
 
-<snip>
-
->>> As such, "osdfs" seems like too-generic a name. How about boazfs?  :)
+Nikanth Karthikesan wrote:
+> Hi Kiyoshi
+> 
+>>>> On 10/28/2008 at 09:30 PM, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote: 
+>> Hi Nikanth,
 >>
->> I agree.  osdfs is the name given by Avishay and IBM and we just adopted it.
->> I think that obfs (Object-based File System) would better represent
->> what it is (although it's still generic compared to boazfs :-)
->>
->
-> If at all then it's avishayfs, but unless I write this filesystem from
-> scratch I don't think I can do anything about the name. The code is
-> copyrighted to Avishay Traeger, and that is the name he chose. Also
-> he has a sourceforge.net project of that name for a long time.
->
-> Avishay would you be willing to change the name? See above, people
-> think it is too generic a name. Like if someone would do a scsifs
-> or blocksfs.
->
-> Personally for me it's just a name, I don't mind either way.
+>> On Fri, 24 Oct 2008 13:14:50 +0530, "Nikanth K" wrote:
+>>> On Fri, Sep 12, 2008 at 8:16 PM, Kiyoshi Ueda wrote:
+>>> <snip>
+>>>
+>>>> +static int dm_make_request(struct request_queue *q, struct bio *bio)
+>>>> +{
+>>>> +       struct mapped_device *md = (struct mapped_device *)q->queuedata;
+>>>> +
+>>>> +       if (unlikely(bio_barrier(bio))) {
+>>>> +               bio_endio(bio, -EOPNOTSUPP);
+>>>> +               return 0;
+>>>> +       }
+>>>> +
+>>> <snip>
+>>>
+>>> Why not add barrier support in the beginning itself, so that targets
+>>> can be developed with barriers in mind? At least can we make the target
+>>> to return error, instead of the core?
+>> Currently, there is no barrier support in dm, not only request-based.
+>> Barrier support is a different feature in the next step, I think.
+> 
+> But there are some works in that direction to add support for barriers in dm.
+> That is why I think building request-based dm with barriers from the 
+> ground up might be a good idea.
 
-I don't care if we change the name.  I suppose we can discuss
-alternatives outside of the mailing lists, but I'd rather not do
-boazfs or avishayfs :-)
+I agree, if I or other people have a time to implement barrier support
+for request-based dm.
+But I think the some works you mentioned above are:
+    - Andi Kleen: barrier support for linear (single device)
+    - Milan Broz: full barrier support in dm core (no target patch)
+so there is no barrier support work for dm-multipath yet.
 
-By the way, just to clarify: I wrote this file system at IBM, but they
-were nice enough to give me full ownership of the code.  I then
-proceeded to put the code up on sourceforge.  Thanks to Boaz and Benny
-for reviving the code and submitting it for inclusion in the kernel.
+Current request-based target is only dm-multipath, so we won't have
+any feature regression even if request-based dm-multipath gets in.
+And I don't have much time to implement barrier support for
+request-based dm-multipath now, so I'd like to consider it as
+the next step.
 
-Avishay
+Thanks,
+Kiyoshi Ueda
