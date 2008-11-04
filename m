@@ -1,66 +1,51 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 01/18] major.h: char-major number for OSD device driver
-Date: Tue,  4 Nov 2008 18:17:00 +0200
-Message-ID: <1225815420-5721-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 02/18] scsi: OSD_TYPE
+Date: Tue,  4 Nov 2008 18:42:17 +0200
+Message-ID: <1225816937-5909-1-git-send-email-bharrosh__8401.1901323267$1225817137$gmane$org@panasas.com>
 References: <491073BB.4000900@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:42539 "EHLO
+Received: from DSL212-235-53-3.bb.netvision.net.il ([212.235.53.3]:37357 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031AbYKDQUE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:20:04 -0500
+	with ESMTP id S1752207AbYKDQnr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 11:43:47 -0500
 In-Reply-To: <491073BB.4000900@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Torben Mathiasen <device@lanana.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.j>
 Cc: linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
 
-We need a major for a char device for our OSD device driver.
-Attached is a proposed patch for the Documentation/devices.txt
-and include/linux/major.h files.
-
-I have allocated the *260* char device as it looked like the next
-available on the lanana.org web-site
-(http://lanana.org/docs/device-list/devices-2.6+.txt)
-
-Any number will do. Please allocate a number for us
-
-(See http:/open-osd.org for further information)
+- Define the OSD_TYPE scsi device and let it show up in scans
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-CC: Torben Mathiasen <device@lanana.org>
 ---
- Documentation/devices.txt |    6 ++++++
- include/linux/major.h     |    1 +
- 2 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_scan.c |    1 +
+ include/scsi/scsi.h      |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/Documentation/devices.txt b/Documentation/devices.txt
-index 05c8064..d18070b 100644
---- a/Documentation/devices.txt
-+++ b/Documentation/devices.txt
-@@ -3142,6 +3142,12 @@ Your cooperation is appreciated.
- 		  1 = /dev/blockrom1	Second ROM card's translation layer interface
- 		  ...
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index b14dc02..633cb87 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -783,6 +783,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	case TYPE_ENCLOSURE:
+ 	case TYPE_COMM:
+ 	case TYPE_RAID:
++	case TYPE_OSD:
+ 		sdev->writeable = 1;
+ 		break;
+ 	case TYPE_ROM:
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index a109165..de1cef2 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -263,6 +263,7 @@ static inline int scsi_status_is_good(int status)
+ #define TYPE_RAID           0x0c
+ #define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
+ #define TYPE_RBC	    0x0e
++#define TYPE_OSD            0x11
+ #define TYPE_NO_LUN         0x7f
  
-+260 char	OSD (Object-based-device) SCSI Device
-+		  0 = /dev/osd0		First OSD Device
-+		  1 = /dev/osd1		Second OSD Device
-+		  ...
-+		  255 = /dev/osd255	256th OSD Device
-+
-  ****	ADDITIONAL /dev DIRECTORY ENTRIES
- 
- This section details additional entries that should or may exist in
-diff --git a/include/linux/major.h b/include/linux/major.h
-index 8824945..058ec15 100644
---- a/include/linux/major.h
-+++ b/include/linux/major.h
-@@ -171,5 +171,6 @@
- #define VIOTAPE_MAJOR		230
- 
- #define BLOCK_EXT_MAJOR		259
-+#define SCSI_OSD_MAJOR		260	/* open-osd's OSD scsi device */
- 
- #endif
+ /* SCSI protocols; these are taken from SPC-3 section 7.5 */
 -- 
 1.6.0.1
 
