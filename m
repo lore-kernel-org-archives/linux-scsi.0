@@ -1,99 +1,145 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH 04/18] libosd: OSDv1 preliminary implementation
-Date: Tue, 4 Nov 2008 19:03:47 +0100
-Message-ID: <20081104180347.GA9818@uranus.ravnborg.org>
-References: <491073BB.4000900@panasas.com> <1225817069-5969-1-git-send-email-bharrosh@panasas.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 03/18] libosd: OSDv1 Headers
+Date: Tue, 4 Nov 2008 11:10:37 -0800
+Message-ID: <20081104111037.bcae04e5.akpm@linux-foundation.org>
+References: <491073BB.4000900@panasas.com>
+	<1225817046-5946-1-git-send-email-bharrosh@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755349AbYKDSHm@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1225817069-5969-1-git-send-email-bharrosh@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, open-osd ml <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41517 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752326AbYKDTMT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 14:12:19 -0500
+In-Reply-To: <1225817046-5946-1-git-send-email-bharrosh@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sami.Iren@seagate.com, pw@padd.com
 
-On Tue, Nov 04, 2008 at 06:44:29PM +0200, Boaz Harrosh wrote:
-> Implementation of the most basic OSD functionality and
-> infrastructure. Mainly Format, Create/Remove Partition,
-> Create/Remove Object, and read/write.
+On Tue,  4 Nov 2008 18:44:06 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> Headers only patch.
 > 
-> - Add Makefile and Kbuild to compile libosd.ko
-> - osd_initiator.c Implementation file for osd_initiator.h
->   and osd_sec.h APIs
-> - osd_debug.h - Some kprintf macro definitions
-
-A few comments below.
-
-	Sam
-
-
+> osd_protocol.h
+> 	Contains a C-fied definition of the T10 OSD standard
+> osd_types.h
+> 	Contains CPU order common used types
+> osd_initiator.h
+> 	API definition of the osd_initiator library
+> osd_sec.h
+> 	Contains High level API for the security manager.
 > 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
-> ---
->  drivers/scsi/osd/Kbuild          |   26 +++
->  drivers/scsi/osd/Makefile        |   37 +++
->  drivers/scsi/osd/osd_debug.h     |   27 +++
->  drivers/scsi/osd/osd_initiator.c |  450 ++++++++++++++++++++++++++++++++++++++
->  4 files changed, 540 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/scsi/osd/Kbuild
->  create mode 100755 drivers/scsi/osd/Makefile
->  create mode 100644 drivers/scsi/osd/osd_debug.h
->  create mode 100644 drivers/scsi/osd/osd_initiator.c
+> [Note that checkpatch spews errors on things that are valid in this context
+> and will not be fixed]
 > 
-> diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
-> new file mode 100644
-> index 0000000..b4678e0
 > --- /dev/null
-> +++ b/drivers/scsi/osd/Kbuild
-> @@ -0,0 +1,26 @@
-> +#
-> +# Kbuild for the OSD modules
-> +#
-> +# Copyright (C) 2008 Panasas Inc.  All rights reserved.
-> +#
-> +# Authors:
-> +#   Boaz Harrosh <bharrosh@panasas.com>
-> +#   Benny Halevy <bhalevy@panasas.com>
-> +#
-> +# This program is free software; you can redistribute it and/or modify
-> +# it under the terms of the GNU General Public License version 2
-> +#
-> +
-> +ifneq ($(OSD_INC),)
-> +# we are built out-of-tree Kconfigure everything as on
-> +
-> +CONFIG_SCSI_OSD_INITIATOR=m
-> +EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_INITIATOR -DCONFIG_SCSI_OSD_INITIATOR_MODULE
-> +
-> +EXTRA_CFLAGS += -I$(OSD_INC)
-> +# EXTRA_CFLAGS += -DCONFIG_SCSI_OSD_DEBUG
-> +
-> +endif
-> +
-> +libosd-objs := osd_initiator.o
-> +obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
+> +++ b/include/scsi/osd_initiator.h
 
-When you submit for inclusion please clean this up.
-1) use ccflags-y as replacement for EXTRA_CFLAGS
-2) use libosd-y as replacement for libosd-objs
+This header uses quite a few things without including the header files
+which define them.  That's a bit risky - it causes compile breakage
+across architectures, across config changes and across time.
 
+> @@ -0,0 +1,332 @@
+> +/*
+> + * osd_initiator.h - OSD initiator API definition
+> + *
+> + * Copyright (C) 2008 Panasas Inc.  All rights reserved.
+> + *
+> + * Authors:
+> + *   Boaz Harrosh <bharrosh@panasas.com>
+> + *   Benny Halevy <bhalevy@panasas.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2
+> + *
+> + */
+> +#ifndef __OSD_INITIATOR_H__
+> +#define __OSD_INITIATOR_H__
 > +
-> +#ifdef CONFIG_SCSI_OSD_INITIATOR_MODULE
-> +MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
-> +MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
-> +MODULE_LICENSE("GPL");
-> +#endif
+> +#include <linux/blkdev.h>
+> +
+> +#include "osd_protocol.h"
+> +#include "osd_types.h"
+> +
+> +/* Note: "NI" in comments below means "Not Implemented yet" */
+> +
+> +/*
+> + * Object-based Storage Device.
+> + * This object represents an OSD device.
+> + * It is not a full linux device in any way. It is only
+> + * a place to hang resources associated with a Linux
+> + * request Q and some default properties.
+> + */
+> +struct osd_dev {
+> +	struct scsi_device *scsi_dev;
 
-no ifdef around here.
+scsi_device
 
-> +void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_dev)
-> +{
-> +	memset(osdd, 0, sizeof(*osdd));
-> +	osdd->scsi_dev = scsi_dev;
-> +	osdd->def_timeout = BLK_DEFAULT_SG_TIMEOUT;
-> +	/* TODO: Allocate pools for osd_request attributes ... */
-> +}
-> +EXPORT_SYMBOL(osd_dev_init);
-kernel-doc comments for all exported funtions / variables.
+> +	unsigned def_timeout;
+> +};
+> +
+> +void osd_dev_init(struct osd_dev *, struct scsi_device *scsi_dev);
+> +void osd_dev_fini(struct osd_dev *);
+> +
+> +struct osd_request;
+> +typedef void (osd_req_done_fn)(struct osd_request *, void *);
+> +
+> +struct osd_request {
+> +	struct osd_cdb cdb;
+> +	struct osd_data_out_integrity_info out_data_integ;
+> +	struct osd_data_in_integrity_info in_data_integ;
+> +
+> +	struct osd_dev *osd_dev;
+> +	struct request *request;
+> +
+> +	struct _osd_req_data_segment {
+> +		void *buff;
+> +		unsigned alloc_size; /* 0 here means not allocated by us */
+> +		unsigned total_bytes;
+> +	} set_attr, enc_get_attr, get_attr;
+> +
+> +	struct _osd_io_info {
+> +		struct bio *bio;
+> +		u64 total_bytes;
+
+u64(!)
+
+> +		struct request *req;
+> +		struct _osd_req_data_segment *last_seg;
+> +		u8 *pad_buff;
+> +	} out, in;
+> +
+> +	gfp_t alloc_flags;
+
+gfp_t
+
+> +	unsigned timeout;
+> +	unsigned retries;
+> +	u8 sense[OSD_MAX_SENSE_LEN];
+> +	enum osd_attributes_mode attributes_mode;
+> +
+> +	osd_req_done_fn *async_done;
+> +	void *async_private;
+> +	int async_error;
+> +};
+
+etc, etc, etc.   Please review all that.
+
+> +struct osd_request *osd_start_request(struct osd_dev *, gfp_t gfp);
+> +int osd_finalize_request(struct osd_request *or,
+> +	u8 options, const void *cap, const u8 *cap_key);
+> +void osd_req_set_master_seed_xchg(struct osd_request *, ...);/* NI */
+> +void osd_req_set_master_key(struct osd_request *, ...);/* NI */
+> +void osd_req_format(struct osd_request *, u64 tot_capacity);
+> +int osd_req_list_dev_partitions(struct osd_request *,
+> +	osd_id initial_id, struct osd_obj_id_list *list, unsigned nelem);
+
+hm.  It appears that someone made the decision to omit the name from
+the `struct osd_request *' parameter in the prototypes and to include
+the argument names for all other arguments.
+
+Not a bad idea, really.
+
