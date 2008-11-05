@@ -1,49 +1,99 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 03/18] libosd: OSDv1 Headers
-Date: Wed, 05 Nov 2008 15:29:52 +0200
-Message-ID: <49119FD0.1000801@panasas.com>
-References: <491073BB.4000900@panasas.com>	 <1225817046-5946-1-git-send-email-bharrosh@panasas.com>	 <20081104111037.bcae04e5.akpm@linux-foundation.org>	 <49119774.10706@panasas.com> <1225890572.4703.15.camel@localhost.localdomain>
+Subject: Re: [PATCH 04/18] libosd: OSDv1 preliminary implementation
+Date: Wed, 05 Nov 2008 15:44:36 +0200
+Message-ID: <4911A344.7090803@panasas.com>
+References: <491073BB.4000900@panasas.com>	<1225817069-5969-1-git-send-email-bharrosh@panasas.com> <20081104111631.5eb9aaf6.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:52873 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726AbYKEN36 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 08:29:58 -0500
-In-Reply-To: <1225890572.4703.15.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755976AbYKENoy@vger.kernel.org>
+In-Reply-To: <20081104111631.5eb9aaf6.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sami.Iren@seagate.com, pw@padd.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sami.Iren@seagate.com, pw@padd.com
 
-James Bottomley wrote:
-> On Wed, 2008-11-05 at 14:54 +0200, Boaz Harrosh wrote:
->>>> +    struct _osd_io_info {
->>>> +            struct bio *bio;
->>>> +            u64 total_bytes;
->>> u64(!)
->>>
->> Do you mean that I need to use __u64? or what do you mean?
+Andrew Morton wrote:
+> On Tue,  4 Nov 2008 18:44:29 +0200
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
 > 
-> He means you've used u64 in a header without actually including any file
-> that defines the typedef.  Linux header files aren't supposed to depend
-> on include order.  They're supposed to stand alone.  The point is that
-> if I include just #include osd_initiator.h into an empty kernel file
-> it's not supposed to spit undefined errors.
+>> Implementation of the most basic OSD functionality and
+>> infrastructure. Mainly Format, Create/Remove Partition,
+>> Create/Remove Object, and read/write.
+>>
+>>
+>> ...
+>>
+>> +struct osd_request *_osd_request_alloc(gfp_t gfp)
+>> +{
+>> +	struct osd_request *or;
+>> +
+>> +	/* TODO: Use mempool with one saved request */
+>> +	or = kzalloc(sizeof(*or), gfp);
+>> +	return or;
+>> +}
+>> +
+>> +void _osd_request_free(struct osd_request *or)
+>> +{
+>> +	kfree(or);
+>> +}
 > 
-> Right at the moment the u64 probably works because blkdev.h #includes
-> the file which defines it, but you're not supposed to rely on that.
-> 
-> James
+> These two functions can/should be made static.  Please generally check
+> for this.
 > 
 
-I have addressed that issue. The osd_initiator.h includes the
-osd_protocol.h file. osd_protocol.h does include all the types
-needed. All of the osd_initiator.h types are derived from
-osd_protocol.h, the only added definitions are from blkdev.h.
+Thanks, I usually do, but these are from the last iteration and were
+rushed in. Will fix.
 
-The very first #include in osd_initiator.c is osd_initiator.h
-which preforms exactly the check you suggest.
+> Also it'd probably make sense to declare both these inline.  The
+> compiler _shoudl_ get it right, but stranger things have happened...
+> 
 
+I do not inline them, because one - I will use mem_pools very soon they
+are just place holders for now. two - I let the compiler
+do that, I made sure the only user is below the definition and I let
+the compiler decide. I like to leave these things controlled from outside,
+so when I compile a UML kernel and finally need to fire up a debugger,
+I can un-inline them very easily.
+
+(This is why I hate forward declarations. If they are not used
+ it is a proof that inlineing of single callers will always happen.)
+
+>> ...
+>>
+>> +/*
+>> + * If osd_finalize_request() was called but the request was not executed through
+>> + * the block layer, then we must release BIOs.
+>> + */
+>> +static void _abort_unexecuted_bios(struct request *rq)
+>> +{
+>> +	struct bio *bio;
+>> +
+>> +	while ((bio = rq->bio) != NULL) {
+>> +		rq->bio = bio->bi_next;
+>> +		bio_endio(bio, 0);
+>> +	}
+>> +}
+> 
+> Boy, that's a scary function.  bye-bye data.
+> 
+
+Thank's for mentioning that. I use it at the very end just before
+the de-allocation of the block request. What happens today is: that
+if for some reason the driver failed to call blk_end_request, 
+or in this case the driver was never called, the last blk_put_request()
+will leak BIOs. There are currently corner cases and bugs in the Kernel
+that cause exactly that.
+
+That loop above should be moved from here to inside blk_put_request().
+if some one needs to hold the BIOs longer then the life span of the request they
+should simply inc-ref them.
+
+Note that here it is totally safe since It's only called just before
+blk_put_request().
+
+This code is actually a bug fix, for the error cases when a request is allocated
+but is never executed do to other error returns.
+
+Thanks
 Boaz
