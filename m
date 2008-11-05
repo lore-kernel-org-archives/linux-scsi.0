@@ -1,48 +1,53 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Tue,  4 Nov 2008 17:32:05 -0800 (PST)
-Message-ID: <20081105013205.816CA108057@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH] scsi_error regression: Fix idempotent command handling
+Date: Tue,  4 Nov 2008 19:47:19 -0600
+Message-ID: <1225849639-7204-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43104 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753730AbYKEBci (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2008 20:32:38 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA51W5mv005065
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Nov 2008 17:32:06 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from mx2.redhat.com ([66.187.237.31]:34968 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753283AbYKEBrV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Nov 2008 20:47:21 -0500
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id mA51lL7s015373
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Nov 2008 20:47:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <mchristi@redhat.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+From: Mike Christie <mchristi@redhat.com>
 
+Drivers want to be able to return DID_TRANSPORT_DISRUPTED and
+have it do the right thing for commands like tape and passthrouh
+as far as retries go. The LLDs previously used DID_BUS_BUSY or DID_ERROR
+which followed the cmd->retries limit, but DID_TRANSPORT_DISRUPTED
+was skipping that check so it could have caused a problem with tape
+commands.
 
+This patch has DID_TRANSPORT_DISRUPTED check the cmd->retries/cmd->allowed.
 
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+---
+ drivers/scsi/scsi_error.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-
-------- Comment #9 from alex.shi@intel.com  2008-11-04 17:32 -------
-I did bisect for this bug and find the following commit cause this problem.
-
-commit f0c0a376d0fcd4c5579ecf5e95f88387cba85211
-Author: Mike Christie <michaelc@cs.wisc.edu>
-Date:   Sun Aug 17 15:24:38 2008 -0500
-
-    [SCSI] Add helper code so transport classes/driver can control queueing
-(v3)
-
-    SCSI-ml manages the queueing limits for the device and host, but
-    does not do so at the target level. However something something similar
-    can come in userful when a driver is transitioning a transport object to
-    the the blocked state, becuase at that time we do not want to queue
-    io and we do not want the queuecommand to be called again.
-
-
-Alex 
-
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 94ed262..3863617 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1340,9 +1340,10 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 * LLD/transport was disrupted during processing of the IO.
+ 		 * The transport class is now blocked/blocking,
+ 		 * and the transport will decide what to do with the IO
+-		 * based on its timers and recovery capablilities.
++		 * based on its timers and recovery capablilities if
++		 * there are enough retries.
+ 		 */
+-		return ADD_TO_MLQUEUE;
++		goto maybe_retry;
+ 	case DID_TRANSPORT_FAILFAST:
+ 		/*
+ 		 * The transport decided to failfast the IO (most likely
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.4.3
+
