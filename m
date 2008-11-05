@@ -1,76 +1,37 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] dpt_i2o.c: fix transferred data length for scsi_set_resid()
-Date: Wed, 05 Nov 2008 16:05:06 +0200
-Message-ID: <4911A812.3020307@panasas.com>
-References: <20081104230908.GA21652@xs4all.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Wed,  5 Nov 2008 06:32:11 -0800 (PST)
+Message-ID: <20081105143211.0961411D10B@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.225]:2890 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbYKEOFJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 09:05:09 -0500
-Received: by qb-out-0506.google.com with SMTP id f11so1573qba.17
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Nov 2008 06:05:07 -0800 (PST)
-In-Reply-To: <20081104230908.GA21652@xs4all.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60891 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751550AbYKEOcq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 09:32:46 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA5EWB1F013144
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 06:32:12 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <mikevs@xs4all.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
 
-Miquel van Smoorenburg wrote:
-> This should go into 2.6.28 and -stable, I think.
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #18 from rjw@sisk.pl  2008-11-05 06:32 -------
+(In reply to comment #16)
+> Alex,
 > 
-> dpt_i2o-fix-xferlen-for-scsi_set_resid.patch
-> 
-> [PATCH] dpt_i2o.c: fix transferred data length for scsi_set_resid()
-> 
-> dpt_i2o.c::adpt_i2o_to_scsi() reads the value at (reply+5) which
-> should contain the length in bytes of the transferred data. This
-> would be correct if reply was a u32 *. However it is a void * here,
-> so we need to read the value at (reply+20) instead.
-> 
-> The value at (reply+5) is usually 0xff0000, which is apparently
-> 'large enough' and didn't cause any trouble until 2.6.27 where
-> 427e59f09fdba387547106de7bab980b7fff77be caused this to become
-> visible through e.g. iostat -x .
-> 
-> Signed-off-by: Miquel van Smoorenburg <mikevs@xs4all.net>
-> 
-> --- linux-2.6.27.4/drivers/scsi/dpt_i2o.c.ORIG	2008-10-26 00:05:07.000000000 +0200
-> +++ linux-2.6.27.4/drivers/scsi/dpt_i2o.c	2008-11-04 23:43:13.000000000 +0100
-> @@ -2445,7 +2445,7 @@
->  	hba_status = detailed_status >> 8;
->  
->  	// calculate resid for sg 
-> -	scsi_set_resid(cmd, scsi_bufflen(cmd) - readl(reply+5));
-> +	scsi_set_resid(cmd, scsi_bufflen(cmd) - readl(reply+20));
->  
+> Your patch is not optimized.
 
-I do wish that someone could do a:
-+	scsi_set_resid(cmd, scsi_bufflen(cmd) - readl(REG_BYTE_COUNT));
+What do you mean exactly?
 
-or what ever. To prevent just these errors from happening.
 
->  	pHba = (adpt_hba*) cmd->device->host->hostdata[0];
->  
-> @@ -2456,7 +2456,7 @@
->  		case I2O_SCSI_DSC_SUCCESS:
->  			cmd->result = (DID_OK << 16);
->  			// handle underflow
-> -			if(readl(reply+5) < cmd->underflow ) {
-> +			if (readl(reply+20) < cmd->underflow) {
-
-Look here it is used a gain. I would say it calls for a constant
-
->  				cmd->result = (DID_ERROR <<16);
->  				printk(KERN_WARNING"%s: SCSI CMD underflow\n",pHba->name);
->  			}
-
-I understand that this is not your fault, but Just for the record, as a
-"TODO:" comment for us all.
-
-Thanks
-Boaz
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
