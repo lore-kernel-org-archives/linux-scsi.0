@@ -1,23 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Wed, 05 Nov 2008 13:46:13 -0500
-Message-ID: <1225910773.4703.51.camel@localhost.localdomain>
-References: <20081105040154.9690A108048@picon.linux-foundation.org>
-	 <1225898691.4703.32.camel@localhost.localdomain>
-	 <4911D6F2.2080309@cs.wisc.edu>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Wed,  5 Nov 2008 10:47:02 -0800 (PST)
+Message-ID: <20081105184702.CB07711D10C@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39135 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752107AbYKESq0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 13:46:26 -0500
-In-Reply-To: <4911D6F2.2080309@cs.wisc.edu>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50271 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752613AbYKESrb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Nov 2008 13:47:31 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA5Il2Tp032221
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 10:47:03 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #21 from anonymous@kernel-bugs.osdl.org  2008-11-05 10:47 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Wed, 2008-11-05 at 11:25 -0600, Mike Christie wrote:
 > James Bottomley wrote:
@@ -76,3 +86,7 @@ endless loop.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
