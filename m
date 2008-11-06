@@ -1,40 +1,31 @@
-From: jim owens <jowens@hp.com>
+From: David Woodhouse <dwmw2@infradead.org>
 Subject: Re: thin provisioned LUN support
-Date: Thu, 06 Nov 2008 10:57:25 -0500
-Message-ID: <491313E5.6060505@hp.com>
-References: <4913028B.6010405@redhat.com> <49130CF2.6010403@hp.com>
+Date: Thu, 6 Nov 2008 15:57:29 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0811061556560.3431@Nokia-N800-26>
+References: <4913028B.6010405@redhat.com> <yq1d4h8nao5.fsf@sermon.lab.mkp.net>
+ <4913107C.3040607@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:17865 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528AbYKFP53 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 10:57:29 -0500
-In-Reply-To: <49130CF2.6010403@hp.com>
+Received: from casper.infradead.org ([85.118.1.10]:40777 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbYKFP5T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 10:57:19 -0500
+In-Reply-To: <4913107C.3040607@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ric Wheeler <rwheeler@redhat.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
 
-James Bottomley wrote:
+On Thu, 6 Nov 2008, Ric Wheeler wrote:
 
-> By the way, the latest (from 2 days ago) version of the Thin
-> Provisioning proposal is here:
-> 
-> http://www.t10.org/ftp/t10/document.08/08-149r4.pdf
+> Just not sure that we have any way to handle this better than what is in 
+> already (best effort, maybe a post/defrag like user util that can be run 
+> offline to clean up?)
 
-If I understand the spec [ not likely ;) ] ...
+Well, it will get a _little_ better, because we will fix it so that 
+discard requests can at least be merged by the elevators (and stop being 
+barriers)
 
-jim owens wrote:
-
- > And the vendors need to provide the device trim chunk size in
- > a standard way (like scsi geometry) to the filesystem.
-
-It may be that the READ CAPACITY (16) provides the trim chunk
-size via the "logical blocks per physical block exponent".
-
-But since this is just a T10 spec, I would want that
-interpretation verified by the array vendors.
-
-jim
+-- 
+dwmw2
