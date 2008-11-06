@@ -1,51 +1,42 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Thu,  6 Nov 2008 06:58:24 -0800 (PST)
-Message-ID: <20081106145824.57883108058@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [patch 3/8] zfcp: fix mempool usage for status_read requests
+Date: Thu, 6 Nov 2008 16:16:11 +0100
+Message-ID: <20081106151611.GA3871@schmichrtp.de.ibm.com>
+References: <20081104153504.606043000@de.ibm.com> <20081104153627.530433000@de.ibm.com> <1225907172.4703.45.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32990 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751434AbYKFO7O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 09:59:14 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA6EwOIb007052
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Nov 2008 06:58:25 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:52540 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbYKFPQO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 10:16:14 -0500
+Content-Disposition: inline
+In-Reply-To: <1225907172.4703.45.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
-
-
-
-
-
-------- Comment #26 from anonymous@kernel-bugs.osdl.org  2008-11-06 06:58 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Wed, 2008-11-05 at 18:19 -0800, bugme-daemon@bugzilla.kernel.org
-wrote:
-> ------- Comment #25 from yanmin_zhang@linux.intel.com  2008-11-05 18:19 -------
-> Created an attachment (id=18697)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view)
->  --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view)
-> Here is the patch to fix it against 2.6.28-rc3.
+On Wed, Nov 05, 2008 at 12:46:12PM -0500, James Bottomley wrote:
+> On Tue, 2008-11-04 at 16:35 +0100, Christof Schmitt wrote:
+> > plain text document attachment (fix-status-read-alloc.diff)
+> > From: Christof Schmitt <christof.schmitt@de.ibm.com>
+> > 
+> > When allocating fsf requests without qtcb, store the pointer to the
+> > mempool in the fsf requests for later call to mempool_free. This
+> > codepath is only used by the status_read requests.
+> > 
+> > Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> > Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 > 
-> I tested the patch on my 2 machines and it does fix the issue.
+> I put this one in, but can you explain this last signoff better?  You
+> sent me the patch, so your signoff should appear last.  If Swen altered
+> the patch, his signoff should appear before yours (with a small
+> explanation of the alteration in square brackets).  If he's just
+> approving it, it should be Acked-by: not Signed-off-by:
 
-The problem is that it doesn't fix the theoretical tight loop, so
-someone else will run into the issue under more trying circumstances.
+I wrote the patch, Swen reviewed it and i sent it as part of the patch
+series. It looks like this did not follow the exact guidelines. For
+future patches, i will document the review with the "Acked-by:".
 
-The only reason a patch which conditionally NULLs starved_head works
-over one that does it absolutely should be that there's some other loop
-that requires it being set to effect a break out.
-
-James
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Christof
