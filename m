@@ -1,79 +1,52 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH] Retry mode select in rdac device handler
-Date: Wed, 05 Nov 2008 20:06:37 -0800
-Message-ID: <1225944397.14830.1111.camel@chandra-ubuntu>
-Reply-To: sekharan@us.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Problems with the block-layer timeouts
+Date: Thu, 6 Nov 2008 08:23:54 +0100
+Message-ID: <20081106072352.GR21867@kernel.dk>
+References: <Pine.LNX.4.44L0.0811011214470.21703-100000@netrider.rowland.org> <20081103085247.GO31673@kernel.dk> <20081106090117U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:36982 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789AbYKFEHk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 23:07:40 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mA646rNQ010253
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:06:53 -0700
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mA647deq125860
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:07:39 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mA647AHv012598
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:07:10 -0700
+Received: from pasmtpb.tele.dk ([80.160.77.98]:47175 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753569AbYKFHZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2008 02:25:20 -0500
+Content-Disposition: inline
+In-Reply-To: <20081106090117U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: dm-devel <dm-devel@redhat.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: stern@rowland.harvard.edu, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When the mode select sent to the controller fails with the retryable
-error, it is better to retry the mode_select from the hardware handler
-itself, instead of propagating the failure to dm-multipath.
+On Thu, Nov 06 2008, FUJITA Tomonori wrote:
+> On Mon, 3 Nov 2008 09:52:48 +0100
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > > In blk_del_timer(), there's no reason to test q->rq_timed_out_fn.  If 
+> > > the method pointer is NULL then req->deadline would be 0 anyway.  In 
+> > > addition, req->deadline should be set to 0 and the end of the routine, 
+> > > just in case req gets requeued.
+> > > 
+> > > In blk_add_timer(), the line
+> > > 
+> > > 	expiry = round_jiffies(req->deadline);
+> > > 
+> > > is not optimal.  round_jiffies() will sometimes round a value _down_ to
+> > > the nearest second.  But blk_rq_timed_out_timer() tests whether
+> > > req->deadline is in the past -- and if the deadline was rounded down
+> > > then this won't be true the first time through.  You wind up getting an
+> > > unnecessary timer interrupt.  Instead there should be a
+> > > round_jiffies_up() utility routine, and it should be used in both
+> > > blk_add_timer() and blk_rq_timed_out_timer().
+> > 
+> > Very good point, we do indeed want a round_jiffies_up() for this!
+> 
+> Just out of curiosity, why do we need to use round_jiffies here? We
+> didn't do that for SCSI, right?
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
-Index: linux-2.6.28-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
-===================================================================
---- linux-2.6.28-rc3.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ linux-2.6.28-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -24,6 +24,7 @@
- #include <scsi/scsi_dh.h>
- 
- #define RDAC_NAME "rdac"
-+#define RDAC_RETRY_COUNT 5
- 
- /*
-  * LSI mode page stuff
-@@ -477,21 +478,27 @@ static int send_mode_select(struct scsi_
- {
- 	struct request *rq;
- 	struct request_queue *q = sdev->request_queue;
--	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-+	int err, retry_cnt = RDAC_RETRY_COUNT;
- 
-+retry:
-+	err = SCSI_DH_RES_TEMP_UNAVAIL;
- 	rq = rdac_failover_get(sdev, h);
- 	if (!rq)
- 		goto done;
- 
--	sdev_printk(KERN_INFO, sdev, "queueing MODE_SELECT command.\n");
-+	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
-+		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
- 
- 	err = blk_execute_rq(q, NULL, rq, 1);
--	if (err != SCSI_DH_OK)
-+	blk_put_request(rq);
-+	if (err != SCSI_DH_OK) {
- 		err = mode_select_handle_sense(sdev, h->sense);
-+		if (err == SCSI_DH_RETRY && retry_cnt--)
-+			goto retry;
-+	}
- 	if (err == SCSI_DH_OK)
- 		h->state = RDAC_STATE_ACTIVE;
- 
--	blk_put_request(rq);
- done:
- 	return err;
- }
+We don't have to, but given that we don't care about exact timeouts, we
+may as well. It's not a new thing, we've done that since pretty much the
+beginning of the generic timeout development.
 
+-- 
+Jens Axboe
 
