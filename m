@@ -1,34 +1,38 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: thin provisioned LUN support
-Date: Thu, 06 Nov 2008 09:43:23 -0500
-Message-ID: <4913028B.6010405@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Thu, 06 Nov 2008 08:57:38 -0600
+Message-ID: <1225983458.4703.66.camel@localhost.localdomain>
+References: <20081106021956.75C2911D10A@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42713 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751112AbYKFO5p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 09:57:45 -0500
+In-Reply-To: <20081106021956.75C2911D10A@picon.linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
+On Wed, 2008-11-05 at 18:19 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> ------- Comment #25 from yanmin_zhang@linux.intel.com  2008-11-05 18:19 -------
+> Created an attachment (id=18697)
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view)
+> Here is the patch to fix it against 2.6.28-rc3.
+> 
+> I tested the patch on my 2 machines and it does fix the issue.
 
-After talking to some vendors, one issue that came up is that the arrays 
-all have a different size that is used internally to track the SCSI 
-equivalent of TRIM commands (POKE/unmap).
+The problem is that it doesn't fix the theoretical tight loop, so
+someone else will run into the issue under more trying circumstances.
 
-What they would like is for us to coalesce these commands into aligned 
-multiples of these chunks. If not, the target device will most likely 
-ignore the bits at the beginning and end (and all small requests).
+The only reason a patch which conditionally NULLs starved_head works
+over one that does it absolutely should be that there's some other loop
+that requires it being set to effect a break out.
 
-I have been thinking about whether or not we can (and should) do 
-anything more than our current best effort to send down large chunks 
-(note that the "chunk" size can range from reasonable sizes like 8KB or 
-so up to close to 1MB!).
+James
 
-One suggestion is that a modified defrag sweep could be used 
-periodically to update the device (a proposal I am not keen on).
-
-Thoughts?
-
-Ric
 
