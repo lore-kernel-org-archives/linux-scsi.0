@@ -1,61 +1,44 @@
-From: Ric Wheeler <rwheeler@redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: thin provisioned LUN support
-Date: Thu, 06 Nov 2008 12:04:22 -0500
-Message-ID: <49132396.4050405@redhat.com>
-References: <4913028B.6010405@redhat.com>	<1225984628.4703.80.camel@localhost.localdomain>	<Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>	<491314B2.9040902@redhat.com> <yq18wrwn6yp.fsf@sermon.lab.mkp.net>
+Date: Thu, 6 Nov 2008 10:15:28 -0700
+Message-ID: <20081106171528.GA11773@parisc-linux.org>
+References: <4913028B.6010405@redhat.com> <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:48328 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750860AbYKFREf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2008 12:04:35 -0500
-In-Reply-To: <yq18wrwn6yp.fsf@sermon.lab.mkp.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:46554 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbYKFRPp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 12:15:45 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Jens Axboe <jens.axboe@oracle.com>
 
-Martin K. Petersen wrote:
->>>>>> "Ric" == Ric Wheeler <rwheeler@redhat.com> writes:
->>>>>>             
->
-> Ric> Big arrays have an internal "track" size that is much larger than
-> Ric> 512 bytes (Symm for example is 64k. Everything smaller than that
-> Ric> is a read-modify-write. Effectively, they have few to no bits
-> Ric> left to track this other bit of state at the smal level of
-> Ric> granularity.
->
-> My point still stands that this is an implementation problem in the
-> array firmware.  It's not really our problem to solve.  Especially
-> since drive vendors and mid-range storage vendors are getting it
-> right.
->
-> If EMC wants to provide thin provisioning on the Symmetrix they'll
-> have to overcome the inherent limitations in their own internal
-> architecture.
->
-> What's next?  Requiring us to exclusively read and write in multiples
-> of block sizes that are artifacts of internal array implementation
-> details?
->
-> For thin provisioning to really work on the Symm, then, we're
-> effectively requiring the filesystem to use 64k filesystem blocks.
-> Lame!
->
-> I don't have a problem with honoring some bits akin to the block
-> device characteristics VPD in trying to do a best-effort scheduling of
-> the I/O.  But effectively disabling thin provisioning for blocks
-> smaller than that is simply broken.
->   
+On Thu, Nov 06, 2008 at 03:24:05PM +0000, David Woodhouse wrote:
+> I think we should be content to declare such devices 'broken'.
+> 
+> They have to keep track of individual sectors _anyway_, and dropping 
+> information for small discard requests is just careless.
 
-Actually, the big arrays have larger "unmap" chunks than the 64k, so it 
-is even more painful than that :-)
+As an implementor of such a device, I say "ya, boo, sucks to you".
+ata_ram simply ignores the bits of the trim which don't line up with the
+page size chunks it's allocated.  Sure, it'd be possible to add a bitmap
+to indicate which 512-byte chunks of the block contain data and which
+don't, but I haven't done that yet.  I think there's even space in the
+struct page that I can abuse to do that.
 
-What is likely to happen is that "thin" will work for vendors with this 
-kind of limitation in a very limited way and they will need to have some 
-kind of user space tool to clean up the mess.
+I think this really is a QoI thing.  Vendors who don't track individual
+sectors will gradually get less and less efficient.  Hopefully users
+will buy from vendors who don't cheat.  We can even write a quick
+program to allocate the entire drive then trim sectors in a chessboard
+patterns.  That'll let users see who's got a crap implementation and
+who's got a good one.
 
-ric
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
