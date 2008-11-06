@@ -1,65 +1,76 @@
-From: Brian Kysela <brian.kysela@gmail.com>
-Subject: Re: [BUG] usb-storage: Error in queuecommand: us->srb = ffff88006a338480
-Date: Thu, 6 Nov 2008 15:12:32 -0500
-Message-ID: <20081106201232.GA25383@ezra.hsd1.tn.comcast.net>
-References: <20081030213557.GA6767@ezra.hsd1.tn.comcast.net> <20081105174905.27194494.akpm@linux-foundation.org>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: thin provisioned LUN support
+Date: Fri, 7 Nov 2008 09:36:05 +1100
+Message-ID: <20081106223605.GC2373@disturbed>
+References: <4913028B.6010405@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:50831 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792AbYKFUMi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 15:12:38 -0500
+Received: from ipmail01.adl6.internode.on.net ([203.16.214.146]:57191 "EHLO
+	ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750909AbYKFWgR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 17:36:17 -0500
 Content-Disposition: inline
-In-Reply-To: <20081105174905.27194494.akpm@linux-foundation.org>
+In-Reply-To: <4913028B.6010405@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, stern@rowland.harvard.edu, Jens Axboe <jens.axboe@oracle.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
 
-On 2008-11-05 at 17:49 -0800, Andrew Morton wrote: 
-> On Thu, 30 Oct 2008 17:35:57 -0400
-> Brian Kysela <bkysela@gmail.com> wrote:
-> 
-> > On kernels ranging from 2.6.26 - 2.6.28-rc2
-> 
-> So 2.6.25 was OK?
+On Thu, Nov 06, 2008 at 09:43:23AM -0500, Ric Wheeler wrote:
+>
+> After talking to some vendors, one issue that came up is that the arrays  
+> all have a different size that is used internally to track the SCSI  
+> equivalent of TRIM commands (POKE/unmap).
+>
+> What they would like is for us to coalesce these commands into aligned  
+> multiples of these chunks. If not, the target device will most likely  
+> ignore the bits at the beginning and end (and all small requests).
 
-I had only tested back to 2.6.26. If I have time and find a kernel
-before that that works consistently, I'll let you know.
+There's lots of questions that need to be answered here. e.g:
 
-> 
-> > on an Intel P4 3.2GHz HT x86-64
-> > cpu, I am seeing a bug that occurs about half the time when copying ~300MB
-> > data from a usb flash drive (FAT) to hard drive (XFS). There are three
-> > possible outcomes, so far, when I hit the bug:
-> > 
-> >     (1) The copy process hangs, cpu wait hits 100% and load avg climbs until
-> >         reboot;
-> >     (2) The copy process hangs and then recovers and then one of:
-> >         (a) the cpu wait & load avg both decline to normal; or
-> >         (b) cpu wait hovers at 100% and the load avg slowly climbs until reboot;
-> >     (3) Kernel bug reported and machine locks up.
-> > 
-> > Result (1) is the most frequent. Result (3) happened only twice out of about 40
-> > tests. I lose the full traces, but here are two relevant lines that I see on
-> > screen before the machine locks up:
-> > 
-> > kernel BUG at /home/brian/linux-2.6/block/elevator.c:841!
-> > invalid opcode: 0000 [#1] PREMPT SMP
-> 
-> It is unclear what kernel version produced that message, and that is
-> important information.  In 2.6.28-rc2, block/elevator.c:841 is
-> 
->     void elv_dequeue_request(struct request_queue *q, struct request *rq)
->     {
-> -->>	BUG_ON(list_empty(&rq->queuelist));
-> 	BUG_ON(ELV_ON_HASH(rq));
-> 
-> please confirm that I have the correct line there.
+Where are these free spaces going to be aggregated before dispatch?
 
-Yes, that's the correct line, it was 2.6.28-rc2 that produced those.
-I'll try usbmon per Alan Stern's suggestion and see if that shows
-anything interesting.
+What happens if they are re-allocated and re-written by the
+filesystem before they've been dispatched?
 
-Brian 
+How is the chunk size going to be passed to the aggregation layer?
+
+What about passing itto the filesystem so it can align all it's
+allocations in a manner that simplifies the dispatch problem?
+
+What happens if a crash occurs before the aggregated free space is
+dispatched?
+
+Are there coherency problems with filesystem recovery after a crash?
+
+> I have been thinking about whether or not we can (and should) do  
+> anything more than our current best effort to send down large chunks  
+> (note that the "chunk" size can range from reasonable sizes like 8KB or  
+> so up to close to 1MB!).
+
+Any aggregation is only as good as the original allocation the
+filesystem did. Look as the mess ext3 extracting untarring a kernel
+tarball creates - blocks are written to all over the place. You'd
+need to fix that to have any hope of behaviour nicely for a RAID
+that has a sub-optimal thin provisioning algorithm.
+
+The problem is not with the filesystem, the block layer or the OS.
+If they array vendors have optimised themselves into a corner,
+then they shoul dbe fixing their problem, not asking the rest of
+the world to expend large amounts of effort to work around the
+shortcomings of their products.....
+
+> One suggestion is that a modified defrag sweep could be used
+> periodically to update the device (a proposal I am not keen on).
+
+No thanks. That needs an implementation per filesystem, and it will
+need to be done with the filesystem on line which means it will
+still need substantial help from the kernel.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
