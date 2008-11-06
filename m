@@ -1,36 +1,50 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Wed,  5 Nov 2008 18:19:56 -0800 (PST)
-Message-ID: <20081106021956.75C2911D10A@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH] Make sure the state of a path is set properly when
+	controller is swapped from passive to active
+Date: Wed, 05 Nov 2008 20:05:21 -0800
+Message-ID: <1225944321.14830.1109.camel@chandra-ubuntu>
+Reply-To: sekharan@us.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34466 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751060AbYKFCT7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 21:19:59 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA62JueA030566
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 18:19:57 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:37100 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789AbYKFEGY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2008 23:06:24 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mA645pgf031561
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:05:51 -0700
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mA646N9L111406
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:06:23 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mA645rR6010324
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2008 21:05:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: dm-devel <dm-devel@redhat.com>, "Moger, Babu" <Babu.Moger@lsi.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+When the controller ownership is changed (from passive to active),
+check_ownership() doesn't set the state of the device to ACTIVE.
+
+This patch fixes the problem.
+
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Reported and tested by: "Moger, Babu" <Babu.Moger@lsi.com>
+---
+Index: linux-2.6.28-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux-2.6.28-rc3.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ linux-2.6.28-rc3/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -387,6 +387,7 @@ static int check_ownership(struct scsi_d
+ 	struct c9_inquiry *inqp;
+ 
+ 	h->lun_state = RDAC_LUN_UNOWNED;
++	h->state = RDAC_STATE_ACTIVE;
+ 	err = submit_inquiry(sdev, 0xC9, sizeof(struct c9_inquiry), h);
+ 	if (err == SCSI_DH_OK) {
+ 		inqp = &h->inq.c9;
 
 
-
-
-
-------- Comment #25 from yanmin_zhang@linux.intel.com  2008-11-05 18:19 -------
-Created an attachment (id=18697)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view)
-Here is the patch to fix it against 2.6.28-rc3.
-
-I tested the patch on my 2 machines and it does fix the issue.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
