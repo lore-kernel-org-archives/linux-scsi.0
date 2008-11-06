@@ -1,43 +1,65 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Brian Kysela <brian.kysela@gmail.com>
 Subject: Re: [BUG] usb-storage: Error in queuecommand: us->srb = ffff88006a338480
-Date: Thu, 6 Nov 2008 14:36:40 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811061435070.23473-100000@iolanthe.rowland.org>
-References: <20081106095757.2c2fcdc3.akpm@linux-foundation.org>
+Date: Thu, 6 Nov 2008 15:12:32 -0500
+Message-ID: <20081106201232.GA25383@ezra.hsd1.tn.comcast.net>
+References: <20081030213557.GA6767@ezra.hsd1.tn.comcast.net> <20081105174905.27194494.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41885 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751005AbYKFTgl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 14:36:41 -0500
-In-Reply-To: <20081106095757.2c2fcdc3.akpm@linux-foundation.org>
+Received: from qw-out-2122.google.com ([74.125.92.26]:50831 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbYKFUMi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 15:12:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20081105174905.27194494.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Brian Kysela <bkysela@gmail.com>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stern@rowland.harvard.edu, Jens Axboe <jens.axboe@oracle.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 6 Nov 2008, Andrew Morton wrote:
-
-> > The error message:
-> > 
-> > > [  152.701070] usb-storage: Error in queuecommand: us->srb = ffff88007dfd0680
-> > 
-> > means that the SCSI layer has told usb-storage to start a new command 
-> > before the old one completed.  This could happen, for example, if the 
-> > SCSI layer had gotten confused and tried to cancel a command that 
-> > wasn't running -- then it would think usb-storage was idle when in fact 
-> > it was still busy.  (This was the failure mechanism resulting from the 
-> > timeout changes.)
-> > 
+On 2008-11-05 at 17:49 -0800, Andrew Morton wrote: 
+> On Thu, 30 Oct 2008 17:35:57 -0400
+> Brian Kysela <bkysela@gmail.com> wrote:
 > 
-> OK, thanks.  I'll cc linux-scsi, but I have this-wont-be-getting-fixed
-> feelings on this one :(
+> > On kernels ranging from 2.6.26 - 2.6.28-rc2
 > 
-> I wonder what's special about Brian's setup.
+> So 2.6.25 was OK?
 
-Brian, if you can use usbmon to monitor what happens during the file 
-copy and subsequent error, it might provide a clue.  Instructions are 
-in the kernel source file Documentation/usb/usbmon.txt.
+I had only tested back to 2.6.26. If I have time and find a kernel
+before that that works consistently, I'll let you know.
 
-Alan Stern
+> 
+> > on an Intel P4 3.2GHz HT x86-64
+> > cpu, I am seeing a bug that occurs about half the time when copying ~300MB
+> > data from a usb flash drive (FAT) to hard drive (XFS). There are three
+> > possible outcomes, so far, when I hit the bug:
+> > 
+> >     (1) The copy process hangs, cpu wait hits 100% and load avg climbs until
+> >         reboot;
+> >     (2) The copy process hangs and then recovers and then one of:
+> >         (a) the cpu wait & load avg both decline to normal; or
+> >         (b) cpu wait hovers at 100% and the load avg slowly climbs until reboot;
+> >     (3) Kernel bug reported and machine locks up.
+> > 
+> > Result (1) is the most frequent. Result (3) happened only twice out of about 40
+> > tests. I lose the full traces, but here are two relevant lines that I see on
+> > screen before the machine locks up:
+> > 
+> > kernel BUG at /home/brian/linux-2.6/block/elevator.c:841!
+> > invalid opcode: 0000 [#1] PREMPT SMP
+> 
+> It is unclear what kernel version produced that message, and that is
+> important information.  In 2.6.28-rc2, block/elevator.c:841 is
+> 
+>     void elv_dequeue_request(struct request_queue *q, struct request *rq)
+>     {
+> -->>	BUG_ON(list_empty(&rq->queuelist));
+> 	BUG_ON(ELV_ON_HASH(rq));
+> 
+> please confirm that I have the correct line there.
 
+Yes, that's the correct line, it was 2.6.28-rc2 that produced those.
+I'll try usbmon per Alan Stern's suggestion and see if that shows
+anything interesting.
+
+Brian 
