@@ -1,93 +1,62 @@
-From: Paul Mackerras <paulus@samba.org>
-Subject: [PATCH] scsi: Eliminate compile warning in ibmvfc.c
-Date: Fri, 7 Nov 2008 14:16:30 +1100
-Message-ID: <18707.45838.704492.589455@cargo.ozlabs.ibm.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Problems with the block-layer timeouts
+Date: Fri, 7 Nov 2008 13:05:55 +0900
+Message-ID: <20081107130552K.fujita.tomonori@lab.ntt.co.jp>
+References: <20081103085247.GO31673@kernel.dk>
+	<20081106090117U.fujita.tomonori@lab.ntt.co.jp>
+	<20081106072352.GR21867@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:58225 "EHLO ozlabs.org"
+Received: from sh.osrg.net ([192.16.179.4]:42522 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900AbYKGDQr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2008 22:16:47 -0500
+	id S1750806AbYKGEGJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2008 23:06:09 -0500
+In-Reply-To: <20081106072352.GR21867@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, sfr@canb.auug.org.au
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, stern@rowland.harvard.edu, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Recent gcc (4.3.2) gives this compile warning on
-drivers/scsi/ibmvscsi/ibmvfc.o:
+On Thu, 6 Nov 2008 08:23:54 +0100
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-  CC      drivers/scsi/ibmvscsi/ibmvfc.o
-.../drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_reset_device':
-.../drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: 'evt' may be used uninitialized in this function
+> On Thu, Nov 06 2008, FUJITA Tomonori wrote:
+> > On Mon, 3 Nov 2008 09:52:48 +0100
+> > Jens Axboe <jens.axboe@oracle.com> wrote:
+> > 
+> > > > In blk_del_timer(), there's no reason to test q->rq_timed_out_fn.  If 
+> > > > the method pointer is NULL then req->deadline would be 0 anyway.  In 
+> > > > addition, req->deadline should be set to 0 and the end of the routine, 
+> > > > just in case req gets requeued.
+> > > > 
+> > > > In blk_add_timer(), the line
+> > > > 
+> > > > 	expiry = round_jiffies(req->deadline);
+> > > > 
+> > > > is not optimal.  round_jiffies() will sometimes round a value _down_ to
+> > > > the nearest second.  But blk_rq_timed_out_timer() tests whether
+> > > > req->deadline is in the past -- and if the deadline was rounded down
+> > > > then this won't be true the first time through.  You wind up getting an
+> > > > unnecessary timer interrupt.  Instead there should be a
+> > > > round_jiffies_up() utility routine, and it should be used in both
+> > > > blk_add_timer() and blk_rq_timed_out_timer().
+> > > 
+> > > Very good point, we do indeed want a round_jiffies_up() for this!
+> > 
+> > Just out of curiosity, why do we need to use round_jiffies here? We
+> > didn't do that for SCSI, right?
+> 
+> We don't have to, but given that we don't care about exact timeouts, we
+> may as well. It's not a new thing, we've done that since pretty much the
+> beginning of the generic timeout development.
 
-This fixes it by rearranging the code a little.  This makes no
-semantic change to the code except that the error message in the
-vhost->state != IBMVFC_ACTIVE case is a little more explicit.
-
-Signed-off-by: Paul Mackerras <paulus@samba.org>
----
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 7650707..e6c149f 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1630,32 +1630,37 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
- 	struct ibmvfc_event *evt;
- 	union ibmvfc_iu rsp_iu;
- 	struct ibmvfc_fcp_rsp *fc_rsp = &rsp_iu.cmd.rsp;
--	int rsp_rc = -EBUSY;
-+	int rsp_rc;
- 	unsigned long flags;
- 	int rsp_code = 0;
- 
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
--	if (vhost->state == IBMVFC_ACTIVE) {
--		evt = ibmvfc_get_event(vhost);
--		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
--
--		tmf = &evt->iu.cmd;
--		memset(tmf, 0, sizeof(*tmf));
--		tmf->resp.va = (u64)evt->crq.ioba + offsetof(struct ibmvfc_cmd, rsp);
--		tmf->resp.len = sizeof(tmf->rsp);
--		tmf->frame_type = IBMVFC_SCSI_FCP_TYPE;
--		tmf->payload_len = sizeof(tmf->iu);
--		tmf->resp_len = sizeof(tmf->rsp);
--		tmf->cancel_key = (unsigned long)sdev->hostdata;
--		tmf->tgt_scsi_id = rport->port_id;
--		int_to_scsilun(sdev->lun, &tmf->iu.lun);
--		tmf->flags = (IBMVFC_NO_MEM_DESC | IBMVFC_TMF);
--		tmf->iu.tmf_flags = type;
--		evt->sync_iu = &rsp_iu;
--
--		init_completion(&evt->comp);
--		rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
-+	if (vhost->state != IBMVFC_ACTIVE) {
-+		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+		sdev_printk(KERN_ERR, sdev,
-+			"Failed to send %s reset event; not active\n", desc);
-+		return -EIO;
- 	}
-+	evt = ibmvfc_get_event(vhost);
-+	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
-+
-+	tmf = &evt->iu.cmd;
-+	memset(tmf, 0, sizeof(*tmf));
-+	tmf->resp.va = (u64)evt->crq.ioba + offsetof(struct ibmvfc_cmd, rsp);
-+	tmf->resp.len = sizeof(tmf->rsp);
-+	tmf->frame_type = IBMVFC_SCSI_FCP_TYPE;
-+	tmf->payload_len = sizeof(tmf->iu);
-+	tmf->resp_len = sizeof(tmf->rsp);
-+	tmf->cancel_key = (unsigned long)sdev->hostdata;
-+	tmf->tgt_scsi_id = rport->port_id;
-+	int_to_scsilun(sdev->lun, &tmf->iu.lun);
-+	tmf->flags = (IBMVFC_NO_MEM_DESC | IBMVFC_TMF);
-+	tmf->iu.tmf_flags = type;
-+	evt->sync_iu = &rsp_iu;
-+
-+	init_completion(&evt->comp);
-+	rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
-+
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- 
- 	if (rsp_rc != 0) {
+I'm not sure that the users of the timeout feature can control exact
+timeouts because the block layer doesn't let the users directly play
+with the timer. elv_dequeue_request() is not the exact time that the
+users want to start the timer. Instead, the block layer hides the
+details behind the elevator (note that as I said before, I think that
+it's the right thing). So the round_jiffies in the block layer doesn't
+make sense to me. I prefer remove them instead of adding a bunch of
+round_jiffies_up_* (I bet that some of them will never be used).
