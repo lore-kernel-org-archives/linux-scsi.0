@@ -1,41 +1,74 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+From: Ric Wheeler <rwheeler@redhat.com>
 Subject: Re: thin provisioned LUN support & file system allocation policy
-Date: Fri, 7 Nov 2008 15:45:27 +0100
-Message-ID: <20081107144527.GA32092@logfs.org>
-References: <4913028B.6010405@redhat.com> <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26> <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com> <20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com> <20081107143425.GE15439@parisc-linux.org>
+Date: Fri, 07 Nov 2008 09:54:02 -0500
+Message-ID: <4914568A.7090307__25453.1140476049$1226069774$gmane$org@redhat.com>
+References: <4913028B.6010405@redhat.com> <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26> <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com> <20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com> <20081107144311.GE9543@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lazybastard.de ([212.112.238.170]:48625 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbYKGOqF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2008 09:46:05 -0500
-Content-Disposition: inline
-In-Reply-To: <20081107143425.GE15439@parisc-linux.org>
+Received: from mx2.redhat.com ([66.187.237.31]:43152 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbYKGOym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2008 09:54:42 -0500
+In-Reply-To: <20081107144311.GE9543@mit.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Theodore Tso <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>
+To: Theodore Tso <tytso@mit.edu>, Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, David
 
-On Fri, 7 November 2008 07:34:26 -0700, Matthew Wilcox wrote:
->=20
-> It's the opposite of a _flash_ friendly policy.  But SSDs are not nai=
-ve
-> flash implementations -- if you overwrite a block, it'll just write
-> elsewhere and update its internal mapping of LBAs to sectors.  I
+Theodore Tso wrote:
+> On Fri, Nov 07, 2008 at 09:26:49AM -0500, Ric Wheeler wrote:
+>   
+>> One more consideration that I should have mentioned is that we can also  
+>> make our file system allocation policies "thin provisioned LUN" friendly.
+>>
+>> Basically, we need to try to re-allocate blocks instead of letting the  
+>> allocations happily progress across the entire block range. This might  
+>> be the inverse of an SSD friendly allocation policy, but would seem to  
+>> be fairly trivial to implement :-)
+>>     
+>
+> I would think that most non log-structured filesystems do this by
+> default.  
+>   
 
-Note that for many of the *cough* cheaper implementations, "elsewhere"
-is still very close to the specified address.
+I am not sure - it would be interesting to use blktrace to build a 
+visual map of how we allocate/free blocks as a file system ages.
 
-J=C3=B6rn
+> The one thing we might need for SSD-friendly allocation policies is to
+> tell the allocators to not try so hard to make sure allocations are
+> contiguous, but there are other reasons why you want contiguous
+> extents anyway (such as reducing the size of your extent tree and
+> reducing the number of block allocation data structures that need to
+> be updated).  And, I think to some extent SSD's do care to some level
+> about contiguous extents, from the point of view of reducing scatter
+> gather operations if nothing else, right?
+>
+> 					- Ted
+>   
+I think that contiguous allocations are still important (especially 
+since the big arrays really like to have contiguous, large chunks of 
+space freed up at once so their unmap/TRIM support works better :-)) For 
+SSD's, streaming writes are still faster than scattered small block 
+writes, so I think contiguous allocation would help them as well.
 
---=20
-When people work hard for you for a pat on the back, you've got
-to give them that pat.
--- Robert Heinlein
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The type of allocation that would help most is something that tries to 
+keep the lower block ranges "hot" for allocation, second best policy 
+would simply keep the allocated blocks in each block group hot and 
+re-allocate them.
+
+One other interesting feature is that the thin luns have a high water 
+mark which can be used to send an out of band (i.e., to some user space 
+app) notification when you hit a specified percentage of your physically 
+allocated blocks. The key is to set this so that a human can have time 
+to react by trying to expand the size of the physical pool (throw in 
+another disk).
+
+We could trigger some file system clean up at this point as well if we 
+could try to repack our allocated blocks and then update the array. Of 
+course, this would only help when the array's concept of used data is 
+wildly out of sync with our concept of allocated blocks which happens 
+when it drops the unmap commands or we don't send them.
+
+Ric
+
