@@ -1,30 +1,56 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: thin provisioned LUN support
-Date: Fri, 7 Nov 2008 16:28:11 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0811071625280.2199@Nokia-N800-26>
-References: <4913028B.6010405@redhat.com>  <1225984628.4703.80.camel@localhost.localdomain>
-  <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>  <20081107120534.GO21867@kernel.dk>
-  <1226072970.15281.46.camel@think.oraclecorp.com>  <yq1r65na5ll.fsf@sermon.lab.mkp.net>
-  <1226074002.8030.33.camel@localhost.localdomain>
- <1226074270.15281.50.camel@think.oraclecorp.com> <1226074710.8030.43.camel@localhost.localdomain>
- <49146B63.70208@redhat.com>
+From: bburk@extremeprotocol.com
+Subject: ATA QWORD buffer formatting
+Date: Fri, 07 Nov 2008 09:31:24 -0700
+Message-ID: <20081107093124.a3c6426c1bfee0652ed014f32bc3b38e.636e892f97.wbe@email.secureserver.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <49146B63.70208@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Chris Mason <chris.mason@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, David Woodhouse <dwmw2@infradead.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpoutwbe04.prod.mesa1.secureserver.net ([208.109.78.206]:60980
+	"HELO smtpoutwbe04.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750911AbYKGQb2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2008 11:31:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 7 Nov 2008, Ric Wheeler wrote:
+I'm a little fuzzy on the format of an ATA "QWORD" for the SCT commands.
+ 
+ 
+http://www.t13.org/Documents/UploadedDocuments/docs2006/D1699r3e-ATA8_ACS.pdf
+ 
+ 
+ 
+Assume a QWORD LBA of 0102030405060708, how is that arrayed in memory
+when the bufer is formatted and sent?
+ 
+Bytes 0-3 = action, etc
+Byte04  = 08
+Byte05  = 07
+Byte06  = 06
+Byte07  = 05
+Byte08  = 04
+Byte09  = 03
+Byte10  = 02
+Byte11  = 01
+ 
+or
+ 
+Bytes 0-3 = action, etc
+Byte04  = 01
+Byte05  = 02
+Byte06  = 03
+Byte07  = 04
+Byte08  = 05
+Byte09  = 06
+Byte10  = 07
+Byte11  = 08
+ 
+ 
+or the wierd ATA endien byte/word shuffle instead?  How would that be
+laid out?
+ 
+ 
 
-> Depending on how vendors implement those unmap commands, sending down a 
-> sequence of commands might cause a performance issue if done at too fine a 
-> granularity. Easiest way to handle that is to make sure that we have a way of 
-> disabling the unmap/discard support (mount option?).
 
-Or maybe a per-queue option, since it already is.
-
--- 
-dwmw2
