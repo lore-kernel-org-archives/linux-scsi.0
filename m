@@ -1,23 +1,29 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11804] New: iscsi: LRO plus iSCSI causes panic
-Date: Thu, 6 Nov 2008 16:29:13 -0800
-Message-ID: <20081106162913.29d7d695.akpm@linux-foundation.org>
-References: <bug-11804-10286@http.bugzilla.kernel.org/>
-	<20081021172721.027d9e1c.akpm@linux-foundation.org>
-	<F169D4F5E1F1974DBFAFABF47F60C10A0E9DB65A@orsmsx507.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11804] iscsi: LRO plus iSCSI causes panic
+Date: Thu,  6 Nov 2008 16:29:55 -0800 (PST)
+Message-ID: <20081107002955.227A4108043@picon.linux-foundation.org>
+References: <bug-11804-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48804 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58611 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751533AbYKGA3z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 19:29:55 -0500
-In-Reply-To: <F169D4F5E1F1974DBFAFABF47F60C10A0E9DB65A@orsmsx507.amr.corp.intel.com>
+	by vger.kernel.org with ESMTP id S1751751AbYKGAa1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 19:30:27 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA70TtnV018310
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Nov 2008 16:29:56 -0800
+In-Reply-To: <bug-11804-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, bugme-daemon@bugzilla.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11804
+
+
+
+
+
+------- Comment #3 from anonymous@kernel-bugs.osdl.org  2008-11-06 16:29 -------
+Reply-To: akpm@linux-foundation.org
 
 On Thu, 6 Nov 2008 16:08:08 -0800
 "Brandeburg, Jesse" <jesse.brandeburg@intel.com> wrote:
@@ -37,3 +43,9 @@ It looks like we own it :(
 I guess it would be useful to use addr2line or gdb or whatever to work
 out exactly which statement is faulting, which pointer contains the
 garbage value, etc.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
