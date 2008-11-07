@@ -1,66 +1,87 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [BUG] usb-storage: Error in queuecommand: us->srb = ffff88006a338480
-Date: Fri, 7 Nov 2008 10:00:29 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811070953460.2437-100000@iolanthe.rowland.org>
-References: <20081107005438.GA26198@ezra.hsd1.tn.comcast.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: thin provisioned LUN support
+Date: Fri, 07 Nov 2008 09:20:30 -0600
+Message-ID: <1226071230.8030.9.camel@localhost.localdomain>
+References: <4913028B.6010405@redhat.com>
+	 <1225984628.4703.80.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
+	 <20081107120534.GO21867@kernel.dk>  <49143142.4010809@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44738 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751449AbYKGPAa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2008 10:00:30 -0500
-In-Reply-To: <20081107005438.GA26198@ezra.hsd1.tn.comcast.net>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:57397 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751864AbYKGPUi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2008 10:20:38 -0500
+In-Reply-To: <49143142.4010809@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian Kysela <brian.kysela@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, David Woodhouse <dwmw2@infradead.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
 
-On Thu, 6 Nov 2008, Brian Kysela wrote:
+On Fri, 2008-11-07 at 07:14 -0500, Ric Wheeler wrote:
+> Jens Axboe wrote:
+> > On Thu, Nov 06 2008, David Woodhouse wrote:
+> >   
+> >> On Thu, 6 Nov 2008, James Bottomley wrote:
+> >>     
+> >>> The way to do this properly would be to run a chequerboard of partials,
+> >>> but this would effectively have trim region tracking done in the block
+> >>> layer ... is this worth it?
+> >>>
+> >>> By the way, the latest (from 2 days ago) version of the Thin
+> >>> Provisioning proposal is here:
+> >>>
+> >>> http://www.t10.org/ftp/t10/document.08/08-149r4.pdf
+> >>>
+> >>> I skimmed it but don't see any update implying that trim might be
+> >>> ineffective if we align wrongly ... where is this?
+> >>>       
+> >> I think we should be content to declare such devices 'broken'.
+> >>
+> >> They have to keep track of individual sectors _anyway_, and dropping 
+> >> information for small discard requests is just careless.
+> >>     
+> >
+> > I agree, seems pretty pointless. Lets let evolution take care of this
+> > issue. I have to say I'm surprised that it really IS an issue to begin
+> > with, are array firmwares really that silly?
+> >
+> > It's not that it would be hard to support (and it would eliminate the
+> > need to do discard merging in the block layer), but it seems like one of
+> > those things that will be of little use in even in the near future.
+> > Discard merging should be useful, I have no problem merging something
+> > like that.
+> >
+> >   
+> I think that discard merging would be helpful (especially for devices 
+> with more reasonable sized unmap chunks).
 
-> On 2008-11-06 at 14:36 -0500, Alan Stern wrote: 
-> > On Thu, 6 Nov 2008, Andrew Morton wrote:
-> > 
-> > > > The error message:
-> > > > 
-> > > > > [  152.701070] usb-storage: Error in queuecommand: us->srb = ffff88007dfd0680
-> > > > 
-> > > > means that the SCSI layer has told usb-storage to start a new command 
-> > > > before the old one completed.  This could happen, for example, if the 
-> > > > SCSI layer had gotten confused and tried to cancel a command that 
-> > > > wasn't running -- then it would think usb-storage was idle when in fact 
-> > > > it was still busy.  (This was the failure mechanism resulting from the 
-> > > > timeout changes.)
-> > > > 
-> > > 
-> > > OK, thanks.  I'll cc linux-scsi, but I have this-wont-be-getting-fixed
-> > > feelings on this one :(
-> > > 
-> > > I wonder what's special about Brian's setup.
-> > 
-> > Brian, if you can use usbmon to monitor what happens during the file 
-> > copy and subsequent error, it might provide a clue.  Instructions are 
-> > in the kernel source file Documentation/usb/usbmon.txt.
-> 
-> Since it's a large file, I have posted the content of usbmon here:
-> 
-> http://www.kysela.org/pub/1.mon.out
-> 
-> I also got another kernel bug and system freeze on that copy, after the
-> copy process hung, when I pulled the drive out:
+One of the ways the unmap command is set up is with a disjoint
+scatterlist, so we can send a large number of unmaps together.  Whether
+they're merged or not really doesn't matter.
 
-This is exactly the failure mechanism I described earlier.  The usbmon
-log shows that a communications error occurred and usb-storage tried to
-carry out error recovery.  The drive apparently did not reset itself,
-because when the READ was reissued no data was received.  In fact, the
-log _ends_ at the point where the READ was reissued; no more data was
-transferred in either direction.  Presumably the next thing to occur
-was a command timeout.
+The probable way a discard system would work if we wanted to endure the
+complexity would be to have the discard system in the underlying device
+driver (or possibly just above it in block, but different devices like
+SCSI or ATA have different discard characteristics).  It would just
+accumulate block discard requests as ranges (and it would have to poke
+holes in the ranges as it sees read/write requests) which it flushes
+periodically.
 
-And since the block-layer timeout code in 2.6.28-rc2 is known to be
-buggy, it's not surprising that the copy process hung at that point.  
-It would be better to run this test under 2.6.27; that way we might
-learn something new.
+The reason for doing it this way is that discards are "special" as long
+as we don't discard a rewritten sector, the time at which they're sent
+down is irrelevant to integrity and thus we can potentially accumulate
+over vastly different timescales than the regular block merging.  If
+we're really going to respect this discard block size, we could
+accumulate the irrelevant discards the array would ignore anyway for
+virtually infinite time.
 
-Alan Stern
+Note, I'm not saying we *should* do this ... I think something like this
+would be much better done in the device ... but if we *are* going to do
+it, then at least lets get it right.
+
+James
+
 
