@@ -1,58 +1,93 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Thu,  6 Nov 2008 17:04:39 -0800 (PST)
-Message-ID: <20081107010439.38A52108048@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: Paul Mackerras <paulus@samba.org>
+Subject: [PATCH] scsi: Eliminate compile warning in ibmvfc.c
+Date: Fri, 7 Nov 2008 14:16:30 +1100
+Message-ID: <18707.45838.704492.589455@cargo.ozlabs.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38079 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751665AbYKGBFK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2008 20:05:10 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA714d4f020863
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Nov 2008 17:04:40 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from ozlabs.org ([203.10.76.45]:58225 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750900AbYKGDQr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2008 22:16:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, sfr@canb.auug.org.au
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+Recent gcc (4.3.2) gives this compile warning on
+drivers/scsi/ibmvscsi/ibmvfc.o:
 
+  CC      drivers/scsi/ibmvscsi/ibmvfc.o
+.../drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_reset_device':
+.../drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: 'evt' may be used uninitialized in this function
 
+This fixes it by rearranging the code a little.  This makes no
+semantic change to the code except that the error message in the
+vhost->state != IBMVFC_ACTIVE case is a little more explicit.
 
-
-
-------- Comment #27 from yanmin_zhang@linux.intel.com  2008-11-06 17:04 -------
-(In reply to comment #26)
-> Reply-To: James.Bottomley@HansenPartnership.com
-> 
-> On Wed, 2008-11-05 at 18:19 -0800, bugme-daemon@bugzilla.kernel.org
-> wrote:
-> > ------- Comment #25 from yanmin_zhang@linux.intel.com  2008-11-05 18:19 -------
-> > Created an attachment (id=18697)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view) [details]
-> >  --> (http://bugzilla.kernel.org/attachment.cgi?id=18697&action=view)
-> > Here is the patch to fix it against 2.6.28-rc3.
-> > 
-> > I tested the patch on my 2 machines and it does fix the issue.
-> 
-> The problem is that it doesn't fix the theoretical tight loop, so
-What's the theoretical tight loop the patch doesn't fix? Would you like to
-elaborate it?
-
-I know there is a scenario that scsi_target_is_busy might returns true in
-scsi_run_queue, but my patch also fixes it.
-
-
-> someone else will run into the issue under more trying circumstances.
-> 
-> The only reason a patch which conditionally NULLs starved_head works
-> over one that does it absolutely should be that there's some other loop
-> that requires it being set to effect a break out.
-I can't understand what you said. What are the other loop?
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Signed-off-by: Paul Mackerras <paulus@samba.org>
+---
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 7650707..e6c149f 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1630,32 +1630,37 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ 	struct ibmvfc_event *evt;
+ 	union ibmvfc_iu rsp_iu;
+ 	struct ibmvfc_fcp_rsp *fc_rsp = &rsp_iu.cmd.rsp;
+-	int rsp_rc = -EBUSY;
++	int rsp_rc;
+ 	unsigned long flags;
+ 	int rsp_code = 0;
+ 
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+-	if (vhost->state == IBMVFC_ACTIVE) {
+-		evt = ibmvfc_get_event(vhost);
+-		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
+-
+-		tmf = &evt->iu.cmd;
+-		memset(tmf, 0, sizeof(*tmf));
+-		tmf->resp.va = (u64)evt->crq.ioba + offsetof(struct ibmvfc_cmd, rsp);
+-		tmf->resp.len = sizeof(tmf->rsp);
+-		tmf->frame_type = IBMVFC_SCSI_FCP_TYPE;
+-		tmf->payload_len = sizeof(tmf->iu);
+-		tmf->resp_len = sizeof(tmf->rsp);
+-		tmf->cancel_key = (unsigned long)sdev->hostdata;
+-		tmf->tgt_scsi_id = rport->port_id;
+-		int_to_scsilun(sdev->lun, &tmf->iu.lun);
+-		tmf->flags = (IBMVFC_NO_MEM_DESC | IBMVFC_TMF);
+-		tmf->iu.tmf_flags = type;
+-		evt->sync_iu = &rsp_iu;
+-
+-		init_completion(&evt->comp);
+-		rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
++	if (vhost->state != IBMVFC_ACTIVE) {
++		spin_unlock_irqrestore(vhost->host->host_lock, flags);
++		sdev_printk(KERN_ERR, sdev,
++			"Failed to send %s reset event; not active\n", desc);
++		return -EIO;
+ 	}
++	evt = ibmvfc_get_event(vhost);
++	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
++
++	tmf = &evt->iu.cmd;
++	memset(tmf, 0, sizeof(*tmf));
++	tmf->resp.va = (u64)evt->crq.ioba + offsetof(struct ibmvfc_cmd, rsp);
++	tmf->resp.len = sizeof(tmf->rsp);
++	tmf->frame_type = IBMVFC_SCSI_FCP_TYPE;
++	tmf->payload_len = sizeof(tmf->iu);
++	tmf->resp_len = sizeof(tmf->rsp);
++	tmf->cancel_key = (unsigned long)sdev->hostdata;
++	tmf->tgt_scsi_id = rport->port_id;
++	int_to_scsilun(sdev->lun, &tmf->iu.lun);
++	tmf->flags = (IBMVFC_NO_MEM_DESC | IBMVFC_TMF);
++	tmf->iu.tmf_flags = type;
++	evt->sync_iu = &rsp_iu;
++
++	init_completion(&evt->comp);
++	rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
++
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 
+ 	if (rsp_rc != 0) {
