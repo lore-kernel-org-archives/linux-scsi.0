@@ -1,47 +1,68 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: thin provisioned LUN support & file system allocation policy
-Date: Fri, 07 Nov 2008 10:12:15 -0600
-Message-ID: <1226074335.8030.40.camel@localhost.localdomain>
-References: <1225984628.4703.80.camel@localhost.localdomain>
+Subject: Re: thin provisioned LUN support
+Date: Fri, 07 Nov 2008 10:18:30 -0600
+Message-ID: <1226074710.8030.43.camel@localhost.localdomain>
+References: <4913028B.6010405@redhat.com>
+	 <1225984628.4703.80.camel@localhost.localdomain>
 	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
-	 <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com>
-	 <20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com>
-	 <20081107144311.GE9543@mit.edu> <4914568A.7090307@redhat.com>
-	 <49145E0C.4030705@hp.com> <20081107153624.GG9543@mit.edu>
-	 <20081107154550.GH15439@parisc-linux.org>  <491467D5.8000502@hp.com>
+	 <20081107120534.GO21867@kernel.dk>
+	 <1226072970.15281.46.camel@think.oraclecorp.com>
+	 <yq1r65na5ll.fsf@sermon.lab.mkp.net>
+	 <1226074002.8030.33.camel@localhost.localdomain>
+	 <1226074270.15281.50.camel@think.oraclecorp.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53814 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752344AbYKGQMW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2008 11:12:22 -0500
-In-Reply-To: <491467D5.8000502@hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1226074270.15281.50.camel@think.oraclecorp.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, David Woodhouse <dwmw2@infradead.org>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
-To: jim owens <jowens@hp.com>
-Cc: linux-fsdevel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, David Woodhouse <dwmw2@infradead.org>, linux-scsi@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Eyal Shani <Eyal.Shani@sandisk.com>
 
-On Fri, 2008-11-07 at 11:07 -0500, jim owens wrote:
-> We have become confused and combined 2 independent issues...
+On Fri, 2008-11-07 at 11:11 -0500, Chris Mason wrote:
+> On Fri, 2008-11-07 at 10:06 -0600, James Bottomley wrote:
+> > On Fri, 2008-11-07 at 11:00 -0500, Martin K. Petersen wrote:
+> > > >>>>> "Chris" == Chris Mason <chris.mason@oracle.com> writes:
+> > > 
+> > > Chris> Hmmm, it's surprising to me that arrays who tell us please use
+> > > Chris> the noop elevator suddenly want us to merge discard requests.
+> > > Chris> The array really needs to be able to deal with this internally.
+> > > 
+> > > Let's also not forget that we're talking about merging discard
+> > > requests for the purpose making internal array housekeeping efficient.
+> > > That involves merging discards up to the internal array block sizes
+> > > which may be on the order of 512/768/1024 KB.
+> > > 
+> > > If we were talking about merging discards up to a 4/8/16 KB boundary
+> > > that might be something we'd have a chance to do within a reasonable
+> > > amount of time (bigger than normal read/write I/O but not hours).
+> > > 
+> > > But keeping discard state around for long enough to attempt to
+> > > aggregate 768KB (and 768KB-aligned) chunks is icky.
+> > 
+> > Icky but possible.  It's the same rb tree affair we use to keep vma
+> > lists (with the same characteristics).  The point is that technically we
+> > can do this pretty easily ... all the way down to not losing any
+> > potential discards that the array would ignore.  However, procedurally
+> > it would certainly be sending the wrong message to the array vendors
+> > (the message being "sure the OS will sanitise any crap you care to
+> > dump").
+> > 
+> > On the other hand, if we have to do it for flash and MMC anyway ...
 > 
-> UNMAP thin storage array provisioning is not SSD TRIM.
+> It doesn't seem like a good idea to maintain a ton of code that gets
+> exercised so rarely, especially wrt filesystem crashes.
 
-Actually, currently they are.
+Heh, am I the only person here who deletes files on a regular basis
+(principally to get my disk down from 99%)?
 
-The primary reason is that we handle current SATA devices through SCSI
-via SAT, so we're going to have to do UNMAP for both arrays and SSDs
-until such time as SATA is ejected from the SCSI mid-layer and it can do
-trim on its own.
+> Just testing it would be a fairly large challenge, spread out across N
+> filesystems.  I think we need to keep discard as simple as we possibly
+> can.
 
-The other reason, of course, is that we're mapping the Block layer
-discard statement for both as well.  If that needs to change to two
-separate instructions, I don't think that's on our current radar.
-
-So, currently we're approaching this problem as one and I don't see any
-way we could logically separate the two cases (except by distinguishing
-between them with device parametrisation).
+I don't disagree with that ... I'm not saying we *should* merely that we
+*could*.
 
 James
 
