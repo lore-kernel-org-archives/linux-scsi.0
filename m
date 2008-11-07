@@ -1,41 +1,52 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: thin provisioned LUN support & file system allocation policy
-Date: Fri, 07 Nov 2008 11:06:25 -0500
-Message-ID: <49146781.3020802@redhat.com>
-References: <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>	<20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com>	<20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com>	<20081107144311.GE9543@mit.edu> <4914568A.7090307@redhat.com>	<49145E0C.4030705@hp.com>	<Pine.LNX.4.64.0811071528190.8115@Nokia-N800-26>	<49146031.70003@hp.com> <20081107154655.GH9543@mit.edu> <yq1y6zva61e.fsf@sermon.lab.mkp.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: thin provisioned LUN support
+Date: Fri, 07 Nov 2008 10:06:42 -0600
+Message-ID: <1226074002.8030.33.camel@localhost.localdomain>
+References: <4913028B.6010405@redhat.com>
+	 <1225984628.4703.80.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
+	 <20081107120534.GO21867@kernel.dk>
+	 <1226072970.15281.46.camel@think.oraclecorp.com>
+	 <yq1r65na5ll.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <yq1y6zva61e.fsf@sermon.lab.mkp.net>
+In-Reply-To: <yq1r65na5ll.fsf@sermon.lab.mkp.net>
 Sender: linux-fsdevel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Theodore Tso <tytso@mit.edu>, jim owens <jowens@hp.com>, David Woodhouse <dwmw2@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
+Cc: Chris Mason <chris.mason@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, David Woodhouse <dwmw2@infradead.org>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
->>>>>> "Ted" == Theodore Tso <tytso@mit.edu> writes:
->>>>>>             
->
-> Ted> How much of a disk wear factor is there with modern disk drives?
-> Ted> The heads aren't touching the disk, and we have plenty of sectors
-> Ted> which are constantly getting rewritten with traditional
-> Ted> filesystems, with no ill effects as far as I know.
->
-> Modern disk firmware maintains a list of write hot spots and will
-> regularly rewrite adjacent sectors to prevent bleed.
->
->   
-This is my understanding (based on looking at lots of disks from my EMC 
-days).  Again, this is not an issue for a Symm/Hitachi/Shark class array 
-since they all abstract away this kind of hot spotting.
+On Fri, 2008-11-07 at 11:00 -0500, Martin K. Petersen wrote:
+> >>>>> "Chris" == Chris Mason <chris.mason@oracle.com> writes:
+> 
+> Chris> Hmmm, it's surprising to me that arrays who tell us please use
+> Chris> the noop elevator suddenly want us to merge discard requests.
+> Chris> The array really needs to be able to deal with this internally.
+> 
+> Let's also not forget that we're talking about merging discard
+> requests for the purpose making internal array housekeeping efficient.
+> That involves merging discards up to the internal array block sizes
+> which may be on the order of 512/768/1024 KB.
+> 
+> If we were talking about merging discards up to a 4/8/16 KB boundary
+> that might be something we'd have a chance to do within a reasonable
+> amount of time (bigger than normal read/write I/O but not hours).
+> 
+> But keeping discard state around for long enough to attempt to
+> aggregate 768KB (and 768KB-aligned) chunks is icky.
 
-Where it is an issue with local drives is when you constantly (like 
-every 20ms) try to update the same sector and that triggers the kind of 
-adjacent track erasure issues you mention here.  Disk block allocation 
-policies that reuse blocks will update the same sectors are orders of 
-magnitude less than this (and much less than we rewrite block allocation 
-bitmaps, etc).
+Icky but possible.  It's the same rb tree affair we use to keep vma
+lists (with the same characteristics).  The point is that technically we
+can do this pretty easily ... all the way down to not losing any
+potential discards that the array would ignore.  However, procedurally
+it would certainly be sending the wrong message to the array vendors
+(the message being "sure the OS will sanitise any crap you care to
+dump").
 
-ric
+On the other hand, if we have to do it for flash and MMC anyway ...
+
+James
+
 
