@@ -1,51 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: thin provisioned LUN support & file system allocation policy
-Date: Fri, 07 Nov 2008 09:36:35 -0600
-Message-ID: <1226072195.8030.14.camel@localhost.localdomain>
-References: <4913028B.6010405@redhat.com>
-	 <1225984628.4703.80.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
-	 <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com>
-	 <20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com>
-	 <20081107144311.GE9543@mit.edu> <4914568A.7090307@redhat.com>
-	 <49145E0C.4030705@hp.com>  <Pine.LNX.4.64.0811071528190.8115@Nokia-N800-26>
+Date: Fri, 7 Nov 2008 08:45:50 -0700
+Message-ID: <20081107154550.GH15439__41417.5466904$1226072839$gmane$org@parisc-linux.org>
+References: <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26> <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com> <20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com> <20081107144311.GE9543@mit.edu> <4914568A.7090307@redhat.com> <49145E0C.4030705@hp.com> <20081107153624.GG9543@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0811071528190.8115@Nokia-N800-26>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: jim owens <jowens@hp.com>, Ric Wheeler <rwheeler@redhat.com>, Theodore Tso <tytso@mit.edu>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:38536 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbYKGPpw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2008 10:45:52 -0500
+Content-Disposition: inline
+In-Reply-To: <20081107153624.GG9543@mit.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, jim owens <jowens@hp.com>, Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <da>
 
-On Fri, 2008-11-07 at 15:31 +0000, David Woodhouse wrote:
-> On Fri, 7 Nov 2008, jim owens wrote:
+On Fri, Nov 07, 2008 at 10:36:24AM -0500, Theodore Tso wrote:
+> The discussion here has been around Intel-style SSD's, which
+> apparently have a log-structured filesystem in the device, such that
+> wear leveling is done automatically, and in fact it is *better* for
+> these devices if we reuse the same block since then the SSD
+> automatically knows that contents at the old location is logically
+> "gone".  (I don't believe, or at least don't see, why there would be
+> any benefit of reusing block ranges versus explicitly using a TRIM
+> command to tell the SSD that the old block was no longer being used;
+> it should have the same effect as far as the SSD is concerned.)
 > 
-> > Ric Wheeler wrote:
-> >
-> >> The type of allocation that would help most is something that tries to keep 
-> >> the lower block ranges "hot" for allocation, second best policy would 
-> >> simply keep the allocated blocks in each block group hot and re-allocate 
-> >> them.
-> >
-> > This block reuse policy ignores the issue of wear leveling...
-> > as in most design things, trading one problem for another.
-> 
-> For SSDs we're being told not to worry our pretty little heads about wear 
-> levelling. That gets done for us, with varying degrees of competence, 
-> within the black box. All we can do to improve that is pray... 
-> and maybe sacrifice the occasional goat.
+> The one thing which I am somewhat concerned about is whether all SSD's
+> will be doing things the Intel way, or whether other SSD's might not
 
-I think the rule is for SSDs that if they have a disk interface we
-ignore wear levelling ... if the FTL is stupid, they're not going to be
-reliable enough even for consumer use.   Trying to second guess the FTL
-would be a layering violation (and a disaster in the making).
+Given that most of my information about how SSDs work comes from a
+presentation given by Samsung at the FS/IO storage workshop, I feel
+fairly confident all the manufacturers do something very similar with a
+log-structured FS internally.
 
-If we're being shown native flash with no intervening disk interface
-then, yes, we need to do wear levelling (although I suspect this will
-really only occur in the embedded space).
+Of course, this probably doesn't apply to the $5 1Gb USB keys that you
+get in the conference schwag, but if we start optimising for those,
+we've probably already lost.
 
-James
-
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
