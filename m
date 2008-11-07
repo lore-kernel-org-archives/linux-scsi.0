@@ -1,49 +1,32 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: thin provisioned LUN support
-Date: Fri, 07 Nov 2008 10:49:30 -0500
-Message-ID: <1226072970.15281.46.camel@think.oraclecorp.com>
-References: <4913028B.6010405@redhat.com>
-	 <1225984628.4703.80.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
-	 <20081107120534.GO21867@kernel.dk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: thin provisioned LUN support & file system allocation policy
+Date: Fri, 07 Nov 2008 10:51:09 -0500
+Message-ID: <yq1y6zva61e.fsf@sermon.lab.mkp.net>
+References: <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
+	<20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com>
+	<20081107121934.GP21867@kernel.dk> <49145029.4040900@redhat.com>
+	<20081107144311.GE9543@mit.edu> <4914568A.7090307@redhat.com>
+	<49145E0C.4030705@hp.com>
+	<Pine.LNX.4.64.0811071528190.8115@Nokia-N800-26>
+	<49146031.70003@hp.com> <20081107154655.GH9543@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20081107120534.GO21867@kernel.dk>
+In-Reply-To: <20081107154655.GH9543@mit.edu> (Theodore Tso's message of "Fri\, 7 Nov 2008 10\:46\:55 -0500")
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
+To: Theodore Tso <tytso@mit.edu>
+Cc: jim owens <jowens@hp.com>, David Woodhouse <dwmw2@infradead.org>, Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2008-11-07 at 13:05 +0100, Jens Axboe wrote:
+>>>>> "Ted" == Theodore Tso <tytso@mit.edu> writes:
 
-> > >I skimmed it but don't see any update implying that trim might be
-> > >ineffective if we align wrongly ... where is this?
-> > 
-> > I think we should be content to declare such devices 'broken'.
-> > 
-> > They have to keep track of individual sectors _anyway_, and dropping 
-> > information for small discard requests is just careless.
-> 
-> I agree, seems pretty pointless. Lets let evolution take care of this
-> issue. I have to say I'm surprised that it really IS an issue to begin
-> with, are array firmwares really that silly?
-> 
-> It's not that it would be hard to support (and it would eliminate the
-> need to do discard merging in the block layer), but it seems like one of
-> those things that will be of little use in even in the near future.
-> Discard merging should be useful, I have no problem merging something
-> like that.
-> 
+Ted> How much of a disk wear factor is there with modern disk drives?
+Ted> The heads aren't touching the disk, and we have plenty of sectors
+Ted> which are constantly getting rewritten with traditional
+Ted> filesystems, with no ill effects as far as I know.
 
-Hmmm, it's surprising to me that arrays who tell us please use the noop
-elevator suddenly want us to merge discard requests.  The array really
-needs to be able to deal with this internally.
+Modern disk firmware maintains a list of write hot spots and will
+regularly rewrite adjacent sectors to prevent bleed.
 
-Not that discard merging is bad, but I agree that we need to push this
-problem off on the array vendors.
-
--chris
-
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
