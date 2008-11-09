@@ -1,67 +1,54 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: thin provisioned LUN support
-Date: Mon, 10 Nov 2008 10:08:23 +1100
-Message-ID: <20081109230823.GS4985@disturbed>
-References: <4913028B.6010405@redhat.com> <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26> <20081107120534.GO21867@kernel.dk> <49143142.4010809@redhat.com> <1226071230.8030.9.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Sun,  9 Nov 2008 15:24:28 -0800 (PST)
+Message-ID: <20081109232428.C2999108041@picon.linux-foundation.org>
+References: <bug-11404-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1226071230.8030.9.camel@localhost.localdomain>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, David Woodhouse <dwmw2@infradead.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56516 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756467AbYKIXZD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Nov 2008 18:25:03 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9NOSLV002504
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Nov 2008 15:24:29 -0800
+In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Nov 07, 2008 at 09:20:30AM -0600, James Bottomley wrote:
-> On Fri, 2008-11-07 at 07:14 -0500, Ric Wheeler wrote:
-> > Jens Axboe wrote:
-> > I think that discard merging would be helpful (especially for devices 
-> > with more reasonable sized unmap chunks).
+http://bugzilla.kernel.org/show_bug.cgi?id=11404
+
+
+
+
+
+------- Comment #6 from rjw@sisk.pl  2008-11-09 15:24 -------
+On Sunday, 9 of November 2008, Randy Dunlap wrote:
+> Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of regressions introduced between 2.6.26 and 2.6.27.
+> > 
+> > The following bug entry is on the current list of known regressions
+> > introduced between 2.6.26 and 2.6.27.  Please verify if it still should
+> > be listed and let me know (either way).
 > 
-> One of the ways the unmap command is set up is with a disjoint
-> scatterlist, so we can send a large number of unmaps together.  Whether
-> they're merged or not really doesn't matter.
+> Yes, it should still be listed.
 > 
-> The probable way a discard system would work if we wanted to endure the
-> complexity would be to have the discard system in the underlying device
-> driver (or possibly just above it in block, but different devices like
-> SCSI or ATA have different discard characteristics).  It would just
-> accumulate block discard requests as ranges (and it would have to poke
-> holes in the ranges as it sees read/write requests) which it flushes
-> periodically.
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11404
+> > Subject		: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+> > Submitter	: rdunlap <randy.dunlap@oracle.com>
+> > Date		: 2008-08-21 5:52 (81 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=121929819616273&w=4
+> > 		  http://marc.info/?l=linux-kernel&m=121932889105368&w=4
+> > Handled-By	: Miller, Mike (OS Dev) <Mike.Miller@hp.com>
+> > 		  James Bottomley <James.Bottomley@hansenpartnership.com>
 
-It appears to me that discard requests are only being considered
-here at a block and device level, and nobody is thinking about
-the system level effects of such aggregation of discard requests.
 
-What happens on a system crash? We lose all the pending discard
-requests, never to be sent again? If so, how do we tell the device
-that certain ranges have actually been discarded after the crash?
-Are you expecting them to get replayed by a filesystem during
-recovery? What if it was a userspace discard from something like
-mkfs that was lost? How does this interact with sync or other
-such user level filesystems synchronisation primitives? Does
-sync_blockdev() flush out pending discard requests? Should fsync?
-
-And if the filesystem has to wait for discard requests to complete
-to guarantee that they are done or can be recovered and replayed
-after a crash, most filesystems are going to need modification. e.g.
-XFS would need to prevent the tail of the log moving forward until
-the discard request associated with a given extent free transaction
-has been completed. That means we need to be able to specifically
-flush queued discard requests and we'd need I/O completions to
-run when they are done to do the filesytem level cleanup work....
-
-Let's keep the OS level interactions simple - if the array vendors
-want to keep long queues of requests around before acting on them
-to aggregate them, then that is an optimisation for them to
-implement. They already do this with small data writes to NVRAM, so I
-don't see how this should be treated any differently...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
