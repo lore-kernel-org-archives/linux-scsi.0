@@ -1,154 +1,100 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Sun,  9 Nov 2008 07:47:56 -0800 (PST)
-Message-ID: <20081109154756.4AEC4108057@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 4/8] drivers/message/fusion: use ARRAY_SIZE
+Date: Sun, 9 Nov 2008 17:55:27 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0811091755050.32509@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46482 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755152AbYKIPs1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Nov 2008 10:48:27 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9FluVK006012
-	for <linux-scsi@vger.kernel.org>; Sun, 9 Nov 2008 07:47:57 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
+Received: from mgw1.diku.dk ([130.225.96.91]:56827 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755950AbYKIQzd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Nov 2008 11:55:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+From: Julia Lawall <julia@diku.dk>
 
+ARRAY_SIZE is more concise to use when the size of an array is divided by
+the size of its type or the size of its first element.
 
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
+// <smpl>
+@i@
+@@
 
+#include <linux/kernel.h>
 
-------- Comment #28 from anonymous@kernel-bugs.osdl.org  2008-11-09 07:47 -------
-Reply-To: James.Bottomley@HansenPartnership.com
+@depends on i using "paren.iso"@
+type T;
+T[] E;
+@@
 
-On Wed, 2008-11-05 at 11:25 -0600, Mike Christie wrote:
-> James Bottomley wrote:
-> > The reason for doing it like this is so that if someone slices the loop
-> > apart again (which is how this crept in) they won't get a continue or
-> > something which allows this to happen.
-> > 
-> > It shouldn't be conditional on the starved list (or anything else)
-> > because it's probably a register and should happen at the same point as
-> > the list deletion but before we drop the problem lock (because once we
-> > drop that lock we'll need to recompute starvation).
-> > 
-> > James
-> > 
-> > ---
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index f5d3b96..f9a531f 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -606,6 +606,7 @@ static void scsi_run_queue(struct request_queue *q)
-> >  		}
-> >  
-> >  		list_del_init(&sdev->starved_entry);
-> > +		starved_entry = NULL;
-> 
-> Should this be starved_head?
-> 
-> >  		spin_unlock(shost->host_lock);
-> >  
-> >  		spin_lock(sdev->request_queue->queue_lock);
-> > 
-> 
-> Do you think we can just splice the list like the attached patch (patch 
-> is example only and is not tested)?
-> 
-> I thought the code is clearer, but I think it may be less efficient. If 
-> scsi_run_queue is run on multiple processors then with the attached 
-> patch one processor would splice the list and possibly have to execute 
-> __blk_run_queue for all the devices on the list serially.
-> 
-> Currently we can at least prep the devices in parallel. One processor 
-> would grab one entry on the list and drop the host lock, so then another 
-> processor could grab another entry on the list and start the execution 
-> process (I wrote start the process because it might turn out that this 
-> second entry execution might have to wait on the first one when the scsi 
-> layer has to grab the queue lock again).
+- (sizeof(E)/sizeof(E[...]))
++ ARRAY_SIZE(E)
 
-I reconsidered:  I think something like this would work well if we
-simply to run through the starved list once each time, giving them the
-chance of executing.  Something like this.
+@depends on i using "paren.iso"@
+type T;
+T[] E;
+@@
 
-James
+- (sizeof(E)/sizeof(T))
++ ARRAY_SIZE(E)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
+ drivers/message/fusion/mptbase.c    |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f5d3b96..979e07a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host
-*shost)
-  */
- static void scsi_run_queue(struct request_queue *q)
- {
--       struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
-+       struct scsi_device *tmp, *sdev = q->queuedata;
-        struct Scsi_Host *shost = sdev->host;
-+       LIST_HEAD(starved_list);
-        unsigned long flags;
-
-        if (scsi_target(sdev)->single_lun)
-                scsi_single_lun_run(sdev);
-
-        spin_lock_irqsave(shost->host_lock, flags);
--       while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost))
-{
-+       list_splice_init(&shost->starved_list, &starved_list);
-+
-+       list_for_each_entry_safe(sdev, tmp, &starved_list, starved_entry) {
-                int flagset;
-
-                /*
-@@ -588,22 +591,10 @@ static void scsi_run_queue(struct request_queue *q)
-                 * scsi_request_fn must get the host_lock before checking
-                 * or modifying starved_list or starved_entry.
-                 */
--               sdev = list_entry(shost->starved_list.next,
--                                         struct scsi_device, starved_entry);
--               /*
--                * The *queue_ready functions can add a device back onto the
--                * starved list's tail, so we must check for a infinite loop.
--                */
--               if (sdev == starved_head)
-+               if (scsi_host_is_busy(shost))
-                        break;
--               if (!starved_head)
--                       starved_head = sdev;
--
--               if (scsi_target_is_busy(scsi_target(sdev))) {
--                       list_move_tail(&sdev->starved_entry,
--                                      &shost->starved_list);
-+               if (scsi_target_is_busy(scsi_target(sdev)))
-                        continue;
--               }
-
-                list_del_init(&sdev->starved_entry);
-                spin_unlock(shost->host_lock);
-@@ -621,6 +612,9 @@ static void scsi_run_queue(struct request_queue *q)
-
-                spin_lock(shost->host_lock);
-        }
-+
-+       /* put any unprocessed entries back */
-+       list_splice(&starved_list, &shost->starved_list);
-        spin_unlock_irqrestore(shost->host_lock, flags);
-
-        blk_run_queue(q);
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d6a0074..7a313f3 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -4563,7 +4563,7 @@ WaitForDoorbellReply(MPT_ADAPTER *ioc, int howlong, int sleepFlag)
+ 			failcnt++;
+ 		hword = le16_to_cpu(CHIPREG_READ32(&ioc->chip->Doorbell) & 0x0000FFFF);
+ 		/* don't overflow our IOC hs_reply[] buffer! */
+-		if (u16cnt < sizeof(ioc->hs_reply) / sizeof(ioc->hs_reply[0]))
++		if (u16cnt < ARRAY_SIZE(ioc->hs_reply))
+ 			hs_reply[u16cnt] = hword;
+ 		CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+ 	}
+@@ -7176,7 +7176,7 @@ union loginfo_type {
+ 
+ 	sas_loginfo.loginfo = log_info;
+ 	if ((sas_loginfo.dw.bus_type != 3 /*SAS*/) &&
+-	    (sas_loginfo.dw.originator < sizeof(originator_str)/sizeof(char*)))
++	    (sas_loginfo.dw.originator < ARRAY_SIZE(originator_str)))
+ 		return;
+ 
+ 	originator_desc = originator_str[sas_loginfo.dw.originator];
+@@ -7185,21 +7185,21 @@ union loginfo_type {
+ 
+ 		case 0:  /* IOP */
+ 			if (sas_loginfo.dw.code <
+-			    sizeof(iop_code_str)/sizeof(char*))
++			    ARRAY_SIZE(iop_code_str))
+ 				code_desc = iop_code_str[sas_loginfo.dw.code];
+ 			break;
+ 		case 1:  /* PL */
+ 			if (sas_loginfo.dw.code <
+-			    sizeof(pl_code_str)/sizeof(char*))
++			    ARRAY_SIZE(pl_code_str))
+ 				code_desc = pl_code_str[sas_loginfo.dw.code];
+ 			break;
+ 		case 2:  /* IR */
+ 			if (sas_loginfo.dw.code >=
+-			    sizeof(ir_code_str)/sizeof(char*))
++			    ARRAY_SIZE(ir_code_str))
+ 				break;
+ 			code_desc = ir_code_str[sas_loginfo.dw.code];
+ 			if (sas_loginfo.dw.subcode >=
+-			    sizeof(raid_sub_code_str)/sizeof(char*))
++			    ARRAY_SIZE(raid_sub_code_str))
+ 			break;
+ 			if (sas_loginfo.dw.code == 0)
+ 				sub_code_desc =
