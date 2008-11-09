@@ -1,137 +1,138 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11990] Kernel hang in spin_unlock_irq from scsi_request_fn from do_IRQ
-Date: Sun,  9 Nov 2008 07:23:02 -0800 (PST)
-Message-ID: <20081109152302.1F873108056@picon.linux-foundation.org>
-References: <bug-11990-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Sun, 09 Nov 2008 09:47:17 -0600
+Message-ID: <1226245637.19841.7.camel@localhost.localdomain>
+References: <20081105040154.9690A108048@picon.linux-foundation.org>
+	 <1225898691.4703.32.camel@localhost.localdomain>
+	 <4911D6F2.2080309@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53030 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754912AbYKIPXe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 10:23:34 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9FN2sI003592
-	for <linux-scsi@vger.kernel.org>; Sun, 9 Nov 2008 07:23:03 -0800
-In-Reply-To: <bug-11990-11613@http.bugzilla.kernel.org/>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58571 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755114AbYKIPrV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 10:47:21 -0500
+In-Reply-To: <4911D6F2.2080309@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11990
-
-
-
-
-
-------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-11-09 07:22 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Sat, 2008-11-08 at 19:50 -0800, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=11990
+On Wed, 2008-11-05 at 11:25 -0600, Mike Christie wrote:
+> James Bottomley wrote:
+> > The reason for doing it like this is so that if someone slices the loop
+> > apart again (which is how this crept in) they won't get a continue or
+> > something which allows this to happen.
+> > 
+> > It shouldn't be conditional on the starved list (or anything else)
+> > because it's probably a register and should happen at the same point as
+> > the list deletion but before we drop the problem lock (because once we
+> > drop that lock we'll need to recompute starvation).
+> > 
+> > James
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index f5d3b96..f9a531f 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -606,6 +606,7 @@ static void scsi_run_queue(struct request_queue *q)
+> >  		}
+> >  
+> >  		list_del_init(&sdev->starved_entry);
+> > +		starved_entry = NULL;
 > 
->            Summary: Kernel hang in spin_unlock_irq from scsi_request_fn from
->                     do_IRQ
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.28-rc3
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: vandrove@vc.cvut.cz
+> Should this be starved_head?
 > 
+> >  		spin_unlock(shost->host_lock);
+> >  
+> >  		spin_lock(sdev->request_queue->queue_lock);
+> > 
 > 
-> Latest working kernel version: commit c8d7aa after 2.6.28-rc2
-> Earliest failing kernel version: commit 920da6 after 2.6.28-rc2
-> Distribution: Debian
-> Hardware Environment: sata_sil24, amd64, 2cpu
-> Software Environment: 64bit kernel, 32bit userspace, preemptible kernel
-> Problem Description:
+> Do you think we can just splice the list like the attached patch (patch 
+> is example only and is not tested)?
 > 
-> When I/O is under stress, from time to time CPU1 hangs, most probably due to
-> endless stream of interrupts.  Backtrace printed either by kernel's softlockup
-> detection or alt-sysrq-p is below (written down; I/O is dead when this
-> happens).
+> I thought the code is clearer, but I think it may be less efficient. If 
+> scsi_run_queue is run on multiple processors then with the attached 
+> patch one processor would splice the list and possibly have to execute 
+> __blk_run_queue for all the devices on the list serially.
 > 
-> _spin_unlock_irq + 0x30  (after sti)
-> scsi_request_fn + 0x1b9  (after spin_unlock_irq(shost->host_lock) at
-> not_ready:)
-> blk_invoke_request_fn
-> __blk_runqueue
-> scsi_run_queue
-> scsi_next_command
-> scsi_end_request
-> scsi_io_completion
-> scsi_finish_command
-> scsi_softirq_done
-> blk_done_softirq
-> __do_softirq
-> call_softirq
-> do_softirq
-> irqexit
-> do_IRQ
-> ret_from_intr
-> <EOI>
-> native_safe_halt
-> trace_hardirqs_on
-> default_idle
-> c1e_idle
-> cpu_idle
-> start_secondary
-> 
-> Steps to reproduce:
-> 
-> It seems to occur under heavy I/O (updatedb, dumping core from ~3GB app), but I
-> was not able to trigger it reliably - most reliable is hard resetting box, then
-> it occurs in ~80% cases when replaying journals on disks connected to
-> sata_sil24 (through PMP, but problem does not seem to occur on 2.6.28-rc2 with
-> Jens's PMP patches).
+> Currently we can at least prep the devices in parallel. One processor 
+> would grab one entry on the list and drop the host lock, so then another 
+> processor could grab another entry on the list and start the execution 
+> process (I wrote start the process because it might turn out that this 
+> second entry execution might have to wait on the first one when the scsi 
+> layer has to grab the queue lock again).
 
-This looks identical to
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
-
-Could you see if this refinement of the discussed patches fixes it for
-you?
-
-Thanks,
+I reconsidered:  I think something like this would work well if we
+simply to run through the starved list once each time, giving them the
+chance of executing.  Something like this.
 
 James
 
 ---
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f5d3b96..e09a661 100644
+index f5d3b96..979e07a 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -606,6 +606,7 @@ static void scsi_run_queue(struct request_queue *q)
-                }
+@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+  */
+ static void scsi_run_queue(struct request_queue *q)
+ {
+-	struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
++	struct scsi_device *tmp, *sdev = q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
++	LIST_HEAD(starved_list);
+ 	unsigned long flags;
+ 
+ 	if (scsi_target(sdev)->single_lun)
+ 		scsi_single_lun_run(sdev);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost)) {
++	list_splice_init(&shost->starved_list, &starved_list);
++
++	list_for_each_entry_safe(sdev, tmp, &starved_list, starved_entry) {
+ 		int flagset;
+ 
+ 		/*
+@@ -588,22 +591,10 @@ static void scsi_run_queue(struct request_queue *q)
+ 		 * scsi_request_fn must get the host_lock before checking
+ 		 * or modifying starved_list or starved_entry.
+ 		 */
+-		sdev = list_entry(shost->starved_list.next,
+-					  struct scsi_device, starved_entry);
+-		/*
+-		 * The *queue_ready functions can add a device back onto the
+-		 * starved list's tail, so we must check for a infinite loop.
+-		 */
+-		if (sdev == starved_head)
++		if (scsi_host_is_busy(shost))
+ 			break;
+-		if (!starved_head)
+-			starved_head = sdev;
+-
+-		if (scsi_target_is_busy(scsi_target(sdev))) {
+-			list_move_tail(&sdev->starved_entry,
+-				       &shost->starved_list);
++		if (scsi_target_is_busy(scsi_target(sdev)))
+ 			continue;
+-		}
+ 
+ 		list_del_init(&sdev->starved_entry);
+ 		spin_unlock(shost->host_lock);
+@@ -621,6 +612,9 @@ static void scsi_run_queue(struct request_queue *q)
+ 
+ 		spin_lock(shost->host_lock);
+ 	}
++
++	/* put any unprocessed entries back */
++	list_splice(&starved_list, &shost->starved_list);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	blk_run_queue(q);
 
-                list_del_init(&sdev->starved_entry);
-+               starved_head = NULL;
-                spin_unlock(shost->host_lock);
 
-                spin_lock(sdev->request_queue->queue_lock);
-@@ -620,6 +621,12 @@ static void scsi_run_queue(struct request_queue *q)
-                spin_unlock(sdev->request_queue->queue_lock);
-
-                spin_lock(shost->host_lock);
-+               if (unlikely(!list_empty(&sdev->starved_entry)))
-+                       /* 
-+                        * sdev got put back on the starved list
-+                        * so finish starved handling
-+                        */
-+                       break;
-        }
-        spin_unlock_irqrestore(shost->host_lock, flags);
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
