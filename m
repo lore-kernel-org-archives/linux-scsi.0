@@ -1,461 +1,214 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 2.6.28-rc3-git6: Reported regressions from 2.6.27
-Date: Sun,  9 Nov 2008 18:53:01 +0100 (CET)
-Message-ID: <YrUCLn0F-xH.A.fhE.E4zFJB@chimera>
+From: "Kit Gerrits" <kitgerrits@gmail.com>
+Subject: Question about spun-down USB disk
+Date: Sun, 9 Nov 2008 22:41:32 +0100
+Message-ID: <4917590e.2435440a.1153.2115@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.191]:2058 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757513AbYKIVlh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 16:41:37 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so968152nfc.21
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Nov 2008 13:41:35 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Hello all!
+
+I am using an Asus EEE Box with Fedora 9 as a NAS.
+I have found a way to spin-down my USB harddisks with the sg3 utils,
+ but the system occasionally times out on write actions to the disk.
+I usually access the disk through SMB of NFS, which forces the disk to spin
+up first.
+Sometimes the system opens the disk by itself, throwing an error.
+ lost page write due to I/O error on sdf1
+
+Is there any way to increase the system timeout when accessing/writing-to
+the drive?
+Or should I go ask the ext3 people?
+Or does sg_start not notify the kernel the device has been stopped?
+
+
+When the system fails, I get the following error:
+Nov  4 23:50:42 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:42 EEE-Box kernel: end_request: I/O error, dev sdf, sector
+976767873
+Nov  4 23:50:42 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 122095984
+Nov  4 23:50:42 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:42 EEE-Box kernel: end_request: I/O error, dev sdf, sector
+976767873
+Nov  4 23:50:42 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 122095984
+Nov  4 23:50:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:52 EEE-Box kernel: end_request: I/O error, dev sdf, sector 4361
+Nov  4 23:50:52 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 545
+Nov  4 23:50:52 EEE-Box kernel: EXT3-fs error (device sdf1): ext3_readdir:
+directory #2 contains a hole at offset 0
+Nov  4 23:50:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:52 EEE-Box kernel: end_request: I/O error, dev sdf, sector 1
+Nov  4 23:50:52 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 0
+Nov  4 23:50:52 EEE-Box kernel: lost page write due to I/O error on sdf1
+Nov  4 23:50:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:52 EEE-Box kernel: end_request: I/O error, dev sdf, sector 265
+Nov  4 23:50:52 EEE-Box kernel: EXT3-fs error (device sdf1):
+ext3_get_inode_loc: unable to read inode block - inode=2, block=33
+Nov  4 23:50:52 EEE-Box kernel: ------------[ cut here ]------------
+Nov  4 23:50:52 EEE-Box kernel: WARNING: at fs/buffer.c:1183
+mark_buffer_dirty+0x23/0x6a() (Not tainted)
+Nov  4 23:50:52 EEE-Box kernel: Modules linked in: joydev cpufreq_stats
+xt_tcpudp iptable_filter ip_tables x_tables nfsd lockd nfs_acl auth_rpcgss
+exportfs bridge bnep rfcomm l2cap bluetooth fuse sunrpc ipv6 loop
+dm_multipath snd_hda_intel snd_seq_dummy snd_seq_oss snd_seq_midi_event
+snd_seq snd_seq_device video snd_pcm_oss output snd_mixer_oss snd_pcm i915
+snd_timer button snd_page_alloc drm snd_hwdep snd i2c_algo_bit i2c_i801
+r8169 pcspkr i2c_core soundcore serio_raw iTCO_wdt iTCO_vendor_support
+usb_storage sg dm_snapshot dm_zero dm_mirror dm_mod ata_piix pata_acpi
+ata_generic libata sd_mod scsi_mod ext3 jbd mbcache uhci_hcd ohci_hcd
+ehci_hcd [last unloaded: microcode]
+Nov  4 23:50:52 EEE-Box kernel: Pid: 1760, comm: ls Not tainted
+2.6.25-14.fc9.i686 #1
+Nov  4 23:50:52 EEE-Box kernel: [<c0427911>] warn_on_slowpath+0x47/0x73
+Nov  4 23:50:52 EEE-Box kernel: [<c062d850>] ?
+atomic_notifier_call_chain+0xf/0x11
+Nov  4 23:50:52 EEE-Box kernel: [<c054aed9>] ? vt_console_print+0x277/0x286
+Nov  4 23:50:52 EEE-Box kernel: [<c054ac62>] ? vt_console_print+0x0/0x286
+Nov  4 23:50:52 EEE-Box kernel: [<c042799d>] ?
+__call_console_drivers+0x56/0x63
+Nov  4 23:50:52 EEE-Box kernel: [<c0427a01>] ?
+_call_console_drivers+0x57/0x5b
+Nov  4 23:50:52 EEE-Box kernel: [<c0427dd5>] ?
+release_console_sem+0x195/0x19d
+Nov  4 23:50:52 EEE-Box kernel: [<c049f38d>] mark_buffer_dirty+0x23/0x6a
+Nov  4 23:50:52 EEE-Box kernel: [<f88ebc36>] ext3_commit_super+0x40/0x53
+[ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88ed076>] ext3_handle_error+0x71/0x95
+[ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88ed129>] ext3_error+0x39/0x43 [ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88e5598>]
+__ext3_get_inode_loc+0x2b1/0x2d8 [ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88e58ed>] ext3_get_inode_loc+0x14/0x16
+[ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88e590f>]
+ext3_reserve_inode_write+0x20/0x68 [ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88e5986>] ext3_mark_inode_dirty+0x2f/0x46
+[ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<f88e5aa8>] ext3_dirty_inode+0x53/0x67
+[ext3]
+Nov  4 23:50:52 EEE-Box kernel: [<c049b785>] __mark_inode_dirty+0x29/0x13c
+Nov  4 23:50:52 EEE-Box kernel: [<c04931af>] touch_atime+0xbb/0xbf
+Nov  4 23:50:52 EEE-Box kernel: [<c048d74a>] vfs_readdir+0x76/0x8f
+Nov  4 23:50:52 EEE-Box kernel: [<c048d490>] ? filldir64+0x0/0xcd
+Nov  4 23:50:52 EEE-Box kernel: [<c048d7c6>] sys_getdents64+0x63/0xa1
+Nov  4 23:50:52 EEE-Box kernel: [<c0405bf2>] syscall_call+0x7/0xb
+Nov  4 23:50:52 EEE-Box kernel: =======================
+Nov  4 23:50:52 EEE-Box kernel: ---[ end trace 1a0b4166f7029756 ]---
+Nov  4 23:50:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:52 EEE-Box kernel: end_request: I/O error, dev sdf, sector 1
+Nov  4 23:50:52 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 0
+Nov  4 23:50:52 EEE-Box kernel: lost page write due to I/O error on sdf1
+Nov  4 23:50:52 EEE-Box kernel: EXT3-fs error (device sdf1) in
+ext3_reserve_inode_write: IO failure
+Nov  4 23:50:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:52 EEE-Box kernel: end_request: I/O error, dev sdf, sector 1
+Nov  4 23:50:52 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 0
+Nov  4 23:50:52 EEE-Box kernel: lost page write due to I/O error on sdf1
+Nov  4 23:50:58 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:58 EEE-Box kernel: end_request: I/O error, dev sdf, sector 4401
+Nov  4 23:50:58 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 550
+Nov  4 23:50:58 EEE-Box kernel: lost page write due to I/O error on sdf1
+Nov  4 23:50:58 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:58 EEE-Box kernel: end_request: I/O error, dev sdf, sector 4409
+Nov  4 23:50:58 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 551
+Nov  4 23:50:58 EEE-Box kernel: lost page write due to I/O error on sdf1
+Nov  4 23:50:58 EEE-Box kernel: Aborting journal on device sdf1.
+Nov  4 23:50:58 EEE-Box kernel: sd 6:0:0:0: [sdf] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK,SUGGEST_OK
+Nov  4 23:50:58 EEE-Box kernel: end_request: I/O error, dev sdf, sector 4401
+Nov  4 23:50:58 EEE-Box kernel: Buffer I/O error on device sdf1, logical
+block 550
+Nov  4 23:50:58 EEE-Box kernel: lost page write due to I/O error on sdf1
+
+My current kernel:
+Linux EEE-Box 2.6.25-14.fc9.i686 #1 SMP Thu May 1 06:28:41 EDT 2008 i686
+i686 i386 GNU/Linux
+
+modinfo  usb_storage
+filename:
+/lib/modules/2.6.25-14.fc9.i686/kernel/drivers/usb/storage/usb-storage.ko
+license:        GPL
+description:    USB Mass Storage driver for Linux
+author:         Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+srcversion:     38F8E61ECA6C16CA785AA38
+--cut aliases--
+depends:        scsi_mod
+vermagic:       2.6.25-14.fc9.i686 SMP mod_unload 686 4KSTACKS
+parm:           delay_use:seconds to delay before using a new device (uint)
+
+
+modinfo  scsi_mod
+filename:
+/lib/modules/2.6.25-14.fc9.i686/kernel/drivers/scsi/scsi_mod.ko
+license:        GPL
+description:    SCSI core
+srcversion:     DF7CC1670A47C981FCDFA39
+depends:
+vermagic:       2.6.25-14.fc9.i686 SMP mod_unload 686 4KSTACKS
+parm:           dev_flags:Given scsi_dev_flags=vendor:model:flags[,v:m:f]
+add black/white list entries for vendor and model with an integer value of
+flags to the scsi device info list (string)
+parm:           default_dev_flags:scsi default device flag integer value
+(int)
+parm:           max_luns:last scsi LUN (should be between 1 and 2^32-1)
+(uint)
+parm:           scan:sync, async or none (string)
+parm:           max_report_luns:REPORT LUNS maximum number of LUNS received
+(should be between 1 and 16384) (uint)
+parm:           inq_timeout:Timeout (in seconds) waiting for devices to
+answer INQUIRY. Default is 5. Some non-compliant devices need more. (uint)
+parm:           scsi_logging_level:a bit mask of logging levels (int)
+
+modinfo sd_mod
+filename:
+/lib/modules/2.6.25-14.fc9.i686/kernel/drivers/scsi/sd_mod.ko
+--cut aliases--
+license:        GPL
+description:    SCSI disk (sd) driver
+author:         Eric Youngdale
+srcversion:     ECC497BE26ACFBB19D2AF29
+depends:        scsi_mod
+vermagic:       2.6.25-14.fc9.i686 SMP mod_unload 686 4KSTACKS
+
+Dmesg of the device:
+Nov  5 00:12:52 EEE-Box kernel: scsi 6:0:0:0: Direct-Access     WD
+5000AVV External 1.65 PQ: 0 ANSI: 4
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] 976773168 512-byte
+hardware sectors (500108 MB)
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Write Protect is off
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Assuming drive cache:
+write through
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] 976773168 512-byte
+hardware sectors (500108 MB)
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Write Protect is off
+Nov  5 00:12:52 EEE-Box kernel: sd 6:0:0:0: [sdf] Assuming drive cache:
+write through
 
-This message contains a list of some regressions from 2.6.27, for which=
- there
-are no fixes in the mainline I know of.  If any of them have been fixed=
- already,
-please let me know.
-
-If you know of any other unresolved regressions from 2.6.27, please let=
- me know
-either and I'll add them to the list.  Also, please let me know if any =
-of the
-entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2008-11-09       73       40          27
-  2008-11-02       55       41          29
-  2008-10-25       26       25          20
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11996
-Subject		: Tracing framework regression in 2.6.28-rc3
-Submitter	: Pekka Paalanen <pq-X3B1VOXEql0@public.gmane.org>
-Date		: 2008-11-09 10:13 (1 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122624392229317&w=3D=
-4
-Handled-By	: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11994
-Subject		: Computer doesn't power down after commit CPI: EC: do transac=
-tion from interrupt context
-Submitter	: Fran=C3=A7ois Valenduc <francois.valenduc-bmtTS95sd5BUM80lpFwj4w@public.gmane.org>
-Date		: 2008-11-09 02:02 (1 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D5ceb40417bca2045350e77f740e0c4c94875fff2
-Handled-By	: ykzhao <yakui.zhao-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11989
-Subject		: Suspend failure on NForce4-based boards due to chanes in sto=
-p_machine
-Submitter	: Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>
-Date		: 2008-11-03 0:28 (7 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Dc9583e55fa2b08a230c549bd1e3c0bde6c50d9cc
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122567187604356&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11987
-Subject		: Bootup time regression from 2.6.27 to 2.6.28-rc3+
-Submitter	: Lukas Hejtmanek <xhejtman-8qz54MUs51PtwjQa/ONI9g@public.gmane.org>
-Date		: 2008-11-04 17:33 (6 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122582006601658&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11986
-Subject		: 2.6.28-rc2-git1: spitz still won't boot
-Submitter	: Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>
-Date		: 2008-11-05 14:23 (5 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122589528016337&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11984
-Subject		: regression when switching TTY-&gt;X, input related?
-Submitter	: Bernhard Schmidt <berni-wpePDvIxQxvMZTq/7ZfH4Q@public.gmane.org>
-Date		: 2008-11-05 22:04 (5 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122592278403853&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11970
-Subject		: gettimeofday return a old time in mmbench
-Submitter	: alexs <alex.shi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2008-11-06 23:57 (4 days old)
-Handled-By	: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11965
-Subject		: regression introduced by - timers: fix itimer/many thread ha=
-ng
-Submitter	: Doug Chapman <doug.chapman-VXdhtT5mjnY@public.gmane.org>
-Date		: 2008-11-06 11:03 (4 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Df06febc96ba8e0af80bcc3eaec0a109e88275fac
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122596943416648&w=3D=
-4
-Handled-By	: Frank Mayhar <fmayhar-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-		  Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-		  Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11958
-Subject		: [2.6.27.x =3D&gt; 2.6.28-rc3] Xorg crash with xf86MapVidMem =
-error
-Submitter	: Tomasz Chmielewski <tch-Nem3ZqsbT/g@public.gmane.org>
-Date		: 2008-11-05 05:37 (5 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11947
-Subject		: 2.6.28-rc VC switching with Intel graphics broken
-Submitter	: Romano Giannetti <romano.giannetti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-11-03 12:10 (7 days old)
-Handled-By	: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11928
-Subject		: ath5k gets lost with eeepc-laptop removal
-Submitter	: Luiz Fernando N. Capitulino <lcapitulino-4qZELD6Fgxg39yzSjRtAkw@public.gmane.org>
-Date		: 2008-10-31 13:05 (10 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122545827204957&w=3D=
-4
-Handled-By	: Nick Kossifidis <mickflemm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11913
-Subject		: USB/INPUT: slab error in cache_alloc_debugcheck_after(): dou=
-ble free?
-Submitter	: Helge Deller <deller-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2008-10-30 23:11 (11 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Dcb8f488c33539f096580e202f5438a809195008f
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122540833301394&w=3D=
-4
-Handled-By	: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-		  Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-		  Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-		  Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-		  Denys Vlasenko <vda.linux-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11908
-Subject		: linux-2.6.28-rc2 regression : oprofile doesnt work anymore
-Submitter	: Eric Dumazet <dada1-fPLkHRcR87vqlBn2x/YWAg@public.gmane.org>
-Date		: 2008-10-30 18:01 (11 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Dc493756e2a8a78bcaae30668317890dcfe86e7c3
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122539004100532&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11906
-Subject		: 2.6.28-rc2 seems to fail at powering down the monitor when i=
-t should
-Submitter	: Gene Heskett <gene.heskett-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-10-30 6:39 (11 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122534879721424&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11905
-Subject		: lots of extra timer interrupts costing 2W
-Submitter	: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Date		: 2008-10-30 2:18 (11 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Dfb02fbc14d17837b4b7b02dbb36142c16a7bf208
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122533314305315&w=3D=
-4
-		  http://marc.info/?l=3Dlinux-kernel&m=3D122541849114444&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11899
-Subject		: sometime boot failed on T61 laptop
-Submitter	: alexs <alex.shi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2008-10-30 02:04 (11 days old)
-Handled-By	: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11896
-Subject		: [2.6.28-rc2] EeePC ACPI errors &amp; exceptions
-Submitter	: Darren Salt <linux-Ym6Ivm/Ks7B65+NM0QMiFAbYiX8G1TQY9dF7HbQ/qKg@public.gmane.org>
-Date		: 2008-10-27 22:52 (14 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122514911328761&w=3D=
-4
-Handled-By	: Alexey Starikovskiy <aystarik-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-		  Zhao Yakui <yakui.zhao-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11891
-Subject		: resume from disk broken on hp/compaq nx7000 (DRM problem)
-Submitter	: Markus Meier <maekke-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-Date		: 2008-10-29 14:42 (12 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D0a3e67a4caac273a3bfc4ced3da364830b1ab241
-Handled-By	: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11875
-Subject		: radeonfb lockup in .28-rc (bisected)
-Submitter	: James Cloos <cloos-GRsvFm/Gh/pBDgjK7y7TUQ@public.gmane.org>
-Date		: 2008-10-28 0:00 (13 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Db1ee26bab14886350ba12a5c10cbc0696ac679bf
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122515210200530&w=3D=
-4
-Handled-By	: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11873
-Subject		: unable to mount ext3 root filesystem due to htree_dirblock_t=
-o_tree
-Submitter	: Jimmy.Jazz-hi6Y0CQ0nG0@public.gmane.org
-Date		: 2008-10-28 05:09 (13 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D4c46501d1659475dc6c89554af6ce7fe6ecf615c
-Handled-By	: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-		  Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11858
-Subject		: Timeout regression introduced by 242f9dcb8ba6f68fcd217a119a7=
-648a4f69290e9
-Submitter	: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date		: 2008-10-26 9:46 (15 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122501447326698&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11849
-Subject		: default IRQ affinity change in v2.6.27 (breaking several SMP=
- PPC based systems)
-Submitter	: Kumar Gala <galak-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-Date		: 2008-10-24 12:45 (17 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122485245924125&w=3D=
-4
-Handled-By	: Chris Snook <csnook-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-		  Scott Wood <scottwood-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11834
-Subject		: iwl3945: if I leave my machine running overnight, wifi will =
-not work in the morning
-Submitter	: Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>
-Date		: 2008-10-19 21:40 (22 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122445440206101&w=3D=
-4
-Handled-By	: reinette chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11828
-Subject		: Linux 2.6.27-git3: no SD card reader
-Submitter	: J.A. Magall=C3=B3n <jamagallon-sh/6fXdz2Rs@public.gmane.org>
-Date		: 2008-10-14 0:54 (27 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122394573904699&w=3D=
-4
-Handled-By	: Pierre Ossman <drzeus-list-p3sGCRWkH8CeZLLa646FqQ@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11826
-Subject		: extreme slowness of IO stuff using 2.6.28-rc1
-Submitter	: Yves-Alexis Perez <corsac-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
-Date		: 2008-10-25 04:25 (16 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Ddc4304f7deee29fcdf6a2b62f7146ea7f505fd42
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122521238402963&w=3D=
-4
-Handled-By	: Arjan van de Ven <arjan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11822
-Subject		: ACPI Warning (nspredef-0858): _SB_.PCI0.LPC_.EC__.BAT0._BIF:=
- Return Package type mismatch at index 9 - found Buffer, expected Strin=
-g [20080926]
-Submitter	: Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2008-10-25 01:26 (16 days old)
-Handled-By	: Robert Moore <Robert.Moore-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11799
-Subject		: xorg can not start up with stolen memory
-Submitter	: arrow zhang <arrow.ebd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-10-21 06:08 (20 days old)
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11988
-Subject		: Eliminate recursive mutex in compat fb ioctl path
-Submitter	: Keith Packard <keithp-aN4HjG94KOLQT0dZR+AlfA@public.gmane.org>
-Date		: 2008-11-03 7:06 (7 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122569604828448&w=3D=
-4
-Handled-By	: Keith Packard <keithp-aN4HjG94KOLQT0dZR+AlfA@public.gmane.org>
-		  Geert Uytterhoeven <Geert.Uytterhoeven-osDt5Q4Chk1BDgjK7y7TUQ@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D122569604828448&w=3D4
-		  http://lkml.org/lkml/2008/10/31/162
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11985
-Subject		: 2.6.28-rc3 truncates nfsd results
-Submitter	: Doug Nazar <nazard-9NxrcwDPlTov2OKnPYDugg@public.gmane.org>
-Date		: 2008-11-04 18:27 (6 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122582366509153&w=3D=
-4
-Handled-By	: Doug Nazar <nazard-9NxrcwDPlTov2OKnPYDugg@public.gmane.org>
-		  J. Bruce Fields <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D122592648119790&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11982
-Subject		: Fan level 7 after resume wit 2.6.28-rc3
-Submitter	: Tino Keitel <tino.keitel-rAwCM5oiXHA@public.gmane.org>
-Date		: 2008-11-05 7:33 (5 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122587043409186&w=3D=
-4
-Handled-By	: Henrique de Moraes Holschuh <hmh-N3TV7GIv+o9fyO9Q7EP/yw@public.gmane.org>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=3D18744&action=3D=
-view
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11942
-Subject		: AMD64 reboot regression
-Submitter	: Michael B. Trausch <mike-cRPrJ27hGUicqzYg7KEe8g@public.gmane.org>
-Date		: 2008-11-02 20:30 (8 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122565790519736&w=3D=
-4
-Handled-By	: Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=3D11942#c11
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11937
-Subject		: ext3 __log_wait_for_space: no transactions
-Submitter	: Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>
-Date		: 2008-10-30 9:49 (11 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122536026105643&w=3D=
-4
-Handled-By	: Theodore Tso <tytso-3s7WtUTddSA@public.gmane.org>
-Patch		: http://lkml.org/lkml/2008/11/1/61
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11925
-Subject		: cdrom: missing compat ioctls
-Submitter	: Andreas Schwab <schwab-l3A5Bk7waGM@public.gmane.org>
-Date		: 2008-10-31 14:02 (10 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D33c2dca4957bd0da3e1af7b96d0758d97e708ef6
-Handled-By	: Andreas Schwab <schwab-l3A5Bk7waGM@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D122548923531545&w=3D2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11917
-Subject		: Asus Eee PC hotkeys stop working after prolonged usage
-Submitter	: Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>
-Date		: 2008-10-31 03:21 (10 days old)
-Handled-By	: Alexey Starikovskiy <astarikovskiy-l3A5Bk7waGM@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-acpi&m=3D122603281422097&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11911
-Subject		: new PCMCIA device instance after resume - orinoco can't down=
-load firmware
-Submitter	: Andrey Borzenkov <arvidjaar-JGs/UdohzUI@public.gmane.org>
-Date		: 2008-10-28 19:19 (13 days old)
-References	: http://marc.info/?l=3Dlinux-wireless&m=3D122522165719760&w=
-=3D4
-Handled-By	: Dave <kilroyd-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-wireless&m=3D122539058601588&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11903
-Subject		: regression: vmalloc easily fail
-Submitter	: Glauber Costa <glommer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date		: 2008-10-28 20:59 (13 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Ddb64fe02258f1507e13fe5212a989922323685ce
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122522755530998&w=3D=
-4
-Handled-By	: Glauber Costa <glommer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-		  Nick Piggin <npiggin-l3A5Bk7waGM@public.gmane.org>
-		  Glauber Costa <glommer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D122609055221549&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11898
-Subject		: mke2fs hang on AIC79 device.
-Submitter	: alexs <alex.shi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2008-10-30 01:17 (11 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Df0c0a376d0fcd4c5579ecf5e95f88387cba85211
-Handled-By	: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=3D11898#c28
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11895
-Subject		: 2.6.28-rc2 regression: keyboard dead after reboot on Toshiba=
- Portege 4000
-Submitter	: Andrey Borzenkov <arvidjaar-JGs/UdohzUI@public.gmane.org>
-Date		: 2008-10-28 19:05 (13 days old)
-References	: http://marc.info/?l=3Dlinux-acpi&m=3D122522085418555&w=3D4
-Handled-By	: Andrey Borzenkov <arvidjaar-JGs/UdohzUI@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D122547719810921&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11841
-Subject		: plenty of line "ACPI: EC: non-query interrupt received, swit=
-ching to interrupt mode" in dmesg and system not powering down
-Submitter	: Fran=C3=A7ois Valenduc <francois.valenduc-bmtTS95sd5BUM80lpFwj4w@public.gmane.org>
-Date		: 2008-10-25 10:29 (16 days old)
-Handled-By	: Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-acpi&m=3D122603281922125&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11806
-Subject		: iwl3945 fails with microcode error
-Submitter	: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Date		: 2008-10-22 02:36 (19 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122450235730661&w=3D=
-4
-Handled-By	: Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-wireless&m=3D122583010822172&w=3D2
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions from 2=
-=2E6.27,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D11808
-
-Please let me know if there are any Bugzilla entries that should be add=
-ed to
-the list in there.
-
-Thanks,
-Rafael
